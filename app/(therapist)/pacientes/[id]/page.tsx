@@ -149,9 +149,18 @@ export default async function PatientProfilePage({ params }: { params: Promise<{
           <p className="text-xs text-gray-500">Adesão</p>
           <p className={`font-semibold ${adherence >= 70 ? "text-green-600" : "text-orange-600"}`}>{adherence}%</p>
         </CardContent></Card>
-        <Card><CardContent className="p-4">
-          <p className="text-xs text-gray-500">PIN de Acesso</p>
-          <p className="font-mono font-bold text-blue-600 tracking-widest">{patient.pin}</p>
+        <Card className="col-span-2 lg:col-span-2"><CardContent className="p-4">
+          <p className="text-xs text-gray-500 mb-2">Credenciais de Acesso do Paciente</p>
+          <div className="flex gap-6">
+            <div>
+              <p className="text-xs text-gray-400">ID do Paciente</p>
+              <p className="font-mono text-sm text-gray-700 break-all">{patient.id}</p>
+            </div>
+            <div>
+              <p className="text-xs text-gray-400">PIN</p>
+              <p className="font-mono font-bold text-blue-600 text-xl tracking-widest">{patient.pin}</p>
+            </div>
+          </div>
         </CardContent></Card>
       </div>
 
