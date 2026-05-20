@@ -15,12 +15,12 @@ export async function sendPasswordResetEmail(to: string, resetUrl: string) {
 
   const transporter = createTransport();
   await transporter.sendMail({
-    from: `"NeuroPeak" <${process.env.GMAIL_USER}>`,
+    from: `"Cognitex" <${process.env.GMAIL_USER}>`,
     to,
-    subject: "Redefinição de senha — NeuroPeak",
+    subject: "Redefinição de senha — Cognitex",
     html: `
       <div style="font-family: sans-serif; max-width: 480px; margin: 0 auto; padding: 24px;">
-        <h2 style="color: #2563eb; margin-bottom: 8px;">NeuroPeak</h2>
+        <h2 style="color: #2563eb; margin-bottom: 8px;">Cognitex</h2>
         <p style="color: #374151;">Você solicitou a redefinição de senha da sua conta.</p>
         <p style="color: #374151;">Clique no botão abaixo para criar uma nova senha.
           Este link expira em <strong>1 hora</strong>.</p>
@@ -51,12 +51,12 @@ export async function sendLicenseRequestEmail(therapist: {
 
   const transporter = createTransport();
   await transporter.sendMail({
-    from: `"NeuroPeak" <${process.env.GMAIL_USER}>`,
+    from: `"Cognitex" <${process.env.GMAIL_USER}>`,
     to: "neuropsi.kamylla@gmail.com",
     subject: `Solicitação de licença — ${therapist.name}`,
     html: `
       <div style="font-family: sans-serif; max-width: 480px; margin: 0 auto; padding: 24px;">
-        <h2 style="color: #2563eb;">NeuroPeak — Solicitação de Licença</h2>
+        <h2 style="color: #2563eb;">Cognitex — Solicitação de Licença</h2>
         <table style="width:100%;border-collapse:collapse;margin-top:16px;">
           <tr>
             <td style="padding:8px 0;color:#6b7280;font-size:13px;">Terapeuta</td>

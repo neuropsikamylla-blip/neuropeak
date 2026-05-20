@@ -137,7 +137,7 @@ export default function NovaSenhaPage() {
           <div className="inline-flex items-center justify-center w-16 h-16 rounded-2xl bg-blue-600 mb-4">
             <Brain className="w-9 h-9 text-white" />
           </div>
-          <h1 className="text-3xl font-bold text-gray-900">NeuroPeak</h1>
+          <h1 className="text-3xl font-bold text-gray-900">Cognitex</h1>
         </div>
 
         <Card className="shadow-xl border-0">
