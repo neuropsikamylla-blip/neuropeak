@@ -3,7 +3,7 @@
 import { signOut, useSession } from "next-auth/react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { Brain, LayoutDashboard, Users, FileText, LogOut, Menu, X } from "lucide-react";
+import { Brain, LayoutDashboard, Users, FileText, LogOut, Menu, X, Settings } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 import { useState } from "react";
@@ -13,6 +13,7 @@ const NAV_ITEMS = [
   { href: "/dashboard", label: "Dashboard", icon: LayoutDashboard },
   { href: "/pacientes", label: "Pacientes", icon: Users },
   { href: "/relatorios", label: "Relatórios", icon: FileText },
+  { href: "/configuracoes", label: "Configurações", icon: Settings },
 ];
 
 export default function TherapistLayout({ children }: { children: React.ReactNode }) {

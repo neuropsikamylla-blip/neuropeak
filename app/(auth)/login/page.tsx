@@ -197,7 +197,9 @@ export default function LoginPage() {
         </Card>
 
         <p className="text-center text-xs text-gray-400 mt-6">
-          NeuroPeak © {new Date().getFullYear()} — Plataforma clínica de treinamento cognitivo
+          É terapeuta?{" "}
+          <a href="/cadastro" className="text-blue-500 hover:underline">Criar conta</a>
+          {" · "}NeuroPeak © {new Date().getFullYear()}
         </p>
       </motion.div>
     </div>
