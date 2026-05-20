@@ -4,6 +4,7 @@ import { getServerSession } from "next-auth";
 import { authOptions } from "@/lib/auth";
 import { supabase } from "@/lib/supabase";
 import { z } from "zod";
+import { randomUUID } from "crypto";
 import { calculateNewDifficulty, checkAchievements } from "@/lib/adaptive";
 import type { SessionData } from "@/types";
 
@@ -42,6 +43,7 @@ export async function POST(req: NextRequest) {
   const { data: newSession, error: sessionError } = await supabase
     .from('Session')
     .insert({
+      id: randomUUID(),
       patientId: data.patientId,
       exerciseId: data.exerciseId,
       domain: data.domain,
@@ -94,11 +96,13 @@ export async function POST(req: NextRequest) {
     await supabase
       .from('ExerciseConfig')
       .insert({
+        id: randomUUID(),
         patientId: data.patientId,
         exerciseId: data.exerciseId,
         currentDifficulty: adaptiveResult.newDifficulty,
         totalAttempts: 1,
         lastAttemptAt: new Date().toISOString(),
+        updatedAt: new Date().toISOString(),
       });
   }
 
@@ -118,6 +122,7 @@ export async function POST(req: NextRequest) {
       .from('Achievement')
       .insert(
         newAchievements.map((a) => ({
+          id: randomUUID(),
           patientId: data.patientId,
           type: a.type,
           title: a.title,
@@ -155,6 +160,7 @@ export async function POST(req: NextRequest) {
         await supabase
           .from('Alert')
           .insert({
+            id: randomUUID(),
             patientId: data.patientId,
             type: "PERFORMANCE_DROP",
             message: `Queda de desempenho detectada no exercício ${data.exerciseId} (−${Math.round(avgPrev - avgLast)} pontos)`,

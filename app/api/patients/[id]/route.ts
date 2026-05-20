@@ -4,6 +4,7 @@ import { getServerSession } from "next-auth";
 import { authOptions } from "@/lib/auth";
 import { supabase } from "@/lib/supabase";
 import { z } from "zod";
+import { randomUUID } from "crypto";
 
 const updateSchema = z.object({
   trainingPlan: z.object({
@@ -125,12 +126,14 @@ export async function PATCH(
     await supabase
       .from('TrainingPlan')
       .insert({
+        id: randomUUID(),
         patientId: id,
         domains: JSON.stringify(trainingPlan.domains),
         exercises: JSON.stringify(trainingPlan.exercises),
         sessionDuration: trainingPlan.sessionDuration,
         frequency: trainingPlan.frequency,
         isActive: true,
+        updatedAt: new Date().toISOString(),
       });
   }
 

@@ -5,6 +5,7 @@ import { authOptions } from "@/lib/auth";
 import { supabase } from "@/lib/supabase";
 import { z } from "zod";
 import { generatePin } from "@/lib/utils";
+import { randomUUID } from "crypto";
 
 const createPatientSchema = z.object({
   name: z.string().min(2),
@@ -57,11 +58,13 @@ export async function POST(req: NextRequest) {
   const pin = generatePin();
 
   const insertData = {
+    id: randomUUID(),
     name,
     birthDate: new Date(birthDate).toISOString(),
     theme,
     pin,
     therapistId,
+    updatedAt: new Date().toISOString(),
     ...Object.fromEntries(
       Object.entries(rest).filter(([, v]) => v !== undefined)
     ),
