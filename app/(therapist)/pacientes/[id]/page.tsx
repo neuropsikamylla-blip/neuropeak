@@ -11,7 +11,9 @@ import { EvolutionChart } from "@/components/charts/EvolutionChart";
 import { DomainRadarChart } from "@/components/charts/DomainRadarChart";
 import { calculateDomainScore, calculateAdherence } from "@/lib/scoring";
 import { formatDate, formatDateTime, calculateAge, formatDuration } from "@/lib/utils";
-import { ArrowLeft, FileText, Edit, Target, Calendar } from "lucide-react";
+import { ArrowLeft, FileText, Target } from "lucide-react";
+import { PatientCredentials } from "@/components/patient/PatientCredentials";
+import { DeletePatientButton } from "@/components/patient/DeletePatientButton";
 import type { SessionData, Domain } from "@/types";
 import { DOMAIN_LABELS } from "@/types";
 import { format, subDays } from "date-fns";
@@ -119,19 +121,20 @@ export default async function PatientProfilePage({ params }: { params: Promise<{
             </div>
           </div>
         </div>
-        <div className="flex gap-2">
-          <Button variant="outline" asChild>
+        <div className="flex flex-wrap gap-2">
+          <Button variant="outline" size="sm" asChild>
             <Link href={`/pacientes/${patient.id}/plano`}>
               <Target className="w-4 h-4 mr-2" />
               Plano de Treino
             </Link>
           </Button>
-          <Button variant="outline" asChild>
+          <Button variant="outline" size="sm" asChild>
             <Link href={`/relatorios?patientId=${patient.id}`}>
               <FileText className="w-4 h-4 mr-2" />
               Gerar Relatório
             </Link>
           </Button>
+          <DeletePatientButton patientId={patient.id} patientName={patient.name} />
         </div>
       </div>
 
@@ -149,20 +152,7 @@ export default async function PatientProfilePage({ params }: { params: Promise<{
           <p className="text-xs text-gray-500">Adesão</p>
           <p className={`font-semibold ${adherence >= 70 ? "text-green-600" : "text-orange-600"}`}>{adherence}%</p>
         </CardContent></Card>
-        <Card className="col-span-2 lg:col-span-2"><CardContent className="p-4">
-          <p className="text-xs text-gray-500 mb-2">Credenciais de Acesso do Paciente</p>
-          <div className="flex gap-6">
-            <div>
-              <p className="text-xs text-gray-400">ID do Paciente</p>
-              <p className="font-mono text-sm text-gray-700 break-all">{patient.id}</p>
-            </div>
-            <div>
-              <p className="text-xs text-gray-400">PIN</p>
-              <p className="font-mono font-bold text-blue-600 text-xl tracking-widest">••••••</p>
-              <p className="text-xs text-gray-400 mt-1">Visível apenas no cadastro</p>
-            </div>
-          </div>
-        </CardContent></Card>
+        <PatientCredentials patientId={patient.id} />
       </div>
 
       <Tabs defaultValue="overview">

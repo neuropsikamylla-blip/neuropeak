@@ -207,6 +207,22 @@ export const EXERCISE_DEFINITIONS = {
     estimatedMinutes: 7,
     icon: "🔄",
   },
+  "labirinto": {
+    id: "labirinto",
+    name: "Labirinto",
+    domain: "executive" as Domain,
+    description: "Navegue pelo labirinto até a saída",
+    estimatedMinutes: 8,
+    icon: "🌀",
+  },
+  "jogo-memoria": {
+    id: "jogo-memoria",
+    name: "Jogo da Memória",
+    domain: "memory" as Domain,
+    description: "Encontre os pares de figuras iguais",
+    estimatedMinutes: 5,
+    icon: "🃏",
+  },
 } as const;
 
 export type ExerciseId = keyof typeof EXERCISE_DEFINITIONS;

@@ -16,6 +16,8 @@ import { IdentificacaoSimbolos } from "@/components/exercises/processing/Identif
 import { TorreHanoi } from "@/components/exercises/executive/TorreHanoi";
 import { Sequenciamento } from "@/components/exercises/executive/Sequenciamento";
 import { FlexibilidadeCognitiva } from "@/components/exercises/executive/FlexibilidadeCognitiva";
+import { Labirinto } from "@/components/exercises/executive/Labirinto";
+import { JogoMemoria } from "@/components/exercises/memory/JogoMemoria";
 import { EXERCISE_DEFINITIONS, type ExerciseResult, type Theme } from "@/types";
 import { useToast } from "@/components/ui/use-toast";
 import { Loader2 } from "lucide-react";
@@ -92,6 +94,18 @@ const EXERCISE_INSTRUCTIONS: Record<string, string[]> = {
     "A regra mudará durante o exercício — preste atenção!",
     "Quando a regra mudar, você verá um aviso na tela.",
     "Tente se adaptar rapidamente às mudanças de regra.",
+  ],
+  "labirinto": [
+    "Você está no canto superior esquerdo do labirinto.",
+    "Seu objetivo é chegar até a bandeira 🏁 no canto inferior direito.",
+    "Use as setas na tela para se mover: ↑ ↓ ← →",
+    "Planeje seu caminho com atenção — nem todo caminho leva à saída!",
+  ],
+  "jogo-memoria": [
+    "As cartas estão viradas para baixo — você não consegue ver as figuras.",
+    "Toque em uma carta para virá-la, depois toque em outra.",
+    "Se as duas forem iguais, elas ficam abertas! Se não, voltam viradas.",
+    "Tente lembrar onde cada figura está para encontrar todos os pares!",
   ],
 };
 
@@ -182,6 +196,8 @@ export default function ExercicioPage() {
       case "torre-hanoi": return <TorreHanoi {...props} />;
       case "sequenciamento": return <Sequenciamento {...props} />;
       case "flexibilidade-cognitiva": return <FlexibilidadeCognitiva {...props} />;
+      case "labirinto": return <Labirinto {...props} />;
+      case "jogo-memoria": return <JogoMemoria {...props} />;
       default: return <div className="p-8 text-center text-gray-500">Exercício em desenvolvimento</div>;
     }
   }
