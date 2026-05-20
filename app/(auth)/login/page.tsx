@@ -157,11 +157,6 @@ export default function LoginPage() {
                   {loading ? <Loader2 className="w-4 h-4 animate-spin mr-2" /> : null}
                   Entrar
                 </Button>
-                <div className="text-center">
-                  <a href="/recuperar-senha" className="text-sm text-gray-500 hover:text-blue-600">
-                    Esqueceu sua senha?
-                  </a>
-                </div>
               </form>
             ) : (
               <form onSubmit={handlePatientLogin} className="space-y-4">
