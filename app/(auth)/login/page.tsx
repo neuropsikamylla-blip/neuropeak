@@ -85,7 +85,7 @@ export default function LoginPage() {
           >
             <Brain className="w-9 h-9 text-white" />
           </motion.div>
-          <h1 className="text-3xl font-bold text-gray-900">Cognitex</h1>
+          <h1 className="text-3xl font-bold text-gray-900">NeuroPeak</h1>
           <p className="text-gray-500 text-sm mt-1">Plataforma de Treinamento Cognitivo</p>
         </div>
 
@@ -199,7 +199,7 @@ export default function LoginPage() {
         <p className="text-center text-xs text-gray-400 mt-6">
           É terapeuta?{" "}
           <a href="/cadastro" className="text-blue-500 hover:underline">Criar conta</a>
-          {" · "}Cognitex © {new Date().getFullYear()}
+          {" · "}NeuroPeak © {new Date().getFullYear()}
         </p>
       </motion.div>
     </div>

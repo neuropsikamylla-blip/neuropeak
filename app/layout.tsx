@@ -4,7 +4,7 @@ import { Toaster } from "@/components/ui/toaster";
 import Providers from "./providers";
 
 export const metadata: Metadata = {
-  title: "Cognitex - Plataforma de Treinamento Cognitivo",
+  title: "NeuroPeak - Plataforma de Treinamento Cognitivo",
   description: "Plataforma clínica de reabilitação e treinamento cognitivo para neuropsicólogos",
 };
 

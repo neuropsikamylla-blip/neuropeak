@@ -73,7 +73,7 @@ export default function CadastroPage() {
             </div>
           </div>
           <CardTitle className="text-2xl font-bold text-gray-900">Criar conta</CardTitle>
-          <CardDescription>Cognitex — Plataforma de Treino Cognitivo</CardDescription>
+          <CardDescription>NeuroPeak — Plataforma de Treino Cognitivo</CardDescription>
         </CardHeader>
 
         <CardContent className="pt-4">
@@ -93,7 +93,7 @@ export default function CadastroPage() {
               <Label htmlFor="clinicName">Nome da clínica (opcional)</Label>
               <Input
                 id="clinicName"
-                placeholder="Clínica Cognitex"
+                placeholder="Clínica NeuroPeak"
                 value={form.clinicName}
                 onChange={(e) => setForm({ ...form, clinicName: e.target.value })}
               />
@@ -140,7 +140,7 @@ export default function CadastroPage() {
               <Input
                 id="accessCode"
                 type="password"
-                placeholder="Código fornecido pela Cognitex"
+                placeholder="Código fornecido pela NeuroPeak"
                 value={form.accessCode}
                 onChange={(e) => setForm({ ...form, accessCode: e.target.value })}
                 required

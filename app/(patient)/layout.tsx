@@ -52,7 +52,7 @@ export default function PatientLayout({ children }: { children: React.ReactNode 
           <div className="flex items-center gap-2">
             <Brain className={`w-6 h-6 ${theme === "GAMIFIED" ? "text-cyan-400" : "text-blue-600"}`} />
             <span className={`font-bold ${theme === "GAMIFIED" ? "text-white" : "text-gray-900"}`}>
-              Cognitex
+              NeuroPeak
             </span>
           </div>
           <div className="flex items-center gap-3">

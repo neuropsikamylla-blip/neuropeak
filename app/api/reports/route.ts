@@ -212,7 +212,7 @@ export async function GET(req: NextRequest) {
       // Header
       createElement(View, { style: styles.header },
         createElement(View, {},
-          createElement(Text, { style: styles.logo }, "Cognitex"),
+          createElement(Text, { style: styles.logo }, "NeuroPeak"),
           createElement(Text, { style: styles.clinicName }, therapist.clinicName ?? "Clínica de Neuropsicologia"),
         ),
         createElement(View, {},
@@ -280,7 +280,7 @@ export async function GET(req: NextRequest) {
 
       // Footer
       createElement(Text, { style: styles.footer },
-        `Cognitex — Plataforma de Treinamento Cognitivo | Relatório gerado em ${format(new Date(), "dd/MM/yyyy 'às' HH:mm", { locale: ptBR })}`
+        `NeuroPeak — Plataforma de Treinamento Cognitivo | Relatório gerado em ${format(new Date(), "dd/MM/yyyy 'às' HH:mm", { locale: ptBR })}`
       ),
     )
   );

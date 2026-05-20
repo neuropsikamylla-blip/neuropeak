@@ -133,7 +133,7 @@ export default function ConfiguracoesPage() {
                 id="clinicName"
                 value={profile.clinicName}
                 onChange={(e) => setProfile({ ...profile, clinicName: e.target.value })}
-                placeholder="Ex: Clínica Cognitex"
+                placeholder="Ex: Clínica NeuroPeak"
               />
             </div>
             <Button type="submit" disabled={profileLoading}>
@@ -247,7 +247,7 @@ export default function ConfiguracoesPage() {
                 className="mt-1 font-mono"
               />
               <p className="text-xs text-gray-500 mt-1">
-                O código é fornecido pela Cognitex após a compra de licenças.
+                O código é fornecido pela NeuroPeak após a compra de licenças.
               </p>
             </div>
             <Button type="submit" disabled={licenseLoading || !licenseCode.trim()}>
