@@ -48,6 +48,18 @@ export async function POST(req: NextRequest) {
 
   const therapistId = (session.user as { id: string }).id;
 
+  // Check license
+  const { data: therapist } = await supabase
+    .from("User")
+    .select("patientLicenses")
+    .eq("id", therapistId)
+    .single();
+
+  const licenses = therapist?.patientLicenses ?? -1;
+  if (licenses === 0) {
+    return NextResponse.json({ error: "Licença necessária" }, { status: 402 });
+  }
+
   const body = await req.json();
   const result = createPatientSchema.safeParse(body);
   if (!result.success) {
@@ -77,6 +89,14 @@ export async function POST(req: NextRequest) {
     .single();
 
   if (insertError) return NextResponse.json({ error: insertError.message }, { status: 500 });
+
+  // Decrement license count if not unlimited
+  if (licenses > 0) {
+    await supabase
+      .from("User")
+      .update({ patientLicenses: licenses - 1, updatedAt: new Date().toISOString() })
+      .eq("id", therapistId);
+  }
 
   return NextResponse.json({ patient }, { status: 201 });
 }

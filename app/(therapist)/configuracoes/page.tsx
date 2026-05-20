@@ -6,7 +6,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
-import { Loader2, Save, User, Lock, Building2 } from "lucide-react";
+import { Loader2, Save, User, Lock, Building2, Key, Package } from "lucide-react";
 import { useToast } from "@/components/ui/use-toast";
 import { Toaster } from "@/components/ui/toaster";
 
@@ -17,6 +17,8 @@ export default function ConfiguracoesPage() {
 
   const [profileLoading, setProfileLoading] = useState(false);
   const [passwordLoading, setPasswordLoading] = useState(false);
+  const [licenseCode, setLicenseCode] = useState("");
+  const [licenseLoading, setLicenseLoading] = useState(false);
 
   const [profile, setProfile] = useState({ name: "", email: "", clinicName: "" });
   const [passwords, setPasswords] = useState({ currentPassword: "", newPassword: "", confirmPassword: "" });
@@ -185,6 +187,71 @@ export default function ConfiguracoesPage() {
             </div>
             <Button type="submit" disabled={passwordLoading}>
               {passwordLoading ? <><Loader2 className="w-4 h-4 mr-2 animate-spin" />Alterando...</> : <><Lock className="w-4 h-4 mr-2" />Alterar senha</>}
+            </Button>
+          </form>
+        </CardContent>
+      </Card>
+
+      {/* Licença */}
+      <Card>
+        <CardHeader>
+          <div className="flex items-center gap-2">
+            <Package className="w-5 h-5 text-blue-600" />
+            <CardTitle className="text-base">Licenças de Pacientes</CardTitle>
+          </div>
+          <CardDescription>Resgatar um código para adicionar novos pacientes à plataforma</CardDescription>
+        </CardHeader>
+        <CardContent>
+          <form
+            onSubmit={async (e) => {
+              e.preventDefault();
+              if (!licenseCode.trim()) return;
+              setLicenseLoading(true);
+              try {
+                const res = await fetch("/api/auth/redeem-license", {
+                  method: "POST",
+                  headers: { "Content-Type": "application/json" },
+                  body: JSON.stringify({ code: licenseCode }),
+                });
+                const data = await res.json();
+                if (!res.ok) {
+                  toast({ title: "Erro", description: data.error, variant: "destructive" });
+                  return;
+                }
+                setLicenseCode("");
+                toast({
+                  title: "Licença resgatada!",
+                  description:
+                    data.licenses === -1
+                      ? "Pacientes ilimitados ativados."
+                      : `Você agora tem ${data.licenses} licença(s) disponível(is).`,
+                });
+              } catch {
+                toast({ title: "Erro", description: "Não foi possível resgatar o código.", variant: "destructive" });
+              } finally {
+                setLicenseLoading(false);
+              }
+            }}
+            className="space-y-4"
+          >
+            <div>
+              <Label htmlFor="licenseCode">
+                <Key className="w-3 h-3 inline mr-1" />
+                Código de licença
+              </Label>
+              <Input
+                id="licenseCode"
+                placeholder="Ex: NPL-XXXXXXXX"
+                value={licenseCode}
+                onChange={(e) => setLicenseCode(e.target.value.toUpperCase())}
+                className="mt-1 font-mono"
+              />
+              <p className="text-xs text-gray-500 mt-1">
+                O código é fornecido pela NeuroPeak após a compra de licenças.
+              </p>
+            </div>
+            <Button type="submit" disabled={licenseLoading || !licenseCode.trim()}>
+              {licenseLoading ? <><Loader2 className="w-4 h-4 mr-2 animate-spin" />Resgatando...</> : "Resgatar licença"}
             </Button>
           </form>
         </CardContent>

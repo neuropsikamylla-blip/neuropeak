@@ -9,7 +9,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { useToast } from "@/components/ui/use-toast";
-import { ArrowLeft, Loader2, Copy, Check } from "lucide-react";
+import { ArrowLeft, Loader2, Copy, Check, Package } from "lucide-react";
 import Link from "next/link";
 import { z } from "zod";
 
@@ -33,6 +33,9 @@ export default function NovoPacientePage() {
   const [loading, setLoading] = useState(false);
   const [created, setCreated] = useState<{ id: string; pin: string; name: string } | null>(null);
   const [pinCopied, setPinCopied] = useState(false);
+  const [needsLicense, setNeedsLicense] = useState(false);
+  const [requestingSent, setRequestingSent] = useState(false);
+  const [requestingLicense, setRequestingLicense] = useState(false);
 
   const [form, setForm] = useState({
     name: "",
@@ -80,6 +83,16 @@ export default function NovoPacientePage() {
         throw new Error(err.error ?? "Erro ao criar paciente");
       }
 
+      if (res.status === 402) {
+        setNeedsLicense(true);
+        return;
+      }
+
+      if (!res.ok) {
+        const err = await res.json();
+        throw new Error(err.error ?? "Erro ao criar paciente");
+      }
+
       const data = await res.json();
       setCreated({ id: data.patient.id, pin: data.patient.pin, name: data.patient.name });
     } catch (err) {
@@ -93,12 +106,80 @@ export default function NovoPacientePage() {
     }
   }
 
+  async function handleRequestLicense() {
+    setRequestingLicense(true);
+    try {
+      await fetch("/api/auth/request-license", { method: "POST" });
+      setRequestingSent(true);
+    } catch {
+      // still show sent to avoid confusion
+      setRequestingSent(true);
+    } finally {
+      setRequestingLicense(false);
+    }
+  }
+
   function copyPin() {
     if (created) {
       navigator.clipboard.writeText(created.pin);
       setPinCopied(true);
       setTimeout(() => setPinCopied(false), 2000);
     }
+  }
+
+  if (needsLicense) {
+    return (
+      <div className="max-w-lg mx-auto">
+        <Card className="border-amber-200 shadow-lg">
+          <CardHeader>
+            <div className="flex items-center gap-2">
+              <Package className="w-5 h-5 text-amber-600" />
+              <CardTitle className="text-amber-700">Licença necessária</CardTitle>
+            </div>
+          </CardHeader>
+          <CardContent className="space-y-4">
+            {requestingSent ? (
+              <div className="bg-green-50 rounded-xl p-4 border border-green-200 text-center space-y-2">
+                <p className="text-green-700 font-medium">Solicitação enviada!</p>
+                <p className="text-sm text-gray-600">
+                  Entraremos em contato em breve com um código de licença para ativar a criação de
+                  novos pacientes.
+                </p>
+                <Button variant="outline" className="mt-2" onClick={() => router.push("/pacientes")}>
+                  Voltar aos pacientes
+                </Button>
+              </div>
+            ) : (
+              <>
+                <p className="text-sm text-gray-700">
+                  Você atingiu o limite de pacientes do seu plano atual. Para adicionar um novo
+                  paciente, é necessário adquirir uma licença.
+                </p>
+                <div className="bg-amber-50 rounded-xl p-4 border border-amber-200">
+                  <p className="text-xs text-amber-700 font-medium">
+                    Ao clicar em &quot;Solicitar licença&quot;, nossa equipe receberá sua solicitação e
+                    enviará um código para você resgatar em <strong>Configurações → Licenças</strong>.
+                  </p>
+                </div>
+                <div className="flex gap-3">
+                  <Button variant="outline" className="flex-1" onClick={() => setNeedsLicense(false)}>
+                    Cancelar
+                  </Button>
+                  <Button
+                    className="flex-1 bg-amber-600 hover:bg-amber-700"
+                    onClick={handleRequestLicense}
+                    disabled={requestingLicense}
+                  >
+                    {requestingLicense ? <Loader2 className="w-4 h-4 animate-spin mr-2" /> : null}
+                    Solicitar licença
+                  </Button>
+                </div>
+              </>
+            )}
+          </CardContent>
+        </Card>
+      </div>
+    );
   }
 
   if (created) {
