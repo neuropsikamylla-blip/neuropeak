@@ -3,24 +3,28 @@
 import { useEffect, useState } from "react";
 import { useParams, useRouter } from "next/navigation";
 import { useSession } from "next-auth/react";
+import dynamic from "next/dynamic";
 import { ExerciseWrapper } from "@/components/exercises/ExerciseWrapper";
-import { SpanNumerico } from "@/components/exercises/memory/SpanNumerico";
-import { MatrizEspacial } from "@/components/exercises/memory/MatrizEspacial";
-import { AssociacaoPares } from "@/components/exercises/memory/AssociacaoPares";
-import { TrilhaVisual } from "@/components/exercises/attention/TrilhaVisual";
-import { StroopTask } from "@/components/exercises/attention/StroopTask";
-import { Vigilancia } from "@/components/exercises/attention/Vigilancia";
-import { TempoReacao } from "@/components/exercises/processing/TempoReacao";
-import { DecisaoRapida } from "@/components/exercises/processing/DecisaoRapida";
-import { IdentificacaoSimbolos } from "@/components/exercises/processing/IdentificacaoSimbolos";
-import { TorreHanoi } from "@/components/exercises/executive/TorreHanoi";
-import { Sequenciamento } from "@/components/exercises/executive/Sequenciamento";
-import { FlexibilidadeCognitiva } from "@/components/exercises/executive/FlexibilidadeCognitiva";
-import { Labirinto } from "@/components/exercises/executive/Labirinto";
-import { JogoMemoria } from "@/components/exercises/memory/JogoMemoria";
 import { EXERCISE_DEFINITIONS, type ExerciseResult, type Theme } from "@/types";
 import { useToast } from "@/components/ui/use-toast";
 import { Loader2 } from "lucide-react";
+
+const loader = { loading: () => <div className="min-h-screen flex items-center justify-center"><Loader2 className="w-8 h-8 animate-spin text-blue-500" /></div> };
+
+const SpanNumerico        = dynamic(() => import("@/components/exercises/memory/SpanNumerico").then(m => ({ default: m.SpanNumerico })), loader);
+const MatrizEspacial      = dynamic(() => import("@/components/exercises/memory/MatrizEspacial").then(m => ({ default: m.MatrizEspacial })), loader);
+const AssociacaoPares     = dynamic(() => import("@/components/exercises/memory/AssociacaoPares").then(m => ({ default: m.AssociacaoPares })), loader);
+const JogoMemoria         = dynamic(() => import("@/components/exercises/memory/JogoMemoria").then(m => ({ default: m.JogoMemoria })), loader);
+const TrilhaVisual        = dynamic(() => import("@/components/exercises/attention/TrilhaVisual").then(m => ({ default: m.TrilhaVisual })), loader);
+const StroopTask          = dynamic(() => import("@/components/exercises/attention/StroopTask").then(m => ({ default: m.StroopTask })), loader);
+const Vigilancia          = dynamic(() => import("@/components/exercises/attention/Vigilancia").then(m => ({ default: m.Vigilancia })), loader);
+const TempoReacao         = dynamic(() => import("@/components/exercises/processing/TempoReacao").then(m => ({ default: m.TempoReacao })), loader);
+const DecisaoRapida       = dynamic(() => import("@/components/exercises/processing/DecisaoRapida").then(m => ({ default: m.DecisaoRapida })), loader);
+const IdentificacaoSimbolos = dynamic(() => import("@/components/exercises/processing/IdentificacaoSimbolos").then(m => ({ default: m.IdentificacaoSimbolos })), loader);
+const TorreHanoi          = dynamic(() => import("@/components/exercises/executive/TorreHanoi").then(m => ({ default: m.TorreHanoi })), loader);
+const Sequenciamento      = dynamic(() => import("@/components/exercises/executive/Sequenciamento").then(m => ({ default: m.Sequenciamento })), loader);
+const FlexibilidadeCognitiva = dynamic(() => import("@/components/exercises/executive/FlexibilidadeCognitiva").then(m => ({ default: m.FlexibilidadeCognitiva })), loader);
+const Labirinto           = dynamic(() => import("@/components/exercises/executive/Labirinto").then(m => ({ default: m.Labirinto })), loader);
 
 const EXERCISE_INSTRUCTIONS: Record<string, string[]> = {
   "span-numerico": [
