@@ -45,18 +45,36 @@ export function SpanNumerico({ difficulty, theme, onComplete }: SpanNumericoProp
     return seq;
   }, [spanLength]);
 
+  function speak(text: string): Promise<void> {
+    return new Promise((resolve) => {
+      if (typeof window === "undefined" || !window.speechSynthesis) {
+        resolve();
+        return;
+      }
+      window.speechSynthesis.cancel();
+      const utterance = new SpeechSynthesisUtterance(text);
+      utterance.lang = "pt-BR";
+      utterance.rate = 0.78;  // ligeiramente abaixo do normal — cadência clínica
+      utterance.pitch = 1.0;
+      utterance.onend = () => resolve();
+      utterance.onerror = () => resolve();
+      window.speechSynthesis.speak(utterance);
+    });
+  }
+
   const showSequence = useCallback(async (seq: number[]) => {
     setPhase("showing");
     setCurrentDisplay(null);
 
     for (let i = 0; i < seq.length; i++) {
-      await new Promise<void>((res) => setTimeout(res, 200));
+      await new Promise<void>((res) => setTimeout(res, 350));  // pausa entre dígitos
       setCurrentDisplay(seq[i]);
-      await new Promise<void>((res) => setTimeout(res, 700));
+      await speak(seq[i].toString());                          // fala o número
+      await new Promise<void>((res) => setTimeout(res, 450)); // dígito ainda visível após fala
       setCurrentDisplay(null);
     }
 
-    await new Promise<void>((res) => setTimeout(res, 400));
+    await new Promise<void>((res) => setTimeout(res, 600));
     setPhase("input");
     setUserInput("");
   }, []);
