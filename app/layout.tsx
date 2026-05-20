@@ -1,0 +1,26 @@
+import type { Metadata } from "next";
+import "./globals.css";
+import { Toaster } from "@/components/ui/toaster";
+import Providers from "./providers";
+
+export const metadata: Metadata = {
+  title: "NeuroPeak - Plataforma de Treinamento Cognitivo",
+  description: "Plataforma clínica de reabilitação e treinamento cognitivo para neuropsicólogos",
+};
+
+export default function RootLayout({
+  children,
+}: {
+  children: React.ReactNode;
+}) {
+  return (
+    <html lang="pt-BR" suppressHydrationWarning>
+      <body className="min-h-screen bg-background antialiased">
+        <Providers>
+          {children}
+          <Toaster />
+        </Providers>
+      </body>
+    </html>
+  );
+}
