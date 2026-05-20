@@ -16,7 +16,8 @@ import type { SessionData, Domain } from "@/types";
 import { DOMAIN_LABELS } from "@/types";
 import { format, subDays } from "date-fns";
 
-export default async function PatientProfilePage({ params }: { params: { id: string } }) {
+export default async function PatientProfilePage({ params }: { params: Promise<{ id: string }> }) {
+  const { id } = await params;
   const session = await getServerSession(authOptions);
   if (!session || (session.user as { role?: string }).role !== "THERAPIST") {
     redirect("/login");
@@ -25,7 +26,7 @@ export default async function PatientProfilePage({ params }: { params: { id: str
   const therapistId = (session.user as { id: string }).id;
 
   const patient = await prisma.patient.findFirst({
-    where: { id: params.id, therapistId },
+    where: { id, therapistId },
     include: {
       sessions: { orderBy: { completedAt: "desc" }, take: 50 },
       trainingPlans: { where: { isActive: true }, take: 1 },
