@@ -52,7 +52,7 @@ export async function sendLicenseRequestEmail(therapist: {
   const transporter = createTransport();
   await transporter.sendMail({
     from: `"NeuroPeak" <${process.env.GMAIL_USER}>`,
-    to: "neuropsi.kamylla@gmail.com",
+    to: process.env.ADMIN_EMAIL || "neuropsi.kamylla@gmail.com",
     subject: `Solicitação de licença — ${therapist.name}`,
     html: `
       <div style="font-family: sans-serif; max-width: 480px; margin: 0 auto; padding: 24px;">

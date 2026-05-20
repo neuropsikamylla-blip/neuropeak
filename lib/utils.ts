@@ -60,7 +60,7 @@ export function shuffle<T>(array: T[]): T[] {
 }
 
 export function generatePin(): string {
-  return Math.floor(1000 + Math.random() * 9000).toString();
+  return Math.floor(100000 + Math.random() * 900000).toString();
 }
 
 export function sleep(ms: number): Promise<void> {

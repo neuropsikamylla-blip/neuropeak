@@ -158,7 +158,8 @@ export default async function PatientProfilePage({ params }: { params: Promise<{
             </div>
             <div>
               <p className="text-xs text-gray-400">PIN</p>
-              <p className="font-mono font-bold text-blue-600 text-xl tracking-widest">{patient.pin}</p>
+              <p className="font-mono font-bold text-blue-600 text-xl tracking-widest">••••••</p>
+              <p className="text-xs text-gray-400 mt-1">Visível apenas no cadastro</p>
             </div>
           </div>
         </CardContent></Card>

@@ -173,14 +173,14 @@ export default function LoginPage() {
                   />
                 </div>
                 <div>
-                  <Label htmlFor="pin">PIN (4 dígitos)</Label>
+                  <Label htmlFor="pin">PIN</Label>
                   <Input
                     id="pin"
                     type="password"
                     inputMode="numeric"
-                    pattern="[0-9]{4}"
-                    placeholder="1234"
-                    maxLength={4}
+                    pattern="[0-9]{4,6}"
+                    placeholder="······"
+                    maxLength={6}
                     value={pin}
                     onChange={(e) => setPin(e.target.value.replace(/\D/g, ""))}
                     required

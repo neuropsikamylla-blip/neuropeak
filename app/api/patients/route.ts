@@ -6,6 +6,7 @@ import { supabase } from "@/lib/supabase";
 import { z } from "zod";
 import { generatePin } from "@/lib/utils";
 import { randomUUID } from "crypto";
+import bcrypt from "bcryptjs";
 
 const createPatientSchema = z.object({
   name: z.string().min(2),
@@ -67,7 +68,8 @@ export async function POST(req: NextRequest) {
   }
 
   const { name, birthDate, theme, ...rest } = result.data;
-  const pin = generatePin();
+  const plainPin = generatePin();
+  const pin = await bcrypt.hash(plainPin, 10);
 
   const insertData = {
     id: randomUUID(),
@@ -98,5 +100,6 @@ export async function POST(req: NextRequest) {
       .eq("id", therapistId);
   }
 
-  return NextResponse.json({ patient }, { status: 201 });
+  // Return plainPin so therapist can share it — it's not stored in plain text
+  return NextResponse.json({ patient: { ...patient, pin: plainPin } }, { status: 201 });
 }

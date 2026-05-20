@@ -349,8 +349,7 @@ function hasConsecutiveDays(sessions: SessionData[], days: number): boolean {
   if (sessions.length === 0) return false;
 
   const dayStrings = sessions.map((s) => {
-    const d = new Date(s.completedAt);
-    return `${d.getFullYear()}-${d.getMonth()}-${d.getDate()}`;
+    return new Date(s.completedAt).toLocaleDateString("pt-BR", { timeZone: "America/Sao_Paulo" });
   });
   const uniqueDays = Array.from(new Set(dayStrings)).sort();
 
