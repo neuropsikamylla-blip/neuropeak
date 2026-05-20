@@ -1,6 +1,6 @@
 import { getServerSession } from "next-auth";
 import { authOptions } from "@/lib/auth";
-import { prisma } from "@/lib/db";
+import { supabase } from "@/lib/supabase";
 import { redirect } from "next/navigation";
 import Link from "next/link";
 import { Button } from "@/components/ui/button";
@@ -21,43 +21,68 @@ export default async function DashboardPage() {
   const therapistId = (session.user as { id: string }).id;
 
   // Fetch patients with recent data
-  const patients = await prisma.patient.findMany({
-    where: { therapistId },
-    include: {
-      sessions: {
-        orderBy: { completedAt: "desc" },
-        take: 20,
-      },
-      alerts: {
-        where: { isRead: false },
-      },
-      trainingPlans: {
-        where: { isActive: true },
-        take: 1,
-      },
-    },
-    orderBy: { createdAt: "desc" },
-  });
+  const { data: patientRows } = await supabase
+    .from('Patient')
+    .select('*')
+    .eq('therapistId', therapistId)
+    .order('createdAt', { ascending: false });
+
+  const patientList = patientRows ?? [];
+  const patientIds = patientList.map((p) => p.id);
+
+  // Fetch related data for all patients in parallel
+  const [
+    { data: allSessions },
+    { data: allAlertRows },
+    { data: allTrainingPlans },
+  ] = await Promise.all([
+    patientIds.length > 0
+      ? supabase
+          .from('Session')
+          .select('*')
+          .in('patientId', patientIds)
+          .order('completedAt', { ascending: false })
+      : Promise.resolve({ data: [] }),
+    patientIds.length > 0
+      ? supabase
+          .from('Alert')
+          .select('*')
+          .in('patientId', patientIds)
+          .eq('isRead', false)
+      : Promise.resolve({ data: [] }),
+    patientIds.length > 0
+      ? supabase
+          .from('TrainingPlan')
+          .select('*')
+          .in('patientId', patientIds)
+          .eq('isActive', true)
+      : Promise.resolve({ data: [] }),
+  ]);
+
+  // Build patients with nested data (capped at 20 sessions per patient)
+  const patients = patientList.map((p) => ({
+    ...p,
+    sessions: (allSessions ?? []).filter((s) => s.patientId === p.id).slice(0, 20),
+    alerts: (allAlertRows ?? []).filter((a) => a.patientId === p.id),
+    trainingPlans: (allTrainingPlans ?? []).filter((t) => t.patientId === p.id).slice(0, 1),
+  }));
 
   // Total sessions this week
   const weekStart = startOfWeek(new Date(), { weekStartsOn: 1 });
-  const sessionsThisWeek = await prisma.session.count({
-    where: {
-      patient: { therapistId },
-      completedAt: { gte: weekStart },
-    },
-  });
+  const sessionsThisWeek = patientIds.length > 0
+    ? ((await supabase
+        .from('Session')
+        .select('id', { count: 'exact', head: true })
+        .in('patientId', patientIds)
+        .gte('completedAt', weekStart.toISOString())).count ?? 0)
+    : 0;
 
-  // Alerts
-  const allAlerts = await prisma.alert.findMany({
-    where: {
-      patient: { therapistId },
-      isRead: false,
-    },
-    include: { patient: true },
-    orderBy: { createdAt: "desc" },
-    take: 10,
-  });
+  // Alerts with patient name
+  const alertRows = allAlertRows ?? [];
+  const allAlerts = alertRows.map((a) => ({
+    ...a,
+    patient: patientList.find((p) => p.id === a.patientId) ?? { name: '' },
+  })).sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime()).slice(0, 10);
 
   const patientSummaries: PatientSummary[] = patients.map((p) => {
     const sessions = p.sessions as SessionData[];

@@ -2,7 +2,7 @@ export const dynamic = "force-dynamic";
 import { NextRequest, NextResponse } from "next/server";
 import { getServerSession } from "next-auth";
 import { authOptions } from "@/lib/auth";
-import { prisma } from "@/lib/db";
+import { supabase } from "@/lib/supabase";
 import { z } from "zod";
 import { calculateNewDifficulty, checkAchievements } from "@/lib/adaptive";
 import type { SessionData } from "@/types";
@@ -39,8 +39,9 @@ export async function POST(req: NextRequest) {
   }
 
   // Create session
-  const newSession = await prisma.session.create({
-    data: {
+  const { data: newSession, error: sessionError } = await supabase
+    .from('Session')
+    .insert({
       patientId: data.patientId,
       exerciseId: data.exerciseId,
       domain: data.domain,
@@ -50,106 +51,114 @@ export async function POST(req: NextRequest) {
       difficulty: data.difficulty,
       duration: data.duration,
       metadata: data.metadata ? JSON.stringify(data.metadata) : null,
-    },
-  });
+    })
+    .select()
+    .single();
+
+  if (sessionError) return NextResponse.json({ error: sessionError.message }, { status: 500 });
 
   // Fetch recent sessions for adaptive difficulty
-  const recentSessions = await prisma.session.findMany({
-    where: { patientId: data.patientId },
-    orderBy: { completedAt: "desc" },
-    take: 20,
-    select: {
-      exerciseId: true,
-      domain: true,
-      score: true,
-      accuracy: true,
-      reactionTime: true,
-      difficulty: true,
-      duration: true,
-      completedAt: true,
-    },
-  });
+  const { data: recentSessions } = await supabase
+    .from('Session')
+    .select('exerciseId, domain, score, accuracy, reactionTime, difficulty, duration, completedAt')
+    .eq('patientId', data.patientId)
+    .order('completedAt', { ascending: false })
+    .limit(20);
 
   // Update adaptive difficulty
   const adaptiveResult = calculateNewDifficulty(
     data.difficulty,
-    recentSessions as SessionData[],
+    (recentSessions ?? []) as SessionData[],
     data.exerciseId
   );
 
-  await prisma.exerciseConfig.upsert({
-    where: {
-      patientId_exerciseId: { patientId: data.patientId, exerciseId: data.exerciseId },
-    },
-    create: {
-      patientId: data.patientId,
-      exerciseId: data.exerciseId,
-      currentDifficulty: adaptiveResult.newDifficulty,
-      totalAttempts: 1,
-      lastAttemptAt: new Date(),
-    },
-    update: {
-      currentDifficulty: adaptiveResult.newDifficulty,
-      totalAttempts: { increment: 1 },
-      lastAttemptAt: new Date(),
-    },
-  });
+  // Upsert exercise config (check if exists first)
+  const { data: existingConfig } = await supabase
+    .from('ExerciseConfig')
+    .select('id, totalAttempts')
+    .eq('patientId', data.patientId)
+    .eq('exerciseId', data.exerciseId)
+    .single();
+
+  if (existingConfig) {
+    await supabase
+      .from('ExerciseConfig')
+      .update({
+        currentDifficulty: adaptiveResult.newDifficulty,
+        totalAttempts: (existingConfig.totalAttempts ?? 0) + 1,
+        lastAttemptAt: new Date().toISOString(),
+      })
+      .eq('patientId', data.patientId)
+      .eq('exerciseId', data.exerciseId);
+  } else {
+    await supabase
+      .from('ExerciseConfig')
+      .insert({
+        patientId: data.patientId,
+        exerciseId: data.exerciseId,
+        currentDifficulty: adaptiveResult.newDifficulty,
+        totalAttempts: 1,
+        lastAttemptAt: new Date().toISOString(),
+      });
+  }
 
   // Check for new achievements
-  const existingAchievements = await prisma.achievement.findMany({
-    where: { patientId: data.patientId },
-    select: { type: true },
-  });
+  const { data: existingAchievements } = await supabase
+    .from('Achievement')
+    .select('type')
+    .eq('patientId', data.patientId);
 
   const newAchievements = checkAchievements(
-    recentSessions as SessionData[],
-    existingAchievements.map((a) => a.type)
+    (recentSessions ?? []) as SessionData[],
+    (existingAchievements ?? []).map((a) => a.type)
   );
 
   if (newAchievements.length > 0) {
-    await prisma.achievement.createMany({
-      data: newAchievements.map((a) => ({
-        patientId: data.patientId,
-        type: a.type,
-        title: a.title,
-        description: a.description,
-        icon: a.icon,
-      })),
-    });
+    await supabase
+      .from('Achievement')
+      .insert(
+        newAchievements.map((a) => ({
+          patientId: data.patientId,
+          type: a.type,
+          title: a.title,
+          description: a.description,
+          icon: a.icon,
+        }))
+      );
   }
 
   // Check alerts
   const lastWeek = new Date(Date.now() - 7 * 24 * 60 * 60 * 1000);
-  const recentCount = recentSessions.filter(
+  const recentCount = (recentSessions ?? []).filter(
     (s) => new Date(s.completedAt) >= lastWeek
   ).length;
 
   if (recentCount === 0) {
     // First session after a week - remove MISSED_SESSION alerts for this exercise
-    await prisma.alert.deleteMany({
-      where: {
-        patientId: data.patientId,
-        type: "MISSED_SESSION",
-        isRead: false,
-      },
-    });
+    await supabase
+      .from('Alert')
+      .delete()
+      .eq('patientId', data.patientId)
+      .eq('type', 'MISSED_SESSION')
+      .eq('isRead', false);
   }
 
   // Check performance drop
-  if (recentSessions.length >= 5) {
-    const last5 = recentSessions.slice(0, 5);
-    const prev5 = recentSessions.slice(5, 10);
+  const sessionList = recentSessions ?? [];
+  if (sessionList.length >= 5) {
+    const last5 = sessionList.slice(0, 5);
+    const prev5 = sessionList.slice(5, 10);
     if (prev5.length >= 5) {
       const avgLast = last5.reduce((s, r) => s + r.score, 0) / 5;
       const avgPrev = prev5.reduce((s, r) => s + r.score, 0) / 5;
       if (avgPrev - avgLast > 15) {
-        await prisma.alert.create({
-          data: {
+        await supabase
+          .from('Alert')
+          .insert({
             patientId: data.patientId,
             type: "PERFORMANCE_DROP",
             message: `Queda de desempenho detectada no exercício ${data.exerciseId} (−${Math.round(avgPrev - avgLast)} pontos)`,
-          },
-        });
+          });
       }
     }
   }

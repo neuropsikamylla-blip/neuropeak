@@ -2,7 +2,7 @@ export const dynamic = "force-dynamic";
 import { NextRequest, NextResponse } from "next/server";
 import { getServerSession } from "next-auth";
 import { authOptions } from "@/lib/auth";
-import { prisma } from "@/lib/db";
+import { supabase } from "@/lib/supabase";
 import { z } from "zod";
 
 const updateSchema = z.object({
@@ -37,21 +37,47 @@ export async function GET(
   const searchParams = req.nextUrl.searchParams;
   const includeConfig = searchParams.get("config") === "true";
 
-  const patient = await prisma.patient.findUnique({
-    where: { id },
-    include: {
-      trainingPlans: { where: { isActive: true }, take: 1 },
-      exerciseConfigs: includeConfig,
-      sessions: { orderBy: { completedAt: "desc" }, take: 50 },
-    },
-  });
+  const { data: patient, error: patientError } = await supabase
+    .from('Patient')
+    .select('*')
+    .eq('id', id)
+    .single();
 
-  if (!patient) return NextResponse.json({ error: "Not found" }, { status: 404 });
+  if (patientError || !patient) return NextResponse.json({ error: "Not found" }, { status: 404 });
   if (isTherapist && patient.therapistId !== user.id) {
     return NextResponse.json({ error: "Forbidden" }, { status: 403 });
   }
 
-  return NextResponse.json({ patient });
+  const [
+    { data: trainingPlans },
+    { data: sessions },
+    { data: exerciseConfigs },
+  ] = await Promise.all([
+    supabase
+      .from('TrainingPlan')
+      .select('*')
+      .eq('patientId', id)
+      .eq('isActive', true)
+      .limit(1),
+    supabase
+      .from('Session')
+      .select('*')
+      .eq('patientId', id)
+      .order('completedAt', { ascending: false })
+      .limit(50),
+    includeConfig
+      ? supabase.from('ExerciseConfig').select('*').eq('patientId', id)
+      : Promise.resolve({ data: [] }),
+  ]);
+
+  const patientWithRelations = {
+    ...patient,
+    trainingPlans: trainingPlans ?? [],
+    sessions: sessions ?? [],
+    exerciseConfigs: exerciseConfigs ?? [],
+  };
+
+  return NextResponse.json({ patient: patientWithRelations });
 }
 
 export async function PATCH(
@@ -66,10 +92,14 @@ export async function PATCH(
 
   const therapistId = (session.user as { id: string }).id;
 
-  const patient = await prisma.patient.findFirst({
-    where: { id, therapistId },
-  });
-  if (!patient) return NextResponse.json({ error: "Not found" }, { status: 404 });
+  const { data: existingPatient, error: findError } = await supabase
+    .from('Patient')
+    .select('id')
+    .eq('id', id)
+    .eq('therapistId', therapistId)
+    .single();
+
+  if (findError || !existingPatient) return NextResponse.json({ error: "Not found" }, { status: 404 });
 
   const body = await req.json();
   const result = updateSchema.safeParse(body);
@@ -80,28 +110,28 @@ export async function PATCH(
   const { trainingPlan, ...patientUpdates } = result.data;
 
   if (Object.keys(patientUpdates).length > 0) {
-    await prisma.patient.update({
-      where: { id },
-      data: patientUpdates,
-    });
+    await supabase
+      .from('Patient')
+      .update(patientUpdates)
+      .eq('id', id);
   }
 
   if (trainingPlan) {
-    await prisma.trainingPlan.updateMany({
-      where: { patientId: id },
-      data: { isActive: false },
-    });
+    await supabase
+      .from('TrainingPlan')
+      .update({ isActive: false })
+      .eq('patientId', id);
 
-    await prisma.trainingPlan.create({
-      data: {
+    await supabase
+      .from('TrainingPlan')
+      .insert({
         patientId: id,
         domains: JSON.stringify(trainingPlan.domains),
         exercises: JSON.stringify(trainingPlan.exercises),
         sessionDuration: trainingPlan.sessionDuration,
         frequency: trainingPlan.frequency,
         isActive: true,
-      },
-    });
+      });
   }
 
   return NextResponse.json({ success: true });
@@ -119,9 +149,11 @@ export async function DELETE(
 
   const therapistId = (session.user as { id: string }).id;
 
-  await prisma.patient.deleteMany({
-    where: { id, therapistId },
-  });
+  await supabase
+    .from('Patient')
+    .delete()
+    .eq('id', id)
+    .eq('therapistId', therapistId);
 
   return NextResponse.json({ success: true });
 }

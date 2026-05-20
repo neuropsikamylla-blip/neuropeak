@@ -1,6 +1,6 @@
 import { getServerSession } from "next-auth";
 import { authOptions } from "@/lib/auth";
-import { prisma } from "@/lib/db";
+import { supabase } from "@/lib/supabase";
 import { redirect, notFound } from "next/navigation";
 import Link from "next/link";
 import { Button } from "@/components/ui/button";
@@ -25,19 +25,56 @@ export default async function PatientProfilePage({ params }: { params: Promise<{
 
   const therapistId = (session.user as { id: string }).id;
 
-  const patient = await prisma.patient.findFirst({
-    where: { id, therapistId },
-    include: {
-      sessions: { orderBy: { completedAt: "desc" }, take: 50 },
-      trainingPlans: { where: { isActive: true }, take: 1 },
-      achievements: { orderBy: { unlockedAt: "desc" } },
-      alerts: { orderBy: { createdAt: "desc" }, take: 5 },
-    },
-  });
+  const { data: patientBase } = await supabase
+    .from('Patient')
+    .select('*')
+    .eq('id', id)
+    .eq('therapistId', therapistId)
+    .single();
 
-  if (!patient) notFound();
+  if (!patientBase) notFound();
+
+  const [
+    { data: sessionRows },
+    { data: trainingPlans },
+    { data: achievements },
+    { data: alerts },
+  ] = await Promise.all([
+    supabase
+      .from('Session')
+      .select('*')
+      .eq('patientId', id)
+      .order('completedAt', { ascending: false })
+      .limit(50),
+    supabase
+      .from('TrainingPlan')
+      .select('*')
+      .eq('patientId', id)
+      .eq('isActive', true)
+      .limit(1),
+    supabase
+      .from('Achievement')
+      .select('*')
+      .eq('patientId', id)
+      .order('unlockedAt', { ascending: false }),
+    supabase
+      .from('Alert')
+      .select('*')
+      .eq('patientId', id)
+      .order('createdAt', { ascending: false })
+      .limit(5),
+  ]);
+
+  const patient = {
+    ...patientBase,
+    sessions: sessionRows ?? [],
+    trainingPlans: trainingPlans ?? [],
+    achievements: achievements ?? [],
+    alerts: alerts ?? [],
+  };
 
   const sessions = patient.sessions as SessionData[];
+  const typedAchievements = patient.achievements as Array<{ id: string; icon: string; title: string; unlockedAt: string }>;
   const domainScores = calculateDomainScore(sessions);
   const age = calculateAge(patient.birthDate);
   const activePlan = patient.trainingPlans[0];
@@ -250,11 +287,11 @@ export default async function PatientProfilePage({ params }: { params: Promise<{
           <Card>
             <CardHeader><CardTitle className="text-base">Conquistas Desbloqueadas</CardTitle></CardHeader>
             <CardContent>
-              {patient.achievements.length === 0 ? (
+              {typedAchievements.length === 0 ? (
                 <p className="text-gray-500 text-sm text-center py-8">Nenhuma conquista ainda.</p>
               ) : (
                 <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-3">
-                  {patient.achievements.map((a) => (
+                  {typedAchievements.map((a) => (
                     <div key={a.id} className="flex flex-col items-center p-4 bg-yellow-50 border-2 border-yellow-200 rounded-xl text-center">
                       <span className="text-3xl mb-2">{a.icon}</span>
                       <p className="font-semibold text-sm text-gray-800">{a.title}</p>

@@ -1,10 +1,10 @@
 import { getServerSession } from "next-auth";
 import { authOptions } from "@/lib/auth";
-import { prisma } from "@/lib/db";
+import { supabase } from "@/lib/supabase";
 import { redirect } from "next/navigation";
 import { calculateDomainScore } from "@/lib/scoring";
 import { formatDate, formatDuration } from "@/lib/utils";
-import { DOMAIN_LABELS, type Domain, type Theme } from "@/types";
+import { DOMAIN_LABELS, type Domain, type Theme, type SessionData } from "@/types";
 import { format, subDays } from "date-fns";
 
 export default async function ProgressoPage() {
@@ -16,18 +16,40 @@ export default async function ProgressoPage() {
   const patientId = (session.user as { patientId?: string }).patientId;
   if (!patientId) redirect("/login");
 
-  const patient = await prisma.patient.findUnique({
-    where: { id: patientId },
-    include: {
-      sessions: { orderBy: { completedAt: "desc" }, take: 30 },
-      achievements: { orderBy: { unlockedAt: "desc" } },
-    },
-  });
+  const { data: patientBase } = await supabase
+    .from('Patient')
+    .select('*')
+    .eq('id', patientId)
+    .single();
 
-  if (!patient) redirect("/login");
+  if (!patientBase) redirect("/login");
+
+  const [
+    { data: sessionRows },
+    { data: achievementRows },
+  ] = await Promise.all([
+    supabase
+      .from('Session')
+      .select('*')
+      .eq('patientId', patientId)
+      .order('completedAt', { ascending: false })
+      .limit(30),
+    supabase
+      .from('Achievement')
+      .select('*')
+      .eq('patientId', patientId)
+      .order('unlockedAt', { ascending: false }),
+  ]);
+
+  const patient = {
+    ...patientBase,
+    sessions: sessionRows ?? [],
+    achievements: achievementRows ?? [],
+  };
 
   const theme = patient.theme as Theme;
-  const sessions = patient.sessions;
+  const sessions = (patient.sessions as SessionData[]);
+  const achievements = patient.achievements as Array<{ id: string; icon: string; title: string; description?: string; unlockedAt: string }>;
   const domainScores = calculateDomainScore(sessions as any);
   const totalPoints = Math.round(sessions.reduce((s, sess) => s + sess.score, 0));
 
@@ -111,7 +133,7 @@ export default async function ProgressoPage() {
       </div>
 
       {/* Achievements */}
-      {patient.achievements.length > 0 && (
+      {achievements.length > 0 && (
         <div className={s.card}>
           <div className="p-4 border-b border-gray-100">
             <h2 className={`font-semibold ${theme === "GAMIFIED" ? "text-gray-200" : "text-gray-800"}`}>
@@ -119,7 +141,7 @@ export default async function ProgressoPage() {
             </h2>
           </div>
           <div className="p-4 grid grid-cols-2 gap-3">
-            {patient.achievements.map((a) => (
+            {achievements.map((a) => (
               <div key={a.id} className={`flex items-center gap-3 p-3 rounded-xl ${s.scoreBg}`}>
                 <span className="text-2xl">{a.icon}</span>
                 <div>

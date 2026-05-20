@@ -1,10 +1,10 @@
 import { getServerSession } from "next-auth";
 import { authOptions } from "@/lib/auth";
-import { prisma } from "@/lib/db";
+import { supabase } from "@/lib/supabase";
 import { redirect } from "next/navigation";
 import Link from "next/link";
 import { calculateAge } from "@/lib/utils";
-import { EXERCISE_DEFINITIONS, DOMAIN_LABELS, type Domain, type Theme } from "@/types";
+import { EXERCISE_DEFINITIONS, DOMAIN_LABELS, type Domain, type Theme, type SessionData } from "@/types";
 import { Trophy, Flame, Star } from "lucide-react";
 
 export default async function InicioPage() {
@@ -16,16 +16,45 @@ export default async function InicioPage() {
   const patientId = (session.user as { patientId?: string }).patientId;
   if (!patientId) redirect("/login");
 
-  const patient = await prisma.patient.findUnique({
-    where: { id: patientId },
-    include: {
-      trainingPlans: { where: { isActive: true }, take: 1 },
-      sessions: { orderBy: { completedAt: "desc" }, take: 20 },
-      achievements: { orderBy: { unlockedAt: "desc" }, take: 3 },
-    },
-  });
+  const { data: patientBase } = await supabase
+    .from('Patient')
+    .select('*')
+    .eq('id', patientId)
+    .single();
 
-  if (!patient) redirect("/login");
+  if (!patientBase) redirect("/login");
+
+  const [
+    { data: trainingPlans },
+    { data: sessions },
+    { data: achievements },
+  ] = await Promise.all([
+    supabase
+      .from('TrainingPlan')
+      .select('*')
+      .eq('patientId', patientId)
+      .eq('isActive', true)
+      .limit(1),
+    supabase
+      .from('Session')
+      .select('*')
+      .eq('patientId', patientId)
+      .order('completedAt', { ascending: false })
+      .limit(20),
+    supabase
+      .from('Achievement')
+      .select('*')
+      .eq('patientId', patientId)
+      .order('unlockedAt', { ascending: false })
+      .limit(3),
+  ]);
+
+  const patient = {
+    ...patientBase,
+    trainingPlans: trainingPlans ?? [],
+    sessions: (sessions ?? []) as SessionData[],
+    achievements: achievements ?? [],
+  };
 
   const theme = patient.theme as Theme;
   const activePlan = patient.trainingPlans[0];
@@ -33,15 +62,18 @@ export default async function InicioPage() {
     ? (JSON.parse(activePlan.exercises) as string[])
     : [];
 
+  const typedSessions = patient.sessions as SessionData[];
+  const typedAchievements = patient.achievements as Array<{ id: string; icon: string; title: string; unlockedAt: string }>;
+
   // Count sessions today
   const today = new Date();
   today.setHours(0, 0, 0, 0);
-  const todaySessions = patient.sessions.filter((s) => new Date(s.completedAt) >= today);
-  const totalPoints = Math.round(patient.sessions.reduce((sum, s) => sum + s.score, 0));
+  const todaySessions = typedSessions.filter((s) => new Date(s.completedAt) >= today);
+  const totalPoints = Math.round(typedSessions.reduce((sum, s) => sum + s.score, 0));
 
   // Calculate streak
   const uniqueDays = new Set(
-    patient.sessions.map((s) => {
+    typedSessions.map((s) => {
       const d = new Date(s.completedAt);
       return `${d.getFullYear()}-${d.getMonth()}-${d.getDate()}`;
     })
@@ -113,7 +145,7 @@ export default async function InicioPage() {
         </div>
         <div className={`p-3 text-center ${s.stat}`}>
           <Star className={`w-5 h-5 mx-auto mb-1 ${theme === "GAMIFIED" ? "text-yellow-400" : "text-purple-500"}`} />
-          <p className={`text-xl font-bold ${theme === "GAMIFIED" ? "text-white" : "text-gray-900"}`}>{patient.achievements.length}</p>
+          <p className={`text-xl font-bold ${theme === "GAMIFIED" ? "text-white" : "text-gray-900"}`}>{typedAchievements.length}</p>
           <p className={`text-xs ${s.sub}`}>{theme === "COLORFUL" ? "Conquistas 🏅" : "Conquistas"}</p>
         </div>
       </div>
@@ -168,13 +200,13 @@ export default async function InicioPage() {
       </div>
 
       {/* Recent achievements */}
-      {patient.achievements.length > 0 && (
+      {typedAchievements.length > 0 && (
         <div>
           <h2 className={`font-bold mb-3 ${theme === "GAMIFIED" ? "text-gray-200" : theme === "COLORFUL" ? "text-purple-700 text-lg" : "text-gray-800"}`}>
             {theme === "COLORFUL" ? "Suas conquistas 🏆" : "Conquistas"}
           </h2>
           <div className="flex gap-3 overflow-x-auto pb-2">
-            {patient.achievements.slice(0, 5).map((a) => (
+            {typedAchievements.slice(0, 5).map((a) => (
               <div key={a.id} className={`flex-shrink-0 p-3 text-center rounded-2xl border ${theme === "GAMIFIED" ? "bg-gray-800 border-yellow-500/30" : "bg-yellow-50 border-yellow-200"}`}>
                 <span className="text-3xl">{a.icon}</span>
                 <p className={`text-xs font-medium mt-1 ${theme === "GAMIFIED" ? "text-gray-300" : "text-gray-700"}`}>{a.title}</p>

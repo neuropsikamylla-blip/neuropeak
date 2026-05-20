@@ -2,7 +2,7 @@ export const dynamic = "force-dynamic";
 import { NextRequest, NextResponse } from "next/server";
 import { getServerSession } from "next-auth";
 import { authOptions } from "@/lib/auth";
-import { prisma } from "@/lib/db";
+import { supabase } from "@/lib/supabase";
 import {
   Document,
   Page,
@@ -165,23 +165,41 @@ export async function GET(req: NextRequest) {
   const start = startStr ? new Date(startStr) : new Date(Date.now() - 90 * 24 * 60 * 60 * 1000);
   const end = endStr ? new Date(endStr + "T23:59:59") : new Date();
 
-  const [patient, therapist] = await Promise.all([
-    prisma.patient.findFirst({
-      where: { id: patientId, therapistId },
-      include: {
-        sessions: {
-          where: { completedAt: { gte: start, lte: end } },
-          orderBy: { completedAt: "desc" },
-        },
-        achievements: true,
-      },
-    }),
-    prisma.user.findUnique({ where: { id: therapistId } }),
+  const [
+    { data: patientBase },
+    { data: sessionRows },
+    { data: achievements },
+    { data: therapist },
+  ] = await Promise.all([
+    supabase
+      .from('Patient')
+      .select('*')
+      .eq('id', patientId)
+      .eq('therapistId', therapistId)
+      .single(),
+    supabase
+      .from('Session')
+      .select('*')
+      .eq('patientId', patientId)
+      .gte('completedAt', start.toISOString())
+      .lte('completedAt', end.toISOString())
+      .order('completedAt', { ascending: false }),
+    supabase
+      .from('Achievement')
+      .select('*')
+      .eq('patientId', patientId),
+    supabase
+      .from('User')
+      .select('*')
+      .eq('id', therapistId)
+      .single(),
   ]);
 
-  if (!patient || !therapist) {
+  if (!patientBase || !therapist) {
     return NextResponse.json({ error: "Not found" }, { status: 404 });
   }
+
+  const patient = { ...patientBase, sessions: sessionRows ?? [], achievements: achievements ?? [] };
 
   const sessions = patient.sessions as SessionData[];
   const domainScores = calculateDomainScore(sessions);
