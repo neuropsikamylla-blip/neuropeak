@@ -5,6 +5,7 @@ import { motion, Reorder, AnimatePresence } from "framer-motion";
 import { calculateExerciseScore } from "@/lib/scoring";
 import { shuffle } from "@/lib/utils";
 import { useExerciseProgress } from "@/components/exercises/ExerciseWrapper";
+import { TutorialBase } from "@/components/exercises/TutorialBase";
 import type { ExerciseResult, Theme } from "@/types";
 
 interface SequenciamentoProps {
@@ -177,7 +178,78 @@ function buildTrial(stepCount: number) {
   };
 }
 
+const TUTORIAL_ITEMS_INITIAL = [
+  { id: "t3", label: "Assar", emoji: "🔥", correctIndex: 2 },
+  { id: "t1", label: "Juntar ingredientes", emoji: "🥣", correctIndex: 0 },
+  { id: "t2", label: "Misturar", emoji: "🥄", correctIndex: 1 },
+];
+
+function SequenciamentoTutorial({ theme, onDone }: { theme: Theme; onDone: () => void }) {
+  const steps = [
+    {
+      instruction: "Arraste os passos para colocá-los na ordem certa!",
+      content: (onStepDone: () => void) => <SequenciamentoDragStep theme={theme} onDone={onStepDone} />,
+    },
+  ];
+
+  return <TutorialBase theme={theme} title="Sequenciamento" steps={steps} onDone={onDone} />;
+}
+
+function SequenciamentoDragStep({ theme, onDone }: { theme: Theme; onDone: () => void }) {
+  const [items, setItems] = useState(TUTORIAL_ITEMS_INITIAL);
+  const [submitted, setSubmitted] = useState(false);
+  const done = useRef(false);
+
+  function handleReorder(newItems: typeof TUTORIAL_ITEMS_INITIAL) {
+    setItems(newItems);
+    // Auto-check: if all in correct order, advance
+    const isCorrect = newItems.every((item, idx) => item.correctIndex === idx);
+    if (isCorrect && !done.current) {
+      done.current = true;
+      setSubmitted(true);
+      setTimeout(onDone, 600);
+    }
+  }
+
+  const subClass = theme === "GAMIFIED" ? "text-gray-400" : "text-gray-500";
+
+  return (
+    <div className="space-y-2">
+      <p className={`text-xs text-center ${subClass}`}>Arraste para ordenar do 1º ao 3º passo:</p>
+      <Reorder.Group axis="y" values={items} onReorder={handleReorder} className="space-y-1.5">
+        {items.map((item, idx) => {
+          const isCorrect = submitted && item.correctIndex === idx;
+          return (
+            <Reorder.Item key={item.id} value={item} disabled={submitted}>
+              <motion.div
+                className={`flex items-center gap-2 p-2.5 rounded-xl border-2 ${
+                  isCorrect ? "border-green-500 bg-green-50" :
+                  theme === "GAMIFIED"
+                    ? "border-gray-600 bg-gray-700 cursor-grab active:cursor-grabbing"
+                    : "border-gray-200 bg-white cursor-grab active:cursor-grabbing hover:border-blue-300"
+                }`}
+                whileDrag={{ scale: 1.03, zIndex: 50 }}
+              >
+                <span className={`w-6 h-6 rounded-full flex items-center justify-center text-xs font-black flex-shrink-0 ${
+                  theme === "GAMIFIED" ? "bg-gray-600 text-gray-300" : "bg-gray-100 text-gray-600"
+                }`}>{idx + 1}</span>
+                <span className="text-lg">{item.emoji}</span>
+                <span className={`text-sm flex-1 ${theme === "GAMIFIED" ? "text-gray-200" : "text-gray-700"}`}>{item.label}</span>
+                {isCorrect && <span>✅</span>}
+              </motion.div>
+            </Reorder.Item>
+          );
+        })}
+      </Reorder.Group>
+      <p className={`text-xs text-center ${subClass}`}>
+        Ordem correta: Juntar → Misturar → Assar
+      </p>
+    </div>
+  );
+}
+
 export function Sequenciamento({ difficulty, theme, onComplete }: SequenciamentoProps) {
+  const [showTutorial, setShowTutorial] = useState(true);
   const reportProgress = useExerciseProgress();
 
   const [stepCount, setStepCount] = useState(initialSteps(difficulty));
@@ -192,8 +264,8 @@ export function Sequenciamento({ difficulty, theme, onComplete }: Sequenciamento
   });
   const currentTrial = trialData;
   const items = trialData.items;
-  function setItems(fn: (prev: Step[]) => Step[]) {
-    setTrialData((prev) => ({ ...prev, items: fn(prev.items) }));
+  function setItems(newItems: Step[]) {
+    setTrialData((prev) => ({ ...prev, items: newItems }));
   }
   const [submitted, setSubmitted] = useState(false);
   const [resultAcc, setResultAcc] = useState(0);
@@ -250,6 +322,10 @@ export function Sequenciamento({ difficulty, theme, onComplete }: Sequenciamento
         startNewTrial(nextSteps);
       }
     }, 1800);
+  }
+
+  if (showTutorial) {
+    return <SequenciamentoTutorial theme={theme} onDone={() => setShowTutorial(false)} />;
   }
 
   const bg = theme === "GAMIFIED" ? "bg-gray-950" : theme === "COLORFUL" ? "bg-gradient-to-br from-amber-50 to-orange-50" : "bg-gray-50";

@@ -4,6 +4,7 @@ import { useState, useEffect, useCallback, useRef } from "react";
 import { motion } from "framer-motion";
 import { calculateExerciseScore } from "@/lib/scoring";
 import { useExerciseProgress } from "@/components/exercises/ExerciseWrapper";
+import { TutorialBase } from "@/components/exercises/TutorialBase";
 import type { ExerciseResult, Theme } from "@/types";
 
 interface LabirintoProps {
@@ -105,7 +106,169 @@ const PALETTES = {
   },
 };
 
+// Simple 5x5 tutorial maze — carved manually (all walls open in a simple path)
+function makeTutorialMaze(): Cell[][] {
+  // Create a simple L-shaped path: go right across top row, then down right column
+  const grid: Cell[][] = Array.from({ length: 5 }, () =>
+    Array.from({ length: 5 }, () => ({ N: true, S: true, E: true, W: true }))
+  );
+  // Open passages along a simple S-path
+  const path: [number, number, "N" | "S" | "E" | "W", "N" | "S" | "E" | "W"][] = [
+    [0, 0, "E", "W"], [0, 1, "E", "W"], [0, 2, "E", "W"], [0, 3, "E", "W"],
+    [0, 4, "S", "N"], [1, 4, "S", "N"], [2, 4, "S", "N"], [3, 4, "S", "N"],
+    [4, 3, "W", "E"], [4, 2, "W", "E"], [4, 1, "W", "E"],
+    [3, 0, "S", "N"], [2, 0, "S", "N"], [1, 0, "S", "N"],
+    [1, 0, "E", "W"], [1, 1, "E", "W"], [1, 2, "E", "W"], [1, 2, "S", "N"],
+    [2, 2, "E", "W"], [2, 3, "S", "N"], [3, 3, "W", "E"], [3, 2, "W", "E"],
+    [3, 2, "S", "N"], [4, 2, "E", "W"], [4, 3, "E", "W"], [4, 4, "N", "S"],
+  ];
+  for (const [r, c, w, o] of path) {
+    const nr = r + ({ N: -1, S: 1, E: 0, W: 0 }[w] ?? 0);
+    const nc = c + ({ N: 0, S: 0, E: 1, W: -1 }[w] ?? 0);
+    if (nr >= 0 && nr < 5 && nc >= 0 && nc < 5) {
+      grid[r][c][w] = false;
+      grid[nr][nc][o] = false;
+    }
+  }
+  return grid;
+}
+
+const TUTORIAL_MAZE = makeTutorialMaze();
+
+function LabirintoTutorial({ theme, onDone }: { theme: Theme; onDone: () => void }) {
+  const steps = [
+    {
+      instruction: "Você só vê parte do labirinto! Navegue até a bandeira 🏁",
+      content: (onStepDone: () => void) => <LabirintoShowStep theme={theme} onDone={onStepDone} />,
+    },
+    {
+      instruction: "Experimente! Mova até a bandeira 🏁",
+      content: (onStepDone: () => void) => <LabirintoInteractStep theme={theme} onDone={onStepDone} />,
+    },
+  ];
+
+  return <TutorialBase theme={theme} title="Labirinto" steps={steps} onDone={onDone} />;
+}
+
+function LabirintoShowStep({ theme, onDone }: { theme: Theme; onDone: () => void }) {
+  const pal = PALETTES[theme];
+
+  useEffect(() => {
+    const t = setTimeout(onDone, 2500);
+    return () => clearTimeout(t);
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+
+  const cellPx = 28;
+  const size = 5;
+  const vp = size * cellPx;
+  const wt = 3;
+
+  return (
+    <div className="flex flex-col items-center gap-2">
+      <svg width={vp} height={vp} style={{ borderRadius: 8, border: `2px solid rgba(255,255,255,0.15)`, display: "block" }}>
+        <rect x={0} y={0} width={vp} height={vp} fill={pal.svgBg} />
+        {TUTORIAL_MAZE.map((row, r) =>
+          row.map((cell, c) => {
+            const wx = c * cellPx, wy = r * cellPx;
+            return (
+              <g key={`${r},${c}`}>
+                <rect x={wx + wt} y={wy + wt} width={cellPx - wt * 2} height={cellPx - wt * 2} fill={pal.floor} />
+                {!cell.E && c < size - 1 && <rect x={wx + cellPx - wt} y={wy + wt} width={wt} height={cellPx - wt * 2} fill={pal.floor} />}
+                {!cell.S && r < size - 1 && <rect x={wx + wt} y={wy + cellPx - wt} width={cellPx - wt * 2} height={wt} fill={pal.floor} />}
+              </g>
+            );
+          })
+        )}
+        <rect x={(size-1)*cellPx+wt+1} y={(size-1)*cellPx+wt+1} width={cellPx-wt*2-2} height={cellPx-wt*2-2} fill={pal.goal} rx={2} opacity={0.85} />
+        <text x={(size-1)*cellPx+cellPx/2} y={(size-1)*cellPx+cellPx/2+4} textAnchor="middle" fontSize={12}>🏁</text>
+        <circle cx={cellPx / 2} cy={cellPx / 2} r={cellPx * 0.28} fill={pal.player} />
+      </svg>
+      <p className={`text-xs text-center ${theme === "GAMIFIED" ? "text-gray-400" : "text-gray-500"}`}>
+        Use as setas para se mover. 🏁 = destino
+      </p>
+    </div>
+  );
+}
+
+function LabirintoInteractStep({ theme, onDone }: { theme: Theme; onDone: () => void }) {
+  const pal = PALETTES[theme];
+  const [player, setPlayer] = useState({ r: 0, c: 0 });
+  const [moveCount, setMoveCount] = useState(0);
+  const done = useRef(false);
+  const playerRef = useRef({ r: 0, c: 0 });
+  playerRef.current = player;
+
+  const cellPx = 28;
+  const size = 5;
+  const vp = size * cellPx;
+  const wt = 3;
+
+  const move = useCallback((dir: "N" | "S" | "E" | "W") => {
+    if (done.current) return;
+    const { r, c } = playerRef.current;
+    if (TUTORIAL_MAZE[r][c][dir]) return;
+    const [dr, dc] = ({ N: [-1, 0], S: [1, 0], E: [0, 1], W: [0, -1] })[dir];
+    const nr = r + dr, nc = c + dc;
+    if (nr < 0 || nr >= size || nc < 0 || nc >= size) return;
+    const newPos = { r: nr, c: nc };
+    setPlayer(newPos);
+    playerRef.current = newPos;
+    const newCount = moveCount + 1;
+    setMoveCount(newCount);
+    if ((nr === size - 1 && nc === size - 1) || newCount >= 5) {
+      done.current = true;
+      setTimeout(onDone, 400);
+    }
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [moveCount]);
+
+  useEffect(() => {
+    function onKey(e: KeyboardEvent) {
+      const map: Record<string, "N"|"S"|"E"|"W"> = { ArrowUp: "N", ArrowDown: "S", ArrowRight: "E", ArrowLeft: "W", w: "N", s: "S", d: "E", a: "W" };
+      if (map[e.key]) { e.preventDefault(); move(map[e.key]); }
+    }
+    window.addEventListener("keydown", onKey);
+    return () => window.removeEventListener("keydown", onKey);
+  }, [move]);
+
+  const btnBase = `flex items-center justify-center rounded-lg font-black text-xl select-none active:scale-90 transition-transform touch-none ${
+    theme === "GAMIFIED" ? "bg-cyan-500/15 text-cyan-400 border border-cyan-500/40" : theme === "COLORFUL" ? "bg-purple-100 text-purple-700" : "bg-gray-100 text-gray-700"
+  }`;
+
+  return (
+    <div className="flex flex-col items-center gap-3">
+      <svg width={vp} height={vp} style={{ borderRadius: 8, border: `2px solid rgba(255,255,255,0.15)`, display: "block" }}>
+        <rect x={0} y={0} width={vp} height={vp} fill={pal.svgBg} />
+        {TUTORIAL_MAZE.map((row, r) =>
+          row.map((cell, c) => {
+            const wx = c * cellPx, wy = r * cellPx;
+            return (
+              <g key={`${r},${c}`}>
+                <rect x={wx + wt} y={wy + wt} width={cellPx - wt * 2} height={cellPx - wt * 2} fill={pal.floor} />
+                {!cell.E && c < size - 1 && <rect x={wx + cellPx - wt} y={wy + wt} width={wt} height={cellPx - wt * 2} fill={pal.floor} />}
+                {!cell.S && r < size - 1 && <rect x={wx + wt} y={wy + cellPx - wt} width={cellPx - wt * 2} height={wt} fill={pal.floor} />}
+              </g>
+            );
+          })
+        )}
+        <rect x={(size-1)*cellPx+wt+1} y={(size-1)*cellPx+wt+1} width={cellPx-wt*2-2} height={cellPx-wt*2-2} fill={pal.goal} rx={2} opacity={0.85} />
+        <text x={(size-1)*cellPx+cellPx/2} y={(size-1)*cellPx+cellPx/2+4} textAnchor="middle" fontSize={12}>🏁</text>
+        <motion.circle cx={player.c * cellPx + cellPx / 2} cy={player.r * cellPx + cellPx / 2} r={cellPx * 0.28} fill={pal.player} animate={{ cx: player.c * cellPx + cellPx / 2, cy: player.r * cellPx + cellPx / 2 }} transition={{ duration: 0.1 }} />
+      </svg>
+      <div className="grid gap-1.5" style={{ gridTemplateColumns: "repeat(3, 40px)", gridTemplateRows: "repeat(3, 40px)" }}>
+        <div /><button className={btnBase} style={{ height: 40 }} onPointerDown={(e) => { e.preventDefault(); move("N"); }}>↑</button><div />
+        <button className={btnBase} style={{ height: 40 }} onPointerDown={(e) => { e.preventDefault(); move("W"); }}>←</button>
+        <div className={`rounded-lg ${theme === "GAMIFIED" ? "bg-gray-800" : "bg-black/10"}`} />
+        <button className={btnBase} style={{ height: 40 }} onPointerDown={(e) => { e.preventDefault(); move("E"); }}>→</button>
+        <div /><button className={btnBase} style={{ height: 40 }} onPointerDown={(e) => { e.preventDefault(); move("S"); }}>↓</button><div />
+      </div>
+    </div>
+  );
+}
+
 export function Labirinto({ difficulty, theme, onComplete }: LabirintoProps) {
+  const [showTutorial, setShowTutorial] = useState(true);
   const reportProgress = useExerciseProgress();
   const pal = PALETTES[theme];
 
@@ -136,12 +299,12 @@ export function Labirinto({ difficulty, theme, onComplete }: LabirintoProps) {
 
   // ── Timer ────────────────────────────────────────────────────────────
   useEffect(() => {
-    if (done || timedOut) return;
+    if (showTutorial || done || timedOut) return;
     const t = setInterval(() => {
       setElapsed(Math.round((Date.now() - mazeStartTime.current) / 1000));
     }, 500);
     return () => clearInterval(t);
-  }, [done, timedOut, mazeNum]);
+  }, [showTutorial, done, timedOut, mazeNum]);
 
   useEffect(() => {
     if (!done && !timedOut && elapsed >= timeLimit) {
@@ -233,6 +396,10 @@ export function Labirinto({ difficulty, theme, onComplete }: LabirintoProps) {
     window.addEventListener("keydown", onKey);
     return () => window.removeEventListener("keydown", onKey);
   }, [move]);
+
+  if (showTutorial) {
+    return <LabirintoTutorial theme={theme} onDone={() => setShowTutorial(false)} />;
+  }
 
   // ── SVG rendering ────────────────────────────────────────────────────
   // World origin shift so player is always centered in viewport

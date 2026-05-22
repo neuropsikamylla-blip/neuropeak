@@ -5,6 +5,7 @@ import { motion, AnimatePresence } from "framer-motion";
 import { calculateExerciseScore } from "@/lib/scoring";
 import { shuffle } from "@/lib/utils";
 import { useExerciseProgress } from "@/components/exercises/ExerciseWrapper";
+import { TutorialBase } from "@/components/exercises/TutorialBase";
 import type { ExerciseResult, Theme } from "@/types";
 
 interface TrilhaVisualProps {
@@ -45,7 +46,98 @@ function generateCells(count: number): Cell[] {
 
 type RoundPhase = "playing" | "feedback";
 
+// Fixed 4-cell tutorial positions (as % in play area)
+const TUTORIAL_CELLS = [
+  { id: 1, x: 20, y: 25 },
+  { id: 2, x: 65, y: 20 },
+  { id: 3, x: 50, y: 65 },
+  { id: 4, x: 25, y: 70 },
+];
+
+function TrilhaTutorialStep({
+  theme,
+  startFrom,
+  onDone,
+}: {
+  theme: Theme;
+  startFrom: number; // first cell id the user should click
+  onDone: () => void;
+}) {
+  const [nextExpected, setNextExpected] = useState(startFrom);
+  const [path, setPath] = useState<{ x: number; y: number }[]>(() =>
+    startFrom === 1 ? [] : TUTORIAL_CELLS.filter((c) => c.id < startFrom).map((c) => ({ x: c.x, y: c.y }))
+  );
+  const done = useRef(false);
+
+  const lineColor = theme === "GAMIFIED" ? "#22d3ee" : theme === "COLORFUL" ? "#818cf8" : "#93c5fd";
+
+  function cellStyle(cell: { id: number }) {
+    const isCompleted = cell.id < nextExpected;
+    const base = "absolute flex items-center justify-center font-black border-2 transform -translate-x-1/2 -translate-y-1/2 w-11 h-11 rounded-xl text-sm select-none transition-all";
+    if (isCompleted) return `${base} ${theme === "GAMIFIED" ? "bg-cyan-800/70 border-cyan-600/50 text-cyan-300 scale-90" : theme === "COLORFUL" ? "bg-indigo-400 border-indigo-500 text-white scale-90" : "bg-blue-300 border-blue-400 text-white scale-90"}`;
+    return `${base} ${theme === "GAMIFIED" ? "bg-gray-800 border-gray-600 text-gray-100 hover:bg-gray-700 shadow-md active:scale-90" : theme === "COLORFUL" ? "bg-white border-indigo-300 text-indigo-800 hover:bg-indigo-50 shadow-sm active:scale-90" : "bg-white border-gray-300 text-gray-700 hover:border-blue-400 shadow-sm active:scale-90"}`;
+  }
+
+  function handleClick(cell: { id: number; x: number; y: number }) {
+    if (done.current || cell.id !== nextExpected) return;
+    const newPath = [...path, { x: cell.x, y: cell.y }];
+    setPath(newPath);
+    const newNext = nextExpected + 1;
+    setNextExpected(newNext);
+    if (newNext > 4) { done.current = true; setTimeout(onDone, 300); }
+  }
+
+  return (
+    <div className={`relative rounded-xl overflow-hidden ${theme === "GAMIFIED" ? "bg-gray-950" : theme === "COLORFUL" ? "bg-indigo-50/60" : "bg-gray-50"}`} style={{ paddingBottom: "60%", minHeight: 160 }}>
+      <svg className="absolute inset-0 w-full h-full pointer-events-none" style={{ overflow: "visible" }}>
+        {path.length > 1 && path.slice(1).map((pt, i) => (
+          <motion.line
+            key={`l${i}`}
+            x1={`${path[i].x}%`} y1={`${path[i].y}%`}
+            x2={`${pt.x}%`} y2={`${pt.y}%`}
+            stroke={lineColor} strokeWidth={2.5} strokeLinecap="round"
+            initial={{ pathLength: 0, opacity: 0 }}
+            animate={{ pathLength: 1, opacity: 0.7 }}
+            transition={{ duration: 0.2 }}
+          />
+        ))}
+      </svg>
+      {TUTORIAL_CELLS.map((cell) => (
+        <button
+          key={cell.id}
+          onClick={() => handleClick(cell)}
+          disabled={done.current}
+          className={cellStyle(cell)}
+          style={{ left: `${cell.x}%`, top: `${cell.y}%` }}
+        >
+          {cell.id}
+        </button>
+      ))}
+    </div>
+  );
+}
+
+function TrilhaVisualTutorial({ theme, onDone }: { theme: Theme; onDone: () => void }) {
+  const steps = [
+    {
+      instruction: "Números estão espalhados na tela. Toque em ordem crescente!",
+      content: (onStepDone: () => void) => (
+        <TrilhaTutorialStep theme={theme} startFrom={1} onDone={onStepDone} />
+      ),
+    },
+    {
+      instruction: "Continue! Agora clique 2, 3, 4 para completar a trilha.",
+      content: (onStepDone: () => void) => (
+        <TrilhaTutorialStep theme={theme} startFrom={2} onDone={onStepDone} />
+      ),
+    },
+  ];
+
+  return <TutorialBase theme={theme} title="Conecta Números" steps={steps} onDone={onDone} />;
+}
+
 export function TrilhaVisual({ difficulty, theme, onComplete }: TrilhaVisualProps) {
+  const [showTutorial, setShowTutorial] = useState(true);
   const reportProgress = useExerciseProgress();
 
   const [count, setCount] = useState(initialCount(difficulty));
@@ -123,6 +215,10 @@ export function TrilhaVisual({ difficulty, theme, onComplete }: TrilhaVisualProp
       setErrors((e) => e + 1);
     }
   }, [roundPhase, nextExpected, count, errors, streak, round, roundResults, difficulty, cells, onComplete, reportProgress, startNewRound]);
+
+  if (showTutorial) {
+    return <TrilhaVisualTutorial theme={theme} onDone={() => setShowTutorial(false)} />;
+  }
 
   // ── Theme styles ──────────────────────────────────────────────────
   const bg =

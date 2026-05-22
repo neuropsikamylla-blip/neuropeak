@@ -5,6 +5,7 @@ import { motion, AnimatePresence } from "framer-motion";
 import { calculateExerciseScore } from "@/lib/scoring";
 import { shuffle } from "@/lib/utils";
 import { useExerciseProgress } from "@/components/exercises/ExerciseWrapper";
+import { TutorialBase } from "@/components/exercises/TutorialBase";
 import type { ExerciseResult, Theme } from "@/types";
 
 interface DecisaoRapidaProps {
@@ -44,7 +45,74 @@ const ITEMS: Item[] = [
 
 const MAX_ITEMS = 20;
 
+function DecisaoRapidaTutorial({ theme, onDone }: { theme: Theme; onDone: () => void }) {
+  const steps = [
+    {
+      instruction: "Você vai ver uma imagem. Classifique: é um ANIMAL ou OBJETO?",
+      content: (onStepDone: () => void) => <DecisaoTutorialStep theme={theme} onDone={onStepDone} />,
+    },
+  ];
+
+  return <TutorialBase theme={theme} title="Decisão Rápida" steps={steps} onDone={onDone} />;
+}
+
+function DecisaoTutorialStep({ theme, onDone }: { theme: Theme; onDone: () => void }) {
+  const [selected, setSelected] = useState<string | null>(null);
+
+  const btnClass = (cat: string) => {
+    const isCorrect = cat === "Animal";
+    const isSelected = selected === cat;
+
+    if (isSelected && isCorrect) return "border-green-500 bg-green-50 text-green-700";
+    if (isSelected && !isCorrect) return "border-red-400 bg-red-50 text-red-600";
+    if (!selected) {
+      return theme === "GAMIFIED"
+        ? "bg-gray-700 border-cyan-500 text-cyan-400 hover:bg-gray-600"
+        : theme === "COLORFUL"
+        ? "bg-gradient-to-br from-purple-100 to-pink-100 border-purple-400 text-purple-700 hover:from-purple-200"
+        : "bg-white border-blue-300 text-blue-700 hover:bg-blue-50";
+    }
+    return theme === "GAMIFIED" ? "bg-gray-700 border-gray-600 text-gray-400" : "bg-gray-50 border-gray-200 text-gray-400";
+  };
+
+  function handleClick(cat: string) {
+    if (selected) return;
+    setSelected(cat);
+    if (cat === "Animal") {
+      setTimeout(onDone, 600);
+    }
+  }
+
+  return (
+    <div className="flex flex-col items-center gap-4">
+      <div className={`rounded-2xl py-8 px-10 border-4 text-center ${
+        selected === "Animal" ? "border-green-500 bg-green-50" : theme === "GAMIFIED" ? "border-gray-600 bg-gray-700" : "border-gray-200 bg-gray-50"
+      }`}>
+        <div className="text-5xl mb-2">🐕</div>
+        <p className={`text-xl font-bold ${theme === "GAMIFIED" ? "text-gray-100" : "text-gray-800"}`}>Cachorro</p>
+      </div>
+      <div className="grid grid-cols-2 gap-3 w-full">
+        {["Animal", "Objeto"].map((cat) => (
+          <motion.button
+            key={cat}
+            onClick={() => handleClick(cat)}
+            disabled={!!selected}
+            className={`py-4 rounded-xl font-bold text-lg border-2 ${btnClass(cat)}`}
+            whileTap={{ scale: 0.97 }}
+          >
+            {cat}
+          </motion.button>
+        ))}
+      </div>
+      {selected && selected !== "Animal" && (
+        <p className="text-sm text-orange-600 text-center">Cachorro é um Animal! Tente novamente.</p>
+      )}
+    </div>
+  );
+}
+
 export function DecisaoRapida({ difficulty, theme, onComplete }: DecisaoRapidaProps) {
+  const [showTutorial, setShowTutorial] = useState(true);
   const reportProgress = useExerciseProgress();
   const [sequence] = useState(() => {
     const shuffled = shuffle(ITEMS);
@@ -100,6 +168,10 @@ export function DecisaoRapida({ difficulty, theme, onComplete }: DecisaoRapidaPr
         setCurrent(nextCurrent);
       }
     }, 500);
+  }
+
+  if (showTutorial) {
+    return <DecisaoRapidaTutorial theme={theme} onDone={() => setShowTutorial(false)} />;
   }
 
   const bgClass = theme === "GAMIFIED" ? "bg-gray-950" : theme === "COLORFUL" ? "bg-gradient-to-br from-teal-50 to-cyan-50" : "bg-gray-50";

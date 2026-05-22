@@ -5,6 +5,7 @@ import { motion } from "framer-motion";
 import { calculateExerciseScore } from "@/lib/scoring";
 import { shuffle } from "@/lib/utils";
 import { useExerciseProgress } from "@/components/exercises/ExerciseWrapper";
+import { TutorialBase } from "@/components/exercises/TutorialBase";
 import type { ExerciseResult, Theme } from "@/types";
 
 interface IdentificacaoSimbolosProps {
@@ -28,7 +29,73 @@ function makeOptions(targetSymbol: string, dCount: number) {
   return shuffle([targetSymbol, ...distractors]);
 }
 
+const TUTORIAL_OPTIONS = ["○", "★", "△", "□"];
+const TUTORIAL_TARGET = "★";
+
+function IdentificacaoTutorial({ theme, onDone }: { theme: Theme; onDone: () => void }) {
+  const steps = [
+    {
+      instruction: "Um símbolo alvo aparece no topo. Encontre-o entre os outros!",
+      content: (onStepDone: () => void) => <IdentificacaoStep theme={theme} onDone={onStepDone} />,
+    },
+  ];
+
+  return <TutorialBase theme={theme} title="Identificação de Símbolos" steps={steps} onDone={onDone} />;
+}
+
+function IdentificacaoStep({ theme, onDone }: { theme: Theme; onDone: () => void }) {
+  const [selected, setSelected] = useState<string | null>(null);
+
+  function handleSelect(sym: string) {
+    if (selected) return;
+    setSelected(sym);
+    if (sym === TUTORIAL_TARGET) {
+      setTimeout(onDone, 500);
+    }
+  }
+
+  return (
+    <div className="flex flex-col gap-3">
+      <div className={`text-center p-3 rounded-xl ${theme === "GAMIFIED" ? "bg-gray-700" : "bg-gray-50"}`}>
+        <p className={`text-xs mb-1 ${theme === "GAMIFIED" ? "text-gray-400" : "text-gray-500"}`}>ALVO:</p>
+        <span className={`text-4xl font-bold ${theme === "GAMIFIED" ? "text-cyan-400" : "text-blue-600"}`}>{TUTORIAL_TARGET}</span>
+      </div>
+      <div className="grid grid-cols-4 gap-2">
+        {TUTORIAL_OPTIONS.map((sym) => {
+          const isTarget = sym === TUTORIAL_TARGET;
+          let cellStyle = "";
+          if (selected) {
+            if (isTarget) cellStyle = "bg-green-100 border-green-500 text-green-700";
+            else cellStyle = theme === "GAMIFIED" ? "bg-gray-700 border-gray-600 text-gray-400" : "bg-gray-50 border-gray-200 text-gray-500";
+          } else {
+            cellStyle = theme === "GAMIFIED"
+              ? "bg-gray-700 border-gray-600 text-gray-200 hover:bg-gray-600 cursor-pointer"
+              : "bg-white border-gray-200 text-gray-700 hover:border-blue-400 hover:bg-blue-50 cursor-pointer";
+          }
+
+          return (
+            <motion.button
+              key={sym}
+              onClick={() => handleSelect(sym)}
+              disabled={!!selected}
+              className={`aspect-square rounded-lg border-2 text-3xl flex items-center justify-center ${cellStyle}`}
+              whileHover={!selected ? { scale: 1.08 } : {}}
+              whileTap={!selected ? { scale: 0.92 } : {}}
+            >
+              {sym}
+            </motion.button>
+          );
+        })}
+      </div>
+      {selected && selected !== TUTORIAL_TARGET && (
+        <p className="text-sm text-orange-600 text-center">Esse não é o alvo! O alvo é ★</p>
+      )}
+    </div>
+  );
+}
+
 export function IdentificacaoSimbolos({ difficulty, theme, onComplete }: IdentificacaoSimbolosProps) {
+  const [showTutorial, setShowTutorial] = useState(true);
   const reportProgress = useExerciseProgress();
 
   const [distractorCount, setDistractorCount] = useState(initialDistractors(difficulty));
@@ -96,6 +163,10 @@ export function IdentificacaoSimbolos({ difficulty, theme, onComplete }: Identif
         advanceTrial(newTarget, nextDistr);
       }
     }, 600);
+  }
+
+  if (showTutorial) {
+    return <IdentificacaoTutorial theme={theme} onDone={() => setShowTutorial(false)} />;
   }
 
   const bgClass = theme === "GAMIFIED" ? "bg-gray-950" : theme === "COLORFUL" ? "bg-gradient-to-br from-indigo-50 to-violet-50" : "bg-gray-50";

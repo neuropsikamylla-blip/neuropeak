@@ -4,6 +4,7 @@ import { useState, useRef, useCallback, useEffect } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { calculateExerciseScore } from "@/lib/scoring";
 import { useExerciseProgress } from "@/components/exercises/ExerciseWrapper";
+import { TutorialBase } from "@/components/exercises/TutorialBase";
 import type { ExerciseResult, Theme } from "@/types";
 
 interface JogoMemoriaProps {
@@ -44,7 +45,132 @@ function buildCards(pairs: number): Card[] {
 
 type GamePhase = "memorize" | "playing" | "feedback";
 
+const TUTORIAL_CARDS = [
+  { id: 0, emoji: "🐶", matched: false },
+  { id: 1, emoji: "🐱", matched: false },
+  { id: 2, emoji: "🐶", matched: false },
+  { id: 3, emoji: "🐱", matched: false },
+];
+
+function JogoMemoriaTutorial({ theme, onDone }: { theme: Theme; onDone: () => void }) {
+  const cardBack = {
+    CLINICAL: "bg-blue-100 border-blue-300",
+    COLORFUL: "bg-gradient-to-br from-purple-400 to-pink-400",
+    GAMIFIED: "bg-gradient-to-br from-cyan-700 to-blue-800 border-cyan-600",
+  }[theme];
+
+  const cardFront = {
+    CLINICAL: "bg-white border-blue-200",
+    COLORFUL: "bg-white border-purple-200",
+    GAMIFIED: "bg-gray-700 border-cyan-500/40",
+  }[theme];
+
+  const steps = [
+    {
+      instruction: "Memorize onde estão os pares! Você tem 3 segundos.",
+      content: (onStepDone: () => void) => (
+        <JogoMemoriaShowStep theme={theme} cardFront={cardFront} onDone={onStepDone} />
+      ),
+    },
+    {
+      instruction: "Agora encontre os pares! Toque duas cartas iguais.",
+      content: (onStepDone: () => void) => (
+        <JogoMemoriaPlayStep theme={theme} cardBack={cardBack} cardFront={cardFront} onDone={onStepDone} />
+      ),
+    },
+  ];
+
+  return <TutorialBase theme={theme} title="Jogo da Memória" steps={steps} onDone={onDone} />;
+}
+
+function JogoMemoriaShowStep({ theme, cardFront, onDone }: { theme: Theme; cardFront: string; onDone: () => void }) {
+  const [countdown, setCountdown] = useState(3);
+
+  useEffect(() => {
+    const interval = setInterval(() => {
+      setCountdown((c) => {
+        if (c <= 1) { clearInterval(interval); onDone(); return 0; }
+        return c - 1;
+      });
+    }, 1000);
+    return () => clearInterval(interval);
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+
+  return (
+    <div className="text-center">
+      <p className={`text-sm mb-3 font-medium ${theme === "GAMIFIED" ? "text-gray-400" : "text-gray-500"}`}>
+        Memorize ({countdown}s)
+      </p>
+      <div className="grid grid-cols-2 gap-3 max-w-[180px] mx-auto">
+        {TUTORIAL_CARDS.map((c) => (
+          <div key={c.id} className={`aspect-square rounded-xl border-2 flex items-center justify-center text-3xl ${cardFront}`}>
+            {c.emoji}
+          </div>
+        ))}
+      </div>
+    </div>
+  );
+}
+
+function JogoMemoriaPlayStep({ theme, cardBack, cardFront, onDone }: { theme: Theme; cardBack: string; cardFront: string; onDone: () => void }) {
+  const [flipped, setFlipped] = useState<number[]>([]);
+  const [matched, setMatched] = useState<number[]>([]);
+  const [locked, setLocked] = useState(false);
+  const done = useRef(false);
+
+  function handleFlip(id: number) {
+    if (locked || done.current || flipped.includes(id) || matched.includes(id)) return;
+    const newFlipped = [...flipped, id];
+    setFlipped(newFlipped);
+
+    if (newFlipped.length === 2) {
+      setLocked(true);
+      const [a, b] = newFlipped;
+      if (TUTORIAL_CARDS[a].emoji === TUTORIAL_CARDS[b].emoji) {
+        setTimeout(() => {
+          const newMatched = [...matched, a, b];
+          setMatched(newMatched);
+          setFlipped([]);
+          setLocked(false);
+          if (newMatched.length === 4) { done.current = true; onDone(); }
+        }, 500);
+      } else {
+        setTimeout(() => { setFlipped([]); setLocked(false); }, 800);
+      }
+    }
+  }
+
+  function cardClass(id: number) {
+    if (matched.includes(id)) return `bg-green-100 border-green-300`;
+    if (flipped.includes(id)) return cardFront;
+    return cardBack;
+  }
+
+  return (
+    <div className="grid grid-cols-2 gap-3 max-w-[180px] mx-auto">
+      {TUTORIAL_CARDS.map((c) => {
+        const visible = flipped.includes(c.id) || matched.includes(c.id);
+        return (
+          <motion.button
+            key={c.id}
+            onClick={() => handleFlip(c.id)}
+            disabled={locked || matched.includes(c.id)}
+            className={`aspect-square rounded-xl border-2 flex items-center justify-center text-3xl ${cardClass(c.id)}`}
+            whileTap={{ scale: 0.92 }}
+          >
+            {visible ? c.emoji : (
+              <span className={`text-lg font-bold ${theme === "GAMIFIED" ? "text-cyan-300" : theme === "COLORFUL" ? "text-white" : "text-blue-400"}`}>?</span>
+            )}
+          </motion.button>
+        );
+      })}
+    </div>
+  );
+}
+
 export function JogoMemoria({ difficulty, theme, onComplete }: JogoMemoriaProps) {
+  const [showTutorial, setShowTutorial] = useState(true);
   const reportProgress = useExerciseProgress();
 
   const [pairCount, setPairCount] = useState(initialPairs(difficulty));
@@ -66,7 +192,7 @@ export function JogoMemoria({ difficulty, theme, onComplete }: JogoMemoriaProps)
 
   // Countdown during memorize phase
   useEffect(() => {
-    if (gamePhase !== "memorize") return;
+    if (showTutorial || gamePhase !== "memorize") return;
     setCountdown(MEMORIZE_SECS);
     const interval = setInterval(() => {
       setCountdown((c) => {
@@ -169,6 +295,10 @@ export function JogoMemoria({ difficulty, theme, onComplete }: JogoMemoriaProps)
     }
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [gamePhase, locked, cards, flipped, matchedCount, errors, pairCount]);
+
+  if (showTutorial) {
+    return <JogoMemoriaTutorial theme={theme} onDone={() => setShowTutorial(false)} />;
+  }
 
   const cols = pairCount * 2 <= 8 ? 4 : 5;
 

@@ -4,6 +4,7 @@ import { useState, useRef, useCallback, useEffect } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { calculateExerciseScore } from "@/lib/scoring";
 import { useExerciseProgress } from "@/components/exercises/ExerciseWrapper";
+import { TutorialBase } from "@/components/exercises/TutorialBase";
 import type { ExerciseResult, Theme } from "@/types";
 
 interface TempoReacaoProps {
@@ -50,7 +51,121 @@ function makeBalloon(isTarget: boolean, ms: number): Balloon {
   };
 }
 
+function BalloonShape({ color, size = 70 }: { color: string; size?: number }) {
+  return (
+    <div style={{ display: "flex", flexDirection: "column", alignItems: "center" }}>
+      <div style={{
+        width: size, height: size,
+        backgroundColor: color,
+        borderRadius: "50% 50% 48% 52% / 55% 55% 45% 45%",
+        boxShadow: `inset -4px -4px 10px rgba(0,0,0,0.2), inset 4px 4px 8px rgba(255,255,255,0.3)`,
+        position: "relative",
+      }}>
+        <div style={{ position: "absolute", top: "18%", left: "20%", width: "26%", height: "16%", backgroundColor: "rgba(255,255,255,0.4)", borderRadius: "50%", transform: "rotate(-30deg)" }} />
+      </div>
+      <div style={{ width: 6, height: 5, backgroundColor: color, borderRadius: "0 0 3px 3px", marginTop: -1 }} />
+      <div style={{ width: 1.5, height: 14, backgroundColor: "#9ca3af", opacity: 0.7 }} />
+    </div>
+  );
+}
+
+function TempoReacaoTutorial({ theme, onDone }: { theme: Theme; onDone: () => void }) {
+  const steps = [
+    {
+      instruction: "Balões coloridos vão cair. Toque APENAS nos VERDES!",
+      content: (onStepDone: () => void) => <TempoReacaoShowStep theme={theme} onDone={onStepDone} />,
+    },
+    {
+      instruction: "Agora experimente! Um balão verde vai cair.",
+      content: (onStepDone: () => void) => <TempoReacaoTapStep theme={theme} onDone={onStepDone} />,
+    },
+  ];
+
+  return <TutorialBase theme={theme} title="Balões" steps={steps} onDone={onDone} />;
+}
+
+function TempoReacaoShowStep({ theme, onDone }: { theme: Theme; onDone: () => void }) {
+  useEffect(() => {
+    const t = setTimeout(onDone, 2500);
+    return () => clearTimeout(t);
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+
+  return (
+    <div className="flex flex-col items-center gap-2">
+      <div className="flex gap-4 justify-center items-end">
+        <div className="flex flex-col items-center">
+          <BalloonShape color="#dc2626" size={55} />
+          <p className="text-xs text-red-500 mt-1">NÃO</p>
+        </div>
+        <div className="flex flex-col items-center">
+          <div className="ring-4 ring-green-400 rounded-full">
+            <BalloonShape color={GREEN} size={65} />
+          </div>
+          <p className="text-xs text-green-600 font-bold mt-1">✓ TOQUE!</p>
+        </div>
+        <div className="flex flex-col items-center">
+          <BalloonShape color="#2563eb" size={55} />
+          <p className="text-xs text-blue-500 mt-1">NÃO</p>
+        </div>
+      </div>
+      <p className={`text-xs text-center mt-2 ${theme === "GAMIFIED" ? "text-gray-400" : "text-gray-500"}`}>
+        Toque só no verde!
+      </p>
+    </div>
+  );
+}
+
+function TempoReacaoTapStep({ theme, onDone }: { theme: Theme; onDone: () => void }) {
+  const [tapped, setTapped] = useState(false);
+  const [missed, setMissed] = useState(false);
+  const [key, setKey] = useState(0);
+
+  function handleTap() {
+    if (tapped) return;
+    setTapped(true);
+    setTimeout(onDone, 500);
+  }
+
+  function handleMiss() {
+    if (tapped) return;
+    setMissed(true);
+    setTimeout(() => { setMissed(false); setKey((k) => k + 1); }, 800);
+  }
+
+  return (
+    <div className="relative overflow-hidden rounded-xl" style={{ height: 200 }}>
+      <AnimatePresence mode="wait">
+        {!tapped && (
+          <motion.div
+            key={key}
+            initial={{ y: -80 }}
+            animate={{ y: 180 }}
+            transition={{ duration: 2.0, ease: "linear" }}
+            onAnimationComplete={handleMiss}
+            style={{ position: "absolute", left: "50%", transform: "translateX(-50%)", cursor: "pointer" }}
+            onClick={handleTap}
+          >
+            <BalloonShape color={GREEN} size={70} />
+          </motion.div>
+        )}
+      </AnimatePresence>
+      {tapped && (
+        <div className="absolute inset-0 flex items-center justify-center">
+          <p className="text-green-500 font-bold text-lg">Ótimo! ✓</p>
+        </div>
+      )}
+      {missed && !tapped && (
+        <div className="absolute inset-0 flex items-center justify-center">
+          <p className="text-orange-500 text-sm font-medium">Ops! Mais rápido!</p>
+        </div>
+      )}
+    </div>
+  );
+}
+
 export function TempoReacao({ difficulty, theme, onComplete }: TempoReacaoProps) {
+  const [showTutorial, setShowTutorial] = useState(true);
   const reportProgress = useExerciseProgress();
 
   const [started, setStarted] = useState(false);
@@ -153,6 +268,10 @@ export function TempoReacao({ difficulty, theme, onComplete }: TempoReacaoProps)
       recordResult(false, null);
       nextSpawnTimer.current = setTimeout(spawnBatch, 700);
     }
+  }
+
+  if (showTutorial) {
+    return <TempoReacaoTutorial theme={theme} onDone={() => setShowTutorial(false)} />;
   }
 
   const bg =

@@ -4,6 +4,7 @@ import { useState, useEffect, useRef, useCallback } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { calculateExerciseScore } from "@/lib/scoring";
 import { useExerciseProgress } from "@/components/exercises/ExerciseWrapper";
+import { TutorialBase } from "@/components/exercises/TutorialBase";
 import type { ExerciseResult, Theme } from "@/types";
 
 interface NBackProps {
@@ -38,7 +39,110 @@ function nextLetter(history: string[], nLevel: number, makeTarget: boolean): str
 
 type Phase = "priming" | "active" | "blank" | "result";
 
+function NBackTutorialStep({
+  theme,
+  prevLetter,
+  currentLetter,
+  isMatch,
+  onDone,
+}: {
+  theme: Theme;
+  prevLetter: string;
+  currentLetter: string;
+  isMatch: boolean;
+  onDone: () => void;
+}) {
+  const [clicked, setClicked] = useState(false);
+
+  const letterBox = {
+    CLINICAL: "bg-blue-50 border-4 border-blue-400 text-blue-700",
+    COLORFUL: "bg-violet-100 border-4 border-violet-400 text-violet-800",
+    GAMIFIED: "bg-gray-700 border-4 border-cyan-500 text-cyan-300",
+  }[theme];
+
+  const subClass = {
+    CLINICAL: "text-gray-500",
+    COLORFUL: "text-violet-400",
+    GAMIFIED: "text-gray-400",
+  }[theme];
+
+  const btnYes = {
+    CLINICAL: "bg-green-500 text-white",
+    COLORFUL: "bg-gradient-to-br from-green-400 to-emerald-400 text-white",
+    GAMIFIED: "bg-green-600 border border-green-500 text-white",
+  }[theme];
+
+  const btnNo = {
+    CLINICAL: "bg-red-400 text-white",
+    COLORFUL: "bg-gradient-to-br from-red-400 to-rose-400 text-white",
+    GAMIFIED: "bg-red-700 border border-red-600 text-white",
+  }[theme];
+
+  const highlightClass = isMatch ? `ring-4 ring-green-400 ${btnYes}` : `ring-4 ring-red-400 ${btnNo}`;
+
+  function handleAnswer(yes: boolean) {
+    if (clicked) return;
+    if (yes === isMatch) { setClicked(true); setTimeout(onDone, 400); }
+  }
+
+  return (
+    <div className="flex flex-col items-center gap-3">
+      <div className="flex items-center gap-4 justify-center">
+        <div className="text-center">
+          <p className={`text-xs mb-1 ${subClass}`}>anterior</p>
+          <div className={`w-20 h-20 rounded-2xl flex items-center justify-center text-4xl font-black ${letterBox} opacity-60`}>
+            {prevLetter}
+          </div>
+        </div>
+        <div className="text-center">
+          <p className={`text-xs mb-1 ${subClass}`}>atual</p>
+          <div className={`w-20 h-20 rounded-2xl flex items-center justify-center text-4xl font-black ${letterBox}`}>
+            {currentLetter}
+          </div>
+        </div>
+      </div>
+      <p className={`text-sm text-center font-medium ${isMatch ? "text-green-600" : "text-red-500"}`}>
+        São iguais? {isMatch ? "SIM!" : "NÃO!"}
+      </p>
+      <div className="grid grid-cols-2 gap-3 w-full max-w-[240px]">
+        <button
+          onClick={() => handleAnswer(false)}
+          className={`py-3 rounded-2xl font-bold text-base ${!isMatch && !clicked ? highlightClass : btnNo}`}
+        >
+          NÃO ✗
+        </button>
+        <button
+          onClick={() => handleAnswer(true)}
+          className={`py-3 rounded-2xl font-bold text-base ${isMatch && !clicked ? highlightClass : btnYes}`}
+        >
+          SIM ✓
+        </button>
+      </div>
+    </div>
+  );
+}
+
+function NBackTutorial({ theme, onDone }: { theme: Theme; onDone: () => void }) {
+  const steps = [
+    {
+      instruction: "Veja a letra atual. É igual à de 1 posição atrás?",
+      content: (onStepDone: () => void) => (
+        <NBackTutorialStep theme={theme} prevLetter="A" currentLetter="A" isMatch={true} onDone={onStepDone} />
+      ),
+    },
+    {
+      instruction: "Agora um exemplo NÃO",
+      content: (onStepDone: () => void) => (
+        <NBackTutorialStep theme={theme} prevLetter="A" currentLetter="B" isMatch={false} onDone={onStepDone} />
+      ),
+    },
+  ];
+
+  return <TutorialBase theme={theme} title="N-Back" steps={steps} onDone={onDone} />;
+}
+
 export function NBack({ difficulty, theme, onComplete }: NBackProps) {
+  const [showTutorial, setShowTutorial] = useState(true);
   const reportProgress = useExerciseProgress();
 
   const [nLevel, setNLevel] = useState(initialN(difficulty));
@@ -81,12 +185,13 @@ export function NBack({ difficulty, theme, onComplete }: NBackProps) {
 
   // Bootstrap first stimulus
   useEffect(() => {
+    if (showTutorial) return;
     const n = initialN(difficulty);
     const letter = LETTERS[Math.floor(Math.random() * LETTERS.length)];
     historyRef.current = [letter];
     presentStimulus(true, false, letter);
   // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, []);
+  }, [showTutorial]);
 
   // Auto-advance after SHOW_MS
   useEffect(() => {
@@ -195,6 +300,10 @@ export function NBack({ difficulty, theme, onComplete }: NBackProps) {
     if (phase !== "active" || answered) return;
     const correct = yes === isTarget;
     processAnswer(correct, trial);
+  }
+
+  if (showTutorial) {
+    return <NBackTutorial theme={theme} onDone={() => setShowTutorial(false)} />;
   }
 
   const bg = { CLINICAL: "bg-gray-50", COLORFUL: "bg-gradient-to-br from-violet-50 to-indigo-50", GAMIFIED: "bg-gray-950" }[theme];

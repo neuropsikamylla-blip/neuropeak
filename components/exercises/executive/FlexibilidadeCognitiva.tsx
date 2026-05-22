@@ -4,6 +4,7 @@ import { useState, useRef, useCallback } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { calculateExerciseScore } from "@/lib/scoring";
 import { useExerciseProgress } from "@/components/exercises/ExerciseWrapper";
+import { TutorialBase } from "@/components/exercises/TutorialBase";
 import type { ExerciseResult, Theme } from "@/types";
 
 interface FlexibilidadeCognitivaProps {
@@ -56,7 +57,135 @@ function ShapeIcon({ shape, fill, size = 40 }: { shape: Card["shape"]; fill: str
   }
 }
 
+function FlexTutorialColorStep({ theme, onDone }: { theme: Theme; onDone: () => void }) {
+  const [selected, setSelected] = useState<string | null>(null);
+  const correct = "azul";
+
+  function handleClick(c: string) {
+    if (selected) return;
+    setSelected(c);
+    if (c === correct) setTimeout(onDone, 600);
+  }
+
+  const colorOptions = COLORS.map((c) => ({ key: c, hex: COLOR_HEX[c] }));
+  const subClass = theme === "GAMIFIED" ? "text-gray-400" : "text-gray-500";
+
+  return (
+    <div className="flex flex-col items-center gap-3">
+      <div className="flex justify-center">
+        <span className={`text-xs font-bold px-3 py-1 rounded-full border ${
+          theme === "GAMIFIED" ? "bg-rose-900/40 text-rose-300 border-rose-700/50" : "bg-rose-50 text-rose-700 border-rose-300"
+        }`}>🎨 COR</span>
+      </div>
+      <div className={`flex items-center justify-center rounded-2xl border-4 border-gray-200`} style={{ height: 100 }}>
+        <ShapeIcon shape="círculo" fill={COLOR_HEX["azul"]} size={70} />
+      </div>
+      <p className={`text-xs text-center ${subClass}`}>Qual é a COR? Toque no azul!</p>
+      <div className="grid grid-cols-4 gap-2 w-full">
+        {colorOptions.map((opt) => {
+          const isCorrect = opt.key === correct;
+          const isSelected = selected === opt.key;
+          return (
+            <motion.button
+              key={opt.key}
+              onClick={() => handleClick(opt.key)}
+              disabled={!!selected}
+              whileTap={{ scale: 0.88 }}
+              className={`flex flex-col items-center gap-1 py-2 rounded-xl border-2 ${
+                isSelected && isCorrect ? "border-green-500 bg-green-50" :
+                isSelected ? "border-red-400 bg-red-50" :
+                "border-gray-200 bg-gray-50"
+              }`}
+              style={{ borderColor: (!selected) ? opt.hex : undefined, background: (!selected) ? `${opt.hex}18` : undefined }}
+            >
+              <div className="w-7 h-7 rounded-full" style={{ backgroundColor: opt.hex }} />
+              <span className="text-[10px] font-bold" style={{ color: opt.hex }}>
+                {opt.key.charAt(0).toUpperCase() + opt.key.slice(1)}
+              </span>
+            </motion.button>
+          );
+        })}
+      </div>
+      {selected && selected !== correct && (
+        <p className="text-xs text-orange-600">O círculo é azul! Toque em Azul.</p>
+      )}
+    </div>
+  );
+}
+
+function FlexTutorialShapeStep({ theme, onDone }: { theme: Theme; onDone: () => void }) {
+  const [selected, setSelected] = useState<string | null>(null);
+  const correct = "quadrado";
+
+  function handleClick(s: string) {
+    if (selected) return;
+    setSelected(s);
+    if (s === correct) setTimeout(onDone, 600);
+  }
+
+  const shapeOptions = SHAPES.map((s) => ({ key: s }));
+  const shapeColor = theme === "GAMIFIED" ? "#94a3b8" : "#64748b";
+  const subClass = theme === "GAMIFIED" ? "text-gray-400" : "text-gray-500";
+
+  return (
+    <div className="flex flex-col items-center gap-3">
+      <div className="flex justify-center">
+        <span className={`text-xs font-bold px-3 py-1 rounded-full border ${
+          theme === "GAMIFIED" ? "bg-blue-900/40 text-blue-300 border-blue-700/50" : "bg-blue-50 text-blue-700 border-blue-300"
+        }`}>🔷 FORMA</span>
+      </div>
+      <div className={`flex items-center justify-center rounded-2xl border-4 border-gray-200`} style={{ height: 100 }}>
+        <ShapeIcon shape="quadrado" fill={COLOR_HEX["vermelho"]} size={70} />
+      </div>
+      <p className={`text-xs text-center ${subClass}`}>Qual é a FORMA? Toque no quadrado!</p>
+      <div className="grid grid-cols-4 gap-2 w-full">
+        {shapeOptions.map((opt) => {
+          const isCorrect = opt.key === correct;
+          const isSelected = selected === opt.key;
+          return (
+            <motion.button
+              key={opt.key}
+              onClick={() => handleClick(opt.key)}
+              disabled={!!selected}
+              whileTap={{ scale: 0.88 }}
+              className={`flex flex-col items-center gap-1 py-2 rounded-xl border-2 ${
+                isSelected && isCorrect ? "border-green-500 bg-green-50" :
+                isSelected ? "border-red-400 bg-red-50" :
+                theme === "GAMIFIED" ? "border-gray-600 bg-gray-700/50" : "border-gray-200 bg-gray-50"
+              }`}
+            >
+              <ShapeIcon shape={opt.key as Card["shape"]} fill={shapeColor} size={24} />
+              <span className={`text-[10px] font-bold ${theme === "GAMIFIED" ? "text-gray-400" : "text-gray-500"}`}>
+                {opt.key.charAt(0).toUpperCase() + opt.key.slice(1)}
+              </span>
+            </motion.button>
+          );
+        })}
+      </div>
+      {selected && selected !== correct && (
+        <p className="text-xs text-orange-600">A figura é um quadrado! Toque em Quadrado.</p>
+      )}
+    </div>
+  );
+}
+
+function FlexibilidadeTutorial({ theme, onDone }: { theme: Theme; onDone: () => void }) {
+  const steps = [
+    {
+      instruction: "Veja a regra no topo. Se for 🎨 COR, escolha a COR da figura.",
+      content: (onStepDone: () => void) => <FlexTutorialColorStep theme={theme} onDone={onStepDone} />,
+    },
+    {
+      instruction: "Se a regra mudar para 🔷 FORMA, escolha a FORMA da figura.",
+      content: (onStepDone: () => void) => <FlexTutorialShapeStep theme={theme} onDone={onStepDone} />,
+    },
+  ];
+
+  return <TutorialBase theme={theme} title="Flexibilidade Cognitiva" steps={steps} onDone={onDone} />;
+}
+
 export function FlexibilidadeCognitiva({ difficulty, theme, onComplete }: FlexibilidadeCognitivaProps) {
+  const [showTutorial, setShowTutorial] = useState(true);
   const reportProgress = useExerciseProgress();
   const [trial, setTrial] = useState(0);
   const [cards] = useState<Card[]>(() => Array.from({ length: TOTAL_TRIALS }, generateCard));
@@ -105,6 +234,10 @@ export function FlexibilidadeCognitiva({ difficulty, theme, onComplete }: Flexib
       }
     }, 420);
   }, [feedback, trial, cards, activeRule, isSwitchTrial, responses, difficulty, onComplete, reportProgress]);
+
+  if (showTutorial) {
+    return <FlexibilidadeTutorial theme={theme} onDone={() => setShowTutorial(false)} />;
+  }
 
   const currentCard = cards[trial];
 

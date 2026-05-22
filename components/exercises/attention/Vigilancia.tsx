@@ -4,6 +4,7 @@ import { useState, useEffect, useRef, useCallback } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { calculateExerciseScore } from "@/lib/scoring";
 import { useExerciseProgress } from "@/components/exercises/ExerciseWrapper";
+import { TutorialBase } from "@/components/exercises/TutorialBase";
 import type { ExerciseResult, Theme } from "@/types";
 
 interface VigilanciaProps {
@@ -20,7 +21,69 @@ const INTERVALS: Record<number, number> = {
 };
 const TOTAL_ITEMS = 60;
 
+function VigilanciaTutorial({ theme, target, onDone }: { theme: Theme; target: string; onDone: () => void }) {
+  const steps = [
+    {
+      instruction: "Um estímulo alvo vai aparecer. Quando aparecer, toque RÁPIDO!",
+      content: (onStepDone: () => void) => <VigilanciaShowTarget theme={theme} target={target} onDone={onStepDone} />,
+    },
+    {
+      instruction: "Tente agora! Toque quando aparecer o alvo.",
+      content: (onStepDone: () => void) => <VigilanciaReactStep theme={theme} target={target} onDone={onStepDone} />,
+    },
+  ];
+
+  return <TutorialBase theme={theme} title="Vigilância" steps={steps} onDone={onDone} />;
+}
+
+function VigilanciaShowTarget({ theme, target, onDone }: { theme: Theme; target: string; onDone: () => void }) {
+  useEffect(() => {
+    const t = setTimeout(onDone, 2000);
+    return () => clearTimeout(t);
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+
+  return (
+    <div className="flex flex-col items-center gap-3">
+      <p className={`text-xs ${theme === "GAMIFIED" ? "text-gray-400" : "text-gray-500"}`}>Este é o alvo:</p>
+      <div className={`w-24 h-24 rounded-2xl flex items-center justify-center ${theme === "GAMIFIED" ? "bg-gray-700" : "bg-gray-100 border-2 border-gray-300"}`}>
+        <span className={`text-6xl font-black ${theme === "GAMIFIED" ? "text-cyan-400" : "text-blue-600"}`}>{target}</span>
+      </div>
+      <p className={`text-xs font-bold ${theme === "GAMIFIED" ? "text-cyan-400" : "text-blue-600"}`}>← Memorize!</p>
+    </div>
+  );
+}
+
+function VigilanciaReactStep({ theme, target, onDone }: { theme: Theme; target: string; onDone: () => void }) {
+  const [tapped, setTapped] = useState(false);
+
+  function handleTap() {
+    if (tapped) return;
+    setTapped(true);
+    setTimeout(onDone, 400);
+  }
+
+  return (
+    <div className="flex flex-col items-center gap-3">
+      <p className={`text-xs font-bold animate-pulse ${theme === "GAMIFIED" ? "text-cyan-400" : "text-blue-600"}`}>TOQUE!</p>
+      <motion.button
+        onClick={handleTap}
+        className={`w-28 h-28 rounded-2xl flex items-center justify-center ${
+          tapped
+            ? "bg-green-500/30"
+            : theme === "GAMIFIED" ? "bg-gray-700 border border-cyan-500/40" : "bg-gray-100 border-2 border-gray-300"
+        }`}
+        whileTap={{ scale: 0.9 }}
+      >
+        <span className={`text-6xl font-black ${theme === "GAMIFIED" ? "text-cyan-400" : "text-blue-600"}`}>{target}</span>
+      </motion.button>
+    </div>
+  );
+}
+
 export function Vigilancia({ difficulty, theme, onComplete }: VigilanciaProps) {
+  const [showTutorial, setShowTutorial] = useState(true);
+  const tutorialTarget = TARGETS[0]; // Always show "A" as tutorial target
   const reportProgress = useExerciseProgress();
   const interval = INTERVALS[difficulty] ?? 1000;
   const targetCount = difficulty >= 4 ? 2 : 1;
@@ -60,6 +123,7 @@ export function Vigilancia({ difficulty, theme, onComplete }: VigilanciaProps) {
   }, [current]);
 
   useEffect(() => {
+    if (showTutorial) return;
     let idx = 0;
     startTime.current = Date.now();
 
@@ -90,7 +154,7 @@ export function Vigilancia({ difficulty, theme, onComplete }: VigilanciaProps) {
     const t = setTimeout(showNext, 500);
     return () => clearTimeout(t);
   // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, []);
+  }, [showTutorial]);
 
   useEffect(() => {
     if (!done) return;
@@ -128,6 +192,10 @@ export function Vigilancia({ difficulty, theme, onComplete }: VigilanciaProps) {
       setFalseAlarms((f) => f + 1);
       setFeedback("false");
     }
+  }
+
+  if (showTutorial) {
+    return <VigilanciaTutorial theme={theme} target={tutorialTarget} onDone={() => setShowTutorial(false)} />;
   }
 
   const bgClass = theme === "GAMIFIED" ? "bg-gray-950" : theme === "COLORFUL" ? "bg-gradient-to-br from-green-50 to-blue-50" : "bg-gray-50";

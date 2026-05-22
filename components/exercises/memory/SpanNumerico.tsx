@@ -4,6 +4,7 @@ import { useState, useEffect, useCallback, useRef } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { calculateExerciseScore } from "@/lib/scoring";
 import { useExerciseProgress } from "@/components/exercises/ExerciseWrapper";
+import { TutorialBase } from "@/components/exercises/TutorialBase";
 import type { ExerciseResult, Theme } from "@/types";
 
 interface SpanNumericoProps {
@@ -47,9 +48,136 @@ function speak(text: string): Promise<void> {
   });
 }
 
+function SpanNumericoTutorial({ theme, reverse, onDone }: { theme: Theme; reverse: boolean; onDone: () => void }) {
+  const seq = reverse ? [5, 9] : [3, 7, 2];
+  const answer = reverse ? [9, 5] : [3, 7, 2];
+
+  const steps = [
+    {
+      instruction: reverse
+        ? "Números vão aparecer um por vez. Desta vez, responda em ORDEM INVERSA!"
+        : "Números vão aparecer um por vez. Memorize a sequência!",
+      content: (onStepDone: () => void) => <SpanShowStep theme={theme} seq={seq} onDone={onStepDone} />,
+    },
+    {
+      instruction: reverse
+        ? `Apareceu ${seq.join(" → ")}. Responda ao contrário: ${answer.join(", ")}`
+        : `Agora clique nos números na ordem em que apareceram: ${seq.join(" → ")}`,
+      content: (onStepDone: () => void) => (
+        <SpanInputStep theme={theme} answer={answer} onDone={onStepDone} />
+      ),
+    },
+  ];
+
+  return <TutorialBase theme={theme} title={reverse ? "Span Numérico Inverso" : "Span Numérico"} steps={steps} onDone={onDone} />;
+}
+
+function SpanShowStep({ theme, seq, onDone }: { theme: Theme; seq: number[]; onDone: () => void }) {
+  const [display, setDisplay] = useState<number | null>(null);
+  const [done, setDone] = useState(false);
+
+  useEffect(() => {
+    let cancelled = false;
+    async function run() {
+      for (const n of seq) {
+        if (cancelled) return;
+        await new Promise<void>((r) => setTimeout(r, 400));
+        if (cancelled) return;
+        setDisplay(n);
+        await new Promise<void>((r) => setTimeout(r, 700));
+        if (cancelled) return;
+        setDisplay(null);
+      }
+      await new Promise<void>((r) => setTimeout(r, 400));
+      if (!cancelled) { setDone(true); onDone(); }
+    }
+    run();
+    return () => { cancelled = true; };
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+
+  const displayBox = {
+    CLINICAL: "bg-gray-100 text-gray-900 border-2 border-gray-300",
+    COLORFUL: "bg-purple-100 text-purple-900 border-4 border-purple-400",
+    GAMIFIED: "bg-gray-700 text-cyan-400 border-2 border-cyan-500",
+  }[theme];
+
+  return (
+    <div className="flex flex-col items-center gap-3">
+      <div className={`w-24 h-24 rounded-2xl flex items-center justify-center text-5xl font-black mx-auto ${displayBox}`}>
+        {display ?? ""}
+      </div>
+      {done && (
+        <p className={`text-xs text-center ${theme === "GAMIFIED" ? "text-gray-400" : "text-gray-500"}`}>
+          Sequência exibida!
+        </p>
+      )}
+    </div>
+  );
+}
+
+function SpanInputStep({ theme, answer, onDone }: { theme: Theme; answer: number[]; onDone: () => void }) {
+  const [clicked, setClicked] = useState<number[]>([]);
+  const [flash, setFlash] = useState<"green" | "red" | null>(null);
+  const done = useRef(false);
+
+  function handleClick(n: number) {
+    if (done.current) return;
+    const next = clicked.length;
+    if (n === answer[next]) {
+      const newClicked = [...clicked, n];
+      setClicked(newClicked);
+      setFlash("green");
+      setTimeout(() => setFlash(null), 300);
+      if (newClicked.length === answer.length) {
+        done.current = true;
+        setTimeout(onDone, 400);
+      }
+    } else {
+      setFlash("red");
+      setTimeout(() => { setFlash(null); setClicked([]); }, 400);
+    }
+  }
+
+  const btnClass = {
+    CLINICAL: "bg-white border-2 border-gray-300 text-gray-800 hover:bg-blue-50 hover:border-blue-400",
+    COLORFUL: "bg-gradient-to-br from-purple-400 to-pink-400 text-white",
+    GAMIFIED: "bg-gray-700 border border-cyan-500/40 text-cyan-300",
+  }[theme];
+
+  const flashOverlay = flash === "green" ? "ring-4 ring-green-400" : flash === "red" ? "ring-4 ring-red-400" : "";
+
+  return (
+    <div className={`rounded-xl p-3 ${flashOverlay} transition-all`}>
+      <div className="flex gap-1.5 justify-center mb-3">
+        {answer.map((_, i) => (
+          <div key={i} className={`w-9 h-9 rounded-lg border-2 flex items-center justify-center font-bold text-lg ${
+            i < clicked.length
+              ? theme === "GAMIFIED" ? "bg-cyan-700 border-cyan-500 text-cyan-300" : "bg-blue-100 border-blue-400 text-blue-700"
+              : theme === "GAMIFIED" ? "bg-gray-700 border-gray-600 text-gray-500" : "bg-gray-100 border-gray-300 text-gray-400"
+          }`}>
+            {i < clicked.length ? clicked[i] : "·"}
+          </div>
+        ))}
+      </div>
+      <div className="grid grid-cols-5 gap-1.5">
+        {[1,2,3,4,5,6,7,8,9,0].map((n) => (
+          <button
+            key={n}
+            onClick={() => handleClick(n)}
+            className={`h-11 rounded-xl font-bold text-lg ${btnClass}`}
+          >
+            {n}
+          </button>
+        ))}
+      </div>
+    </div>
+  );
+}
+
 export function SpanNumerico({ difficulty, theme, onComplete, alwaysReverse }: SpanNumericoProps) {
   const reverse = alwaysReverse ?? REVERSE_MODE(difficulty);
-
+  const [showTutorial, setShowTutorial] = useState(true);
   const [spanLength, setSpanLength] = useState(initialSpan(difficulty));
   const [streak, setStreak] = useState(0); // positivo = acertos, negativo = erros
   const [phase, setPhase] = useState<Phase>("showing");
@@ -95,10 +223,11 @@ export function SpanNumerico({ difficulty, theme, onComplete, alwaysReverse }: S
 
   // eslint-disable-next-line react-hooks/exhaustive-deps
   useEffect(() => {
+    if (showTutorial) return;
     const seq = generateSeq(spanLength);
     setSequence(seq);
     showSequence(seq);
-  }, [trial]);
+  }, [trial, showTutorial]);
 
   function handleKey(key: number | "⌫" | "✓") {
     if (phase !== "input") return;
@@ -157,6 +286,10 @@ export function SpanNumerico({ difficulty, theme, onComplete, alwaysReverse }: S
         setTrial(nextTrial);
       }
     }, 1600);
+  }
+
+  if (showTutorial) {
+    return <SpanNumericoTutorial theme={theme} reverse={reverse} onDone={() => setShowTutorial(false)} />;
   }
 
   // ─── Estilos por tema ────────────────────────────────────────────────

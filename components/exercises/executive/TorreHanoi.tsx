@@ -4,6 +4,7 @@ import { useState, useEffect, useRef, useCallback } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { calculateExerciseScore } from "@/lib/scoring";
 import { useExerciseProgress } from "@/components/exercises/ExerciseWrapper";
+import { TutorialBase } from "@/components/exercises/TutorialBase";
 import type { ExerciseResult, Theme } from "@/types";
 
 interface TorreHanoiProps {
@@ -40,7 +41,147 @@ function initialPegs(discCount: number): State {
   ];
 }
 
+function HanoiPegsDisplay({
+  pegs,
+  theme,
+  selected,
+  discCount,
+  onPegClick,
+}: {
+  pegs: [number[], number[], number[]];
+  theme: Theme;
+  selected: number | null;
+  discCount: number;
+  onPegClick?: (i: number) => void;
+}) {
+  const maxW = 120;
+  return (
+    <div className="flex justify-around items-end" style={{ height: 140 }}>
+      {pegs.map((peg, pegIdx) => (
+        <div
+          key={pegIdx}
+          className="flex flex-col items-center cursor-pointer relative"
+          style={{ width: maxW + 16 }}
+          onClick={() => onPegClick?.(pegIdx)}
+        >
+          <div
+            className={`absolute bottom-0 rounded-lg ${selected === pegIdx ? "bg-yellow-400" : theme === "GAMIFIED" ? "bg-gray-600" : "bg-gray-400"}`}
+            style={{ width: maxW + 16, height: 7 }}
+          />
+          <div
+            className={`absolute rounded-full ${theme === "GAMIFIED" ? "bg-gray-500" : "bg-gray-400"}`}
+            style={{ width: 6, height: 125, bottom: 7 }}
+          />
+          <div className="absolute bottom-2 flex flex-col-reverse items-center gap-0.5">
+            {peg.map((disc, di) => {
+              const w = (disc / discCount) * maxW + 16;
+              const isTop = di === peg.length - 1;
+              return (
+                <div
+                  key={disc}
+                  className="rounded-md flex items-center justify-center text-white text-xs font-bold"
+                  style={{
+                    width: w, height: 18,
+                    backgroundColor: DISC_COLORS[disc - 1] ?? "#666",
+                    opacity: selected === pegIdx && isTop ? 0.6 : 1,
+                  }}
+                >
+                  {disc}
+                </div>
+              );
+            })}
+          </div>
+          <div className={`text-xs absolute -bottom-5 ${theme === "GAMIFIED" ? "text-gray-400" : "text-gray-500"}`}>
+            {pegIdx === 0 ? "Origem" : pegIdx === 1 ? "Aux" : "Destino"}
+          </div>
+        </div>
+      ))}
+    </div>
+  );
+}
+
+function TorreHanoiTutorial({ theme, onDone }: { theme: Theme; onDone: () => void }) {
+  const steps = [
+    {
+      instruction: "Mova todos os discos do pino esquerdo para o direito!",
+      content: (onStepDone: () => void) => <HanoiMoveStep theme={theme} onDone={onStepDone} />,
+    },
+    {
+      instruction: "Regra: disco MAIOR nunca pode ficar sobre disco MENOR.",
+      content: (onStepDone: () => void) => <HanoiRuleStep theme={theme} onDone={onStepDone} />,
+    },
+  ];
+
+  return <TutorialBase theme={theme} title="Torre de Hanói" steps={steps} onDone={onDone} />;
+}
+
+function HanoiMoveStep({ theme, onDone }: { theme: Theme; onDone: () => void }) {
+  const [pegs, setPegs] = useState<[number[], number[], number[]]>([[1], [], []]);
+  const [animating, setAnimating] = useState(false);
+
+  useEffect(() => {
+    const t = setTimeout(() => {
+      setAnimating(true);
+      setTimeout(() => {
+        setPegs([[], [], [1]]);
+        setTimeout(onDone, 500);
+      }, 600);
+    }, 800);
+    return () => clearTimeout(t);
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+
+  return (
+    <div className="flex flex-col items-center gap-2 mt-4">
+      <HanoiPegsDisplay pegs={pegs} theme={theme} selected={null} discCount={1} />
+      <p className={`text-xs mt-6 ${theme === "GAMIFIED" ? "text-gray-400" : "text-gray-500"}`}>
+        {animating ? "→ movendo disco para o destino..." : "Observe o movimento..."}
+      </p>
+    </div>
+  );
+}
+
+function HanoiRuleStep({ theme, onDone }: { theme: Theme; onDone: () => void }) {
+  const [autoAdvanced, setAutoAdvanced] = useState(false);
+
+  useEffect(() => {
+    const t = setTimeout(() => { setAutoAdvanced(true); }, 3000);
+    return () => clearTimeout(t);
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+
+  const validPegs: [number[], number[], number[]] = [[2, 1], [], []]; // big on bottom, small on top
+  const invalidPegs: [number[], number[], number[]] = [[1, 2], [], []]; // invalid: big on top of small
+
+  const subClass = theme === "GAMIFIED" ? "text-gray-400" : "text-gray-500";
+
+  return (
+    <div className="space-y-3">
+      <div className="grid grid-cols-2 gap-3">
+        <div className={`rounded-xl p-3 border-2 border-green-400 ${theme === "GAMIFIED" ? "bg-gray-700/50" : "bg-green-50"}`}>
+          <p className="text-xs text-green-600 font-bold mb-2 text-center">✅ Válido</p>
+          <HanoiPegsDisplay pegs={validPegs} theme={theme} selected={null} discCount={2} />
+        </div>
+        <div className={`rounded-xl p-3 border-2 border-red-400 ${theme === "GAMIFIED" ? "bg-gray-700/50" : "bg-red-50"}`}>
+          <p className="text-xs text-red-500 font-bold mb-2 text-center">❌ Inválido</p>
+          <HanoiPegsDisplay pegs={invalidPegs} theme={theme} selected={null} discCount={2} />
+        </div>
+      </div>
+      <p className={`text-xs text-center ${subClass}`}>Disco maior nunca sobre disco menor!</p>
+      {autoAdvanced ? (
+        <button
+          onClick={onDone}
+          className={`w-full py-2 rounded-xl font-bold text-sm ${theme === "GAMIFIED" ? "bg-cyan-600 text-white" : "bg-blue-600 text-white"}`}
+        >
+          Entendi!
+        </button>
+      ) : null}
+    </div>
+  );
+}
+
 export function TorreHanoi({ difficulty, theme, onComplete }: TorreHanoiProps) {
+  const [showTutorial, setShowTutorial] = useState(true);
   const reportProgress = useExerciseProgress();
 
   // Adaptive state
@@ -139,6 +280,10 @@ export function TorreHanoi({ difficulty, theme, onComplete }: TorreHanoiProps) {
         }, 2000);
       }
     }
+  }
+
+  if (showTutorial) {
+    return <TorreHanoiTutorial theme={theme} onDone={() => setShowTutorial(false)} />;
   }
 
   const bgClass = theme === "GAMIFIED" ? "bg-gray-950" : theme === "COLORFUL" ? "bg-gradient-to-br from-yellow-50 to-orange-50" : "bg-gray-50";
