@@ -127,14 +127,6 @@ export const EXERCISE_DEFINITIONS = {
     estimatedMinutes: 7,
     icon: "🔲",
   },
-  "associacao-pares": {
-    id: "associacao-pares",
-    name: "Associação de Pares",
-    domain: "memory" as Domain,
-    description: "Associe palavras e imagens",
-    estimatedMinutes: 7,
-    icon: "🔗",
-  },
   "jogo-memoria": {
     id: "jogo-memoria",
     name: "Jogo da Memória",
@@ -169,11 +161,11 @@ export const EXERCISE_DEFINITIONS = {
   },
   "trilha-visual": {
     id: "trilha-visual",
-    name: "Trilha Visual",
+    name: "Conecta Números",
     domain: "attention" as Domain,
-    description: "Conecte números em sequência",
+    description: "Toque os números em ordem crescente, do menor ao maior",
     estimatedMinutes: 7,
-    icon: "🗺️",
+    icon: "🔢",
   },
   "stroop-task": {
     id: "stroop-task",

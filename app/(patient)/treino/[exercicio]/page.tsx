@@ -17,7 +17,6 @@ function ExerciseLoader() {
 
 const SpanNumerico        = dynamic(() => import("@/components/exercises/memory/SpanNumerico").then(m => ({ default: m.SpanNumerico })), { loading: ExerciseLoader });
 const MatrizEspacial      = dynamic(() => import("@/components/exercises/memory/MatrizEspacial").then(m => ({ default: m.MatrizEspacial })), { loading: ExerciseLoader });
-const AssociacaoPares     = dynamic(() => import("@/components/exercises/memory/AssociacaoPares").then(m => ({ default: m.AssociacaoPares })), { loading: ExerciseLoader });
 const JogoMemoria         = dynamic(() => import("@/components/exercises/memory/JogoMemoria").then(m => ({ default: m.JogoMemoria })), { loading: ExerciseLoader });
 const SpanNumericoInverso = dynamic(() => import("@/components/exercises/memory/SpanNumericoInverso").then(m => ({ default: m.SpanNumericoInverso })), { loading: ExerciseLoader });
 const MatrizEspacialInversa = dynamic(() => import("@/components/exercises/memory/MatrizEspacialInversa").then(m => ({ default: m.MatrizEspacialInversa })), { loading: ExerciseLoader });
@@ -299,7 +298,6 @@ export default function ExercicioPage() {
     switch (exerciseId) {
       case "span-numerico": return <SpanNumerico {...props} />;
       case "matriz-espacial": return <MatrizEspacial {...props} />;
-      case "associacao-pares": return <AssociacaoPares {...props} />;
       case "trilha-visual": return <TrilhaVisual {...props} />;
       case "stroop-task": return <StroopTask {...props} />;
       case "vigilancia": return <Vigilancia {...props} />;

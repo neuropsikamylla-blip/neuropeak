@@ -113,9 +113,6 @@ export function IdentificacaoSimbolos({ difficulty, theme, onComplete }: Identif
               {distractorCount + 1} símbolos
             </p>
           </div>
-          <span className={`text-sm ${theme === "GAMIFIED" ? "text-gray-400" : "text-gray-500"}`}>
-            {trial + 1}/{MAX_TRIALS}
-          </span>
         </div>
 
         {/* Barra de progresso */}

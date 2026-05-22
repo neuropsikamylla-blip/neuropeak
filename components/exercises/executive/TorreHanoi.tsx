@@ -157,9 +157,6 @@ export function TorreHanoi({ difficulty, theme, onComplete }: TorreHanoiProps) {
               Movimentos: {moves} · Ótimo: {optimal}
             </p>
           </div>
-          <span className={`text-sm ${theme === "GAMIFIED" ? "text-gray-400" : "text-gray-500"}`}>
-            {puzzle + 1}/{MAX_PUZZLES}
-          </span>
         </div>
 
         {/* Barra de progresso */}

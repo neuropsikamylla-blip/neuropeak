@@ -110,7 +110,6 @@ export function DecisaoRapida({ difficulty, theme, onComplete }: DecisaoRapidaPr
       <div className={`w-full max-w-md rounded-2xl p-8 ${theme === "GAMIFIED" ? "bg-gray-800 border border-cyan-500/30" : "bg-white shadow-lg"}`}>
         <div className="flex justify-between items-center mb-3">
           <h2 className={`font-bold ${theme === "GAMIFIED" ? "text-cyan-400" : "text-gray-900"}`}>Decisão Rápida</h2>
-          <span className={`text-sm ${theme === "GAMIFIED" ? "text-gray-400" : "text-gray-500"}`}>{current + 1}/{MAX_ITEMS}</span>
         </div>
 
         {/* Barra de progresso */}

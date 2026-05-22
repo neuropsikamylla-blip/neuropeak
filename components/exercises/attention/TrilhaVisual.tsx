@@ -31,8 +31,8 @@ function initialCount(difficulty: number) {
 function generateCells(count: number): Cell[] {
   const positions = shuffle(
     Array.from({ length: count }, () => ({
-      x: 5 + Math.random() * 85,
-      y: 5 + Math.random() * 85,
+      x: 6 + Math.random() * 82,
+      y: 6 + Math.random() * 82,
     }))
   );
   return Array.from({ length: count }, (_, i) => ({
@@ -48,13 +48,11 @@ type RoundPhase = "playing" | "feedback";
 export function TrilhaVisual({ difficulty, theme, onComplete }: TrilhaVisualProps) {
   const reportProgress = useExerciseProgress();
 
-  // Adaptive state
   const [count, setCount] = useState(initialCount(difficulty));
   const [streak, setStreak] = useState(0);
   const [round, setRound] = useState(0);
   const [roundResults, setRoundResults] = useState<{ correct: boolean; count: number }[]>([]);
 
-  // Round state
   const [cells, setCells] = useState<Cell[]>(() => generateCells(initialCount(difficulty)));
   const [nextExpected, setNextExpected] = useState(1);
   const [errors, setErrors] = useState(0);
@@ -83,18 +81,13 @@ export function TrilhaVisual({ difficulty, theme, onComplete }: TrilhaVisualProp
 
     if (cellId === nextExpected) {
       if (nextExpected === count) {
-        // Trail completed
-        const isCorrect = errors <= 1; // at most 1 error = correct
-
+        const isCorrect = errors <= 1;
         const newRoundResults = [...roundResults, { correct: isCorrect, count }];
         setRoundResults(newRoundResults);
         setRoundCorrect(isCorrect);
         setRoundPhase("feedback");
 
-        // 2-up/2-down staircase on count
-        const newStreak = isCorrect
-          ? Math.max(streak, 0) + 1
-          : Math.min(streak, 0) - 1;
+        const newStreak = isCorrect ? Math.max(streak, 0) + 1 : Math.min(streak, 0) - 1;
         let nextCount = count;
         let nextStreak = newStreak;
         if (newStreak >= 2) { nextCount = Math.min(count + 2, MAX_COUNT); nextStreak = 0; }
@@ -133,39 +126,43 @@ export function TrilhaVisual({ difficulty, theme, onComplete }: TrilhaVisualProp
     }
   }, [roundPhase, nextExpected, count, errors, streak, round, roundResults, difficulty, onComplete, reportProgress, startNewRound]);
 
-  const bgClass = theme === "GAMIFIED" ? "bg-gray-950" : theme === "COLORFUL" ? "bg-gradient-to-br from-yellow-50 to-green-50" : "bg-gray-50";
+  const bgClass =
+    theme === "GAMIFIED" ? "bg-gray-950" :
+    theme === "COLORFUL" ? "bg-gradient-to-br from-yellow-50 to-green-50" :
+    "bg-gray-50";
+
+  const headerClass =
+    theme === "GAMIFIED" ? "border-gray-700" : "border-gray-200";
+
+  const titleClass =
+    theme === "GAMIFIED" ? "text-cyan-400" :
+    theme === "COLORFUL" ? "text-green-700" :
+    "text-gray-900";
+
+  const subClass =
+    theme === "GAMIFIED" ? "text-gray-400" : "text-gray-500";
 
   return (
     <div className={`min-h-screen flex flex-col items-center p-4 ${bgClass}`}>
-      <div className={`w-full max-w-2xl rounded-2xl overflow-hidden ${theme === "GAMIFIED" ? "bg-gray-800 border border-cyan-500/30" : "bg-white shadow-lg"}`}>
+      <div className={`w-full max-w-2xl rounded-2xl overflow-hidden ${
+        theme === "GAMIFIED" ? "bg-gray-800 border border-cyan-500/30" : "bg-white shadow-lg"
+      }`}>
         {/* Header */}
-        <div className={`flex justify-between items-center px-6 py-4 border-b ${theme === "GAMIFIED" ? "border-gray-700" : "border-gray-200"}`}>
+        <div className={`flex justify-between items-center px-6 py-4 border-b ${headerClass}`}>
           <div>
-            <span className={`font-bold ${theme === "GAMIFIED" ? "text-cyan-400" : "text-gray-900"}`}>
-              Trilha Visual
-            </span>
-            <span className={`ml-2 text-xs ${theme === "GAMIFIED" ? "text-gray-400" : "text-gray-500"}`}>
-              {count} números
-            </span>
+            <span className={`font-bold ${titleClass}`}>Conecta Números</span>
+            <span className={`ml-2 text-xs ${subClass}`}>{count} números</span>
           </div>
-          <div className="flex gap-5 text-sm">
-            {roundPhase === "playing" && (
-              <>
-                <span className={theme === "GAMIFIED" ? "text-gray-300" : "text-gray-600"}>
-                  Próximo: <strong className={theme === "GAMIFIED" ? "text-cyan-400" : "text-blue-600"}>{nextExpected}</strong>
-                </span>
-                <span className={`${errors > 0 ? "text-red-500" : theme === "GAMIFIED" ? "text-gray-400" : "text-gray-500"}`}>
-                  Erros: {errors}
-                </span>
-              </>
+          <div className="flex gap-4 text-sm items-center">
+            {roundPhase === "playing" && errors > 0 && (
+              <span className="text-red-500 font-medium">
+                {errors} {errors === 1 ? "erro" : "erros"}
+              </span>
             )}
-            <span className={theme === "GAMIFIED" ? "text-gray-400" : "text-gray-500"}>
-              {round + 1}/{MAX_ROUNDS}
-            </span>
           </div>
         </div>
 
-        {/* Barra de progresso */}
+        {/* Progress bar */}
         <div className="flex gap-1 px-6 py-2">
           {Array.from({ length: MAX_ROUNDS }).map((_, i) => (
             <div
@@ -173,17 +170,16 @@ export function TrilhaVisual({ difficulty, theme, onComplete }: TrilhaVisualProp
               className={`h-1.5 flex-1 rounded-full transition-colors ${
                 i < roundResults.length
                   ? roundResults[i].correct ? "bg-green-500" : "bg-red-400"
-                  : i === round
-                  ? "bg-blue-400 animate-pulse"
+                  : i === round ? "bg-blue-400 animate-pulse"
                   : theme === "GAMIFIED" ? "bg-gray-700" : "bg-gray-200"
               }`}
             />
           ))}
         </div>
 
-        <p className={`text-center text-sm py-2 px-6 ${theme === "GAMIFIED" ? "text-gray-400" : "text-gray-600"}`}>
+        <p className={`text-center text-sm py-2 px-6 ${subClass}`}>
           {roundPhase === "playing"
-            ? "Toque nos números em ordem crescente: 1, 2, 3..."
+            ? "Toque os números do menor para o maior: 1, 2, 3..."
             : roundCorrect ? "Correto! ✅" : "Incorreto ❌"}
         </p>
 
@@ -191,29 +187,25 @@ export function TrilhaVisual({ difficulty, theme, onComplete }: TrilhaVisualProp
         <div className="relative w-full" style={{ paddingBottom: "75%" }}>
           {cells.map((cell) => {
             const isCompleted = cell.id < nextExpected;
-            const isNext = cell.id === nextExpected;
 
             return (
               <motion.button
                 key={cell.id}
                 onClick={() => handleCellClick(cell.id)}
-                disabled={roundPhase !== "playing"}
-                className={`absolute w-10 h-10 rounded-full flex items-center justify-center text-sm font-bold border-2 transform -translate-x-1/2 -translate-y-1/2 transition-all ${
+                disabled={roundPhase !== "playing" || isCompleted}
+                className={`absolute w-10 h-10 rounded-lg flex items-center justify-center text-sm font-bold border-2 transform -translate-x-1/2 -translate-y-1/2 transition-all select-none ${
                   isCompleted
-                    ? "bg-green-500 border-green-600 text-white opacity-40"
-                    : isNext
                     ? theme === "GAMIFIED"
-                      ? "bg-cyan-500 border-cyan-300 text-gray-900 shadow-[0_0_15px_rgba(6,182,212,0.6)]"
-                      : "bg-blue-500 border-blue-600 text-white shadow-md ring-2 ring-blue-300"
+                      ? "bg-cyan-800 border-cyan-700 text-cyan-300 opacity-50"
+                      : "bg-green-400 border-green-500 text-white opacity-50"
                     : theme === "GAMIFIED"
-                    ? "bg-gray-700 border-gray-500 text-gray-300 hover:bg-gray-600"
-                    : "bg-white border-gray-400 text-gray-700 hover:bg-gray-100"
+                    ? "bg-gray-700 border-gray-500 text-gray-200 hover:bg-gray-600 active:scale-90"
+                    : theme === "COLORFUL"
+                    ? "bg-white border-green-300 text-green-800 hover:bg-green-50 shadow-sm active:scale-90"
+                    : "bg-white border-gray-400 text-gray-700 hover:bg-gray-100 shadow-sm active:scale-90"
                 }`}
                 style={{ left: `${cell.x}%`, top: `${cell.y}%` }}
-                whileHover={{ scale: 1.15 }}
-                whileTap={{ scale: 0.9 }}
-                animate={isNext ? { scale: [1, 1.1, 1] } : {}}
-                transition={isNext ? { duration: 1.5, repeat: Infinity } : {}}
+                whileTap={{ scale: 0.88 }}
               >
                 {cell.label}
               </motion.button>

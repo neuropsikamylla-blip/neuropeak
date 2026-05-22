@@ -104,9 +104,6 @@ export function TempoReacao({ difficulty, theme, onComplete }: TempoReacaoProps)
           <h2 className={`font-bold ${theme === "GAMIFIED" ? "text-cyan-400" : "text-gray-900"}`}>
             Tempo de Reação
           </h2>
-          <span className={`text-sm ${theme === "GAMIFIED" ? "text-gray-400" : "text-gray-500"}`}>
-            {trial + 1}/{MAX_TRIALS}
-          </span>
         </div>
 
         {/* Progress bar */}

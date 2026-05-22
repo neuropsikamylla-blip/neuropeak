@@ -187,7 +187,6 @@ export function MatrizEspacial({ difficulty, theme, onComplete, alwaysReverse }:
               {reverse ? " · clique ao contrário" : ""}
             </p>
           </div>
-          <span className={`text-sm font-medium ${sub}`}>{trial + 1}/{MAX_TRIALS}</span>
         </div>
 
         {/* Barra de progresso */}
@@ -257,21 +256,9 @@ export function MatrizEspacial({ difficulty, theme, onComplete, alwaysReverse }:
               initial={{ opacity: 0, y: 8 }}
               animate={{ opacity: 1, y: 0 }}
             >
-              <p className={`text-xs ${sub}`}>
-                {reverse ? "Resposta correta (inversa): " : "Sequência correta: "}
-                posições {(reverse ? [...sequence].reverse() : sequence).map((c) => c + 1).join(" → ")}
+              <p className={`text-sm font-semibold ${feedbackData.correct ? "text-green-600" : "text-red-500"}`}>
+                {feedbackData.correct ? "Correto! ✅" : "Incorreto ❌"}
               </p>
-              {reverse && (
-                <p className={`text-xs ${sub} opacity-70`}>
-                  (apresentado: {sequence.map((c) => c + 1).join(" → ")})
-                </p>
-              )}
-              {trial + 1 < MAX_TRIALS && (
-                <p className={`text-xs mt-1 font-medium ${feedbackData.correct ? (theme === "GAMIFIED" ? "text-cyan-400" : "text-blue-600") : (theme === "GAMIFIED" ? "text-gray-500" : "text-gray-400")}`}>
-                  {feedbackData.correct && streak + 1 >= 2 ? `Próxima: ${Math.min(seqLength + 1, MAX_SEQ)} células ↑` : ""}
-                  {!feedbackData.correct && streak - 1 <= -2 && seqLength > MIN_SEQ ? `Próxima: ${Math.max(seqLength - 1, MIN_SEQ)} células ↓` : ""}
-                </p>
-              )}
             </motion.div>
           )}
         </AnimatePresence>

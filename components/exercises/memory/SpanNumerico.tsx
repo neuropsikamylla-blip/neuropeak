@@ -200,7 +200,6 @@ export function SpanNumerico({ difficulty, theme, onComplete, alwaysReverse }: S
               {reverse ? " · responda ao contrário" : ""}
             </p>
           </div>
-          <span className={`text-sm font-medium ${sub}`}>{trial + 1}/{MAX_TRIALS}</span>
         </div>
 
         {/* Barra de progresso */}

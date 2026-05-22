@@ -121,7 +121,6 @@ export function FlexibilidadeCognitiva({ difficulty, theme, onComplete }: Flexib
       <div className={`w-full max-w-md rounded-2xl p-6 ${theme === "GAMIFIED" ? "bg-gray-800 border border-cyan-500/30" : "bg-white shadow-lg"}`}>
         <div className="flex justify-between items-center mb-3">
           <h2 className={`font-bold text-lg ${theme === "GAMIFIED" ? "text-cyan-400" : "text-gray-900"}`}>Flexibilidade Cognitiva</h2>
-          <span className={`text-sm ${theme === "GAMIFIED" ? "text-gray-400" : "text-gray-500"}`}>{trial + 1}/{TOTAL_TRIALS}</span>
         </div>
 
         {/* Barra de progresso */}

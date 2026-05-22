@@ -388,14 +388,9 @@ export function StroopTask({ difficulty, theme, onComplete }: StroopTaskProps) {
           <span className={`text-xs ${theme === "GAMIFIED" ? "text-gray-500" : "text-gray-400"}`}>
             {(Math.round(timeMs / 100) / 10).toFixed(1)}s/item
           </span>
-          <div className="flex gap-4 items-center">
-            <span className={`text-sm font-bold ${theme === "GAMIFIED" ? "text-green-400" : "text-green-600"}`}>
-              ✓ {results.filter((r) => r.correct).length}
-            </span>
-            <span className={`text-sm ${theme === "GAMIFIED" ? "text-gray-400" : "text-gray-500"}`}>
-              {trial + 1}/{MAX_TRIALS}
-            </span>
-          </div>
+          <span className={`text-sm font-bold ${theme === "GAMIFIED" ? "text-green-400" : "text-green-600"}`}>
+            ✓ {results.filter((r) => r.correct).length}
+          </span>
         </div>
 
         {/* Progress dots */}

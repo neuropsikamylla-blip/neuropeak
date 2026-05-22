@@ -13,7 +13,7 @@ interface NBackProps {
 }
 
 const LETTERS = ["A", "B", "C", "D", "E", "F", "G", "H", "K", "L", "M", "P", "R"];
-const SHOW_MS = 2200;
+const SHOW_MS = 3500;
 const BLANK_MS = 400;
 const TARGET_RATIO = 0.32;
 
@@ -49,6 +49,7 @@ export function NBack({ difficulty, theme, onComplete }: NBackProps) {
   const [trial, setTrial] = useState(0);
   const [currentLetter, setCurrentLetter] = useState("");
   const [isTarget, setIsTarget] = useState(false);
+  const isTargetRef = useRef(false);
   const [answered, setAnswered] = useState(false);
   const [lastCorrect, setLastCorrect] = useState<boolean | null>(null);
   const [results, setResults] = useState<{ correct: boolean; nLevel: number }[]>([]);
@@ -71,6 +72,7 @@ export function NBack({ difficulty, theme, onComplete }: NBackProps) {
   const presentStimulus = useCallback((isPriming: boolean, targetBool: boolean, letter: string) => {
     setCurrentLetter(letter);
     setIsTarget(targetBool);
+    isTargetRef.current = targetBool;
     setAnswered(false);
     setLastCorrect(null);
     setPhase(isPriming ? "priming" : "active");
@@ -99,7 +101,7 @@ export function NBack({ difficulty, theme, onComplete }: NBackProps) {
 
       if (myPhase === "active" && !answeredRef.current) {
         // Timeout → NÃO (missed target or correct non-target)
-        const missed = isTarget; // target but no response = wrong
+        const missed = isTargetRef.current; // use ref to avoid stale closure
         processAnswer(!missed, myTrial);
         return;
       }
@@ -225,7 +227,7 @@ export function NBack({ difficulty, theme, onComplete }: NBackProps) {
             <h2 className={`font-bold text-base ${titleClass}`}>N-Back — {nLevel}-back</h2>
             <p className={`text-xs ${subClass}`}>A letra de agora é igual à de {nLevel} atrás?</p>
           </div>
-          <span className={`text-sm font-medium ${subClass}`}>{trial + 1}/{TOTAL_TRIALS}</span>
+          <span className={`text-sm font-medium ${subClass}`}>{nLevel}-back</span>
         </div>
 
         {/* Progress bar */}
@@ -328,7 +330,6 @@ export function NBack({ difficulty, theme, onComplete }: NBackProps) {
               }`}
             />
           ))}
-          <span className={`text-xs ml-1 ${subClass}`}>{nLevel}-back</span>
         </div>
       </div>
     </div>

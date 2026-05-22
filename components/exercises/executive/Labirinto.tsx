@@ -214,9 +214,6 @@ export function Labirinto({ difficulty, theme, onComplete }: LabirintoProps) {
             </p>
           </div>
           <div className="text-right">
-            <p className={`text-sm ${theme === "GAMIFIED" ? "text-gray-400" : "text-gray-500"}`}>
-              {mazeNum + 1}/{MAX_MAZES}
-            </p>
             <p className={`text-xs font-medium ${timeColor}`}>
               {elapsed}s / {timeLimit}s
             </p>

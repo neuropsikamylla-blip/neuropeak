@@ -193,7 +193,6 @@ export function Sequenciamento({ difficulty, theme, onComplete }: Sequenciamento
             </h2>
             <p className={`text-xs ${subClass}`}>{stepCount} passos</p>
           </div>
-          <span className={`text-sm ${subClass}`}>{trial + 1}/{MAX_TRIALS}</span>
         </div>
 
         {/* Barra de progresso */}

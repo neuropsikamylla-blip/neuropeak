@@ -15,7 +15,7 @@ import { ExerciseScienceCard } from "@/components/exercises/ExerciseScienceCard"
 const ALL_DOMAINS: Domain[] = ["memory", "attention", "processing", "executive"];
 
 const DOMAIN_EXERCISES: Record<Domain, string[]> = {
-  memory: ["span-numerico", "matriz-espacial", "associacao-pares", "jogo-memoria", "span-numerico-inverso", "matriz-espacial-inversa", "nback"],
+  memory: ["span-numerico", "matriz-espacial", "jogo-memoria", "span-numerico-inverso", "matriz-espacial-inversa", "nback"],
   attention: ["trilha-visual", "stroop-task", "vigilancia"],
   processing: ["tempo-reacao", "decisao-rapida", "identificacao-simbolos"],
   executive: ["torre-hanoi", "sequenciamento", "flexibilidade-cognitiva", "labirinto"],
