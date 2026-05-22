@@ -31,7 +31,7 @@ export default function NovoPacientePage() {
   const router = useRouter();
   const { toast } = useToast();
   const [loading, setLoading] = useState(false);
-  const [created, setCreated] = useState<{ id: string; pin: string; name: string } | null>(null);
+  const [created, setCreated] = useState<{ id: string; pin: string; name: string; patientCode?: string } | null>(null);
   const [pinCopied, setPinCopied] = useState(false);
   const [needsLicense, setNeedsLicense] = useState(false);
   const [requestingSent, setRequestingSent] = useState(false);
@@ -94,7 +94,7 @@ export default function NovoPacientePage() {
       }
 
       const data = await res.json();
-      setCreated({ id: data.patient.id, pin: data.patient.pin, name: data.patient.name });
+      setCreated({ id: data.patient.id, pin: data.patient.pin, name: data.patient.name, patientCode: data.patient.patientCode });
     } catch (err) {
       toast({
         title: "Erro",
@@ -195,12 +195,17 @@ export default function NovoPacientePage() {
                 Compartilhe estas informações de acesso com o paciente <strong>{created.name}</strong>:
               </p>
               <div className="space-y-2">
-                <div className="flex items-center justify-between bg-white rounded-lg p-3 border">
-                  <div>
-                    <p className="text-xs text-gray-500">ID do Paciente</p>
-                    <p className="font-mono font-bold text-gray-800">{created.id}</p>
+                {created.patientCode && (
+                  <div className="flex items-center justify-between bg-white rounded-lg p-3 border">
+                    <div>
+                      <p className="text-xs text-gray-500">Código do Paciente</p>
+                      <p className="font-mono font-bold text-2xl tracking-widest text-blue-700">{created.patientCode}</p>
+                    </div>
+                    <Button variant="ghost" size="sm" onClick={() => { navigator.clipboard.writeText(created.patientCode!); }}>
+                      <Copy className="w-4 h-4" />
+                    </Button>
                   </div>
-                </div>
+                )}
                 <div className="flex items-center justify-between bg-white rounded-lg p-3 border">
                   <div>
                     <p className="text-xs text-gray-500">PIN de acesso</p>

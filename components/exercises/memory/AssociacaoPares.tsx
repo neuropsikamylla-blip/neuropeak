@@ -1,10 +1,10 @@
 "use client";
 
 import { useState, useEffect, useRef } from "react";
-import { motion, AnimatePresence } from "framer-motion";
-import { Button } from "@/components/ui/button";
+import { motion } from "framer-motion";
 import { calculateExerciseScore } from "@/lib/scoring";
 import { shuffle } from "@/lib/utils";
+import { useExerciseProgress } from "@/components/exercises/ExerciseWrapper";
 import type { ExerciseResult, Theme } from "@/types";
 
 interface AssociacaoPares {
@@ -13,10 +13,13 @@ interface AssociacaoPares {
   onComplete: (result: ExerciseResult) => void;
 }
 
-const PAIRS_BY_DIFFICULTY: Record<number, number> = {
-  1: 3, 2: 4, 3: 5, 4: 6, 5: 7,
-  6: 8, 7: 9, 8: 10, 9: 12, 10: 12,
-};
+const MAX_QUESTIONS = 20;
+const MIN_PAIRS = 2;
+const MAX_PAIRS = 10;
+
+function initialPairs(difficulty: number) {
+  return Math.min(Math.max(2, Math.floor(difficulty * 0.7) + 1), 6);
+}
 
 const WORD_PAIRS = [
   { word: "Sol", emoji: "☀️" }, { word: "Lua", emoji: "🌙" },
@@ -29,20 +32,27 @@ const WORD_PAIRS = [
   { word: "Barco", emoji: "⛵" },
 ];
 
-type Phase = "study" | "recall" | "done";
+type Phase = "study" | "recall";
 
 export function AssociacaoPares({ difficulty, theme, onComplete }: AssociacaoPares) {
-  const pairCount = PAIRS_BY_DIFFICULTY[difficulty] ?? 3;
-  const maxTrials = 3;
+  const reportProgress = useExerciseProgress();
 
-  const [pairs] = useState(() => shuffle(WORD_PAIRS).slice(0, pairCount));
+  // Adaptive state
+  const [pairCount, setPairCount] = useState(initialPairs(difficulty));
+  const [streak, setStreak] = useState(0);
+
+  // Session tracking
+  const [totalAnswered, setTotalAnswered] = useState(0);
+  const [sessionResults, setSessionResults] = useState<boolean[]>([]);
+
+  // Round state
+  const [pairs, setPairs] = useState(() => shuffle(WORD_PAIRS).slice(0, initialPairs(difficulty)));
   const [phase, setPhase] = useState<Phase>("study");
-  const [studyCountdown, setStudyCountdown] = useState(pairCount * 3);
+  const [studyCountdown, setStudyCountdown] = useState(initialPairs(difficulty) * 3);
   const [currentQuestion, setCurrentQuestion] = useState(0);
   const [shuffledOptions, setShuffledOptions] = useState<string[]>([]);
   const [selected, setSelected] = useState<string | null>(null);
-  const [correct, setCorrect] = useState<boolean | null>(null);
-  const [results, setResults] = useState<boolean[]>([]);
+
   const startTime = useRef<number>(Date.now());
 
   // Study countdown
@@ -60,27 +70,49 @@ export function AssociacaoPares({ difficulty, theme, onComplete }: AssociacaoPar
   // Prepare options for current question
   useEffect(() => {
     if (phase !== "recall") return;
-    const correct = pairs[currentQuestion].emoji;
+    const correctEmoji = pairs[currentQuestion]?.emoji;
+    if (!correctEmoji) return;
     const distractors = pairs
       .filter((_, i) => i !== currentQuestion)
       .map((p) => p.emoji);
-    const options = shuffle([correct, ...distractors.slice(0, 3)]);
-    setShuffledOptions(options);
+    const opts = shuffle([correctEmoji, ...distractors.slice(0, 3)]);
+    setShuffledOptions(opts);
     setSelected(null);
-    setCorrect(null);
   }, [phase, currentQuestion, pairs]);
+
+  function startNewRound(nextPairCount: number) {
+    const newPairs = shuffle(WORD_PAIRS).slice(0, nextPairCount);
+    setPairs(newPairs);
+    setPhase("study");
+    setStudyCountdown(nextPairCount * 3);
+    setCurrentQuestion(0);
+    setSelected(null);
+  }
 
   function handleSelect(emoji: string) {
     if (selected) return;
     setSelected(emoji);
     const isCorrect = emoji === pairs[currentQuestion].emoji;
-    setCorrect(isCorrect);
-    const newResults = [...results, isCorrect];
-    setResults(newResults);
+    const newSessionResults = [...sessionResults, isCorrect];
+    const newTotal = totalAnswered + 1;
+
+    setSessionResults(newSessionResults);
+    setTotalAnswered(newTotal);
+
+    // 2-up/2-down staircase on pair count
+    const newStreak = isCorrect
+      ? Math.max(streak, 0) + 1
+      : Math.min(streak, 0) - 1;
+    let nextPairCount = pairCount;
+    let nextStreak = newStreak;
+    if (newStreak >= 2) { nextPairCount = Math.min(pairCount + 1, MAX_PAIRS); nextStreak = 0; }
+    if (newStreak <= -2) { nextPairCount = Math.max(pairCount - 1, MIN_PAIRS); nextStreak = 0; }
+
+    reportProgress(Math.round((newTotal / MAX_QUESTIONS) * 100));
 
     setTimeout(() => {
-      if (currentQuestion + 1 >= pairCount) {
-        const accuracy = newResults.filter(Boolean).length / pairCount;
+      if (newTotal >= MAX_QUESTIONS) {
+        const accuracy = newSessionResults.filter(Boolean).length / MAX_QUESTIONS;
         const duration = Math.round((Date.now() - startTime.current) / 1000);
         const score = calculateExerciseScore("associacao-pares", accuracy, undefined, difficulty);
         onComplete({
@@ -90,9 +122,20 @@ export function AssociacaoPares({ difficulty, theme, onComplete }: AssociacaoPar
           accuracy,
           difficulty,
           duration,
-          metadata: { pairCount, correctCount: newResults.filter(Boolean).length },
+          metadata: {
+            questions: MAX_QUESTIONS,
+            correctCount: newSessionResults.filter(Boolean).length,
+            maxPairs: Math.max(...newSessionResults.map((_, i) => (i < newSessionResults.length ? pairCount : 0))),
+          },
         });
+      } else if (currentQuestion + 1 >= pairCount) {
+        // End of round → staircase → new study round
+        setStreak(nextStreak);
+        setPairCount(nextPairCount);
+        startNewRound(nextPairCount);
       } else {
+        setStreak(nextStreak);
+        setPairCount(nextPairCount);
         setCurrentQuestion((q) => q + 1);
       }
     }, 1000);
@@ -101,10 +144,34 @@ export function AssociacaoPares({ difficulty, theme, onComplete }: AssociacaoPar
   const bgClass = theme === "GAMIFIED" ? "bg-gray-950" : theme === "COLORFUL" ? "bg-gradient-to-br from-pink-50 to-yellow-50" : "bg-gray-50";
   const cardClass = theme === "GAMIFIED" ? "bg-gray-800 border border-cyan-500/30 rounded-2xl" : "bg-white shadow-lg rounded-2xl";
   const titleClass = theme === "GAMIFIED" ? "text-cyan-400" : theme === "COLORFUL" ? "text-pink-600" : "text-gray-900";
+  const subClass = theme === "GAMIFIED" ? "text-gray-400" : "text-gray-500";
 
   return (
     <div className={`min-h-screen flex flex-col items-center justify-center p-4 ${bgClass}`}>
       <div className={`w-full max-w-lg p-6 ${cardClass}`}>
+
+        {/* Barra de progresso global */}
+        <div className="flex justify-between items-center mb-2">
+          <span className={`text-xs ${subClass}`}>
+            {phase === "study" ? `Estude ${pairCount} par${pairCount > 1 ? "es" : ""}` : "Qual é a imagem?"}
+          </span>
+          <span className={`text-xs font-medium ${subClass}`}>{totalAnswered}/{MAX_QUESTIONS}</span>
+        </div>
+        <div className="flex gap-1 mb-4">
+          {Array.from({ length: MAX_QUESTIONS }).map((_, i) => (
+            <div
+              key={i}
+              className={`h-1.5 flex-1 rounded-full transition-colors ${
+                i < sessionResults.length
+                  ? sessionResults[i] ? "bg-green-500" : "bg-red-400"
+                  : i === totalAnswered && phase === "recall"
+                  ? "bg-blue-400 animate-pulse"
+                  : theme === "GAMIFIED" ? "bg-gray-700" : "bg-gray-200"
+              }`}
+            />
+          ))}
+        </div>
+
         {phase === "study" && (
           <>
             <div className="flex justify-between items-center mb-4">
@@ -113,7 +180,7 @@ export function AssociacaoPares({ difficulty, theme, onComplete }: AssociacaoPar
                 {studyCountdown}s
               </span>
             </div>
-            <p className={`text-sm mb-4 ${theme === "GAMIFIED" ? "text-gray-400" : "text-gray-500"}`}>
+            <p className={`text-sm mb-4 ${subClass}`}>
               Memorize as associações palavra-imagem
             </p>
             <div className="grid grid-cols-2 gap-3">
@@ -123,7 +190,7 @@ export function AssociacaoPares({ difficulty, theme, onComplete }: AssociacaoPar
                   className={`p-4 rounded-xl flex items-center gap-3 ${theme === "GAMIFIED" ? "bg-gray-700" : "bg-gray-50 border border-gray-200"}`}
                   initial={{ opacity: 0, y: 20 }}
                   animate={{ opacity: 1, y: 0 }}
-                  transition={{ delay: i * 0.1 }}
+                  transition={{ delay: i * 0.08 }}
                 >
                   <span className="text-3xl">{pair.emoji}</span>
                   <span className={`font-medium ${theme === "GAMIFIED" ? "text-gray-200" : "text-gray-800"}`}>
@@ -139,21 +206,21 @@ export function AssociacaoPares({ difficulty, theme, onComplete }: AssociacaoPar
           <>
             <div className="flex justify-between items-center mb-6">
               <h2 className={`font-bold text-lg ${titleClass}`}>Qual é a imagem?</h2>
-              <span className={`text-sm ${theme === "GAMIFIED" ? "text-gray-400" : "text-gray-500"}`}>
+              <span className={`text-sm ${subClass}`}>
                 {currentQuestion + 1}/{pairCount}
               </span>
             </div>
 
             <div className={`text-center p-6 rounded-2xl mb-6 ${theme === "GAMIFIED" ? "bg-gray-700" : "bg-gray-50"}`}>
               <p className={`text-3xl font-bold ${theme === "GAMIFIED" ? "text-gray-100" : "text-gray-800"}`}>
-                {pairs[currentQuestion].word}
+                {pairs[currentQuestion]?.word}
               </p>
             </div>
 
             <div className="grid grid-cols-2 gap-3">
               {shuffledOptions.map((emoji, i) => {
                 const isSelected = selected === emoji;
-                const isCorrectAnswer = emoji === pairs[currentQuestion].emoji;
+                const isCorrectAnswer = emoji === pairs[currentQuestion]?.emoji;
                 let cellStyle = "";
 
                 if (selected) {
@@ -179,26 +246,6 @@ export function AssociacaoPares({ difficulty, theme, onComplete }: AssociacaoPar
                   </motion.button>
                 );
               })}
-            </div>
-
-            {/* Progress dots */}
-            <div className="flex justify-center gap-2 mt-6">
-              {Array.from({ length: pairCount }).map((_, i) => (
-                <div
-                  key={i}
-                  className={`w-3 h-3 rounded-full ${
-                    i < results.length
-                      ? results[i]
-                        ? "bg-green-500"
-                        : "bg-red-500"
-                      : i === currentQuestion
-                      ? "bg-blue-400"
-                      : theme === "GAMIFIED"
-                      ? "bg-gray-700"
-                      : "bg-gray-200"
-                  }`}
-                />
-              ))}
             </div>
           </>
         )}

@@ -1,8 +1,9 @@
 "use client";
 
-import { useState, useEffect, useRef, useCallback } from "react";
+import { useState, useRef, useCallback } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { calculateExerciseScore } from "@/lib/scoring";
+import { useExerciseProgress } from "@/components/exercises/ExerciseWrapper";
 import type { ExerciseResult, Theme } from "@/types";
 
 interface JogoMemoriaProps {
@@ -20,7 +21,13 @@ interface Card {
 
 const EMOJIS = ["🐶","🐱","🐰","🦊","🐻","🐼","🐨","🦁","🐸","🦋","🦄","🐬","🦜","🐙","🦕","🐳","🦒","🐘"];
 
-const PAIRS: Record<number, number> = { 1: 4, 2: 6, 3: 8, 4: 10, 5: 12 };
+const MAX_ROUNDS = 10;
+const MIN_PAIRS = 2;
+const MAX_PAIRS = 9; // EMOJIS.length / 2
+
+function initialPairs(difficulty: number) {
+  return Math.min(Math.max(2, difficulty + 1), 6);
+}
 
 function buildCards(pairs: number): Card[] {
   const emojis = [...EMOJIS].sort(() => Math.random() - 0.5).slice(0, pairs);
@@ -33,24 +40,33 @@ function buildCards(pairs: number): Card[] {
 }
 
 export function JogoMemoria({ difficulty, theme, onComplete }: JogoMemoriaProps) {
-  const pairs = PAIRS[difficulty] ?? 4;
-  const [cards, setCards] = useState<Card[]>(() => buildCards(pairs));
+  const reportProgress = useExerciseProgress();
+
+  // Adaptive state
+  const [pairCount, setPairCount] = useState(initialPairs(difficulty));
+  const [streak, setStreak] = useState(0);
+  const [round, setRound] = useState(0);
+  const [roundResults, setRoundResults] = useState<{ correct: boolean; pairs: number }[]>([]);
+
+  // Game state
+  const [cards, setCards] = useState<Card[]>(() => buildCards(initialPairs(difficulty)));
   const [selected, setSelected] = useState<number[]>([]);
   const [attempts, setAttempts] = useState(0);
   const [matchedCount, setMatchedCount] = useState(0);
   const [locked, setLocked] = useState(false);
+
   const startTime = useRef(Date.now());
+  const roundStartTime = useRef(Date.now());
   const doneRef = useRef(false);
 
-  useEffect(() => {
-    setCards(buildCards(pairs));
+  function startNextRound(nextPairCount: number, nextRound: number) {
+    setCards(buildCards(nextPairCount));
     setSelected([]);
     setAttempts(0);
     setMatchedCount(0);
     setLocked(false);
-    doneRef.current = false;
-    startTime.current = Date.now();
-  }, [pairs]);
+    roundStartTime.current = Date.now();
+  }
 
   const handleFlip = useCallback((id: number) => {
     if (locked || doneRef.current) return;
@@ -63,7 +79,8 @@ export function JogoMemoria({ difficulty, theme, onComplete }: JogoMemoriaProps)
 
     if (newSelected.length === 2) {
       setLocked(true);
-      setAttempts(a => a + 1);
+      const newAttempts = attempts + 1;
+      setAttempts(newAttempts);
       const [a, b] = newSelected;
       const cardA = cards[a], cardB = cards[b];
 
@@ -76,20 +93,49 @@ export function JogoMemoria({ difficulty, theme, onComplete }: JogoMemoriaProps)
           setLocked(false);
           const newMatch = matchedCount + 1;
           setMatchedCount(newMatch);
-          if (newMatch === pairs && !doneRef.current) {
-            doneRef.current = true;
-            const duration = Math.round((Date.now() - startTime.current) / 1000);
-            const efficiency = Math.min(1, pairs / (attempts + 1));
-            const score = calculateExerciseScore("jogo-memoria", efficiency, undefined, difficulty);
-            setTimeout(() => onComplete({
-              exerciseId: "jogo-memoria",
-              domain: "memory",
-              score,
-              accuracy: efficiency,
-              difficulty,
-              duration,
-              metadata: { pairs, attempts: attempts + 1 },
-            }), 800);
+
+          if (newMatch === pairCount && !doneRef.current) {
+            // Round completed — evaluate efficiency
+            const efficiency = pairCount / newAttempts; // 1.0 = perfect, lower = worse
+            const isCorrect = efficiency >= 0.5; // completed with < 2× optimal attempts
+
+            const newRoundResults = [...roundResults, { correct: isCorrect, pairs: pairCount }];
+            setRoundResults(newRoundResults);
+
+            const newStreak = isCorrect
+              ? Math.max(streak, 0) + 1
+              : Math.min(streak, 0) - 1;
+            let nextPairs = pairCount;
+            let nextStreak = newStreak;
+            if (newStreak >= 2) { nextPairs = Math.min(pairCount + 1, MAX_PAIRS); nextStreak = 0; }
+            if (newStreak <= -2) { nextPairs = Math.max(pairCount - 1, MIN_PAIRS); nextStreak = 0; }
+
+            const nextRound = round + 1;
+            reportProgress(Math.round((nextRound / MAX_ROUNDS) * 100));
+
+            setTimeout(() => {
+              if (nextRound >= MAX_ROUNDS) {
+                doneRef.current = true;
+                const accuracy = newRoundResults.filter((r) => r.correct).length / MAX_ROUNDS;
+                const maxPairs = Math.max(...newRoundResults.map((r) => r.pairs));
+                const duration = Math.round((Date.now() - startTime.current) / 1000);
+                const score = calculateExerciseScore("jogo-memoria", accuracy, undefined, difficulty);
+                onComplete({
+                  exerciseId: "jogo-memoria",
+                  domain: "memory",
+                  score,
+                  accuracy,
+                  difficulty,
+                  duration,
+                  metadata: { rounds: MAX_ROUNDS, maxPairs, correct: newRoundResults.filter((r) => r.correct).length },
+                });
+              } else {
+                setRound(nextRound);
+                setStreak(nextStreak);
+                setPairCount(nextPairs);
+                startNextRound(nextPairs, nextRound);
+              }
+            }, 1200);
           }
         }, 600);
       } else {
@@ -102,14 +148,14 @@ export function JogoMemoria({ difficulty, theme, onComplete }: JogoMemoriaProps)
         }, 1000);
       }
     }
-  }, [locked, cards, selected, matchedCount, pairs, attempts, difficulty, onComplete]);
+  }, [locked, cards, selected, matchedCount, pairCount, attempts, streak, round, roundResults, difficulty, onComplete, reportProgress]);
 
-  const cols = pairs <= 4 ? 4 : pairs <= 6 ? 4 : pairs <= 8 ? 4 : 5;
+  const cols = pairCount <= 4 ? 4 : pairCount <= 6 ? 4 : 5;
 
   const cardBg = {
-    CLINICAL: { back: "bg-blue-100 border-blue-300", front: "bg-white border-blue-200", text: "text-gray-700", matched: "bg-green-50 border-green-300" },
-    COLORFUL: { back: "bg-gradient-to-br from-purple-400 to-pink-400", front: "bg-white border-purple-200", text: "text-purple-700", matched: "bg-yellow-50 border-yellow-300" },
-    GAMIFIED: { back: "bg-gradient-to-br from-cyan-600 to-blue-700 border-cyan-500", front: "bg-gray-700 border-cyan-500/40", text: "text-cyan-400", matched: "bg-gray-600/50 border-cyan-500/20" },
+    CLINICAL: { back: "bg-blue-100 border-blue-300", front: "bg-white border-blue-200", matched: "bg-green-50 border-green-300" },
+    COLORFUL: { back: "bg-gradient-to-br from-purple-400 to-pink-400", front: "bg-white border-purple-200", matched: "bg-yellow-50 border-yellow-300" },
+    GAMIFIED: { back: "bg-gradient-to-br from-cyan-600 to-blue-700 border-cyan-500", front: "bg-gray-700 border-cyan-500/40", matched: "bg-gray-600/50 border-cyan-500/20" },
   }[theme];
 
   return (
@@ -119,14 +165,40 @@ export function JogoMemoria({ difficulty, theme, onComplete }: JogoMemoriaProps)
       <div className={`w-full max-w-sm rounded-2xl p-5 ${
         theme === "GAMIFIED" ? "bg-gray-800 border border-cyan-500/30" : "bg-white shadow-lg"
       }`}>
-        <div className="flex justify-between items-center mb-4">
-          <h2 className={`font-bold text-lg ${
-            theme === "GAMIFIED" ? "text-cyan-400" : theme === "COLORFUL" ? "text-purple-700" : "text-gray-900"
-          }`}>🃏 Jogo da Memória</h2>
-          <div className="text-right">
-            <p className={`text-xs ${theme === "GAMIFIED" ? "text-gray-400" : "text-gray-400"}`}>Pares encontrados</p>
-            <p className={`font-bold text-sm ${theme === "GAMIFIED" ? "text-cyan-400" : "text-blue-600"}`}>{matchedCount}/{pairs}</p>
+        <div className="flex justify-between items-center mb-3">
+          <div>
+            <h2 className={`font-bold text-lg ${
+              theme === "GAMIFIED" ? "text-cyan-400" : theme === "COLORFUL" ? "text-purple-700" : "text-gray-900"
+            }`}>🃏 Jogo da Memória</h2>
+            <p className={`text-xs ${theme === "GAMIFIED" ? "text-gray-400" : "text-gray-500"}`}>
+              {pairCount} par{pairCount > 1 ? "es" : ""}
+            </p>
           </div>
+          <div className="text-right">
+            <p className={`text-xs ${theme === "GAMIFIED" ? "text-gray-400" : "text-gray-400"}`}>Rodada</p>
+            <p className={`font-bold text-sm ${theme === "GAMIFIED" ? "text-cyan-400" : "text-blue-600"}`}>{round + 1}/{MAX_ROUNDS}</p>
+          </div>
+        </div>
+
+        {/* Barra de progresso */}
+        <div className="flex gap-1 mb-4">
+          {Array.from({ length: MAX_ROUNDS }).map((_, i) => (
+            <div
+              key={i}
+              className={`h-1.5 flex-1 rounded-full transition-colors ${
+                i < roundResults.length
+                  ? roundResults[i].correct ? "bg-green-500" : "bg-red-400"
+                  : i === round
+                  ? "bg-blue-400 animate-pulse"
+                  : theme === "GAMIFIED" ? "bg-gray-700" : "bg-gray-200"
+              }`}
+            />
+          ))}
+        </div>
+
+        {/* Pares encontrados nesta rodada */}
+        <div className={`text-center text-xs mb-3 ${theme === "GAMIFIED" ? "text-gray-500" : "text-gray-400"}`}>
+          {matchedCount}/{pairCount} pares • {attempts} tentativas
         </div>
 
         <div
@@ -146,8 +218,6 @@ export function JogoMemoria({ difficulty, theme, onComplete }: JogoMemoriaProps)
                   : cardBg.back
                 }`}
               whileTap={{ scale: 0.92 }}
-              animate={{ rotateY: card.flipped || card.matched ? 0 : 180 }}
-              transition={{ duration: 0.25 }}
             >
               <AnimatePresence mode="wait">
                 {(card.flipped || card.matched) ? (
@@ -167,10 +237,6 @@ export function JogoMemoria({ difficulty, theme, onComplete }: JogoMemoriaProps)
               </AnimatePresence>
             </motion.button>
           ))}
-        </div>
-
-        <div className={`text-center text-xs ${theme === "GAMIFIED" ? "text-gray-500" : "text-gray-400"}`}>
-          {attempts} tentativas
         </div>
       </div>
     </div>

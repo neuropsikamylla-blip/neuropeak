@@ -4,6 +4,7 @@ import { useState, useEffect, useRef, useCallback } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { calculateExerciseScore } from "@/lib/scoring";
 import { average } from "@/lib/utils";
+import { useExerciseProgress } from "@/components/exercises/ExerciseWrapper";
 import type { ExerciseResult, Theme } from "@/types";
 
 interface TempoReacaoProps {
@@ -14,9 +15,10 @@ interface TempoReacaoProps {
 
 type Phase = "waiting" | "ready" | "stimulus" | "tooEarly" | "result";
 
-const TRIALS = 8;
+const MAX_TRIALS = 20;
 
 export function TempoReacao({ difficulty, theme, onComplete }: TempoReacaoProps) {
+  const reportProgress = useExerciseProgress();
   const [phase, setPhase] = useState<Phase>("waiting");
   const [reactionTimes, setReactionTimes] = useState<number[]>([]);
   const [lastRT, setLastRT] = useState<number | null>(null);
@@ -27,7 +29,6 @@ export function TempoReacao({ difficulty, theme, onComplete }: TempoReacaoProps)
 
   const startTrial = useCallback(() => {
     setPhase("ready");
-    // Random delay 1.5-4s
     const delay = 1500 + Math.random() * 2500;
     timeoutRef.current = setTimeout(() => {
       setPhase("stimulus");
@@ -43,7 +44,6 @@ export function TempoReacao({ difficulty, theme, onComplete }: TempoReacaoProps)
 
   function handlePress() {
     if (phase === "ready") {
-      // Too early!
       if (timeoutRef.current) clearTimeout(timeoutRef.current);
       setPhase("tooEarly");
       return;
@@ -56,8 +56,11 @@ export function TempoReacao({ difficulty, theme, onComplete }: TempoReacaoProps)
     setReactionTimes(newRTs);
     setPhase("result");
 
+    const nextTrial = trial + 1;
+    reportProgress(Math.round((nextTrial / MAX_TRIALS) * 100));
+
     setTimeout(() => {
-      if (trial + 1 >= TRIALS) {
+      if (nextTrial >= MAX_TRIALS) {
         const avgRT = average(newRTs);
         const accuracy = 1 - Math.min(1, (avgRT - 150) / 1000);
         const duration = Math.round((Date.now() - startTime.current) / 1000);
@@ -70,10 +73,10 @@ export function TempoReacao({ difficulty, theme, onComplete }: TempoReacaoProps)
           reactionTime: avgRT,
           difficulty,
           duration,
-          metadata: { trials: TRIALS, allRTs: newRTs, avgRT },
+          metadata: { trials: MAX_TRIALS, allRTs: newRTs, avgRT },
         });
       } else {
-        setTrial((t) => t + 1);
+        setTrial(nextTrial);
         startTrial();
       }
     }, 800);
@@ -97,22 +100,22 @@ export function TempoReacao({ difficulty, theme, onComplete }: TempoReacaoProps)
   return (
     <div className={`min-h-screen flex flex-col items-center justify-center p-4 ${bgClass}`}>
       <div className={`w-full max-w-sm rounded-2xl p-8 ${theme === "GAMIFIED" ? "bg-gray-800 border border-cyan-500/30" : "bg-white shadow-lg"}`}>
-        <div className="flex justify-between items-center mb-6">
+        <div className="flex justify-between items-center mb-4">
           <h2 className={`font-bold ${theme === "GAMIFIED" ? "text-cyan-400" : "text-gray-900"}`}>
             Tempo de Reação
           </h2>
           <span className={`text-sm ${theme === "GAMIFIED" ? "text-gray-400" : "text-gray-500"}`}>
-            {trial + 1}/{TRIALS}
+            {trial + 1}/{MAX_TRIALS}
           </span>
         </div>
 
-        {/* Progress */}
+        {/* Progress bar */}
         <div className="flex gap-1 mb-6">
           {reactionTimes.map((rt, i) => (
             <div key={i} className={`h-1.5 flex-1 rounded-full ${rt < 300 ? "bg-green-500" : rt < 500 ? "bg-blue-500" : "bg-orange-400"}`} />
           ))}
-          {Array.from({ length: TRIALS - reactionTimes.length }).map((_, i) => (
-            <div key={i} className={`h-1.5 flex-1 rounded-full ${theme === "GAMIFIED" ? "bg-gray-700" : "bg-gray-200"}`} />
+          {Array.from({ length: MAX_TRIALS - reactionTimes.length }).map((_, i) => (
+            <div key={i} className={`h-1.5 flex-1 rounded-full ${i === 0 && phase !== "waiting" ? "bg-blue-400 animate-pulse" : theme === "GAMIFIED" ? "bg-gray-700" : "bg-gray-200"}`} />
           ))}
         </div>
 

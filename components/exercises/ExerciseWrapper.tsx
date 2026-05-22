@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, createContext, useContext } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { Button } from "@/components/ui/button";
 import { ScoreDisplay } from "@/components/gamification/ScoreDisplay";
@@ -10,10 +10,14 @@ import { CheckCircle2, XCircle, Clock, Target, Zap } from "lucide-react";
 
 type Phase = "instructions" | "exercise" | "results";
 
+const ProgressContext = createContext<(pct: number) => void>(() => {});
+export const useExerciseProgress = () => useContext(ProgressContext);
+
 interface ExerciseWrapperProps {
   title: string;
   instructions: string[];
   theme: Theme;
+  difficulty?: number;
   children: (onComplete: (result: ExerciseResult) => void) => React.ReactNode;
   onFinish: (result: ExerciseResult) => void;
 }
@@ -22,13 +26,16 @@ export function ExerciseWrapper({
   title,
   instructions,
   theme,
+  difficulty,
   children,
   onFinish,
 }: ExerciseWrapperProps) {
   const [phase, setPhase] = useState<Phase>("instructions");
   const [result, setResult] = useState<ExerciseResult | null>(null);
+  const [sessionProgress, setSessionProgress] = useState(0);
 
   function handleComplete(r: ExerciseResult) {
+    setSessionProgress(100);
     setResult(r);
     setPhase("results");
   }
@@ -105,7 +112,39 @@ export function ExerciseWrapper({
             animate={{ opacity: 1 }}
             exit={{ opacity: 0 }}
           >
-            {children(handleComplete)}
+            <ProgressContext.Provider value={setSessionProgress}>
+              {children(handleComplete)}
+            </ProgressContext.Provider>
+
+            {difficulty !== undefined && (
+              <div className={`fixed bottom-6 right-4 z-50 rounded-2xl px-4 py-3 min-w-[150px] shadow-lg ${
+                theme === "GAMIFIED"
+                  ? "bg-gray-800/95 border border-cyan-500/40 backdrop-blur-sm"
+                  : theme === "COLORFUL"
+                  ? "bg-white/95 border-2 border-purple-300 backdrop-blur-sm"
+                  : "bg-white/95 border border-gray-200 backdrop-blur-sm shadow-md"
+              }`}>
+                <p className={`text-xs font-bold mb-0.5 ${
+                  theme === "GAMIFIED" ? "text-cyan-400" : theme === "COLORFUL" ? "text-purple-700" : "text-gray-800"
+                }`}>
+                  Nível {difficulty}
+                </p>
+                <p className={`text-xs mb-1.5 ${
+                  theme === "GAMIFIED" ? "text-gray-400" : "text-gray-500"
+                }`}>
+                  Progresso {Math.round(sessionProgress)}%
+                </p>
+                <div className={`h-1.5 rounded-full ${theme === "GAMIFIED" ? "bg-gray-600" : "bg-gray-200"}`}>
+                  <motion.div
+                    className={`h-full rounded-full ${
+                      theme === "GAMIFIED" ? "bg-cyan-500" : theme === "COLORFUL" ? "bg-purple-500" : "bg-blue-500"
+                    }`}
+                    animate={{ width: `${sessionProgress}%` }}
+                    transition={{ duration: 0.4 }}
+                  />
+                </div>
+              </div>
+            )}
           </motion.div>
         )}
 

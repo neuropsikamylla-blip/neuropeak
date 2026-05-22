@@ -1,8 +1,9 @@
 "use client";
 
-import { useState, useEffect, useRef, useCallback } from "react";
+import { useState, useEffect, useRef } from "react";
 import { motion } from "framer-motion";
 import { calculateExerciseScore } from "@/lib/scoring";
+import { useExerciseProgress } from "@/components/exercises/ExerciseWrapper";
 import type { ExerciseResult, Theme } from "@/types";
 
 interface StroopTaskProps {
@@ -18,145 +19,214 @@ const COLORS = [
   { name: "AMARELO", hex: "#EAB308" },
 ];
 
-const COUNTS: Record<number, number> = {
-  1: 10, 2: 10, 3: 10, 4: 15, 5: 20,
-  6: 20, 7: 25, 8: 25, 9: 30, 10: 30,
-};
-const TIME_LIMITS: Record<number, number> = {
-  1: 0, 2: 0, 3: 30, 4: 30, 5: 30,
-  6: 25, 7: 25, 8: 20, 9: 20, 10: 15,
-};
+const MAX_TRIALS = 20;
+const MIN_TIME_MS = 800;
+const MAX_TIME_MS = 6000;
+
+// Initial time limit based on difficulty
+function initialTimeMs(difficulty: number) {
+  return Math.max(800, Math.round(6000 - (difficulty - 1) * 580));
+}
+
+function generateItem(difficulty: number) {
+  const wordColor = COLORS[Math.floor(Math.random() * COLORS.length)];
+  const congruent = difficulty <= 2 && Math.random() < 0.35;
+  const inkColor = congruent
+    ? wordColor
+    : COLORS.filter((c) => c.name !== wordColor.name)[Math.floor(Math.random() * 3)];
+  return { word: wordColor.name, inkColor };
+}
 
 export function StroopTask({ difficulty, theme, onComplete }: StroopTaskProps) {
-  const count = COUNTS[difficulty] ?? 10;
-  const timeLimit = TIME_LIMITS[difficulty] ?? 0;
+  const reportProgress = useExerciseProgress();
 
-  const [items] = useState(() => {
-    return Array.from({ length: count }, () => {
-      const wordColor = COLORS[Math.floor(Math.random() * COLORS.length)];
-      let inkColor = COLORS[Math.floor(Math.random() * COLORS.length)];
-      if (difficulty >= 2) {
-        // Force incongruent
-        while (inkColor.name === wordColor.name) {
-          inkColor = COLORS[Math.floor(Math.random() * COLORS.length)];
-        }
-      }
-      return { word: wordColor.name, inkColor: inkColor };
-    });
-  });
+  // Adaptive state
+  const [timeMs, setTimeMs] = useState(initialTimeMs(difficulty));
+  const [streak, setStreak] = useState(0);
 
-  const [current, setCurrent] = useState(0);
-  const [results, setResults] = useState<{ correct: boolean; rt: number }[]>([]);
-  const [timeLeft, setTimeLeft] = useState(timeLimit || 999);
+  const [trial, setTrial] = useState(0);
+  const [item, setItem] = useState(() => generateItem(difficulty));
+  const [results, setResults] = useState<{ correct: boolean; rt: number; timeMs: number }[]>([]);
+  const [itemProgress, setItemProgress] = useState(100);
   const [done, setDone] = useState(false);
-  const itemStart = useRef<number>(Date.now());
-  const startTime = useRef<number>(Date.now());
 
-  useEffect(() => {
-    itemStart.current = Date.now();
-  }, [current]);
+  const doneRef = useRef(false);
+  const trialRef = useRef(0);
+  const answeredRef = useRef(false);
+  const itemStartRef = useRef(Date.now());
+  const sessionStartRef = useRef(Date.now());
 
-  useEffect(() => {
-    if (timeLimit === 0 || done) return;
-    if (timeLeft <= 0) {
-      finishExercise([...results]);
-      return;
-    }
-    const t = setInterval(() => setTimeLeft((s) => s - 1), 1000);
-    return () => clearInterval(t);
-  }, [timeLeft, timeLimit, done]);
+  trialRef.current = trial;
 
-  const finishExercise = useCallback((finalResults: { correct: boolean; rt: number }[]) => {
-    if (done) return;
-    setDone(true);
-    const accuracy = finalResults.length > 0
-      ? finalResults.filter((r) => r.correct).length / finalResults.length
-      : 0;
-    const avgRT = finalResults.length > 0
-      ? finalResults.reduce((sum, r) => sum + r.rt, 0) / finalResults.length
-      : 1000;
-    const duration = Math.round((Date.now() - startTime.current) / 1000);
-    const score = calculateExerciseScore("stroop-task", accuracy, avgRT, difficulty);
-    onComplete({
-      exerciseId: "stroop-task",
-      domain: "attention",
-      score,
-      accuracy,
-      reactionTime: avgRT,
-      difficulty,
-      duration,
-      metadata: { total: finalResults.length, correct: finalResults.filter((r) => r.correct).length },
-    });
-  }, [done, difficulty, onComplete]);
+  function advanceTrial(correct: boolean, rt: number, currentTimeMs: number) {
+    if (doneRef.current || answeredRef.current) return;
+    answeredRef.current = true;
 
-  function handleAnswer(colorName: string) {
-    if (done) return;
-    const rt = Date.now() - itemStart.current;
-    const isCorrect = colorName === items[current].inkColor.name;
-    const newResults = [...results, { correct: isCorrect, rt }];
+    const newResults = [...results, { correct, rt, timeMs: currentTimeMs }];
     setResults(newResults);
 
-    if (current + 1 >= count) {
-      finishExercise(newResults);
+    // 2-up/2-down staircase on timeMs (lower = harder)
+    const newStreak = correct
+      ? Math.max(streak, 0) + 1
+      : Math.min(streak, 0) - 1;
+    let nextTime = currentTimeMs;
+    let nextStreak = newStreak;
+    if (newStreak >= 2) { nextTime = Math.max(currentTimeMs - 400, MIN_TIME_MS); nextStreak = 0; }
+    if (newStreak <= -2) { nextTime = Math.min(currentTimeMs + 600, MAX_TIME_MS); nextStreak = 0; }
+
+    const nextTrial = trialRef.current + 1;
+    reportProgress(Math.round((nextTrial / MAX_TRIALS) * 100));
+
+    if (nextTrial >= MAX_TRIALS) {
+      doneRef.current = true;
+      setDone(true);
+      const accuracy = newResults.filter((r) => r.correct).length / MAX_TRIALS;
+      const avgRT = newResults.reduce((s, r) => s + r.rt, 0) / MAX_TRIALS;
+      const duration = Math.round((Date.now() - sessionStartRef.current) / 1000);
+      const score = calculateExerciseScore("stroop-task", accuracy, avgRT, difficulty);
+      onComplete({
+        exerciseId: "stroop-task",
+        domain: "attention",
+        score,
+        accuracy,
+        reactionTime: avgRT,
+        difficulty,
+        duration,
+        metadata: { total: MAX_TRIALS, correct: newResults.filter((r) => r.correct).length, minTimeMs: Math.min(...newResults.map((r) => r.timeMs)) },
+      });
     } else {
-      setCurrent((c) => c + 1);
+      setStreak(nextStreak);
+      setTimeMs(nextTime);
+      setTrial(nextTrial);
+      setItem(generateItem(difficulty));
     }
   }
 
-  const bgClass = theme === "GAMIFIED" ? "bg-gray-950" : theme === "COLORFUL" ? "bg-gradient-to-br from-blue-50 to-purple-50" : "bg-gray-50";
+  // Timer per item
+  useEffect(() => {
+    if (doneRef.current) return;
+    const myTrial = trial;
+    const myTimeMs = timeMs;
+    itemStartRef.current = Date.now();
+    answeredRef.current = false;
+    setItemProgress(100);
+
+    const interval = setInterval(() => {
+      if (doneRef.current || trialRef.current !== myTrial) {
+        clearInterval(interval);
+        return;
+      }
+      const elapsed = Date.now() - itemStartRef.current;
+      const pct = Math.max(0, (1 - elapsed / myTimeMs) * 100);
+      setItemProgress(pct);
+
+      if (elapsed >= myTimeMs) {
+        clearInterval(interval);
+        if (trialRef.current === myTrial) {
+          advanceTrial(false, myTimeMs, myTimeMs);
+        }
+      }
+    }, 50);
+
+    return () => clearInterval(interval);
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [trial, done]);
+
+  function handleAnswer(colorName: string) {
+    if (doneRef.current || answeredRef.current) return;
+    const rt = Date.now() - itemStartRef.current;
+    advanceTrial(colorName === item.inkColor.name, rt, timeMs);
+  }
+
+  const bgClass =
+    theme === "GAMIFIED"
+      ? "bg-gray-950"
+      : theme === "COLORFUL"
+      ? "bg-gradient-to-br from-blue-50 to-purple-50"
+      : "bg-gray-50";
+
+  const timerColor =
+    itemProgress < 25
+      ? "#EF4444"
+      : theme === "GAMIFIED"
+      ? "#06b6d4"
+      : theme === "COLORFUL"
+      ? "#a855f7"
+      : "#3B82F6";
 
   return (
     <div className={`min-h-screen flex flex-col items-center justify-center p-4 ${bgClass}`}>
-      <div className={`w-full max-w-md rounded-2xl p-8 ${theme === "GAMIFIED" ? "bg-gray-800 border border-cyan-500/30" : "bg-white shadow-lg"}`}>
+      <div
+        className={`w-full max-w-md rounded-2xl p-8 ${
+          theme === "GAMIFIED"
+            ? "bg-gray-800 border border-cyan-500/30"
+            : "bg-white shadow-lg"
+        }`}
+      >
         {/* Header */}
-        <div className="flex justify-between items-center mb-6">
+        <div className="flex justify-between items-center mb-3">
           <div>
-            <span className={`text-sm ${theme === "GAMIFIED" ? "text-gray-400" : "text-gray-500"}`}>
-              {current + 1}/{count}
+            <span className={`text-sm font-medium ${theme === "GAMIFIED" ? "text-gray-300" : "text-gray-700"}`}>
+              Stroop
+            </span>
+            <span className={`ml-2 text-xs ${theme === "GAMIFIED" ? "text-gray-500" : "text-gray-400"}`}>
+              {Math.round(timeMs / 1000 * 10) / 10}s/item
             </span>
           </div>
-          {timeLimit > 0 && (
-            <div className={`font-bold text-xl ${timeLeft <= 5 ? "text-red-500" : theme === "GAMIFIED" ? "text-cyan-400" : "text-blue-600"}`}>
-              {timeLeft}s
-            </div>
-          )}
-          <div className={`text-sm ${theme === "GAMIFIED" ? "text-gray-400" : "text-gray-500"}`}>
-            ✓ {results.filter((r) => r.correct).length}
+          <div className="flex gap-4 items-center">
+            <span className={`text-sm font-bold ${theme === "GAMIFIED" ? "text-green-400" : "text-green-600"}`}>
+              ✓ {results.filter((r) => r.correct).length}
+            </span>
+            <span className={`text-sm ${theme === "GAMIFIED" ? "text-gray-400" : "text-gray-500"}`}>
+              {trial + 1}/{MAX_TRIALS}
+            </span>
           </div>
         </div>
 
-        {/* Progress bar */}
-        <div className={`h-2 rounded-full mb-8 ${theme === "GAMIFIED" ? "bg-gray-700" : "bg-gray-200"}`}>
+        {/* Barra de progresso geral */}
+        <div className="flex gap-1 mb-3">
+          {Array.from({ length: MAX_TRIALS }).map((_, i) => (
+            <div
+              key={i}
+              className={`h-1.5 flex-1 rounded-full transition-colors ${
+                i < results.length
+                  ? results[i].correct ? "bg-green-500" : "bg-red-400"
+                  : i === trial
+                  ? "bg-blue-400 animate-pulse"
+                  : theme === "GAMIFIED" ? "bg-gray-700" : "bg-gray-200"
+              }`}
+            />
+          ))}
+        </div>
+
+        {/* Barra de tempo por item */}
+        <div className={`h-1.5 rounded-full mb-6 ${theme === "GAMIFIED" ? "bg-gray-700" : "bg-gray-100"}`}>
           <motion.div
-            className={`h-full rounded-full ${theme === "GAMIFIED" ? "bg-cyan-500" : "bg-blue-500"}`}
-            animate={{ width: `${(current / count) * 100}%` }}
-            transition={{ duration: 0.3 }}
+            className="h-full rounded-full transition-colors duration-300"
+            style={{ width: `${itemProgress}%`, backgroundColor: timerColor }}
           />
         </div>
 
-        {/* Instruction */}
+        {/* Instrução */}
         <p className={`text-center text-sm mb-6 font-medium ${theme === "GAMIFIED" ? "text-gray-300" : "text-gray-600"}`}>
           Selecione a COR DA TINTA (não leia a palavra!)
         </p>
 
-        {/* Stroop word */}
-        {current < items.length && (
-          <div className="text-center mb-10">
-            <motion.span
-              key={current}
-              className="text-5xl font-black tracking-wide"
-              style={{ color: items[current].inkColor.hex }}
-              initial={{ opacity: 0, scale: 0.8 }}
-              animate={{ opacity: 1, scale: 1 }}
-              exit={{ opacity: 0 }}
-              transition={{ duration: 0.15 }}
-            >
-              {items[current].word}
-            </motion.span>
-          </div>
-        )}
+        {/* Palavra Stroop */}
+        <div className="text-center mb-10">
+          <motion.span
+            key={trial}
+            className="text-5xl font-black tracking-wide"
+            style={{ color: item.inkColor.hex }}
+            initial={{ opacity: 0, scale: 0.8 }}
+            animate={{ opacity: 1, scale: 1 }}
+            transition={{ duration: 0.15 }}
+          >
+            {item.word}
+          </motion.span>
+        </div>
 
-        {/* Color buttons */}
+        {/* Botões de cor */}
         <div className="grid grid-cols-2 gap-3">
           {COLORS.map((color) => (
             <motion.button

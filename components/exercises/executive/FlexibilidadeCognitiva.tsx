@@ -3,6 +3,7 @@
 import { useState, useRef, useCallback } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { calculateExerciseScore } from "@/lib/scoring";
+import { useExerciseProgress } from "@/components/exercises/ExerciseWrapper";
 import type { ExerciseResult, Theme } from "@/types";
 
 interface FlexibilidadeCognitivaProps {
@@ -27,8 +28,8 @@ const COLOR_MAP: Record<Card["color"], string> = {
   amarelo: "#EAB308",
 };
 
-const TOTAL_TRIALS = 24;
-const SWITCH_EVERY = 8;
+const TOTAL_TRIALS = 20;
+const SWITCH_EVERY = 5; // switch rule every 5 trials → 4 switches total
 
 function generateCard(): Card {
   return {
@@ -57,8 +58,8 @@ function ShapeIcon({ shape, color, size = 40 }: { shape: Card["shape"]; color: s
 }
 
 export function FlexibilidadeCognitiva({ difficulty, theme, onComplete }: FlexibilidadeCognitivaProps) {
+  const reportProgress = useExerciseProgress();
   const [trial, setTrial] = useState(0);
-  const [currentRule, setCurrentRule] = useState<Rule>("cor");
   const [card] = useState<Card[]>(() => Array.from({ length: TOTAL_TRIALS }, generateCard));
   const [responses, setResponses] = useState<{ correct: boolean; rt: number; isSwitchTrial: boolean }[]>([]);
   const [feedback, setFeedback] = useState<"correct" | "incorrect" | null>(null);
@@ -66,26 +67,26 @@ export function FlexibilidadeCognitiva({ difficulty, theme, onComplete }: Flexib
   const startTime = useRef<number>(Date.now());
 
   const isSwitchTrial = trial > 0 && trial % SWITCH_EVERY === 0;
-  const activeRule = Math.floor(trial / SWITCH_EVERY) % 2 === 0 ? "cor" : "forma";
+  const activeRule: Rule = Math.floor(trial / SWITCH_EVERY) % 2 === 0 ? "cor" : "forma";
 
   const handleAnswer = useCallback((value: string) => {
     if (feedback) return;
     const rt = Date.now() - trialStart.current;
     const currentCard = card[trial];
-    let isCorrect = false;
-    if (activeRule === "cor") {
-      isCorrect = value === currentCard.color;
-    } else {
-      isCorrect = value === currentCard.shape;
-    }
+    const isCorrect = activeRule === "cor"
+      ? value === currentCard.color
+      : value === currentCard.shape;
 
     setFeedback(isCorrect ? "correct" : "incorrect");
     const newResponses = [...responses, { correct: isCorrect, rt, isSwitchTrial }];
     setResponses(newResponses);
 
+    const nextTrial = trial + 1;
+    reportProgress(Math.round((nextTrial / TOTAL_TRIALS) * 100));
+
     setTimeout(() => {
       setFeedback(null);
-      if (trial + 1 >= TOTAL_TRIALS) {
+      if (nextTrial >= TOTAL_TRIALS) {
         const accuracy = newResponses.filter((r) => r.correct).length / TOTAL_TRIALS;
         const avgRT = newResponses.reduce((s, r) => s + r.rt, 0) / TOTAL_TRIALS;
         const switchErrors = newResponses.filter((r) => r.isSwitchTrial && !r.correct).length;
@@ -102,16 +103,15 @@ export function FlexibilidadeCognitiva({ difficulty, theme, onComplete }: Flexib
           metadata: { total: TOTAL_TRIALS, switchErrors, accuracy },
         });
       } else {
-        setTrial((t) => t + 1);
+        setTrial(nextTrial);
         trialStart.current = Date.now();
       }
     }, 500);
-  }, [feedback, trial, card, activeRule, isSwitchTrial, responses, difficulty, onComplete]);
+  }, [feedback, trial, card, activeRule, isSwitchTrial, responses, difficulty, onComplete, reportProgress]);
 
   const currentCard = card[trial];
   const bgClass = theme === "GAMIFIED" ? "bg-gray-950" : theme === "COLORFUL" ? "bg-gradient-to-br from-green-50 to-teal-50" : "bg-gray-50";
 
-  // Options based on rule
   const options = activeRule === "cor"
     ? COLORS.map((c) => ({ value: c, label: c.charAt(0).toUpperCase() + c.slice(1), color: COLOR_MAP[c] }))
     : SHAPES.map((s) => ({ value: s, label: s.charAt(0).toUpperCase() + s.slice(1), shape: s }));
@@ -119,9 +119,25 @@ export function FlexibilidadeCognitiva({ difficulty, theme, onComplete }: Flexib
   return (
     <div className={`min-h-screen flex flex-col items-center justify-center p-4 ${bgClass}`}>
       <div className={`w-full max-w-md rounded-2xl p-6 ${theme === "GAMIFIED" ? "bg-gray-800 border border-cyan-500/30" : "bg-white shadow-lg"}`}>
-        <div className="flex justify-between items-center mb-4">
+        <div className="flex justify-between items-center mb-3">
           <h2 className={`font-bold text-lg ${theme === "GAMIFIED" ? "text-cyan-400" : "text-gray-900"}`}>Flexibilidade Cognitiva</h2>
           <span className={`text-sm ${theme === "GAMIFIED" ? "text-gray-400" : "text-gray-500"}`}>{trial + 1}/{TOTAL_TRIALS}</span>
+        </div>
+
+        {/* Barra de progresso */}
+        <div className="flex gap-1 mb-4">
+          {Array.from({ length: TOTAL_TRIALS }).map((_, i) => (
+            <div
+              key={i}
+              className={`h-1.5 flex-1 rounded-full transition-colors ${
+                i < responses.length
+                  ? responses[i].correct ? "bg-green-500" : "bg-red-400"
+                  : i === trial
+                  ? "bg-blue-400 animate-pulse"
+                  : theme === "GAMIFIED" ? "bg-gray-700" : "bg-gray-200"
+              }`}
+            />
+          ))}
         </div>
 
         {/* Rule display */}
@@ -146,14 +162,6 @@ export function FlexibilidadeCognitiva({ difficulty, theme, onComplete }: Flexib
             </p>
           </motion.div>
         </AnimatePresence>
-
-        {/* Progress */}
-        <div className={`h-2 rounded-full mb-6 ${theme === "GAMIFIED" ? "bg-gray-700" : "bg-gray-200"}`}>
-          <div
-            className={`h-full rounded-full transition-all ${theme === "GAMIFIED" ? "bg-cyan-500" : "bg-blue-500"}`}
-            style={{ width: `${(trial / TOTAL_TRIALS) * 100}%` }}
-          />
-        </div>
 
         {/* Card display */}
         <div className={`flex items-center justify-center p-8 rounded-2xl mb-6 border-4 ${

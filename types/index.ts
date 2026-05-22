@@ -116,7 +116,7 @@ export const EXERCISE_DEFINITIONS = {
     name: "Span Numérico",
     domain: "memory" as Domain,
     description: "Memorize e repita sequências de números",
-    estimatedMinutes: 5,
+    estimatedMinutes: 7,
     icon: "🔢",
   },
   "matriz-espacial": {
@@ -124,7 +124,7 @@ export const EXERCISE_DEFINITIONS = {
     name: "Matriz Espacial",
     domain: "memory" as Domain,
     description: "Memorize e reproduza padrões em uma grade",
-    estimatedMinutes: 5,
+    estimatedMinutes: 7,
     icon: "🔲",
   },
   "associacao-pares": {
@@ -135,12 +135,44 @@ export const EXERCISE_DEFINITIONS = {
     estimatedMinutes: 7,
     icon: "🔗",
   },
+  "jogo-memoria": {
+    id: "jogo-memoria",
+    name: "Jogo da Memória",
+    domain: "memory" as Domain,
+    description: "Encontre os pares de figuras iguais",
+    estimatedMinutes: 7,
+    icon: "🃏",
+  },
+  "span-numerico-inverso": {
+    id: "span-numerico-inverso",
+    name: "Span Numérico Inverso",
+    domain: "memory" as Domain,
+    description: "Repita sequências de números em ordem contrária",
+    estimatedMinutes: 7,
+    icon: "🔁",
+  },
+  "matriz-espacial-inversa": {
+    id: "matriz-espacial-inversa",
+    name: "Matriz Espacial Inversa",
+    domain: "memory" as Domain,
+    description: "Clique nas células na ordem inversa à apresentada",
+    estimatedMinutes: 7,
+    icon: "↩️",
+  },
+  "nback": {
+    id: "nback",
+    name: "N-Back",
+    domain: "memory" as Domain,
+    description: "Identifique se o estímulo atual foi apresentado N posições atrás",
+    estimatedMinutes: 8,
+    icon: "🧠",
+  },
   "trilha-visual": {
     id: "trilha-visual",
     name: "Trilha Visual",
     domain: "attention" as Domain,
     description: "Conecte números em sequência",
-    estimatedMinutes: 5,
+    estimatedMinutes: 7,
     icon: "🗺️",
   },
   "stroop-task": {
@@ -148,7 +180,7 @@ export const EXERCISE_DEFINITIONS = {
     name: "Tarefa Stroop",
     domain: "attention" as Domain,
     description: "Identifique a cor da tinta, não a palavra",
-    estimatedMinutes: 5,
+    estimatedMinutes: 7,
     icon: "🎨",
   },
   "vigilancia": {
@@ -156,7 +188,7 @@ export const EXERCISE_DEFINITIONS = {
     name: "Vigilância",
     domain: "attention" as Domain,
     description: "Detecte estímulos alvo em uma sequência",
-    estimatedMinutes: 5,
+    estimatedMinutes: 7,
     icon: "👁️",
   },
   "tempo-reacao": {
@@ -164,7 +196,7 @@ export const EXERCISE_DEFINITIONS = {
     name: "Tempo de Reação",
     domain: "processing" as Domain,
     description: "Reaja o mais rápido possível ao estímulo",
-    estimatedMinutes: 3,
+    estimatedMinutes: 5,
     icon: "⚡",
   },
   "decisao-rapida": {
@@ -172,7 +204,7 @@ export const EXERCISE_DEFINITIONS = {
     name: "Decisão Rápida",
     domain: "processing" as Domain,
     description: "Classifique categorias rapidamente",
-    estimatedMinutes: 5,
+    estimatedMinutes: 7,
     icon: "🧩",
   },
   "identificacao-simbolos": {
@@ -180,7 +212,7 @@ export const EXERCISE_DEFINITIONS = {
     name: "Identificação de Símbolos",
     domain: "processing" as Domain,
     description: "Encontre o símbolo alvo entre distratores",
-    estimatedMinutes: 5,
+    estimatedMinutes: 7,
     icon: "🔍",
   },
   "torre-hanoi": {
@@ -196,7 +228,7 @@ export const EXERCISE_DEFINITIONS = {
     name: "Sequenciamento",
     domain: "executive" as Domain,
     description: "Ordene etapas na sequência correta",
-    estimatedMinutes: 5,
+    estimatedMinutes: 7,
     icon: "📋",
   },
   "flexibilidade-cognitiva": {
@@ -214,14 +246,6 @@ export const EXERCISE_DEFINITIONS = {
     description: "Navegue pelo labirinto até a saída",
     estimatedMinutes: 8,
     icon: "🌀",
-  },
-  "jogo-memoria": {
-    id: "jogo-memoria",
-    name: "Jogo da Memória",
-    domain: "memory" as Domain,
-    description: "Encontre os pares de figuras iguais",
-    estimatedMinutes: 5,
-    icon: "🃏",
   },
 } as const;
 

@@ -9,40 +9,43 @@ datasource db {
 }
 
 model User {
-  id         String    @id @default(cuid())
-  email      String    @unique
-  password   String
-  name       String
-  clinicName String?
-  role       String    @default("THERAPIST")
-  createdAt  DateTime  @default(now())
-  updatedAt  DateTime  @updatedAt
-  patients   Patient[]
+  id              String    @id @default(cuid())
+  email           String    @unique
+  password        String
+  name            String
+  clinicName      String?
+  role            String    @default("THERAPIST")
+  patientLicenses Int       @default(-1)
+  createdAt       DateTime  @default(now())
+  updatedAt       DateTime  @updatedAt
+  patients        Patient[]
 }
 
 model Patient {
-  id                String           @id @default(cuid())
-  name              String
-  birthDate         DateTime
-  education         String?
-  medications       String?
-  therapeuticGoals  String?
-  clinicalNotes     String?
-  contact           String?
-  guardian          String?
-  cid               String?
-  diagnosis         String?
-  pin               String
-  theme             String           @default("CLINICAL")
-  therapistId       String
-  therapist         User             @relation(fields: [therapistId], references: [id])
-  createdAt         DateTime         @default(now())
-  updatedAt         DateTime         @updatedAt
-  sessions          Session[]
-  trainingPlans     TrainingPlan[]
-  exerciseConfigs   ExerciseConfig[]
-  achievements      Achievement[]
-  alerts            Alert[]
+  id               String           @id @default(cuid())
+  name             String
+  birthDate        DateTime
+  education        String?
+  medications      String?
+  therapeuticGoals String?
+  clinicalNotes    String?
+  contact          String?
+  guardian         String?
+  cid              String?
+  diagnosis        String?
+  pin              String
+  pinPlain         String?
+  patientCode      String?          @unique
+  theme            String           @default("CLINICAL")
+  therapistId      String
+  therapist        User             @relation(fields: [therapistId], references: [id])
+  createdAt        DateTime         @default(now())
+  updatedAt        DateTime         @updatedAt
+  sessions         Session[]
+  trainingPlans    TrainingPlan[]
+  exerciseConfigs  ExerciseConfig[]
+  achievements     Achievement[]
+  alerts           Alert[]
 }
 
 model TrainingPlan {
@@ -106,5 +109,23 @@ model Alert {
   type      String
   message   String
   isRead    Boolean  @default(false)
+  createdAt DateTime @default(now())
+}
+
+model LicenseCode {
+  id                String    @id @default(cuid())
+  code              String    @unique
+  licenses          Int
+  usedByTherapistId String?
+  usedAt            DateTime?
+  createdAt         DateTime  @default(now())
+}
+
+model PasswordResetToken {
+  id        String   @id @default(cuid())
+  token     String   @unique
+  userId    String
+  expiresAt DateTime
+  used      Boolean  @default(false)
   createdAt DateTime @default(now())
 }

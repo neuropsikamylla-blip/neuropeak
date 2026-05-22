@@ -3,7 +3,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { getServerSession } from "next-auth";
 import { authOptions } from "@/lib/auth";
 import { supabase } from "@/lib/supabase";
-import { generatePin } from "@/lib/utils";
+import { generatePin, generatePatientCode } from "@/lib/utils";
 import bcrypt from "bcryptjs";
 
 export async function POST(
@@ -18,10 +18,9 @@ export async function POST(
 
   const therapistId = (session.user as { id: string }).id;
 
-  // Verify patient belongs to this therapist
   const { data: patient } = await supabase
     .from("Patient")
-    .select("id")
+    .select("id, patientCode")
     .eq("id", id)
     .eq("therapistId", therapistId)
     .single();
@@ -33,10 +32,25 @@ export async function POST(
   const plainPin = generatePin();
   const hashedPin = await bcrypt.hash(plainPin, 10);
 
+  // Generate patientCode if patient doesn't have one yet
+  let patientCode: string | null = (patient as { patientCode?: string | null }).patientCode ?? null;
+  if (!patientCode) {
+    let unique = false;
+    do {
+      patientCode = generatePatientCode();
+      const { data: existing } = await supabase
+        .from("Patient")
+        .select("id")
+        .eq("patientCode", patientCode)
+        .maybeSingle();
+      unique = !existing;
+    } while (!unique);
+  }
+
   await supabase
     .from("Patient")
-    .update({ pin: hashedPin, updatedAt: new Date().toISOString() })
+    .update({ pin: hashedPin, pinPlain: plainPin, patientCode, updatedAt: new Date().toISOString() })
     .eq("id", id);
 
-  return NextResponse.json({ pin: plainPin });
+  return NextResponse.json({ pin: plainPin, patientCode });
 }

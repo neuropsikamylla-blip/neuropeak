@@ -1,8 +1,9 @@
 "use client";
 
 import { useState, useEffect, useRef, useCallback } from "react";
-import { motion } from "framer-motion";
+import { motion, AnimatePresence } from "framer-motion";
 import { calculateExerciseScore } from "@/lib/scoring";
+import { useExerciseProgress } from "@/components/exercises/ExerciseWrapper";
 import type { ExerciseResult, Theme } from "@/types";
 
 interface TorreHanoiProps {
@@ -11,10 +12,13 @@ interface TorreHanoiProps {
   onComplete: (result: ExerciseResult) => void;
 }
 
-const DISC_COUNTS: Record<number, number> = {
-  1: 2, 2: 3, 3: 3, 4: 4, 5: 4,
-  6: 5, 7: 5, 8: 6, 9: 6, 10: 7,
-};
+const MIN_DISCS = 2;
+const MAX_DISCS = 6;
+const MAX_PUZZLES = 10;
+
+function initialDiscs(difficulty: number) {
+  return Math.min(Math.max(2, Math.floor(difficulty * 0.4) + 2), 4);
+}
 
 const DISC_COLORS = [
   "#EF4444", "#F97316", "#EAB308", "#22C55E",
@@ -28,38 +32,46 @@ function optimalMoves(n: number): number {
   return Math.pow(2, n) - 1;
 }
 
-export function TorreHanoi({ difficulty, theme, onComplete }: TorreHanoiProps) {
-  const discCount = DISC_COUNTS[difficulty] ?? 3;
-  const optimal = optimalMoves(discCount);
+function initialPegs(discCount: number): State {
+  return [
+    Array.from({ length: discCount }, (_, i) => discCount - i),
+    [],
+    [],
+  ];
+}
 
-  const [pegs, setPegs] = useState<State>(() => {
-    const initial: State = [
-      Array.from({ length: discCount }, (_, i) => discCount - i),
-      [],
-      [],
-    ];
-    return initial;
-  });
+export function TorreHanoi({ difficulty, theme, onComplete }: TorreHanoiProps) {
+  const reportProgress = useExerciseProgress();
+
+  // Adaptive state
+  const [discCount, setDiscCount] = useState(initialDiscs(difficulty));
+  const [streak, setStreak] = useState(0);
+  const [puzzle, setPuzzle] = useState(0);
+  const [puzzleResults, setPuzzleResults] = useState<{ correct: boolean; discs: number }[]>([]);
+
+  // Puzzle state
+  const [pegs, setPegs] = useState<State>(() => initialPegs(initialDiscs(difficulty)));
   const [selected, setSelected] = useState<number | null>(null);
   const [moves, setMoves] = useState(0);
   const [won, setWon] = useState(false);
-  const [elapsed, setElapsed] = useState(0);
-  const startTime = useRef<number | null>(null);
 
-  useEffect(() => {
-    if (won || !startTime.current) return;
-    const t = setInterval(() => {
-      if (startTime.current) setElapsed(Math.round((Date.now() - startTime.current) / 1000));
-    }, 1000);
-    return () => clearInterval(t);
-  }, [won]);
+  const startTime = useRef<number>(Date.now());
+  const puzzleStart = useRef<number>(Date.now());
+
+  const optimal = optimalMoves(discCount);
+
+  function startNewPuzzle(nextDiscs: number) {
+    setPegs(initialPegs(nextDiscs));
+    setSelected(null);
+    setMoves(0);
+    setWon(false);
+    puzzleStart.current = Date.now();
+  }
 
   function handlePegClick(pegIdx: number) {
     if (won) return;
-    if (!startTime.current) startTime.current = Date.now();
 
     if (selected === null) {
-      // Select top disc from this peg
       if (pegs[pegIdx].length === 0) return;
       setSelected(pegIdx);
     } else {
@@ -72,37 +84,58 @@ export function TorreHanoi({ difficulty, theme, onComplete }: TorreHanoiProps) {
       const toPeg = pegs[pegIdx];
       const disc = fromPeg[fromPeg.length - 1];
 
-      // Validate move
       if (toPeg.length > 0 && toPeg[toPeg.length - 1] < disc) {
         setSelected(null);
         return;
       }
 
-      // Make move
       const newPegs: State = pegs.map((p) => [...p]) as State;
       newPegs[selected].pop();
       newPegs[pegIdx].push(disc);
       setPegs(newPegs);
-      setMoves((m) => m + 1);
+      const newMoves = moves + 1;
+      setMoves(newMoves);
       setSelected(null);
 
-      // Check win
       if (newPegs[2].length === discCount) {
         setWon(true);
-        const duration = Math.round((Date.now() - (startTime.current ?? Date.now())) / 1000);
-        const moveRatio = optimal / Math.max(moves + 1, optimal);
-        const accuracy = Math.min(1, moveRatio);
-        const score = calculateExerciseScore("torre-hanoi", accuracy, undefined, difficulty);
+        const isCorrect = newMoves <= 2 * optimal;
+
+        const newPuzzleResults = [...puzzleResults, { correct: isCorrect, discs: discCount }];
+        setPuzzleResults(newPuzzleResults);
+
+        const newStreak = isCorrect
+          ? Math.max(streak, 0) + 1
+          : Math.min(streak, 0) - 1;
+        let nextDiscs = discCount;
+        let nextStreak = newStreak;
+        if (newStreak >= 2) { nextDiscs = Math.min(discCount + 1, MAX_DISCS); nextStreak = 0; }
+        if (newStreak <= -2) { nextDiscs = Math.max(discCount - 1, MIN_DISCS); nextStreak = 0; }
+
+        const nextPuzzle = puzzle + 1;
+        reportProgress(Math.round((nextPuzzle / MAX_PUZZLES) * 100));
+
         setTimeout(() => {
-          onComplete({
-            exerciseId: "torre-hanoi",
-            domain: "executive",
-            score,
-            accuracy,
-            difficulty,
-            duration,
-            metadata: { discCount, moves: moves + 1, optimalMoves: optimal, moveRatio },
-          });
+          if (nextPuzzle >= MAX_PUZZLES) {
+            const accuracy = newPuzzleResults.filter((r) => r.correct).length / MAX_PUZZLES;
+            const maxDiscs = Math.max(...newPuzzleResults.map((r) => r.discs));
+            const duration = Math.round((Date.now() - startTime.current) / 1000);
+            const score = calculateExerciseScore("torre-hanoi", accuracy, undefined, difficulty);
+            onComplete({
+              exerciseId: "torre-hanoi",
+              domain: "executive",
+              score,
+              accuracy,
+              difficulty,
+              duration,
+              metadata: { puzzles: MAX_PUZZLES, maxDiscs, correct: newPuzzleResults.filter((r) => r.correct).length },
+            });
+          } else {
+            setPuzzle(nextPuzzle);
+            setStreak(nextStreak);
+            setDiscCount(nextDiscs);
+            startNewPuzzle(nextDiscs);
+          }
         }, 2000);
       }
     }
@@ -115,19 +148,39 @@ export function TorreHanoi({ difficulty, theme, onComplete }: TorreHanoiProps) {
     <div className={`min-h-screen flex flex-col items-center justify-center p-4 ${bgClass}`}>
       <div className={`w-full max-w-xl rounded-2xl p-6 ${theme === "GAMIFIED" ? "bg-gray-800 border border-cyan-500/30" : "bg-white shadow-lg"}`}>
         {/* Header */}
-        <div className="flex justify-between items-center mb-4">
-          <h2 className={`font-bold ${theme === "GAMIFIED" ? "text-cyan-400" : "text-gray-900"}`}>
-            Torre de Hanói ({discCount} discos)
-          </h2>
-          <div className={`text-sm ${theme === "GAMIFIED" ? "text-gray-400" : "text-gray-500"}`}>
-            <span>Movimentos: <strong>{moves}</strong></span>
-            <span className="ml-3">Ótimo: {optimal}</span>
+        <div className="flex justify-between items-center mb-3">
+          <div>
+            <h2 className={`font-bold ${theme === "GAMIFIED" ? "text-cyan-400" : "text-gray-900"}`}>
+              Torre de Hanói ({discCount} discos)
+            </h2>
+            <p className={`text-xs ${theme === "GAMIFIED" ? "text-gray-400" : "text-gray-500"}`}>
+              Movimentos: {moves} · Ótimo: {optimal}
+            </p>
           </div>
+          <span className={`text-sm ${theme === "GAMIFIED" ? "text-gray-400" : "text-gray-500"}`}>
+            {puzzle + 1}/{MAX_PUZZLES}
+          </span>
+        </div>
+
+        {/* Barra de progresso */}
+        <div className="flex gap-1 mb-5">
+          {Array.from({ length: MAX_PUZZLES }).map((_, i) => (
+            <div
+              key={i}
+              className={`h-1.5 flex-1 rounded-full transition-colors ${
+                i < puzzleResults.length
+                  ? puzzleResults[i].correct ? "bg-green-500" : "bg-red-400"
+                  : i === puzzle
+                  ? "bg-blue-400 animate-pulse"
+                  : theme === "GAMIFIED" ? "bg-gray-700" : "bg-gray-200"
+              }`}
+            />
+          ))}
         </div>
 
         {/* Instructions */}
-        <p className={`text-xs mb-6 text-center ${theme === "GAMIFIED" ? "text-gray-400" : "text-gray-500"}`}>
-          Mova todos os discos para o pino da direita. Clique em um pino para selecionar e clique em outro para mover.
+        <p className={`text-xs mb-4 text-center ${theme === "GAMIFIED" ? "text-gray-400" : "text-gray-500"}`}>
+          Mova todos os discos para o pino da direita. Clique para selecionar e mover.
           {selected !== null && <strong className="ml-1 text-blue-500"> Pino {selected + 1} selecionado</strong>}
         </p>
 
@@ -140,19 +193,14 @@ export function TorreHanoi({ difficulty, theme, onComplete }: TorreHanoiProps) {
               style={{ width: `${maxDiscWidth + 20}px` }}
               onClick={() => handlePegClick(pegIdx)}
             >
-              {/* Base */}
               <div
                 className={`absolute bottom-0 rounded-lg ${selected === pegIdx ? "bg-yellow-400" : theme === "GAMIFIED" ? "bg-gray-600" : "bg-gray-400"}`}
                 style={{ width: `${maxDiscWidth + 20}px`, height: "8px" }}
               />
-
-              {/* Pole */}
               <div
                 className={`absolute rounded-full ${theme === "GAMIFIED" ? "bg-gray-500" : "bg-gray-400"}`}
                 style={{ width: "8px", height: "180px", bottom: "8px" }}
               />
-
-              {/* Discs */}
               <div className="absolute bottom-2 flex flex-col-reverse items-center gap-0.5">
                 {peg.map((disc, discIdx) => {
                   const width = (disc / discCount) * maxDiscWidth + 20;
@@ -168,7 +216,7 @@ export function TorreHanoi({ difficulty, theme, onComplete }: TorreHanoiProps) {
                         opacity: selected === pegIdx && isTop ? 0.6 : 1,
                         boxShadow: isTop && selected === pegIdx ? "0 0 12px rgba(250,204,21,0.8)" : undefined,
                       }}
-                      layoutId={`disc-${disc}`}
+                      layoutId={`disc-${disc}-${puzzle}`}
                       transition={{ type: "spring", stiffness: 300, damping: 25 }}
                     >
                       {disc}
@@ -176,8 +224,6 @@ export function TorreHanoi({ difficulty, theme, onComplete }: TorreHanoiProps) {
                   );
                 })}
               </div>
-
-              {/* Peg label */}
               <div className={`mt-2 text-xs ${theme === "GAMIFIED" ? "text-gray-400" : "text-gray-500"} absolute -bottom-6`}>
                 {pegIdx === 0 ? "Origem" : pegIdx === 1 ? "Auxiliar" : "Destino"}
               </div>
@@ -187,17 +233,29 @@ export function TorreHanoi({ difficulty, theme, onComplete }: TorreHanoiProps) {
 
         <div className="mt-8" />
 
-        {won && (
-          <motion.div
-            className="text-center p-4 rounded-xl bg-green-50 border-2 border-green-500 mt-4"
-            initial={{ scale: 0.8, opacity: 0 }}
-            animate={{ scale: 1, opacity: 1 }}
-          >
-            <div className="text-4xl mb-2">🏆</div>
-            <p className="font-bold text-green-700 text-lg">Parabéns! Puzzle resolvido!</p>
-            <p className="text-green-600 text-sm">{moves} movimentos (ótimo: {optimal})</p>
-          </motion.div>
-        )}
+        <AnimatePresence>
+          {won && (
+            <motion.div
+              className={`text-center p-4 rounded-xl mt-4 ${
+                puzzleResults[puzzle]?.correct
+                  ? "bg-green-50 border-2 border-green-500"
+                  : "bg-orange-50 border-2 border-orange-400"
+              }`}
+              initial={{ scale: 0.8, opacity: 0 }}
+              animate={{ scale: 1, opacity: 1 }}
+            >
+              <div className="text-4xl mb-2">
+                {puzzleResults[puzzle]?.correct ? "🏆" : "✅"}
+              </div>
+              <p className={`font-bold text-lg ${puzzleResults[puzzle]?.correct ? "text-green-700" : "text-orange-700"}`}>
+                {puzzleResults[puzzle]?.correct ? "Excelente!" : "Resolvido!"}
+              </p>
+              <p className={`text-sm ${puzzleResults[puzzle]?.correct ? "text-green-600" : "text-orange-600"}`}>
+                {moves} movimentos (ótimo: {optimal})
+              </p>
+            </motion.div>
+          )}
+        </AnimatePresence>
       </div>
     </div>
   );

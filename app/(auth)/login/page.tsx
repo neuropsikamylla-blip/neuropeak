@@ -8,7 +8,8 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
-import { Brain, Eye, EyeOff, Loader2 } from "lucide-react";
+import Image from "next/image";
+import { Eye, EyeOff, Loader2 } from "lucide-react";
 import { useToast } from "@/components/ui/use-toast";
 
 type Mode = "therapist" | "patient";
@@ -80,10 +81,17 @@ export default function LoginPage() {
         {/* Logo */}
         <div className="text-center mb-8">
           <motion.div
-            className="inline-flex items-center justify-center w-16 h-16 rounded-2xl bg-blue-600 mb-4"
-            whileHover={{ rotate: 5, scale: 1.05 }}
+            className="inline-block mb-2"
+            whileHover={{ scale: 1.05 }}
           >
-            <Brain className="w-9 h-9 text-white" />
+            <Image
+              src="/icon-192.png"
+              alt="NeuroPeak"
+              width={96}
+              height={96}
+              className="rounded-3xl mx-auto"
+              priority
+            />
           </motion.div>
           <h1 className="text-3xl font-bold text-gray-900">NeuroPeak</h1>
           <p className="text-gray-500 text-sm mt-1">Plataforma de Treinamento Cognitivo</p>
@@ -113,7 +121,7 @@ export default function LoginPage() {
             <CardDescription>
               {mode === "therapist"
                 ? "Entre com seu email e senha"
-                : "Entre com seu ID de paciente e PIN"}
+                : "Entre com seu código (ex: COG09834) e PIN"}
             </CardDescription>
           </CardHeader>
 
@@ -161,15 +169,15 @@ export default function LoginPage() {
             ) : (
               <form onSubmit={handlePatientLogin} className="space-y-4">
                 <div>
-                  <Label htmlFor="patientId">ID do Paciente</Label>
+                  <Label htmlFor="patientId">Código do Paciente</Label>
                   <Input
                     id="patientId"
                     type="text"
-                    placeholder="ID fornecido pelo terapeuta"
+                    placeholder="Ex: COG09834"
                     value={patientId}
-                    onChange={(e) => setPatientId(e.target.value)}
+                    onChange={(e) => setPatientId(e.target.value.toUpperCase())}
                     required
-                    className="mt-1"
+                    className="mt-1 font-mono text-lg tracking-widest text-center uppercase"
                   />
                 </div>
                 <div>

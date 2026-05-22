@@ -4,6 +4,7 @@ import { useState, useEffect, useRef, useCallback } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { calculateExerciseScore } from "@/lib/scoring";
 import { shuffle } from "@/lib/utils";
+import { useExerciseProgress } from "@/components/exercises/ExerciseWrapper";
 import type { ExerciseResult, Theme } from "@/types";
 
 interface DecisaoRapidaProps {
@@ -22,7 +23,7 @@ const ITEMS: Item[] = [
   { label: "Gato", category: "Animal", emoji: "🐱" },
   { label: "Cadeira", category: "Objeto", emoji: "🪑" },
   { label: "Cachorro", category: "Animal", emoji: "🐶" },
-  { label: "Mesa", category: "Objeto", emoji: "🪑" },
+  { label: "Mesa", category: "Objeto", emoji: "🪞" },
   { label: "Peixe", category: "Animal", emoji: "🐟" },
   { label: "Livro", category: "Objeto", emoji: "📚" },
   { label: "Pássaro", category: "Animal", emoji: "🐦" },
@@ -41,20 +42,13 @@ const ITEMS: Item[] = [
   { label: "Guarda-chuva", category: "Objeto", emoji: "☂️" },
 ];
 
-const COUNTS: Record<number, number> = {
-  1: 10, 2: 15, 3: 20, 4: 15, 5: 20,
-  6: 20, 7: 20, 8: 25, 9: 25, 10: 30,
-};
+const MAX_ITEMS = 20;
 
 export function DecisaoRapida({ difficulty, theme, onComplete }: DecisaoRapidaProps) {
-  const count = COUNTS[difficulty] ?? 10;
+  const reportProgress = useExerciseProgress();
   const [sequence] = useState(() => {
     const shuffled = shuffle(ITEMS);
-    const seq: Item[] = [];
-    for (let i = 0; i < count; i++) {
-      seq.push(shuffled[i % shuffled.length]);
-    }
-    return seq;
+    return Array.from({ length: MAX_ITEMS }, (_, i) => shuffled[i % shuffled.length]);
   });
 
   const [current, setCurrent] = useState(0);
@@ -83,9 +77,9 @@ export function DecisaoRapida({ difficulty, theme, onComplete }: DecisaoRapidaPr
       reactionTime: avgRT,
       difficulty,
       duration,
-      metadata: { total: count, correct: finalResults.filter((r) => r.correct).length },
+      metadata: { total: MAX_ITEMS, correct: finalResults.filter((r) => r.correct).length },
     });
-  }, [done, count, difficulty, onComplete]);
+  }, [done, difficulty, onComplete]);
 
   function handleAnswer(category: string) {
     if (done || feedback) return;
@@ -95,12 +89,15 @@ export function DecisaoRapida({ difficulty, theme, onComplete }: DecisaoRapidaPr
     const newResults = [...results, { correct: isCorrect, rt }];
     setResults(newResults);
 
+    const nextCurrent = current + 1;
+    reportProgress(Math.round((nextCurrent / MAX_ITEMS) * 100));
+
     setTimeout(() => {
       setFeedback(null);
-      if (current + 1 >= count) {
+      if (nextCurrent >= MAX_ITEMS) {
         finishExercise(newResults);
       } else {
-        setCurrent((c) => c + 1);
+        setCurrent(nextCurrent);
       }
     }, 500);
   }
@@ -111,17 +108,25 @@ export function DecisaoRapida({ difficulty, theme, onComplete }: DecisaoRapidaPr
   return (
     <div className={`min-h-screen flex flex-col items-center justify-center p-4 ${bgClass}`}>
       <div className={`w-full max-w-md rounded-2xl p-8 ${theme === "GAMIFIED" ? "bg-gray-800 border border-cyan-500/30" : "bg-white shadow-lg"}`}>
-        <div className="flex justify-between items-center mb-4">
+        <div className="flex justify-between items-center mb-3">
           <h2 className={`font-bold ${theme === "GAMIFIED" ? "text-cyan-400" : "text-gray-900"}`}>Decisão Rápida</h2>
-          <span className={`text-sm ${theme === "GAMIFIED" ? "text-gray-400" : "text-gray-500"}`}>{current + 1}/{count}</span>
+          <span className={`text-sm ${theme === "GAMIFIED" ? "text-gray-400" : "text-gray-500"}`}>{current + 1}/{MAX_ITEMS}</span>
         </div>
 
-        {/* Progress bar */}
-        <div className={`h-2 rounded-full mb-6 ${theme === "GAMIFIED" ? "bg-gray-700" : "bg-gray-200"}`}>
-          <motion.div
-            className={`h-full rounded-full ${theme === "GAMIFIED" ? "bg-cyan-500" : "bg-blue-500"}`}
-            animate={{ width: `${(current / count) * 100}%` }}
-          />
+        {/* Barra de progresso */}
+        <div className="flex gap-1 mb-5">
+          {Array.from({ length: MAX_ITEMS }).map((_, i) => (
+            <div
+              key={i}
+              className={`h-1.5 flex-1 rounded-full transition-colors ${
+                i < results.length
+                  ? results[i].correct ? "bg-green-500" : "bg-red-400"
+                  : i === current
+                  ? "bg-blue-400 animate-pulse"
+                  : theme === "GAMIFIED" ? "bg-gray-700" : "bg-gray-200"
+              }`}
+            />
+          ))}
         </div>
 
         <p className={`text-center text-sm mb-4 ${theme === "GAMIFIED" ? "text-gray-400" : "text-gray-600"}`}>
@@ -175,7 +180,6 @@ export function DecisaoRapida({ difficulty, theme, onComplete }: DecisaoRapidaPr
           ))}
         </div>
 
-        {/* Score tally */}
         <div className="flex justify-center gap-4 mt-4 text-sm">
           <span className="text-green-500">✓ {results.filter((r) => r.correct).length}</span>
           <span className={theme === "GAMIFIED" ? "text-gray-400" : "text-gray-400"}>|</span>

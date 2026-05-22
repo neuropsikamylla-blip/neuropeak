@@ -8,7 +8,8 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
-import { Brain, Loader2, Eye, EyeOff, CheckCircle } from "lucide-react";
+import Image from "next/image";
+import { Loader2, Eye, EyeOff, CheckCircle } from "lucide-react";
 
 function NovaSenhaForm() {
   const searchParams = useSearchParams();
@@ -134,9 +135,7 @@ export default function NovaSenhaPage() {
         className="w-full max-w-md"
       >
         <div className="text-center mb-8">
-          <div className="inline-flex items-center justify-center w-16 h-16 rounded-2xl bg-blue-600 mb-4">
-            <Brain className="w-9 h-9 text-white" />
-          </div>
+          <Image src="/icon-96.png" alt="NeuroPeak" width={64} height={64} className="rounded-2xl mx-auto mb-4" />
           <h1 className="text-3xl font-bold text-gray-900">NeuroPeak</h1>
         </div>
 

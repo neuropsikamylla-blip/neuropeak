@@ -9,22 +9,27 @@ import { EXERCISE_DEFINITIONS, type ExerciseResult, type Theme } from "@/types";
 import { useToast } from "@/components/ui/use-toast";
 import { Loader2 } from "lucide-react";
 
-const loader = { loading: () => <div className="min-h-screen flex items-center justify-center"><Loader2 className="w-8 h-8 animate-spin text-blue-500" /></div> };
+function ExerciseLoader() {
+  return <div className="min-h-screen flex items-center justify-center"><Loader2 className="w-8 h-8 animate-spin text-blue-500" /></div>;
+}
 
-const SpanNumerico        = dynamic(() => import("@/components/exercises/memory/SpanNumerico").then(m => ({ default: m.SpanNumerico })), loader);
-const MatrizEspacial      = dynamic(() => import("@/components/exercises/memory/MatrizEspacial").then(m => ({ default: m.MatrizEspacial })), loader);
-const AssociacaoPares     = dynamic(() => import("@/components/exercises/memory/AssociacaoPares").then(m => ({ default: m.AssociacaoPares })), loader);
-const JogoMemoria         = dynamic(() => import("@/components/exercises/memory/JogoMemoria").then(m => ({ default: m.JogoMemoria })), loader);
-const TrilhaVisual        = dynamic(() => import("@/components/exercises/attention/TrilhaVisual").then(m => ({ default: m.TrilhaVisual })), loader);
-const StroopTask          = dynamic(() => import("@/components/exercises/attention/StroopTask").then(m => ({ default: m.StroopTask })), loader);
-const Vigilancia          = dynamic(() => import("@/components/exercises/attention/Vigilancia").then(m => ({ default: m.Vigilancia })), loader);
-const TempoReacao         = dynamic(() => import("@/components/exercises/processing/TempoReacao").then(m => ({ default: m.TempoReacao })), loader);
-const DecisaoRapida       = dynamic(() => import("@/components/exercises/processing/DecisaoRapida").then(m => ({ default: m.DecisaoRapida })), loader);
-const IdentificacaoSimbolos = dynamic(() => import("@/components/exercises/processing/IdentificacaoSimbolos").then(m => ({ default: m.IdentificacaoSimbolos })), loader);
-const TorreHanoi          = dynamic(() => import("@/components/exercises/executive/TorreHanoi").then(m => ({ default: m.TorreHanoi })), loader);
-const Sequenciamento      = dynamic(() => import("@/components/exercises/executive/Sequenciamento").then(m => ({ default: m.Sequenciamento })), loader);
-const FlexibilidadeCognitiva = dynamic(() => import("@/components/exercises/executive/FlexibilidadeCognitiva").then(m => ({ default: m.FlexibilidadeCognitiva })), loader);
-const Labirinto           = dynamic(() => import("@/components/exercises/executive/Labirinto").then(m => ({ default: m.Labirinto })), loader);
+const SpanNumerico        = dynamic(() => import("@/components/exercises/memory/SpanNumerico").then(m => ({ default: m.SpanNumerico })), { loading: ExerciseLoader });
+const MatrizEspacial      = dynamic(() => import("@/components/exercises/memory/MatrizEspacial").then(m => ({ default: m.MatrizEspacial })), { loading: ExerciseLoader });
+const AssociacaoPares     = dynamic(() => import("@/components/exercises/memory/AssociacaoPares").then(m => ({ default: m.AssociacaoPares })), { loading: ExerciseLoader });
+const JogoMemoria         = dynamic(() => import("@/components/exercises/memory/JogoMemoria").then(m => ({ default: m.JogoMemoria })), { loading: ExerciseLoader });
+const SpanNumericoInverso = dynamic(() => import("@/components/exercises/memory/SpanNumericoInverso").then(m => ({ default: m.SpanNumericoInverso })), { loading: ExerciseLoader });
+const MatrizEspacialInversa = dynamic(() => import("@/components/exercises/memory/MatrizEspacialInversa").then(m => ({ default: m.MatrizEspacialInversa })), { loading: ExerciseLoader });
+const NBack               = dynamic(() => import("@/components/exercises/memory/NBack").then(m => ({ default: m.NBack })), { loading: ExerciseLoader });
+const TrilhaVisual        = dynamic(() => import("@/components/exercises/attention/TrilhaVisual").then(m => ({ default: m.TrilhaVisual })), { loading: ExerciseLoader });
+const StroopTask          = dynamic(() => import("@/components/exercises/attention/StroopTask").then(m => ({ default: m.StroopTask })), { loading: ExerciseLoader });
+const Vigilancia          = dynamic(() => import("@/components/exercises/attention/Vigilancia").then(m => ({ default: m.Vigilancia })), { loading: ExerciseLoader });
+const TempoReacao         = dynamic(() => import("@/components/exercises/processing/TempoReacao").then(m => ({ default: m.TempoReacao })), { loading: ExerciseLoader });
+const DecisaoRapida       = dynamic(() => import("@/components/exercises/processing/DecisaoRapida").then(m => ({ default: m.DecisaoRapida })), { loading: ExerciseLoader });
+const IdentificacaoSimbolos = dynamic(() => import("@/components/exercises/processing/IdentificacaoSimbolos").then(m => ({ default: m.IdentificacaoSimbolos })), { loading: ExerciseLoader });
+const TorreHanoi          = dynamic(() => import("@/components/exercises/executive/TorreHanoi").then(m => ({ default: m.TorreHanoi })), { loading: ExerciseLoader });
+const Sequenciamento      = dynamic(() => import("@/components/exercises/executive/Sequenciamento").then(m => ({ default: m.Sequenciamento })), { loading: ExerciseLoader });
+const FlexibilidadeCognitiva = dynamic(() => import("@/components/exercises/executive/FlexibilidadeCognitiva").then(m => ({ default: m.FlexibilidadeCognitiva })), { loading: ExerciseLoader });
+const Labirinto           = dynamic(() => import("@/components/exercises/executive/Labirinto").then(m => ({ default: m.Labirinto })), { loading: ExerciseLoader });
 
 const EXERCISE_INSTRUCTIONS: Record<string, string[]> = {
   "span-numerico": [
@@ -110,6 +115,24 @@ const EXERCISE_INSTRUCTIONS: Record<string, string[]> = {
     "Toque em uma carta para virá-la, depois toque em outra.",
     "Se as duas forem iguais, elas ficam abertas! Se não, voltam viradas.",
     "Tente lembrar onde cada figura está para encontrar todos os pares!",
+  ],
+  "span-numerico-inverso": [
+    "Uma sequência de números será exibida, um por vez.",
+    "Memorize os números — mas responda em ORDEM INVERSA.",
+    "Se ouvir 3 → 7 → 2, responda 2 → 7 → 3.",
+    "Este exercício treina memória operacional (working memory).",
+  ],
+  "matriz-espacial-inversa": [
+    "Células de uma grade serão iluminadas em sequência.",
+    "Após a sequência, clique nas células em ORDEM INVERSA.",
+    "Se acendeu posição A → B → C, clique C → B → A.",
+    "Este exercício treina memória operacional visuoespacial.",
+  ],
+  "nback": [
+    "Uma letra será exibida por vez na tela.",
+    "Você deve responder se a letra ATUAL é igual à de N posições atrás.",
+    "Exemplo (2-back): A B C A → a 4ª letra (A) é igual à 2ª (B)? NÃO.",
+    "Responda SIM ou NÃO antes que a próxima letra apareça.",
   ],
 };
 
@@ -202,6 +225,9 @@ export default function ExercicioPage() {
       case "flexibilidade-cognitiva": return <FlexibilidadeCognitiva {...props} />;
       case "labirinto": return <Labirinto {...props} />;
       case "jogo-memoria": return <JogoMemoria {...props} />;
+      case "span-numerico-inverso": return <SpanNumericoInverso {...props} />;
+      case "matriz-espacial-inversa": return <MatrizEspacialInversa {...props} />;
+      case "nback": return <NBack {...props} />;
       default: return <div className="p-8 text-center text-gray-500">Exercício em desenvolvimento</div>;
     }
   }
@@ -211,6 +237,7 @@ export default function ExercicioPage() {
       title={exerciseDef.name}
       instructions={instructions}
       theme={theme}
+      difficulty={difficulty}
       onFinish={handleComplete}
     >
       {(onComplete) => renderExercise(onComplete)}

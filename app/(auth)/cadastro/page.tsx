@@ -7,7 +7,8 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
-import { Brain, Loader2 } from "lucide-react";
+import Image from "next/image";
+import { Loader2 } from "lucide-react";
 
 export default function CadastroPage() {
   const router = useRouter();
@@ -68,9 +69,7 @@ export default function CadastroPage() {
       <Card className="w-full max-w-md shadow-xl">
         <CardHeader className="text-center pb-2">
           <div className="flex justify-center mb-3">
-            <div className="w-14 h-14 bg-blue-600 rounded-2xl flex items-center justify-center">
-              <Brain className="w-8 h-8 text-white" />
-            </div>
+            <Image src="/icon-96.png" alt="NeuroPeak" width={56} height={56} className="rounded-2xl mx-auto" />
           </div>
           <CardTitle className="text-2xl font-bold text-gray-900">Criar conta</CardTitle>
           <CardDescription>NeuroPeak — Plataforma de Treino Cognitivo</CardDescription>

@@ -1,9 +1,10 @@
 "use client";
 
+import { useState } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import { AlertCircle, Clock, TrendingDown, CheckCircle2 } from "lucide-react";
+import { AlertCircle, Clock, TrendingDown, CheckCircle2, Loader2 } from "lucide-react";
 import { formatDate } from "@/lib/utils";
 import Link from "next/link";
 
@@ -19,7 +20,6 @@ interface Alert {
 
 interface AlertsPanelProps {
   alerts: Alert[];
-  onMarkRead?: (alertId: string) => void;
 }
 
 function AlertIcon({ type }: { type: Alert["type"] }) {
@@ -55,8 +55,33 @@ function alertLabel(type: Alert["type"]): string {
   }
 }
 
-export function AlertsPanel({ alerts, onMarkRead }: AlertsPanelProps) {
+export function AlertsPanel({ alerts: initial }: AlertsPanelProps) {
+  const [alerts, setAlerts] = useState(initial);
+  const [loading, setLoading] = useState<string | null>(null);
+
   const unread = alerts.filter((a) => !a.isRead);
+
+  async function markRead(alertId: string) {
+    setLoading(alertId);
+    try {
+      await fetch(`/api/alerts/${alertId}`, { method: "PATCH" });
+      setAlerts((prev) =>
+        prev.map((a) => (a.id === alertId ? { ...a, isRead: true } : a))
+      );
+    } finally {
+      setLoading(null);
+    }
+  }
+
+  async function markAllRead() {
+    const unreadIds = alerts.filter((a) => !a.isRead).map((a) => a.id);
+    setLoading("all");
+    await Promise.all(
+      unreadIds.map((id) => fetch(`/api/alerts/${id}`, { method: "PATCH" }))
+    );
+    setAlerts((prev) => prev.map((a) => ({ ...a, isRead: true })));
+    setLoading(null);
+  }
 
   return (
     <Card>
@@ -70,17 +95,28 @@ export function AlertsPanel({ alerts, onMarkRead }: AlertsPanelProps) {
             </Badge>
           )}
         </CardTitle>
+        {unread.length > 1 && (
+          <Button
+            variant="ghost"
+            size="sm"
+            className="text-xs h-7 px-2 text-gray-500"
+            onClick={markAllRead}
+            disabled={loading === "all"}
+          >
+            {loading === "all" ? <Loader2 className="w-3 h-3 animate-spin" /> : "Marcar todos"}
+          </Button>
+        )}
       </CardHeader>
       <CardContent>
         {alerts.length === 0 ? (
           <p className="text-sm text-gray-500 text-center py-4">Nenhum alerta no momento.</p>
         ) : (
           <div className="space-y-3">
-            {alerts.slice(0, 5).map((alert) => (
+            {alerts.slice(0, 8).map((alert) => (
               <div
                 key={alert.id}
-                className={`flex items-start gap-3 p-3 rounded-lg border ${
-                  alert.isRead ? "bg-gray-50 opacity-60" : "bg-white"
+                className={`flex items-start gap-3 p-3 rounded-lg border transition-opacity ${
+                  alert.isRead ? "bg-gray-50 opacity-50" : "bg-white"
                 }`}
               >
                 <AlertIcon type={alert.type} />
@@ -101,14 +137,19 @@ export function AlertsPanel({ alerts, onMarkRead }: AlertsPanelProps) {
                   </Link>
                   <p className="text-xs text-gray-600 mt-0.5">{alert.message}</p>
                 </div>
-                {!alert.isRead && onMarkRead && (
+                {!alert.isRead && (
                   <Button
                     variant="ghost"
                     size="sm"
-                    className="text-xs h-7 px-2"
-                    onClick={() => onMarkRead(alert.id)}
+                    className="text-xs h-7 px-2 flex-shrink-0"
+                    onClick={() => markRead(alert.id)}
+                    disabled={loading === alert.id}
                   >
-                    Lido
+                    {loading === alert.id ? (
+                      <Loader2 className="w-3 h-3 animate-spin" />
+                    ) : (
+                      "Lido"
+                    )}
                   </Button>
                 )}
               </div>

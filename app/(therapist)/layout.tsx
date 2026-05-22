@@ -3,7 +3,8 @@
 import { signOut, useSession } from "next-auth/react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { Brain, LayoutDashboard, Users, FileText, LogOut, Menu, X, Settings } from "lucide-react";
+import Image from "next/image";
+import { LayoutDashboard, Users, FileText, LogOut, Menu, X, Settings } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 import { useState } from "react";
@@ -33,9 +34,7 @@ export default function TherapistLayout({ children }: { children: React.ReactNod
       )}>
         {/* Logo */}
         <div className="flex items-center gap-3 px-6 py-5 border-b border-gray-100">
-          <div className="w-9 h-9 rounded-xl bg-blue-600 flex items-center justify-center">
-            <Brain className="w-5 h-5 text-white" />
-          </div>
+          <Image src="/icon-48.png" alt="NeuroPeak" width={36} height={36} className="rounded-xl" />
           <div>
             <span className="font-bold text-gray-900 text-lg">NeuroPeak</span>
             <p className="text-xs text-gray-500">Painel Clínico</p>
@@ -103,7 +102,7 @@ export default function TherapistLayout({ children }: { children: React.ReactNod
         {/* Mobile header */}
         <header className="lg:hidden bg-white border-b border-gray-200 px-4 py-3 flex items-center justify-between sticky top-0 z-30">
           <div className="flex items-center gap-2">
-            <Brain className="w-6 h-6 text-blue-600" />
+            <Image src="/icon-48.png" alt="NeuroPeak" width={28} height={28} className="rounded-lg" />
             <span className="font-bold text-gray-900">NeuroPeak</span>
           </div>
           <button onClick={() => setMobileOpen(!mobileOpen)} className="p-2 rounded-lg hover:bg-gray-100">

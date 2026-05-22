@@ -4,7 +4,7 @@ import { getServerSession } from "next-auth";
 import { authOptions } from "@/lib/auth";
 import { supabase } from "@/lib/supabase";
 import { z } from "zod";
-import { generatePin } from "@/lib/utils";
+import { generatePin, generatePatientCode } from "@/lib/utils";
 import { randomUUID } from "crypto";
 import bcrypt from "bcryptjs";
 
@@ -32,7 +32,7 @@ export async function GET(req: NextRequest) {
 
   const { data: patients, error } = await supabase
     .from('Patient')
-    .select('id, name, theme, createdAt')
+    .select('*')
     .eq('therapistId', therapistId)
     .order('name', { ascending: true });
 
@@ -71,18 +71,37 @@ export async function POST(req: NextRequest) {
   const plainPin = generatePin();
   const pin = await bcrypt.hash(plainPin, 10);
 
-  const insertData = {
+  // Try to generate a unique patientCode; skip if column doesn't exist yet
+  let patientCode: string | undefined;
+  try {
+    let codeIsUnique = false;
+    do {
+      patientCode = generatePatientCode();
+      const { data: existing } = await supabase
+        .from('Patient')
+        .select('id')
+        .eq('patientCode', patientCode)
+        .maybeSingle();
+      codeIsUnique = !existing;
+    } while (!codeIsUnique);
+  } catch {
+    patientCode = undefined;
+  }
+
+  const insertData: Record<string, unknown> = {
     id: randomUUID(),
     name,
     birthDate: new Date(birthDate).toISOString(),
     theme,
     pin,
+    pinPlain: plainPin,
     therapistId,
     updatedAt: new Date().toISOString(),
     ...Object.fromEntries(
       Object.entries(rest).filter(([, v]) => v !== undefined)
     ),
   };
+  if (patientCode) insertData.patientCode = patientCode;
 
   const { data: patient, error: insertError } = await supabase
     .from('Patient')

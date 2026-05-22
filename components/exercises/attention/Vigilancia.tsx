@@ -3,6 +3,7 @@
 import { useState, useEffect, useRef, useCallback } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { calculateExerciseScore } from "@/lib/scoring";
+import { useExerciseProgress } from "@/components/exercises/ExerciseWrapper";
 import type { ExerciseResult, Theme } from "@/types";
 
 interface VigilanciaProps {
@@ -17,9 +18,10 @@ const INTERVALS: Record<number, number> = {
   1: 1200, 2: 900, 3: 700, 4: 1200, 5: 900,
   6: 700, 7: 900, 8: 700, 9: 700, 10: 600,
 };
-const TOTAL_ITEMS = 30;
+const TOTAL_ITEMS = 60;
 
 export function Vigilancia({ difficulty, theme, onComplete }: VigilanciaProps) {
+  const reportProgress = useExerciseProgress();
   const interval = INTERVALS[difficulty] ?? 1000;
   const targetCount = difficulty >= 4 ? 2 : 1;
   const targets = TARGETS.slice(0, targetCount);
@@ -27,7 +29,6 @@ export function Vigilancia({ difficulty, theme, onComplete }: VigilanciaProps) {
   const [sequence] = useState(() => {
     const seq: string[] = [];
     for (let i = 0; i < TOTAL_ITEMS; i++) {
-      // ~30% chance of target
       if (Math.random() < 0.3) {
         seq.push(targets[Math.floor(Math.random() * targets.length)]);
       } else {
@@ -50,6 +51,14 @@ export function Vigilancia({ difficulty, theme, onComplete }: VigilanciaProps) {
   const reactionTimes = useRef<number[]>([]);
   const stimulusStart = useRef<number>(0);
 
+  // Report progress as items advance
+  useEffect(() => {
+    if (current >= 0) {
+      reportProgress(Math.round(((current + 1) / TOTAL_ITEMS) * 100));
+    }
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [current]);
+
   useEffect(() => {
     let idx = 0;
     startTime.current = Date.now();
@@ -68,7 +77,6 @@ export function Vigilancia({ difficulty, theme, onComplete }: VigilanciaProps) {
       setFeedback(null);
 
       setTimeout(() => {
-        // If target and no response → miss
         if (!responded.current && targets.includes(sequence[idx])) {
           setMisses((m) => m + 1);
           setFeedback("miss");
@@ -81,6 +89,7 @@ export function Vigilancia({ difficulty, theme, onComplete }: VigilanciaProps) {
 
     const t = setTimeout(showNext, 500);
     return () => clearTimeout(t);
+  // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   useEffect(() => {
@@ -99,8 +108,9 @@ export function Vigilancia({ difficulty, theme, onComplete }: VigilanciaProps) {
       reactionTime: avgRT,
       difficulty,
       duration,
-      metadata: { hits, misses, falseAlarms, targets },
+      metadata: { hits, misses, falseAlarms, targets, total: TOTAL_ITEMS },
     });
+  // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [done]);
 
   function handleTap() {
@@ -177,7 +187,6 @@ export function Vigilancia({ difficulty, theme, onComplete }: VigilanciaProps) {
             )}
           </AnimatePresence>
 
-          {/* Feedback flash */}
           <AnimatePresence>
             {feedback && (
               <motion.div

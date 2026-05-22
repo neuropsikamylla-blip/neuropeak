@@ -10,14 +10,15 @@ import { useToast } from "@/components/ui/use-toast";
 import { ArrowLeft, Loader2, Save } from "lucide-react";
 import Link from "next/link";
 import { EXERCISE_DEFINITIONS, DOMAIN_LABELS, type Domain } from "@/types";
+import { ExerciseScienceCard } from "@/components/exercises/ExerciseScienceCard";
 
 const ALL_DOMAINS: Domain[] = ["memory", "attention", "processing", "executive"];
 
 const DOMAIN_EXERCISES: Record<Domain, string[]> = {
-  memory: ["span-numerico", "matriz-espacial", "associacao-pares"],
+  memory: ["span-numerico", "matriz-espacial", "associacao-pares", "jogo-memoria", "span-numerico-inverso", "matriz-espacial-inversa", "nback"],
   attention: ["trilha-visual", "stroop-task", "vigilancia"],
   processing: ["tempo-reacao", "decisao-rapida", "identificacao-simbolos"],
-  executive: ["torre-hanoi", "sequenciamento", "flexibilidade-cognitiva"],
+  executive: ["torre-hanoi", "sequenciamento", "flexibilidade-cognitiva", "labirinto"],
 };
 
 export default function PlanoPage() {
@@ -152,26 +153,28 @@ export default function PlanoPage() {
                 {DOMAIN_EXERCISES[domain].map((exId) => {
                   const ex = EXERCISE_DEFINITIONS[exId as keyof typeof EXERCISE_DEFINITIONS];
                   return (
-                    <label
-                      key={exId}
-                      className={`flex items-center gap-3 p-3 rounded-lg border-2 cursor-pointer transition-all ${
-                        selectedExercises.includes(exId)
-                          ? "border-blue-400 bg-blue-50"
-                          : "border-gray-200 hover:border-gray-300"
-                      }`}
-                    >
-                      <input
-                        type="checkbox"
-                        checked={selectedExercises.includes(exId)}
-                        onChange={() => toggleExercise(exId)}
-                        className="w-4 h-4 text-blue-600 rounded"
-                      />
-                      <span className="text-xl">{ex.icon}</span>
-                      <div>
-                        <p className="font-medium text-sm text-gray-800">{ex.name}</p>
-                        <p className="text-xs text-gray-500">{ex.description} · ~{ex.estimatedMinutes}min</p>
-                      </div>
-                    </label>
+                    <div key={exId}>
+                      <label
+                        className={`flex items-center gap-3 p-3 rounded-lg border-2 cursor-pointer transition-all ${
+                          selectedExercises.includes(exId)
+                            ? "border-blue-400 bg-blue-50"
+                            : "border-gray-200 hover:border-gray-300"
+                        }`}
+                      >
+                        <input
+                          type="checkbox"
+                          checked={selectedExercises.includes(exId)}
+                          onChange={() => toggleExercise(exId)}
+                          className="w-4 h-4 text-blue-600 rounded"
+                        />
+                        <span className="text-xl">{ex.icon}</span>
+                        <div>
+                          <p className="font-medium text-sm text-gray-800">{ex.name}</p>
+                          <p className="text-xs text-gray-500">{ex.description} · ~{ex.estimatedMinutes}min</p>
+                        </div>
+                      </label>
+                      <ExerciseScienceCard exerciseId={exId} />
+                    </div>
                   );
                 })}
               </div>

@@ -3,7 +3,8 @@
 import { signOut, useSession } from "next-auth/react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { Brain, Home, Dumbbell, TrendingUp, LogOut } from "lucide-react";
+import Image from "next/image";
+import { Home, Dumbbell, TrendingUp, LogOut } from "lucide-react";
 import { cn } from "@/lib/utils";
 
 const NAV_ITEMS = [
@@ -50,7 +51,7 @@ export default function PatientLayout({ children }: { children: React.ReactNode 
       {showNav && (
         <header className={`sticky top-0 z-30 px-4 py-3 flex items-center justify-between ${navStyles[theme]}`}>
           <div className="flex items-center gap-2">
-            <Brain className={`w-6 h-6 ${theme === "GAMIFIED" ? "text-cyan-400" : "text-blue-600"}`} />
+            <Image src="/icon-48.png" alt="NeuroPeak" width={28} height={28} className="rounded-lg" />
             <span className={`font-bold ${theme === "GAMIFIED" ? "text-white" : "text-gray-900"}`}>
               NeuroPeak
             </span>

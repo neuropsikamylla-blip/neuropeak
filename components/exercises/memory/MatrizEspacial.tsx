@@ -1,204 +1,281 @@
 "use client";
 
 import { useState, useEffect, useCallback, useRef } from "react";
-import { motion } from "framer-motion";
-import { Button } from "@/components/ui/button";
+import { motion, AnimatePresence } from "framer-motion";
 import { calculateExerciseScore } from "@/lib/scoring";
+import { useExerciseProgress } from "@/components/exercises/ExerciseWrapper";
 import type { ExerciseResult, Theme } from "@/types";
 
 interface MatrizEspacialProps {
   difficulty: number;
   theme: Theme;
   onComplete: (result: ExerciseResult) => void;
+  alwaysReverse?: boolean;
 }
-
-const GRID_SIZES: Record<number, number> = {
-  1: 4, 2: 4, 3: 4, 4: 4, 5: 4,
-  6: 5, 7: 5, 8: 5, 9: 5, 10: 5,
-};
-const SEQ_LENGTHS: Record<number, number> = {
-  1: 3, 2: 4, 3: 5, 4: 6, 5: 7,
-  6: 5, 7: 6, 8: 7, 9: 8, 10: 9,
-};
 
 type Phase = "showing" | "recall" | "feedback";
 
-export function MatrizEspacial({ difficulty, theme, onComplete }: MatrizEspacialProps) {
-  const gridSize = GRID_SIZES[difficulty] ?? 4;
-  const seqLength = SEQ_LENGTHS[difficulty] ?? 3;
-  const maxTrials = 4;
+const MAX_TRIALS = 20;
+const MIN_SEQ = 2;
+const MAX_SEQ = 9;
+const GRID = 4; // 4×4 sempre
 
+// Dificuldade 6-10: modo inverso (clica na ordem reversa)
+const REVERSE_MODE = (difficulty: number) => difficulty >= 6;
+
+// Ponto de partida: dificuldade 1 → 2 células, dificuldade 5 → 4, dificuldade 10 → 6
+function initialSeq(difficulty: number) {
+  return Math.min(Math.max(2, Math.floor(difficulty * 0.5) + 1), 5);
+}
+
+export function MatrizEspacial({ difficulty, theme, onComplete, alwaysReverse }: MatrizEspacialProps) {
+  const reverse = alwaysReverse ?? REVERSE_MODE(difficulty);
+  const [seqLength, setSeqLength] = useState(initialSeq(difficulty));
+  const [streak, setStreak] = useState(0); // positivo = acertos seguidos, negativo = erros
   const [phase, setPhase] = useState<Phase>("showing");
   const [sequence, setSequence] = useState<number[]>([]);
   const [activeCell, setActiveCell] = useState<number | null>(null);
-  const [userSequence, setUserSequence] = useState<number[]>([]);
+  const [userSeq, setUserSeq] = useState<number[]>([]);
   const [trial, setTrial] = useState(0);
-  const [scores, setScores] = useState<number[]>([]);
-  const [highlightedCells, setHighlightedCells] = useState<Set<number>>(new Set());
+  const [attempts, setAttempts] = useState<{ correct: boolean; seqLen: number }[]>([]);
+  const [feedbackData, setFeedbackData] = useState<{ correct: boolean; userSeq: number[] } | null>(null);
   const startTime = useRef<number>(Date.now());
+  const reportProgress = useExerciseProgress();
 
-  const generateSequence = useCallback(() => {
+  const generateSeq = useCallback((len: number) => {
     const cells = new Set<number>();
-    const total = gridSize * gridSize;
-    while (cells.size < seqLength) {
-      cells.add(Math.floor(Math.random() * total));
-    }
+    while (cells.size < len) cells.add(Math.floor(Math.random() * GRID * GRID));
     return Array.from(cells);
-  }, [gridSize, seqLength]);
+  }, []);
 
   const showSequence = useCallback(async (seq: number[]) => {
     setPhase("showing");
-    setHighlightedCells(new Set());
+    setActiveCell(null);
+    setUserSeq([]);
 
     for (const cell of seq) {
-      await new Promise<void>((res) => setTimeout(res, 300));
+      await new Promise<void>((r) => setTimeout(r, 350));
       setActiveCell(cell);
-      await new Promise<void>((res) => setTimeout(res, 700));
+      await new Promise<void>((r) => setTimeout(r, 750));
       setActiveCell(null);
     }
 
-    await new Promise<void>((res) => setTimeout(res, 400));
+    await new Promise<void>((r) => setTimeout(r, 500));
     setPhase("recall");
-    setUserSequence([]);
-    setHighlightedCells(new Set());
   }, []);
 
+  // eslint-disable-next-line react-hooks/exhaustive-deps
   useEffect(() => {
-    const seq = generateSequence();
+    const seq = generateSeq(seqLength);
     setSequence(seq);
-    if (trial === 0) startTime.current = Date.now();
     showSequence(seq);
-  }, [trial, generateSequence, showSequence]);
+  }, [trial]);
 
   function handleCellClick(idx: number) {
-    if (phase !== "recall") return;
-    if (userSequence.includes(idx)) return;
+    if (phase !== "recall" || userSeq.includes(idx)) return;
 
-    const newSeq = [...userSequence, idx];
-    setUserSequence(newSeq);
-    setHighlightedCells(new Set(newSeq));
+    const newSeq = [...userSeq, idx];
+    setUserSeq(newSeq);
 
-    if (newSeq.length === seqLength) {
-      // Check accuracy
-      let correct = 0;
-      for (let i = 0; i < seqLength; i++) {
-        if (newSeq[i] === sequence[i]) correct++;
+    if (newSeq.length < seqLength) return; // ainda esperando mais cliques
+
+    // Avalia: na ordem direta ou inversa conforme modo
+    const expected = reverse ? [...sequence].reverse() : sequence;
+    const correct = newSeq.every((cell, i) => cell === expected[i]);
+
+    setFeedbackData({ correct, userSeq: newSeq });
+    setPhase("feedback");
+
+    const newAttempts = [...attempts, { correct, seqLen: seqLength }];
+    setAttempts(newAttempts);
+
+    // Escada 2-cima / 2-baixo
+    const newStreak = correct
+      ? Math.max(streak, 0) + 1   // acerto: incrementa streak positivo
+      : Math.min(streak, 0) - 1;  // erro: incrementa streak negativo
+
+    let nextSeqLen = seqLength;
+    let nextStreak = newStreak;
+    if (newStreak >= 2) { nextSeqLen = Math.min(seqLength + 1, MAX_SEQ); nextStreak = 0; }
+    if (newStreak <= -2) { nextSeqLen = Math.max(seqLength - 1, MIN_SEQ); nextStreak = 0; }
+
+    const nextTrial = trial + 1;
+    reportProgress(Math.round((nextTrial / MAX_TRIALS) * 100));
+
+    setTimeout(() => {
+      if (nextTrial >= MAX_TRIALS) {
+        const accuracy = newAttempts.filter((a) => a.correct).length / MAX_TRIALS;
+        const maxSeq = Math.max(...newAttempts.map((a) => a.seqLen));
+        const duration = Math.round((Date.now() - startTime.current) / 1000);
+        const score = calculateExerciseScore("matriz-espacial", accuracy, undefined, difficulty);
+        onComplete({
+          exerciseId: "matriz-espacial",
+          domain: "memory",
+          score,
+          accuracy,
+          difficulty,
+          duration,
+          metadata: { gridSize: GRID, seqLength: maxSeq, reverse, trials: MAX_TRIALS, correct: newAttempts.filter((a) => a.correct).length },
+        });
+      } else {
+        setFeedbackData(null);
+        setStreak(nextStreak);
+        setSeqLength(nextSeqLen);
+        setTrial(nextTrial);
       }
-      const trialAccuracy = correct / seqLength;
-      const newScores = [...scores, trialAccuracy];
-      setScores(newScores);
-      setPhase("feedback");
-
-      setTimeout(() => {
-        if (trial + 1 >= maxTrials) {
-          const accuracy = newScores.reduce((a, b) => a + b, 0) / maxTrials;
-          const duration = Math.round((Date.now() - startTime.current) / 1000);
-          const score = calculateExerciseScore("matriz-espacial", accuracy, undefined, difficulty);
-          onComplete({
-            exerciseId: "matriz-espacial",
-            domain: "memory",
-            score,
-            accuracy,
-            difficulty,
-            duration,
-            metadata: { gridSize, seqLength, trials: maxTrials },
-          });
-        } else {
-          setTrial((t) => t + 1);
-          setScores(newScores);
-        }
-      }, 1500);
-    }
+    }, 1800);
   }
 
-  const cellCount = gridSize * gridSize;
+  // ─── Estilos por tema ────────────────────────────────────────────────
+  const bg = { CLINICAL: "bg-gray-50", COLORFUL: "bg-gradient-to-br from-purple-50 to-pink-50", GAMIFIED: "bg-gray-950" }[theme];
+  const card = { CLINICAL: "bg-white shadow-lg", COLORFUL: "bg-white shadow-lg", GAMIFIED: "bg-gray-800 border border-cyan-500/30" }[theme];
+  const title = { CLINICAL: "text-gray-900", COLORFUL: "text-purple-700", GAMIFIED: "text-cyan-400" }[theme];
+  const sub = { CLINICAL: "text-gray-500", COLORFUL: "text-purple-500", GAMIFIED: "text-gray-400" }[theme];
 
-  const bgClass = theme === "GAMIFIED" ? "bg-gray-950" : theme === "COLORFUL" ? "bg-gradient-to-br from-purple-50 to-pink-50" : "bg-gray-50";
-  const cardClass = theme === "GAMIFIED" ? "bg-gray-800 border border-cyan-500/30 rounded-2xl" : "bg-white shadow-lg rounded-2xl";
+  function cellStyle(idx: number) {
+    const isActive = activeCell === idx;
+    const isUserSelected = userSeq.includes(idx);
+    const isInSeq = sequence.includes(idx);
+
+    if (phase === "feedback" && feedbackData) {
+      const posInUser = feedbackData.userSeq.indexOf(idx);
+      const posInSeq = sequence.indexOf(idx);
+      if (posInUser !== -1 && posInSeq !== -1 && posInUser === posInSeq) {
+        return "bg-green-400 border-green-600"; // posição correta
+      }
+      if (isInSeq) return "bg-amber-300 border-amber-500"; // célula certa, ordem errada
+      if (isUserSelected) return "bg-red-300 border-red-500"; // célula errada
+    }
+
+    if (isActive) {
+      return theme === "GAMIFIED"
+        ? "bg-cyan-500 border-cyan-300 shadow-[0_0_15px_rgba(6,182,212,0.6)]"
+        : theme === "COLORFUL"
+        ? "bg-purple-500 border-purple-300"
+        : "bg-blue-500 border-blue-300";
+    }
+    if (isUserSelected && phase === "recall") {
+      return theme === "GAMIFIED"
+        ? "bg-cyan-700 border-cyan-500"
+        : theme === "COLORFUL"
+        ? "bg-purple-300 border-purple-500"
+        : "bg-blue-300 border-blue-500";
+    }
+    return theme === "GAMIFIED"
+      ? "bg-gray-700 border-gray-600 hover:bg-gray-600"
+      : theme === "COLORFUL"
+      ? "bg-purple-50 border-purple-200 hover:bg-purple-100"
+      : "bg-gray-100 border-gray-300 hover:bg-gray-200";
+  }
+
+  const nextSeqDisplay = feedbackData?.correct
+    ? Math.min(seqLength + (streak + 1 >= 2 ? 1 : 0), MAX_SEQ)
+    : Math.max(seqLength + (streak - 1 <= -2 ? -1 : 0), MIN_SEQ);
 
   return (
-    <div className={`min-h-screen flex flex-col items-center justify-center p-4 ${bgClass}`}>
-      <div className={`w-full max-w-md p-6 ${cardClass}`}>
-        <div className="flex justify-between items-center mb-4">
-          <h2 className={`font-bold text-lg ${theme === "GAMIFIED" ? "text-cyan-400" : theme === "COLORFUL" ? "text-purple-700" : "text-gray-900"}`}>
-            Matriz Espacial
-          </h2>
-          <span className={`text-sm ${theme === "GAMIFIED" ? "text-gray-400" : "text-gray-500"}`}>
-            {trial + 1}/{maxTrials}
-          </span>
+    <div className={`min-h-screen flex flex-col items-center justify-center p-4 ${bg}`}>
+      <div className={`w-full max-w-sm rounded-2xl p-6 ${card}`}>
+
+        {/* Header */}
+        <div className="flex justify-between items-center mb-3">
+          <div>
+            <h2 className={`font-bold text-base ${title}`}>
+              Matriz Espacial{reverse ? " — Inversa" : ""}
+            </h2>
+            <p className={`text-xs ${sub}`}>
+              {seqLength} célula{seqLength > 1 ? "s" : ""}
+              {reverse ? " · clique ao contrário" : ""}
+            </p>
+          </div>
+          <span className={`text-sm font-medium ${sub}`}>{trial + 1}/{MAX_TRIALS}</span>
         </div>
 
-        <p className={`text-sm mb-4 text-center ${theme === "GAMIFIED" ? "text-gray-300" : "text-gray-600"}`}>
-          {phase === "showing"
-            ? "Observe as células iluminadas..."
-            : phase === "recall"
-            ? `Clique nas ${seqLength} células na ordem correta`
-            : "Verificando..."}
+        {/* Barra de progresso */}
+        <div className="flex gap-1 mb-5">
+          {Array.from({ length: MAX_TRIALS }).map((_, i) => (
+            <div
+              key={i}
+              className={`h-1.5 flex-1 rounded-full transition-colors ${
+                i < attempts.length
+                  ? attempts[i].correct ? "bg-green-500" : "bg-red-400"
+                  : i === trial
+                  ? "bg-blue-400 animate-pulse"
+                  : theme === "GAMIFIED" ? "bg-gray-700" : "bg-gray-200"
+              }`}
+            />
+          ))}
+        </div>
+
+        {/* Instrução */}
+        <p className={`text-sm text-center mb-4 min-h-[20px] ${sub}`}>
+          {phase === "showing" && (reverse ? "Observe a sequência... clique ao contrário!" : "Observe a sequência...")}
+          {phase === "recall" && (reverse
+            ? `Toque as ${seqLength} células em ORDEM INVERSA (última → primeira)`
+            : `Toque as ${seqLength} células na mesma ordem`)}
+          {phase === "feedback" && (feedbackData?.correct ? "Correto! ✅" : "Incorreto ❌")}
         </p>
 
-        {/* Grid */}
+        {/* Grid 4×4 */}
         <div
-          className="grid gap-2 mx-auto mb-6"
-          style={{
-            gridTemplateColumns: `repeat(${gridSize}, 1fr)`,
-            maxWidth: gridSize === 4 ? "280px" : "320px",
-          }}
+          className="grid gap-2 mx-auto mb-4"
+          style={{ gridTemplateColumns: `repeat(${GRID}, 1fr)`, maxWidth: "280px" }}
         >
-          {Array.from({ length: cellCount }).map((_, idx) => {
-            const isActive = activeCell === idx;
-            const isHighlighted = highlightedCells.has(idx);
-            const isInSequence = sequence.includes(idx);
-            const isCorrect = phase === "feedback" && isInSequence;
-
-            return (
-              <motion.button
-                key={idx}
-                onClick={() => handleCellClick(idx)}
-                disabled={phase !== "recall" || userSequence.includes(idx)}
-                className={`aspect-square rounded-lg border-2 cursor-pointer transition-all ${
-                  isActive
-                    ? theme === "GAMIFIED"
-                      ? "bg-cyan-500 border-cyan-300 shadow-[0_0_15px_rgba(6,182,212,0.6)]"
-                      : theme === "COLORFUL"
-                      ? "bg-purple-500 border-purple-300"
-                      : "bg-blue-500 border-blue-300"
-                    : isHighlighted && phase === "recall"
-                    ? theme === "GAMIFIED"
-                      ? "bg-cyan-700 border-cyan-500"
-                      : "bg-blue-300 border-blue-500"
-                    : isCorrect
-                    ? "bg-green-400 border-green-600"
-                    : theme === "GAMIFIED"
-                    ? "bg-gray-700 border-gray-600 hover:bg-gray-600"
-                    : "bg-gray-100 border-gray-300 hover:bg-gray-200"
-                }`}
-                whileHover={phase === "recall" ? { scale: 1.05 } : {}}
-                whileTap={phase === "recall" ? { scale: 0.95 } : {}}
-                animate={isActive ? { scale: [1, 1.1, 1] } : {}}
-              />
-            );
-          })}
+          {Array.from({ length: GRID * GRID }).map((_, idx) => (
+            <motion.button
+              key={idx}
+              onClick={() => handleCellClick(idx)}
+              disabled={phase !== "recall" || userSeq.includes(idx)}
+              className={`aspect-square rounded-xl border-2 transition-colors ${cellStyle(idx)}`}
+              whileTap={phase === "recall" ? { scale: 0.9 } : {}}
+              animate={activeCell === idx ? { scale: [1, 1.15, 1] } : {}}
+              transition={{ duration: 0.15 }}
+            />
+          ))}
         </div>
 
-        {/* User progress */}
+        {/* Indicador de posição durante recall */}
         {phase === "recall" && (
           <div className="flex justify-center gap-2">
             {Array.from({ length: seqLength }).map((_, i) => (
               <div
                 key={i}
-                className={`w-4 h-4 rounded-full ${
-                  i < userSequence.length
-                    ? theme === "GAMIFIED"
-                      ? "bg-cyan-500"
-                      : "bg-blue-500"
-                    : theme === "GAMIFIED"
-                    ? "bg-gray-700"
-                    : "bg-gray-200"
+                className={`w-3 h-3 rounded-full transition-colors ${
+                  i < userSeq.length
+                    ? theme === "GAMIFIED" ? "bg-cyan-500" : theme === "COLORFUL" ? "bg-purple-500" : "bg-blue-500"
+                    : theme === "GAMIFIED" ? "bg-gray-700" : "bg-gray-200"
                 }`}
               />
             ))}
           </div>
         )}
+
+        {/* Feedback */}
+        <AnimatePresence>
+          {phase === "feedback" && feedbackData && (
+            <motion.div
+              className="text-center mt-3"
+              initial={{ opacity: 0, y: 8 }}
+              animate={{ opacity: 1, y: 0 }}
+            >
+              <p className={`text-xs ${sub}`}>
+                {reverse ? "Resposta correta (inversa): " : "Sequência correta: "}
+                posições {(reverse ? [...sequence].reverse() : sequence).map((c) => c + 1).join(" → ")}
+              </p>
+              {reverse && (
+                <p className={`text-xs ${sub} opacity-70`}>
+                  (apresentado: {sequence.map((c) => c + 1).join(" → ")})
+                </p>
+              )}
+              {trial + 1 < MAX_TRIALS && (
+                <p className={`text-xs mt-1 font-medium ${feedbackData.correct ? (theme === "GAMIFIED" ? "text-cyan-400" : "text-blue-600") : (theme === "GAMIFIED" ? "text-gray-500" : "text-gray-400")}`}>
+                  {feedbackData.correct && streak + 1 >= 2 ? `Próxima: ${Math.min(seqLength + 1, MAX_SEQ)} células ↑` : ""}
+                  {!feedbackData.correct && streak - 1 <= -2 && seqLength > MIN_SEQ ? `Próxima: ${Math.max(seqLength - 1, MIN_SEQ)} células ↓` : ""}
+                </p>
+              )}
+            </motion.div>
+          )}
+        </AnimatePresence>
+
       </div>
     </div>
   );

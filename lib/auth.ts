@@ -47,17 +47,34 @@ export const authOptions: NextAuthOptions = {
       id: "patient-pin",
       name: "Paciente",
       credentials: {
-        patientId: { label: "ID do Paciente", type: "text" },
+        patientId: { label: "Código do Paciente", type: "text" },
         pin: { label: "PIN", type: "password" },
       },
       async authorize(credentials) {
         if (!credentials?.patientId || !credentials?.pin) return null;
 
-        const { data: patient } = await supabase
-          .from('Patient')
-          .select('*')
-          .eq('id', credentials.patientId)
-          .single();
+        const input = credentials.patientId.trim().toUpperCase();
+        const isCode = /^COG\d{4,6}$/.test(input);
+        let patient = null;
+        if (isCode) {
+          try {
+            const { data } = await supabase
+              .from('Patient')
+              .select('*')
+              .eq('patientCode', input)
+              .maybeSingle();
+            patient = data;
+          } catch {
+            // column may not exist yet; fall through to null
+          }
+        } else {
+          const { data } = await supabase
+            .from('Patient')
+            .select('*')
+            .eq('id', credentials.patientId)
+            .maybeSingle();
+          patient = data;
+        }
 
         if (!patient) return null;
         const pinValid = await bcrypt.compare(credentials.pin, patient.pin);

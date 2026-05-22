@@ -7,13 +7,20 @@ import { RefreshCw, Copy, Check, Eye, EyeOff } from "lucide-react";
 
 interface PatientCredentialsProps {
   patientId: string;
+  patientCode?: string | null;
+  pinPlain?: string | null;
 }
 
-export function PatientCredentials({ patientId }: PatientCredentialsProps) {
-  const [pin, setPin] = useState<string | null>(null);
+export function PatientCredentials({
+  patientId,
+  patientCode: initialCode,
+  pinPlain: initialPin,
+}: PatientCredentialsProps) {
+  const [pin, setPin] = useState<string | null>(initialPin ?? null);
+  const [code, setCode] = useState<string | null>(initialCode ?? null);
   const [loading, setLoading] = useState(false);
-  const [copied, setCopied] = useState(false);
-  const [showPin, setShowPin] = useState(true);
+  const [copied, setCopied] = useState<"code" | "pin" | null>(null);
+  const [showPin, setShowPin] = useState(false);
 
   async function handleGeneratePin() {
     if (!confirm("Gerar um novo PIN vai invalidar o PIN atual do paciente. Continuar?")) return;
@@ -23,6 +30,7 @@ export function PatientCredentials({ patientId }: PatientCredentialsProps) {
       const data = await res.json();
       if (res.ok) {
         setPin(data.pin);
+        if (data.patientCode) setCode(data.patientCode);
         setShowPin(true);
       }
     } finally {
@@ -30,12 +38,10 @@ export function PatientCredentials({ patientId }: PatientCredentialsProps) {
     }
   }
 
-  function copyPin() {
-    if (pin) {
-      navigator.clipboard.writeText(pin);
-      setCopied(true);
-      setTimeout(() => setCopied(false), 2000);
-    }
+  function copyText(text: string, type: "code" | "pin") {
+    navigator.clipboard.writeText(text);
+    setCopied(type);
+    setTimeout(() => setCopied(null), 2000);
   }
 
   return (
@@ -43,31 +49,50 @@ export function PatientCredentials({ patientId }: PatientCredentialsProps) {
       <CardContent className="p-4">
         <p className="text-xs text-gray-500 mb-2">Credenciais de Acesso do Paciente</p>
         <div className="flex flex-wrap gap-6 items-end">
+
+          {/* Código do paciente */}
           <div>
-            <p className="text-xs text-gray-400">ID do Paciente</p>
-            <p className="font-mono text-sm text-gray-700 break-all">{patientId}</p>
+            <p className="text-xs text-gray-400">Código do Paciente</p>
+            {code ? (
+              <div className="flex items-center gap-2 mt-1">
+                <p className="font-mono font-bold text-blue-700 text-xl tracking-widest">{code}</p>
+                <button onClick={() => copyText(code, "code")} className="text-gray-400 hover:text-gray-600">
+                  {copied === "code" ? <Check className="w-4 h-4 text-green-500" /> : <Copy className="w-4 h-4" />}
+                </button>
+              </div>
+            ) : (
+              <p className="font-mono text-sm text-gray-400 mt-1">—</p>
+            )}
+            <p className="text-xs text-gray-400 mt-1">Informe ao paciente para login</p>
           </div>
+
+          {/* PIN */}
           <div>
             <p className="text-xs text-gray-400">PIN</p>
             {pin ? (
               <div className="flex items-center gap-2 mt-1">
                 <p className="font-mono font-bold text-blue-600 text-xl tracking-widest">
-                  {showPin ? pin : "••••••"}
+                  {showPin ? pin : "••••"}
                 </p>
                 <button onClick={() => setShowPin(!showPin)} className="text-gray-400 hover:text-gray-600">
                   {showPin ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
                 </button>
-                <button onClick={copyPin} className="text-gray-400 hover:text-gray-600">
-                  {copied ? <Check className="w-4 h-4 text-green-500" /> : <Copy className="w-4 h-4" />}
+                <button onClick={() => copyText(pin, "pin")} className="text-gray-400 hover:text-gray-600">
+                  {copied === "pin" ? <Check className="w-4 h-4 text-green-500" /> : <Copy className="w-4 h-4" />}
                 </button>
               </div>
             ) : (
-              <p className="font-mono font-bold text-gray-400 text-xl tracking-widest mt-1">••••••</p>
+              <div className="mt-1">
+                <p className="font-mono font-bold text-gray-300 text-xl tracking-widest">••••</p>
+                <p className="text-xs text-orange-500 mt-0.5">Gere um novo PIN para visualizar</p>
+              </div>
             )}
             <p className="text-xs text-gray-400 mt-1">
-              {pin ? "Anote o PIN e compartilhe com o paciente" : "PIN definido no cadastro"}
+              {pin ? "Compartilhe com o paciente" : "PIN legado — não visível"}
             </p>
           </div>
+
+          {/* Botão gerar */}
           <div className="ml-auto">
             <Button
               variant="outline"
@@ -77,7 +102,7 @@ export function PatientCredentials({ patientId }: PatientCredentialsProps) {
               className="text-xs"
             >
               <RefreshCw className={`w-3 h-3 mr-1 ${loading ? "animate-spin" : ""}`} />
-              {pin ? "Gerar outro PIN" : "Gerar Novo PIN"}
+              {pin ? "Gerar novo PIN" : "Gerar PIN"}
             </Button>
           </div>
         </div>
