@@ -5,8 +5,9 @@ import { motion, AnimatePresence } from "framer-motion";
 import { Button } from "@/components/ui/button";
 import { ScoreDisplay } from "@/components/gamification/ScoreDisplay";
 import { formatDuration, formatReactionTime } from "@/lib/utils";
+import { EXERCISE_FUNCTIONAL } from "@/lib/exercise-functional";
 import type { ExerciseResult, Theme } from "@/types";
-import { CheckCircle2, XCircle, Clock, Target, Zap } from "lucide-react";
+import { CheckCircle2, XCircle, Clock, Target, Zap, Lightbulb } from "lucide-react";
 
 type Phase = "instructions" | "exercise" | "results";
 
@@ -18,6 +19,7 @@ interface ExerciseWrapperProps {
   instructions: string[];
   theme: Theme;
   difficulty?: number;
+  exerciseId?: string;
   children: (onComplete: (result: ExerciseResult) => void) => React.ReactNode;
   onFinish: (result: ExerciseResult) => void;
 }
@@ -27,12 +29,15 @@ export function ExerciseWrapper({
   instructions,
   theme,
   difficulty,
+  exerciseId,
   children,
   onFinish,
 }: ExerciseWrapperProps) {
   const [phase, setPhase] = useState<Phase>("instructions");
   const [result, setResult] = useState<ExerciseResult | null>(null);
   const [sessionProgress, setSessionProgress] = useState(0);
+
+  const functional = exerciseId ? EXERCISE_FUNCTIONAL[exerciseId] : undefined;
 
   function handleComplete(r: ExerciseResult) {
     setSessionProgress(100);
@@ -82,9 +87,18 @@ export function ExerciseWrapper({
             exit={{ opacity: 0, y: -30 }}
           >
             <h1 className={`${s.title} mb-2`}>{title}</h1>
-            <p className={`${s.text} text-sm mb-6 opacity-70`}>Leia as instruções antes de começar</p>
+            <p className={`${s.text} text-sm mb-4 opacity-70`}>Leia as instruções antes de começar</p>
 
-            <div className="space-y-3 mb-8">
+            {functional && (
+              <div className={`rounded-xl p-4 mb-5 ${theme === "GAMIFIED" ? "bg-cyan-900/30 border border-cyan-500/20" : theme === "COLORFUL" ? "bg-purple-50 border border-purple-200" : "bg-blue-50 border border-blue-100"}`}>
+                <p className={`text-xs font-bold uppercase tracking-wide mb-1 ${theme === "GAMIFIED" ? "text-cyan-400" : theme === "COLORFUL" ? "text-purple-600" : "text-blue-600"}`}>
+                  Para que serve no dia a dia
+                </p>
+                <p className={`text-sm leading-relaxed ${s.text}`}>{functional.scenario}</p>
+              </div>
+            )}
+
+            <div className="space-y-3 mb-5">
               {instructions.map((inst, i) => (
                 <div key={i} className="flex gap-3 items-start">
                   <span className={`w-6 h-6 rounded-full flex items-center justify-center text-sm font-bold flex-shrink-0 mt-0.5 ${theme === "GAMIFIED" ? "bg-cyan-500 text-gray-900" : theme === "COLORFUL" ? "bg-purple-500 text-white" : "bg-blue-500 text-white"}`}>
@@ -94,6 +108,22 @@ export function ExerciseWrapper({
                 </div>
               ))}
             </div>
+
+            {functional && (
+              <div className={`rounded-xl p-4 mb-5 ${theme === "GAMIFIED" ? "bg-gray-700/50" : theme === "COLORFUL" ? "bg-yellow-50 border border-yellow-200" : "bg-gray-50 border border-gray-100"}`}>
+                <p className={`text-xs font-bold uppercase tracking-wide mb-2 ${theme === "GAMIFIED" ? "text-yellow-400" : theme === "COLORFUL" ? "text-yellow-700" : "text-gray-600"}`}>
+                  Estratégias
+                </p>
+                <ul className="space-y-1.5">
+                  {functional.strategies.map((s_item, i) => (
+                    <li key={i} className={`text-xs leading-relaxed flex gap-2 ${s.text}`}>
+                      <span className="mt-0.5 shrink-0">•</span>
+                      {s_item}
+                    </li>
+                  ))}
+                </ul>
+              </div>
+            )}
 
             <Button
               className={`w-full h-12 text-base ${s.btn}`}
@@ -207,11 +237,25 @@ export function ExerciseWrapper({
             </div>
 
             {result.reactionTime && (
-              <div className={`flex items-center justify-center gap-2 mb-6 p-3 rounded-lg ${theme === "GAMIFIED" ? "bg-gray-700" : "bg-blue-50"}`}>
+              <div className={`flex items-center justify-center gap-2 mb-4 p-3 rounded-lg ${theme === "GAMIFIED" ? "bg-gray-700" : "bg-blue-50"}`}>
                 <Zap className="w-4 h-4 text-yellow-500" />
                 <span className={`${s.text} text-sm`}>
                   Tempo de reação médio: <strong>{formatReactionTime(result.reactionTime)}</strong>
                 </span>
+              </div>
+            )}
+
+            {functional && (
+              <div className={`rounded-xl p-4 mb-6 ${theme === "GAMIFIED" ? "bg-cyan-900/30 border border-cyan-500/20" : theme === "COLORFUL" ? "bg-green-50 border border-green-200" : "bg-green-50 border border-green-100"}`}>
+                <div className="flex items-start gap-2">
+                  <Lightbulb className={`w-4 h-4 shrink-0 mt-0.5 ${theme === "GAMIFIED" ? "text-cyan-400" : "text-green-600"}`} />
+                  <div>
+                    <p className={`text-xs font-bold uppercase tracking-wide mb-1 ${theme === "GAMIFIED" ? "text-cyan-400" : "text-green-700"}`}>
+                      Leve para o seu dia
+                    </p>
+                    <p className={`text-sm leading-relaxed ${s.text}`}>{functional.dailyTip}</p>
+                  </div>
+                </div>
               </div>
             )}
 

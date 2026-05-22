@@ -70,10 +70,10 @@ const EXERCISE_INSTRUCTIONS: Record<string, string[]> = {
     "Mantenha o foco — o exercício testa atenção sustentada!",
   ],
   "tempo-reacao": [
-    "Um círculo aparecerá na tela.",
-    "Aguarde — quando ele ficar VERDE, toque o mais rápido possível!",
-    "Não toque antes do sinal verde (toque antecipado conta como erro).",
-    "Tente manter um tempo de reação consistente.",
+    "Balões coloridos irão cair pela tela.",
+    "Toque APENAS nos balões VERDES — eles são o alvo certo.",
+    "Balões de outras cores são distratores — ignore-os.",
+    "Rapidez e precisão contam: toque certo, no momento certo!",
   ],
   "decisao-rapida": [
     "Você verá imagens com nomes de animais ou objetos.",
@@ -100,22 +100,22 @@ const EXERCISE_INSTRUCTIONS: Record<string, string[]> = {
     "Quando estiver satisfeito, clique em 'Verificar Sequência'.",
   ],
   "flexibilidade-cognitiva": [
-    "Você classificará cartões por uma regra (cor ou forma).",
-    "A regra mudará durante o exercício — preste atenção!",
-    "Quando a regra mudar, você verá um aviso na tela.",
-    "Tente se adaptar rapidamente às mudanças de regra.",
+    "Você classificará cartões — ora pela COR, ora pela FORMA.",
+    "A regra muda silenciosamente durante o exercício: fique atento ao que está sendo pedido.",
+    "Releia a regra ativa antes de responder.",
+    "Quando errar, não se preocupe — adaptar-se à mudança é exatamente o treino!",
   ],
   "labirinto": [
-    "Você está no canto superior esquerdo do labirinto.",
-    "Seu objetivo é chegar até a bandeira 🏁 no canto inferior direito.",
-    "Use as setas na tela para se mover: ↑ ↓ ← →",
-    "Planeje seu caminho com atenção — nem todo caminho leva à saída!",
+    "Você está num labirinto — navegue até a bandeira 🏁 para sair.",
+    "Use as setas na tela ou as teclas WASD / setas do teclado.",
+    "Você só vê uma parte do labirinto — explore com atenção e guarde referências visuais.",
+    "Ao se perder, volte ao último cruzamento que você lembra.",
   ],
   "jogo-memoria": [
-    "As cartas estão viradas para baixo — você não consegue ver as figuras.",
-    "Toque em uma carta para virá-la, depois toque em outra.",
-    "Se as duas forem iguais, elas ficam abertas! Se não, voltam viradas.",
-    "Tente lembrar onde cada figura está para encontrar todos os pares!",
+    "Objetos do dia a dia aparecerão nas cartas — remédios, chaves, óculos e mais.",
+    "Memorize as posições durante o tempo de exibição.",
+    "Depois, encontre os pares: toque uma carta, depois a outra igual.",
+    "Cuidado: erros demais encerram a rodada antes de terminar!",
   ],
   "span-numerico-inverso": [
     "Uma sequência de números será exibida, um por vez.",
@@ -322,6 +322,7 @@ export default function ExercicioPage() {
       instructions={instructions}
       theme={theme}
       difficulty={difficulty}
+      exerciseId={exerciseId}
       onFinish={handleComplete}
     >
       {(onComplete) => renderExercise(onComplete)}

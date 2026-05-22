@@ -19,7 +19,7 @@ interface Card {
   matched: boolean;
 }
 
-const EMOJIS = ["🐶","🐱","🐰","🦊","🐻","🐼","🐨","🦁","🐸","🦋","🦄","🐬","🦜","🐙","🦕","🐳","🦒","🐘"];
+const EMOJIS = ["💊","🔑","👓","👜","📱","💳","🚗","🏠","🌡️","📞","💉","🩺","📋","🧴","🕐","🛒","📌","🗝️"];
 const MAX_ROUNDS = 10;
 const MIN_PAIRS = 4;
 const MAX_PAIRS = 9;
@@ -46,10 +46,10 @@ function buildCards(pairs: number): Card[] {
 type GamePhase = "memorize" | "playing" | "feedback";
 
 const TUTORIAL_CARDS = [
-  { id: 0, emoji: "🐶", matched: false },
-  { id: 1, emoji: "🐱", matched: false },
-  { id: 2, emoji: "🐶", matched: false },
-  { id: 3, emoji: "🐱", matched: false },
+  { id: 0, emoji: "💊", matched: false },
+  { id: 1, emoji: "🔑", matched: false },
+  { id: 2, emoji: "💊", matched: false },
+  { id: 3, emoji: "🔑", matched: false },
 ];
 
 function JogoMemoriaTutorial({ theme, onDone }: { theme: Theme; onDone: () => void }) {
