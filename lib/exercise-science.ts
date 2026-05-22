@@ -85,14 +85,15 @@ export const EXERCISE_SCIENCE: Record<string, ExerciseScience> = {
   "stroop-task": {
     exerciseId: "stroop-task",
     neuroanatomy:
-      "Controle inibitório e atenção seletiva: córtex cingulado anterior (monitoramento de conflito), CPFDL esquerdo (inibição) e córtex motor pré-suplementar. Neuroimagem funcional confirma ativação do giro frontal inferior durante interferência Stroop (Nee et al., 2007; Taylor et al., 2020).",
+      "Controle inibitório, atenção seletiva e flexibilidade cognitiva: córtex cingulado anterior (monitoramento de conflito), CPFDL esquerdo (inibição) e córtex pré-motor suplementar. A variante com troca de regra (COR/PALAVRA) recruta adicionalmente o giro frontal inferior e o córtex pré-frontal dorsomedial para task-switching (Monsell, 2003; Nee et al., 2007).",
     trainingEffects:
-      "Treino Stroop adaptativo reduz tempo de interferência em 15–25% após 8 semanas (Parris et al., 2022). Soveri et al. (2017) demonstram melhora moderada no controle inibitório com transferência para tarefas de atenção dividida. Efeitos mais expressivos em idosos e pacientes com TDA/H.",
+      "Treino adaptativo com interferência cor-palavra reduz tempo de interferência em 15–25% após 8 semanas (Parris et al., 2022). A introdução de trocas de regra aumenta o custo de alternância e promove ganhos adicionais em flexibilidade cognitiva e controle inibitório. Efeitos mais expressivos em idosos, TDA/H e pós-TCE leve.",
     clinicalRelevance:
-      "Amplamente utilizado em avaliação de TDA/H, DP, TCE e esquizofrenia. Interferência Stroop aumentada correlaciona-se com maior risco de erros em atividades cotidianas de alta demanda cognitiva. Normas brasileiras disponíveis no BNCA e NEUPSILIN (Malloy-Diniz et al., 2018).",
+      "Relevante para TDA/H, DP, TCE, esquizofrenia e transtornos de ansiedade. A versão com troca de regra distingue déficits de inibição pura de déficits de flexibilidade cognitiva, auxiliando no planejamento terapêutico individualizado. Normas brasileiras disponíveis no NEUPSILIN e BNCA (Malloy-Diniz et al., 2018).",
     references: [
       "Parris, B. A., et al. (2022). Stroop interference, Stroop facilitation and their relationship to executive functions. Psychological Research, 86(2), 387–405.",
-      "Soveri, A., et al. (2017). Working memory training revisited: A multi-level meta-analysis of n-back training studies. Psychonomic Bulletin & Review, 24(4), 1077–1096.",
+      "Monsell, S. (2003). Task switching. Trends in Cognitive Sciences, 7(3), 134–140.",
+      "Nee, D. E., et al. (2007). Interference resolution: Insights from a meta-analysis of neuroimaging tasks. Cognitive, Affective, & Behavioral Neuroscience, 7(1), 1–17.",
       "Malloy-Diniz, L. F., et al. (2018). Avaliação Neuropsicológica (2ª ed.). Artmed.",
     ],
   },

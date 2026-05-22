@@ -59,10 +59,10 @@ const EXERCISE_INSTRUCTIONS: Record<string, string[]> = {
     "Tente ser rápido mas preciso!",
   ],
   "stroop-task": [
-    "Palavras de cores aparecerão na tela escritas em tintas coloridas.",
-    "Você deve identificar a COR DA TINTA, não a palavra escrita.",
-    "Por exemplo: a palavra AZUL escrita em vermelho — resposta correta: VERMELHO.",
-    "Seja rápido — o exercício testa sua atenção seletiva!",
+    "Uma palavra colorida aparecerá na tela. No topo, haverá uma regra: 🎨 COR ou 📝 PALAVRA.",
+    "Se a regra for COR: clique na cor da tinta usada para pintar a palavra.",
+    "Se a regra for PALAVRA: clique na palavra que está escrita, independente da cor.",
+    "Antes de começar, você verá dois exemplos práticos para entender bem!",
   ],
   "vigilancia": [
     "Uma sequência de letras e números aparecerá rapidamente.",

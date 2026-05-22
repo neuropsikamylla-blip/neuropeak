@@ -177,10 +177,10 @@ export const EXERCISE_DEFINITIONS = {
   },
   "stroop-task": {
     id: "stroop-task",
-    name: "Tarefa Stroop",
+    name: "Cores e Palavras",
     domain: "attention" as Domain,
-    description: "Identifique a cor da tinta, não a palavra",
-    estimatedMinutes: 7,
+    description: "Siga a regra COR ou PALAVRA para identificar a resposta correta",
+    estimatedMinutes: 8,
     icon: "🎨",
   },
   "vigilancia": {
