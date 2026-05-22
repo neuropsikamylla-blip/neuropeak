@@ -1,9 +1,8 @@
 "use client";
 
-import { useState, useEffect, useRef, useCallback } from "react";
+import { useState, useRef, useCallback, useEffect } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { calculateExerciseScore } from "@/lib/scoring";
-import { average } from "@/lib/utils";
 import { useExerciseProgress } from "@/components/exercises/ExerciseWrapper";
 import type { ExerciseResult, Theme } from "@/types";
 
@@ -13,182 +12,282 @@ interface TempoReacaoProps {
   onComplete: (result: ExerciseResult) => void;
 }
 
-type Phase = "waiting" | "ready" | "stimulus" | "tooEarly" | "result";
+interface Balloon {
+  id: number;
+  isTarget: boolean;
+  color: string;
+  x: number;       // % from left
+  size: number;    // px diameter
+  duration: number; // ms to cross the play area
+  spawnedAt: number;
+}
+
+const GREEN = "#16a34a";
+const DISTRACTOR_COLORS = ["#dc2626", "#2563eb", "#9333ea", "#ea580c", "#0891b2"];
 
 const MAX_TRIALS = 20;
 
+function speedMs(difficulty: number) {
+  // 5000ms (easiest) → 2200ms (hardest)
+  return Math.round(5000 - ((difficulty - 1) / 9) * 2800);
+}
+
+function distractorCount(difficulty: number) {
+  // 0 at diff 1-2 → 4 at diff 9-10
+  return Math.min(4, Math.floor((difficulty - 1) / 2));
+}
+
+let _uid = 0;
+function makeBalloon(isTarget: boolean, ms: number): Balloon {
+  return {
+    id: ++_uid,
+    isTarget,
+    color: isTarget ? GREEN : DISTRACTOR_COLORS[Math.floor(Math.random() * DISTRACTOR_COLORS.length)],
+    x: 4 + Math.random() * 78,
+    size: 62 + Math.random() * 22,
+    duration: ms * (0.85 + Math.random() * 0.3),
+    spawnedAt: Date.now(),
+  };
+}
+
 export function TempoReacao({ difficulty, theme, onComplete }: TempoReacaoProps) {
   const reportProgress = useExerciseProgress();
-  const [phase, setPhase] = useState<Phase>("waiting");
-  const [reactionTimes, setReactionTimes] = useState<number[]>([]);
-  const [lastRT, setLastRT] = useState<number | null>(null);
-  const [trial, setTrial] = useState(0);
-  const stimulusTime = useRef<number>(0);
-  const timeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
-  const startTime = useRef<number>(Date.now());
 
-  const startTrial = useCallback(() => {
-    setPhase("ready");
-    const delay = 1500 + Math.random() * 2500;
-    timeoutRef.current = setTimeout(() => {
-      setPhase("stimulus");
-      stimulusTime.current = Date.now();
-    }, delay);
-  }, []);
+  const [started, setStarted] = useState(false);
+  const [balloons, setBalloons] = useState<Balloon[]>([]);
+  const [results, setResults] = useState<{ correct: boolean; rt: number | null }[]>([]);
+  const [wrongId, setWrongId] = useState<number | null>(null); // balloon id that was wrong-clicked
+  const [missFlash, setMissFlash] = useState(false);
 
-  useEffect(() => {
-    return () => {
-      if (timeoutRef.current) clearTimeout(timeoutRef.current);
-    };
-  }, []);
+  const resolvedIds = useRef(new Set<number>());
+  const resultsRef = useRef<{ correct: boolean; rt: number | null }[]>([]);
+  const doneRef = useRef(false);
+  const startTime = useRef(Date.now());
+  const nextSpawnTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
 
-  function handlePress() {
-    if (phase === "ready") {
-      if (timeoutRef.current) clearTimeout(timeoutRef.current);
-      setPhase("tooEarly");
-      return;
-    }
-    if (phase !== "stimulus") return;
+  const ms = speedMs(difficulty);
+  const nd = distractorCount(difficulty);
 
-    const rt = Date.now() - stimulusTime.current;
-    setLastRT(rt);
-    const newRTs = [...reactionTimes, rt];
-    setReactionTimes(newRTs);
-    setPhase("result");
+  const recordResult = useCallback((correct: boolean, rt: number | null) => {
+    if (doneRef.current) return;
 
-    const nextTrial = trial + 1;
-    reportProgress(Math.round((nextTrial / MAX_TRIALS) * 100));
+    const newResults = [...resultsRef.current, { correct, rt }];
+    resultsRef.current = newResults;
+    setResults(newResults);
+    reportProgress(Math.round((newResults.length / MAX_TRIALS) * 100));
 
-    setTimeout(() => {
-      if (nextTrial >= MAX_TRIALS) {
-        const avgRT = average(newRTs);
-        const accuracy = 1 - Math.min(1, (avgRT - 150) / 1000);
-        const duration = Math.round((Date.now() - startTime.current) / 1000);
-        const score = calculateExerciseScore("tempo-reacao", Math.max(0, accuracy), avgRT, difficulty);
+    if (newResults.length >= MAX_TRIALS) {
+      doneRef.current = true;
+      if (nextSpawnTimer.current) clearTimeout(nextSpawnTimer.current);
+
+      const hits = newResults.filter((r) => r.correct && r.rt !== null);
+      const avgRT = hits.length > 0 ? hits.reduce((s, r) => s + (r.rt ?? 0), 0) / hits.length : 1000;
+      const accuracy = newResults.filter((r) => r.correct).length / MAX_TRIALS;
+      const dur = Math.round((Date.now() - startTime.current) / 1000);
+      const score = calculateExerciseScore("tempo-reacao", accuracy, avgRT, difficulty);
+
+      setTimeout(() => {
         onComplete({
           exerciseId: "tempo-reacao",
           domain: "processing",
           score,
-          accuracy: Math.max(0, accuracy),
+          accuracy,
           reactionTime: avgRT,
           difficulty,
-          duration,
-          metadata: { trials: MAX_TRIALS, allRTs: newRTs, avgRT },
+          duration: dur,
+          metadata: { trials: MAX_TRIALS, avgRT, correct: hits.length },
         });
-      } else {
-        setTrial(nextTrial);
-        startTrial();
-      }
-    }, 800);
+      }, 1500);
+    }
+  }, [difficulty, onComplete, reportProgress]);
+
+  const spawnBatch = useCallback(() => {
+    if (doneRef.current) return;
+    if (resultsRef.current.length >= MAX_TRIALS) return;
+
+    const batch: Balloon[] = [makeBalloon(true, ms)];
+    for (let i = 0; i < nd; i++) batch.push(makeBalloon(false, ms));
+    setBalloons((prev) => [...prev, ...batch]);
+  }, [ms, nd]);
+
+  function start() {
+    setStarted(true);
+    startTime.current = Date.now();
+    spawnBatch();
   }
 
-  function handleTooEarlyNext() {
-    setTrial((t) => t + 1);
-    startTrial();
+  useEffect(() => () => {
+    if (nextSpawnTimer.current) clearTimeout(nextSpawnTimer.current);
+  }, []);
+
+  function handleBalloonClick(balloon: Balloon) {
+    if (!started || doneRef.current) return;
+    if (resolvedIds.current.has(balloon.id)) return;
+    if (resultsRef.current.length >= MAX_TRIALS) return;
+
+    resolvedIds.current.add(balloon.id);
+    setBalloons((prev) => prev.filter((b) => b.id !== balloon.id));
+
+    if (balloon.isTarget) {
+      const rt = Date.now() - balloon.spawnedAt;
+      recordResult(true, rt);
+      // Spawn next batch after short delay
+      nextSpawnTimer.current = setTimeout(spawnBatch, 700);
+    } else {
+      setWrongId(balloon.id);
+      setTimeout(() => setWrongId(null), 500);
+      setMissFlash(true);
+      setTimeout(() => setMissFlash(false), 350);
+      recordResult(false, null);
+    }
   }
 
-  const bgClass = theme === "GAMIFIED" ? "bg-gray-950" : theme === "COLORFUL" ? "bg-gradient-to-br from-orange-50 to-red-50" : "bg-gray-50";
+  function handleBalloonExit(balloon: Balloon) {
+    if (resolvedIds.current.has(balloon.id)) return;
+    resolvedIds.current.add(balloon.id);
+    setBalloons((prev) => prev.filter((b) => b.id !== balloon.id));
 
-  const stimulusColors = {
-    waiting: theme === "GAMIFIED" ? "bg-gray-700" : "bg-gray-200",
-    ready: theme === "GAMIFIED" ? "bg-yellow-900/50 border-yellow-500" : "bg-yellow-100 border-yellow-400",
-    stimulus: theme === "GAMIFIED" ? "bg-green-500 shadow-[0_0_40px_rgba(34,197,94,0.5)]" : "bg-green-400",
-    tooEarly: theme === "GAMIFIED" ? "bg-red-900/50" : "bg-red-100",
-    result: theme === "GAMIFIED" ? "bg-blue-900/50" : "bg-blue-50",
-  };
+    if (balloon.isTarget && started && !doneRef.current) {
+      setMissFlash(true);
+      setTimeout(() => setMissFlash(false), 350);
+      recordResult(false, null);
+      nextSpawnTimer.current = setTimeout(spawnBatch, 700);
+    }
+  }
+
+  const bg =
+    theme === "GAMIFIED" ? "bg-gray-950" :
+    theme === "COLORFUL" ? "bg-gradient-to-b from-sky-100 to-blue-200" :
+    "bg-gray-100";
+
+  const cardClass =
+    theme === "GAMIFIED" ? "bg-gray-800 border border-cyan-500/30" : "bg-white shadow-md";
+
+  const titleClass =
+    theme === "GAMIFIED" ? "text-cyan-400" :
+    theme === "COLORFUL" ? "text-sky-700" :
+    "text-gray-900";
+
+  const subClass = theme === "GAMIFIED" ? "text-gray-400" : "text-gray-500";
 
   return (
-    <div className={`min-h-screen flex flex-col items-center justify-center p-4 ${bgClass}`}>
-      <div className={`w-full max-w-sm rounded-2xl p-8 ${theme === "GAMIFIED" ? "bg-gray-800 border border-cyan-500/30" : "bg-white shadow-lg"}`}>
-        <div className="flex justify-between items-center mb-4">
-          <h2 className={`font-bold ${theme === "GAMIFIED" ? "text-cyan-400" : "text-gray-900"}`}>
-            Tempo de Reação
-          </h2>
+    <div className={`min-h-screen flex flex-col p-3 transition-colors ${bg} ${missFlash ? "!bg-red-200" : ""}`}>
+      {/* Header card */}
+      <div className={`rounded-2xl p-3 mb-3 ${cardClass}`}>
+        <div className="flex justify-between items-center mb-2">
+          <div>
+            <h2 className={`font-bold text-base ${titleClass}`}>🎈 Balões</h2>
+            <p className={`text-xs ${subClass}`}>Toque apenas nos balões <span className="font-bold text-green-600">VERDES</span></p>
+          </div>
         </div>
-
-        {/* Progress bar */}
-        <div className="flex gap-1 mb-6">
-          {reactionTimes.map((rt, i) => (
-            <div key={i} className={`h-1.5 flex-1 rounded-full ${rt < 300 ? "bg-green-500" : rt < 500 ? "bg-blue-500" : "bg-orange-400"}`} />
-          ))}
-          {Array.from({ length: MAX_TRIALS - reactionTimes.length }).map((_, i) => (
-            <div key={i} className={`h-1.5 flex-1 rounded-full ${i === 0 && phase !== "waiting" ? "bg-blue-400 animate-pulse" : theme === "GAMIFIED" ? "bg-gray-700" : "bg-gray-200"}`} />
-          ))}
-        </div>
-
-        {phase === "waiting" && (
-          <div className="text-center">
-            <p className={`mb-6 text-sm ${theme === "GAMIFIED" ? "text-gray-400" : "text-gray-600"}`}>
-              Toque no círculo quando ele ficar VERDE
-            </p>
+        <div className="flex gap-0.5">
+          {Array.from({ length: MAX_TRIALS }).map((_, i) => (
             <div
-              className={`w-48 h-48 rounded-full mx-auto flex items-center justify-center cursor-pointer transition-all ${stimulusColors.waiting}`}
-              onClick={startTrial}
+              key={i}
+              className={`h-1.5 flex-1 rounded-full transition-colors ${
+                i < results.length
+                  ? results[i].correct ? "bg-green-500" : "bg-red-400"
+                  : i === results.length ? "bg-blue-400 animate-pulse"
+                  : theme === "GAMIFIED" ? "bg-gray-700" : "bg-gray-200"
+              }`}
+            />
+          ))}
+        </div>
+      </div>
+
+      {/* Play area */}
+      <div
+        className={`relative flex-1 rounded-2xl overflow-hidden ${
+          theme === "GAMIFIED" ? "bg-gray-900" : "bg-white/40"
+        }`}
+        style={{ minHeight: "65vh" }}
+      >
+        {!started && (
+          <div className="absolute inset-0 flex flex-col items-center justify-center gap-3">
+            <p className={`text-sm text-center px-6 ${subClass}`}>
+              Balões coloridos vão cair. Toque <strong className="text-green-600">só nos verdes</strong>!
+            </p>
+            <button
+              onClick={start}
+              className={`px-8 py-4 rounded-2xl font-bold text-lg shadow-lg active:scale-95 transition-transform ${
+                theme === "GAMIFIED"
+                  ? "bg-cyan-500 text-gray-900"
+                  : "bg-green-500 text-white"
+              }`}
             >
-              <p className={`font-bold ${theme === "GAMIFIED" ? "text-gray-400" : "text-gray-500"}`}>
-                Toque para começar
-              </p>
-            </div>
+              🎈 Começar
+            </button>
           </div>
         )}
 
-        {(phase === "ready" || phase === "stimulus" || phase === "tooEarly" || phase === "result") && (
-          <div className="text-center">
-            <AnimatePresence mode="wait">
-              <motion.div
-                key={phase}
-                className={`w-48 h-48 rounded-full mx-auto flex items-center justify-center cursor-pointer border-4 transition-colors select-none ${stimulusColors[phase]}`}
-                onClick={handlePress}
-                whileTap={{ scale: 0.95 }}
-                animate={phase === "stimulus" ? { scale: [1, 1.05, 1] } : {}}
-                transition={{ duration: 0.3 }}
+        <AnimatePresence>
+          {balloons.map((balloon) => (
+            <motion.div
+              key={balloon.id}
+              initial={{ y: -balloon.size * 1.4 }}
+              animate={{ y: "110vh" }}
+              transition={{ duration: balloon.duration / 1000, ease: "linear" }}
+              onAnimationComplete={() => handleBalloonExit(balloon)}
+              style={{
+                position: "absolute",
+                left: `${balloon.x}%`,
+                top: 0,
+                width: balloon.size,
+                display: "flex",
+                flexDirection: "column",
+                alignItems: "center",
+                cursor: "pointer",
+                touchAction: "none",
+              }}
+              onClick={() => handleBalloonClick(balloon)}
+            >
+              {/* Balloon body */}
+              <div
+                style={{
+                  width: balloon.size,
+                  height: balloon.size,
+                  backgroundColor: balloon.color,
+                  borderRadius: "50% 50% 48% 52% / 55% 55% 45% 45%",
+                  boxShadow: `inset -6px -6px 14px rgba(0,0,0,0.22), inset 6px 6px 10px rgba(255,255,255,0.35)`,
+                  position: "relative",
+                }}
               >
-                {phase === "ready" && (
-                  <motion.p
-                    className={`font-bold text-lg ${theme === "GAMIFIED" ? "text-yellow-400" : "text-yellow-700"}`}
-                    animate={{ opacity: [1, 0.5, 1] }}
-                    transition={{ duration: 0.8, repeat: Infinity }}
-                  >
-                    Aguarde...
-                  </motion.p>
-                )}
-                {phase === "stimulus" && (
-                  <p className="font-black text-2xl text-white">AGORA!</p>
-                )}
-                {phase === "tooEarly" && (
-                  <p className={`font-bold ${theme === "GAMIFIED" ? "text-red-400" : "text-red-600"}`}>
-                    Cedo demais!
-                  </p>
-                )}
-                {phase === "result" && lastRT && (
-                  <div>
-                    <p className={`text-3xl font-black ${theme === "GAMIFIED" ? "text-cyan-400" : "text-blue-600"}`}>
-                      {lastRT}ms
-                    </p>
-                    <p className={`text-xs ${theme === "GAMIFIED" ? "text-gray-400" : "text-gray-500"}`}>
-                      {lastRT < 250 ? "Incrível!" : lastRT < 350 ? "Muito bom!" : lastRT < 500 ? "Bom!" : "Continue!"}
-                    </p>
-                  </div>
-                )}
-              </motion.div>
-            </AnimatePresence>
-
-            {phase === "tooEarly" && (
-              <button
-                className={`mt-4 text-sm underline ${theme === "GAMIFIED" ? "text-cyan-400" : "text-blue-600"}`}
-                onClick={handleTooEarlyNext}
-              >
-                Tentar novamente
-              </button>
-            )}
-
-            {reactionTimes.length > 0 && (
-              <p className={`mt-4 text-sm ${theme === "GAMIFIED" ? "text-gray-400" : "text-gray-500"}`}>
-                Média: {Math.round(average(reactionTimes))}ms
-              </p>
-            )}
-          </div>
-        )}
+                {/* Highlight spot */}
+                <div
+                  style={{
+                    position: "absolute",
+                    top: "18%",
+                    left: "20%",
+                    width: "28%",
+                    height: "18%",
+                    backgroundColor: "rgba(255,255,255,0.45)",
+                    borderRadius: "50%",
+                    transform: "rotate(-30deg)",
+                  }}
+                />
+              </div>
+              {/* Knot */}
+              <div
+                style={{
+                  width: 8,
+                  height: 6,
+                  backgroundColor: balloon.color,
+                  borderRadius: "0 0 4px 4px",
+                  marginTop: -1,
+                }}
+              />
+              {/* String */}
+              <div
+                style={{
+                  width: 1.5,
+                  height: 18,
+                  backgroundColor: "#6b7280",
+                  opacity: 0.7,
+                }}
+              />
+            </motion.div>
+          ))}
+        </AnimatePresence>
       </div>
     </div>
   );
