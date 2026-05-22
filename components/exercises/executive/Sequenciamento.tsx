@@ -3,7 +3,6 @@
 import { useState, useRef, useCallback } from "react";
 import { motion, Reorder, AnimatePresence } from "framer-motion";
 import { calculateExerciseScore } from "@/lib/scoring";
-import { shuffle } from "@/lib/utils";
 import { useExerciseProgress } from "@/components/exercises/ExerciseWrapper";
 import { TutorialBase } from "@/components/exercises/TutorialBase";
 import type { ExerciseResult, Theme } from "@/types";
@@ -163,8 +162,26 @@ function initialSteps(difficulty: number) {
   return Math.min(Math.max(3, Math.floor(difficulty * 0.4) + 2), 5);
 }
 
-function buildTrial(stepCount: number) {
-  const seq = SEQUENCES[Math.floor(Math.random() * SEQUENCES.length)];
+// Ensures the shuffled order differs from the correct order
+function shuffleAway<T extends { correctIndex: number }>(arr: T[]): T[] {
+  if (arr.length <= 1) return [...arr];
+  let result: T[];
+  let attempts = 0;
+  do {
+    result = [...arr].sort(() => Math.random() - 0.5);
+    attempts++;
+  } while (result.every((v, i) => v.correctIndex === i) && attempts < 30);
+  return result;
+}
+
+function buildTrial(stepCount: number, usedIndices: Set<number>) {
+  // Pick a sequence not yet used this session
+  const available = SEQUENCES.map((_, i) => i).filter((i) => !usedIndices.has(i));
+  const pool = available.length > 0 ? available : Array.from({ length: SEQUENCES.length }, (_, i) => i);
+  const seqIdx = pool[Math.floor(Math.random() * pool.length)];
+  usedIndices.add(seqIdx);
+
+  const seq = SEQUENCES[seqIdx];
   const steps = seq.steps.slice(0, stepCount);
   return {
     name: seq.name,
@@ -257,10 +274,12 @@ export function Sequenciamento({ difficulty, theme, onComplete }: Sequenciamento
   const [trial, setTrial] = useState(0);
   const [trialResults, setTrialResults] = useState<{ correct: boolean; steps: number }[]>([]);
 
+  const usedSeqIndices = useRef(new Set<number>());
+
   // Single state init — avoids name/steps mismatch from two separate buildTrial calls
   const [trialData, setTrialData] = useState(() => {
-    const t = buildTrial(initialSteps(difficulty));
-    return { ...t, items: shuffle([...t.steps]) };
+    const t = buildTrial(initialSteps(difficulty), usedSeqIndices.current);
+    return { ...t, items: shuffleAway([...t.steps]) };
   });
   const currentTrial = trialData;
   const items = trialData.items;
@@ -272,10 +291,9 @@ export function Sequenciamento({ difficulty, theme, onComplete }: Sequenciamento
 
   const startTime = useRef<number>(Date.now());
 
-  // Fix: always use one buildTrial call, set both name+steps from it
   const startNewTrial = useCallback((nextStepCount: number) => {
-    const t = buildTrial(nextStepCount);
-    setTrialData({ ...t, items: shuffle([...t.steps]) });
+    const t = buildTrial(nextStepCount, usedSeqIndices.current);
+    setTrialData({ ...t, items: shuffleAway([...t.steps]) });
     setSubmitted(false);
     setResultAcc(0);
   // eslint-disable-next-line react-hooks/exhaustive-deps

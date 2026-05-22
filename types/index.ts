@@ -209,11 +209,11 @@ export const EXERCISE_DEFINITIONS = {
   },
   "torre-hanoi": {
     id: "torre-hanoi",
-    name: "Torre de Hanói",
+    name: "Jogo das Torres",
     domain: "executive" as Domain,
-    description: "Resolva o puzzle de discos",
+    description: "Mova os discos usando o menor número de movimentos",
     estimatedMinutes: 10,
-    icon: "🗼",
+    icon: "🪅",
   },
   "sequenciamento": {
     id: "sequenciamento",

@@ -88,10 +88,10 @@ const EXERCISE_INSTRUCTIONS: Record<string, string[]> = {
     "Símbolos parecidos irão aparecer para dificultar!",
   ],
   "torre-hanoi": [
-    "Você verá 3 pinos com discos de diferentes tamanhos.",
-    "Mova todos os discos do pino esquerdo para o direito.",
-    "Regra: um disco maior nunca pode ficar sobre um menor.",
-    "Planeje seus movimentos com antecedência!",
+    "Você verá 3 pinos com discos empilhados no pino da esquerda.",
+    "Mova todos os discos para o pino da direita, usando o pino do meio como apoio.",
+    "Regra: um disco maior NUNCA pode ficar sobre um menor.",
+    "Tente resolver usando o menor número de movimentos possível!",
   ],
   "sequenciamento": [
     "Você verá uma lista de passos de uma tarefa em ordem aleatória.",

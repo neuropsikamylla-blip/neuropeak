@@ -426,13 +426,17 @@ export function Labirinto({ difficulty, theme, onComplete }: LabirintoProps) {
         mazeElements.push(
           <rect key={`f${r},${c}`} x={wx + WT} y={wy + WT} width={C_PX - WT * 2} height={C_PX - WT * 2} fill={fillColor} />
         );
-        // Open passages (fill the wall gap)
-        if (!cell.N && r > 0)
-          mazeElements.push(<rect key={`n${r},${c}`} x={wx + WT} y={wy} width={C_PX - WT * 2} height={WT}
-            fill={isExplored || explored.has(key(r-1, c)) ? (isExplored && explored.has(key(r-1,c)) ? pal.trail : pal.floor) : pal.floor} />);
-        if (!cell.W && c > 0)
-          mazeElements.push(<rect key={`w${r},${c}`} x={wx} y={wy + WT} width={WT} height={C_PX - WT * 2}
-            fill={isExplored || explored.has(key(r, c-1)) ? (isExplored && explored.has(key(r,c-1)) ? pal.trail : pal.floor) : pal.floor} />);
+        // Open passages — fill the full 2×WT gap between adjacent cell interiors
+        if (!cell.N && r > 0) {
+          const bothN = isExplored && explored.has(key(r - 1, c));
+          mazeElements.push(<rect key={`n${r},${c}`} x={wx + WT} y={wy - WT} width={C_PX - WT * 2} height={WT * 2}
+            fill={bothN ? pal.trail : pal.floor} />);
+        }
+        if (!cell.W && c > 0) {
+          const bothW = isExplored && explored.has(key(r, c - 1));
+          mazeElements.push(<rect key={`w${r},${c}`} x={wx - WT} y={wy + WT} width={WT * 2} height={C_PX - WT * 2}
+            fill={bothW ? pal.trail : pal.floor} />);
+        }
       }
     }
   }
@@ -518,31 +522,32 @@ export function Labirinto({ difficulty, theme, onComplete }: LabirintoProps) {
           {/* Wall background */}
           <rect x={0} y={0} width={VP_PX} height={VP_PX} fill={pal.svgBg} />
 
-          {/* Maze cells */}
-          <motion.g
-            clipPath="url(#vp)"
-            animate={{ x: worldOffX, y: worldOffY }}
-            transition={{ duration: 0.1, ease: "linear" }}
-          >
-            {mazeElements}
+          {/* Maze cells — outer g clips, inner motion.g translates */}
+          <g clipPath="url(#vp)">
+            <motion.g
+              animate={{ x: worldOffX, y: worldOffY }}
+              transition={{ duration: 0.1, ease: "linear" }}
+            >
+              {mazeElements}
 
-            {/* Goal square */}
-            <rect
-              x={(size - 1) * C_PX + WT + 2}
-              y={(size - 1) * C_PX + WT + 2}
-              width={C_PX - WT * 2 - 4}
-              height={C_PX - WT * 2 - 4}
-              fill={pal.goal}
-              rx={3}
-              opacity={0.85}
-            />
-            <text
-              x={(size - 1) * C_PX + C_PX / 2}
-              y={(size - 1) * C_PX + C_PX / 2 + 5}
-              textAnchor="middle"
-              fontSize={16}
-            >🏁</text>
-          </motion.g>
+              {/* Goal square */}
+              <rect
+                x={(size - 1) * C_PX + WT + 2}
+                y={(size - 1) * C_PX + WT + 2}
+                width={C_PX - WT * 2 - 4}
+                height={C_PX - WT * 2 - 4}
+                fill={pal.goal}
+                rx={3}
+                opacity={0.85}
+              />
+              <text
+                x={(size - 1) * C_PX + C_PX / 2}
+                y={(size - 1) * C_PX + C_PX / 2 + 5}
+                textAnchor="middle"
+                fontSize={16}
+              >🏁</text>
+            </motion.g>
+          </g>
 
           {/* Player — always at center */}
           <circle cx={px} cy={py} r={C_PX * 0.32} fill={pal.playerGlow} />

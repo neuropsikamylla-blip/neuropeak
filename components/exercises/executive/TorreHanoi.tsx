@@ -13,12 +13,12 @@ interface TorreHanoiProps {
   onComplete: (result: ExerciseResult) => void;
 }
 
-const MIN_DISCS = 2;
+const MIN_DISCS = 3;
 const MAX_DISCS = 6;
 const MAX_PUZZLES = 10;
 
 function initialDiscs(difficulty: number) {
-  return Math.min(Math.max(2, Math.floor(difficulty * 0.4) + 2), 4);
+  return Math.min(Math.max(MIN_DISCS, Math.floor(difficulty * 0.4) + 2), MAX_DISCS);
 }
 
 const DISC_COLORS = [
@@ -112,7 +112,7 @@ function TorreHanoiTutorial({ theme, onDone }: { theme: Theme; onDone: () => voi
     },
   ];
 
-  return <TutorialBase theme={theme} title="Torre de Hanói" steps={steps} onDone={onDone} />;
+  return <TutorialBase theme={theme} title="Jogo das Torres" steps={steps} onDone={onDone} />;
 }
 
 function HanoiMoveStep({ theme, onDone }: { theme: Theme; onDone: () => void }) {
@@ -184,11 +184,10 @@ export function TorreHanoi({ difficulty, theme, onComplete }: TorreHanoiProps) {
   const [showTutorial, setShowTutorial] = useState(true);
   const reportProgress = useExerciseProgress();
 
-  // Adaptive state
   const [discCount, setDiscCount] = useState(initialDiscs(difficulty));
-  const [streak, setStreak] = useState(0);
   const [puzzle, setPuzzle] = useState(0);
   const [puzzleResults, setPuzzleResults] = useState<{ correct: boolean; discs: number }[]>([]);
+  const [lastWasOptimal, setLastWasOptimal] = useState(false);
 
   // Puzzle state
   const [pegs, setPegs] = useState<State>(() => initialPegs(initialDiscs(difficulty)));
@@ -240,18 +239,15 @@ export function TorreHanoi({ difficulty, theme, onComplete }: TorreHanoiProps) {
 
       if (newPegs[2].length === discCount) {
         setWon(true);
-        const isCorrect = newMoves <= 2 * optimal;
+        // "Correct" = used the minimum number of moves
+        const isOptimal = newMoves <= optimal;
+        setLastWasOptimal(isOptimal);
 
-        const newPuzzleResults = [...puzzleResults, { correct: isCorrect, discs: discCount }];
+        const newPuzzleResults = [...puzzleResults, { correct: isOptimal, discs: discCount }];
         setPuzzleResults(newPuzzleResults);
 
-        const newStreak = isCorrect
-          ? Math.max(streak, 0) + 1
-          : Math.min(streak, 0) - 1;
-        let nextDiscs = discCount;
-        let nextStreak = newStreak;
-        if (newStreak >= 2) { nextDiscs = Math.min(discCount + 1, MAX_DISCS); nextStreak = 0; }
-        if (newStreak <= -2) { nextDiscs = Math.max(discCount - 1, MIN_DISCS); nextStreak = 0; }
+        // If optimal → increase disc count; if not → stay at same difficulty
+        const nextDiscs = isOptimal ? Math.min(discCount + 1, MAX_DISCS) : discCount;
 
         const nextPuzzle = puzzle + 1;
         reportProgress(Math.round((nextPuzzle / MAX_PUZZLES) * 100));
@@ -273,11 +269,10 @@ export function TorreHanoi({ difficulty, theme, onComplete }: TorreHanoiProps) {
             });
           } else {
             setPuzzle(nextPuzzle);
-            setStreak(nextStreak);
             setDiscCount(nextDiscs);
             startNewPuzzle(nextDiscs);
           }
-        }, 2000);
+        }, 2500);
       }
     }
   }
@@ -296,7 +291,7 @@ export function TorreHanoi({ difficulty, theme, onComplete }: TorreHanoiProps) {
         <div className="flex justify-between items-center mb-3">
           <div>
             <h2 className={`font-bold ${theme === "GAMIFIED" ? "text-cyan-400" : "text-gray-900"}`}>
-              Torre de Hanói ({discCount} discos)
+              Jogo das Torres ({discCount} discos)
             </h2>
             <p className={`text-xs ${theme === "GAMIFIED" ? "text-gray-400" : "text-gray-500"}`}>
               Movimentos: {moves} · Ótimo: {optimal}
@@ -379,22 +374,25 @@ export function TorreHanoi({ difficulty, theme, onComplete }: TorreHanoiProps) {
           {won && (
             <motion.div
               className={`text-center p-4 rounded-xl mt-4 ${
-                puzzleResults[puzzle]?.correct
+                lastWasOptimal
                   ? "bg-green-50 border-2 border-green-500"
                   : "bg-orange-50 border-2 border-orange-400"
               }`}
               initial={{ scale: 0.8, opacity: 0 }}
               animate={{ scale: 1, opacity: 1 }}
             >
-              <div className="text-4xl mb-2">
-                {puzzleResults[puzzle]?.correct ? "🏆" : "✅"}
-              </div>
-              <p className={`font-bold text-lg ${puzzleResults[puzzle]?.correct ? "text-green-700" : "text-orange-700"}`}>
-                {puzzleResults[puzzle]?.correct ? "Excelente!" : "Resolvido!"}
+              <div className="text-4xl mb-2">{lastWasOptimal ? "🏆" : "✅"}</div>
+              <p className={`font-bold text-lg ${lastWasOptimal ? "text-green-700" : "text-orange-700"}`}>
+                {lastWasOptimal ? "Movimentos mínimos!" : "Resolvido!"}
               </p>
-              <p className={`text-sm ${puzzleResults[puzzle]?.correct ? "text-green-600" : "text-orange-600"}`}>
-                {moves} movimentos (ótimo: {optimal})
+              <p className={`text-sm ${lastWasOptimal ? "text-green-600" : "text-orange-600"}`}>
+                {moves} movimento{moves !== 1 ? "s" : ""} · mínimo: {optimal}
               </p>
+              {!lastWasOptimal && (
+                <p className="text-xs text-orange-500 mt-1">
+                  Você pode fazer em {optimal} movimentos — tente de novo!
+                </p>
+              )}
             </motion.div>
           )}
         </AnimatePresence>
