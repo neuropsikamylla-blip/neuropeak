@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useRef, useCallback } from "react";
-import { motion } from "framer-motion";
+import { motion, AnimatePresence } from "framer-motion";
 import { calculateExerciseScore } from "@/lib/scoring";
 import { shuffle } from "@/lib/utils";
 import { useExerciseProgress } from "@/components/exercises/ExerciseWrapper";
@@ -16,8 +16,8 @@ interface TrilhaVisualProps {
 interface Cell {
   id: number;
   label: string;
-  x: number;
-  y: number;
+  x: number; // % in play area
+  y: number; // % in play area
 }
 
 const MAX_ROUNDS = 20;
@@ -31,8 +31,8 @@ function initialCount(difficulty: number) {
 function generateCells(count: number): Cell[] {
   const positions = shuffle(
     Array.from({ length: count }, () => ({
-      x: 6 + Math.random() * 82,
-      y: 6 + Math.random() * 82,
+      x: 8 + Math.random() * 78,
+      y: 8 + Math.random() * 78,
     }))
   );
   return Array.from({ length: count }, (_, i) => ({
@@ -58,28 +58,29 @@ export function TrilhaVisual({ difficulty, theme, onComplete }: TrilhaVisualProp
   const [errors, setErrors] = useState(0);
   const [roundPhase, setRoundPhase] = useState<RoundPhase>("playing");
   const [roundCorrect, setRoundCorrect] = useState(false);
+  const [path, setPath] = useState<{ x: number; y: number }[]>([]);
 
   const startTime = useRef<number>(Date.now());
-  const roundStart = useRef<number>(Date.now());
   const firstClick = useRef(false);
 
   const startNewRound = useCallback((nextCount: number) => {
     setCells(generateCells(nextCount));
     setNextExpected(1);
     setErrors(0);
+    setPath([]);
     setRoundPhase("playing");
     firstClick.current = false;
-    roundStart.current = Date.now();
   }, []);
 
   const handleCellClick = useCallback((cellId: number) => {
     if (roundPhase !== "playing") return;
-    if (!firstClick.current) {
-      firstClick.current = true;
-      roundStart.current = Date.now();
-    }
+    if (!firstClick.current) firstClick.current = true;
+
+    const clickedCell = cells.find((c) => c.id === cellId)!;
 
     if (cellId === nextExpected) {
+      setPath((prev) => [...prev, { x: clickedCell.x, y: clickedCell.y }]);
+
       if (nextExpected === count) {
         const isCorrect = errors <= 1;
         const newRoundResults = [...roundResults, { correct: isCorrect, count }];
@@ -105,10 +106,7 @@ export function TrilhaVisual({ difficulty, theme, onComplete }: TrilhaVisualProp
             onComplete({
               exerciseId: "trilha-visual",
               domain: "attention",
-              score,
-              accuracy,
-              difficulty,
-              duration,
+              score, accuracy, difficulty, duration,
               metadata: { rounds: MAX_ROUNDS, maxCount, correct: newRoundResults.filter((r) => r.correct).length },
             });
           } else {
@@ -124,88 +122,142 @@ export function TrilhaVisual({ difficulty, theme, onComplete }: TrilhaVisualProp
     } else {
       setErrors((e) => e + 1);
     }
-  }, [roundPhase, nextExpected, count, errors, streak, round, roundResults, difficulty, onComplete, reportProgress, startNewRound]);
+  }, [roundPhase, nextExpected, count, errors, streak, round, roundResults, difficulty, cells, onComplete, reportProgress, startNewRound]);
 
-  const bgClass =
+  // ── Theme styles ──────────────────────────────────────────────────
+  const bg =
     theme === "GAMIFIED" ? "bg-gray-950" :
-    theme === "COLORFUL" ? "bg-gradient-to-br from-yellow-50 to-green-50" :
+    theme === "COLORFUL" ? "bg-gradient-to-br from-indigo-50 to-sky-50" :
     "bg-gray-50";
 
-  const headerClass =
-    theme === "GAMIFIED" ? "border-gray-700" : "border-gray-200";
+  const card =
+    theme === "GAMIFIED" ? "bg-gray-900 border border-cyan-500/20" :
+    "bg-white shadow-lg";
 
   const titleClass =
     theme === "GAMIFIED" ? "text-cyan-400" :
-    theme === "COLORFUL" ? "text-green-700" :
+    theme === "COLORFUL" ? "text-indigo-700" :
     "text-gray-900";
 
-  const subClass =
-    theme === "GAMIFIED" ? "text-gray-400" : "text-gray-500";
+  const subClass = theme === "GAMIFIED" ? "text-gray-400" : "text-gray-500";
+
+  const playAreaBg =
+    theme === "GAMIFIED" ? "bg-gray-950" :
+    theme === "COLORFUL" ? "bg-indigo-50/60" :
+    "bg-gray-50";
+
+  const lineColor =
+    theme === "GAMIFIED" ? "#22d3ee" :
+    theme === "COLORFUL" ? "#818cf8" :
+    "#93c5fd";
+
+  function cellStyle(cell: Cell) {
+    const isCompleted = cell.id < nextExpected;
+    const base = "absolute flex items-center justify-center font-black border-2 transform -translate-x-1/2 -translate-y-1/2 select-none transition-all";
+    const size = "w-11 h-11 rounded-xl text-sm";
+
+    if (isCompleted) {
+      return `${base} ${size} ${
+        theme === "GAMIFIED"
+          ? "bg-cyan-800/70 border-cyan-600/50 text-cyan-300 scale-90"
+          : theme === "COLORFUL"
+          ? "bg-indigo-400 border-indigo-500 text-white scale-90"
+          : "bg-blue-300 border-blue-400 text-white scale-90"
+      }`;
+    }
+    return `${base} ${size} ${
+      theme === "GAMIFIED"
+        ? "bg-gray-800 border-gray-600 text-gray-100 hover:bg-gray-700 hover:border-cyan-600 shadow-md active:scale-90"
+        : theme === "COLORFUL"
+        ? "bg-white border-indigo-300 text-indigo-800 hover:bg-indigo-50 hover:border-indigo-400 shadow-sm active:scale-90"
+        : "bg-white border-gray-300 text-gray-700 hover:border-blue-400 hover:bg-blue-50 shadow-sm active:scale-90"
+    }`;
+  }
 
   return (
-    <div className={`min-h-screen flex flex-col items-center p-4 ${bgClass}`}>
-      <div className={`w-full max-w-2xl rounded-2xl overflow-hidden ${
-        theme === "GAMIFIED" ? "bg-gray-800 border border-cyan-500/30" : "bg-white shadow-lg"
-      }`}>
+    <div className={`min-h-screen flex flex-col items-center p-4 ${bg}`}>
+      <div className={`w-full max-w-2xl rounded-2xl overflow-hidden ${card}`}>
+
         {/* Header */}
-        <div className={`flex justify-between items-center px-6 py-4 border-b ${headerClass}`}>
+        <div className={`flex justify-between items-center px-5 py-3 border-b ${
+          theme === "GAMIFIED" ? "border-gray-800" : "border-gray-100"
+        }`}>
           <div>
-            <span className={`font-bold ${titleClass}`}>Conecta Números</span>
+            <span className={`font-bold ${titleClass}`}>🔢 Conecta Números</span>
             <span className={`ml-2 text-xs ${subClass}`}>{count} números</span>
           </div>
-          <div className="flex gap-4 text-sm items-center">
-            {roundPhase === "playing" && errors > 0 && (
-              <span className="text-red-500 font-medium">
-                {errors} {errors === 1 ? "erro" : "erros"}
-              </span>
-            )}
-          </div>
+          {roundPhase === "playing" && errors > 0 && (
+            <span className="text-red-500 font-medium text-sm">{errors} {errors === 1 ? "erro" : "erros"}</span>
+          )}
         </div>
 
         {/* Progress bar */}
-        <div className="flex gap-1 px-6 py-2">
+        <div className="flex gap-0.5 px-5 py-2">
           {Array.from({ length: MAX_ROUNDS }).map((_, i) => (
-            <div
-              key={i}
-              className={`h-1.5 flex-1 rounded-full transition-colors ${
-                i < roundResults.length
-                  ? roundResults[i].correct ? "bg-green-500" : "bg-red-400"
-                  : i === round ? "bg-blue-400 animate-pulse"
-                  : theme === "GAMIFIED" ? "bg-gray-700" : "bg-gray-200"
-              }`}
-            />
+            <div key={i} className={`h-1.5 flex-1 rounded-full transition-colors ${
+              i < roundResults.length
+                ? roundResults[i].correct ? "bg-green-500" : "bg-red-400"
+                : i === round ? "bg-blue-400 animate-pulse"
+                : theme === "GAMIFIED" ? "bg-gray-800" : "bg-gray-200"
+            }`} />
           ))}
         </div>
 
-        <p className={`text-center text-sm py-2 px-6 ${subClass}`}>
+        {/* Instruction */}
+        <p className={`text-center text-xs py-1.5 px-5 ${subClass}`}>
           {roundPhase === "playing"
-            ? "Toque os números do menor para o maior: 1, 2, 3..."
+            ? "Toque em ordem crescente: 1 → 2 → 3 → ..."
             : roundCorrect ? "Correto! ✅" : "Incorreto ❌"}
         </p>
 
-        {/* Grid area */}
-        <div className="relative w-full" style={{ paddingBottom: "75%" }}>
+        {/* Play area */}
+        <div className={`relative w-full ${playAreaBg}`} style={{ paddingBottom: "72%" }}>
+
+          {/* SVG trail lines */}
+          <svg
+            className="absolute inset-0 w-full h-full pointer-events-none"
+            style={{ overflow: "visible" }}
+          >
+            {path.length > 1 && path.slice(1).map((pt, i) => (
+              <motion.line
+                key={`line-${i}`}
+                x1={`${path[i].x}%`}
+                y1={`${path[i].y}%`}
+                x2={`${pt.x}%`}
+                y2={`${pt.y}%`}
+                stroke={lineColor}
+                strokeWidth={2.5}
+                strokeLinecap="round"
+                initial={{ pathLength: 0, opacity: 0 }}
+                animate={{ pathLength: 1, opacity: 0.7 }}
+                transition={{ duration: 0.25, ease: "easeOut" }}
+              />
+            ))}
+            {/* Dot on first clicked */}
+            {path.length > 0 && (
+              <circle
+                cx={`${path[0].x}%`}
+                cy={`${path[0].y}%`}
+                r={4}
+                fill={lineColor}
+                opacity={0.6}
+              />
+            )}
+          </svg>
+
+          {/* Number tokens */}
           {cells.map((cell) => {
             const isCompleted = cell.id < nextExpected;
-
             return (
               <motion.button
                 key={cell.id}
                 onClick={() => handleCellClick(cell.id)}
                 disabled={roundPhase !== "playing" || isCompleted}
-                className={`absolute w-10 h-10 rounded-lg flex items-center justify-center text-sm font-bold border-2 transform -translate-x-1/2 -translate-y-1/2 transition-all select-none ${
-                  isCompleted
-                    ? theme === "GAMIFIED"
-                      ? "bg-cyan-800 border-cyan-700 text-cyan-300 opacity-50"
-                      : "bg-green-400 border-green-500 text-white opacity-50"
-                    : theme === "GAMIFIED"
-                    ? "bg-gray-700 border-gray-500 text-gray-200 hover:bg-gray-600 active:scale-90"
-                    : theme === "COLORFUL"
-                    ? "bg-white border-green-300 text-green-800 hover:bg-green-50 shadow-sm active:scale-90"
-                    : "bg-white border-gray-400 text-gray-700 hover:bg-gray-100 shadow-sm active:scale-90"
-                }`}
+                className={cellStyle(cell)}
                 style={{ left: `${cell.x}%`, top: `${cell.y}%` }}
-                whileTap={{ scale: 0.88 }}
+                whileTap={{ scale: 0.85 }}
+                animate={isCompleted ? { scale: 0.88, opacity: 0.55 } : { scale: 1, opacity: 1 }}
+                transition={{ duration: 0.18 }}
               >
                 {cell.label}
               </motion.button>

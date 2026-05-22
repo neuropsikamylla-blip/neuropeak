@@ -21,15 +21,15 @@ interface Card {
 
 const SHAPES: Card["shape"][] = ["círculo", "quadrado", "triângulo", "estrela"];
 const COLORS: Card["color"][] = ["vermelho", "azul", "verde", "amarelo"];
-const COLOR_MAP: Record<Card["color"], string> = {
-  vermelho: "#EF4444",
-  azul: "#3B82F6",
-  verde: "#22C55E",
-  amarelo: "#EAB308",
+const COLOR_HEX: Record<Card["color"], string> = {
+  vermelho: "#ef4444",
+  azul: "#3b82f6",
+  verde: "#22c55e",
+  amarelo: "#eab308",
 };
 
 const TOTAL_TRIALS = 20;
-const SWITCH_EVERY = 5; // switch rule every 5 trials → 4 switches total
+const SWITCH_EVERY = 5;
 
 function generateCard(): Card {
   return {
@@ -38,16 +38,15 @@ function generateCard(): Card {
   };
 }
 
-function ShapeIcon({ shape, color, size = 40 }: { shape: Card["shape"]; color: string; size?: number }) {
+function ShapeIcon({ shape, fill, size = 40 }: { shape: Card["shape"]; fill: string; size?: number }) {
   const s = size;
-  const fill = color;
   switch (shape) {
     case "círculo":
-      return <svg width={s} height={s}><circle cx={s/2} cy={s/2} r={s/2 - 2} fill={fill} /></svg>;
+      return <svg width={s} height={s} viewBox={`0 0 ${s} ${s}`}><circle cx={s/2} cy={s/2} r={s/2 - 2} fill={fill} /></svg>;
     case "quadrado":
-      return <svg width={s} height={s}><rect x="2" y="2" width={s-4} height={s-4} fill={fill} /></svg>;
+      return <svg width={s} height={s} viewBox={`0 0 ${s} ${s}`}><rect x="3" y="3" width={s-6} height={s-6} rx="3" fill={fill} /></svg>;
     case "triângulo":
-      return <svg width={s} height={s}><polygon points={`${s/2},2 ${s-2},${s-2} 2,${s-2}`} fill={fill} /></svg>;
+      return <svg width={s} height={s} viewBox={`0 0 ${s} ${s}`}><polygon points={`${s/2},3 ${s-3},${s-3} 3,${s-3}`} fill={fill} /></svg>;
     case "estrela":
       return (
         <svg width={s} height={s} viewBox="0 0 24 24">
@@ -60,7 +59,7 @@ function ShapeIcon({ shape, color, size = 40 }: { shape: Card["shape"]; color: s
 export function FlexibilidadeCognitiva({ difficulty, theme, onComplete }: FlexibilidadeCognitivaProps) {
   const reportProgress = useExerciseProgress();
   const [trial, setTrial] = useState(0);
-  const [card] = useState<Card[]>(() => Array.from({ length: TOTAL_TRIALS }, generateCard));
+  const [cards] = useState<Card[]>(() => Array.from({ length: TOTAL_TRIALS }, generateCard));
   const [responses, setResponses] = useState<{ correct: boolean; rt: number; isSwitchTrial: boolean }[]>([]);
   const [feedback, setFeedback] = useState<"correct" | "incorrect" | null>(null);
   const trialStart = useRef<number>(Date.now());
@@ -72,7 +71,7 @@ export function FlexibilidadeCognitiva({ difficulty, theme, onComplete }: Flexib
   const handleAnswer = useCallback((value: string) => {
     if (feedback) return;
     const rt = Date.now() - trialStart.current;
-    const currentCard = card[trial];
+    const currentCard = cards[trial];
     const isCorrect = activeRule === "cor"
       ? value === currentCard.color
       : value === currentCard.shape;
@@ -95,117 +94,157 @@ export function FlexibilidadeCognitiva({ difficulty, theme, onComplete }: Flexib
         onComplete({
           exerciseId: "flexibilidade-cognitiva",
           domain: "executive",
-          score,
-          accuracy,
+          score, accuracy,
           reactionTime: avgRT,
-          difficulty,
-          duration,
+          difficulty, duration,
           metadata: { total: TOTAL_TRIALS, switchErrors, accuracy },
         });
       } else {
         setTrial(nextTrial);
         trialStart.current = Date.now();
       }
-    }, 500);
-  }, [feedback, trial, card, activeRule, isSwitchTrial, responses, difficulty, onComplete, reportProgress]);
+    }, 420);
+  }, [feedback, trial, cards, activeRule, isSwitchTrial, responses, difficulty, onComplete, reportProgress]);
 
-  const currentCard = card[trial];
-  const bgClass = theme === "GAMIFIED" ? "bg-gray-950" : theme === "COLORFUL" ? "bg-gradient-to-br from-green-50 to-teal-50" : "bg-gray-50";
+  const currentCard = cards[trial];
 
-  const options = activeRule === "cor"
-    ? COLORS.map((c) => ({ value: c, label: c.charAt(0).toUpperCase() + c.slice(1), color: COLOR_MAP[c] }))
-    : SHAPES.map((s) => ({ value: s, label: s.charAt(0).toUpperCase() + s.slice(1), shape: s }));
+  const bg =
+    theme === "GAMIFIED" ? "bg-gray-950" :
+    theme === "COLORFUL" ? "bg-gradient-to-br from-teal-50 to-emerald-50" :
+    "bg-gray-50";
+
+  const card =
+    theme === "GAMIFIED" ? "bg-gray-800 border border-cyan-500/30" :
+    "bg-white shadow-lg";
+
+  const titleClass =
+    theme === "GAMIFIED" ? "text-cyan-400" :
+    theme === "COLORFUL" ? "text-teal-700" :
+    "text-gray-900";
+
+  const subClass = theme === "GAMIFIED" ? "text-gray-400" : "text-gray-500";
+
+  // Rule badge
+  const ruleLabel = activeRule === "cor" ? "COR" : "FORMA";
+  const ruleIcon = activeRule === "cor" ? "🎨" : "🔷";
+  const ruleBadgeBg =
+    activeRule === "cor"
+      ? theme === "GAMIFIED" ? "bg-rose-900/40 text-rose-300 border-rose-700/50" : "bg-rose-50 text-rose-700 border-rose-300"
+      : theme === "GAMIFIED" ? "bg-blue-900/40 text-blue-300 border-blue-700/50" : "bg-blue-50 text-blue-700 border-blue-300";
+
+  // Card feedback border
+  const cardBorder =
+    feedback === "correct" ? "border-green-500 shadow-green-200" :
+    feedback === "incorrect" ? "border-red-400 shadow-red-200" :
+    theme === "GAMIFIED" ? "border-gray-600" : "border-gray-200";
+
+  // Answer options
+  const colorOptions = COLORS.map((c) => ({ key: c, hex: COLOR_HEX[c] }));
+  const shapeOptions = SHAPES.map((s) => ({ key: s }));
 
   return (
-    <div className={`min-h-screen flex flex-col items-center justify-center p-4 ${bgClass}`}>
-      <div className={`w-full max-w-md rounded-2xl p-6 ${theme === "GAMIFIED" ? "bg-gray-800 border border-cyan-500/30" : "bg-white shadow-lg"}`}>
+    <div className={`min-h-screen flex flex-col items-center justify-center p-4 ${bg}`}>
+      <div className={`w-full max-w-sm rounded-2xl p-5 ${card}`}>
+
+        {/* Header */}
         <div className="flex justify-between items-center mb-3">
-          <h2 className={`font-bold text-lg ${theme === "GAMIFIED" ? "text-cyan-400" : "text-gray-900"}`}>Flexibilidade Cognitiva</h2>
+          <h2 className={`font-bold text-base ${titleClass}`}>🔀 Flexibilidade</h2>
+          {/* Rule badge — transitions silently when rule changes */}
+          <AnimatePresence mode="wait">
+            <motion.span
+              key={activeRule}
+              className={`text-xs font-bold px-3 py-1 rounded-full border ${ruleBadgeBg}`}
+              initial={{ scale: 0.8, opacity: 0 }}
+              animate={{ scale: 1, opacity: 1 }}
+              exit={{ scale: 0.8, opacity: 0 }}
+              transition={{ duration: 0.2 }}
+            >
+              {ruleIcon} {ruleLabel}
+            </motion.span>
+          </AnimatePresence>
         </div>
 
-        {/* Barra de progresso */}
-        <div className="flex gap-1 mb-4">
+        {/* Progress bar */}
+        <div className="flex gap-0.5 mb-4">
           {Array.from({ length: TOTAL_TRIALS }).map((_, i) => (
-            <div
-              key={i}
-              className={`h-1.5 flex-1 rounded-full transition-colors ${
-                i < responses.length
-                  ? responses[i].correct ? "bg-green-500" : "bg-red-400"
-                  : i === trial
-                  ? "bg-blue-400 animate-pulse"
-                  : theme === "GAMIFIED" ? "bg-gray-700" : "bg-gray-200"
-              }`}
-            />
+            <div key={i} className={`h-1.5 flex-1 rounded-full transition-colors ${
+              i < responses.length
+                ? responses[i].correct ? "bg-green-500" : "bg-red-400"
+                : i === trial ? "bg-blue-400 animate-pulse"
+                : theme === "GAMIFIED" ? "bg-gray-700" : "bg-gray-200"
+            }`} />
           ))}
         </div>
 
-        {/* Rule display */}
+        {/* Shape card */}
         <AnimatePresence mode="wait">
           <motion.div
-            key={activeRule}
-            className={`text-center p-3 rounded-xl mb-4 border-2 ${
-              isSwitchTrial
-                ? "border-orange-500 bg-orange-50 animate-pulse"
-                : theme === "GAMIFIED"
-                ? "border-cyan-500/50 bg-gray-700"
-                : "border-blue-200 bg-blue-50"
-            }`}
-            initial={{ scale: 0.9 }}
-            animate={{ scale: 1 }}
+            key={trial}
+            className={`flex items-center justify-center rounded-2xl mb-5 border-4 transition-colors shadow-lg ${cardBorder}`}
+            style={{ height: 160 }}
+            initial={{ scale: 0.85, opacity: 0 }}
+            animate={{ scale: 1, opacity: 1 }}
+            exit={{ scale: 0.85, opacity: 0 }}
+            transition={{ duration: 0.18 }}
           >
-            {isSwitchTrial && (
-              <p className="text-orange-600 font-bold text-xs mb-1">MUDANÇA DE REGRA!</p>
-            )}
-            <p className={`font-bold ${theme === "GAMIFIED" ? "text-cyan-400" : "text-blue-700"}`}>
-              Classifique por: <span className="uppercase">{activeRule}</span>
-            </p>
+            <ShapeIcon
+              shape={currentCard.shape}
+              fill={COLOR_HEX[currentCard.color]}
+              size={88}
+            />
           </motion.div>
         </AnimatePresence>
 
-        {/* Card display */}
-        <div className={`flex items-center justify-center p-8 rounded-2xl mb-6 border-4 ${
-          feedback === "correct" ? "border-green-500 bg-green-50"
-          : feedback === "incorrect" ? "border-red-500 bg-red-50"
-          : theme === "GAMIFIED" ? "border-gray-600 bg-gray-700"
-          : "border-gray-200 bg-gray-50"
-        }`}>
-          <ShapeIcon
-            shape={currentCard.shape}
-            color={COLOR_MAP[currentCard.color]}
-            size={80}
-          />
-        </div>
-
         {/* Answer buttons */}
-        <div className="grid grid-cols-2 gap-3">
-          {options.map((opt) => (
-            <motion.button
-              key={opt.value}
-              onClick={() => handleAnswer(opt.value)}
-              disabled={!!feedback}
-              className={`py-4 px-3 rounded-xl font-bold text-sm border-2 ${
-                theme === "GAMIFIED"
-                  ? "bg-gray-700 border-gray-600 text-gray-200 hover:bg-gray-600"
-                  : "bg-white border-gray-200 text-gray-700 hover:border-blue-400 hover:bg-blue-50"
-              }`}
-              style={activeRule === "cor" && "color" in opt ? { borderColor: opt.color, color: opt.color } : {}}
-              whileHover={{ scale: 1.03 }}
-              whileTap={{ scale: 0.97 }}
-            >
-              {"shape" in opt ? (
-                <div className="flex items-center justify-center gap-2">
-                  <ShapeIcon shape={opt.shape as Card["shape"]} color="#6B7280" size={20} />
-                  {opt.label}
-                </div>
-              ) : opt.label}
-            </motion.button>
-          ))}
-        </div>
-
-        <div className="flex justify-center gap-4 mt-4 text-sm">
-          <span className="text-green-500">✓ {responses.filter((r) => r.correct).length}</span>
-          <span className="text-red-500">✗ {responses.filter((r) => !r.correct).length}</span>
-        </div>
+        {activeRule === "cor" ? (
+          <div className="grid grid-cols-4 gap-3">
+            {colorOptions.map((opt) => (
+              <motion.button
+                key={opt.key}
+                onClick={() => handleAnswer(opt.key)}
+                disabled={!!feedback}
+                whileTap={{ scale: 0.88 }}
+                className="flex flex-col items-center gap-1.5 py-3 rounded-2xl border-2 active:scale-90 transition-all"
+                style={{
+                  borderColor: opt.hex,
+                  background: feedback ? "transparent" : `${opt.hex}18`,
+                }}
+              >
+                <div
+                  className="w-8 h-8 rounded-full shadow"
+                  style={{ backgroundColor: opt.hex }}
+                />
+                <span className="text-[10px] font-bold" style={{ color: opt.hex }}>
+                  {opt.key.charAt(0).toUpperCase() + opt.key.slice(1)}
+                </span>
+              </motion.button>
+            ))}
+          </div>
+        ) : (
+          <div className="grid grid-cols-4 gap-3">
+            {shapeOptions.map((opt) => {
+              const shapeColor = theme === "GAMIFIED" ? "#94a3b8" : "#64748b";
+              return (
+                <motion.button
+                  key={opt.key}
+                  onClick={() => handleAnswer(opt.key)}
+                  disabled={!!feedback}
+                  whileTap={{ scale: 0.88 }}
+                  className={`flex flex-col items-center gap-1.5 py-3 rounded-2xl border-2 transition-all ${
+                    theme === "GAMIFIED"
+                      ? "border-gray-600 bg-gray-700/50 hover:bg-gray-700"
+                      : "border-gray-200 bg-gray-50 hover:bg-gray-100"
+                  }`}
+                >
+                  <ShapeIcon shape={opt.key as Card["shape"]} fill={shapeColor} size={28} />
+                  <span className={`text-[10px] font-bold ${subClass}`}>
+                    {opt.key.charAt(0).toUpperCase() + opt.key.slice(1)}
+                  </span>
+                </motion.button>
+              );
+            })}
+          </div>
+        )}
       </div>
     </div>
   );
