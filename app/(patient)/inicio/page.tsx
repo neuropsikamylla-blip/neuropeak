@@ -40,7 +40,7 @@ export default async function InicioPage() {
       .select('*')
       .eq('patientId', patientId)
       .order('completedAt', { ascending: false })
-      .limit(20),
+      .limit(50),
     supabase
       .from('Achievement')
       .select('*')
@@ -65,13 +65,28 @@ export default async function InicioPage() {
   const typedSessions = patient.sessions as SessionData[];
   const typedAchievements = patient.achievements as Array<{ id: string; icon: string; title: string; unlockedAt: string }>;
 
-  // Count sessions today
-  const today = new Date();
-  today.setHours(0, 0, 0, 0);
-  const todaySessions = typedSessions.filter((s) => new Date(s.completedAt) >= today);
+  // Cycle progress
+  const cycleTarget = activePlan ? activePlan.frequency * 4 : 0;
+  const cycleSessionsCount = activePlan
+    ? typedSessions.filter(
+        (s) => new Date(s.completedAt) >= new Date(activePlan.createdAt)
+      ).length
+    : 0;
+  const cycleComplete = cycleSessionsCount >= cycleTarget && cycleTarget > 0;
+
+  // Count sessions today (by local date)
+  const now = new Date();
+  const todaySessions = typedSessions.filter((s) => {
+    const d = new Date(s.completedAt);
+    return (
+      d.getFullYear() === now.getFullYear() &&
+      d.getMonth() === now.getMonth() &&
+      d.getDate() === now.getDate()
+    );
+  });
   const totalPoints = Math.round(typedSessions.reduce((sum, s) => sum + s.score, 0));
 
-  // Calculate streak
+  // Streak (unique days)
   const uniqueDays = new Set(
     typedSessions.map((s) => {
       const d = new Date(s.completedAt);
@@ -88,7 +103,10 @@ export default async function InicioPage() {
       sub: "text-gray-500",
       accent: "text-blue-600",
       exCard: "bg-white rounded-xl border border-gray-200 hover:border-blue-300 hover:shadow-md transition-all",
+      exDone: "bg-gray-50 rounded-xl border border-gray-100 opacity-60",
       stat: "bg-gray-50 rounded-xl",
+      progress: "bg-gray-200",
+      progressBar: "bg-blue-500",
     },
     COLORFUL: {
       bg: "bg-gradient-to-br from-purple-50 via-pink-50 to-yellow-50",
@@ -98,7 +116,10 @@ export default async function InicioPage() {
       sub: "text-purple-400",
       accent: "text-pink-500",
       exCard: "bg-white rounded-2xl border-2 border-purple-100 hover:border-purple-400 hover:shadow-lg transition-all",
+      exDone: "bg-purple-50 rounded-2xl border-2 border-purple-100 opacity-60",
       stat: "bg-gradient-to-br from-purple-100 to-pink-100 rounded-2xl",
+      progress: "bg-purple-200",
+      progressBar: "bg-purple-500",
     },
     GAMIFIED: {
       bg: "bg-gray-950",
@@ -108,7 +129,10 @@ export default async function InicioPage() {
       sub: "text-gray-400",
       accent: "text-cyan-400",
       exCard: "bg-gray-800 rounded-2xl border border-gray-700 hover:border-cyan-500 hover:shadow-[0_0_20px_rgba(6,182,212,0.15)] transition-all",
+      exDone: "bg-gray-800 rounded-2xl border border-gray-700 opacity-50",
       stat: "bg-gray-700 rounded-2xl",
+      progress: "bg-gray-700",
+      progressBar: "bg-cyan-500",
     },
   };
 
@@ -150,6 +174,35 @@ export default async function InicioPage() {
         </div>
       </div>
 
+      {/* Cycle progress */}
+      {activePlan && cycleTarget > 0 && (
+        <div className={`p-4 ${s.card}`}>
+          <div className="flex justify-between items-center mb-2">
+            <span className={`text-sm font-medium ${theme === "GAMIFIED" ? "text-gray-300" : "text-gray-700"}`}>
+              {theme === "GAMIFIED" ? "PROGRESSO DO CICLO" : theme === "COLORFUL" ? "Progresso do ciclo 📈" : "Progresso do ciclo"}
+            </span>
+            <span className={`text-sm font-bold ${s.accent}`}>
+              {Math.min(cycleSessionsCount, cycleTarget)}/{cycleTarget}
+            </span>
+          </div>
+          <div className={`h-2.5 rounded-full ${s.progress}`}>
+            <div
+              className={`h-full rounded-full transition-all ${s.progressBar}`}
+              style={{ width: `${Math.min(100, Math.round((cycleSessionsCount / cycleTarget) * 100))}%` }}
+            />
+          </div>
+          {cycleComplete ? (
+            <p className="text-xs text-green-600 mt-2 font-medium text-center">
+              {theme === "GAMIFIED" ? "✓ CICLO COMPLETO — Aguarde nova missão do terapeuta" : theme === "COLORFUL" ? "🎊 Ciclo concluído! Aguarde seu terapeuta configurar o próximo." : "Ciclo concluído. Aguarde seu terapeuta configurar o próximo."}
+            </p>
+          ) : (
+            <p className={`text-xs mt-2 ${s.sub}`}>
+              {cycleTarget - cycleSessionsCount} {cycleTarget - cycleSessionsCount === 1 ? "sessão restante" : "sessões restantes"} neste ciclo
+            </p>
+          )}
+        </div>
+      )}
+
       {/* Today's plan */}
       <div>
         <h2 className={`font-bold mb-3 ${theme === "GAMIFIED" ? "text-gray-200" : theme === "COLORFUL" ? "text-purple-700 text-lg" : "text-gray-800"}`}>
@@ -168,31 +221,35 @@ export default async function InicioPage() {
               if (!ex) return null;
               const doneToday = todaySessions.some((s) => s.exerciseId === exId);
 
-              return (
-                <Link key={exId} href={`/treino/${exId}`}>
-                  <div className={`p-4 flex items-center gap-4 cursor-pointer ${s.exCard} ${doneToday ? "opacity-60" : ""}`}>
-                    <span className="text-3xl">{ex.icon}</span>
-                    <div className="flex-1">
-                      <div className="flex items-center gap-2">
-                        <p className={`font-semibold ${theme === "GAMIFIED" ? "text-gray-100" : "text-gray-800"}`}>
-                          {ex.name}
-                        </p>
-                        {doneToday && (
-                          <span className="text-xs bg-green-100 text-green-700 px-2 py-0.5 rounded-full font-medium">
-                            ✓ Concluído
-                          </span>
-                        )}
-                      </div>
-                      <p className={`text-xs mt-0.5 ${s.sub}`}>{ex.description}</p>
-                      <p className={`text-xs mt-0.5 ${s.accent}`}>
-                        {DOMAIN_LABELS[ex.domain as Domain]} · ~{ex.estimatedMinutes}min
+              const cardContent = (
+                <div className={`p-4 flex items-center gap-4 ${doneToday ? s.exDone : `cursor-pointer ${s.exCard}`}`}>
+                  <span className="text-3xl">{ex.icon}</span>
+                  <div className="flex-1">
+                    <div className="flex items-center gap-2">
+                      <p className={`font-semibold ${theme === "GAMIFIED" ? "text-gray-100" : "text-gray-800"}`}>
+                        {ex.name}
                       </p>
+                      {doneToday && (
+                        <span className="text-xs bg-green-100 text-green-700 px-2 py-0.5 rounded-full font-medium">
+                          ✓ {theme === "GAMIFIED" ? "COMPLETO" : "Concluído"}
+                        </span>
+                      )}
                     </div>
-                    {!doneToday && (
-                      <span className={`text-xl ${theme === "GAMIFIED" ? "text-cyan-400" : "text-blue-500"}`}>→</span>
-                    )}
+                    <p className={`text-xs mt-0.5 ${s.sub}`}>{ex.description}</p>
+                    <p className={`text-xs mt-0.5 ${s.accent}`}>
+                      {DOMAIN_LABELS[ex.domain as Domain]} · ~{ex.estimatedMinutes}min
+                    </p>
                   </div>
-                </Link>
+                  {!doneToday && (
+                    <span className={`text-xl ${theme === "GAMIFIED" ? "text-cyan-400" : "text-blue-500"}`}>→</span>
+                  )}
+                </div>
+              );
+
+              return doneToday ? (
+                <div key={exId}>{cardContent}</div>
+              ) : (
+                <Link key={exId} href={`/treino/${exId}`}>{cardContent}</Link>
               );
             })}
           </div>

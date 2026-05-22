@@ -169,6 +169,48 @@ export async function POST(req: NextRequest) {
     }
   }
 
+  // Cycle completion check
+  const { data: activePlan } = await supabase
+    .from('TrainingPlan')
+    .select('id, frequency, createdAt')
+    .eq('patientId', data.patientId)
+    .eq('isActive', true)
+    .maybeSingle();
+
+  if (activePlan) {
+    const cycleTarget = activePlan.frequency * 4;
+    const { count: sessionCount } = await supabase
+      .from('Session')
+      .select('id', { count: 'exact', head: true })
+      .eq('patientId', data.patientId)
+      .gte('completedAt', activePlan.createdAt);
+
+    if ((sessionCount ?? 0) >= cycleTarget) {
+      const { data: existingCycleAlert } = await supabase
+        .from('Alert')
+        .select('id')
+        .eq('patientId', data.patientId)
+        .eq('type', 'CYCLE_COMPLETE')
+        .gte('createdAt', activePlan.createdAt)
+        .maybeSingle();
+
+      if (!existingCycleAlert) {
+        const { data: patientInfo } = await supabase
+          .from('Patient')
+          .select('name')
+          .eq('id', data.patientId)
+          .single();
+
+        await supabase.from('Alert').insert({
+          id: randomUUID(),
+          patientId: data.patientId,
+          type: 'CYCLE_COMPLETE',
+          message: `Ciclo de ${cycleTarget} sessões concluído por ${patientInfo?.name ?? 'paciente'}! Revise o desempenho e configure um novo ciclo de treino.`,
+        });
+      }
+    }
+  }
+
   return NextResponse.json({
     session: newSession,
     adaptive: adaptiveResult,

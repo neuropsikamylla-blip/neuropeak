@@ -12,7 +12,7 @@ interface Alert {
   id: string;
   patientId: string;
   patientName: string;
-  type: "MISSED_SESSION" | "PERFORMANCE_DROP" | "GOAL_REACHED";
+  type: "MISSED_SESSION" | "PERFORMANCE_DROP" | "GOAL_REACHED" | "CYCLE_COMPLETE";
   message: string;
   isRead: boolean;
   createdAt: Date;
@@ -30,10 +30,12 @@ function AlertIcon({ type }: { type: Alert["type"] }) {
       return <TrendingDown className="w-5 h-5 text-red-500" />;
     case "GOAL_REACHED":
       return <CheckCircle2 className="w-5 h-5 text-green-500" />;
+    case "CYCLE_COMPLETE":
+      return <CheckCircle2 className="w-5 h-5 text-blue-600" />;
   }
 }
 
-function alertVariant(type: Alert["type"]): "warning" | "destructive" | "success" {
+function alertVariant(type: Alert["type"]): "warning" | "destructive" | "success" | "info" {
   switch (type) {
     case "MISSED_SESSION":
       return "warning";
@@ -41,6 +43,8 @@ function alertVariant(type: Alert["type"]): "warning" | "destructive" | "success
       return "destructive";
     case "GOAL_REACHED":
       return "success";
+    case "CYCLE_COMPLETE":
+      return "info";
   }
 }
 
@@ -52,6 +56,8 @@ function alertLabel(type: Alert["type"]): string {
       return "Queda de Desempenho";
     case "GOAL_REACHED":
       return "Meta Atingida";
+    case "CYCLE_COMPLETE":
+      return "Ciclo Concluído";
   }
 }
 

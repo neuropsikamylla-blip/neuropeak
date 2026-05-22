@@ -7,7 +7,9 @@ import dynamic from "next/dynamic";
 import { ExerciseWrapper } from "@/components/exercises/ExerciseWrapper";
 import { EXERCISE_DEFINITIONS, type ExerciseResult, type Theme } from "@/types";
 import { useToast } from "@/components/ui/use-toast";
-import { Loader2 } from "lucide-react";
+import { Loader2, CheckCircle2 } from "lucide-react";
+import { Button } from "@/components/ui/button";
+import Link from "next/link";
 
 function ExerciseLoader() {
   return <div className="min-h-screen flex items-center justify-center"><Loader2 className="w-8 h-8 animate-spin text-blue-500" /></div>;
@@ -136,6 +138,71 @@ const EXERCISE_INSTRUCTIONS: Record<string, string[]> = {
   ],
 };
 
+function isSameLocalDay(a: Date, b: Date) {
+  return (
+    a.getFullYear() === b.getFullYear() &&
+    a.getMonth() === b.getMonth() &&
+    a.getDate() === b.getDate()
+  );
+}
+
+function BlockedScreen({ theme, exerciseName }: { theme: Theme; exerciseName: string }) {
+  const styles = {
+    CLINICAL: {
+      bg: "bg-gray-50 min-h-screen flex items-center justify-center p-4",
+      card: "bg-white rounded-xl shadow-md border border-gray-100 p-8 max-w-sm w-full text-center",
+      icon: "text-green-500",
+      title: "text-gray-900 text-xl font-semibold mt-4 mb-2",
+      msg: "text-gray-500 text-sm mb-6",
+      btn: "bg-blue-600 hover:bg-blue-700 text-white w-full h-11",
+    },
+    COLORFUL: {
+      bg: "bg-gradient-to-br from-purple-50 via-pink-50 to-yellow-50 min-h-screen flex items-center justify-center p-4",
+      card: "bg-white rounded-3xl shadow-xl border-2 border-purple-200 p-8 max-w-sm w-full text-center",
+      icon: "text-green-500",
+      title: "text-purple-700 text-2xl font-bold mt-4 mb-2",
+      msg: "text-purple-500 text-sm mb-6",
+      btn: "bg-gradient-to-r from-purple-500 to-pink-500 text-white w-full h-11 rounded-full font-bold",
+    },
+    GAMIFIED: {
+      bg: "bg-gray-950 min-h-screen flex items-center justify-center p-4",
+      card: "bg-gray-800 rounded-2xl border border-cyan-500/30 p-8 max-w-sm w-full text-center shadow-[0_0_30px_rgba(6,182,212,0.1)]",
+      icon: "text-cyan-400",
+      title: "text-cyan-400 text-xl font-black tracking-wide mt-4 mb-2 uppercase",
+      msg: "text-gray-400 text-sm mb-6",
+      btn: "bg-gradient-to-r from-cyan-500 to-blue-600 text-white w-full h-11 rounded-xl font-bold tracking-wide",
+    },
+  };
+  const s = styles[theme];
+
+  return (
+    <div className={s.bg}>
+      <div className={s.card}>
+        <CheckCircle2 className={`w-16 h-16 mx-auto ${s.icon}`} />
+        <h2 className={s.title}>
+          {theme === "GAMIFIED"
+            ? "Missão Concluída!"
+            : theme === "COLORFUL"
+            ? "Exercício concluído hoje! 🎉"
+            : "Exercício concluído hoje"}
+        </h2>
+        <p className={s.msg}>
+          {theme === "GAMIFIED"
+            ? `${exerciseName} já foi completado hoje. Volte amanhã para continuar subindo de nível!`
+            : theme === "COLORFUL"
+            ? `Você já treinou ${exerciseName} hoje! Volte amanhã para mais desafios. 💪`
+            : `Você já realizou ${exerciseName} hoje. Descanse e volte amanhã — a consistência é o segredo!`}
+        </p>
+        <Button className={s.btn} asChild>
+          <Link href="/inicio">
+            {theme === "GAMIFIED" ? "Voltar ao QG" : "Voltar ao início"}
+          </Link>
+        </Button>
+      </div>
+    </div>
+  );
+}
+
 export default function ExercicioPage() {
   const params = useParams();
   const router = useRouter();
@@ -146,6 +213,7 @@ export default function ExercicioPage() {
   const [difficulty, setDifficulty] = useState(1);
   const [loading, setLoading] = useState(true);
   const [theme, setTheme] = useState<Theme>("CLINICAL");
+  const [blockedToday, setBlockedToday] = useState(false);
 
   useEffect(() => {
     const user = session?.user as { patientId?: string; theme?: string } | undefined;
@@ -153,14 +221,28 @@ export default function ExercicioPage() {
 
     setTheme((user.theme ?? "CLINICAL") as Theme);
 
-    // Fetch current difficulty
     fetch(`/api/patients/${user.patientId}?config=true`)
       .then((r) => r.json())
       .then((data) => {
-        const config = data.exerciseConfigs?.find(
-          (c: { exerciseId: string; currentDifficulty: number }) => c.exerciseId === exerciseId
+        const configs = data.patient?.exerciseConfigs ?? [];
+        const config = configs.find(
+          (c: { exerciseId: string; currentDifficulty: number; lastAttemptAt?: string | null }) =>
+            c.exerciseId === exerciseId
         );
-        if (config) setDifficulty(config.currentDifficulty);
+
+        if (config) {
+          const lastAttempt = config.lastAttemptAt ? new Date(config.lastAttemptAt) : null;
+          if (lastAttempt && isSameLocalDay(lastAttempt, new Date())) {
+            // Already done today — block
+            setBlockedToday(true);
+          } else if (lastAttempt) {
+            // New day: warm-up at 2 below last reached difficulty
+            setDifficulty(Math.max(1, config.currentDifficulty - 2));
+          } else {
+            setDifficulty(config.currentDifficulty);
+          }
+        }
+        // No config = first time doing exercise, start at difficulty 1 (default)
       })
       .catch(() => {})
       .finally(() => setLoading(false));
@@ -203,6 +285,10 @@ export default function ExercicioPage() {
         <p className="text-gray-500">Exercício não encontrado: {exerciseId}</p>
       </div>
     );
+  }
+
+  if (blockedToday) {
+    return <BlockedScreen theme={theme} exerciseName={exerciseDef.name} />;
   }
 
   const instructions = EXERCISE_INSTRUCTIONS[exerciseId] ?? ["Siga as instruções do exercício."];

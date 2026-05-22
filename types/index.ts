@@ -1,6 +1,6 @@
 export type UserRole = "THERAPIST" | "PATIENT";
 export type Theme = "CLINICAL" | "COLORFUL" | "GAMIFIED";
-export type AlertType = "MISSED_SESSION" | "PERFORMANCE_DROP" | "GOAL_REACHED";
+export type AlertType = "MISSED_SESSION" | "PERFORMANCE_DROP" | "GOAL_REACHED" | "CYCLE_COMPLETE";
 export type Domain = "memory" | "attention" | "processing" | "executive";
 
 export interface ExerciseResult {
