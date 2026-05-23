@@ -34,8 +34,8 @@ function speedMs(difficulty: number) {
 }
 
 function distractorCount(difficulty: number) {
-  // 0 at diff 1-2 → 4 at diff 9-10
-  return Math.min(4, Math.floor((difficulty - 1) / 2));
+  // 2 at diff 1 → 6 at diff 10 — always present to require visual selection
+  return Math.min(6, 2 + Math.floor((difficulty - 1) / 2));
 }
 
 let _uid = 0;

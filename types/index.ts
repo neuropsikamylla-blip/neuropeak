@@ -151,14 +151,6 @@ export const EXERCISE_DEFINITIONS = {
     estimatedMinutes: 7,
     icon: "↩️",
   },
-  "nback": {
-    id: "nback",
-    name: "N-Back",
-    domain: "memory" as Domain,
-    description: "Identifique se o estímulo atual foi apresentado N posições atrás",
-    estimatedMinutes: 8,
-    icon: "🧠",
-  },
   "trilha-visual": {
     id: "trilha-visual",
     name: "Conecta Números",
@@ -175,14 +167,6 @@ export const EXERCISE_DEFINITIONS = {
     estimatedMinutes: 8,
     icon: "🎨",
   },
-  "vigilancia": {
-    id: "vigilancia",
-    name: "Vigilância",
-    domain: "attention" as Domain,
-    description: "Detecte estímulos alvo em uma sequência",
-    estimatedMinutes: 7,
-    icon: "👁️",
-  },
   "tempo-reacao": {
     id: "tempo-reacao",
     name: "Tempo de Reação",
@@ -190,22 +174,6 @@ export const EXERCISE_DEFINITIONS = {
     description: "Reaja o mais rápido possível ao estímulo",
     estimatedMinutes: 5,
     icon: "⚡",
-  },
-  "decisao-rapida": {
-    id: "decisao-rapida",
-    name: "Decisão Rápida",
-    domain: "processing" as Domain,
-    description: "Classifique categorias rapidamente",
-    estimatedMinutes: 7,
-    icon: "🧩",
-  },
-  "identificacao-simbolos": {
-    id: "identificacao-simbolos",
-    name: "Identificação de Símbolos",
-    domain: "processing" as Domain,
-    description: "Encontre o símbolo alvo entre distratores",
-    estimatedMinutes: 7,
-    icon: "🔍",
   },
   "torre-hanoi": {
     id: "torre-hanoi",
@@ -254,6 +222,14 @@ export const EXERCISE_DEFINITIONS = {
     description: "Decida se uma situação do dia a dia está correta ou errada",
     estimatedMinutes: 7,
     icon: "✅",
+  },
+  "semaforo": {
+    id: "semaforo",
+    name: "Semáforo",
+    domain: "processing" as Domain,
+    description: "Reaja ao sinal certo: avance no verde, pare no vermelho",
+    estimatedMinutes: 6,
+    icon: "🚦",
   },
   "antes-depois": {
     id: "antes-depois",

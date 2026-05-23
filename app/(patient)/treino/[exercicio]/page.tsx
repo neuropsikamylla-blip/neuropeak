@@ -38,6 +38,7 @@ const AtencaoSeletiva     = dynamic(() => import("@/components/exercises/attenti
 const AtencaoAlternada    = dynamic(() => import("@/components/exercises/attention/AtencaoAlternada").then(m => ({ default: m.AtencaoAlternada })), { loading: ExerciseLoader });
 const AtencaoDividida     = dynamic(() => import("@/components/exercises/attention/AtencaoDividida").then(m => ({ default: m.AtencaoDividida })), { loading: ExerciseLoader });
 const AtencaoSustentada   = dynamic(() => import("@/components/exercises/attention/AtencaoSustentada").then(m => ({ default: m.AtencaoSustentada })), { loading: ExerciseLoader });
+const Semaforo            = dynamic(() => import("@/components/exercises/processing/Semaforo").then(m => ({ default: m.Semaforo })), { loading: ExerciseLoader });
 
 const EXERCISE_INSTRUCTIONS: Record<string, string[]> = {
   "span-numerico": [
@@ -183,6 +184,12 @@ const EXERCISE_INSTRUCTIONS: Record<string, string[]> = {
     "Uma sequência de símbolos aparece rapidamente.",
     "Toque na tela APENAS quando aparecer o símbolo alvo.",
     "Mantenha o foco durante todo o exercício — a atenção não pode vacilar!",
+  ],
+  "semaforo": [
+    "Três semáforos aparecem na tela. Um deles vai piscar — é o semáforo ativo.",
+    "Observe a cor do semáforo ativo: verde ou vermelho.",
+    "Toque em AVANÇAR se estiver verde, e em PARAR se estiver vermelho ou amarelo.",
+    "Ignore os outros semáforos — foque só no que está piscando!",
   ],
 };
 
@@ -368,6 +375,7 @@ export default function ExercicioPage() {
       case "atencao-alternada": return <AtencaoAlternada {...props} />;
       case "atencao-dividida": return <AtencaoDividida {...props} />;
       case "atencao-sustentada": return <AtencaoSustentada {...props} />;
+      case "semaforo": return <Semaforo {...props} />;
       default: return <div className="p-8 text-center text-gray-500">Exercício em desenvolvimento</div>;
     }
   }

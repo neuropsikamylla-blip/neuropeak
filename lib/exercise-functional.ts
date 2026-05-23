@@ -185,4 +185,13 @@ export const EXERCISE_FUNCTIONAL: Record<string, ExerciseFunctional> = {
     ],
     dailyTip: "Para esperas longas, use alarmes ou timers como suporte externo. Apoio externo não é fraqueza — é estratégia inteligente para preservar a atenção onde realmente importa.",
   },
+  "semaforo": {
+    scenario: "Reagir no momento certo ao sinal do ônibus, ao semáforo na travessia, ao chamado do médico, ou ao sinal sonoro de um aparelho.",
+    strategies: [
+      "Foque no sinal correto antes que ele apareça — atenção preparatória acelera a resposta.",
+      "Ignore os estímulos ao redor: treine o olhar para o ponto certo antes de agir.",
+      "Se errar, pause e reinicie com calma — a pressa depois do erro aumenta o próximo erro.",
+    ],
+    dailyTip: "Na vida real, identifique o sinal que importa antes de começar a esperar: 'Estou olhando para o semáforo desta faixa.' Foco intencional reduz tempo de reação.",
+  },
 };
