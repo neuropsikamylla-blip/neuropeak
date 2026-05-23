@@ -122,4 +122,67 @@ export const EXERCISE_FUNCTIONAL: Record<string, ExerciseFunctional> = {
     ],
     dailyTip: "Em locais novos, tire foto da planta do local ou do mapa. Ter o mapa externo alivia o mapa mental que o cérebro precisa manter.",
   },
+  "ordem-historia": {
+    scenario: "Executar uma tarefa complexa do dia a dia sem pular nem misturar etapas — preparar o almoço, organizar documentos, ir ao banco.",
+    strategies: [
+      "Antes de agir, pense na história completa: onde começa e onde termina?",
+      "Identifique qual etapa 'desbloqueiam' as seguintes — o que precisa acontecer primeiro?",
+      "Se ficar em dúvida entre dois passos, pergunte: 'Consigo fazer B sem antes fazer A?'",
+    ],
+    dailyTip: "Para rotinas complexas, escreva os passos em um papel antes de começar. Checar visualmente cada etapa concluída reduz erros e dá sensação de controle.",
+  },
+  "certo-ou-errado": {
+    scenario: "Tomar decisões rápidas sobre segurança no dia a dia — usar o remédio certo, agir com segurança no trânsito, proteger a saúde.",
+    strategies: [
+      "Na dúvida sobre segurança, o instinto 'não está certo' geralmente está correto — confie nele.",
+      "Em situações de risco, pause e pergunte: 'Isso pode me prejudicar ou prejudicar alguém?'",
+      "Para decisões sobre medicamentos: na dúvida, não tome; ligue para o médico ou farmacêutico.",
+    ],
+    dailyTip: "Monte uma lista de verificação para rotinas de segurança críticas (checar gás, trancar a porta). Rever a lista elimina o esforço de lembrar de cabeça.",
+  },
+  "antes-depois": {
+    scenario: "Organizar compromissos em sequência correta — lembrar que consulta é depois do exame, que o ônibus passa antes das 8h, que o remédio é antes do café.",
+    strategies: [
+      "Para datas e sequências, crie uma linha do tempo mental: o que já passou, o que está aqui, o que vem depois.",
+      "Use âncoras fixas: 'segunda começa a semana', 'janeiro começa o ano' — isso ajuda a navegar na sequência.",
+      "Repita em voz alta: 'Terça vem depois de segunda, antes de quarta.'",
+    ],
+    dailyTip: "Use uma agenda física ou calendário visível. Ver a sequência de dias/eventos reduz a dependência de memória de trabalho para organização temporal.",
+  },
+  "atencao-seletiva": {
+    scenario: "Encontrar seu nome na lista do consultório, localizar o produto certo na prateleira do mercado, achar a linha de ônibus certa num painel movimentado.",
+    strategies: [
+      "Defina claramente o que está procurando antes de iniciar a busca.",
+      "Faça uma varredura sistemática: linha por linha, de cima para baixo, da esquerda para a direita.",
+      "Use o dedo ou um marcador físico para não perder a linha.",
+    ],
+    dailyTip: "Antes de buscar algo (remédio na bolsa, produto no mercado), feche os olhos e visualize como é. Ter uma imagem mental clara acelera a busca visual.",
+  },
+  "atencao-alternada": {
+    scenario: "Adaptar-se quando uma rota muda, quando a consulta troca de andar, quando uma tarefa é interrompida e você precisa retomar outra.",
+    strategies: [
+      "Ao mudar de tarefa, faça uma pausa de 2 segundos e declare a nova tarefa: 'Agora eu estou fazendo X.'",
+      "Releia ou ouça novamente a nova instrução antes de agir — confirmar a mudança evita respostas automáticas antigas.",
+      "Normalize o erro de transição: o cérebro precisa de um momento para 'descarregar' a regra anterior.",
+    ],
+    dailyTip: "Evite transições abruptas entre tarefas importantes. Termine a frase, salve o arquivo, anote onde parou — então mude. Criar uma 'pausa de transição' reduz erros.",
+  },
+  "atencao-dividida": {
+    scenario: "Ouvir o que o médico fala enquanto assina um formulário, atravessar a rua enquanto atende alguém, cozinhar enquanto acompanha o horário.",
+    strategies: [
+      "Identifique qual das duas tarefas exige mais atenção e deixe a outra em 'piloto automático'.",
+      "Para tarefas divididas, simplifique ao máximo a tarefa secundária (ex: responder monossílabos em vez de frases longas).",
+      "Se sentir que está perdendo o fio de uma das tarefas, pare a menos importante e retome.",
+    ],
+    dailyTip: "Evite dividir atenção em tarefas de alto risco — dirigir e usar celular, checar medicamentos enquanto conversa. Reserve atenção total para o que realmente importa.",
+  },
+  "atencao-sustentada": {
+    scenario: "Aguardar o nome ser chamado na sala de espera, monitorar a panela no fogão, ficar atento ao sinal de saída do ônibus em uma rota desconhecida.",
+    strategies: [
+      "Defina o alvo antes de começar a esperar: 'Estou esperando ouvir MEU NOME.'",
+      "Use varredura ativa: a cada 30 segundos, verifique conscientemente se o alvo apareceu.",
+      "Reduza distrações ao redor quando a vigília é importante — celular para baixo, tela apagada.",
+    ],
+    dailyTip: "Para esperas longas, use alarmes ou timers como suporte externo. Apoio externo não é fraqueza — é estratégia inteligente para preservar a atenção onde realmente importa.",
+  },
 };

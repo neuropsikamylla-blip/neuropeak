@@ -31,6 +31,13 @@ const TorreHanoi          = dynamic(() => import("@/components/exercises/executi
 const Sequenciamento      = dynamic(() => import("@/components/exercises/executive/Sequenciamento").then(m => ({ default: m.Sequenciamento })), { loading: ExerciseLoader });
 const FlexibilidadeCognitiva = dynamic(() => import("@/components/exercises/executive/FlexibilidadeCognitiva").then(m => ({ default: m.FlexibilidadeCognitiva })), { loading: ExerciseLoader });
 const Labirinto           = dynamic(() => import("@/components/exercises/executive/Labirinto").then(m => ({ default: m.Labirinto })), { loading: ExerciseLoader });
+const OrdemHistoria       = dynamic(() => import("@/components/exercises/executive/OrdemHistoria").then(m => ({ default: m.OrdemHistoria })), { loading: ExerciseLoader });
+const CertoOuErrado       = dynamic(() => import("@/components/exercises/processing/CertoOuErrado").then(m => ({ default: m.CertoOuErrado })), { loading: ExerciseLoader });
+const AntesDepois         = dynamic(() => import("@/components/exercises/attention/AntesDepois").then(m => ({ default: m.AntesDepois })), { loading: ExerciseLoader });
+const AtencaoSeletiva     = dynamic(() => import("@/components/exercises/attention/AtencaoSeletiva").then(m => ({ default: m.AtencaoSeletiva })), { loading: ExerciseLoader });
+const AtencaoAlternada    = dynamic(() => import("@/components/exercises/attention/AtencaoAlternada").then(m => ({ default: m.AtencaoAlternada })), { loading: ExerciseLoader });
+const AtencaoDividida     = dynamic(() => import("@/components/exercises/attention/AtencaoDividida").then(m => ({ default: m.AtencaoDividida })), { loading: ExerciseLoader });
+const AtencaoSustentada   = dynamic(() => import("@/components/exercises/attention/AtencaoSustentada").then(m => ({ default: m.AtencaoSustentada })), { loading: ExerciseLoader });
 
 const EXERCISE_INSTRUCTIONS: Record<string, string[]> = {
   "span-numerico": [
@@ -134,6 +141,48 @@ const EXERCISE_INSTRUCTIONS: Record<string, string[]> = {
     "Você deve responder se a letra ATUAL é igual à de N posições atrás.",
     "Exemplo (2-back): A B C A → a 4ª letra (A) é igual à 2ª (B)? NÃO.",
     "Responda SIM ou NÃO antes que a próxima letra apareça.",
+  ],
+  "ordem-historia": [
+    "Você verá 4 painéis de uma situação do dia a dia em ordem embaralhada.",
+    "Arraste os painéis para colocá-los em ordem cronológica: do primeiro ao último.",
+    "Pense em qual etapa precisa acontecer antes da próxima.",
+    "Clique em 'Verificar' quando estiver satisfeito com a ordem.",
+  ],
+  "certo-ou-errado": [
+    "Você verá uma situação do cotidiano descrita em texto.",
+    "Decida rapidamente: essa situação está CORRETA ou ERRADA?",
+    "Pense em segurança, saúde e boas práticas do dia a dia.",
+    "Velocidade e precisão contam — confie no seu julgamento!",
+  ],
+  "antes-depois": [
+    "Uma palavra aparece no centro — pode ser um dia, mês, número ou rotina.",
+    "A pergunta indica: O que vem ANTES? ou O que vem DEPOIS?",
+    "Escolha a opção correta entre as 4 alternativas.",
+    "Tente responder antes que o tempo acabe — rapidez e precisão valem!",
+  ],
+  "atencao-seletiva": [
+    "Uma palavra alvo aparece no topo da tela.",
+    "Localize essa palavra entre as outras e toque nela.",
+    "As palavras distratoras são similares — leia com atenção.",
+    "Seja rápido: o tempo de resposta é medido!",
+  ],
+  "atencao-alternada": [
+    "Você verá um objeto ou ser vivo e deve classificá-lo conforme a REGRA ATUAL.",
+    "A regra muda durante o exercício: ora é 'Animal ou Objeto?', ora é 'Grande ou Pequeno?'",
+    "Sempre verifique qual regra está ativa antes de responder.",
+    "Adaptar-se à mudança de regra é o treino principal!",
+  ],
+  "atencao-dividida": [
+    "A tela está dividida em dois lados: NÚMEROS (esquerda) e LETRAS (direita).",
+    "Esquerda: toque ÍMPAR quando aparecer um número ímpar.",
+    "Direita: toque VOGAL quando aparecer uma vogal.",
+    "Os dois lados acontecem ao mesmo tempo — monitore ambos!",
+  ],
+  "atencao-sustentada": [
+    "Um símbolo alvo é mostrado no topo — memorize ele.",
+    "Uma sequência de símbolos aparece rapidamente.",
+    "Toque na tela APENAS quando aparecer o símbolo alvo.",
+    "Mantenha o foco durante todo o exercício — a atenção não pode vacilar!",
   ],
 };
 
@@ -312,6 +361,13 @@ export default function ExercicioPage() {
       case "span-numerico-inverso": return <SpanNumericoInverso {...props} />;
       case "matriz-espacial-inversa": return <MatrizEspacialInversa {...props} />;
       case "nback": return <NBack {...props} />;
+      case "ordem-historia": return <OrdemHistoria {...props} />;
+      case "certo-ou-errado": return <CertoOuErrado {...props} />;
+      case "antes-depois": return <AntesDepois {...props} />;
+      case "atencao-seletiva": return <AtencaoSeletiva {...props} />;
+      case "atencao-alternada": return <AtencaoAlternada {...props} />;
+      case "atencao-dividida": return <AtencaoDividida {...props} />;
+      case "atencao-sustentada": return <AtencaoSustentada {...props} />;
       default: return <div className="p-8 text-center text-gray-500">Exercício em desenvolvimento</div>;
     }
   }
