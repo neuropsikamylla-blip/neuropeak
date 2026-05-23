@@ -23,13 +23,14 @@ interface TrafficLightProps {
 }
 
 const TOTAL_TRIALS = 20;
-const BLINK_COUNT = 3;
-const BLINK_INTERVAL = 150; // ms on/off
+// All lights blink for this duration before the target reveals its color
+const BLINK_DURATION = 1500; // ms
 
 function lightOnMs(difficulty: number): number {
-  if (difficulty <= 3) return 3000;
-  if (difficulty <= 6) return 2000;
-  return 1200;
+  if (difficulty <= 2) return 3500;
+  if (difficulty <= 5) return 2200;
+  if (difficulty <= 8) return 1400;
+  return 900;
 }
 
 function randomLightColor(): LightColor {
@@ -48,7 +49,7 @@ function isGoSignal(color: LightColor): boolean {
   return color === "green";
 }
 
-// ─── TrafficLight SVG component ──────────────────────────────────────────────
+// ─── TrafficLight component ───────────────────────────────────────────────────
 
 function TrafficLight({ activeColor, isTarget, isBlinking }: TrafficLightProps) {
   const lights: { color: LightColor; fill: string; glow: string }[] = [
@@ -59,17 +60,9 @@ function TrafficLight({ activeColor, isTarget, isBlinking }: TrafficLightProps) 
 
   return (
     <motion.div
-      animate={isBlinking ? { opacity: [1, 0.15, 1] } : { opacity: 1 }}
-      transition={
-        isBlinking
-          ? { duration: BLINK_INTERVAL / 500, repeat: BLINK_COUNT * 2, repeatType: "mirror" }
-          : { duration: 0.1 }
-      }
-      style={{
-        display: "inline-flex",
-        flexDirection: "column",
-        alignItems: "center",
-      }}
+      animate={isBlinking ? { opacity: [1, 0.1, 1] } : { opacity: 1 }}
+      transition={isBlinking ? { duration: 0.25, repeat: 5, repeatType: "mirror" } : { duration: 0.1 }}
+      style={{ display: "inline-flex", flexDirection: "column", alignItems: "center" }}
     >
       <div
         style={{
@@ -82,12 +75,8 @@ function TrafficLight({ activeColor, isTarget, isBlinking }: TrafficLightProps) 
           alignItems: "center",
           justifyContent: "space-evenly",
           padding: "10px 0",
-          border: isTarget
-            ? "2.5px solid #facc15"
-            : "2px solid #374151",
-          boxShadow: isTarget
-            ? "0 0 14px 3px rgba(250,204,21,0.45)"
-            : "none",
+          border: isTarget ? "2.5px solid #facc15" : "2px solid #374151",
+          boxShadow: isTarget ? "0 0 14px 3px rgba(250,204,21,0.45)" : "none",
         }}
       >
         {lights.map(({ color, fill, glow }) => {
@@ -108,15 +97,7 @@ function TrafficLight({ activeColor, isTarget, isBlinking }: TrafficLightProps) 
           );
         })}
       </div>
-      {/* Pole */}
-      <div
-        style={{
-          width: 8,
-          height: 28,
-          backgroundColor: "#374151",
-          borderRadius: "0 0 4px 4px",
-        }}
-      />
+      <div style={{ width: 8, height: 28, backgroundColor: "#374151", borderRadius: "0 0 4px 4px" }} />
     </motion.div>
   );
 }
@@ -229,8 +210,7 @@ type Phase = "idle" | "blinking" | "active" | "feedback";
 interface RoundState {
   targetPos: Position;
   targetColor: LightColor;
-  distractors: [LightColor, LightColor]; // colors for the two non-target slots
-  showLight: boolean; // toggled during blinking phase
+  distractors: [LightColor, LightColor];
 }
 
 export function Semaforo({ difficulty, theme, onComplete }: SemaforoProps) {
@@ -297,53 +277,27 @@ export function Semaforo({ difficulty, theme, onComplete }: SemaforoProps) {
   const startRound = useCallback(() => {
     if (doneRef.current) return;
 
-    const positions: Position[] = [0, 1, 2];
-    const targetPos = positions[Math.floor(Math.random() * 3)] as Position;
+    const targetPos = ([0, 1, 2] as Position[])[Math.floor(Math.random() * 3)];
     const targetColor = randomLightColor();
-
-    // Build distractor colors (indices that are NOT targetPos)
-    const distColors: LightColor[] = [randomDistractorColor(), randomDistractorColor()];
-
-    const newRound: RoundState = {
-      targetPos,
-      targetColor,
-      distractors: [distColors[0], distColors[1]],
-      showLight: false,
-    };
+    const distColors: [LightColor, LightColor] = [randomDistractorColor(), randomDistractorColor()];
+    const newRound: RoundState = { targetPos, targetColor, distractors: distColors };
 
     setRound(newRound);
-    setPhase("blinking");
+    setPhase("blinking"); // all 3 lights blink yellow — target unknown
     respondedRef.current = false;
 
-    // Blink the target light BLINK_COUNT times
-    let blinksDone = 0;
-    const totalBlinks = BLINK_COUNT * 2; // on + off per blink
+    // After BLINK_DURATION, reveal target color (Framer Motion handles the visual blink)
+    blinkTimer.current = setTimeout(() => {
+      setPhase("active");
+      roundActiveAt.current = Date.now();
 
-    function doBlink() {
-      blinksDone++;
-      setRound((prev) =>
-        prev ? { ...prev, showLight: blinksDone % 2 === 1 } : prev
-      );
-
-      if (blinksDone < totalBlinks) {
-        blinkTimer.current = setTimeout(doBlink, BLINK_INTERVAL);
-      } else {
-        // All blinks done — light stays on
-        setRound((prev) => (prev ? { ...prev, showLight: true } : prev));
-        setPhase("active");
-        roundActiveAt.current = Date.now();
-
-        // Auto-timeout: treat as miss
-        activeTimer.current = setTimeout(() => {
-          if (!respondedRef.current && !doneRef.current) {
-            respondedRef.current = true;
-            handleResponse(false, newRound);
-          }
-        }, onMs);
-      }
-    }
-
-    blinkTimer.current = setTimeout(doBlink, BLINK_INTERVAL);
+      activeTimer.current = setTimeout(() => {
+        if (!respondedRef.current && !doneRef.current) {
+          respondedRef.current = true;
+          handleResponse(false, newRound);
+        }
+      }, onMs);
+    }, BLINK_DURATION + 100);
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [onMs]);
 
@@ -400,33 +354,25 @@ export function Semaforo({ difficulty, theme, onComplete }: SemaforoProps) {
   }
 
   // ─── Build per-slot data ──────────────────────────────────────────────────
-  // slots: index 0 = left, 1 = center, 2 = right
-  // For each slot, compute (activeColor, isTarget, isBlinking)
   const slots: { activeColor: LightColor | null; isTarget: boolean; isBlinking: boolean }[] =
     [0, 1, 2].map((idx) => {
-      if (!round || !started) {
-        return { activeColor: null, isTarget: false, isBlinking: false };
+      if (!round || !started) return { activeColor: null, isTarget: false, isBlinking: false };
+
+      if (phase === "blinking") {
+        // All 3 blink yellow — no hint which is the target
+        return { activeColor: "yellow", isTarget: false, isBlinking: true };
       }
 
       const isTarget = idx === round.targetPos;
-
       if (isTarget) {
-        const showColor = round.showLight ? round.targetColor : null;
-        return { activeColor: showColor, isTarget: true, isBlinking: false };
+        return { activeColor: round.targetColor, isTarget: true, isBlinking: false };
       }
 
-      // Distractor
+      // Distractors: at high difficulty show their colors too (harder to spot the target)
       const distIdx = idx < round.targetPos ? idx : idx - 1;
       const distColor = round.distractors[distIdx] ?? "red";
-
-      const distIsBlinking = distractorsAlsoBlink && phase === "blinking";
-      const showDistColor =
-        phase === "active" || (phase === "blinking" && round.showLight)
-          ? distColor
-          : null;
-
       return {
-        activeColor: distIsBlinking ? (round.showLight ? distColor : null) : showDistColor,
+        activeColor: distractorsAlsoBlink ? distColor : null,
         isTarget: false,
         isBlinking: false,
       };

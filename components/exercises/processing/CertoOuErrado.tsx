@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useRef, useCallback } from "react";
+import { useState, useRef, useCallback, useMemo, useEffect } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { calculateExerciseScore } from "@/lib/scoring";
 import { useExerciseProgress } from "@/components/exercises/ExerciseWrapper";
@@ -11,6 +11,7 @@ interface CertoOuErradoProps {
   difficulty: number;
   theme: Theme;
   onComplete: (result: ExerciseResult) => void;
+  patientAge?: number;
 }
 
 interface Scenario {
@@ -20,6 +21,7 @@ interface Scenario {
   explanation: string;
   /** Higher = harder / less obvious. Used for difficulty-weighted selection. */
   hardness: number;
+  ageGroup?: "all" | "adult" | "child" | "teen";
 }
 
 const MAX_TRIALS = 20;
@@ -292,7 +294,183 @@ const ALL_SCENARIOS: Scenario[] = [
     explanation: "A pele do bebê é sensível — água quente demais causa queimaduras.",
     hardness: 3,
   },
+
+  // Child scenarios
+  {
+    text: "Bater em um colega porque ele pegou seu brinquedo",
+    emoji: "👊",
+    answer: "errado",
+    explanation: "Bater machuca e não resolve o problema. O certo é pedir ajuda a um adulto.",
+    hardness: 1,
+    ageGroup: "child",
+  },
+  {
+    text: "Mentir para os pais para não levar bronca",
+    emoji: "🤥",
+    answer: "errado",
+    explanation: "A mentira quebra a confiança. O melhor é falar a verdade.",
+    hardness: 2,
+    ageGroup: "child",
+  },
+  {
+    text: "Copiar a tarefa do colega para entregar na escola",
+    emoji: "📋",
+    answer: "errado",
+    explanation: "Copiar é desonesto e impede o aprendizado.",
+    hardness: 2,
+    ageGroup: "child",
+  },
+  {
+    text: "Aceitar doce de um estranho na rua",
+    emoji: "🍬",
+    answer: "errado",
+    explanation: "Nunca aceite nada de desconhecidos. Avise um adulto de confiança.",
+    hardness: 1,
+    ageGroup: "child",
+  },
+  {
+    text: "Correr e brincar perto da beira da piscina",
+    emoji: "🏊",
+    answer: "errado",
+    explanation: "Escorregões perto da piscina podem causar acidentes graves.",
+    hardness: 1,
+    ageGroup: "child",
+  },
+  {
+    text: "Brigar com outro colega por causa de um brinquedo em vez de esperar a vez",
+    emoji: "🧸",
+    answer: "errado",
+    explanation: "Compartilhar e esperar a vez é a atitude correta.",
+    hardness: 2,
+    ageGroup: "child",
+  },
+  {
+    text: "Jogar o lixo no chão porque não tem lixeira perto",
+    emoji: "🗑️",
+    answer: "errado",
+    explanation: "O certo é guardar o lixo e jogar na lixeira quando encontrar uma.",
+    hardness: 2,
+    ageGroup: "child",
+  },
+  {
+    text: "Pedir ajuda a um adulto de confiança quando sentir medo ou perigo",
+    emoji: "🙋",
+    answer: "certo",
+    explanation: "Adultos de confiança estão lá para proteger e ajudar.",
+    hardness: 1,
+    ageGroup: "child",
+  },
+  {
+    text: "Atravessar a rua sozinho sem olhar para os dois lados",
+    emoji: "🚗",
+    answer: "errado",
+    explanation: "Sempre olhe para os dois lados e use a faixa de pedestres.",
+    hardness: 1,
+    ageGroup: "child",
+  },
+  {
+    text: "Lavar as mãos depois de usar o banheiro e antes de comer",
+    emoji: "🤲",
+    answer: "certo",
+    explanation: "Higiene das mãos previne doenças e infecções.",
+    hardness: 1,
+    ageGroup: "child",
+  },
+
+  // Teen scenarios
+  {
+    text: "Acessar o celular do namorado ou da namorada sem permissão para ler as mensagens",
+    emoji: "📱",
+    answer: "errado",
+    explanation: "Invadir a privacidade do parceiro quebra a confiança e não é aceitável.",
+    hardness: 3,
+    ageGroup: "teen",
+  },
+  {
+    text: "Aceitar um cigarro oferecido por amigos para não parecer diferente do grupo",
+    emoji: "🚬",
+    answer: "errado",
+    explanation: "Ceder à pressão do grupo coloca sua saúde em risco. Dizer não é um direito.",
+    hardness: 4,
+    ageGroup: "teen",
+  },
+  {
+    text: "Enviar uma foto íntima para alguém que pediu muito",
+    emoji: "📸",
+    answer: "errado",
+    explanation: "Fotos íntimas podem ser compartilhadas sem consentimento, causando danos graves.",
+    hardness: 5,
+    ageGroup: "teen",
+  },
+  {
+    text: "Olhar o celular enquanto atravessa a rua",
+    emoji: "🚦",
+    answer: "errado",
+    explanation: "Distração no trânsito é perigosa e pode ser fatal para pedestres.",
+    hardness: 2,
+    ageGroup: "teen",
+  },
+  {
+    text: "Pegar dinheiro da carteira dos pais sem avisar, pensando em devolver depois",
+    emoji: "💸",
+    answer: "errado",
+    explanation: "Pegar sem permissão é furto, mesmo com intenção de devolver.",
+    hardness: 4,
+    ageGroup: "teen",
+  },
+  {
+    text: "Sair de uma festa onde percebe que as pessoas estão usando drogas",
+    emoji: "🏃",
+    answer: "certo",
+    explanation: "Afastar-se de ambientes com drogas protege sua segurança e reputação.",
+    hardness: 4,
+    ageGroup: "teen",
+  },
+  {
+    text: "Dirigir o carro dos pais depois de beber uma cerveja, porque a quantidade foi pequena",
+    emoji: "🍺",
+    answer: "errado",
+    explanation: "Qualquer quantidade de álcool compromete os reflexos. Dirigir alcoolizado é crime.",
+    hardness: 5,
+    ageGroup: "teen",
+  },
+  {
+    text: "Bloquear e denunciar alguém que está fazendo cyberbullying contra você ou um amigo",
+    emoji: "🛡️",
+    answer: "certo",
+    explanation: "Denunciar o cyberbullying é a atitude correta para proteger a si e aos outros.",
+    hardness: 3,
+    ageGroup: "teen",
+  },
+  {
+    text: "Compartilhar a localização em tempo real com um desconhecido que conheceu online",
+    emoji: "📍",
+    answer: "errado",
+    explanation: "Compartilhar localização com estranhos online é perigoso e pode facilitar situações de risco.",
+    hardness: 5,
+    ageGroup: "teen",
+  },
+  {
+    text: "Contar para um adulto de confiança quando um amigo falar em se machucar",
+    emoji: "💙",
+    answer: "certo",
+    explanation: "Buscar ajuda de adultos em situações de risco pode salvar vidas.",
+    hardness: 6,
+    ageGroup: "teen",
+  },
 ];
+
+// ─── Age-group filtering ──────────────────────────────────────────────────────
+
+function getScenarioPool(age?: number): Scenario[] {
+  if (age !== undefined && age < 12) {
+    return ALL_SCENARIOS.filter((s) => !s.ageGroup || s.ageGroup === "child" || s.ageGroup === "all");
+  }
+  if (age !== undefined && age < 18) {
+    return ALL_SCENARIOS.filter((s) => !s.ageGroup || s.ageGroup === "teen" || s.ageGroup === "all");
+  }
+  return ALL_SCENARIOS.filter((s) => !s.ageGroup || s.ageGroup === "adult" || s.ageGroup === "all");
+}
 
 // ─── Difficulty helpers ───────────────────────────────────────────────────────
 
@@ -416,6 +594,40 @@ function TutorialInteractiveStep({
   );
 }
 
+function CertoIntroStep({
+  theme,
+  onDone,
+}: {
+  theme: Theme;
+  onDone: () => void;
+}) {
+  useEffect(() => {
+    const t = setTimeout(onDone, 2500);
+    return () => clearTimeout(t);
+  }, [onDone]);
+
+  return (
+    <div className="flex flex-col items-center gap-3">
+      <div className="text-5xl">🤔</div>
+      <div className="flex gap-3 w-full">
+        <div className="flex-1 rounded-xl py-3 text-center font-bold text-white bg-green-500 text-sm opacity-90">
+          ✅ CERTO
+        </div>
+        <div className="flex-1 rounded-xl py-3 text-center font-bold text-white bg-red-500 text-sm opacity-90">
+          ❌ ERRADO
+        </div>
+      </div>
+      <p
+        className={`text-xs text-center ${
+          theme === "GAMIFIED" ? "text-gray-400" : "text-gray-500"
+        }`}
+      >
+        Toque no botão correto o mais rápido possível!
+      </p>
+    </div>
+  );
+}
+
 function CertoOuErradoTutorial({
   theme,
   onDone,
@@ -427,30 +639,9 @@ function CertoOuErradoTutorial({
     {
       instruction:
         "Uma situação do dia a dia será mostrada. Você decide: é CERTO ou ERRADO?",
-      content: (onStepDone: () => void) => {
-        // Auto-advance after 2.5 s for the explanation slide
-        setTimeout(onStepDone, 2500);
-        return (
-          <div className="flex flex-col items-center gap-3">
-            <div className="text-5xl">🤔</div>
-            <div className="flex gap-3 w-full">
-              <div className="flex-1 rounded-xl py-3 text-center font-bold text-white bg-green-500 text-sm opacity-90">
-                ✅ CERTO
-              </div>
-              <div className="flex-1 rounded-xl py-3 text-center font-bold text-white bg-red-500 text-sm opacity-90">
-                ❌ ERRADO
-              </div>
-            </div>
-            <p
-              className={`text-xs text-center ${
-                theme === "GAMIFIED" ? "text-gray-400" : "text-gray-500"
-              }`}
-            >
-              Toque no botão correto o mais rápido possível!
-            </p>
-          </div>
-        );
-      },
+      content: (onStepDone: () => void) => (
+        <CertoIntroStep theme={theme} onDone={onStepDone} />
+      ),
     },
     {
       instruction: "Experimente! Toque na resposta que você acha correta.",
@@ -476,9 +667,12 @@ export function CertoOuErrado({
   difficulty,
   theme,
   onComplete,
+  patientAge,
 }: CertoOuErradoProps) {
   const [showTutorial, setShowTutorial] = useState(true);
   const reportProgress = useExerciseProgress();
+
+  const SCENARIO_POOL = useMemo(() => getScenarioPool(patientAge), [patientAge]);
 
   // Game state
   const [currentScenario, setCurrentScenario] = useState<Scenario | null>(null);
@@ -499,7 +693,7 @@ export function CertoOuErrado({
 
   // ── Pick next scenario ──────────────────────────────────────────────────────
   const pickNextScenario = useCallback(() => {
-    const available = ALL_SCENARIOS.map((_, i) => i).filter(
+    const available = SCENARIO_POOL.map((_, i) => i).filter(
       (i) => !usedIndices.current.has(i)
     );
 
@@ -509,12 +703,12 @@ export function CertoOuErrado({
       return pickNextScenario();
     }
 
-    const idx = weightedPickIndex(available, ALL_SCENARIOS, difficulty);
+    const idx = weightedPickIndex(available, SCENARIO_POOL, difficulty);
     usedIndices.current.add(idx);
-    setCurrentScenario(ALL_SCENARIOS[idx]);
+    setCurrentScenario(SCENARIO_POOL[idx]);
     setFeedback(null);
     trialStartTime.current = Date.now();
-  }, [difficulty]);
+  }, [difficulty, SCENARIO_POOL]);
 
   // ── Record a trial result ───────────────────────────────────────────────────
   const recordResult = useCallback(

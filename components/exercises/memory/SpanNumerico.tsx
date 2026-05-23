@@ -28,12 +28,7 @@ function initialSpan(difficulty: number) {
   return Math.min(Math.max(2, Math.floor(difficulty * 0.5) + 1), 5);
 }
 
-const NUMPAD: (number | "⌫" | "✓")[][] = [
-  [1, 2, 3],
-  [4, 5, 6],
-  [7, 8, 9],
-  ["⌫", 0, "✓"],
-];
+const NUM_KEYS = [1, 2, 3, 4, 5, 6, 7, 8, 9, 0] as const;
 
 function speak(text: string): Promise<void> {
   return new Promise((resolve) => {
@@ -403,39 +398,41 @@ export function SpanNumerico({ difficulty, theme, onComplete, alwaysReverse }: S
               ))}
             </div>
 
-            {/* Numpad */}
-            <div className="grid grid-cols-3 gap-3">
-              {NUMPAD.flat().map((key, idx) => {
-                const isBack = key === "⌫";
-                const isConfirm = key === "✓";
-                const disabled = isConfirm && digits.length === 0;
-
-                let extra = "";
-                if (isBack) {
-                  extra = {
-                    CLINICAL: "bg-orange-50 border-2 border-orange-300 text-orange-600 hover:bg-orange-100",
-                    COLORFUL: "bg-orange-400 text-white",
-                    GAMIFIED: "bg-gray-700 border border-orange-500/40 text-orange-400",
-                  }[theme];
-                } else if (isConfirm) {
-                  extra = {
-                    CLINICAL: `bg-blue-600 border-2 border-blue-600 text-white hover:bg-blue-700 ${disabled ? "opacity-40 cursor-not-allowed" : ""}`,
-                    COLORFUL: `bg-gradient-to-br from-green-400 to-teal-400 text-white ${disabled ? "opacity-40" : ""}`,
-                    GAMIFIED: `bg-cyan-600 border border-cyan-600/60 text-white ${disabled ? "opacity-40" : ""}`,
-                  }[theme];
-                }
-
-                return (
-                  <button
-                    key={idx}
-                    onPointerDown={(e) => { e.preventDefault(); if (!disabled) handleKey(key); }}
-                    disabled={disabled}
-                    className={`${isBack || isConfirm ? `h-14 flex items-center justify-center rounded-2xl text-2xl font-bold select-none active:scale-95 transition-transform duration-75 ${extra}` : numBtn}`}
-                  >
-                    {key}
-                  </button>
-                );
-              })}
+            {/* Teclado moderno: 2 linhas de 5 */}
+            <div className="grid grid-cols-5 gap-2 mb-2">
+              {NUM_KEYS.map((n) => (
+                <button
+                  key={n}
+                  onPointerDown={(e) => { e.preventDefault(); handleKey(n); }}
+                  className={numBtn}
+                >
+                  {n}
+                </button>
+              ))}
+            </div>
+            {/* Ações */}
+            <div className="flex gap-2">
+              <button
+                onPointerDown={(e) => { e.preventDefault(); handleKey("⌫"); }}
+                className={`flex-1 h-12 flex items-center justify-center gap-1 rounded-2xl text-sm font-bold select-none active:scale-95 transition-transform duration-75 ${
+                  theme === "CLINICAL" ? "bg-orange-50 border-2 border-orange-300 text-orange-600" :
+                  theme === "COLORFUL" ? "bg-orange-400 text-white" :
+                  "bg-gray-700 border border-orange-500/40 text-orange-400"
+                }`}
+              >
+                ← Apagar
+              </button>
+              <button
+                onPointerDown={(e) => { e.preventDefault(); if (digits.length > 0) handleKey("✓"); }}
+                disabled={digits.length === 0}
+                className={`flex-1 h-12 flex items-center justify-center gap-1 rounded-2xl text-sm font-bold select-none active:scale-95 transition-transform duration-75 ${digits.length === 0 ? "opacity-40 cursor-not-allowed " : ""}${
+                  theme === "CLINICAL" ? "bg-blue-600 text-white" :
+                  theme === "COLORFUL" ? "bg-gradient-to-br from-green-400 to-teal-400 text-white" :
+                  "bg-cyan-600 text-white"
+                }`}
+              >
+                Confirmar ✓
+              </button>
             </div>
           </div>
         )}

@@ -13,44 +13,42 @@ interface AtencaoSustentadaProps {
   onComplete: (result: ExerciseResult) => void;
 }
 
-const MAX_STIMULI = 30;
-// ~30% of stimuli will be targets
-const TARGET_RATIO = 0.3;
+const MAX_STIMULI = 40; // Longer task for sustained attention
+const TARGET_RATIO = 0.28;
 
-const TARGET_EMOJI = "🔔";
-
-// Non-target emoji pool
-const DISTRACTOR_EMOJIS = [
-  "🎵", "⭐", "🌙", "🌈", "🍎", "🎯", "🏆",
-  "🌸", "🦋", "🎪", "🎨", "🌺", "🍀", "🎭",
-  "🌊", "🎸", "🏅", "🌻", "🎲", "🦚",
-];
+// CPT paradigm: target is the letter A
+const TARGET_LETTER = "A";
+const LETTERS = ["B","C","D","E","F","G","H","I","J","L","M","N","O","P","R","S","T","U","V","Z"];
+// Visually similar lures used at high difficulty to challenge inhibition
+const LURE_LETTERS = ["Á", "Â", "Ã", "À", "H", "R"];
 
 function getStimulusInterval(difficulty: number): number {
-  if (difficulty <= 2) return 2200;
-  if (difficulty <= 4) return 1800;
-  if (difficulty <= 7) return 1500;
-  return 1200;
+  if (difficulty <= 2) return 1800;
+  if (difficulty <= 4) return 1400;
+  if (difficulty <= 7) return 1000;
+  return 700;
 }
 
-function buildSequence(): string[] {
+function buildSequence(difficulty: number): string[] {
   const seq: string[] = [];
   let targetCount = 0;
   const targetTotal = Math.round(MAX_STIMULI * TARGET_RATIO);
+  const includeLures = difficulty > 5;
+  const lureRatio = Math.min(0.25, 0.12 + (difficulty - 5) * 0.025);
 
   for (let i = 0; i < MAX_STIMULI; i++) {
     const remaining = MAX_STIMULI - i;
     const targetsLeft = targetTotal - targetCount;
-    // Force remaining targets in if we're running out of slots
     const forcedTarget = targetsLeft >= remaining;
     const shouldBeTarget = forcedTarget || (targetsLeft > 0 && Math.random() < TARGET_RATIO);
 
     if (shouldBeTarget) {
-      seq.push(TARGET_EMOJI);
+      seq.push(TARGET_LETTER);
       targetCount++;
+    } else if (includeLures && Math.random() < lureRatio) {
+      seq.push(LURE_LETTERS[Math.floor(Math.random() * LURE_LETTERS.length)]);
     } else {
-      const distractor = DISTRACTOR_EMOJIS[Math.floor(Math.random() * DISTRACTOR_EMOJIS.length)];
-      seq.push(distractor);
+      seq.push(LETTERS[Math.floor(Math.random() * LETTERS.length)]);
     }
   }
 
@@ -61,7 +59,7 @@ function buildSequence(): string[] {
 
 function TutorialShowTarget({ theme, onDone }: { theme: Theme; onDone: () => void }) {
   useEffect(() => {
-    const t = setTimeout(onDone, 2200);
+    const t = setTimeout(onDone, 2500);
     return () => clearTimeout(t);
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
@@ -69,15 +67,17 @@ function TutorialShowTarget({ theme, onDone }: { theme: Theme; onDone: () => voi
   return (
     <div className="flex flex-col items-center gap-3">
       <p className={`text-xs font-medium ${theme === "GAMIFIED" ? "text-gray-400" : "text-gray-500"}`}>
-        Este é o alvo que você deve encontrar:
+        Toque na tela APENAS quando aparecer a letra:
       </p>
       <div className={`w-28 h-28 rounded-2xl flex items-center justify-center ${
         theme === "GAMIFIED" ? "bg-gray-700 ring-2 ring-cyan-500/50" : "bg-gray-100 border-2 border-blue-300"
       }`}>
-        <span className="text-7xl">{TARGET_EMOJI}</span>
+        <span className={`text-8xl font-black ${theme === "GAMIFIED" ? "text-cyan-400" : "text-blue-600"}`}>
+          {TARGET_LETTER}
+        </span>
       </div>
       <p className={`text-xs font-bold animate-pulse ${theme === "GAMIFIED" ? "text-cyan-400" : "text-blue-600"}`}>
-        Memorize — {TARGET_EMOJI}!
+        Memorize — apenas a letra {TARGET_LETTER}!
       </p>
     </div>
   );
@@ -85,14 +85,9 @@ function TutorialShowTarget({ theme, onDone }: { theme: Theme; onDone: () => voi
 
 function TutorialPracticeStep({ theme, onDone }: { theme: Theme; onDone: () => void }) {
   const [stimuli] = useState(() => {
-    // 4 practice stimuli: 1 target + 3 distractors
-    const positions = [0, 1, 2, 3];
-    const targetPos = Math.floor(Math.random() * 4);
-    return positions.map((i) =>
-      i === targetPos
-        ? TARGET_EMOJI
-        : DISTRACTOR_EMOJIS[Math.floor(Math.random() * DISTRACTOR_EMOJIS.length)]
-    );
+    // 5 practice stimuli: 2 targets + 3 distractors
+    const arr = [TARGET_LETTER, TARGET_LETTER, ...LETTERS.slice(0, 3)];
+    return arr.sort(() => Math.random() - 0.5);
   });
 
   const [current, setCurrent] = useState(0);
@@ -122,7 +117,7 @@ function TutorialPracticeStep({ theme, onDone }: { theme: Theme; onDone: () => v
     setTapped(true);
   }
 
-  const isTarget = stimuli[current] === TARGET_EMOJI;
+  const isTarget = stimuli[current] === TARGET_LETTER;
   const stimulusToShow = current < stimuli.length ? stimuli[current] : null;
 
   return (
@@ -130,7 +125,7 @@ function TutorialPracticeStep({ theme, onDone }: { theme: Theme; onDone: () => v
       <div className={`flex items-center gap-2 px-3 py-1.5 rounded-lg ${
         theme === "GAMIFIED" ? "bg-gray-700" : "bg-gray-100"
       }`}>
-        <span className="text-lg">{TARGET_EMOJI}</span>
+        <span className={`text-lg font-black ${theme === "GAMIFIED" ? "text-cyan-400" : "text-blue-600"}`}>{TARGET_LETTER}</span>
         <span className={`text-xs font-bold ${theme === "GAMIFIED" ? "text-gray-300" : "text-gray-700"}`}>= alvo</span>
       </div>
       <motion.div
@@ -146,11 +141,11 @@ function TutorialPracticeStep({ theme, onDone }: { theme: Theme; onDone: () => v
           {stimulusToShow && showing && (
             <motion.span
               key={current}
-              className="text-7xl"
+              className={`text-7xl font-black ${theme === "GAMIFIED" ? "text-white" : "text-gray-900"}`}
               initial={{ scale: 0.4, opacity: 0 }}
               animate={{ scale: 1, opacity: 1 }}
               exit={{ scale: 0.4, opacity: 0 }}
-              transition={{ duration: 0.12 }}
+              transition={{ duration: 0.1 }}
             >
               {stimulusToShow}
             </motion.span>
@@ -158,7 +153,7 @@ function TutorialPracticeStep({ theme, onDone }: { theme: Theme; onDone: () => v
         </AnimatePresence>
       </motion.div>
       <p className={`text-xs text-center ${theme === "GAMIFIED" ? "text-gray-400" : "text-gray-500"}`}>
-        Toque na área quando aparecer {TARGET_EMOJI}
+        Toque na área quando aparecer a letra {TARGET_LETTER}
       </p>
     </div>
   );
@@ -167,11 +162,11 @@ function TutorialPracticeStep({ theme, onDone }: { theme: Theme; onDone: () => v
 function AtencaoSustentadaTutorial({ theme, onDone }: { theme: Theme; onDone: () => void }) {
   const steps = [
     {
-      instruction: `Você vai ver emojis aparecerem um por vez. Toque a tela APENAS quando aparecer ${TARGET_EMOJI}`,
+      instruction: `Letras vão aparecer uma por vez. Toque a tela APENAS quando aparecer a letra "${TARGET_LETTER}".`,
       content: (onStepDone: () => void) => <TutorialShowTarget theme={theme} onDone={onStepDone} />,
     },
     {
-      instruction: "Pratique! Toque somente quando aparecer o alvo. Ignore os outros emojis.",
+      instruction: `Pratique! Toque só no "${TARGET_LETTER}". Ignore todas as outras letras.`,
       content: (onStepDone: () => void) => <TutorialPracticeStep theme={theme} onDone={onStepDone} />,
     },
   ];
@@ -185,7 +180,7 @@ export function AtencaoSustentada({ difficulty, theme, onComplete }: AtencaoSust
   const reportProgress = useExerciseProgress();
   const stimulusInterval = getStimulusInterval(difficulty);
 
-  const [sequence] = useState(() => buildSequence());
+  const [sequence] = useState(() => buildSequence(difficulty));
 
   const [current, setCurrent] = useState(-1);
   const [displayedEmoji, setDisplayedEmoji] = useState<string | null>(null);
@@ -231,7 +226,7 @@ export function AtencaoSustentada({ difficulty, theme, onComplete }: AtencaoSust
 
       setTimeout(() => {
         const emoji = sequence[idx];
-        const isTarget = emoji === TARGET_EMOJI;
+        const isTarget = emoji === TARGET_LETTER;
 
         if (isTarget && !responded.current) {
           // Miss: target shown, no response
@@ -255,7 +250,7 @@ export function AtencaoSustentada({ difficulty, theme, onComplete }: AtencaoSust
 
   useEffect(() => {
     if (!done) return;
-    const totalTargets = sequence.filter((e) => e === TARGET_EMOJI).length;
+    const totalTargets = sequence.filter((e) => e === TARGET_LETTER).length;
     // d' accuracy: (hits) / (hits + misses + falseAlarms)
     const accuracy = hits + misses + falseAlarms > 0 ? hits / (hits + misses + falseAlarms) : 0;
     const avgRT = reactionTimes.current.length > 0
@@ -278,8 +273,8 @@ export function AtencaoSustentada({ difficulty, theme, onComplete }: AtencaoSust
 
   function handleTap() {
     if (done || current < 0) return;
-    const emoji = sequence[current];
-    const isTarget = emoji === TARGET_EMOJI;
+    const letter = sequence[current];
+    const isTarget = letter === TARGET_LETTER;
 
     if (isTarget && !responded.current) {
       responded.current = true;
@@ -354,36 +349,36 @@ export function AtencaoSustentada({ difficulty, theme, onComplete }: AtencaoSust
         </div>
 
         {/* Target reminder */}
-        <div className={`p-3 rounded-xl mb-6 flex items-center gap-3 ${targetBoxClass}`}>
+        <div className={`p-3 rounded-xl mb-4 flex items-center gap-3 ${targetBoxClass}`}>
           <div className={`w-12 h-12 rounded-xl flex items-center justify-center ${
             theme === "GAMIFIED" ? "bg-gray-900/60" : "bg-white border border-gray-200"
           }`}>
-            <span className="text-3xl">{TARGET_EMOJI}</span>
+            <span className={`text-3xl font-black ${theme === "GAMIFIED" ? "text-cyan-400" : "text-blue-600"}`}>{TARGET_LETTER}</span>
           </div>
           <div>
             <p className={`text-xs font-semibold ${theme === "GAMIFIED" ? "text-gray-400" : "text-gray-500"}`}>
               Toque quando aparecer:
             </p>
             <p className={`text-sm font-black ${theme === "GAMIFIED" ? "text-white" : "text-gray-800"}`}>
-              Este emoji {TARGET_EMOJI}
+              A letra "{TARGET_LETTER}" — ignore as demais!
             </p>
           </div>
         </div>
 
         {/* Stimulus display */}
         <div
-          className={`relative w-44 h-44 mx-auto rounded-3xl flex items-center justify-center mb-8 cursor-pointer select-none ${stimulusBoxClass}`}
+          className={`relative w-44 h-44 mx-auto rounded-3xl flex items-center justify-center mb-6 cursor-pointer select-none ${stimulusBoxClass}`}
           onClick={handleTap}
         >
           <AnimatePresence mode="wait">
             {displayedEmoji && (
               <motion.span
                 key={displayedEmoji + current}
-                className="text-8xl"
-                initial={{ scale: 0.4, opacity: 0 }}
+                className={`text-8xl font-black ${theme === "GAMIFIED" ? "text-white" : "text-gray-900"}`}
+                initial={{ scale: 0.3, opacity: 0 }}
                 animate={{ scale: 1, opacity: 1 }}
-                exit={{ scale: 0.4, opacity: 0 }}
-                transition={{ duration: 0.12 }}
+                exit={{ scale: 0.3, opacity: 0 }}
+                transition={{ duration: 0.09 }}
               >
                 {displayedEmoji}
               </motion.span>
@@ -410,7 +405,7 @@ export function AtencaoSustentada({ difficulty, theme, onComplete }: AtencaoSust
 
         {/* Instruction */}
         <p className={`text-center text-sm ${theme === "GAMIFIED" ? "text-gray-400" : "text-gray-500"}`}>
-          Toque na área acima quando aparecer {TARGET_EMOJI}
+          Toque na área acima quando aparecer a letra <strong>{TARGET_LETTER}</strong>
         </p>
 
         {/* Stats row */}

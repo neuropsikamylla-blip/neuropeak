@@ -180,16 +180,16 @@ const EXERCISE_INSTRUCTIONS: Record<string, string[]> = {
     "Os dois lados acontecem ao mesmo tempo — monitore ambos!",
   ],
   "atencao-sustentada": [
-    "Um símbolo alvo é mostrado no topo — memorize ele.",
-    "Uma sequência de símbolos aparece rapidamente.",
-    "Toque na tela APENAS quando aparecer o símbolo alvo.",
+    "Letras vão aparecer uma por vez, rapidamente.",
+    "Toque a tela APENAS quando aparecer a letra A.",
+    "Ignore todas as outras letras — inclusive letras parecidas com A.",
     "Mantenha o foco durante todo o exercício — a atenção não pode vacilar!",
   ],
   "semaforo": [
-    "Três semáforos aparecem na tela. Um deles vai piscar — é o semáforo ativo.",
-    "Observe a cor do semáforo ativo: verde ou vermelho.",
-    "Toque em AVANÇAR se estiver verde, e em PARAR se estiver vermelho ou amarelo.",
-    "Ignore os outros semáforos — foque só no que está piscando!",
+    "Três semáforos aparecem na tela e piscam ao mesmo tempo.",
+    "Após piscar, UM deles acende com uma cor — esse é o ativo.",
+    "Verde → toque AVANÇAR. Vermelho ou amarelo → toque PARAR.",
+    "Reaja rápido assim que um semáforo acender — o tempo é limitado!",
   ],
 };
 
@@ -269,6 +269,7 @@ export default function ExercicioPage() {
   const [loading, setLoading] = useState(true);
   const [theme, setTheme] = useState<Theme>("CLINICAL");
   const [blockedToday, setBlockedToday] = useState(false);
+  const [patientAge, setPatientAge] = useState<number | undefined>();
 
   useEffect(() => {
     const user = session?.user as { patientId?: string; theme?: string } | undefined;
@@ -279,6 +280,13 @@ export default function ExercicioPage() {
     fetch(`/api/patients/${user.patientId}?config=true`)
       .then((r) => r.json())
       .then((data) => {
+        // Calculate patient age from dateOfBirth if available
+        const dob = data.patient?.dateOfBirth;
+        if (dob) {
+          const age = Math.floor((Date.now() - new Date(dob).getTime()) / (365.25 * 24 * 3600 * 1000));
+          setPatientAge(age);
+        }
+
         const configs = data.patient?.exerciseConfigs ?? [];
         const config = configs.find(
           (c: { exerciseId: string; currentDifficulty: number; lastAttemptAt?: string | null }) =>
@@ -369,7 +377,7 @@ export default function ExercicioPage() {
       case "matriz-espacial-inversa": return <MatrizEspacialInversa {...props} />;
       case "nback": return <NBack {...props} />;
       case "ordem-historia": return <OrdemHistoria {...props} />;
-      case "certo-ou-errado": return <CertoOuErrado {...props} />;
+      case "certo-ou-errado": return <CertoOuErrado {...props} patientAge={patientAge} />;
       case "antes-depois": return <AntesDepois {...props} />;
       case "atencao-seletiva": return <AtencaoSeletiva {...props} />;
       case "atencao-alternada": return <AtencaoAlternada {...props} />;
