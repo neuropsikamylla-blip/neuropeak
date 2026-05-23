@@ -15,10 +15,10 @@ import { ExerciseScienceCard } from "@/components/exercises/ExerciseScienceCard"
 const ALL_DOMAINS: Domain[] = ["memory", "attention", "processing", "executive"];
 
 const DOMAIN_EXERCISES: Record<Domain, string[]> = {
-  memory: ["span-numerico", "matriz-espacial", "jogo-memoria", "span-numerico-inverso", "matriz-espacial-inversa", "nback"],
-  attention: ["trilha-visual", "stroop-task", "vigilancia"],
-  processing: ["tempo-reacao", "decisao-rapida", "identificacao-simbolos"],
-  executive: ["torre-hanoi", "sequenciamento", "flexibilidade-cognitiva", "labirinto"],
+  memory: ["span-numerico", "span-numerico-inverso", "matriz-espacial", "matriz-espacial-inversa", "jogo-memoria"],
+  attention: ["trilha-visual", "stroop-task", "antes-depois", "atencao-seletiva", "atencao-alternada", "atencao-dividida", "atencao-sustentada"],
+  processing: ["tempo-reacao", "certo-ou-errado", "semaforo"],
+  executive: ["torre-hanoi", "sequenciamento", "flexibilidade-cognitiva", "labirinto", "ordem-historia"],
 };
 
 export default function PlanoPage() {
@@ -152,6 +152,7 @@ export default function PlanoPage() {
               <div className="grid grid-cols-1 gap-2">
                 {DOMAIN_EXERCISES[domain].map((exId) => {
                   const ex = EXERCISE_DEFINITIONS[exId as keyof typeof EXERCISE_DEFINITIONS];
+                  if (!ex) return null;
                   return (
                     <div key={exId}>
                       <label
