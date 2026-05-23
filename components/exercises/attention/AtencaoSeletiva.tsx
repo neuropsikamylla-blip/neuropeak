@@ -30,14 +30,14 @@ interface WordGroup {
 
 const WORD_GROUPS: WordGroup[] = [
   { target: "MARIA", distractors: ["MARIO", "MARA", "MARINA", "MARISA", "MARCIA", "MARCO", "MARICA", "MARIANA"] },
-  { target: "JOSE", distractors: ["JOAO", "JOEL", "JOSEFA", "JOSIAS", "JORGE", "JONAS", "JOSIANE", "JOSEFA"] },
-  { target: "PEDRO", distractors: ["PAULO", "PETRA", "PEDRO", "PEDROSA", "PIERRE", "PEDRA", "PEDER", "PADRÃO"] },
+  { target: "JOSE", distractors: ["JOAO", "JOEL", "JOSEFA", "JOSIAS", "JORGE", "JONAS", "JOSIANE", "JOSIANE"] },
+  { target: "PEDRO", distractors: ["PAULO", "PETRA", "PEDROSA", "PIERRE", "PEDRA", "PEDER", "PADRÃO", "PEDRAS"] },
   { target: "ANA", distractors: ["ANO", "ANNA", "ANITA", "ANEL", "ANJO", "ANTES", "ANAL", "ANDAR"] },
-  { target: "LUCAS", distractors: ["LUCA", "LUCIO", "LUCIANA", "LUCAS", "LUIZ", "LUCIA", "LUCIANO", "LUCA"] },
-  { target: "CARLOS", distractors: ["CARLA", "CAROL", "CARLOS", "CARLSON", "CARLITO", "CAROLE", "CARMO", "CARLOTA"] },
+  { target: "LUCAS", distractors: ["LUCA", "LUCIO", "LUCIANA", "LUIZ", "LUCIA", "LUCIANO", "LUCENA", "LUCCA"] },
+  { target: "CARLOS", distractors: ["CARLA", "CAROL", "CARLSON", "CARLITO", "CAROLE", "CARMO", "CARLOTA", "CARLÃO"] },
   { target: "REMÉDIO", distractors: ["REMÉDIOS", "REMOTO", "MÉDICO", "MEMÓRIA", "REMESSA", "RETIRO", "REGIME", "RECADO"] },
   { target: "ÔNIBUS", distractors: ["ÓCULOS", "ÓPTICA", "ÂNCORA", "ÔNIX", "ÓBVIO", "ÚNICO", "ÍNDICE", "ÂMBITO"] },
-  { target: "LARANJA", distractors: ["LARANJA", "LARANJAL", "LARANJEIRA", "LARANJADA", "LORENA", "LARVA", "LARAN", "LARANJAS"] },
+  { target: "LARANJA", distractors: ["LARANJAL", "LARANJEIRA", "LARANJADA", "LORENA", "LARVA", "LARAN", "LARANJAS", "LARANJAI"] },
   { target: "SAPATO", distractors: ["SALATO", "SAPATA", "SAPATOS", "SABATO", "SAPÃO", "SAVATO", "SAPINO", "SAPATÃO"] },
   { target: "ESCOLA", distractors: ["ESCOVA", "ESCOLTA", "ESCORE", "ESCORA", "ESCOL", "ESCOLAR", "ESCOLHA", "ESCURO"] },
   { target: "LIVRO", distractors: ["LÍVIDO", "LIVROS", "LIVRE", "LIBRA", "LICRO", "LIVOR", "LUBRO", "LIBOR"] },
@@ -66,6 +66,24 @@ function buildGrid(group: WordGroup, gridSize: number): { words: string[]; targe
 }
 
 // ── Tutorial sub-components ────────────────────────────────────────────────
+
+function SeletivaIntroStep({ theme, onDone }: { theme: Theme; onDone: () => void }) {
+  useEffect(() => {
+    const t = setTimeout(onDone, 2000);
+    return () => clearTimeout(t);
+  }, [onDone]);
+  const targetBg = theme === "GAMIFIED" ? "bg-cyan-600" : "bg-blue-100 border-2 border-blue-400";
+  const targetText = theme === "GAMIFIED" ? "text-white" : "text-blue-700";
+  return (
+    <div className="flex flex-col items-center gap-3">
+      <div className={`px-6 py-3 rounded-xl ${targetBg}`}>
+        <p className={`text-xs font-semibold opacity-70 ${targetText}`}>Encontre esta palavra:</p>
+        <p className={`text-3xl font-black tracking-widest text-center ${targetText}`}>MARIA</p>
+      </div>
+      <p className={`text-xs ${theme === "GAMIFIED" ? "text-gray-400" : "text-gray-500"}`}>← Este é o alvo!</p>
+    </div>
+  );
+}
 
 function TutorialShowGrid({ theme, onDone }: { theme: Theme; onDone: () => void }) {
   const sampleGroup = WORD_GROUPS[0];
@@ -123,20 +141,7 @@ function AtencaoSeletivaTutorial({ theme, onDone }: { theme: Theme; onDone: () =
   const steps = [
     {
       instruction: "Uma palavra ALVO aparece no topo. Você deve encontrá-la na grade abaixo.",
-      content: (onStepDone: () => void) => {
-        useEffect(() => { const t = setTimeout(onStepDone, 2000); return () => clearTimeout(t); }, []);
-        const targetBg = theme === "GAMIFIED" ? "bg-cyan-600" : "bg-blue-100 border-2 border-blue-400";
-        const targetText = theme === "GAMIFIED" ? "text-white" : "text-blue-700";
-        return (
-          <div className="flex flex-col items-center gap-3">
-            <div className={`px-6 py-3 rounded-xl ${targetBg}`}>
-              <p className={`text-xs font-semibold opacity-70 ${targetText}`}>Encontre esta palavra:</p>
-              <p className={`text-3xl font-black tracking-widest text-center ${targetText}`}>MARIA</p>
-            </div>
-            <p className={`text-xs ${theme === "GAMIFIED" ? "text-gray-400" : "text-gray-500"}`}>← Este é o alvo!</p>
-          </div>
-        );
-      },
+      content: (onStepDone: () => void) => <SeletivaIntroStep theme={theme} onDone={onStepDone} />,
     },
     {
       instruction: "Toque a palavra alvo entre as distractoras. Seja rápido e preciso!",
@@ -261,7 +266,7 @@ export function AtencaoSeletiva({ difficulty, theme, onComplete }: AtencaoSeleti
     ? "text-violet-700"
     : "text-blue-700";
 
-  const gridCols = gridSize <= 8 ? "grid-cols-4" : gridSize <= 12 ? "grid-cols-4" : "grid-cols-4";
+  const gridCols = gridSize > 16 ? "grid-cols-5" : "grid-cols-4";
 
   return (
     <div className={`min-h-screen flex flex-col items-center justify-center p-4 ${bgClass}`}>

@@ -48,7 +48,7 @@ const ITEMS: Item[] = [
   { name: "HIPOPÓTAMO",isAnimal: true, isLarge: true,  emoji: "🦛" },
   { name: "PULGA",    isAnimal: true,  isLarge: false, emoji: "🦠" },
   { name: "PRÉDIO",   isAnimal: false, isLarge: true,  emoji: "🏢" },
-  { name: "BOTÃO",    isAnimal: false, isLarge: false, emoji: "🔘" },
+  { name: "PÍLULA",   isAnimal: false, isLarge: false, emoji: "💊" },
 ];
 
 function getRuleBlockSize(difficulty: number): number {
@@ -76,6 +76,26 @@ function buildTrialSequence(total: number, blockSize: number): { item: Item; rul
 }
 
 // ── Tutorial sub-components ────────────────────────────────────────────────
+
+function AlternadaRulesStep({ theme, onDone }: { theme: Theme; onDone: () => void }) {
+  useEffect(() => {
+    const t = setTimeout(onDone, 2500);
+    return () => clearTimeout(t);
+  }, [onDone]);
+  return (
+    <div className="flex flex-col gap-2">
+      {[
+        { label: "Regra A", text: "É animal ou objeto?", color: theme === "GAMIFIED" ? "border-amber-500/60 bg-amber-900/30 text-amber-300" : "border-amber-400 bg-amber-50 text-amber-700" },
+        { label: "Regra B", text: "É grande ou pequeno?", color: theme === "GAMIFIED" ? "border-teal-500/60 bg-teal-900/30 text-teal-300" : "border-teal-400 bg-teal-50 text-teal-700" },
+      ].map((r) => (
+        <div key={r.label} className={`p-3 rounded-xl border text-center ${r.color}`}>
+          <p className="text-xs font-semibold opacity-70">{r.label}</p>
+          <p className="font-black">{r.text}</p>
+        </div>
+      ))}
+    </div>
+  );
+}
 
 function TutorialRuleDemo({
   theme,
@@ -157,22 +177,7 @@ function AtencaoAlternadaTutorial({ theme, onDone }: { theme: Theme; onDone: () 
   const steps = [
     {
       instruction: "Você vai classificar figuras seguindo uma REGRA. A regra muda durante o exercício!",
-      content: (onStepDone: () => void) => {
-        useEffect(() => { const t = setTimeout(onStepDone, 2500); return () => clearTimeout(t); }, []);
-        return (
-          <div className="flex flex-col gap-2">
-            {[
-              { label: "Regra A", text: "É animal ou objeto?", color: theme === "GAMIFIED" ? "border-amber-500/60 bg-amber-900/30 text-amber-300" : "border-amber-400 bg-amber-50 text-amber-700" },
-              { label: "Regra B", text: "É grande ou pequeno?", color: theme === "GAMIFIED" ? "border-teal-500/60 bg-teal-900/30 text-teal-300" : "border-teal-400 bg-teal-50 text-teal-700" },
-            ].map((r) => (
-              <div key={r.label} className={`p-3 rounded-xl border text-center ${r.color}`}>
-                <p className="text-xs font-semibold opacity-70">{r.label}</p>
-                <p className="font-black">{r.text}</p>
-              </div>
-            ))}
-          </div>
-        );
-      },
+      content: (onStepDone: () => void) => <AlternadaRulesStep theme={theme} onDone={onStepDone} />,
     },
     {
       instruction: "Pratique a Regra A: é ANIMAL ou OBJETO? Toque a resposta certa.",

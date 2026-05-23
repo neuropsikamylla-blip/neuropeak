@@ -356,9 +356,9 @@ export function TempoReacao({ difficulty, theme, onComplete }: TempoReacaoProps)
                 flexDirection: "column",
                 alignItems: "center",
                 cursor: "pointer",
-                touchAction: "none",
+                touchAction: "manipulation",
               }}
-              onClick={() => handleBalloonClick(balloon)}
+              onPointerDown={(e) => { e.stopPropagation(); handleBalloonClick(balloon); }}
             >
               {/* Balloon body */}
               <div

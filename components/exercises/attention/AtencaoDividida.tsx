@@ -96,6 +96,26 @@ function buildStimulusSequence(): Stimulus[] {
 
 // ── Tutorial sub-components ────────────────────────────────────────────────
 
+function DivididaIntroStep({ theme, onDone }: { theme: Theme; onDone: () => void }) {
+  useEffect(() => {
+    const t = setTimeout(onDone, 3000);
+    return () => clearTimeout(t);
+  }, [onDone]);
+  return (
+    <div className="flex gap-2">
+      {[
+        { side: "NÚMEROS", sub: "toque se for ÍMPAR", color: theme === "GAMIFIED" ? "bg-blue-900/40 border-blue-500/40 text-blue-300" : "bg-blue-50 border-blue-300 text-blue-700" },
+        { side: "LETRAS", sub: "toque se for VOGAL", color: theme === "GAMIFIED" ? "bg-rose-900/40 border-rose-500/40 text-rose-300" : "bg-rose-50 border-rose-300 text-rose-700" },
+      ].map((s) => (
+        <div key={s.side} className={`flex-1 p-3 rounded-xl border text-center ${s.color}`}>
+          <p className="text-base font-black">{s.side}</p>
+          <p className="text-xs mt-1 opacity-80">{s.sub}</p>
+        </div>
+      ))}
+    </div>
+  );
+}
+
 function TutorialNumberDemo({ theme, onDone }: { theme: Theme; onDone: () => void }) {
   const [digit] = useState(() => {
     const oddDigits = DIGITS.filter(isOdd);
@@ -185,22 +205,7 @@ function AtencaoDivididaTutorial({ theme, onDone }: { theme: Theme; onDone: () =
   const steps = [
     {
       instruction: "A tela fica dividida: NÚMEROS à esquerda, LETRAS à direita. Você precisa prestar atenção nos DOIS!",
-      content: (onStepDone: () => void) => {
-        useEffect(() => { const t = setTimeout(onStepDone, 3000); return () => clearTimeout(t); }, []);
-        return (
-          <div className="flex gap-2">
-            {[
-              { side: "NÚMEROS", sub: "toque se for ÍMPAR", color: theme === "GAMIFIED" ? "bg-blue-900/40 border-blue-500/40 text-blue-300" : "bg-blue-50 border-blue-300 text-blue-700" },
-              { side: "LETRAS", sub: "toque se for VOGAL", color: theme === "GAMIFIED" ? "bg-rose-900/40 border-rose-500/40 text-rose-300" : "bg-rose-50 border-rose-300 text-rose-700" },
-            ].map((s) => (
-              <div key={s.side} className={`flex-1 p-3 rounded-xl border text-center ${s.color}`}>
-                <p className="text-base font-black">{s.side}</p>
-                <p className="text-xs mt-1 opacity-80">{s.sub}</p>
-              </div>
-            ))}
-          </div>
-        );
-      },
+      content: (onStepDone: () => void) => <DivididaIntroStep theme={theme} onDone={onStepDone} />,
     },
     {
       instruction: "Números: toque ÍMPAR quando aparecer um número ímpar (1, 3, 5, 7, 9).",

@@ -49,14 +49,16 @@ function generateTrial(difficulty: number): TrialItem {
   const congruent = Math.random() < congruentChance;
   const others = getOtherColors(word);
   const inkColor = congruent ? word : others[Math.floor(Math.random() * others.length)];
-  // Higher difficulty = more PALAVRA rule switches
-  let rule: Rule = "COR";
+  // Balanced rule distribution — PALAVRA appears from the start
+  let rule: Rule;
   if (difficulty >= 7) {
-    rule = Math.random() < 0.5 ? "COR" : "PALAVRA";
+    rule = Math.random() < 0.5 ? "PALAVRA" : "COR";
   } else if (difficulty >= 5) {
-    rule = Math.random() < 0.35 ? "PALAVRA" : "COR";
+    rule = Math.random() < 0.45 ? "PALAVRA" : "COR";
   } else if (difficulty >= 3) {
-    rule = Math.random() < 0.2 ? "PALAVRA" : "COR";
+    rule = Math.random() < 0.4 ? "PALAVRA" : "COR";
+  } else {
+    rule = Math.random() < 0.35 ? "PALAVRA" : "COR";
   }
   return { word, inkColor, rule };
 }
