@@ -1,7 +1,6 @@
 "use client";
 
 import { useState, useEffect, useCallback, useRef } from "react";
-import { motion } from "framer-motion";
 import { calculateExerciseScore } from "@/lib/scoring";
 import { useExerciseProgress } from "@/components/exercises/ExerciseWrapper";
 import { TutorialBase } from "@/components/exercises/TutorialBase";
@@ -14,10 +13,13 @@ interface LabirintoProps {
 }
 
 interface Cell {
-  N: boolean; S: boolean; E: boolean; W: boolean;
+  N: boolean;
+  S: boolean;
+  E: boolean;
+  W: boolean;
 }
 
-// ── Maze generation (recursive DFS, perfect maze) ─────────────────────
+// ── Maze generation (recursive DFS, perfect maze) ──────────────────────────
 function generateMaze(size: number): Cell[][] {
   const grid: Cell[][] = Array.from({ length: size }, () =>
     Array.from({ length: size }, () => ({ N: true, S: true, E: true, W: true }))
@@ -28,16 +30,17 @@ function generateMaze(size: number): Cell[][] {
     vis[r][c] = true;
     const dirs = [
       { dr: -1, dc: 0, w: "N" as const, o: "S" as const },
-      { dr:  1, dc: 0, w: "S" as const, o: "N" as const },
-      { dr:  0, dc: 1, w: "E" as const, o: "W" as const },
-      { dr:  0, dc:-1, w: "W" as const, o: "E" as const },
+      { dr: 1, dc: 0, w: "S" as const, o: "N" as const },
+      { dr: 0, dc: 1, w: "E" as const, o: "W" as const },
+      { dr: 0, dc: -1, w: "W" as const, o: "E" as const },
     ];
     for (let i = dirs.length - 1; i > 0; i--) {
       const j = Math.floor(Math.random() * (i + 1));
       [dirs[i], dirs[j]] = [dirs[j], dirs[i]];
     }
     for (const { dr, dc, w, o } of dirs) {
-      const nr = r + dr, nc = c + dc;
+      const nr = r + dr;
+      const nc = c + dc;
       if (nr >= 0 && nr < size && nc >= 0 && nc < size && !vis[nr][nc]) {
         grid[r][c][w] = false;
         grid[nr][nc][o] = false;
@@ -49,11 +52,15 @@ function generateMaze(size: number): Cell[][] {
   return grid;
 }
 
-// ── Configuration ──────────────────────────────────────────────────────
-// Maze sizes: larger = harder to navigate without seeing full picture
-const SIZE_STEPS = [10, 12, 14, 17, 20, 24];
+// ── Configuration ──────────────────────────────────────────────────────────
+const SIZE_STEPS = [6, 7, 8, 9, 10, 11];
 const TIME_LIMITS: Record<number, number> = {
-  10: 70, 12: 90, 14: 115, 17: 150, 20: 190, 24: 250,
+  6: 60,
+  7: 75,
+  8: 95,
+  9: 120,
+  10: 150,
+  11: 185,
 };
 const MAX_MAZES = 10;
 const MIN_IDX = 0;
@@ -63,68 +70,70 @@ function initialIdx(difficulty: number) {
   return Math.min(Math.max(0, Math.floor((difficulty - 1) / 2)), MAX_IDX);
 }
 
-// ── Viewport constants ─────────────────────────────────────────────────
-// Player always centered; only 9×9 cells visible at a time
-const VIEWPORT = 9;
-const C_PX = 36;    // px per cell
-const WT = 4;       // wall thickness (passage = C_PX - 2*WT = 28px)
-const VP_PX = VIEWPORT * C_PX; // 324px
+function cellKey(r: number, c: number) {
+  return `${r},${c}`;
+}
 
-function key(r: number, c: number) { return `${r},${c}`; }
-
-// ── Theme palettes ─────────────────────────────────────────────────────
+// ── Theme palettes ─────────────────────────────────────────────────────────
 const PALETTES = {
   CLINICAL: {
-    bg: "#374151",        // outer page bg
-    wall: "#374151",      // carved stone wall
-    floor: "#f3f4f6",     // lit corridor
-    trail: "#bfdbfe",     // visited corridor tint (light blue)
-    player: "#3b82f6",    // player dot
-    playerGlow: "rgba(59,130,246,0.35)",
-    goal: "#16a34a",      // goal color
-    svgBg: "#374151",
+    bg: "#f3f4f6",
+    wall: "#374151",
+    floor: "#ffffff",
+    trail: "#dbeafe",
+    player: "#3b82f6",
+    goal: "#dcfce7",
+    goalText: "#166534",
+    pageBg: "#1f2937",
+    headerBg: "rgba(0,0,0,0.3)",
+    flashRed: "#fca5a5",
   },
   COLORFUL: {
-    bg: "#1e1b4b",
-    wall: "#312e81",
+    bg: "#faf5ff",
+    wall: "#4c1d95",
     floor: "#fdf4ff",
-    trail: "#e9d5ff",
+    trail: "#ede9fe",
     player: "#ec4899",
-    playerGlow: "rgba(236,72,153,0.4)",
-    goal: "#f59e0b",
-    svgBg: "#312e81",
+    goal: "#fef3c7",
+    goalText: "#92400e",
+    pageBg: "#1e1b4b",
+    headerBg: "rgba(0,0,0,0.25)",
+    flashRed: "#fca5a5",
   },
   GAMIFIED: {
-    bg: "#020617",
-    wall: "#0d1117",
+    bg: "#0f172a",
+    wall: "#94a3b8",
     floor: "#1e293b",
-    trail: "#0f4c75",
+    trail: "#1e3a5f",
     player: "#22d3ee",
-    playerGlow: "rgba(34,211,238,0.5)",
-    goal: "#fbbf24",
-    svgBg: "#0d1117",
+    goal: "#064e3b",
+    goalText: "#34d399",
+    pageBg: "#030712",
+    headerBg: "rgba(0,0,0,0.5)",
+    flashRed: "#7f1d1d",
   },
 };
 
-// Simple 5x5 tutorial maze — carved manually (all walls open in a simple path)
+// ── Tutorial maze (5x5 with a clear path) ─────────────────────────────────
 function makeTutorialMaze(): Cell[][] {
-  // Create a simple L-shaped path: go right across top row, then down right column
   const grid: Cell[][] = Array.from({ length: 5 }, () =>
     Array.from({ length: 5 }, () => ({ N: true, S: true, E: true, W: true }))
   );
-  // Open passages along a simple S-path
-  const path: [number, number, "N" | "S" | "E" | "W", "N" | "S" | "E" | "W"][] = [
+  const passages: [number, number, "N" | "S" | "E" | "W", "N" | "S" | "E" | "W"][] = [
     [0, 0, "E", "W"], [0, 1, "E", "W"], [0, 2, "E", "W"], [0, 3, "E", "W"],
     [0, 4, "S", "N"], [1, 4, "S", "N"], [2, 4, "S", "N"], [3, 4, "S", "N"],
-    [4, 3, "W", "E"], [4, 2, "W", "E"], [4, 1, "W", "E"],
+    [3, 3, "W", "E"], [3, 2, "W", "E"], [3, 2, "S", "N"],
+    [4, 2, "E", "W"], [4, 3, "E", "W"],
     [3, 0, "S", "N"], [2, 0, "S", "N"], [1, 0, "S", "N"],
     [1, 0, "E", "W"], [1, 1, "E", "W"], [1, 2, "E", "W"], [1, 2, "S", "N"],
-    [2, 2, "E", "W"], [2, 3, "S", "N"], [3, 3, "W", "E"], [3, 2, "W", "E"],
-    [3, 2, "S", "N"], [4, 2, "E", "W"], [4, 3, "E", "W"], [4, 4, "N", "S"],
+    [2, 2, "E", "W"], [2, 3, "S", "N"],
+    [4, 4, "N", "S"],
   ];
-  for (const [r, c, w, o] of path) {
-    const nr = r + ({ N: -1, S: 1, E: 0, W: 0 }[w] ?? 0);
-    const nc = c + ({ N: 0, S: 0, E: 1, W: -1 }[w] ?? 0);
+  for (const [r, c, w, o] of passages) {
+    const dr = w === "N" ? -1 : w === "S" ? 1 : 0;
+    const dc = w === "E" ? 1 : w === "W" ? -1 : 0;
+    const nr = r + dr;
+    const nc = c + dc;
     if (nr >= 0 && nr < 5 && nc >= 0 && nc < 5) {
       grid[r][c][w] = false;
       grid[nr][nc][o] = false;
@@ -135,169 +144,355 @@ function makeTutorialMaze(): Cell[][] {
 
 const TUTORIAL_MAZE = makeTutorialMaze();
 
-function LabirintoTutorial({ theme, onDone }: { theme: Theme; onDone: () => void }) {
-  const steps = [
-    {
-      instruction: "Você só vê parte do labirinto! Navegue até a bandeira 🏁",
-      content: (onStepDone: () => void) => <LabirintoShowStep theme={theme} onDone={onStepDone} />,
-    },
-    {
-      instruction: "Experimente! Mova até a bandeira 🏁",
-      content: (onStepDone: () => void) => <LabirintoInteractStep theme={theme} onDone={onStepDone} />,
-    },
-  ];
-
-  return <TutorialBase theme={theme} title="Labirinto" steps={steps} onDone={onDone} />;
+// ── Maze grid rendered with CSS divs ──────────────────────────────────────
+interface MazeGridProps {
+  maze: Cell[][];
+  player: { r: number; c: number };
+  explored: Set<string>;
+  flashCell: string | null;
+  theme: Theme;
+  containerPx: number;
+  onCellClick: (r: number, c: number) => void;
+  isGoal?: (r: number, c: number) => boolean;
 }
 
-function LabirintoShowStep({ theme, onDone }: { theme: Theme; onDone: () => void }) {
+function MazeGrid({
+  maze,
+  player,
+  explored,
+  flashCell,
+  theme,
+  containerPx,
+  onCellClick,
+  isGoal,
+}: MazeGridProps) {
   const pal = PALETTES[theme];
+  const size = maze.length;
+  const cellPx = Math.floor(containerPx / size);
+  const wallPx = 2;
 
+  return (
+    <div
+      style={{
+        display: "grid",
+        gridTemplateColumns: `repeat(${size}, ${cellPx}px)`,
+        gridTemplateRows: `repeat(${size}, ${cellPx}px)`,
+        width: cellPx * size,
+        height: cellPx * size,
+        background: pal.wall,
+        borderRadius: 8,
+        overflow: "hidden",
+        border: `${wallPx}px solid ${pal.wall}`,
+        boxSizing: "border-box",
+      }}
+    >
+      {maze.map((row, r) =>
+        row.map((cell, c) => {
+          const isPlayer = player.r === r && player.c === c;
+          const isGoalCell = isGoal ? isGoal(r, c) : r === size - 1 && c === size - 1;
+          const isExplored = explored.has(cellKey(r, c));
+          const isFlashing = flashCell === cellKey(r, c);
+
+          let bg = pal.floor;
+          if (isFlashing) {
+            bg = pal.flashRed;
+          } else if (isGoalCell) {
+            bg = pal.goal;
+          } else if (isExplored) {
+            bg = pal.trail;
+          }
+
+          return (
+            <div
+              key={cellKey(r, c)}
+              onClick={() => onCellClick(r, c)}
+              style={{
+                width: cellPx,
+                height: cellPx,
+                background: bg,
+                boxSizing: "border-box",
+                borderTop: cell.N ? `${wallPx}px solid ${pal.wall}` : "none",
+                borderRight: cell.E ? `${wallPx}px solid ${pal.wall}` : "none",
+                borderBottom: cell.S ? `${wallPx}px solid ${pal.wall}` : "none",
+                borderLeft: cell.W ? `${wallPx}px solid ${pal.wall}` : "none",
+                display: "flex",
+                alignItems: "center",
+                justifyContent: "center",
+                position: "relative",
+                cursor: "pointer",
+                transition: "background 0.1s",
+              }}
+            >
+              {isGoalCell && !isPlayer && (
+                <span
+                  style={{
+                    fontSize: Math.max(10, cellPx * 0.5),
+                    lineHeight: 1,
+                    userSelect: "none",
+                  }}
+                >
+                  🏁
+                </span>
+              )}
+              {isPlayer && (
+                <div
+                  style={{
+                    width: cellPx * 0.55,
+                    height: cellPx * 0.55,
+                    borderRadius: "50%",
+                    background: pal.player,
+                    boxShadow: `0 0 ${cellPx * 0.3}px ${pal.player}88`,
+                    flexShrink: 0,
+                  }}
+                />
+              )}
+            </div>
+          );
+        })
+      )}
+    </div>
+  );
+}
+
+// ── Tutorial step 1: static display ───────────────────────────────────────
+function TutorialShowStep({ theme, onDone }: { theme: Theme; onDone: () => void }) {
   useEffect(() => {
     const t = setTimeout(onDone, 2500);
     return () => clearTimeout(t);
-  // eslint-disable-next-line react-hooks/exhaustive-deps
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
-  const cellPx = 28;
-  const size = 5;
-  const vp = size * cellPx;
-  const wt = 3;
+  const containerPx = 200;
+  const playerPos = { r: 0, c: 0 };
+  const explored = new Set([cellKey(0, 0)]);
 
   return (
-    <div className="flex flex-col items-center gap-2">
-      <svg width={vp} height={vp} style={{ borderRadius: 8, border: `2px solid rgba(255,255,255,0.15)`, display: "block" }}>
-        <rect x={0} y={0} width={vp} height={vp} fill={pal.svgBg} />
-        {TUTORIAL_MAZE.map((row, r) =>
-          row.map((cell, c) => {
-            const wx = c * cellPx, wy = r * cellPx;
-            return (
-              <g key={`${r},${c}`}>
-                <rect x={wx + wt} y={wy + wt} width={cellPx - wt * 2} height={cellPx - wt * 2} fill={pal.floor} />
-                {!cell.E && c < size - 1 && <rect x={wx + cellPx - wt} y={wy + wt} width={wt} height={cellPx - wt * 2} fill={pal.floor} />}
-                {!cell.S && r < size - 1 && <rect x={wx + wt} y={wy + cellPx - wt} width={cellPx - wt * 2} height={wt} fill={pal.floor} />}
-              </g>
-            );
-          })
-        )}
-        <rect x={(size-1)*cellPx+wt+1} y={(size-1)*cellPx+wt+1} width={cellPx-wt*2-2} height={cellPx-wt*2-2} fill={pal.goal} rx={2} opacity={0.85} />
-        <text x={(size-1)*cellPx+cellPx/2} y={(size-1)*cellPx+cellPx/2+4} textAnchor="middle" fontSize={12}>🏁</text>
-        <circle cx={cellPx / 2} cy={cellPx / 2} r={cellPx * 0.28} fill={pal.player} />
-      </svg>
-      <p className={`text-xs text-center ${theme === "GAMIFIED" ? "text-gray-400" : "text-gray-500"}`}>
-        Use as setas para se mover. 🏁 = destino
+    <div className="flex flex-col items-center gap-3">
+      <MazeGrid
+        maze={TUTORIAL_MAZE}
+        player={playerPos}
+        explored={explored}
+        flashCell={null}
+        theme={theme}
+        containerPx={containerPx}
+        onCellClick={() => undefined}
+        isGoal={(r, c) => r === 4 && c === 4}
+      />
+      <p
+        className="text-sm text-center leading-snug"
+        style={{
+          color: theme === "GAMIFIED" ? "#9ca3af" : "#4b5563",
+          maxWidth: 220,
+        }}
+      >
+        O labirinto inteiro aparece na tela. Toque nas células ao lado do jogador para se mover.
       </p>
     </div>
   );
 }
 
-function LabirintoInteractStep({ theme, onDone }: { theme: Theme; onDone: () => void }) {
-  const pal = PALETTES[theme];
+// ── Tutorial step 2: interactive practice ─────────────────────────────────
+function TutorialInteractStep({ theme, onDone }: { theme: Theme; onDone: () => void }) {
   const [player, setPlayer] = useState({ r: 0, c: 0 });
+  const [explored, setExplored] = useState<Set<string>>(() => new Set([cellKey(0, 0)]));
+  const [flashCell, setFlashCell] = useState<string | null>(null);
   const [moveCount, setMoveCount] = useState(0);
-  const done = useRef(false);
+  const doneRef = useRef(false);
   const playerRef = useRef({ r: 0, c: 0 });
   playerRef.current = player;
 
-  const cellPx = 28;
+  const containerPx = 200;
   const size = 5;
-  const vp = size * cellPx;
-  const wt = 3;
 
-  const move = useCallback((dir: "N" | "S" | "E" | "W") => {
-    if (done.current) return;
-    const { r, c } = playerRef.current;
-    if (TUTORIAL_MAZE[r][c][dir]) return;
-    const [dr, dc] = ({ N: [-1, 0], S: [1, 0], E: [0, 1], W: [0, -1] })[dir];
-    const nr = r + dr, nc = c + dc;
-    if (nr < 0 || nr >= size || nc < 0 || nc >= size) return;
-    const newPos = { r: nr, c: nc };
-    setPlayer(newPos);
-    playerRef.current = newPos;
-    const newCount = moveCount + 1;
-    setMoveCount(newCount);
-    if ((nr === size - 1 && nc === size - 1) || newCount >= 5) {
-      done.current = true;
-      setTimeout(onDone, 400);
-    }
-  // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [moveCount]);
+  const tryMove = useCallback(
+    (targetR: number, targetC: number) => {
+      if (doneRef.current) return;
+      const { r, c } = playerRef.current;
+      const dr = targetR - r;
+      const dc = targetC - c;
+
+      const isAdjacent =
+        (Math.abs(dr) === 1 && dc === 0) || (Math.abs(dc) === 1 && dr === 0);
+      if (!isAdjacent) return;
+
+      const dir: "N" | "S" | "E" | "W" =
+        dr === -1 ? "N" : dr === 1 ? "S" : dc === 1 ? "E" : "W";
+
+      if (TUTORIAL_MAZE[r][c][dir]) {
+        // Wall — flash red
+        const k = cellKey(targetR, targetC);
+        setFlashCell(k);
+        setTimeout(() => setFlashCell(null), 200);
+        return;
+      }
+
+      const newPos = { r: targetR, c: targetC };
+      setPlayer(newPos);
+      playerRef.current = newPos;
+      setExplored((prev) => new Set([...prev, cellKey(targetR, targetC)]));
+
+      const newCount = moveCount + 1;
+      setMoveCount(newCount);
+
+      if ((targetR === size - 1 && targetC === size - 1) || newCount >= 3) {
+        doneRef.current = true;
+        setTimeout(onDone, 500);
+      }
+    },
+    [moveCount, onDone]
+  );
+
+  const moveByDir = useCallback(
+    (dir: "N" | "S" | "E" | "W") => {
+      const { r, c } = playerRef.current;
+      const dr = dir === "N" ? -1 : dir === "S" ? 1 : 0;
+      const dc = dir === "E" ? 1 : dir === "W" ? -1 : 0;
+      const nr = r + dr;
+      const nc = c + dc;
+      if (nr >= 0 && nr < size && nc >= 0 && nc < size) {
+        tryMove(nr, nc);
+      }
+    },
+    [tryMove]
+  );
 
   useEffect(() => {
     function onKey(e: KeyboardEvent) {
-      const map: Record<string, "N"|"S"|"E"|"W"> = { ArrowUp: "N", ArrowDown: "S", ArrowRight: "E", ArrowLeft: "W", w: "N", s: "S", d: "E", a: "W" };
-      if (map[e.key]) { e.preventDefault(); move(map[e.key]); }
+      const map: Record<string, "N" | "S" | "E" | "W"> = {
+        ArrowUp: "N",
+        ArrowDown: "S",
+        ArrowRight: "E",
+        ArrowLeft: "W",
+        w: "N",
+        s: "S",
+        d: "E",
+        a: "W",
+      };
+      if (map[e.key]) {
+        e.preventDefault();
+        moveByDir(map[e.key]);
+      }
     }
     window.addEventListener("keydown", onKey);
     return () => window.removeEventListener("keydown", onKey);
-  }, [move]);
-
-  const btnBase = `flex items-center justify-center rounded-lg font-black text-xl select-none active:scale-90 transition-transform touch-none ${
-    theme === "GAMIFIED" ? "bg-cyan-500/15 text-cyan-400 border border-cyan-500/40" : theme === "COLORFUL" ? "bg-purple-100 text-purple-700" : "bg-gray-100 text-gray-700"
-  }`;
+  }, [moveByDir]);
 
   return (
     <div className="flex flex-col items-center gap-3">
-      <svg width={vp} height={vp} style={{ borderRadius: 8, border: `2px solid rgba(255,255,255,0.15)`, display: "block" }}>
-        <rect x={0} y={0} width={vp} height={vp} fill={pal.svgBg} />
-        {TUTORIAL_MAZE.map((row, r) =>
-          row.map((cell, c) => {
-            const wx = c * cellPx, wy = r * cellPx;
-            return (
-              <g key={`${r},${c}`}>
-                <rect x={wx + wt} y={wy + wt} width={cellPx - wt * 2} height={cellPx - wt * 2} fill={pal.floor} />
-                {!cell.E && c < size - 1 && <rect x={wx + cellPx - wt} y={wy + wt} width={wt} height={cellPx - wt * 2} fill={pal.floor} />}
-                {!cell.S && r < size - 1 && <rect x={wx + wt} y={wy + cellPx - wt} width={cellPx - wt * 2} height={wt} fill={pal.floor} />}
-              </g>
-            );
-          })
-        )}
-        <rect x={(size-1)*cellPx+wt+1} y={(size-1)*cellPx+wt+1} width={cellPx-wt*2-2} height={cellPx-wt*2-2} fill={pal.goal} rx={2} opacity={0.85} />
-        <text x={(size-1)*cellPx+cellPx/2} y={(size-1)*cellPx+cellPx/2+4} textAnchor="middle" fontSize={12}>🏁</text>
-        <motion.circle cx={player.c * cellPx + cellPx / 2} cy={player.r * cellPx + cellPx / 2} r={cellPx * 0.28} fill={pal.player} animate={{ cx: player.c * cellPx + cellPx / 2, cy: player.r * cellPx + cellPx / 2 }} transition={{ duration: 0.1 }} />
-      </svg>
-      <div className="grid gap-1.5" style={{ gridTemplateColumns: "repeat(3, 40px)", gridTemplateRows: "repeat(3, 40px)" }}>
-        <div /><button className={btnBase} style={{ height: 40 }} onPointerDown={(e) => { e.preventDefault(); move("N"); }}>↑</button><div />
-        <button className={btnBase} style={{ height: 40 }} onPointerDown={(e) => { e.preventDefault(); move("W"); }}>←</button>
-        <div className={`rounded-lg ${theme === "GAMIFIED" ? "bg-gray-800" : "bg-black/10"}`} />
-        <button className={btnBase} style={{ height: 40 }} onPointerDown={(e) => { e.preventDefault(); move("E"); }}>→</button>
-        <div /><button className={btnBase} style={{ height: 40 }} onPointerDown={(e) => { e.preventDefault(); move("S"); }}>↓</button><div />
-      </div>
+      <MazeGrid
+        maze={TUTORIAL_MAZE}
+        player={player}
+        explored={explored}
+        flashCell={flashCell}
+        theme={theme}
+        containerPx={containerPx}
+        onCellClick={tryMove}
+        isGoal={(r, c) => r === 4 && c === 4}
+      />
+      <p
+        className="text-xs text-center"
+        style={{ color: theme === "GAMIFIED" ? "#9ca3af" : "#6b7280" }}
+      >
+        Toque nas células ao lado do jogador para se mover
+      </p>
     </div>
   );
 }
 
+// ── Tutorial wrapper ───────────────────────────────────────────────────────
+function LabirintoTutorial({ theme, onDone }: { theme: Theme; onDone: () => void }) {
+  const steps = [
+    {
+      instruction:
+        "O labirinto inteiro aparece na tela. Toque nas células ao lado do jogador para se mover.",
+      content: (onStepDone: () => void) => (
+        <TutorialShowStep theme={theme} onDone={onStepDone} />
+      ),
+    },
+    {
+      instruction: "Experimente! Mova ao menos 3 células para continuar.",
+      content: (onStepDone: () => void) => (
+        <TutorialInteractStep theme={theme} onDone={onStepDone} />
+      ),
+    },
+  ];
+
+  return (
+    <TutorialBase theme={theme} title="Labirinto" steps={steps} onDone={onDone} />
+  );
+}
+
+// ── Main component ─────────────────────────────────────────────────────────
 export function Labirinto({ difficulty, theme, onComplete }: LabirintoProps) {
   const [showTutorial, setShowTutorial] = useState(true);
   const reportProgress = useExerciseProgress();
   const pal = PALETTES[theme];
 
-  const [sizeIdx, setSizeIdx] = useState(initialIdx(difficulty));
+  const [sizeIdx, setSizeIdx] = useState(() => initialIdx(difficulty));
   const [streak, setStreak] = useState(0);
   const [mazeNum, setMazeNum] = useState(0);
-  const [mazeResults, setMazeResults] = useState<{ correct: boolean; size: number }[]>([]);
+  const [mazeResults, setMazeResults] = useState<{ correct: boolean; size: number }[]>(
+    []
+  );
 
   const size = SIZE_STEPS[sizeIdx];
-  const timeLimit = TIME_LIMITS[size];
+  const timeLimit = TIME_LIMITS[size] ?? 120;
 
-  const [maze, setMaze] = useState<Cell[][]>(() => generateMaze(SIZE_STEPS[initialIdx(difficulty)]));
+  const [maze, setMaze] = useState<Cell[][]>(() =>
+    generateMaze(SIZE_STEPS[initialIdx(difficulty)])
+  );
   const [player, setPlayer] = useState({ r: 0, c: 0 });
-  const [explored, setExplored] = useState<Set<string>>(() => new Set([key(0, 0)]));
+  const [explored, setExplored] = useState<Set<string>>(
+    () => new Set([cellKey(0, 0)])
+  );
+  const [flashCell, setFlashCell] = useState<string | null>(null);
   const [moves, setMoves] = useState(0);
   const [elapsed, setElapsed] = useState(0);
   const [done, setDone] = useState(false);
   const [timedOut, setTimedOut] = useState(false);
-  const [feedbackMsg, setFeedbackMsg] = useState("");
 
   const startTime = useRef(Date.now());
   const mazeStartTime = useRef(Date.now());
   const allDoneRef = useRef(false);
   const playerRef = useRef({ r: 0, c: 0 });
   const mazeRef = useRef(maze);
+  const doneRef = useRef(false);
+  const timedOutRef = useRef(false);
+  // Keep refs for closure access in finishMaze
+  const mazeResultsRef = useRef(mazeResults);
+  const mazeNumRef = useRef(mazeNum);
+  const sizeIdxRef = useRef(sizeIdx);
+  const streakRef = useRef(streak);
+  const sizeRef = useRef(size);
+  const elapsedRef = useRef(elapsed);
+  const timeLimitRef = useRef(timeLimit);
+
   mazeRef.current = maze;
   playerRef.current = player;
+  doneRef.current = done;
+  timedOutRef.current = timedOut;
+  mazeResultsRef.current = mazeResults;
+  mazeNumRef.current = mazeNum;
+  sizeIdxRef.current = sizeIdx;
+  streakRef.current = streak;
+  sizeRef.current = size;
+  elapsedRef.current = elapsed;
+  timeLimitRef.current = timeLimit;
 
-  // ── Timer ────────────────────────────────────────────────────────────
+  // ── Container size ──────────────────────────────────────────────────────
+  const [windowWidth, setWindowWidth] = useState(
+    typeof window !== "undefined" ? window.innerWidth : 375
+  );
+  useEffect(() => {
+    function onResize() {
+      setWindowWidth(window.innerWidth);
+    }
+    window.addEventListener("resize", onResize);
+    return () => window.removeEventListener("resize", onResize);
+  }, []);
+  const containerPx = Math.min(320, windowWidth - 32);
+
+  // ── Timer ───────────────────────────────────────────────────────────────
   useEffect(() => {
     if (showTutorial || done || timedOut) return;
     const t = setInterval(() => {
@@ -306,312 +501,317 @@ export function Labirinto({ difficulty, theme, onComplete }: LabirintoProps) {
     return () => clearInterval(t);
   }, [showTutorial, done, timedOut, mazeNum]);
 
+  // ── finishMaze ──────────────────────────────────────────────────────────
+  const finishMaze = useCallback(
+    (isCorrect: boolean) => {
+      if (allDoneRef.current) return;
+
+      const curMazeResults = mazeResultsRef.current;
+      const curMazeNum = mazeNumRef.current;
+      const curSizeIdx = sizeIdxRef.current;
+      const curStreak = streakRef.current;
+      const curSize = sizeRef.current;
+      const curElapsed = elapsedRef.current;
+      const curTimeLimit = timeLimitRef.current;
+
+      const newResults = [...curMazeResults, { correct: isCorrect, size: curSize }];
+      setMazeResults(newResults);
+
+      const newStreak = isCorrect
+        ? Math.max(curStreak, 0) + 1
+        : Math.min(curStreak, 0) - 1;
+
+      let nextIdx = curSizeIdx;
+      let nextStreak = newStreak;
+      if (newStreak >= 2) {
+        nextIdx = Math.min(curSizeIdx + 1, MAX_IDX);
+        nextStreak = 0;
+      }
+      if (newStreak <= -2) {
+        nextIdx = Math.max(curSizeIdx - 1, MIN_IDX);
+        nextStreak = 0;
+      }
+
+      const nextMaze = curMazeNum + 1;
+      reportProgress(Math.round((nextMaze / MAX_MAZES) * 100));
+
+      if (!isCorrect && curElapsed < curTimeLimit) {
+        // timed out
+        setTimedOut(true);
+        timedOutRef.current = true;
+      }
+
+      setTimeout(() => {
+        if (nextMaze >= MAX_MAZES) {
+          allDoneRef.current = true;
+          const accuracy = newResults.filter((r) => r.correct).length / MAX_MAZES;
+          const maxSize = Math.max(...newResults.map((r) => r.size));
+          const duration = Math.round((Date.now() - startTime.current) / 1000);
+          const score = calculateExerciseScore("labirinto", accuracy, undefined, difficulty);
+          onComplete({
+            exerciseId: "labirinto",
+            domain: "executive",
+            score,
+            accuracy,
+            difficulty,
+            duration,
+            metadata: {
+              mazes: MAX_MAZES,
+              maxSize,
+              correct: newResults.filter((r) => r.correct).length,
+            },
+          });
+        } else {
+          const nextSize = SIZE_STEPS[nextIdx];
+          const nextMazeGrid = generateMaze(nextSize);
+          setMazeNum(nextMaze);
+          setStreak(nextStreak);
+          setSizeIdx(nextIdx);
+          setMaze(nextMazeGrid);
+          setPlayer({ r: 0, c: 0 });
+          playerRef.current = { r: 0, c: 0 };
+          setExplored(new Set([cellKey(0, 0)]));
+          setMoves(0);
+          setElapsed(0);
+          setDone(false);
+          setTimedOut(false);
+          doneRef.current = false;
+          timedOutRef.current = false;
+          mazeStartTime.current = Date.now();
+        }
+      }, 1800);
+    },
+    [difficulty, onComplete, reportProgress]
+  );
+
+  // ── Timeout check ───────────────────────────────────────────────────────
   useEffect(() => {
-    if (!done && !timedOut && elapsed >= timeLimit) {
-      setTimedOut(true);
+    if (!done && !timedOut && elapsed > 0 && elapsed >= timeLimit) {
       finishMaze(false);
     }
-  // eslint-disable-next-line react-hooks/exhaustive-deps
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [elapsed]);
 
-  // ── Finish maze ───────────────────────────────────────────────────────
-  function finishMaze(isCorrect: boolean) {
-    if (allDoneRef.current) return;
-    setFeedbackMsg(isCorrect ? "Saída encontrada! ✅" : elapsed >= timeLimit ? "Tempo esgotado ⏰" : "Saída encontrada!");
+  // ── Try move to adjacent cell ───────────────────────────────────────────
+  const tryMove = useCallback(
+    (targetR: number, targetC: number) => {
+      if (doneRef.current || timedOutRef.current) return;
+      const { r, c } = playerRef.current;
+      const dr = targetR - r;
+      const dc = targetC - c;
 
-    const newResults = [...mazeResults, { correct: isCorrect, size }];
-    setMazeResults(newResults);
+      const isAdjacent =
+        (Math.abs(dr) === 1 && dc === 0) || (Math.abs(dc) === 1 && dr === 0);
+      if (!isAdjacent) return;
 
-    const newStreak = isCorrect ? Math.max(streak, 0) + 1 : Math.min(streak, 0) - 1;
-    let nextIdx = sizeIdx;
-    let nextStreak = newStreak;
-    if (newStreak >= 2) { nextIdx = Math.min(sizeIdx + 1, MAX_IDX); nextStreak = 0; }
-    if (newStreak <= -2) { nextIdx = Math.max(sizeIdx - 1, MIN_IDX); nextStreak = 0; }
+      const dir: "N" | "S" | "E" | "W" =
+        dr === -1 ? "N" : dr === 1 ? "S" : dc === 1 ? "E" : "W";
 
-    const nextMaze = mazeNum + 1;
-    reportProgress(Math.round((nextMaze / MAX_MAZES) * 100));
+      const g = mazeRef.current;
+      if (!g.length) return;
 
-    setTimeout(() => {
-      if (nextMaze >= MAX_MAZES) {
-        allDoneRef.current = true;
-        const accuracy = newResults.filter((r) => r.correct).length / MAX_MAZES;
-        const maxSize = Math.max(...newResults.map((r) => r.size));
-        const duration = Math.round((Date.now() - startTime.current) / 1000);
-        const score = calculateExerciseScore("labirinto", accuracy, undefined, difficulty);
-        onComplete({
-          exerciseId: "labirinto",
-          domain: "executive",
-          score, accuracy, difficulty, duration,
-          metadata: { mazes: MAX_MAZES, maxSize, correct: newResults.filter((r) => r.correct).length },
-        });
-      } else {
-        const nextSize = SIZE_STEPS[nextIdx];
-        const nextMazeGrid = generateMaze(nextSize);
-        setMazeNum(nextMaze);
-        setStreak(nextStreak);
-        setSizeIdx(nextIdx);
-        setMaze(nextMazeGrid);
-        setPlayer({ r: 0, c: 0 });
-        setExplored(new Set([key(0, 0)]));
-        setMoves(0);
-        setElapsed(0);
-        setDone(false);
-        setTimedOut(false);
-        setFeedbackMsg("");
-        mazeStartTime.current = Date.now();
+      if (g[r][c][dir]) {
+        // Wall — flash the target cell red
+        const k = cellKey(targetR, targetC);
+        setFlashCell(k);
+        setTimeout(() => setFlashCell(null), 200);
+        return;
       }
-    }, 2000);
-  }
 
-  // ── Movement ─────────────────────────────────────────────────────────
-  const move = useCallback((dir: "N" | "S" | "E" | "W") => {
-    if (done || timedOut) return;
-    const { r, c } = playerRef.current;
-    const g = mazeRef.current;
-    if (!g.length || g[r][c][dir]) return;
+      const newPos = { r: targetR, c: targetC };
+      setPlayer(newPos);
+      playerRef.current = newPos;
+      setMoves((m) => m + 1);
+      setExplored((prev) => new Set([...prev, cellKey(targetR, targetC)]));
 
-    const [dr, dc] = ({ N: [-1, 0], S: [1, 0], E: [0, 1], W: [0, -1] })[dir];
-    const nr = r + dr, nc = c + dc;
-    const curSize = SIZE_STEPS[sizeIdx];
+      const curSize = sizeRef.current;
+      if (targetR === curSize - 1 && targetC === curSize - 1) {
+        setDone(true);
+        doneRef.current = true;
+        finishMaze(true);
+      }
+    },
+    [finishMaze]
+  );
 
-    setPlayer({ r: nr, c: nc });
-    setMoves((m) => m + 1);
-    setExplored((prev) => new Set([...prev, key(nr, nc)]));
+  const moveByDir = useCallback(
+    (dir: "N" | "S" | "E" | "W") => {
+      const { r, c } = playerRef.current;
+      const dr = dir === "N" ? -1 : dir === "S" ? 1 : 0;
+      const dc = dir === "E" ? 1 : dir === "W" ? -1 : 0;
+      const curSize = sizeRef.current;
+      const nr = r + dr;
+      const nc = c + dc;
+      if (nr >= 0 && nr < curSize && nc >= 0 && nc < curSize) {
+        tryMove(nr, nc);
+      }
+    },
+    [tryMove]
+  );
 
-    if (nr === curSize - 1 && nc === curSize - 1) {
-      setDone(true);
-      finishMaze(true);
-    }
-  // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [done, timedOut, sizeIdx]);
-
+  // ── Keyboard support ────────────────────────────────────────────────────
   useEffect(() => {
     function onKey(e: KeyboardEvent) {
-      const map: Record<string, "N"|"S"|"E"|"W"> = {
-        ArrowUp: "N", ArrowDown: "S", ArrowRight: "E", ArrowLeft: "W",
-        w: "N", s: "S", d: "E", a: "W",
+      const map: Record<string, "N" | "S" | "E" | "W"> = {
+        ArrowUp: "N",
+        ArrowDown: "S",
+        ArrowRight: "E",
+        ArrowLeft: "W",
+        w: "N",
+        s: "S",
+        d: "E",
+        a: "W",
       };
-      if (map[e.key]) { e.preventDefault(); move(map[e.key]); }
+      if (map[e.key]) {
+        e.preventDefault();
+        moveByDir(map[e.key]);
+      }
     }
-    window.addEventListener("keydown", onKey);
+    if (!showTutorial) {
+      window.addEventListener("keydown", onKey);
+    }
     return () => window.removeEventListener("keydown", onKey);
-  }, [move]);
+  }, [moveByDir, showTutorial]);
 
+  // ── Swipe support ───────────────────────────────────────────────────────
+  const touchStartRef = useRef<{ x: number; y: number } | null>(null);
+
+  function onTouchStart(e: React.TouchEvent) {
+    const t = e.touches[0];
+    touchStartRef.current = { x: t.clientX, y: t.clientY };
+  }
+
+  function onTouchEnd(e: React.TouchEvent) {
+    if (!touchStartRef.current) return;
+    const t = e.changedTouches[0];
+    const dx = t.clientX - touchStartRef.current.x;
+    const dy = t.clientY - touchStartRef.current.y;
+    touchStartRef.current = null;
+
+    const minSwipe = 20;
+    if (Math.abs(dx) < minSwipe && Math.abs(dy) < minSwipe) return;
+
+    if (Math.abs(dx) > Math.abs(dy)) {
+      moveByDir(dx > 0 ? "E" : "W");
+    } else {
+      moveByDir(dy > 0 ? "S" : "N");
+    }
+  }
+
+  // ── Render ──────────────────────────────────────────────────────────────
   if (showTutorial) {
     return <LabirintoTutorial theme={theme} onDone={() => setShowTutorial(false)} />;
   }
 
-  // ── SVG rendering ────────────────────────────────────────────────────
-  // World origin shift so player is always centered in viewport
-  const worldOffX = VP_PX / 2 - (player.c * C_PX + C_PX / 2);
-  const worldOffY = VP_PX / 2 - (player.r * C_PX + C_PX / 2);
-
-  // Only render cells in viewport + 1 buffer
-  const halfV = Math.ceil(VIEWPORT / 2) + 1;
-  const rMin = Math.max(0, player.r - halfV);
-  const rMax = Math.min(size - 1, player.r + halfV);
-  const cMin = Math.max(0, player.c - halfV);
-  const cMax = Math.min(size - 1, player.c + halfV);
-
-  const mazeElements: React.ReactNode[] = [];
-  if (maze.length) {
-    for (let r = rMin; r <= rMax; r++) {
-      for (let c = cMin; c <= cMax; c++) {
-        const cell = maze[r][c];
-        const wx = c * C_PX, wy = r * C_PX;
-        const isExplored = explored.has(key(r, c));
-        const fillColor = isExplored ? pal.trail : pal.floor;
-
-        // Cell interior
-        mazeElements.push(
-          <rect key={`f${r},${c}`} x={wx + WT} y={wy + WT} width={C_PX - WT * 2} height={C_PX - WT * 2} fill={fillColor} />
-        );
-        // Open passages — fill the full 2×WT gap between adjacent cell interiors
-        if (!cell.N && r > 0) {
-          const bothN = isExplored && explored.has(key(r - 1, c));
-          mazeElements.push(<rect key={`n${r},${c}`} x={wx + WT} y={wy - WT} width={C_PX - WT * 2} height={WT * 2}
-            fill={bothN ? pal.trail : pal.floor} />);
-        }
-        if (!cell.W && c > 0) {
-          const bothW = isExplored && explored.has(key(r, c - 1));
-          mazeElements.push(<rect key={`w${r},${c}`} x={wx - WT} y={wy + WT} width={WT * 2} height={C_PX - WT * 2}
-            fill={bothW ? pal.trail : pal.floor} />);
-        }
-      }
-    }
-  }
-
-  // Player (always at viewport center)
-  const px = VP_PX / 2, py = VP_PX / 2;
-
-  // Goal position in viewport coords
-  const gx = (size - 1) * C_PX + C_PX / 2 + worldOffX;
-  const gy = (size - 1) * C_PX + C_PX / 2 + worldOffY;
-  const goalVisible = gx >= 0 && gx <= VP_PX && gy >= 0 && gy <= VP_PX;
-
-  // Time color warning
   const timeRatio = elapsed / timeLimit;
-  const timeColor = timeRatio > 0.8 ? "#ef4444" : timeRatio > 0.6 ? "#f97316" : theme === "GAMIFIED" ? "#9ca3af" : "#6b7280";
-
-  // D-pad button style
-  const btnBase = `flex items-center justify-center rounded-xl font-black text-2xl select-none active:scale-90 transition-transform touch-none ${
-    theme === "GAMIFIED"
-      ? "bg-cyan-500/15 text-cyan-400 border border-cyan-500/40 active:bg-cyan-500/30"
-      : theme === "COLORFUL"
-      ? "bg-purple-100 text-purple-700 active:bg-purple-200"
-      : "bg-gray-100 text-gray-700 active:bg-gray-200"
-  }`;
-
-  // Mini-map size
-  const mmSize = 56;
-  const mmDot = Math.max(2, mmSize / size);
+  const timeColor =
+    timeRatio > 0.8 ? "#ef4444" : timeRatio > 0.6 ? "#f97316" : theme === "GAMIFIED" ? "#9ca3af" : "#6b7280";
 
   return (
-    <div className={`min-h-screen flex flex-col items-center justify-center p-3`}
-      style={{ background: theme === "GAMIFIED" ? "#030712" : theme === "COLORFUL" ? "#1e1b4b" : "#1f2937" }}>
-
+    <div
+      className="min-h-screen flex flex-col items-center justify-center p-4"
+      style={{ background: pal.pageBg }}
+    >
       {/* Header */}
-      <div className={`w-full max-w-sm rounded-2xl px-4 py-3 mb-3 ${
-        theme === "GAMIFIED" ? "bg-gray-900 border border-cyan-500/20" : "bg-black/30"
-      }`}>
+      <div
+        className="w-full max-w-sm rounded-2xl px-4 py-3 mb-4"
+        style={{
+          background: pal.headerBg,
+          border:
+            theme === "GAMIFIED"
+              ? "1px solid rgba(34,211,238,0.2)"
+              : "1px solid rgba(255,255,255,0.1)",
+        }}
+      >
         <div className="flex justify-between items-center mb-2">
           <div>
-            <h2 className={`font-bold text-base ${
-              theme === "GAMIFIED" ? "text-cyan-400" : theme === "COLORFUL" ? "text-purple-300" : "text-white"
-            }`}>🌀 Labirinto</h2>
-            <p className="text-xs text-gray-400">{size}×{size} · {moves} mov.</p>
+            <h2
+              className="font-bold text-base"
+              style={{
+                color:
+                  theme === "GAMIFIED"
+                    ? "#22d3ee"
+                    : theme === "COLORFUL"
+                    ? "#c4b5fd"
+                    : "#ffffff",
+              }}
+            >
+              🌀 Labirinto
+            </h2>
+            <p className="text-xs" style={{ color: "#9ca3af" }}>
+              {size}×{size} · {moves} mov.
+            </p>
           </div>
           <div className="text-right">
-            <p className="text-xs font-bold" style={{ color: timeColor }}>{elapsed}s / {timeLimit}s</p>
+            <p className="text-sm font-bold tabular-nums" style={{ color: timeColor }}>
+              {elapsed}s / {timeLimit}s
+            </p>
           </div>
         </div>
         <div className="flex gap-0.5">
           {Array.from({ length: MAX_MAZES }).map((_, i) => (
-            <div key={i} className={`h-1.5 flex-1 rounded-full transition-colors ${
-              i < mazeResults.length
-                ? mazeResults[i].correct ? "bg-green-500" : "bg-red-400"
-                : i === mazeNum ? "bg-blue-400 animate-pulse"
-                : "bg-white/10"
-            }`} />
+            <div
+              key={i}
+              className="h-1.5 flex-1 rounded-full transition-colors"
+              style={{
+                background:
+                  i < mazeResults.length
+                    ? mazeResults[i].correct
+                      ? "#22c55e"
+                      : "#f87171"
+                    : i === mazeNum
+                    ? "#60a5fa"
+                    : "rgba(255,255,255,0.1)",
+              }}
+            />
           ))}
         </div>
       </div>
 
-      {/* Maze viewport */}
-      <div className="relative mb-4" style={{ width: VP_PX, height: VP_PX }}>
-        <svg
-          width={VP_PX}
-          height={VP_PX}
-          style={{
-            borderRadius: 12,
-            border: `2px solid ${theme === "GAMIFIED" ? "rgba(34,211,238,0.25)" : "rgba(255,255,255,0.15)"}`,
-            overflow: "hidden",
-            display: "block",
-          }}
-        >
-          <defs>
-            <clipPath id="vp">
-              <rect x={0} y={0} width={VP_PX} height={VP_PX} />
-            </clipPath>
-            <filter id="glow">
-              <feGaussianBlur stdDeviation="3" result="blur" />
-              <feMerge><feMergeNode in="blur" /><feMergeNode in="SourceGraphic" /></feMerge>
-            </filter>
-          </defs>
+      {/* Maze */}
+      <div
+        className="relative"
+        style={{ touchAction: "none" }}
+        onTouchStart={onTouchStart}
+        onTouchEnd={onTouchEnd}
+      >
+        <MazeGrid
+          maze={maze}
+          player={player}
+          explored={explored}
+          flashCell={flashCell}
+          theme={theme}
+          containerPx={containerPx}
+          onCellClick={tryMove}
+        />
 
-          {/* Wall background */}
-          <rect x={0} y={0} width={VP_PX} height={VP_PX} fill={pal.svgBg} />
-
-          {/* Maze cells — outer g clips, inner motion.g translates */}
-          <g clipPath="url(#vp)">
-            <motion.g
-              animate={{ x: worldOffX, y: worldOffY }}
-              transition={{ duration: 0.1, ease: "linear" }}
-            >
-              {mazeElements}
-
-              {/* Goal square */}
-              <rect
-                x={(size - 1) * C_PX + WT + 2}
-                y={(size - 1) * C_PX + WT + 2}
-                width={C_PX - WT * 2 - 4}
-                height={C_PX - WT * 2 - 4}
-                fill={pal.goal}
-                rx={3}
-                opacity={0.85}
-              />
-              <text
-                x={(size - 1) * C_PX + C_PX / 2}
-                y={(size - 1) * C_PX + C_PX / 2 + 5}
-                textAnchor="middle"
-                fontSize={16}
-              >🏁</text>
-            </motion.g>
-          </g>
-
-          {/* Player — always at center */}
-          <circle cx={px} cy={py} r={C_PX * 0.32} fill={pal.playerGlow} />
-          <circle cx={px} cy={py} r={C_PX * 0.22} fill={pal.player} />
-        </svg>
-
-        {/* Mini-map (top-right corner overlay) */}
-        <div
-          style={{
-            position: "absolute",
-            top: 8, right: 8,
-            width: mmSize, height: mmSize,
-            background: "rgba(0,0,0,0.65)",
-            borderRadius: 6,
-            border: "1px solid rgba(255,255,255,0.15)",
-            overflow: "hidden",
-          }}
-        >
-          {/* Player dot */}
-          <div style={{
-            position: "absolute",
-            left: player.c / size * mmSize - mmDot / 2,
-            top: player.r / size * mmSize - mmDot / 2,
-            width: mmDot + 2, height: mmDot + 2,
-            borderRadius: "50%",
-            background: pal.player,
-          }} />
-          {/* Goal dot */}
-          <div style={{
-            position: "absolute",
-            right: 1, bottom: 1,
-            width: 5, height: 5,
-            background: pal.goal,
-          }} />
-        </div>
-
-        {/* Feedback overlay */}
+        {/* Result overlay */}
         {(done || timedOut) && (
-          <div className="absolute inset-0 flex items-center justify-center rounded-xl"
-            style={{ background: "rgba(0,0,0,0.7)" }}>
+          <div
+            className="absolute inset-0 flex items-center justify-center rounded-xl"
+            style={{ background: "rgba(0,0,0,0.72)" }}
+          >
             <div className="text-center">
-              <p className={`text-2xl font-black ${done ? "text-green-400" : "text-red-400"}`}>
+              <p
+                className="text-3xl font-black"
+                style={{ color: done ? "#4ade80" : "#f87171" }}
+              >
                 {done ? "🎉 Saída!" : "⏰ Tempo!"}
               </p>
-              <p className="text-sm text-gray-300 mt-1">{moves} movimentos · {elapsed}s</p>
+              <p className="text-sm mt-1" style={{ color: "#d1d5db" }}>
+                {moves} movimentos · {elapsed}s
+              </p>
             </div>
           </div>
         )}
       </div>
 
-      {/* D-pad */}
-      <div className="grid gap-2" style={{ gridTemplateColumns: "repeat(3, 56px)", gridTemplateRows: "repeat(3, 56px)" }}>
-        <div />
-        <button className={btnBase} style={{ height: 56 }} onPointerDown={(e) => { e.preventDefault(); move("N"); }}>↑</button>
-        <div />
-        <button className={btnBase} style={{ height: 56 }} onPointerDown={(e) => { e.preventDefault(); move("W"); }}>←</button>
-        <div className={`rounded-xl ${theme === "GAMIFIED" ? "bg-gray-800" : "bg-black/20"}`} />
-        <button className={btnBase} style={{ height: 56 }} onPointerDown={(e) => { e.preventDefault(); move("E"); }}>→</button>
-        <div />
-        <button className={btnBase} style={{ height: 56 }} onPointerDown={(e) => { e.preventDefault(); move("S"); }}>↓</button>
-        <div />
-      </div>
-
-      <p className="text-xs text-white/30 mt-3">↑↓←→ ou WASD</p>
+      <p
+        className="text-xs mt-4"
+        style={{ color: "rgba(255,255,255,0.2)" }}
+      >
+        Toque na célula ao lado · swipe · ↑↓←→ · WASD
+      </p>
     </div>
   );
 }
