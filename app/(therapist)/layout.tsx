@@ -9,6 +9,7 @@ import { Button } from "@/components/ui/button";
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 import { useState } from "react";
 import { cn } from "@/lib/utils";
+import { AppUpdateButton } from "@/components/AppUpdateButton";
 
 const NAV_ITEMS = [
   { href: "/dashboard", label: "Dashboard", icon: LayoutDashboard },
@@ -77,6 +78,9 @@ export default function TherapistLayout({ children }: { children: React.ReactNod
               <p className="text-xs text-gray-500 truncate">{user?.clinicName ?? "Clínica"}</p>
             </div>
           </div>
+          <div className="flex items-center gap-2 mb-1">
+            <AppUpdateButton iconClass="w-4 h-4" buttonClass="text-gray-500 hover:bg-gray-100" />
+          </div>
           <Button
             variant="ghost"
             size="sm"
@@ -105,9 +109,12 @@ export default function TherapistLayout({ children }: { children: React.ReactNod
             <Image src="/icon-48.png" alt="NeuroPeak" width={28} height={28} className="rounded-lg" />
             <span className="font-bold text-gray-900">NeuroPeak</span>
           </div>
-          <button onClick={() => setMobileOpen(!mobileOpen)} className="p-2 rounded-lg hover:bg-gray-100">
-            {mobileOpen ? <X className="w-5 h-5" /> : <Menu className="w-5 h-5" />}
-          </button>
+          <div className="flex items-center gap-2">
+            <AppUpdateButton iconClass="w-4 h-4" buttonClass="text-gray-500" />
+            <button onClick={() => setMobileOpen(!mobileOpen)} className="p-2 rounded-lg hover:bg-gray-100">
+              {mobileOpen ? <X className="w-5 h-5" /> : <Menu className="w-5 h-5" />}
+            </button>
+          </div>
         </header>
 
         <main className="flex-1 p-6">

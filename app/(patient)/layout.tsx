@@ -4,8 +4,9 @@ import { signOut, useSession } from "next-auth/react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import Image from "next/image";
-import { Home, Dumbbell, TrendingUp, LogOut } from "lucide-react";
+import { Home, TrendingUp, LogOut } from "lucide-react";
 import { cn } from "@/lib/utils";
+import { AppUpdateButton } from "@/components/AppUpdateButton";
 
 const NAV_ITEMS = [
   { href: "/inicio", label: "Início", icon: Home },
@@ -60,6 +61,7 @@ export default function PatientLayout({ children }: { children: React.ReactNode 
             <span className={`text-sm ${theme === "GAMIFIED" ? "text-gray-300" : "text-gray-600"}`}>
               {user?.name?.split(" ")[0]}
             </span>
+            <AppUpdateButton iconClass="w-4 h-4" buttonClass={textStyles[theme]} />
             <button
               onClick={() => signOut({ callbackUrl: "/login" })}
               className={`p-1.5 rounded-lg hover:opacity-80 ${textStyles[theme]}`}
