@@ -326,9 +326,9 @@ export function TorreHanoi({ difficulty, theme, onComplete }: TorreHanoiProps) {
           {pegs.map((peg, pegIdx) => (
             <div
               key={pegIdx}
-              className="flex flex-col items-center cursor-pointer relative"
-              style={{ width: `${maxDiscWidth + 20}px` }}
-              onClick={() => handlePegClick(pegIdx)}
+              className="flex flex-col items-center cursor-pointer relative select-none"
+              style={{ width: `${maxDiscWidth + 20}px`, touchAction: "manipulation" }}
+              onPointerDown={(e) => { e.preventDefault(); handlePegClick(pegIdx); }}
             >
               <div
                 className={`absolute bottom-0 rounded-lg ${selected === pegIdx ? "bg-yellow-400" : theme === "GAMIFIED" ? "bg-gray-600" : "bg-gray-400"}`}
@@ -348,20 +348,24 @@ export function TorreHanoi({ difficulty, theme, onComplete }: TorreHanoiProps) {
                       className="rounded-lg flex items-center justify-center text-white text-xs font-bold"
                       style={{
                         width: `${width}px`,
-                        height: "22px",
+                        height: "28px",
                         backgroundColor: DISC_COLORS[disc - 1] ?? "#666",
                         opacity: selected === pegIdx && isTop ? 0.6 : 1,
                         boxShadow: isTop && selected === pegIdx ? "0 0 12px rgba(250,204,21,0.8)" : undefined,
+                        touchAction: "manipulation",
                       }}
                       layoutId={`disc-${disc}-${puzzle}`}
                       transition={{ type: "spring", stiffness: 300, damping: 25 }}
+                      onPointerDown={(e) => { e.stopPropagation(); e.preventDefault(); handlePegClick(pegIdx); }}
                     >
                       {disc}
                     </motion.div>
                   );
                 })}
               </div>
-              <div className={`mt-2 text-xs ${theme === "GAMIFIED" ? "text-gray-400" : "text-gray-500"} absolute -bottom-6`}>
+              <div
+                className={`mt-2 text-xs ${theme === "GAMIFIED" ? "text-gray-400" : "text-gray-500"} absolute -bottom-6 pointer-events-none`}
+              >
                 {pegIdx === 0 ? "Origem" : pegIdx === 1 ? "Auxiliar" : "Destino"}
               </div>
             </div>

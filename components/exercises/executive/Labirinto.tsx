@@ -20,7 +20,7 @@ interface Cell {
 }
 
 // ── Maze generation (recursive DFS, perfect maze) ──────────────────────────
-function generateMaze(size: number): Cell[][] {
+function generateMaze(size: number, loops: number = 0): Cell[][] {
   const grid: Cell[][] = Array.from({ length: size }, () =>
     Array.from({ length: size }, () => ({ N: true, S: true, E: true, W: true }))
   );
@@ -49,7 +49,37 @@ function generateMaze(size: number): Cell[][] {
     }
   }
   dfs(0, 0);
+
+  // Add extra openings to create misleading loops / false routes
+  if (loops > 0) {
+    const wallDirs = [
+      { dr: 0, dc: 1, w: "E" as const, o: "W" as const },
+      { dr: 1, dc: 0, w: "S" as const, o: "N" as const },
+    ];
+    let added = 0;
+    const attempts = loops * 30;
+    for (let t = 0; t < attempts && added < loops; t++) {
+      const r = Math.floor(Math.random() * size);
+      const c = Math.floor(Math.random() * size);
+      const { dr, dc, w, o } = wallDirs[Math.floor(Math.random() * wallDirs.length)];
+      const nr = r + dr;
+      const nc = c + dc;
+      if (nr < size && nc < size && grid[r][c][w]) {
+        grid[r][c][w] = false;
+        grid[nr][nc][o] = false;
+        added++;
+      }
+    }
+  }
+
   return grid;
+}
+
+function mazeLoops(difficulty: number, sizeIdx: number): number {
+  if (difficulty <= 3) return 0;
+  if (difficulty <= 5) return 1 + sizeIdx;
+  if (difficulty <= 7) return 2 + sizeIdx;
+  return 3 + sizeIdx;
 }
 
 // ── Configuration ──────────────────────────────────────────────────────────
@@ -438,9 +468,10 @@ export function Labirinto({ difficulty, theme, onComplete }: LabirintoProps) {
   const size = SIZE_STEPS[sizeIdx];
   const timeLimit = TIME_LIMITS[size] ?? 120;
 
-  const [maze, setMaze] = useState<Cell[][]>(() =>
-    generateMaze(SIZE_STEPS[initialIdx(difficulty)])
-  );
+  const [maze, setMaze] = useState<Cell[][]>(() => {
+    const idx = initialIdx(difficulty);
+    return generateMaze(SIZE_STEPS[idx], mazeLoops(difficulty, idx));
+  });
   const [player, setPlayer] = useState({ r: 0, c: 0 });
   const [explored, setExplored] = useState<Set<string>>(
     () => new Set([cellKey(0, 0)])
@@ -563,7 +594,7 @@ export function Labirinto({ difficulty, theme, onComplete }: LabirintoProps) {
           });
         } else {
           const nextSize = SIZE_STEPS[nextIdx];
-          const nextMazeGrid = generateMaze(nextSize);
+          const nextMazeGrid = generateMaze(nextSize, mazeLoops(difficulty, nextIdx));
           setMazeNum(nextMaze);
           setStreak(nextStreak);
           setSizeIdx(nextIdx);
