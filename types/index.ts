@@ -271,6 +271,22 @@ export const EXERCISE_DEFINITIONS = {
     estimatedMinutes: 8,
     icon: "🔔",
   },
+  "desafio-supermercado": {
+    id: "desafio-supermercado",
+    name: "Desafio do Supermercado",
+    domain: "memory" as Domain,
+    description: "Memorize a lista de compras e encontre os itens na prateleira",
+    estimatedMinutes: 8,
+    icon: "🛒",
+  },
+  "desafio-cidade": {
+    id: "desafio-cidade",
+    name: "Desafio da Cidade",
+    domain: "executive" as Domain,
+    description: "Resolva missões em ambientes da cidade: mercado, cinema e mais",
+    estimatedMinutes: 10,
+    icon: "🏙️",
+  },
 } as const;
 
 export type ExerciseId = keyof typeof EXERCISE_DEFINITIONS;

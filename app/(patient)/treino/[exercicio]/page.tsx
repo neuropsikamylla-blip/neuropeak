@@ -39,6 +39,8 @@ const AtencaoAlternada    = dynamic(() => import("@/components/exercises/attenti
 const AtencaoDividida     = dynamic(() => import("@/components/exercises/attention/AtencaoDividida").then(m => ({ default: m.AtencaoDividida })), { loading: ExerciseLoader });
 const AtencaoSustentada   = dynamic(() => import("@/components/exercises/attention/AtencaoSustentada").then(m => ({ default: m.AtencaoSustentada })), { loading: ExerciseLoader });
 const Semaforo            = dynamic(() => import("@/components/exercises/processing/Semaforo").then(m => ({ default: m.Semaforo })), { loading: ExerciseLoader });
+const DesafioSupermercado = dynamic(() => import("@/components/exercises/memory/DesafioSupermercado").then(m => ({ default: m.DesafioSupermercado })), { loading: ExerciseLoader });
+const DesafioCidade       = dynamic(() => import("@/components/exercises/executive/DesafioCidade").then(m => ({ default: m.DesafioCidade })), { loading: ExerciseLoader });
 
 const EXERCISE_INSTRUCTIONS: Record<string, string[]> = {
   "span-numerico": [
@@ -190,6 +192,18 @@ const EXERCISE_INSTRUCTIONS: Record<string, string[]> = {
     "Após piscar, UM deles acende com uma cor — esse é o ativo.",
     "Verde → toque AVANÇAR. Vermelho ou amarelo → toque PARAR.",
     "Reaja rápido assim que um semáforo acender — o tempo é limitado!",
+  ],
+  "desafio-supermercado": [
+    "Uma lista de compras aparecerá na tela por alguns segundos — memorize os itens!",
+    "Após a lista sumir, você verá uma prateleira com vários produtos.",
+    "Selecione apenas os itens que estavam na sua lista.",
+    "Confirme quando estiver pronto. A dificuldade aumenta conforme você acerta!",
+  ],
+  "desafio-cidade": [
+    "Você está em uma cidade com diferentes ambientes: Mercado, Cinema e mais.",
+    "Escolha um ambiente e complete a missão proposta.",
+    "No Mercado: memorize a lista de compras e encontre os itens corretos.",
+    "No Cinema: planeje sua compra dentro do orçamento disponível.",
   ],
 };
 
@@ -384,6 +398,8 @@ export default function ExercicioPage() {
       case "atencao-dividida": return <AtencaoDividida {...props} />;
       case "atencao-sustentada": return <AtencaoSustentada {...props} />;
       case "semaforo": return <Semaforo {...props} />;
+      case "desafio-supermercado": return <DesafioSupermercado {...props} />;
+      case "desafio-cidade": return <DesafioCidade {...props} />;
       default: return <div className="p-8 text-center text-gray-500">Exercício em desenvolvimento</div>;
     }
   }

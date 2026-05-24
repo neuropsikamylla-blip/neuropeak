@@ -51,11 +51,11 @@ export function ExerciseWrapper({
 
   const themeStyles = {
     CLINICAL: {
-      bg: "bg-gray-50 min-h-screen",
-      card: "bg-white rounded-xl shadow-md border border-gray-100 p-8 max-w-2xl mx-auto",
-      title: "text-gray-900 text-2xl font-semibold",
-      text: "text-gray-700",
-      btn: "bg-blue-600 hover:bg-blue-700 text-white",
+      bg: "bg-gradient-to-br from-slate-50 via-white to-indigo-50/30 min-h-screen",
+      card: "bg-white rounded-2xl shadow-md border border-slate-200/70 p-8 max-w-2xl mx-auto",
+      title: "text-slate-800 text-2xl font-bold tracking-tight",
+      text: "text-slate-600",
+      btn: "bg-indigo-600 hover:bg-indigo-700 text-white rounded-xl font-semibold",
     },
     COLORFUL: {
       bg: "bg-gradient-to-br from-purple-50 via-pink-50 to-yellow-50 min-h-screen",
@@ -90,8 +90,8 @@ export function ExerciseWrapper({
             <p className={`${s.text} text-sm mb-4 opacity-70`}>Leia as instruções antes de começar</p>
 
             {functional && (
-              <div className={`rounded-xl p-4 mb-5 ${theme === "GAMIFIED" ? "bg-cyan-900/30 border border-cyan-500/20" : theme === "COLORFUL" ? "bg-purple-50 border border-purple-200" : "bg-blue-50 border border-blue-100"}`}>
-                <p className={`text-xs font-bold uppercase tracking-wide mb-1 ${theme === "GAMIFIED" ? "text-cyan-400" : theme === "COLORFUL" ? "text-purple-600" : "text-blue-600"}`}>
+              <div className={`rounded-xl p-4 mb-5 ${theme === "GAMIFIED" ? "bg-cyan-900/30 border border-cyan-500/20" : theme === "COLORFUL" ? "bg-purple-50 border border-purple-200" : "bg-indigo-50/60 border border-indigo-100"}`}>
+                <p className={`text-xs font-bold uppercase tracking-wide mb-1 ${theme === "GAMIFIED" ? "text-cyan-400" : theme === "COLORFUL" ? "text-purple-600" : "text-indigo-600"}`}>
                   Para que serve no dia a dia
                 </p>
                 <p className={`text-sm leading-relaxed ${s.text}`}>{functional.scenario}</p>
@@ -101,7 +101,7 @@ export function ExerciseWrapper({
             <div className="space-y-3 mb-5">
               {instructions.map((inst, i) => (
                 <div key={i} className="flex gap-3 items-start">
-                  <span className={`w-6 h-6 rounded-full flex items-center justify-center text-sm font-bold flex-shrink-0 mt-0.5 ${theme === "GAMIFIED" ? "bg-cyan-500 text-gray-900" : theme === "COLORFUL" ? "bg-purple-500 text-white" : "bg-blue-500 text-white"}`}>
+                  <span className={`w-6 h-6 rounded-full flex items-center justify-center text-sm font-bold flex-shrink-0 mt-0.5 ${theme === "GAMIFIED" ? "bg-cyan-500 text-gray-900" : theme === "COLORFUL" ? "bg-purple-500 text-white" : "bg-indigo-500 text-white"}`}>
                     {i + 1}
                   </span>
                   <p className={`${s.text} text-sm leading-relaxed`}>{inst}</p>
@@ -129,7 +129,7 @@ export function ExerciseWrapper({
               className={`w-full h-12 text-base ${s.btn}`}
               onClick={() => setPhase("exercise")}
             >
-              {theme === "GAMIFIED" ? "INICIAR MISSÃO" : theme === "COLORFUL" ? "Vamos lá! 🚀" : "Iniciar Exercício"}
+              {theme === "GAMIFIED" ? "INICIAR MISSÃO" : theme === "COLORFUL" ? "Vamos lá! 🚀" : "Iniciar"}
             </Button>
           </motion.div>
         )}

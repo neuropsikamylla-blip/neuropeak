@@ -4,7 +4,7 @@ import { supabase } from "@/lib/supabase";
 import { redirect } from "next/navigation";
 import Link from "next/link";
 import { calculateAge } from "@/lib/utils";
-import { EXERCISE_DEFINITIONS, DOMAIN_LABELS, type Domain, type Theme, type SessionData } from "@/types";
+import { EXERCISE_DEFINITIONS, DOMAIN_LABELS, DOMAIN_COLORS, type Domain, type Theme, type SessionData } from "@/types";
 import { Trophy, Flame, Star } from "lucide-react";
 
 export default async function InicioPage() {
@@ -96,17 +96,17 @@ export default async function InicioPage() {
 
   const styles = {
     CLINICAL: {
-      bg: "bg-gray-50",
-      header: "bg-white border-b border-gray-100",
-      card: "bg-white rounded-xl shadow-sm border border-gray-100",
-      title: "text-gray-900 text-2xl font-semibold",
-      sub: "text-gray-500",
-      accent: "text-blue-600",
-      exCard: "bg-white rounded-xl border border-gray-200 hover:border-blue-300 hover:shadow-md transition-all",
-      exDone: "bg-gray-50 rounded-xl border border-gray-100 opacity-60",
-      stat: "bg-gray-50 rounded-xl",
-      progress: "bg-gray-200",
-      progressBar: "bg-blue-500",
+      bg: "bg-gradient-to-br from-slate-50 via-white to-indigo-50/40",
+      header: "bg-white border border-slate-200/70 shadow-sm rounded-2xl",
+      card: "bg-white rounded-2xl shadow-sm border border-slate-200/70",
+      title: "text-slate-800 text-2xl font-bold tracking-tight",
+      sub: "text-slate-500",
+      accent: "text-indigo-600",
+      exCard: "bg-white rounded-2xl border border-slate-200/70 shadow-sm hover:border-indigo-300 hover:shadow-md transition-all duration-200",
+      exDone: "bg-slate-50/80 rounded-2xl border border-slate-200/50 opacity-70",
+      stat: "bg-white rounded-2xl border border-slate-200/70 shadow-sm",
+      progress: "bg-slate-200",
+      progressBar: "bg-indigo-500",
     },
     COLORFUL: {
       bg: "bg-gradient-to-br from-purple-50 via-pink-50 to-yellow-50",
@@ -144,14 +144,14 @@ export default async function InicioPage() {
       {/* Welcome card */}
       <div className={`p-5 ${s.header}`}>
         <h1 className={s.title}>
-          {theme === "COLORFUL" ? `Olá, ${firstName}! 👋` : theme === "GAMIFIED" ? `MISSÃO ATIVA — ${firstName.toUpperCase()}` : `Olá, ${firstName}`}
+          {theme === "COLORFUL" ? `Olá, ${firstName}! 👋` : theme === "GAMIFIED" ? `MISSÃO ATIVA — ${firstName.toUpperCase()}` : `Bom treino, ${firstName}`}
         </h1>
         <p className={`text-sm mt-1 ${s.sub}`}>
           {theme === "GAMIFIED"
             ? "Complete seus exercícios para ganhar XP!"
             : theme === "COLORFUL"
             ? "Hora de treinar o cérebro! 🧠✨"
-            : "Pronto para o seu treino de hoje?"}
+            : "Treino cognitivo personalizado para você"}
         </p>
       </div>
 
@@ -221,11 +221,15 @@ export default async function InicioPage() {
               if (!ex) return null;
               const doneToday = todaySessions.some((s) => s.exerciseId === exId);
 
+              const domainColor = DOMAIN_COLORS[ex.domain as Domain] ?? "#6366f1";
               const cardContent = (
-                <div className={`p-4 flex items-center gap-4 ${doneToday ? s.exDone : `cursor-pointer ${s.exCard}`}`}>
+                <div
+                  className={`p-4 flex items-center gap-4 overflow-hidden relative ${doneToday ? s.exDone : `cursor-pointer ${s.exCard}`}`}
+                  style={theme === "CLINICAL" ? { borderLeft: `3px solid ${doneToday ? "#cbd5e1" : domainColor}` } : undefined}
+                >
                   <span className="text-3xl">{ex.icon}</span>
-                  <div className="flex-1">
-                    <div className="flex items-center gap-2">
+                  <div className="flex-1 min-w-0">
+                    <div className="flex items-center gap-2 flex-wrap">
                       <p className={`font-semibold ${theme === "GAMIFIED" ? "text-gray-100" : "text-gray-800"}`}>
                         {ex.name}
                       </p>
@@ -235,13 +239,25 @@ export default async function InicioPage() {
                         </span>
                       )}
                     </div>
-                    <p className={`text-xs mt-0.5 ${s.sub}`}>{ex.description}</p>
-                    <p className={`text-xs mt-0.5 ${s.accent}`}>
-                      {DOMAIN_LABELS[ex.domain as Domain]} · ~{ex.estimatedMinutes}min
-                    </p>
+                    <p className={`text-xs mt-0.5 truncate ${s.sub}`}>{ex.description}</p>
+                    {theme === "CLINICAL" ? (
+                      <div className="flex items-center gap-2 mt-1">
+                        <span
+                          className="text-xs font-semibold px-2 py-0.5 rounded-full"
+                          style={{ background: domainColor + "18", color: domainColor }}
+                        >
+                          {DOMAIN_LABELS[ex.domain as Domain]}
+                        </span>
+                        <span className="text-xs text-slate-400">~{ex.estimatedMinutes} min</span>
+                      </div>
+                    ) : (
+                      <p className={`text-xs mt-0.5 ${s.accent}`}>
+                        {DOMAIN_LABELS[ex.domain as Domain]} · ~{ex.estimatedMinutes}min
+                      </p>
+                    )}
                   </div>
                   {!doneToday && (
-                    <span className={`text-xl ${theme === "GAMIFIED" ? "text-cyan-400" : "text-blue-500"}`}>→</span>
+                    <span className={`text-xl flex-shrink-0 ${theme === "GAMIFIED" ? "text-cyan-400" : theme === "CLINICAL" ? "text-indigo-400" : "text-blue-500"}`}>›</span>
                   )}
                 </div>
               );

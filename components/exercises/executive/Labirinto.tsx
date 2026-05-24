@@ -75,29 +75,31 @@ function generateMaze(size: number, loops: number = 0): Cell[][] {
   return grid;
 }
 
-function mazeLoops(difficulty: number, sizeIdx: number): number {
-  if (difficulty <= 3) return 0;
-  if (difficulty <= 5) return 1 + sizeIdx;
-  if (difficulty <= 7) return 2 + sizeIdx;
-  return 3 + sizeIdx;
+function mazeLoops(difficulty: number, size: number): number {
+  const base = Math.max(1, Math.floor((size * size) / 40));
+  if (difficulty <= 2) return 0;
+  if (difficulty <= 4) return base;
+  if (difficulty <= 6) return base * 2;
+  if (difficulty <= 8) return base * 3;
+  return base * 4;
 }
 
 // ── Configuration ──────────────────────────────────────────────────────────
-const SIZE_STEPS = [6, 7, 8, 9, 10, 11];
+const SIZE_STEPS = [8, 10, 13, 16, 20, 24];
 const TIME_LIMITS: Record<number, number> = {
-  6: 60,
-  7: 75,
-  8: 95,
-  9: 120,
-  10: 150,
-  11: 185,
+  8: 90,
+  10: 125,
+  13: 170,
+  16: 230,
+  20: 310,
+  24: 420,
 };
 const MAX_MAZES = 10;
 const MIN_IDX = 0;
 const MAX_IDX = SIZE_STEPS.length - 1;
 
 function initialIdx(difficulty: number) {
-  return Math.min(Math.max(0, Math.floor((difficulty - 1) / 2)), MAX_IDX);
+  return Math.min(Math.max(0, Math.floor((difficulty - 1) * MAX_IDX / 9)), MAX_IDX);
 }
 
 function cellKey(r: number, c: number) {
@@ -199,7 +201,7 @@ function MazeGrid({
   const pal = PALETTES[theme];
   const size = maze.length;
   const cellPx = Math.floor(containerPx / size);
-  const wallPx = 2;
+  const wallPx = size >= 16 ? 1 : 2;
 
   return (
     <div
@@ -470,7 +472,8 @@ export function Labirinto({ difficulty, theme, onComplete }: LabirintoProps) {
 
   const [maze, setMaze] = useState<Cell[][]>(() => {
     const idx = initialIdx(difficulty);
-    return generateMaze(SIZE_STEPS[idx], mazeLoops(difficulty, idx));
+    const initSize = SIZE_STEPS[idx];
+    return generateMaze(initSize, mazeLoops(difficulty, initSize));
   });
   const [player, setPlayer] = useState({ r: 0, c: 0 });
   const [explored, setExplored] = useState<Set<string>>(
@@ -521,7 +524,7 @@ export function Labirinto({ difficulty, theme, onComplete }: LabirintoProps) {
     window.addEventListener("resize", onResize);
     return () => window.removeEventListener("resize", onResize);
   }, []);
-  const containerPx = Math.min(320, windowWidth - 32);
+  const containerPx = Math.min(Math.max(300, windowWidth - 48), 480);
 
   // ── Timer ───────────────────────────────────────────────────────────────
   useEffect(() => {
@@ -594,7 +597,7 @@ export function Labirinto({ difficulty, theme, onComplete }: LabirintoProps) {
           });
         } else {
           const nextSize = SIZE_STEPS[nextIdx];
-          const nextMazeGrid = generateMaze(nextSize, mazeLoops(difficulty, nextIdx));
+          const nextMazeGrid = generateMaze(nextSize, mazeLoops(difficulty, nextSize));
           setMazeNum(nextMaze);
           setStreak(nextStreak);
           setSizeIdx(nextIdx);

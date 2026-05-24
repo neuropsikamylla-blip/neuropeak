@@ -15,10 +15,10 @@ import { ExerciseScienceCard } from "@/components/exercises/ExerciseScienceCard"
 const ALL_DOMAINS: Domain[] = ["memory", "attention", "processing", "executive"];
 
 const DOMAIN_EXERCISES: Record<Domain, string[]> = {
-  memory: ["span-numerico", "span-numerico-inverso", "matriz-espacial", "matriz-espacial-inversa", "jogo-memoria"],
+  memory: ["span-numerico", "span-numerico-inverso", "matriz-espacial", "matriz-espacial-inversa", "jogo-memoria", "desafio-supermercado"],
   attention: ["trilha-visual", "stroop-task", "antes-depois", "atencao-seletiva", "atencao-alternada", "atencao-dividida", "atencao-sustentada"],
   processing: ["tempo-reacao", "certo-ou-errado", "semaforo"],
-  executive: ["torre-hanoi", "sequenciamento", "flexibilidade-cognitiva", "labirinto", "ordem-historia"],
+  executive: ["torre-hanoi", "sequenciamento", "flexibilidade-cognitiva", "labirinto", "ordem-historia", "desafio-cidade"],
 };
 
 export default function PlanoPage() {
