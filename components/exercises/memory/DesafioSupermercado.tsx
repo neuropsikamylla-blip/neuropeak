@@ -145,108 +145,96 @@ function buildTrial(count: number, usedLists: Set<string>): { list: Product[]; s
   return { list: listProducts, shelf };
 }
 
-// ── Tutorial ──────────────────────────────────────────────────────────────
-function SupermercadoTutorial({ theme, onDone }: { theme: Theme; onDone: () => void }) {
-  const tutorialList: Product[] = [
-    { id: "pao", name: "Pão", emoji: "🍞" },
-    { id: "leite", name: "Leite", emoji: "🥛" },
-  ];
-  const tutorialShelf: Product[] = [
-    { id: "arroz", name: "Arroz", emoji: "🌾" },
-    { id: "pao", name: "Pão", emoji: "🍞" },
-    { id: "cafe", name: "Café", emoji: "☕" },
-    { id: "leite", name: "Leite", emoji: "🥛" },
-    { id: "ovos", name: "Ovos", emoji: "🥚" },
-    { id: "acucar", name: "Açúcar", emoji: "🍬" },
-  ];
+// ── Tutorial — componentes próprios para cada passo ──────────────────────
+const TUT_LIST: Product[] = [
+  { id: "pao", name: "Pão", emoji: "🍞" },
+  { id: "leite", name: "Leite", emoji: "🥛" },
+];
 
-  const [tutPhase, setTutPhase] = useState<"list" | "shelf">("list");
-  const [selected, setSelected] = useState<Set<string>>(new Set());
-  const [done, setDone] = useState(false);
+const TUT_SHELF: Product[] = [
+  { id: "arroz", name: "Arroz", emoji: "🌾" },
+  { id: "pao", name: "Pão", emoji: "🍞" },
+  { id: "cafe", name: "Café", emoji: "☕" },
+  { id: "leite", name: "Leite", emoji: "🥛" },
+  { id: "ovos", name: "Ovos", emoji: "🥚" },
+  { id: "acucar", name: "Açúcar", emoji: "🍬" },
+];
 
-  const pal = theme === "GAMIFIED"
-    ? { bg: "bg-gray-700", text: "text-gray-200", badge: "bg-cyan-600 text-white" }
-    : theme === "COLORFUL"
-    ? { bg: "bg-violet-50", text: "text-gray-700", badge: "bg-violet-500 text-white" }
-    : { bg: "bg-slate-50", text: "text-slate-700", badge: "bg-indigo-500 text-white" };
+function TutMemorizeStep({ theme, onDone }: { theme: Theme; onDone: () => void }) {
+  const listBg = theme === "GAMIFIED" ? "bg-gray-700" : theme === "COLORFUL" ? "bg-violet-50" : "bg-slate-50";
+  const textClass = theme === "GAMIFIED" ? "text-gray-200" : "text-gray-800";
 
   useEffect(() => {
-    if (tutPhase === "list") {
-      const t = setTimeout(() => setTutPhase("shelf"), 3000);
-      return () => clearTimeout(t);
-    }
-  }, [tutPhase]);
+    const t = setTimeout(onDone, 3200);
+    return () => clearTimeout(t);
+  }, [onDone]);
 
-  function toggleSelect(id: string) {
-    if (done) return;
-    const next = new Set(selected);
-    next.has(id) ? next.delete(id) : next.add(id);
-    setSelected(next);
+  return (
+    <div className={`rounded-xl p-4 space-y-3 ${listBg}`}>
+      <p className={`text-sm font-bold ${textClass}`}>Sua lista de compras:</p>
+      {TUT_LIST.map((p) => (
+        <div key={p.id} className="flex items-center gap-3">
+          <span className="text-2xl">{p.emoji}</span>
+          <span className={`text-sm ${textClass}`}>{p.name}</span>
+        </div>
+      ))}
+    </div>
+  );
+}
 
-    if (next.has("pao") && next.has("leite") && next.size === 2) {
-      setDone(true);
-    }
+function TutShelfStep({ theme, onDone }: { theme: Theme; onDone: () => void }) {
+  const [sel, setSel] = useState(new Set<string>());
+  const completedRef = useRef(false);
+  const textClass = theme === "GAMIFIED" ? "text-gray-200" : "text-gray-700";
+
+  function tap(id: string) {
+    if (completedRef.current) return;
+    setSel((prev) => {
+      const next = new Set(prev);
+      next.has(id) ? next.delete(id) : next.add(id);
+      if (next.has("pao") && next.has("leite") && !completedRef.current) {
+        completedRef.current = true;
+        setTimeout(onDone, 600);
+      }
+      return next;
+    });
   }
 
+  return (
+    <div className="grid grid-cols-3 gap-2">
+      {TUT_SHELF.map((p) => {
+        const active = sel.has(p.id);
+        return (
+          <button
+            key={p.id}
+            onClick={() => tap(p.id)}
+            className={`p-2 rounded-xl border-2 flex flex-col items-center gap-1 transition-all ${
+              active
+                ? "border-green-500 bg-green-50"
+                : theme === "GAMIFIED"
+                ? "border-gray-600 bg-gray-700"
+                : "border-slate-200 bg-white"
+            }`}
+          >
+            <span className="text-2xl">{p.emoji}</span>
+            <span className={`text-xs text-center leading-tight ${textClass}`}>{p.name}</span>
+            {active && <span className="text-xs text-green-600 font-bold">✓</span>}
+          </button>
+        );
+      })}
+    </div>
+  );
+}
+
+function SupermercadoTutorial({ theme, onDone }: { theme: Theme; onDone: () => void }) {
   const steps = [
     {
-      instruction: "Memorize os itens da lista — ela vai desaparecer em breve!",
-      content: (onStepDone: () => void) => {
-        useEffect(() => { const t = setTimeout(onStepDone, 3200); return () => clearTimeout(t); }, []);
-        return (
-          <div className={`rounded-xl p-4 space-y-2 ${pal.bg}`}>
-            <p className={`text-sm font-bold ${pal.text}`}>Sua lista:</p>
-            {tutorialList.map((p) => (
-              <div key={p.id} className="flex items-center gap-2">
-                <span className="text-2xl">{p.emoji}</span>
-                <span className={`text-sm ${pal.text}`}>{p.name}</span>
-              </div>
-            ))}
-          </div>
-        );
-      },
+      instruction: "Uma lista de compras vai aparecer por alguns segundos. Memorize os itens!",
+      content: (onStepDone: () => void) => <TutMemorizeStep theme={theme} onDone={onStepDone} />,
     },
     {
       instruction: "Agora selecione na prateleira os itens que você memorizou.",
-      content: (onStepDone: () => void) => {
-        const [sel, setSel] = useState(new Set<string>());
-        const doneRef = useRef(false);
-
-        function tap(id: string) {
-          if (doneRef.current) return;
-          const next = new Set(sel);
-          next.has(id) ? next.delete(id) : next.add(id);
-          setSel(next);
-          if (next.has("pao") && next.has("leite") && !doneRef.current) {
-            doneRef.current = true;
-            setTimeout(onStepDone, 600);
-          }
-        }
-
-        return (
-          <div className="grid grid-cols-3 gap-2">
-            {tutorialShelf.map((p) => {
-              const active = sel.has(p.id);
-              return (
-                <button
-                  key={p.id}
-                  onClick={() => tap(p.id)}
-                  className={`p-2 rounded-xl border-2 flex flex-col items-center gap-1 transition-all ${
-                    active
-                      ? "border-green-500 bg-green-50"
-                      : theme === "GAMIFIED"
-                      ? "border-gray-600 bg-gray-700"
-                      : "border-slate-200 bg-white"
-                  }`}
-                >
-                  <span className="text-2xl">{p.emoji}</span>
-                  <span className={`text-xs text-center leading-tight ${pal.text}`}>{p.name}</span>
-                </button>
-              );
-            })}
-          </div>
-        );
-      },
+      content: (onStepDone: () => void) => <TutShelfStep theme={theme} onDone={onStepDone} />,
     },
   ];
 
