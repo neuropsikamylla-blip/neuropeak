@@ -1,12 +1,12 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import { useSession } from "next-auth/react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
-import { Loader2, Save, User, Lock, Building2, Key, Package, ShieldCheck } from "lucide-react";
+import { Loader2, Save, User, Lock, Building2, Key, Package, ShieldCheck, Upload, CheckCircle2, Clock, XCircle } from "lucide-react";
 import { useToast } from "@/components/ui/use-toast";
 import { Toaster } from "@/components/ui/toaster";
 
@@ -23,6 +23,12 @@ export default function ConfiguracoesPage() {
   const [profile, setProfile] = useState({ name: "", email: "", clinicName: "", crp: "" });
   const [passwords, setPasswords] = useState({ currentPassword: "", newPassword: "", confirmPassword: "" });
 
+  const [crpStatus, setCrpStatus] = useState<"unverified" | "pending" | "verified" | "rejected">("unverified");
+  const [crpForm, setCrpForm] = useState({ crp: "", acceptedTerms: false });
+  const [crpFile, setCrpFile] = useState<File | null>(null);
+  const [crpLoading, setCrpLoading] = useState(false);
+  const fileRef = useRef<HTMLInputElement>(null);
+
   useEffect(() => {
     if (user) {
       setProfile({
@@ -33,6 +39,13 @@ export default function ConfiguracoesPage() {
       });
     }
   }, [user]);
+
+  useEffect(() => {
+    fetch("/api/crp-verification/status")
+      .then((r) => r.ok ? r.json() : null)
+      .then((d) => { if (d?.status) setCrpStatus(d.status); })
+      .catch(() => {});
+  }, []);
 
   const handleProfileSave = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -136,22 +149,6 @@ export default function ConfiguracoesPage() {
                 onChange={(e) => setProfile({ ...profile, clinicName: e.target.value })}
                 placeholder="Ex: Clínica NeuroPeak"
               />
-            </div>
-            <div>
-              <Label htmlFor="crp">
-                <ShieldCheck className="w-3 h-3 inline mr-1" />
-                CRP (Conselho Regional de Psicologia)
-              </Label>
-              <Input
-                id="crp"
-                value={profile.crp}
-                onChange={(e) => setProfile({ ...profile, crp: e.target.value })}
-                placeholder="Ex: 06/12345"
-                className="mt-1"
-              />
-              <p className="text-xs text-gray-500 mt-1">
-                Obrigatório para acesso ao módulo Mundo Interior. Confirma que o uso é mediado por profissional registrado.
-              </p>
             </div>
             <Button type="submit" disabled={profileLoading}>
               {profileLoading ? <><Loader2 className="w-4 h-4 mr-2 animate-spin" />Salvando...</> : <><Save className="w-4 h-4 mr-2" />Salvar perfil</>}
@@ -271,6 +268,131 @@ export default function ConfiguracoesPage() {
               {licenseLoading ? <><Loader2 className="w-4 h-4 mr-2 animate-spin" />Resgatando...</> : "Resgatar licença"}
             </Button>
           </form>
+        </CardContent>
+      </Card>
+
+      {/* Verificação CRP */}
+      <Card>
+        <CardHeader>
+          <div className="flex items-center gap-2">
+            <ShieldCheck className="w-5 h-5 text-blue-600" />
+            <CardTitle className="text-base">Verificação de CRP</CardTitle>
+          </div>
+          <CardDescription>Obrigatório para acessar o módulo Mundo Interior</CardDescription>
+        </CardHeader>
+        <CardContent>
+          {crpStatus === "verified" && (
+            <div className="flex items-center gap-2 p-3 rounded-xl bg-green-50 border border-green-200">
+              <CheckCircle2 className="w-5 h-5 text-green-600" />
+              <div>
+                <p className="text-sm font-semibold text-green-800">CRP verificado</p>
+                <p className="text-xs text-green-700">Acesso ao Mundo Interior liberado.</p>
+              </div>
+            </div>
+          )}
+
+          {crpStatus === "pending" && (
+            <div className="flex items-center gap-2 p-3 rounded-xl bg-yellow-50 border border-yellow-200">
+              <Clock className="w-5 h-5 text-yellow-600" />
+              <div>
+                <p className="text-sm font-semibold text-yellow-800">Em análise</p>
+                <p className="text-xs text-yellow-700">Seu documento foi enviado e está aguardando aprovação.</p>
+              </div>
+            </div>
+          )}
+
+          {crpStatus === "rejected" && (
+            <div className="space-y-3">
+              <div className="flex items-center gap-2 p-3 rounded-xl bg-red-50 border border-red-200">
+                <XCircle className="w-5 h-5 text-red-500" />
+                <div>
+                  <p className="text-sm font-semibold text-red-800">Verificação rejeitada</p>
+                  <p className="text-xs text-red-700">Envie um novo documento para solicitar revisão.</p>
+                </div>
+              </div>
+            </div>
+          )}
+
+          {(crpStatus === "unverified" || crpStatus === "rejected") && (
+            <form
+              onSubmit={async (e) => {
+                e.preventDefault();
+                if (!crpForm.crp.trim() || !crpFile || !crpForm.acceptedTerms) return;
+                setCrpLoading(true);
+                try {
+                  const fd = new FormData();
+                  fd.append("crp", crpForm.crp.trim());
+                  fd.append("document", crpFile);
+                  fd.append("acceptedTerms", "true");
+                  const res = await fetch("/api/crp-verification", { method: "POST", body: fd });
+                  const data = await res.json();
+                  if (!res.ok) { toast({ title: "Erro", description: data.error, variant: "destructive" }); return; }
+                  setCrpStatus("pending");
+                  toast({ title: "Documento enviado!", description: "Você será notificado após a análise." });
+                } catch {
+                  toast({ title: "Erro ao enviar", variant: "destructive" });
+                } finally {
+                  setCrpLoading(false);
+                }
+              }}
+              className="space-y-4 mt-3"
+            >
+              <div>
+                <Label htmlFor="crpNumber">Número do CRP</Label>
+                <Input
+                  id="crpNumber"
+                  value={crpForm.crp}
+                  onChange={(e) => setCrpForm({ ...crpForm, crp: e.target.value })}
+                  placeholder="Ex: 06/12345"
+                  className="mt-1"
+                  required
+                />
+              </div>
+              <div>
+                <Label>Documento comprobatório</Label>
+                <p className="text-xs text-gray-500 mb-2">Foto ou PDF da carteirinha do CRP ou certidão do CFP (máx. 5MB)</p>
+                <div
+                  className="border-2 border-dashed border-gray-200 rounded-xl p-4 text-center cursor-pointer hover:border-blue-300 transition-colors"
+                  onClick={() => fileRef.current?.click()}
+                >
+                  {crpFile ? (
+                    <p className="text-sm text-blue-700 font-medium">{crpFile.name}</p>
+                  ) : (
+                    <>
+                      <Upload className="w-6 h-6 text-gray-400 mx-auto mb-1" />
+                      <p className="text-sm text-gray-500">Clique para selecionar</p>
+                      <p className="text-xs text-gray-400">JPG, PNG ou PDF</p>
+                    </>
+                  )}
+                </div>
+                <input
+                  ref={fileRef}
+                  type="file"
+                  accept="image/jpeg,image/png,image/webp,application/pdf"
+                  className="hidden"
+                  onChange={(e) => setCrpFile(e.target.files?.[0] ?? null)}
+                />
+              </div>
+              <div className="flex items-start gap-2 p-3 rounded-xl bg-gray-50 border border-gray-200">
+                <input
+                  type="checkbox"
+                  id="terms"
+                  checked={crpForm.acceptedTerms}
+                  onChange={(e) => setCrpForm({ ...crpForm, acceptedTerms: e.target.checked })}
+                  className="mt-0.5 flex-shrink-0"
+                />
+                <label htmlFor="terms" className="text-xs text-gray-700 leading-relaxed cursor-pointer">
+                  Declaro ser psicólogo(a) devidamente registrado(a) no CRP e que utilizarei o módulo Mundo Interior exclusivamente em sessões clínicas mediadas por mim. Estou ciente de que a ferramenta é um recurso auxiliar e não substitui psicoterapia, não realiza diagnóstico e não deve ser usada de forma autônoma pelo paciente.
+                </label>
+              </div>
+              <Button
+                type="submit"
+                disabled={crpLoading || !crpForm.crp.trim() || !crpFile || !crpForm.acceptedTerms}
+              >
+                {crpLoading ? <><Loader2 className="w-4 h-4 mr-2 animate-spin" />Enviando...</> : <><Upload className="w-4 h-4 mr-2" />Enviar para verificação</>}
+              </Button>
+            </form>
+          )}
         </CardContent>
       </Card>
 

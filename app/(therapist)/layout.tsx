@@ -4,7 +4,7 @@ import { signOut, useSession } from "next-auth/react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import Image from "next/image";
-import { LayoutDashboard, Users, FileText, LogOut, Menu, X, Settings, Globe } from "lucide-react";
+import { LayoutDashboard, Users, FileText, LogOut, Menu, X, Settings, Globe, Brain } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 import { useState } from "react";
@@ -14,6 +14,7 @@ import { AppUpdateButton } from "@/components/AppUpdateButton";
 const NAV_ITEMS = [
   { href: "/dashboard", label: "Dashboard", icon: LayoutDashboard },
   { href: "/pacientes", label: "Pacientes", icon: Users },
+  { href: "/treino-cognitivo", label: "Treino Cognitivo", icon: Brain },
   { href: "/mundo-interior", label: "Mundo Interior", icon: Globe },
   { href: "/relatorios", label: "Relatórios", icon: FileText },
   { href: "/configuracoes", label: "Configurações", icon: Settings },

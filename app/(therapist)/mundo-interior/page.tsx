@@ -20,10 +20,11 @@ export default async function MundoInteriorOverviewPage() {
   // Fetch current CRP from DB (not from token, which may be stale)
   const { data: therapistUser } = await supabase
     .from("User")
-    .select("crp")
+    .select("crp, crpStatus")
     .eq("id", therapistId)
     .single();
-  const hasCrp = !!therapistUser?.crp;
+  const crpStatus = therapistUser?.crpStatus ?? "unverified";
+  const hasCrp = crpStatus === "verified";
 
   const [{ data: patients }, { data: activeSessions }] = await Promise.all([
     supabase
@@ -65,16 +66,27 @@ export default async function MundoInteriorOverviewPage() {
       </div>
 
       {/* Gate de CRP */}
-      {!hasCrp && (
+      {crpStatus === "pending" && (
+        <div className="flex items-start gap-3 rounded-xl bg-yellow-50 border border-yellow-200 px-4 py-4">
+          <ShieldCheck className="w-5 h-5 text-yellow-600 flex-shrink-0 mt-0.5" />
+          <div>
+            <p className="text-sm font-semibold text-yellow-800">Verificação em análise</p>
+            <p className="text-xs text-yellow-700 mt-0.5">Seu documento foi enviado e está sendo analisado. O acesso será liberado após aprovação.</p>
+          </div>
+        </div>
+      )}
+      {(crpStatus === "unverified" || crpStatus === "rejected") && (
         <div className="flex items-start gap-3 rounded-xl bg-red-50 border border-red-200 px-4 py-4">
           <ShieldCheck className="w-5 h-5 text-red-500 flex-shrink-0 mt-0.5" />
           <div className="flex-1 space-y-2">
-            <p className="text-sm font-semibold text-red-800">CRP não registrado</p>
+            <p className="text-sm font-semibold text-red-800">
+              {crpStatus === "rejected" ? "Verificação rejeitada" : "CRP não verificado"}
+            </p>
             <p className="text-xs text-red-700">
-              Para acessar o Mundo Interior é necessário informar seu número de CRP nas configurações. Isso confirma que o módulo está sendo utilizado por um profissional de psicologia registrado.
+              Envie seu CRP e documento comprobatório nas configurações para liberar o acesso.
             </p>
             <Button asChild size="sm" variant="outline" className="border-red-300 text-red-700 hover:bg-red-100">
-              <Link href="/configuracoes">Registrar CRP agora</Link>
+              <Link href="/configuracoes">Ir para Configurações</Link>
             </Button>
           </div>
         </div>
