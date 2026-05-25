@@ -32,6 +32,9 @@ function pal(theme: Theme) {
     wrong: "border-red-500 bg-red-900/30",
     bar: "bg-gray-700",
     draggable: "border-gray-600 bg-gray-750",
+    story: "bg-cyan-900/20 border border-cyan-700",
+    storyLabel: "text-cyan-400",
+    storyBody: "text-gray-200",
   };
   if (theme === "COLORFUL") return {
     bg: "bg-gradient-to-br from-violet-50 via-white to-pink-50",
@@ -51,6 +54,9 @@ function pal(theme: Theme) {
     wrong: "border-red-400 bg-red-50",
     bar: "bg-violet-100",
     draggable: "border-violet-200 bg-white",
+    story: "bg-violet-50 border-2 border-violet-200",
+    storyLabel: "text-violet-600",
+    storyBody: "text-violet-900",
   };
   return {
     bg: "bg-gradient-to-br from-slate-50 via-white to-indigo-50/30",
@@ -70,7 +76,20 @@ function pal(theme: Theme) {
     wrong: "border-red-300 bg-red-50",
     bar: "bg-slate-200",
     draggable: "border-slate-200 bg-white",
+    story: "bg-blue-50 border border-blue-200",
+    storyLabel: "text-blue-700",
+    storyBody: "text-blue-900",
   };
+}
+
+function parseHour(h: string): number {
+  const parts = h.split("h").map(Number);
+  return parts[0] * 60 + (parts[1] || 0);
+}
+
+function parseDuration(d: string): number {
+  const parts = d.split("h").map(Number);
+  return parts[0] * 60 + (parts[1] || 0);
 }
 
 // ─── CINEMA ───────────────────────────────────────────────────────────────────
@@ -104,18 +123,79 @@ const SNACKS: Snack[] = [
   { id: "nachos", name: "Nachos", emoji: "🫔", price: 14 },
 ];
 
+interface CinemaL1Scenario {
+  story: string;
+  canMeia: boolean;
+  mustReturnBy: number | null; // hora limite em minutos (ex: 20 * 60)
+}
+
+const CINEMA_L1_SCENARIOS: CinemaL1Scenario[] = [
+  {
+    story: "Você tem a carteirinha de estudante na mochila e prometeu à sua mãe que estaria em casa para o jantar — ela serve às 20h em ponto. Não vai conseguir comer se chegar atrasado.",
+    canMeia: true,
+    mustReturnBy: 20,
+  },
+  {
+    story: "Você vai levar sua avó ao cinema de aniversário. O médico pediu que ela não fique fora de casa após as 19h por causa da medicação. E como ela tem mais de 60 anos, ela tem direito à meia-entrada.",
+    canMeia: true,
+    mustReturnBy: 19,
+  },
+  {
+    story: "Você e um colega de trabalho combinaram de ir ao cinema direto do expediente. Nenhum de vocês tem desconto — são funcionários CLT sem carteirinha de estudante ou cartão de idoso. Sem pressa para voltar.",
+    canMeia: false,
+    mustReturnBy: null,
+  },
+  {
+    story: "Você tem o cartão de idoso (65+) na carteira e o dia inteiro livre — sem compromissos, sem pressa. Aproveite!",
+    canMeia: true,
+    mustReturnBy: null,
+  },
+];
+
 // L1 — selecionar ingresso dentro do orçamento
 function CinemaL1({ theme, onFinish }: { theme: Theme; onFinish: (ok: boolean) => void }) {
   const p = pal(theme);
+  const scenario = useRef(CINEMA_L1_SCENARIOS[Math.floor(Math.random() * CINEMA_L1_SCENARIOS.length)]);
   const budget = useRef(22 + Math.floor(Math.random() * 16));
   const filme = useRef(FILMES[Math.floor(Math.random() * FILMES.length)]);
-  const horarios = useRef([...HORARIOS].sort(() => Math.random() - 0.5).slice(0, 3));
+  const horarios = useRef((() => {
+    const all = [...HORARIOS];
+    if (!scenario.current.mustReturnBy) {
+      return all.sort(() => Math.random() - 0.5).slice(0, 3);
+    }
+    const durMin = parseDuration(filme.current.duration);
+    const limitMin = scenario.current.mustReturnBy * 60;
+    const valid = all.filter(h => parseHour(h) + durMin <= limitMin);
+    const invalid = all.filter(h => parseHour(h) + durMin > limitMin);
+    const picked: string[] = [];
+    if (valid.length > 0) picked.push(valid[Math.floor(Math.random() * valid.length)]);
+    const shuffledInvalid = [...invalid].sort(() => Math.random() - 0.5);
+    for (let i = 0; i < shuffledInvalid.length && picked.length < 3; i++) picked.push(shuffledInvalid[i]);
+    const remaining = all.filter(h => !picked.includes(h)).sort(() => Math.random() - 0.5);
+    while (picked.length < 3 && remaining.length > 0) picked.push(remaining.shift()!);
+    return picked.sort((a, b) => parseHour(a) - parseHour(b));
+  })());
   const [ticket, setTicket] = useState<string | null>(null);
   const [hora, setHora] = useState<string | null>(null);
   const total = INGRESSOS.find(t => t.id === ticket)?.price ?? 0;
 
+  function isValidChoice() {
+    if (!ticket || !hora || total > budget.current) return false;
+    if (!scenario.current.canMeia && ticket === "meia") return false;
+    if (scenario.current.mustReturnBy !== null) {
+      const endMin = parseHour(hora) + parseDuration(filme.current.duration);
+      if (endMin > scenario.current.mustReturnBy * 60) return false;
+    }
+    return true;
+  }
+
   return (
     <div className="space-y-4">
+      <div className={`rounded-xl p-4 ${p.story}`}>
+        <p className={`text-xs font-bold uppercase tracking-wide mb-1 ${p.storyLabel}`}>📖 Cenário</p>
+        <p className={`text-sm ${p.storyBody}`}>{scenario.current.story}</p>
+      </div>
+
       <div className={`rounded-xl p-4 ${p.card}`}>
         <p className={`text-xs uppercase tracking-wide font-semibold mb-1 ${p.muted}`}>
           {filme.current.genre} · {filme.current.duration} · {filme.current.rating}+
@@ -146,11 +226,20 @@ function CinemaL1({ theme, onFinish }: { theme: Theme; onFinish: (ok: boolean) =
       <div>
         <p className={`text-xs font-semibold uppercase tracking-wide mb-2 ${p.muted}`}>Horário</p>
         <div className="grid grid-cols-3 gap-2">
-          {horarios.current.map(h => (
-            <button key={h} onClick={() => setHora(h)}
-              className={`py-2.5 rounded-xl border-2 text-sm font-bold transition-all ${hora === h ? p.sel : p.unsel} ${p.text}`}
-            >{h}</button>
-          ))}
+          {horarios.current.map(h => {
+            const endMin = parseHour(h) + parseDuration(filme.current.duration);
+            const endH = Math.floor(endMin / 60);
+            const endM = endMin % 60;
+            const endLabel = `${endH}h${endM.toString().padStart(2, "0")}`;
+            return (
+              <button key={h} onClick={() => setHora(h)}
+                className={`py-2.5 px-1 rounded-xl border-2 text-sm font-bold transition-all ${hora === h ? p.sel : p.unsel} ${p.text}`}
+              >
+                <span className="block">{h}</span>
+                <span className={`block text-xs font-normal ${p.muted}`}>até {endLabel}</span>
+              </button>
+            );
+          })}
         </div>
       </div>
 
@@ -161,7 +250,7 @@ function CinemaL1({ theme, onFinish }: { theme: Theme; onFinish: (ok: boolean) =
       )}
 
       <button
-        onClick={() => onFinish(ticket !== null && hora !== null && total <= budget.current)}
+        onClick={() => onFinish(isValidChoice())}
         disabled={!ticket || !hora}
         className={`w-full h-11 rounded-xl font-bold transition-all ${p.btn} disabled:opacity-40`}
       >Comprar ingresso</button>
@@ -169,10 +258,18 @@ function CinemaL1({ theme, onFinish }: { theme: Theme; onFinish: (ok: boolean) =
   );
 }
 
+const CINEMA_L2_STORIES = [
+  "Recebi meu salário hoje, mas o aluguel levou quase tudo. Sobrou R$ {budget} e quero curtir o cinema com direito a pelo menos um lanche.",
+  "Ganhei R$ {budget} numa raspadinha! Hora de comemorar: cinema com bombonière incluída.",
+  "É meu aniversário e guardei R$ {budget} especialmente pra isso. Ingresso e algum lanche — tudo que eu quero!",
+  "Só tenho R$ {budget} em dinheiro na carteira e precisa dar para o ingresso e alguma coisa pra comer durante o filme.",
+];
+
 // L2 — ingresso + lanches com orçamento apertado
 function CinemaL2({ theme, onFinish }: { theme: Theme; onFinish: (ok: boolean) => void }) {
   const p = pal(theme);
   const budget = useRef(44 + Math.floor(Math.random() * 16));
+  const story = useRef(CINEMA_L2_STORIES[Math.floor(Math.random() * CINEMA_L2_STORIES.length)]);
   const [ticket, setTicket] = useState<string | null>(null);
   const [snacks, setSnacks] = useState<Set<string>>(new Set());
 
@@ -187,6 +284,10 @@ function CinemaL2({ theme, onFinish }: { theme: Theme; onFinish: (ok: boolean) =
 
   return (
     <div className="space-y-4">
+      <div className={`rounded-xl p-4 ${p.story}`}>
+        <p className={`text-xs font-bold uppercase tracking-wide mb-1 ${p.storyLabel}`}>📖 Situação</p>
+        <p className={`text-sm ${p.storyBody}`}>{story.current.replace("{budget}", String(budget.current))}</p>
+      </div>
       <div className={`flex justify-between items-center p-3 rounded-xl ${p.card}`}>
         <p className={`text-sm font-semibold ${p.text}`}>💰 Orçamento: R$ {budget.current}</p>
         <p className={`text-sm font-bold ${over ? "text-red-500" : "text-green-600"}`}>
@@ -307,11 +408,18 @@ function CinemaL3({ theme, onFinish }: { theme: Theme; onFinish: (ok: boolean) =
   );
 }
 
+const CINEMA_L4_STORIES = [
+  "Você planejou a tarde inteira para ir ao cinema. Comprou pipoca mentalmente, escolheu o assento... mas ao chegar, uma placa avisa: sessão cancelada por problema técnico.",
+  "Você veio de longe especialmente para esta sessão. Chegou na hora certa, mas o cinema acabou de anunciar o cancelamento por falta de projecionista. Ainda há outras opções na programação.",
+  "Você estava animadíssimo com o filme que escolheu. Mas no display da bilheteria aparece: CANCELADA. Respira fundo — tem outras opções.",
+];
+
 // L4 — sessão cancelada, imprevisto e adaptação
 function CinemaL4({ theme, onFinish }: { theme: Theme; onFinish: (ok: boolean) => void }) {
   const p = pal(theme);
   const filmes = useRef([...FILMES].sort(() => Math.random() - 0.5).slice(0, 3));
   const budget = useRef(28 + Math.floor(Math.random() * 14));
+  const cancellationStory = useRef(CINEMA_L4_STORIES[Math.floor(Math.random() * CINEMA_L4_STORIES.length)]);
   const [step, setStep] = useState<"choose" | "alert" | "adapt">("choose");
   const [first, setFirst] = useState<string | null>(null);
   const [second, setSecond] = useState<string | null>(null);
@@ -329,6 +437,10 @@ function CinemaL4({ theme, onFinish }: { theme: Theme; onFinish: (ok: boolean) =
 
   if (step === "choose") return (
     <div className="space-y-3">
+      <div className={`rounded-xl p-4 ${p.story}`}>
+        <p className={`text-xs font-bold uppercase tracking-wide mb-1 ${p.storyLabel}`}>📖 Situação</p>
+        <p className={`text-sm ${p.storyBody}`}>{cancellationStory.current}</p>
+      </div>
       <p className={`text-sm font-medium ${p.text}`}>Qual filme você quer assistir?</p>
       {filmes.current.map(f => (
         <button key={f.id} onClick={() => choose(f.id)}
@@ -400,11 +512,11 @@ const CARDAPIO: Prato[] = [
 ];
 
 const PEDIDOS_L1 = [
-  { dishes: ["frango", "suco"], note: "Mesa 3 quer frango grelhado e suco natural." },
-  { dishes: ["salada", "file", "agua"], note: "Mesa 1 quer salada Caesar, filé ao molho e água." },
-  { dishes: ["massa", "sorvete"], note: "Mesa 5 quer massa ao pesto e sorvete." },
-  { dishes: ["risoto", "vinho"], note: "Mesa 2 quer risoto e taça de vinho." },
-  { dishes: ["sopa", "frango", "mousse"], note: "Mesa 4 quer sopa, frango grelhado e mousse." },
+  { dishes: ["frango", "suco"], note: "Mesa 3 — casal com pressa, saem em 30 min. Pedem frango grelhado e suco natural." },
+  { dishes: ["salada", "file", "agua"], note: "Mesa 1 — executivo em reunião de negócios. Quer salada Caesar, filé ao molho e água." },
+  { dishes: ["massa", "sorvete"], note: "Mesa 5 — mãe com filho pequeno, sem pressa. Pedem massa ao pesto e sorvete." },
+  { dishes: ["risoto", "vinho"], note: "Mesa 2 — casal em aniversário de namoro. Escolheram risoto e taça de vinho." },
+  { dishes: ["sopa", "frango", "mousse"], note: "Mesa 4 — grupo de amigas. Pediram sopa do dia, frango grelhado e mousse de chocolate." },
 ];
 
 // L1 — memorizar e reproduzir pedido
@@ -743,22 +855,22 @@ function CityHub({ theme, levels, done, max, onSelect }: {
 
 // ─── Briefing da missão ───────────────────────────────────────────────────────
 
-const BRIEFINGS: Record<EnvId, Record<number, { title: string; obj: string; rule: string }>> = {
+const BRIEFINGS: Record<EnvId, Record<number, { title: string; story: string; obj: string; rule: string }>> = {
   cinema: {
-    1: { title: "Comprar Ingresso",      obj: "Escolha o ingresso e horário dentro do orçamento.",       rule: "Não ultrapasse o valor disponível." },
-    2: { title: "Controle de Gastos",    obj: "Combine ingresso e lanches sem estourar o orçamento.",    rule: "O total não pode ultrapassar o limite." },
-    3: { title: "Pedido da Bombonière",  obj: "Memorize o pedido e reproduza-o na loja.",                rule: "Você tem 8 segundos para memorizar." },
-    4: { title: "Sessão Cancelada",      obj: "A sessão escolhida foi cancelada. Encontre outra.",       rule: "Adapte-se rápido ao imprevisto." },
+    1: { title: "Comprar Ingresso",      story: "Você tem um orçamento limitado e um compromisso no dia. Quem você é define o desconto disponível — e que horas precisa estar de volta.",                         obj: "Escolha o ingresso e horário dentro do orçamento.", rule: "Não ultrapasse o valor disponível." },
+    2: { title: "Controle de Gastos",    story: "Sobrou uma grana na carteira. Dá pra curtir o cinema e ainda comer alguma coisa — se você planejar direito.",                                                    obj: "Combine ingresso e lanches sem estourar o orçamento.", rule: "O total não pode ultrapassar o limite." },
+    3: { title: "Pedido da Bombonière",  story: "Seu amigo foi comprar os ingressos enquanto você ficou na fila da bombonière. Ele anotou o que cada um queria — agora é com você.",                              obj: "Memorize o pedido e reproduza-o na loja.", rule: "Você tem 8 segundos para memorizar." },
+    4: { title: "Sessão Cancelada",      story: "Você planejou o dia todo para este filme. Ao chegar, a surpresa: sessão cancelada. Mas o cinema ainda está aberto — há outras opções.",                          obj: "A sessão escolhida foi cancelada. Encontre outra.", rule: "Adapte-se rápido ao imprevisto." },
   },
   restaurante: {
-    1: { title: "Anotar Pedido",         obj: "Memorize o pedido e selecione os itens corretos.",        rule: "6 segundos para memorizar." },
-    2: { title: "Ordem de Serviço",      obj: "Arranje os pratos na sequência correta.",                 rule: "Entrada → Prato principal → Sobremesa." },
-    3: { title: "Pedidos Especiais",     obj: "Memorize as modificações de cada cliente.",               rule: "8 segundos · 3 pedidos com variações." },
+    1: { title: "Anotar Pedido",         story: "A casa está cheia e seu bloco de anotações acabou. Você vai ter que guardar o pedido na memória e reproduzi-lo depois.",                                         obj: "Memorize o pedido e selecione os itens corretos.", rule: "6 segundos para memorizar." },
+    2: { title: "Ordem de Serviço",      story: "Os pratos saíram da cozinha todos embaralhados e precisam ser servidos na ordem certa. A mesa espera.",                                                          obj: "Arranje os pratos na sequência correta.", rule: "Entrada → Prato principal → Sobremesa." },
+    3: { title: "Pedidos Especiais",     story: "Mesa VIP com clientes exigentes — cada um pediu uma modificação diferente no prato. Não misture os pedidos!",                                                    obj: "Memorize as modificações de cada cliente.", rule: "8 segundos · 3 pedidos com variações." },
   },
   farmacia: {
-    1: { title: "Retirar Medicamento",   obj: "Organize as etapas para retirar o medicamento.",          rule: "Arraste na ordem correta." },
-    2: { title: "Compra Simples",        obj: "Organize as etapas de uma compra na farmácia.",           rule: "Arraste na ordem correta." },
-    3: { title: "Medicamento Controlado", obj: "Siga o protocolo correto para medicamento com receita.", rule: "A ordem importa — cada etapa tem consequência." },
+    1: { title: "Retirar Medicamento",   story: "Sua mãe ligou: o remédio dela acabou e ela não pode sair. Você foi buscar — mas precisa seguir os passos certos para retirar com receita.",                     obj: "Organize as etapas para retirar o medicamento.", rule: "Arraste na ordem correta." },
+    2: { title: "Compra Simples",        story: "Você entrou na farmácia para pegar um produto rapidinho. Parece fácil, mas sem saber a sequência certa, pode perder tempo à toa.",                               obj: "Organize as etapas de uma compra na farmácia.", rule: "Arraste na ordem correta." },
+    3: { title: "Medicamento Controlado", story: "O médico receitou um medicamento de uso controlado. Tem regra para tudo — e se você errar a ordem, vai embora sem o remédio.",                                 obj: "Siga o protocolo correto para medicamento com receita.", rule: "A ordem importa — cada etapa tem consequência." },
   },
 };
 
@@ -778,6 +890,11 @@ function MissionBriefing({ envId, level, theme, onStart }: {
           <p className={`text-xs font-semibold uppercase tracking-wide ${p.muted}`}>{cfg.name} · Nível {level}</p>
           <p className={`font-bold text-xl ${p.title}`}>{b.title}</p>
         </div>
+      </div>
+
+      <div className={`p-4 rounded-xl ${p.story}`}>
+        <p className={`text-xs font-bold uppercase tracking-wide mb-1 ${p.storyLabel}`}>📖 Contexto</p>
+        <p className={`text-sm ${p.storyBody}`}>{b.story}</p>
       </div>
 
       <div className={`p-4 rounded-xl space-y-2 ${p.card}`}>

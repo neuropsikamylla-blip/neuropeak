@@ -84,8 +84,43 @@ function mazeLoops(difficulty: number, size: number): number {
   return base * 5;
 }
 
-// Place true exit + false exits on south/east border so player must explore to find the right one
+// BFS para encontrar o caminho mais curto; retorna o conjunto de células no caminho
+function findSolutionPath(
+  maze: Cell[][],
+  from: { r: number; c: number },
+  to: { r: number; c: number }
+): Set<string> {
+  const size = maze.length;
+  const queue: Array<{ r: number; c: number; path: string[] }> = [
+    { r: from.r, c: from.c, path: [cellKey(from.r, from.c)] },
+  ];
+  const visited = new Set([cellKey(from.r, from.c)]);
+  const dirMap = [
+    { dr: -1, dc: 0, w: "N" as const },
+    { dr:  1, dc: 0, w: "S" as const },
+    { dr:  0, dc: 1, w: "E" as const },
+    { dr:  0, dc:-1, w: "W" as const },
+  ];
+  while (queue.length > 0) {
+    const { r, c, path } = queue.shift()!;
+    if (r === to.r && c === to.c) return new Set(path);
+    for (const { dr, dc, w } of dirMap) {
+      const nr = r + dr;
+      const nc = c + dc;
+      const k = cellKey(nr, nc);
+      if (nr >= 0 && nr < size && nc >= 0 && nc < size && !visited.has(k) && !maze[r][c][w]) {
+        visited.add(k);
+        queue.push({ r: nr, c: nc, path: [...path, k] });
+      }
+    }
+  }
+  return new Set();
+}
+
+// Place true exit + false exits on south/east border.
+// False exits are never placed on the solution path to the true exit.
 function generateBorderExits(
+  maze: Cell[][],
   size: number,
   falseCount: number
 ): { trueExit: { r: number; c: number }; falseExits: { r: number; c: number }[] } {
@@ -98,7 +133,15 @@ function generateBorderExits(
     [filtered[i], filtered[j]] = [filtered[j], filtered[i]];
   }
   const trueExit = filtered[0];
-  const falseExits = filtered.slice(1, 1 + Math.min(falseCount, filtered.length - 1));
+
+  // Find solution path from (0,0) to trueExit
+  const solutionPath = findSolutionPath(maze, { r: 0, c: 0 }, trueExit);
+
+  // False exits must not be on the solution path
+  const safeCandidates = filtered.slice(1).filter(
+    (p) => !solutionPath.has(cellKey(p.r, p.c))
+  );
+  const falseExits = safeCandidates.slice(0, Math.min(falseCount, safeCandidates.length));
   return { trueExit, falseExits };
 }
 
@@ -516,7 +559,7 @@ export function Labirinto({ difficulty, theme, onComplete }: LabirintoProps) {
     const idx = initialIdx(difficulty);
     const sz = SIZE_STEPS[idx];
     const grid = generateMaze(sz, mazeLoops(difficulty, sz));
-    const exits = generateBorderExits(sz, falseExitsCount(difficulty));
+    const exits = generateBorderExits(grid, sz, falseExitsCount(difficulty));
     return { maze: grid, trueExit: exits.trueExit, falseExits: exits.falseExits };
   });
   const [maze, setMaze] = useState<Cell[][]>(mazeInitState.maze);
@@ -650,7 +693,7 @@ export function Labirinto({ difficulty, theme, onComplete }: LabirintoProps) {
         } else {
           const nextSize = SIZE_STEPS[nextIdx];
           const nextMazeGrid = generateMaze(nextSize, mazeLoops(difficulty, nextSize));
-          const nextExits = generateBorderExits(nextSize, falseExitsCount(difficulty));
+          const nextExits = generateBorderExits(nextMazeGrid, nextSize, falseExitsCount(difficulty));
           setMazeNum(nextMaze);
           setStreak(nextStreak);
           setSizeIdx(nextIdx);

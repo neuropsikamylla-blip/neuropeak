@@ -49,7 +49,6 @@ const OBJECTS: GameObj[] = [
 ];
 
 const TOTAL_TRIALS = 24;
-const SWITCH_EVERY = 8;
 
 type RuleName = "animal" | "comida" | "mochila";
 
@@ -75,21 +74,52 @@ function shuffle<T>(arr: T[]): T[] {
 }
 
 function buildSequence(): GameObj[] {
-  return [
-    ...shuffle(OBJECTS).slice(0, SWITCH_EVERY),
-    ...shuffle(OBJECTS).slice(0, SWITCH_EVERY),
-    ...shuffle(OBJECTS).slice(0, SWITCH_EVERY),
-  ];
+  const pool = [...shuffle(OBJECTS), ...shuffle(OBJECTS)];
+  return pool.slice(0, TOTAL_TRIALS);
+}
+
+// Gera sequência de regras com alternância controlada por dificuldade
+// difficulty <= 3: blocos de 3–4 → exercita memória de trabalho sem sobrecarregar
+// difficulty 4–6: blocos de 2–3 → alternância moderada
+// difficulty 7–8: blocos de 1–2 → troca quase trial a trial
+// difficulty 9–10: completamente imprevisível, maioria troca a cada trial
+function buildRuleSequence(difficulty: number): RuleName[] {
+  const seq: RuleName[] = [];
+  let current: RuleName = RULE_NAMES[Math.floor(Math.random() * 3)];
+  let runLen = 0;
+
+  // maxRun = quantos trials seguidos com a mesma regra
+  const maxRun =
+    difficulty <= 3 ? 4 :
+    difficulty <= 5 ? 3 :
+    difficulty <= 7 ? 2 : 1;
+
+  // switchProb = probabilidade de trocar após cada trial (além do maxRun)
+  const switchProb =
+    difficulty <= 3 ? 0.15 :
+    difficulty <= 5 ? 0.30 :
+    difficulty <= 7 ? 0.55 :
+    difficulty <= 8 ? 0.75 : 0.90;
+
+  for (let i = 0; i < TOTAL_TRIALS; i++) {
+    seq.push(current);
+    runLen++;
+    const mustSwitch = runLen >= maxRun;
+    const willSwitch = mustSwitch || Math.random() < switchProb;
+    if (willSwitch) {
+      // escolhe regra diferente da atual
+      const others = RULE_NAMES.filter(r => r !== current);
+      current = others[Math.floor(Math.random() * others.length)];
+      runLen = 0;
+    }
+  }
+  return seq;
 }
 
 function getCorrectAnswer(obj: GameObj, rule: RuleName): boolean {
   if (rule === "animal") return obj.isAnimal;
   if (rule === "comida") return obj.isFood;
   return obj.fitsBackpack;
-}
-
-function getRuleName(trial: number): RuleName {
-  return RULE_NAMES[Math.floor(trial / SWITCH_EVERY) % 3];
 }
 
 function getTrialMs(difficulty: number): number {
@@ -220,6 +250,7 @@ export function FlexibilidadeCognitiva({ difficulty, theme, onComplete }: Flexib
   const reportProgress = useExerciseProgress();
 
   const [sequence] = useState<GameObj[]>(() => buildSequence());
+  const [ruleSequence] = useState<RuleName[]>(() => buildRuleSequence(difficulty));
   const [trial, setTrial] = useState(0);
   const [responses, setResponses] = useState<{ correct: boolean; rt: number; isSwitchTrial: boolean }[]>([]);
   const [feedback, setFeedback] = useState<"correct" | "incorrect" | "timeout" | null>(null);
@@ -241,8 +272,8 @@ export function FlexibilidadeCognitiva({ difficulty, theme, onComplete }: Flexib
   responsesRef.current = responses;
 
   const trialMs = getTrialMs(difficulty);
-  const currentRule = getRuleName(trial);
-  const isSwitchTrial = trial > 0 && trial % SWITCH_EVERY === 0;
+  const currentRule = ruleSequence[Math.min(trial, TOTAL_TRIALS - 1)];
+  const isSwitchTrial = trial > 0 && ruleSequence[trial] !== ruleSequence[trial - 1];
 
   const handleAnswer = useCallback(
     (answer: boolean | null) => {
@@ -253,8 +284,8 @@ export function FlexibilidadeCognitiva({ difficulty, theme, onComplete }: Flexib
       const rt = Date.now() - trialStart.current;
       const curTrial = trialRef.current;
       const obj = sequence[curTrial];
-      const curRule = getRuleName(curTrial);
-      const curIsSwitchTrial = curTrial > 0 && curTrial % SWITCH_EVERY === 0;
+      const curRule = ruleSequence[curTrial];
+      const curIsSwitchTrial = curTrial > 0 && ruleSequence[curTrial] !== ruleSequence[curTrial - 1];
 
       const isCorrect = answer !== null && getCorrectAnswer(obj, curRule) === answer;
       const fbType = answer === null ? "timeout" : isCorrect ? "correct" : "incorrect";
@@ -296,10 +327,11 @@ export function FlexibilidadeCognitiva({ difficulty, theme, onComplete }: Flexib
           return;
         }
 
-        const nextIsSwitch = nextTrial % SWITCH_EVERY === 0;
-        const showSwitchOverlay = difficulty <= 8;
+        const nextIsSwitch = ruleSequence[nextTrial] !== ruleSequence[nextTrial - 1];
+        // Mostra overlay de troca apenas em dificuldades ≤ 7; acima disso, o paciente deve notar sozinho
+        const showSwitchOverlay = nextIsSwitch && difficulty <= 7;
 
-        if (nextIsSwitch && showSwitchOverlay) {
+        if (showSwitchOverlay) {
           setShowRuleSwitch(true);
           showRuleSwitchRef.current = true;
           setTrial(nextTrial);
@@ -320,7 +352,7 @@ export function FlexibilidadeCognitiva({ difficulty, theme, onComplete }: Flexib
         }
       }, delay);
     },
-    [difficulty, onComplete, reportProgress, sequence, trialMs]
+    [difficulty, onComplete, reportProgress, ruleSequence, sequence, trialMs]
   );
 
   // Per-trial countdown timer
@@ -367,7 +399,7 @@ export function FlexibilidadeCognitiva({ difficulty, theme, onComplete }: Flexib
   }
 
   const obj = sequence[Math.min(trial, TOTAL_TRIALS - 1)];
-  const nextRule = getRuleName(trial);
+  const nextRule = ruleSequence[Math.min(trial, TOTAL_TRIALS - 1)];
 
   const bg =
     theme === "GAMIFIED" ? "bg-gray-950" :
