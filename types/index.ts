@@ -255,14 +255,6 @@ export const EXERCISE_DEFINITIONS = {
     estimatedMinutes: 7,
     icon: "🔀",
   },
-  "atencao-dividida": {
-    id: "atencao-dividida",
-    name: "Atenção Dividida",
-    domain: "attention" as Domain,
-    description: "Monitore dois fluxos de informação simultaneamente",
-    estimatedMinutes: 8,
-    icon: "👀",
-  },
   "atencao-sustentada": {
     id: "atencao-sustentada",
     name: "Atenção Sustentada",

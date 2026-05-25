@@ -104,7 +104,7 @@ const FILMES = [
 ];
 
 const INGRESSOS = [
-  { id: "meia", label: "Meia-entrada", price: 14, note: "Estudante / Idoso" },
+  { id: "meia", label: "Meia-entrada", price: 14, note: "Estudante / Professor / Idoso (60+)" },
   { id: "inteira", label: "Inteira", price: 28, note: "Padrão" },
   { id: "vip", label: "VIP Poltrona", price: 42, note: "Reclinável + serviço" },
 ];
@@ -136,7 +136,7 @@ const CINEMA_L1_SCENARIOS: CinemaL1Scenario[] = [
     mustReturnBy: 20,
   },
   {
-    story: "Você vai levar sua avó ao cinema de aniversário. O médico pediu que ela não fique fora de casa após as 19h por causa da medicação. E como ela tem mais de 60 anos, ela tem direito à meia-entrada.",
+    story: "É o aniversário da sua avó Dona Maria, 73 anos. Você vai deixá-la no cinema — ela quer muito ir, mas você precisa voltar ao trabalho. O médico pediu que ela não fique fora de casa depois das 19h por causa da medicação. Compre só o ingresso dela dentro do seu orçamento.",
     canMeia: true,
     mustReturnBy: 19,
   },

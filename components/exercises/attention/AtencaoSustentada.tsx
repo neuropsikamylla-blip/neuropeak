@@ -408,21 +408,6 @@ export function AtencaoSustentada({ difficulty, theme, onComplete }: AtencaoSust
           Toque na área acima quando aparecer a letra <strong>{TARGET_LETTER}</strong>
         </p>
 
-        {/* Stats row */}
-        <div className="flex justify-center gap-6 mt-4">
-          <div className="text-center">
-            <p className={`text-xs ${theme === "GAMIFIED" ? "text-gray-500" : "text-gray-400"}`}>Acertos</p>
-            <p className={`text-lg font-black ${theme === "GAMIFIED" ? "text-green-400" : "text-green-600"}`}>{hits}</p>
-          </div>
-          <div className="text-center">
-            <p className={`text-xs ${theme === "GAMIFIED" ? "text-gray-500" : "text-gray-400"}`}>Falhas</p>
-            <p className={`text-lg font-black ${theme === "GAMIFIED" ? "text-orange-400" : "text-orange-500"}`}>{misses}</p>
-          </div>
-          <div className="text-center">
-            <p className={`text-xs ${theme === "GAMIFIED" ? "text-gray-500" : "text-gray-400"}`}>Falsos</p>
-            <p className={`text-lg font-black ${theme === "GAMIFIED" ? "text-red-400" : "text-red-500"}`}>{falseAlarms}</p>
-          </div>
-        </div>
       </div>
     </div>
   );

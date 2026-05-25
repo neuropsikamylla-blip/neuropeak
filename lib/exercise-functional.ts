@@ -167,15 +167,6 @@ export const EXERCISE_FUNCTIONAL: Record<string, ExerciseFunctional> = {
     ],
     dailyTip: "Evite transições abruptas entre tarefas importantes. Termine a frase, salve o arquivo, anote onde parou — então mude. Criar uma 'pausa de transição' reduz erros.",
   },
-  "atencao-dividida": {
-    scenario: "Ouvir o que o médico fala enquanto assina um formulário, atravessar a rua enquanto atende alguém, cozinhar enquanto acompanha o horário.",
-    strategies: [
-      "Identifique qual das duas tarefas exige mais atenção e deixe a outra em 'piloto automático'.",
-      "Para tarefas divididas, simplifique ao máximo a tarefa secundária (ex: responder monossílabos em vez de frases longas).",
-      "Se sentir que está perdendo o fio de uma das tarefas, pare a menos importante e retome.",
-    ],
-    dailyTip: "Evite dividir atenção em tarefas de alto risco — dirigir e usar celular, checar medicamentos enquanto conversa. Reserve atenção total para o que realmente importa.",
-  },
   "atencao-sustentada": {
     scenario: "Aguardar o nome ser chamado na sala de espera, monitorar a panela no fogão, ficar atento ao sinal de saída do ônibus em uma rota desconhecida.",
     strategies: [

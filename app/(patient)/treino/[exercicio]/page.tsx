@@ -36,7 +36,6 @@ const CertoOuErrado       = dynamic(() => import("@/components/exercises/process
 const AntesDepois         = dynamic(() => import("@/components/exercises/attention/AntesDepois").then(m => ({ default: m.AntesDepois })), { loading: ExerciseLoader });
 const AtencaoSeletiva     = dynamic(() => import("@/components/exercises/attention/AtencaoSeletiva").then(m => ({ default: m.AtencaoSeletiva })), { loading: ExerciseLoader });
 const AtencaoAlternada    = dynamic(() => import("@/components/exercises/attention/AtencaoAlternada").then(m => ({ default: m.AtencaoAlternada })), { loading: ExerciseLoader });
-const AtencaoDividida     = dynamic(() => import("@/components/exercises/attention/AtencaoDividida").then(m => ({ default: m.AtencaoDividida })), { loading: ExerciseLoader });
 const AtencaoSustentada   = dynamic(() => import("@/components/exercises/attention/AtencaoSustentada").then(m => ({ default: m.AtencaoSustentada })), { loading: ExerciseLoader });
 const Semaforo            = dynamic(() => import("@/components/exercises/processing/Semaforo").then(m => ({ default: m.Semaforo })), { loading: ExerciseLoader });
 const DesafioSupermercado = dynamic(() => import("@/components/exercises/memory/DesafioSupermercado").then(m => ({ default: m.DesafioSupermercado })), { loading: ExerciseLoader });
@@ -174,12 +173,6 @@ const EXERCISE_INSTRUCTIONS: Record<string, string[]> = {
     "A regra muda durante o exercício: ora é 'Animal ou Objeto?', ora é 'Grande ou Pequeno?'",
     "Sempre verifique qual regra está ativa antes de responder.",
     "Adaptar-se à mudança de regra é o treino principal!",
-  ],
-  "atencao-dividida": [
-    "A tela está dividida em dois lados: NÚMEROS (esquerda) e LETRAS (direita).",
-    "Esquerda: toque ÍMPAR quando aparecer um número ímpar.",
-    "Direita: toque VOGAL quando aparecer uma vogal.",
-    "Os dois lados acontecem ao mesmo tempo — monitore ambos!",
   ],
   "atencao-sustentada": [
     "Letras vão aparecer uma por vez, rapidamente.",
@@ -395,7 +388,6 @@ export default function ExercicioPage() {
       case "antes-depois": return <AntesDepois {...props} />;
       case "atencao-seletiva": return <AtencaoSeletiva {...props} />;
       case "atencao-alternada": return <AtencaoAlternada {...props} />;
-      case "atencao-dividida": return <AtencaoDividida {...props} />;
       case "atencao-sustentada": return <AtencaoSustentada {...props} />;
       case "semaforo": return <Semaforo {...props} />;
       case "desafio-supermercado": return <DesafioSupermercado {...props} />;

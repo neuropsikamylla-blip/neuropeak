@@ -29,13 +29,17 @@ const DISTRACTOR_COLORS = ["#dc2626", "#2563eb", "#9333ea", "#ea580c", "#0891b2"
 const MAX_TRIALS = 20;
 
 function speedMs(difficulty: number) {
-  // 5000ms (easiest) → 2200ms (hardest)
-  return Math.round(5000 - ((difficulty - 1) / 9) * 2800);
+  // 9000ms (diff 1) → 2500ms (diff 10) — very slow start so single tap is easy
+  return Math.round(9000 - ((difficulty - 1) / 9) * 6500);
 }
 
 function distractorCount(difficulty: number) {
-  // 2 at diff 1 → 6 at diff 10 — always present to require visual selection
-  return Math.min(6, 2 + Math.floor((difficulty - 1) / 2));
+  // 0 distractors at diff 1-2, then grows progressively
+  if (difficulty <= 2) return 0;
+  if (difficulty <= 4) return 1;
+  if (difficulty <= 6) return 2;
+  if (difficulty <= 8) return 3;
+  return 5;
 }
 
 let _uid = 0;
@@ -362,7 +366,7 @@ export function TempoReacao({ difficulty, theme, onComplete }: TempoReacaoProps)
                 pointerEvents: "auto",
                 zIndex: 10,
               }}
-              onClick={() => handleBalloonClick(balloon)}
+              onPointerDown={() => handleBalloonClick(balloon)}
             >
               {/* Balloon body */}
               <div
