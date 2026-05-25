@@ -170,14 +170,14 @@ function generateBorderExits(
 }
 
 // ── Configuration ──────────────────────────────────────────────────────────
-const SIZE_STEPS = [8, 10, 13, 16, 20, 24];
+const SIZE_STEPS = [15, 19, 23, 27, 31, 35];
 const TIME_LIMITS: Record<number, number> = {
-  8: 90,
-  10: 125,
-  13: 170,
-  16: 230,
-  20: 310,
-  24: 420,
+  15: 150,
+  19: 210,
+  23: 270,
+  27: 330,
+  31: 420,
+  35: 520,
 };
 const MAX_MAZES = 10;
 const MIN_IDX = 0;
@@ -286,7 +286,7 @@ function MazeGrid({
   const pal = PALETTES[theme];
   const size = maze.length;
   const cellPx = Math.floor(containerPx / size);
-  const wallPx = size >= 16 ? 1 : 2;
+  const wallPx = 1;
 
   return (
     <div
@@ -615,7 +615,7 @@ export function Labirinto({ difficulty, theme, onComplete }: LabirintoProps) {
     window.addEventListener("resize", onResize);
     return () => window.removeEventListener("resize", onResize);
   }, []);
-  const containerPx = Math.min(Math.max(300, windowWidth - 48), 480);
+  const containerPx = Math.min(windowWidth - 24, 420);
 
   // ── Timer ───────────────────────────────────────────────────────────────
   useEffect(() => {
@@ -866,7 +866,7 @@ export function Labirinto({ difficulty, theme, onComplete }: LabirintoProps) {
               🌀 Labirinto
             </h2>
             <p className="text-xs" style={{ color: "#9ca3af" }}>
-              {size}×{size} · {moves} mov.
+              Labirinto {mazeNum + 1}/{MAX_MAZES} · {size}×{size} · {moves} mov.
             </p>
           </div>
           <div className="text-right">
@@ -932,6 +932,33 @@ export function Labirinto({ difficulty, theme, onComplete }: LabirintoProps) {
             </div>
           </div>
         )}
+      </div>
+
+      {/* D-pad controls */}
+      <div className="flex flex-col items-center gap-1 mt-4">
+        <button
+          onPointerDown={() => moveByDir("N")}
+          className="w-14 h-14 rounded-2xl text-2xl flex items-center justify-center active:scale-90 transition-transform"
+          style={{ background: pal.headerBg, border: "1px solid rgba(255,255,255,0.15)", color: "#fff" }}
+        >▲</button>
+        <div className="flex gap-1">
+          <button
+            onPointerDown={() => moveByDir("W")}
+            className="w-14 h-14 rounded-2xl text-2xl flex items-center justify-center active:scale-90 transition-transform"
+            style={{ background: pal.headerBg, border: "1px solid rgba(255,255,255,0.15)", color: "#fff" }}
+          >◀</button>
+          <div className="w-14 h-14" />
+          <button
+            onPointerDown={() => moveByDir("E")}
+            className="w-14 h-14 rounded-2xl text-2xl flex items-center justify-center active:scale-90 transition-transform"
+            style={{ background: pal.headerBg, border: "1px solid rgba(255,255,255,0.15)", color: "#fff" }}
+          >▶</button>
+        </div>
+        <button
+          onPointerDown={() => moveByDir("S")}
+          className="w-14 h-14 rounded-2xl text-2xl flex items-center justify-center active:scale-90 transition-transform"
+          style={{ background: pal.headerBg, border: "1px solid rgba(255,255,255,0.15)", color: "#fff" }}
+        >▼</button>
       </div>
 
       <p
