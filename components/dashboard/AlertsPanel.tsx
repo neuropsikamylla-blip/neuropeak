@@ -131,33 +131,33 @@ export function AlertsPanel({ alerts: initial }: AlertsPanelProps) {
                     <Badge variant={alertVariant(alert.type)} className="text-xs">
                       {alertLabel(alert.type)}
                     </Badge>
-                    <span className="text-xs text-gray-400">
-                      {formatDate(alert.createdAt)}
-                    </span>
                   </div>
+                  <span className="text-xs text-gray-400">
+                    {formatDate(alert.createdAt)}
+                  </span>
                   <Link
                     href={`/pacientes/${alert.patientId}`}
-                    className="text-sm font-medium text-blue-600 hover:underline"
+                    className="block text-sm font-medium text-blue-600 hover:underline mt-0.5"
                   >
                     {alert.patientName}
                   </Link>
                   <p className="text-xs text-gray-600 mt-0.5">{alert.message}</p>
+                  {!alert.isRead && (
+                    <Button
+                      variant="ghost"
+                      size="sm"
+                      className="text-xs h-7 px-2 mt-1.5 -ml-2"
+                      onClick={() => markRead(alert.id)}
+                      disabled={loading === alert.id}
+                    >
+                      {loading === alert.id ? (
+                        <Loader2 className="w-3 h-3 animate-spin" />
+                      ) : (
+                        "Lido"
+                      )}
+                    </Button>
+                  )}
                 </div>
-                {!alert.isRead && (
-                  <Button
-                    variant="ghost"
-                    size="sm"
-                    className="text-xs h-7 px-2 flex-shrink-0"
-                    onClick={() => markRead(alert.id)}
-                    disabled={loading === alert.id}
-                  >
-                    {loading === alert.id ? (
-                      <Loader2 className="w-3 h-3 animate-spin" />
-                    ) : (
-                      "Lido"
-                    )}
-                  </Button>
-                )}
               </div>
             ))}
           </div>
