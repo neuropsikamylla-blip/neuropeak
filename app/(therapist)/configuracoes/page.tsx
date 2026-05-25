@@ -396,7 +396,30 @@ export default function ConfiguracoesPage() {
         </CardContent>
       </Card>
 
+      {/* Link admin — só aparece para admin */}
+      <AdminLink email={user?.email} />
+
       <Toaster />
     </div>
+  );
+}
+
+function AdminLink({ email }: { email?: string }) {
+  const [isAdmin, setIsAdmin] = useState(false);
+  useEffect(() => {
+    // verifica se é admin consultando a API (que já sabe o ADMIN_EMAIL)
+    fetch("/api/crp-verification")
+      .then((r) => { if (r.ok) setIsAdmin(true); })
+      .catch(() => {});
+  }, [email]);
+  if (!isAdmin) return null;
+  return (
+    <a
+      href="/admin"
+      className="flex items-center gap-2 text-xs text-gray-400 hover:text-gray-600 transition-colors mt-2"
+    >
+      <ShieldCheck className="w-3.5 h-3.5" />
+      Painel de verificação de CRP
+    </a>
   );
 }
