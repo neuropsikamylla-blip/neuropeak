@@ -18,7 +18,7 @@ const DOMAIN_EXERCISES: Record<Domain, string[]> = {
   memory: ["span-numerico", "span-numerico-inverso", "matriz-espacial", "matriz-espacial-inversa", "jogo-memoria", "desafio-supermercado"],
   attention: ["trilha-visual", "stroop-task", "antes-depois", "atencao-seletiva", "atencao-alternada", "atencao-sustentada"],
   processing: ["tempo-reacao", "certo-ou-errado", "semaforo"],
-  executive: ["torre-hanoi", "sequenciamento", "flexibilidade-cognitiva", "labirinto", "ordem-historia", "desafio-cidade"],
+  executive: ["torre-hanoi", "sequenciamento", "flexibilidade-cognitiva", "labirinto", "ordem-historia"],
 };
 
 export default function PlanoPage() {
@@ -183,6 +183,50 @@ export default function PlanoPage() {
           )}
         </Card>
       ))}
+
+      {/* ── Desafio da Cidade — Ecossistema ────────────────────────────────── */}
+      <div className="relative rounded-2xl border-2 border-amber-300 bg-gradient-to-br from-amber-50 to-orange-50 overflow-hidden">
+        {/* Faixa decorativa lateral */}
+        <div className="absolute left-0 top-0 bottom-0 w-1.5 bg-gradient-to-b from-amber-400 to-orange-400" />
+
+        <div className="pl-5 pr-4 pt-4 pb-0">
+          <div className="flex items-start gap-3">
+            <input
+              type="checkbox"
+              id="desafio-cidade-check"
+              checked={selectedExercises.includes("desafio-cidade")}
+              onChange={() => toggleExercise("desafio-cidade")}
+              className="w-4 h-4 mt-0.5 text-amber-600 rounded accent-amber-500"
+            />
+            <div className="flex-1 min-w-0">
+              <div className="flex items-center gap-2 flex-wrap">
+                <label htmlFor="desafio-cidade-check" className="cursor-pointer font-bold text-base text-amber-900">
+                  🏙️ Desafio da Cidade
+                </label>
+                <span className="text-xs font-semibold bg-amber-200 text-amber-800 px-2 py-0.5 rounded-full">
+                  Ecossistema Urbano
+                </span>
+              </div>
+              <p className="text-xs text-amber-700 mt-0.5 leading-relaxed">
+                Ambiente urbano interativo com personagens, missões reais e imprevistos. Treina planejamento, memória de trabalho, flexibilidade cognitiva e tomada de decisão dentro de um único ecossistema.
+              </p>
+              <div className="flex flex-wrap gap-1.5 mt-2 mb-3">
+                {["Planejamento", "Memória", "Flexibilidade", "Tomada de decisão", "Controle inibitório"].map(tag => (
+                  <span key={tag} className="text-[10px] bg-white/70 border border-amber-200 text-amber-700 px-1.5 py-0.5 rounded-full">
+                    {tag}
+                  </span>
+                ))}
+              </div>
+            </div>
+          </div>
+        </div>
+
+        {selectedExercises.includes("desafio-cidade") && (
+          <div className="px-4 pb-4">
+            <ExerciseScienceCard exerciseId="desafio-cidade" />
+          </div>
+        )}
+      </div>
 
       <div className="flex gap-3">
         <Button variant="outline" asChild className="flex-1">
