@@ -78,7 +78,7 @@ export const EXERCISE_SCIENCE: Record<string, ExerciseScience> = {
     references: [
       "Fuentes, D., et al. (2021). Neuropsicologia: Teoria e Prática (3ª ed.). Artmed.",
       "Conners, C. K., et al. (2016). Attention-deficit hyperactivity disorder: A clinical science perspective. American Psychological Association.",
-      "Lampit, A., et al. (2017). Computerized cognitive training in cognitively healthy older adults: a systematic review and meta-analysis of effect modifiers. PLOS Medicine, 11(11).",
+      "Lampit, A., et al. (2014). Computerized cognitive training in cognitively healthy older adults: a systematic review and meta-analysis of effect modifiers. PLOS Medicine, 11(11), e1001756.",
     ],
   },
 
@@ -101,13 +101,13 @@ export const EXERCISE_SCIENCE: Record<string, ExerciseScience> = {
   "vigilancia": {
     exerciseId: "vigilancia",
     neuroanatomy:
-      "Atenção sustentada: hemisfério direito (rede fronto-parietal), córtex pré-frontal ventrolateral e locus coeruleus (modulação noradrenérgica da vigília). Tálamo e formação reticular mantêm o estado de alerta ao longo do tempo (Parasuraman, 1998; Doell et al., 2021).",
+      "Atenção sustentada: hemisfério direito (rede fronto-parietal), córtex pré-frontal ventrolateral e locus coeruleus (modulação noradrenérgica da vigília). Tálamo e formação reticular mantêm o estado de alerta ao longo do tempo (Parasuraman, 1998; Robertson & Garavan, 2004).",
     trainingEffects:
       "Treino com tarefas de detecção de alvo contínua (CPT) melhora atenção sustentada em 0,4–0,5 DP em crianças e adolescentes com TDA/H (Christiansen et al., 2019). Protocolos de ≥ 12 semanas produzem benefícios mais duradouros. Redução de omissões documentada após treino intensivo em adultos.",
     clinicalRelevance:
       "CPT é gold standard para diagnóstico auxiliar de TDA/H (Conners' CPT-3). Déficits de vigilância frequentes em TCE, esclerose múltipla, epilepsia e psicose. Monitorar evolução da taxa de omissões e tempo de reação ao longo das sessões é indicativo de progressão terapêutica.",
     references: [
-      "Doell, K. C., et al. (2021). Differences in the neural correlates of affective and cognitive empathy. Neuropsychologia, 152, 107755.",
+      "Parasuraman, R. (1998). The attentive brain. MIT Press.",
       "Christiansen, H., et al. (2019). Effects of cognitive training on cognitive performance of school-aged children with ADHD. European Child & Adolescent Psychiatry, 28(6), 789–798.",
       "Fuentes, D., et al. (2021). Neuropsicologia: Teoria e Prática (3ª ed.). Artmed.",
     ],

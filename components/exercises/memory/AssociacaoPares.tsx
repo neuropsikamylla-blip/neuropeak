@@ -125,7 +125,7 @@ export function AssociacaoPares({ difficulty, theme, onComplete }: AssociacaoPar
           metadata: {
             questions: MAX_QUESTIONS,
             correctCount: newSessionResults.filter(Boolean).length,
-            maxPairs: Math.max(...newSessionResults.map((_, i) => (i < newSessionResults.length ? pairCount : 0))),
+            maxPairs: pairCount,
           },
         });
       } else if (currentQuestion + 1 >= pairCount) {

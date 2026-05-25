@@ -11,7 +11,7 @@ import { EvolutionChart } from "@/components/charts/EvolutionChart";
 import { DomainRadarChart } from "@/components/charts/DomainRadarChart";
 import { calculateDomainScore, calculateAdherence } from "@/lib/scoring";
 import { formatDate, formatDateTime, calculateAge, formatDuration } from "@/lib/utils";
-import { ArrowLeft, FileText, Target } from "lucide-react";
+import { ArrowLeft, FileText, Target, Globe } from "lucide-react";
 import { PatientCredentials } from "@/components/patient/PatientCredentials";
 import { DeletePatientButton } from "@/components/patient/DeletePatientButton";
 import type { SessionData, Domain } from "@/types";
@@ -132,6 +132,12 @@ export default async function PatientProfilePage({ params }: { params: Promise<{
             <Link href={`/relatorios?patientId=${patient.id}`}>
               <FileText className="w-4 h-4 mr-2" />
               Gerar Relatório
+            </Link>
+          </Button>
+          <Button variant="outline" size="sm" asChild>
+            <Link href={`/pacientes/${patient.id}/mundo-interior`}>
+              <Globe className="w-4 h-4 mr-2" />
+              Mundo Interior
             </Link>
           </Button>
           <DeletePatientButton patientId={patient.id} patientName={patient.name} />

@@ -101,9 +101,9 @@ export function IdentificacaoSimbolos({ difficulty, theme, onComplete }: Identif
   const [distractorCount, setDistractorCount] = useState(initialDistractors(difficulty));
   const [streak, setStreak] = useState(0);
   const [trial, setTrial] = useState(0);
-  const [target, setTarget] = useState(() => SYMBOLS[Math.floor(Math.random() * 5)]);
+  const [target, setTarget] = useState(() => SYMBOLS[Math.floor(Math.random() * SYMBOLS.length)]);
   const [options, setOptions] = useState(() => {
-    const t = SYMBOLS[Math.floor(Math.random() * 5)];
+    const t = SYMBOLS[Math.floor(Math.random() * SYMBOLS.length)];
     return makeOptions(t, initialDistractors(difficulty));
   });
   const [results, setResults] = useState<{ correct: boolean; rt: number; distractors: number }[]>([]);
@@ -159,7 +159,7 @@ export function IdentificacaoSimbolos({ difficulty, theme, onComplete }: Identif
         setStreak(nextStreak);
         setDistractorCount(nextDistr);
         setTrial(nextTrialNum);
-        const newTarget = SYMBOLS[Math.floor(Math.random() * 5)];
+        const newTarget = SYMBOLS[Math.floor(Math.random() * SYMBOLS.length)];
         advanceTrial(newTarget, nextDistr);
       }
     }, 600);
