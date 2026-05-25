@@ -52,14 +52,24 @@ export async function GET(req: NextRequest) {
   const searchParams = req.nextUrl.searchParams;
 
   if (role === "THERAPIST") {
+    const therapistId = (session.user as { id: string }).id;
     const patientId = searchParams.get("patientId");
-    if (!patientId) return NextResponse.json({ error: "patientId required" }, { status: 400 });
+    if (patientId) {
+      const { data } = await supabase
+        .from("TherapeuticSession")
+        .select("*")
+        .eq("patientId", patientId)
+        .order("createdAt", { ascending: false })
+        .limit(20);
+      return NextResponse.json(data ?? []);
+    }
+    // No patientId → return all active sessions for this therapist
     const { data } = await supabase
       .from("TherapeuticSession")
       .select("*")
-      .eq("patientId", patientId)
-      .order("createdAt", { ascending: false })
-      .limit(20);
+      .eq("therapistId", therapistId)
+      .eq("status", "active")
+      .order("createdAt", { ascending: false });
     return NextResponse.json(data ?? []);
   }
 
