@@ -469,27 +469,77 @@ export function DesafioSupermercado({ difficulty, theme, onComplete }: DesafioSu
                 </p>
               </div>
 
-              <div className="grid grid-cols-3 gap-2 mb-4">
-                {shelfProducts.map((p) => {
-                  const isSelected = selected.has(p.id);
+              {/* Prateleira do supermercado */}
+              <div
+                className="rounded-xl overflow-hidden mb-4"
+                style={{
+                  background: theme === "GAMIFIED"
+                    ? "linear-gradient(to bottom, #111827 0%, #1f2937 100%)"
+                    : theme === "COLORFUL"
+                    ? "linear-gradient(to bottom, #064e3b 0%, #065f46 100%)"
+                    : "linear-gradient(to bottom, #292524 0%, #44403c 100%)",
+                  boxShadow: "inset 0 2px 8px rgba(0,0,0,0.4)",
+                }}
+              >
+                {/* Etiqueta da prateleira */}
+                <div
+                  className="text-center py-1 text-xs font-semibold tracking-widest uppercase"
+                  style={{
+                    background: theme === "GAMIFIED" ? "#0e7490" : theme === "COLORFUL" ? "#047857" : "#78716c",
+                    color: "#fff",
+                    letterSpacing: "0.15em",
+                  }}
+                >
+                  🏪 Prateleira
+                </div>
+
+                {/* Fileiras de produtos */}
+                {Array.from({ length: Math.ceil(shelfProducts.length / 3) }).map((_, rowIdx) => {
+                  const rowProducts = shelfProducts.slice(rowIdx * 3, rowIdx * 3 + 3);
                   return (
-                    <button
-                      key={p.id}
-                      onClick={() => toggleProduct(p.id)}
-                      className={`p-2 rounded-xl border-2 flex flex-col items-center gap-1 transition-all active:scale-95 ${
-                        isSelected ? pal.selectedCard : pal.productCard
-                      }`}
-                    >
-                      <span className="text-2xl">{p.emoji}</span>
-                      <span className={`text-xs text-center leading-tight ${theme === "GAMIFIED" ? "text-gray-200" : "text-gray-700"}`}>
-                        {p.name}
-                      </span>
-                      {isSelected && (
-                        <span className="text-xs text-green-600 font-bold">✓</span>
-                      )}
-                    </button>
+                    <div key={rowIdx} className="px-2 pt-2">
+                      <div className="grid grid-cols-3 gap-2">
+                        {rowProducts.map((p) => {
+                          const isSelected = selected.has(p.id);
+                          return (
+                            <button
+                              key={p.id}
+                              onClick={() => toggleProduct(p.id)}
+                              className={`p-2 rounded-lg border-2 flex flex-col items-center gap-1 transition-all active:scale-95 ${
+                                isSelected ? pal.selectedCard : pal.productCard
+                              }`}
+                            >
+                              <span className="text-2xl">{p.emoji}</span>
+                              <span className={`text-xs text-center leading-tight ${theme === "GAMIFIED" ? "text-gray-200" : "text-gray-700"}`}>
+                                {p.name}
+                              </span>
+                              {isSelected && (
+                                <span className="text-xs text-green-600 font-bold">✓</span>
+                              )}
+                            </button>
+                          );
+                        })}
+                        {/* Slots vazios na última fileira */}
+                        {rowProducts.length < 3 &&
+                          Array.from({ length: 3 - rowProducts.length }).map((_, i) => (
+                            <div key={`empty-${i}`} />
+                          ))}
+                      </div>
+                      {/* Tábua da prateleira */}
+                      <div
+                        className="mt-2 rounded-sm"
+                        style={{
+                          height: "10px",
+                          background: theme === "GAMIFIED"
+                            ? "linear-gradient(to bottom, #374151 0%, #1f2937 100%)"
+                            : "linear-gradient(to bottom, #92400e 0%, #78350f 100%)",
+                          boxShadow: "0 4px 8px rgba(0,0,0,0.5), inset 0 1px 0 rgba(255,255,255,0.15)",
+                        }}
+                      />
+                    </div>
                   );
                 })}
+                <div className="h-3" />
               </div>
 
               <button
