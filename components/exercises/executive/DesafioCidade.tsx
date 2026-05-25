@@ -9,7 +9,7 @@ import type { ExerciseResult, Theme } from "@/types";
 // ─── Tipos ────────────────────────────────────────────────────────────────────
 
 type EnvId = "cinema" | "restaurante" | "farmacia";
-type Phase = "hub" | "briefing" | "mission" | "result";
+type Phase = "briefing" | "mission" | "result";
 
 // ─── Paleta por tema ──────────────────────────────────────────────────────────
 
@@ -799,67 +799,6 @@ const ENV_CFG = {
   farmacia:   { emoji: "💊", name: "Farmácia",   desc: "Sequenciar etapas e organizar tarefas", color: "emerald" },
 } as const;
 
-function envBorderClass(color: string, theme: Theme) {
-  if (theme === "GAMIFIED") {
-    return color === "indigo" ? "border-cyan-500/40 hover:border-cyan-400"
-      : color === "rose" ? "border-pink-500/40 hover:border-pink-400"
-      : "border-emerald-500/40 hover:border-emerald-400";
-  }
-  return color === "indigo" ? "border-indigo-200 hover:border-indigo-400"
-    : color === "rose" ? "border-rose-200 hover:border-rose-400"
-    : "border-emerald-200 hover:border-emerald-400";
-}
-
-function envAccentClass(color: string, theme: Theme) {
-  if (theme === "GAMIFIED") {
-    return color === "indigo" ? "text-cyan-400" : color === "rose" ? "text-pink-400" : "text-emerald-400";
-  }
-  return color === "indigo" ? "text-indigo-600" : color === "rose" ? "text-rose-600" : "text-emerald-600";
-}
-
-function CityHub({ theme, levels, done, max, onSelect }: {
-  theme: Theme;
-  levels: Record<EnvId, number>;
-  done: number;
-  max: number;
-  onSelect: (env: EnvId) => void;
-}) {
-  const p = pal(theme);
-
-  return (
-    <div className="space-y-5">
-      <div className="text-center">
-        {theme === "COLORFUL" && <p className="text-4xl mb-1">🏙️</p>}
-        <h2 className={`font-bold text-lg ${p.title}`}>
-          {theme === "GAMIFIED" ? "Selecione a missão" : theme === "COLORFUL" ? "Bem-vindo à Cidade! 🌟" : "Escolha um ambiente"}
-        </h2>
-        <p className={`text-xs mt-1 ${p.muted}`}>Missão {done + 1} de {max}</p>
-      </div>
-
-      <div className="space-y-3">
-        {(Object.entries(ENV_CFG) as [EnvId, typeof ENV_CFG[EnvId]][]).map(([envId, cfg]) => (
-          <button key={envId} onClick={() => onSelect(envId)}
-            className={`w-full p-4 rounded-2xl border-2 text-left transition-all ${p.card} ${envBorderClass(cfg.color, theme)}`}
-          >
-            <div className="flex items-center gap-3">
-              <span className="text-3xl">{cfg.emoji}</span>
-              <div className="flex-1 min-w-0">
-                <div className="flex items-center justify-between gap-2">
-                  <p className={`font-bold text-base ${p.title}`}>{cfg.name}</p>
-                  <span className={`text-xs font-semibold shrink-0 ${envAccentClass(cfg.color, theme)}`}>
-                    Nível {levels[envId]}
-                  </span>
-                </div>
-                <p className={`text-xs mt-0.5 ${p.muted}`}>{cfg.desc}</p>
-              </div>
-            </div>
-          </button>
-        ))}
-      </div>
-    </div>
-  );
-}
-
 // ─── Briefing da missão ───────────────────────────────────────────────────────
 
 const BRIEFINGS: Record<EnvId, Record<number, { title: string; story: string; obj: string; rule: string }>> = {
@@ -882,8 +821,8 @@ const BRIEFINGS: Record<EnvId, Record<number, { title: string; story: string; ob
   },
 };
 
-function MissionBriefing({ envId, level, theme, onStart }: {
-  envId: EnvId; level: number; theme: Theme; onStart: () => void;
+function MissionBriefing({ envId, level, theme, missionNum, totalMissions, onStart }: {
+  envId: EnvId; level: number; theme: Theme; missionNum: number; totalMissions: number; onStart: () => void;
 }) {
   const p = pal(theme);
   const cfg = ENV_CFG[envId];
@@ -895,7 +834,9 @@ function MissionBriefing({ envId, level, theme, onStart }: {
       <div className="flex items-center gap-3">
         <span className="text-4xl">{cfg.emoji}</span>
         <div>
-          <p className={`text-xs font-semibold uppercase tracking-wide ${p.muted}`}>{cfg.name} · Nível {level}</p>
+          <p className={`text-xs font-semibold uppercase tracking-wide ${p.muted}`}>
+            {cfg.name} · Missão {missionNum}/{totalMissions}
+          </p>
           <p className={`font-bold text-xl ${p.title}`}>{b.title}</p>
         </div>
       </div>
@@ -944,18 +885,32 @@ const MAX_MISSIONS = 8;
 
 function initialLevel(d: number) { return Math.min(Math.max(1, Math.ceil(d / 3)), 4); }
 
+// Gera fila balanceada: cada ambiente aparece em rodízio, nunca repetindo o mesmo consecutivamente
+function buildMissionQueue(count: number): EnvId[] {
+  const envs: EnvId[] = ["cinema", "restaurante", "farmacia"];
+  const queue: EnvId[] = [];
+  while (queue.length < count) {
+    const shuffled = [...envs].sort(() => Math.random() - 0.5);
+    for (const e of shuffled) {
+      if (queue.length < count) queue.push(e);
+    }
+  }
+  return queue;
+}
+
 export function DesafioCidade({ difficulty, theme, onComplete }: {
   difficulty: number; theme: Theme; onComplete: (result: ExerciseResult) => void;
 }) {
   const reportProgress = useExerciseProgress();
   const startTime = useRef(Date.now());
   const results = useRef<boolean[]>([]);
+  const missionQueue = useRef<EnvId[]>(buildMissionQueue(MAX_MISSIONS));
 
-  const [phase, setPhase] = useState<Phase>("hub");
-  const [env, setEnv] = useState<EnvId | null>(null);
-  const [lastOk, setLastOk] = useState(false);
+  const [phase, setPhase] = useState<Phase>("briefing");
+  const [currentEnv, setCurrentEnv] = useState<EnvId>(missionQueue.current[0]);
   const [done, setDone] = useState(0);
   const [missionKey, setMissionKey] = useState(0);
+  const [lastOk, setLastOk] = useState(false);
 
   const [levels, setLevels] = useState<Record<EnvId, number>>({
     cinema:      initialLevel(difficulty),
@@ -965,20 +920,13 @@ export function DesafioCidade({ difficulty, theme, onComplete }: {
   const [streaks, setStreaks] = useState<Record<EnvId, number>>({ cinema: 0, restaurante: 0, farmacia: 0 });
   const p = pal(theme);
 
-  function selectEnv(envId: EnvId) {
-    setEnv(envId);
-    setMissionKey(k => k + 1);
-    setPhase("briefing");
-  }
-
   function finishMission(correct: boolean) {
-    const e = env!;
+    const e = currentEnv;
     setLastOk(correct);
 
     const newStreak = correct ? Math.max(streaks[e], 0) + 1 : Math.min(streaks[e], 0) - 1;
     const maxLvl = e === "farmacia" ? FARM_DATA.length : e === "restaurante" ? 3 : 4;
-    let delta = 0;
-    let reset = false;
+    let delta = 0, reset = false;
     if (newStreak >= 2)  { delta =  1; reset = true; }
     if (newStreak <= -2) { delta = -1; reset = true; }
 
@@ -1007,13 +955,13 @@ export function DesafioCidade({ difficulty, theme, onComplete }: {
           metadata: { missions: MAX_MISSIONS, correct: correctCount },
         });
       } else {
-        setEnv(null);
-        setPhase("hub");
+        setCurrentEnv(missionQueue.current[next]);
+        setMissionKey(k => k + 1);
+        setPhase("briefing");
       }
     }, 2000);
   }
 
-  // Barra de progresso das missões
   const ProgressBar = () => (
     <div className="flex gap-0.5 mb-4">
       {Array.from({ length: MAX_MISSIONS }).map((_, i) => (
@@ -1032,34 +980,35 @@ export function DesafioCidade({ difficulty, theme, onComplete }: {
         <ProgressBar />
 
         <AnimatePresence mode="wait">
-          {phase === "hub" && (
-            <motion.div key="hub" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}>
-              <CityHub theme={theme} levels={levels} done={done} max={MAX_MISSIONS} onSelect={selectEnv} />
+          {phase === "briefing" && (
+            <motion.div key={`briefing-${missionKey}`} initial={{ opacity: 0, x: 20 }} animate={{ opacity: 1, x: 0 }} exit={{ opacity: 0, x: -20 }}>
+              <MissionBriefing
+                envId={currentEnv}
+                level={levels[currentEnv]}
+                theme={theme}
+                missionNum={done + 1}
+                totalMissions={MAX_MISSIONS}
+                onStart={() => setPhase("mission")}
+              />
             </motion.div>
           )}
 
-          {phase === "briefing" && env && (
-            <motion.div key="briefing" initial={{ opacity: 0, x: 20 }} animate={{ opacity: 1, x: 0 }} exit={{ opacity: 0, x: -20 }}>
-              <MissionBriefing envId={env} level={levels[env]} theme={theme} onStart={() => setPhase("mission")} />
-            </motion.div>
-          )}
-
-          {phase === "mission" && env && (
+          {phase === "mission" && (
             <motion.div key={`mission-${missionKey}`} initial={{ opacity: 0, x: 20 }} animate={{ opacity: 1, x: 0 }} exit={{ opacity: 0, x: -20 }}>
               <div className="flex items-center gap-2 mb-4">
-                <span className="text-xl">{ENV_CFG[env].emoji}</span>
+                <span className="text-xl">{ENV_CFG[currentEnv].emoji}</span>
                 <p className={`text-xs font-semibold uppercase tracking-wide ${p.muted}`}>
-                  {ENV_CFG[env].name} · Nível {levels[env]}
+                  {ENV_CFG[currentEnv].name} · Nível {levels[currentEnv]} · {done + 1}/{MAX_MISSIONS}
                 </p>
               </div>
-              {env === "cinema"      && <CinemaMission     level={levels.cinema}      theme={theme} onFinish={finishMission} />}
-              {env === "restaurante" && <RestauranteMission level={levels.restaurante} theme={theme} onFinish={finishMission} />}
-              {env === "farmacia"    && <FarmaciaMission    level={levels.farmacia}    theme={theme} onFinish={finishMission} />}
+              {currentEnv === "cinema"      && <CinemaMission     level={levels.cinema}      theme={theme} onFinish={finishMission} />}
+              {currentEnv === "restaurante" && <RestauranteMission level={levels.restaurante} theme={theme} onFinish={finishMission} />}
+              {currentEnv === "farmacia"    && <FarmaciaMission    level={levels.farmacia}    theme={theme} onFinish={finishMission} />}
             </motion.div>
           )}
 
           {phase === "result" && (
-            <motion.div key="result" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}>
+            <motion.div key={`result-${done}`} initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}>
               <MissionResult correct={lastOk} theme={theme} />
             </motion.div>
           )}
