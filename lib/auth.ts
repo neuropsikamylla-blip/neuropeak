@@ -40,6 +40,7 @@ export const authOptions: NextAuthOptions = {
           name: user.name,
           role: user.role,
           clinicName: user.clinicName ?? undefined,
+          crp: user.crp ?? undefined,
         };
       },
     }),
@@ -94,11 +95,12 @@ export const authOptions: NextAuthOptions = {
   callbacks: {
     async jwt({ token, user }) {
       if (user) {
-        const u = user as unknown as { role?: string; clinicName?: string; patientId?: string; theme?: string };
+        const u = user as unknown as { role?: string; clinicName?: string; patientId?: string; theme?: string; crp?: string };
         token.role = u.role;
         token.clinicName = u.clinicName;
         token.patientId = u.patientId;
         token.theme = u.theme;
+        token.crp = u.crp;
       }
       return token;
     },
@@ -109,6 +111,7 @@ export const authOptions: NextAuthOptions = {
         (session.user as { clinicName?: string }).clinicName = token.clinicName as string | undefined;
         (session.user as { patientId?: string }).patientId = token.patientId as string | undefined;
         (session.user as { theme?: string }).theme = token.theme as string | undefined;
+        (session.user as { crp?: string }).crp = token.crp as string | undefined;
       }
       return session;
     },

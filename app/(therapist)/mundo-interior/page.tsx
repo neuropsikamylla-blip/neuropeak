@@ -3,7 +3,7 @@ import { authOptions } from "@/lib/auth";
 import { supabase } from "@/lib/supabase";
 import { redirect } from "next/navigation";
 import Link from "next/link";
-import { Globe, Plus, Users } from "lucide-react";
+import { Globe, Plus, Users, ShieldAlert, ShieldCheck } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import type { TherapeuticSession } from "@/components/therapeutic/MundoInterior";
 
@@ -16,6 +16,14 @@ export default async function MundoInteriorOverviewPage() {
   }
 
   const therapistId = (session.user as { id: string }).id;
+
+  // Fetch current CRP from DB (not from token, which may be stale)
+  const { data: therapistUser } = await supabase
+    .from("User")
+    .select("crp")
+    .eq("id", therapistId)
+    .single();
+  const hasCrp = !!therapistUser?.crp;
 
   const [{ data: patients }, { data: activeSessions }] = await Promise.all([
     supabase
@@ -44,12 +52,36 @@ export default async function MundoInteriorOverviewPage() {
         <Globe className="w-6 h-6 text-indigo-600" />
         <div>
           <h1 className="text-2xl font-bold text-gray-900">Mundo Interior</h1>
-          <p className="text-sm text-gray-500">Módulo psicoterapêutico gamificado — use em sessão com o paciente</p>
+          <p className="text-sm text-gray-500">Ferramenta gamificada de apoio ao acompanhamento psicológico</p>
         </div>
       </div>
 
-      {/* Active sessions */}
-      {activePatients.length > 0 && (
+      {/* Disclaimer obrigatório */}
+      <div className="flex items-start gap-3 rounded-xl bg-amber-50 border border-amber-200 px-4 py-3">
+        <ShieldAlert className="w-5 h-5 text-amber-600 flex-shrink-0 mt-0.5" />
+        <p className="text-xs text-amber-800 leading-relaxed">
+          <strong>Ferramenta auxiliar de uso mediado.</strong> Não realiza diagnóstico e não substitui acompanhamento psicológico profissional. Deve ser utilizada exclusivamente em sessão conduzida por psicólogo habilitado.
+        </p>
+      </div>
+
+      {/* Gate de CRP */}
+      {!hasCrp && (
+        <div className="flex items-start gap-3 rounded-xl bg-red-50 border border-red-200 px-4 py-4">
+          <ShieldCheck className="w-5 h-5 text-red-500 flex-shrink-0 mt-0.5" />
+          <div className="flex-1 space-y-2">
+            <p className="text-sm font-semibold text-red-800">CRP não registrado</p>
+            <p className="text-xs text-red-700">
+              Para acessar o Mundo Interior é necessário informar seu número de CRP nas configurações. Isso confirma que o módulo está sendo utilizado por um profissional de psicologia registrado.
+            </p>
+            <Button asChild size="sm" variant="outline" className="border-red-300 text-red-700 hover:bg-red-100">
+              <Link href="/configuracoes">Registrar CRP agora</Link>
+            </Button>
+          </div>
+        </div>
+      )}
+
+      {/* Conteúdo bloqueado sem CRP */}
+      {hasCrp && activePatients.length > 0 && (
         <div className="space-y-3">
           <p className="text-sm font-semibold text-gray-700 flex items-center gap-2">
             <span className="relative flex h-2.5 w-2.5">
@@ -82,8 +114,8 @@ export default async function MundoInteriorOverviewPage() {
         </div>
       )}
 
-      {/* All patients */}
-      <div className="space-y-3">
+      {/* All patients — só mostra com CRP */}
+      {hasCrp && <div className="space-y-3">
         <p className="text-sm font-semibold text-gray-700 flex items-center gap-2">
           <Users className="w-4 h-4 text-gray-400" />
           Pacientes ({(patients ?? []).length})
@@ -93,10 +125,7 @@ export default async function MundoInteriorOverviewPage() {
         )}
         {otherPatients.map((p) => (
           <div key={p.id} className="flex items-center justify-between p-4 rounded-2xl border border-gray-200 bg-white hover:border-gray-300 transition-all">
-            <div>
-              <p className="font-medium text-gray-800">{p.name}</p>
-              {p.diagnosis && <p className="text-xs text-gray-400">{p.diagnosis}</p>}
-            </div>
+            <p className="font-medium text-gray-800">{p.name}</p>
             <Button variant="outline" size="sm" asChild>
               <Link href={`/pacientes/${p.id}/mundo-interior`}>
                 <Plus className="w-4 h-4 mr-1" />
@@ -105,7 +134,7 @@ export default async function MundoInteriorOverviewPage() {
             </Button>
           </div>
         ))}
-      </div>
+      </div>}
     </div>
   );
 }

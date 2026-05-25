@@ -116,7 +116,6 @@ export default async function PatientProfilePage({ params }: { params: Promise<{
             <h1 className="text-2xl font-bold text-gray-900">{patient.name}</h1>
             <div className="flex items-center gap-2 mt-1">
               <Badge variant="secondary">{age} anos</Badge>
-              {patient.diagnosis && <Badge variant="outline">{patient.diagnosis}</Badge>}
               <Badge variant="info">{patient.theme}</Badge>
             </div>
           </div>
@@ -204,7 +203,7 @@ export default async function PatientProfilePage({ params }: { params: Promise<{
 
           {patient.therapeuticGoals && (
             <Card>
-              <CardHeader><CardTitle className="text-base">Objetivos Terapêuticos</CardTitle></CardHeader>
+              <CardHeader><CardTitle className="text-base">Objetivos do Programa</CardTitle></CardHeader>
               <CardContent>
                 <p className="text-gray-700 text-sm">{patient.therapeuticGoals}</p>
               </CardContent>
@@ -256,7 +255,7 @@ export default async function PatientProfilePage({ params }: { params: Promise<{
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             {[
               { label: "CID", value: patient.cid },
-              { label: "Diagnóstico", value: patient.diagnosis },
+              { label: "Hipótese de trabalho", value: patient.diagnosis },
               { label: "Escolaridade", value: patient.education },
               { label: "Contato", value: patient.contact },
               { label: "Responsável", value: patient.guardian },

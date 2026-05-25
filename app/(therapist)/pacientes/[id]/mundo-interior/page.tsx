@@ -3,7 +3,7 @@
 import { useState, useEffect, useRef, useCallback } from "react";
 import { useParams, useRouter } from "next/navigation";
 import Link from "next/link";
-import { ArrowLeft, RefreshCw, Plus, FileText } from "lucide-react";
+import { ArrowLeft, RefreshCw, Plus, FileText, ShieldAlert } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { useToast } from "@/components/ui/use-toast";
 import type { TherapeuticSession } from "@/components/therapeutic/MundoInterior";
@@ -106,12 +106,20 @@ export default function MundoInteriorTherapistPage() {
         </Button>
         <div className="flex-1">
           <h1 className="text-xl font-bold text-gray-900">🌌 Mundo Interior</h1>
-          <p className="text-sm text-gray-500">Módulo psicoterapêutico gamificado</p>
+          <p className="text-sm text-gray-500">Ferramenta gamificada de apoio ao acompanhamento psicológico</p>
         </div>
         <Button onClick={createSession} disabled={creating || !!activeSession} size="sm">
           <Plus className="w-4 h-4 mr-1" />
           {creating ? "Criando..." : "Nova sessão"}
         </Button>
+      </div>
+
+      {/* Disclaimer */}
+      <div className="flex items-start gap-3 rounded-xl bg-amber-50 border border-amber-200 px-4 py-3">
+        <ShieldAlert className="w-4 h-4 text-amber-600 flex-shrink-0 mt-0.5" />
+        <p className="text-xs text-amber-800">
+          Ferramenta auxiliar de apoio ao acompanhamento psicológico. Não realiza diagnóstico e não substitui psicoterapia. Use exclusivamente em sessão mediada pelo psicólogo.
+        </p>
       </div>
 
       {/* Active session */}

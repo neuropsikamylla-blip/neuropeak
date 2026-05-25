@@ -10,6 +10,7 @@ const profileSchema = z.object({
   name: z.string().min(2).optional(),
   email: z.string().email().optional(),
   clinicName: z.string().optional(),
+  crp: z.string().optional(),
   currentPassword: z.string().optional(),
   newPassword: z.string().min(8).optional(),
 });

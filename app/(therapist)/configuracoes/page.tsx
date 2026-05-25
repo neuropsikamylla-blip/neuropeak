@@ -6,21 +6,21 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
-import { Loader2, Save, User, Lock, Building2, Key, Package } from "lucide-react";
+import { Loader2, Save, User, Lock, Building2, Key, Package, ShieldCheck } from "lucide-react";
 import { useToast } from "@/components/ui/use-toast";
 import { Toaster } from "@/components/ui/toaster";
 
 export default function ConfiguracoesPage() {
   const { data: session, update } = useSession();
   const { toast } = useToast();
-  const user = session?.user as { name?: string; email?: string; clinicName?: string } | undefined;
+  const user = session?.user as { name?: string; email?: string; clinicName?: string; crp?: string } | undefined;
 
   const [profileLoading, setProfileLoading] = useState(false);
   const [passwordLoading, setPasswordLoading] = useState(false);
   const [licenseCode, setLicenseCode] = useState("");
   const [licenseLoading, setLicenseLoading] = useState(false);
 
-  const [profile, setProfile] = useState({ name: "", email: "", clinicName: "" });
+  const [profile, setProfile] = useState({ name: "", email: "", clinicName: "", crp: "" });
   const [passwords, setPasswords] = useState({ currentPassword: "", newPassword: "", confirmPassword: "" });
 
   useEffect(() => {
@@ -29,6 +29,7 @@ export default function ConfiguracoesPage() {
         name: user.name ?? "",
         email: user.email ?? "",
         clinicName: user.clinicName ?? "",
+        crp: user.crp ?? "",
       });
     }
   }, [user]);
@@ -40,7 +41,7 @@ export default function ConfiguracoesPage() {
       const res = await fetch("/api/auth/profile", {
         method: "PATCH",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ name: profile.name, email: profile.email, clinicName: profile.clinicName }),
+        body: JSON.stringify({ name: profile.name, email: profile.email, clinicName: profile.clinicName, crp: profile.crp }),
       });
       const data = await res.json();
       if (!res.ok) {
@@ -135,6 +136,22 @@ export default function ConfiguracoesPage() {
                 onChange={(e) => setProfile({ ...profile, clinicName: e.target.value })}
                 placeholder="Ex: Clínica NeuroPeak"
               />
+            </div>
+            <div>
+              <Label htmlFor="crp">
+                <ShieldCheck className="w-3 h-3 inline mr-1" />
+                CRP (Conselho Regional de Psicologia)
+              </Label>
+              <Input
+                id="crp"
+                value={profile.crp}
+                onChange={(e) => setProfile({ ...profile, crp: e.target.value })}
+                placeholder="Ex: 06/12345"
+                className="mt-1"
+              />
+              <p className="text-xs text-gray-500 mt-1">
+                Obrigatório para acesso ao módulo Mundo Interior. Confirma que o uso é mediado por profissional registrado.
+              </p>
             </div>
             <Button type="submit" disabled={profileLoading}>
               {profileLoading ? <><Loader2 className="w-4 h-4 mr-2 animate-spin" />Salvando...</> : <><Save className="w-4 h-4 mr-2" />Salvar perfil</>}

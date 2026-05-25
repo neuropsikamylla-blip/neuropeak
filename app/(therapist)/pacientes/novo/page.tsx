@@ -291,16 +291,16 @@ export default function NovoPacientePage() {
               <Input id="cid" value={form.cid} onChange={(e) => handleChange("cid", e.target.value)} placeholder="Ex: F84.0" className="mt-1" />
             </div>
             <div>
-              <Label htmlFor="diagnosis">Diagnóstico</Label>
-              <Input id="diagnosis" value={form.diagnosis} onChange={(e) => handleChange("diagnosis", e.target.value)} placeholder="Diagnóstico clínico" className="mt-1" />
+              <Label htmlFor="diagnosis">Hipótese de trabalho</Label>
+              <Input id="diagnosis" value={form.diagnosis} onChange={(e) => handleChange("diagnosis", e.target.value)} placeholder="Ex: TDAH, TEA, dificuldades de aprendizagem" className="mt-1" />
             </div>
             <div className="sm:col-span-2">
               <Label htmlFor="medications">Medicamentos em uso</Label>
               <Textarea id="medications" value={form.medications} onChange={(e) => handleChange("medications", e.target.value)} placeholder="Liste os medicamentos e doses" className="mt-1" rows={2} />
             </div>
             <div className="sm:col-span-2">
-              <Label htmlFor="therapeuticGoals">Objetivos terapêuticos</Label>
-              <Textarea id="therapeuticGoals" value={form.therapeuticGoals} onChange={(e) => handleChange("therapeuticGoals", e.target.value)} placeholder="Descreva os objetivos do tratamento" className="mt-1" rows={2} />
+              <Label htmlFor="therapeuticGoals">Objetivos do programa</Label>
+              <Textarea id="therapeuticGoals" value={form.therapeuticGoals} onChange={(e) => handleChange("therapeuticGoals", e.target.value)} placeholder="Descreva o que se espera alcançar com o programa de treino" className="mt-1" rows={2} />
             </div>
             <div className="sm:col-span-2">
               <Label htmlFor="clinicalNotes">Notas clínicas</Label>
