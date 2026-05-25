@@ -265,7 +265,21 @@ export default function NovoPacientePage() {
             </div>
             <div>
               <Label htmlFor="birthDate">Data de nascimento *</Label>
-              <Input id="birthDate" type="date" value={form.birthDate} onChange={(e) => handleChange("birthDate", e.target.value)} className="mt-1" />
+              <div className="flex items-center gap-2 mt-1">
+                <Input id="birthDate" type="date" value={form.birthDate} onChange={(e) => handleChange("birthDate", e.target.value)} />
+                {form.birthDate && (
+                  <span className="text-sm text-gray-500 whitespace-nowrap">
+                    {(() => {
+                      const today = new Date();
+                      const birth = new Date(form.birthDate);
+                      let age = today.getFullYear() - birth.getFullYear();
+                      const m = today.getMonth() - birth.getMonth();
+                      if (m < 0 || (m === 0 && today.getDate() < birth.getDate())) age--;
+                      return age >= 0 ? `${age} anos` : "";
+                    })()}
+                  </span>
+                )}
+              </div>
               {errors.birthDate && <p className="text-red-500 text-xs mt-1">{errors.birthDate}</p>}
             </div>
             <div>
