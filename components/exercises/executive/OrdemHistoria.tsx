@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useRef, useCallback } from "react";
-import { motion, Reorder, AnimatePresence } from "framer-motion";
+import { motion, AnimatePresence } from "framer-motion";
 import { calculateExerciseScore } from "@/lib/scoring";
 import { useExerciseProgress } from "@/components/exercises/ExerciseWrapper";
 import { TutorialBase } from "@/components/exercises/TutorialBase";
@@ -310,64 +310,83 @@ const TUTORIAL_PANELS_INITIAL: Panel[] = [
   { id: "tp2", emoji: "🍳", label: "Cozinhar a refeição", correctIndex: 1 },
 ];
 
-function OrdemHistoriaDragStep({ theme, onDone }: { theme: Theme; onDone: () => void }) {
-  const [items, setItems] = useState(TUTORIAL_PANELS_INITIAL);
+function OrdemHistoriaTapStep({ theme, onDone }: { theme: Theme; onDone: () => void }) {
+  const [tappedIds, setTappedIds] = useState<string[]>([]);
   const [submitted, setSubmitted] = useState(false);
   const done = useRef(false);
 
-  function handleReorder(newItems: Panel[]) {
-    setItems(newItems);
-    const isCorrect = newItems.every((item, idx) => item.correctIndex === idx);
-    if (isCorrect && !done.current) {
-      done.current = true;
-      setSubmitted(true);
-      setTimeout(onDone, 700);
+  const panels = TUTORIAL_PANELS_INITIAL;
+
+  function tapPanel(id: string) {
+    if (submitted || tappedIds.includes(id)) return;
+    const next = [...tappedIds, id];
+    setTappedIds(next);
+    if (next.length === panels.length && !done.current) {
+      const correctOrder = [...panels]
+        .sort((a, b) => a.correctIndex - b.correctIndex)
+        .map((p) => p.id);
+      const isCorrect = next.every((pid, i) => pid === correctOrder[i]);
+      if (isCorrect) {
+        done.current = true;
+        setSubmitted(true);
+        setTimeout(onDone, 700);
+      } else {
+        // ordem errada: resetar após breve feedback
+        setTimeout(() => setTappedIds([]), 600);
+      }
     }
   }
 
   const subClass = theme === "GAMIFIED" ? "text-gray-400" : "text-gray-500";
+  const normalCard =
+    theme === "GAMIFIED"
+      ? "border-gray-600 bg-gray-700"
+      : "border-gray-200 bg-white hover:border-blue-300";
+  const selectedCard =
+    theme === "GAMIFIED"
+      ? "border-cyan-400 bg-gray-600"
+      : "border-blue-400 bg-blue-50";
+  const correctCard = "border-green-500 bg-green-50";
+  const badgeClass =
+    theme === "GAMIFIED" ? "bg-cyan-500 text-white" : "bg-blue-500 text-white";
 
   return (
     <div className="space-y-2">
       <p className={`text-xs text-center ${subClass}`}>
-        Arraste os painéis para colocá-los na ordem certa:
+        Toque os painéis na ordem correta da história: 1.º, 2.º, 3.º...
       </p>
-      <Reorder.Group axis="y" values={items} onReorder={handleReorder} className="space-y-1.5">
-        {items.map((item, idx) => {
-          const isCorrect = submitted && item.correctIndex === idx;
+      <div className="grid grid-cols-3 gap-2">
+        {panels.map((panel) => {
+          const tapIdx = tappedIds.indexOf(panel.id);
+          const isTapped = tapIdx !== -1;
           return (
-            <Reorder.Item key={item.id} value={item} disabled={submitted}>
-              <motion.div
-                className={`flex items-center gap-2.5 p-2.5 rounded-xl border-2 ${
-                  isCorrect
-                    ? "border-green-500 bg-green-50"
-                    : theme === "GAMIFIED"
-                    ? "border-gray-600 bg-gray-700 cursor-grab active:cursor-grabbing"
-                    : "border-gray-200 bg-white cursor-grab active:cursor-grabbing hover:border-blue-300"
-                }`}
-                whileDrag={{ scale: 1.03, zIndex: 50 }}
-              >
+            <button
+              key={panel.id}
+              onClick={() => tapPanel(panel.id)}
+              disabled={submitted}
+              className={`relative p-2.5 rounded-xl border-2 flex flex-col items-center gap-1 transition-all ${
+                submitted
+                  ? correctCard
+                  : isTapped
+                  ? selectedCard
+                  : normalCard
+              }`}
+            >
+              {isTapped && (
                 <span
-                  className={`w-6 h-6 rounded-full flex items-center justify-center text-xs font-black flex-shrink-0 ${
-                    theme === "GAMIFIED" ? "bg-gray-600 text-gray-300" : "bg-gray-100 text-gray-600"
-                  }`}
+                  className={`absolute -top-2 -right-2 w-5 h-5 rounded-full text-xs font-bold flex items-center justify-center ${badgeClass}`}
                 >
-                  {idx + 1}
+                  {tapIdx + 1}
                 </span>
-                <span className="text-xl">{item.emoji}</span>
-                <span
-                  className={`text-sm flex-1 ${
-                    theme === "GAMIFIED" ? "text-gray-200" : "text-gray-700"
-                  }`}
-                >
-                  {item.label}
-                </span>
-                {isCorrect && <span>✅</span>}
-              </motion.div>
-            </Reorder.Item>
+              )}
+              <span className="text-2xl">{panel.emoji}</span>
+              <span className={`text-xs text-center leading-tight ${theme === "GAMIFIED" ? "text-gray-200" : "text-gray-700"}`}>
+                {panel.label}
+              </span>
+            </button>
           );
         })}
-      </Reorder.Group>
+      </div>
       <p className={`text-xs text-center ${subClass}`}>
         Ordem correta: Comprar → Cozinhar → Servir
       </p>
@@ -379,9 +398,9 @@ function OrdemHistoriaTutorial({ theme, onDone }: { theme: Theme; onDone: () => 
   const steps = [
     {
       instruction:
-        "Você verá painéis de uma situação do dia a dia em ordem embaralhada. Arraste-os para a sequência correta!",
+        "Você verá painéis de uma situação do dia a dia em ordem embaralhada. Toque os painéis na ordem correta da história: 1.º, 2.º, 3.º...",
       content: (onStepDone: () => void) => (
-        <OrdemHistoriaDragStep theme={theme} onDone={onStepDone} />
+        <OrdemHistoriaTapStep theme={theme} onDone={onStepDone} />
       ),
     },
   ];
@@ -399,6 +418,7 @@ export function OrdemHistoria({ difficulty, theme, onComplete }: OrdemHistoriaPr
   const [submitted, setSubmitted] = useState(false);
   const [streak, setStreak] = useState(0);
   const [panelLevel, setPanelLevel] = useState(() => initialPanelLevel(difficulty));
+  const [tappedIds, setTappedIds] = useState<string[]>([]);
 
   const used3 = useRef(new Set<number>());
   const used4 = useRef(new Set<number>());
@@ -408,26 +428,35 @@ export function OrdemHistoria({ difficulty, theme, onComplete }: OrdemHistoriaPr
   const [trialData, setTrialData] = useState(() => {
     const initLevel = initialPanelLevel(difficulty);
     const data = buildTrialData(initLevel, used3.current, used4.current, used5.current);
-    return { ...data, items: shuffleAway([...data.panels]) };
+    return { ...data, shuffled: shuffleAway([...data.panels]) };
   });
-
-  const items = trialData.items;
-
-  function setItems(newItems: Panel[]) {
-    setTrialData((prev) => ({ ...prev, items: newItems }));
-  }
 
   const startNewTrial = useCallback(
     (nextLevel: number) => {
       const data = buildTrialData(nextLevel, used3.current, used4.current, used5.current);
-      setTrialData({ ...data, items: shuffleAway([...data.panels]) });
+      setTrialData({ ...data, shuffled: shuffleAway([...data.panels]) });
+      setTappedIds([]);
       setSubmitted(false);
     },
     []
   );
 
+  function tapPanel(id: string) {
+    if (submitted || tappedIds.includes(id)) return;
+    setTappedIds((prev) => [...prev, id]);
+  }
+
+  function undoLast() {
+    if (submitted) return;
+    setTappedIds((prev) => prev.slice(0, -1));
+  }
+
   function handleSubmit() {
-    const isCorrect = items.every((item, idx) => item.correctIndex === idx);
+    const correctOrder = [...trialData.panels]
+      .sort((a, b) => a.correctIndex - b.correctIndex)
+      .map((p) => p.id);
+    const isCorrect = tappedIds.every((id, i) => id === correctOrder[i]);
+
     const newResults = [...trialResults, isCorrect];
     setTrialResults(newResults);
     setSubmitted(true);
@@ -483,46 +512,56 @@ export function OrdemHistoria({ difficulty, theme, onComplete }: OrdemHistoriaPr
     theme === "GAMIFIED"
       ? "bg-gray-950"
       : theme === "COLORFUL"
-      ? "bg-gradient-to-br from-violet-50 to-fuchsia-50"
+      ? "bg-gradient-to-br from-blue-50 via-white to-rose-50"
       : "bg-gradient-to-br from-slate-50 to-indigo-50/30";
 
   const card =
     theme === "GAMIFIED"
       ? "bg-gray-800 border border-cyan-500/30"
       : theme === "COLORFUL"
-      ? "bg-white shadow-xl border-2 border-violet-200"
+      ? "bg-white shadow-xl border-2 border-blue-300"
       : "bg-white shadow-md border border-slate-200/60";
 
   const titleClass =
     theme === "GAMIFIED"
       ? "text-cyan-400"
       : theme === "COLORFUL"
-      ? "text-violet-700"
+      ? "text-blue-800"
       : "text-slate-800";
 
   const subClass =
-    theme === "GAMIFIED" ? "text-gray-400" : theme === "COLORFUL" ? "text-violet-400" : "text-slate-500";
+    theme === "GAMIFIED" ? "text-gray-400" : theme === "COLORFUL" ? "text-blue-400" : "text-slate-500";
 
   const taskBg =
     theme === "GAMIFIED"
       ? "bg-gray-700/50"
       : theme === "COLORFUL"
-      ? "bg-violet-50 border border-violet-100"
+      ? "bg-blue-50 border border-blue-100"
       : "bg-indigo-50/50 border border-indigo-100/60";
 
-  const itemBase =
+  const normalCardClass =
     theme === "GAMIFIED"
-      ? "border-gray-600 bg-gray-700 cursor-grab active:cursor-grabbing"
+      ? "border-gray-600 bg-gray-700 active:scale-95"
       : theme === "COLORFUL"
-      ? "border-violet-200 bg-white cursor-grab active:cursor-grabbing hover:border-violet-400"
-      : "border-slate-200 bg-white cursor-grab active:cursor-grabbing hover:border-indigo-300 shadow-sm";
+      ? "border-blue-200 bg-white hover:border-blue-400 active:scale-95"
+      : "border-slate-200 bg-white hover:border-indigo-300 shadow-sm active:scale-95";
 
-  const badgeBase =
+  const selectedCardClass =
     theme === "GAMIFIED"
-      ? "bg-gray-600 text-gray-300"
+      ? "border-cyan-400 bg-gray-600"
       : theme === "COLORFUL"
-      ? "bg-violet-100 text-violet-700"
-      : "bg-indigo-100 text-indigo-700";
+      ? "border-blue-500 bg-blue-50"
+      : "border-indigo-500 bg-indigo-50";
+
+  const correctCardClass = "border-green-500 bg-green-50";
+  const wrongCardClass = "border-red-400 bg-red-50";
+
+  const badgeClass =
+    theme === "GAMIFIED"
+      ? "bg-cyan-500 text-white"
+      : theme === "COLORFUL"
+      ? "bg-blue-100 text-blue-800"
+      : "bg-indigo-500 text-white";
 
   const labelClass =
     theme === "GAMIFIED" ? "text-gray-200" : theme === "COLORFUL" ? "text-gray-800" : "text-slate-700";
@@ -531,13 +570,20 @@ export function OrdemHistoria({ difficulty, theme, onComplete }: OrdemHistoriaPr
     theme === "GAMIFIED"
       ? "bg-cyan-600 hover:bg-cyan-700 text-white"
       : theme === "COLORFUL"
-      ? "bg-gradient-to-r from-violet-500 to-fuchsia-500 text-white"
+      ? "bg-gradient-to-r from-rose-700 to-blue-700 text-white"
       : "bg-indigo-600 hover:bg-indigo-700 text-white";
 
+  const undoBtnClass =
+    theme === "GAMIFIED"
+      ? "bg-gray-700 hover:bg-gray-600 text-gray-300 border border-gray-600"
+      : theme === "COLORFUL"
+      ? "bg-white hover:bg-gray-50 text-gray-600 border border-gray-300"
+      : "bg-white hover:bg-slate-50 text-slate-600 border border-slate-300";
+
   const dotActive =
-    theme === "GAMIFIED" ? "bg-cyan-500" : theme === "COLORFUL" ? "bg-violet-500" : "bg-indigo-500";
+    theme === "GAMIFIED" ? "bg-cyan-500" : theme === "COLORFUL" ? "bg-blue-500" : "bg-indigo-500";
   const dotInactive =
-    theme === "GAMIFIED" ? "bg-gray-700" : theme === "COLORFUL" ? "bg-violet-100" : "bg-slate-200";
+    theme === "GAMIFIED" ? "bg-gray-700" : theme === "COLORFUL" ? "bg-blue-100" : "bg-slate-200";
 
   // Rótulo de nível
   const levelLabel =
@@ -546,10 +592,16 @@ export function OrdemHistoria({ difficulty, theme, onComplete }: OrdemHistoriaPr
     theme === "GAMIFIED"
       ? "text-cyan-400"
       : theme === "COLORFUL"
-      ? "text-violet-500"
+      ? "text-blue-500"
       : "text-indigo-500";
 
   const lastResult = trialResults[trialResults.length - 1];
+  const allTapped = tappedIds.length === trialData.panelCount;
+
+  // Para feedback após submit: determinar se cada painel está certo ou errado
+  const correctOrder = [...trialData.panels]
+    .sort((a, b) => a.correctIndex - b.correctIndex)
+    .map((p) => p.id);
 
   return (
     <div className={`min-h-screen flex flex-col items-center justify-center p-4 ${bg}`}>
@@ -600,72 +652,76 @@ export function OrdemHistoria({ difficulty, theme, onComplete }: OrdemHistoriaPr
               {trialData.name}
             </p>
             <p className={`text-xs ${subClass}`}>
-              Arraste do 1.º ao {trialData.panelCount}.º momento
+              Toque os painéis na ordem correta: 1.º ao {trialData.panelCount}.º
             </p>
           </div>
         </div>
 
-        {/* Painéis arrastáveis */}
-        <Reorder.Group
-          axis="y"
-          values={items}
-          onReorder={setItems}
-          className="space-y-2 my-3"
-        >
-          {items.map((item, idx) => {
-            const isCorrect = submitted && item.correctIndex === idx;
-            const isWrong = submitted && item.correctIndex !== idx;
+        {/* Grade de painéis */}
+        <div className="grid grid-cols-3 gap-3 my-4">
+          {trialData.shuffled.map((panel) => {
+            const tapIdx = tappedIds.indexOf(panel.id);
+            const isTapped = tapIdx !== -1;
+
+            let cardClass = normalCardClass;
+            if (submitted) {
+              // após submit: verde se o painel estava na posição certa (tappedIds[correctIndex] === panel.id)
+              const wasCorrect = tappedIds[panel.correctIndex] === panel.id;
+              cardClass = wasCorrect ? correctCardClass : wrongCardClass;
+            } else if (isTapped) {
+              cardClass = selectedCardClass;
+            }
 
             return (
-              <Reorder.Item key={item.id} value={item} disabled={submitted}>
-                <motion.div
-                  className={`flex items-center gap-2.5 p-3 rounded-xl border-2 transition-colors ${
-                    isCorrect
-                      ? "border-green-500 bg-green-50"
-                      : isWrong
-                      ? "border-red-400 bg-red-50"
-                      : itemBase
-                  }`}
-                  whileDrag={{
-                    scale: 1.03,
-                    boxShadow: "0 8px 24px rgba(0,0,0,0.15)",
-                    zIndex: 50,
-                  }}
-                >
+              <button
+                key={panel.id}
+                onClick={() => tapPanel(panel.id)}
+                disabled={submitted}
+                className={`relative p-3 rounded-2xl border-2 flex flex-col items-center gap-1.5 transition-all ${cardClass}`}
+              >
+                {isTapped && (
                   <span
-                    className={`w-7 h-7 rounded-full flex items-center justify-center text-sm font-black flex-shrink-0 ${
-                      isCorrect
-                        ? "bg-green-500 text-white"
-                        : isWrong
-                        ? "bg-red-400 text-white"
-                        : badgeBase
-                    }`}
+                    className={`absolute -top-2 -right-2 w-5 h-5 rounded-full text-xs font-bold flex items-center justify-center ${badgeClass}`}
                   >
-                    {idx + 1}
+                    {tapIdx + 1}
                   </span>
-                  <span className="text-2xl flex-shrink-0">{item.emoji}</span>
-                  <span className={`text-sm flex-1 leading-tight ${labelClass}`}>
-                    {item.label}
+                )}
+                {submitted && !tappedIds.includes(panel.id) && (
+                  <span className="absolute -top-2 -right-2 w-5 h-5 rounded-full text-xs font-bold flex items-center justify-center bg-gray-400 text-white">
+                    {panel.correctIndex + 1}
                   </span>
-                  {submitted && (
-                    <span className="text-base ml-auto flex-shrink-0">
-                      {isCorrect ? "✅" : "❌"}
-                    </span>
-                  )}
-                </motion.div>
-              </Reorder.Item>
+                )}
+                <span className="text-3xl">{panel.emoji}</span>
+                {panelLevel < 3 && (
+                  <span className={`text-xs text-center leading-tight ${labelClass}`}>
+                    {panel.label}
+                  </span>
+                )}
+              </button>
             );
           })}
-        </Reorder.Group>
+        </div>
 
         {/* Área de ação */}
         {!submitted ? (
-          <button
-            onClick={handleSubmit}
-            className={`w-full h-11 rounded-xl font-bold transition-colors ${btnClass}`}
-          >
-            Verificar
-          </button>
+          <div className="flex gap-2">
+            {tappedIds.length > 0 && (
+              <button
+                onClick={undoLast}
+                className={`flex-1 h-11 rounded-xl font-bold transition-colors text-sm ${undoBtnClass}`}
+              >
+                Desfazer
+              </button>
+            )}
+            {allTapped && (
+              <button
+                onClick={handleSubmit}
+                className={`flex-1 h-11 rounded-xl font-bold transition-colors ${btnClass}`}
+              >
+                Confirmar
+              </button>
+            )}
+          </div>
         ) : (
           <AnimatePresence>
             <motion.div

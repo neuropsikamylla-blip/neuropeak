@@ -84,6 +84,34 @@ function mazeLoops(difficulty: number, size: number): number {
   return base * 4;
 }
 
+function generateFalseExits(maze: Cell[][], count: number): { r: number; c: number }[] {
+  if (count <= 0) return [];
+  const size = maze.length;
+  const deadEnds: { r: number; c: number }[] = [];
+
+  for (let r = 0; r < size; r++) {
+    for (let c = 0; c < size; c++) {
+      if (r === 0 && c === 0) continue;
+      if (r === size - 1 && c === size - 1) continue;
+      const cell = maze[r][c];
+      const walls = [cell.N, cell.S, cell.E, cell.W].filter(Boolean).length;
+      if (walls >= 3) {
+        deadEnds.push({ r, c });
+      }
+    }
+  }
+
+  return [...deadEnds].sort(() => Math.random() - 0.5).slice(0, count);
+}
+
+function falseExitsCount(difficulty: number): number {
+  if (difficulty <= 2) return 0;
+  if (difficulty <= 4) return 1;
+  if (difficulty <= 6) return 2;
+  if (difficulty <= 8) return 3;
+  return 4;
+}
+
 // ── Configuration ──────────────────────────────────────────────────────────
 const SIZE_STEPS = [8, 10, 13, 16, 20, 24];
 const TIME_LIMITS: Record<number, number> = {
@@ -186,6 +214,7 @@ interface MazeGridProps {
   containerPx: number;
   onCellClick: (r: number, c: number) => void;
   isGoal?: (r: number, c: number) => boolean;
+  falseExits?: { r: number; c: number }[];
 }
 
 function MazeGrid({
@@ -197,6 +226,7 @@ function MazeGrid({
   containerPx,
   onCellClick,
   isGoal,
+  falseExits,
 }: MazeGridProps) {
   const pal = PALETTES[theme];
   const size = maze.length;
@@ -224,12 +254,15 @@ function MazeGrid({
           const isGoalCell = isGoal ? isGoal(r, c) : r === size - 1 && c === size - 1;
           const isExplored = explored.has(cellKey(r, c));
           const isFlashing = flashCell === cellKey(r, c);
+          const isFalseExit = falseExits?.some(fe => fe.r === r && fe.c === c) ?? false;
 
           let bg = pal.floor;
           if (isFlashing) {
             bg = pal.flashRed;
           } else if (isGoalCell) {
             bg = pal.goal;
+          } else if (isFalseExit && !isPlayer) {
+            bg = theme === "GAMIFIED" ? "#1a1a2e" : "#fef3c7";
           } else if (isExplored) {
             bg = pal.trail;
           }
@@ -264,6 +297,17 @@ function MazeGrid({
                   }}
                 >
                   🏁
+                </span>
+              )}
+              {isFalseExit && !isPlayer && (
+                <span
+                  style={{
+                    fontSize: Math.max(10, cellPx * 0.45),
+                    lineHeight: 1,
+                    userSelect: "none",
+                  }}
+                >
+                  🚪
                 </span>
               )}
               {isPlayer && (
@@ -470,11 +514,15 @@ export function Labirinto({ difficulty, theme, onComplete }: LabirintoProps) {
   const size = SIZE_STEPS[sizeIdx];
   const timeLimit = TIME_LIMITS[size] ?? 120;
 
-  const [maze, setMaze] = useState<Cell[][]>(() => {
+  const [mazeInitState] = useState(() => {
     const idx = initialIdx(difficulty);
-    const initSize = SIZE_STEPS[idx];
-    return generateMaze(initSize, mazeLoops(difficulty, initSize));
+    const sz = SIZE_STEPS[idx];
+    const grid = generateMaze(sz, mazeLoops(difficulty, sz));
+    return { maze: grid, falseExits: generateFalseExits(grid, falseExitsCount(difficulty)) };
   });
+  const [maze, setMaze] = useState<Cell[][]>(mazeInitState.maze);
+  const [falseExits, setFalseExits] = useState<{ r: number; c: number }[]>(mazeInitState.falseExits);
+  const [wrongExitFlash, setWrongExitFlash] = useState(false);
   const [player, setPlayer] = useState({ r: 0, c: 0 });
   const [explored, setExplored] = useState<Set<string>>(
     () => new Set([cellKey(0, 0)])
@@ -490,6 +538,7 @@ export function Labirinto({ difficulty, theme, onComplete }: LabirintoProps) {
   const allDoneRef = useRef(false);
   const playerRef = useRef({ r: 0, c: 0 });
   const mazeRef = useRef(maze);
+  const falseExitsRef = useRef(falseExits);
   const doneRef = useRef(false);
   const timedOutRef = useRef(false);
   // Keep refs for closure access in finishMaze
@@ -502,6 +551,7 @@ export function Labirinto({ difficulty, theme, onComplete }: LabirintoProps) {
   const timeLimitRef = useRef(timeLimit);
 
   mazeRef.current = maze;
+  falseExitsRef.current = falseExits;
   playerRef.current = player;
   doneRef.current = done;
   timedOutRef.current = timedOut;
@@ -598,10 +648,12 @@ export function Labirinto({ difficulty, theme, onComplete }: LabirintoProps) {
         } else {
           const nextSize = SIZE_STEPS[nextIdx];
           const nextMazeGrid = generateMaze(nextSize, mazeLoops(difficulty, nextSize));
+          const nextFalseExits = generateFalseExits(nextMazeGrid, falseExitsCount(difficulty));
           setMazeNum(nextMaze);
           setStreak(nextStreak);
           setSizeIdx(nextIdx);
           setMaze(nextMazeGrid);
+          setFalseExits(nextFalseExits);
           setPlayer({ r: 0, c: 0 });
           playerRef.current = { r: 0, c: 0 };
           setExplored(new Set([cellKey(0, 0)]));
@@ -649,6 +701,29 @@ export function Labirinto({ difficulty, theme, onComplete }: LabirintoProps) {
         const k = cellKey(targetR, targetC);
         setFlashCell(k);
         setTimeout(() => setFlashCell(null), 200);
+        return;
+      }
+
+      // Check for false exit before processing as a move
+      const fe = falseExitsRef.current;
+      const isFalseExit = fe.some(x => x.r === targetR && x.c === targetC);
+      if (isFalseExit) {
+        // Move to the cell visually
+        setPlayer({ r: targetR, c: targetC });
+        playerRef.current = { r: targetR, c: targetC };
+        setExplored(prev => new Set([...prev, cellKey(targetR, targetC)]));
+        setFlashCell(cellKey(targetR, targetC));
+        setWrongExitFlash(true);
+
+        setTimeout(() => {
+          setFlashCell(null);
+          setWrongExitFlash(false);
+          // Teleport back to start
+          setPlayer({ r: 0, c: 0 });
+          playerRef.current = { r: 0, c: 0 };
+          // Time penalty: subtract 15 seconds
+          mazeStartTime.current = mazeStartTime.current - 15000;
+        }, 900);
         return;
       }
 
@@ -802,6 +877,13 @@ export function Labirinto({ difficulty, theme, onComplete }: LabirintoProps) {
         </div>
       </div>
 
+      {/* Wrong exit message */}
+      {wrongExitFlash && (
+        <div className="text-center text-sm font-bold text-red-500 animate-pulse mb-2">
+          ❌ Saída errada! −15s
+        </div>
+      )}
+
       {/* Maze */}
       <div
         className="relative"
@@ -817,6 +899,7 @@ export function Labirinto({ difficulty, theme, onComplete }: LabirintoProps) {
           theme={theme}
           containerPx={containerPx}
           onCellClick={tryMove}
+          falseExits={falseExits}
         />
 
         {/* Result overlay */}

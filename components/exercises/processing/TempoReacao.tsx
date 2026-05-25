@@ -174,6 +174,7 @@ export function TempoReacao({ difficulty, theme, onComplete }: TempoReacaoProps)
   const [wrongId, setWrongId] = useState<number | null>(null); // balloon id that was wrong-clicked
   const [missFlash, setMissFlash] = useState(false);
 
+  const startedRef = useRef(false);
   const resolvedIds = useRef(new Set<number>());
   const resultsRef = useRef<{ correct: boolean; rt: number | null }[]>([]);
   const doneRef = useRef(false);
@@ -222,11 +223,12 @@ export function TempoReacao({ difficulty, theme, onComplete }: TempoReacaoProps)
 
     const batch: Balloon[] = [makeBalloon(true, ms)];
     for (let i = 0; i < nd; i++) batch.push(makeBalloon(false, ms));
-    setBalloons((prev) => [...prev, ...batch]);
+    setBalloons(batch);
   }, [ms, nd]);
 
   function start() {
     setStarted(true);
+    startedRef.current = true;
     startTime.current = Date.now();
     spawnBatch();
   }
@@ -236,7 +238,7 @@ export function TempoReacao({ difficulty, theme, onComplete }: TempoReacaoProps)
   }, []);
 
   function handleBalloonClick(balloon: Balloon) {
-    if (!started || doneRef.current) return;
+    if (!startedRef.current || doneRef.current) return;
     if (resolvedIds.current.has(balloon.id)) return;
     if (resultsRef.current.length >= MAX_TRIALS) return;
 
@@ -344,7 +346,7 @@ export function TempoReacao({ difficulty, theme, onComplete }: TempoReacaoProps)
             <motion.div
               key={balloon.id}
               initial={{ y: -balloon.size * 1.4 }}
-              animate={{ y: "110vh" }}
+              animate={{ y: 1200 }}
               transition={{ duration: balloon.duration / 1000, ease: "linear" }}
               onAnimationComplete={() => handleBalloonExit(balloon)}
               style={{
@@ -357,8 +359,10 @@ export function TempoReacao({ difficulty, theme, onComplete }: TempoReacaoProps)
                 alignItems: "center",
                 cursor: "pointer",
                 touchAction: "manipulation",
+                pointerEvents: "auto",
+                zIndex: 10,
               }}
-              onPointerDown={(e) => { e.stopPropagation(); handleBalloonClick(balloon); }}
+              onClick={() => handleBalloonClick(balloon)}
             >
               {/* Balloon body */}
               <div

@@ -58,11 +58,11 @@ export function ExerciseWrapper({
       btn: "bg-indigo-600 hover:bg-indigo-700 text-white rounded-xl font-semibold",
     },
     COLORFUL: {
-      bg: "bg-gradient-to-br from-purple-50 via-pink-50 to-yellow-50 min-h-screen",
-      card: "bg-white rounded-3xl shadow-xl border-2 border-purple-200 p-8 max-w-2xl mx-auto",
-      title: "text-purple-700 text-3xl font-bold",
-      text: "text-purple-900",
-      btn: "bg-gradient-to-r from-purple-500 to-pink-500 text-white rounded-full text-lg font-bold",
+      bg: "bg-gradient-to-br from-blue-50 via-white to-rose-50 min-h-screen",
+      card: "bg-white rounded-3xl shadow-xl border-2 border-blue-300 p-8 max-w-2xl mx-auto",
+      title: "text-blue-800 text-3xl font-bold",
+      text: "text-gray-800",
+      btn: "bg-gradient-to-r from-rose-700 to-blue-700 text-white rounded-full text-lg font-bold",
     },
     GAMIFIED: {
       bg: "bg-gray-950 min-h-screen",
