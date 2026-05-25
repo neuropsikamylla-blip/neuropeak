@@ -141,12 +141,12 @@ const CINEMA_L1_SCENARIOS: CinemaL1Scenario[] = [
     mustReturnBy: 19,
   },
   {
-    story: "Você e um colega de trabalho combinaram de ir ao cinema direto do expediente. Nenhum de vocês tem desconto — são funcionários CLT sem carteirinha de estudante ou cartão de idoso. Sem pressa para voltar.",
+    story: "Você e um colega de trabalho combinaram de ir ao cinema direto do expediente. Nenhum de vocês tem documento de estudante ou qualquer outro desconto — são funcionários CLT comuns. Sem pressa para voltar.",
     canMeia: false,
     mustReturnBy: null,
   },
   {
-    story: "Você tem o cartão de idoso (65+) na carteira e o dia inteiro livre — sem compromissos, sem pressa. Aproveite!",
+    story: "Você tem 67 anos, está aposentado e ganhou o dia inteiro livre — sem compromissos, sem pressa. O que você escolhe?",
     canMeia: true,
     mustReturnBy: null,
   },
@@ -156,7 +156,12 @@ const CINEMA_L1_SCENARIOS: CinemaL1Scenario[] = [
 function CinemaL1({ theme, onFinish }: { theme: Theme; onFinish: (ok: boolean) => void }) {
   const p = pal(theme);
   const scenario = useRef(CINEMA_L1_SCENARIOS[Math.floor(Math.random() * CINEMA_L1_SCENARIOS.length)]);
-  const budget = useRef(22 + Math.floor(Math.random() * 16));
+  // Quando canMeia=false o menor ticket válido é inteira (R$28), então o budget mínimo precisa cobri-lo.
+  const budget = useRef(
+    scenario.current.canMeia
+      ? 20 + Math.floor(Math.random() * 12)   // R$20–R$31: meia (R$14) sempre cabe
+      : 30 + Math.floor(Math.random() * 12)   // R$30–R$41: inteira (R$28) sempre cabe
+  );
   const filme = useRef(FILMES[Math.floor(Math.random() * FILMES.length)]);
   const horarios = useRef((() => {
     const all = [...HORARIOS];
@@ -327,10 +332,13 @@ function CinemaL2({ theme, onFinish }: { theme: Theme; onFinish: (ok: boolean) =
       </div>
 
       {over && <p className="text-xs text-red-500 text-center">⚠️ Acima do orçamento! Remova algum item.</p>}
+      {!over && ticket && snacks.size === 0 && (
+        <p className="text-xs text-amber-600 text-center">Adicione pelo menos um item da bombonière.</p>
+      )}
 
       <button
-        onClick={() => onFinish(ticket !== null && !over)}
-        disabled={!ticket || over}
+        onClick={() => onFinish(ticket !== null && snacks.size > 0 && !over)}
+        disabled={!ticket || snacks.size === 0 || over}
         className={`w-full h-11 rounded-xl font-bold transition-all ${p.btn} disabled:opacity-40`}
       >Confirmar compra · R$ {total}</button>
     </div>
@@ -466,8 +474,7 @@ function CinemaL4({ theme, onFinish }: { theme: Theme; onFinish: (ok: boolean) =
   return (
     <div className="space-y-3">
       <div className="p-3 rounded-xl border-2 border-amber-400 bg-amber-50">
-        <p className="text-sm font-semibold text-amber-800">⚠️ Sessão cancelada — escolha outra opção</p>
-        <p className="text-xs text-amber-700 mt-0.5">Orçamento: R$ {budget.current}</p>
+        <p className="text-sm font-semibold text-amber-800">⚠️ Sessão cancelada — escolha outra opção disponível</p>
       </div>
       {remaining.map(f => (
         <button key={f.id} onClick={() => setSecond(f.id)}
@@ -868,9 +875,10 @@ const BRIEFINGS: Record<EnvId, Record<number, { title: string; story: string; ob
     3: { title: "Pedidos Especiais",     story: "Mesa VIP com clientes exigentes — cada um pediu uma modificação diferente no prato. Não misture os pedidos!",                                                    obj: "Memorize as modificações de cada cliente.", rule: "8 segundos · 3 pedidos com variações." },
   },
   farmacia: {
-    1: { title: "Retirar Medicamento",   story: "Sua mãe ligou: o remédio dela acabou e ela não pode sair. Você foi buscar — mas precisa seguir os passos certos para retirar com receita.",                     obj: "Organize as etapas para retirar o medicamento.", rule: "Arraste na ordem correta." },
-    2: { title: "Compra Simples",        story: "Você entrou na farmácia para pegar um produto rapidinho. Parece fácil, mas sem saber a sequência certa, pode perder tempo à toa.",                               obj: "Organize as etapas de uma compra na farmácia.", rule: "Arraste na ordem correta." },
+    1: { title: "Retirar Medicamento",    story: "Sua mãe ligou: o remédio dela acabou e ela não pode sair. Você foi buscar — mas precisa seguir os passos certos para retirar com receita.",                     obj: "Organize as etapas para retirar o medicamento.", rule: "Arraste na ordem correta." },
+    2: { title: "Compra Simples",         story: "Você entrou na farmácia para pegar um produto rapidinho. Parece fácil, mas sem saber a sequência certa, pode perder tempo à toa.",                               obj: "Organize as etapas de uma compra na farmácia.", rule: "Arraste na ordem correta." },
     3: { title: "Medicamento Controlado", story: "O médico receitou um medicamento de uso controlado. Tem regra para tudo — e se você errar a ordem, vai embora sem o remédio.",                                 obj: "Siga o protocolo correto para medicamento com receita.", rule: "A ordem importa — cada etapa tem consequência." },
+    4: { title: "Troca de Medicamento",   story: "Você comprou o remédio errado ontem. Voltou hoje para trocar — mas não basta simplesmente pedir: tem uma sequência de passos que a farmácia exige.",             obj: "Siga os passos corretos para realizar a troca.", rule: "Ordem errada = troca recusada." },
   },
 };
 
