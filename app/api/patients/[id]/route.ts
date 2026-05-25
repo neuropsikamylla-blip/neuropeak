@@ -7,16 +7,23 @@ import { z } from "zod";
 import { randomUUID } from "crypto";
 
 const updateSchema = z.object({
+  name: z.string().min(2).optional(),
+  birthDate: z.string().optional(),
+  education: z.string().optional(),
+  contact: z.string().optional(),
+  guardian: z.string().optional(),
+  cid: z.string().optional(),
+  diagnosis: z.string().optional(),
+  theme: z.enum(["CLINICAL", "COLORFUL", "GAMIFIED"]).optional(),
+  clinicalNotes: z.string().optional(),
+  therapeuticGoals: z.string().optional(),
+  medications: z.string().optional(),
   trainingPlan: z.object({
     domains: z.array(z.string()),
     exercises: z.array(z.string()),
     sessionDuration: z.number().min(5).max(120),
     frequency: z.number().min(1).max(7),
   }).optional(),
-  theme: z.enum(["CLINICAL", "COLORFUL", "GAMIFIED"]).optional(),
-  clinicalNotes: z.string().optional(),
-  therapeuticGoals: z.string().optional(),
-  medications: z.string().optional(),
 });
 
 export async function GET(
