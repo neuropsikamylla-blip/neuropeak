@@ -162,7 +162,7 @@ export const EXERCISE_DEFINITIONS = {
   "stroop-task": {
     id: "stroop-task",
     name: "Cores e Palavras",
-    domain: "attention" as Domain,
+    domain: "executive" as Domain,
     description: "Siga a regra COR ou PALAVRA para identificar a resposta correta",
     estimatedMinutes: 8,
     icon: "🎨",
