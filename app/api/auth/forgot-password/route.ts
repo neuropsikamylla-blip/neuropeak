@@ -1,6 +1,6 @@
 export const dynamic = "force-dynamic";
 import { NextRequest, NextResponse } from "next/server";
-import { supabase } from "@/lib/supabase";
+import prisma from "@/lib/db";
 import { sendPasswordResetEmail } from "@/lib/mailer";
 import { randomUUID } from "crypto";
 import { z } from "zod";
@@ -18,33 +18,27 @@ export async function POST(req: NextRequest) {
 
   const { email } = result.data;
 
-  const { data: user } = await supabase
-    .from("User")
-    .select("id, email, name")
-    .eq("email", email)
-    .single();
+  const user = await prisma.user.findUnique({
+    where: { email },
+    select: { id: true, email: true, name: true },
+  });
 
-  // Always return success to avoid email enumeration
-  if (!user) {
-    return NextResponse.json({ success: true });
-  }
+  if (!user) return NextResponse.json({ success: true });
 
-  // Invalidate old tokens
-  await supabase
-    .from("PasswordResetToken")
-    .update({ used: true })
-    .eq("userId", user.id)
-    .eq("used", false);
+  await prisma.passwordResetToken.updateMany({
+    where: { userId: user.id, used: false },
+    data: { used: true },
+  });
 
   const token = randomUUID().replace(/-/g, "") + randomUUID().replace(/-/g, "");
-  const expiresAt = new Date(Date.now() + 60 * 60 * 1000).toISOString();
 
-  await supabase.from("PasswordResetToken").insert({
-    id: randomUUID(),
-    token,
-    userId: user.id,
-    expiresAt,
-    used: false,
+  await prisma.passwordResetToken.create({
+    data: {
+      token,
+      userId: user.id,
+      expiresAt: new Date(Date.now() + 60 * 60 * 1000),
+      used: false,
+    },
   });
 
   const baseUrl = process.env.NEXTAUTH_URL || "http://localhost:3000";

@@ -2,9 +2,9 @@ export const dynamic = "force-dynamic";
 import { NextRequest, NextResponse } from "next/server";
 import { getServerSession } from "next-auth";
 import { authOptions } from "@/lib/auth";
+import prisma from "@/lib/db";
 import { getSupabase } from "@/lib/supabase";
 
-// POST: submit CRP number + document + accept terms
 export async function POST(req: NextRequest) {
   const session = await getServerSession(authOptions);
   if (!session || (session.user as { role?: string }).role !== "THERAPIST") {
@@ -21,7 +21,7 @@ export async function POST(req: NextRequest) {
   if (!file) return NextResponse.json({ error: "Documento obrigatório" }, { status: 400 });
   if (!acceptedTerms) return NextResponse.json({ error: "Aceite dos termos obrigatório" }, { status: 400 });
 
-  const maxSize = 5 * 1024 * 1024; // 5MB
+  const maxSize = 5 * 1024 * 1024;
   if (file.size > maxSize) return NextResponse.json({ error: "Arquivo muito grande (máx 5MB)" }, { status: 400 });
 
   const allowed = ["image/jpeg", "image/png", "image/webp", "application/pdf"];
@@ -29,39 +29,28 @@ export async function POST(req: NextRequest) {
     return NextResponse.json({ error: "Formato inválido. Use JPG, PNG ou PDF" }, { status: 400 });
   }
 
-  const supabase = getSupabase();
-  const ext = file.name.split(".").pop() ?? "jpg";
-  const path = `${userId}/crp-${Date.now()}.${ext}`;
-
-  const bytes = await file.arrayBuffer();
-  const { error: uploadError } = await supabase.storage
-    .from("crp-documents")
-    .upload(path, bytes, { contentType: file.type, upsert: true });
-
-  if (uploadError) {
-    return NextResponse.json({ error: "Erro ao enviar documento" }, { status: 500 });
+  let path: string;
+  try {
+    const supabase = getSupabase();
+    const ext = file.name.split(".").pop() ?? "jpg";
+    path = `${userId}/crp-${Date.now()}.${ext}`;
+    const bytes = await file.arrayBuffer();
+    const { error: uploadError } = await supabase.storage
+      .from("crp-documents")
+      .upload(path, bytes, { contentType: file.type, upsert: true });
+    if (uploadError) return NextResponse.json({ error: "Erro ao enviar documento" }, { status: 500 });
+  } catch {
+    return NextResponse.json({ error: "Armazenamento de documentos indisponível" }, { status: 503 });
   }
 
-  const { error: updateError } = await supabase
-    .from("User")
-    .update({
-      crp,
-      crpDocument: path,
-      crpStatus: "pending",
-      crpAcceptedTerms: true,
-      crpSubmittedAt: new Date().toISOString(),
-      updatedAt: new Date().toISOString(),
-    })
-    .eq("id", userId);
-
-  if (updateError) {
-    return NextResponse.json({ error: "Erro ao salvar dados" }, { status: 500 });
-  }
+  await prisma.user.update({
+    where: { id: userId },
+    data: { crp, crpDocument: path, crpStatus: "pending", crpAcceptedTerms: true, crpSubmittedAt: new Date() },
+  });
 
   return NextResponse.json({ success: true, status: "pending" });
 }
 
-// PATCH: admin approve/reject (only admin email)
 export async function PATCH(req: NextRequest) {
   const session = await getServerSession(authOptions);
   if (!session || (session.user as { role?: string }).role !== "THERAPIST") {
@@ -78,19 +67,13 @@ export async function PATCH(req: NextRequest) {
     return NextResponse.json({ error: "Dados inválidos" }, { status: 400 });
   }
 
-  const supabase = getSupabase();
-  const { error } = await supabase
-    .from("User")
-    .update({ crpStatus: status, updatedAt: new Date().toISOString() })
-    .eq("id", userId);
-
-  if (error) return NextResponse.json({ error: "Erro ao atualizar" }, { status: 500 });
+  await prisma.user.update({ where: { id: userId }, data: { crpStatus: status } });
 
   return NextResponse.json({ success: true });
 }
 
-// GET: admin list pending verifications
 export async function GET(req: NextRequest) {
+  void req;
   const session = await getServerSession(authOptions);
   if (!session || (session.user as { role?: string }).role !== "THERAPIST") {
     return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
@@ -101,12 +84,11 @@ export async function GET(req: NextRequest) {
     return NextResponse.json({ error: "Unauthorized" }, { status: 403 });
   }
 
-  const supabase = getSupabase();
-  const { data } = await supabase
-    .from("User")
-    .select("id, name, email, crp, crpStatus, crpDocument, crpSubmittedAt")
-    .not("crpStatus", "eq", "unverified")
-    .order("crpSubmittedAt", { ascending: false });
+  const users = await prisma.user.findMany({
+    where: { crpStatus: { not: "unverified" } },
+    select: { id: true, name: true, email: true, crp: true, crpStatus: true, crpDocument: true, crpSubmittedAt: true },
+    orderBy: { crpSubmittedAt: "desc" },
+  });
 
-  return NextResponse.json(data ?? []);
+  return NextResponse.json(users);
 }

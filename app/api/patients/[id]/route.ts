@@ -2,9 +2,8 @@ export const dynamic = "force-dynamic";
 import { NextRequest, NextResponse } from "next/server";
 import { getServerSession } from "next-auth";
 import { authOptions } from "@/lib/auth";
-import { supabase } from "@/lib/supabase";
+import prisma from "@/lib/db";
 import { z } from "zod";
-import { randomUUID } from "crypto";
 
 const updateSchema = z.object({
   name: z.string().min(2).optional(),
@@ -42,50 +41,29 @@ export async function GET(
     return NextResponse.json({ error: "Forbidden" }, { status: 403 });
   }
 
-  const searchParams = req.nextUrl.searchParams;
-  const includeConfig = searchParams.get("config") === "true";
+  const includeConfig = req.nextUrl.searchParams.get("config") === "true";
 
-  const { data: patient, error: patientError } = await supabase
-    .from('Patient')
-    .select('*')
-    .eq('id', id)
-    .single();
+  const patient = await prisma.patient.findUnique({
+    where: { id },
+    include: {
+      trainingPlans: {
+        where: { isActive: true },
+        take: 1,
+      },
+      sessions: {
+        orderBy: { completedAt: "desc" },
+        take: 50,
+      },
+      exerciseConfigs: includeConfig,
+    },
+  });
 
-  if (patientError || !patient) return NextResponse.json({ error: "Not found" }, { status: 404 });
+  if (!patient) return NextResponse.json({ error: "Not found" }, { status: 404 });
   if (isTherapist && patient.therapistId !== user.id) {
     return NextResponse.json({ error: "Forbidden" }, { status: 403 });
   }
 
-  const [
-    { data: trainingPlans },
-    { data: sessions },
-    { data: exerciseConfigs },
-  ] = await Promise.all([
-    supabase
-      .from('TrainingPlan')
-      .select('*')
-      .eq('patientId', id)
-      .eq('isActive', true)
-      .limit(1),
-    supabase
-      .from('Session')
-      .select('*')
-      .eq('patientId', id)
-      .order('completedAt', { ascending: false })
-      .limit(50),
-    includeConfig
-      ? supabase.from('ExerciseConfig').select('*').eq('patientId', id)
-      : Promise.resolve({ data: [] }),
-  ]);
-
-  const patientWithRelations = {
-    ...patient,
-    trainingPlans: trainingPlans ?? [],
-    sessions: sessions ?? [],
-    exerciseConfigs: exerciseConfigs ?? [],
-  };
-
-  return NextResponse.json({ patient: patientWithRelations });
+  return NextResponse.json({ patient });
 }
 
 export async function PATCH(
@@ -100,14 +78,12 @@ export async function PATCH(
 
   const therapistId = (session.user as { id: string }).id;
 
-  const { data: existingPatient, error: findError } = await supabase
-    .from('Patient')
-    .select('id')
-    .eq('id', id)
-    .eq('therapistId', therapistId)
-    .single();
+  const existing = await prisma.patient.findFirst({
+    where: { id, therapistId },
+    select: { id: true },
+  });
 
-  if (findError || !existingPatient) return NextResponse.json({ error: "Not found" }, { status: 404 });
+  if (!existing) return NextResponse.json({ error: "Not found" }, { status: 404 });
 
   const body = await req.json();
   const result = updateSchema.safeParse(body);
@@ -118,30 +94,26 @@ export async function PATCH(
   const { trainingPlan, ...patientUpdates } = result.data;
 
   if (Object.keys(patientUpdates).length > 0) {
-    await supabase
-      .from('Patient')
-      .update(patientUpdates)
-      .eq('id', id);
+    const data: Record<string, unknown> = { ...patientUpdates };
+    if (patientUpdates.birthDate) data.birthDate = new Date(patientUpdates.birthDate);
+    await prisma.patient.update({ where: { id }, data });
   }
 
   if (trainingPlan) {
-    await supabase
-      .from('TrainingPlan')
-      .update({ isActive: false })
-      .eq('patientId', id);
-
-    await supabase
-      .from('TrainingPlan')
-      .insert({
-        id: randomUUID(),
+    await prisma.trainingPlan.updateMany({
+      where: { patientId: id },
+      data: { isActive: false },
+    });
+    await prisma.trainingPlan.create({
+      data: {
         patientId: id,
         domains: JSON.stringify(trainingPlan.domains),
         exercises: JSON.stringify(trainingPlan.exercises),
         sessionDuration: trainingPlan.sessionDuration,
         frequency: trainingPlan.frequency,
         isActive: true,
-        updatedAt: new Date().toISOString(),
-      });
+      },
+    });
   }
 
   return NextResponse.json({ success: true });
@@ -151,6 +123,7 @@ export async function DELETE(
   req: NextRequest,
   { params }: { params: Promise<{ id: string }> }
 ) {
+  void req;
   const { id } = await params;
   const session = await getServerSession(authOptions);
   if (!session || (session.user as { role?: string }).role !== "THERAPIST") {
@@ -159,11 +132,7 @@ export async function DELETE(
 
   const therapistId = (session.user as { id: string }).id;
 
-  await supabase
-    .from('Patient')
-    .delete()
-    .eq('id', id)
-    .eq('therapistId', therapistId);
+  await prisma.patient.deleteMany({ where: { id, therapistId } });
 
   return NextResponse.json({ success: true });
 }

@@ -1,6 +1,6 @@
 export const dynamic = "force-dynamic";
 import { NextRequest, NextResponse } from "next/server";
-import { supabase } from "@/lib/supabase";
+import prisma from "@/lib/db";
 import bcrypt from "bcryptjs";
 import { z } from "zod";
 
@@ -18,11 +18,7 @@ export async function POST(req: NextRequest) {
 
   const { token, newPassword } = result.data;
 
-  const { data: resetToken } = await supabase
-    .from("PasswordResetToken")
-    .select("id, userId, expiresAt, used")
-    .eq("token", token)
-    .single();
+  const resetToken = await prisma.passwordResetToken.findUnique({ where: { token } });
 
   if (!resetToken) {
     return NextResponse.json({ error: "Link inválido ou expirado" }, { status: 400 });
@@ -38,19 +34,15 @@ export async function POST(req: NextRequest) {
 
   const hashedPassword = await bcrypt.hash(newPassword, 12);
 
-  const { error: updateError } = await supabase
-    .from("User")
-    .update({ password: hashedPassword, updatedAt: new Date().toISOString() })
-    .eq("id", resetToken.userId);
+  await prisma.user.update({
+    where: { id: resetToken.userId },
+    data: { password: hashedPassword },
+  });
 
-  if (updateError) {
-    return NextResponse.json({ error: "Erro ao atualizar senha" }, { status: 500 });
-  }
-
-  await supabase
-    .from("PasswordResetToken")
-    .update({ used: true })
-    .eq("id", resetToken.id);
+  await prisma.passwordResetToken.update({
+    where: { id: resetToken.id },
+    data: { used: true },
+  });
 
   return NextResponse.json({ success: true });
 }

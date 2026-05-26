@@ -1,12 +1,12 @@
 import { NextAuthOptions } from "next-auth";
 import CredentialsProvider from "next-auth/providers/credentials";
 import bcrypt from "bcryptjs";
-import { supabase } from "@/lib/supabase";
+import prisma from "@/lib/db";
 
 export const authOptions: NextAuthOptions = {
   session: {
     strategy: "jwt",
-    maxAge: 8 * 60 * 60, // 8 hours
+    maxAge: 8 * 60 * 60,
   },
   pages: {
     signIn: "/login",
@@ -23,11 +23,9 @@ export const authOptions: NextAuthOptions = {
       async authorize(credentials) {
         if (!credentials?.email || !credentials?.password) return null;
 
-        const { data: user } = await supabase
-          .from('User')
-          .select('*')
-          .eq('email', credentials.email)
-          .single();
+        const user = await prisma.user.findUnique({
+          where: { email: credentials.email },
+        });
 
         if (!user) return null;
 
@@ -56,26 +54,10 @@ export const authOptions: NextAuthOptions = {
 
         const input = credentials.patientId.trim().toUpperCase();
         const isCode = /^COG\d{4,6}$/.test(input);
-        let patient = null;
-        if (isCode) {
-          try {
-            const { data } = await supabase
-              .from('Patient')
-              .select('*')
-              .eq('patientCode', input)
-              .maybeSingle();
-            patient = data;
-          } catch {
-            // column may not exist yet; fall through to null
-          }
-        } else {
-          const { data } = await supabase
-            .from('Patient')
-            .select('*')
-            .eq('id', credentials.patientId)
-            .maybeSingle();
-          patient = data;
-        }
+
+        const patient = isCode
+          ? await prisma.patient.findFirst({ where: { patientCode: input } })
+          : await prisma.patient.findUnique({ where: { id: credentials.patientId } });
 
         if (!patient) return null;
         const pinValid = await bcrypt.compare(credentials.pin, patient.pin);

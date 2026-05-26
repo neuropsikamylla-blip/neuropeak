@@ -1,6 +1,6 @@
 import { getServerSession } from "next-auth";
 import { authOptions } from "@/lib/auth";
-import { supabase } from "@/lib/supabase";
+import prisma from "@/lib/db";
 import { redirect } from "next/navigation";
 import Link from "next/link";
 import { Globe, Plus, Users, ShieldAlert, ShieldCheck } from "lucide-react";
@@ -17,35 +17,31 @@ export default async function MundoInteriorOverviewPage() {
 
   const therapistId = (session.user as { id: string }).id;
 
-  // Fetch current CRP from DB (not from token, which may be stale)
-  const { data: therapistUser } = await supabase
-    .from("User")
-    .select("crp, crpStatus")
-    .eq("id", therapistId)
-    .single();
+  const therapistUser = await prisma.user.findUnique({
+    where: { id: therapistId },
+    select: { crp: true, crpStatus: true },
+  });
   const crpStatus = therapistUser?.crpStatus ?? "unverified";
   const hasCrp = crpStatus === "verified";
 
-  const [{ data: patients }, { data: activeSessions }] = await Promise.all([
-    supabase
-      .from("Patient")
-      .select("id, name, diagnosis")
-      .eq("therapistId", therapistId)
-      .order("name"),
-    supabase
-      .from("TherapeuticSession")
-      .select("*")
-      .eq("therapistId", therapistId)
-      .eq("status", "active"),
+  const [patients, activeSessions] = await Promise.all([
+    prisma.patient.findMany({
+      where: { therapistId },
+      select: { id: true, name: true, diagnosis: true },
+      orderBy: { name: "asc" },
+    }),
+    prisma.therapeuticSession.findMany({
+      where: { therapistId, status: "active" },
+    }),
   ]);
 
   const activeByPatient: Record<string, TherapeuticSession> = {};
-  for (const s of (activeSessions ?? []) as TherapeuticSession[]) {
+  for (const s of activeSessions as unknown as TherapeuticSession[]) {
     activeByPatient[s.patientId] = s;
   }
 
-  const activePatients = (patients ?? []).filter((p) => activeByPatient[p.id]);
-  const otherPatients = (patients ?? []).filter((p) => !activeByPatient[p.id]);
+  const activePatients = patients.filter((p) => activeByPatient[p.id]);
+  const otherPatients = patients.filter((p) => !activeByPatient[p.id]);
 
   return (
     <div className="max-w-2xl mx-auto space-y-6">
@@ -130,9 +126,9 @@ export default async function MundoInteriorOverviewPage() {
       {hasCrp && <div className="space-y-3">
         <p className="text-sm font-semibold text-gray-700 flex items-center gap-2">
           <Users className="w-4 h-4 text-gray-400" />
-          Pacientes ({(patients ?? []).length})
+          Pacientes ({patients.length})
         </p>
-        {(patients ?? []).length === 0 && (
+        {patients.length === 0 && (
           <p className="text-sm text-gray-400 text-center py-8">Nenhum paciente cadastrado ainda.</p>
         )}
         {otherPatients.map((p) => (

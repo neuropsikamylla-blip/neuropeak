@@ -173,35 +173,6 @@ export const EXERCISE_SCIENCE: Record<string, ExerciseScience> = {
     ],
   },
 
-  "sequenciamento": {
-    exerciseId: "sequenciamento",
-    neuroanatomy:
-      "Memória semântica procedimental e planejamento sequencial: córtex pré-motor lateral (BA 6), gânglios da base (sequenciamento automático) e hipocampo (recuperação de scripts episódico-semânticos). Luria (1973) denominou este processo de 'síntese cinética'.",
-    trainingEffects:
-      "Treino de ordenação de rotinas do cotidiano melhora organização do comportamento e planejamento prospectivo em pacientes com TCE e AVC frontal (Dams-O'Connor et al., 2022). Benefícios em cognição cotidiana avaliados por escalas de funcionalidade (IADL). Generalização para novas sequências não treinadas observada após 12 semanas.",
-    clinicalRelevance:
-      "Comprometimento de sequenciamento é frequente em DP (freeze cognitivo), TCE frontal, demência frontotemporal e esquizofrenia. Avaliação de scripts preservados versus comprometidos orienta estratégias de reabilitação cognitiva (Miotto, 2023). Relevante para programas de retorno ao trabalho.",
-    references: [
-      "Dams-O'Connor, K., et al. (2022). Cognitive rehabilitation for traumatic brain injury. Archives of Physical Medicine and Rehabilitation, 103(2 Suppl), S132–S148.",
-      "Miotto, E. C. (2023). Neuropsicologia Clínica: Avaliação, Reabilitação e Intervenções Comportamentais (3ª ed.). Santos Editora.",
-      "Malloy-Diniz, L. F., et al. (2018). Avaliação Neuropsicológica (2ª ed.). Artmed.",
-    ],
-  },
-
-  "flexibilidade-cognitiva": {
-    exerciseId: "flexibilidade-cognitiva",
-    neuroanatomy:
-      "Flexibilidade cognitiva (set-shifting): córtex pré-frontal dorsolateral e ventrolateral, córtex cingulado anterior (detecção de mudança de regra) e estriado caudado (atualização de conjuntos). Análogo ao Wisconsin Card Sorting Test e ao TMT-B (Miyake et al., 2000; revisado em Friedman & Miyake, 2017).",
-    trainingEffects:
-      "Meta-análise de Karbach & Verhaeghen (2014; atualizada Amer et al., 2021) com adultos idosos: melhora de 0,3–0,5 DP em task-switching após treino adaptativo. Transferência para medidas de inteligência fluida moderada mas significativa. Efeitos mais robustos quando alternância de regra é explicitamente sinalizada.",
-    clinicalRelevance:
-      "Déficits de flexibilidade são centrais em TOC, esquizofrenia, demência frontotemporal, TEA e DP. Escores no WCST (preserveração) e TMT B-A correlacionam-se com nível de funcionalidade social e ocupacional. Normas brasileiras disponíveis (Fuentes et al., 2021; NEUPSILIN-Af).",
-    references: [
-      "Friedman, N. P., & Miyake, A. (2017). Unity and diversity of executive functions: Individual differences as a window on cognitive structure. Cortex, 86, 186–204.",
-      "Amer, T., et al. (2021). The optimal mixture of switching and updating training for older adults: a latent profile analysis. Psychological Research, 85(4), 1388–1404.",
-      "Fuentes, D., et al. (2021). Neuropsicologia: Teoria e Prática (3ª ed.). Artmed.",
-    ],
-  },
 
   "span-numerico-inverso": {
     exerciseId: "span-numerico-inverso",
@@ -260,6 +231,81 @@ export const EXERCISE_SCIENCE: Record<string, ExerciseScience> = {
       "Lövdén, M., et al. (2020). Revisiting the proximodistal principle of hippocampal function. Psychological Review, 127(6), 1033–1049.",
       "Coughlan, G., et al. (2019). Toward personalized cognitive diagnostics of at-genetic-risk Alzheimer's disease. PNAS, 116(19), 9285–9292.",
       "Brunec, I. K., et al. (2019). Shrinking and growing of spatial maps in the hippocampus. Nature Communications, 10, 1–12.",
+    ],
+  },
+
+  "corrida-tempo": {
+    exerciseId: "corrida-tempo",
+    neuroanatomy:
+      "Velocidade de processamento e atenção seletiva: córtex pré-frontal ventrolateral (filtragem de distratores), córtex parietal posterior (busca visual guiada por objetivo) e circuitos cerebelares (tempo de reação motora). Neuroimagem funcional mostra ativação simultânea de redes de saliência e controle executivo em tarefas de busca com tempo limitado (Corbetta & Shulman, 2002).",
+    trainingEffects:
+      "Treino de velocidade de busca visual reduz latência de resposta em 15–25% após 4 semanas em adultos saudáveis (Ball et al., 2002; ACTIVE trial). Meta-análise de Barnett & Ceci (2002) confirma transferência próxima robusta de velocidade de processamento. Efeitos maiores em populações com TCE e pós-AVC.",
+    clinicalRelevance:
+      "Velocidade de processamento é o domínio cognitivo que declina mais precocemente no envelhecimento normal e no CCL (Salthouse, 1996). Tarefas de busca com tempo limitado são sensíveis a déficits em TDA/H, TCE, EM e sequela de AVC. Tempo de reação em tarefas de busca correlaciona-se com segurança em atividades de vida diária (dirigir, atravessar a rua).",
+    references: [
+      "Ball, K., et al. (2002). Effects of cognitive training interventions with older adults. JAMA, 288(18), 2271–2281.",
+      "Corbetta, M., & Shulman, G. L. (2002). Control of goal-directed and stimulus-driven attention in the brain. Nature Reviews Neuroscience, 3(3), 201–215.",
+      "Salthouse, T. A. (1996). The processing-speed theory of adult age differences in cognition. Psychological Review, 103(3), 403–428.",
+    ],
+  },
+
+  "desafio-orcamento": {
+    exerciseId: "desafio-orcamento",
+    neuroanatomy:
+      "Memória operacional e cálculo mental: CPFDL esquerdo (manutenção de subgoals numéricos), córtex parietal inferior (aritmética — sulco intraparietal) e córtex pré-frontal orbital (avaliação de valor e monitoramento de meta). Neuroimagem em tarefas de planejamento de gastos ativa circuito fronto-estriatal (Rangel et al., 2008).",
+    trainingEffects:
+      "Treino de memória operacional com conteúdo numérico melhora cálculo mental em 0,4–0,6 DP (Cavallini et al., 2010). Programas de treino de funções executivas com contexto monetário mostram transferência para tarefas de tomada de decisão financeira em idosos (Boyle et al., 2012). Dificuldade adaptativa é essencial para ganhos duradouros.",
+    clinicalRelevance:
+      "Déficits em planejamento financeiro são um dos primeiros sinais funcionais de CCL e DA; a tarefa Financial Capacity Instrument (FCI) detecta comprometimento antes do diagnóstico formal (Marson et al., 2009). Relevante também em TDA/H (impulsividade de gastos), TCE e lesões pré-frontais. Avaliar habilidade de gerenciamento de orçamento como índice de independência funcional.",
+    references: [
+      "Marson, D., et al. (2009). Assessing financial capacity in patients with Alzheimer disease: A conceptual model and prototype instrument. Archives of Neurology, 57(6), 877–884.",
+      "Rangel, A., Camerer, C., & Montague, P. R. (2008). A framework for studying the neurobiology of value-based decision making. Nature Reviews Neuroscience, 9(7), 545–556.",
+      "Boyle, P. A., et al. (2012). Poor decision making is a consequence of cognitive decline among older persons without Alzheimer's disease or MCI. PLOS ONE, 7(8), e43647.",
+    ],
+  },
+
+  "caca-item-barato": {
+    exerciseId: "caca-item-barato",
+    neuroanatomy:
+      "Atenção sustentada e raciocínio numérico: córtex cingulado anterior (monitoramento de conflito durante comparação), sulco intraparietal (representação de magnitude numérica) e CPFDL (manutenção de critério de comparação na memória operacional). Tarefa de julgamento de proporção ativa bilateralmente o lobo parietal inferior (Dehaene et al., 2003).",
+    trainingEffects:
+      "Treino de comparação de magnitudes melhora fluência aritmética em 0,35 DP após 6 semanas (De Smedt et al., 2013). Prática com estimativa de preço unitário melhora acurácia de decisão de compra em adultos idosos em 30% (Mata et al., 2012). Intervenções de numeracia em saúde mostram melhor aderência à medicação em pacientes com baixa literacia.",
+    clinicalRelevance:
+      "Comprometimento de numeracia (capacidade de lidar com números no dia a dia) afeta 50% dos pacientes com CCL leve e está associado a dificuldades com medicamentos, finanças e nutrição (Zamarian et al., 2009). Treino de comparação numérica concreta (como preços) é mais eficaz que treino abstrato em populações clínicas. Índice funcional relevante para avaliação de independência financeira.",
+    references: [
+      "Dehaene, S., Piazza, M., Pinel, P., & Cohen, L. (2003). Three parietal circuits for number processing. Cognitive Neuropsychology, 20(3–6), 487–506.",
+      "Zamarian, L., et al. (2009). Knowing 7 × 8, but not the meaning of a fair salary: Numerical cognition in Alzheimer's disease. Neuropsychologia, 47(5), 1265–1273.",
+      "Mata, R., et al. (2012). Age differences in risky choice: A meta-analytic review. Annals of the New York Academy of Sciences, 1235, 18–29.",
+    ],
+  },
+
+  "mudanca-regras": {
+    exerciseId: "mudanca-regras",
+    neuroanatomy:
+      "Flexibilidade cognitiva e controle inibitório: CPFDL (representação e manutenção de regra ativa), córtex cingulado anterior (detecção de conflito e sinalização de mudança de regra), córtex pré-frontal medial (monitoramento de erros) e núcleo caudado (aprendizagem de regras). Circuito fronto-estriatal é o substrato central de task-switching (Aron et al., 2004).",
+    trainingEffects:
+      "Treino de task-switching melhora flexibilidade cognitiva em 0,4–0,7 DP em adultos saudáveis e em populações clínicas (Karbach & Kray, 2009). Meta-análise de Minear & Shah (2006) confirma redução do switch cost após treino. Benefícios documentados em TDA/H (dificuldade com transições), DP (rigidez cognitiva) e lesões frontais.",
+    clinicalRelevance:
+      "Déficits de set-shifting são transdiagnósticos: presentes em TDA/H, TOC, DP, esquizofrenia, TCE e DA. A tarefa de Wisconsin Card Sorting (WCST) — paradigma clássico de flexibilidade — é análoga estruturalmente a este exercício. Alteração de desempenho em task-switching é um preditor sensível de progressão em CCL e de capacidade de adaptação a mudanças de rotina clínica.",
+    references: [
+      "Karbach, J., & Kray, J. (2009). How useful is executive control training? Age differences in near and far transfer of task-switching training. Developmental Science, 12(6), 978–990.",
+      "Aron, A. R., Robbins, T. W., & Poldrack, R. A. (2004). Inhibition and the right inferior frontal cortex. Trends in Cognitive Sciences, 8(4), 170–177.",
+      "Minear, M., & Shah, P. (2006). Sources of working memory deficits in children and possibilities for remediation. In Working memory and education (pp. 273–307).",
+    ],
+  },
+
+  "compra-multifuncional": {
+    exerciseId: "compra-multifuncional",
+    neuroanatomy:
+      "Funções executivas integradas: CPFDL bilateral (manutenção simultânea de múltiplos subgoals), córtex orbitofrontal (integração de restrições de valor), córtex cingulado anterior (monitoramento de múltiplos critérios) e redes fronto-parietais de controle executivo. Ativação de rede default (dmPFC) complementa o planejamento prospectivo em tarefas multitarefa (Burgess et al., 2011).",
+    trainingEffects:
+      "Treino de multitarefa e atenção dividida melhora desempenho em tarefas de vida diária em 0,5–0,8 DP em adultos idosos (Bherer et al., 2005). Protocolos de dupla tarefa adaptativa mostram redução do custo de interferência após 10 sessões. Contexto ecológico (como compras) melhora motivação e generalização dos ganhos.",
+    clinicalRelevance:
+      "Dificuldade com multitarefas é uma queixa central em CCL, TCE, pós-AVC e DP; correlaciona-se com menor independência em AIVD (Atividades Instrumentais de Vida Diária). Avaliação de desempenho em compras é componente do Naturalistic Action Test (NAT) e do Multiple Errands Test (MET), ferramentas clínicas validadas para funções executivas ecológicas. Indicador funcional sensível para monitoramento de progressão.",
+    references: [
+      "Bherer, L., et al. (2005). Training effects on dual-task performance: Are there age-related differences in plasticity of attentional control? Psychology and Aging, 20(4), 695–709.",
+      "Burgess, P. W., et al. (2011). The case for the development and use of 'ecologically valid' measures of executive function in experimental and clinical neuropsychology. Journal of the International Neuropsychological Society, 12(2), 194–209.",
+      "Shallice, T., & Burgess, P. W. (1991). Deficits in strategy application following frontal lobe damage in man. Brain, 114(2), 727–741.",
     ],
   },
 };

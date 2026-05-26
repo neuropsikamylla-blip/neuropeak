@@ -2,19 +2,19 @@ export const dynamic = "force-dynamic";
 import { NextRequest, NextResponse } from "next/server";
 import { getServerSession } from "next-auth";
 import { authOptions } from "@/lib/auth";
-import { supabase } from "@/lib/supabase";
+import prisma from "@/lib/db";
 import {
   Document,
   Page,
   Text,
   View,
   StyleSheet,
-  pdf,
+  renderToBuffer,
 } from "@react-pdf/renderer";
 import { createElement } from "react";
 import { calculateDomainScore, generateRecommendations } from "@/lib/scoring";
 import { formatDate, calculateAge } from "@/lib/utils";
-import { DOMAIN_LABELS, type Domain } from "@/types";
+import { DOMAIN_LABELS } from "@/types";
 import type { SessionData } from "@/types";
 import { format } from "date-fns";
 import { ptBR } from "date-fns/locale";
@@ -165,51 +165,28 @@ export async function GET(req: NextRequest) {
   const start = startStr ? new Date(startStr) : new Date(Date.now() - 90 * 24 * 60 * 60 * 1000);
   const end = endStr ? new Date(endStr + "T23:59:59") : new Date();
 
-  const [
-    { data: patientBase },
-    { data: sessionRows },
-    { data: achievements },
-    { data: therapist },
-  ] = await Promise.all([
-    supabase
-      .from('Patient')
-      .select('*')
-      .eq('id', patientId)
-      .eq('therapistId', therapistId)
-      .single(),
-    supabase
-      .from('Session')
-      .select('*')
-      .eq('patientId', patientId)
-      .gte('completedAt', start.toISOString())
-      .lte('completedAt', end.toISOString())
-      .order('completedAt', { ascending: false }),
-    supabase
-      .from('Achievement')
-      .select('*')
-      .eq('patientId', patientId),
-    supabase
-      .from('User')
-      .select('*')
-      .eq('id', therapistId)
-      .single(),
+  const [patientBase, sessionRows, achievements, therapist] = await Promise.all([
+    prisma.patient.findFirst({ where: { id: patientId, therapistId } }),
+    prisma.session.findMany({
+      where: { patientId, completedAt: { gte: start, lte: end } },
+      orderBy: { completedAt: "desc" },
+    }),
+    prisma.achievement.findMany({ where: { patientId } }),
+    prisma.user.findUnique({ where: { id: therapistId } }),
   ]);
 
   if (!patientBase || !therapist) {
     return NextResponse.json({ error: "Not found" }, { status: 404 });
   }
 
-  const patient = { ...patientBase, sessions: sessionRows ?? [], achievements: achievements ?? [] };
-
-  const sessions = patient.sessions as SessionData[];
+  const patient = { ...patientBase, sessions: sessionRows, achievements };
+  const sessions = patient.sessions as unknown as SessionData[];
   const domainScores = calculateDomainScore(sessions);
   const age = calculateAge(patient.birthDate);
   const recommendations = generateRecommendations(domainScores);
 
-  // Build PDF document
   const doc = createElement(Document, {},
     createElement(Page, { size: "A4", style: styles.page },
-      // Header
       createElement(View, { style: styles.header },
         createElement(View, {},
           createElement(Text, { style: styles.logo }, "NeuroPeak"),
@@ -221,22 +198,19 @@ export async function GET(req: NextRequest) {
         ),
       ),
 
-      // Patient info
       createElement(Text, { style: styles.sectionTitle }, "1. Identificação do Paciente"),
       createElement(View, { style: styles.row }, createElement(Text, { style: styles.label }, "Nome:"), createElement(Text, { style: styles.value }, patient.name)),
       createElement(View, { style: styles.row }, createElement(Text, { style: styles.label }, "Data de Nascimento:"), createElement(Text, { style: styles.value }, `${formatDate(patient.birthDate)} (${age} anos)`)),
-      patient.cid && createElement(View, { style: styles.row }, createElement(Text, { style: styles.label }, "CID:"), createElement(Text, { style: styles.value }, patient.cid)),
-      patient.diagnosis && createElement(View, { style: styles.row }, createElement(Text, { style: styles.label }, "Diagnóstico:"), createElement(Text, { style: styles.value }, patient.diagnosis)),
-      patient.education && createElement(View, { style: styles.row }, createElement(Text, { style: styles.label }, "Escolaridade:"), createElement(Text, { style: styles.value }, patient.education)),
-      patient.medications && createElement(View, { style: styles.row }, createElement(Text, { style: styles.label }, "Medicamentos:"), createElement(Text, { style: styles.value }, patient.medications)),
+      patient.cid ? createElement(View, { style: styles.row }, createElement(Text, { style: styles.label }, "CID:"), createElement(Text, { style: styles.value }, patient.cid)) : null,
+      patient.diagnosis ? createElement(View, { style: styles.row }, createElement(Text, { style: styles.label }, "Diagnóstico:"), createElement(Text, { style: styles.value }, patient.diagnosis)) : null,
+      patient.education ? createElement(View, { style: styles.row }, createElement(Text, { style: styles.label }, "Escolaridade:"), createElement(Text, { style: styles.value }, patient.education)) : null,
+      patient.medications ? createElement(View, { style: styles.row }, createElement(Text, { style: styles.label }, "Medicamentos:"), createElement(Text, { style: styles.value }, patient.medications)) : null,
 
-      // Training summary
       createElement(Text, { style: styles.sectionTitle }, "2. Resumo do Treinamento"),
       createElement(View, { style: styles.row }, createElement(Text, { style: styles.label }, "Total de sessões:"), createElement(Text, { style: styles.value }, String(sessions.length))),
       createElement(View, { style: styles.row }, createElement(Text, { style: styles.label }, "Período avaliado:"), createElement(Text, { style: styles.value }, `${formatDate(start)} a ${formatDate(end)}`)),
       createElement(View, { style: styles.row }, createElement(Text, { style: styles.label }, "Terapeuta:"), createElement(Text, { style: styles.value }, therapist.name)),
 
-      // Domain scores
       createElement(Text, { style: styles.sectionTitle }, "3. Desempenho por Domínio Cognitivo"),
       ...domainScores.map((ds) =>
         createElement(View, { style: styles.domainRow, key: ds.domain },
@@ -248,7 +222,6 @@ export async function GET(req: NextRequest) {
         )
       ),
 
-      // Session history (last 10)
       createElement(Text, { style: styles.sectionTitle }, "4. Histórico de Sessões (últimas 10)"),
       createElement(View, { style: { ...styles.sessionRow, borderBottomColor: "#9CA3AF" } },
         createElement(Text, { style: { ...styles.sessionCell, width: 100, fontFamily: "Helvetica-Bold" } }, "Data"),
@@ -265,11 +238,9 @@ export async function GET(req: NextRequest) {
         )
       ),
 
-      // Recommendations
       createElement(Text, { style: styles.sectionTitle }, "5. Recomendações"),
       createElement(Text, { style: styles.recommendations }, recommendations),
 
-      // Signature
       createElement(View, { style: styles.signature },
         createElement(View, { style: styles.signatureBox },
           createElement(Text, { style: styles.signatureLabel }, therapist.name),
@@ -278,15 +249,13 @@ export async function GET(req: NextRequest) {
         ),
       ),
 
-      // Footer
       createElement(Text, { style: styles.footer },
         `NeuroPeak — Plataforma de Treinamento Cognitivo | Relatório gerado em ${format(new Date(), "dd/MM/yyyy 'às' HH:mm", { locale: ptBR })}`
       ),
     )
   );
 
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  const pdfBuffer = await (pdf(doc) as any).toBuffer();
+  const pdfBuffer = await renderToBuffer(doc);
 
   return new NextResponse(pdfBuffer as unknown as BodyInit, {
     headers: {

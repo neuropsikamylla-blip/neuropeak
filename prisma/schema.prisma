@@ -134,3 +134,20 @@ model PasswordResetToken {
   used      Boolean  @default(false)
   createdAt DateTime @default(now())
 }
+
+model TherapeuticSession {
+  id                String   @id @default(cuid())
+  patientId         String
+  therapistId       String
+  status            String   @default("active")
+  phase             String   @default("character_creation")
+  characterData     Json     @default("{}")
+  currentRegion     String?
+  currentHouseIndex Int      @default(0)
+  unlockedTools     Json     @default("[]")
+  completedRegions  Json     @default("[]")
+  responses         Json     @default("[]")
+  therapistNotes    String   @default("")
+  createdAt         DateTime @default(now())
+  updatedAt         DateTime @updatedAt
+}

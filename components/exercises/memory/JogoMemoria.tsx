@@ -205,7 +205,7 @@ export function JogoMemoria({ difficulty, theme, onComplete }: JogoMemoriaProps)
       });
     }, 1000);
     return () => clearInterval(interval);
-  }, [gamePhase, round]);
+  }, [gamePhase, round, showTutorial]);
 
   function finishRound(isCorrect: boolean, currentErrors: number, newMatchedCount: number, currentPairCount: number) {
     setRoundCorrect(isCorrect);

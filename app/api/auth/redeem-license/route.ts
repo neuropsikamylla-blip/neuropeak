@@ -2,7 +2,7 @@ export const dynamic = "force-dynamic";
 import { NextRequest, NextResponse } from "next/server";
 import { getServerSession } from "next-auth";
 import { authOptions } from "@/lib/auth";
-import { supabase } from "@/lib/supabase";
+import prisma from "@/lib/db";
 import { z } from "zod";
 
 const schema = z.object({
@@ -25,11 +25,9 @@ export async function POST(req: NextRequest) {
 
   const { code } = result.data;
 
-  const { data: license } = await supabase
-    .from("LicenseCode")
-    .select("id, licenses, usedByTherapistId")
-    .eq("code", code.trim().toUpperCase())
-    .single();
+  const license = await prisma.licenseCode.findFirst({
+    where: { code: code.trim().toUpperCase() },
+  });
 
   if (!license) {
     return NextResponse.json({ error: "Código de licença inválido" }, { status: 404 });
@@ -39,30 +37,27 @@ export async function POST(req: NextRequest) {
     return NextResponse.json({ error: "Este código já foi utilizado" }, { status: 409 });
   }
 
-  // Get current license count
-  const { data: user } = await supabase
-    .from("User")
-    .select("patientLicenses")
-    .eq("id", therapistId)
-    .single();
+  const user = await prisma.user.findUnique({
+    where: { id: therapistId },
+    select: { patientLicenses: true },
+  });
 
   if (!user) {
     return NextResponse.json({ error: "Usuário não encontrado" }, { status: 404 });
   }
 
   const currentLicenses = user.patientLicenses ?? -1;
-  // If currently unlimited (-1), switch to counted mode
   const newLicenses = currentLicenses === -1 ? license.licenses : currentLicenses + license.licenses;
 
-  await supabase
-    .from("LicenseCode")
-    .update({ usedByTherapistId: therapistId, usedAt: new Date().toISOString() })
-    .eq("id", license.id);
+  await prisma.licenseCode.update({
+    where: { id: license.id },
+    data: { usedByTherapistId: therapistId, usedAt: new Date() },
+  });
 
-  await supabase
-    .from("User")
-    .update({ patientLicenses: newLicenses, updatedAt: new Date().toISOString() })
-    .eq("id", therapistId);
+  await prisma.user.update({
+    where: { id: therapistId },
+    data: { patientLicenses: newLicenses },
+  });
 
   return NextResponse.json({ success: true, licenses: newLicenses });
 }

@@ -1,6 +1,6 @@
 import { getServerSession } from "next-auth";
 import { authOptions } from "@/lib/auth";
-import { supabase } from "@/lib/supabase";
+import prisma from "@/lib/db";
 import { redirect } from "next/navigation";
 import Link from "next/link";
 import { calculateAge } from "@/lib/utils";
@@ -16,44 +16,21 @@ export default async function InicioPage() {
   const patientId = (session.user as { patientId?: string }).patientId;
   if (!patientId) redirect("/login");
 
-  const { data: patientBase } = await supabase
-    .from('Patient')
-    .select('*')
-    .eq('id', patientId)
-    .single();
+  const patientBase = await prisma.patient.findUnique({ where: { id: patientId } });
 
   if (!patientBase) redirect("/login");
 
-  const [
-    { data: trainingPlans },
-    { data: sessions },
-    { data: achievements },
-  ] = await Promise.all([
-    supabase
-      .from('TrainingPlan')
-      .select('*')
-      .eq('patientId', patientId)
-      .eq('isActive', true)
-      .limit(1),
-    supabase
-      .from('Session')
-      .select('*')
-      .eq('patientId', patientId)
-      .order('completedAt', { ascending: false })
-      .limit(50),
-    supabase
-      .from('Achievement')
-      .select('*')
-      .eq('patientId', patientId)
-      .order('unlockedAt', { ascending: false })
-      .limit(3),
+  const [trainingPlans, sessions, achievements] = await Promise.all([
+    prisma.trainingPlan.findMany({ where: { patientId, isActive: true }, take: 1 }),
+    prisma.session.findMany({ where: { patientId }, orderBy: { completedAt: "desc" }, take: 50 }),
+    prisma.achievement.findMany({ where: { patientId }, orderBy: { unlockedAt: "desc" }, take: 3 }),
   ]);
 
   const patient = {
     ...patientBase,
-    trainingPlans: trainingPlans ?? [],
-    sessions: (sessions ?? []) as SessionData[],
-    achievements: achievements ?? [],
+    trainingPlans,
+    sessions: sessions as unknown as SessionData[],
+    achievements,
   };
 
   const theme = patient.theme as Theme;
@@ -63,7 +40,7 @@ export default async function InicioPage() {
     : [];
 
   const typedSessions = patient.sessions as SessionData[];
-  const typedAchievements = patient.achievements as Array<{ id: string; icon: string; title: string; unlockedAt: string }>;
+  const typedAchievements = patient.achievements as unknown as Array<{ id: string; icon: string; title: string; unlockedAt: string }>;
 
   // Cycle progress
   const cycleTarget = activePlan ? activePlan.frequency * 4 : 0;

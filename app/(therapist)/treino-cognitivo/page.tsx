@@ -1,6 +1,6 @@
 import { getServerSession } from "next-auth";
 import { authOptions } from "@/lib/auth";
-import { supabase } from "@/lib/supabase";
+import prisma from "@/lib/db";
 import { redirect } from "next/navigation";
 import Link from "next/link";
 import { Brain, Target, TrendingUp, TrendingDown, Minus, Plus, Clock } from "lucide-react";
@@ -20,13 +20,11 @@ export default async function TreinoCognitivoPage() {
 
   const therapistId = (session.user as { id: string }).id;
 
-  const { data: patientRows } = await supabase
-    .from("Patient")
-    .select("id, name, theme, createdAt")
-    .eq("therapistId", therapistId)
-    .order("name");
-
-  const patientList = patientRows ?? [];
+  const patientList = await prisma.patient.findMany({
+    where: { therapistId },
+    select: { id: true, name: true, theme: true, createdAt: true },
+    orderBy: { name: "asc" },
+  });
   const patientIds = patientList.map((p) => p.id);
 
   if (patientIds.length === 0) {
@@ -50,22 +48,18 @@ export default async function TreinoCognitivoPage() {
     );
   }
 
-  const [{ data: allSessions }, { data: allPlans }] = await Promise.all([
-    supabase
-      .from("Session")
-      .select("patientId, completedAt, score, domain, accuracy, duration")
-      .in("patientId", patientIds)
-      .order("completedAt", { ascending: false }),
-    supabase
-      .from("TrainingPlan")
-      .select("*")
-      .in("patientId", patientIds)
-      .eq("isActive", true),
+  const [allSessions, allPlans] = await Promise.all([
+    prisma.session.findMany({
+      where: { patientId: { in: patientIds } },
+      select: { patientId: true, completedAt: true, score: true, domain: true, accuracy: true, duration: true },
+      orderBy: { completedAt: "desc" },
+    }),
+    prisma.trainingPlan.findMany({ where: { patientId: { in: patientIds }, isActive: true } }),
   ]);
 
   const rows = patientList.map((p) => {
-    const sessions = ((allSessions ?? []).filter((s) => s.patientId === p.id) as unknown as SessionData[]);
-    const plan = (allPlans ?? []).find((t) => t.patientId === p.id);
+    const sessions = (allSessions.filter((s) => s.patientId === p.id) as unknown as SessionData[]);
+    const plan = allPlans.find((t) => t.patientId === p.id);
     const adherence = plan
       ? calculateAdherence(sessions, plan.frequency, new Date(p.createdAt))
       : null;

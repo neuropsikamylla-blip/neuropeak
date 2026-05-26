@@ -2,7 +2,7 @@ export const dynamic = "force-dynamic";
 import { NextRequest, NextResponse } from "next/server";
 import { getServerSession } from "next-auth";
 import { authOptions } from "@/lib/auth";
-import { supabase } from "@/lib/supabase";
+import prisma from "@/lib/db";
 
 export async function PATCH(
   _req: NextRequest,
@@ -16,28 +16,21 @@ export async function PATCH(
   const { id } = await params;
   const therapistId = (session.user as { id: string }).id;
 
-  // Only allow marking alerts of the therapist's own patients
-  const { data: alert } = await supabase
-    .from('Alert')
-    .select('id, patientId')
-    .eq('id', id)
-    .single();
+  const alert = await prisma.alert.findUnique({
+    where: { id },
+    select: { id: true, patientId: true },
+  });
 
   if (!alert) return NextResponse.json({ error: "Not found" }, { status: 404 });
 
-  const { data: patient } = await supabase
-    .from('Patient')
-    .select('id')
-    .eq('id', alert.patientId)
-    .eq('therapistId', therapistId)
-    .single();
+  const patient = await prisma.patient.findFirst({
+    where: { id: alert.patientId, therapistId },
+    select: { id: true },
+  });
 
   if (!patient) return NextResponse.json({ error: "Forbidden" }, { status: 403 });
 
-  await supabase
-    .from('Alert')
-    .update({ isRead: true })
-    .eq('id', id);
+  await prisma.alert.update({ where: { id }, data: { isRead: true } });
 
   return NextResponse.json({ ok: true });
 }

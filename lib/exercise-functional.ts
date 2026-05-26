@@ -95,24 +95,6 @@ export const EXERCISE_FUNCTIONAL: Record<string, ExerciseFunctional> = {
     ],
     dailyTip: "Para tarefas complexas do dia a dia, anote as etapas em papel antes de começar. Ver a sequência impressa alivia a memória de trabalho.",
   },
-  "sequenciamento": {
-    scenario: "Executar uma atividade cotidiana na ordem certa — preparar o café, trocar um curativo, organizar a mala — sem pular ou repetir etapas.",
-    strategies: [
-      "Antes de cada etapa, pergunte: 'O que precisa estar pronto para eu fazer isso?'",
-      "Use checklists físicos para atividades com muitas etapas.",
-      "Se perder a ordem, volte ao passo mais recente que você confirma ter feito.",
-    ],
-    dailyTip: "Para rotinas importantes, escreva as etapas em um cartão e deixe visível no local da tarefa. Rotina escrita vira autonomia.",
-  },
-  "flexibilidade-cognitiva": {
-    scenario: "Quando o ônibus muda de rota, o consultório troca de andar ou a receita do médico é diferente da última — adaptar o plano sem travar.",
-    strategies: [
-      "Ao perceber a mudança, faça uma pausa de 2 segundos antes de agir — 'Qual é a nova regra?'",
-      "Releia ou ouça novamente o que mudou antes de continuar.",
-      "Normalize o erro de transição — o cérebro precisa de um momento para atualizar.",
-    ],
-    dailyTip: "Se alguém mudar um plano de última hora, peça para repetir a nova instrução. Confirmar a mudança em voz alta ajuda a gravar a nova rota.",
-  },
   "labirinto": {
     scenario: "Navegar em hospital, shopping ou prédio desconhecido sem se perder, mesmo sem celular ou sinalização clara.",
     strategies: [
@@ -184,5 +166,50 @@ export const EXERCISE_FUNCTIONAL: Record<string, ExerciseFunctional> = {
       "Se errar, pause e reinicie com calma — a pressa depois do erro aumenta o próximo erro.",
     ],
     dailyTip: "Na vida real, identifique o sinal que importa antes de começar a esperar: 'Estou olhando para o semáforo desta faixa.' Foco intencional reduz tempo de reação.",
+  },
+  "corrida-tempo": {
+    scenario: "Localizar rapidamente um produto na prateleira do mercado, encontrar um item na bolsa ou identificar informações relevantes num formulário com tempo limitado.",
+    strategies: [
+      "Antes de começar, grave bem o que está procurando — a imagem mental acelera a busca.",
+      "Faça varredura sistemática: percorra o grid linha a linha, não pule aleatoriamente.",
+      "Priorize os alvos mais visíveis antes de procurar os menores — ganha tempo.",
+    ],
+    dailyTip: "No mercado, leia a lista antes de entrar no corredor e visualize os itens. Ter o alvo claro na mente reduz o tempo de busca e a sobrecarga cognitiva.",
+  },
+  "desafio-orcamento": {
+    scenario: "Fazer compras respeitando um limite de valor, calcular se o dinheiro disponível cobre os itens necessários ou planejar gastos do mês.",
+    strategies: [
+      "Estime o total mentalmente antes de confirmar — arredonde os preços para facilitar.",
+      "Comece pelos itens mais baratos e vá adicionando os mais caros — é mais fácil controlar o total.",
+      "Se o objetivo for exato, selecione os itens obrigatórios primeiro e depois ajuste com itens menores.",
+    ],
+    dailyTip: "Antes de sair para o mercado, some mentalmente os preços dos itens essenciais. Ter uma estimativa evita surpresas no caixa e treina cálculo mental rotineiro.",
+  },
+  "caca-item-barato": {
+    scenario: "Escolher a embalagem mais vantajosa no mercado, comparar preços de medicamentos em diferentes tamanhos ou avaliar qual oferta é mais econômica.",
+    strategies: [
+      "Calcule sempre o preço por 100g ou 100ml — é a medida que permite comparação justa.",
+      "Arredonde os valores para facilitar o cálculo mental: R$3,90 por 500g ≈ R$0,78/100g.",
+      "Desconfie de embalagens 'gigantes' — nem sempre são mais baratas por unidade.",
+    ],
+    dailyTip: "No mercado, antes de pegar um produto, compare com o tamanho ao lado. Habituar-se a checar o preço por quilograma (geralmente impresso na etiqueta) economiza dinheiro sem esforço.",
+  },
+  "mudanca-regras": {
+    scenario: "Adaptar-se quando as instruções mudam — quando o médico altera a posologia, quando o roteiro do dia muda, ou quando regras de segurança são atualizadas.",
+    strategies: [
+      "Ao receber uma nova instrução, verbalize: 'Agora a regra é X' — isso consolida a mudança.",
+      "Não confie na resposta automática — confirme mentalmente a regra ativa antes de agir.",
+      "Se errar por seguir a regra antiga, não se preocupe: é um erro de transição, não de capacidade.",
+    ],
+    dailyTip: "Quando uma rotina mudar, escreva a nova instrução e afixe-a num lugar visível. Ver a regra externamente reduz a dependência de memória de trabalho para manter a mudança ativa.",
+  },
+  "compra-multifuncional": {
+    scenario: "Executar uma tarefa com múltiplas restrições simultâneas: organizar a mochila do hospital, preparar o almoço respeitando restrições alimentares e de quantidade, ou resolver burocracias com vários requisitos.",
+    strategies: [
+      "Antes de começar, leia todas as restrições — resolver uma por vez sem ver o todo leva a erros.",
+      "Priorize as restrições mais rígidas primeiro (ex.: categoria obrigatória), depois ajuste para as demais.",
+      "Use a checagem visual do painel como âncora — não confie só na memória.",
+    ],
+    dailyTip: "Para tarefas do dia a dia com múltiplas restrições, crie uma lista de verificação física ou no celular antes de agir. Ver os requisitos todos de uma vez reduz a sobrecarga de memória de trabalho.",
   },
 };

@@ -1,6 +1,6 @@
 import { getServerSession } from "next-auth";
 import { authOptions } from "@/lib/auth";
-import { supabase } from "@/lib/supabase";
+import prisma from "@/lib/db";
 import { redirect } from "next/navigation";
 import { calculateDomainScore } from "@/lib/scoring";
 import { formatDate, formatDuration } from "@/lib/utils";
@@ -16,40 +16,24 @@ export default async function ProgressoPage() {
   const patientId = (session.user as { patientId?: string }).patientId;
   if (!patientId) redirect("/login");
 
-  const { data: patientBase } = await supabase
-    .from('Patient')
-    .select('*')
-    .eq('id', patientId)
-    .single();
+  const patientBase = await prisma.patient.findUnique({ where: { id: patientId } });
 
   if (!patientBase) redirect("/login");
 
-  const [
-    { data: sessionRows },
-    { data: achievementRows },
-  ] = await Promise.all([
-    supabase
-      .from('Session')
-      .select('*')
-      .eq('patientId', patientId)
-      .order('completedAt', { ascending: false })
-      .limit(30),
-    supabase
-      .from('Achievement')
-      .select('*')
-      .eq('patientId', patientId)
-      .order('unlockedAt', { ascending: false }),
+  const [sessionRows, achievementRows] = await Promise.all([
+    prisma.session.findMany({ where: { patientId }, orderBy: { completedAt: "desc" }, take: 30 }),
+    prisma.achievement.findMany({ where: { patientId }, orderBy: { unlockedAt: "desc" } }),
   ]);
 
   const patient = {
     ...patientBase,
-    sessions: sessionRows ?? [],
-    achievements: achievementRows ?? [],
+    sessions: sessionRows,
+    achievements: achievementRows,
   };
 
   const theme = patient.theme as Theme;
   const sessions = (patient.sessions as SessionData[]);
-  const achievements = patient.achievements as Array<{ id: string; icon: string; title: string; description?: string; unlockedAt: string }>;
+  const achievements = patient.achievements as unknown as Array<{ id: string; icon: string; title: string; description?: string; unlockedAt: string }>;
   const domainScores = calculateDomainScore(sessions as any);
   const totalPoints = Math.round(sessions.reduce((s, sess) => s + sess.score, 0));
 

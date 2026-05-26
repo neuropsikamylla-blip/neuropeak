@@ -2,8 +2,7 @@ export const dynamic = "force-dynamic";
 import { NextRequest, NextResponse } from "next/server";
 import { getServerSession } from "next-auth";
 import { authOptions } from "@/lib/auth";
-import { supabase } from "@/lib/supabase";
-import { randomUUID } from "crypto";
+import prisma from "@/lib/db";
 
 export async function POST(req: NextRequest) {
   const session = await getServerSession(authOptions);
@@ -14,17 +13,13 @@ export async function POST(req: NextRequest) {
   const { patientId } = await req.json();
   if (!patientId) return NextResponse.json({ error: "patientId required" }, { status: 400 });
 
-  // Close any existing active sessions for this patient
-  await supabase
-    .from("TherapeuticSession")
-    .update({ status: "paused", updatedAt: new Date().toISOString() })
-    .eq("patientId", patientId)
-    .eq("status", "active");
+  await prisma.therapeuticSession.updateMany({
+    where: { patientId, status: "active" },
+    data: { status: "paused" },
+  });
 
-  const { data, error } = await supabase
-    .from("TherapeuticSession")
-    .insert({
-      id: randomUUID(),
+  const data = await prisma.therapeuticSession.create({
+    data: {
       patientId,
       therapistId,
       status: "active",
@@ -36,11 +31,9 @@ export async function POST(req: NextRequest) {
       completedRegions: [],
       responses: [],
       therapistNotes: "",
-    })
-    .select()
-    .single();
+    },
+  });
 
-  if (error) return NextResponse.json({ error: error.message }, { status: 500 });
   return NextResponse.json(data);
 }
 
@@ -55,35 +48,27 @@ export async function GET(req: NextRequest) {
     const therapistId = (session.user as { id: string }).id;
     const patientId = searchParams.get("patientId");
     if (patientId) {
-      const { data } = await supabase
-        .from("TherapeuticSession")
-        .select("*")
-        .eq("patientId", patientId)
-        .order("createdAt", { ascending: false })
-        .limit(20);
-      return NextResponse.json(data ?? []);
+      const data = await prisma.therapeuticSession.findMany({
+        where: { patientId },
+        orderBy: { createdAt: "desc" },
+        take: 20,
+      });
+      return NextResponse.json(data);
     }
-    // No patientId → return all active sessions for this therapist
-    const { data } = await supabase
-      .from("TherapeuticSession")
-      .select("*")
-      .eq("therapistId", therapistId)
-      .eq("status", "active")
-      .order("createdAt", { ascending: false });
-    return NextResponse.json(data ?? []);
+    const data = await prisma.therapeuticSession.findMany({
+      where: { therapistId, status: "active" },
+      orderBy: { createdAt: "desc" },
+    });
+    return NextResponse.json(data);
   }
 
   if (role === "PATIENT") {
     const patientId = (session.user as { patientId?: string }).patientId;
     if (!patientId) return NextResponse.json({ error: "No patientId" }, { status: 400 });
-    const { data } = await supabase
-      .from("TherapeuticSession")
-      .select("*")
-      .eq("patientId", patientId)
-      .eq("status", "active")
-      .order("createdAt", { ascending: false })
-      .limit(1)
-      .single();
+    const data = await prisma.therapeuticSession.findFirst({
+      where: { patientId, status: "active" },
+      orderBy: { createdAt: "desc" },
+    });
     return NextResponse.json(data ?? null);
   }
 

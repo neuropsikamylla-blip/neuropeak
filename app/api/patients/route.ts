@@ -2,10 +2,9 @@ export const dynamic = "force-dynamic";
 import { NextRequest, NextResponse } from "next/server";
 import { getServerSession } from "next-auth";
 import { authOptions } from "@/lib/auth";
-import { supabase } from "@/lib/supabase";
+import prisma from "@/lib/db";
 import { z } from "zod";
 import { generatePin, generatePatientCode } from "@/lib/utils";
-import { randomUUID } from "crypto";
 import bcrypt from "bcryptjs";
 
 const createPatientSchema = z.object({
@@ -23,6 +22,7 @@ const createPatientSchema = z.object({
 });
 
 export async function GET(req: NextRequest) {
+  void req;
   const session = await getServerSession(authOptions);
   if (!session || (session.user as { role?: string }).role !== "THERAPIST") {
     return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
@@ -30,13 +30,10 @@ export async function GET(req: NextRequest) {
 
   const therapistId = (session.user as { id: string }).id;
 
-  const { data: patients, error } = await supabase
-    .from('Patient')
-    .select('*')
-    .eq('therapistId', therapistId)
-    .order('name', { ascending: true });
-
-  if (error) return NextResponse.json({ error: error.message }, { status: 500 });
+  const patients = await prisma.patient.findMany({
+    where: { therapistId },
+    orderBy: { name: "asc" },
+  });
 
   return NextResponse.json({ patients });
 }
@@ -49,12 +46,10 @@ export async function POST(req: NextRequest) {
 
   const therapistId = (session.user as { id: string }).id;
 
-  // Check license
-  const { data: therapist } = await supabase
-    .from("User")
-    .select("patientLicenses")
-    .eq("id", therapistId)
-    .single();
+  const therapist = await prisma.user.findUnique({
+    where: { id: therapistId },
+    select: { patientLicenses: true },
+  });
 
   const licenses = therapist?.patientLicenses ?? -1;
   if (licenses === 0) {
@@ -71,54 +66,33 @@ export async function POST(req: NextRequest) {
   const plainPin = generatePin();
   const pin = await bcrypt.hash(plainPin, 10);
 
-  // Try to generate a unique patientCode; skip if column doesn't exist yet
   let patientCode: string | undefined;
-  try {
-    let codeIsUnique = false;
-    do {
-      patientCode = generatePatientCode();
-      const { data: existing } = await supabase
-        .from('Patient')
-        .select('id')
-        .eq('patientCode', patientCode)
-        .maybeSingle();
-      codeIsUnique = !existing;
-    } while (!codeIsUnique);
-  } catch {
-    patientCode = undefined;
-  }
+  let codeIsUnique = false;
+  do {
+    patientCode = generatePatientCode();
+    const existing = await prisma.patient.findFirst({ where: { patientCode } });
+    codeIsUnique = !existing;
+  } while (!codeIsUnique);
 
-  const insertData: Record<string, unknown> = {
-    id: randomUUID(),
-    name,
-    birthDate: new Date(birthDate).toISOString(),
-    theme,
-    pin,
-    pinPlain: plainPin,
-    therapistId,
-    updatedAt: new Date().toISOString(),
-    ...Object.fromEntries(
-      Object.entries(rest).filter(([, v]) => v !== undefined)
-    ),
-  };
-  if (patientCode) insertData.patientCode = patientCode;
+  const patient = await prisma.patient.create({
+    data: {
+      name,
+      birthDate: new Date(birthDate),
+      theme,
+      pin,
+      pinPlain: plainPin,
+      therapistId,
+      patientCode,
+      ...Object.fromEntries(Object.entries(rest).filter(([, v]) => v !== undefined)),
+    },
+  });
 
-  const { data: patient, error: insertError } = await supabase
-    .from('Patient')
-    .insert(insertData)
-    .select()
-    .single();
-
-  if (insertError) return NextResponse.json({ error: insertError.message }, { status: 500 });
-
-  // Decrement license count if not unlimited
   if (licenses > 0) {
-    await supabase
-      .from("User")
-      .update({ patientLicenses: licenses - 1, updatedAt: new Date().toISOString() })
-      .eq("id", therapistId);
+    await prisma.user.update({
+      where: { id: therapistId },
+      data: { patientLicenses: licenses - 1 },
+    });
   }
 
-  // Return plainPin so therapist can share it — it's not stored in plain text
   return NextResponse.json({ patient: { ...patient, pin: plainPin } }, { status: 201 });
 }

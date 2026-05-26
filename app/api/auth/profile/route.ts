@@ -2,7 +2,7 @@ export const dynamic = "force-dynamic";
 import { NextRequest, NextResponse } from "next/server";
 import { getServerSession } from "next-auth";
 import { authOptions } from "@/lib/auth";
-import { supabase } from "@/lib/supabase";
+import prisma from "@/lib/db";
 import { z } from "zod";
 import bcrypt from "bcryptjs";
 
@@ -30,27 +30,23 @@ export async function PATCH(req: NextRequest) {
 
   const { currentPassword, newPassword, ...profileUpdates } = result.data;
 
-  // Check email uniqueness if changing
   if (profileUpdates.email) {
-    const { data: existing } = await supabase
-      .from('User')
-      .select('id')
-      .eq('email', profileUpdates.email)
-      .neq('id', userId)
-      .single();
+    const existing = await prisma.user.findFirst({
+      where: { email: profileUpdates.email, NOT: { id: userId } },
+      select: { id: true },
+    });
     if (existing) {
       return NextResponse.json({ error: "Este email já está em uso" }, { status: 409 });
     }
   }
 
-  const updates: Record<string, unknown> = { ...profileUpdates, updatedAt: new Date().toISOString() };
+  const updates: Record<string, unknown> = { ...profileUpdates };
 
-  // Handle password change
   if (newPassword) {
     if (!currentPassword) {
       return NextResponse.json({ error: "Informe a senha atual" }, { status: 400 });
     }
-    const { data: user } = await supabase.from('User').select('password').eq('id', userId).single();
+    const user = await prisma.user.findUnique({ where: { id: userId }, select: { password: true } });
     if (!user) return NextResponse.json({ error: "Usuário não encontrado" }, { status: 404 });
 
     const valid = await bcrypt.compare(currentPassword, user.password);
@@ -59,8 +55,7 @@ export async function PATCH(req: NextRequest) {
     updates.password = await bcrypt.hash(newPassword, 12);
   }
 
-  const { error } = await supabase.from('User').update(updates).eq('id', userId);
-  if (error) return NextResponse.json({ error: "Erro ao atualizar perfil" }, { status: 500 });
+  await prisma.user.update({ where: { id: userId }, data: updates });
 
   return NextResponse.json({ success: true });
 }

@@ -29,18 +29,43 @@ function initialCount(difficulty: number) {
   return Math.min(Math.max(5, difficulty + 4), 14);
 }
 
+function playAreaHeightPct(count: number) {
+  if (count <= 12) return 72;
+  if (count <= 18) return 90;
+  return 112;
+}
+
 function generateCells(count: number): Cell[] {
-  const positions = shuffle(
-    Array.from({ length: count }, () => ({
-      x: 8 + Math.random() * 78,
-      y: 8 + Math.random() * 78,
-    }))
-  );
-  return Array.from({ length: count }, (_, i) => ({
+  const heightPct = playAreaHeightPct(count);
+  // Adjusted cell size as % of each axis
+  const CELL_W = 12;
+  const CELL_H = CELL_W * (100 / heightPct);
+
+  const cols = count <= 6 ? 3 : count <= 12 ? 4 : 5;
+  const rows = Math.ceil(count / cols);
+  const cw = 76 / cols;
+  const ch = 76 / rows;
+
+  const maxJX = Math.max(0, (cw - CELL_W) / 2 * 0.85);
+  const maxJY = Math.max(0, (ch - CELL_H) / 2 * 0.85);
+
+  const allSlots: { x: number; y: number }[] = [];
+  for (let r = 0; r < rows; r++) {
+    for (let c = 0; c < cols; c++) {
+      const cx = 10 + c * cw + cw * 0.5;
+      const cy = 10 + r * ch + ch * 0.5;
+      allSlots.push({
+        x: cx + (Math.random() - 0.5) * 2 * maxJX,
+        y: cy + (Math.random() - 0.5) * 2 * maxJY,
+      });
+    }
+  }
+
+  return shuffle(allSlots).slice(0, count).map(({ x, y }, i) => ({
     id: i + 1,
     label: String(i + 1),
-    x: positions[i].x,
-    y: positions[i].y,
+    x: Math.max(7, Math.min(91, x)),
+    y: Math.max(7, Math.min(91, y)),
   }));
 }
 
@@ -307,7 +332,7 @@ export function TrilhaVisual({ difficulty, theme, onComplete }: TrilhaVisualProp
         </p>
 
         {/* Play area */}
-        <div className={`relative w-full ${playAreaBg}`} style={{ paddingBottom: "72%" }}>
+        <div className={`relative w-full ${playAreaBg}`} style={{ paddingBottom: `${playAreaHeightPct(count)}%` }}>
 
           {/* SVG trail lines */}
           <svg

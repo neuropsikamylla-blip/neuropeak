@@ -1,6 +1,6 @@
 import { getServerSession } from "next-auth";
 import { authOptions } from "@/lib/auth";
-import { supabase } from "@/lib/supabase";
+import prisma from "@/lib/db";
 import { redirect } from "next/navigation";
 import Link from "next/link";
 import { Button } from "@/components/ui/button";
@@ -17,48 +17,30 @@ export default async function PacientesPage() {
 
   const therapistId = (session.user as { id: string }).id;
 
-  const { data: patientRows } = await supabase
-    .from('Patient')
-    .select('*')
-    .eq('therapistId', therapistId)
-    .order('name', { ascending: true });
+  const patientList = await prisma.patient.findMany({
+    where: { therapistId },
+    orderBy: { name: "asc" },
+  });
 
-  const patientList = patientRows ?? [];
   const patientIds = patientList.map((p) => p.id);
 
-  const [
-    { data: allSessions },
-    { data: allAlerts },
-    { data: allTrainingPlans },
-  ] = await Promise.all([
+  const [allSessions, allAlerts, allTrainingPlans] = await Promise.all([
     patientIds.length > 0
-      ? supabase
-          .from('Session')
-          .select('*')
-          .in('patientId', patientIds)
-          .order('completedAt', { ascending: false })
-      : Promise.resolve({ data: [] }),
+      ? prisma.session.findMany({ where: { patientId: { in: patientIds } }, orderBy: { completedAt: "desc" } })
+      : [],
     patientIds.length > 0
-      ? supabase
-          .from('Alert')
-          .select('*')
-          .in('patientId', patientIds)
-          .eq('isRead', false)
-      : Promise.resolve({ data: [] }),
+      ? prisma.alert.findMany({ where: { patientId: { in: patientIds }, isRead: false } })
+      : [],
     patientIds.length > 0
-      ? supabase
-          .from('TrainingPlan')
-          .select('*')
-          .in('patientId', patientIds)
-          .eq('isActive', true)
-      : Promise.resolve({ data: [] }),
+      ? prisma.trainingPlan.findMany({ where: { patientId: { in: patientIds }, isActive: true } })
+      : [],
   ]);
 
   const patients = patientList.map((p) => ({
     ...p,
-    sessions: (allSessions ?? []).filter((s) => s.patientId === p.id).slice(0, 30),
-    alerts: (allAlerts ?? []).filter((a) => a.patientId === p.id),
-    trainingPlans: (allTrainingPlans ?? []).filter((t) => t.patientId === p.id).slice(0, 1),
+    sessions: allSessions.filter((s) => s.patientId === p.id).slice(0, 30),
+    alerts: allAlerts.filter((a) => a.patientId === p.id),
+    trainingPlans: allTrainingPlans.filter((t) => t.patientId === p.id).slice(0, 1),
   }));
 
   const patientSummaries: PatientSummary[] = patients.map((p) => {

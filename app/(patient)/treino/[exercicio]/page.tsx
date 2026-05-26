@@ -28,8 +28,6 @@ const TempoReacao         = dynamic(() => import("@/components/exercises/process
 const DecisaoRapida       = dynamic(() => import("@/components/exercises/processing/DecisaoRapida").then(m => ({ default: m.DecisaoRapida })), { loading: ExerciseLoader });
 const IdentificacaoSimbolos = dynamic(() => import("@/components/exercises/processing/IdentificacaoSimbolos").then(m => ({ default: m.IdentificacaoSimbolos })), { loading: ExerciseLoader });
 const TorreHanoi          = dynamic(() => import("@/components/exercises/executive/TorreHanoi").then(m => ({ default: m.TorreHanoi })), { loading: ExerciseLoader });
-const Sequenciamento      = dynamic(() => import("@/components/exercises/executive/Sequenciamento").then(m => ({ default: m.Sequenciamento })), { loading: ExerciseLoader });
-const FlexibilidadeCognitiva = dynamic(() => import("@/components/exercises/executive/FlexibilidadeCognitiva").then(m => ({ default: m.FlexibilidadeCognitiva })), { loading: ExerciseLoader });
 const Labirinto           = dynamic(() => import("@/components/exercises/executive/Labirinto").then(m => ({ default: m.Labirinto })), { loading: ExerciseLoader });
 const OrdemHistoria       = dynamic(() => import("@/components/exercises/executive/OrdemHistoria").then(m => ({ default: m.OrdemHistoria })), { loading: ExerciseLoader });
 const CertoOuErrado       = dynamic(() => import("@/components/exercises/processing/CertoOuErrado").then(m => ({ default: m.CertoOuErrado })), { loading: ExerciseLoader });
@@ -40,6 +38,11 @@ const AtencaoSustentada   = dynamic(() => import("@/components/exercises/attenti
 const Semaforo            = dynamic(() => import("@/components/exercises/processing/Semaforo").then(m => ({ default: m.Semaforo })), { loading: ExerciseLoader });
 const DesafioSupermercado = dynamic(() => import("@/components/exercises/memory/DesafioSupermercado").then(m => ({ default: m.DesafioSupermercado })), { loading: ExerciseLoader });
 const DesafioCidade       = dynamic(() => import("@/components/exercises/executive/DesafioCidade").then(m => ({ default: m.DesafioCidade })), { loading: ExerciseLoader });
+const CorridaContraOTempo = dynamic(() => import("@/components/exercises/processing/CorridaContraOTempo").then(m => ({ default: m.CorridaContraOTempo })), { loading: ExerciseLoader });
+const DesafioOrcamento    = dynamic(() => import("@/components/exercises/executive/DesafioOrcamento").then(m => ({ default: m.DesafioOrcamento })), { loading: ExerciseLoader });
+const CacaItemBarato      = dynamic(() => import("@/components/exercises/attention/CacaItemBarato").then(m => ({ default: m.CacaItemBarato })), { loading: ExerciseLoader });
+const MudancaRegras       = dynamic(() => import("@/components/exercises/executive/MudancaRegras").then(m => ({ default: m.MudancaRegras })), { loading: ExerciseLoader });
+const CompraMultifuncional = dynamic(() => import("@/components/exercises/executive/CompraMultifuncional").then(m => ({ default: m.CompraMultifuncional })), { loading: ExerciseLoader });
 
 const EXERCISE_INSTRUCTIONS: Record<string, string[]> = {
   "span-numerico": [
@@ -101,18 +104,6 @@ const EXERCISE_INSTRUCTIONS: Record<string, string[]> = {
     "Mova todos os discos para o pino da direita, usando o pino do meio como apoio.",
     "Regra: um disco maior NUNCA pode ficar sobre um menor.",
     "Tente resolver usando o menor número de movimentos possível!",
-  ],
-  "sequenciamento": [
-    "Você verá uma lista de passos de uma tarefa em ordem aleatória.",
-    "Arraste os passos para colocá-los na ordem correta.",
-    "Pense na sequência lógica de cada etapa.",
-    "Quando estiver satisfeito, clique em 'Verificar Sequência'.",
-  ],
-  "flexibilidade-cognitiva": [
-    "Você classificará cartões — ora pela COR, ora pela FORMA.",
-    "A regra muda silenciosamente durante o exercício: fique atento ao que está sendo pedido.",
-    "Releia a regra ativa antes de responder.",
-    "Quando errar, não se preocupe — adaptar-se à mudança é exatamente o treino!",
   ],
   "labirinto": [
     "Você está num labirinto — navegue até a bandeira 🏁 para sair.",
@@ -197,6 +188,36 @@ const EXERCISE_INSTRUCTIONS: Record<string, string[]> = {
     "Escolha um ambiente e complete a missão proposta.",
     "No Mercado: memorize a lista de compras e encontre os itens corretos.",
     "No Cinema: planeje sua compra dentro do orçamento disponível.",
+  ],
+  "corrida-tempo": [
+    "Uma categoria de produto será anunciada antes de cada rodada.",
+    "Localize e toque TODOS os itens que pertencem a essa categoria no grid.",
+    "Seja rápido — o tempo é limitado! Itens da categoria errada não contam.",
+    "A grade fica maior e o tempo menor conforme a dificuldade aumenta.",
+  ],
+  "desafio-orcamento": [
+    "Você verá um conjunto de produtos com seus preços e um objetivo de gasto.",
+    "Selecione itens para atingir o objetivo: máximo, faixa ou valor exato.",
+    "O total aparece em tempo real — confirme quando estiver satisfeito.",
+    "Fique atento: ultrapassar o orçamento desabilita a confirmação!",
+  ],
+  "caca-item-barato": [
+    "Você verá diferentes embalagens do mesmo produto, com tamanhos e preços variados.",
+    "Calcule (ou estime) qual tem o menor preço por 100g ou 100ml.",
+    "Toque na embalagem que oferece o melhor custo-benefício.",
+    "Nas dificuldades maiores, o preço por unidade não aparece — calcule mentalmente!",
+  ],
+  "mudanca-regras": [
+    "Uma regra aparece no topo da tela: selecione TODOS os itens que se encaixam nela.",
+    "A regra pode mudar a cada rodada — fique atento ao aviso de mudança!",
+    "Confirme a seleção quando estiver pronto. É necessário acertar todos os itens corretos.",
+    "Regras possíveis: categoria, preço máximo, preço mínimo ou excluir categoria.",
+  ],
+  "compra-multifuncional": [
+    "Você deve respeitar TODAS as regras ao mesmo tempo: orçamento, categoria e quantidade.",
+    "Um painel mostra em tempo real quais regras já foram cumpridas (✓) e quais faltam.",
+    "O cronômetro corre — se o tempo acabar, a compra é confirmada como está.",
+    "Planeje antes de tocar nos itens: leia todas as restrições primeiro!",
   ],
 };
 
@@ -376,8 +397,6 @@ export default function ExercicioPage() {
       case "decisao-rapida": return <DecisaoRapida {...props} />;
       case "identificacao-simbolos": return <IdentificacaoSimbolos {...props} />;
       case "torre-hanoi": return <TorreHanoi {...props} />;
-      case "sequenciamento": return <Sequenciamento {...props} />;
-      case "flexibilidade-cognitiva": return <FlexibilidadeCognitiva {...props} />;
       case "labirinto": return <Labirinto {...props} />;
       case "jogo-memoria": return <JogoMemoria {...props} />;
       case "span-numerico-inverso": return <SpanNumericoInverso {...props} />;
@@ -392,6 +411,11 @@ export default function ExercicioPage() {
       case "semaforo": return <Semaforo {...props} />;
       case "desafio-supermercado": return <DesafioSupermercado {...props} />;
       case "desafio-cidade": return <DesafioCidade {...props} />;
+      case "corrida-tempo": return <CorridaContraOTempo {...props} />;
+      case "desafio-orcamento": return <DesafioOrcamento {...props} />;
+      case "caca-item-barato": return <CacaItemBarato {...props} />;
+      case "mudanca-regras": return <MudancaRegras {...props} />;
+      case "compra-multifuncional": return <CompraMultifuncional {...props} />;
       default: return <div className="p-8 text-center text-gray-500">Exercício em desenvolvimento</div>;
     }
   }

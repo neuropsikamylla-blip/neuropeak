@@ -757,36 +757,86 @@ function FarmaciaMission({ level, theme, onFinish }: { level: number; theme: The
   const p = pal(theme);
   const idx = Math.min(level - 1, FARM_DATA.length - 1);
   const data = useRef(FARM_DATA[idx]);
-  const [steps, setSteps] = useState(() =>
+  // Shuffled display order (never changes)
+  const [displaySteps] = useState(() =>
     data.current.steps.map((label, i) => ({ id: String(i), label })).sort(() => Math.random() - 0.5)
   );
+  // IDs in the order the user tapped them
+  const [ordered, setOrdered] = useState<string[]>([]);
+
+  function tap(id: string) {
+    setOrdered((prev) => {
+      if (prev.includes(id)) return prev.filter((x) => x !== id);
+      return [...prev, id];
+    });
+  }
+
+  function confirm() {
+    const orderedLabels = ordered.map((id) => displaySteps.find((s) => s.id === id)!.label);
+    onFinish(orderedLabels.every((label, i) => label === data.current.steps[i]));
+  }
+
+  const allSelected = ordered.length === displaySteps.length;
 
   return (
     <div className="space-y-4">
       <div className={`p-3 rounded-xl ${p.card}`}>
         <p className={`text-xs font-bold uppercase tracking-wide mb-1 ${p.muted}`}>Tarefa</p>
         <p className={`text-sm font-semibold ${p.text}`}>{data.current.title}</p>
-        <p className={`text-xs mt-1 ${p.muted}`}>Arraste as etapas na ordem correta.</p>
+        <p className={`text-xs mt-1 ${p.muted}`}>
+          Toque nas etapas na ordem correta (1ª, 2ª, 3ª…).
+        </p>
       </div>
 
-      <Reorder.Group axis="y" values={steps} onReorder={setSteps} className="space-y-2">
-        {steps.map((step, idx) => (
-          <Reorder.Item key={step.id} value={step}
-            className={`flex items-center gap-3 p-3 rounded-xl border-2 cursor-grab active:cursor-grabbing select-none transition-all ${p.draggable}`}
-          >
-            <span className={`text-xs font-bold w-6 h-6 rounded-full flex items-center justify-center shrink-0 ${p.badge}`}>
-              {idx + 1}
-            </span>
-            <span className={`text-sm font-medium flex-1 ${p.text}`}>{step.label}</span>
-            <span className={`text-base ${p.muted}`}>⠿</span>
-          </Reorder.Item>
-        ))}
-      </Reorder.Group>
+      {/* Sequência montada pelo usuário */}
+      {ordered.length > 0 && (
+        <div className={`flex flex-wrap gap-1.5 p-2 rounded-xl ${p.story}`}>
+          {ordered.map((id, i) => {
+            const step = displaySteps.find((s) => s.id === id)!;
+            return (
+              <span
+                key={id}
+                className={`flex items-center gap-1 px-2 py-1 rounded-lg text-xs font-medium ${p.badge}`}
+              >
+                <span className="font-bold">{i + 1}.</span> {step.label}
+              </span>
+            );
+          })}
+        </div>
+      )}
+
+      {/* Etapas para tocar */}
+      <div className="space-y-2">
+        {displaySteps.map((step) => {
+          const pos = ordered.indexOf(step.id);
+          const isOrdered = pos !== -1;
+          return (
+            <button
+              key={step.id}
+              onClick={() => tap(step.id)}
+              className={`w-full flex items-center gap-3 p-3 rounded-xl border-2 text-left transition-all active:scale-95 ${
+                isOrdered ? p.sel : p.unsel
+              }`}
+            >
+              <span className={`w-7 h-7 rounded-full flex items-center justify-center text-xs font-bold shrink-0 ${
+                isOrdered ? p.badge : (theme === "GAMIFIED" ? "bg-gray-700 text-gray-400" : "bg-slate-100 text-slate-400")
+              }`}>
+                {isOrdered ? pos + 1 : "?"}
+              </span>
+              <span className={`text-sm font-medium flex-1 ${p.text}`}>{step.label}</span>
+              {isOrdered && <span className="text-green-500 text-sm">✓</span>}
+            </button>
+          );
+        })}
+      </div>
 
       <button
-        onClick={() => onFinish(steps.every((s, i) => s.label === data.current.steps[i]))}
-        className={`w-full h-11 rounded-xl font-bold transition-all ${p.btn}`}
-      >Confirmar ordem</button>
+        onClick={confirm}
+        disabled={!allSelected}
+        className={`w-full h-11 rounded-xl font-bold transition-all ${p.btn} disabled:opacity-40`}
+      >
+        {allSelected ? "Confirmar ordem" : `Selecione todas as etapas (${ordered.length}/${displaySteps.length})`}
+      </button>
     </div>
   );
 }

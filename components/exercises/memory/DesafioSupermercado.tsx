@@ -137,7 +137,7 @@ function buildTrial(count: number, usedLists: Set<string>): { list: Product[]; s
 
   const fillers = PRODUCTS.filter((p) => !listIds.has(p.id));
   const shuffledFillers = [...fillers].sort(() => Math.random() - 0.5);
-  const shelfSize = Math.min(PRODUCTS.length, count * 3 + 3);
+  const shelfSize = Math.min(PRODUCTS.length, count * 2 + 2);
   const shelf = [...listProducts, ...shuffledFillers.slice(0, shelfSize - count)].sort(
     () => Math.random() - 0.5
   );
@@ -432,24 +432,35 @@ export function DesafioSupermercado({ difficulty, theme, onComplete }: DesafioSu
                 </div>
               </div>
 
-              <div className={`rounded-xl p-4 space-y-2.5 ${pal.listBg}`}>
-                <p className={`text-xs font-bold uppercase tracking-wide mb-2 ${pal.accent}`}>
-                  Sua lista de compras ({itemCount} itens)
+              {/* Lista visual com emoji grande */}
+              <div className={`rounded-xl p-3 ${pal.listBg}`}>
+                <p className={`text-xs font-bold uppercase tracking-wide mb-3 ${pal.accent}`}>
+                  🛒 Sua lista ({itemCount} itens)
                 </p>
-                {currentList.map((p, idx) => (
-                  <motion.div
-                    key={p.id}
-                    initial={{ opacity: 0, x: -10 }}
-                    animate={{ opacity: 1, x: 0 }}
-                    transition={{ delay: idx * 0.08 }}
-                    className="flex items-center gap-3"
-                  >
-                    <span className="text-2xl">{p.emoji}</span>
-                    <span className={`text-sm font-medium ${theme === "GAMIFIED" ? "text-gray-200" : "text-gray-800"}`}>
-                      {p.name}
-                    </span>
-                  </motion.div>
-                ))}
+                <div className="grid grid-cols-2 gap-2">
+                  {currentList.map((p, idx) => (
+                    <motion.div
+                      key={p.id}
+                      initial={{ opacity: 0, scale: 0.8 }}
+                      animate={{ opacity: 1, scale: 1 }}
+                      transition={{ delay: idx * 0.08 }}
+                      className={`flex flex-col items-center gap-1 p-3 rounded-xl border-2 ${
+                        theme === "GAMIFIED"
+                          ? "border-cyan-600/40 bg-gray-800"
+                          : theme === "COLORFUL"
+                          ? "border-emerald-300 bg-white"
+                          : "border-emerald-200 bg-white"
+                      }`}
+                    >
+                      <span className="text-5xl leading-none">{p.emoji}</span>
+                      <span className={`text-xs font-semibold text-center leading-tight mt-1 ${
+                        theme === "GAMIFIED" ? "text-gray-100" : "text-gray-800"
+                      }`}>
+                        {p.name}
+                      </span>
+                    </motion.div>
+                  ))}
+                </div>
               </div>
             </motion.div>
           )}
@@ -461,17 +472,22 @@ export function DesafioSupermercado({ difficulty, theme, onComplete }: DesafioSu
               initial={{ opacity: 0, y: 10 }}
               animate={{ opacity: 1, y: 0 }}
               exit={{ opacity: 0, y: -10 }}
+              className="flex flex-col"
             >
-              <div className="mb-3">
-                <p className={`font-bold text-sm ${pal.title}`}>Encontre os itens da sua lista!</p>
-                <p className={`text-xs mt-0.5 ${pal.sub}`}>
-                  Selecione {itemCount} {itemCount === 1 ? "item" : "itens"} · {selected.size} selecionado{selected.size !== 1 ? "s" : ""}
-                </p>
+              <div className="mb-2 flex justify-between items-center">
+                <p className={`font-bold text-sm ${pal.title}`}>Encontre os itens!</p>
+                <span className={`text-xs font-semibold px-2 py-0.5 rounded-full ${
+                  selected.size === itemCount
+                    ? "bg-green-100 text-green-700"
+                    : theme === "GAMIFIED" ? "bg-gray-700 text-gray-300" : "bg-slate-100 text-slate-500"
+                }`}>
+                  {selected.size}/{itemCount}
+                </span>
               </div>
 
-              {/* Prateleira do supermercado */}
+              {/* Prateleira do supermercado — área com scroll próprio */}
               <div
-                className="rounded-xl overflow-hidden mb-4"
+                className="rounded-xl overflow-hidden mb-3"
                 style={{
                   background: theme === "GAMIFIED"
                     ? "linear-gradient(to bottom, #111827 0%, #1f2937 100%)"
@@ -483,69 +499,72 @@ export function DesafioSupermercado({ difficulty, theme, onComplete }: DesafioSu
               >
                 {/* Etiqueta da prateleira */}
                 <div
-                  className="text-center py-1 text-xs font-semibold tracking-widest uppercase"
+                  className="text-center py-1.5 text-xs font-semibold tracking-widest uppercase"
                   style={{
                     background: theme === "GAMIFIED" ? "#0e7490" : theme === "COLORFUL" ? "#047857" : "#78716c",
                     color: "#fff",
-                    letterSpacing: "0.15em",
                   }}
                 >
                   🏪 Prateleira
                 </div>
 
-                {/* Fileiras de produtos */}
-                {Array.from({ length: Math.ceil(shelfProducts.length / 3) }).map((_, rowIdx) => {
-                  const rowProducts = shelfProducts.slice(rowIdx * 3, rowIdx * 3 + 3);
-                  return (
-                    <div key={rowIdx} className="px-2 pt-2">
-                      <div className="grid grid-cols-3 gap-2">
-                        {rowProducts.map((p) => {
-                          const isSelected = selected.has(p.id);
-                          return (
-                            <button
-                              key={p.id}
-                              onClick={() => toggleProduct(p.id)}
-                              className={`p-2 rounded-lg border-2 flex flex-col items-center gap-1 transition-all active:scale-95 ${
-                                isSelected ? pal.selectedCard : pal.productCard
-                              }`}
-                            >
-                              <span className="text-2xl">{p.emoji}</span>
-                              <span className={`text-xs text-center leading-tight ${theme === "GAMIFIED" ? "text-gray-200" : "text-gray-700"}`}>
-                                {p.name}
-                              </span>
-                              {isSelected && (
-                                <span className="text-xs text-green-600 font-bold">✓</span>
-                              )}
-                            </button>
-                          );
-                        })}
-                        {/* Slots vazios na última fileira */}
-                        {rowProducts.length < 3 &&
-                          Array.from({ length: 3 - rowProducts.length }).map((_, i) => (
-                            <div key={`empty-${i}`} />
-                          ))}
+                {/* Fileiras de 2 produtos — emoji grande */}
+                <div
+                  className="overflow-y-auto"
+                  style={{ maxHeight: "52vh" }}
+                >
+                  {Array.from({ length: Math.ceil(shelfProducts.length / 2) }).map((_, rowIdx) => {
+                    const rowProducts = shelfProducts.slice(rowIdx * 2, rowIdx * 2 + 2);
+                    return (
+                      <div key={rowIdx} className="px-2 pt-2">
+                        <div className="grid grid-cols-2 gap-2">
+                          {rowProducts.map((p) => {
+                            const isSelected = selected.has(p.id);
+                            return (
+                              <button
+                                key={p.id}
+                                onClick={() => toggleProduct(p.id)}
+                                className={`py-3 px-2 rounded-xl border-2 flex flex-col items-center gap-1.5 transition-all active:scale-95 ${
+                                  isSelected ? pal.selectedCard : pal.productCard
+                                }`}
+                              >
+                                <span className="text-5xl leading-none">{p.emoji}</span>
+                                <span className={`text-xs text-center font-semibold leading-tight ${
+                                  theme === "GAMIFIED" ? "text-gray-100" : "text-gray-800"
+                                }`}>
+                                  {p.name}
+                                </span>
+                                {isSelected && (
+                                  <span className="text-sm text-green-500 font-bold">✓</span>
+                                )}
+                              </button>
+                            );
+                          })}
+                          {rowProducts.length < 2 && <div />}
+                        </div>
+                        {/* Tábua da prateleira */}
+                        <div
+                          className="mt-2 rounded-sm"
+                          style={{
+                            height: "10px",
+                            background: theme === "GAMIFIED"
+                              ? "linear-gradient(to bottom, #374151 0%, #1f2937 100%)"
+                              : "linear-gradient(to bottom, #92400e 0%, #78350f 100%)",
+                            boxShadow: "0 4px 8px rgba(0,0,0,0.5), inset 0 1px 0 rgba(255,255,255,0.15)",
+                          }}
+                        />
                       </div>
-                      {/* Tábua da prateleira */}
-                      <div
-                        className="mt-2 rounded-sm"
-                        style={{
-                          height: "10px",
-                          background: theme === "GAMIFIED"
-                            ? "linear-gradient(to bottom, #374151 0%, #1f2937 100%)"
-                            : "linear-gradient(to bottom, #92400e 0%, #78350f 100%)",
-                          boxShadow: "0 4px 8px rgba(0,0,0,0.5), inset 0 1px 0 rgba(255,255,255,0.15)",
-                        }}
-                      />
-                    </div>
-                  );
-                })}
-                <div className="h-3" />
+                    );
+                  })}
+                  <div className="h-3" />
+                </div>
               </div>
 
+              {/* Botão sempre visível abaixo da prateleira */}
               <button
                 onClick={handleConfirm}
                 disabled={selected.size === 0}
-                className={`w-full h-11 rounded-xl font-bold transition-all ${pal.btn} disabled:opacity-40`}
+                className={`w-full h-12 rounded-xl font-bold text-base transition-all ${pal.btn} disabled:opacity-40`}
               >
                 Confirmar seleção ({selected.size}/{itemCount})
               </button>

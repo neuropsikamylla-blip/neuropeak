@@ -1,6 +1,6 @@
 import { getServerSession } from "next-auth";
 import { authOptions } from "@/lib/auth";
-import { supabase } from "@/lib/supabase";
+import prisma from "@/lib/db";
 import { redirect, notFound } from "next/navigation";
 import Link from "next/link";
 import { Button } from "@/components/ui/button";
@@ -27,56 +27,27 @@ export default async function PatientProfilePage({ params }: { params: Promise<{
 
   const therapistId = (session.user as { id: string }).id;
 
-  const { data: patientBase } = await supabase
-    .from('Patient')
-    .select('*')
-    .eq('id', id)
-    .eq('therapistId', therapistId)
-    .single();
+  const patientBase = await prisma.patient.findFirst({ where: { id, therapistId } });
 
   if (!patientBase) notFound();
 
-  const [
-    { data: sessionRows },
-    { data: trainingPlans },
-    { data: achievements },
-    { data: alerts },
-  ] = await Promise.all([
-    supabase
-      .from('Session')
-      .select('*')
-      .eq('patientId', id)
-      .order('completedAt', { ascending: false })
-      .limit(50),
-    supabase
-      .from('TrainingPlan')
-      .select('*')
-      .eq('patientId', id)
-      .eq('isActive', true)
-      .limit(1),
-    supabase
-      .from('Achievement')
-      .select('*')
-      .eq('patientId', id)
-      .order('unlockedAt', { ascending: false }),
-    supabase
-      .from('Alert')
-      .select('*')
-      .eq('patientId', id)
-      .order('createdAt', { ascending: false })
-      .limit(5),
+  const [sessionRows, trainingPlans, achievements, alerts] = await Promise.all([
+    prisma.session.findMany({ where: { patientId: id }, orderBy: { completedAt: "desc" }, take: 50 }),
+    prisma.trainingPlan.findMany({ where: { patientId: id, isActive: true }, take: 1 }),
+    prisma.achievement.findMany({ where: { patientId: id }, orderBy: { unlockedAt: "desc" } }),
+    prisma.alert.findMany({ where: { patientId: id }, orderBy: { createdAt: "desc" }, take: 5 }),
   ]);
 
   const patient = {
     ...patientBase,
-    sessions: sessionRows ?? [],
-    trainingPlans: trainingPlans ?? [],
-    achievements: achievements ?? [],
-    alerts: alerts ?? [],
+    sessions: sessionRows,
+    trainingPlans,
+    achievements,
+    alerts,
   };
 
   const sessions = patient.sessions as SessionData[];
-  const typedAchievements = patient.achievements as Array<{ id: string; icon: string; title: string; unlockedAt: string }>;
+  const typedAchievements = patient.achievements as unknown as Array<{ id: string; icon: string; title: string; unlockedAt: string }>;
   const domainScores = calculateDomainScore(sessions);
   const age = calculateAge(patient.birthDate);
   const activePlan = patient.trainingPlans[0];

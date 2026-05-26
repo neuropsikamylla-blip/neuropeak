@@ -2,9 +2,8 @@ export const dynamic = "force-dynamic";
 import { NextRequest, NextResponse } from "next/server";
 import { getServerSession } from "next-auth";
 import { authOptions } from "@/lib/auth";
-import { supabase } from "@/lib/supabase";
+import prisma from "@/lib/db";
 import { z } from "zod";
-import { randomUUID } from "crypto";
 import { calculateNewDifficulty, checkAchievements } from "@/lib/adaptive";
 import type { SessionData } from "@/types";
 
@@ -34,16 +33,12 @@ export async function POST(req: NextRequest) {
 
   const data = result.data;
 
-  // Verify the patient belongs to this session
   if (user.role === "PATIENT" && user.patientId !== data.patientId) {
     return NextResponse.json({ error: "Forbidden" }, { status: 403 });
   }
 
-  // Create session
-  const { data: newSession, error: sessionError } = await supabase
-    .from('Session')
-    .insert({
-      id: randomUUID(),
+  const newSession = await prisma.session.create({
+    data: {
       patientId: data.patientId,
       exerciseId: data.exerciseId,
       domain: data.domain,
@@ -53,167 +48,122 @@ export async function POST(req: NextRequest) {
       difficulty: data.difficulty,
       duration: data.duration,
       metadata: data.metadata ? JSON.stringify(data.metadata) : null,
-    })
-    .select()
-    .single();
+    },
+  });
 
-  if (sessionError) return NextResponse.json({ error: sessionError.message }, { status: 500 });
+  const recentSessions = await prisma.session.findMany({
+    where: { patientId: data.patientId },
+    orderBy: { completedAt: "desc" },
+    take: 20,
+    select: { exerciseId: true, domain: true, score: true, accuracy: true, reactionTime: true, difficulty: true, duration: true, completedAt: true },
+  });
 
-  // Fetch recent sessions for adaptive difficulty
-  const { data: recentSessions } = await supabase
-    .from('Session')
-    .select('exerciseId, domain, score, accuracy, reactionTime, difficulty, duration, completedAt')
-    .eq('patientId', data.patientId)
-    .order('completedAt', { ascending: false })
-    .limit(20);
-
-  // Update adaptive difficulty
   const adaptiveResult = calculateNewDifficulty(
     data.difficulty,
-    (recentSessions ?? []) as SessionData[],
+    recentSessions as unknown as SessionData[],
     data.exerciseId
   );
 
-  // Upsert exercise config (check if exists first)
-  const { data: existingConfig } = await supabase
-    .from('ExerciseConfig')
-    .select('id, totalAttempts')
-    .eq('patientId', data.patientId)
-    .eq('exerciseId', data.exerciseId)
-    .single();
+  await prisma.exerciseConfig.upsert({
+    where: { patientId_exerciseId: { patientId: data.patientId, exerciseId: data.exerciseId } },
+    create: {
+      patientId: data.patientId,
+      exerciseId: data.exerciseId,
+      currentDifficulty: adaptiveResult.newDifficulty,
+      totalAttempts: 1,
+      lastAttemptAt: new Date(),
+    },
+    update: {
+      currentDifficulty: adaptiveResult.newDifficulty,
+      totalAttempts: { increment: 1 },
+      lastAttemptAt: new Date(),
+    },
+  });
 
-  if (existingConfig) {
-    await supabase
-      .from('ExerciseConfig')
-      .update({
-        currentDifficulty: adaptiveResult.newDifficulty,
-        totalAttempts: (existingConfig.totalAttempts ?? 0) + 1,
-        lastAttemptAt: new Date().toISOString(),
-      })
-      .eq('patientId', data.patientId)
-      .eq('exerciseId', data.exerciseId);
-  } else {
-    await supabase
-      .from('ExerciseConfig')
-      .insert({
-        id: randomUUID(),
-        patientId: data.patientId,
-        exerciseId: data.exerciseId,
-        currentDifficulty: adaptiveResult.newDifficulty,
-        totalAttempts: 1,
-        lastAttemptAt: new Date().toISOString(),
-        updatedAt: new Date().toISOString(),
-      });
-  }
-
-  // Check for new achievements
-  const { data: existingAchievements } = await supabase
-    .from('Achievement')
-    .select('type')
-    .eq('patientId', data.patientId);
+  const existingAchievements = await prisma.achievement.findMany({
+    where: { patientId: data.patientId },
+    select: { type: true },
+  });
 
   const newAchievements = checkAchievements(
-    (recentSessions ?? []) as SessionData[],
-    (existingAchievements ?? []).map((a) => a.type)
+    recentSessions as unknown as SessionData[],
+    existingAchievements.map((a) => a.type)
   );
 
   if (newAchievements.length > 0) {
-    await supabase
-      .from('Achievement')
-      .insert(
-        newAchievements.map((a) => ({
-          id: randomUUID(),
-          patientId: data.patientId,
-          type: a.type,
-          title: a.title,
-          description: a.description,
-          icon: a.icon,
-        }))
-      );
+    await prisma.achievement.createMany({
+      data: newAchievements.map((a) => ({
+        patientId: data.patientId,
+        type: a.type,
+        title: a.title,
+        description: a.description,
+        icon: a.icon,
+      })),
+    });
   }
 
-  // Check alerts
   const lastWeek = new Date(Date.now() - 7 * 24 * 60 * 60 * 1000);
-  const recentCount = (recentSessions ?? []).filter(
-    (s) => new Date(s.completedAt) >= lastWeek
-  ).length;
+  const recentCount = recentSessions.filter((s) => new Date(s.completedAt) >= lastWeek).length;
 
   if (recentCount === 0) {
-    // First session after a week - remove MISSED_SESSION alerts for this exercise
-    await supabase
-      .from('Alert')
-      .delete()
-      .eq('patientId', data.patientId)
-      .eq('type', 'MISSED_SESSION')
-      .eq('isRead', false);
+    await prisma.alert.deleteMany({
+      where: { patientId: data.patientId, type: "MISSED_SESSION", isRead: false },
+    });
   }
 
-  // Check performance drop
-  const sessionList = recentSessions ?? [];
-  if (sessionList.length >= 5) {
-    const last5 = sessionList.slice(0, 5);
-    const prev5 = sessionList.slice(5, 10);
+  if (recentSessions.length >= 5) {
+    const last5 = recentSessions.slice(0, 5);
+    const prev5 = recentSessions.slice(5, 10);
     if (prev5.length >= 5) {
       const avgLast = last5.reduce((s, r) => s + r.score, 0) / 5;
       const avgPrev = prev5.reduce((s, r) => s + r.score, 0) / 5;
       if (avgPrev - avgLast > 15) {
-        await supabase
-          .from('Alert')
-          .insert({
-            id: randomUUID(),
+        await prisma.alert.create({
+          data: {
             patientId: data.patientId,
             type: "PERFORMANCE_DROP",
             message: `Queda de desempenho detectada no exercício ${data.exerciseId} (−${Math.round(avgPrev - avgLast)} pontos)`,
-          });
-      }
-    }
-  }
-
-  // Cycle completion check
-  const { data: activePlan } = await supabase
-    .from('TrainingPlan')
-    .select('id, frequency, createdAt')
-    .eq('patientId', data.patientId)
-    .eq('isActive', true)
-    .maybeSingle();
-
-  if (activePlan) {
-    const cycleTarget = activePlan.frequency * 4;
-    const { count: sessionCount } = await supabase
-      .from('Session')
-      .select('id', { count: 'exact', head: true })
-      .eq('patientId', data.patientId)
-      .gte('completedAt', activePlan.createdAt);
-
-    if ((sessionCount ?? 0) >= cycleTarget) {
-      const { data: existingCycleAlert } = await supabase
-        .from('Alert')
-        .select('id')
-        .eq('patientId', data.patientId)
-        .eq('type', 'CYCLE_COMPLETE')
-        .gte('createdAt', activePlan.createdAt)
-        .maybeSingle();
-
-      if (!existingCycleAlert) {
-        const { data: patientInfo } = await supabase
-          .from('Patient')
-          .select('name')
-          .eq('id', data.patientId)
-          .single();
-
-        await supabase.from('Alert').insert({
-          id: randomUUID(),
-          patientId: data.patientId,
-          type: 'CYCLE_COMPLETE',
-          message: `Ciclo de ${cycleTarget} sessões concluído por ${patientInfo?.name ?? 'paciente'}! Revise o desempenho e configure um novo ciclo de treino.`,
+          },
         });
       }
     }
   }
 
-  return NextResponse.json({
-    session: newSession,
-    adaptive: adaptiveResult,
-    newAchievements,
-  }, { status: 201 });
+  const activePlan = await prisma.trainingPlan.findFirst({
+    where: { patientId: data.patientId, isActive: true },
+    select: { id: true, frequency: true, createdAt: true },
+  });
+
+  if (activePlan) {
+    const cycleTarget = activePlan.frequency * 4;
+    const sessionCount = await prisma.session.count({
+      where: { patientId: data.patientId, completedAt: { gte: activePlan.createdAt } },
+    });
+
+    if (sessionCount >= cycleTarget) {
+      const existingCycleAlert = await prisma.alert.findFirst({
+        where: {
+          patientId: data.patientId,
+          type: "CYCLE_COMPLETE",
+          createdAt: { gte: activePlan.createdAt },
+        },
+      });
+
+      if (!existingCycleAlert) {
+        const patientInfo = await prisma.patient.findUnique({
+          where: { id: data.patientId },
+          select: { name: true },
+        });
+        await prisma.alert.create({
+          data: {
+            patientId: data.patientId,
+            type: "CYCLE_COMPLETE",
+            message: `Ciclo de ${cycleTarget} sessões concluído por ${patientInfo?.name ?? "paciente"}! Revise o desempenho e configure um novo ciclo de treino.`,
+          },
+        });
+      }
+    }
+  }
+
+  return NextResponse.json({ session: newSession, adaptive: adaptiveResult, newAchievements }, { status: 201 });
 }

@@ -1,9 +1,8 @@
 export const dynamic = "force-dynamic";
 import { NextRequest, NextResponse } from "next/server";
-import { supabase } from "@/lib/supabase";
+import prisma from "@/lib/db";
 import { z } from "zod";
 import bcrypt from "bcryptjs";
-import { randomUUID } from "crypto";
 
 const registerSchema = z.object({
   name: z.string().min(2, "Nome deve ter pelo menos 2 caracteres"),
@@ -27,31 +26,22 @@ export async function POST(req: NextRequest) {
     return NextResponse.json({ error: "Código de acesso inválido" }, { status: 403 });
   }
 
-  const { data: existing } = await supabase
-    .from('User')
-    .select('id')
-    .eq('email', email)
-    .single();
-
+  const existing = await prisma.user.findUnique({ where: { email } });
   if (existing) {
     return NextResponse.json({ error: "Este email já está cadastrado" }, { status: 409 });
   }
 
   const hashedPassword = await bcrypt.hash(password, 12);
 
-  const { error } = await supabase.from('User').insert({
-    id: randomUUID(),
-    email,
-    password: hashedPassword,
-    name,
-    clinicName: clinicName ?? null,
-    role: "THERAPIST",
-    updatedAt: new Date().toISOString(),
+  await prisma.user.create({
+    data: {
+      email,
+      password: hashedPassword,
+      name,
+      clinicName: clinicName ?? null,
+      role: "THERAPIST",
+    },
   });
-
-  if (error) {
-    return NextResponse.json({ error: "Erro ao criar conta" }, { status: 500 });
-  }
 
   return NextResponse.json({ success: true }, { status: 201 });
 }

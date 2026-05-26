@@ -16,9 +16,9 @@ const ALL_DOMAINS: Domain[] = ["memory", "attention", "processing", "executive"]
 
 const DOMAIN_EXERCISES: Record<Domain, string[]> = {
   memory: ["span-numerico", "span-numerico-inverso", "matriz-espacial", "matriz-espacial-inversa", "jogo-memoria", "desafio-supermercado"],
-  attention: ["trilha-visual", "stroop-task", "antes-depois", "atencao-seletiva", "atencao-alternada", "atencao-sustentada"],
-  processing: ["tempo-reacao", "certo-ou-errado", "semaforo"],
-  executive: ["torre-hanoi", "sequenciamento", "flexibilidade-cognitiva", "labirinto", "ordem-historia"],
+  attention: ["trilha-visual", "stroop-task", "antes-depois", "atencao-seletiva", "atencao-alternada", "atencao-sustentada", "caca-item-barato"],
+  processing: ["tempo-reacao", "certo-ou-errado", "semaforo", "corrida-tempo"],
+  executive: ["torre-hanoi", "labirinto", "ordem-historia", "desafio-orcamento", "mudanca-regras", "compra-multifuncional"],
 };
 
 export default function PlanoPage() {
@@ -28,12 +28,35 @@ export default function PlanoPage() {
   const patientId = params.id as string;
 
   const [loading, setLoading] = useState(false);
-  const [selectedDomains, setSelectedDomains] = useState<Domain[]>(["memory", "attention"]);
-  const [selectedExercises, setSelectedExercises] = useState<string[]>([
-    "span-numerico", "stroop-task",
-  ]);
+  const [loadingPlan, setLoadingPlan] = useState(true);
+  const [selectedDomains, setSelectedDomains] = useState<Domain[]>([]);
+  const [selectedExercises, setSelectedExercises] = useState<string[]>([]);
   const [sessionDuration, setSessionDuration] = useState(30);
   const [frequency, setFrequency] = useState(3);
+
+  useEffect(() => {
+    fetch(`/api/patients/${patientId}`)
+      .then(r => r.json())
+      .then(data => {
+        const plan = data.patient?.trainingPlans?.[0];
+        if (plan) {
+          const domains: Domain[] = typeof plan.domains === "string" ? JSON.parse(plan.domains) : plan.domains ?? [];
+          const exercises: string[] = typeof plan.exercises === "string" ? JSON.parse(plan.exercises) : plan.exercises ?? [];
+          setSelectedDomains(domains);
+          setSelectedExercises(exercises);
+          setSessionDuration(plan.sessionDuration ?? 30);
+          setFrequency(plan.frequency ?? 3);
+        } else {
+          setSelectedDomains(["memory", "attention"]);
+          setSelectedExercises(["span-numerico", "stroop-task"]);
+        }
+      })
+      .catch(() => {
+        setSelectedDomains(["memory", "attention"]);
+        setSelectedExercises(["span-numerico", "stroop-task"]);
+      })
+      .finally(() => setLoadingPlan(false));
+  }, [patientId]);
 
   function toggleDomain(domain: Domain) {
     setSelectedDomains((prev) => {
@@ -85,6 +108,14 @@ export default function PlanoPage() {
     } finally {
       setLoading(false);
     }
+  }
+
+  if (loadingPlan) {
+    return (
+      <div className="flex items-center justify-center min-h-[40vh]">
+        <Loader2 className="w-7 h-7 animate-spin text-blue-500" />
+      </div>
+    );
   }
 
   return (
