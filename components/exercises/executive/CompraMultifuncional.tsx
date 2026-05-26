@@ -70,11 +70,12 @@ function buildRound(d: number): Round {
   return { items, budget, requiredCategory, minItems, maxItems, constraints, goalLabel: goalParts.join(" · ") };
 }
 
-function checkRound(round: Round, selected: Set<string>, items: Round["items"]): { pass: boolean; reasons: string[] } {
+function checkRound(round: Round, selected: Set<string>, items: Round["items"]): { pass: boolean; reasons: string[]; total: number } {
   const sel = items.filter(i => selected.has(i.id));
   const total = sel.reduce((s, i) => s + i.price, 0);
   const reasons: string[] = [];
 
+  if (sel.length === 0) reasons.push("Selecione ao menos 1 item");
   if (total > round.budget) reasons.push(`Orçamento excedido (${fmt(total)} > ${fmt(round.budget)})`);
   if (round.requiredCategory && !sel.some(i => i.cat === round.requiredCategory))
     reasons.push(`Falta item de ${CAT_LABELS[round.requiredCategory]}`);
@@ -83,7 +84,7 @@ function checkRound(round: Round, selected: Set<string>, items: Round["items"]):
   if (round.maxItems !== undefined && sel.length > round.maxItems)
     reasons.push(`Máximo ${round.maxItems} itens (selecionou ${sel.length})`);
 
-  return { pass: reasons.length === 0, reasons };
+  return { pass: reasons.length === 0, reasons, total };
 }
 
 function TutStep({ theme, onDone }: { theme: Theme; onDone: () => void }) {
@@ -150,17 +151,17 @@ export function CompraMultifuncional({ difficulty, theme, onComplete }: Props) {
   const reportProgress = useExerciseProgress();
 
   const [round, setRound] = useState(0);
-  const [roundResults, setRoundResults] = useState<{ pass: boolean; reasons: string[] }[]>([]);
+  const [roundResults, setRoundResults] = useState<{ pass: boolean; reasons: string[]; total: number }[]>([]);
   const [selected, setSelected] = useState(new Set<string>());
   const [phase, setPhase] = useState<"shopping" | "result">("shopping");
   const [timeLeft, setTimeLeft] = useState(timeSecs(difficulty));
-  const [lastResult, setLastResult] = useState<{ pass: boolean; reasons: string[] } | null>(null);
+  const [lastResult, setLastResult] = useState<{ pass: boolean; reasons: string[]; total: number } | null>(null);
 
   const timerRef = useRef<ReturnType<typeof setInterval> | null>(null);
   const roundEndedRef = useRef(false);
   const startTime = useRef(Date.now());
   const roundRef = useRef(0);
-  const resultsRef = useRef<{ pass: boolean; reasons: string[] }[]>([]);
+  const resultsRef = useRef<{ pass: boolean; reasons: string[]; total: number }[]>([]);
 
   const [currentRound, setCurrentRound] = useState<Round>(() => buildRound(difficulty));
 
@@ -250,8 +251,6 @@ export function CompraMultifuncional({ difficulty, theme, onComplete }: Props) {
     btn: theme === "GAMIFIED" ? "bg-cyan-600 text-white" : theme === "COLORFUL" ? "bg-gradient-to-r from-teal-500 to-cyan-500 text-white" : "bg-teal-600 text-white",
   };
 
-  const total = [...selected].reduce((s, id) => s + (currentRound.items.find(i => i.id === id)?.price ?? 0), 0);
-  const overBudget = total > currentRound.budget;
   const tl = timeSecs(difficulty);
   const timerRatio = timeLeft / tl;
   const timerColor = timerRatio > 0.5 ? "bg-green-500" : timerRatio > 0.25 ? "bg-amber-400" : "bg-red-500 animate-pulse";
@@ -287,8 +286,8 @@ export function CompraMultifuncional({ difficulty, theme, onComplete }: Props) {
               <div className={`rounded-xl p-2.5 mb-3 border text-xs space-y-1 ${theme === "GAMIFIED" ? "bg-gray-700 border-gray-600" : "bg-teal-50 border-teal-200"}`}>
                 <p className={`font-bold text-xs uppercase tracking-wide ${pal.sub}`}>Regras simultâneas</p>
                 <div className="flex flex-wrap gap-x-3 gap-y-0.5">
-                  <span className={overBudget ? "text-red-500 font-bold" : "text-green-600 font-medium"}>
-                    {overBudget ? "✗" : "✓"} Orçamento: até {fmt(currentRound.budget)} ({fmt(total)})
+                  <span className={`font-medium ${pal.sub}`}>
+                    💰 Orçamento: até {fmt(currentRound.budget)}
                   </span>
                   {currentRound.requiredCategory && (
                     <span className={hasRequired ? "text-green-600 font-medium" : `font-medium ${pal.sub}`}>
@@ -330,7 +329,7 @@ export function CompraMultifuncional({ difficulty, theme, onComplete }: Props) {
               <button onClick={confirm} disabled={selected.size === 0}
                 className={`w-full h-11 rounded-xl font-bold transition-all disabled:opacity-40 ${pal.btn}`}
               >
-                Confirmar ({fmt(total)} · {selected.size} item{selected.size !== 1 ? "s" : ""})
+                Confirmar seleção ({selected.size} item{selected.size !== 1 ? "s" : ""})
               </button>
             </motion.div>
           )}
@@ -341,6 +340,9 @@ export function CompraMultifuncional({ difficulty, theme, onComplete }: Props) {
               <p className="text-5xl mb-2">{lastResult.pass ? "✅" : "❌"}</p>
               <p className={`font-bold text-lg ${lastResult.pass ? "text-green-600" : "text-red-500"}`}>
                 {lastResult.pass ? "Todas as regras cumpridas!" : "Regras não cumpridas"}
+              </p>
+              <p className={`text-sm font-medium mt-1 ${pal.sub}`}>
+                Total gasto: <strong>{fmt(lastResult.total)}</strong> de {fmt(currentRound.budget)}
               </p>
               {lastResult.reasons.length > 0 && (
                 <div className="mt-2 space-y-0.5">

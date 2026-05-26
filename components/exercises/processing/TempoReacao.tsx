@@ -85,7 +85,7 @@ function TempoReacaoTutorial({ theme, onDone }: { theme: Theme; onDone: () => vo
     },
   ];
 
-  return <TutorialBase theme={theme} title="Balões" steps={steps} onDone={onDone} />;
+  return <TutorialBase theme={theme} title="Reflexos" steps={steps} onDone={onDone} />;
 }
 
 function TempoReacaoShowStep({ theme, onDone }: { theme: Theme; onDone: () => void }) {
@@ -184,6 +184,8 @@ export function TempoReacao({ difficulty, theme, onComplete }: TempoReacaoProps)
   const doneRef = useRef(false);
   const startTime = useRef(Date.now());
   const nextSpawnTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const correctCountRef = useRef(0);
+  const pendingTargetsRef = useRef(0);
 
   const ms = speedMs(difficulty);
   const nd = distractorCount(difficulty);
@@ -225,8 +227,16 @@ export function TempoReacao({ difficulty, theme, onComplete }: TempoReacaoProps)
     if (doneRef.current) return;
     if (resultsRef.current.length >= MAX_TRIALS) return;
 
-    const batch: Balloon[] = [makeBalloon(true, ms)];
-    for (let i = 0; i < nd; i++) batch.push(makeBalloon(false, ms));
+    // Progressive: after every 4 correct hits, add 1 extra target (max 3) and 1 extra distractor (max +3)
+    const bonus = Math.min(Math.floor(correctCountRef.current / 4), 2);
+    const numTargets = 1 + bonus;
+    const numDistr = nd + Math.min(Math.floor(correctCountRef.current / 4), 3);
+
+    const batch: Balloon[] = [
+      ...Array.from({ length: numTargets }, () => makeBalloon(true, ms)),
+      ...Array.from({ length: numDistr }, () => makeBalloon(false, ms)),
+    ];
+    pendingTargetsRef.current = numTargets;
     setBalloons(batch);
   }, [ms, nd]);
 
@@ -251,9 +261,12 @@ export function TempoReacao({ difficulty, theme, onComplete }: TempoReacaoProps)
 
     if (balloon.isTarget) {
       const rt = Date.now() - balloon.spawnedAt;
+      correctCountRef.current++;
+      pendingTargetsRef.current = Math.max(0, pendingTargetsRef.current - 1);
       recordResult(true, rt);
-      // Spawn next batch after short delay
-      nextSpawnTimer.current = setTimeout(spawnBatch, 700);
+      if (pendingTargetsRef.current <= 0) {
+        nextSpawnTimer.current = setTimeout(spawnBatch, 700);
+      }
     } else {
       setWrongId(balloon.id);
       setTimeout(() => setWrongId(null), 500);
@@ -269,10 +282,13 @@ export function TempoReacao({ difficulty, theme, onComplete }: TempoReacaoProps)
     setBalloons((prev) => prev.filter((b) => b.id !== balloon.id));
 
     if (balloon.isTarget && started && !doneRef.current) {
+      pendingTargetsRef.current = Math.max(0, pendingTargetsRef.current - 1);
       setMissFlash(true);
       setTimeout(() => setMissFlash(false), 350);
       recordResult(false, null);
-      nextSpawnTimer.current = setTimeout(spawnBatch, 700);
+      if (pendingTargetsRef.current <= 0) {
+        nextSpawnTimer.current = setTimeout(spawnBatch, 700);
+      }
     }
   }
 
@@ -301,7 +317,7 @@ export function TempoReacao({ difficulty, theme, onComplete }: TempoReacaoProps)
       <div className={`rounded-2xl p-3 mb-3 ${cardClass}`}>
         <div className="flex justify-between items-center mb-2">
           <div>
-            <h2 className={`font-bold text-base ${titleClass}`}>🎈 Balões</h2>
+            <h2 className={`font-bold text-base ${titleClass}`}>🎯 Reflexos</h2>
             <p className={`text-xs ${subClass}`}>Toque apenas nos balões <span className="font-bold text-green-600">VERDES</span></p>
           </div>
         </div>

@@ -938,7 +938,7 @@ export function CertoOuErrado({
                     {currentScenario.emoji}
                   </div>
                   <p
-                    className={`text-base font-semibold leading-snug ${scenarioText}`}
+                    className={`text-xl font-bold leading-snug ${scenarioText}`}
                   >
                     {currentScenario.text}
                   </p>
@@ -955,7 +955,7 @@ export function CertoOuErrado({
                         }}
                         exit={{ opacity: 0, height: 0 }}
                         transition={{ duration: 0.2 }}
-                        className={`rounded-xl px-3 py-2 text-xs font-medium leading-snug ${
+                        className={`rounded-xl px-3 py-2 text-sm font-medium leading-snug ${
                           feedback.correct
                             ? theme === "GAMIFIED"
                               ? "bg-green-900/60 text-green-300"
@@ -982,7 +982,7 @@ export function CertoOuErrado({
                     whileTap={{ scale: 0.94 }}
                     onClick={() => handleAnswer("certo")}
                     disabled={feedback !== null}
-                    className={`flex-1 py-5 rounded-2xl font-black text-lg transition-opacity ${btnCerto} ${
+                    className={`flex-1 py-6 rounded-2xl font-black text-2xl transition-opacity ${btnCerto} ${
                       feedback !== null ? "opacity-50 cursor-not-allowed" : ""
                     }`}
                   >
@@ -992,7 +992,7 @@ export function CertoOuErrado({
                     whileTap={{ scale: 0.94 }}
                     onClick={() => handleAnswer("errado")}
                     disabled={feedback !== null}
-                    className={`flex-1 py-5 rounded-2xl font-black text-lg transition-opacity ${btnErrado} ${
+                    className={`flex-1 py-6 rounded-2xl font-black text-2xl transition-opacity ${btnErrado} ${
                       feedback !== null ? "opacity-50 cursor-not-allowed" : ""
                     }`}
                   >

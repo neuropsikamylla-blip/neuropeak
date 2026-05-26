@@ -205,7 +205,22 @@ export function CorridaContraOTempo({ difficulty, theme, onComplete }: Props) {
 
         <div className="flex justify-between items-center mb-2">
           <h2 className={`font-bold text-base ${titleClass}`}>⏱️ Corrida contra o Tempo</h2>
-          <span className={`text-sm font-mono font-bold tabular-nums ${timeLeft <= 5 ? "text-red-500 animate-pulse" : subClass}`}>{timeLeft}s</span>
+          <div className="flex items-center gap-3">
+            {/* Carrinho de compras */}
+            <div className="relative">
+              <svg width="32" height="28" viewBox="0 0 32 28" fill="none">
+                <path d="M3 3 L7 3 L10 18 L26 18 L29 8 L10 8" stroke={theme === "GAMIFIED" ? "#22d3ee" : "#ef4444"} strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round"/>
+                <circle cx="13" cy="22" r="2.5" fill={theme === "GAMIFIED" ? "#22d3ee" : "#ef4444"}/>
+                <circle cx="23" cy="22" r="2.5" fill={theme === "GAMIFIED" ? "#22d3ee" : "#ef4444"}/>
+              </svg>
+              {phase === "playing" && hitsRef.current > 0 && (
+                <span className="absolute -top-1 -right-1 bg-green-500 text-white text-[9px] font-bold rounded-full w-4 h-4 flex items-center justify-center">
+                  {hitsRef.current}
+                </span>
+              )}
+            </div>
+            <span className={`text-sm font-mono font-bold tabular-nums ${timeLeft <= 5 ? "text-red-500 animate-pulse" : subClass}`}>{timeLeft}s</span>
+          </div>
         </div>
 
         <div className="flex gap-0.5 mb-3">
@@ -244,27 +259,28 @@ export function CorridaContraOTempo({ difficulty, theme, onComplete }: Props) {
                 <div className={`h-full rounded-full transition-all duration-1000 ${timerColor}`} style={{ width: `${timerRatio * 100}%` }} />
               </div>
 
-              <div className="grid grid-cols-4 gap-1.5">
+              <div className="grid grid-cols-4 gap-2">
                 {items.map(item => (
                   <motion.button key={item.id} onPointerDown={() => handleTap(item)}
                     disabled={item.collected || roundEndedRef.current}
-                    className={`p-1.5 rounded-xl border-2 flex flex-col items-center gap-0.5 transition-all ${
+                    className={`p-2 rounded-xl border-2 flex flex-col items-center gap-1 transition-all ${
                       item.collected ? "border-green-500 bg-green-50 opacity-40" :
                       wrongFlash.has(item.id) ? "border-red-500 bg-red-100" :
                       theme === "GAMIFIED" ? "border-gray-600 bg-gray-700 active:scale-90" : "border-slate-200 bg-white active:scale-90 shadow-sm"
                     }`}
-                    animate={wrongFlash.has(item.id) ? { x: [-3, 3, -3, 3, 0] } : {}}
+                    animate={wrongFlash.has(item.id) ? { x: [-3, 3, -3, 3, 0] } : item.collected ? { scale: [1, 1.15, 1] } : {}}
                     transition={{ duration: 0.25 }}
                   >
-                    <span className="text-xl">{item.emoji}</span>
-                    <span className={`text-[10px] text-center leading-none font-medium ${theme === "GAMIFIED" ? "text-gray-300" : "text-gray-600"}`}>
+                    <span className="text-3xl">{item.emoji}</span>
+                    <span className={`text-xs text-center leading-tight font-semibold ${theme === "GAMIFIED" ? "text-gray-200" : "text-gray-700"}`}>
                       {item.name}
                     </span>
+                    {item.collected && <span className="text-sm text-green-600 font-bold">🛒</span>}
                   </motion.button>
                 ))}
               </div>
-              <p className={`text-xs text-center mt-2 ${subClass}`}>
-                {items.filter(i => i.isTarget && !i.collected).length} restantes de {totalRef.current}
+              <p className={`text-sm text-center mt-2 font-medium ${subClass}`}>
+                🛒 {hitsRef.current}/{totalRef.current} coletados
               </p>
             </motion.div>
           )}
