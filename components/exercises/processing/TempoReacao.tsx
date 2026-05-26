@@ -380,7 +380,7 @@ export function TempoReacao({ difficulty, theme, onComplete }: TempoReacaoProps)
                 cursor: "pointer",
                 touchAction: "manipulation",
                 pointerEvents: "auto",
-                zIndex: 10,
+                zIndex: balloon.isTarget ? 20 : 10,
               }}
               onPointerDown={() => handleBalloonClick(balloon)}
             >

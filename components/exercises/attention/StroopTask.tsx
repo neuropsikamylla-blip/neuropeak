@@ -65,7 +65,7 @@ function generateTrial(difficulty: number): TrialItem {
 }
 
 function initialTimeMs(difficulty: number): number {
-  return Math.max(MIN_TIME_MS, Math.round(5000 - (difficulty - 1) * 460));
+  return Math.max(MIN_TIME_MS, Math.round(4000 - (difficulty - 1) * 400));
 }
 
 function correctAnswer(item: TrialItem): string {
@@ -364,6 +364,7 @@ export function StroopTask({ difficulty, theme, onComplete }: StroopTaskProps) {
   if (phase === "tutorial") {
     return (
       <TutorialStep
+        key={tutorialStep}
         step={tutorialStep}
         item={TUTORIAL_EXAMPLES[tutorialStep]}
         theme={theme}

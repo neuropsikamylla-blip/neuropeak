@@ -686,8 +686,283 @@ function VestuarioSvg({ id, size }: { id: string; size: number }) {
   }
 }
 
+function BrinquedoSvg({ id, size }: { id: string; size: number }) {
+  const s = size;
+  switch (id) {
+    // PELÚCIAS
+    case "bq-ursinho":
+      return (
+        <svg width={s} height={s} viewBox="0 0 40 40" fill="none">
+          <ellipse cx="20" cy="27" rx="11" ry="9" fill="#C8956C"/>
+          <circle cx="20" cy="15" r="8" fill="#C8956C"/>
+          <circle cx="13" cy="10" r="4" fill="#C8956C"/>
+          <circle cx="27" cy="10" r="4" fill="#C8956C"/>
+          <circle cx="13" cy="10" r="2.5" fill="#D4A57A"/>
+          <circle cx="27" cy="10" r="2.5" fill="#D4A57A"/>
+          <ellipse cx="20" cy="17" rx="4" ry="3" fill="#D4A57A"/>
+          <circle cx="17.5" cy="13.5" r="1.8" fill="#2C1810"/>
+          <circle cx="22.5" cy="13.5" r="1.8" fill="#2C1810"/>
+          <circle cx="18" cy="13" r="0.6" fill="white"/>
+          <circle cx="23" cy="13" r="0.6" fill="white"/>
+          <ellipse cx="20" cy="18" rx="2" ry="1.5" fill="#9B6040"/>
+          <ellipse cx="20" cy="27" rx="6" ry="5" fill="#D4A57A"/>
+          <ellipse cx="10" cy="24" rx="3" ry="5" fill="#C8956C"/>
+          <ellipse cx="30" cy="24" rx="3" ry="5" fill="#C8956C"/>
+          <ellipse cx="15" cy="33" rx="4" ry="4" fill="#C8956C"/>
+          <ellipse cx="25" cy="33" rx="4" ry="4" fill="#C8956C"/>
+        </svg>
+      );
+    case "bq-panda":
+      return (
+        <svg width={s} height={s} viewBox="0 0 40 40" fill="none">
+          <ellipse cx="20" cy="27" rx="11" ry="9" fill="#F0F0F0"/>
+          <circle cx="20" cy="15" r="8" fill="#F0F0F0"/>
+          <circle cx="13" cy="10" r="4" fill="#2C2C2C"/>
+          <circle cx="27" cy="10" r="4" fill="#2C2C2C"/>
+          <ellipse cx="17" cy="14.5" rx="3.5" ry="3.5" fill="#2C2C2C"/>
+          <ellipse cx="23" cy="14.5" rx="3.5" ry="3.5" fill="#2C2C2C"/>
+          <circle cx="17" cy="14.5" r="1.5" fill="#1A1A1A"/>
+          <circle cx="23" cy="14.5" r="1.5" fill="#1A1A1A"/>
+          <circle cx="17.5" cy="14" r="0.5" fill="white"/>
+          <circle cx="23.5" cy="14" r="0.5" fill="white"/>
+          <ellipse cx="20" cy="18.5" rx="3" ry="2.5" fill="#F0F0F0"/>
+          <ellipse cx="20" cy="18.5" rx="1.5" ry="1" fill="#2C2C2C"/>
+          <ellipse cx="20" cy="27" rx="6" ry="5" fill="#F0F0F0"/>
+          <ellipse cx="10" cy="24" rx="3" ry="5" fill="#2C2C2C"/>
+          <ellipse cx="30" cy="24" rx="3" ry="5" fill="#2C2C2C"/>
+          <ellipse cx="15" cy="33" rx="4" ry="4" fill="#F0F0F0"/>
+          <ellipse cx="25" cy="33" rx="4" ry="4" fill="#F0F0F0"/>
+        </svg>
+      );
+    case "bq-coelho":
+      return (
+        <svg width={s} height={s} viewBox="0 0 40 40" fill="none">
+          <ellipse cx="20" cy="27" rx="10" ry="9" fill="#F5F5F5"/>
+          <circle cx="20" cy="16" r="7" fill="#F5F5F5"/>
+          <ellipse cx="15" cy="7" rx="3" ry="7" fill="#F5F5F5"/>
+          <ellipse cx="25" cy="7" rx="3" ry="7" fill="#F5F5F5"/>
+          <ellipse cx="15" cy="7" rx="1.5" ry="5.5" fill="#FFB3BA"/>
+          <ellipse cx="25" cy="7" rx="1.5" ry="5.5" fill="#FFB3BA"/>
+          <circle cx="17.5" cy="15.5" r="1.5" fill="#2C1810"/>
+          <circle cx="22.5" cy="15.5" r="1.5" fill="#2C1810"/>
+          <circle cx="18" cy="15" r="0.5" fill="white"/>
+          <ellipse cx="20" cy="18" rx="2.5" ry="2" fill="#FFB3BA"/>
+          <ellipse cx="10" cy="29" rx="3" ry="5" fill="#F5F5F5"/>
+          <ellipse cx="30" cy="29" rx="3" ry="5" fill="#F5F5F5"/>
+          <ellipse cx="15" cy="34" rx="4" ry="3.5" fill="#F5F5F5"/>
+          <ellipse cx="25" cy="34" rx="4" ry="3.5" fill="#F5F5F5"/>
+        </svg>
+      );
+    case "bq-boneca":
+      return (
+        <svg width={s} height={s} viewBox="0 0 40 40" fill="none">
+          <circle cx="20" cy="11" r="7" fill="#FFD5A8"/>
+          <ellipse cx="20" cy="7" rx="7" ry="5" fill="#FFD700"/>
+          <ellipse cx="13" cy="13" rx="2" ry="5" fill="#FFD700"/>
+          <ellipse cx="27" cy="13" rx="2" ry="5" fill="#FFD700"/>
+          <circle cx="17.5" cy="10.5" r="1.5" fill="#2C1810"/>
+          <circle cx="22.5" cy="10.5" r="1.5" fill="#2C1810"/>
+          <circle cx="18" cy="10" r="0.5" fill="white"/>
+          <path d="M18 14 Q20 15.5 22 14" stroke="#E07070" strokeWidth="1" strokeLinecap="round" fill="none"/>
+          <ellipse cx="17" cy="12.5" rx="1.5" ry="0.8" fill="#FFB3B3" opacity="0.6"/>
+          <ellipse cx="23" cy="12.5" rx="1.5" ry="0.8" fill="#FFB3B3" opacity="0.6"/>
+          <path d="M14 19 Q20 17 26 19 L28 36 L12 36 Z" fill="#FF6B9D"/>
+          <path d="M14 19 Q20 21 26 19" stroke="#E0508A" strokeWidth="1.5" fill="none"/>
+          <ellipse cx="11" cy="24" rx="2.5" ry="5" fill="#FFD5A8"/>
+          <ellipse cx="29" cy="24" rx="2.5" ry="5" fill="#FFD5A8"/>
+        </svg>
+      );
+    // VEÍCULOS
+    case "bq-carrinho":
+      return (
+        <svg width={s} height={s} viewBox="0 0 40 40" fill="none">
+          <rect x="5" y="19" width="30" height="12" rx="3" fill="#E53935"/>
+          <path d="M8 19 Q10 11 15 10 L25 10 Q30 11 32 19 Z" fill="#EF5350"/>
+          <rect x="12" y="12" width="7" height="6" rx="1.5" fill="#B3E5FC"/>
+          <rect x="21" y="12" width="7" height="6" rx="1.5" fill="#B3E5FC"/>
+          <circle cx="11" cy="31" r="5" fill="#212121"/>
+          <circle cx="29" cy="31" r="5" fill="#212121"/>
+          <circle cx="11" cy="31" r="2.5" fill="#616161"/>
+          <circle cx="29" cy="31" r="2.5" fill="#616161"/>
+          <rect x="32" y="21" width="4" height="3" rx="1" fill="#FFF176"/>
+          <rect x="4" y="21" width="2" height="2" rx="0.5" fill="#EF9A9A"/>
+        </svg>
+      );
+    case "bq-aviao":
+      return (
+        <svg width={s} height={s} viewBox="0 0 40 40" fill="none">
+          <ellipse cx="20" cy="21" rx="14" ry="5" fill="#1565C0"/>
+          <path d="M16 20 L4 27 L8 29 L20 23 Z" fill="#1E88E5"/>
+          <path d="M22 19 L36 24 L32 26 L20 22 Z" fill="#1E88E5"/>
+          <path d="M9 19 L5 13 L8 13 L12 20 Z" fill="#0D47A1"/>
+          <circle cx="17" cy="20" r="1.5" fill="#B3E5FC"/>
+          <circle cx="22" cy="21" r="1.5" fill="#B3E5FC"/>
+          <ellipse cx="32" cy="23" rx="3" ry="2" fill="#42A5F5"/>
+        </svg>
+      );
+    case "bq-barco":
+      return (
+        <svg width={s} height={s} viewBox="0 0 40 40" fill="none">
+          <path d="M5 25 Q20 33 35 25 L32 21 L8 21 Z" fill="#E53935"/>
+          <path d="M8 21 L32 21 L30 17 L10 17 Z" fill="#FFFFFF"/>
+          <rect x="19" y="5" width="2" height="16" fill="#795548"/>
+          <path d="M21 6 L33 16 L21 16 Z" fill="#EEEEEE" stroke="#BDBDBD" strokeWidth="0.5"/>
+          <circle cx="24" cy="19" r="2" fill="#B3E5FC" stroke="#BDBDBD" strokeWidth="0.5"/>
+          <path d="M4 29 Q10 27 16 29 Q22 31 28 29 Q34 27 37 29" stroke="#64B5F6" strokeWidth="1.5" fill="none" strokeLinecap="round"/>
+        </svg>
+      );
+    case "bq-trem":
+      return (
+        <svg width={s} height={s} viewBox="0 0 40 40" fill="none">
+          <rect x="5" y="15" width="30" height="16" rx="3" fill="#388E3C"/>
+          <rect x="5" y="15" width="30" height="5" rx="3" fill="#2E7D32"/>
+          <rect x="9" y="19" width="6" height="6" rx="1.5" fill="#B3E5FC"/>
+          <rect x="17" y="19" width="6" height="6" rx="1.5" fill="#B3E5FC"/>
+          <rect x="25" y="19" width="6" height="6" rx="1.5" fill="#B3E5FC"/>
+          <rect x="7" y="8" width="5" height="8" rx="1" fill="#1B5E20"/>
+          <ellipse cx="9.5" cy="8" rx="3.5" ry="1.5" fill="#1B5E20"/>
+          <circle cx="11" cy="32" r="4" fill="#212121"/>
+          <circle cx="20" cy="32" r="4" fill="#212121"/>
+          <circle cx="29" cy="32" r="4" fill="#212121"/>
+          <circle cx="11" cy="32" r="2" fill="#616161"/>
+          <circle cx="20" cy="32" r="2" fill="#616161"/>
+          <circle cx="29" cy="32" r="2" fill="#616161"/>
+          <rect x="3" y="35" width="34" height="2" rx="1" fill="#8D6E63"/>
+        </svg>
+      );
+    // JOGOS
+    case "bq-dado":
+      return (
+        <svg width={s} height={s} viewBox="0 0 40 40" fill="none">
+          <path d="M20 5 L35 13 L35 28 L20 36 L5 28 L5 13 Z" fill="#EEEEEE"/>
+          <path d="M20 5 L35 13 L20 21 L5 13 Z" fill="#F5F5F5"/>
+          <path d="M20 21 L35 13 L35 28 L20 36 Z" fill="#E0E0E0"/>
+          <path d="M20 21 L5 13 L5 28 L20 36 Z" fill="#BDBDBD"/>
+          <circle cx="16" cy="13" r="1.5" fill="#212121"/>
+          <circle cx="24" cy="13" r="1.5" fill="#212121"/>
+          <circle cx="20" cy="17" r="1.5" fill="#212121"/>
+          <circle cx="27" cy="19" r="1.2" fill="#212121"/>
+          <circle cx="31" cy="23" r="1.2" fill="#212121"/>
+          <circle cx="9" cy="19" r="1.2" fill="#212121"/>
+          <circle cx="13" cy="23" r="1.2" fill="#212121"/>
+          <circle cx="11" cy="27" r="1.2" fill="#212121"/>
+        </svg>
+      );
+    case "bq-cartas":
+      return (
+        <svg width={s} height={s} viewBox="0 0 40 40" fill="none">
+          <rect x="16" y="8" width="16" height="22" rx="2" fill="#1565C0" transform="rotate(10 24 19)"/>
+          <rect x="17" y="9" width="14" height="20" rx="1.5" fill="#1E88E5" transform="rotate(10 24 19)"/>
+          <rect x="8" y="9" width="16" height="22" rx="2" fill="#FFFFFF" stroke="#E0E0E0" strokeWidth="0.8"/>
+          <path d="M16,22 C16,19 13,19 13,22 C13,25 16,27 16,27 C16,27 19,25 19,22 C19,19 16,19 16,22 Z" fill="#E53935"/>
+          <path d="M10 13 L11.5 10 L13 13 M10.5 12 L12.5 12" stroke="#E53935" strokeWidth="0.9" fill="none" strokeLinecap="round"/>
+        </svg>
+      );
+    case "bq-puzzle":
+      return (
+        <svg width={s} height={s} viewBox="0 0 40 40" fill="none">
+          <path d="M7 7 L17 7 Q17 4 19 4 Q21 4 21 7 L31 7 L31 17 Q34 17 34 19 Q34 21 31 21 L31 31 L21 31 Q21 34 19 34 Q17 34 17 31 L7 31 L7 21 Q4 21 4 19 Q4 17 7 17 Z" fill="#FF7043"/>
+          <path d="M11 11 L27 11 L27 27 L11 27 Z" fill="#FF8A65" opacity="0.4"/>
+        </svg>
+      );
+    case "bq-lego":
+      return (
+        <svg width={s} height={s} viewBox="0 0 40 40" fill="none">
+          <rect x="6" y="20" width="28" height="14" rx="2" fill="#FDD835"/>
+          <rect x="6" y="18" width="28" height="4" rx="1" fill="#F9A825"/>
+          <ellipse cx="13" cy="18" rx="4" ry="4" fill="#FDD835" stroke="#F9A825" strokeWidth="0.8"/>
+          <ellipse cx="20" cy="18" rx="4" ry="4" fill="#FDD835" stroke="#F9A825" strokeWidth="0.8"/>
+          <ellipse cx="27" cy="18" rx="4" ry="4" fill="#FDD835" stroke="#F9A825" strokeWidth="0.8"/>
+          <ellipse cx="13" cy="15" rx="4" ry="2" fill="#FDD835" stroke="#F9A825" strokeWidth="0.5"/>
+          <ellipse cx="20" cy="15" rx="4" ry="2" fill="#FDD835" stroke="#F9A825" strokeWidth="0.5"/>
+          <ellipse cx="27" cy="15" rx="4" ry="2" fill="#FDD835" stroke="#F9A825" strokeWidth="0.5"/>
+        </svg>
+      );
+    // ELETRÔNICOS
+    case "bq-controle":
+      return (
+        <svg width={s} height={s} viewBox="0 0 40 40" fill="none">
+          <path d="M6 18 Q4 26 8 30 Q12 34 16 32 L20 28 L24 32 Q28 34 32 30 Q36 26 34 18 Q32 12 26 12 L14 12 Q8 12 6 18 Z" fill="#212121"/>
+          <rect x="10" y="19" width="8" height="2.5" rx="1" fill="#424242"/>
+          <rect x="13" y="16" width="2.5" height="8" rx="1" fill="#424242"/>
+          <circle cx="28" cy="18" r="2" fill="#EF5350"/>
+          <circle cx="24" cy="22" r="2" fill="#66BB6A"/>
+          <circle cx="32" cy="22" r="2" fill="#29B6F6"/>
+          <circle cx="28" cy="26" r="2" fill="#FDD835"/>
+          <rect x="17" y="20" width="3" height="2" rx="0.5" fill="#616161"/>
+          <rect x="21" y="20" width="3" height="2" rx="0.5" fill="#616161"/>
+          <circle cx="14" cy="26" r="3" fill="#424242"/>
+          <circle cx="26" cy="28" r="3" fill="#424242"/>
+        </svg>
+      );
+    case "bq-robo":
+      return (
+        <svg width={s} height={s} viewBox="0 0 40 40" fill="none">
+          <rect x="19" y="2" width="2" height="5" fill="#90A4AE"/>
+          <circle cx="20" cy="2" r="2" fill="#EF5350"/>
+          <rect x="12" y="7" width="16" height="12" rx="2" fill="#78909C"/>
+          <rect x="14" y="10" width="4" height="4" rx="1" fill="#64FFDA"/>
+          <rect x="22" y="10" width="4" height="4" rx="1" fill="#64FFDA"/>
+          <rect x="15" y="16" width="10" height="1.5" rx="0.5" fill="#546E7A"/>
+          <rect x="15" y="16" width="2" height="1.5" fill="#64FFDA"/>
+          <rect x="19" y="16" width="2" height="1.5" fill="#64FFDA"/>
+          <rect x="17" y="19" width="6" height="3" rx="1" fill="#607D8B"/>
+          <rect x="9" y="22" width="22" height="13" rx="2" fill="#78909C"/>
+          <rect x="12" y="24" width="16" height="8" rx="1" fill="#546E7A"/>
+          <circle cx="16" cy="26" r="1.5" fill="#EF5350"/>
+          <circle cx="20" cy="26" r="1.5" fill="#FDD835"/>
+          <circle cx="24" cy="26" r="1.5" fill="#66BB6A"/>
+          <path d="M14 30 L26 30" stroke="#64FFDA" strokeWidth="1" strokeLinecap="round"/>
+          <rect x="3" y="22" width="5" height="10" rx="2" fill="#607D8B"/>
+          <rect x="32" y="22" width="5" height="10" rx="2" fill="#607D8B"/>
+          <rect x="12" y="35" width="6" height="4" rx="1" fill="#607D8B"/>
+          <rect x="22" y="35" width="6" height="4" rx="1" fill="#607D8B"/>
+        </svg>
+      );
+    case "bq-drone":
+      return (
+        <svg width={s} height={s} viewBox="0 0 40 40" fill="none">
+          <rect x="14" y="14" width="12" height="12" rx="2" fill="#37474F"/>
+          <circle cx="20" cy="20" r="3" fill="#F44336"/>
+          <line x1="14" y1="14" x2="5" y2="5" stroke="#546E7A" strokeWidth="3" strokeLinecap="round"/>
+          <line x1="26" y1="14" x2="35" y2="5" stroke="#546E7A" strokeWidth="3" strokeLinecap="round"/>
+          <line x1="14" y1="26" x2="5" y2="35" stroke="#546E7A" strokeWidth="3" strokeLinecap="round"/>
+          <line x1="26" y1="26" x2="35" y2="35" stroke="#546E7A" strokeWidth="3" strokeLinecap="round"/>
+          <ellipse cx="5" cy="5" rx="5" ry="1.5" fill="#90A4AE" transform="rotate(-45 5 5)"/>
+          <ellipse cx="35" cy="5" rx="5" ry="1.5" fill="#90A4AE" transform="rotate(45 35 5)"/>
+          <ellipse cx="5" cy="35" rx="5" ry="1.5" fill="#90A4AE" transform="rotate(45 5 35)"/>
+          <ellipse cx="35" cy="35" rx="5" ry="1.5" fill="#90A4AE" transform="rotate(-45 35 35)"/>
+          <circle cx="5" cy="5" r="2" fill="#263238"/>
+          <circle cx="35" cy="5" r="2" fill="#263238"/>
+          <circle cx="5" cy="35" r="2" fill="#263238"/>
+          <circle cx="35" cy="35" r="2" fill="#263238"/>
+        </svg>
+      );
+    case "bq-tablet":
+      return (
+        <svg width={s} height={s} viewBox="0 0 40 40" fill="none">
+          <rect x="5" y="3" width="30" height="36" rx="3" fill="#37474F"/>
+          <rect x="7" y="5" width="26" height="30" rx="1" fill="#1565C0"/>
+          <rect x="8" y="6" width="12" height="9" rx="0.5" fill="#4CAF50"/>
+          <rect x="21" y="6" width="12" height="9" rx="0.5" fill="#FF7043"/>
+          <rect x="8" y="16" width="12" height="9" rx="0.5" fill="#FDD835"/>
+          <rect x="21" y="16" width="12" height="9" rx="0.5" fill="#CE93D8"/>
+          <circle cx="14" cy="10.5" r="2.5" fill="#1B5E20"/>
+          <circle cx="27" cy="10.5" r="2.5" fill="#BF360C"/>
+          <circle cx="14" cy="20.5" r="2.5" fill="#F57F17"/>
+          <circle cx="27" cy="20.5" r="2.5" fill="#6A1B9A"/>
+          <circle cx="20" cy="37" r="1.5" fill="#546E7A"/>
+          <circle cx="20" cy="4" r="1" fill="#546E7A"/>
+        </svg>
+      );
+    default:
+      return null;
+  }
+}
+
 export function ItemSvg({ id, size = 36 }: { id: string; size?: number }) {
   if (id.startsWith("an-")) return <AnimalSvg id={id} size={size} />;
   if (id.startsWith("vs-")) return <VestuarioSvg id={id} size={size} />;
+  if (id.startsWith("bq-")) return <BrinquedoSvg id={id} size={size} />;
   return <ProductSvg id={id} size={size} />;
 }

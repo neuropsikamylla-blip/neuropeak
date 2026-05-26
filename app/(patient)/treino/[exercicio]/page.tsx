@@ -32,9 +32,6 @@ const Labirinto           = dynamic(() => import("@/components/exercises/executi
 const OrdemHistoria       = dynamic(() => import("@/components/exercises/executive/OrdemHistoria").then(m => ({ default: m.OrdemHistoria })), { loading: ExerciseLoader });
 const CertoOuErrado       = dynamic(() => import("@/components/exercises/processing/CertoOuErrado").then(m => ({ default: m.CertoOuErrado })), { loading: ExerciseLoader });
 const AntesDepois         = dynamic(() => import("@/components/exercises/attention/AntesDepois").then(m => ({ default: m.AntesDepois })), { loading: ExerciseLoader });
-const AtencaoSeletiva     = dynamic(() => import("@/components/exercises/attention/AtencaoSeletiva").then(m => ({ default: m.AtencaoSeletiva })), { loading: ExerciseLoader });
-const AtencaoAlternada    = dynamic(() => import("@/components/exercises/attention/AtencaoAlternada").then(m => ({ default: m.AtencaoAlternada })), { loading: ExerciseLoader });
-const AtencaoSustentada   = dynamic(() => import("@/components/exercises/attention/AtencaoSustentada").then(m => ({ default: m.AtencaoSustentada })), { loading: ExerciseLoader });
 const Semaforo            = dynamic(() => import("@/components/exercises/processing/Semaforo").then(m => ({ default: m.Semaforo })), { loading: ExerciseLoader });
 const DesafioSupermercado = dynamic(() => import("@/components/exercises/memory/DesafioSupermercado").then(m => ({ default: m.DesafioSupermercado })), { loading: ExerciseLoader });
 const DesafioCidade       = dynamic(() => import("@/components/exercises/executive/DesafioCidade").then(m => ({ default: m.DesafioCidade })), { loading: ExerciseLoader });
@@ -152,24 +149,6 @@ const EXERCISE_INSTRUCTIONS: Record<string, string[]> = {
     "A pergunta indica: O que vem ANTES? ou O que vem DEPOIS?",
     "Escolha a opção correta entre as 4 alternativas.",
     "Tente responder antes que o tempo acabe — rapidez e precisão valem!",
-  ],
-  "atencao-seletiva": [
-    "Uma palavra alvo aparece no topo da tela.",
-    "Localize essa palavra entre as outras e toque nela.",
-    "As palavras distratoras são similares — leia com atenção.",
-    "Seja rápido: o tempo de resposta é medido!",
-  ],
-  "atencao-alternada": [
-    "Você verá um objeto ou ser vivo e deve classificá-lo conforme a REGRA ATUAL.",
-    "A regra muda durante o exercício: ora é 'Animal ou Objeto?', ora é 'Grande ou Pequeno?'",
-    "Sempre verifique qual regra está ativa antes de responder.",
-    "Adaptar-se à mudança de regra é o treino principal!",
-  ],
-  "atencao-sustentada": [
-    "Letras vão aparecer uma por vez, rapidamente.",
-    "Toque a tela APENAS quando aparecer a letra A.",
-    "Ignore todas as outras letras — inclusive letras parecidas com A.",
-    "Mantenha o foco durante todo o exercício — a atenção não pode vacilar!",
   ],
   "semaforo": [
     "Três semáforos aparecem na tela e piscam ao mesmo tempo.",
@@ -405,9 +384,6 @@ export default function ExercicioPage() {
       case "ordem-historia": return <OrdemHistoria {...props} />;
       case "certo-ou-errado": return <CertoOuErrado {...props} patientAge={patientAge} />;
       case "antes-depois": return <AntesDepois {...props} />;
-      case "atencao-seletiva": return <AtencaoSeletiva {...props} />;
-      case "atencao-alternada": return <AtencaoAlternada {...props} />;
-      case "atencao-sustentada": return <AtencaoSustentada {...props} />;
       case "semaforo": return <Semaforo {...props} />;
       case "desafio-supermercado": return <DesafioSupermercado {...props} />;
       case "desafio-cidade": return <DesafioCidade {...props} />;

@@ -282,11 +282,11 @@ export function TorreHanoi({ difficulty, theme, onComplete }: TorreHanoiProps) {
   }
 
   const bgClass = theme === "GAMIFIED" ? "bg-gray-950" : theme === "COLORFUL" ? "bg-gradient-to-br from-yellow-50 to-orange-50" : "bg-gray-50";
-  const maxDiscWidth = 160;
+  const maxDiscWidth = 180;
 
   return (
     <div className={`min-h-screen flex flex-col items-center justify-center p-4 ${bgClass}`}>
-      <div className={`w-full max-w-xl rounded-2xl p-6 ${theme === "GAMIFIED" ? "bg-gray-800 border border-cyan-500/30" : "bg-white shadow-lg"}`}>
+      <div className={`w-full max-w-2xl rounded-2xl p-6 ${theme === "GAMIFIED" ? "bg-gray-800 border border-cyan-500/30" : "bg-white shadow-lg"}`}>
         {/* Header */}
         <div className="flex justify-between items-center mb-3">
           <div>
@@ -322,7 +322,7 @@ export function TorreHanoi({ difficulty, theme, onComplete }: TorreHanoiProps) {
         </p>
 
         {/* Pegs area */}
-        <div className="flex justify-around items-end mb-4" style={{ height: "200px" }}>
+        <div className="flex justify-around items-end mb-4" style={{ height: "340px" }}>
           {pegs.map((peg, pegIdx) => (
             <div
               key={pegIdx}
@@ -332,23 +332,23 @@ export function TorreHanoi({ difficulty, theme, onComplete }: TorreHanoiProps) {
             >
               <div
                 className={`absolute bottom-0 rounded-lg ${selected === pegIdx ? "bg-yellow-400" : theme === "GAMIFIED" ? "bg-gray-600" : "bg-gray-400"}`}
-                style={{ width: `${maxDiscWidth + 20}px`, height: "8px" }}
+                style={{ width: `${maxDiscWidth + 20}px`, height: "10px" }}
               />
               <div
                 className={`absolute rounded-full ${theme === "GAMIFIED" ? "bg-gray-500" : "bg-gray-400"}`}
-                style={{ width: "8px", height: "180px", bottom: "8px" }}
+                style={{ width: "10px", height: "320px", bottom: "10px" }}
               />
-              <div className="absolute bottom-2 flex flex-col-reverse items-center gap-0.5">
+              <div className="absolute bottom-3 flex flex-col-reverse items-center gap-1">
                 {peg.map((disc, discIdx) => {
                   const width = (disc / discCount) * maxDiscWidth + 20;
                   const isTop = discIdx === peg.length - 1;
                   return (
                     <motion.div
                       key={disc}
-                      className="rounded-lg flex items-center justify-center text-white text-xs font-bold"
+                      className="rounded-lg flex items-center justify-center text-white text-sm font-bold"
                       style={{
                         width: `${width}px`,
-                        height: "28px",
+                        height: "42px",
                         backgroundColor: DISC_COLORS[disc - 1] ?? "#666",
                         opacity: selected === pegIdx && isTop ? 0.6 : 1,
                         boxShadow: isTop && selected === pegIdx ? "0 0 12px rgba(250,204,21,0.8)" : undefined,

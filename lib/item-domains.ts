@@ -79,41 +79,33 @@ export const SUPERMERCADO_DOMAIN: FlexDomain = {
   ],
 };
 
-export const ANIMAIS_DOMAIN: FlexDomain = {
-  id: "animais",
-  name: "Animais",
-  collectVerb: "Agrupe",
+export const BRINQUEDOS_DOMAIN: FlexDomain = {
+  id: "brinquedos",
+  name: "Brinquedos",
+  collectVerb: "Separe",
   categories: [
-    { id: "fazenda",   label: "Fazenda",   emoji: "🐄" },
-    { id: "selva",     label: "Selva",     emoji: "🦁" },
-    { id: "aquatico",  label: "Aquático",  emoji: "🐠" },
-    { id: "domestico", label: "Doméstico", emoji: "🐶" },
+    { id: "pelucias",    label: "Pelúcias",    emoji: "🧸" },
+    { id: "veiculos",    label: "Veículos",    emoji: "🚗" },
+    { id: "jogos",       label: "Jogos",       emoji: "🎲" },
+    { id: "eletronicos", label: "Eletrônicos", emoji: "🎮" },
   ],
   items: [
-    { id: "an-vaca",      name: "Vaca",      cat: "fazenda",   price: 8.00 },
-    { id: "an-porco",     name: "Porco",     cat: "fazenda",   price: 6.00 },
-    { id: "an-galinha",   name: "Galinha",   cat: "fazenda",   price: 5.00 },
-    { id: "an-cavalo",    name: "Cavalo",    cat: "fazenda",   price: 12.00 },
-    { id: "an-ovelha",    name: "Ovelha",    cat: "fazenda",   price: 7.00 },
-    { id: "an-pato",      name: "Pato",      cat: "fazenda",   price: 4.00 },
-    { id: "an-leao",      name: "Leão",      cat: "selva",     price: 15.00 },
-    { id: "an-elefante",  name: "Elefante",  cat: "selva",     price: 18.00 },
-    { id: "an-macaco",    name: "Macaco",    cat: "selva",     price: 9.00 },
-    { id: "an-girafa",    name: "Girafa",    cat: "selva",     price: 14.00 },
-    { id: "an-zebra",     name: "Zebra",     cat: "selva",     price: 11.00 },
-    { id: "an-tigre",     name: "Tigre",     cat: "selva",     price: 16.00 },
-    { id: "an-peixe",     name: "Peixe",     cat: "aquatico",  price: 6.00 },
-    { id: "an-golfinho",  name: "Golfinho",  cat: "aquatico",  price: 13.00 },
-    { id: "an-polvo",     name: "Polvo",     cat: "aquatico",  price: 10.00 },
-    { id: "an-tartaruga", name: "Tartaruga", cat: "aquatico",  price: 8.00 },
-    { id: "an-tubarao",   name: "Tubarão",   cat: "aquatico",  price: 17.00 },
-    { id: "an-caranguejo",name: "Caranguejo",cat: "aquatico",  price: 7.00 },
-    { id: "an-cachorro",  name: "Cachorro",  cat: "domestico", price: 9.00 },
-    { id: "an-gato",      name: "Gato",      cat: "domestico", price: 7.00 },
-    { id: "an-coelho",    name: "Coelho",    cat: "domestico", price: 5.00 },
-    { id: "an-papagaio",  name: "Papagaio",  cat: "domestico", price: 11.00 },
-    { id: "an-hamster",   name: "Hamster",   cat: "domestico", price: 4.00 },
-    { id: "an-calopsita", name: "Calopsita", cat: "domestico", price: 8.00 },
+    { id: "bq-ursinho",  name: "Ursinho",        cat: "pelucias",    price: 29.90 },
+    { id: "bq-panda",    name: "Panda",          cat: "pelucias",    price: 34.90 },
+    { id: "bq-coelho",   name: "Coelho",         cat: "pelucias",    price: 24.90 },
+    { id: "bq-boneca",   name: "Boneca",         cat: "pelucias",    price: 44.90 },
+    { id: "bq-carrinho", name: "Carrinho",       cat: "veiculos",    price: 19.90 },
+    { id: "bq-aviao",    name: "Aviãozinho",     cat: "veiculos",    price: 24.90 },
+    { id: "bq-barco",    name: "Barquinho",      cat: "veiculos",    price: 22.90 },
+    { id: "bq-trem",     name: "Trem",           cat: "veiculos",    price: 39.90 },
+    { id: "bq-dado",     name: "Dado",           cat: "jogos",       price: 9.90 },
+    { id: "bq-cartas",   name: "Baralho",        cat: "jogos",       price: 14.90 },
+    { id: "bq-puzzle",   name: "Quebra-cabeça",  cat: "jogos",       price: 34.90 },
+    { id: "bq-lego",     name: "Lego",           cat: "jogos",       price: 49.90 },
+    { id: "bq-controle", name: "Controle",       cat: "eletronicos", price: 79.90 },
+    { id: "bq-robo",     name: "Robozinho",      cat: "eletronicos", price: 89.90 },
+    { id: "bq-drone",    name: "Drone",          cat: "eletronicos", price: 129.90 },
+    { id: "bq-tablet",   name: "Tablet",         cat: "eletronicos", price: 149.90 },
   ],
 };
 
@@ -155,7 +147,7 @@ export const VESTUARIO_DOMAIN: FlexDomain = {
   ],
 };
 
-export const ALL_DOMAINS: FlexDomain[] = [SUPERMERCADO_DOMAIN, ANIMAIS_DOMAIN, VESTUARIO_DOMAIN];
+export const ALL_DOMAINS: FlexDomain[] = [SUPERMERCADO_DOMAIN, BRINQUEDOS_DOMAIN, VESTUARIO_DOMAIN];
 
 export function pickRandomDomain(): FlexDomain {
   return ALL_DOMAINS[Math.floor(Math.random() * ALL_DOMAINS.length)];
