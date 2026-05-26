@@ -101,7 +101,7 @@ export default function TherapistLayout({ children }: { children: React.ReactNod
             </div>
           </div>
           <div className="flex items-center gap-2 mb-1">
-            <AppUpdateButton iconClass="w-4 h-4" buttonClass="text-gray-500 hover:bg-gray-100" />
+            <AppUpdateButton iconClass="w-4 h-4" buttonClass="text-gray-500 hover:bg-gray-100" showVersion />
           </div>
           <Button
             variant="ghost"
