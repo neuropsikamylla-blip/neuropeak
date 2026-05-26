@@ -6,6 +6,7 @@ import { calculateExerciseScore } from "@/lib/scoring";
 import { useExerciseProgress } from "@/components/exercises/ExerciseWrapper";
 import { TutorialBase } from "@/components/exercises/TutorialBase";
 import type { ExerciseResult, Theme } from "@/types";
+import { ProductSvg } from "./ProductSvg";
 
 interface DesafioSupermercadoProps {
   difficulty: number;
@@ -174,7 +175,7 @@ function TutMemorizeStep({ theme, onDone }: { theme: Theme; onDone: () => void }
       <p className={`text-sm font-bold ${textClass}`}>Sua lista de compras:</p>
       {TUT_LIST.map((p) => (
         <div key={p.id} className="flex items-center gap-3">
-          <span className="text-2xl">{p.emoji}</span>
+          <ProductSvg id={p.id} size={32} />
           <span className={`text-sm ${textClass}`}>{p.name}</span>
         </div>
       ))}
@@ -201,14 +202,14 @@ function TutShelfStep({ theme, onDone }: { theme: Theme; onDone: () => void }) {
   }
 
   return (
-    <div className="grid grid-cols-3 gap-2">
+    <div className="grid grid-cols-4 gap-2">
       {TUT_SHELF.map((p) => {
         const active = sel.has(p.id);
         return (
           <button
             key={p.id}
             onClick={() => tap(p.id)}
-            className={`p-2 rounded-xl border-2 flex flex-col items-center gap-1 transition-all ${
+            className={`p-1.5 rounded-lg border-2 flex flex-col items-center gap-1 transition-all active:scale-95 ${
               active
                 ? "border-green-500 bg-green-50"
                 : theme === "GAMIFIED"
@@ -216,8 +217,8 @@ function TutShelfStep({ theme, onDone }: { theme: Theme; onDone: () => void }) {
                 : "border-slate-200 bg-white"
             }`}
           >
-            <span className="text-2xl">{p.emoji}</span>
-            <span className={`text-xs text-center leading-tight ${textClass}`}>{p.name}</span>
+            <ProductSvg id={p.id} size={32} />
+            <span className={`text-[10px] text-center leading-tight ${textClass}`}>{p.name}</span>
             {active && <span className="text-xs text-green-600 font-bold">✓</span>}
           </button>
         );
@@ -452,7 +453,7 @@ export function DesafioSupermercado({ difficulty, theme, onComplete }: DesafioSu
                           : "border-emerald-200 bg-white"
                       }`}
                     >
-                      <span className="text-5xl leading-none">{p.emoji}</span>
+                      <ProductSvg id={p.id} size={48} />
                       <span className={`text-xs font-semibold text-center leading-tight mt-1 ${
                         theme === "GAMIFIED" ? "text-gray-100" : "text-gray-800"
                       }`}>
@@ -505,48 +506,44 @@ export function DesafioSupermercado({ difficulty, theme, onComplete }: DesafioSu
                     color: "#fff",
                   }}
                 >
-                  🏪 Prateleira
+                  PRATELEIRA
                 </div>
 
-                {/* Fileiras de 2 produtos — emoji grande */}
-                <div
-                  className="overflow-y-auto"
-                  style={{ maxHeight: "52vh" }}
-                >
-                  {Array.from({ length: Math.ceil(shelfProducts.length / 2) }).map((_, rowIdx) => {
-                    const rowProducts = shelfProducts.slice(rowIdx * 2, rowIdx * 2 + 2);
+                {/* Fileiras de 4 produtos — sem scroll */}
+                <div>
+                  {Array.from({ length: Math.ceil(shelfProducts.length / 4) }).map((_, rowIdx) => {
+                    const rowProducts = shelfProducts.slice(rowIdx * 4, rowIdx * 4 + 4);
                     return (
                       <div key={rowIdx} className="px-2 pt-2">
-                        <div className="grid grid-cols-2 gap-2">
+                        <div className="grid grid-cols-4 gap-1.5">
                           {rowProducts.map((p) => {
                             const isSelected = selected.has(p.id);
                             return (
                               <button
                                 key={p.id}
                                 onClick={() => toggleProduct(p.id)}
-                                className={`py-3 px-2 rounded-xl border-2 flex flex-col items-center gap-1.5 transition-all active:scale-95 ${
+                                className={`p-1.5 rounded-lg border-2 flex flex-col items-center gap-1 transition-all active:scale-95 ${
                                   isSelected ? pal.selectedCard : pal.productCard
                                 }`}
                               >
-                                <span className="text-5xl leading-none">{p.emoji}</span>
-                                <span className={`text-xs text-center font-semibold leading-tight ${
+                                <ProductSvg id={p.id} size={32} />
+                                <span className={`text-[10px] text-center font-semibold leading-tight ${
                                   theme === "GAMIFIED" ? "text-gray-100" : "text-gray-800"
                                 }`}>
                                   {p.name}
                                 </span>
                                 {isSelected && (
-                                  <span className="text-sm text-green-500 font-bold">✓</span>
+                                  <span className="text-xs text-green-500 font-bold">✓</span>
                                 )}
                               </button>
                             );
                           })}
-                          {rowProducts.length < 2 && <div />}
                         </div>
                         {/* Tábua da prateleira */}
                         <div
                           className="mt-2 rounded-sm"
                           style={{
-                            height: "10px",
+                            height: "8px",
                             background: theme === "GAMIFIED"
                               ? "linear-gradient(to bottom, #374151 0%, #1f2937 100%)"
                               : "linear-gradient(to bottom, #92400e 0%, #78350f 100%)",
@@ -592,7 +589,7 @@ export function DesafioSupermercado({ difficulty, theme, onComplete }: DesafioSu
                         wasSelected ? "border-green-500 bg-green-50" : "border-red-300 bg-red-50"
                       }`}
                     >
-                      <span className="text-2xl">{p.emoji}</span>
+                      <ProductSvg id={p.id} size={32} />
                       <span className="text-xs text-center leading-tight text-gray-700">{p.name}</span>
                       <span>{wasSelected ? "✅" : "❌"}</span>
                     </div>

@@ -32,10 +32,11 @@ const MAX_TRIALS = 20;
 const MIN_TIME_MS = 800;
 const MAX_TIME_MS = 5000;
 
-// Fixed tutorial examples — one for each rule
+// Fixed tutorial examples — three examples with variety
 const TUTORIAL_EXAMPLES: TrialItem[] = [
-  { word: COLORS[0], inkColor: COLORS[1], rule: "COR" },     // "VERMELHO" em tinta AZUL → resposta: AZUL
-  { word: COLORS[2], inkColor: COLORS[0], rule: "PALAVRA" }, // "VERDE" em tinta VERMELHO → resposta: VERDE
+  { word: COLORS[0], inkColor: COLORS[1], rule: "COR" },     // "VERMELHO" em AZUL → AZUL
+  { word: COLORS[2], inkColor: COLORS[0], rule: "PALAVRA" }, // "VERDE" em VERMELHO → VERDE
+  { word: COLORS[3], inkColor: COLORS[2], rule: "COR" },     // "AMARELO" em VERDE → VERDE
 ];
 
 function getOtherColors(excluded: (typeof COLORS)[number]) {
@@ -182,17 +183,29 @@ function TutorialStep({
                 </p>
                 <p className={`text-sm mt-1 ${isCorrect ? "text-green-600" : "text-orange-600"}`}>
                   {item.rule === "COR" ? (
-                    <>
-                      A <strong>tinta</strong> era{" "}
-                      <strong style={{ color: item.inkColor.hex }}>{item.inkColor.name}</strong>
-                      {!isCorrect && <>, não &quot;{selected}&quot;</>}.
-                    </>
+                    isCorrect ? (
+                      <>
+                        A cor da tinta era{" "}
+                        <strong style={{ color: item.inkColor.hex }}>{item.inkColor.name}</strong>. Correto!
+                      </>
+                    ) : (
+                      <>
+                        A cor da tinta era{" "}
+                        <strong style={{ color: item.inkColor.hex }}>{item.inkColor.name}</strong>
+                        , não &quot;{selected}&quot;.
+                      </>
+                    )
                   ) : (
-                    <>
-                      A <strong>palavra escrita</strong> era{" "}
-                      <strong>{item.word.name}</strong>
-                      {!isCorrect && <>, não &quot;{selected}&quot;</>}.
-                    </>
+                    isCorrect ? (
+                      <>
+                        A palavra escrita era <strong>{item.word.name}</strong>. Correto!
+                      </>
+                    ) : (
+                      <>
+                        A palavra escrita era <strong>{item.word.name}</strong>
+                        , não &quot;{selected}&quot;.
+                      </>
+                    )
                   )}
                 </p>
               </div>

@@ -127,7 +127,7 @@ const STORIES_4: Story[] = [
   ]},
   { name: "Plantar uma semente", emoji: "🌱", panels: [
     { emoji: "🪴", label: "Preparar o vaso com terra" },
-    { emoji: "☝️", label: "Fazer um buraco na terra" },
+    { emoji: "👇", label: "Fazer um buraco na terra" },
     { emoji: "🌰", label: "Depositar a semente" },
     { emoji: "💧", label: "Regar com pouca água" },
   ]},
@@ -144,7 +144,7 @@ const STORIES_4: Story[] = [
     { emoji: "😴", label: "Adormecer" },
   ]},
   { name: "Enviar uma encomenda", emoji: "📦", panels: [
-    { emoji: "🗃️", label: "Empacotar o produto na caixa" },
+    { emoji: "📦", label: "Colocar na caixa para enviar" },
     { emoji: "🏷️", label: "Colar a etiqueta com o endereço" },
     { emoji: "🚶", label: "Levar até a agência dos Correios" },
     { emoji: "🧾", label: "Receber o comprovante de envio" },
@@ -172,6 +172,12 @@ const STORIES_4: Story[] = [
     { emoji: "🔑", label: "Acessar a área PIX" },
     { emoji: "📝", label: "Informar a chave e o valor" },
     { emoji: "✅", label: "Confirmar e salvar o comprovante" },
+  ]},
+  { name: "O Cachorro Azul", emoji: "🐕", panels: [
+    { emoji: "🔍", label: "No parque, procurando o cachorro" },
+    { emoji: "😔", label: "Sentado triste na calçada" },
+    { emoji: "🏃", label: "Correndo pedir ajuda às crianças" },
+    { emoji: "🎈", label: "Cachorro voltou! Balão sobe no céu" },
   ]},
 ];
 
@@ -379,7 +385,7 @@ function OrdemHistoriaTapStep({ theme, onDone }: { theme: Theme; onDone: () => v
                   {tapIdx + 1}
                 </span>
               )}
-              <span className="text-2xl">{panel.emoji}</span>
+              <span className="text-3xl">{panel.emoji}</span>
               <span className={`text-xs text-center leading-tight ${theme === "GAMIFIED" ? "text-gray-200" : "text-gray-700"}`}>
                 {panel.label}
               </span>
@@ -691,7 +697,7 @@ export function OrdemHistoria({ difficulty, theme, onComplete }: OrdemHistoriaPr
                     {panel.correctIndex + 1}
                   </span>
                 )}
-                <span className="text-3xl">{panel.emoji}</span>
+                <span className="text-4xl">{panel.emoji}</span>
                 {panelLevel < 3 && (
                   <span className={`text-xs text-center leading-tight ${labelClass}`}>
                     {panel.label}

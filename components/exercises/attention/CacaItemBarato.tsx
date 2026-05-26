@@ -113,7 +113,7 @@ function TutStep({ theme, onDone }: { theme: Theme; onDone: () => void }) {
   const sub = theme === "GAMIFIED" ? "text-gray-400" : "text-gray-500";
   return (
     <div className="space-y-2">
-      <p className={`text-xs text-center ${sub}`}>Qual embalagem tem o menor preço por 100 g?</p>
+      <p className={`text-xs text-center ${sub}`}>Observe o preço e a quantidade de cada embalagem — qual sai mais em conta?</p>
       {opts.map(opt => {
         const isCorrect = opt.id === correct;
         const isSelected = opt.id === sel;
@@ -135,9 +135,6 @@ function TutStep({ theme, onDone }: { theme: Theme; onDone: () => void }) {
               </div>
             </div>
             <div className="text-right">
-              <p className={`text-sm font-bold ${theme === "GAMIFIED" ? "text-cyan-300" : "text-emerald-700"}`}>
-                {fmt(opt.unitPrice)}/100g
-              </p>
               {revealed && isCorrect && <span className="text-xs text-green-600 font-bold">✓ Melhor!</span>}
             </div>
           </button>
@@ -206,7 +203,7 @@ export function CacaItemBarato({ difficulty, theme, onComplete }: Props) {
 
   if (showTutorial) {
     return <TutorialBase theme={theme} title="Caça ao Item Mais Barato"
-      steps={[{ instruction: "Compare as embalagens e toque na que tem o MENOR PREÇO por 100g ou 100ml!", content: (done) => <TutStep theme={theme} onDone={done} /> }]}
+      steps={[{ instruction: "Observe o preço e a quantidade de cada embalagem. Qual sai mais em conta?", content: (done) => <TutStep theme={theme} onDone={done} /> }]}
       onDone={() => setShowTutorial(false)} />;
   }
 
@@ -249,7 +246,7 @@ export function CacaItemBarato({ difficulty, theme, onComplete }: Props) {
               <div className={`rounded-xl p-3 mb-3 border text-center ${theme === "GAMIFIED" ? "bg-gray-700 border-gray-600" : "bg-amber-50 border-amber-200"}`}>
                 <span className="text-3xl">{currentTrial.emoji}</span>
                 <p className={`text-sm font-bold mt-1 ${theme === "GAMIFIED" ? "text-gray-100" : "text-gray-800"}`}>
-                  Qual embalagem tem o menor preço por 100g?
+                  Qual dessas embalagens é a mais vantajosa? Compare os preços e quantidades.
                 </p>
               </div>
 
@@ -264,15 +261,6 @@ export function CacaItemBarato({ difficulty, theme, onComplete }: Props) {
                         <p className={`text-sm font-semibold ${theme === "GAMIFIED" ? "text-gray-100" : "text-gray-800"}`}>{opt.quantity}</p>
                         <p className={`text-xs ${pal.sub}`}>por {fmt(opt.price)}</p>
                       </div>
-                    </div>
-                    <div className="text-right">
-                      {difficulty >= 7 ? (
-                        <p className={`text-xs ${pal.sub}`}>Calcule!</p>
-                      ) : (
-                        <p className={`text-sm font-bold ${theme === "GAMIFIED" ? "text-cyan-300" : "text-emerald-700"}`}>
-                          {fmt(opt.unitPrice)}/100g
-                        </p>
-                      )}
                     </div>
                   </button>
                 ))}

@@ -182,6 +182,45 @@ function buildRefeicoes(): AntesDepoisItem[] {
   });
 }
 
+const CHURRASCO_SEQUENCIA: AntesDepoisItem[] = [
+  {
+    category: "Churrasco",
+    item: "Acender o carvão",
+    emoji: "🔥",
+    before: "Comprar a carne",
+    after: "Colocar a carne na grelha",
+    wrongOptions: ["Servir a carne", "Lavar a grelha", "Ir ao mercado"],
+    minDifficulty: 3,
+  },
+  {
+    category: "Churrasco",
+    item: "Colocar a carne na grelha",
+    emoji: "🥩",
+    before: "Acender o carvão",
+    after: "Servir a carne",
+    wrongOptions: ["Comprar a carne", "Lavar a grelha", "Fazer a lista"],
+    minDifficulty: 3,
+  },
+  {
+    category: "Churrasco",
+    item: "Servir a carne",
+    emoji: "🍖",
+    before: "Colocar a carne na grelha",
+    after: "Lavar a grelha",
+    wrongOptions: ["Acender o carvão", "Comprar a carne", "Fazer a lista"],
+    minDifficulty: 3,
+  },
+  {
+    category: "Churrasco",
+    item: "Comprar a carne",
+    emoji: "🛒",
+    before: "Fazer a lista de compras",
+    after: "Temperar a carne",
+    wrongOptions: ["Acender o carvão", "Servir a carne", "Lavar a grelha"],
+    minDifficulty: 4,
+  },
+];
+
 // Merge all items
 const ALL_ITEMS: AntesDepoisItem[] = [
   ...buildNumeros(),
@@ -191,6 +230,7 @@ const ALL_ITEMS: AntesDepoisItem[] = [
   ...buildRotinas(),
   ...buildMeses(),
   ...buildLetras(),
+  ...CHURRASCO_SEQUENCIA,
 ];
 
 // ─── Helpers ──────────────────────────────────────────────────────────────────
@@ -222,6 +262,57 @@ function buildOptions(item: AntesDepoisItem, direction: Direction): string[] {
   // Take up to 3; all categories have at least 3 wrong options available.
   const wrongs = shuffle([...item.wrongOptions]).slice(0, 3);
   return shuffle([correct, ...wrongs]);
+}
+
+// ─── SVG Icon helpers ─────────────────────────────────────────────────────────
+
+function CalendarIcon() {
+  return (
+    <svg width="52" height="52" viewBox="0 0 48 48" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round">
+      <rect x="4" y="8" width="40" height="36" rx="3" />
+      <rect x="4" y="8" width="40" height="12" rx="3" fill="currentColor" fillOpacity="0.12" />
+      <line x1="12" y1="4" x2="12" y2="14" strokeWidth="2.5" />
+      <line x1="36" y1="4" x2="36" y2="14" strokeWidth="2.5" />
+      <line x1="4" y1="24" x2="44" y2="24" strokeWidth="1" />
+      <circle cx="14" cy="33" r="2" fill="currentColor" stroke="none" />
+      <circle cx="24" cy="33" r="2" fill="currentColor" stroke="none" />
+      <circle cx="34" cy="33" r="2" fill="currentColor" stroke="none" />
+      <circle cx="14" cy="40" r="2" fill="currentColor" stroke="none" />
+      <circle cx="24" cy="40" r="2" fill="currentColor" stroke="none" />
+    </svg>
+  );
+}
+
+function GrillIcon() {
+  return (
+    <svg width="52" height="52" viewBox="0 0 48 48" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round">
+      {/* grill top */}
+      <rect x="6" y="14" width="36" height="8" rx="2" />
+      {/* grill bars */}
+      <line x1="14" y1="14" x2="14" y2="22" strokeWidth="2.5" />
+      <line x1="20" y1="14" x2="20" y2="22" strokeWidth="2.5" />
+      <line x1="26" y1="14" x2="26" y2="22" strokeWidth="2.5" />
+      <line x1="32" y1="14" x2="32" y2="22" strokeWidth="2.5" />
+      {/* legs */}
+      <line x1="14" y1="22" x2="10" y2="42" />
+      <line x1="34" y1="22" x2="38" y2="42" />
+      <line x1="24" y1="22" x2="24" y2="38" />
+      {/* fire */}
+      <path d="M18 12 Q20 8 22 10 Q24 6 26 10 Q28 8 30 12" strokeWidth="1.5" />
+      {/* meat */}
+      <path d="M10 18 Q16 15 24 18 Q32 21 38 18" strokeWidth="1.5" />
+    </svg>
+  );
+}
+
+function ItemIcon({ item }: { item: AntesDepoisItem }) {
+  if (item.category === "Dias da semana" || item.category === "Meses do ano") {
+    return <CalendarIcon />;
+  }
+  if (item.category === "Churrasco") {
+    return <GrillIcon />;
+  }
+  return <span className="text-5xl">{item.emoji}</span>;
 }
 
 // ─── Tutorial ─────────────────────────────────────────────────────────────────
@@ -279,7 +370,18 @@ function TutorialStep({ theme, onDone }: { theme: Theme; onDone: () => void }) {
       {/* Center card */}
       <div className={`rounded-xl p-4 text-center ${cardBg}`}>
         <p className={`text-xs mb-1 ${labelColor}`}>O que vem DEPOIS de...</p>
-        <div className="text-4xl mb-1">{TUTORIAL_ITEM.emoji}</div>
+        <div className="flex justify-center mb-1">
+          <svg width="48" height="48" viewBox="0 0 48 48" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round">
+            <rect x="4" y="8" width="40" height="36" rx="3" />
+            <rect x="4" y="8" width="40" height="12" rx="3" fill="currentColor" fillOpacity="0.15" />
+            <line x1="12" y1="4" x2="12" y2="14" strokeWidth="2.5" />
+            <line x1="36" y1="4" x2="36" y2="14" strokeWidth="2.5" />
+            <text x="14" y="32" fontSize="7" fill="currentColor" stroke="none" fontWeight="bold">SEG</text>
+            <text x="28" y="32" fontSize="7" fill="currentColor" stroke="none" fontWeight="bold">TER</text>
+            <text x="14" y="40" fontSize="7" fill="currentColor" stroke="none">QUA</text>
+            <text x="28" y="40" fontSize="7" fill="currentColor" stroke="none">QUI</text>
+          </svg>
+        </div>
         <p className={`text-xl font-bold ${itemTextColor}`}>{TUTORIAL_ITEM.item}</p>
       </div>
 
@@ -553,7 +655,9 @@ export function AntesDepois({ difficulty, theme, onComplete }: AntesDepoisProps)
             transition={{ duration: 0.25 }}
             className={`rounded-2xl p-5 text-center mb-4 ${centerCardBg}`}
           >
-            <div className="text-5xl mb-2">{currentItem.emoji}</div>
+            <div className="flex justify-center mb-2">
+              <ItemIcon item={currentItem} />
+            </div>
             <p className={`text-2xl font-extrabold tracking-tight ${itemTextColor}`}>
               {currentItem.item}
             </p>

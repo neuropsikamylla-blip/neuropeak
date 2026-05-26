@@ -6,6 +6,7 @@ import { calculateExerciseScore } from "@/lib/scoring";
 import { useExerciseProgress } from "@/components/exercises/ExerciseWrapper";
 import { TutorialBase } from "@/components/exercises/TutorialBase";
 import type { ExerciseResult, Theme } from "@/types";
+import { MEMORY_ITEMS, MemorySymbol } from "./MemorySymbol";
 
 interface JogoMemoriaProps {
   difficulty: number;
@@ -15,11 +16,9 @@ interface JogoMemoriaProps {
 
 interface Card {
   id: number;
-  emoji: string;
+  symbol: string;
   matched: boolean;
 }
-
-const EMOJIS = ["💊","🔑","👓","👜","📱","💳","🚗","🏠","🌡️","📞","💉","🩺","📋","🧴","🕐","🛒","📌","🗝️"];
 const MAX_ROUNDS = 10;
 const MIN_PAIRS = 4;
 const MAX_PAIRS = 9;
@@ -34,22 +33,22 @@ function errorBudget(pairs: number) {
 }
 
 function buildCards(pairs: number): Card[] {
-  const emojis = [...EMOJIS].sort(() => Math.random() - 0.5).slice(0, pairs);
-  const doubled = [...emojis, ...emojis];
+  const symbols = [...MEMORY_ITEMS].sort(() => Math.random() - 0.5).slice(0, pairs).map(m => m.id);
+  const doubled = [...symbols, ...symbols];
   for (let i = doubled.length - 1; i > 0; i--) {
     const j = Math.floor(Math.random() * (i + 1));
     [doubled[i], doubled[j]] = [doubled[j], doubled[i]];
   }
-  return doubled.map((emoji, id) => ({ id, emoji, matched: false }));
+  return doubled.map((symbol, id) => ({ id, symbol, matched: false }));
 }
 
 type GamePhase = "memorize" | "playing" | "feedback";
 
 const TUTORIAL_CARDS = [
-  { id: 0, emoji: "💊", matched: false },
-  { id: 1, emoji: "🔑", matched: false },
-  { id: 2, emoji: "💊", matched: false },
-  { id: 3, emoji: "🔑", matched: false },
+  { id: 0, symbol: MEMORY_ITEMS[0].id, matched: false },
+  { id: 1, symbol: MEMORY_ITEMS[1].id, matched: false },
+  { id: 2, symbol: MEMORY_ITEMS[0].id, matched: false },
+  { id: 3, symbol: MEMORY_ITEMS[1].id, matched: false },
 ];
 
 function JogoMemoriaTutorial({ theme, onDone }: { theme: Theme; onDone: () => void }) {
@@ -104,8 +103,8 @@ function JogoMemoriaShowStep({ theme, cardFront, onDone }: { theme: Theme; cardF
       </p>
       <div className="grid grid-cols-2 gap-3 max-w-[180px] mx-auto">
         {TUTORIAL_CARDS.map((c) => (
-          <div key={c.id} className={`aspect-square rounded-xl border-2 flex items-center justify-center text-3xl ${cardFront}`}>
-            {c.emoji}
+          <div key={c.id} className={`w-16 h-16 rounded-xl border-2 flex items-center justify-center ${cardFront}`}>
+            <MemorySymbol id={c.symbol} size={36} />
           </div>
         ))}
       </div>
@@ -127,7 +126,7 @@ function JogoMemoriaPlayStep({ theme, cardBack, cardFront, onDone }: { theme: Th
     if (newFlipped.length === 2) {
       setLocked(true);
       const [a, b] = newFlipped;
-      if (TUTORIAL_CARDS[a].emoji === TUTORIAL_CARDS[b].emoji) {
+      if (TUTORIAL_CARDS[a].symbol === TUTORIAL_CARDS[b].symbol) {
         setTimeout(() => {
           const newMatched = [...matched, a, b];
           setMatched(newMatched);
@@ -156,10 +155,10 @@ function JogoMemoriaPlayStep({ theme, cardBack, cardFront, onDone }: { theme: Th
             key={c.id}
             onClick={() => handleFlip(c.id)}
             disabled={locked || matched.includes(c.id)}
-            className={`aspect-square rounded-xl border-2 flex items-center justify-center text-3xl ${cardClass(c.id)}`}
+            className={`w-16 h-16 rounded-xl border-2 flex items-center justify-center ${cardClass(c.id)}`}
             whileTap={{ scale: 0.92 }}
           >
-            {visible ? c.emoji : (
+            {visible ? <MemorySymbol id={c.symbol} size={36} /> : (
               <span className={`text-lg font-bold ${theme === "GAMIFIED" ? "text-cyan-300" : theme === "COLORFUL" ? "text-white" : "text-blue-400"}`}>?</span>
             )}
           </motion.button>
@@ -267,7 +266,7 @@ export function JogoMemoria({ difficulty, theme, onComplete }: JogoMemoriaProps)
       const cardA = cards[a];
       const cardB = cards[b];
 
-      if (cardA.emoji === cardB.emoji) {
+      if (cardA.symbol === cardB.symbol) {
         setTimeout(() => {
           const newCards = cards.map((c) =>
             c.id === a || c.id === b ? { ...c, matched: true } : c
@@ -374,19 +373,19 @@ export function JogoMemoria({ difficulty, theme, onComplete }: JogoMemoriaProps)
                 key={c.id}
                 onClick={() => handleFlip(c.id)}
                 disabled={gamePhase !== "playing" || c.matched || flipped.includes(c.id) || locked}
-                className={`aspect-square rounded-xl border-2 flex items-center justify-center text-2xl transition-all ${cardClass(c)}`}
+                className={`w-16 h-16 rounded-xl border-2 flex items-center justify-center transition-all ${cardClass(c)}`}
                 whileTap={gamePhase === "playing" ? { scale: 0.92 } : {}}
               >
                 <AnimatePresence mode="wait">
                   {isVisible ? (
-                    <motion.span
+                    <motion.div
                       key="front"
                       initial={{ opacity: 0, scale: 0.5 }}
                       animate={{ opacity: 1, scale: 1 }}
                       exit={{ opacity: 0 }}
                     >
-                      {c.emoji}
-                    </motion.span>
+                      <MemorySymbol id={c.symbol} size={36} />
+                    </motion.div>
                   ) : (
                     <motion.span
                       key="back"

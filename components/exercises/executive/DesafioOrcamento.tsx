@@ -83,7 +83,6 @@ function TutStep({ theme, onDone }: { theme: Theme; onDone: () => void }) {
     <div className="space-y-3">
       <div className={`p-3 rounded-xl border flex justify-between ${theme === "GAMIFIED" ? "bg-gray-700 border-gray-600" : "bg-slate-50 border-slate-200"}`}>
         <span className={`text-sm font-semibold ${theme === "GAMIFIED" ? "text-gray-200" : "text-gray-800"}`}>Orçamento: {fmt(budget)}</span>
-        <span className={`text-sm font-bold ${total > budget ? "text-red-500" : "text-green-600"}`}>Total: {fmt(total)}</span>
       </div>
       <div className="grid grid-cols-2 gap-2">
         {items.map(item => (
@@ -105,7 +104,6 @@ function TutStep({ theme, onDone }: { theme: Theme; onDone: () => void }) {
           theme === "GAMIFIED" ? "bg-cyan-600 text-white" : "bg-emerald-600 text-white"
         }`}
       >Confirmar seleção</button>
-      {total > budget && <p className={`text-xs text-center text-red-500`}>⚠️ Acima do orçamento!</p>}
     </div>
   );
 }
@@ -222,12 +220,9 @@ export function DesafioOrcamento({ difficulty, theme, onComplete }: Props) {
                 </p>
               </div>
 
-              {/* Running total */}
+              {/* Selected count */}
               <div className="flex justify-between items-center mb-3">
                 <span className={`text-xs ${pal.sub}`}>{selected.size} produto{selected.size !== 1 ? "s" : ""} selecionado{selected.size !== 1 ? "s" : ""}</span>
-                <span className={`text-base font-bold tabular-nums ${overBudget ? "text-red-500" : inGoal ? "text-green-600" : pal.sub}`}>
-                  {fmt(total)} / {fmt(currentTrial.budget)}
-                </span>
               </div>
 
               {/* Products grid */}
@@ -250,12 +245,10 @@ export function DesafioOrcamento({ difficulty, theme, onComplete }: Props) {
                 ))}
               </div>
 
-              {overBudget && <p className="text-xs text-red-500 text-center mb-2">⚠️ Acima do orçamento! Remova algum item.</p>}
-
-              <button onClick={confirm} disabled={selected.size === 0 || overBudget}
+              <button onClick={confirm} disabled={selected.size === 0}
                 className={`w-full h-11 rounded-xl font-bold transition-all disabled:opacity-40 ${pal.btn}`}
               >
-                Confirmar ({fmt(total)})
+                Confirmar seleção
               </button>
             </motion.div>
           )}
