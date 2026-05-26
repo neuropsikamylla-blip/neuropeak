@@ -5,15 +5,16 @@ import { motion, AnimatePresence } from "framer-motion";
 import { calculateExerciseScore } from "@/lib/scoring";
 import { useExerciseProgress } from "@/components/exercises/ExerciseWrapper";
 import { TutorialBase } from "@/components/exercises/TutorialBase";
+import { ItemSvg } from "@/components/exercises/ItemSvg";
 import type { ExerciseResult, Theme } from "@/types";
 import {
-  SUPER_ITEMS, CAT_LABELS, CAT_EMOJIS, shuffleSM, itemsByCategory, ALL_CATEGORIES,
-  type Category,
-} from "@/lib/supermarket-data";
+  shuffleFlex, itemsByFlexCat, pickRandomDomain,
+  type FlexDomain, type FlexItem, type FlexCategory,
+} from "@/lib/item-domains";
 
 interface Props { difficulty: number; theme: Theme; onComplete: (result: ExerciseResult) => void; }
 
-interface GridItem { id: string; name: string; emoji: string; isTarget: boolean; collected: boolean; }
+interface GridItem extends FlexItem { isTarget: boolean; collected: boolean; }
 
 const MAX_ROUNDS = 8;
 
@@ -21,26 +22,28 @@ function gridCount(d: number) { return d <= 4 ? 12 : 16; }
 function targetCount(d: number) { return d <= 3 ? 4 : d <= 6 ? 5 : 6; }
 function timeSecs(d: number) { return d <= 3 ? 25 : d <= 6 ? 20 : 15; }
 
-function buildGrid(cat: Category, d: number): GridItem[] {
+function buildGrid(domain: FlexDomain, cat: FlexCategory, d: number): GridItem[] {
   const nT = targetCount(d);
   const size = gridCount(d);
-  const targets = shuffleSM(itemsByCategory(cat)).slice(0, nT);
-  const dist = shuffleSM(SUPER_ITEMS.filter(i => i.cat !== cat)).slice(0, size - nT);
-  return shuffleSM([
-    ...targets.map(t => ({ id: t.id, name: t.name, emoji: t.emoji, isTarget: true, collected: false })),
-    ...dist.map(t => ({ id: t.id, name: t.name, emoji: t.emoji, isTarget: false, collected: false })),
+  const targets = shuffleFlex(itemsByFlexCat(domain, cat.id)).slice(0, nT);
+  const dist = shuffleFlex(domain.items.filter(i => i.cat !== cat.id)).slice(0, size - nT);
+  return shuffleFlex([
+    ...targets.map(t => ({ ...t, isTarget: true, collected: false })),
+    ...dist.map(t => ({ ...t, isTarget: false, collected: false })),
   ]);
 }
 
 function TutStep({ theme, onDone }: { theme: Theme; onDone: () => void }) {
-  const ITEMS = [
-    { id: "a", emoji: "🍌", name: "Banana", isTarget: true },
-    { id: "b", emoji: "🧴", name: "Sabão",  isTarget: false },
-    { id: "c", emoji: "🍎", name: "Maçã",   isTarget: true },
-    { id: "d", emoji: "🥤", name: "Refri",  isTarget: false },
-    { id: "e", emoji: "🥕", name: "Cenoura",isTarget: true },
-    { id: "f", emoji: "☕", name: "Café",    isTarget: false },
+  const ITEMS: GridItem[] = [
+    { id: "banana",  name: "Banana",  cat: "hortifruti", price: 3.90, isTarget: true,  collected: false },
+    { id: "sabao",   name: "Sabão",   cat: "higiene",    price: 18.90, isTarget: false, collected: false },
+    { id: "maca",    name: "Maçã",    cat: "hortifruti", price: 6.90, isTarget: true,  collected: false },
+    { id: "refri",   name: "Refri",   cat: "bebidas",    price: 8.90, isTarget: false, collected: false },
+    { id: "cenoura", name: "Cenoura", cat: "hortifruti", price: 4.90, isTarget: true,  collected: false },
+    { id: "cafe",    name: "Café",    cat: "mercearia",  price: 11.90, isTarget: false, collected: false },
   ];
+  const catLabel = "Hortifruti";
+  const catEmoji = "🥦";
   const [col, setCol] = useState(new Set<string>());
   const doneRef = useRef(false);
 
@@ -59,9 +62,9 @@ function TutStep({ theme, onDone }: { theme: Theme; onDone: () => void }) {
       <div className={`flex items-center gap-2 justify-center mb-3 px-3 py-2 rounded-xl ${
         theme === "GAMIFIED" ? "bg-cyan-900/40 border border-cyan-600" : "bg-amber-50 border border-amber-200"
       }`}>
-        <span className="text-xl">🥦</span>
+        <span className="text-xl">{catEmoji}</span>
         <span className={`font-bold text-sm ${theme === "GAMIFIED" ? "text-cyan-300" : "text-amber-800"}`}>
-          Colete: Hortifruti
+          Colete: {catLabel}
         </span>
       </div>
       <div className="grid grid-cols-3 gap-2">
@@ -75,7 +78,7 @@ function TutStep({ theme, onDone }: { theme: Theme; onDone: () => void }) {
                 : (theme === "GAMIFIED" ? "border-gray-600 bg-gray-700" : "border-slate-200 bg-white")
             }`}
           >
-            <span className="text-2xl">{item.emoji}</span>
+            <ItemSvg id={item.id} size={32} />
             <span className={`text-xs text-center leading-none ${theme === "GAMIFIED" ? "text-gray-200" : "text-gray-700"}`}>
               {item.name}
             </span>
@@ -93,10 +96,11 @@ export function CorridaContraOTempo({ difficulty, theme, onComplete }: Props) {
   const [showTutorial, setShowTutorial] = useState(true);
   const reportProgress = useExerciseProgress();
 
+  const domainRef = useRef<FlexDomain>(pickRandomDomain());
   const [round, setRound] = useState(0);
   const [roundResults, setRoundResults] = useState<{ correct: boolean; hits: number; total: number }[]>([]);
   const [phase, setPhase] = useState<Phase>("ready");
-  const [target, setTarget] = useState<Category>("hortifruti");
+  const [targetCat, setTargetCat] = useState<FlexCategory>(domainRef.current.categories[0]);
   const [items, setItems] = useState<GridItem[]>([]);
   const [timeLeft, setTimeLeft] = useState(timeSecs(difficulty));
   const [wrongFlash, setWrongFlash] = useState<Set<string>>(new Set());
@@ -146,12 +150,17 @@ export function CorridaContraOTempo({ difficulty, theme, onComplete }: Props) {
   }
 
   function startRound() {
-    const cat = ALL_CATEGORIES[Math.floor(Math.random() * ALL_CATEGORIES.length)];
-    const newItems = buildGrid(cat, difficulty);
+    if (roundRef.current % 3 === 0 && roundRef.current > 0) {
+      domainRef.current = pickRandomDomain();
+    }
+    const domain = domainRef.current;
+    const cats = domain.categories;
+    const cat = cats[Math.floor(Math.random() * cats.length)];
+    const newItems = buildGrid(domain, cat, difficulty);
     roundEndedRef.current = false;
     hitsRef.current = 0;
     totalRef.current = newItems.filter(i => i.isTarget).length;
-    setTarget(cat);
+    setTargetCat(cat);
     setItems(newItems);
     setTimeLeft(timeSecs(difficulty));
     setPhase("playing");
@@ -198,6 +207,7 @@ export function CorridaContraOTempo({ difficulty, theme, onComplete }: Props) {
   const tl = timeSecs(difficulty);
   const timerRatio = timeLeft / tl;
   const timerColor = timerRatio > 0.5 ? "bg-green-500" : timerRatio > 0.25 ? "bg-amber-400" : "bg-red-500 animate-pulse";
+  const domain = domainRef.current;
 
   return (
     <div className={`min-h-screen flex flex-col items-center justify-center p-3 ${bg}`}>
@@ -206,7 +216,6 @@ export function CorridaContraOTempo({ difficulty, theme, onComplete }: Props) {
         <div className="flex justify-between items-center mb-2">
           <h2 className={`font-bold text-base ${titleClass}`}>⏱️ Corrida contra o Tempo</h2>
           <div className="flex items-center gap-3">
-            {/* Carrinho de compras */}
             <div className="relative">
               <svg width="32" height="28" viewBox="0 0 32 28" fill="none">
                 <path d="M3 3 L7 3 L10 18 L26 18 L29 8 L10 8" stroke={theme === "GAMIFIED" ? "#22d3ee" : "#ef4444"} strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round"/>
@@ -249,9 +258,9 @@ export function CorridaContraOTempo({ difficulty, theme, onComplete }: Props) {
               <div className={`flex items-center justify-center gap-2 py-2 px-3 rounded-xl mb-2 ${
                 theme === "GAMIFIED" ? "bg-cyan-900/40 border border-cyan-600/40" : "bg-amber-50 border border-amber-200"
               }`}>
-                <span className="text-2xl">{CAT_EMOJIS[target]}</span>
+                <span className="text-2xl">{targetCat.emoji}</span>
                 <span className={`font-bold text-sm ${theme === "GAMIFIED" ? "text-cyan-300" : "text-amber-800"}`}>
-                  Colete: {CAT_LABELS[target]}
+                  {domain.collectVerb}: {targetCat.label}
                 </span>
               </div>
 
@@ -271,7 +280,7 @@ export function CorridaContraOTempo({ difficulty, theme, onComplete }: Props) {
                     animate={wrongFlash.has(item.id) ? { x: [-3, 3, -3, 3, 0] } : item.collected ? { scale: [1, 1.15, 1] } : {}}
                     transition={{ duration: 0.25 }}
                   >
-                    <span className="text-3xl">{item.emoji}</span>
+                    <ItemSvg id={item.id} size={32} />
                     <span className={`text-xs text-center leading-tight font-semibold ${theme === "GAMIFIED" ? "text-gray-200" : "text-gray-700"}`}>
                       {item.name}
                     </span>

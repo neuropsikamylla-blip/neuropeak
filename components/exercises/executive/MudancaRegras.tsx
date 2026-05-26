@@ -5,8 +5,12 @@ import { motion, AnimatePresence } from "framer-motion";
 import { calculateExerciseScore } from "@/lib/scoring";
 import { useExerciseProgress } from "@/components/exercises/ExerciseWrapper";
 import { TutorialBase } from "@/components/exercises/TutorialBase";
+import { ItemSvg } from "@/components/exercises/ItemSvg";
 import type { ExerciseResult, Theme } from "@/types";
-import { SUPER_ITEMS, shuffleSM, fmt, type Category } from "@/lib/supermarket-data";
+import {
+  shuffleFlex, fmt, pickRandomDomain,
+  type FlexDomain, type FlexItem,
+} from "@/lib/item-domains";
 
 interface Props { difficulty: number; theme: Theme; onComplete: (result: ExerciseResult) => void; }
 
@@ -16,49 +20,42 @@ type RuleType = "category" | "price-below" | "price-above" | "not-category";
 
 interface Rule {
   type: RuleType;
-  category?: Category;
+  category?: string;
+  categoryLabel?: string;
+  categoryEmoji?: string;
   priceThreshold?: number;
   label: string;
   emoji: string;
 }
 
-interface TrialItem {
-  id: string;
-  name: string;
-  emoji: string;
-  price: number;
-  cat: Category;
-}
+interface TrialItem extends FlexItem { /* already has id, name, cat, price */ }
 
 interface Trial {
+  domain: FlexDomain;
   items: TrialItem[];
   rule: Rule;
   correctIds: Set<string>;
   changed: boolean;
 }
 
-function makeRule(d: number, excludeRule?: Rule): Rule {
-  const cats: Category[] = ["hortifruti", "laticinios", "mercearia", "higiene", "bebidas"];
-  const catLabels: Record<Category, string> = {
-    hortifruti: "Hortifruti", laticinios: "Laticínios", mercearia: "Mercearia",
-    higiene: "Higiene", bebidas: "Bebidas",
-  };
-  const catEmojis: Record<Category, string> = {
-    hortifruti: "🥦", laticinios: "🥛", mercearia: "🌾", higiene: "🧴", bebidas: "🥤",
-  };
-
+function makeRule(d: number, domain: FlexDomain, excludeRule?: Rule): Rule {
+  const cats = domain.categories;
   const types: RuleType[] = d <= 4 ? ["category"] : d <= 7 ? ["category", "price-below", "price-above"] : ["category", "price-below", "price-above", "not-category"];
   let type: RuleType;
   do { type = types[Math.floor(Math.random() * types.length)]; } while (excludeRule?.type === type && excludeRule?.category && type === "category" && Math.random() > 0.5);
 
   if (type === "category" || type === "not-category") {
-    let cat: Category;
-    do { cat = cats[Math.floor(Math.random() * cats.length)]; } while (excludeRule?.category === cat);
+    let cat = cats[Math.floor(Math.random() * cats.length)];
+    let attempts = 0;
+    while (excludeRule?.category === cat.id && attempts++ < 10) {
+      cat = cats[Math.floor(Math.random() * cats.length)];
+    }
     return type === "category"
-      ? { type, category: cat, label: `Pegue apenas ${catLabels[cat]}`, emoji: catEmojis[cat] }
-      : { type, category: cat, label: `Não pegue ${catLabels[cat]}`, emoji: "🚫" };
+      ? { type, category: cat.id, categoryLabel: cat.label, categoryEmoji: cat.emoji, label: `Selecione apenas ${cat.label}`, emoji: cat.emoji }
+      : { type, category: cat.id, categoryLabel: cat.label, categoryEmoji: cat.emoji, label: `Não selecione ${cat.label}`, emoji: "🚫" };
   }
-  const threshold = [5, 7, 10, 12][Math.floor(Math.random() * 4)];
+  const prices = domain.id === "vestuario" ? [40, 60, 80, 100] : [5, 7, 10, 12];
+  const threshold = prices[Math.floor(Math.random() * prices.length)];
   return type === "price-below"
     ? { type, priceThreshold: threshold, label: `Apenas itens até ${fmt(threshold)}`, emoji: "⬇️" }
     : { type, priceThreshold: threshold, label: `Apenas itens acima de ${fmt(threshold)}`, emoji: "⬆️" };
@@ -72,28 +69,28 @@ function matchesRule(item: TrialItem, rule: Rule): boolean {
   return false;
 }
 
-function buildTrial(d: number, trialIdx: number, prevRule?: Rule): Trial {
+function buildTrial(d: number, trialIdx: number, domain: FlexDomain, prevRule?: Rule): Trial {
   const count = d <= 3 ? 8 : d <= 6 ? 10 : 12;
-  const rule = makeRule(d, prevRule);
-  const items: TrialItem[] = shuffleSM(SUPER_ITEMS).slice(0, count).map(i => ({
-    id: i.id, name: i.name, emoji: i.emoji, price: i.price, cat: i.cat,
+  const rule = makeRule(d, domain, prevRule);
+  const items: TrialItem[] = shuffleFlex(domain.items).slice(0, count).map(i => ({
+    id: i.id, name: i.name, price: i.price, cat: i.cat,
   }));
   const correctIds = new Set(items.filter(i => matchesRule(i, rule)).map(i => i.id));
   const changed = trialIdx > 0 && prevRule !== undefined;
-  return { items, rule, correctIds, changed };
+  return { domain, items, rule, correctIds, changed };
 }
 
 function TutStep({ theme, onDone }: { theme: Theme; onDone: () => void }) {
   const items: TrialItem[] = [
-    { id: "a", emoji: "🍌", name: "Banana",  price: 3.90, cat: "hortifruti" },
-    { id: "b", emoji: "🥛", name: "Leite",   price: 5.90, cat: "laticinios" },
-    { id: "c", emoji: "🍎", name: "Maçã",    price: 6.90, cat: "hortifruti" },
-    { id: "d", emoji: "☕", name: "Café",    price: 11.90, cat: "mercearia" },
-    { id: "e", emoji: "🥕", name: "Cenoura", price: 4.90, cat: "hortifruti" },
-    { id: "f", emoji: "🧴", name: "Sabão",   price: 18.90, cat: "higiene" },
+    { id: "banana",  name: "Banana",  price: 3.90, cat: "hortifruti" },
+    { id: "leite",   name: "Leite",   price: 5.90, cat: "laticinios" },
+    { id: "maca",    name: "Maçã",    price: 6.90, cat: "hortifruti" },
+    { id: "cafe",    name: "Café",    price: 11.90, cat: "mercearia" },
+    { id: "cenoura", name: "Cenoura", price: 4.90, cat: "hortifruti" },
+    { id: "sabao",   name: "Sabão",   price: 18.90, cat: "higiene" },
   ];
-  const rule: Rule = { type: "category", category: "hortifruti", label: "Pegue apenas Hortifruti", emoji: "🥦" };
-  const correct = new Set(["a", "c", "e"]);
+  const rule: Rule = { type: "category", category: "hortifruti", categoryLabel: "Hortifruti", label: "Selecione apenas Hortifruti", emoji: "🥦" };
+  const correct = new Set(["banana", "maca", "cenoura"]);
   const [sel, setSel] = useState(new Set<string>());
   const [confirmed, setConfirmed] = useState(false);
   const doneRef = useRef(false);
@@ -129,7 +126,7 @@ function TutStep({ theme, onDone }: { theme: Theme; onDone: () => void }) {
                 theme === "GAMIFIED" ? "border-gray-600 bg-gray-700" : "border-slate-200 bg-white"
               }`}
             >
-              <span className="text-2xl">{item.emoji}</span>
+              <ItemSvg id={item.id} size={36} />
               <span className={`text-xs text-center leading-none ${theme === "GAMIFIED" ? "text-gray-200" : "text-gray-700"}`}>{item.name}</span>
               {isSelected && <span className="text-xs text-green-500 font-bold">✓</span>}
             </button>
@@ -147,6 +144,7 @@ export function MudancaRegras({ difficulty, theme, onComplete }: Props) {
   const [showTutorial, setShowTutorial] = useState(true);
   const reportProgress = useExerciseProgress();
 
+  const domainRef = useRef<FlexDomain>(pickRandomDomain());
   const [trial, setTrial] = useState(0);
   const [trialResults, setTrialResults] = useState<boolean[]>([]);
   const [selected, setSelected] = useState(new Set<string>());
@@ -159,10 +157,16 @@ export function MudancaRegras({ difficulty, theme, onComplete }: Props) {
   const resultsRef = useRef<boolean[]>([]);
   const prevRule = useRef<Rule | undefined>(undefined);
 
-  const [currentTrial, setCurrentTrial] = useState<Trial>(() => buildTrial(difficulty, 0, undefined));
+  const [currentTrial, setCurrentTrial] = useState<Trial>(() =>
+    buildTrial(difficulty, 0, domainRef.current, undefined)
+  );
 
   const nextTrial = useCallback((nextIdx: number) => {
-    const newTrial = buildTrial(difficulty, nextIdx, prevRule.current);
+    if (nextIdx % 4 === 0 && nextIdx > 0) {
+      domainRef.current = pickRandomDomain();
+      prevRule.current = undefined;
+    }
+    const newTrial = buildTrial(difficulty, nextIdx, domainRef.current, prevRule.current);
     prevRule.current = newTrial.rule;
     setCurrentTrial(newTrial);
     setSelected(new Set());
@@ -214,7 +218,7 @@ export function MudancaRegras({ difficulty, theme, onComplete }: Props) {
   if (showTutorial) {
     return <TutorialBase theme={theme} title="Mudança de Regras"
       steps={[{
-        instruction: "Selecione TODOS os produtos que seguem a regra indicada. Atenção: a regra pode mudar entre as rodadas!",
+        instruction: "Selecione TODOS os itens que seguem a regra indicada. Atenção: a regra pode mudar entre as rodadas!",
         content: (done) => <TutStep theme={theme} onDone={done} />,
       }]}
       onDone={() => setShowTutorial(false)} />;
@@ -237,7 +241,7 @@ export function MudancaRegras({ difficulty, theme, onComplete }: Props) {
 
         <div className="flex justify-between items-center mb-1">
           <h2 className={`font-bold text-base ${pal.title}`}>🔀 Mudança de Regras</h2>
-          <span className={`text-xs ${pal.sub}`}>{trial + 1}/{MAX_TRIALS}</span>
+          <span className={`text-xs ${pal.sub}`}>{trial + 1}/{MAX_TRIALS} · {currentTrial.domain.name}</span>
         </div>
 
         <div className="flex gap-0.5 mb-3">
@@ -283,11 +287,11 @@ export function MudancaRegras({ difficulty, theme, onComplete }: Props) {
                       selected.has(item.id) ? pal.sel : pal.item
                     }`}
                   >
-                    <span className="text-2xl">{item.emoji}</span>
+                    <ItemSvg id={item.id} size={36} />
                     <span className={`text-[11px] text-center leading-none font-medium ${theme === "GAMIFIED" ? "text-gray-200" : "text-gray-700"}`}>
                       {item.name}
                     </span>
-                    {currentTrial.rule.type !== "category" && currentTrial.rule.type !== "not-category" && (
+                    {(currentTrial.rule.type === "price-below" || currentTrial.rule.type === "price-above") && (
                       <span className={`text-[10px] font-bold ${theme === "GAMIFIED" ? "text-cyan-400" : "text-emerald-600"}`}>
                         {fmt(item.price)}
                       </span>

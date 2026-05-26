@@ -5,8 +5,12 @@ import { motion, AnimatePresence } from "framer-motion";
 import { calculateExerciseScore } from "@/lib/scoring";
 import { useExerciseProgress } from "@/components/exercises/ExerciseWrapper";
 import { TutorialBase } from "@/components/exercises/TutorialBase";
+import { ItemSvg } from "@/components/exercises/ItemSvg";
 import type { ExerciseResult, Theme } from "@/types";
-import { SUPER_ITEMS, shuffleSM, fmt, type Category } from "@/lib/supermarket-data";
+import {
+  shuffleFlex, fmt, pickRandomDomain,
+  type FlexDomain, type FlexItem,
+} from "@/lib/item-domains";
 
 interface Props { difficulty: number; theme: Theme; onComplete: (result: ExerciseResult) => void; }
 
@@ -18,25 +22,21 @@ function itemCount(d: number) { return d <= 3 ? 8 : d <= 6 ? 10 : 12; }
 type Constraint = "budget" | "category" | "min-items" | "max-items";
 
 interface Round {
-  items: { id: string; name: string; emoji: string; price: number; cat: Category }[];
+  domain: FlexDomain;
+  items: FlexItem[];
   budget: number;
-  requiredCategory?: Category;
+  requiredCategory?: string;
+  requiredCategoryLabel?: string;
   minItems?: number;
   maxItems?: number;
   constraints: Constraint[];
   goalLabel: string;
 }
 
-const CAT_LABELS: Record<Category, string> = {
-  hortifruti: "Hortifruti", laticinios: "Laticínios", mercearia: "Mercearia",
-  higiene: "Higiene", bebidas: "Bebidas",
-};
-
 function buildRound(d: number): Round {
+  const domain = pickRandomDomain();
   const count = itemCount(d);
-  const items = shuffleSM(SUPER_ITEMS).slice(0, count).map(i => ({
-    id: i.id, name: i.name, emoji: i.emoji, price: i.price, cat: i.cat as Category,
-  }));
+  const items = shuffleFlex(domain.items).slice(0, count);
 
   const totalMax = items.reduce((s, i) => s + i.price, 0);
   const budget = Math.round((totalMax * (0.55 + Math.random() * 0.25)) / 5) * 5;
@@ -44,15 +44,17 @@ function buildRound(d: number): Round {
   const constraints: Constraint[] = ["budget"];
   const goalParts: string[] = [`Orçamento: até ${fmt(budget)}`];
 
-  let requiredCategory: Category | undefined;
+  let requiredCategory: string | undefined;
+  let requiredCategoryLabel: string | undefined;
   let minItems: number | undefined;
   let maxItems: number | undefined;
 
   if (d >= 4) {
-    const cats: Category[] = ["hortifruti", "laticinios", "mercearia", "higiene", "bebidas"];
-    requiredCategory = cats[Math.floor(Math.random() * cats.length)];
+    const cat = domain.categories[Math.floor(Math.random() * domain.categories.length)];
+    requiredCategory = cat.id;
+    requiredCategoryLabel = cat.label;
     constraints.push("category");
-    goalParts.push(`Inclua ao menos 1 item de ${CAT_LABELS[requiredCategory]}`);
+    goalParts.push(`Inclua ao menos 1 de ${cat.label}`);
   }
 
   if (d >= 6) {
@@ -67,10 +69,10 @@ function buildRound(d: number): Round {
     goalParts.push(`Máximo ${maxItems} itens`);
   }
 
-  return { items, budget, requiredCategory, minItems, maxItems, constraints, goalLabel: goalParts.join(" · ") };
+  return { domain, items, budget, requiredCategory, requiredCategoryLabel, minItems, maxItems, constraints, goalLabel: goalParts.join(" · ") };
 }
 
-function checkRound(round: Round, selected: Set<string>, items: Round["items"]): { pass: boolean; reasons: string[]; total: number } {
+function checkRound(round: Round, selected: Set<string>, items: FlexItem[]): { pass: boolean; reasons: string[]; total: number } {
   const sel = items.filter(i => selected.has(i.id));
   const total = sel.reduce((s, i) => s + i.price, 0);
   const reasons: string[] = [];
@@ -78,7 +80,7 @@ function checkRound(round: Round, selected: Set<string>, items: Round["items"]):
   if (sel.length === 0) reasons.push("Selecione ao menos 1 item");
   if (total > round.budget) reasons.push(`Orçamento excedido (${fmt(total)} > ${fmt(round.budget)})`);
   if (round.requiredCategory && !sel.some(i => i.cat === round.requiredCategory))
-    reasons.push(`Falta item de ${CAT_LABELS[round.requiredCategory]}`);
+    reasons.push(`Falta item de ${round.requiredCategoryLabel}`);
   if (round.minItems !== undefined && sel.length < round.minItems)
     reasons.push(`Mínimo ${round.minItems} itens (selecionou ${sel.length})`);
   if (round.maxItems !== undefined && sel.length > round.maxItems)
@@ -88,16 +90,16 @@ function checkRound(round: Round, selected: Set<string>, items: Round["items"]):
 }
 
 function TutStep({ theme, onDone }: { theme: Theme; onDone: () => void }) {
-  const items = [
-    { id: "a", emoji: "🍌", name: "Banana",  price: 3.90, cat: "hortifruti" as Category },
-    { id: "b", emoji: "🥛", name: "Leite",   price: 5.90, cat: "laticinios" as Category },
-    { id: "c", emoji: "☕", name: "Café",    price: 11.90, cat: "mercearia"  as Category },
-    { id: "d", emoji: "🍎", name: "Maçã",   price: 6.90, cat: "hortifruti" as Category },
-    { id: "e", emoji: "🧴", name: "Sabão",  price: 18.90, cat: "higiene"    as Category },
-    { id: "f", emoji: "🥤", name: "Refri",  price: 8.90, cat: "bebidas"    as Category },
+  const items: FlexItem[] = [
+    { id: "banana",  name: "Banana",  price: 3.90,  cat: "hortifruti" },
+    { id: "leite",   name: "Leite",   price: 5.90,  cat: "laticinios" },
+    { id: "cafe",    name: "Café",    price: 11.90, cat: "mercearia"  },
+    { id: "maca",    name: "Maçã",    price: 6.90,  cat: "hortifruti" },
+    { id: "sabao",   name: "Sabão",   price: 18.90, cat: "higiene"    },
+    { id: "refri",   name: "Refri",   price: 8.90,  cat: "bebidas"    },
   ];
   const budget = 20;
-  const requiredCategory: Category = "hortifruti";
+  const requiredCategory = "hortifruti";
   const [sel, setSel] = useState(new Set<string>());
   const doneRef = useRef(false);
 
@@ -122,8 +124,8 @@ function TutStep({ theme, onDone }: { theme: Theme; onDone: () => void }) {
         <p className={sub}>• Inclua ao menos 1 Hortifruti</p>
       </div>
       <div className={`flex justify-between text-xs px-1 ${sub}`}>
-        <span>Total: <strong className={total > budget ? "text-red-500" : "text-green-600"}>{fmt(total)}</strong></span>
         <span>Hortifruti: <strong className={hasHorti ? "text-green-600" : "text-red-500"}>{hasHorti ? "✓" : "✗"}</strong></span>
+        <span>{sel.size} selecionado{sel.size !== 1 ? "s" : ""}</span>
       </div>
       <div className="grid grid-cols-3 gap-1.5">
         {items.map(item => (
@@ -133,7 +135,7 @@ function TutStep({ theme, onDone }: { theme: Theme; onDone: () => void }) {
               theme === "GAMIFIED" ? "border-gray-600 bg-gray-700" : "border-slate-200 bg-white"
             }`}
           >
-            <span className="text-xl">{item.emoji}</span>
+            <ItemSvg id={item.id} size={32} />
             <span className={`text-[10px] text-center leading-none ${theme === "GAMIFIED" ? "text-gray-200" : "text-gray-600"}`}>{item.name}</span>
             <span className={`text-[10px] font-bold ${theme === "GAMIFIED" ? "text-cyan-400" : "text-emerald-600"}`}>{fmt(item.price)}</span>
           </button>
@@ -282,16 +284,17 @@ export function CompraMultifuncional({ difficulty, theme, onComplete }: Props) {
         <AnimatePresence mode="wait">
           {phase === "shopping" && (
             <motion.div key={`shop-${round}`} initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }}>
-              {/* Constraints panel */}
               <div className={`rounded-xl p-2.5 mb-3 border text-xs space-y-1 ${theme === "GAMIFIED" ? "bg-gray-700 border-gray-600" : "bg-teal-50 border-teal-200"}`}>
-                <p className={`font-bold text-xs uppercase tracking-wide ${pal.sub}`}>Regras simultâneas</p>
+                <p className={`font-bold text-xs uppercase tracking-wide ${pal.sub}`}>
+                  Regras — {currentRound.domain.name}
+                </p>
                 <div className="flex flex-wrap gap-x-3 gap-y-0.5">
                   <span className={`font-medium ${pal.sub}`}>
                     💰 Orçamento: até {fmt(currentRound.budget)}
                   </span>
                   {currentRound.requiredCategory && (
                     <span className={hasRequired ? "text-green-600 font-medium" : `font-medium ${pal.sub}`}>
-                      {hasRequired ? "✓" : "○"} {CAT_LABELS[currentRound.requiredCategory]}
+                      {hasRequired ? "✓" : "○"} {currentRound.requiredCategoryLabel}
                     </span>
                   )}
                   {currentRound.minItems !== undefined && (
@@ -314,7 +317,7 @@ export function CompraMultifuncional({ difficulty, theme, onComplete }: Props) {
                       selected.has(item.id) ? pal.sel : pal.item
                     }`}
                   >
-                    <span className="text-2xl">{item.emoji}</span>
+                    <ItemSvg id={item.id} size={32} />
                     <span className={`text-[10px] text-center leading-none font-medium ${theme === "GAMIFIED" ? "text-gray-200" : "text-gray-700"}`}>
                       {item.name}
                     </span>
