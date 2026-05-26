@@ -164,19 +164,34 @@ const TUT_SHELF: Product[] = [
 function TutMemorizeStep({ theme, onDone }: { theme: Theme; onDone: () => void }) {
   const listBg = theme === "GAMIFIED" ? "bg-gray-700" : theme === "COLORFUL" ? "bg-violet-50" : "bg-slate-50";
   const textClass = theme === "GAMIFIED" ? "text-gray-200" : "text-gray-800";
+  const [countdown, setCountdown] = useState(4);
 
   useEffect(() => {
-    const t = setTimeout(onDone, 3200);
-    return () => clearTimeout(t);
+    const interval = setInterval(() => {
+      setCountdown(prev => {
+        if (prev <= 1) { clearInterval(interval); onDone(); return 0; }
+        return prev - 1;
+      });
+    }, 1000);
+    return () => clearInterval(interval);
   }, [onDone]);
 
   return (
     <div className={`rounded-xl p-4 space-y-3 ${listBg}`}>
-      <p className={`text-sm font-bold ${textClass}`}>Sua lista de compras:</p>
+      <div className="flex justify-between items-center">
+        <p className={`text-sm font-bold ${textClass}`}>Sua lista de compras:</p>
+        <div className="flex items-center gap-2">
+          <span className={`text-xs tabular-nums ${theme === "GAMIFIED" ? "text-cyan-400" : "text-amber-600"}`}>{countdown}s</span>
+          <button onClick={onDone}
+            className={`text-xs px-2 py-0.5 rounded-lg font-bold ${theme === "GAMIFIED" ? "bg-cyan-600 text-white" : "bg-amber-500 text-white"}`}>
+            Pronto →
+          </button>
+        </div>
+      </div>
       {TUT_LIST.map((p) => (
         <div key={p.id} className="flex items-center gap-3">
-          <ProductSvg id={p.id} size={32} />
-          <span className={`text-sm ${textClass}`}>{p.name}</span>
+          <ProductSvg id={p.id} size={40} />
+          <span className={`text-sm font-semibold ${textClass}`}>{p.name}</span>
         </div>
       ))}
     </div>
@@ -388,7 +403,7 @@ export function DesafioSupermercado({ difficulty, theme, onComplete }: DesafioSu
 
   return (
     <div className={`min-h-screen flex flex-col items-center justify-center p-4 ${pal.bg}`}>
-      <div className={`w-full max-w-md rounded-2xl p-5 ${pal.card}`}>
+      <div className={`w-full max-w-2xl rounded-2xl p-5 sm:p-6 ${pal.card}`}>
 
         {/* Header */}
         <div className="flex justify-between items-center mb-1">
@@ -438,14 +453,14 @@ export function DesafioSupermercado({ difficulty, theme, onComplete }: DesafioSu
                 <p className={`text-xs font-bold uppercase tracking-wide mb-3 ${pal.accent}`}>
                   🛒 Sua lista ({itemCount} itens)
                 </p>
-                <div className="grid grid-cols-2 gap-2">
+                <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-3">
                   {currentList.map((p, idx) => (
                     <motion.div
                       key={p.id}
                       initial={{ opacity: 0, scale: 0.8 }}
                       animate={{ opacity: 1, scale: 1 }}
                       transition={{ delay: idx * 0.08 }}
-                      className={`flex flex-col items-center gap-1 p-3 rounded-xl border-2 ${
+                      className={`flex flex-col items-center gap-2 p-4 rounded-xl border-2 ${
                         theme === "GAMIFIED"
                           ? "border-cyan-600/40 bg-gray-800"
                           : theme === "COLORFUL"
@@ -453,8 +468,8 @@ export function DesafioSupermercado({ difficulty, theme, onComplete }: DesafioSu
                           : "border-emerald-200 bg-white"
                       }`}
                     >
-                      <ProductSvg id={p.id} size={48} />
-                      <span className={`text-xs font-semibold text-center leading-tight mt-1 ${
+                      <ProductSvg id={p.id} size={64} />
+                      <span className={`text-sm font-semibold text-center leading-tight ${
                         theme === "GAMIFIED" ? "text-gray-100" : "text-gray-800"
                       }`}>
                         {p.name}
@@ -509,51 +524,43 @@ export function DesafioSupermercado({ difficulty, theme, onComplete }: DesafioSu
                   PRATELEIRA
                 </div>
 
-                {/* Fileiras de 4 produtos — sem scroll */}
-                <div>
-                  {Array.from({ length: Math.ceil(shelfProducts.length / 4) }).map((_, rowIdx) => {
-                    const rowProducts = shelfProducts.slice(rowIdx * 4, rowIdx * 4 + 4);
-                    return (
-                      <div key={rowIdx} className="px-2 pt-2">
-                        <div className="grid grid-cols-4 gap-1.5">
-                          {rowProducts.map((p) => {
-                            const isSelected = selected.has(p.id);
-                            return (
-                              <button
-                                key={p.id}
-                                onClick={() => toggleProduct(p.id)}
-                                className={`p-1.5 rounded-lg border-2 flex flex-col items-center gap-1 transition-all active:scale-95 ${
-                                  isSelected ? pal.selectedCard : pal.productCard
-                                }`}
-                              >
-                                <ProductSvg id={p.id} size={32} />
-                                <span className={`text-[10px] text-center font-semibold leading-tight ${
-                                  theme === "GAMIFIED" ? "text-gray-100" : "text-gray-800"
-                                }`}>
-                                  {p.name}
-                                </span>
-                                {isSelected && (
-                                  <span className="text-xs text-green-500 font-bold">✓</span>
-                                )}
-                              </button>
-                            );
-                          })}
-                        </div>
-                        {/* Tábua da prateleira */}
-                        <div
-                          className="mt-2 rounded-sm"
-                          style={{
-                            height: "8px",
-                            background: theme === "GAMIFIED"
-                              ? "linear-gradient(to bottom, #374151 0%, #1f2937 100%)"
-                              : "linear-gradient(to bottom, #92400e 0%, #78350f 100%)",
-                            boxShadow: "0 4px 8px rgba(0,0,0,0.5), inset 0 1px 0 rgba(255,255,255,0.15)",
-                          }}
-                        />
-                      </div>
-                    );
-                  })}
-                  <div className="h-3" />
+                {/* Grid de produtos */}
+                <div className="p-2">
+                  <div className="grid grid-cols-4 sm:grid-cols-5 lg:grid-cols-6 gap-2">
+                    {shelfProducts.map((p) => {
+                      const isSelected = selected.has(p.id);
+                      return (
+                        <button
+                          key={p.id}
+                          onClick={() => toggleProduct(p.id)}
+                          className={`p-2 rounded-lg border-2 flex flex-col items-center gap-1 transition-all active:scale-95 ${
+                            isSelected ? pal.selectedCard : pal.productCard
+                          }`}
+                        >
+                          <ProductSvg id={p.id} size={48} />
+                          <span className={`text-xs text-center font-semibold leading-tight ${
+                            theme === "GAMIFIED" ? "text-gray-100" : "text-gray-800"
+                          }`}>
+                            {p.name}
+                          </span>
+                          {isSelected && (
+                            <span className="text-xs text-green-500 font-bold">✓</span>
+                          )}
+                        </button>
+                      );
+                    })}
+                  </div>
+                  {/* Shelf plank */}
+                  <div
+                    className="mt-2 rounded-sm"
+                    style={{
+                      height: "8px",
+                      background: theme === "GAMIFIED"
+                        ? "linear-gradient(to bottom, #374151 0%, #1f2937 100%)"
+                        : "linear-gradient(to bottom, #92400e 0%, #78350f 100%)",
+                      boxShadow: "0 4px 8px rgba(0,0,0,0.5), inset 0 1px 0 rgba(255,255,255,0.15)",
+                    }}
+                  />
                 </div>
               </div>
 

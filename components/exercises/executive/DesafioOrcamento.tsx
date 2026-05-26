@@ -1,267 +1,298 @@
 "use client";
 
-import { useState, useRef, useCallback } from "react";
+import { useState, useEffect, useRef, useCallback } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { calculateExerciseScore } from "@/lib/scoring";
 import { useExerciseProgress } from "@/components/exercises/ExerciseWrapper";
 import { TutorialBase } from "@/components/exercises/TutorialBase";
+import { ItemSvg } from "@/components/exercises/ItemSvg";
 import type { ExerciseResult, Theme } from "@/types";
-import { SUPER_ITEMS, shuffleSM, fmt } from "@/lib/supermarket-data";
+import {
+  shuffleFlex, itemsByFlexCat, pickRandomDomain, ALL_DOMAINS,
+  type FlexDomain, type FlexCategory, type FlexItem,
+} from "@/lib/item-domains";
 
 interface Props { difficulty: number; theme: Theme; onComplete: (result: ExerciseResult) => void; }
 
-const MAX_TRIALS = 10;
+const ITEMS_PER_SESSION = 12;
 
-type GoalMode = "max" | "range" | "exact";
-
-interface Trial {
-  items: { id: string; name: string; emoji: string; price: number }[];
-  budget: number;
-  goal: GoalMode;
-  targetMin: number;
-  targetMax: number;
-  goalLabel: string;
+function secsPerItem(d: number): number {
+  return d >= 7 ? 4 : 5;
 }
 
-function buildTrial(d: number, used: Set<string>): Trial {
-  const count = d <= 3 ? 8 : d <= 6 ? 10 : 12;
-  const pool = shuffleSM(SUPER_ITEMS.filter(i => !used.has(i.id))).slice(0, count);
-  const items = pool.map(i => ({ id: i.id, name: i.name, emoji: i.emoji, price: i.price }));
+interface SessionItem {
+  item: FlexItem;
+  isTarget: boolean;
+}
 
-  const totalMax = items.reduce((s, i) => s + i.price, 0);
-  const budget = Math.round((totalMax * (0.5 + Math.random() * 0.3)) / 5) * 5;
+interface Session {
+  domain: FlexDomain;
+  targetCategory: FlexCategory;
+  items: SessionItem[];
+}
 
-  let goal: GoalMode, targetMin: number, targetMax: number, goalLabel: string;
-  if (d <= 3) {
-    goal = "max";
-    targetMin = 0;
-    targetMax = budget;
-    goalLabel = `Gaste até ${fmt(budget)}`;
-  } else if (d <= 6) {
-    const mid = Math.round(budget * 0.75);
-    targetMin = mid - 5;
-    targetMax = budget;
-    goal = "range";
-    goalLabel = `Gaste entre ${fmt(targetMin)} e ${fmt(budget)}`;
+function buildSession(d: number): Session {
+  const domain = pickRandomDomain();
+  const catIdx = Math.floor(Math.random() * domain.categories.length);
+  const targetCategory = domain.categories[catIdx];
+
+  const targets = shuffleFlex(itemsByFlexCat(domain, targetCategory.id)).slice(0, 6);
+
+  let distractorItems: FlexItem[];
+  if (d <= 4) {
+    // Distractors from a completely different domain
+    const others = ALL_DOMAINS.filter(dom => dom.id !== domain.id);
+    const otherDomain = others[Math.floor(Math.random() * others.length)];
+    distractorItems = shuffleFlex(otherDomain.items).slice(0, 6);
   } else {
-    const exact = Math.round((budget * (0.6 + Math.random() * 0.3)) / 0.1) * 0.1;
-    const tolerance = d <= 8 ? 2 : 1;
-    targetMin = exact - tolerance;
-    targetMax = exact + tolerance;
-    goal = "exact";
-    goalLabel = `Gaste exatamente ${fmt(exact)} (±${fmt(tolerance)})`;
+    // Distractors from same domain, different categories
+    const sameButOther = domain.items.filter(i => i.cat !== targetCategory.id);
+    distractorItems = shuffleFlex(sameButOther).slice(0, 6);
   }
 
-  return { items, budget, goal, targetMin, targetMax, goalLabel };
+  const sessionItems: SessionItem[] = shuffleFlex([
+    ...targets.map(item => ({ item, isTarget: true })),
+    ...distractorItems.map(item => ({ item, isTarget: false })),
+  ]);
+
+  return { domain, targetCategory, items: sessionItems };
 }
+
+// ── Tutorial ───────────────────────────────────────────────────────────────
 
 function TutStep({ theme, onDone }: { theme: Theme; onDone: () => void }) {
-  const items = [
-    { id: "a", emoji: "🍌", name: "Banana", price: 3.90 },
-    { id: "b", emoji: "🥛", name: "Leite",  price: 5.90 },
-    { id: "c", emoji: "☕", name: "Café",   price: 11.90 },
-    { id: "d", emoji: "🧴", name: "Sabão",  price: 18.90 },
-  ];
-  const [sel, setSel] = useState(new Set<string>());
-  const budget = 15;
-  const total = [...sel].reduce((s, id) => s + (items.find(i => i.id === id)?.price ?? 0), 0);
-  const ok = total <= budget && sel.size > 0;
   const doneRef = useRef(false);
 
-  function toggle(id: string) {
-    setSel(prev => { const n = new Set(prev); n.has(id) ? n.delete(id) : n.add(id); return n; });
+  function answer(a: "SIM" | "NÃO") {
+    if (doneRef.current) return;
+    if (a === "SIM") {
+      doneRef.current = true;
+      setTimeout(onDone, 400);
+    }
   }
 
-  function confirm() {
-    if (!ok || doneRef.current) return;
-    doneRef.current = true;
-    onDone();
-  }
-
+  const text = theme === "GAMIFIED" ? "text-gray-200" : "text-gray-800";
   const sub = theme === "GAMIFIED" ? "text-gray-400" : "text-gray-500";
+
   return (
-    <div className="space-y-3">
-      <div className={`p-3 rounded-xl border flex justify-between ${theme === "GAMIFIED" ? "bg-gray-700 border-gray-600" : "bg-slate-50 border-slate-200"}`}>
-        <span className={`text-sm font-semibold ${theme === "GAMIFIED" ? "text-gray-200" : "text-gray-800"}`}>Orçamento: {fmt(budget)}</span>
+    <div className="space-y-4">
+      <div className={`rounded-xl p-3 border text-center ${
+        theme === "GAMIFIED" ? "bg-gray-700 border-gray-600" : "bg-amber-50 border-amber-200"
+      }`}>
+        <p className={`text-xs font-bold uppercase tracking-wide mb-0.5 ${sub}`}>Categoria</p>
+        <p className={`text-base font-bold ${theme === "GAMIFIED" ? "text-cyan-300" : "text-amber-800"}`}>
+          🐄 Fazenda (Animais)?
+        </p>
       </div>
-      <div className="grid grid-cols-2 gap-2">
-        {items.map(item => (
-          <button key={item.id} onClick={() => toggle(item.id)}
-            className={`p-2 rounded-xl border-2 flex flex-col items-center gap-1 transition-all ${
-              sel.has(item.id)
-                ? "border-emerald-500 bg-emerald-50"
-                : theme === "GAMIFIED" ? "border-gray-600 bg-gray-700" : "border-slate-200 bg-white"
-            }`}
-          >
-            <span className="text-3xl">{item.emoji}</span>
-            <span className={`text-xs font-semibold ${theme === "GAMIFIED" ? "text-gray-200" : "text-gray-700"}`}>{item.name}</span>
-            <span className={`text-xs font-bold ${theme === "GAMIFIED" ? "text-cyan-400" : "text-emerald-600"}`}>{fmt(item.price)}</span>
-          </button>
-        ))}
+
+      <div className="flex flex-col items-center gap-2 py-2">
+        <ItemSvg id="an-vaca" size={80} />
+        <p className={`font-bold text-xl ${text}`}>Vaca</p>
       </div>
-      <button onClick={confirm} disabled={!ok}
-        className={`w-full h-10 rounded-xl font-bold transition-all disabled:opacity-40 ${
-          theme === "GAMIFIED" ? "bg-cyan-600 text-white" : "bg-emerald-600 text-white"
-        }`}
-      >Confirmar seleção</button>
+
+      <p className={`text-center text-xs ${sub}`}>
+        Toque SIM — Vaca é animal de fazenda!
+      </p>
+
+      <div className="grid grid-cols-2 gap-3">
+        <button onClick={() => answer("SIM")}
+          className="h-14 rounded-2xl font-bold text-xl bg-green-500 hover:bg-green-600 text-white transition-all active:scale-95">
+          SIM ✓
+        </button>
+        <button onClick={() => answer("NÃO")}
+          className="h-14 rounded-2xl font-bold text-xl bg-red-400 hover:bg-red-500 text-white transition-all active:scale-95">
+          NÃO ✗
+        </button>
+      </div>
     </div>
   );
 }
+
+// ── Componente principal ───────────────────────────────────────────────────
 
 export function DesafioOrcamento({ difficulty, theme, onComplete }: Props) {
   const [showTutorial, setShowTutorial] = useState(true);
   const reportProgress = useExerciseProgress();
 
-  const [trial, setTrial] = useState(0);
-  const [trialResults, setTrialResults] = useState<boolean[]>([]);
-  const [selected, setSelected] = useState(new Set<string>());
-  const [phase, setPhase] = useState<"shopping" | "result">("shopping");
+  const [itemIdx, setItemIdx] = useState(0);
+  const [results, setResults] = useState<boolean[]>([]);
+  const [phase, setPhase] = useState<"question" | "feedback">("question");
   const [lastCorrect, setLastCorrect] = useState(false);
+  const [timer, setTimer] = useState(secsPerItem(difficulty));
+  const [session, setSession] = useState<Session>(() => buildSession(difficulty));
 
-  const usedIds = useRef(new Set<string>());
+  const timerRef = useRef<ReturnType<typeof setInterval> | null>(null);
+  const answeredRef = useRef(false);
   const startTime = useRef(Date.now());
-  const trialRef = useRef(0);
+  const itemIdxRef = useRef(0);
   const resultsRef = useRef<boolean[]>([]);
+  const maxSecs = secsPerItem(difficulty);
 
-  const [currentTrial, setCurrentTrial] = useState<Trial>(() => buildTrial(difficulty, usedIds.current));
+  useEffect(() => () => { if (timerRef.current) clearInterval(timerRef.current); }, []);
 
-  const nextTrial = useCallback((nextIdx: number) => {
-    currentTrial.items.forEach(i => usedIds.current.add(i.id));
-    if (usedIds.current.size > SUPER_ITEMS.length - 5) usedIds.current.clear();
-    setCurrentTrial(buildTrial(difficulty, usedIds.current));
-    setSelected(new Set());
-    setPhase("shopping");
-  }, [difficulty, currentTrial]);
+  const finishItem = useCallback((isCorrect: boolean) => {
+    if (answeredRef.current) return;
+    answeredRef.current = true;
+    if (timerRef.current) clearInterval(timerRef.current);
 
-  function toggle(id: string) {
-    if (phase !== "shopping") return;
-    setSelected(prev => { const n = new Set(prev); n.has(id) ? n.delete(id) : n.add(id); return n; });
-  }
-
-  function confirm() {
-    const total = [...selected].reduce((s, id) => s + (currentTrial.items.find(i => i.id === id)?.price ?? 0), 0);
-    const isCorrect = total >= currentTrial.targetMin && total <= currentTrial.targetMax;
     const newResults = [...resultsRef.current, isCorrect];
     resultsRef.current = newResults;
-    setTrialResults(newResults);
+    setResults([...newResults]);
     setLastCorrect(isCorrect);
-    setPhase("result");
+    setPhase("feedback");
 
-    const nextT = trialRef.current + 1;
-    reportProgress(Math.round((nextT / MAX_TRIALS) * 100));
+    const nextIdx = itemIdxRef.current + 1;
+    reportProgress(Math.round((nextIdx / ITEMS_PER_SESSION) * 100));
 
     setTimeout(() => {
-      if (nextT >= MAX_TRIALS) {
-        const accuracy = newResults.filter(Boolean).length / MAX_TRIALS;
+      if (nextIdx >= ITEMS_PER_SESSION) {
+        const accuracy = newResults.filter(Boolean).length / ITEMS_PER_SESSION;
         onComplete({
           exerciseId: "desafio-orcamento",
           domain: "executive",
           score: calculateExerciseScore("desafio-orcamento", accuracy, undefined, difficulty),
           accuracy, difficulty,
           duration: Math.round((Date.now() - startTime.current) / 1000),
-          metadata: { trials: MAX_TRIALS, correct: newResults.filter(Boolean).length },
+          metadata: { trials: ITEMS_PER_SESSION, correct: newResults.filter(Boolean).length },
         });
       } else {
-        trialRef.current = nextT;
-        setTrial(nextT);
-        nextTrial(nextT);
+        itemIdxRef.current = nextIdx;
+        answeredRef.current = false;
+        setItemIdx(nextIdx);
+        setPhase("question");
       }
-    }, 1800);
+    }, 1000);
+  }, [itemIdx, difficulty, onComplete, reportProgress]);
+
+  useEffect(() => {
+    if (phase !== "question" || showTutorial) return;
+    setTimer(maxSecs);
+    timerRef.current = setInterval(() => {
+      setTimer(t => {
+        if (t <= 1) {
+          clearInterval(timerRef.current!);
+          finishItem(false);
+          return 0;
+        }
+        return t - 1;
+      });
+    }, 1000);
+    return () => { if (timerRef.current) clearInterval(timerRef.current); };
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [phase, itemIdx, showTutorial]);
+
+  function answer(response: "SIM" | "NÃO") {
+    if (phase !== "question" || answeredRef.current) return;
+    const currentItem = session.items[itemIdx];
+    const isCorrect = (response === "SIM") === currentItem.isTarget;
+    finishItem(isCorrect);
   }
 
   if (showTutorial) {
-    return <TutorialBase theme={theme} title="Desafio do Orçamento"
-      steps={[{ instruction: "Selecione produtos sem ultrapassar o orçamento disponível. Observe os preços com atenção!", content: (done) => <TutStep theme={theme} onDone={done} /> }]}
-      onDone={() => setShowTutorial(false)} />;
+    return (
+      <TutorialBase theme={theme} title="Fluência Semântica"
+        steps={[{
+          instruction: "Um item aparece na tela. Toque SIM se ele pertence à categoria mostrada, NÃO se não pertencer. Seja rápido!",
+          content: (done) => <TutStep theme={theme} onDone={done} />,
+        }]}
+        onDone={() => setShowTutorial(false)} />
+    );
   }
 
-  const total = [...selected].reduce((s, id) => s + (currentTrial.items.find(i => i.id === id)?.price ?? 0), 0);
-  const overBudget = total > currentTrial.budget;
-  const inGoal = total >= currentTrial.targetMin && total <= currentTrial.targetMax;
+  const currentItem = session.items[itemIdx];
+  const timerRatio = timer / maxSecs;
+  const timerColor = timerRatio > 0.6 ? "bg-green-400" : timerRatio > 0.3 ? "bg-amber-400" : "bg-red-500 animate-pulse";
 
   const pal = {
-    bg: theme === "GAMIFIED" ? "bg-gray-950" : theme === "COLORFUL" ? "bg-gradient-to-br from-emerald-50 to-teal-50" : "bg-gray-50",
-    card: theme === "GAMIFIED" ? "bg-gray-800 border border-cyan-500/30" : "bg-white shadow-lg",
-    title: theme === "GAMIFIED" ? "text-cyan-400" : theme === "COLORFUL" ? "text-emerald-700" : "text-gray-900",
+    bg: theme === "GAMIFIED" ? "bg-gray-950" : theme === "COLORFUL" ? "bg-gradient-to-br from-fuchsia-50 to-pink-50" : "bg-gradient-to-br from-slate-50 to-rose-50/20",
+    card: theme === "GAMIFIED" ? "bg-gray-800 border border-cyan-500/20" : theme === "COLORFUL" ? "bg-white border-2 border-fuchsia-200 shadow-xl" : "bg-white border border-slate-200/70 shadow-md",
+    title: theme === "GAMIFIED" ? "text-cyan-400" : theme === "COLORFUL" ? "text-fuchsia-700" : "text-slate-800",
     sub: theme === "GAMIFIED" ? "text-gray-400" : "text-gray-500",
-    goal: theme === "GAMIFIED" ? "bg-gray-700 border-gray-600" : "bg-emerald-50 border-emerald-200",
-    item: theme === "GAMIFIED" ? "border-gray-600 bg-gray-700" : "border-slate-200 bg-white shadow-sm",
-    sel: theme === "GAMIFIED" ? "border-cyan-400 bg-cyan-900/30" : "border-emerald-500 bg-emerald-50",
-    btn: theme === "GAMIFIED" ? "bg-cyan-600 text-white" : theme === "COLORFUL" ? "bg-gradient-to-r from-emerald-500 to-teal-500 text-white" : "bg-emerald-600 text-white",
+    catBg: theme === "GAMIFIED" ? "bg-gray-700 border-gray-600" : theme === "COLORFUL" ? "bg-fuchsia-50 border-fuchsia-200" : "bg-slate-50 border-slate-200",
+    catText: theme === "GAMIFIED" ? "text-cyan-300" : theme === "COLORFUL" ? "text-fuchsia-800" : "text-slate-800",
+    dotActive: theme === "GAMIFIED" ? "bg-cyan-500" : theme === "COLORFUL" ? "bg-fuchsia-500" : "bg-fuchsia-500",
+    dotInactive: theme === "GAMIFIED" ? "bg-gray-700" : "bg-slate-200",
   };
 
   return (
-    <div className={`min-h-screen flex flex-col items-center justify-start py-4 px-3 ${pal.bg}`}>
-      <div className={`w-full max-w-md rounded-2xl p-4 ${pal.card}`}>
+    <div className={`min-h-screen flex flex-col items-center justify-center p-4 ${pal.bg}`}>
+      <div className={`w-full max-w-2xl rounded-2xl p-5 sm:p-6 ${pal.card}`}>
 
         <div className="flex justify-between items-center mb-1">
-          <h2 className={`font-bold text-base ${pal.title}`}>💰 Desafio do Orçamento</h2>
-          <span className={`text-xs ${pal.sub}`}>{trial + 1}/{MAX_TRIALS}</span>
+          <h2 className={`font-bold text-base ${pal.title}`}>🗂️ Fluência Semântica</h2>
+          <span className={`text-xs ${pal.sub}`}>{itemIdx + 1}/{ITEMS_PER_SESSION}</span>
         </div>
 
+        {/* Progresso */}
         <div className="flex gap-0.5 mb-3">
-          {Array.from({ length: MAX_TRIALS }).map((_, i) => (
+          {Array.from({ length: ITEMS_PER_SESSION }).map((_, i) => (
             <div key={i} className={`h-1.5 flex-1 rounded-full transition-colors ${
-              i < trialResults.length ? trialResults[i] ? "bg-green-500" : "bg-red-400"
-              : i === trial ? "bg-blue-400 animate-pulse"
-              : theme === "GAMIFIED" ? "bg-gray-700" : "bg-gray-200"
+              i < results.length
+                ? results[i] ? "bg-green-500" : "bg-red-400"
+                : i === itemIdx ? `${pal.dotActive} animate-pulse` : pal.dotInactive
             }`} />
           ))}
         </div>
 
+        {/* Timer bar */}
+        <div className={`h-2 rounded-full mb-4 ${theme === "GAMIFIED" ? "bg-gray-700" : "bg-slate-200"}`}>
+          <div className={`h-full rounded-full transition-all duration-1000 ${timerColor}`}
+            style={{ width: `${timerRatio * 100}%` }} />
+        </div>
+
+        {/* Categoria alvo */}
+        <div className={`rounded-xl p-3 mb-4 border text-center ${pal.catBg}`}>
+          <p className={`text-xs font-bold uppercase tracking-wide mb-0.5 ${pal.sub}`}>Categoria</p>
+          <p className={`text-base font-bold ${pal.catText}`}>
+            {session.targetCategory.emoji} {session.targetCategory.label} ({session.domain.name})?
+          </p>
+        </div>
+
         <AnimatePresence mode="wait">
-          {phase === "shopping" && (
-            <motion.div key={`shop-${trial}`} initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }}>
-              {/* Goal card */}
-              <div className={`rounded-xl p-3 mb-3 border ${pal.goal}`}>
-                <p className={`text-xs font-bold uppercase tracking-wide mb-0.5 ${pal.sub}`}>Objetivo</p>
-                <p className={`text-sm font-semibold ${theme === "GAMIFIED" ? "text-gray-100" : "text-gray-800"}`}>
-                  {currentTrial.goalLabel}
+          {phase === "question" && (
+            <motion.div key={`q-${itemIdx}`}
+              initial={{ opacity: 0, scale: 0.9 }} animate={{ opacity: 1, scale: 1 }}
+              exit={{ opacity: 0, scale: 1.05 }}>
+
+              <div className="flex flex-col items-center gap-3 py-4">
+                <ItemSvg id={currentItem.item.id} size={120} />
+                <p className={`font-bold text-2xl text-center ${
+                  theme === "GAMIFIED" ? "text-gray-100" : "text-gray-800"
+                }`}>
+                  {currentItem.item.name}
                 </p>
               </div>
 
-              {/* Selected count */}
-              <div className="flex justify-between items-center mb-3">
-                <span className={`text-xs ${pal.sub}`}>{selected.size} produto{selected.size !== 1 ? "s" : ""} selecionado{selected.size !== 1 ? "s" : ""}</span>
+              <div className="grid grid-cols-2 gap-4 mt-2">
+                <button onClick={() => answer("SIM")}
+                  className="h-16 rounded-2xl font-bold text-xl bg-green-500 hover:bg-green-600 text-white transition-all active:scale-95 shadow-md">
+                  SIM ✓
+                </button>
+                <button onClick={() => answer("NÃO")}
+                  className="h-16 rounded-2xl font-bold text-xl bg-red-400 hover:bg-red-500 text-white transition-all active:scale-95 shadow-md">
+                  NÃO ✗
+                </button>
               </div>
-
-              {/* Products grid */}
-              <div className="grid grid-cols-3 gap-2 mb-3">
-                {currentTrial.items.map(item => (
-                  <button key={item.id} onClick={() => toggle(item.id)}
-                    className={`p-2 rounded-xl border-2 flex flex-col items-center gap-1 transition-all active:scale-95 ${
-                      selected.has(item.id) ? pal.sel : pal.item
-                    }`}
-                  >
-                    <span className="text-3xl">{item.emoji}</span>
-                    <span className={`text-xs text-center leading-none font-medium ${theme === "GAMIFIED" ? "text-gray-200" : "text-gray-700"}`}>
-                      {item.name}
-                    </span>
-                    <span className={`text-xs font-bold ${theme === "GAMIFIED" ? "text-cyan-400" : "text-emerald-600"}`}>
-                      {fmt(item.price)}
-                    </span>
-                    {selected.has(item.id) && <span className="text-xs text-green-500 font-bold">✓</span>}
-                  </button>
-                ))}
-              </div>
-
-              <button onClick={confirm} disabled={selected.size === 0}
-                className={`w-full h-11 rounded-xl font-bold transition-all disabled:opacity-40 ${pal.btn}`}
-              >
-                Confirmar seleção
-              </button>
             </motion.div>
           )}
 
-          {phase === "result" && (
-            <motion.div key={`res-${trial}`} className="text-center py-8"
-              initial={{ opacity: 0, scale: 0.9 }} animate={{ opacity: 1, scale: 1 }}>
-              <p className="text-5xl mb-2">{lastCorrect ? "✅" : "❌"}</p>
-              <p className={`font-bold text-lg ${lastCorrect ? "text-green-600" : "text-red-500"}`}>
-                {lastCorrect ? "Orçamento cumprido!" : "Fora do objetivo"}
+          {phase === "feedback" && (
+            <motion.div key={`fb-${itemIdx}`}
+              initial={{ opacity: 0 }} animate={{ opacity: 1 }}
+              className="flex flex-col items-center gap-2 py-4">
+              <ItemSvg id={currentItem.item.id} size={72} />
+              <p className={`font-semibold text-lg ${theme === "GAMIFIED" ? "text-gray-100" : "text-gray-800"}`}>
+                {currentItem.item.name}
               </p>
-              <p className={`text-sm mt-1 ${pal.sub}`}>Total gasto: {fmt(total)}</p>
-              <p className={`text-xs mt-0.5 ${pal.sub}`}>{currentTrial.goalLabel}</p>
+              <p className="text-3xl">{lastCorrect ? "✅" : "❌"}</p>
+              <p className={`text-sm font-semibold ${lastCorrect ? "text-green-600" : "text-red-500"}`}>
+                {lastCorrect
+                  ? "Correto!"
+                  : currentItem.isTarget
+                    ? `Sim! É ${session.targetCategory.label}`
+                    : `Não é ${session.targetCategory.label}`
+                }
+              </p>
             </motion.div>
           )}
         </AnimatePresence>

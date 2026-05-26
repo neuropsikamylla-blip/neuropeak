@@ -8,16 +8,23 @@ export function ProductSvg({ id, size = 36 }: { id: string; size?: number }) {
     case "pao":
       return (
         <svg width={s} height={s} viewBox="0 0 40 40">
-          {/* Base */}
-          <path d="M6 25 Q6 34 20 34 Q34 34 34 25Z" fill="#A0522D"/>
-          {/* Dome */}
-          <path d="M6 25 Q6 11 20 11 Q34 11 34 25Z" fill="#D2895A"/>
-          {/* Crust top highlight */}
-          <path d="M7 21 Q8 13 20 12 Q32 13 33 21" fill="none" stroke="#E8A870" strokeWidth="1.5" strokeLinecap="round"/>
-          {/* Score marks */}
-          <line x1="14" y1="13" x2="13.5" y2="22" stroke="#8B4513" strokeWidth="1.5" strokeLinecap="round"/>
-          <line x1="20" y1="11" x2="19.5" y2="21" stroke="#8B4513" strokeWidth="1.5" strokeLinecap="round"/>
-          <line x1="26" y1="13" x2="25.5" y2="22" stroke="#8B4513" strokeWidth="1.5" strokeLinecap="round"/>
+          {/* Plastic bag — clear outline */}
+          <rect x="5" y="10" width="30" height="26" rx="4" fill="rgba(220,240,255,0.5)" stroke="#90CAF9" strokeWidth="1"/>
+          {/* Twist tie at top */}
+          <rect x="16" y="7" width="8" height="4" rx="2" fill="#E53935"/>
+          <path d="M16 9 Q20 7 24 9" stroke="#C62828" strokeWidth="1" fill="none"/>
+          {/* Slices of bread (3 visible) */}
+          <rect x="9" y="15" width="7" height="17" rx="2" fill="#D2895A"/>
+          <rect x="9" y="15" width="7" height="17" rx="2" fill="none" stroke="#A0522D" strokeWidth="0.7"/>
+          <ellipse cx="12.5" cy="15.5" rx="3.5" ry="1.2" fill="#C47A45"/>
+          <rect x="17" y="15" width="7" height="17" rx="2" fill="#C47A45"/>
+          <rect x="17" y="15" width="7" height="17" rx="2" fill="none" stroke="#A0522D" strokeWidth="0.7"/>
+          <ellipse cx="20.5" cy="15.5" rx="3.5" ry="1.2" fill="#B87040"/>
+          <rect x="25" y="15" width="7" height="17" rx="2" fill="#D2895A"/>
+          <rect x="25" y="15" width="7" height="17" rx="2" fill="none" stroke="#A0522D" strokeWidth="0.7"/>
+          <ellipse cx="28.5" cy="15.5" rx="3.5" ry="1.2" fill="#C47A45"/>
+          {/* Bag reflection */}
+          <path d="M6 12 Q8 11 10 13" fill="none" stroke="rgba(255,255,255,0.6)" strokeWidth="1.2" strokeLinecap="round"/>
         </svg>
       );
 
@@ -100,18 +107,22 @@ export function ProductSvg({ id, size = 36 }: { id: string; size?: number }) {
     case "arroz":
       return (
         <svg width={s} height={s} viewBox="0 0 40 40">
-          {/* Bag */}
-          <path d="M9 15 L7 34 L33 34 L31 15Z" fill="#F5F0E0"/>
-          <path d="M9 15 L7 34 L33 34 L31 15Z" fill="none" stroke="#C8B87A" strokeWidth="1"/>
-          {/* Tied top */}
-          <path d="M9 15 Q20 7 31 15" fill="#E8E0C0" stroke="#C8B87A" strokeWidth="1"/>
-          {/* Rice grains */}
-          <ellipse cx="16" cy="22" rx="2.2" ry="1" fill="#DDD0A0" transform="rotate(-20 16 22)"/>
-          <ellipse cx="21" cy="20" rx="2.2" ry="1" fill="#DDD0A0" transform="rotate(10 21 20)"/>
-          <ellipse cx="25" cy="23" rx="2.2" ry="1" fill="#DDD0A0" transform="rotate(-30 25 23)"/>
-          <ellipse cx="17" cy="27" rx="2.2" ry="1" fill="#DDD0A0" transform="rotate(15 17 27)"/>
-          <ellipse cx="24" cy="28" rx="2.2" ry="1" fill="#DDD0A0" transform="rotate(-10 24 28)"/>
-          <ellipse cx="20" cy="25" rx="2.2" ry="1" fill="#DDD0A0" transform="rotate(5 20 25)"/>
+          {/* Package body */}
+          <rect x="5" y="6" width="30" height="32" rx="3" fill="#1565C0"/>
+          <rect x="5" y="6" width="30" height="32" rx="3" fill="none" stroke="#0D47A1" strokeWidth="1"/>
+          {/* White label area */}
+          <rect x="7" y="13" width="26" height="18" rx="2" fill="#FFFFFF"/>
+          {/* Blue "ARROZ" band */}
+          <rect x="7" y="13" width="26" height="6" rx="2" fill="#1565C0"/>
+          <text x="20" y="18.5" fontSize="5.5" textAnchor="middle" fill="white" fontWeight="bold">ARROZ</text>
+          {/* Rice grains on label */}
+          <ellipse cx="14" cy="26" rx="2.5" ry="1.1" fill="#F5EDD0" transform="rotate(-20 14 26)"/>
+          <ellipse cx="19" cy="24" rx="2.5" ry="1.1" fill="#EDE0B8" transform="rotate(10 19 24)"/>
+          <ellipse cx="24" cy="26" rx="2.5" ry="1.1" fill="#F5EDD0" transform="rotate(-10 24 26)"/>
+          <ellipse cx="16" cy="29" rx="2.5" ry="1.1" fill="#EDE0B8" transform="rotate(15 16 29)"/>
+          <ellipse cx="22" cy="29" rx="2.5" ry="1.1" fill="#F5EDD0" transform="rotate(5 22 29)"/>
+          {/* Weight indicator */}
+          <text x="20" y="36" fontSize="5" textAnchor="middle" fill="#90CAF9">1 kg</text>
         </svg>
       );
 
@@ -191,22 +202,23 @@ export function ProductSvg({ id, size = 36 }: { id: string; size?: number }) {
     case "cafe":
       return (
         <svg width={s} height={s} viewBox="0 0 40 40">
-          {/* Can body */}
-          <rect x="9" y="11" width="22" height="24" rx="3" fill="#3E2314"/>
-          <rect x="9" y="11" width="22" height="24" rx="3" fill="none" stroke="#2A1508" strokeWidth="1"/>
-          {/* Top lid */}
-          <ellipse cx="20" cy="11" rx="11" ry="3.5" fill="#6B4020"/>
-          {/* Bottom lid */}
-          <ellipse cx="20" cy="35" rx="11" ry="3" fill="#2A1508"/>
-          {/* Brown label */}
-          <rect x="10" y="16" width="20" height="14" rx="2" fill="#7B5030"/>
-          {/* Cup icon on label */}
-          <path d="M15 19 L16 26 L24 26 L25 19Z" fill="#3E2314"/>
-          <path d="M25 21 Q29 21 29 23.5 Q29 26 25 26" fill="none" stroke="#3E2314" strokeWidth="1.5"/>
-          {/* Steam */}
-          <path d="M17 19 Q16 16.5 17 14.5" fill="none" stroke="#C8A882" strokeWidth="1.2" strokeLinecap="round"/>
-          <path d="M20 18.5 Q19 16 20 14" fill="none" stroke="#C8A882" strokeWidth="1.2" strokeLinecap="round"/>
-          <path d="M23 19 Q22 16.5 23 14.5" fill="none" stroke="#C8A882" strokeWidth="1.2" strokeLinecap="round"/>
+          {/* Bag body (vacuum-sealed coffee bag) */}
+          <path d="M8 12 Q8 8 12 7 L28 7 Q32 8 32 12 L32 34 Q32 36 30 36 L10 36 Q8 36 8 34 Z" fill="#4E342E"/>
+          <path d="M8 12 Q8 8 12 7 L28 7 Q32 8 32 12 L32 34 Q32 36 30 36 L10 36 Q8 36 8 34 Z" fill="none" stroke="#3E2314" strokeWidth="1"/>
+          {/* Seal at top */}
+          <rect x="8" y="7" width="24" height="5" rx="2" fill="#6D4C41"/>
+          {/* Gold band label */}
+          <rect x="9" y="15" width="22" height="14" rx="2" fill="#FFC107"/>
+          {/* CAFÉ text */}
+          <text x="20" y="20.5" fontSize="6" textAnchor="middle" fill="#3E2314" fontWeight="bold">CAFÉ</text>
+          {/* Coffee cup icon */}
+          <path d="M15 22 L16 26 L24 26 L25 22Z" fill="#5D4037"/>
+          <ellipse cx="20" cy="22" rx="5" ry="1.2" fill="#4E342E"/>
+          {/* Valve (common on coffee bags) */}
+          <circle cx="28" cy="13" r="2.5" fill="#5D4037" stroke="#3E2314" strokeWidth="0.8"/>
+          <circle cx="28" cy="13" r="1" fill="#3E2314"/>
+          {/* Shine */}
+          <path d="M9 13 Q11 11 13 12.5" fill="none" stroke="rgba(255,255,255,0.2)" strokeWidth="1.5" strokeLinecap="round"/>
         </svg>
       );
 

@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect, useRef, useCallback } from "react";
+import { useState, useEffect, useRef } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { calculateExerciseScore } from "@/lib/scoring";
 import { useExerciseProgress } from "@/components/exercises/ExerciseWrapper";
@@ -16,344 +16,460 @@ interface Props { difficulty: number; theme: Theme; onComplete: (result: Exercis
 
 const MAX_ROUNDS = 8;
 
-function timeSecs(d: number) { return d <= 3 ? 35 : d <= 6 ? 28 : 20; }
-function itemCount(d: number) { return d <= 3 ? 8 : d <= 6 ? 10 : 12; }
-
-type Constraint = "budget" | "category" | "min-items" | "max-items";
+type QType = "yn-total" | "mc-item" | "mc-total";
+type Phase = "showing" | "answering" | "feedback";
 
 interface Round {
   domain: FlexDomain;
   items: FlexItem[];
-  budget: number;
-  requiredCategory?: string;
-  requiredCategoryLabel?: string;
-  minItems?: number;
-  maxItems?: number;
-  constraints: Constraint[];
-  goalLabel: string;
+  showSecs: number;
+  question: string;
+  qType: QType;
+  correctAnswer: string;
+  choices?: string[];
+}
+
+function itemCount(d: number): number {
+  return d <= 3 ? 3 : d <= 6 ? 4 : 5;
+}
+
+function showSecs(d: number): number {
+  return d <= 3 ? 9 : d <= 6 ? 7 : 5;
+}
+
+function generateWrongTotals(total: number): string[] {
+  const scale = Math.max(4, total * 0.12);
+  const candidates = [
+    total + scale,
+    total - scale * 0.8,
+    total + scale * 1.8,
+    total - scale * 1.4,
+    total + scale * 0.5,
+  ].map(v => Math.round(v * 100) / 100).filter(v => v > 0);
+
+  const seen = new Set([total]);
+  const result: string[] = [];
+  for (const v of shuffleFlex(candidates)) {
+    if (!seen.has(v)) {
+      seen.add(v);
+      result.push(fmt(v));
+      if (result.length === 3) break;
+    }
+  }
+  return result;
 }
 
 function buildRound(d: number): Round {
   const domain = pickRandomDomain();
   const count = itemCount(d);
+  const secs = showSecs(d);
   const items = shuffleFlex(domain.items).slice(0, count);
+  const total = Math.round(items.reduce((s, i) => s + i.price, 0) * 100) / 100;
 
-  const totalMax = items.reduce((s, i) => s + i.price, 0);
-  const budget = Math.round((totalMax * (0.55 + Math.random() * 0.25)) / 5) * 5;
+  let question: string;
+  let qType: QType;
+  let correctAnswer: string;
+  let choices: string[] | undefined;
 
-  const constraints: Constraint[] = ["budget"];
-  const goalParts: string[] = [`Orçamento: até ${fmt(budget)}`];
-
-  let requiredCategory: string | undefined;
-  let requiredCategoryLabel: string | undefined;
-  let minItems: number | undefined;
-  let maxItems: number | undefined;
-
-  if (d >= 4) {
-    const cat = domain.categories[Math.floor(Math.random() * domain.categories.length)];
-    requiredCategory = cat.id;
-    requiredCategoryLabel = cat.label;
-    constraints.push("category");
-    goalParts.push(`Inclua ao menos 1 de ${cat.label}`);
+  if (d <= 4) {
+    qType = "yn-total";
+    const makeTrue = Math.random() < 0.5;
+    const scale = Math.max(3, total * 0.15);
+    const threshold = makeTrue
+      ? Math.round((total - scale * (0.8 + Math.random() * 0.4)) * 10) / 10
+      : Math.round((total + scale * (0.8 + Math.random() * 0.4)) * 10) / 10;
+    question = `O total de todos os itens passa de ${fmt(threshold)}?`;
+    correctAnswer = makeTrue ? "SIM" : "NÃO";
+  } else if (d <= 7) {
+    qType = "mc-item";
+    const mostExpensive = items.reduce((a, b) => (a.price > b.price ? a : b));
+    question = "Qual item custa mais?";
+    choices = shuffleFlex(items.map(i => i.name));
+    correctAnswer = mostExpensive.name;
+  } else {
+    qType = "mc-total";
+    question = "Qual é o total de todos os itens?";
+    const correctFmt = fmt(total);
+    choices = shuffleFlex([correctFmt, ...generateWrongTotals(total)]);
+    correctAnswer = correctFmt;
   }
 
-  if (d >= 6) {
-    minItems = 3 + Math.floor(Math.random() * 2);
-    constraints.push("min-items");
-    goalParts.push(`Mínimo ${minItems} itens`);
-  }
-
-  if (d >= 8) {
-    maxItems = count - 2 - Math.floor(Math.random() * 2);
-    constraints.push("max-items");
-    goalParts.push(`Máximo ${maxItems} itens`);
-  }
-
-  return { domain, items, budget, requiredCategory, requiredCategoryLabel, minItems, maxItems, constraints, goalLabel: goalParts.join(" · ") };
+  return { domain, items, showSecs: secs, question, qType, correctAnswer, choices };
 }
 
-function checkRound(round: Round, selected: Set<string>, items: FlexItem[]): { pass: boolean; reasons: string[]; total: number } {
-  const sel = items.filter(i => selected.has(i.id));
-  const total = sel.reduce((s, i) => s + i.price, 0);
-  const reasons: string[] = [];
+// ── Tutorial ───────────────────────────────────────────────────────────────
 
-  if (sel.length === 0) reasons.push("Selecione ao menos 1 item");
-  if (total > round.budget) reasons.push(`Orçamento excedido (${fmt(total)} > ${fmt(round.budget)})`);
-  if (round.requiredCategory && !sel.some(i => i.cat === round.requiredCategory))
-    reasons.push(`Falta item de ${round.requiredCategoryLabel}`);
-  if (round.minItems !== undefined && sel.length < round.minItems)
-    reasons.push(`Mínimo ${round.minItems} itens (selecionou ${sel.length})`);
-  if (round.maxItems !== undefined && sel.length > round.maxItems)
-    reasons.push(`Máximo ${round.maxItems} itens (selecionou ${sel.length})`);
+const TUT_ITEMS: FlexItem[] = [
+  { id: "leite",  name: "Leite",  cat: "laticinios", price: 5.90 },
+  { id: "cafe",   name: "Café",   cat: "mercearia",  price: 11.90 },
+  { id: "banana", name: "Banana", cat: "hortifruti", price: 3.90 },
+];
 
-  return { pass: reasons.length === 0, reasons, total };
+function TutShowStep({ theme, onDone }: { theme: Theme; onDone: () => void }) {
+  const [countdown, setCountdown] = useState(5);
+
+  useEffect(() => {
+    const iv = setInterval(() => {
+      setCountdown(p => {
+        if (p <= 1) { clearInterval(iv); onDone(); return 0; }
+        return p - 1;
+      });
+    }, 1000);
+    return () => clearInterval(iv);
+  }, [onDone]);
+
+  const text = theme === "GAMIFIED" ? "text-gray-200" : "text-gray-800";
+  const accent = theme === "GAMIFIED" ? "text-cyan-400" : "text-emerald-600";
+  const cardBg = theme === "GAMIFIED" ? "bg-gray-700 border-gray-600" : "bg-white border-slate-200";
+
+  return (
+    <div className="space-y-3">
+      <div className="flex justify-between items-center">
+        <p className={`text-sm font-bold ${text}`}>Memorize os preços!</p>
+        <div className="flex items-center gap-2">
+          <span className={`text-xs tabular-nums ${accent}`}>{countdown}s</span>
+          <button onClick={onDone}
+            className={`text-xs px-2 py-0.5 rounded font-bold ${theme === "GAMIFIED" ? "bg-cyan-600 text-white" : "bg-amber-500 text-white"}`}>
+            Pronto →
+          </button>
+        </div>
+      </div>
+      {TUT_ITEMS.map(item => (
+        <div key={item.id} className={`flex items-center justify-between p-2.5 rounded-xl border-2 ${cardBg}`}>
+          <div className="flex items-center gap-3">
+            <ItemSvg id={item.id} size={44} />
+            <span className={`font-semibold ${text}`}>{item.name}</span>
+          </div>
+          <span className={`font-bold text-lg ${accent}`}>{fmt(item.price)}</span>
+        </div>
+      ))}
+    </div>
+  );
 }
 
-function TutStep({ theme, onDone }: { theme: Theme; onDone: () => void }) {
-  const items: FlexItem[] = [
-    { id: "banana",  name: "Banana",  price: 3.90,  cat: "hortifruti" },
-    { id: "leite",   name: "Leite",   price: 5.90,  cat: "laticinios" },
-    { id: "cafe",    name: "Café",    price: 11.90, cat: "mercearia"  },
-    { id: "maca",    name: "Maçã",    price: 6.90,  cat: "hortifruti" },
-    { id: "sabao",   name: "Sabão",   price: 18.90, cat: "higiene"    },
-    { id: "refri",   name: "Refri",   price: 8.90,  cat: "bebidas"    },
-  ];
-  const budget = 20;
-  const requiredCategory = "hortifruti";
-  const [sel, setSel] = useState(new Set<string>());
+function TutAnswerStep({ theme, onDone }: { theme: Theme; onDone: () => void }) {
   const doneRef = useRef(false);
+  const total = TUT_ITEMS.reduce((s, i) => s + i.price, 0); // 21.70
+  const threshold = 18.00;
 
-  const total = [...sel].reduce((s, id) => s + (items.find(i => i.id === id)?.price ?? 0), 0);
-  const hasHorti = [...sel].some(id => items.find(i => i.id === id)?.cat === requiredCategory);
-  const ok = total <= budget && hasHorti && sel.size > 0;
-
-  function toggle(id: string) { setSel(prev => { const n = new Set(prev); n.has(id) ? n.delete(id) : n.add(id); return n; }); }
-
-  function confirm() {
-    if (!ok || doneRef.current) return;
+  function answer(a: string) {
+    if (doneRef.current) return;
     doneRef.current = true;
     onDone();
   }
 
+  const text = theme === "GAMIFIED" ? "text-gray-200" : "text-gray-800";
   const sub = theme === "GAMIFIED" ? "text-gray-400" : "text-gray-500";
   return (
-    <div className="space-y-2">
-      <div className={`p-2 rounded-xl text-xs space-y-0.5 ${theme === "GAMIFIED" ? "bg-gray-700" : "bg-amber-50 border border-amber-200"}`}>
-        <p className={`font-bold ${theme === "GAMIFIED" ? "text-cyan-300" : "text-amber-800"}`}>Regras simultâneas:</p>
-        <p className={sub}>• Orçamento: até {fmt(budget)}</p>
-        <p className={sub}>• Inclua ao menos 1 Hortifruti</p>
+    <div className="space-y-4">
+      <div className={`rounded-xl p-3 border text-center ${
+        theme === "GAMIFIED" ? "bg-gray-700 border-gray-600" : "bg-violet-50 border-violet-200"
+      }`}>
+        <p className={`font-bold text-sm ${theme === "GAMIFIED" ? "text-cyan-300" : "text-violet-800"}`}>
+          O total de todos os itens passa de {fmt(threshold)}?
+        </p>
       </div>
-      <div className={`flex justify-between text-xs px-1 ${sub}`}>
-        <span>Hortifruti: <strong className={hasHorti ? "text-green-600" : "text-red-500"}>{hasHorti ? "✓" : "✗"}</strong></span>
-        <span>{sel.size} selecionado{sel.size !== 1 ? "s" : ""}</span>
+      <p className={`text-center text-xs ${sub}`}>
+        Leite {fmt(5.90)} + Café {fmt(11.90)} + Banana {fmt(3.90)} = {fmt(total)} → SIM
+      </p>
+      <div className="grid grid-cols-2 gap-3">
+        <button onClick={() => answer("SIM")}
+          className="h-14 rounded-2xl font-bold text-xl bg-green-500 hover:bg-green-600 text-white transition-all active:scale-95">
+          SIM ✓
+        </button>
+        <button onClick={() => answer("NÃO")}
+          className="h-14 rounded-2xl font-bold text-xl bg-red-400 hover:bg-red-500 text-white transition-all active:scale-95">
+          NÃO ✗
+        </button>
       </div>
-      <div className="grid grid-cols-3 gap-1.5">
-        {items.map(item => (
-          <button key={item.id} onClick={() => toggle(item.id)}
-            className={`p-1.5 rounded-xl border-2 flex flex-col items-center gap-0.5 transition-all ${
-              sel.has(item.id) ? "border-emerald-500 bg-emerald-50" :
-              theme === "GAMIFIED" ? "border-gray-600 bg-gray-700" : "border-slate-200 bg-white"
-            }`}
-          >
-            <ItemSvg id={item.id} size={32} />
-            <span className={`text-[10px] text-center leading-none ${theme === "GAMIFIED" ? "text-gray-200" : "text-gray-600"}`}>{item.name}</span>
-            <span className={`text-[10px] font-bold ${theme === "GAMIFIED" ? "text-cyan-400" : "text-emerald-600"}`}>{fmt(item.price)}</span>
-          </button>
-        ))}
-      </div>
-      <button onClick={confirm} disabled={!ok}
-        className={`w-full h-10 rounded-xl font-bold disabled:opacity-40 ${theme === "GAMIFIED" ? "bg-cyan-600 text-white" : "bg-emerald-600 text-white"}`}
-      >Confirmar</button>
     </div>
   );
 }
+
+// ── Componente principal ───────────────────────────────────────────────────
 
 export function CompraMultifuncional({ difficulty, theme, onComplete }: Props) {
   const [showTutorial, setShowTutorial] = useState(true);
   const reportProgress = useExerciseProgress();
 
   const [round, setRound] = useState(0);
-  const [roundResults, setRoundResults] = useState<{ pass: boolean; reasons: string[]; total: number }[]>([]);
-  const [selected, setSelected] = useState(new Set<string>());
-  const [phase, setPhase] = useState<"shopping" | "result">("shopping");
-  const [timeLeft, setTimeLeft] = useState(timeSecs(difficulty));
-  const [lastResult, setLastResult] = useState<{ pass: boolean; reasons: string[]; total: number } | null>(null);
+  const [roundResults, setRoundResults] = useState<boolean[]>([]);
+  const [phase, setPhase] = useState<Phase>("showing");
+  const [countdown, setCountdown] = useState(0);
+  const [selectedAnswer, setSelectedAnswer] = useState<string | null>(null);
+  const [currentRound, setCurrentRound] = useState<Round>(() => buildRound(difficulty));
 
   const timerRef = useRef<ReturnType<typeof setInterval> | null>(null);
-  const roundEndedRef = useRef(false);
+  const answeredRef = useRef(false);
   const startTime = useRef(Date.now());
   const roundRef = useRef(0);
-  const resultsRef = useRef<{ pass: boolean; reasons: string[]; total: number }[]>([]);
-
-  const [currentRound, setCurrentRound] = useState<Round>(() => buildRound(difficulty));
+  const resultsRef = useRef<boolean[]>([]);
 
   useEffect(() => () => { if (timerRef.current) clearInterval(timerRef.current); }, []);
 
-  const finishRound = useCallback((sel: Set<string>) => {
-    if (roundEndedRef.current) return;
-    roundEndedRef.current = true;
-    if (timerRef.current) clearInterval(timerRef.current);
-
-    const result = checkRound(currentRound, sel, currentRound.items);
-    const newResults = [...resultsRef.current, result];
-    resultsRef.current = newResults;
-    setRoundResults(newResults);
-    setLastResult(result);
-    setPhase("result");
-
-    const nextR = roundRef.current + 1;
-    reportProgress(Math.round((nextR / MAX_ROUNDS) * 100));
-
-    setTimeout(() => {
-      if (nextR >= MAX_ROUNDS) {
-        const accuracy = newResults.filter(r => r.pass).length / MAX_ROUNDS;
-        onComplete({
-          exerciseId: "compra-multifuncional",
-          domain: "executive",
-          score: calculateExerciseScore("compra-multifuncional", accuracy, undefined, difficulty),
-          accuracy, difficulty,
-          duration: Math.round((Date.now() - startTime.current) / 1000),
-          metadata: { rounds: MAX_ROUNDS, correct: newResults.filter(r => r.pass).length },
-        });
-      } else {
-        roundRef.current = nextR;
-        setRound(nextR);
-        roundEndedRef.current = false;
-        const newRound = buildRound(difficulty);
-        setCurrentRound(newRound);
-        setSelected(new Set());
-        setTimeLeft(timeSecs(difficulty));
-        setPhase("shopping");
-      }
-    }, 2200);
-  }, [currentRound, difficulty, onComplete, reportProgress]);
-
+  // Showing phase countdown
   useEffect(() => {
-    if (phase !== "shopping" || showTutorial) return;
+    if (phase !== "showing" || showTutorial) return;
+    setCountdown(currentRound.showSecs);
     timerRef.current = setInterval(() => {
-      setTimeLeft(t => {
-        if (t <= 1) {
+      setCountdown(p => {
+        if (p <= 1) {
           clearInterval(timerRef.current!);
-          finishRound(selected);
+          setPhase("answering");
           return 0;
         }
-        return t - 1;
+        return p - 1;
       });
     }, 1000);
     return () => { if (timerRef.current) clearInterval(timerRef.current); };
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [phase, round, showTutorial]);
 
-  function toggle(id: string) {
-    if (phase !== "shopping" || roundEndedRef.current) return;
-    setSelected(prev => { const n = new Set(prev); n.has(id) ? n.delete(id) : n.add(id); return n; });
+  function skipToAnswering() {
+    if (timerRef.current) clearInterval(timerRef.current);
+    setPhase("answering");
   }
 
-  function confirm() {
-    if (phase !== "shopping" || roundEndedRef.current) return;
-    finishRound(selected);
+  function handleAnswer(answer: string) {
+    if (answeredRef.current) return;
+    answeredRef.current = true;
+    setSelectedAnswer(answer);
+
+    const isCorrect = answer === currentRound.correctAnswer;
+    const newResults = [...resultsRef.current, isCorrect];
+    resultsRef.current = newResults;
+    setRoundResults(newResults);
+    setPhase("feedback");
+
+    const nextR = roundRef.current + 1;
+    reportProgress(Math.round((nextR / MAX_ROUNDS) * 100));
+
+    setTimeout(() => {
+      if (nextR >= MAX_ROUNDS) {
+        const accuracy = newResults.filter(Boolean).length / MAX_ROUNDS;
+        onComplete({
+          exerciseId: "compra-multifuncional",
+          domain: "executive",
+          score: calculateExerciseScore("compra-multifuncional", accuracy, undefined, difficulty),
+          accuracy, difficulty,
+          duration: Math.round((Date.now() - startTime.current) / 1000),
+          metadata: { rounds: MAX_ROUNDS, correct: newResults.filter(Boolean).length },
+        });
+      } else {
+        roundRef.current = nextR;
+        setRound(nextR);
+        answeredRef.current = false;
+        setSelectedAnswer(null);
+        setCurrentRound(buildRound(difficulty));
+        setPhase("showing");
+      }
+    }, 2000);
   }
 
   if (showTutorial) {
-    return <TutorialBase theme={theme} title="Compra Multifuncional"
-      steps={[{
-        instruction: "Respeite TODAS as regras ao mesmo tempo: orçamento, categorias e quantidade de itens — dentro do tempo limite!",
-        content: (done) => <TutStep theme={theme} onDone={done} />,
-      }]}
-      onDone={() => setShowTutorial(false)} />;
+    return (
+      <TutorialBase theme={theme} title="Conta Mental"
+        steps={[
+          {
+            instruction: "Os itens aparecem com seus preços. Memorize bem — eles vão sumir!",
+            content: (done) => <TutShowStep theme={theme} onDone={done} />,
+          },
+          {
+            instruction: "Os preços sumiram! Responda a pergunta sobre os valores.",
+            content: (done) => <TutAnswerStep theme={theme} onDone={done} />,
+          },
+        ]}
+        onDone={() => setShowTutorial(false)} />
+    );
   }
 
   const pal = {
-    bg: theme === "GAMIFIED" ? "bg-gray-950" : theme === "COLORFUL" ? "bg-gradient-to-br from-teal-50 to-cyan-50" : "bg-gray-50",
-    card: theme === "GAMIFIED" ? "bg-gray-800 border border-cyan-500/30" : "bg-white shadow-lg",
-    title: theme === "GAMIFIED" ? "text-cyan-400" : theme === "COLORFUL" ? "text-teal-700" : "text-gray-900",
+    bg: theme === "GAMIFIED" ? "bg-gray-950" : theme === "COLORFUL" ? "bg-gradient-to-br from-violet-50 to-purple-50" : "bg-gradient-to-br from-slate-50 to-blue-50/20",
+    card: theme === "GAMIFIED" ? "bg-gray-800 border border-cyan-500/20" : theme === "COLORFUL" ? "bg-white border-2 border-violet-200 shadow-xl" : "bg-white border border-slate-200/70 shadow-md",
+    title: theme === "GAMIFIED" ? "text-cyan-400" : theme === "COLORFUL" ? "text-violet-700" : "text-slate-800",
     sub: theme === "GAMIFIED" ? "text-gray-400" : "text-gray-500",
-    item: theme === "GAMIFIED" ? "border-gray-600 bg-gray-700" : "border-slate-200 bg-white shadow-sm",
-    sel: theme === "GAMIFIED" ? "border-cyan-400 bg-cyan-900/30" : "border-emerald-500 bg-emerald-50",
-    btn: theme === "GAMIFIED" ? "bg-cyan-600 text-white" : theme === "COLORFUL" ? "bg-gradient-to-r from-teal-500 to-cyan-500 text-white" : "bg-teal-600 text-white",
+    accent: theme === "GAMIFIED" ? "text-cyan-400" : theme === "COLORFUL" ? "text-violet-600" : "text-violet-600",
+    itemCard: theme === "GAMIFIED" ? "bg-gray-700 border-gray-600" : "bg-white border-slate-200 shadow-sm",
+    qBox: theme === "GAMIFIED" ? "bg-gray-700 border-gray-600" : theme === "COLORFUL" ? "bg-violet-50 border-violet-200" : "bg-slate-50 border-slate-200",
+    choiceBtn: theme === "GAMIFIED" ? "bg-gray-700 border border-gray-500 text-gray-100 hover:border-cyan-400" : "bg-white border-2 border-slate-200 text-gray-800 hover:border-violet-400 shadow-sm",
+    dotActive: theme === "GAMIFIED" ? "bg-cyan-500" : "bg-violet-500",
+    dotInactive: theme === "GAMIFIED" ? "bg-gray-700" : "bg-slate-200",
   };
 
-  const tl = timeSecs(difficulty);
-  const timerRatio = timeLeft / tl;
-  const timerColor = timerRatio > 0.5 ? "bg-green-500" : timerRatio > 0.25 ? "bg-amber-400" : "bg-red-500 animate-pulse";
-  const hasRequired = !currentRound.requiredCategory || [...selected].some(id => currentRound.items.find(i => i.id === id)?.cat === currentRound.requiredCategory);
+  const showRatio = currentRound.showSecs > 0 ? countdown / currentRound.showSecs : 0;
 
   return (
-    <div className={`min-h-screen flex flex-col items-center justify-start py-4 px-3 ${pal.bg}`}>
-      <div className={`w-full max-w-md rounded-2xl p-4 ${pal.card}`}>
+    <div className={`min-h-screen flex flex-col items-center justify-center p-4 ${pal.bg}`}>
+      <div className={`w-full max-w-2xl rounded-2xl p-5 sm:p-6 ${pal.card}`}>
 
         <div className="flex justify-between items-center mb-1">
-          <h2 className={`font-bold text-base ${pal.title}`}>🛒 Compra Multifuncional</h2>
-          <span className={`text-sm font-mono font-bold tabular-nums ${timeLeft <= 7 ? "text-red-500 animate-pulse" : pal.sub}`}>{timeLeft}s</span>
+          <h2 className={`font-bold text-base ${pal.title}`}>🧮 Conta Mental</h2>
+          <span className={`text-xs ${pal.sub}`}>{round + 1}/{MAX_ROUNDS}</span>
         </div>
 
-        <div className="flex gap-0.5 mb-2">
+        <div className="flex gap-0.5 mb-4">
           {Array.from({ length: MAX_ROUNDS }).map((_, i) => (
             <div key={i} className={`h-1.5 flex-1 rounded-full transition-colors ${
-              i < roundResults.length ? roundResults[i].pass ? "bg-green-500" : "bg-red-400"
-              : i === round ? "bg-blue-400 animate-pulse"
-              : theme === "GAMIFIED" ? "bg-gray-700" : "bg-gray-200"
+              i < roundResults.length
+                ? roundResults[i] ? "bg-green-500" : "bg-red-400"
+                : i === round ? `${pal.dotActive} animate-pulse` : pal.dotInactive
             }`} />
           ))}
         </div>
 
-        <div className={`h-1.5 rounded-full mb-3 ${theme === "GAMIFIED" ? "bg-gray-700" : "bg-gray-200"}`}>
-          <div className={`h-full rounded-full transition-all duration-1000 ${timerColor}`} style={{ width: `${timerRatio * 100}%` }} />
-        </div>
-
         <AnimatePresence mode="wait">
-          {phase === "shopping" && (
-            <motion.div key={`shop-${round}`} initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }}>
-              <div className={`rounded-xl p-2.5 mb-3 border text-xs space-y-1 ${theme === "GAMIFIED" ? "bg-gray-700 border-gray-600" : "bg-teal-50 border-teal-200"}`}>
-                <p className={`font-bold text-xs uppercase tracking-wide ${pal.sub}`}>
-                  Regras — {currentRound.domain.name}
-                </p>
-                <div className="flex flex-wrap gap-x-3 gap-y-0.5">
-                  <span className={`font-medium ${pal.sub}`}>
-                    💰 Orçamento: até {fmt(currentRound.budget)}
-                  </span>
-                  {currentRound.requiredCategory && (
-                    <span className={hasRequired ? "text-green-600 font-medium" : `font-medium ${pal.sub}`}>
-                      {hasRequired ? "✓" : "○"} {currentRound.requiredCategoryLabel}
-                    </span>
-                  )}
-                  {currentRound.minItems !== undefined && (
-                    <span className={selected.size >= currentRound.minItems ? "text-green-600 font-medium" : `font-medium ${pal.sub}`}>
-                      {selected.size >= currentRound.minItems ? "✓" : "○"} Min {currentRound.minItems} itens
-                    </span>
-                  )}
-                  {currentRound.maxItems !== undefined && (
-                    <span className={selected.size <= currentRound.maxItems ? "text-green-600 font-medium" : "text-red-500 font-bold"}>
-                      {selected.size <= currentRound.maxItems ? "✓" : "✗"} Max {currentRound.maxItems} itens
-                    </span>
-                  )}
+
+          {/* FASE: Mostrar itens com preços */}
+          {phase === "showing" && (
+            <motion.div key={`show-${round}`}
+              initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -10 }}>
+
+              <div className="flex justify-between items-center mb-2">
+                <div>
+                  <p className={`text-sm font-bold ${pal.title}`}>Memorize os preços!</p>
+                  <p className={`text-xs ${pal.sub}`}>{currentRound.domain.name}</p>
+                </div>
+                <div className="flex items-center gap-2">
+                  <span className={`text-sm tabular-nums font-mono font-bold ${pal.accent}`}>{countdown}s</span>
+                  <button onClick={skipToAnswering}
+                    className={`text-xs px-2.5 py-1 rounded-lg font-bold transition-all active:scale-95 ${
+                      theme === "GAMIFIED" ? "bg-cyan-600 text-white" : "bg-amber-500 text-white"
+                    }`}>
+                    Pronto →
+                  </button>
                 </div>
               </div>
 
-              <div className="grid grid-cols-3 gap-1.5 mb-3">
-                {currentRound.items.map(item => (
-                  <button key={item.id} onClick={() => toggle(item.id)}
-                    className={`p-1.5 rounded-xl border-2 flex flex-col items-center gap-0.5 transition-all active:scale-95 ${
-                      selected.has(item.id) ? pal.sel : pal.item
-                    }`}
-                  >
-                    <ItemSvg id={item.id} size={32} />
-                    <span className={`text-[10px] text-center leading-none font-medium ${theme === "GAMIFIED" ? "text-gray-200" : "text-gray-700"}`}>
-                      {item.name}
-                    </span>
-                    <span className={`text-[10px] font-bold ${theme === "GAMIFIED" ? "text-cyan-400" : "text-emerald-600"}`}>
-                      {fmt(item.price)}
-                    </span>
-                    {selected.has(item.id) && <span className="text-[10px] text-green-500 font-bold">✓</span>}
-                  </button>
-                ))}
+              <div className={`h-1.5 rounded-full mb-4 ${theme === "GAMIFIED" ? "bg-gray-700" : "bg-slate-200"}`}>
+                <div className="h-full rounded-full bg-amber-400 transition-all duration-1000"
+                  style={{ width: `${showRatio * 100}%` }} />
               </div>
 
-              <button onClick={confirm} disabled={selected.size === 0}
-                className={`w-full h-11 rounded-xl font-bold transition-all disabled:opacity-40 ${pal.btn}`}
-              >
-                Confirmar seleção ({selected.size} item{selected.size !== 1 ? "s" : ""})
-              </button>
+              <div className="space-y-2">
+                {currentRound.items.map((item, idx) => (
+                  <motion.div key={item.id}
+                    initial={{ opacity: 0, x: -10 }} animate={{ opacity: 1, x: 0 }}
+                    transition={{ delay: idx * 0.07 }}
+                    className={`flex items-center justify-between p-3 rounded-xl border-2 ${pal.itemCard}`}>
+                    <div className="flex items-center gap-3">
+                      <ItemSvg id={item.id} size={52} />
+                      <span className={`font-semibold text-sm ${theme === "GAMIFIED" ? "text-gray-100" : "text-gray-800"}`}>
+                        {item.name}
+                      </span>
+                    </div>
+                    <span className={`font-bold text-lg tabular-nums ${pal.accent}`}>
+                      {fmt(item.price)}
+                    </span>
+                  </motion.div>
+                ))}
+              </div>
             </motion.div>
           )}
 
-          {phase === "result" && lastResult && (
-            <motion.div key={`res-${round}`} className="text-center py-6"
-              initial={{ opacity: 0, scale: 0.9 }} animate={{ opacity: 1, scale: 1 }}>
-              <p className="text-5xl mb-2">{lastResult.pass ? "✅" : "❌"}</p>
-              <p className={`font-bold text-lg ${lastResult.pass ? "text-green-600" : "text-red-500"}`}>
-                {lastResult.pass ? "Todas as regras cumpridas!" : "Regras não cumpridas"}
-              </p>
-              <p className={`text-sm font-medium mt-1 ${pal.sub}`}>
-                Total gasto: <strong>{fmt(lastResult.total)}</strong> de {fmt(currentRound.budget)}
-              </p>
-              {lastResult.reasons.length > 0 && (
-                <div className="mt-2 space-y-0.5">
-                  {lastResult.reasons.map((r, i) => (
-                    <p key={i} className="text-xs text-red-500">{r}</p>
+          {/* FASE: Responder */}
+          {phase === "answering" && (
+            <motion.div key={`ans-${round}`}
+              initial={{ opacity: 0, scale: 0.95 }} animate={{ opacity: 1, scale: 1 }} exit={{ opacity: 0 }}>
+
+              {/* Items sem preço */}
+              <div className="space-y-2 mb-5">
+                {currentRound.items.map(item => (
+                  <div key={item.id}
+                    className={`flex items-center justify-between p-3 rounded-xl border-2 ${pal.itemCard}`}>
+                    <div className="flex items-center gap-3">
+                      <ItemSvg id={item.id} size={52} />
+                      <span className={`font-semibold text-sm ${theme === "GAMIFIED" ? "text-gray-100" : "text-gray-800"}`}>
+                        {item.name}
+                      </span>
+                    </div>
+                    <span className={`font-bold text-lg ${theme === "GAMIFIED" ? "text-gray-600" : "text-gray-300"}`}>
+                      ???
+                    </span>
+                  </div>
+                ))}
+              </div>
+
+              {/* Pergunta */}
+              <div className={`rounded-xl p-4 mb-4 border text-center ${pal.qBox}`}>
+                <p className={`font-bold text-base ${theme === "GAMIFIED" ? "text-cyan-300" : "text-slate-800"}`}>
+                  {currentRound.question}
+                </p>
+              </div>
+
+              {/* Botões SIM/NÃO */}
+              {currentRound.qType === "yn-total" && (
+                <div className="grid grid-cols-2 gap-4">
+                  <button onClick={() => handleAnswer("SIM")}
+                    className="h-16 rounded-2xl font-bold text-xl bg-green-500 hover:bg-green-600 text-white transition-all active:scale-95 shadow-md">
+                    SIM ✓
+                  </button>
+                  <button onClick={() => handleAnswer("NÃO")}
+                    className="h-16 rounded-2xl font-bold text-xl bg-red-400 hover:bg-red-500 text-white transition-all active:scale-95 shadow-md">
+                    NÃO ✗
+                  </button>
+                </div>
+              )}
+
+              {/* Múltipla escolha */}
+              {(currentRound.qType === "mc-item" || currentRound.qType === "mc-total") && currentRound.choices && (
+                <div className="grid grid-cols-2 gap-2">
+                  {currentRound.choices.map(choice => (
+                    <button key={choice} onClick={() => handleAnswer(choice)}
+                      className={`h-14 rounded-xl font-bold text-sm transition-all active:scale-95 ${pal.choiceBtn}`}>
+                      {choice}
+                    </button>
                   ))}
                 </div>
               )}
+            </motion.div>
+          )}
+
+          {/* FASE: Feedback */}
+          {phase === "feedback" && (
+            <motion.div key={`fb-${round}`}
+              initial={{ opacity: 0, scale: 0.95 }} animate={{ opacity: 1, scale: 1 }}>
+
+              <div className="text-center mb-4">
+                <p className="text-4xl mb-1">
+                  {selectedAnswer === currentRound.correctAnswer ? "✅" : "❌"}
+                </p>
+                <p className={`font-bold text-lg ${
+                  selectedAnswer === currentRound.correctAnswer ? "text-green-600" : "text-red-500"
+                }`}>
+                  {selectedAnswer === currentRound.correctAnswer ? "Correto!" : "Errado!"}
+                </p>
+                {selectedAnswer !== currentRound.correctAnswer && (
+                  <p className={`text-sm mt-1 ${pal.sub}`}>
+                    Resposta: <strong className={pal.accent}>{currentRound.correctAnswer}</strong>
+                  </p>
+                )}
+              </div>
+
+              {/* Preços revelados */}
+              <div className="space-y-2">
+                {currentRound.items.map(item => (
+                  <div key={item.id}
+                    className={`flex items-center justify-between p-3 rounded-xl border-2 ${pal.itemCard}`}>
+                    <div className="flex items-center gap-3">
+                      <ItemSvg id={item.id} size={40} />
+                      <span className={`font-semibold text-sm ${theme === "GAMIFIED" ? "text-gray-100" : "text-gray-800"}`}>
+                        {item.name}
+                      </span>
+                    </div>
+                    <span className={`font-bold tabular-nums ${pal.accent}`}>
+                      {fmt(item.price)}
+                    </span>
+                  </div>
+                ))}
+                <div className={`flex justify-between items-center p-2.5 rounded-xl font-bold text-sm ${
+                  theme === "GAMIFIED" ? "bg-gray-700 text-gray-100" : "bg-violet-50 text-violet-800 border border-violet-200"
+                }`}>
+                  <span>Total:</span>
+                  <span className="tabular-nums">
+                    {fmt(currentRound.items.reduce((s, i) => s + i.price, 0))}
+                  </span>
+                </div>
+              </div>
             </motion.div>
           )}
         </AnimatePresence>
