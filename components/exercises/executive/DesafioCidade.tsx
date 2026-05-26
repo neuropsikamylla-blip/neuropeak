@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useEffect, useRef } from "react";
-import { motion, AnimatePresence, Reorder } from "framer-motion";
+import { motion, AnimatePresence } from "framer-motion";
 import { calculateExerciseScore } from "@/lib/scoring";
 import { useExerciseProgress } from "@/components/exercises/ExerciseWrapper";
 import type { ExerciseResult, Theme } from "@/types";
@@ -353,14 +353,19 @@ function CinemaL3({ theme, onFinish }: { theme: Theme; onFinish: (ok: boolean) =
   const [memorizing, setMemorizing] = useState(true);
   const [secs, setSecs] = useState(8);
   const [sel, setSel] = useState<Set<string>>(new Set());
+  const timerRef = useRef<ReturnType<typeof setInterval> | null>(null);
 
   useEffect(() => {
     if (!memorizing) return;
-    const t = setInterval(() => {
-      setSecs(p => { if (p <= 1) { clearInterval(t); setMemorizing(false); return 0; } return p - 1; });
-    }, 1000);
-    return () => clearInterval(t);
+    timerRef.current = setInterval(() => setSecs(s => s - 1), 1000);
+    return () => { if (timerRef.current) clearInterval(timerRef.current); };
   }, [memorizing]);
+
+  useEffect(() => {
+    if (!memorizing || secs > 0) return;
+    if (timerRef.current) { clearInterval(timerRef.current); timerRef.current = null; }
+    setMemorizing(false);
+  }, [memorizing, secs]);
 
   function toggle(id: string) {
     setSel(prev => { const n = new Set(prev); n.has(id) ? n.delete(id) : n.add(id); return n; });
@@ -431,10 +436,15 @@ function CinemaL4({ theme, onFinish }: { theme: Theme; onFinish: (ok: boolean) =
   const [step, setStep] = useState<"choose" | "alert" | "adapt">("choose");
   const [first, setFirst] = useState<string | null>(null);
   const [second, setSecond] = useState<string | null>(null);
+  const alertTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+
+  useEffect(() => {
+    return () => { if (alertTimerRef.current) clearTimeout(alertTimerRef.current); };
+  }, []);
 
   function choose(id: string) {
     setFirst(id); setStep("alert");
-    setTimeout(() => setStep("adapt"), 2000);
+    alertTimerRef.current = setTimeout(() => setStep("adapt"), 2000);
   }
 
   function confirm() {
@@ -533,14 +543,19 @@ function RestauranteL1({ theme, onFinish }: { theme: Theme; onFinish: (ok: boole
   const [mem, setMem] = useState(true);
   const [secs, setSecs] = useState(6);
   const [sel, setSel] = useState<Set<string>>(new Set());
+  const timerRef = useRef<ReturnType<typeof setInterval> | null>(null);
 
   useEffect(() => {
     if (!mem) return;
-    const t = setInterval(() => {
-      setSecs(p => { if (p <= 1) { clearInterval(t); setMem(false); return 0; } return p - 1; });
-    }, 1000);
-    return () => clearInterval(t);
+    timerRef.current = setInterval(() => setSecs(s => s - 1), 1000);
+    return () => { if (timerRef.current) clearInterval(timerRef.current); };
   }, [mem]);
+
+  useEffect(() => {
+    if (!mem || secs > 0) return;
+    if (timerRef.current) { clearInterval(timerRef.current); timerRef.current = null; }
+    setMem(false);
+  }, [mem, secs]);
 
   function toggle(id: string) {
     setSel(prev => { const n = new Set(prev); n.has(id) ? n.delete(id) : n.add(id); return n; });
@@ -600,7 +615,7 @@ function RestauranteL1({ theme, onFinish }: { theme: Theme; onFinish: (ok: boole
   );
 }
 
-// L2 — servir em sequência correta (arrastar)
+// L2 — servir em sequência correta (toque na ordem certa)
 const SEQUENCIAS = [
   { label: "Mesa 7", items: ["bruschetta", "frango", "sorvete"] },
   { label: "Mesa 2", items: ["sopa", "file", "mousse"] },
@@ -610,12 +625,19 @@ const SEQUENCIAS = [
 function RestauranteL2({ theme, onFinish }: { theme: Theme; onFinish: (ok: boolean) => void }) {
   const p = pal(theme);
   const seq = useRef(SEQUENCIAS[Math.floor(Math.random() * SEQUENCIAS.length)]);
-  const [items, setItems] = useState(() =>
-    [...seq.current.items].sort(() => Math.random() - 0.5).map(id => CARDAPIO.find(x => x.id === id)!)
-  );
+  const [shuffledIds] = useState(() => [...seq.current.items].sort(() => Math.random() - 0.5));
+  const [ordered, setOrdered] = useState<string[]>([]);
+
+  function tap(id: string) {
+    setOrdered(prev =>
+      prev.includes(id) ? prev.filter(x => x !== id) : [...prev, id]
+    );
+  }
+
+  const allOrdered = ordered.length === seq.current.items.length;
 
   function confirm() {
-    onFinish(items.every((item, i) => item.id === seq.current.items[i]));
+    onFinish(ordered.every((id, i) => id === seq.current.items[i]));
   }
 
   return (
@@ -623,30 +645,58 @@ function RestauranteL2({ theme, onFinish }: { theme: Theme; onFinish: (ok: boole
       <div className={`p-3 rounded-xl ${p.card}`}>
         <p className={`text-xs font-bold uppercase tracking-wide ${p.muted}`}>{seq.current.label}</p>
         <p className={`text-sm font-medium mt-1 ${p.text}`}>
-          Arraste os pratos na ordem de serviço: <span className={p.accent}>entrada → prato → sobremesa</span>
+          Toque nos pratos <span className={p.accent}>na ordem de serviço</span>: entrada → prato → sobremesa
         </p>
       </div>
 
-      <Reorder.Group axis="y" values={items} onReorder={setItems} className="space-y-2">
-        {items.map((dish, idx) => (
-          <Reorder.Item key={dish.id} value={dish}
-            className={`flex items-center gap-3 p-3 rounded-xl border-2 cursor-grab active:cursor-grabbing transition-all select-none ${p.draggable}`}
-          >
-            <span className={`text-xs font-bold w-6 h-6 rounded-full flex items-center justify-center shrink-0 ${p.badge}`}>
-              {idx + 1}
-            </span>
-            <span className="text-2xl">{dish.emoji}</span>
-            <div>
-              <p className={`text-sm font-semibold ${p.text}`}>{dish.name}</p>
-              <p className={`text-xs capitalize ${p.muted}`}>{dish.cat}</p>
-            </div>
-            <span className={`ml-auto text-base ${p.muted}`}>⠿</span>
-          </Reorder.Item>
-        ))}
-      </Reorder.Group>
+      {/* Sequência montada */}
+      {ordered.length > 0 && (
+        <div className={`flex flex-wrap gap-2 p-3 rounded-xl min-h-[48px] ${p.story}`}>
+          {ordered.map((id, i) => {
+            const dish = CARDAPIO.find(x => x.id === id)!;
+            return (
+              <button key={id} onClick={() => tap(id)}
+                className={`flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg border-2 text-sm transition-all ${p.sel}`}
+              >
+                <span className={`text-xs font-bold ${p.storyLabel}`}>{i + 1}.</span>
+                <span>{dish.emoji}</span>
+                <span className={`text-xs font-medium ${p.text}`}>{dish.name}</span>
+              </button>
+            );
+          })}
+        </div>
+      )}
 
-      <button onClick={confirm} className={`w-full h-11 rounded-xl font-bold transition-all ${p.btn}`}>
-        Servir nesta ordem
+      {/* Pratos disponíveis */}
+      <div className="space-y-2">
+        {shuffledIds.map(id => {
+          const dish = CARDAPIO.find(x => x.id === id)!;
+          const pos = ordered.indexOf(id);
+          const isOrdered = pos !== -1;
+          return (
+            <button key={id} onClick={() => tap(id)}
+              className={`w-full flex items-center gap-3 p-3 rounded-xl border-2 text-left transition-all active:scale-95 ${isOrdered ? p.sel : p.unsel}`}
+            >
+              <span className={`w-7 h-7 rounded-full flex items-center justify-center text-xs font-bold shrink-0 ${
+                isOrdered ? p.badge : (theme === "GAMIFIED" ? "bg-gray-700 text-gray-400" : "bg-slate-100 text-slate-400")
+              }`}>
+                {isOrdered ? pos + 1 : "?"}
+              </span>
+              <span className="text-2xl">{dish.emoji}</span>
+              <div>
+                <p className={`text-sm font-semibold ${p.text}`}>{dish.name}</p>
+                <p className={`text-xs capitalize ${p.muted}`}>{dish.cat}</p>
+              </div>
+              {isOrdered && <span className="ml-auto text-green-500 text-sm">✓</span>}
+            </button>
+          );
+        })}
+      </div>
+
+      <button onClick={confirm} disabled={!allOrdered}
+        className={`w-full h-11 rounded-xl font-bold transition-all ${p.btn} disabled:opacity-40`}
+      >
+        {allOrdered ? "Servir nesta ordem ✓" : `Selecione os ${seq.current.items.length} pratos (${ordered.length}/${seq.current.items.length})`}
       </button>
     </div>
   );
@@ -680,14 +730,19 @@ function RestauranteL3({ theme, onFinish }: { theme: Theme; onFinish: (ok: boole
   const [mem, setMem] = useState(true);
   const [secs, setSecs] = useState(8);
   const [answers, setAnswers] = useState<Record<string, string>>({});
+  const timerRef = useRef<ReturnType<typeof setInterval> | null>(null);
 
   useEffect(() => {
     if (!mem) return;
-    const t = setInterval(() => {
-      setSecs(p => { if (p <= 1) { clearInterval(t); setMem(false); return 0; } return p - 1; });
-    }, 1000);
-    return () => clearInterval(t);
+    timerRef.current = setInterval(() => setSecs(s => s - 1), 1000);
+    return () => { if (timerRef.current) clearInterval(timerRef.current); };
   }, [mem]);
+
+  useEffect(() => {
+    if (!mem || secs > 0) return;
+    if (timerRef.current) { clearInterval(timerRef.current); timerRef.current = null; }
+    setMem(false);
+  }, [mem, secs]);
 
   if (mem) return (
     <div className="space-y-3">
@@ -961,6 +1016,11 @@ export function DesafioCidade({ difficulty, theme, onComplete }: {
   const [done, setDone] = useState(0);
   const [missionKey, setMissionKey] = useState(0);
   const [lastOk, setLastOk] = useState(false);
+  const resultTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+
+  useEffect(() => {
+    return () => { if (resultTimerRef.current) clearTimeout(resultTimerRef.current); };
+  }, []);
 
   const [levels, setLevels] = useState<Record<EnvId, number>>({
     cinema:      initialLevel(difficulty),
@@ -991,7 +1051,8 @@ export function DesafioCidade({ difficulty, theme, onComplete }: {
     reportProgress(Math.round((next / MAX_MISSIONS) * 100));
     setPhase("result");
 
-    setTimeout(() => {
+    if (resultTimerRef.current) clearTimeout(resultTimerRef.current);
+    resultTimerRef.current = setTimeout(() => {
       if (next >= MAX_MISSIONS) {
         const correctCount = results.current.filter(Boolean).length;
         const accuracy = correctCount / MAX_MISSIONS;
@@ -1025,8 +1086,8 @@ export function DesafioCidade({ difficulty, theme, onComplete }: {
   );
 
   return (
-    <div className={`min-h-screen flex flex-col items-center justify-center p-4 ${p.bg}`}>
-      <div className={`w-full max-w-md rounded-2xl p-5 ${p.wrap}`}>
+    <div className={`min-h-screen overflow-y-auto p-4 ${p.bg}`}>
+      <div className={`w-full max-w-md mx-auto rounded-2xl p-5 my-4 ${p.wrap}`}>
         <ProgressBar />
 
         <AnimatePresence mode="wait">
