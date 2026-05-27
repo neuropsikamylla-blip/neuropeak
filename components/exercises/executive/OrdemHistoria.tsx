@@ -364,7 +364,11 @@ function OrdemHistoriaDragStep({ theme, onDone }: { theme: Theme; onDone: () => 
           <Reorder.Item
             key={panel.id}
             value={panel}
-            className={`flex items-center gap-3 rounded-xl border-2 p-3 select-none cursor-grab active:cursor-grabbing transition-all ${
+            layout
+            dragMomentum={false}
+            whileDrag={{ scale: 1.04, boxShadow: "0 8px 24px rgba(0,0,0,0.18)", zIndex: 20 }}
+            transition={{ duration: 0.15 }}
+            className={`flex items-center gap-3 rounded-xl border-2 p-3 select-none cursor-grab active:cursor-grabbing ${
               correct ? "border-green-500 bg-green-50" : cardCls
             }`}
           >
@@ -377,7 +381,7 @@ function OrdemHistoriaDragStep({ theme, onDone }: { theme: Theme; onDone: () => 
             <span className={`flex-1 text-sm font-semibold ${correct ? "text-green-700" : labelCls}`}>
               {panel.label}
             </span>
-            <span className={`text-lg ${handleCls}`}>⠿</span>
+            <span className={`text-xl ${handleCls}`}>⠿</span>
           </Reorder.Item>
         ))}
       </Reorder.Group>
@@ -594,7 +598,7 @@ export function OrdemHistoria({ difficulty, theme, onComplete }: OrdemHistoriaPr
     }
 
     return (
-      <div className={`flex items-center gap-3 rounded-2xl border-2 overflow-hidden cursor-grab active:cursor-grabbing select-none ${normalCardClass}`}>
+      <div className={`flex items-center gap-3 rounded-2xl border-2 overflow-hidden ${normalCardClass}`}>
         <span className={`w-8 h-8 flex items-center justify-center ml-3 rounded-full text-sm font-bold shrink-0 ${numBadgeClass}`}>
           {idx + 1}
         </span>
@@ -602,7 +606,7 @@ export function OrdemHistoria({ difficulty, theme, onComplete }: OrdemHistoriaPr
           <span className="text-3xl leading-none">{panel.emoji}</span>
         </div>
         <p className={`flex-1 text-sm font-semibold ${labelClass}`}>{panel.label}</p>
-        <span className={`text-lg mr-3 ${handleClass}`}>⠿</span>
+        <span className={`text-xl mr-3 ${handleClass}`}>⠿</span>
       </div>
     );
   }
@@ -674,7 +678,15 @@ export function OrdemHistoria({ difficulty, theme, onComplete }: OrdemHistoriaPr
             className="flex flex-col gap-2 my-4"
           >
             {orderedPanels.map((panel, idx) => (
-              <Reorder.Item key={panel.id} value={panel}>
+              <Reorder.Item
+                key={panel.id}
+                value={panel}
+                layout
+                dragMomentum={false}
+                whileDrag={{ scale: 1.03, boxShadow: "0 10px 28px rgba(0,0,0,0.16)", zIndex: 20 }}
+                transition={{ duration: 0.15 }}
+                className="select-none cursor-grab active:cursor-grabbing rounded-2xl"
+              >
                 {renderPanelRow(panel, idx, false)}
               </Reorder.Item>
             ))}
