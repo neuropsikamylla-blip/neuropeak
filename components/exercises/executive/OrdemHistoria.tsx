@@ -393,16 +393,16 @@ function OrdemHistoriaTapStep({ theme, onDone }: { theme: Theme; onDone: () => v
               disabled={submitted}
               className={`relative rounded-xl border-2 overflow-hidden flex flex-col transition-all active:scale-95 ${borderCls}`}
             >
-              <div className={`relative flex items-center justify-center h-16 ${sceneAreaCls}`}>
-                <span className="text-4xl leading-none">{panel.emoji}</span>
+              <div className={`relative flex items-center justify-center h-20 ${sceneAreaCls}`}>
+                <span className="text-5xl leading-none">{panel.emoji}</span>
                 {isTapped && !submitted && (
-                  <span className={`absolute top-1 right-1 w-5 h-5 rounded-full text-xs font-bold flex items-center justify-center shadow-sm ${badgeClass}`}>
+                  <span className={`absolute top-1.5 right-1.5 w-6 h-6 rounded-full text-xs font-bold flex items-center justify-center shadow ${badgeClass}`}>
                     {tapIdx + 1}
                   </span>
                 )}
               </div>
-              <div className={`px-1.5 py-1 ${labelAreaCls}`}>
-                <p className={`text-[10px] text-center leading-tight font-medium ${theme === "GAMIFIED" ? "text-gray-200" : "text-gray-700"}`}>
+              <div className={`px-2 py-1.5 ${labelAreaCls}`}>
+                <p className={`text-xs text-center leading-tight font-semibold ${theme === "GAMIFIED" ? "text-gray-200" : "text-gray-700"}`}>
                   {panel.label}
                 </p>
               </div>
@@ -628,7 +628,7 @@ export function OrdemHistoria({ difficulty, theme, onComplete }: OrdemHistoriaPr
 
   return (
     <div className={`min-h-screen flex flex-col items-center p-4 pt-5 ${bg}`}>
-      <div className={`w-full max-w-md rounded-2xl p-5 ${card}`}>
+      <div className={`w-full max-w-2xl rounded-2xl p-5 ${card}`}>
 
         {/* Header */}
         <div className="flex justify-between items-center mb-1">
@@ -710,30 +710,35 @@ export function OrdemHistoria({ difficulty, theme, onComplete }: OrdemHistoriaPr
                     className={`relative rounded-2xl border-2 overflow-hidden flex flex-col transition-all active:scale-95 ${borderCls}`}
                   >
                     {/* Área da cena */}
-                    <div className={`relative flex items-center justify-center h-20 ${sceneAreaCls}`}>
-                      <span className="text-5xl leading-none">{panel.emoji}</span>
+                    <div className={`relative flex items-center justify-center h-28 ${sceneAreaCls}`}>
+                      {/* Emoji de contexto da história (fundo) */}
+                      <span className="absolute text-7xl opacity-10 select-none pointer-events-none">
+                        {trialData.taskEmoji}
+                      </span>
+                      {/* Emoji da ação (primeiro plano) */}
+                      <span className="text-6xl leading-none relative z-10">{panel.emoji}</span>
                       {/* Overlay de estado */}
                       {!submitted && isTapped && (
-                        <div className="absolute inset-0 bg-blue-400/10 pointer-events-none" />
+                        <div className="absolute inset-0 bg-blue-400/15 pointer-events-none" />
                       )}
                       {submitted && (
-                        <div className={`absolute inset-0 pointer-events-none ${wasCorrect ? "bg-green-400/10" : "bg-red-400/10"}`} />
+                        <div className={`absolute inset-0 pointer-events-none ${wasCorrect ? "bg-green-400/15" : "bg-red-400/15"}`} />
                       )}
                       {/* Badge de ordem */}
                       {!submitted && isTapped && (
-                        <span className={`absolute top-1.5 right-1.5 w-6 h-6 rounded-full text-xs font-bold flex items-center justify-center shadow ${badgeClass}`}>
+                        <span className={`absolute top-2 right-2 w-7 h-7 rounded-full text-sm font-bold flex items-center justify-center shadow-md ${badgeClass}`}>
                           {tapIdx + 1}
                         </span>
                       )}
                       {submitted && (
-                        <span className={`absolute top-1.5 right-1.5 w-6 h-6 rounded-full text-xs font-bold flex items-center justify-center shadow ${wasCorrect ? "bg-green-500 text-white" : "bg-red-400 text-white"}`}>
+                        <span className={`absolute top-2 right-2 w-7 h-7 rounded-full text-sm font-bold flex items-center justify-center shadow-md ${wasCorrect ? "bg-green-500 text-white" : "bg-red-400 text-white"}`}>
                           {panel.correctIndex + 1}
                         </span>
                       )}
                     </div>
                     {/* Rótulo */}
-                    <div className={`px-2 py-1.5 ${labelAreaCls}`}>
-                      <p className={`text-xs text-center leading-tight font-medium ${labelClass}`}>
+                    <div className={`px-2 py-2 ${labelAreaCls}`}>
+                      <p className={`text-xs text-center leading-tight font-semibold ${labelClass}`}>
                         {panel.label}
                       </p>
                     </div>

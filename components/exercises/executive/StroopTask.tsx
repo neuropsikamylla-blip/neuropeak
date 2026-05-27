@@ -17,6 +17,7 @@ const COLORS = [
   { name: "AZUL",     hex: "#3B82F6" },
   { name: "VERDE",    hex: "#22C55E" },
   { name: "AMARELO",  hex: "#EAB308" },
+  { name: "ROXO",     hex: "#A855F7" },
 ];
 
 type Rule = "COR" | "PALAVRA";
@@ -29,14 +30,14 @@ interface TrialItem {
 }
 
 const MAX_TRIALS = 20;
-const MIN_TIME_MS = 800;
-const MAX_TIME_MS = 5000;
+const MIN_TIME_MS = 550;
+const MAX_TIME_MS = 4000;
 
 // Fixed tutorial examples — three examples with variety
 const TUTORIAL_EXAMPLES: TrialItem[] = [
   { word: COLORS[0], inkColor: COLORS[1], rule: "COR" },     // "VERMELHO" em AZUL → AZUL
   { word: COLORS[2], inkColor: COLORS[0], rule: "PALAVRA" }, // "VERDE" em VERMELHO → VERDE
-  { word: COLORS[3], inkColor: COLORS[2], rule: "COR" },     // "AMARELO" em VERDE → VERDE
+  { word: COLORS[4], inkColor: COLORS[3], rule: "COR" },     // "ROXO" em AMARELO → AMARELO
 ];
 
 function getOtherColors(excluded: (typeof COLORS)[number]) {
@@ -45,8 +46,8 @@ function getOtherColors(excluded: (typeof COLORS)[number]) {
 
 function generateTrial(difficulty: number): TrialItem {
   const word = COLORS[Math.floor(Math.random() * COLORS.length)];
-  // Higher difficulty = more incongruent (word ≠ ink color)
-  const congruentChance = difficulty <= 2 ? 0.5 : difficulty <= 4 ? 0.3 : 0.1;
+  // More incongruent at all levels — exercise should require real cognitive effort
+  const congruentChance = difficulty <= 2 ? 0.2 : difficulty <= 4 ? 0.1 : 0.03;
   const congruent = Math.random() < congruentChance;
   const others = getOtherColors(word);
   const inkColor = congruent ? word : others[Math.floor(Math.random() * others.length)];
@@ -65,7 +66,7 @@ function generateTrial(difficulty: number): TrialItem {
 }
 
 function initialTimeMs(difficulty: number): number {
-  return Math.max(MIN_TIME_MS, Math.round(4000 - (difficulty - 1) * 400));
+  return Math.max(MIN_TIME_MS, Math.round(2800 - (difficulty - 1) * 300));
 }
 
 function correctAnswer(item: TrialItem): string {
@@ -295,8 +296,8 @@ export function StroopTask({ difficulty, theme, onComplete }: StroopTaskProps) {
     const newStreak = correct ? Math.max(streak, 0) + 1 : Math.min(streak, 0) - 1;
     let nextTime = currentTimeMs;
     let nextStreak = newStreak;
-    if (newStreak >= 2) { nextTime = Math.max(currentTimeMs - 350, MIN_TIME_MS); nextStreak = 0; }
-    if (newStreak <= -2) { nextTime = Math.min(currentTimeMs + 500, MAX_TIME_MS); nextStreak = 0; }
+    if (newStreak >= 2) { nextTime = Math.max(currentTimeMs - 500, MIN_TIME_MS); nextStreak = 0; }
+    if (newStreak <= -2) { nextTime = Math.min(currentTimeMs + 350, MAX_TIME_MS); nextStreak = 0; }
 
     const nextTrial = trialRef.current + 1;
     reportProgress(Math.round((nextTrial / MAX_TRIALS) * 100));
