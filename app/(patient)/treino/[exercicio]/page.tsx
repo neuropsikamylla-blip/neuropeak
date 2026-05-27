@@ -41,6 +41,11 @@ const DesafioOrcamento    = dynamic(() => import("@/components/exercises/executi
 const CacaItemBarato      = dynamic(() => import("@/components/exercises/attention/CacaItemBarato").then(m => ({ default: m.CacaItemBarato })), { loading: ExerciseLoader });
 const MudancaRegras       = dynamic(() => import("@/components/exercises/executive/MudancaRegras").then(m => ({ default: m.MudancaRegras })), { loading: ExerciseLoader });
 const CompraMultifuncional = dynamic(() => import("@/components/exercises/executive/CompraMultifuncional").then(m => ({ default: m.CompraMultifuncional })), { loading: ExerciseLoader });
+const TaskSwitching        = dynamic(() => import("@/components/exercises/executive/TaskSwitching").then(m => ({ default: m.TaskSwitching })), { loading: ExerciseLoader });
+const AtencaoSustentada    = dynamic(() => import("@/components/exercises/attention/AtencaoSustentada").then(m => ({ default: m.AtencaoSustentada })), { loading: ExerciseLoader });
+const MOT                  = dynamic(() => import("@/components/exercises/attention/MOT").then(m => ({ default: m.MOT })), { loading: ExerciseLoader });
+const DualTask             = dynamic(() => import("@/components/exercises/attention/DualTask").then(m => ({ default: m.DualTask })), { loading: ExerciseLoader });
+const DeductiveGrid        = dynamic(() => import("@/components/exercises/executive/DeductiveGrid").then(m => ({ default: m.DeductiveGrid })), { loading: ExerciseLoader });
 
 const EXERCISE_INSTRUCTIONS: Record<string, string[]> = {
   "span-numerico": [
@@ -204,6 +209,36 @@ const EXERCISE_INSTRUCTIONS: Record<string, string[]> = {
     "Um painel mostra em tempo real quais regras já foram cumpridas (✓) e quais faltam.",
     "O cronômetro corre — se o tempo acabar, a compra é confirmada como está.",
     "Planeje antes de tocar nos itens: leia todas as restrições primeiro!",
+  ],
+  "task-switching": [
+    "Uma carta aparece na tela. Classifique-a seguindo a REGRA mostrada no topo.",
+    "Toque no botão correto o mais rápido possível — velocidade e precisão contam!",
+    "Nas dificuldades maiores, a regra muda SEM aviso. Fique sempre atento!",
+    "Regras possíveis: COR (Vermelho/Azul), NÚMERO (Ímpar/Par), FORMA (Círculo/Triângulo).",
+  ],
+  "atencao-sustentada": [
+    "Letras aparecem na tela, uma por vez, em sequência rápida.",
+    "Toque APENAS quando aparecer X imediatamente após A. Sequência A → X = tocar.",
+    "Se a letra X aparecer após QUALQUER outra letra, ignore! Só toca no A → X.",
+    "O exercício é longo — mantenha o foco do início ao fim!",
+  ],
+  "mot": [
+    "Algumas bolas vão piscar — memorize quais são!",
+    "Todas as bolas vão se mover. Tente acompanhar as bolas que piscaram com os olhos.",
+    "Quando as bolas pararem, toque nas bolas que eram os alvos.",
+    "Atenção: quanto mais bolas e mais rápido, mais difícil!",
+  ],
+  "dual-task": [
+    "Você terá DUAS tarefas ao mesmo tempo — fique atento às duas áreas da tela!",
+    "SUPERIOR: Toque quando aparecer uma forma VERDE. Ignore outras cores.",
+    "INFERIOR: Toque IGUAL quando o número for igual ao anterior.",
+    "Divida sua atenção entre as duas — não foque em apenas uma!",
+  ],
+  "deductive-grid": [
+    "Leia as pistas e deduza quem tem cada atributo.",
+    "Toque numa célula para marcar: toque 1x = SIM ✓, 2x = NÃO ✗, 3x = apaga.",
+    "Use eliminação: se souber que Bruno=Verde, marque NÃO para Ana e Carla.",
+    "Confirme quando tiver certeza de todas as células!",
   ],
 };
 
@@ -400,6 +435,11 @@ export default function ExercicioPage() {
       case "caca-item-barato": return <CacaItemBarato {...props} />;
       case "mudanca-regras": return <MudancaRegras {...props} />;
       case "compra-multifuncional": return <CompraMultifuncional {...props} />;
+      case "task-switching": return <TaskSwitching {...props} />;
+      case "atencao-sustentada": return <AtencaoSustentada {...props} />;
+      case "mot": return <MOT {...props} />;
+      case "dual-task": return <DualTask {...props} />;
+      case "deductive-grid": return <DeductiveGrid {...props} />;
       default: return <div className="p-8 text-center text-gray-500">Exercício em desenvolvimento</div>;
     }
   }
