@@ -26,11 +26,63 @@ interface Round {
   domain: FlexDomain;
   items: FlexItem[];
   goal: Goal;
+  story: string;
+  storyIcon: string;
+}
+
+// ── Histórias por domínio ──────────────────────────────────────────────────
+
+const STORIES: Record<string, { icon: string; lines: string[] }> = {
+  supermercado: {
+    icon: "🛒",
+    lines: [
+      "Sua mãe pediu para você fazer as compras da semana enquanto ela está no trabalho.",
+      "Você quer preparar um jantar especial para a família. Precisa escolher os ingredientes.",
+      "O vizinho está doente e pediu para você buscar algumas coisas no mercado pra ele.",
+      "Hoje é dia das compras do mês! Veja o que está faltando em casa.",
+      "Você vai receber amigos para o almoço de domingo e precisa organizar o cardápio.",
+      "Sua avó deixou uma lista de compras. Você vai ao mercado no lugar dela.",
+      "Saiu mais cedo do trabalho e decidiu aproveitar para abastecer a despensa.",
+      "É quarta-feira, dia de promoção no mercado! Hora de comprar com inteligência.",
+    ],
+  },
+  brinquedos: {
+    icon: "🎁",
+    lines: [
+      "O aniversário do seu sobrinho é semana que vem. Você quer comprar um presente especial.",
+      "Chegou o Natal! Você separou uma verba para comprar presentes para as crianças da família.",
+      "A escola promoveu um brechó de brinquedos. Você levou dinheiro para comprar.",
+      "Você ganhou um vale-presente em uma loja de brinquedos. Hora de escolher!",
+      "É o Dia das Crianças e você quer surpreender as crianças com um presente dentro do orçamento.",
+      "Você vai a uma festa de aniversário e precisa levar um presente sem gastar muito.",
+      "Seu amigo vai ser pai e você quer dar um presente de chá de bebê.",
+      "Promoção de fim de ano na loja de brinquedos! Compre com sabedoria.",
+    ],
+  },
+  vestuario: {
+    icon: "👕",
+    lines: [
+      "Você ganhou um vale-presente e quer renovar o guarda-roupa. Confira as opções.",
+      "Está chegando o inverno e você precisa comprar algumas peças mais quentes.",
+      "Tem uma festa importante no fim de semana e você quer se arrumar dentro do orçamento.",
+      "Você foi promovido no trabalho e precisa de roupas mais formais. Veja o que cabe no bolso.",
+      "Liquidação de verão! Bons produtos, mas você precisa controlar os gastos.",
+      "Vai viajar para um lugar frio e precisa de roupas adequadas. Orçamento limitado.",
+      "A academia começou amanhã! Você precisa comprar roupas de treino.",
+      "Você vai presentear um amigo com roupas no aniversário dele.",
+    ],
+  },
+};
+
+function getStory(domainId: string, roundIdx: number): { icon: string; line: string } {
+  const bank = STORIES[domainId] ?? STORIES["supermercado"];
+  const idx = roundIdx % bank.lines.length;
+  return { icon: bank.icon, line: bank.lines[idx] };
 }
 
 function itemCount(d: number): number { return d <= 3 ? 8 : d <= 6 ? 10 : 12; }
 
-function buildRound(d: number): Round {
+function buildRound(d: number, roundIdx: number): Round {
   const domain = pickRandomDomain();
   const count = itemCount(d);
   const items = shuffleFlex(domain.items).slice(0, count);
@@ -40,24 +92,22 @@ function buildRound(d: number): Round {
 
   let goal: Goal;
   if (d <= 3) {
-    // Orçamento máximo simples: escolher até N itens abaixo de um limite
     const budget = Math.round((avgPrice * (2 + Math.random())) * 10) / 10;
     goal = { type: "max", max: budget, label: `Gaste no máximo ${fmt(budget)}` };
   } else if (d <= 6) {
-    // Faixa de gasto: entre min e max
     const mid = avgPrice * (1.5 + Math.random() * 1.5);
     const range = avgPrice * 0.4;
     const min = Math.round((mid - range) * 10) / 10;
     const max = Math.round((mid + range) * 10) / 10;
     goal = { type: "range", min, max, label: `Gaste entre ${fmt(min)} e ${fmt(max)}` };
   } else {
-    // Precisa gastar pelo menos X, mas sem ultrapassar Y
     const minBudget = Math.round((avgPrice * 1.5) * 10) / 10;
     const maxBudget = Math.round((avgPrice * 3) * 10) / 10;
     goal = { type: "range", min: minBudget, max: maxBudget, label: `Gaste entre ${fmt(minBudget)} e ${fmt(maxBudget)}` };
   }
 
-  return { domain, items, goal };
+  const { icon, line } = getStory(domain.id, roundIdx);
+  return { domain, items, goal, story: line, storyIcon: icon };
 }
 
 function isGoalMet(total: number, goal: Goal): boolean {
@@ -103,9 +153,17 @@ function TutStep({ theme, onDone }: { theme: Theme; onDone: () => void }) {
   const goalTxt = theme === "GAMIFIED" ? "text-amber-300" : "text-amber-800";
   const text = theme === "GAMIFIED" ? "text-gray-200" : "text-gray-800";
   const sub = theme === "GAMIFIED" ? "text-gray-400" : "text-gray-500";
+  const storyBg = theme === "GAMIFIED" ? "bg-blue-900/30 border-blue-700" : "bg-blue-50 border-blue-200";
+  const storyTxt = theme === "GAMIFIED" ? "text-blue-300" : "text-blue-700";
 
   return (
     <div className="space-y-3">
+      <div className={`flex items-start gap-2 px-3 py-2 rounded-xl border ${storyBg}`}>
+        <span className="text-lg shrink-0">🛒</span>
+        <p className={`text-xs leading-snug ${storyTxt}`}>
+          Sua mãe pediu para você fazer as compras da semana. Ela deixou R$15,00 para gastar.
+        </p>
+      </div>
       <div className={`flex items-center gap-2 px-3 py-2 rounded-xl border ${goalBg}`}>
         <span className="text-lg">💰</span>
         <p className={`text-sm font-bold ${goalTxt}`}>{goal.label}</p>
@@ -150,7 +208,7 @@ export function DesafioOrcamento({ difficulty, theme, onComplete }: Props) {
   const [selected, setSelected] = useState(new Set<string>());
   const [phase, setPhase] = useState<"shopping" | "result">("shopping");
   const [lastCorrect, setLastCorrect] = useState(false);
-  const [currentRound, setCurrentRound] = useState<Round>(() => buildRound(difficulty));
+  const [currentRound, setCurrentRound] = useState<Round>(() => buildRound(difficulty, 0));
 
   const startTime = useRef(Date.now());
   const roundRef = useRef(0);
@@ -192,7 +250,7 @@ export function DesafioOrcamento({ difficulty, theme, onComplete }: Props) {
         roundRef.current = nextR;
         setRound(nextR);
         setSelected(new Set());
-        setCurrentRound(buildRound(difficulty));
+        setCurrentRound(buildRound(difficulty, nextR));
         setPhase("shopping");
       }
     }, 1800);
@@ -202,7 +260,7 @@ export function DesafioOrcamento({ difficulty, theme, onComplete }: Props) {
     return (
       <TutorialBase theme={theme} title="Desafio do Orçamento"
         steps={[{
-          instruction: "Selecione itens para montar sua cesta. O total deve respeitar o orçamento indicado. Toque nos itens para adicionar ou remover!",
+          instruction: "Você terá uma situação do dia a dia e um orçamento para respeitar. Escolha os itens, faça as contas de cabeça e confirme a compra!",
           content: (done) => <TutStep theme={theme} onDone={done} />,
         }]}
         onDone={() => setShowTutorial(false)} />
@@ -214,6 +272,8 @@ export function DesafioOrcamento({ difficulty, theme, onComplete }: Props) {
     card: theme === "GAMIFIED" ? "bg-gray-800 border border-cyan-500/30" : "bg-white shadow-lg",
     title: theme === "GAMIFIED" ? "text-cyan-400" : theme === "COLORFUL" ? "text-emerald-700" : "text-gray-900",
     sub: theme === "GAMIFIED" ? "text-gray-400" : "text-gray-500",
+    storyBg: theme === "GAMIFIED" ? "bg-blue-900/30 border-blue-700/50" : theme === "COLORFUL" ? "bg-sky-50 border-sky-300" : "bg-blue-50 border-blue-200",
+    storyTxt: theme === "GAMIFIED" ? "text-blue-300" : "text-blue-700",
     goalBg: theme === "GAMIFIED" ? "bg-amber-900/30 border-amber-600/50" : theme === "COLORFUL" ? "bg-amber-50 border-amber-300" : "bg-amber-50 border-amber-200",
     goalTxt: theme === "GAMIFIED" ? "text-amber-300" : "text-amber-800",
     item: theme === "GAMIFIED" ? "border-gray-600 bg-gray-700" : "border-slate-200 bg-white shadow-sm",
@@ -221,9 +281,6 @@ export function DesafioOrcamento({ difficulty, theme, onComplete }: Props) {
     totalBg: theme === "GAMIFIED" ? "bg-gray-700" : "bg-slate-100",
     btnConfirm: theme === "GAMIFIED" ? "bg-cyan-600 hover:bg-cyan-700 text-white" : theme === "COLORFUL" ? "bg-gradient-to-r from-emerald-500 to-teal-500 text-white" : "bg-emerald-600 hover:bg-emerald-700 text-white",
   };
-
-  const overBudget = currentRound.goal.type !== "min" && totalRounded > currentRound.goal.max;
-  const totalColor = met ? "text-green-500" : overBudget ? "text-red-500" : theme === "GAMIFIED" ? "text-cyan-400" : "text-indigo-600";
 
   return (
     <div className={`min-h-screen overflow-y-auto ${pal.bg}`}>
@@ -248,6 +305,14 @@ export function DesafioOrcamento({ difficulty, theme, onComplete }: Props) {
           <AnimatePresence mode="wait">
             {phase === "shopping" && (
               <motion.div key={`shop-${round}`} initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }}>
+
+                {/* Historinha */}
+                <div className={`flex items-start gap-2 px-3 py-2 rounded-xl border mb-2 ${pal.storyBg}`}>
+                  <span className="text-base shrink-0">{currentRound.storyIcon}</span>
+                  <p className={`text-xs leading-snug ${pal.storyTxt}`}>{currentRound.story}</p>
+                </div>
+
+                {/* Orçamento */}
                 <div className={`flex items-center gap-2 px-3 py-2 rounded-xl border mb-3 ${pal.goalBg}`}>
                   <span className="text-lg">💰</span>
                   <p className={`text-sm font-bold ${pal.goalTxt}`}>{currentRound.goal.label}</p>
@@ -291,7 +356,7 @@ export function DesafioOrcamento({ difficulty, theme, onComplete }: Props) {
                   {lastCorrect ? "Orçamento respeitado!" : "Tente de novo na próxima"}
                 </p>
                 <p className={`text-sm mt-1 ${pal.sub}`}>
-                  Total: <strong>{fmt(totalRounded)}</strong> · {currentRound.goal.label}
+                  Você gastou: <strong>{fmt(totalRounded)}</strong> · {currentRound.goal.label}
                 </p>
               </motion.div>
             )}

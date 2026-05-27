@@ -343,6 +343,14 @@ export const EXERCISE_DEFINITIONS = {
     estimatedMinutes: 8,
     icon: "🎯",
   },
+  "focus-agents-auditivo": {
+    id: "focus-agents-auditivo",
+    name: "Focus Agentes Auditivo",
+    domain: "attention" as Domain,
+    description: "Ouça o comando e identifique o personagem correto — sem texto, apenas áudio",
+    estimatedMinutes: 8,
+    icon: "🎯",
+  },
   "deductive-grid": {
     id: "deductive-grid",
     name: "Grade Dedutiva",

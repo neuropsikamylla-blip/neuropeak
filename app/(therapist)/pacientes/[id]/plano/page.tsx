@@ -16,7 +16,7 @@ const ALL_DOMAINS: Domain[] = ["memory", "attention", "processing", "executive"]
 
 const DOMAIN_EXERCISES: Record<Domain, string[]> = {
   memory: ["span-numerico", "span-numerico-inverso", "matriz-espacial", "matriz-espacial-inversa", "jogo-memoria", "desafio-supermercado", "desafio-supermercado-auditivo"],
-  attention: ["trilha-visual", "antes-depois", "caca-item-barato", "atencao-seletiva", "atencao-sustentada", "mot", "dual-task", "focus-agents"],
+  attention: ["trilha-visual", "antes-depois", "caca-item-barato", "atencao-seletiva", "atencao-sustentada", "mot", "dual-task", "focus-agents", "focus-agents-auditivo"],
   processing: ["tempo-reacao", "certo-ou-errado", "semaforo", "corrida-tempo"],
   executive: ["torre-hanoi", "labirinto", "stroop-task", "ordem-historia", "desafio-orcamento", "mudanca-regras", "compra-multifuncional", "task-switching", "deductive-grid"],
 };

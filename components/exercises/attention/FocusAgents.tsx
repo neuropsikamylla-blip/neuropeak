@@ -739,9 +739,10 @@ export interface FocusAgentsProps {
   difficulty: number;
   theme: Theme;
   onComplete: (result: ExerciseResult) => void;
+  forceMode?: "visual" | "auditivo";
 }
 
-export function FocusAgents({ difficulty, theme, onComplete }: FocusAgentsProps) {
+export function FocusAgents({ difficulty, theme, onComplete, forceMode }: FocusAgentsProps) {
   const mode = getMode(theme);
   const [showTutorial, setShowTutorial] = useState(true);
   const reportProgress = useExerciseProgress();
@@ -789,7 +790,7 @@ export function FocusAgents({ difficulty, theme, onComplete }: FocusAgentsProps)
     }
 
     // Auto-speak command (skip in visual-only mode)
-    const instrMode = getInstrMode(d);
+    const instrMode = forceMode === "visual" ? "visual" : forceMode === "auditivo" ? "audio" : getInstrMode(d);
     if (instrMode !== "visual") speak(gen.command);
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [mode, difficulty]);
@@ -862,7 +863,7 @@ export function FocusAgents({ difficulty, theme, onComplete }: FocusAgentsProps)
 
   const targetAttrs = chars.find(c => c.id === targetId)?.attrs;
   const effectiveDiff = Math.max(1, Math.min(10, difficulty + Math.floor(round / 3)));
-  const instrMode = getInstrMode(effectiveDiff);
+  const instrMode: InstrMode = forceMode === "visual" ? "visual" : forceMode === "auditivo" ? "audio" : getInstrMode(effectiveDiff);
 
   return (
     <div className={`min-h-screen flex flex-col items-center p-4 pt-6 ${pal.bg}`}>

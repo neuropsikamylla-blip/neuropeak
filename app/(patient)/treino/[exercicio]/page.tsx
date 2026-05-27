@@ -253,6 +253,12 @@ const EXERCISE_INSTRUCTIONS: Record<string, string[]> = {
     "Atenção: há personagens parecidos para confundir — compare todos os atributos!",
     "Nas dificuldades maiores o tempo é curto e os distratores são quase idênticos ao alvo.",
   ],
+  "focus-agents-auditivo": [
+    "Você vai OUVIR o comando — preste atenção ao áudio.",
+    "Sem texto de ajuda: identifique o personagem apenas pelo que ouviu.",
+    "Clique no alto-falante para repetir o comando se precisar.",
+    "Treine a memória auditiva e atenção focada no som!",
+  ],
 };
 
 function isSameLocalDay(a: Date, b: Date) {
@@ -455,6 +461,7 @@ export default function ExercicioPage() {
       case "dual-task": return <DualTask {...props} />;
       case "deductive-grid": return <DeductiveGrid {...props} />;
       case "focus-agents": return <FocusAgents {...props} />;
+      case "focus-agents-auditivo": return <FocusAgents {...props} forceMode="auditivo" />;
       default: return <div className="p-8 text-center text-gray-500">Exercício em desenvolvimento</div>;
     }
   }
