@@ -954,7 +954,7 @@ export function FocusAgents({ difficulty, theme, onComplete, forceMode }: FocusA
   const gameTitle = mode === "child" ? "🎯 Focus Criaturas" : mode === "teen" ? "🎮 Focus Avatares" : "🔍 Focus Agentes";
 
   return (
-    <div className="relative w-full overflow-hidden" style={{ height: "100dvh", minHeight: 520 }}>
+    <div className="fixed inset-0 overflow-hidden" style={{ zIndex: 40 }}>
       {/* Fundo cenográfico */}
       <SceneBg theme={theme} />
 
