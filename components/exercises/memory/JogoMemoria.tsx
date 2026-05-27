@@ -103,8 +103,8 @@ function JogoMemoriaShowStep({ theme, cardFront, onDone }: { theme: Theme; cardF
       </p>
       <div className="grid grid-cols-2 gap-3 max-w-[180px] mx-auto">
         {TUTORIAL_CARDS.map((c) => (
-          <div key={c.id} className={`w-16 h-16 rounded-xl border-2 flex items-center justify-center ${cardFront}`}>
-            <MemorySymbol id={c.symbol} size={36} />
+          <div key={c.id} className={`w-20 h-20 rounded-xl border-2 flex items-center justify-center ${cardFront}`}>
+            <MemorySymbol id={c.symbol} size={48} />
           </div>
         ))}
       </div>
@@ -155,7 +155,7 @@ function JogoMemoriaPlayStep({ theme, cardBack, cardFront, onDone }: { theme: Th
             key={c.id}
             onClick={() => handleFlip(c.id)}
             disabled={locked || matched.includes(c.id)}
-            className={`w-16 h-16 rounded-xl border-2 flex items-center justify-center ${cardClass(c.id)}`}
+            className={`w-20 h-20 rounded-xl border-2 flex items-center justify-center ${cardClass(c.id)}`}
             whileTap={{ scale: 0.92 }}
           >
             {visible ? <MemorySymbol id={c.symbol} size={36} /> : (
@@ -331,7 +331,7 @@ export function JogoMemoria({ difficulty, theme, onComplete }: JogoMemoriaProps)
 
   return (
     <div className={`min-h-screen flex flex-col items-center p-4 pt-6 ${bg}`}>
-      <div className={`w-full max-w-sm rounded-2xl p-5 ${card}`}>
+      <div className={`w-full max-w-2xl rounded-2xl p-5 ${card}`}>
         <div className="flex justify-between items-center mb-3">
           <div>
             <h2 className={`font-bold text-base ${titleClass}`}>🃏 Jogo da Memória</h2>
@@ -373,7 +373,7 @@ export function JogoMemoria({ difficulty, theme, onComplete }: JogoMemoriaProps)
                 key={c.id}
                 onClick={() => handleFlip(c.id)}
                 disabled={gamePhase !== "playing" || c.matched || flipped.includes(c.id) || locked}
-                className={`w-16 h-16 rounded-xl border-2 flex items-center justify-center transition-all ${cardClass(c)}`}
+                className={`w-20 h-20 rounded-xl border-2 flex items-center justify-center transition-all ${cardClass(c)}`}
                 whileTap={gamePhase === "playing" ? { scale: 0.92 } : {}}
               >
                 <AnimatePresence mode="wait">
@@ -384,7 +384,7 @@ export function JogoMemoria({ difficulty, theme, onComplete }: JogoMemoriaProps)
                       animate={{ opacity: 1, scale: 1 }}
                       exit={{ opacity: 0 }}
                     >
-                      <MemorySymbol id={c.symbol} size={36} />
+                      <MemorySymbol id={c.symbol} size={48} />
                     </motion.div>
                   ) : (
                     <motion.span

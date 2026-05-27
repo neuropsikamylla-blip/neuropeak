@@ -273,6 +273,22 @@ function shuffleAway<T extends { correctIndex: number }>(arr: T[]): T[] {
   return result;
 }
 
+const SCENE_PALETTE = [
+  "from-sky-100 to-cyan-50",
+  "from-amber-100 to-yellow-50",
+  "from-violet-100 to-purple-50",
+  "from-emerald-100 to-teal-50",
+  "from-rose-100 to-pink-50",
+  "from-orange-100 to-amber-50",
+  "from-indigo-100 to-blue-50",
+  "from-teal-100 to-cyan-50",
+];
+
+function sceneBg(emoji: string): string {
+  const code = emoji.codePointAt(0) ?? 0;
+  return SCENE_PALETTE[code % SCENE_PALETTE.length];
+}
+
 function pickFromPool(pool: Story[], used: Set<number>): { story: Story; idx: number } {
   const available = pool.map((_, i) => i).filter((i) => !used.has(i));
 
@@ -365,30 +381,31 @@ function OrdemHistoriaTapStep({ theme, onDone }: { theme: Theme; onDone: () => v
         {panels.map((panel) => {
           const tapIdx = tappedIds.indexOf(panel.id);
           const isTapped = tapIdx !== -1;
+          const borderCls = submitted ? correctCard : isTapped ? selectedCard : normalCard;
+          const sceneAreaCls = theme === "GAMIFIED"
+            ? "bg-gradient-to-br from-gray-700 to-gray-800"
+            : `bg-gradient-to-br ${sceneBg(panel.emoji)}`;
+          const labelAreaCls = theme === "GAMIFIED" ? "bg-gray-700" : "bg-white";
           return (
             <button
               key={panel.id}
               onClick={() => tapPanel(panel.id)}
               disabled={submitted}
-              className={`relative p-2.5 rounded-xl border-2 flex flex-col items-center gap-1 transition-all ${
-                submitted
-                  ? correctCard
-                  : isTapped
-                  ? selectedCard
-                  : normalCard
-              }`}
+              className={`relative rounded-xl border-2 overflow-hidden flex flex-col transition-all active:scale-95 ${borderCls}`}
             >
-              {isTapped && (
-                <span
-                  className={`absolute -top-2 -right-2 w-5 h-5 rounded-full text-xs font-bold flex items-center justify-center ${badgeClass}`}
-                >
-                  {tapIdx + 1}
-                </span>
-              )}
-              <span className="text-3xl">{panel.emoji}</span>
-              <span className={`text-xs text-center leading-tight ${theme === "GAMIFIED" ? "text-gray-200" : "text-gray-700"}`}>
-                {panel.label}
-              </span>
+              <div className={`relative flex items-center justify-center h-16 ${sceneAreaCls}`}>
+                <span className="text-4xl leading-none">{panel.emoji}</span>
+                {isTapped && !submitted && (
+                  <span className={`absolute top-1 right-1 w-5 h-5 rounded-full text-xs font-bold flex items-center justify-center shadow-sm ${badgeClass}`}>
+                    {tapIdx + 1}
+                  </span>
+                )}
+              </div>
+              <div className={`px-1.5 py-1 ${labelAreaCls}`}>
+                <p className={`text-[10px] text-center leading-tight font-medium ${theme === "GAMIFIED" ? "text-gray-200" : "text-gray-700"}`}>
+                  {panel.label}
+                </p>
+              </div>
             </button>
           );
         })}
@@ -664,49 +681,68 @@ export function OrdemHistoria({ difficulty, theme, onComplete }: OrdemHistoriaPr
         </div>
 
         {/* Grade de painéis */}
-        <div className="grid grid-cols-3 gap-3 my-4">
-          {trialData.shuffled.map((panel) => {
-            const tapIdx = tappedIds.indexOf(panel.id);
-            const isTapped = tapIdx !== -1;
+        {(() => {
+          const gridCols = trialData.panelCount === 4 ? "grid-cols-2" : "grid-cols-3";
+          return (
+            <div className={`grid ${gridCols} gap-3 my-4`}>
+              {trialData.shuffled.map((panel) => {
+                const tapIdx = tappedIds.indexOf(panel.id);
+                const isTapped = tapIdx !== -1;
+                const wasCorrect = submitted && tappedIds[panel.correctIndex] === panel.id;
 
-            let cardClass = normalCardClass;
-            if (submitted) {
-              // após submit: verde se o painel estava na posição certa (tappedIds[correctIndex] === panel.id)
-              const wasCorrect = tappedIds[panel.correctIndex] === panel.id;
-              cardClass = wasCorrect ? correctCardClass : wrongCardClass;
-            } else if (isTapped) {
-              cardClass = selectedCardClass;
-            }
+                let borderCls = normalCardClass;
+                if (submitted) {
+                  borderCls = wasCorrect ? correctCardClass : wrongCardClass;
+                } else if (isTapped) {
+                  borderCls = selectedCardClass;
+                }
 
-            return (
-              <button
-                key={panel.id}
-                onClick={() => tapPanel(panel.id)}
-                disabled={submitted}
-                className={`relative p-3 rounded-2xl border-2 flex flex-col items-center gap-1.5 transition-all ${cardClass}`}
-              >
-                {isTapped && (
-                  <span
-                    className={`absolute -top-2 -right-2 w-5 h-5 rounded-full text-xs font-bold flex items-center justify-center ${badgeClass}`}
+                const sceneAreaCls = theme === "GAMIFIED"
+                  ? "bg-gradient-to-br from-gray-700 to-gray-800"
+                  : `bg-gradient-to-br ${sceneBg(panel.emoji)}`;
+                const labelAreaCls = theme === "GAMIFIED" ? "bg-gray-800" : "bg-white";
+
+                return (
+                  <button
+                    key={panel.id}
+                    onClick={() => tapPanel(panel.id)}
+                    disabled={submitted}
+                    className={`relative rounded-2xl border-2 overflow-hidden flex flex-col transition-all active:scale-95 ${borderCls}`}
                   >
-                    {tapIdx + 1}
-                  </span>
-                )}
-                {submitted && !tappedIds.includes(panel.id) && (
-                  <span className="absolute -top-2 -right-2 w-5 h-5 rounded-full text-xs font-bold flex items-center justify-center bg-gray-400 text-white">
-                    {panel.correctIndex + 1}
-                  </span>
-                )}
-                <span className="text-4xl">{panel.emoji}</span>
-                {panelLevel < 3 && (
-                  <span className={`text-xs text-center leading-tight ${labelClass}`}>
-                    {panel.label}
-                  </span>
-                )}
-              </button>
-            );
-          })}
-        </div>
+                    {/* Área da cena */}
+                    <div className={`relative flex items-center justify-center h-20 ${sceneAreaCls}`}>
+                      <span className="text-5xl leading-none">{panel.emoji}</span>
+                      {/* Overlay de estado */}
+                      {!submitted && isTapped && (
+                        <div className="absolute inset-0 bg-blue-400/10 pointer-events-none" />
+                      )}
+                      {submitted && (
+                        <div className={`absolute inset-0 pointer-events-none ${wasCorrect ? "bg-green-400/10" : "bg-red-400/10"}`} />
+                      )}
+                      {/* Badge de ordem */}
+                      {!submitted && isTapped && (
+                        <span className={`absolute top-1.5 right-1.5 w-6 h-6 rounded-full text-xs font-bold flex items-center justify-center shadow ${badgeClass}`}>
+                          {tapIdx + 1}
+                        </span>
+                      )}
+                      {submitted && (
+                        <span className={`absolute top-1.5 right-1.5 w-6 h-6 rounded-full text-xs font-bold flex items-center justify-center shadow ${wasCorrect ? "bg-green-500 text-white" : "bg-red-400 text-white"}`}>
+                          {panel.correctIndex + 1}
+                        </span>
+                      )}
+                    </div>
+                    {/* Rótulo */}
+                    <div className={`px-2 py-1.5 ${labelAreaCls}`}>
+                      <p className={`text-xs text-center leading-tight font-medium ${labelClass}`}>
+                        {panel.label}
+                      </p>
+                    </div>
+                  </button>
+                );
+              })}
+            </div>
+          );
+        })()}
 
         {/* Área de ação */}
         {!submitted ? (

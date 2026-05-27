@@ -46,6 +46,7 @@ const AtencaoSustentada    = dynamic(() => import("@/components/exercises/attent
 const MOT                  = dynamic(() => import("@/components/exercises/attention/MOT").then(m => ({ default: m.MOT })), { loading: ExerciseLoader });
 const DualTask             = dynamic(() => import("@/components/exercises/attention/DualTask").then(m => ({ default: m.DualTask })), { loading: ExerciseLoader });
 const DeductiveGrid        = dynamic(() => import("@/components/exercises/executive/DeductiveGrid").then(m => ({ default: m.DeductiveGrid })), { loading: ExerciseLoader });
+const FocusAgents          = dynamic(() => import("@/components/exercises/attention/FocusAgents").then(m => ({ default: m.FocusAgents })), { loading: ExerciseLoader });
 
 const EXERCISE_INSTRUCTIONS: Record<string, string[]> = {
   "span-numerico": [
@@ -169,10 +170,16 @@ const EXERCISE_INSTRUCTIONS: Record<string, string[]> = {
     "Reaja rápido assim que um semáforo acender — o tempo é limitado!",
   ],
   "desafio-supermercado": [
-    "Uma lista de compras aparecerá na tela por alguns segundos — memorize os itens!",
+    "Uma lista de compras aparecerá na tela — leia e memorize os itens com nome e desenho!",
     "Após a lista sumir, você verá uma prateleira com vários produtos.",
-    "Selecione apenas os itens que estavam na sua lista.",
-    "Confirme quando estiver pronto. A dificuldade aumenta conforme você acerta!",
+    "Selecione apenas os itens que estavam na sua lista e confirme.",
+    "A dificuldade aumenta conforme você acerta: mais itens na lista!",
+  ],
+  "desafio-supermercado-auditivo": [
+    "Você vai OUVIR a lista de compras lida em voz alta — ouça com atenção!",
+    "Memorize os produtos pelo SOM do nome — os desenhos não terão legenda.",
+    "Após a lista, encontre os produtos na prateleira reconhecendo-os pelo desenho.",
+    "Treine sua memória auditiva e reconhecimento visual ao mesmo tempo!",
   ],
   "desafio-cidade": [
     "Você está em uma cidade com diferentes ambientes: Mercado, Cinema e mais.",
@@ -193,10 +200,10 @@ const EXERCISE_INSTRUCTIONS: Record<string, string[]> = {
     "Fique atento: ultrapassar o orçamento desabilita a confirmação!",
   ],
   "caca-item-barato": [
-    "Você verá diferentes embalagens do mesmo produto, com tamanhos e preços variados.",
-    "Calcule (ou estime) qual tem o menor preço por 100g ou 100ml.",
-    "Toque na embalagem que oferece o melhor custo-benefício.",
-    "Nas dificuldades maiores, o preço por unidade não aparece — calcule mentalmente!",
+    "Você verá etiquetas de produtos com preço, peso, quantidade e validade.",
+    "Leia as informações e responda a pergunta sobre o produto ou compare embalagens.",
+    "Nas dificuldades maiores, compare múltiplos produtos e calcule qual tem melhor custo-benefício.",
+    "Treine a leitura de rótulos — uma habilidade essencial do dia a dia!",
   ],
   "mudanca-regras": [
     "Uma regra aparece no topo da tela: selecione TODOS os itens que se encaixam nela.",
@@ -239,6 +246,12 @@ const EXERCISE_INSTRUCTIONS: Record<string, string[]> = {
     "Toque numa célula para marcar: toque 1x = SIM ✓, 2x = NÃO ✗, 3x = apaga.",
     "Use eliminação: se souber que Bruno=Verde, marque NÃO para Ana e Carla.",
     "Confirme quando tiver certeza de todas as células!",
+  ],
+  "focus-agents": [
+    "Um comando aparecerá no topo — leia (ou ouça) os atributos do personagem alvo.",
+    "Encontre e clique no personagem correto entre os outros na tela.",
+    "Atenção: há personagens parecidos para confundir — compare todos os atributos!",
+    "Nas dificuldades maiores o tempo é curto e os distratores são quase idênticos ao alvo.",
   ],
 };
 
@@ -428,7 +441,8 @@ export default function ExercicioPage() {
       case "certo-ou-errado": return <CertoOuErrado {...props} patientAge={patientAge} />;
       case "antes-depois": return <AntesDepois {...props} />;
       case "semaforo": return <Semaforo {...props} />;
-      case "desafio-supermercado": return <DesafioSupermercado {...props} />;
+      case "desafio-supermercado": return <DesafioSupermercado {...props} mode="leitura" />;
+      case "desafio-supermercado-auditivo": return <DesafioSupermercado {...props} mode="auditivo" />;
       case "desafio-cidade": return <DesafioCidade {...props} />;
       case "corrida-tempo": return <CorridaContraOTempo {...props} />;
       case "desafio-orcamento": return <DesafioOrcamento {...props} />;
@@ -440,6 +454,7 @@ export default function ExercicioPage() {
       case "mot": return <MOT {...props} />;
       case "dual-task": return <DualTask {...props} />;
       case "deductive-grid": return <DeductiveGrid {...props} />;
+      case "focus-agents": return <FocusAgents {...props} />;
       default: return <div className="p-8 text-center text-gray-500">Exercício em desenvolvimento</div>;
     }
   }

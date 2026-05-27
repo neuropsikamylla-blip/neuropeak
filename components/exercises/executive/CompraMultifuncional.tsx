@@ -244,8 +244,8 @@ export function CompraMultifuncional({ difficulty, theme, onComplete }: Props) {
 
   return (
     <div className={`min-h-screen overflow-y-auto ${pal.bg}`}>
-      <div className="max-w-md mx-auto px-3 py-4">
-        <div className={`rounded-2xl p-4 ${pal.card}`}>
+      <div className="max-w-2xl mx-auto px-4 py-4">
+        <div className={`rounded-2xl p-5 ${pal.card}`}>
 
           <div className="flex justify-between items-center mb-2">
             <h2 className={`font-bold text-base ${pal.title}`}>🛒 Compra Multifuncional</h2>
@@ -280,41 +280,61 @@ export function CompraMultifuncional({ difficulty, theme, onComplete }: Props) {
                   {ruleRow(qtyOk, `Exatamente ${rules.quantity} item${rules.quantity !== 1 ? "s" : ""} (${selected.size} selecionado${selected.size !== 1 ? "s" : ""})`)}
                 </div>
 
-                <div className="grid grid-cols-3 gap-2 mb-3">
+                <div className="grid grid-cols-3 sm:grid-cols-4 gap-2 mb-3">
                   {currentRound.items.map(item => (
                     <button key={item.id} onClick={() => toggle(item.id)}
-                      className={`p-2 rounded-xl border-2 flex flex-col items-center gap-1 transition-all active:scale-95 ${
+                      className={`p-3 rounded-xl border-2 flex flex-col items-center gap-1.5 transition-all active:scale-95 ${
                         selected.has(item.id) ? pal.itemSel : pal.item
                       }`}>
-                      <ItemSvg id={item.id} size={32} />
-                      <span className={`text-[10px] text-center leading-none font-medium ${theme === "GAMIFIED" ? "text-gray-200" : "text-gray-700"}`}>
+                      <ItemSvg id={item.id} size={48} />
+                      <span className={`text-xs text-center leading-tight font-medium ${theme === "GAMIFIED" ? "text-gray-200" : "text-gray-700"}`}>
                         {item.name}
                       </span>
-                      <span className={`text-[10px] font-bold tabular-nums ${theme === "GAMIFIED" ? "text-cyan-400" : "text-emerald-600"}`}>
+                      <span className={`text-xs font-bold tabular-nums ${theme === "GAMIFIED" ? "text-cyan-400" : "text-emerald-600"}`}>
                         {fmt(item.price)}
                       </span>
-                      {selected.has(item.id) && <span className="text-[10px] text-green-600 font-bold">✓</span>}
+                      {selected.has(item.id) && <span className="text-xs text-green-600 font-bold">✓</span>}
                     </button>
                   ))}
                 </div>
 
-                <button onClick={() => finishRound(allOk)} disabled={!allOk}
+                <button onClick={() => finishRound(allOk)} disabled={selected.size === 0}
                   className={`w-full h-11 rounded-xl font-bold transition-all disabled:opacity-40 ${pal.btn}`}>
-                  {allOk ? "✓ Confirmar compra" : "Atenda todas as regras"}
+                  {selected.size === 0 ? "Selecione itens" : "→ Confirmar seleção"}
                 </button>
               </motion.div>
             )}
 
             {phase === "result" && (
-              <motion.div key={`res-${round}`} className="text-center py-8"
+              <motion.div key={`res-${round}`} className="py-6"
                 initial={{ opacity: 0, scale: 0.9 }} animate={{ opacity: 1, scale: 1 }}>
-                <p className="text-5xl mb-2">{lastCorrect ? "✅" : "❌"}</p>
-                <p className={`font-bold text-lg ${lastCorrect ? "text-green-600" : "text-red-500"}`}>
+                <p className="text-5xl text-center mb-3">{lastCorrect ? "✅" : "❌"}</p>
+                <p className={`font-bold text-lg text-center mb-4 ${lastCorrect ? "text-green-600" : "text-red-500"}`}>
                   {lastCorrect ? "Todas as regras cumpridas!" : "Nem todas as regras foram atendidas"}
                 </p>
-                <p className={`text-xs mt-1 ${pal.sub}`}>
-                  {lastCorrect ? `Total: ${fmt(total)} · ${selected.size} itens` : `Revise: orçamento, categoria e quantidade`}
-                </p>
+                {!lastCorrect && (
+                  <div className={`rounded-xl p-3 border space-y-1.5 ${pal.ruleBox}`}>
+                    <p className={`text-xs font-bold mb-1 ${pal.sub}`}>O que ficou faltando:</p>
+                    {!budgetOk && (
+                      <div className="flex items-center gap-2 text-xs text-red-500 font-semibold">
+                        <span>✗</span><span>Orçamento ultrapassado — total {fmt(total)} de máx {fmt(rules.budget)}</span>
+                      </div>
+                    )}
+                    {!hasCat && (
+                      <div className="flex items-center gap-2 text-xs text-red-500 font-semibold">
+                        <span>✗</span><span>Faltou incluir {rules.category.emoji} {rules.category.label}</span>
+                      </div>
+                    )}
+                    {!qtyOk && (
+                      <div className="flex items-center gap-2 text-xs text-red-500 font-semibold">
+                        <span>✗</span><span>Quantidade errada — {selected.size} selecionado{selected.size !== 1 ? "s" : ""}, precisava de {rules.quantity}</span>
+                      </div>
+                    )}
+                  </div>
+                )}
+                {lastCorrect && (
+                  <p className={`text-xs text-center ${pal.sub}`}>Total: {fmt(total)} · {selected.size} itens</p>
+                )}
               </motion.div>
             )}
           </AnimatePresence>

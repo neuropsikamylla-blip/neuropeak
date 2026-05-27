@@ -117,7 +117,7 @@ function TutStep({ theme, onDone }: { theme: Theme; onDone: () => void }) {
               sel.has(item.id) ? "border-green-500 bg-green-50" :
               theme === "GAMIFIED" ? "border-gray-600 bg-gray-700" : "border-slate-200 bg-white"
             }`}>
-            <ItemSvg id={item.id} size={40} />
+            <ItemSvg id={item.id} size={56} />
             <span className={`text-xs font-semibold ${text}`}>{item.name}</span>
             <span className={`text-xs font-bold ${theme === "GAMIFIED" ? "text-cyan-400" : "text-emerald-600"}`}>{fmt(item.price)}</span>
             {sel.has(item.id) && <span className="text-xs text-green-600 font-bold">✓</span>}
@@ -261,7 +261,7 @@ export function DesafioOrcamento({ difficulty, theme, onComplete }: Props) {
                       className={`p-2 rounded-xl border-2 flex flex-col items-center gap-1 transition-all active:scale-95 ${
                         selected.has(item.id) ? pal.itemSel : pal.item
                       }`}>
-                      <ItemSvg id={item.id} size={36} />
+                      <ItemSvg id={item.id} size={52} />
                       <span className={`text-[11px] text-center leading-none font-medium ${theme === "GAMIFIED" ? "text-gray-200" : "text-gray-700"}`}>
                         {item.name}
                       </span>

@@ -249,11 +249,19 @@ export const EXERCISE_DEFINITIONS = {
   },
   "desafio-supermercado": {
     id: "desafio-supermercado",
-    name: "Desafio do Supermercado",
+    name: "Supermercado — Leitura",
     domain: "memory" as Domain,
-    description: "Memorize a lista de compras e encontre os itens na prateleira",
+    description: "Leia a lista de compras, memorize e encontre os itens na prateleira",
     estimatedMinutes: 8,
     icon: "🛒",
+  },
+  "desafio-supermercado-auditivo": {
+    id: "desafio-supermercado-auditivo",
+    name: "Supermercado — Auditivo",
+    domain: "memory" as Domain,
+    description: "Ouça a lista de compras e identifique os produtos pelos desenhos na prateleira",
+    estimatedMinutes: 9,
+    icon: "🔊",
   },
   "desafio-cidade": {
     id: "desafio-cidade",
@@ -281,11 +289,11 @@ export const EXERCISE_DEFINITIONS = {
   },
   "caca-item-barato": {
     id: "caca-item-barato",
-    name: "Caça ao Item Mais Barato",
+    name: "Caça Informação",
     domain: "attention" as Domain,
-    description: "Compare embalagens e encontre a que tem o menor preço por unidade",
-    estimatedMinutes: 7,
-    icon: "🏷️",
+    description: "Encontre e interprete informações em etiquetas de produtos — preço, peso, quantidade e validade",
+    estimatedMinutes: 8,
+    icon: "🔍",
   },
   "mudanca-regras": {
     id: "mudanca-regras",
@@ -326,6 +334,14 @@ export const EXERCISE_DEFINITIONS = {
     description: "Faça duas tarefas ao mesmo tempo: visual e de monitoramento",
     estimatedMinutes: 8,
     icon: "🧠",
+  },
+  "focus-agents": {
+    id: "focus-agents",
+    name: "Focus Agentes",
+    domain: "attention" as Domain,
+    description: "Identifique o personagem correto entre distratores — leia o comando e clique rápido",
+    estimatedMinutes: 8,
+    icon: "🎯",
   },
   "deductive-grid": {
     id: "deductive-grid",

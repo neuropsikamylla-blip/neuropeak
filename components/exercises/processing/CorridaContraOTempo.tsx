@@ -210,8 +210,8 @@ export function CorridaContraOTempo({ difficulty, theme, onComplete }: Props) {
   const domain = domainRef.current;
 
   return (
-    <div className={`min-h-screen flex flex-col items-center p-3 pt-5 ${bg}`}>
-      <div className={`w-full max-w-sm rounded-2xl p-4 ${card}`}>
+    <div className={`min-h-screen flex flex-col items-center p-4 pt-6 ${bg}`}>
+      <div className={`w-full max-w-2xl rounded-2xl p-5 ${card}`}>
 
         <div className="flex justify-between items-center mb-2">
           <h2 className={`font-bold text-base ${titleClass}`}>⏱️ Corrida contra o Tempo</h2>
@@ -268,11 +268,11 @@ export function CorridaContraOTempo({ difficulty, theme, onComplete }: Props) {
                 <div className={`h-full rounded-full transition-all duration-1000 ${timerColor}`} style={{ width: `${timerRatio * 100}%` }} />
               </div>
 
-              <div className="grid grid-cols-4 gap-2">
+              <div className="grid grid-cols-3 sm:grid-cols-4 gap-3">
                 {items.map(item => (
                   <motion.button key={item.id} onPointerDown={() => handleTap(item)}
                     disabled={item.collected || roundEndedRef.current}
-                    className={`p-2 rounded-xl border-2 flex flex-col items-center gap-1 transition-all ${
+                    className={`p-3 rounded-xl border-2 flex flex-col items-center gap-1.5 transition-all ${
                       item.collected ? "border-green-500 bg-green-50 opacity-40" :
                       wrongFlash.has(item.id) ? "border-red-500 bg-red-100" :
                       theme === "GAMIFIED" ? "border-gray-600 bg-gray-700 active:scale-90" : "border-slate-200 bg-white active:scale-90 shadow-sm"
@@ -280,7 +280,7 @@ export function CorridaContraOTempo({ difficulty, theme, onComplete }: Props) {
                     animate={wrongFlash.has(item.id) ? { x: [-3, 3, -3, 3, 0] } : item.collected ? { scale: [1, 1.15, 1] } : {}}
                     transition={{ duration: 0.25 }}
                   >
-                    <ItemSvg id={item.id} size={32} />
+                    <ItemSvg id={item.id} size={48} />
                     <span className={`text-xs text-center leading-tight font-semibold ${theme === "GAMIFIED" ? "text-gray-200" : "text-gray-700"}`}>
                       {item.name}
                     </span>

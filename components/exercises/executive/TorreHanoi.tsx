@@ -54,9 +54,9 @@ function HanoiPegsDisplay({
   discCount: number;
   onPegClick?: (i: number) => void;
 }) {
-  const maxW = 120;
+  const maxW = 140;
   return (
-    <div className="flex justify-around items-end" style={{ height: 140 }}>
+    <div className="flex justify-around items-end" style={{ height: 200 }}>
       {pegs.map((peg, pegIdx) => (
         <div
           key={pegIdx}
@@ -66,22 +66,22 @@ function HanoiPegsDisplay({
         >
           <div
             className={`absolute bottom-0 rounded-lg ${selected === pegIdx ? "bg-yellow-400" : theme === "GAMIFIED" ? "bg-gray-600" : "bg-gray-400"}`}
-            style={{ width: maxW + 16, height: 7 }}
+            style={{ width: maxW + 16, height: 10 }}
           />
           <div
             className={`absolute rounded-full ${theme === "GAMIFIED" ? "bg-gray-500" : "bg-gray-400"}`}
-            style={{ width: 6, height: 125, bottom: 7 }}
+            style={{ width: 8, height: 180, bottom: 10 }}
           />
-          <div className="absolute bottom-2 flex flex-col-reverse items-center gap-0.5">
+          <div className="absolute bottom-3 flex flex-col-reverse items-center gap-1">
             {peg.map((disc, di) => {
               const w = (disc / discCount) * maxW + 16;
               const isTop = di === peg.length - 1;
               return (
                 <div
                   key={disc}
-                  className="rounded-md flex items-center justify-center text-white text-xs font-bold"
+                  className="rounded-lg flex items-center justify-center text-white text-xs font-bold"
                   style={{
-                    width: w, height: 18,
+                    width: w, height: 32,
                     backgroundColor: DISC_COLORS[disc - 1] ?? "#666",
                     opacity: selected === pegIdx && isTop ? 0.6 : 1,
                   }}
