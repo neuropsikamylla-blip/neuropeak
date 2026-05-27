@@ -198,7 +198,7 @@ function CharacterCreator({ sessionId, onDone }: { sessionId: string; onDone: (c
 
   function next() {
     if (step < 3) setStep(s => s + 1);
-    else { onDone(char); patchSession(sessionId, { characterData: char, phase: "map" }); }
+    else { onDone(char); }
   }
 
   const canNext =
@@ -388,6 +388,11 @@ function RegionBoard({
   const [submitted, setSubmitted] = useState(false);
   const [showBreathing, setShowBreathing] = useState(house?.type === "breathing");
   const [showToolUnlock, setShowToolUnlock] = useState(false);
+  const submitTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+
+  useEffect(() => {
+    return () => { if (submitTimerRef.current) clearTimeout(submitTimerRef.current); };
+  }, []);
 
   useEffect(() => {
     setAnswer("");
@@ -406,7 +411,8 @@ function RegionBoard({
     };
     setSubmitted(true);
     if (house.type === "tool_unlock") { setShowToolUnlock(true); }
-    setTimeout(() => {
+    if (submitTimerRef.current) clearTimeout(submitTimerRef.current);
+    submitTimerRef.current = setTimeout(() => {
       onHouseDone(resp);
     }, house.type === "tool_unlock" ? 3000 : 1200);
   }
@@ -510,8 +516,15 @@ function RegionBoard({
           )}
 
           {/* Breathing */}
-          {house.type === "breathing" && showBreathing && (
-            <BreathingGame onComplete={() => { setShowBreathing(false); handleSubmit("exercício de respiração concluído"); }} />
+          {house.type === "breathing" && (
+            showBreathing
+              ? <BreathingGame onComplete={() => { setShowBreathing(false); handleSubmit("exercício de respiração concluído"); }} />
+              : submitted
+                ? <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="text-center py-4">
+                    <span className="text-3xl">✨</span>
+                    <p className="text-cyan-300 font-semibold mt-2">Registrado!</p>
+                  </motion.div>
+                : null
           )}
 
           {/* Tool unlock */}
@@ -654,7 +667,7 @@ export function MundoInterior({ sessionId }: { sessionId: string }) {
 
   return (
     <div
-      className="min-h-screen flex flex-col"
+      className="min-h-screen overflow-y-auto"
       style={{
         background: session.phase === "board" && region
           ? `linear-gradient(135deg, ${region.color}33 0%, #0f0c29 60%)`
@@ -679,7 +692,7 @@ export function MundoInterior({ sessionId }: { sessionId: string }) {
       </div>
 
       {/* Content */}
-      <div className="flex-1 px-4 pb-8">
+      <div className="px-4 pb-8 my-4">
         <AnimatePresence mode="wait">
           {session.phase === "character_creation" && (
             <motion.div key="char" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}>

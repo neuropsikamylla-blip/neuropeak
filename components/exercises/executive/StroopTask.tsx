@@ -110,7 +110,7 @@ function TutorialStep({
       : "bg-purple-100 text-purple-700 border-2 border-purple-300";
 
   return (
-    <div className={`min-h-screen flex flex-col items-center justify-center p-4 ${bgClass}`}>
+    <div className={`min-h-screen flex flex-col items-center p-4 pt-5 ${bgClass}`}>
       <div className={`w-full max-w-sm rounded-2xl p-6 ${cardClass}`}>
 
         {/* Header */}
@@ -395,7 +395,7 @@ export function StroopTask({ difficulty, theme, onComplete }: StroopTaskProps) {
       : "bg-purple-100 text-purple-700 border-2 border-purple-300";
 
   return (
-    <div className={`min-h-screen flex flex-col items-center justify-center p-4 ${bgClass}`}>
+    <div className={`min-h-screen flex flex-col items-center p-4 pt-5 ${bgClass}`}>
       <div className={`w-full max-w-md rounded-2xl p-6 ${
         theme === "GAMIFIED" ? "bg-gray-800 border border-cyan-500/30" : "bg-white shadow-lg"
       }`}>

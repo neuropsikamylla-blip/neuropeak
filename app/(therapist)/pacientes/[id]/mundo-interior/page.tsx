@@ -31,6 +31,9 @@ export default function MundoInteriorTherapistPage() {
   const [creating, setCreating] = useState(false);
   const pollRef = useRef<ReturnType<typeof setInterval> | null>(null);
 
+  const notesRef = useRef(notes);
+  notesRef.current = notes;
+
   const loadSessions = useCallback(async () => {
     const res = await fetch(`/api/therapeutic-sessions?patientId=${patientId}`);
     if (res.ok) {
@@ -38,10 +41,10 @@ export default function MundoInteriorTherapistPage() {
       setSessions(data);
       const active = data.find(s => s.status === "active") ?? null;
       setActiveSession(active);
-      if (active && !notes) setNotes(active.therapistNotes ?? "");
+      if (active && !notesRef.current) setNotes(active.therapistNotes ?? "");
     }
     setLoading(false);
-  }, [patientId, notes]);
+  }, [patientId]);
 
   useEffect(() => {
     loadSessions();

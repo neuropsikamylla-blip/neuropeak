@@ -285,7 +285,7 @@ export function TorreHanoi({ difficulty, theme, onComplete }: TorreHanoiProps) {
   const maxDiscWidth = 180;
 
   return (
-    <div className={`min-h-screen flex flex-col items-center justify-center p-4 ${bgClass}`}>
+    <div className={`min-h-screen flex flex-col items-center p-4 pt-5 ${bgClass}`}>
       <div className={`w-full max-w-2xl rounded-2xl p-6 ${theme === "GAMIFIED" ? "bg-gray-800 border border-cyan-500/30" : "bg-white shadow-lg"}`}>
         {/* Header */}
         <div className="flex justify-between items-center mb-3">

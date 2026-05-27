@@ -836,7 +836,7 @@ export function Labirinto({ difficulty, theme, onComplete }: LabirintoProps) {
 
   return (
     <div
-      className="min-h-screen flex flex-col items-center justify-center p-4"
+      className="min-h-screen flex flex-col items-center p-4 pt-4"
       style={{ background: pal.pageBg }}
     >
       {/* Header */}

@@ -19,10 +19,24 @@ export default function MundoInteriorPatientPage() {
     if ((authSession?.user as { role?: string })?.role !== "PATIENT") { router.replace("/login"); return; }
 
     fetch("/api/therapeutic-sessions")
-      .then(r => r.json())
-      .then(data => { setSession(data); setLoading(false); })
+      .then(r => r.ok ? r.json() : null)
+      .then((data: TherapeuticSession | null) => { setSession(data); setLoading(false); })
       .catch(() => setLoading(false));
   }, [status, authSession, router]);
+
+  // Polling automático enquanto não há sessão ativa
+  useEffect(() => {
+    if (loading || session) return;
+    const interval = setInterval(async () => {
+      try {
+        const r = await fetch("/api/therapeutic-sessions");
+        if (!r.ok) return;
+        const data: TherapeuticSession | null = await r.json();
+        if (data) setSession(data);
+      } catch { /* ignore */ }
+    }, 5000);
+    return () => clearInterval(interval);
+  }, [loading, session]);
 
   if (loading || status === "loading") {
     return (

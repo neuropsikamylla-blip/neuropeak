@@ -210,7 +210,7 @@ export function CorridaContraOTempo({ difficulty, theme, onComplete }: Props) {
   const domain = domainRef.current;
 
   return (
-    <div className={`min-h-screen flex flex-col items-center justify-center p-3 ${bg}`}>
+    <div className={`min-h-screen flex flex-col items-center p-3 pt-5 ${bg}`}>
       <div className={`w-full max-w-sm rounded-2xl p-4 ${card}`}>
 
         <div className="flex justify-between items-center mb-2">

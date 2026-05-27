@@ -610,7 +610,7 @@ export function OrdemHistoria({ difficulty, theme, onComplete }: OrdemHistoriaPr
     .map((p) => p.id);
 
   return (
-    <div className={`min-h-screen flex flex-col items-center justify-center p-4 ${bg}`}>
+    <div className={`min-h-screen flex flex-col items-center p-4 pt-5 ${bg}`}>
       <div className={`w-full max-w-md rounded-2xl p-5 ${card}`}>
 
         {/* Header */}

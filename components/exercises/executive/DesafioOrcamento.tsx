@@ -1,109 +1,142 @@
 "use client";
 
-import { useState, useEffect, useRef, useCallback } from "react";
+import { useState, useRef } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { calculateExerciseScore } from "@/lib/scoring";
 import { useExerciseProgress } from "@/components/exercises/ExerciseWrapper";
 import { TutorialBase } from "@/components/exercises/TutorialBase";
 import { ItemSvg } from "@/components/exercises/ItemSvg";
 import type { ExerciseResult, Theme } from "@/types";
-import {
-  shuffleFlex, itemsByFlexCat, pickRandomDomain, ALL_DOMAINS,
-  type FlexDomain, type FlexCategory, type FlexItem,
-} from "@/lib/item-domains";
+import { shuffleFlex, fmt, pickRandomDomain, type FlexDomain, type FlexItem } from "@/lib/item-domains";
 
 interface Props { difficulty: number; theme: Theme; onComplete: (result: ExerciseResult) => void; }
 
-const ITEMS_PER_SESSION = 12;
+const MAX_ROUNDS = 8;
 
-function secsPerItem(d: number): number {
-  return d >= 7 ? 4 : 5;
+type GoalType = "max" | "range" | "min";
+
+interface Goal {
+  type: GoalType;
+  min?: number;
+  max: number;
+  label: string;
 }
 
-interface SessionItem {
-  item: FlexItem;
-  isTarget: boolean;
-}
-
-interface Session {
+interface Round {
   domain: FlexDomain;
-  targetCategory: FlexCategory;
-  items: SessionItem[];
+  items: FlexItem[];
+  goal: Goal;
 }
 
-function buildSession(d: number): Session {
+function itemCount(d: number): number { return d <= 3 ? 8 : d <= 6 ? 10 : 12; }
+
+function buildRound(d: number): Round {
   const domain = pickRandomDomain();
-  const catIdx = Math.floor(Math.random() * domain.categories.length);
-  const targetCategory = domain.categories[catIdx];
+  const count = itemCount(d);
+  const items = shuffleFlex(domain.items).slice(0, count);
+  const allPrices = items.map(i => i.price);
+  const total = allPrices.reduce((s, p) => s + p, 0);
+  const avgPrice = total / count;
 
-  const targets = shuffleFlex(itemsByFlexCat(domain, targetCategory.id)).slice(0, 6);
-
-  let distractorItems: FlexItem[];
-  if (d <= 4) {
-    // Distractors from a completely different domain
-    const others = ALL_DOMAINS.filter(dom => dom.id !== domain.id);
-    const otherDomain = others[Math.floor(Math.random() * others.length)];
-    distractorItems = shuffleFlex(otherDomain.items).slice(0, 6);
+  let goal: Goal;
+  if (d <= 3) {
+    // Orçamento máximo simples: escolher até N itens abaixo de um limite
+    const budget = Math.round((avgPrice * (2 + Math.random())) * 10) / 10;
+    goal = { type: "max", max: budget, label: `Gaste no máximo ${fmt(budget)}` };
+  } else if (d <= 6) {
+    // Faixa de gasto: entre min e max
+    const mid = avgPrice * (1.5 + Math.random() * 1.5);
+    const range = avgPrice * 0.4;
+    const min = Math.round((mid - range) * 10) / 10;
+    const max = Math.round((mid + range) * 10) / 10;
+    goal = { type: "range", min, max, label: `Gaste entre ${fmt(min)} e ${fmt(max)}` };
   } else {
-    // Distractors from same domain, different categories
-    const sameButOther = domain.items.filter(i => i.cat !== targetCategory.id);
-    distractorItems = shuffleFlex(sameButOther).slice(0, 6);
+    // Precisa gastar pelo menos X, mas sem ultrapassar Y
+    const minBudget = Math.round((avgPrice * 1.5) * 10) / 10;
+    const maxBudget = Math.round((avgPrice * 3) * 10) / 10;
+    goal = { type: "range", min: minBudget, max: maxBudget, label: `Gaste entre ${fmt(minBudget)} e ${fmt(maxBudget)}` };
   }
 
-  const sessionItems: SessionItem[] = shuffleFlex([
-    ...targets.map(item => ({ item, isTarget: true })),
-    ...distractorItems.map(item => ({ item, isTarget: false })),
-  ]);
+  return { domain, items, goal };
+}
 
-  return { domain, targetCategory, items: sessionItems };
+function isGoalMet(total: number, goal: Goal): boolean {
+  if (goal.type === "max") return total > 0 && total <= goal.max;
+  if (goal.type === "range") return total >= (goal.min ?? 0) && total <= goal.max;
+  if (goal.type === "min") return total >= (goal.min ?? 0);
+  return false;
 }
 
 // ── Tutorial ───────────────────────────────────────────────────────────────
 
 function TutStep({ theme, onDone }: { theme: Theme; onDone: () => void }) {
+  const items: FlexItem[] = [
+    { id: "banana", name: "Banana", cat: "hortifruti", price: 3.90 },
+    { id: "leite",  name: "Leite",  cat: "laticinios", price: 5.90 },
+    { id: "cafe",   name: "Café",   cat: "mercearia",  price: 11.90 },
+    { id: "sabao",  name: "Sabão",  cat: "higiene",    price: 18.90 },
+  ];
+  const goal: Goal = { type: "max", max: 15.00, label: `Gaste no máximo ${fmt(15.00)}` };
+  const [sel, setSel] = useState(new Set<string>());
+  const [confirmed, setConfirmed] = useState(false);
+  const [ok, setOk] = useState(false);
   const doneRef = useRef(false);
 
-  function answer(a: "SIM" | "NÃO") {
-    if (doneRef.current) return;
-    if (a === "SIM") {
-      doneRef.current = true;
-      setTimeout(onDone, 400);
-    }
+  const total = items.filter(i => sel.has(i.id)).reduce((s, i) => s + i.price, 0);
+  const totalRounded = Math.round(total * 100) / 100;
+  const met = isGoalMet(totalRounded, goal);
+
+  function toggle(id: string) {
+    if (confirmed) return;
+    setSel(prev => { const n = new Set(prev); n.has(id) ? n.delete(id) : n.add(id); return n; });
   }
 
+  function confirm() {
+    if (doneRef.current || sel.size === 0) return;
+    setConfirmed(true);
+    setOk(met);
+    if (met) { doneRef.current = true; setTimeout(onDone, 900); }
+    else setTimeout(() => { setSel(new Set()); setConfirmed(false); }, 1000);
+  }
+
+  const goalBg = theme === "GAMIFIED" ? "bg-amber-900/40 border-amber-600" : "bg-amber-50 border-amber-300";
+  const goalTxt = theme === "GAMIFIED" ? "text-amber-300" : "text-amber-800";
   const text = theme === "GAMIFIED" ? "text-gray-200" : "text-gray-800";
   const sub = theme === "GAMIFIED" ? "text-gray-400" : "text-gray-500";
 
   return (
-    <div className="space-y-4">
-      <div className={`rounded-xl p-3 border text-center ${
-        theme === "GAMIFIED" ? "bg-gray-700 border-gray-600" : "bg-amber-50 border-amber-200"
-      }`}>
-        <p className={`text-xs font-bold uppercase tracking-wide mb-0.5 ${sub}`}>Categoria</p>
-        <p className={`text-base font-bold ${theme === "GAMIFIED" ? "text-cyan-300" : "text-amber-800"}`}>
-          🐄 Fazenda (Animais)?
-        </p>
+    <div className="space-y-3">
+      <div className={`flex items-center gap-2 px-3 py-2 rounded-xl border ${goalBg}`}>
+        <span className="text-lg">💰</span>
+        <p className={`text-sm font-bold ${goalTxt}`}>{goal.label}</p>
       </div>
-
-      <div className="flex flex-col items-center gap-2 py-2">
-        <ItemSvg id="an-vaca" size={80} />
-        <p className={`font-bold text-xl ${text}`}>Vaca</p>
+      <div className="grid grid-cols-2 gap-2">
+        {items.map(item => (
+          <button key={item.id} onClick={() => toggle(item.id)}
+            className={`p-2 rounded-xl border-2 flex flex-col items-center gap-1 transition-all active:scale-95 ${
+              sel.has(item.id) ? "border-green-500 bg-green-50" :
+              theme === "GAMIFIED" ? "border-gray-600 bg-gray-700" : "border-slate-200 bg-white"
+            }`}>
+            <ItemSvg id={item.id} size={40} />
+            <span className={`text-xs font-semibold ${text}`}>{item.name}</span>
+            <span className={`text-xs font-bold ${theme === "GAMIFIED" ? "text-cyan-400" : "text-emerald-600"}`}>{fmt(item.price)}</span>
+            {sel.has(item.id) && <span className="text-xs text-green-600 font-bold">✓</span>}
+          </button>
+        ))}
       </div>
-
-      <p className={`text-center text-xs ${sub}`}>
-        Toque SIM — Vaca é animal de fazenda!
-      </p>
-
-      <div className="grid grid-cols-2 gap-3">
-        <button onClick={() => answer("SIM")}
-          className="h-14 rounded-2xl font-bold text-xl bg-green-500 hover:bg-green-600 text-white transition-all active:scale-95">
-          SIM ✓
-        </button>
-        <button onClick={() => answer("NÃO")}
-          className="h-14 rounded-2xl font-bold text-xl bg-red-400 hover:bg-red-500 text-white transition-all active:scale-95">
-          NÃO ✗
-        </button>
+      <div className={`flex items-center justify-between px-3 py-2 rounded-xl ${theme === "GAMIFIED" ? "bg-gray-700" : "bg-slate-100"}`}>
+        <span className={`text-sm font-bold ${sub}`}>Total:</span>
+        <span className={`text-lg font-black tabular-nums ${met ? "text-green-500" : totalRounded > goal.max ? "text-red-500" : theme === "GAMIFIED" ? "text-cyan-400" : "text-indigo-600"}`}>
+          {fmt(totalRounded)}
+        </span>
       </div>
+      {confirmed && !ok && <p className="text-xs text-center text-red-500 font-semibold">Orçamento ultrapassado! Tente de novo.</p>}
+      <button onClick={confirm} disabled={sel.size === 0}
+        className={`w-full h-11 rounded-xl font-bold text-white transition-all disabled:opacity-40 ${
+          theme === "GAMIFIED" ? "bg-cyan-600" : "bg-indigo-600"
+        }`}>
+        Confirmar compra
+      </button>
     </div>
   );
 }
@@ -114,188 +147,162 @@ export function DesafioOrcamento({ difficulty, theme, onComplete }: Props) {
   const [showTutorial, setShowTutorial] = useState(true);
   const reportProgress = useExerciseProgress();
 
-  const [itemIdx, setItemIdx] = useState(0);
-  const [results, setResults] = useState<boolean[]>([]);
-  const [phase, setPhase] = useState<"question" | "feedback">("question");
+  const [round, setRound] = useState(0);
+  const [roundResults, setRoundResults] = useState<boolean[]>([]);
+  const [selected, setSelected] = useState(new Set<string>());
+  const [phase, setPhase] = useState<"shopping" | "result">("shopping");
   const [lastCorrect, setLastCorrect] = useState(false);
-  const [timer, setTimer] = useState(secsPerItem(difficulty));
-  const [session, setSession] = useState<Session>(() => buildSession(difficulty));
+  const [currentRound, setCurrentRound] = useState<Round>(() => buildRound(difficulty));
 
-  const timerRef = useRef<ReturnType<typeof setInterval> | null>(null);
-  const answeredRef = useRef(false);
   const startTime = useRef(Date.now());
-  const itemIdxRef = useRef(0);
+  const roundRef = useRef(0);
   const resultsRef = useRef<boolean[]>([]);
-  const maxSecs = secsPerItem(difficulty);
 
-  useEffect(() => () => { if (timerRef.current) clearInterval(timerRef.current); }, []);
+  function toggle(id: string) {
+    if (phase !== "shopping") return;
+    setSelected(prev => { const n = new Set(prev); n.has(id) ? n.delete(id) : n.add(id); return n; });
+  }
 
-  const finishItem = useCallback((isCorrect: boolean) => {
-    if (answeredRef.current) return;
-    answeredRef.current = true;
-    if (timerRef.current) clearInterval(timerRef.current);
+  const total = currentRound.items.filter(i => selected.has(i.id)).reduce((s, i) => s + i.price, 0);
+  const totalRounded = Math.round(total * 100) / 100;
+  const met = isGoalMet(totalRounded, currentRound.goal);
 
+  function confirm() {
+    if (phase !== "shopping" || selected.size === 0) return;
+    const isCorrect = met;
     const newResults = [...resultsRef.current, isCorrect];
     resultsRef.current = newResults;
-    setResults([...newResults]);
+    setRoundResults(newResults);
     setLastCorrect(isCorrect);
-    setPhase("feedback");
+    setPhase("result");
 
-    const nextIdx = itemIdxRef.current + 1;
-    reportProgress(Math.round((nextIdx / ITEMS_PER_SESSION) * 100));
+    const nextR = roundRef.current + 1;
+    reportProgress(Math.round((nextR / MAX_ROUNDS) * 100));
 
     setTimeout(() => {
-      if (nextIdx >= ITEMS_PER_SESSION) {
-        const accuracy = newResults.filter(Boolean).length / ITEMS_PER_SESSION;
+      if (nextR >= MAX_ROUNDS) {
+        const accuracy = newResults.filter(Boolean).length / MAX_ROUNDS;
         onComplete({
           exerciseId: "desafio-orcamento",
           domain: "executive",
           score: calculateExerciseScore("desafio-orcamento", accuracy, undefined, difficulty),
           accuracy, difficulty,
           duration: Math.round((Date.now() - startTime.current) / 1000),
-          metadata: { trials: ITEMS_PER_SESSION, correct: newResults.filter(Boolean).length },
+          metadata: { rounds: MAX_ROUNDS, correct: newResults.filter(Boolean).length },
         });
       } else {
-        itemIdxRef.current = nextIdx;
-        answeredRef.current = false;
-        setItemIdx(nextIdx);
-        setPhase("question");
+        roundRef.current = nextR;
+        setRound(nextR);
+        setSelected(new Set());
+        setCurrentRound(buildRound(difficulty));
+        setPhase("shopping");
       }
-    }, 1000);
-  }, [itemIdx, difficulty, onComplete, reportProgress]);
-
-  useEffect(() => {
-    if (phase !== "question" || showTutorial) return;
-    setTimer(maxSecs);
-    timerRef.current = setInterval(() => {
-      setTimer(t => {
-        if (t <= 1) {
-          clearInterval(timerRef.current!);
-          finishItem(false);
-          return 0;
-        }
-        return t - 1;
-      });
-    }, 1000);
-    return () => { if (timerRef.current) clearInterval(timerRef.current); };
-  // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [phase, itemIdx, showTutorial]);
-
-  function answer(response: "SIM" | "NÃO") {
-    if (phase !== "question" || answeredRef.current) return;
-    const currentItem = session.items[itemIdx];
-    const isCorrect = (response === "SIM") === currentItem.isTarget;
-    finishItem(isCorrect);
+    }, 1800);
   }
 
   if (showTutorial) {
     return (
-      <TutorialBase theme={theme} title="Fluência Semântica"
+      <TutorialBase theme={theme} title="Desafio do Orçamento"
         steps={[{
-          instruction: "Um item aparece na tela. Toque SIM se ele pertence à categoria mostrada, NÃO se não pertencer. Seja rápido!",
+          instruction: "Selecione itens para montar sua cesta. O total deve respeitar o orçamento indicado. Toque nos itens para adicionar ou remover!",
           content: (done) => <TutStep theme={theme} onDone={done} />,
         }]}
         onDone={() => setShowTutorial(false)} />
     );
   }
 
-  const currentItem = session.items[itemIdx];
-  const timerRatio = timer / maxSecs;
-  const timerColor = timerRatio > 0.6 ? "bg-green-400" : timerRatio > 0.3 ? "bg-amber-400" : "bg-red-500 animate-pulse";
-
   const pal = {
-    bg: theme === "GAMIFIED" ? "bg-gray-950" : theme === "COLORFUL" ? "bg-gradient-to-br from-fuchsia-50 to-pink-50" : "bg-gradient-to-br from-slate-50 to-rose-50/20",
-    card: theme === "GAMIFIED" ? "bg-gray-800 border border-cyan-500/20" : theme === "COLORFUL" ? "bg-white border-2 border-fuchsia-200 shadow-xl" : "bg-white border border-slate-200/70 shadow-md",
-    title: theme === "GAMIFIED" ? "text-cyan-400" : theme === "COLORFUL" ? "text-fuchsia-700" : "text-slate-800",
+    bg: theme === "GAMIFIED" ? "bg-gray-950" : theme === "COLORFUL" ? "bg-gradient-to-br from-emerald-50 to-teal-50" : "bg-gray-50",
+    card: theme === "GAMIFIED" ? "bg-gray-800 border border-cyan-500/30" : "bg-white shadow-lg",
+    title: theme === "GAMIFIED" ? "text-cyan-400" : theme === "COLORFUL" ? "text-emerald-700" : "text-gray-900",
     sub: theme === "GAMIFIED" ? "text-gray-400" : "text-gray-500",
-    catBg: theme === "GAMIFIED" ? "bg-gray-700 border-gray-600" : theme === "COLORFUL" ? "bg-fuchsia-50 border-fuchsia-200" : "bg-slate-50 border-slate-200",
-    catText: theme === "GAMIFIED" ? "text-cyan-300" : theme === "COLORFUL" ? "text-fuchsia-800" : "text-slate-800",
-    dotActive: theme === "GAMIFIED" ? "bg-cyan-500" : theme === "COLORFUL" ? "bg-fuchsia-500" : "bg-fuchsia-500",
-    dotInactive: theme === "GAMIFIED" ? "bg-gray-700" : "bg-slate-200",
+    goalBg: theme === "GAMIFIED" ? "bg-amber-900/30 border-amber-600/50" : theme === "COLORFUL" ? "bg-amber-50 border-amber-300" : "bg-amber-50 border-amber-200",
+    goalTxt: theme === "GAMIFIED" ? "text-amber-300" : "text-amber-800",
+    item: theme === "GAMIFIED" ? "border-gray-600 bg-gray-700" : "border-slate-200 bg-white shadow-sm",
+    itemSel: "border-green-500 bg-green-50",
+    totalBg: theme === "GAMIFIED" ? "bg-gray-700" : "bg-slate-100",
+    btnConfirm: theme === "GAMIFIED" ? "bg-cyan-600 hover:bg-cyan-700 text-white" : theme === "COLORFUL" ? "bg-gradient-to-r from-emerald-500 to-teal-500 text-white" : "bg-emerald-600 hover:bg-emerald-700 text-white",
   };
 
+  const overBudget = currentRound.goal.type !== "min" && totalRounded > currentRound.goal.max;
+  const totalColor = met ? "text-green-500" : overBudget ? "text-red-500" : theme === "GAMIFIED" ? "text-cyan-400" : "text-indigo-600";
+
   return (
-    <div className={`min-h-screen flex flex-col items-center justify-center p-4 ${pal.bg}`}>
-      <div className={`w-full max-w-2xl rounded-2xl p-5 sm:p-6 ${pal.card}`}>
+    <div className={`min-h-screen overflow-y-auto ${pal.bg}`}>
+      <div className="max-w-md mx-auto px-3 py-4">
+        <div className={`rounded-2xl p-4 ${pal.card}`}>
 
-        <div className="flex justify-between items-center mb-1">
-          <h2 className={`font-bold text-base ${pal.title}`}>🗂️ Fluência Semântica</h2>
-          <span className={`text-xs ${pal.sub}`}>{itemIdx + 1}/{ITEMS_PER_SESSION}</span>
-        </div>
+          <div className="flex justify-between items-center mb-2">
+            <h2 className={`font-bold text-base ${pal.title}`}>💰 Desafio do Orçamento</h2>
+            <span className={`text-xs ${pal.sub}`}>{round + 1}/{MAX_ROUNDS} · {currentRound.domain.name}</span>
+          </div>
 
-        {/* Progresso */}
-        <div className="flex gap-0.5 mb-3">
-          {Array.from({ length: ITEMS_PER_SESSION }).map((_, i) => (
-            <div key={i} className={`h-1.5 flex-1 rounded-full transition-colors ${
-              i < results.length
-                ? results[i] ? "bg-green-500" : "bg-red-400"
-                : i === itemIdx ? `${pal.dotActive} animate-pulse` : pal.dotInactive
-            }`} />
-          ))}
-        </div>
+          <div className="flex gap-0.5 mb-3">
+            {Array.from({ length: MAX_ROUNDS }).map((_, i) => (
+              <div key={i} className={`h-1.5 flex-1 rounded-full transition-colors ${
+                i < roundResults.length ? (roundResults[i] ? "bg-green-500" : "bg-red-400")
+                : i === round ? "bg-blue-400 animate-pulse"
+                : theme === "GAMIFIED" ? "bg-gray-700" : "bg-gray-200"
+              }`} />
+            ))}
+          </div>
 
-        {/* Timer bar */}
-        <div className={`h-2 rounded-full mb-4 ${theme === "GAMIFIED" ? "bg-gray-700" : "bg-slate-200"}`}>
-          <div className={`h-full rounded-full transition-all duration-1000 ${timerColor}`}
-            style={{ width: `${timerRatio * 100}%` }} />
-        </div>
+          <AnimatePresence mode="wait">
+            {phase === "shopping" && (
+              <motion.div key={`shop-${round}`} initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }}>
+                <div className={`flex items-center gap-2 px-3 py-2 rounded-xl border mb-3 ${pal.goalBg}`}>
+                  <span className="text-lg">💰</span>
+                  <p className={`text-sm font-bold ${pal.goalTxt}`}>{currentRound.goal.label}</p>
+                </div>
 
-        {/* Categoria alvo */}
-        <div className={`rounded-xl p-3 mb-4 border text-center ${pal.catBg}`}>
-          <p className={`text-xs font-bold uppercase tracking-wide mb-0.5 ${pal.sub}`}>Categoria</p>
-          <p className={`text-base font-bold ${pal.catText}`}>
-            {session.targetCategory.emoji} {session.targetCategory.label} ({session.domain.name})?
-          </p>
-        </div>
+                <div className="grid grid-cols-3 gap-2 mb-3">
+                  {currentRound.items.map(item => (
+                    <button key={item.id} onClick={() => toggle(item.id)}
+                      className={`p-2 rounded-xl border-2 flex flex-col items-center gap-1 transition-all active:scale-95 ${
+                        selected.has(item.id) ? pal.itemSel : pal.item
+                      }`}>
+                      <ItemSvg id={item.id} size={36} />
+                      <span className={`text-[11px] text-center leading-none font-medium ${theme === "GAMIFIED" ? "text-gray-200" : "text-gray-700"}`}>
+                        {item.name}
+                      </span>
+                      <span className={`text-[11px] font-bold tabular-nums ${theme === "GAMIFIED" ? "text-cyan-400" : "text-emerald-600"}`}>
+                        {fmt(item.price)}
+                      </span>
+                      {selected.has(item.id) && <span className="text-xs text-green-600 font-bold">✓</span>}
+                    </button>
+                  ))}
+                </div>
 
-        <AnimatePresence mode="wait">
-          {phase === "question" && (
-            <motion.div key={`q-${itemIdx}`}
-              initial={{ opacity: 0, scale: 0.9 }} animate={{ opacity: 1, scale: 1 }}
-              exit={{ opacity: 0, scale: 1.05 }}>
+                <div className={`flex items-center justify-between px-3 py-2 rounded-xl mb-3 ${pal.totalBg}`}>
+                  <div>
+                    <span className={`text-xs ${pal.sub}`}>{selected.size} item(ns) na cesta</span>
+                    {met && <span className="ml-2 text-xs font-bold text-green-500">✓ Orçamento OK</span>}
+                    {overBudget && <span className="ml-2 text-xs font-bold text-red-500">⚠ Acima do limite</span>}
+                  </div>
+                  <span className={`text-lg font-black tabular-nums ${totalColor}`}>{fmt(totalRounded)}</span>
+                </div>
 
-              <div className="flex flex-col items-center gap-3 py-4">
-                <ItemSvg id={currentItem.item.id} size={120} />
-                <p className={`font-bold text-2xl text-center ${
-                  theme === "GAMIFIED" ? "text-gray-100" : "text-gray-800"
-                }`}>
-                  {currentItem.item.name}
+                <button onClick={confirm} disabled={selected.size === 0 || !met}
+                  className={`w-full h-11 rounded-xl font-bold transition-all disabled:opacity-40 ${pal.btnConfirm}`}>
+                  {met ? "Confirmar compra ✓" : selected.size === 0 ? "Selecione itens" : "Ajuste o orçamento"}
+                </button>
+              </motion.div>
+            )}
+
+            {phase === "result" && (
+              <motion.div key={`res-${round}`} className="text-center py-8"
+                initial={{ opacity: 0, scale: 0.9 }} animate={{ opacity: 1, scale: 1 }}>
+                <p className="text-5xl mb-2">{lastCorrect ? "✅" : "❌"}</p>
+                <p className={`font-bold text-lg ${lastCorrect ? "text-green-600" : "text-red-500"}`}>
+                  {lastCorrect ? "Orçamento respeitado!" : "Tente de novo na próxima"}
                 </p>
-              </div>
-
-              <div className="grid grid-cols-2 gap-4 mt-2">
-                <button onClick={() => answer("SIM")}
-                  className="h-16 rounded-2xl font-bold text-xl bg-green-500 hover:bg-green-600 text-white transition-all active:scale-95 shadow-md">
-                  SIM ✓
-                </button>
-                <button onClick={() => answer("NÃO")}
-                  className="h-16 rounded-2xl font-bold text-xl bg-red-400 hover:bg-red-500 text-white transition-all active:scale-95 shadow-md">
-                  NÃO ✗
-                </button>
-              </div>
-            </motion.div>
-          )}
-
-          {phase === "feedback" && (
-            <motion.div key={`fb-${itemIdx}`}
-              initial={{ opacity: 0 }} animate={{ opacity: 1 }}
-              className="flex flex-col items-center gap-2 py-4">
-              <ItemSvg id={currentItem.item.id} size={72} />
-              <p className={`font-semibold text-lg ${theme === "GAMIFIED" ? "text-gray-100" : "text-gray-800"}`}>
-                {currentItem.item.name}
-              </p>
-              <p className="text-3xl">{lastCorrect ? "✅" : "❌"}</p>
-              <p className={`text-sm font-semibold ${lastCorrect ? "text-green-600" : "text-red-500"}`}>
-                {lastCorrect
-                  ? "Correto!"
-                  : currentItem.isTarget
-                    ? `Sim! É ${session.targetCategory.label}`
-                    : `Não é ${session.targetCategory.label}`
-                }
-              </p>
-            </motion.div>
-          )}
-        </AnimatePresence>
+                <p className={`text-sm mt-1 ${pal.sub}`}>
+                  Total: <strong>{fmt(totalRounded)}</strong> · {currentRound.goal.label}
+                </p>
+              </motion.div>
+            )}
+          </AnimatePresence>
+        </div>
       </div>
     </div>
   );
