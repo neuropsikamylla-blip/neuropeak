@@ -212,12 +212,20 @@ function AgentSvg({ a, mode, size = 80 }: { a: CharAttrs; mode: AgeMode; size?: 
   const bodyShade = "rgba(0,0,0,0.14)";
   const stripeCol = isLight ? "rgba(0,0,0,0.12)" : "rgba(255,255,255,0.16)";
   const badgeColor = a.extraId ? BADGE_COLORS[a.extraId] : null;
+  const capeColor = mode === "child" ? "#7B0000" : mode === "teen" ? "#0f0520" : "#0c1633";
+  const capeShade = mode === "child" ? "#CC2222" : mode === "teen" ? "#1e0a45" : "#172450";
   const eyeR = mode === "child" ? 3.5 : 3;
   const h = Math.round(size * 112 / 60);
 
   return (
     <svg width={size} height={h} viewBox="0 0 60 112"
-      style={{ overflow: "visible", filter: "drop-shadow(2px 5px 9px rgba(0,0,0,0.45))" }}>
+      style={{ overflow: "visible", filter: "drop-shadow(2px 6px 14px rgba(0,0,0,0.65))" }}>
+
+      {/* ── CAPE ── drawn first so it sits behind everything */}
+      <path d="M14 34 L46 34 Q57 55 57 88 Q52 106 30 110 Q8 106 3 88 Q3 55 14 34Z"
+        fill={capeColor} stroke={ol} strokeWidth={sw} strokeLinejoin="round" />
+      <path d="M18 36 L42 36 Q51 57 50 86 Q47 104 30 107 Q13 104 10 86 Q9 57 18 36Z"
+        fill={capeShade} stroke="none" opacity="0.35" />
 
       {/* ── BOOTS ── */}
       <rect x="13" y="101" width="14" height="7" rx="3.5" fill="#1a1a1a" stroke={ol} strokeWidth={sw} />
@@ -466,14 +474,14 @@ function AgentCard({ char, mode, onClick, state, size }: {
   state: "idle" | "correct" | "wrong"; size: number;
 }) {
   const ring =
-    state === "correct" ? "ring-4 ring-green-400 bg-green-100/80 scale-110" :
-    state === "wrong"   ? "ring-4 ring-red-400 bg-red-100/80 scale-90 opacity-50" :
-    "ring-2 ring-white/60 hover:ring-white active:scale-95 bg-white/20 hover:bg-white/30";
+    state === "correct" ? "ring-4 ring-green-400 bg-green-500/20 scale-110" :
+    state === "wrong"   ? "ring-4 ring-red-400 bg-red-500/20 scale-90 opacity-50" :
+    "ring-1 ring-white/30 hover:ring-white/60 active:scale-95 bg-white/10 hover:bg-white/20";
   return (
     <motion.button
       onClick={onClick}
       whileTap={{ scale: 0.92 }}
-      className={`relative rounded-2xl p-1 cursor-pointer transition-all duration-150 backdrop-blur-[2px] shadow-xl ${ring}`}
+      className={`relative rounded-2xl p-1 cursor-pointer transition-all duration-150 backdrop-blur-sm shadow-xl ${ring}`}
       style={{ touchAction: "manipulation" }}
     >
       <AgentSvg a={char.attrs} mode={mode} size={size} />
@@ -564,57 +572,42 @@ function FocusTutorial({ theme, mode, onDone }: { theme: Theme; mode: AgeMode; o
 // ── Scene Background ──────────────────────────────────────────────────────────
 
 function SceneBg({ theme }: { theme: Theme }) {
-  if (theme === "GAMIFIED") return (
-    <div className="absolute inset-0 overflow-hidden">
-      <div className="absolute inset-0" style={{ background: "linear-gradient(180deg,#04040f 0%,#0d0825 45%,#1a0840 70%,#260a55 100%)" }} />
-      {[...Array(40)].map((_, i) => (
-        <div key={i} className="absolute rounded-full bg-white"
-          style={{ width: i % 4 === 0 ? 3 : 2, height: i % 4 === 0 ? 3 : 2,
-            opacity: 0.3 + (i % 6) * 0.1,
-            left: `${(i * 37 + 11) % 100}%`, top: `${(i * 23 + 5) % 72}%` }} />
-      ))}
-      <svg className="absolute bottom-0 w-full" viewBox="0 0 400 90" preserveAspectRatio="none">
-        <path d="M0 90 L0 48 Q30 36 60 44 Q90 52 120 38 Q150 24 180 42 Q210 58 240 38 Q270 20 300 44 Q330 62 360 40 Q390 22 400 40 L400 90Z" fill="#180540" />
-        <path d="M0 90 L0 62 Q40 50 80 58 Q120 64 160 52 Q200 40 240 56 Q280 70 320 54 Q360 38 400 56 L400 90Z" fill="#2a0a68" />
-      </svg>
-    </div>
-  );
-  if (theme === "COLORFUL") return (
-    <div className="absolute inset-0 overflow-hidden">
-      <div className="absolute inset-0" style={{ background: "linear-gradient(180deg,#87CEEB 0%,#a8dcf5 40%,#c8edb8 70%,#7AC143 100%)" }} />
-      <div className="absolute top-[7%] left-[8%] opacity-85">
-        <div className="w-24 h-9 rounded-full bg-white/95 shadow-md" />
-        <div className="w-16 h-7 rounded-full bg-white/95 shadow-md -mt-4 ml-5" />
-      </div>
-      <div className="absolute top-[10%] right-[14%] opacity-75">
-        <div className="w-18 h-8 rounded-full bg-white/90 shadow" style={{ width: 72 }} />
-        <div className="w-12 h-6 rounded-full bg-white/90 shadow -mt-3 ml-4" />
-      </div>
-      <div className="absolute top-[18%] left-[55%] opacity-60">
-        <div className="w-14 h-6 rounded-full bg-white/90" />
-        <div className="w-9 h-5 rounded-full bg-white/90 -mt-3 ml-2" />
-      </div>
-      <svg className="absolute bottom-0 w-full" viewBox="0 0 400 75" preserveAspectRatio="none">
-        <path d="M0 75 L0 42 Q50 22 100 37 Q150 54 200 30 Q250 8 300 34 Q350 56 400 36 L400 75Z" fill="#4a8f22" />
-        <path d="M0 75 L0 56 Q60 44 120 54 Q180 62 240 50 Q300 38 360 52 Q385 58 400 54 L400 75Z" fill="#5cb82e" />
-      </svg>
-    </div>
-  );
+  const isColorful = theme === "COLORFUL";
+  const isGamified = theme === "GAMIFIED";
+  const palette = isColorful
+    ? { r: ["rgba(236,72,153,.55)","rgba(168,85,247,.45)","rgba(99,102,241,.35)","rgba(59,130,246,.25)","rgba(16,185,129,.2)"],
+        glow: "rgba(236,72,153,.45)", bg0: "#1a0045", bg1: "#080018" }
+    : isGamified
+    ? { r: ["rgba(147,51,234,.6)","rgba(99,102,241,.5)","rgba(167,139,250,.4)","rgba(192,132,252,.3)","rgba(216,180,254,.2)"],
+        glow: "rgba(147,51,234,.5)", bg0: "#0d0320", bg1: "#020008" }
+    : { r: ["rgba(59,130,246,.5)","rgba(99,102,241,.4)","rgba(139,92,246,.3)","rgba(147,197,253,.25)","rgba(196,181,253,.2)"],
+        glow: "rgba(59,130,246,.45)", bg0: "#060e30", bg1: "#010510" };
+
   return (
     <div className="absolute inset-0 overflow-hidden">
-      <div className="absolute inset-0" style={{ background: "linear-gradient(180deg,#dff0fa 0%,#c5e1f5 45%,#d4eaf5 75%,#a8cde0 100%)" }} />
-      <div className="absolute top-[9%] left-[7%] opacity-45">
-        <div className="w-28 h-9 rounded-full bg-white shadow-sm" />
-        <div className="w-18 h-7 rounded-full bg-white shadow-sm -mt-4 ml-6" style={{ width: 72 }} />
+      <div className="absolute inset-0"
+        style={{ background: `radial-gradient(ellipse at 50% 25%, ${palette.bg0} 0%, ${palette.bg1} 100%)` }} />
+      {[...Array(55)].map((_, i) => (
+        <div key={i} className="absolute rounded-full bg-white"
+          style={{ width: i%6===0?2:1, height: i%6===0?2:1, opacity: 0.1+(i%9)*0.06,
+            left: `${(i*41+7)%100}%`, top: `${(i*29+3)%100}%` }} />
+      ))}
+      <div className="absolute" style={{ top: "30%", left: "50%", transform: "translate(-50%,-50%)" }}>
+        {palette.r.map((color, i) => {
+          const w = 60 + i * 48, h = 38 + i * 30;
+          return (
+            <motion.div key={i} className="absolute rounded-full border-2"
+              style={{ width: w, height: h, marginLeft: -w/2, marginTop: -h/2, borderColor: color }}
+              animate={{ rotate: i%2===0 ? 360 : -360 }}
+              transition={{ duration: 8+i*2, repeat: Infinity, ease: "linear" }} />
+          );
+        })}
+        <div className="absolute w-16 h-10 rounded-full"
+          style={{ marginLeft: -32, marginTop: -20,
+            background: `radial-gradient(ellipse, rgba(255,255,255,.85) 0%, ${palette.glow} 50%, transparent 75%)` }} />
       </div>
-      <div className="absolute top-[5%] right-[11%] opacity-32">
-        <div className="w-22 h-8 rounded-full bg-white" style={{ width: 88 }} />
-        <div className="w-13 h-6 rounded-full bg-white -mt-3 ml-5" style={{ width: 52 }} />
-      </div>
-      <svg className="absolute bottom-0 w-full" viewBox="0 0 400 65" preserveAspectRatio="none">
-        <path d="M0 65 L0 38 Q80 22 160 36 Q240 50 320 28 Q370 14 400 30 L400 65Z" fill="#7aafc8" />
-        <path d="M0 65 L0 50 Q80 38 160 48 Q240 58 320 44 Q370 36 400 46 L400 65Z" fill="#8cbfd5" />
-      </svg>
+      <div className="absolute inset-0"
+        style={{ background: `radial-gradient(ellipse at 50% 30%, ${palette.glow.replace(/[\d.]+\)$/, "0.1)")} 0%, transparent 55%)` }} />
     </div>
   );
 }
@@ -776,13 +769,10 @@ export function FocusAgents({ difficulty, theme, onComplete, forceMode }: FocusA
   if (showTutorial) return <FocusTutorial theme={theme} mode={mode} onDone={() => setShowTutorial(false)} />;
 
   // HUD palette
-  const hudBg = theme === "GAMIFIED" ? "bg-black/65 border-purple-500/40 text-white"
-    : theme === "COLORFUL" ? "bg-white/85 border-white/70 text-gray-800"
-    : "bg-white/85 border-white/60 text-slate-800";
   const dotColor = (i: number) => {
     if (i < roundResults.length) return roundResults[i].correct ? "bg-green-400" : "bg-red-400";
-    if (i === round) return (theme === "GAMIFIED" ? "bg-cyan-400" : "bg-blue-500") + " animate-pulse";
-    return theme === "GAMIFIED" ? "bg-white/20" : "bg-black/15";
+    if (i === round) return "bg-violet-400 animate-pulse";
+    return "bg-white/15";
   };
 
   const effectiveDiff = Math.max(1, Math.min(10, difficulty + Math.floor(round / 3)));
@@ -796,7 +786,8 @@ export function FocusAgents({ difficulty, theme, onComplete, forceMode }: FocusA
 
       {/* HUD */}
       <div className="absolute top-0 left-0 right-0 z-20 px-3 pt-2 pb-1">
-        <div className={`flex items-center gap-2 rounded-2xl px-3 py-1.5 border backdrop-blur-sm ${hudBg}`}>
+        <div className="flex items-center gap-2 rounded-2xl px-3 py-1.5 text-white"
+          style={{ background: "rgba(255,255,255,0.08)", backdropFilter: "blur(12px)", border: "1.5px solid rgba(255,255,255,0.15)", boxShadow: "0 4px 20px rgba(0,0,0,0.4)" }}>
           <span className="text-xs font-bold opacity-70 whitespace-nowrap">{gameTitle}</span>
           <div className="flex gap-0.5 flex-1">
             {Array.from({ length: MAX_ROUNDS }).map((_, i) => (
@@ -843,16 +834,10 @@ export function FocusAgents({ difficulty, theme, onComplete, forceMode }: FocusA
           <motion.div className="absolute inset-0 z-30 flex flex-col items-center justify-center px-4"
             initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0, scale: 0.95 }}
             transition={{ duration: 0.22 }}>
-            <div className={`w-full max-w-sm rounded-3xl shadow-2xl border-2 overflow-hidden ${
-              theme === "GAMIFIED" ? "bg-slate-900/96 border-cyan-500/50"
-              : theme === "COLORFUL" ? "bg-white/96 border-purple-300"
-              : "bg-white/96 border-blue-200"
-            }`}>
-              <div className={`px-4 py-2 text-center text-xs font-bold uppercase tracking-widest ${
-                theme === "GAMIFIED" ? "bg-cyan-500/20 text-cyan-300"
-                : theme === "COLORFUL" ? "bg-purple-100 text-purple-600"
-                : "bg-blue-50 text-blue-600"
-              }`}>
+            <div className="w-full max-w-sm rounded-3xl overflow-hidden"
+              style={{ background: "rgba(255,255,255,0.08)", backdropFilter: "blur(24px)", border: "1.5px solid rgba(255,255,255,0.18)", boxShadow: "0 8px 40px rgba(0,0,0,0.6)" }}>
+              <div className="px-4 py-2 text-center text-xs font-bold uppercase tracking-widest"
+                style={{ background: "rgba(255,255,255,0.08)", color: "rgba(255,255,255,0.6)" }}>
                 {instrMode === "audio" ? "👂 Ouça o comando" : "👁 Leia o comando"}
               </div>
               <div className="px-5 py-5 space-y-4">
@@ -861,30 +846,28 @@ export function FocusAgents({ difficulty, theme, onComplete, forceMode }: FocusA
                     style={{ background: targetAttrs?.colorHex ?? "#999" }} />
                 </div>
                 {instrMode !== "audio" ? (
-                  <p className={`text-center font-bold text-lg leading-snug ${theme === "GAMIFIED" ? "text-white" : "text-gray-800"}`}>
+                  <p className="text-center font-bold text-lg leading-snug text-white">
                     {command}
                   </p>
                 ) : (
                   <div className="text-center space-y-1">
-                    <p className={`font-bold text-base ${theme === "GAMIFIED" ? "text-cyan-300" : "text-indigo-600"}`}>👂 Modo Auditivo</p>
-                    <p className={`text-sm ${theme === "GAMIFIED" ? "text-slate-400" : "text-gray-500"}`}>Ouça e encontre o personagem</p>
+                    <p className="font-bold text-base text-violet-300">👂 Modo Auditivo</p>
+                    <p className="text-sm text-white/60">Ouça e encontre o personagem</p>
                   </div>
                 )}
                 <div className="flex gap-3">
                   {instrMode !== "visual" && (
                     <button onClick={() => speak(command)}
-                      className={`flex-1 h-12 rounded-2xl font-bold text-sm flex items-center justify-center gap-2 border-2 transition-all active:scale-95 ${
-                        theme === "GAMIFIED" ? "border-cyan-500 text-cyan-300 bg-cyan-500/10 hover:bg-cyan-500/20"
-                        : theme === "COLORFUL" ? "border-purple-300 text-purple-600 bg-purple-50 hover:bg-purple-100"
-                        : "border-blue-300 text-blue-600 bg-blue-50 hover:bg-blue-100"
-                      }`}>🔊 Ouvir</button>
+                      className="flex-1 h-12 rounded-2xl font-bold text-sm flex items-center justify-center gap-2 transition-all active:scale-95 text-violet-300"
+                      style={{ background: "rgba(139,92,246,0.15)", border: "1.5px solid rgba(139,92,246,0.4)" }}>
+                      🔊 Ouvir
+                    </button>
                   )}
                   <button onClick={startPlaying}
-                    className={`flex-1 h-12 rounded-2xl font-bold text-white text-sm flex items-center justify-center gap-2 shadow-lg transition-all active:scale-95 ${
-                      theme === "GAMIFIED" ? "bg-gradient-to-r from-cyan-500 to-blue-600"
-                      : theme === "COLORFUL" ? "bg-gradient-to-r from-purple-500 to-pink-500"
-                      : "bg-gradient-to-r from-blue-500 to-indigo-600"
-                    }`}>Encontrar! →</button>
+                    className="flex-1 h-12 rounded-2xl font-bold text-white text-sm flex items-center justify-center gap-2 transition-all active:scale-95"
+                    style={{ background: "linear-gradient(135deg, #7c3aed, #4f46e5)", boxShadow: "0 4px 20px rgba(124,58,237,0.5)" }}>
+                    Encontrar! →
+                  </button>
                 </div>
               </div>
             </div>
@@ -898,13 +881,15 @@ export function FocusAgents({ difficulty, theme, onComplete, forceMode }: FocusA
           <motion.div className="absolute inset-0 z-30 flex items-center justify-center"
             initial={{ opacity: 0, scale: 0.8 }} animate={{ opacity: 1, scale: 1 }} exit={{ opacity: 0 }}
             transition={{ duration: 0.18 }}>
-            <div className={`px-10 py-7 rounded-3xl shadow-2xl text-center border-2 ${
-              picked && chars.find(c => c.id === picked)?.isTarget
-                ? "bg-green-500/96 border-green-300 text-white"
-                : timedOut
-                  ? "bg-orange-500/96 border-orange-300 text-white"
-                  : "bg-red-500/96 border-red-300 text-white"
-            }`}>
+            <div className="px-10 py-7 rounded-3xl text-center text-white"
+              style={{
+                background: picked && chars.find(c => c.id === picked)?.isTarget
+                  ? "rgba(22,163,74,0.92)" : timedOut
+                  ? "rgba(234,88,12,0.92)" : "rgba(220,38,38,0.92)",
+                backdropFilter: "blur(20px)",
+                border: "1.5px solid rgba(255,255,255,0.25)",
+                boxShadow: "0 8px 40px rgba(0,0,0,0.6)",
+              }}>
               <p className="text-5xl mb-2">
                 {picked && chars.find(c => c.id === picked)?.isTarget ? "✅" : timedOut ? "⏱" : "❌"}
               </p>

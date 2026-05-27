@@ -346,17 +346,11 @@ function OrdemHistoriaDragStep({ theme, onDone }: { theme: Theme; onDone: () => 
     }
   }
 
-  const subCls = theme === "GAMIFIED" ? "text-gray-400" : "text-gray-500";
-  const cardCls = theme === "GAMIFIED"
-    ? "bg-gray-700 border-gray-600"
-    : "bg-white border-gray-200 shadow-sm";
-  const numBadgeCls = theme === "GAMIFIED" ? "bg-cyan-500 text-white" : "bg-blue-500 text-white";
-  const labelCls = theme === "GAMIFIED" ? "text-gray-200" : "text-gray-700";
-  const handleCls = theme === "GAMIFIED" ? "text-gray-500" : "text-gray-300";
+  const isDark = theme === "GAMIFIED";
 
   return (
     <div className="space-y-2">
-      <p className={`text-xs text-center ${subCls}`}>
+      <p className="text-xs text-center mb-3" style={{ color: isDark ? "#9ca3af" : "#8a7a6a" }}>
         Arraste os painéis para colocá-los na ordem correta da história
       </p>
       <Reorder.Group axis="y" values={panels} onReorder={handleReorder} className="flex flex-col gap-2">
@@ -366,26 +360,40 @@ function OrdemHistoriaDragStep({ theme, onDone }: { theme: Theme; onDone: () => 
             value={panel}
             layout
             dragMomentum={false}
-            whileDrag={{ scale: 1.04, boxShadow: "0 8px 24px rgba(0,0,0,0.18)", zIndex: 20 }}
+            whileDrag={{ scale: 1.03, boxShadow: "0 12px 32px rgba(0,0,0,0.22)", zIndex: 20 }}
             transition={{ duration: 0.15 }}
-            className={`flex items-center gap-3 rounded-xl border-2 p-3 select-none cursor-grab active:cursor-grabbing ${
-              correct ? "border-green-500 bg-green-50" : cardCls
+            className={`flex items-center gap-3 rounded-2xl overflow-hidden select-none cursor-grab active:cursor-grabbing ${
+              isDark ? "bg-gray-700" : "bg-white"
             }`}
+            style={{
+              border: correct
+                ? "1.5px solid rgba(34,197,94,0.4)"
+                : isDark ? "1px solid rgba(255,255,255,0.07)" : "1.5px solid rgba(26,39,68,0.08)",
+              background: correct
+                ? isDark ? "rgba(34,197,94,0.1)" : "rgba(34,197,94,0.06)"
+                : undefined,
+              boxShadow: isDark ? "none" : "0 2px 10px rgba(26,39,68,0.06)",
+            }}
           >
-            <span className={`w-6 h-6 rounded-full text-xs font-bold flex items-center justify-center shrink-0 ${
-              correct ? "bg-green-500 text-white" : numBadgeCls
-            }`}>
-              {idx + 1}
-            </span>
-            <span className="text-3xl leading-none">{panel.emoji}</span>
-            <span className={`flex-1 text-sm font-semibold ${correct ? "text-green-700" : labelCls}`}>
+            <div className="w-10 flex items-center justify-center py-4 flex-shrink-0"
+              style={{ background: correct ? "rgba(34,197,94,0.12)" : isDark ? "rgba(0,0,0,0.2)" : "rgba(26,39,68,0.05)" }}>
+              <span className="w-7 h-7 rounded-full flex items-center justify-center text-sm font-black text-white"
+                style={{ background: correct ? "#22c55e" : isDark ? "#06b6d4" : "#1a2744" }}>
+                {idx + 1}
+              </span>
+            </div>
+            <div className={`flex items-center justify-center w-12 h-12 flex-shrink-0 rounded-xl bg-gradient-to-br ${sceneBg(panel.emoji)}`}>
+              <span className="text-3xl leading-none">{panel.emoji}</span>
+            </div>
+            <span className="flex-1 text-sm font-bold uppercase tracking-tight"
+              style={{ color: correct ? "#15803d" : isDark ? "#e2e8f0" : "#1a2744" }}>
               {panel.label}
             </span>
-            <span className={`text-xl ${handleCls}`}>⠿</span>
+            <span className="text-xl mr-3" style={{ color: isDark ? "#4b5563" : "#d1d5db" }}>⠿</span>
           </Reorder.Item>
         ))}
       </Reorder.Group>
-      <p className={`text-xs text-center ${subCls}`}>
+      <p className="text-xs text-center mt-2" style={{ color: isDark ? "#6b7280" : "#9a9080" }}>
         Ordem correta: Comprar → Cozinhar → Servir
       </p>
     </div>
@@ -493,138 +501,100 @@ export function OrdemHistoria({ difficulty, theme, onComplete }: OrdemHistoriaPr
     return <OrdemHistoriaTutorial theme={theme} onDone={() => setShowTutorial(false)} />;
   }
 
-  // ── Tokens de tema ────────────────────────────────────────────────────────
-  const bg =
-    theme === "GAMIFIED"
-      ? "bg-gray-950"
-      : theme === "COLORFUL"
-      ? "bg-gradient-to-br from-blue-50 via-white to-rose-50"
-      : "bg-gradient-to-br from-slate-50 to-indigo-50/30";
+  // ── Design tokens ─────────────────────────────────────────────────────────
+  const isGamified = theme === "GAMIFIED";
 
-  const card =
-    theme === "GAMIFIED"
-      ? "bg-gray-800 border border-cyan-500/30"
-      : theme === "COLORFUL"
-      ? "bg-white shadow-xl border-2 border-blue-300"
-      : "bg-white shadow-md border border-slate-200/60";
+  const bgClass = isGamified ? "bg-gray-950" : "";
+  const bgStyle: React.CSSProperties | undefined = !isGamified
+    ? { background: "linear-gradient(160deg, #ede8df 0%, #e4ddd0 55%, #dbd4c5 100%)" }
+    : undefined;
 
-  const titleClass =
-    theme === "GAMIFIED"
-      ? "text-cyan-400"
-      : theme === "COLORFUL"
-      ? "text-blue-800"
-      : "text-slate-800";
-
-  const subClass =
-    theme === "GAMIFIED" ? "text-gray-400" : theme === "COLORFUL" ? "text-blue-400" : "text-slate-500";
-
-  const taskBg =
-    theme === "GAMIFIED"
-      ? "bg-gray-700/50"
-      : theme === "COLORFUL"
-      ? "bg-blue-50 border border-blue-100"
-      : "bg-indigo-50/50 border border-indigo-100/60";
-
-  const normalCardClass =
-    theme === "GAMIFIED"
-      ? "border-gray-600 bg-gray-700"
-      : theme === "COLORFUL"
-      ? "border-blue-200 bg-white hover:border-blue-400"
-      : "border-slate-200 bg-white hover:border-indigo-300 shadow-sm";
-
-  const btnClass =
-    theme === "GAMIFIED"
-      ? "bg-cyan-600 hover:bg-cyan-700 text-white"
-      : theme === "COLORFUL"
-      ? "bg-gradient-to-r from-rose-700 to-blue-700 text-white"
-      : "bg-indigo-600 hover:bg-indigo-700 text-white";
-
-  const dotActive =
-    theme === "GAMIFIED" ? "bg-cyan-500" : theme === "COLORFUL" ? "bg-blue-500" : "bg-indigo-500";
-  const dotInactive =
-    theme === "GAMIFIED" ? "bg-gray-700" : theme === "COLORFUL" ? "bg-blue-100" : "bg-slate-200";
+  const card = isGamified
+    ? "bg-gray-800 border border-gray-700"
+    : "bg-white border border-gray-100 shadow-lg";
 
   const levelLabel =
     panelLevel === 1 ? "3 etapas" : panelLevel === 2 ? "4 etapas" : "5 etapas";
-  const levelColor =
-    theme === "GAMIFIED"
-      ? "text-cyan-400"
-      : theme === "COLORFUL"
-      ? "text-blue-500"
-      : "text-indigo-500";
-
-  const labelClass =
-    theme === "GAMIFIED" ? "text-gray-200" : theme === "COLORFUL" ? "text-gray-800" : "text-slate-700";
-
-  const numBadgeClass =
-    theme === "GAMIFIED"
-      ? "bg-cyan-500 text-white"
-      : theme === "COLORFUL"
-      ? "bg-blue-100 text-blue-800"
-      : "bg-indigo-500 text-white";
-
-  const handleClass =
-    theme === "GAMIFIED" ? "text-gray-500" : "text-gray-300";
 
   const lastResult = trialResults[trialResults.length - 1];
 
   // Render helper for a single panel row
   function renderPanelRow(panel: Panel, idx: number, isSubmitted: boolean) {
-    const sceneSmallCls = theme === "GAMIFIED"
-      ? "bg-gradient-to-br from-gray-700 to-gray-800"
-      : `bg-gradient-to-br ${sceneBg(panel.emoji)}`;
+    const emojiBg = isGamified
+      ? "rgba(255,255,255,0.07)"
+      : `var(--tw-gradient-from, #f0f4f8)`;
+    const sceneGradient = isGamified ? undefined : `bg-gradient-to-br ${sceneBg(panel.emoji)}`;
 
     if (isSubmitted) {
-      const isInCorrectPos = panel.correctIndex === idx;
-      const rowCls = isInCorrectPos
-        ? "border-green-500 bg-green-50"
-        : "border-red-400 bg-red-50";
-      const numCls = isInCorrectPos
-        ? "bg-green-500 text-white"
-        : "bg-red-400 text-white";
-      const lblCls = isInCorrectPos ? "text-green-700" : "text-red-700";
+      const ok = panel.correctIndex === idx;
       return (
-        <div className={`flex items-center gap-3 rounded-2xl border-2 overflow-hidden ${rowCls}`}>
-          <span className={`w-8 h-8 flex items-center justify-center ml-3 rounded-full text-sm font-bold shrink-0 ${numCls}`}>
-            {idx + 1}
-          </span>
-          <div className={`flex items-center justify-center w-14 h-14 shrink-0 ${sceneSmallCls}`}>
+        <div className="flex items-center gap-3 rounded-2xl overflow-hidden"
+          style={{
+            background: ok ? "rgba(34,197,94,0.07)" : "rgba(239,68,68,0.07)",
+            border: `1.5px solid ${ok ? "rgba(34,197,94,0.3)" : "rgba(239,68,68,0.3)"}`,
+          }}>
+          <div className="w-10 flex items-center justify-center py-4 flex-shrink-0"
+            style={{ background: ok ? "rgba(34,197,94,0.12)" : "rgba(239,68,68,0.12)" }}>
+            <span className="w-7 h-7 rounded-full flex items-center justify-center text-sm font-black text-white"
+              style={{ background: ok ? "#22c55e" : "#ef4444" }}>
+              {idx + 1}
+            </span>
+          </div>
+          <div className={`flex items-center justify-center w-14 h-14 flex-shrink-0 rounded-xl ${sceneGradient ?? ""}`}
+            style={isGamified ? { background: emojiBg } : undefined}>
             <span className="text-3xl leading-none">{panel.emoji}</span>
           </div>
-          <p className={`flex-1 text-sm font-semibold ${lblCls}`}>{panel.label}</p>
-          <span className="text-lg mr-3">{isInCorrectPos ? "✅" : "❌"}</span>
+          <p className="flex-1 text-sm font-bold uppercase tracking-tight"
+            style={{ color: ok ? "#15803d" : "#b91c1c" }}>
+            {panel.label}
+          </p>
+          <span className="text-lg mr-3">{ok ? "✅" : "❌"}</span>
         </div>
       );
     }
 
     return (
-      <div className={`flex items-center gap-3 rounded-2xl border-2 overflow-hidden ${normalCardClass}`}>
-        <span className={`w-8 h-8 flex items-center justify-center ml-3 rounded-full text-sm font-bold shrink-0 ${numBadgeClass}`}>
-          {idx + 1}
-        </span>
-        <div className={`flex items-center justify-center w-14 h-14 shrink-0 ${sceneSmallCls}`}>
+      <div className={`flex items-center gap-3 rounded-2xl overflow-hidden ${isGamified ? "bg-gray-700" : "bg-white"}`}
+        style={{
+          border: isGamified ? "1px solid rgba(255,255,255,0.08)" : "1.5px solid rgba(26,39,68,0.08)",
+          boxShadow: isGamified ? "none" : "0 2px 10px rgba(26,39,68,0.06)",
+        }}>
+        <div className="w-10 flex items-center justify-center py-4 flex-shrink-0"
+          style={{ background: isGamified ? "rgba(0,0,0,0.2)" : "rgba(26,39,68,0.05)" }}>
+          <span className="w-7 h-7 rounded-full flex items-center justify-center text-sm font-black text-white"
+            style={{ background: isGamified ? "#06b6d4" : "#1a2744" }}>
+            {idx + 1}
+          </span>
+        </div>
+        <div className={`flex items-center justify-center w-14 h-14 flex-shrink-0 rounded-xl ${sceneGradient ?? ""}`}
+          style={isGamified ? { background: emojiBg } : undefined}>
           <span className="text-3xl leading-none">{panel.emoji}</span>
         </div>
-        <p className={`flex-1 text-sm font-semibold ${labelClass}`}>{panel.label}</p>
-        <span className={`text-xl mr-3 ${handleClass}`}>⠿</span>
+        <p className="flex-1 text-sm font-bold uppercase tracking-tight"
+          style={{ color: isGamified ? "#e2e8f0" : "#1a2744" }}>
+          {panel.label}
+        </p>
+        <span className="text-xl mr-3" style={{ color: isGamified ? "#4b5563" : "#d1d5db" }}>⠿</span>
       </div>
     );
   }
 
   return (
-    <div className={`min-h-screen flex flex-col items-center p-4 pt-5 ${bg}`}>
+    <div className={`min-h-screen flex flex-col items-center p-4 pt-5 ${bgClass}`} style={bgStyle}>
       <div className={`w-full max-w-2xl rounded-2xl p-5 ${card}`}>
 
         {/* Header */}
         <div className="flex justify-between items-center mb-1">
-          <h2 className={`font-bold text-base ${titleClass}`}>📖 Ordem da História</h2>
-          <span className={`text-xs ${subClass}`}>
+          <h2 className="font-bold text-base" style={{ color: isGamified ? "#22d3ee" : "#1a2744" }}>
+            📖 Ordem da História
+          </h2>
+          <span className="text-xs font-mono" style={{ color: isGamified ? "#6b7280" : "#8a7a6a" }}>
             {trial + 1}/{MAX_TRIALS}
           </span>
         </div>
 
         {/* Nível atual */}
-        <p className={`text-xs mb-2 font-medium ${levelColor}`}>
+        <p className="text-xs mb-2 font-semibold" style={{ color: isGamified ? "#22d3ee" : "#2a5fa5" }}>
           Nível: {levelLabel}
           {streak >= 1 && " · 🔥 " + streak + " seguidos"}
           {streak <= -1 && " · " + Math.abs(streak) + " erros seguidos"}
@@ -633,29 +603,29 @@ export function OrdemHistoria({ difficulty, theme, onComplete }: OrdemHistoriaPr
         {/* Barra de progresso */}
         <div className="flex gap-0.5 mb-4">
           {Array.from({ length: MAX_TRIALS }).map((_, i) => (
-            <div
-              key={i}
-              className={`h-1.5 flex-1 rounded-full transition-colors ${
-                i < trialResults.length
-                  ? trialResults[i]
-                    ? "bg-green-500"
-                    : "bg-red-400"
+            <div key={i} className="h-1.5 flex-1 rounded-full transition-colors"
+              style={{
+                background: i < trialResults.length
+                  ? trialResults[i] ? "#22c55e" : "#ef4444"
                   : i === trial
-                  ? `${dotActive} animate-pulse`
-                  : dotInactive
-              }`}
-            />
+                  ? isGamified ? "#06b6d4" : "#2a5fa5"
+                  : isGamified ? "rgba(255,255,255,0.1)" : "rgba(26,39,68,0.1)"
+              }} />
           ))}
         </div>
 
         {/* Título da história */}
-        <div className={`flex items-center gap-2 mb-3 px-3 py-2 rounded-xl ${taskBg}`}>
-          <span className="text-2xl">{trialData.taskEmoji}</span>
+        <div className="flex items-center gap-3 mb-4 px-4 py-3 rounded-2xl"
+          style={{
+            background: isGamified ? "rgba(255,255,255,0.05)" : "rgba(26,39,68,0.05)",
+            border: isGamified ? "1px solid rgba(255,255,255,0.08)" : "1px solid rgba(26,39,68,0.08)",
+          }}>
+          <span className="text-3xl">{trialData.taskEmoji}</span>
           <div>
-            <p className={`font-bold text-sm ${theme === "GAMIFIED" ? "text-gray-200" : "text-gray-800"}`}>
+            <p className="font-bold text-base" style={{ color: isGamified ? "#e2e8f0" : "#1a2744" }}>
               {trialData.name}
             </p>
-            <p className={`text-xs ${subClass}`}>
+            <p className="text-xs mt-0.5" style={{ color: isGamified ? "#6b7280" : "#8a7a6a" }}>
               Arraste os painéis para definir a ordem correta
             </p>
           </div>
@@ -695,28 +665,34 @@ export function OrdemHistoria({ difficulty, theme, onComplete }: OrdemHistoriaPr
 
         {/* Área de ação */}
         {!submitted ? (
-          <button
-            onClick={handleSubmit}
-            className={`w-full h-11 rounded-xl font-bold transition-colors ${btnClass}`}
-          >
+          <button onClick={handleSubmit}
+            className="w-full h-12 rounded-full font-bold text-white text-sm active:scale-95 transition-transform"
+            style={{
+              background: isGamified
+                ? "linear-gradient(135deg, #0891b2, #0e7490)"
+                : "linear-gradient(135deg, #1a2744, #2a4a8a)",
+              boxShadow: isGamified
+                ? "0 4px 16px rgba(8,145,178,0.4)"
+                : "0 4px 16px rgba(26,39,68,0.35)",
+            }}>
             Confirmar Ordem
           </button>
         ) : (
           <AnimatePresence>
             <motion.div
-              className={`text-center p-3 rounded-xl border ${
-                lastResult
-                  ? "bg-green-50 border-green-300"
-                  : "bg-red-50 border-red-300"
-              }`}
+              className="text-center p-4 rounded-2xl"
+              style={{
+                background: lastResult ? "rgba(34,197,94,0.08)" : "rgba(239,68,68,0.08)",
+                border: `1.5px solid ${lastResult ? "rgba(34,197,94,0.3)" : "rgba(239,68,68,0.3)"}`,
+              }}
               initial={{ scale: 0.9, opacity: 0 }}
               animate={{ scale: 1, opacity: 1 }}
               transition={{ duration: 0.2 }}
             >
-              <p className={`font-bold text-sm ${lastResult ? "text-green-700" : "text-red-600"}`}>
-                {lastResult ? "Ordem correta! ✅" : "Ordem incorreta ❌"}
+              <p className="font-bold text-base" style={{ color: lastResult ? "#15803d" : "#b91c1c" }}>
+                {lastResult ? "✅ Ordem correta!" : "❌ Ordem incorreta"}
               </p>
-              <p className="text-xs text-gray-500 mt-0.5">
+              <p className="text-xs text-gray-500 mt-1">
                 {lastResult
                   ? "Muito bem! Próxima história em instantes."
                   : "Observe os destaques e tente memorizar a sequência."}

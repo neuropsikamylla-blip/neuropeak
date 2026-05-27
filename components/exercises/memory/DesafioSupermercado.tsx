@@ -512,26 +512,21 @@ export function DesafioSupermercado({ difficulty, theme, onComplete, mode = "lei
     return <SupermercadoTutorial theme={theme} mode={mode} onDone={() => setShowTutorial(false)} />;
   }
 
-  // ── Paleta ─────────────────────────────────────────────────────────────────
+  // ── Design tokens ──────────────────────────────────────────────────────────
+  const isGamified = theme === "GAMIFIED";
+  const bgClass = isGamified ? "bg-slate-950" : "";
+  const bgStyle: React.CSSProperties | undefined = !isGamified
+    ? { background: "linear-gradient(160deg, #ede8df 0%, #e4ddd0 55%, #dbd4c5 100%)" }
+    : undefined;
   const pal = {
-    bg: theme === "GAMIFIED"
-      ? "bg-slate-950"
-      : theme === "COLORFUL"
-      ? "bg-gradient-to-br from-amber-50 to-orange-50"
-      : "bg-gradient-to-br from-amber-50/60 via-white to-orange-50/30",
-    card: theme === "GAMIFIED"
-      ? "bg-slate-800 border border-slate-600/40"
-      : "bg-white border border-amber-200 shadow-lg",
-    title: theme === "GAMIFIED" ? "text-cyan-400" : "text-amber-800",
-    sub: theme === "GAMIFIED" ? "text-slate-400" : "text-amber-600",
-    accent: theme === "GAMIFIED" ? "bg-cyan-600 hover:bg-cyan-700" : "bg-amber-500 hover:bg-amber-600",
-    listCard: theme === "GAMIFIED"
-      ? "border-slate-600 bg-slate-700"
-      : "border-amber-300 bg-amber-50",
+    card: isGamified ? "bg-slate-800 border border-slate-700" : "bg-white border border-gray-100 shadow-lg",
+    title: isGamified ? "text-cyan-400" : "text-gray-900",
+    sub: isGamified ? "text-slate-400" : "text-gray-500",
+    listCard: isGamified ? "border-slate-600 bg-slate-700/80" : "border-gray-100 bg-white shadow-sm",
     dot: (i: number, results: boolean[]) => {
       if (i < results.length) return results[i] ? "bg-green-500" : "bg-red-400";
-      if (i === results.length) return (theme === "GAMIFIED" ? "bg-cyan-500" : "bg-amber-500") + " animate-pulse";
-      return theme === "GAMIFIED" ? "bg-slate-700" : "bg-amber-100";
+      if (i === results.length) return (isGamified ? "bg-cyan-500" : "bg-blue-600") + " animate-pulse";
+      return isGamified ? "bg-slate-700" : "bg-gray-200";
     },
   };
 
@@ -539,7 +534,7 @@ export function DesafioSupermercado({ difficulty, theme, onComplete, mode = "lei
   const ratio = memorizeTotal > 0 ? countdown / memorizeTotal : 0;
 
   return (
-    <div className={`min-h-screen flex flex-col items-center p-4 pt-6 ${pal.bg}`}>
+    <div className={`min-h-screen flex flex-col items-center p-4 pt-6 ${bgClass}`} style={bgStyle}>
       <div className={`w-full max-w-2xl rounded-2xl p-5 ${pal.card}`}>
 
         {/* Header */}
@@ -581,8 +576,9 @@ export function DesafioSupermercado({ difficulty, theme, onComplete, mode = "lei
               </div>
 
               {/* Lista */}
-              <div className={`rounded-xl p-3 ${theme === "GAMIFIED" ? "bg-slate-900/60" : "bg-amber-50 border border-amber-200"}`}>
-                <p className={`text-xs font-bold uppercase tracking-wide mb-2 ${pal.sub}`}>
+              <div className="rounded-xl p-3"
+                style={{ background: isGamified ? "rgba(0,0,0,0.3)" : "rgba(26,39,68,0.04)", border: isGamified ? "1px solid rgba(255,255,255,0.06)" : "1px solid rgba(26,39,68,0.08)" }}>
+                <p className="text-xs font-bold uppercase tracking-wide mb-2" style={{ color: isGamified ? "#06b6d4" : "#2a5fa5" }}>
                   🛒 Lista ({itemCount} {itemCount === 1 ? "item" : "itens"})
                 </p>
                 <div className="grid grid-cols-3 sm:grid-cols-4 gap-2">
@@ -596,13 +592,12 @@ export function DesafioSupermercado({ difficulty, theme, onComplete, mode = "lei
                     >
                       <ProductSvg id={p.id} size={68} />
                       {mode === "leitura" && (
-                        <span className={`text-xs font-bold text-center leading-tight ${
-                          theme === "GAMIFIED" ? "text-gray-100" : "text-gray-800"
-                        }`}>{p.name}</span>
+                        <span className="text-xs font-bold text-center leading-tight"
+                          style={{ color: isGamified ? "#f1f5f9" : "#1a2744" }}>
+                          {p.name}
+                        </span>
                       )}
-                      {mode === "auditivo" && (
-                        <span className="text-base">🔊</span>
-                      )}
+                      {mode === "auditivo" && <span className="text-base">🔊</span>}
                     </motion.div>
                   ))}
                 </div>
@@ -614,7 +609,15 @@ export function DesafioSupermercado({ difficulty, theme, onComplete, mode = "lei
                   if (typeof window !== "undefined") window.speechSynthesis?.cancel();
                   setPhase("shopping");
                 }}
-                className={`w-full mt-3 h-10 rounded-xl font-bold text-sm text-white transition-all ${pal.accent}`}
+                className="w-full mt-3 h-11 rounded-full font-bold text-sm text-white active:scale-95 transition-transform"
+                style={{
+                  background: isGamified
+                    ? "linear-gradient(135deg, #0891b2, #0e7490)"
+                    : "linear-gradient(135deg, #1a2744, #2a4a8a)",
+                  boxShadow: isGamified
+                    ? "0 4px 16px rgba(8,145,178,0.4)"
+                    : "0 4px 16px rgba(26,39,68,0.35)",
+                }}
               >
                 Já memorizei → ir para a prateleira
               </button>
@@ -626,11 +629,13 @@ export function DesafioSupermercado({ difficulty, theme, onComplete, mode = "lei
             <motion.div key="shop" initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -8 }}>
               <div className="flex justify-between items-center mb-2">
                 <p className={`font-bold text-sm ${pal.title}`}>Encontre os itens na prateleira!</p>
-                <span className={`text-xs font-semibold px-2 py-0.5 rounded-full ${
-                  selected.size === itemCount
-                    ? "bg-green-100 text-green-700"
-                    : theme === "GAMIFIED" ? "bg-slate-700 text-slate-300" : "bg-amber-100 text-amber-600"
-                }`}>
+                <span className="text-xs font-semibold px-2 py-0.5 rounded-full"
+                  style={{
+                    background: selected.size === itemCount
+                      ? "rgba(34,197,94,0.15)"
+                      : isGamified ? "rgba(255,255,255,0.1)" : "rgba(26,39,68,0.08)",
+                    color: selected.size === itemCount ? "#15803d" : isGamified ? "#cbd5e1" : "#1a2744",
+                  }}>
                   {selected.size}/{itemCount}
                 </span>
               </div>
@@ -652,7 +657,15 @@ export function DesafioSupermercado({ difficulty, theme, onComplete, mode = "lei
               <button
                 onClick={handleConfirm}
                 disabled={selected.size === 0}
-                className={`w-full mt-3 h-12 rounded-xl font-bold text-base text-white transition-all disabled:opacity-40 ${pal.accent}`}
+                className="w-full mt-3 h-12 rounded-full font-bold text-base text-white active:scale-95 transition-transform disabled:opacity-40"
+                style={{
+                  background: isGamified
+                    ? "linear-gradient(135deg, #0891b2, #0e7490)"
+                    : "linear-gradient(135deg, #1a2744, #2a4a8a)",
+                  boxShadow: isGamified
+                    ? "0 4px 16px rgba(8,145,178,0.4)"
+                    : "0 4px 16px rgba(26,39,68,0.35)",
+                }}
               >
                 Confirmar ({selected.size}/{itemCount})
               </button>
@@ -667,11 +680,16 @@ export function DesafioSupermercado({ difficulty, theme, onComplete, mode = "lei
                 {currentList.map((p) => {
                   const hit = selected.has(p.id);
                   return (
-                    <div key={p.id} className={`p-2 rounded-xl border-2 flex flex-col items-center gap-1 ${
-                      hit ? "border-green-400 bg-green-50" : "border-red-300 bg-red-50"
-                    }`}>
+                    <div key={p.id} className="p-2 rounded-xl flex flex-col items-center gap-1"
+                      style={{
+                        border: `1.5px solid ${hit ? "rgba(34,197,94,0.35)" : "rgba(239,68,68,0.35)"}`,
+                        background: hit ? "rgba(34,197,94,0.07)" : "rgba(239,68,68,0.07)",
+                      }}>
                       <ProductSvg id={p.id} size={52} />
-                      <span className="text-[10px] text-center leading-tight text-gray-700">{p.name}</span>
+                      <span className="text-[10px] text-center leading-tight font-semibold"
+                        style={{ color: hit ? "#15803d" : "#b91c1c" }}>
+                        {p.name}
+                      </span>
                       <span className="text-sm">{hit ? "✅" : "❌"}</span>
                     </div>
                   );
