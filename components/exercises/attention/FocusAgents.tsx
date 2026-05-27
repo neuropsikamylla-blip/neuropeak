@@ -731,6 +731,89 @@ function FocusTutorial({ theme, mode, onDone }: { theme: Theme; mode: AgeMode; o
   return <TutorialBase theme={theme} title={title} steps={steps} onDone={onDone} />;
 }
 
+// ── Scene Background ──────────────────────────────────────────────────────────
+
+function SceneBg({ theme }: { theme: Theme }) {
+  if (theme === "GAMIFIED") {
+    return (
+      <div className="absolute inset-0 overflow-hidden">
+        <div className="absolute inset-0" style={{ background: "linear-gradient(180deg, #0a0a1a 0%, #1a1040 55%, #2d1060 100%)" }} />
+        {/* Stars */}
+        {[...Array(30)].map((_, i) => (
+          <div key={i} className="absolute rounded-full bg-white"
+            style={{ width: i % 3 === 0 ? 3 : 2, height: i % 3 === 0 ? 3 : 2, opacity: 0.4 + (i % 5) * 0.1,
+              left: `${(i * 37 + 13) % 100}%`, top: `${(i * 23 + 7) % 60}%` }} />
+        ))}
+        {/* Ground */}
+        <svg className="absolute bottom-0 w-full" viewBox="0 0 400 80" preserveAspectRatio="none">
+          <path d="M0 80 L0 45 Q30 35 60 42 Q90 50 120 38 Q150 26 180 40 Q210 52 240 36 Q270 22 300 40 Q330 55 360 38 Q390 25 400 38 L400 80Z" fill="#1e0a40"/>
+          <path d="M0 80 L0 55 Q40 45 80 52 Q120 58 160 48 Q200 38 240 52 Q280 64 320 50 Q360 36 400 50 L400 80Z" fill="#2d1060"/>
+        </svg>
+      </div>
+    );
+  }
+  if (theme === "COLORFUL") {
+    return (
+      <div className="absolute inset-0 overflow-hidden">
+        <div className="absolute inset-0" style={{ background: "linear-gradient(180deg, #87CEEB 0%, #b8e4f9 45%, #d4f0b8 70%, #8BC34A 100%)" }} />
+        {/* Clouds */}
+        <div className="absolute top-[8%] left-[10%] opacity-80">
+          <div className="w-20 h-8 rounded-full bg-white/90 shadow" />
+          <div className="w-14 h-7 rounded-full bg-white/90 shadow -mt-4 ml-4" />
+        </div>
+        <div className="absolute top-[12%] right-[15%] opacity-70">
+          <div className="w-16 h-6 rounded-full bg-white/90 shadow" />
+          <div className="w-10 h-5 rounded-full bg-white/90 shadow -mt-3 ml-3" />
+        </div>
+        {/* Ground hills */}
+        <svg className="absolute bottom-0 w-full" viewBox="0 0 400 70" preserveAspectRatio="none">
+          <path d="M0 70 L0 40 Q50 20 100 35 Q150 50 200 30 Q250 10 300 32 Q350 52 400 35 L400 70Z" fill="#5a9e2f"/>
+          <path d="M0 70 L0 55 Q60 42 120 52 Q180 60 240 48 Q300 36 360 50 Q385 56 400 52 L400 70Z" fill="#6dbf3d"/>
+        </svg>
+      </div>
+    );
+  }
+  // CLINICAL
+  return (
+    <div className="absolute inset-0 overflow-hidden">
+      <div className="absolute inset-0" style={{ background: "linear-gradient(180deg, #e8f4fd 0%, #cce7f5 50%, #dce8f0 80%, #b8d4e8 100%)" }} />
+      {/* Subtle clouds */}
+      <div className="absolute top-[10%] left-[8%] opacity-40">
+        <div className="w-24 h-8 rounded-full bg-white shadow-sm" />
+        <div className="w-16 h-6 rounded-full bg-white shadow-sm -mt-4 ml-5" />
+      </div>
+      <div className="absolute top-[6%] right-[12%] opacity-30">
+        <div className="w-20 h-7 rounded-full bg-white" />
+        <div className="w-12 h-5 rounded-full bg-white -mt-3 ml-4" />
+      </div>
+      {/* Ground */}
+      <svg className="absolute bottom-0 w-full" viewBox="0 0 400 60" preserveAspectRatio="none">
+        <path d="M0 60 L0 38 Q80 22 160 35 Q240 48 320 28 Q370 16 400 30 L400 60Z" fill="#8ab4cc"/>
+        <path d="M0 60 L0 48 Q80 36 160 46 Q240 56 320 42 Q370 34 400 44 L400 60Z" fill="#9dc4d8"/>
+      </svg>
+    </div>
+  );
+}
+
+// ── Floating character positions ──────────────────────────────────────────────
+
+interface CharPos { id: string; x: number; y: number; floatDur: number; floatAmp: number; floatDelay: number; }
+
+function generatePositions(chars: AgentChar[]): CharPos[] {
+  const positions: CharPos[] = [];
+  const minDist = 18; // minimum % distance between centers
+  for (const ch of chars) {
+    let x = 0, y = 0, attempts = 0;
+    do {
+      x = 5 + Math.random() * 82;
+      y = 8 + Math.random() * 62;
+      attempts++;
+    } while (attempts < 50 && positions.some(p => Math.hypot(p.x - x, p.y - y) < minDist));
+    positions.push({ id: ch.id, x, y, floatDur: 2.5 + Math.random() * 2, floatAmp: 8 + Math.random() * 10, floatDelay: Math.random() * 2 });
+  }
+  return positions;
+}
+
 // ── Main component ────────────────────────────────────────────────────────────
 
 const MAX_ROUNDS = 10;
@@ -747,11 +830,14 @@ export function FocusAgents({ difficulty, theme, onComplete, forceMode }: FocusA
   const [showTutorial, setShowTutorial] = useState(true);
   const reportProgress = useExerciseProgress();
 
+  const [gamePhase, setGamePhase] = useState<"command" | "playing" | "feedback">("command");
   const [round, setRound] = useState(0);
   const [chars, setChars] = useState<AgentChar[]>([]);
+  const [charPositions, setCharPositions] = useState<CharPos[]>([]);
   const [command, setCommand] = useState("");
   const [targetId, setTargetId] = useState("");
   const [picked, setPicked] = useState<string | null>(null);
+  const [timedOut, setTimedOut] = useState(false);
   const [timerLeft, setTimerLeft] = useState<number | null>(null);
   const [roundResults, setRoundResults] = useState<{ correct: boolean; rt: number }[]>([]);
 
@@ -759,48 +845,57 @@ export function FocusAgents({ difficulty, theme, onComplete, forceMode }: FocusA
   const roundStart = useRef(Date.now());
   const sessionStart = useRef(Date.now());
   const currentTargetId = useRef(targetId);
+  const roundResultsRef = useRef(roundResults);
   currentTargetId.current = targetId;
+  roundResultsRef.current = roundResults;
 
   const clearTimer = () => { if (timerRef.current) { clearInterval(timerRef.current); timerRef.current = null; } };
 
-  const startRound = useCallback((r: number) => {
+  const prepareRound = useCallback((r: number) => {
     const d = Math.max(1, Math.min(10, difficulty + Math.floor(r / 3)));
     const gen = generateRound(mode, d);
     setChars(gen.chars);
+    setCharPositions(generatePositions(gen.chars));
     setCommand(gen.command);
     setTargetId(gen.targetId);
     setPicked(null);
-    roundStart.current = Date.now();
+    setTimedOut(false);
+    setTimerLeft(timerSec(d));
+    setGamePhase("command");
 
-    const t = timerSec(d);
-    setTimerLeft(t);
+    // Auto-speak in audio/both mode
+    const instrMode = forceMode === "visual" ? "visual" : forceMode === "auditivo" ? "audio" : getInstrMode(d);
+    if (instrMode !== "visual") speak(gen.command);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [mode, difficulty, forceMode]);
+
+  function startPlaying() {
+    setGamePhase("playing");
+    roundStart.current = Date.now();
     clearTimer();
-    if (t !== null) {
+    const t = timerLeft;
+    if (t !== null && t > 0) {
       timerRef.current = setInterval(() => {
         setTimerLeft(prev => {
           if (prev === null || prev <= 1) {
             clearTimer();
-            // Time out = wrong
-            handleResult(false, currentTargetId.current, r);
+            handleResult(false, currentTargetId.current, round);
             return 0;
           }
           return prev - 1;
         });
       }, 1000);
     }
+  }
 
-    // Auto-speak command (skip in visual-only mode)
-    const instrMode = forceMode === "visual" ? "visual" : forceMode === "auditivo" ? "audio" : getInstrMode(d);
-    if (instrMode !== "visual") speak(gen.command);
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [mode, difficulty]);
-
-  // Handle result — defined outside setTimerLeft to avoid closure issues
-  function handleResult(correct: boolean, tId: string, r: number) {
+  function handleResult(correct: boolean, _tId: string, r: number) {
     clearTimer();
     const rt = Date.now() - roundStart.current;
-    const newResults = [...roundResults, { correct, rt }];
+    const newResults = [...roundResultsRef.current, { correct, rt }];
     setRoundResults(newResults);
+    roundResultsRef.current = newResults;
+    if (!correct) setTimedOut(true);
+    setGamePhase("feedback");
 
     const nextRound = r + 1;
     reportProgress(Math.round((nextRound / MAX_ROUNDS) * 100));
@@ -822,145 +917,204 @@ export function FocusAgents({ difficulty, theme, onComplete, forceMode }: FocusA
         });
       } else {
         setRound(nextRound);
-        startRound(nextRound);
+        prepareRound(nextRound);
       }
-    }, 1200);
+    }, 1400);
   }
 
   function handleTap(char: AgentChar) {
-    if (picked) return;
+    if (gamePhase !== "playing" || picked) return;
     setPicked(char.id);
     handleResult(char.isTarget, targetId, round);
   }
 
   useEffect(() => {
-    if (!showTutorial) startRound(0);
+    if (!showTutorial) prepareRound(0);
     return () => { clearTimer(); if (typeof window !== "undefined") window.speechSynthesis?.cancel(); };
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [showTutorial]);
 
   if (showTutorial) return <FocusTutorial theme={theme} mode={mode} onDone={() => setShowTutorial(false)} />;
 
-  // ── Paleta ─────────────────────────────────────────────────────────────────
-  const pal = {
-    bg: theme === "GAMIFIED" ? "bg-slate-950"
-      : theme === "COLORFUL" ? "bg-gradient-to-br from-purple-50 via-pink-50 to-yellow-50"
-      : "bg-gradient-to-br from-slate-50 via-white to-blue-50/30",
-    title: theme === "GAMIFIED" ? "text-cyan-400" : theme === "COLORFUL" ? "text-purple-700" : "text-slate-800",
-    sub: theme === "GAMIFIED" ? "text-slate-400" : theme === "COLORFUL" ? "text-purple-500" : "text-slate-500",
-    dot: (i: number) => {
-      if (i < roundResults.length) return roundResults[i].correct ? "bg-green-500" : "bg-red-400";
-      if (i === round) return (theme === "GAMIFIED" ? "bg-cyan-500" : "bg-purple-500") + " animate-pulse";
-      return theme === "GAMIFIED" ? "bg-slate-700" : "bg-slate-200";
-    },
-    shelf: theme === "GAMIFIED" ? "bg-slate-800/60 border-slate-700" : "bg-white/70 border-slate-200",
+  // ── Paleta HUD ──────────────────────────────────────────────────────────────
+  const hudBg = theme === "GAMIFIED" ? "bg-black/60 border-purple-500/40 text-white"
+    : theme === "COLORFUL" ? "bg-white/80 border-white/60 text-gray-800"
+    : "bg-white/80 border-white/50 text-slate-800";
+  const dotColor = (i: number) => {
+    if (i < roundResults.length) return roundResults[i].correct ? "bg-green-400" : "bg-red-400";
+    if (i === round) return (theme === "GAMIFIED" ? "bg-cyan-400" : "bg-blue-500") + " animate-pulse";
+    return theme === "GAMIFIED" ? "bg-white/20" : "bg-black/15";
   };
 
-  // Grid cols based on char count
-  const n = chars.length;
-  const cols = n <= 6 ? 3 : n <= 9 ? 3 : n <= 12 ? 4 : 5;
-  const cardSize = cols <= 3 ? 68 : cols === 4 ? 58 : 50;
-
-  const targetAttrs = chars.find(c => c.id === targetId)?.attrs;
   const effectiveDiff = Math.max(1, Math.min(10, difficulty + Math.floor(round / 3)));
   const instrMode: InstrMode = forceMode === "visual" ? "visual" : forceMode === "auditivo" ? "audio" : getInstrMode(effectiveDiff);
+  const targetAttrs = chars.find(c => c.id === targetId)?.attrs;
+  const cardSize = chars.length <= 8 ? 72 : chars.length <= 12 ? 62 : 54;
+
+  const gameTitle = mode === "child" ? "🎯 Focus Criaturas" : mode === "teen" ? "🎮 Focus Avatares" : "🔍 Focus Agentes";
 
   return (
-    <div className={`min-h-screen flex flex-col items-center p-4 pt-6 ${pal.bg}`}>
-      <div className="w-full max-w-2xl space-y-3">
+    <div className="relative w-full overflow-hidden" style={{ height: "100dvh", minHeight: 520 }}>
+      {/* Fundo cenográfico */}
+      <SceneBg theme={theme} />
 
-        {/* Header */}
-        <div className="flex justify-between items-center">
-          <h2 className={`font-bold text-sm ${pal.title}`}>
-            {mode === "child" ? "🎯 Focus Criaturas" : mode === "teen" ? "🎮 Focus Avatares" : "🔍 Focus Agentes"}
-          </h2>
-          <div className="flex items-center gap-2">
-            {timerLeft !== null && (
-              <span className={`text-sm font-bold tabular-nums px-2 py-0.5 rounded-lg ${
-                timerLeft <= 5
-                  ? "bg-red-100 text-red-600 animate-pulse"
-                  : theme === "GAMIFIED" ? "bg-slate-700 text-cyan-400" : "bg-blue-50 text-blue-600"
-              }`}>⏱ {timerLeft}s</span>
-            )}
-            <span className={`text-xs ${pal.sub}`}>{round + 1}/{MAX_ROUNDS}</span>
+      {/* HUD topo */}
+      <div className="absolute top-0 left-0 right-0 z-20 px-3 pt-2 pb-1">
+        <div className={`flex items-center gap-2 rounded-2xl px-3 py-1.5 border backdrop-blur-sm ${hudBg}`}>
+          <span className="text-xs font-bold opacity-70">{gameTitle}</span>
+          <div className="flex gap-0.5 flex-1">
+            {Array.from({ length: MAX_ROUNDS }).map((_, i) => (
+              <div key={i} className={`h-1.5 flex-1 rounded-full transition-all ${dotColor(i)}`} />
+            ))}
           </div>
-        </div>
-
-        {/* Progress dots */}
-        <div className="flex gap-0.5">
-          {Array.from({ length: MAX_ROUNDS }).map((_, i) => (
-            <div key={i} className={`h-1.5 flex-1 rounded-full transition-all ${pal.dot(i)}`} />
-          ))}
-        </div>
-
-        {/* Command panel */}
-        <AnimatePresence mode="wait">
-          <motion.div key={round} initial={{ opacity: 0, y: -6 }} animate={{ opacity: 1, y: 0 }}>
-            <CommandPanel
-              command={command}
-              colorHex={targetAttrs?.colorHex ?? "#999"}
-              colorLabel={targetAttrs?.colorLabel ?? ""}
-              theme={theme}
-              onSpeak={() => speak(command)}
-              instrMode={instrMode}
-            />
-          </motion.div>
-        </AnimatePresence>
-
-        {/* Character grid */}
-        <div
-          className={`rounded-2xl p-3 border ${pal.shelf}`}
-          style={{ display: "grid", gridTemplateColumns: `repeat(${cols}, 1fr)`, gap: "8px" }}
-        >
-          {chars.map(ch => {
-            const state = picked === ch.id
-              ? (ch.isTarget ? "correct" : "wrong")
-              : (picked !== null && ch.isTarget ? "correct" : "idle");
-            return (
-              <AgentCard
-                key={ch.id}
-                char={ch}
-                mode={mode}
-                onClick={() => handleTap(ch)}
-                state={state}
-                size={cardSize}
-              />
-            );
-          })}
-        </div>
-
-        {/* Feedback message */}
-        <AnimatePresence>
-          {picked && (
-            <motion.div
-              key="feedback"
-              initial={{ opacity: 0, scale: 0.9 }}
-              animate={{ opacity: 1, scale: 1 }}
-              exit={{ opacity: 0 }}
-              className={`text-center font-bold text-base py-2 rounded-xl ${
-                chars.find(c => c.id === picked)?.isTarget
-                  ? "text-green-600 bg-green-50"
-                  : "text-red-600 bg-red-50"
-              }`}
-            >
-              {chars.find(c => c.id === picked)?.isTarget
-                ? "✅ Correto!"
-                : "❌ Errado — o correto ficou marcado em verde"}
-            </motion.div>
+          <span className="text-xs font-bold opacity-70">{round + 1}/{MAX_ROUNDS}</span>
+          {timerLeft !== null && gamePhase === "playing" && (
+            <span className={`text-xs font-bold tabular-nums px-1.5 py-0.5 rounded-lg ml-1 ${
+              timerLeft <= 5 ? "bg-red-500 text-white animate-pulse" : "bg-black/20 text-inherit"
+            }`}>⏱{timerLeft}s</span>
           )}
-          {picked === null && timerLeft === 0 && (
-            <motion.div
-              key="timeout"
-              initial={{ opacity: 0 }}
-              animate={{ opacity: 1 }}
-              className="text-center font-bold text-base py-2 rounded-xl text-orange-600 bg-orange-50"
-            >
-              ⏱ Tempo esgotado!
-            </motion.div>
-          )}
-        </AnimatePresence>
-
+        </div>
       </div>
+
+      {/* Personagens flutuando */}
+      <div className="absolute inset-0 z-10" style={{ paddingTop: 56, paddingBottom: 16 }}>
+        {chars.map(ch => {
+          const pos = charPositions.find(p => p.id === ch.id);
+          if (!pos) return null;
+          const state: "idle" | "correct" | "wrong" =
+            picked === ch.id ? (ch.isTarget ? "correct" : "wrong") :
+            (picked !== null && ch.isTarget ? "correct" : "idle");
+          const visible = gamePhase !== "command";
+          return (
+            <motion.div
+              key={ch.id}
+              className="absolute"
+              style={{ left: `${pos.x}%`, top: `${pos.y}%`, transform: "translate(-50%, -50%)" }}
+              initial={{ opacity: 0, scale: 0.5 }}
+              animate={visible ? {
+                opacity: 1, scale: 1,
+                y: [0, -pos.floatAmp, 0, pos.floatAmp * 0.5, 0],
+                x: [0, pos.floatAmp * 0.4, 0, -pos.floatAmp * 0.3, 0],
+              } : { opacity: 0, scale: 0.5 }}
+              transition={visible ? {
+                opacity: { duration: 0.3 },
+                scale: { duration: 0.3 },
+                y: { duration: pos.floatDur, repeat: Infinity, ease: "easeInOut", delay: pos.floatDelay },
+                x: { duration: pos.floatDur * 1.3, repeat: Infinity, ease: "easeInOut", delay: pos.floatDelay + 0.5 },
+              } : { duration: 0.2 }}
+            >
+              <AgentCard char={ch} mode={mode} onClick={() => handleTap(ch)} state={state} size={cardSize} />
+            </motion.div>
+          );
+        })}
+      </div>
+
+      {/* Cartão de comando (fase command) */}
+      <AnimatePresence>
+        {gamePhase === "command" && (
+          <motion.div
+            className="absolute inset-0 z-30 flex flex-col items-center justify-center px-4"
+            initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0, scale: 0.95 }}
+            transition={{ duration: 0.25 }}
+          >
+            <div className={`w-full max-w-sm rounded-3xl shadow-2xl border-2 overflow-hidden ${
+              theme === "GAMIFIED" ? "bg-slate-900/95 border-cyan-500/50"
+              : theme === "COLORFUL" ? "bg-white/95 border-purple-300"
+              : "bg-white/95 border-blue-200"
+            }`}>
+              {/* Header do cartão */}
+              <div className={`px-4 py-2 text-center text-xs font-bold uppercase tracking-widest ${
+                theme === "GAMIFIED" ? "bg-cyan-500/20 text-cyan-300"
+                : theme === "COLORFUL" ? "bg-purple-100 text-purple-600"
+                : "bg-blue-50 text-blue-600"
+              }`}>
+                {instrMode === "audio" ? "👂 Ouça o comando" : instrMode === "visual" ? "👁 Leia o comando" : "👁 Leia o comando"}
+              </div>
+
+              {/* Corpo do cartão */}
+              <div className="px-5 py-5 space-y-4">
+                {/* Swatch de cor */}
+                <div className="flex justify-center">
+                  <div className="w-12 h-12 rounded-full shadow-lg border-4 border-white/50"
+                    style={{ background: targetAttrs?.colorHex ?? "#999" }} />
+                </div>
+
+                {/* Texto do comando */}
+                {instrMode !== "audio" ? (
+                  <p className={`text-center font-bold text-lg leading-snug ${
+                    theme === "GAMIFIED" ? "text-white" : "text-gray-800"
+                  }`}>{command}</p>
+                ) : (
+                  <div className="text-center space-y-1">
+                    <p className={`font-bold text-base ${theme === "GAMIFIED" ? "text-cyan-300" : "text-indigo-600"}`}>
+                      👂 Modo Auditivo
+                    </p>
+                    <p className={`text-sm ${theme === "GAMIFIED" ? "text-slate-400" : "text-gray-500"}`}>
+                      Ouça o comando e encontre o personagem
+                    </p>
+                  </div>
+                )}
+
+                {/* Botão de ouvir + OK */}
+                <div className="flex gap-3">
+                  {instrMode !== "visual" && (
+                    <button
+                      onClick={() => speak(command)}
+                      className={`flex-1 h-12 rounded-2xl font-bold text-sm flex items-center justify-center gap-2 border-2 transition-all active:scale-95 ${
+                        theme === "GAMIFIED" ? "border-cyan-500 text-cyan-300 bg-cyan-500/10 hover:bg-cyan-500/20"
+                        : theme === "COLORFUL" ? "border-purple-300 text-purple-600 bg-purple-50 hover:bg-purple-100"
+                        : "border-blue-300 text-blue-600 bg-blue-50 hover:bg-blue-100"
+                      }`}
+                    >
+                      🔊 Ouvir
+                    </button>
+                  )}
+                  <button
+                    onClick={startPlaying}
+                    className={`flex-1 h-12 rounded-2xl font-bold text-white text-sm flex items-center justify-center gap-2 shadow-lg transition-all active:scale-95 ${
+                      theme === "GAMIFIED" ? "bg-gradient-to-r from-cyan-500 to-blue-600"
+                      : theme === "COLORFUL" ? "bg-gradient-to-r from-purple-500 to-pink-500"
+                      : "bg-gradient-to-r from-blue-500 to-indigo-600"
+                    }`}
+                  >
+                    Encontrar! →
+                  </button>
+                </div>
+              </div>
+            </div>
+          </motion.div>
+        )}
+      </AnimatePresence>
+
+      {/* Feedback overlay (fase feedback) */}
+      <AnimatePresence>
+        {gamePhase === "feedback" && (
+          <motion.div
+            className="absolute inset-0 z-30 flex items-center justify-center"
+            initial={{ opacity: 0, scale: 0.8 }}
+            animate={{ opacity: 1, scale: 1 }}
+            exit={{ opacity: 0 }}
+            transition={{ duration: 0.2 }}
+          >
+            <div className={`px-8 py-6 rounded-3xl shadow-2xl text-center border-2 ${
+              picked && chars.find(c => c.id === picked)?.isTarget
+                ? "bg-green-500/95 border-green-300 text-white"
+                : timedOut
+                  ? "bg-orange-500/95 border-orange-300 text-white"
+                  : "bg-red-500/95 border-red-300 text-white"
+            }`}>
+              <p className="text-5xl mb-2">
+                {picked && chars.find(c => c.id === picked)?.isTarget ? "✅" : timedOut ? "⏱" : "❌"}
+              </p>
+              <p className="font-bold text-xl">
+                {picked && chars.find(c => c.id === picked)?.isTarget
+                  ? "Correto!"
+                  : timedOut ? "Tempo esgotado!" : "Errado!"}
+              </p>
+            </div>
+          </motion.div>
+        )}
+      </AnimatePresence>
     </div>
   );
 }
