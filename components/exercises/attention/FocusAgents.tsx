@@ -7,43 +7,44 @@ import { useExerciseProgress } from "@/components/exercises/ExerciseWrapper";
 import { TutorialBase } from "@/components/exercises/TutorialBase";
 import type { ExerciseResult, Theme } from "@/types";
 
-// ── Types ────────────────────────────────────────────────────────────────────
+// ── Types ─────────────────────────────────────────────────────────────────────
 
 type AgeMode = "child" | "teen" | "adult";
 
 interface CharAttrs {
-  colorId: string;
-  colorHex: string;
-  colorLabel: string;
-  hatId: string | null;
-  hatLabel: string | null;
-  extraId: string | null;   // child: óculos/mochila/gravata | teen: mochila/máscara/luvas | adult: crachá-X
-  extraLabel: string | null;
-  symbolId: string | null;
-  symbolLabel: string | null;
+  colorId: string; colorHex: string; colorLabel: string;
+  hatId: string | null; hatLabel: string | null;
+  extraId: string | null; extraLabel: string | null;
+  symbolId: string | null; symbolLabel: string | null;
 }
 
-interface AgentChar {
-  id: string;
-  attrs: CharAttrs;
-  isTarget: boolean;
+interface AgentChar { id: string; attrs: CharAttrs; isTarget: boolean; }
+
+interface FallingChar {
+  uid: string; char: AgentChar;
+  x: number; size: number; fallDur: number;
 }
 
-// ── Palettes ─────────────────────────────────────────────────────────────────
+// ── Palettes ──────────────────────────────────────────────────────────────────
 
 type Def = { id: string; label: string };
 type ColorDef = Def & { hex: string };
 
+const BADGE_COLORS: Record<string, string> = {
+  "badge-azul": "#1565C0", "badge-verde": "#2E7D32",
+  "badge-vermelho": "#C62828", "badge-amarelo": "#F9A825",
+};
+
 const COLORS: Record<AgeMode, ColorDef[]> = {
   child: [
-    { id: "amarelo",   hex: "#FFD600", label: "amarelo" },
-    { id: "azul",      hex: "#1E88E5", label: "azul" },
-    { id: "verde",     hex: "#43A047", label: "verde" },
-    { id: "vermelho",  hex: "#E53935", label: "vermelho" },
-    { id: "roxo",      hex: "#8E24AA", label: "roxo" },
-    { id: "laranja",   hex: "#FB8C00", label: "laranja" },
-    { id: "rosa",      hex: "#E91E63", label: "rosa" },
-    { id: "cinza",     hex: "#78909C", label: "cinza" },
+    { id: "amarelo",  hex: "#FFD600", label: "amarelo" },
+    { id: "azul",     hex: "#1E88E5", label: "azul" },
+    { id: "verde",    hex: "#43A047", label: "verde" },
+    { id: "vermelho", hex: "#E53935", label: "vermelho" },
+    { id: "roxo",     hex: "#8E24AA", label: "roxo" },
+    { id: "laranja",  hex: "#FB8C00", label: "laranja" },
+    { id: "rosa",     hex: "#E91E63", label: "rosa" },
+    { id: "cinza",    hex: "#78909C", label: "cinza" },
   ],
   teen: [
     { id: "preto",     hex: "#1e1e2e", label: "preto" },
@@ -56,73 +57,47 @@ const COLORS: Record<AgeMode, ColorDef[]> = {
     { id: "cinza",     hex: "#475569", label: "cinza" },
   ],
   adult: [
-    { id: "azul",      hex: "#1565C0", label: "azul" },
-    { id: "cinza",     hex: "#546E7A", label: "cinza" },
-    { id: "preto",     hex: "#37474F", label: "preto" },
-    { id: "verde",     hex: "#2E7D32", label: "verde" },
-    { id: "branco",    hex: "#CFD8DC", label: "branco" },
-    { id: "marrom",    hex: "#5D4037", label: "marrom" },
+    { id: "azul",   hex: "#1565C0", label: "azul" },
+    { id: "cinza",  hex: "#546E7A", label: "cinza" },
+    { id: "preto",  hex: "#37474F", label: "preto" },
+    { id: "verde",  hex: "#2E7D32", label: "verde" },
+    { id: "branco", hex: "#CFD8DC", label: "branco" },
+    { id: "marrom", hex: "#5D4037", label: "marrom" },
   ],
 };
 
 const HATS: Record<AgeMode, Def[]> = {
   child: [
-    { id: "chapeu",   label: "chapéu" },
-    { id: "bone",     label: "boné" },
-    { id: "coroa",    label: "coroa" },
-    { id: "antena",   label: "antena" },
+    { id: "chapeu", label: "chapéu" }, { id: "bone", label: "boné" },
+    { id: "coroa",  label: "coroa"  }, { id: "antena", label: "antena" },
   ],
   teen: [
-    { id: "capuz",    label: "capuz" },
-    { id: "headset",  label: "headset" },
-    { id: "bone",     label: "boné" },
-    { id: "visor",    label: "óculos escuros" },
+    { id: "capuz",   label: "capuz" },  { id: "headset", label: "headset" },
+    { id: "bone",    label: "boné"  },  { id: "visor",   label: "óculos escuros" },
   ],
   adult: [
-    { id: "headset",  label: "headset" },
-    { id: "bone",     label: "boné" },
-    { id: "oculos",   label: "óculos" },
-    { id: "chapeu",   label: "chapéu" },
+    { id: "headset", label: "headset" }, { id: "bone",   label: "boné" },
+    { id: "oculos",  label: "óculos"  }, { id: "chapeu", label: "chapéu" },
   ],
 };
 
 const EXTRAS: Record<AgeMode, Def[]> = {
   child: [
-    { id: "mochila",  label: "mochila" },
-    { id: "gravata",  label: "gravata-borboleta" },
-    { id: "oculos",   label: "óculos" },
+    { id: "mochila", label: "mochila" }, { id: "gravata", label: "gravata-borboleta" }, { id: "oculos", label: "óculos" },
   ],
   teen: [
-    { id: "mochila",  label: "mochila" },
-    { id: "mascara",  label: "máscara" },
-    { id: "luvas",    label: "luvas" },
+    { id: "mochila", label: "mochila" }, { id: "mascara", label: "máscara" }, { id: "luvas", label: "luvas" },
   ],
   adult: [
-    { id: "badge-azul",     label: "crachá azul" },
-    { id: "badge-verde",    label: "crachá verde" },
-    { id: "badge-vermelho", label: "crachá vermelho" },
-    { id: "badge-amarelo",  label: "crachá amarelo" },
+    { id: "badge-azul", label: "crachá azul" }, { id: "badge-verde", label: "crachá verde" },
+    { id: "badge-vermelho", label: "crachá vermelho" }, { id: "badge-amarelo", label: "crachá amarelo" },
   ],
 };
 
 const SYMBOLS: Record<AgeMode, Def[]> = {
-  child: [
-    { id: "estrela",  label: "estrela" },
-    { id: "coracao",  label: "coração" },
-    { id: "raio",     label: "raio" },
-  ],
-  teen: [
-    { id: "raio",     label: "raio" },
-    { id: "x-mark",   label: "X" },
-    { id: "diamante", label: "diamante" },
-    { id: "caveira",  label: "caveira" },
-  ],
-  adult: [
-    { id: "triangulo",label: "triângulo" },
-    { id: "circulo",  label: "círculo" },
-    { id: "quadrado", label: "quadrado" },
-    { id: "estrela",  label: "estrela" },
-  ],
+  child: [{ id: "estrela", label: "estrela" }, { id: "coracao", label: "coração" }, { id: "raio", label: "raio" }],
+  teen:  [{ id: "raio", label: "raio" }, { id: "x-mark", label: "X" }, { id: "diamante", label: "diamante" }, { id: "caveira", label: "caveira" }],
+  adult: [{ id: "triangulo", label: "triângulo" }, { id: "circulo", label: "círculo" }, { id: "quadrado", label: "quadrado" }, { id: "estrela", label: "estrela" }],
 };
 
 // ── Helpers ───────────────────────────────────────────────────────────────────
@@ -138,7 +113,7 @@ function getMode(theme: Theme): AgeMode {
   return "adult";
 }
 function numChars(d: number): number {
-  if (d <= 2) return 6; if (d <= 4) return 8; if (d <= 6) return 10; if (d <= 8) return 12; return 15;
+  if (d <= 2) return 5; if (d <= 4) return 7; if (d <= 6) return 9; if (d <= 8) return 11; return 13;
 }
 function numAttrs(d: number): number {
   if (d <= 2) return 1; if (d <= 5) return 2; if (d <= 8) return 3; return 4;
@@ -155,51 +130,31 @@ function makeTargetAttrs(mode: AgeMode, n: number): CharAttrs {
   const h = n >= 2 ? pick(HATS[mode]) : null;
   const e = n >= 3 ? pick(EXTRAS[mode]) : null;
   const s = n >= 4 ? pick(SYMBOLS[mode]) : null;
-  return {
-    colorId: c.id, colorHex: c.hex, colorLabel: c.label,
-    hatId: h?.id ?? null, hatLabel: h?.label ?? null,
-    extraId: e?.id ?? null, extraLabel: e?.label ?? null,
-    symbolId: s?.id ?? null, symbolLabel: s?.label ?? null,
-  };
+  return { colorId: c.id, colorHex: c.hex, colorLabel: c.label, hatId: h?.id ?? null, hatLabel: h?.label ?? null, extraId: e?.id ?? null, extraLabel: e?.label ?? null, symbolId: s?.id ?? null, symbolLabel: s?.label ?? null };
 }
 
 function makeDistractorAttrs(target: CharAttrs, mode: AgeMode, n: number, smart: boolean): CharAttrs {
   if (smart && n >= 2) {
-    // Mutate exactly 1 attribute to create a "near miss"
     const slot = Math.floor(Math.random() * n);
     const c = slot === 0 ? pickExcl(COLORS[mode], target.colorId) : COLORS[mode].find(x => x.id === target.colorId)!;
     const h = n >= 2 ? (slot === 1 ? pickExcl(HATS[mode], target.hatId) : HATS[mode].find(x => x.id === target.hatId)) : null;
     const e = n >= 3 ? (slot === 2 ? pickExcl(EXTRAS[mode], target.extraId) : EXTRAS[mode].find(x => x.id === target.extraId)) : null;
     const s = n >= 4 ? (slot === 3 ? pickExcl(SYMBOLS[mode], target.symbolId) : SYMBOLS[mode].find(x => x.id === target.symbolId)) : null;
     const safeC = c ?? pick(COLORS[mode]);
-    return {
-      colorId: safeC.id, colorHex: safeC.hex, colorLabel: safeC.label,
-      hatId: h?.id ?? null, hatLabel: h?.label ?? null,
-      extraId: e?.id ?? null, extraLabel: e?.label ?? null,
-      symbolId: s?.id ?? null, symbolLabel: s?.label ?? null,
-    };
+    return { colorId: safeC.id, colorHex: safeC.hex, colorLabel: safeC.label, hatId: h?.id ?? null, hatLabel: h?.label ?? null, extraId: e?.id ?? null, extraLabel: e?.label ?? null, symbolId: s?.id ?? null, symbolLabel: s?.label ?? null };
   }
-  // Random: ensure at least color is different
   const c = pickExcl(COLORS[mode], target.colorId);
   const h = n >= 2 ? pick(HATS[mode]) : null;
   const e = n >= 3 ? pick(EXTRAS[mode]) : null;
   const s = n >= 4 ? pick(SYMBOLS[mode]) : null;
-  return {
-    colorId: c.id, colorHex: c.hex, colorLabel: c.label,
-    hatId: h?.id ?? null, hatLabel: h?.label ?? null,
-    extraId: e?.id ?? null, extraLabel: e?.label ?? null,
-    symbolId: s?.id ?? null, symbolLabel: s?.label ?? null,
-  };
+  return { colorId: c.id, colorHex: c.hex, colorLabel: c.label, hatId: h?.id ?? null, hatLabel: h?.label ?? null, extraId: e?.id ?? null, extraLabel: e?.label ?? null, symbolId: s?.id ?? null, symbolLabel: s?.label ?? null };
 }
 
 function buildCommand(mode: AgeMode, a: CharAttrs, n: number): string {
   if (mode === "child") {
     let s = `Clique na criaturinha ${a.colorLabel}`;
     if (n >= 2 && a.hatLabel) s += ` com ${a.hatLabel}`;
-    if (n >= 3 && a.extraLabel) {
-      if (a.extraId === "oculos") s += ` e óculos`;
-      else s += ` e ${a.extraLabel}`;
-    }
+    if (n >= 3 && a.extraLabel) s += ` e ${a.extraLabel}`;
     if (n >= 4 && a.symbolLabel) s += ` e ${a.symbolLabel} no corpo`;
     return s;
   }
@@ -218,21 +173,17 @@ function buildCommand(mode: AgeMode, a: CharAttrs, n: number): string {
 }
 
 function generateRound(mode: AgeMode, d: number): { chars: AgentChar[]; command: string; targetId: string } {
-  const n = numChars(d);
-  const na = numAttrs(d);
+  const n = numChars(d); const na = numAttrs(d);
   const target = makeTargetAttrs(mode, na);
   const smart = d >= 6;
   const smartCount = smart ? Math.min(3, Math.floor(n * 0.35)) : 0;
-
   const distractors: CharAttrs[] = [];
   for (let i = 0; i < smartCount; i++) distractors.push(makeDistractorAttrs(target, mode, na, true));
   while (distractors.length < n - 1) distractors.push(makeDistractorAttrs(target, mode, na, false));
-
   const chars: AgentChar[] = [
     { id: "target", attrs: target, isTarget: true },
     ...distractors.slice(0, n - 1).map((attrs, i) => ({ id: `d${i}`, attrs, isTarget: false })),
   ].sort(() => Math.random() - 0.5);
-
   return { chars, command: buildCommand(mode, target, na), targetId: "target" };
 }
 
@@ -246,334 +197,286 @@ function speak(text: string) {
   window.speechSynthesis.speak(u);
 }
 
-// ── Child Creature SVG ────────────────────────────────────────────────────────
+// ── Full-body Agent SVG ───────────────────────────────────────────────────────
+// viewBox 0 0 60 112 — head-to-boots full character, comic-book style
 
-const BADGE_COLORS: Record<string, string> = {
-  "badge-azul": "#1565C0", "badge-verde": "#2E7D32",
-  "badge-vermelho": "#C62828", "badge-amarelo": "#F9A825",
-};
-
-function ChildSvg({ a, size = 80 }: { a: CharAttrs; size?: number }) {
+function AgentSvg({ a, mode, size = 80 }: { a: CharAttrs; mode: AgeMode; size?: number }) {
   const c = a.colorHex;
-  const dark = "rgba(0,0,0,0.22)";
+  const skin = "#FFDCC0";
+  const ol = "#111";  // outline color
+  const sw = 2;       // stroke width
+  const isLight = ["#CFD8DC", "#DDE1F0", "#FFD600"].includes(c);
+  const hairFill = mode === "child" ? "#6D4C41" : mode === "teen" ? "#1a1a1a" : "#5D4037";
+  const legShade = "rgba(0,0,0,0.22)";
+  const bodyHighlight = "rgba(255,255,255,0.22)";
+  const bodyShade = "rgba(0,0,0,0.14)";
+  const stripeCol = isLight ? "rgba(0,0,0,0.12)" : "rgba(255,255,255,0.16)";
+  const badgeColor = a.extraId ? BADGE_COLORS[a.extraId] : null;
+  const eyeR = mode === "child" ? 3.5 : 3;
+  const h = Math.round(size * 112 / 60);
+
   return (
-    <svg width={size} height={size} viewBox="0 0 80 80" className="overflow-visible">
-      {/* Mochila (backpack behind body) */}
-      {a.extraId === "mochila" && (
+    <svg width={size} height={h} viewBox="0 0 60 112"
+      style={{ overflow: "visible", filter: "drop-shadow(2px 5px 9px rgba(0,0,0,0.45))" }}>
+
+      {/* ── BOOTS ── */}
+      <rect x="13" y="101" width="14" height="7" rx="3.5" fill="#1a1a1a" stroke={ol} strokeWidth={sw} />
+      <rect x="33" y="101" width="14" height="7" rx="3.5" fill="#1a1a1a" stroke={ol} strokeWidth={sw} />
+      <ellipse cx="20" cy="107" rx="9.5" ry="3.5" fill="#222" stroke={ol} strokeWidth="1.5" />
+      <ellipse cx="40" cy="107" rx="9.5" ry="3.5" fill="#222" stroke={ol} strokeWidth="1.5" />
+
+      {/* ── LEGS ── */}
+      <path d="M20 72 Q18 87 18 102 L27 102 L30 83 L33 102 L42 102 Q42 87 40 72Z"
+        fill={c} stroke={ol} strokeWidth={sw} strokeLinejoin="round" />
+      {/* Leg inner shade */}
+      <path d="M20 72 Q18 87 18 102 L27 102 L30 83 L33 102 L42 102 Q42 87 40 72 Q35 76 30 76 Q25 76 20 72Z"
+        fill={legShade} />
+
+      {/* ── TORSO ── */}
+      <path d="M11 38 Q8 55 9 72 L51 72 Q52 55 49 38 Q44 27 30 26 Q16 27 11 38Z"
+        fill={c} stroke={ol} strokeWidth={sw} strokeLinejoin="round" />
+      {/* Torso center seam */}
+      <line x1="30" y1="26" x2="30" y2="72" stroke={stripeCol} strokeWidth="2" />
+      {/* Torso highlight (left shoulder) */}
+      <ellipse cx="21" cy="40" rx="7" ry="4" fill={bodyHighlight} transform="rotate(-25 21 40)" />
+      {/* Torso right shade */}
+      <path d="M42 38 Q49 55 49 72 L51 72 Q52 55 49 38Z" fill={bodyShade} />
+
+      {/* ── ARMS ── */}
+      <path d="M11 38 Q4 48 3 64 L9 66 Q8 53 16 44Z"
+        fill={c} stroke={ol} strokeWidth={sw} strokeLinejoin="round" />
+      <path d="M49 38 Q56 48 57 64 L51 66 Q52 53 44 44Z"
+        fill={c} stroke={ol} strokeWidth={sw} strokeLinejoin="round" />
+
+      {/* ── HANDS ── */}
+      <ellipse cx="6" cy="67" rx="5.5" ry="5" fill={skin} stroke={ol} strokeWidth={sw} />
+      <ellipse cx="54" cy="67" rx="5.5" ry="5" fill={skin} stroke={ol} strokeWidth={sw} />
+      {/* Knuckle lines */}
+      <line x1="3.5" y1="65.5" x2="4.5" y2="69.5" stroke="rgba(0,0,0,0.18)" strokeWidth="1" />
+      <line x1="6.5" y1="64.5" x2="6.5" y2="69.5" stroke="rgba(0,0,0,0.18)" strokeWidth="1" />
+
+      {/* ── BELT ── */}
+      <rect x="9" y="69" width="42" height="6" rx="3"
+        fill={isLight ? "#546E7A" : "#212121"} stroke={ol} strokeWidth="1.5" />
+      <rect x="27" y="69" width="6" height="6" rx="2.5"
+        fill={isLight ? "#78909C" : "rgba(255,255,255,0.4)"} />
+
+      {/* ── BADGE ── */}
+      {badgeColor && (
         <g>
-          <rect x="5" y="36" width="13" height="18" rx="3" fill="#8B6914"/>
-          <rect x="6" y="38" width="11" height="14" rx="2" fill="#A07820"/>
-          <rect x="8" y="41" width="7" height="2" rx="1" fill="#8B6914"/>
-          <rect x="8" y="45" width="7" height="2" rx="1" fill="#8B6914"/>
+          <rect x="17" y="48" width="14" height="11" rx="2.5" fill={badgeColor} stroke={ol} strokeWidth="1.5" />
+          <rect x="18" y="49" width="12" height="4" rx="1.5" fill="rgba(255,255,255,0.3)" />
+          <rect x="18" y="54" width="8" height="2.5" rx="1" fill="rgba(255,255,255,0.5)" />
         </g>
       )}
-      {/* Body */}
-      <ellipse cx="40" cy="53" rx="31" ry="26" fill={c}/>
-      <ellipse cx="40" cy="53" rx="31" ry="26" fill="none" stroke={dark} strokeWidth="1.5"/>
-      {/* Body highlight */}
-      <ellipse cx="29" cy="42" rx="10" ry="6" fill="rgba(255,255,255,0.18)"/>
-      {/* Bow tie */}
+
+      {/* ── BACKPACK ── */}
+      {a.extraId === "mochila" && (
+        <g>
+          <rect x="4" y="40" width="11" height="22" rx="3" fill={isLight ? "#9E9E9E" : "#8D6E26"} stroke={ol} strokeWidth="1.5" />
+          <rect x="5.5" y="42" width="8" height="18" rx="2" fill={isLight ? "#BDBDBD" : "#A07D2E"} />
+          <line x1="7.5" y1="46" x2="11.5" y2="46" stroke="rgba(0,0,0,0.3)" strokeWidth="1.2" />
+          <line x1="7.5" y1="51" x2="11.5" y2="51" stroke="rgba(0,0,0,0.3)" strokeWidth="1.2" />
+        </g>
+      )}
+
+      {/* ── GRAVATA BORBOLETA ── */}
       {a.extraId === "gravata" && (
-        <g transform="translate(40,71)">
-          <polygon points="-9,-4 0,0 -9,4" fill="#E53935"/>
-          <polygon points="9,-4 0,0 9,4" fill="#C62828"/>
-          <circle cx="0" cy="0" r="3" fill="#B71C1C"/>
+        <g transform="translate(30,36)">
+          <polygon points="-8,-3.5 0,0 -8,3.5" fill="#E53935" stroke={ol} strokeWidth="1" />
+          <polygon points="8,-3.5 0,0 8,3.5" fill="#C62828" stroke={ol} strokeWidth="1" />
+          <circle cx="0" cy="0" r="2.5" fill="#B71C1C" stroke={ol} strokeWidth="1" />
         </g>
       )}
-      {/* Symbol on body */}
-      {a.symbolId === "estrela" && (
-        <polygon points="40,56 42.4,63.4 50.2,63.4 44,68 46.4,75.4 40,71 33.6,75.4 36,68 29.8,63.4 37.6,63.4"
-          fill="#FFD600" opacity="0.9" transform="scale(0.55) translate(33,38)"/>
-      )}
-      {a.symbolId === "coracao" && (
-        <path d="M40 67 C40 67 32 61 32 56 C32 53 36 51 40 56 C44 51 48 53 48 56 C48 61 40 67 40 67Z"
-          fill="#E91E63" opacity="0.9"/>
-      )}
-      {a.symbolId === "raio" && (
-        <polygon points="43,53 38,61 41.5,59 37,68 45,58 41,60" fill="#FFD600" opacity="0.95"/>
-      )}
-      {/* Left eye */}
-      <circle cx="28" cy="48" r="8" fill="white"/>
-      <circle cx="29.5" cy="48.5" r="4.5" fill="#1a1a1a"/>
-      <circle cx="31" cy="46.5" r="1.8" fill="white"/>
-      {/* Right eye */}
-      <circle cx="52" cy="48" r="8" fill="white"/>
-      <circle cx="53.5" cy="48.5" r="4.5" fill="#1a1a1a"/>
-      <circle cx="55" cy="46.5" r="1.8" fill="white"/>
-      {/* Nose */}
-      <circle cx="40" cy="56" r="2.2" fill={dark}/>
-      {/* Smile */}
-      <path d="M 31 63 Q 40 72 49 63" fill="none" stroke="rgba(0,0,0,0.55)" strokeWidth="2.8" strokeLinecap="round"/>
-      {/* Glasses (extra=oculos) */}
-      {a.extraId === "oculos" && (
-        <g>
-          <circle cx="28" cy="48" r="10.5" fill="none" stroke="#222" strokeWidth="2.2"/>
-          <circle cx="52" cy="48" r="10.5" fill="none" stroke="#222" strokeWidth="2.2"/>
-          <line x1="38.5" y1="48" x2="41.5" y2="48" stroke="#222" strokeWidth="2.2"/>
-          <line x1="17.5" y1="45" x2="22" y2="43.5" stroke="#222" strokeWidth="1.8"/>
-          <line x1="58" y1="43.5" x2="62.5" y2="45" stroke="#222" strokeWidth="1.8"/>
-        </g>
-      )}
-      {/* HAT: chapéu */}
-      {a.hatId === "chapeu" && (
-        <g>
-          <ellipse cx="40" cy="24" rx="20" ry="5" fill="#1a1a1a"/>
-          <polygon points="40,2 27,24 53,24" fill="#2a2a2a"/>
-          <ellipse cx="40" cy="24" rx="15" ry="3.5" fill="#333"/>
-        </g>
-      )}
-      {/* HAT: boné */}
-      {a.hatId === "bone" && (
-        <g>
-          <path d="M20 22 Q20 8 40 8 Q60 8 60 22" fill="#333"/>
-          <rect x="20" y="18" width="40" height="9" rx="5" fill="#444"/>
-          <rect x="12" y="20" width="16" height="6" rx="3" fill="#555"/>
-          <circle cx="40" cy="11" r="3" fill="#555"/>
-        </g>
-      )}
-      {/* HAT: coroa */}
-      {a.hatId === "coroa" && (
-        <g>
-          <rect x="22" y="18" width="36" height="9" rx="1" fill="#FFD700"/>
-          <polygon points="22,18 22,7 31,16 40,7 49,16 58,7 58,18" fill="#FFD700"/>
-          <rect x="22" y="22" width="36" height="5" rx="1" fill="#FFC107"/>
-          <circle cx="40" cy="14" r="2.5" fill="#E53935"/>
-          <circle cx="28" cy="18" r="2" fill="#2196F3"/>
-          <circle cx="52" cy="18" r="2" fill="#2196F3"/>
-        </g>
-      )}
-      {/* HAT: antena */}
-      {a.hatId === "antena" && (
-        <g>
-          <line x1="40" y1="22" x2="40" y2="5" stroke="#777" strokeWidth="2.5"/>
-          <circle cx="40" cy="3.5" r="4.5" fill="#E53935"/>
-          <circle cx="40" cy="3.5" r="2" fill="#FF8A80"/>
-        </g>
-      )}
-    </svg>
-  );
-}
 
-// ── Teen Avatar SVG ───────────────────────────────────────────────────────────
-
-function TeenSvg({ a, size = 80 }: { a: CharAttrs; size?: number }) {
-  const c = a.colorHex;
-  const isLight = c === "#DDE1F0";
-  const textOnBg = isLight ? "#1a1a2e" : "rgba(255,255,255,0.8)";
-  const skinTone = "#FFDCC0";
-  return (
-    <svg width={size} height={size} viewBox="0 0 80 90" className="overflow-visible">
-      {/* Mochila */}
-      {a.extraId === "mochila" && (
-        <rect x="55" y="42" width="12" height="20" rx="3" fill={isLight ? "#555" : "#222"} opacity="0.85"/>
-      )}
-      {/* Body/hoodie */}
-      <path d="M18 50 Q14 58 16 80 L64 80 Q66 58 62 50 Q55 41 40 39 Q25 41 18 50Z" fill={c}/>
-      {/* Hoodie front panel (darker center strip) */}
-      <path d="M35 39 L35 80 L45 80 L45 39Z" fill="rgba(0,0,0,0.12)"/>
-      {/* Pocket */}
-      <rect x="30" y="62" width="20" height="12" rx="2" fill="rgba(0,0,0,0.15)"/>
-      {/* Capuz raised (when capuz) */}
-      {a.hatId === "capuz" && (
-        <path d="M22 45 Q22 28 40 26 Q58 28 58 45 Q55 40 40 38 Q25 40 22 45Z" fill={c} opacity="0.75"/>
-      )}
-      {/* Neck/collar */}
-      <path d="M32 39 Q40 36 48 39 L47 44 Q40 42 33 44Z" fill="rgba(0,0,0,0.2)"/>
-      {/* HEAD */}
-      <circle cx="40" cy="26" r="17" fill={skinTone}/>
-      {/* Hair */}
-      <path d="M23 26 Q23 9 40 9 Q57 9 57 26 Q53 17 40 17 Q27 17 23 26Z" fill="#2d1b00"/>
-      {/* Eyes */}
-      <ellipse cx="33" cy="26" rx="3" ry="3.5" fill="#1a1a1a"/>
-      <ellipse cx="47" cy="26" rx="3" ry="3.5" fill="#1a1a1a"/>
-      <circle cx="34.5" cy="24.5" r="1.2" fill="white"/>
-      <circle cx="48.5" cy="24.5" r="1.2" fill="white"/>
-      {/* Eyebrows */}
-      <path d="M29 21 Q33 19.5 37 21" fill="none" stroke="#2d1b00" strokeWidth="1.5" strokeLinecap="round"/>
-      <path d="M43 21 Q47 19.5 51 21" fill="none" stroke="#2d1b00" strokeWidth="1.5" strokeLinecap="round"/>
-      {/* Nose */}
-      <path d="M38 30 Q40 33 42 30" fill="none" stroke="#C49A7A" strokeWidth="1.3"/>
-      {/* Mouth */}
-      <path d="M35 36 Q40 40 45 36" fill="none" stroke="#333" strokeWidth="1.8" strokeLinecap="round"/>
-      {/* Visor/sunglasses */}
-      {a.hatId === "visor" && (
-        <g>
-          <rect x="25" y="21" width="13" height="9" rx="3.5" fill="#111" opacity="0.92"/>
-          <rect x="42" y="21" width="13" height="9" rx="3.5" fill="#111" opacity="0.92"/>
-          <line x1="38" y1="25" x2="42" y2="25" stroke="#333" strokeWidth="2"/>
-          <line x1="22" y1="24" x2="25" y2="24" stroke="#555" strokeWidth="1.5"/>
-          <line x1="55" y1="24" x2="58" y2="24" stroke="#555" strokeWidth="1.5"/>
-          {/* Lens sheen */}
-          <rect x="26" y="22" width="5" height="2" rx="1" fill="rgba(255,255,255,0.12)"/>
-          <rect x="43" y="22" width="5" height="2" rx="1" fill="rgba(255,255,255,0.12)"/>
-        </g>
-      )}
-      {/* Headset */}
-      {a.hatId === "headset" && (
-        <g>
-          <path d="M21 24 Q21 9 40 9 Q59 9 59 24" fill="none" stroke="#333" strokeWidth="3.5"/>
-          <rect x="17" y="20" width="9" height="14" rx="3.5" fill="#555"/>
-          <rect x="54" y="20" width="9" height="14" rx="3.5" fill="#555"/>
-          <line x1="17" y1="30" x2="11" y2="36" stroke="#444" strokeWidth="2" strokeLinecap="round"/>
-          <circle cx="11" cy="37" r="2.5" fill="#333"/>
-        </g>
-      )}
-      {/* Boné */}
-      {a.hatId === "bone" && (
-        <g>
-          <path d="M22 22 Q22 9 40 9 Q58 9 58 22" fill={isLight ? "#555" : "#1a1a2e"}/>
-          <rect x="22" y="19" width="36" height="8" rx="4" fill={isLight ? "#666" : "#2a2a3e"}/>
-          <rect x="16" y="21" width="18" height="5" rx="2.5" fill={isLight ? "#777" : "#333"}/>
-          <circle cx="40" cy="12" r="2.5" fill={isLight ? "#888" : "#444"}/>
-        </g>
-      )}
-      {/* Máscara */}
-      {a.extraId === "mascara" && (
-        <g>
-          <rect x="27" y="30" width="26" height="16" rx="5" fill="#00B4D8" opacity="0.88"/>
-          <line x1="29" y1="37" x2="51" y2="37" stroke="rgba(255,255,255,0.3)" strokeWidth="1.2"/>
-          <path d="M33 34 Q40 32 47 34" fill="none" stroke="rgba(255,255,255,0.2)" strokeWidth="1"/>
-        </g>
-      )}
-      {/* Luvas */}
+      {/* ── LUVAS ── */}
       {a.extraId === "luvas" && (
         <g>
-          <ellipse cx="14" cy="64" rx="7" ry="9" fill="#7B2FBE" opacity="0.9"/>
-          <ellipse cx="66" cy="64" rx="7" ry="9" fill="#7B2FBE" opacity="0.9"/>
+          <ellipse cx="6" cy="67" rx="5.5" ry="5" fill="#7B2FBE" stroke={ol} strokeWidth={sw} />
+          <ellipse cx="54" cy="67" rx="5.5" ry="5" fill="#7B2FBE" stroke={ol} strokeWidth={sw} />
         </g>
       )}
-      {/* Chest symbol */}
+
+      {/* ── SYMBOLS ON BODY ── */}
+      {a.symbolId === "estrela" && (
+        <polygon points="30,43 32.4,50.5 40.5,50.5 34,55.2 36.4,62.7 30,58 23.6,62.7 26,55.2 19.5,50.5 27.6,50.5"
+          fill="#FFD600" stroke={ol} strokeWidth="1.2" />
+      )}
+      {a.symbolId === "coracao" && (
+        <path d="M30 59 C30 59 21 52 21 46.5 C21 43 24.5 41 30 46.5 C35.5 41 39 43 39 46.5 C39 52 30 59 30 59Z"
+          fill="#F06292" stroke={ol} strokeWidth="1.2" />
+      )}
       {a.symbolId === "raio" && (
-        <polygon points="43,51 38,62 42,59 38,72 46,59 41.5,62" fill="#FFD600" opacity="0.9"/>
+        <polygon points="34,42 27,54 32,51.5 27,65 38,51 32.5,53.5"
+          fill="#FFD600" stroke={ol} strokeWidth="1.2" />
+      )}
+      {a.symbolId === "triangulo" && (
+        <polygon points="30,43 39,57 21,57"
+          fill={isLight ? "rgba(0,0,0,0.45)" : "rgba(255,255,255,0.7)"} stroke={ol} strokeWidth="1.2" />
+      )}
+      {a.symbolId === "circulo" && (
+        <circle cx="30" cy="51" r="8"
+          fill={isLight ? "rgba(0,0,0,0.3)" : "rgba(255,255,255,0.55)"} stroke={ol} strokeWidth="1.2" />
+      )}
+      {a.symbolId === "quadrado" && (
+        <rect x="23" y="44" width="14" height="14"
+          fill={isLight ? "rgba(0,0,0,0.3)" : "rgba(255,255,255,0.55)"} stroke={ol} strokeWidth="1.2" />
       )}
       {a.symbolId === "x-mark" && (
-        <g stroke={textOnBg} strokeWidth="3" strokeLinecap="round">
-          <line x1="33" y1="51" x2="47" y2="65"/><line x1="47" y1="51" x2="33" y2="65"/>
+        <g stroke={isLight ? "rgba(0,0,0,0.65)" : "rgba(255,255,255,0.85)"} strokeWidth="3.5" strokeLinecap="round">
+          <line x1="23" y1="43" x2="37" y2="57" /><line x1="37" y1="43" x2="23" y2="57" />
         </g>
       )}
       {a.symbolId === "diamante" && (
-        <polygon points="40,50 49,60 40,70 31,60" fill={textOnBg} opacity="0.85"/>
+        <polygon points="30,43 39.5,51 30,59 20.5,51"
+          fill={isLight ? "rgba(0,0,0,0.35)" : "rgba(255,255,255,0.65)"} stroke={ol} strokeWidth="1.2" />
       )}
       {a.symbolId === "caveira" && (
-        <text x="40" y="67" textAnchor="middle" fontSize="18" fill={textOnBg} opacity="0.8">☠</text>
+        <text x="30" y="60" textAnchor="middle" fontSize="18"
+          fill={isLight ? "rgba(0,0,0,0.6)" : "rgba(255,255,255,0.85)"}>☠</text>
       )}
-    </svg>
-  );
-}
 
-// ── Adult Agent SVG ───────────────────────────────────────────────────────────
+      {/* ── HEAD ── */}
+      <circle cx="30" cy="21" r="13" fill={skin} stroke={ol} strokeWidth={sw} />
 
-function AdultSvg({ a, size = 80 }: { a: CharAttrs; size?: number }) {
-  const c = a.colorHex;
-  const isLight = c === "#CFD8DC";
-  const badgeHex = a.extraId ? BADGE_COLORS[a.extraId] : null;
-  const skinTone = "#FFDCC0";
-  return (
-    <svg width={size} height={size} viewBox="0 0 80 90" className="overflow-visible">
-      {/* Suit body */}
-      <path d="M17 50 Q13 60 15 82 L65 82 Q67 60 63 50 Q56 40 40 38 Q24 40 17 50Z" fill={c}/>
-      {/* Shirt/tie center */}
-      <path d="M34 38 L34 82 L46 82 L46 38Z" fill={isLight ? "rgba(0,0,0,0.08)" : "rgba(255,255,255,0.12)"}/>
-      {/* Tie */}
-      <polygon points="40,42 37,52 40,58 43,52" fill={isLight ? "#37474F" : "rgba(0,0,0,0.3)"}/>
-      {/* Suit lapels */}
-      <path d="M34 38 L22 52" fill="none" stroke={isLight ? "rgba(0,0,0,0.2)" : "rgba(255,255,255,0.2)"} strokeWidth="1.5"/>
-      <path d="M46 38 L58 52" fill="none" stroke={isLight ? "rgba(0,0,0,0.2)" : "rgba(255,255,255,0.2)"} strokeWidth="1.5"/>
-      {/* Badge on left chest */}
-      {badgeHex && (
-        <g>
-          <rect x="18" y="54" width="16" height="11" rx="2.5" fill={badgeHex}/>
-          <rect x="19" y="55" width="14" height="4" rx="1" fill="rgba(255,255,255,0.25)"/>
-          <rect x="19" y="60" width="9" height="2.5" rx="1" fill="rgba(255,255,255,0.4)"/>
-          {/* Symbol on badge */}
-          {a.symbolId === "triangulo" && <polygon points="26,57 30,62 22,62" fill="rgba(255,255,255,0.9)"/>}
-          {a.symbolId === "circulo"   && <circle cx="26" cy="59.5" r="3" fill="rgba(255,255,255,0.9)"/>}
-          {a.symbolId === "quadrado"  && <rect x="23" y="57" width="6" height="6" fill="rgba(255,255,255,0.9)"/>}
-          {a.symbolId === "estrela"   && <polygon points="26,56.5 27.4,59.8 31,59.8 28.3,61.8 29.3,65 26,63 22.7,65 23.7,61.8 21,59.8 24.6,59.8" fill="rgba(255,255,255,0.9)"/>}
+      {/* MÁSCARA (behind other face features) */}
+      {a.extraId === "mascara" && (
+        <rect x="21" y="25" width="18" height="12" rx="4.5" fill="#00B4D8" stroke={ol} strokeWidth="1.5" opacity="0.9" />
+      )}
+
+      {/* HAIR */}
+      <path d="M17 21 Q17 8 30 8 Q43 8 43 21 Q39 13 30 13 Q21 13 17 21Z" fill={hairFill} />
+      {/* Hair side bits */}
+      {mode === "child" && (
+        <>
+          <path d="M17 21 Q15 17 16 14 Q17 12 19 13 Q17 17 17 21Z" fill={hairFill} />
+          <path d="M43 21 Q45 17 44 14 Q43 12 41 13 Q43 17 43 21Z" fill={hairFill} />
+        </>
+      )}
+
+      {/* EYEBROWS */}
+      <path d="M19.5 16 Q23.5 14 27.5 16" fill="none" stroke={hairFill} strokeWidth="2.2" strokeLinecap="round" />
+      <path d="M32.5 16 Q36.5 14 40.5 16" fill="none" stroke={hairFill} strokeWidth="2.2" strokeLinecap="round" />
+
+      {/* EYES */}
+      <circle cx="25" cy="21" r={eyeR} fill="#1a1a1a" />
+      <circle cx="35" cy="21" r={eyeR} fill="#1a1a1a" />
+      <circle cx={25 + eyeR * 0.4} cy={21 - eyeR * 0.5} r={eyeR * 0.4} fill="white" />
+      <circle cx={35 + eyeR * 0.4} cy={21 - eyeR * 0.5} r={eyeR * 0.4} fill="white" />
+
+      {/* GLASSES (oculos extra OR adult hat oculos) */}
+      {(a.extraId === "oculos" || a.hatId === "oculos") && (
+        <g stroke="#1a1a1a" strokeWidth="2" fill="none">
+          <circle cx="25" cy="21" r="5.5" />
+          <circle cx="35" cy="21" r="5.5" />
+          <line x1="29.5" y1="21" x2="30.5" y2="21" />
+          <line x1="14.5" y1="19" x2="19.5" y2="20.5" />
+          <line x1="40.5" y1="20.5" x2="45.5" y2="19" />
         </g>
       )}
-      {/* Symbol without badge (on arm/chest) */}
-      {!badgeHex && a.symbolId && (
+
+      {/* NOSE */}
+      <path d="M27.5 25.5 Q30 29 32.5 25.5" fill="none" stroke="#C4927A" strokeWidth="1.6" strokeLinecap="round" />
+
+      {/* MOUTH */}
+      {mode === "child"
+        ? <path d="M23.5 30 Q30 35.5 36.5 30" fill="none" stroke="#9A5244" strokeWidth="2.4" strokeLinecap="round" />
+        : <path d="M25 29.5 Q30 33 35 29.5" fill="none" stroke="#9A5244" strokeWidth="2" strokeLinecap="round" />
+      }
+
+      {/* VISOR */}
+      {a.hatId === "visor" && (
         <g>
-          {a.symbolId === "triangulo" && <polygon points="40,52 47,62 33,62" fill={isLight ? "rgba(0,0,0,0.5)" : "rgba(255,255,255,0.6)"}/>}
-          {a.symbolId === "circulo"   && <circle cx="40" cy="57" r="6" fill={isLight ? "rgba(0,0,0,0.3)" : "rgba(255,255,255,0.5)"}/>}
-          {a.symbolId === "quadrado"  && <rect x="34" y="51" width="12" height="12" fill={isLight ? "rgba(0,0,0,0.3)" : "rgba(255,255,255,0.5)"}/>}
-          {a.symbolId === "estrela"   && <polygon points="40,51 42.4,58.4 50.2,58.4 44,62.8 46.4,70.2 40,66 33.6,70.2 36,62.8 29.8,58.4 37.6,58.4" fill={isLight ? "rgba(0,0,0,0.4)" : "rgba(255,255,255,0.55)"} transform="scale(0.5) translate(40,50)"/>}
+          <rect x="18.5" y="16.5" width="11.5" height="8" rx="3.5" fill="#050505" opacity="0.93" />
+          <rect x="30" y="16.5" width="11.5" height="8" rx="3.5" fill="#050505" opacity="0.93" />
+          <line x1="29.5" y1="20" x2="30" y2="20" stroke="#444" strokeWidth="2" />
+          <line x1="15" y1="18.5" x2="18.5" y2="19.5" stroke="#555" strokeWidth="1.5" />
+          <line x1="41.5" y1="19.5" x2="45" y2="18.5" stroke="#555" strokeWidth="1.5" />
+          <rect x="19.5" y="17.5" width="5" height="2.5" rx="1" fill="rgba(255,255,255,0.1)" />
+          <rect x="31" y="17.5" width="5" height="2.5" rx="1" fill="rgba(255,255,255,0.1)" />
         </g>
       )}
-      {/* Head */}
-      <circle cx="40" cy="25" r="16" fill={skinTone}/>
-      {/* Professional hair */}
-      <path d="M24 25 Q24 9 40 9 Q56 9 56 25 Q52 17 40 17 Q28 17 24 25Z" fill="#5D4037"/>
-      {/* Eyes */}
-      <ellipse cx="33.5" cy="25" rx="2.8" ry="2.8" fill="#1a1a1a"/>
-      <ellipse cx="46.5" cy="25" rx="2.8" ry="2.8" fill="#1a1a1a"/>
-      <circle cx="35" cy="23.5" r="1.1" fill="white"/>
-      <circle cx="48" cy="23.5" r="1.1" fill="white"/>
-      {/* Nose */}
-      <path d="M38 29 Q40 32 42 29" fill="none" stroke="#C49A7A" strokeWidth="1.2"/>
-      {/* Neutral/professional mouth */}
-      <line x1="35" y1="34.5" x2="45" y2="34.5" stroke="#C49A7A" strokeWidth="1.5" strokeLinecap="round"/>
-      {/* HAT: headset */}
+
+      {/* HEADSET */}
       {a.hatId === "headset" && (
         <g>
-          <path d="M23 22 Q23 9 40 9 Q57 9 57 22" fill="none" stroke="#37474F" strokeWidth="3.5"/>
-          <rect x="18" y="19" width="8" height="12" rx="3" fill="#546E7A"/>
-          <rect x="54" y="19" width="8" height="12" rx="3" fill="#546E7A"/>
-          <line x1="18" y1="28" x2="12" y2="34" stroke="#546E7A" strokeWidth="2"/>
-          <circle cx="12" cy="35" r="2.5" fill="#455A64"/>
+          <path d="M16 19 Q16 6 30 6 Q44 6 44 19" fill="none" stroke="#2d2d2d" strokeWidth="3.5" />
+          <rect x="11.5" y="14" width="8" height="13" rx="4" fill="#444" stroke={ol} strokeWidth="1.5" />
+          <rect x="40.5" y="14" width="8" height="13" rx="4" fill="#444" stroke={ol} strokeWidth="1.5" />
+          <line x1="11.5" y1="25" x2="6" y2="32" stroke="#3d3d3d" strokeWidth="2.5" strokeLinecap="round" />
+          <circle cx="5" cy="33.5" r="3.5" fill="#333" stroke={ol} strokeWidth="1" />
         </g>
       )}
-      {/* HAT: boné */}
+
+      {/* BONE */}
       {a.hatId === "bone" && (
         <g>
-          <path d="M23 20 Q23 8 40 8 Q57 8 57 20" fill="#37474F"/>
-          <rect x="23" y="18" width="34" height="7" rx="3.5" fill="#455A64"/>
-          <rect x="16" y="20" width="18" height="5" rx="2.5" fill="#546E7A"/>
-          <circle cx="40" cy="11" r="2.5" fill="#546E7A"/>
+          <path d="M17 17 Q17 7 30 7 Q43 7 43 17" fill="#2a2a2a" stroke={ol} strokeWidth="1.5" />
+          <rect x="17" y="13.5" width="26" height="8.5" rx="4.5" fill="#333" stroke={ol} strokeWidth="1.5" />
+          <rect x="11" y="16" width="20" height="5.5" rx="2.5" fill="#444" stroke={ol} strokeWidth="1" />
+          <circle cx="30" cy="9.5" r="3" fill="#555" />
         </g>
       )}
-      {/* HAT: óculos */}
-      {a.hatId === "oculos" && (
-        <g>
-          <path d="M26 25 Q33.5 20 41 25 Q41 30 33.5 30 Q26 30 26 25Z" fill="none" stroke="#333" strokeWidth="1.8"/>
-          <path d="M41 25 Q48.5 20 56 25 Q56 30 48.5 30 Q41 30 41 25Z" fill="none" stroke="#333" strokeWidth="1.8"/>
-          <line x1="22" y1="25" x2="26" y2="25" stroke="#333" strokeWidth="1.8"/>
-          <line x1="56" y1="25" x2="60" y2="25" stroke="#333" strokeWidth="1.8"/>
-        </g>
-      )}
-      {/* HAT: chapéu */}
+
+      {/* CHAPEU */}
       {a.hatId === "chapeu" && (
         <g>
-          <ellipse cx="40" cy="11" rx="20" ry="4.5" fill="#2a2a2a"/>
-          <rect x="23" y="4" width="34" height="9" rx="2" fill="#333"/>
-          <ellipse cx="40" cy="4.5" rx="17" ry="3" fill="#2a2a2a"/>
+          <ellipse cx="30" cy="8" rx="20" ry="5.5" fill="#1a1a1a" stroke={ol} strokeWidth={sw} />
+          <rect x="17" y="0.5" width="26" height="10" rx="2.5" fill="#252525" stroke={ol} strokeWidth={sw} />
+          {/* Band */}
+          <rect x="17" y="7.5" width="26" height="3.5" rx="1.5" fill={c} opacity="0.85" />
         </g>
       )}
+
+      {/* COROA */}
+      {a.hatId === "coroa" && (
+        <g>
+          <polygon points="15,8 15,0 22.5,6 30,0 37.5,6 45,0 45,8"
+            fill="#FFD700" stroke={ol} strokeWidth="2" />
+          <rect x="15" y="5.5" width="30" height="7.5" rx="1.5" fill="#FFC107" stroke={ol} strokeWidth="1.5" />
+          <circle cx="30" cy="3" r="3" fill="#E53935" />
+          <circle cx="20" cy="7.5" r="2.2" fill="#2196F3" />
+          <circle cx="40" cy="7.5" r="2.2" fill="#2196F3" />
+        </g>
+      )}
+
+      {/* ANTENA */}
+      {a.hatId === "antena" && (
+        <g>
+          <line x1="30" y1="8.5" x2="30" y2="-5" stroke="#888" strokeWidth="2.5" strokeLinecap="round" />
+          <circle cx="30" cy="-7.5" r="5.5" fill="#F44336" stroke={ol} strokeWidth="1.5" />
+          <circle cx="30" cy="-7.5" r="2.5" fill="#FF8A80" />
+        </g>
+      )}
+
+      {/* CAPUZ */}
+      {a.hatId === "capuz" && (
+        <path d="M17 19 Q16 6 30 6 Q44 6 43 19 Q39 12 30 12 Q21 12 17 19Z"
+          fill={c} opacity="0.85" stroke={ol} strokeWidth="1.5" />
+      )}
+
     </svg>
   );
 }
 
-// ── CharacterCard ─────────────────────────────────────────────────────────────
+// ── AgentCard ─────────────────────────────────────────────────────────────────
 
-function AgentCard({
-  char, mode, onClick, state, size,
-}: {
+function AgentCard({ char, mode, onClick, state, size }: {
   char: AgentChar; mode: AgeMode; onClick: () => void;
   state: "idle" | "correct" | "wrong"; size: number;
 }) {
-  const ring = state === "correct" ? "ring-4 ring-green-400 bg-green-50 scale-110" :
-               state === "wrong"   ? "ring-4 ring-red-400 bg-red-50 scale-90 opacity-60" :
-               "ring-2 ring-transparent hover:ring-blue-300 active:scale-95 bg-white/90 hover:bg-white";
+  const ring =
+    state === "correct" ? "ring-4 ring-green-400 bg-green-100/80 scale-110" :
+    state === "wrong"   ? "ring-4 ring-red-400 bg-red-100/80 scale-90 opacity-50" :
+    "ring-2 ring-white/60 hover:ring-white active:scale-95 bg-white/20 hover:bg-white/30";
   return (
     <motion.button
       onClick={onClick}
-      whileTap={{ scale: 0.93 }}
-      className={`relative rounded-2xl p-1.5 cursor-pointer transition-all duration-150 shadow-sm ${ring}`}
+      whileTap={{ scale: 0.92 }}
+      className={`relative rounded-2xl p-1 cursor-pointer transition-all duration-150 backdrop-blur-[2px] shadow-xl ${ring}`}
+      style={{ touchAction: "manipulation" }}
     >
-      {mode === "child" && <ChildSvg a={char.attrs} size={size} />}
-      {mode === "teen"  && <TeenSvg  a={char.attrs} size={size} />}
-      {mode === "adult" && <AdultSvg a={char.attrs} size={size} />}
+      <AgentSvg a={char.attrs} mode={mode} size={size} />
     </motion.button>
   );
 }
@@ -581,15 +484,12 @@ function AgentCard({
 // ── Command display ───────────────────────────────────────────────────────────
 
 type InstrMode = "both" | "visual" | "audio";
-
 function getInstrMode(d: number): InstrMode {
-  if (d <= 4) return "both";
-  if (d <= 7) return "visual";
-  return "audio";
+  if (d <= 4) return "both"; if (d <= 7) return "visual"; return "audio";
 }
 
-function CommandPanel({ command, colorHex, colorLabel, theme, onSpeak, instrMode }: {
-  command: string; colorHex: string; colorLabel: string; theme: Theme; onSpeak: () => void; instrMode: InstrMode;
+function CommandPanel({ command, colorHex, theme, onSpeak, instrMode }: {
+  command: string; colorHex: string; theme: Theme; onSpeak: () => void; instrMode: InstrMode;
 }) {
   const bg = theme === "GAMIFIED" ? "bg-slate-800 border-cyan-500/30" :
              theme === "COLORFUL" ? "bg-white border-purple-300" : "bg-white border-blue-200";
@@ -597,26 +497,19 @@ function CommandPanel({ command, colorHex, colorLabel, theme, onSpeak, instrMode
   const subTxt = theme === "GAMIFIED" ? "text-slate-400" : "text-slate-500";
   const showText = instrMode !== "audio";
   const showSpeaker = instrMode !== "visual";
-
   return (
     <div className={`rounded-2xl border-2 p-3 flex items-center gap-3 ${bg}`}>
-      {/* Color swatch */}
-      <div className="w-8 h-8 rounded-full flex-shrink-0 border-2 border-black/10 shadow"
-           style={{ background: colorHex }} />
+      <div className="w-8 h-8 rounded-full flex-shrink-0 border-2 border-black/10 shadow" style={{ background: colorHex }} />
       {showText ? (
         <p className={`text-sm font-bold flex-1 leading-snug ${txt}`}>{command}</p>
       ) : (
         <div className="flex-1">
           <p className={`text-sm font-bold ${txt}`}>👂 Modo Auditivo</p>
-          <p className={`text-xs ${subTxt}`}>Ouça o comando e encontre o personagem</p>
+          <p className={`text-xs ${subTxt}`}>Ouça e encontre o personagem</p>
         </div>
       )}
       {showSpeaker && (
-        <button
-          onClick={onSpeak}
-          className={`text-xl flex-shrink-0 transition-transform active:scale-90`}
-          title="Ouvir comando"
-        >🔊</button>
+        <button onClick={onSpeak} className="text-xl flex-shrink-0 active:scale-90 transition-transform" title="Ouvir">🔊</button>
       )}
     </div>
   );
@@ -626,75 +519,17 @@ function CommandPanel({ command, colorHex, colorLabel, theme, onSpeak, instrMode
 
 function FocusTutorial({ theme, mode, onDone }: { theme: Theme; mode: AgeMode; onDone: () => void }) {
   const tutChars: AgentChar[] = [
-    {
-      id: "t0", isTarget: true,
-      attrs: {
-        colorId: "azul", colorHex: mode === "adult" ? "#1565C0" : mode === "teen" ? "#00B4D8" : "#1E88E5",
-        colorLabel: "azul",
-        hatId: "bone", hatLabel: "boné",
-        extraId: null, extraLabel: null,
-        symbolId: null, symbolLabel: null,
-      },
-    },
-    {
-      id: "t1", isTarget: false,
-      attrs: {
-        colorId: "vermelho", colorHex: mode === "teen" ? "#EF233C" : "#E53935",
-        colorLabel: "vermelho",
-        hatId: "bone", hatLabel: "boné",
-        extraId: null, extraLabel: null,
-        symbolId: null, symbolLabel: null,
-      },
-    },
-    {
-      id: "t2", isTarget: false,
-      attrs: {
-        colorId: "azul", colorHex: mode === "adult" ? "#1565C0" : "#1E88E5",
-        colorLabel: "azul",
-        hatId: "chapeu", hatLabel: "chapéu",
-        extraId: null, extraLabel: null,
-        symbolId: null, symbolLabel: null,
-      },
-    },
-    {
-      id: "t3", isTarget: false,
-      attrs: {
-        colorId: "verde", colorHex: mode === "adult" ? "#2E7D32" : "#43A047",
-        colorLabel: "verde",
-        hatId: null, hatLabel: null,
-        extraId: null, extraLabel: null,
-        symbolId: null, symbolLabel: null,
-      },
-    },
-    {
-      id: "t4", isTarget: false,
-      attrs: {
-        colorId: mode === "child" ? "laranja" : "roxo",
-        colorHex: mode === "child" ? "#FB8C00" : "#8E24AA",
-        colorLabel: mode === "child" ? "laranja" : "roxo",
-        hatId: null, hatLabel: null,
-        extraId: null, extraLabel: null,
-        symbolId: null, symbolLabel: null,
-      },
-    },
-    {
-      id: "t5", isTarget: false,
-      attrs: {
-        colorId: mode === "child" ? "rosa" : "cinza",
-        colorHex: mode === "child" ? "#E91E63" : "#546E7A",
-        colorLabel: mode === "child" ? "rosa" : "cinza",
-        hatId: null, hatLabel: null,
-        extraId: null, extraLabel: null,
-        symbolId: null, symbolLabel: null,
-      },
-    },
+    { id: "t0", isTarget: true,  attrs: { colorId: "azul", colorHex: mode === "adult" ? "#1565C0" : "#1E88E5", colorLabel: "azul", hatId: "bone", hatLabel: "boné", extraId: null, extraLabel: null, symbolId: null, symbolLabel: null } },
+    { id: "t1", isTarget: false, attrs: { colorId: "vermelho", colorHex: "#E53935", colorLabel: "vermelho", hatId: "bone", hatLabel: "boné", extraId: null, extraLabel: null, symbolId: null, symbolLabel: null } },
+    { id: "t2", isTarget: false, attrs: { colorId: "azul", colorHex: "#1E88E5", colorLabel: "azul", hatId: "chapeu", hatLabel: "chapéu", extraId: null, extraLabel: null, symbolId: null, symbolLabel: null } },
+    { id: "t3", isTarget: false, attrs: { colorId: "verde", colorHex: "#43A047", colorLabel: "verde", hatId: null, hatLabel: null, extraId: null, extraLabel: null, symbolId: null, symbolLabel: null } },
+    { id: "t4", isTarget: false, attrs: { colorId: "laranja", colorHex: "#FB8C00", colorLabel: "laranja", hatId: null, hatLabel: null, extraId: null, extraLabel: null, symbolId: null, symbolLabel: null } },
+    { id: "t5", isTarget: false, attrs: { colorId: "roxo", colorHex: "#8E24AA", colorLabel: "roxo", hatId: null, hatLabel: null, extraId: null, extraLabel: null, symbolId: null, symbolLabel: null } },
   ].sort(() => Math.random() - 0.5);
 
   const cmd = mode === "child" ? "Clique na criaturinha azul com boné" :
               mode === "teen"  ? "Clique no avatar azul com boné" :
                                  "Selecione o agente com uniforme azul e boné";
-
-  const modeLabel = mode === "child" ? "criaturas fofas" : mode === "teen" ? "avatares" : "agentes";
 
   function TutStep({ onStepDone }: { onStepDone: () => void }) {
     const [picked, setPicked] = useState<string | null>(null);
@@ -705,15 +540,13 @@ function FocusTutorial({ theme, mode, onDone }: { theme: Theme; mode: AgeMode; o
     }
     return (
       <div className="space-y-3">
-        <CommandPanel command={cmd} colorHex="#1E88E5" colorLabel="azul" theme={theme} onSpeak={() => speak(cmd)} instrMode="both" />
+        <CommandPanel command={cmd} colorHex="#1E88E5" theme={theme} onSpeak={() => speak(cmd)} instrMode="both" />
         <div className="grid grid-cols-3 gap-2">
           {tutChars.map(ch => (
-            <AgentCard
-              key={ch.id} char={ch} mode={mode}
+            <AgentCard key={ch.id} char={ch} mode={mode}
               onClick={() => tap(ch.id, ch.isTarget)}
               state={picked === ch.id ? (ch.isTarget ? "correct" : "wrong") : "idle"}
-              size={60}
-            />
+              size={60} />
           ))}
         </div>
       </div>
@@ -721,97 +554,69 @@ function FocusTutorial({ theme, mode, onDone }: { theme: Theme; mode: AgeMode; o
   }
 
   const title = mode === "child" ? "Focus Criaturas" : mode === "teen" ? "Focus Avatares" : "Focus Agentes";
-  const steps = [
-    {
-      instruction: `Você verá vários ${modeLabel} na tela. Leia o comando e clique no correto!`,
-      content: (done: () => void) => <TutStep onStepDone={done} />,
-    },
-  ];
-
-  return <TutorialBase theme={theme} title={title} steps={steps} onDone={onDone} />;
+  return (
+    <TutorialBase theme={theme} title={title}
+      steps={[{ instruction: "Leia o comando e clique no personagem correto!", content: (done) => <TutStep onStepDone={done} /> }]}
+      onDone={onDone} />
+  );
 }
 
 // ── Scene Background ──────────────────────────────────────────────────────────
 
 function SceneBg({ theme }: { theme: Theme }) {
-  if (theme === "GAMIFIED") {
-    return (
-      <div className="absolute inset-0 overflow-hidden">
-        <div className="absolute inset-0" style={{ background: "linear-gradient(180deg, #0a0a1a 0%, #1a1040 55%, #2d1060 100%)" }} />
-        {/* Stars */}
-        {[...Array(30)].map((_, i) => (
-          <div key={i} className="absolute rounded-full bg-white"
-            style={{ width: i % 3 === 0 ? 3 : 2, height: i % 3 === 0 ? 3 : 2, opacity: 0.4 + (i % 5) * 0.1,
-              left: `${(i * 37 + 13) % 100}%`, top: `${(i * 23 + 7) % 60}%` }} />
-        ))}
-        {/* Ground */}
-        <svg className="absolute bottom-0 w-full" viewBox="0 0 400 80" preserveAspectRatio="none">
-          <path d="M0 80 L0 45 Q30 35 60 42 Q90 50 120 38 Q150 26 180 40 Q210 52 240 36 Q270 22 300 40 Q330 55 360 38 Q390 25 400 38 L400 80Z" fill="#1e0a40"/>
-          <path d="M0 80 L0 55 Q40 45 80 52 Q120 58 160 48 Q200 38 240 52 Q280 64 320 50 Q360 36 400 50 L400 80Z" fill="#2d1060"/>
-        </svg>
-      </div>
-    );
-  }
-  if (theme === "COLORFUL") {
-    return (
-      <div className="absolute inset-0 overflow-hidden">
-        <div className="absolute inset-0" style={{ background: "linear-gradient(180deg, #87CEEB 0%, #b8e4f9 45%, #d4f0b8 70%, #8BC34A 100%)" }} />
-        {/* Clouds */}
-        <div className="absolute top-[8%] left-[10%] opacity-80">
-          <div className="w-20 h-8 rounded-full bg-white/90 shadow" />
-          <div className="w-14 h-7 rounded-full bg-white/90 shadow -mt-4 ml-4" />
-        </div>
-        <div className="absolute top-[12%] right-[15%] opacity-70">
-          <div className="w-16 h-6 rounded-full bg-white/90 shadow" />
-          <div className="w-10 h-5 rounded-full bg-white/90 shadow -mt-3 ml-3" />
-        </div>
-        {/* Ground hills */}
-        <svg className="absolute bottom-0 w-full" viewBox="0 0 400 70" preserveAspectRatio="none">
-          <path d="M0 70 L0 40 Q50 20 100 35 Q150 50 200 30 Q250 10 300 32 Q350 52 400 35 L400 70Z" fill="#5a9e2f"/>
-          <path d="M0 70 L0 55 Q60 42 120 52 Q180 60 240 48 Q300 36 360 50 Q385 56 400 52 L400 70Z" fill="#6dbf3d"/>
-        </svg>
-      </div>
-    );
-  }
-  // CLINICAL
-  return (
+  if (theme === "GAMIFIED") return (
     <div className="absolute inset-0 overflow-hidden">
-      <div className="absolute inset-0" style={{ background: "linear-gradient(180deg, #e8f4fd 0%, #cce7f5 50%, #dce8f0 80%, #b8d4e8 100%)" }} />
-      {/* Subtle clouds */}
-      <div className="absolute top-[10%] left-[8%] opacity-40">
-        <div className="w-24 h-8 rounded-full bg-white shadow-sm" />
-        <div className="w-16 h-6 rounded-full bg-white shadow-sm -mt-4 ml-5" />
-      </div>
-      <div className="absolute top-[6%] right-[12%] opacity-30">
-        <div className="w-20 h-7 rounded-full bg-white" />
-        <div className="w-12 h-5 rounded-full bg-white -mt-3 ml-4" />
-      </div>
-      {/* Ground */}
-      <svg className="absolute bottom-0 w-full" viewBox="0 0 400 60" preserveAspectRatio="none">
-        <path d="M0 60 L0 38 Q80 22 160 35 Q240 48 320 28 Q370 16 400 30 L400 60Z" fill="#8ab4cc"/>
-        <path d="M0 60 L0 48 Q80 36 160 46 Q240 56 320 42 Q370 34 400 44 L400 60Z" fill="#9dc4d8"/>
+      <div className="absolute inset-0" style={{ background: "linear-gradient(180deg,#04040f 0%,#0d0825 45%,#1a0840 70%,#260a55 100%)" }} />
+      {[...Array(40)].map((_, i) => (
+        <div key={i} className="absolute rounded-full bg-white"
+          style={{ width: i % 4 === 0 ? 3 : 2, height: i % 4 === 0 ? 3 : 2,
+            opacity: 0.3 + (i % 6) * 0.1,
+            left: `${(i * 37 + 11) % 100}%`, top: `${(i * 23 + 5) % 72}%` }} />
+      ))}
+      <svg className="absolute bottom-0 w-full" viewBox="0 0 400 90" preserveAspectRatio="none">
+        <path d="M0 90 L0 48 Q30 36 60 44 Q90 52 120 38 Q150 24 180 42 Q210 58 240 38 Q270 20 300 44 Q330 62 360 40 Q390 22 400 40 L400 90Z" fill="#180540" />
+        <path d="M0 90 L0 62 Q40 50 80 58 Q120 64 160 52 Q200 40 240 56 Q280 70 320 54 Q360 38 400 56 L400 90Z" fill="#2a0a68" />
       </svg>
     </div>
   );
-}
-
-// ── Floating character positions ──────────────────────────────────────────────
-
-interface CharPos { id: string; x: number; y: number; floatDur: number; floatAmp: number; floatDelay: number; }
-
-function generatePositions(chars: AgentChar[]): CharPos[] {
-  const positions: CharPos[] = [];
-  const minDist = 18; // minimum % distance between centers
-  for (const ch of chars) {
-    let x = 0, y = 0, attempts = 0;
-    do {
-      x = 5 + Math.random() * 82;
-      y = 8 + Math.random() * 62;
-      attempts++;
-    } while (attempts < 50 && positions.some(p => Math.hypot(p.x - x, p.y - y) < minDist));
-    positions.push({ id: ch.id, x, y, floatDur: 2.5 + Math.random() * 2, floatAmp: 8 + Math.random() * 10, floatDelay: Math.random() * 2 });
-  }
-  return positions;
+  if (theme === "COLORFUL") return (
+    <div className="absolute inset-0 overflow-hidden">
+      <div className="absolute inset-0" style={{ background: "linear-gradient(180deg,#87CEEB 0%,#a8dcf5 40%,#c8edb8 70%,#7AC143 100%)" }} />
+      <div className="absolute top-[7%] left-[8%] opacity-85">
+        <div className="w-24 h-9 rounded-full bg-white/95 shadow-md" />
+        <div className="w-16 h-7 rounded-full bg-white/95 shadow-md -mt-4 ml-5" />
+      </div>
+      <div className="absolute top-[10%] right-[14%] opacity-75">
+        <div className="w-18 h-8 rounded-full bg-white/90 shadow" style={{ width: 72 }} />
+        <div className="w-12 h-6 rounded-full bg-white/90 shadow -mt-3 ml-4" />
+      </div>
+      <div className="absolute top-[18%] left-[55%] opacity-60">
+        <div className="w-14 h-6 rounded-full bg-white/90" />
+        <div className="w-9 h-5 rounded-full bg-white/90 -mt-3 ml-2" />
+      </div>
+      <svg className="absolute bottom-0 w-full" viewBox="0 0 400 75" preserveAspectRatio="none">
+        <path d="M0 75 L0 42 Q50 22 100 37 Q150 54 200 30 Q250 8 300 34 Q350 56 400 36 L400 75Z" fill="#4a8f22" />
+        <path d="M0 75 L0 56 Q60 44 120 54 Q180 62 240 50 Q300 38 360 52 Q385 58 400 54 L400 75Z" fill="#5cb82e" />
+      </svg>
+    </div>
+  );
+  return (
+    <div className="absolute inset-0 overflow-hidden">
+      <div className="absolute inset-0" style={{ background: "linear-gradient(180deg,#dff0fa 0%,#c5e1f5 45%,#d4eaf5 75%,#a8cde0 100%)" }} />
+      <div className="absolute top-[9%] left-[7%] opacity-45">
+        <div className="w-28 h-9 rounded-full bg-white shadow-sm" />
+        <div className="w-18 h-7 rounded-full bg-white shadow-sm -mt-4 ml-6" style={{ width: 72 }} />
+      </div>
+      <div className="absolute top-[5%] right-[11%] opacity-32">
+        <div className="w-22 h-8 rounded-full bg-white" style={{ width: 88 }} />
+        <div className="w-13 h-6 rounded-full bg-white -mt-3 ml-5" style={{ width: 52 }} />
+      </div>
+      <svg className="absolute bottom-0 w-full" viewBox="0 0 400 65" preserveAspectRatio="none">
+        <path d="M0 65 L0 38 Q80 22 160 36 Q240 50 320 28 Q370 14 400 30 L400 65Z" fill="#7aafc8" />
+        <path d="M0 65 L0 50 Q80 38 160 48 Q240 58 320 44 Q370 36 400 46 L400 65Z" fill="#8cbfd5" />
+      </svg>
+    </div>
+  );
 }
 
 // ── Main component ────────────────────────────────────────────────────────────
@@ -819,8 +624,7 @@ function generatePositions(chars: AgentChar[]): CharPos[] {
 const MAX_ROUNDS = 10;
 
 export interface FocusAgentsProps {
-  difficulty: number;
-  theme: Theme;
+  difficulty: number; theme: Theme;
   onComplete: (result: ExerciseResult) => void;
   forceMode?: "visual" | "auditivo";
 }
@@ -833,7 +637,7 @@ export function FocusAgents({ difficulty, theme, onComplete, forceMode }: FocusA
   const [gamePhase, setGamePhase] = useState<"command" | "playing" | "feedback">("command");
   const [round, setRound] = useState(0);
   const [chars, setChars] = useState<AgentChar[]>([]);
-  const [charPositions, setCharPositions] = useState<CharPos[]>([]);
+  const [fallers, setFallers] = useState<FallingChar[]>([]);
   const [command, setCommand] = useState("");
   const [targetId, setTargetId] = useState("");
   const [picked, setPicked] = useState<string | null>(null);
@@ -844,9 +648,9 @@ export function FocusAgents({ difficulty, theme, onComplete, forceMode }: FocusA
   const timerRef = useRef<ReturnType<typeof setInterval> | null>(null);
   const roundStart = useRef(Date.now());
   const sessionStart = useRef(Date.now());
-  const currentTargetId = useRef(targetId);
   const roundResultsRef = useRef(roundResults);
-  currentTargetId.current = targetId;
+  const resolvedIds = useRef(new Set<string>());
+  const doneRef = useRef(false);
   roundResultsRef.current = roundResults;
 
   const clearTimer = () => { if (timerRef.current) { clearInterval(timerRef.current); timerRef.current = null; } };
@@ -855,31 +659,55 @@ export function FocusAgents({ difficulty, theme, onComplete, forceMode }: FocusA
     const d = Math.max(1, Math.min(10, difficulty + Math.floor(r / 3)));
     const gen = generateRound(mode, d);
     setChars(gen.chars);
-    setCharPositions(generatePositions(gen.chars));
+    setFallers([]);
     setCommand(gen.command);
     setTargetId(gen.targetId);
     setPicked(null);
     setTimedOut(false);
     setTimerLeft(timerSec(d));
     setGamePhase("command");
-
-    // Auto-speak in audio/both mode
+    resolvedIds.current = new Set();
     const instrMode = forceMode === "visual" ? "visual" : forceMode === "auditivo" ? "audio" : getInstrMode(d);
     if (instrMode !== "visual") speak(gen.command);
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [mode, difficulty, forceMode]);
 
   function startPlaying() {
+    const effectiveDiff = Math.max(1, Math.min(10, difficulty + Math.floor(round / 3)));
+    const n = chars.length;
+    const charSize = n <= 5 ? 78 : n <= 7 ? 70 : n <= 9 ? 62 : n <= 11 ? 55 : 50;
+    const t = timerSec(effectiveDiff);
+    const baseFallDur = t !== null ? t + 2.5 : 13;
+
+    // Spread characters across 10%-90% of width
+    const slotW = 80 / n;
+    const newFallers: FallingChar[] = chars.map((ch, i) => {
+      const slotCenter = 10 + i * slotW + slotW / 2;
+      const jitter = (Math.random() - 0.5) * slotW * 0.55;
+      const x = Math.max(8, Math.min(92, slotCenter + jitter));
+      return {
+        uid: `${ch.id}-${round}`,
+        char: ch,
+        x,
+        size: charSize,
+        fallDur: baseFallDur * (0.85 + Math.random() * 0.3),
+      };
+    });
+
+    setFallers(newFallers);
     setGamePhase("playing");
     roundStart.current = Date.now();
     clearTimer();
-    const t = timerLeft;
+
     if (t !== null && t > 0) {
       timerRef.current = setInterval(() => {
         setTimerLeft(prev => {
           if (prev === null || prev <= 1) {
             clearTimer();
-            handleResult(false, currentTargetId.current, round);
+            if (!resolvedIds.current.has("timeout")) {
+              resolvedIds.current.add("timeout");
+              handleResult(false, round);
+            }
             return 0;
           }
           return prev - 1;
@@ -888,30 +716,29 @@ export function FocusAgents({ difficulty, theme, onComplete, forceMode }: FocusA
     }
   }
 
-  function handleResult(correct: boolean, _tId: string, r: number) {
+  function handleResult(correct: boolean, r: number) {
+    if (doneRef.current) return;
     clearTimer();
+    setFallers([]);
     const rt = Date.now() - roundStart.current;
     const newResults = [...roundResultsRef.current, { correct, rt }];
     setRoundResults(newResults);
     roundResultsRef.current = newResults;
     if (!correct) setTimedOut(true);
     setGamePhase("feedback");
-
     const nextRound = r + 1;
     reportProgress(Math.round((nextRound / MAX_ROUNDS) * 100));
 
     setTimeout(() => {
       if (nextRound >= MAX_ROUNDS) {
+        doneRef.current = true;
         const correctCount = newResults.filter(x => x.correct).length;
         const accuracy = correctCount / MAX_ROUNDS;
         const avgRt = newResults.filter(x => x.correct).reduce((s, x) => s + x.rt, 0) / (correctCount || 1);
         onComplete({
-          exerciseId: "focus-agents",
-          domain: "attention",
+          exerciseId: "focus-agents", domain: "attention",
           score: calculateExerciseScore("focus-agents", accuracy, Math.round(avgRt), difficulty),
-          accuracy,
-          reactionTime: Math.round(avgRt),
-          difficulty,
+          accuracy, reactionTime: Math.round(avgRt), difficulty,
           duration: Math.round((Date.now() - sessionStart.current) / 1000),
           metadata: { rounds: MAX_ROUNDS, correct: correctCount, mode },
         });
@@ -919,27 +746,39 @@ export function FocusAgents({ difficulty, theme, onComplete, forceMode }: FocusA
         setRound(nextRound);
         prepareRound(nextRound);
       }
-    }, 1400);
+    }, 1300);
   }
 
-  function handleTap(char: AgentChar) {
-    if (gamePhase !== "playing" || picked) return;
-    setPicked(char.id);
-    handleResult(char.isTarget, targetId, round);
+  function handleFallerClick(faller: FallingChar) {
+    if (gamePhase !== "playing") return;
+    if (resolvedIds.current.has(faller.uid)) return;
+    resolvedIds.current.add(faller.uid);
+    resolvedIds.current.add("timeout");
+    setPicked(faller.char.id);
+    handleResult(faller.char.isTarget, round);
+  }
+
+  function handleFallerExit(faller: FallingChar) {
+    if (resolvedIds.current.has(faller.uid)) return;
+    resolvedIds.current.add(faller.uid);
+    if (faller.char.isTarget && !resolvedIds.current.has("timeout")) {
+      resolvedIds.current.add("timeout");
+      handleResult(false, round);
+    }
   }
 
   useEffect(() => {
-    if (!showTutorial) prepareRound(0);
+    if (!showTutorial) { sessionStart.current = Date.now(); prepareRound(0); }
     return () => { clearTimer(); if (typeof window !== "undefined") window.speechSynthesis?.cancel(); };
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [showTutorial]);
 
   if (showTutorial) return <FocusTutorial theme={theme} mode={mode} onDone={() => setShowTutorial(false)} />;
 
-  // ── Paleta HUD ──────────────────────────────────────────────────────────────
-  const hudBg = theme === "GAMIFIED" ? "bg-black/60 border-purple-500/40 text-white"
-    : theme === "COLORFUL" ? "bg-white/80 border-white/60 text-gray-800"
-    : "bg-white/80 border-white/50 text-slate-800";
+  // HUD palette
+  const hudBg = theme === "GAMIFIED" ? "bg-black/65 border-purple-500/40 text-white"
+    : theme === "COLORFUL" ? "bg-white/85 border-white/70 text-gray-800"
+    : "bg-white/85 border-white/60 text-slate-800";
   const dotColor = (i: number) => {
     if (i < roundResults.length) return roundResults[i].correct ? "bg-green-400" : "bg-red-400";
     if (i === round) return (theme === "GAMIFIED" ? "bg-cyan-400" : "bg-blue-500") + " animate-pulse";
@@ -949,136 +788,103 @@ export function FocusAgents({ difficulty, theme, onComplete, forceMode }: FocusA
   const effectiveDiff = Math.max(1, Math.min(10, difficulty + Math.floor(round / 3)));
   const instrMode: InstrMode = forceMode === "visual" ? "visual" : forceMode === "auditivo" ? "audio" : getInstrMode(effectiveDiff);
   const targetAttrs = chars.find(c => c.id === targetId)?.attrs;
-  const cardSize = chars.length <= 8 ? 72 : chars.length <= 12 ? 62 : 54;
-
   const gameTitle = mode === "child" ? "🎯 Focus Criaturas" : mode === "teen" ? "🎮 Focus Avatares" : "🔍 Focus Agentes";
 
   return (
     <div className="fixed inset-0 overflow-hidden" style={{ zIndex: 40 }}>
-      {/* Fundo cenográfico */}
       <SceneBg theme={theme} />
 
-      {/* HUD topo */}
+      {/* HUD */}
       <div className="absolute top-0 left-0 right-0 z-20 px-3 pt-2 pb-1">
         <div className={`flex items-center gap-2 rounded-2xl px-3 py-1.5 border backdrop-blur-sm ${hudBg}`}>
-          <span className="text-xs font-bold opacity-70">{gameTitle}</span>
+          <span className="text-xs font-bold opacity-70 whitespace-nowrap">{gameTitle}</span>
           <div className="flex gap-0.5 flex-1">
             {Array.from({ length: MAX_ROUNDS }).map((_, i) => (
               <div key={i} className={`h-1.5 flex-1 rounded-full transition-all ${dotColor(i)}`} />
             ))}
           </div>
-          <span className="text-xs font-bold opacity-70">{round + 1}/{MAX_ROUNDS}</span>
+          <span className="text-xs font-bold opacity-70 whitespace-nowrap">{round + 1}/{MAX_ROUNDS}</span>
           {timerLeft !== null && gamePhase === "playing" && (
             <span className={`text-xs font-bold tabular-nums px-1.5 py-0.5 rounded-lg ml-1 ${
-              timerLeft <= 5 ? "bg-red-500 text-white animate-pulse" : "bg-black/20 text-inherit"
+              timerLeft <= 5 ? "bg-red-500 text-white animate-pulse" : "bg-black/20"
             }`}>⏱{timerLeft}s</span>
           )}
         </div>
       </div>
 
-      {/* Personagens flutuando */}
-      <div className="absolute inset-0 z-10" style={{ paddingTop: 56, paddingBottom: 16 }}>
-        {chars.map(ch => {
-          const pos = charPositions.find(p => p.id === ch.id);
-          if (!pos) return null;
-          const state: "idle" | "correct" | "wrong" =
-            picked === ch.id ? (ch.isTarget ? "correct" : "wrong") :
-            (picked !== null && ch.isTarget ? "correct" : "idle");
-          const visible = gamePhase !== "command";
-          return (
-            <motion.div
-              key={ch.id}
-              className="absolute"
-              style={{ left: `${pos.x}%`, top: `${pos.y}%`, transform: "translate(-50%, -50%)" }}
-              initial={{ opacity: 0, scale: 0.5 }}
-              animate={visible ? {
-                opacity: 1, scale: 1,
-                y: [0, -pos.floatAmp, 0, pos.floatAmp * 0.5, 0],
-                x: [0, pos.floatAmp * 0.4, 0, -pos.floatAmp * 0.3, 0],
-              } : { opacity: 0, scale: 0.5 }}
-              transition={visible ? {
-                opacity: { duration: 0.3 },
-                scale: { duration: 0.3 },
-                y: { duration: pos.floatDur, repeat: Infinity, ease: "easeInOut", delay: pos.floatDelay },
-                x: { duration: pos.floatDur * 1.3, repeat: Infinity, ease: "easeInOut", delay: pos.floatDelay + 0.5 },
-              } : { duration: 0.2 }}
-            >
-              <AgentCard char={ch} mode={mode} onClick={() => handleTap(ch)} state={state} size={cardSize} />
-            </motion.div>
-          );
-        })}
+      {/* Falling characters */}
+      <div className="absolute inset-0 z-10" style={{ paddingTop: 56 }}>
+        <AnimatePresence>
+          {fallers.map(faller => {
+            const state: "idle" | "correct" | "wrong" =
+              picked === faller.char.id ? (faller.char.isTarget ? "correct" : "wrong") :
+              (picked !== null && faller.char.isTarget ? "correct" : "idle");
+            return (
+              <motion.div
+                key={faller.uid}
+                className="absolute"
+                style={{ left: `${faller.x}%`, top: 0, transform: "translateX(-50%)", touchAction: "manipulation" }}
+                initial={{ y: -160 }}
+                animate={{ y: 1600 }}
+                transition={{ duration: faller.fallDur, ease: "linear" }}
+                onAnimationComplete={() => handleFallerExit(faller)}
+                onPointerDown={(e) => { e.stopPropagation(); handleFallerClick(faller); }}
+              >
+                <AgentCard char={faller.char} mode={mode} onClick={() => handleFallerClick(faller)} state={state} size={faller.size} />
+              </motion.div>
+            );
+          })}
+        </AnimatePresence>
       </div>
 
-      {/* Cartão de comando (fase command) */}
+      {/* Command card */}
       <AnimatePresence>
         {gamePhase === "command" && (
-          <motion.div
-            className="absolute inset-0 z-30 flex flex-col items-center justify-center px-4"
+          <motion.div className="absolute inset-0 z-30 flex flex-col items-center justify-center px-4"
             initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0, scale: 0.95 }}
-            transition={{ duration: 0.25 }}
-          >
+            transition={{ duration: 0.22 }}>
             <div className={`w-full max-w-sm rounded-3xl shadow-2xl border-2 overflow-hidden ${
-              theme === "GAMIFIED" ? "bg-slate-900/95 border-cyan-500/50"
-              : theme === "COLORFUL" ? "bg-white/95 border-purple-300"
-              : "bg-white/95 border-blue-200"
+              theme === "GAMIFIED" ? "bg-slate-900/96 border-cyan-500/50"
+              : theme === "COLORFUL" ? "bg-white/96 border-purple-300"
+              : "bg-white/96 border-blue-200"
             }`}>
-              {/* Header do cartão */}
               <div className={`px-4 py-2 text-center text-xs font-bold uppercase tracking-widest ${
                 theme === "GAMIFIED" ? "bg-cyan-500/20 text-cyan-300"
                 : theme === "COLORFUL" ? "bg-purple-100 text-purple-600"
                 : "bg-blue-50 text-blue-600"
               }`}>
-                {instrMode === "audio" ? "👂 Ouça o comando" : instrMode === "visual" ? "👁 Leia o comando" : "👁 Leia o comando"}
+                {instrMode === "audio" ? "👂 Ouça o comando" : "👁 Leia o comando"}
               </div>
-
-              {/* Corpo do cartão */}
               <div className="px-5 py-5 space-y-4">
-                {/* Swatch de cor */}
                 <div className="flex justify-center">
-                  <div className="w-12 h-12 rounded-full shadow-lg border-4 border-white/50"
+                  <div className="w-14 h-14 rounded-full shadow-lg border-4 border-white/60"
                     style={{ background: targetAttrs?.colorHex ?? "#999" }} />
                 </div>
-
-                {/* Texto do comando */}
                 {instrMode !== "audio" ? (
-                  <p className={`text-center font-bold text-lg leading-snug ${
-                    theme === "GAMIFIED" ? "text-white" : "text-gray-800"
-                  }`}>{command}</p>
+                  <p className={`text-center font-bold text-lg leading-snug ${theme === "GAMIFIED" ? "text-white" : "text-gray-800"}`}>
+                    {command}
+                  </p>
                 ) : (
                   <div className="text-center space-y-1">
-                    <p className={`font-bold text-base ${theme === "GAMIFIED" ? "text-cyan-300" : "text-indigo-600"}`}>
-                      👂 Modo Auditivo
-                    </p>
-                    <p className={`text-sm ${theme === "GAMIFIED" ? "text-slate-400" : "text-gray-500"}`}>
-                      Ouça o comando e encontre o personagem
-                    </p>
+                    <p className={`font-bold text-base ${theme === "GAMIFIED" ? "text-cyan-300" : "text-indigo-600"}`}>👂 Modo Auditivo</p>
+                    <p className={`text-sm ${theme === "GAMIFIED" ? "text-slate-400" : "text-gray-500"}`}>Ouça e encontre o personagem</p>
                   </div>
                 )}
-
-                {/* Botão de ouvir + OK */}
                 <div className="flex gap-3">
                   {instrMode !== "visual" && (
-                    <button
-                      onClick={() => speak(command)}
+                    <button onClick={() => speak(command)}
                       className={`flex-1 h-12 rounded-2xl font-bold text-sm flex items-center justify-center gap-2 border-2 transition-all active:scale-95 ${
                         theme === "GAMIFIED" ? "border-cyan-500 text-cyan-300 bg-cyan-500/10 hover:bg-cyan-500/20"
                         : theme === "COLORFUL" ? "border-purple-300 text-purple-600 bg-purple-50 hover:bg-purple-100"
                         : "border-blue-300 text-blue-600 bg-blue-50 hover:bg-blue-100"
-                      }`}
-                    >
-                      🔊 Ouvir
-                    </button>
+                      }`}>🔊 Ouvir</button>
                   )}
-                  <button
-                    onClick={startPlaying}
+                  <button onClick={startPlaying}
                     className={`flex-1 h-12 rounded-2xl font-bold text-white text-sm flex items-center justify-center gap-2 shadow-lg transition-all active:scale-95 ${
                       theme === "GAMIFIED" ? "bg-gradient-to-r from-cyan-500 to-blue-600"
                       : theme === "COLORFUL" ? "bg-gradient-to-r from-purple-500 to-pink-500"
                       : "bg-gradient-to-r from-blue-500 to-indigo-600"
-                    }`}
-                  >
-                    Encontrar! →
-                  </button>
+                    }`}>Encontrar! →</button>
                 </div>
               </div>
             </div>
@@ -1086,30 +892,24 @@ export function FocusAgents({ difficulty, theme, onComplete, forceMode }: FocusA
         )}
       </AnimatePresence>
 
-      {/* Feedback overlay (fase feedback) */}
+      {/* Feedback overlay */}
       <AnimatePresence>
         {gamePhase === "feedback" && (
-          <motion.div
-            className="absolute inset-0 z-30 flex items-center justify-center"
-            initial={{ opacity: 0, scale: 0.8 }}
-            animate={{ opacity: 1, scale: 1 }}
-            exit={{ opacity: 0 }}
-            transition={{ duration: 0.2 }}
-          >
-            <div className={`px-8 py-6 rounded-3xl shadow-2xl text-center border-2 ${
+          <motion.div className="absolute inset-0 z-30 flex items-center justify-center"
+            initial={{ opacity: 0, scale: 0.8 }} animate={{ opacity: 1, scale: 1 }} exit={{ opacity: 0 }}
+            transition={{ duration: 0.18 }}>
+            <div className={`px-10 py-7 rounded-3xl shadow-2xl text-center border-2 ${
               picked && chars.find(c => c.id === picked)?.isTarget
-                ? "bg-green-500/95 border-green-300 text-white"
+                ? "bg-green-500/96 border-green-300 text-white"
                 : timedOut
-                  ? "bg-orange-500/95 border-orange-300 text-white"
-                  : "bg-red-500/95 border-red-300 text-white"
+                  ? "bg-orange-500/96 border-orange-300 text-white"
+                  : "bg-red-500/96 border-red-300 text-white"
             }`}>
               <p className="text-5xl mb-2">
                 {picked && chars.find(c => c.id === picked)?.isTarget ? "✅" : timedOut ? "⏱" : "❌"}
               </p>
-              <p className="font-bold text-xl">
-                {picked && chars.find(c => c.id === picked)?.isTarget
-                  ? "Correto!"
-                  : timedOut ? "Tempo esgotado!" : "Errado!"}
+              <p className="font-bold text-2xl">
+                {picked && chars.find(c => c.id === picked)?.isTarget ? "Correto!" : timedOut ? "Tempo!" : "Errado!"}
               </p>
             </div>
           </motion.div>
