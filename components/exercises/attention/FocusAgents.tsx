@@ -580,24 +580,44 @@ function AgentCard({
 
 // ── Command display ───────────────────────────────────────────────────────────
 
-function CommandPanel({ command, colorHex, colorLabel, theme, onSpeak }: {
-  command: string; colorHex: string; colorLabel: string; theme: Theme; onSpeak: () => void;
+type InstrMode = "both" | "visual" | "audio";
+
+function getInstrMode(d: number): InstrMode {
+  if (d <= 4) return "both";
+  if (d <= 7) return "visual";
+  return "audio";
+}
+
+function CommandPanel({ command, colorHex, colorLabel, theme, onSpeak, instrMode }: {
+  command: string; colorHex: string; colorLabel: string; theme: Theme; onSpeak: () => void; instrMode: InstrMode;
 }) {
   const bg = theme === "GAMIFIED" ? "bg-slate-800 border-cyan-500/30" :
              theme === "COLORFUL" ? "bg-white border-purple-300" : "bg-white border-blue-200";
   const txt = theme === "GAMIFIED" ? "text-cyan-100" : "text-gray-800";
+  const subTxt = theme === "GAMIFIED" ? "text-slate-400" : "text-slate-500";
+  const showText = instrMode !== "audio";
+  const showSpeaker = instrMode !== "visual";
 
   return (
     <div className={`rounded-2xl border-2 p-3 flex items-center gap-3 ${bg}`}>
       {/* Color swatch */}
       <div className="w-8 h-8 rounded-full flex-shrink-0 border-2 border-black/10 shadow"
            style={{ background: colorHex }} />
-      <p className={`text-sm font-bold flex-1 leading-snug ${txt}`}>{command}</p>
-      <button
-        onClick={onSpeak}
-        className={`text-xl flex-shrink-0 transition-transform active:scale-90`}
-        title="Ouvir comando"
-      >🔊</button>
+      {showText ? (
+        <p className={`text-sm font-bold flex-1 leading-snug ${txt}`}>{command}</p>
+      ) : (
+        <div className="flex-1">
+          <p className={`text-sm font-bold ${txt}`}>👂 Modo Auditivo</p>
+          <p className={`text-xs ${subTxt}`}>Ouça o comando e encontre o personagem</p>
+        </div>
+      )}
+      {showSpeaker && (
+        <button
+          onClick={onSpeak}
+          className={`text-xl flex-shrink-0 transition-transform active:scale-90`}
+          title="Ouvir comando"
+        >🔊</button>
+      )}
     </div>
   );
 }
@@ -685,7 +705,7 @@ function FocusTutorial({ theme, mode, onDone }: { theme: Theme; mode: AgeMode; o
     }
     return (
       <div className="space-y-3">
-        <CommandPanel command={cmd} colorHex="#1E88E5" colorLabel="azul" theme={theme} onSpeak={() => speak(cmd)}/>
+        <CommandPanel command={cmd} colorHex="#1E88E5" colorLabel="azul" theme={theme} onSpeak={() => speak(cmd)} instrMode="both" />
         <div className="grid grid-cols-3 gap-2">
           {tutChars.map(ch => (
             <AgentCard
@@ -768,8 +788,9 @@ export function FocusAgents({ difficulty, theme, onComplete }: FocusAgentsProps)
       }, 1000);
     }
 
-    // Auto-speak command
-    speak(gen.command);
+    // Auto-speak command (skip in visual-only mode)
+    const instrMode = getInstrMode(d);
+    if (instrMode !== "visual") speak(gen.command);
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [mode, difficulty]);
 
@@ -840,6 +861,8 @@ export function FocusAgents({ difficulty, theme, onComplete }: FocusAgentsProps)
   const cardSize = cols <= 3 ? 68 : cols === 4 ? 58 : 50;
 
   const targetAttrs = chars.find(c => c.id === targetId)?.attrs;
+  const effectiveDiff = Math.max(1, Math.min(10, difficulty + Math.floor(round / 3)));
+  const instrMode = getInstrMode(effectiveDiff);
 
   return (
     <div className={`min-h-screen flex flex-col items-center p-4 pt-6 ${pal.bg}`}>
@@ -878,6 +901,7 @@ export function FocusAgents({ difficulty, theme, onComplete }: FocusAgentsProps)
               colorLabel={targetAttrs?.colorLabel ?? ""}
               theme={theme}
               onSpeak={() => speak(command)}
+              instrMode={instrMode}
             />
           </motion.div>
         </AnimatePresence>

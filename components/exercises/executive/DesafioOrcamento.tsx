@@ -125,12 +125,10 @@ function TutStep({ theme, onDone }: { theme: Theme; onDone: () => void }) {
         ))}
       </div>
       <div className={`flex items-center justify-between px-3 py-2 rounded-xl ${theme === "GAMIFIED" ? "bg-gray-700" : "bg-slate-100"}`}>
-        <span className={`text-sm font-bold ${sub}`}>Total:</span>
-        <span className={`text-lg font-black tabular-nums ${met ? "text-green-500" : totalRounded > goal.max ? "text-red-500" : theme === "GAMIFIED" ? "text-cyan-400" : "text-indigo-600"}`}>
-          {fmt(totalRounded)}
-        </span>
+        <span className={`text-xs ${sub}`}>{sel.size} item(s) selecionado(s)</span>
+        <span className={`text-xs ${sub}`}>💡 Calcule mentalmente</span>
       </div>
-      {confirmed && !ok && <p className="text-xs text-center text-red-500 font-semibold">Orçamento ultrapassado! Tente de novo.</p>}
+      {confirmed && !ok && <p className="text-xs text-center text-red-500 font-semibold">Orçamento não respeitado! Tente de novo.</p>}
       <button onClick={confirm} disabled={sel.size === 0}
         className={`w-full h-11 rounded-xl font-bold text-white transition-all disabled:opacity-40 ${
           theme === "GAMIFIED" ? "bg-cyan-600" : "bg-indigo-600"
@@ -274,17 +272,13 @@ export function DesafioOrcamento({ difficulty, theme, onComplete }: Props) {
                 </div>
 
                 <div className={`flex items-center justify-between px-3 py-2 rounded-xl mb-3 ${pal.totalBg}`}>
-                  <div>
-                    <span className={`text-xs ${pal.sub}`}>{selected.size} item(ns) na cesta</span>
-                    {met && <span className="ml-2 text-xs font-bold text-green-500">✓ Orçamento OK</span>}
-                    {overBudget && <span className="ml-2 text-xs font-bold text-red-500">⚠ Acima do limite</span>}
-                  </div>
-                  <span className={`text-lg font-black tabular-nums ${totalColor}`}>{fmt(totalRounded)}</span>
+                  <span className={`text-xs ${pal.sub}`}>{selected.size} item(ns) selecionado(s)</span>
+                  <span className={`text-xs ${pal.sub}`}>💡 Calcule o total mentalmente</span>
                 </div>
 
-                <button onClick={confirm} disabled={selected.size === 0 || !met}
+                <button onClick={confirm} disabled={selected.size === 0}
                   className={`w-full h-11 rounded-xl font-bold transition-all disabled:opacity-40 ${pal.btnConfirm}`}>
-                  {met ? "Confirmar compra ✓" : selected.size === 0 ? "Selecione itens" : "Ajuste o orçamento"}
+                  {selected.size === 0 ? "Selecione itens" : "Confirmar compra"}
                 </button>
               </motion.div>
             )}

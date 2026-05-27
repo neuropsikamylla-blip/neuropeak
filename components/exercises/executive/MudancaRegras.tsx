@@ -565,7 +565,8 @@ export function MudancaRegras({ difficulty, theme, onComplete }: Props) {
   const [showTutorial, setShowTutorial] = useState(true);
   const reportProgress = useExerciseProgress();
 
-  const level = getLevel(difficulty);
+  const [level, setLevel] = useState<MRLevel>(() => getLevel(difficulty));
+  const [streak, setStreak] = useState(0);
   const [trial, setTrial] = useState(0);
   const [trialResults, setTrialResults] = useState<boolean[]>([]);
   const [chosen, setChosen] = useState<string | null>(null);
@@ -577,14 +578,14 @@ export function MudancaRegras({ difficulty, theme, onComplete }: Props) {
   const trialRef = useRef(0);
 
   const [scenario, setScenario] = useState<MRScenario>(() =>
-    pickScenario(getPool(level), usedRef.current)
+    pickScenario(getPool(getLevel(difficulty)), usedRef.current)
   );
 
-  const loadNext = useCallback(() => {
-    setScenario(pickScenario(getPool(level), usedRef.current));
+  const loadNext = useCallback((nextLevel: MRLevel) => {
+    setScenario(pickScenario(getPool(nextLevel), usedRef.current));
     setChosen(null);
     setPhase("choosing");
-  }, [level]);
+  }, []);
 
   function handleTap(key: string) {
     if (phase !== "choosing") return;
@@ -595,6 +596,21 @@ export function MudancaRegras({ difficulty, theme, onComplete }: Props) {
     const newResults = [...resultsRef.current, isCorrect];
     resultsRef.current = newResults;
     setTrialResults(newResults);
+
+    // Adaptive level progression
+    const newStreak = isCorrect ? Math.max(streak, 0) + 1 : Math.min(streak, 0) - 1;
+    let nextLevel = level;
+    let resetStreak = false;
+    if (newStreak >= 2) {
+      nextLevel = Math.min(level + 1, 3) as MRLevel;
+      resetStreak = true;
+    } else if (newStreak <= -2) {
+      nextLevel = Math.max(level - 1, 1) as MRLevel;
+      resetStreak = true;
+    }
+    const nextStreak = resetStreak ? 0 : newStreak;
+    setStreak(nextStreak);
+    setLevel(nextLevel);
 
     const nextTrial = trialRef.current + 1;
     reportProgress(Math.round((nextTrial / MAX_TRIALS) * 100));
@@ -608,12 +624,12 @@ export function MudancaRegras({ difficulty, theme, onComplete }: Props) {
           score: calculateExerciseScore("mudanca-regras", accuracy, undefined, difficulty),
           accuracy, difficulty,
           duration: Math.round((Date.now() - startTime.current) / 1000),
-          metadata: { trials: MAX_TRIALS, correct: newResults.filter(Boolean).length, level },
+          metadata: { trials: MAX_TRIALS, correct: newResults.filter(Boolean).length, level: nextLevel },
         });
       } else {
         trialRef.current = nextTrial;
         setTrial(nextTrial);
-        loadNext();
+        loadNext(nextLevel);
       }
     }, 2200);
   }
@@ -666,7 +682,11 @@ export function MudancaRegras({ difficulty, theme, onComplete }: Props) {
               {level === 1 ? "🟢 Leve" : level === 2 ? "🟡 Médio" : "🔴 Avançado"}
             </span>
           </div>
-          <span className={`text-xs ${pal.sub}`}>{trial + 1}/{MAX_TRIALS}</span>
+          <div className="flex items-center gap-2">
+            {streak >= 2 && <span className="text-xs font-bold text-orange-500">🔥 {streak}</span>}
+            {streak <= -2 && <span className="text-xs font-bold text-blue-400">↓ {Math.abs(streak)}</span>}
+            <span className={`text-xs ${pal.sub}`}>{trial + 1}/{MAX_TRIALS}</span>
+          </div>
         </div>
 
         {/* Progress */}

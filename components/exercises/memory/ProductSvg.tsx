@@ -703,6 +703,81 @@ export function ProductSvg({ id, size = 36 }: { id: string; size?: number }) {
         </svg>
       );
 
+    // ─── UVA ─────────────────────────────────────────────────────────────────
+    case "uva":
+      return (
+        <svg width={s} height={s} viewBox="0 0 40 40">
+          {/* Stem */}
+          <path d="M20 5 Q22 8 20 12" fill="none" stroke="#5D4037" strokeWidth="1.5" strokeLinecap="round"/>
+          {/* Leaf */}
+          <path d="M20 7 Q26 4 27 9 Q22 11 20 7Z" fill="#4CAF50"/>
+          {/* Grapes cluster */}
+          <circle cx="17" cy="17" r="4.5" fill="#7B1FA2"/>
+          <circle cx="23" cy="17" r="4.5" fill="#8E24AA"/>
+          <circle cx="14" cy="23" r="4.5" fill="#8E24AA"/>
+          <circle cx="20" cy="23" r="4.5" fill="#9C27B0"/>
+          <circle cx="26" cy="23" r="4.5" fill="#8E24AA"/>
+          <circle cx="17" cy="29" r="4.5" fill="#9C27B0"/>
+          <circle cx="23" cy="29" r="4.5" fill="#7B1FA2"/>
+          <circle cx="20" cy="35" r="4" fill="#8E24AA"/>
+          {/* Highlights */}
+          <circle cx="15.5" cy="15.5" r="1.5" fill="rgba(255,255,255,0.35)"/>
+          <circle cx="21.5" cy="15.5" r="1.5" fill="rgba(255,255,255,0.35)"/>
+        </svg>
+      );
+
+    // ─── LARANJA ─────────────────────────────────────────────────────────────
+    case "laranja":
+      return (
+        <svg width={s} height={s} viewBox="0 0 40 40">
+          {/* Fruit body */}
+          <circle cx="20" cy="22" r="15" fill="#FF9800"/>
+          <circle cx="20" cy="22" r="15" fill="none" stroke="#F57C00" strokeWidth="1"/>
+          {/* Navel */}
+          <circle cx="20" cy="22" r="4" fill="#FB8C00"/>
+          <circle cx="20" cy="22" r="2" fill="#F57C00"/>
+          {/* Segments lines */}
+          <line x1="20" y1="7" x2="20" y2="37" stroke="rgba(230,100,0,0.25)" strokeWidth="0.8"/>
+          <line x1="5" y1="22" x2="35" y2="22" stroke="rgba(230,100,0,0.25)" strokeWidth="0.8"/>
+          <line x1="9" y1="12" x2="31" y2="32" stroke="rgba(230,100,0,0.2)" strokeWidth="0.8"/>
+          <line x1="31" y1="12" x2="9" y2="32" stroke="rgba(230,100,0,0.2)" strokeWidth="0.8"/>
+          {/* Stem + leaf */}
+          <rect x="18.5" y="5" width="3" height="4" rx="1.5" fill="#5D4037"/>
+          <path d="M20 6 Q26 3 27 7 Q23 9 20 6Z" fill="#4CAF50"/>
+          {/* Shine */}
+          <circle cx="14" cy="15" r="3" fill="rgba(255,255,255,0.22)"/>
+        </svg>
+      );
+
+    // ─── CHÁ ─────────────────────────────────────────────────────────────────
+    case "cha":
+      return (
+        <svg width={s} height={s} viewBox="0 0 40 40">
+          {/* Box body */}
+          <rect x="8" y="12" width="22" height="24" rx="2" fill="#F9A825"/>
+          <rect x="8" y="12" width="22" height="24" rx="2" fill="none" stroke="#F57F17" strokeWidth="1"/>
+          {/* Label panel */}
+          <rect x="10" y="16" width="18" height="14" rx="1.5" fill="rgba(255,255,255,0.35)"/>
+          {/* Tea cup icon */}
+          <path d="M14 23 Q14 27 20 27 Q26 27 26 23 L25 19 L15 19Z" fill="#BF360C"/>
+          <path d="M26 21 Q30 20 30 23 Q30 26 26 25" fill="none" stroke="#BF360C" strokeWidth="1.5"/>
+          {/* Steam lines */}
+          <path d="M17 16 Q18 13 17 10" fill="none" stroke="#F57F17" strokeWidth="1.2" strokeLinecap="round"/>
+          <path d="M20 15 Q21 12 20 9" fill="none" stroke="#F57F17" strokeWidth="1.2" strokeLinecap="round"/>
+          <path d="M23 16 Q24 13 23 10" fill="none" stroke="#F57F17" strokeWidth="1.2" strokeLinecap="round"/>
+          {/* Box top */}
+          <path d="M8 12 L30 12 L30 16 L8 16Z" fill="#F57F17"/>
+          {/* Brand line */}
+          <rect x="10" y="31" width="18" height="3" rx="1" fill="rgba(255,255,255,0.25)"/>
+        </svg>
+      );
+
+    // ─── Aliases ─────────────────────────────────────────────────────────────
+    case "agua-min":   return <ProductSvg id="agua"         size={s} />;
+    case "refri":      return <ProductSvg id="refrigerante" size={s} />;
+    case "papel-hig":  return <ProductSvg id="papel"        size={s} />;
+    case "suco-cx":    return <ProductSvg id="suco"         size={s} />;
+
     // ─── Fallback ─────────────────────────────────────────────────────────────
     default: {
       const label = id.slice(0, 4).toUpperCase();
