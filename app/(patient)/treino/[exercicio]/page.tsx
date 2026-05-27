@@ -22,6 +22,7 @@ const SpanNumericoInverso = dynamic(() => import("@/components/exercises/memory/
 const MatrizEspacialInversa = dynamic(() => import("@/components/exercises/memory/MatrizEspacialInversa").then(m => ({ default: m.MatrizEspacialInversa })), { loading: ExerciseLoader });
 const NBack               = dynamic(() => import("@/components/exercises/memory/NBack").then(m => ({ default: m.NBack })), { loading: ExerciseLoader });
 const TrilhaVisual        = dynamic(() => import("@/components/exercises/attention/TrilhaVisual").then(m => ({ default: m.TrilhaVisual })), { loading: ExerciseLoader });
+const AtencaoSeletiva     = dynamic(() => import("@/components/exercises/attention/AtencaoSeletiva").then(m => ({ default: m.AtencaoSeletiva })), { loading: ExerciseLoader });
 const StroopTask          = dynamic(() => import("@/components/exercises/executive/StroopTask").then(m => ({ default: m.StroopTask })), { loading: ExerciseLoader });
 const Vigilancia          = dynamic(() => import("@/components/exercises/attention/Vigilancia").then(m => ({ default: m.Vigilancia })), { loading: ExerciseLoader });
 const TempoReacao         = dynamic(() => import("@/components/exercises/processing/TempoReacao").then(m => ({ default: m.TempoReacao })), { loading: ExerciseLoader });
@@ -59,6 +60,12 @@ const EXERCISE_INSTRUCTIONS: Record<string, string[]> = {
     "Estude os pares durante o tempo disponível.",
     "Em seguida, você verá uma palavra e deverá escolher a imagem correta.",
     "Tente criar associações mentais para facilitar a memorização.",
+  ],
+  "atencao-seletiva": [
+    "Um estímulo aparece na tela por poucos instantes — forme colorida ou com formato específico.",
+    "Toque na tela APENAS quando o estímulo corresponder à regra mostrada no topo.",
+    "Se o estímulo for diferente, NÃO toque — espere o próximo.",
+    "Nas dificuldades mais altas, a regra pode mudar durante o exercício. Fique atento!",
   ],
   "trilha-visual": [
     "Números de 1 a N estão espalhados pela tela.",
@@ -369,6 +376,7 @@ export default function ExercicioPage() {
     switch (exerciseId) {
       case "span-numerico": return <SpanNumerico {...props} />;
       case "matriz-espacial": return <MatrizEspacial {...props} />;
+      case "atencao-seletiva": return <AtencaoSeletiva {...props} />;
       case "trilha-visual": return <TrilhaVisual {...props} />;
       case "stroop-task": return <StroopTask {...props} />;
       case "vigilancia": return <Vigilancia {...props} />;

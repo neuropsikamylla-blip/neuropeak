@@ -227,7 +227,7 @@ export const EXERCISE_DEFINITIONS = {
     id: "atencao-seletiva",
     name: "Atenção Seletiva",
     domain: "attention" as Domain,
-    description: "Encontre a palavra alvo entre distratores similares",
+    description: "Responda ao estímulo alvo e iniba respostas aos distratores",
     estimatedMinutes: 7,
     icon: "🎯",
   },
