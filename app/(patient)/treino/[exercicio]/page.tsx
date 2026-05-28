@@ -248,10 +248,10 @@ const EXERCISE_INSTRUCTIONS: Record<string, string[]> = {
     "Confirme quando tiver certeza de todas as células!",
   ],
   "focus-agents": [
-    "Um comando aparecerá no topo — leia (ou ouça) os atributos do personagem alvo.",
+    "Um comando VISUAL aparecerá no topo — leia os atributos do personagem alvo.",
     "Encontre e clique no personagem correto entre os outros na tela.",
     "Atenção: há personagens parecidos para confundir — compare todos os atributos!",
-    "Nas dificuldades maiores o tempo é curto e os distratores são quase idênticos ao alvo.",
+    "Sem áudio: treine atenção visual e leitura rápida de características.",
   ],
   "focus-agents-auditivo": [
     "Você vai OUVIR o comando — preste atenção ao áudio.",
@@ -460,7 +460,7 @@ export default function ExercicioPage() {
       case "mot": return <MOT {...props} />;
       case "dual-task": return <DualTask {...props} />;
       case "deductive-grid": return <DeductiveGrid {...props} />;
-      case "focus-agents": return <FocusAgents {...props} />;
+      case "focus-agents": return <FocusAgents {...props} forceMode="visual" />;
       case "focus-agents-auditivo": return <FocusAgents {...props} forceMode="auditivo" />;
       default: return <div className="p-8 text-center text-gray-500">Exercício em desenvolvimento</div>;
     }
