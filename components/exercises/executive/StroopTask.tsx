@@ -94,13 +94,13 @@ function RuleBadge({ rule }: { rule: Rule }) {
         style={{
           background: isCor
             ? "linear-gradient(135deg, rgba(96,165,250,0.25), rgba(139,92,246,0.25))"
-            : "linear-gradient(135deg, rgba(168,85,247,0.25), rgba(236,72,153,0.25))",
-          border: `2px solid ${isCor ? "rgba(147,197,253,0.5)" : "rgba(216,180,254,0.5)"}`,
-          color: isCor ? "#93c5fd" : "#d8b4fe",
+            : "linear-gradient(135deg, #1a0030, #2d0050)",
+          border: `2px solid ${isCor ? "rgba(147,197,253,0.5)" : "rgba(216,180,254,0.6)"}`,
+          color: isCor ? "#93c5fd" : "#e9d5ff",
           backdropFilter: "blur(8px)",
           boxShadow: isCor
             ? "0 0 20px rgba(96,165,250,0.3), inset 0 1px 0 rgba(255,255,255,0.1)"
-            : "0 0 20px rgba(168,85,247,0.3), inset 0 1px 0 rgba(255,255,255,0.1)",
+            : "0 0 24px rgba(168,85,247,0.5), inset 0 1px 0 rgba(255,255,255,0.15)",
         }}
       >
         {isCor ? "🎨" : "📝"}

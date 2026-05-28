@@ -344,24 +344,45 @@ function AgentSvg({ a, mode, size = 80 }: { a: CharAttrs; mode: AgeMode; size?: 
           fill={c} stroke={ol} strokeWidth="1.5" opacity="0.96"/>
       )}
 
-      {/* ═══ BONE ═══ */}
+      {/* ═══ BONE (baseball cap) ═══ */}
       {a.hatId === "bone" && (
         <g>
-          <ellipse cx="30" cy="8" rx="25" ry="8.5" fill="#222" stroke={ol} strokeWidth="1.5"/>
-          <rect x="7" y="4.5" width="46" height="9" rx="4.5" fill="#333" stroke={ol} strokeWidth="1.5"/>
-          <rect x="6" y="7" width="28" height="6.5" rx="3" fill="#3d3d3d" stroke={ol} strokeWidth="1"/>
-          <circle cx="30" cy="2" r="4.5" fill="#3d3d3d"/>
-          <ellipse cx="30" cy="13.5" rx="25" ry="3" fill="rgba(0,0,0,0.15)" stroke="none"/>
+          {/* Dome — cobre o topo da cabeça */}
+          <path d="M10 23 Q10 3 30 2 Q50 3 50 23"
+            fill="#2d2d2d" stroke={ol} strokeWidth="1.6"/>
+          {/* Faixa da testa */}
+          <rect x="10" y="19" width="40" height="6.5" rx="3"
+            fill="#383838" stroke={ol} strokeWidth="1.4"/>
+          {/* Aba frontal — sai para a esquerda como boné de lado */}
+          <path d="M10 21.5 L-5 21 Q-7 24.5 -5 27 L10 25.5Z"
+            fill="#2d2d2d" stroke={ol} strokeWidth="1.3"/>
+          {/* Sombra embaixo da aba */}
+          <line x1="10" y1="25.5" x2="-4" y2="26.5"
+            stroke="rgba(0,0,0,0.4)" strokeWidth="1.2" strokeLinecap="round"/>
+          {/* Brilho da aba */}
+          <line x1="10" y1="22.5" x2="-4" y2="22"
+            stroke="rgba(255,255,255,0.1)" strokeWidth="1" strokeLinecap="round"/>
+          {/* Botão no topo */}
+          <circle cx="30" cy="3.5" r="3.5" fill="#383838"/>
+          {/* Costuras do dome */}
+          <path d="M30 3.5 Q26 13 22 23" fill="none" stroke="rgba(255,255,255,0.08)" strokeWidth="1" strokeLinecap="round"/>
+          <path d="M30 3.5 Q34 13 38 23" fill="none" stroke="rgba(255,255,255,0.08)" strokeWidth="1" strokeLinecap="round"/>
         </g>
       )}
 
-      {/* ═══ CHAPEU ═══ */}
+      {/* ═══ CHAPEU (top hat / cowboy) ═══ */}
       {a.hatId === "chapeu" && (
         <g>
-          <ellipse cx="30" cy="7" rx="27" ry="7.5" fill="#0d0d0d" stroke={ol} strokeWidth="1.8"/>
-          <rect x="12" y="-2.5" width="36" height="12.5" rx="3" fill="#1a1a1a" stroke={ol} strokeWidth="1.8"/>
-          <rect x="12" y="6" width="36" height="4.5" rx="2" fill={c} opacity="0.9"/>
-          <ellipse cx="25" cy="0" rx="8" ry="3" fill="rgba(255,255,255,0.1)" transform="rotate(-15 25 0)"/>
+          {/* Aba larga em volta */}
+          <ellipse cx="30" cy="7" rx="28" ry="7" fill="#111" stroke={ol} strokeWidth="1.8"/>
+          {/* Copa alta */}
+          <rect x="15" y="-10" width="30" height="19" rx="3" fill="#1a1a1a" stroke={ol} strokeWidth="1.8"/>
+          {/* Faixa colorida */}
+          <rect x="15" y="5.5" width="30" height="4.5" rx="1.5" fill={c} opacity="0.92"/>
+          {/* Brilho no topo da copa */}
+          <ellipse cx="25" cy="-8" rx="7" ry="2.5" fill="rgba(255,255,255,0.1)" transform="rotate(-12 25 -8)"/>
+          {/* Sombra da aba */}
+          <ellipse cx="30" cy="9.5" rx="28" ry="3" fill="rgba(0,0,0,0.2)" stroke="none"/>
         </g>
       )}
 
