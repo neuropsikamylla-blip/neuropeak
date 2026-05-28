@@ -198,20 +198,21 @@ function speak(text: string) {
 }
 
 // ── Full-body Agent SVG ───────────────────────────────────────────────────────
-// viewBox 0 0 60 112  —  chibi: cabeça grande (rx22), corpo pequeno (w24)
+// viewBox 0 0 60 112  —  chibi premium: olhos enormes, cabelo na cor do uniforme
 
 function AgentSvg({ a, mode, size = 80 }: { a: CharAttrs; mode: AgeMode; size?: number }) {
   const c = a.colorHex;
-  const skin = "#FFD9B8";
+  const skin = "#FDDCB0";
   const ol = "#1a1a1a";
   const isLight = ["#CFD8DC", "#DDE1F0", "#FFD600", "#FB8C00"].includes(c);
-  const hair = mode === "child" ? "#5D3317" : mode === "teen" ? "#0d0d0d" : "#3E2723";
+  // Cabelo na cor do uniforme (como NEO=azul, MINDRA=roxo, FOKUS=verde)
+  const hair = c;
   const badgeColor = a.extraId ? BADGE_COLORS[a.extraId] : null;
   const h = Math.round(size * 112 / 60);
 
   return (
     <svg width={size} height={h} viewBox="0 0 60 112"
-      style={{ overflow: "visible", filter: "drop-shadow(0px 6px 14px rgba(0,0,0,0.6))" }}>
+      style={{ overflow: "visible", filter: "drop-shadow(0px 6px 16px rgba(0,0,0,0.55))" }}>
 
       {/* ═══ BACKPACK (behind body) ═══ */}
       {a.extraId === "mochila" && (
@@ -224,28 +225,33 @@ function AgentSvg({ a, mode, size = 80 }: { a: CharAttrs; mode: AgeMode; size?: 
         </g>
       )}
 
-      {/* ═══ HAIR (behind head, not drawn if capuz) ═══ */}
+      {/* ═══ HAIR (behind head, não desenhado se capuz ou bone) ═══ */}
       {a.hatId !== "capuz" && (
         <>
           {mode === "child" && (
             <>
-              {/* Fluffy blob + top knob + side puffs */}
-              <ellipse cx="30" cy="12" rx="24" ry="16" fill={hair}/>
-              <circle cx="30" cy="1" r="8" fill={hair}/>
-              <path d="M6 23 Q3 9 8 2" fill="none" stroke={hair} strokeWidth="9" strokeLinecap="round"/>
-              <path d="M54 23 Q57 9 52 2" fill="none" stroke={hair} strokeWidth="9" strokeLinecap="round"/>
+              {/* Grande cabelo volumoso colorido */}
+              <ellipse cx="30" cy="10" rx="26" ry="18" fill={hair}/>
+              <circle cx="30" cy="-1" r="10" fill={hair}/>
+              <path d="M4 23 Q1 5 8 -1" fill="none" stroke={hair} strokeWidth="12" strokeLinecap="round"/>
+              <path d="M56 23 Q59 5 52 -1" fill="none" stroke={hair} strokeWidth="12" strokeLinecap="round"/>
+              <ellipse cx="20" cy="4" rx="10" ry="5.5" fill="rgba(255,255,255,0.2)" transform="rotate(-18 20 4)"/>
             </>
           )}
           {mode === "teen" && (
             <>
-              {/* Swept asymmetric + spiky top */}
-              <path d="M8 23 Q9 1 26 0 Q41 0 53 11 Q57 18 53 23 Q49 7 33 7 Q16 7 8 23Z" fill={hair}/>
-              <path d="M53 23 Q59 9 57 1" fill="none" stroke={hair} strokeWidth="7" strokeLinecap="round"/>
+              {/* Cabelo varrido, volumoso */}
+              <path d="M7 23 Q6 -2 26 -2 Q44 -2 54 11 Q58 18 53 23 Q49 5 32 5 Q15 5 7 23Z" fill={hair}/>
+              <path d="M53 23 Q61 6 59 -2" fill="none" stroke={hair} strokeWidth="9" strokeLinecap="round"/>
+              <ellipse cx="24" cy="4" rx="11" ry="4.5" fill="rgba(255,255,255,0.18)" transform="rotate(-12 24 4)"/>
             </>
           )}
           {mode === "adult" && (
-            /* Neat professional cap */
-            <path d="M10 23 Q13 4 30 3 Q47 4 50 23 Q46 11 30 11 Q14 11 10 23Z" fill={hair}/>
+            <>
+              {/* Cabelo lateral penteado */}
+              <path d="M10 22 Q11 3 30 2 Q48 3 50 22 Q46 10 30 10 Q14 10 10 22Z" fill={hair}/>
+              <ellipse cx="21" cy="8" rx="9" ry="3.5" fill="rgba(255,255,255,0.18)" transform="rotate(-18 21 8)"/>
+            </>
           )}
         </>
       )}
@@ -257,86 +263,62 @@ function AgentSvg({ a, mode, size = 80 }: { a: CharAttrs; mode: AgeMode; size?: 
 
       {/* ═══ HEAD ═══ */}
       <ellipse cx="30" cy="25" rx="22" ry="22" fill={skin} stroke={ol} strokeWidth="2"/>
-      {/* Head shine */}
-      <ellipse cx="22" cy="13" rx="9" ry="5.5" fill="rgba(255,255,255,0.28)" transform="rotate(-22 22 13)"/>
+      <ellipse cx="20" cy="13" rx="9.5" ry="6" fill="rgba(255,255,255,0.3)" transform="rotate(-22 20 13)"/>
 
-      {/* ═══ CHEEKS (child only) ═══ */}
-      {mode === "child" && (
-        <>
-          <ellipse cx="13" cy="33" rx="5.5" ry="3.5" fill="#FFB3B3" opacity="0.65"/>
-          <ellipse cx="47" cy="33" rx="5.5" ry="3.5" fill="#FFB3B3" opacity="0.65"/>
-        </>
-      )}
+      {/* ═══ CHEEKS (sempre visíveis, como no estilo de referência) ═══ */}
+      <ellipse cx="11" cy="34" rx="5.5" ry="3.5" fill="#FFB3B3" opacity="0.6"/>
+      <ellipse cx="49" cy="34" rx="5.5" ry="3.5" fill="#FFB3B3" opacity="0.6"/>
 
       {/* ═══ MASK (behind face) ═══ */}
       {a.extraId === "mascara" && (
         <rect x="14" y="24" width="32" height="15" rx="6" fill="#00B4D8" stroke={ol} strokeWidth="1.2" opacity="0.94"/>
       )}
 
-      {/* ═══ EYEBROWS ═══ */}
-      {mode === "child" ? (
-        <>
-          <path d="M14 18 Q19.5 15 24.5 18" fill="none" stroke={hair} strokeWidth="2.6" strokeLinecap="round"/>
-          <path d="M35.5 18 Q40.5 15 46 18" fill="none" stroke={hair} strokeWidth="2.6" strokeLinecap="round"/>
-        </>
-      ) : mode === "teen" ? (
-        <>
-          <path d="M14.5 18.5 Q19.5 16 25 18" fill="none" stroke={hair} strokeWidth="2.3" strokeLinecap="round"/>
-          <path d="M35 18.5 Q40.5 16 46 17.5" fill="none" stroke={hair} strokeWidth="2.3" strokeLinecap="round"/>
-        </>
-      ) : (
-        <>
-          <path d="M15 18.5 Q20 16.5 25.5 18.5" fill="none" stroke={hair} strokeWidth="2.1" strokeLinecap="round"/>
-          <path d="M34.5 18.5 Q40 16.5 45 18.5" fill="none" stroke={hair} strokeWidth="2.1" strokeLinecap="round"/>
-        </>
-      )}
+      {/* ═══ EYEBROWS (uniforme, sobrancelhas expressivas) ═══ */}
+      <path d="M11.5 17 Q18 13.5 24.5 17" fill="none" stroke={ol} strokeWidth="2.6" strokeLinecap="round"/>
+      <path d="M35.5 17 Q42 13.5 48.5 17" fill="none" stroke={ol} strokeWidth="2.6" strokeLinecap="round"/>
 
-      {/* ═══ EYES (big chibi ovals) ═══ */}
-      {/* Left */}
-      <ellipse cx="21" cy="28" rx="7" ry="8" fill="white" stroke={ol} strokeWidth="1.5"/>
-      <ellipse cx="22" cy="29.5" rx="4.8" ry="5.5" fill="#111"/>
-      <circle cx="25" cy="26" r="2.2" fill="white" opacity="0.95"/>
-      <circle cx="20" cy="32.5" r="1.3" fill="white" opacity="0.45"/>
-      {/* Right */}
-      <ellipse cx="39" cy="28" rx="7" ry="8" fill="white" stroke={ol} strokeWidth="1.5"/>
-      <ellipse cx="40" cy="29.5" rx="4.8" ry="5.5" fill="#111"/>
-      <circle cx="43" cy="26" r="2.2" fill="white" opacity="0.95"/>
-      <circle cx="38" cy="32.5" r="1.3" fill="white" opacity="0.45"/>
+      {/* ═══ OLHOS ENORMES — iris quase preenche o branco (estilo referência) ═══ */}
+      {/* Esquerdo */}
+      <ellipse cx="20" cy="27" rx="8.5" ry="9.5" fill="white" stroke={ol} strokeWidth="1.6"/>
+      <ellipse cx="20.5" cy="27.5" rx="6.5" ry="7.5" fill="#0d0d0d"/>
+      <circle cx="24" cy="23" r="3.2" fill="white" opacity="0.95"/>
+      <circle cx="17.5" cy="32" r="1.7" fill="white" opacity="0.5"/>
+      {/* Direito */}
+      <ellipse cx="40" cy="27" rx="8.5" ry="9.5" fill="white" stroke={ol} strokeWidth="1.6"/>
+      <ellipse cx="40.5" cy="27.5" rx="6.5" ry="7.5" fill="#0d0d0d"/>
+      <circle cx="44" cy="23" r="3.2" fill="white" opacity="0.95"/>
+      <circle cx="37.5" cy="32" r="1.7" fill="white" opacity="0.5"/>
 
-      {/* ═══ GLASSES ═══ */}
+      {/* ═══ GLASSES (armação colorida, grande, estilo MINDRA) ═══ */}
       {(a.extraId === "oculos" || a.hatId === "oculos") && (
-        <g stroke={ol} strokeWidth="1.8" fill="none">
-          <ellipse cx="21" cy="28" rx="8.5" ry="9.5"/>
-          <ellipse cx="39" cy="28" rx="8.5" ry="9.5"/>
-          <line x1="29.5" y1="28" x2="30.5" y2="28"/>
-          <line x1="6" y1="22.5" x2="12.5" y2="26"/>
-          <line x1="47.5" y1="26" x2="54" y2="22.5"/>
+        <g stroke={c} strokeWidth="2.2" fill={`${c}44`}>
+          <ellipse cx="20" cy="27" rx="10" ry="11"/>
+          <ellipse cx="40" cy="27" rx="10" ry="11"/>
+          <line x1="30" y1="27" x2="30" y2="27" stroke={c} strokeWidth="2"/>
+          <line x1="4" y1="21" x2="10" y2="24.5" stroke={ol} strokeWidth="1.8"/>
+          <line x1="50" y1="24.5" x2="56" y2="21" stroke={ol} strokeWidth="1.8"/>
         </g>
       )}
 
       {/* ═══ VISOR ═══ */}
       {a.hatId === "visor" && (
         <g>
-          <ellipse cx="21" cy="28" rx="8.5" ry="9.5" fill="#020a14" opacity="0.97"/>
-          <ellipse cx="39" cy="28" rx="8.5" ry="9.5" fill="#020a14" opacity="0.97"/>
-          <line x1="29.5" y1="28" x2="30.5" y2="28" stroke="#1a3a5c" strokeWidth="2.5"/>
-          <ellipse cx="21" cy="24" rx="5.5" ry="3" fill="rgba(100,180,255,0.13)"/>
-          <ellipse cx="39" cy="24" rx="5.5" ry="3" fill="rgba(100,180,255,0.13)"/>
-          <line x1="6" y1="22.5" x2="12.5" y2="26" stroke={ol} strokeWidth="1.8"/>
-          <line x1="47.5" y1="26" x2="54" y2="22.5" stroke={ol} strokeWidth="1.8"/>
+          <ellipse cx="20" cy="27" rx="10" ry="11" fill="#020a14" opacity="0.97"/>
+          <ellipse cx="40" cy="27" rx="10" ry="11" fill="#020a14" opacity="0.97"/>
+          <line x1="30" y1="27" x2="30" y2="27" stroke="#1a3a5c" strokeWidth="2.5"/>
+          <ellipse cx="20" cy="23" rx="6" ry="3.5" fill="rgba(100,200,255,0.2)"/>
+          <ellipse cx="40" cy="23" rx="6" ry="3.5" fill="rgba(100,200,255,0.2)"/>
+          <line x1="4" y1="21" x2="10" y2="24.5" stroke={ol} strokeWidth="2"/>
+          <line x1="50" y1="24.5" x2="56" y2="21" stroke={ol} strokeWidth="2"/>
         </g>
       )}
 
-      {/* ═══ NOSE ═══ */}
-      <circle cx="30" cy="36.5" r="2" fill="#C4927A" opacity="0.65"/>
+      {/* ═══ NARIZ (sutil, estilo chibi) ═══ */}
+      <path d="M27.5 37.5 Q30 40 32.5 37.5" fill="none" stroke="#C4927A" strokeWidth="1.6" strokeLinecap="round"/>
 
-      {/* ═══ MOUTH ═══ */}
-      {mode === "child"
-        ? <path d="M20 41.5 Q30 48 40 41.5" fill="none" stroke="#9A5244" strokeWidth="2.6" strokeLinecap="round"/>
-        : mode === "teen"
-        ? <path d="M23 41 Q30 45 37 41" fill="none" stroke="#9A5244" strokeWidth="2.1" strokeLinecap="round"/>
-        : <path d="M24 40.5 Q30 44 36 40.5" fill="none" stroke="#9A5244" strokeWidth="1.9" strokeLinecap="round"/>
-      }
+      {/* ═══ BOCA ═══ */}
+      <path d="M22 43 Q30 49.5 38 43" fill="none" stroke="#9A5244" strokeWidth="2.5" strokeLinecap="round"/>
 
       {/* ═══ CAPUZ FRONT RIM ═══ */}
       {a.hatId === "capuz" && (
@@ -344,29 +326,26 @@ function AgentSvg({ a, mode, size = 80 }: { a: CharAttrs; mode: AgeMode; size?: 
           fill={c} stroke={ol} strokeWidth="1.5" opacity="0.96"/>
       )}
 
-      {/* ═══ BONE (baseball cap) ═══ */}
+      {/* ═══ BONE (baseball cap — cúpula + aba frontal larga, estilo NEXO) ═══ */}
       {a.hatId === "bone" && (
         <g>
-          {/* Dome — cobre o topo da cabeça */}
-          <path d="M10 23 Q10 3 30 2 Q50 3 50 23"
-            fill="#2d2d2d" stroke={ol} strokeWidth="1.6"/>
-          {/* Faixa da testa */}
-          <rect x="10" y="19" width="40" height="6.5" rx="3"
-            fill="#383838" stroke={ol} strokeWidth="1.4"/>
-          {/* Aba frontal — sai para a esquerda como boné de lado */}
-          <path d="M10 21.5 L-5 21 Q-7 24.5 -5 27 L10 25.5Z"
-            fill="#2d2d2d" stroke={ol} strokeWidth="1.3"/>
-          {/* Sombra embaixo da aba */}
-          <line x1="10" y1="25.5" x2="-4" y2="26.5"
-            stroke="rgba(0,0,0,0.4)" strokeWidth="1.2" strokeLinecap="round"/>
-          {/* Brilho da aba */}
-          <line x1="10" y1="22.5" x2="-4" y2="22"
-            stroke="rgba(255,255,255,0.1)" strokeWidth="1" strokeLinecap="round"/>
+          {/* Cúpula do boné */}
+          <path d="M9 22 Q9 0 30 -1 Q51 0 51 22" fill="#2d2d2d" stroke={ol} strokeWidth="1.8"/>
+          {/* Brilho 3D na cúpula */}
+          <ellipse cx="20" cy="8" rx="9" ry="4.5" fill="rgba(255,255,255,0.2)" transform="rotate(-18 20 8)"/>
+          {/* Logo/símbolo no painel frontal */}
+          <circle cx="30" cy="12" r="5.5" fill="rgba(0,0,0,0.22)" stroke="rgba(255,255,255,0.22)" strokeWidth="1"/>
+          <circle cx="30" cy="12" r="2.5" fill="rgba(255,255,255,0.3)"/>
+          {/* Faixa suadouro */}
+          <rect x="9" y="19" width="42" height="4.5" rx="2" fill="#1a1a1a" stroke={ol} strokeWidth="1.2"/>
+          {/* Aba frontal — larga, ligeiramente curva para baixo */}
+          <path d="M1 23 Q30 30 59 23 Q59 28 30 35 Q1 28 1 23Z" fill="#383838" stroke={ol} strokeWidth="1.4"/>
+          {/* Underside shadow da aba */}
+          <path d="M2 24.5 Q30 31 58 24.5 Q58 28.5 30 35 Q2 28.5 2 24.5Z" fill="rgba(0,0,0,0.35)" stroke="none"/>
+          {/* Brilho no topo da aba */}
+          <path d="M2 23 Q30 29 58 23" fill="none" stroke="rgba(255,255,255,0.1)" strokeWidth="1.5" strokeLinecap="round"/>
           {/* Botão no topo */}
-          <circle cx="30" cy="3.5" r="3.5" fill="#383838"/>
-          {/* Costuras do dome */}
-          <path d="M30 3.5 Q26 13 22 23" fill="none" stroke="rgba(255,255,255,0.08)" strokeWidth="1" strokeLinecap="round"/>
-          <path d="M30 3.5 Q34 13 38 23" fill="none" stroke="rgba(255,255,255,0.08)" strokeWidth="1" strokeLinecap="round"/>
+          <circle cx="30" cy="0" r="3" fill="#3a3a3a" stroke={ol} strokeWidth="0.8"/>
         </g>
       )}
 
@@ -408,15 +387,19 @@ function AgentSvg({ a, mode, size = 80 }: { a: CharAttrs; mode: AgeMode; size?: 
         </g>
       )}
 
-      {/* ═══ HEADSET ═══ */}
+      {/* ═══ HEADSET (ear cups na cor do uniforme, estilo NEO) ═══ */}
       {a.hatId === "headset" && (
         <g>
           <path d="M8 24 Q8 2 30 2 Q52 2 52 24" fill="none" stroke="#1a1a1a" strokeWidth="4.5"/>
-          <rect x="4" y="16" width="11" height="16" rx="5.5" fill="#2d2d2d" stroke={ol} strokeWidth="1.5"/>
-          <rect x="45" y="16" width="11" height="16" rx="5.5" fill="#2d2d2d" stroke={ol} strokeWidth="1.5"/>
-          <ellipse cx="9.5" cy="23" rx="4" ry="5" fill="#3d3d3d"/>
-          <ellipse cx="50.5" cy="23" rx="4" ry="5" fill="#3d3d3d"/>
-          <line x1="5" y1="30" x2="-1" y2="41" stroke="#222" strokeWidth="2.5" strokeLinecap="round"/>
+          <rect x="3" y="15" width="13" height="18" rx="6" fill="#2d2d2d" stroke={ol} strokeWidth="1.5"/>
+          <rect x="44" y="15" width="13" height="18" rx="6" fill="#2d2d2d" stroke={ol} strokeWidth="1.5"/>
+          {/* Ear cups coloridos */}
+          <ellipse cx="9.5" cy="23" rx="4.5" ry="6" fill={c}/>
+          <ellipse cx="50.5" cy="23" rx="4.5" ry="6" fill={c}/>
+          {/* Brilho nos ear cups */}
+          <ellipse cx="8" cy="20" rx="2" ry="2.5" fill="rgba(255,255,255,0.3)"/>
+          <ellipse cx="49" cy="20" rx="2" ry="2.5" fill="rgba(255,255,255,0.3)"/>
+          <line x1="5" y1="31" x2="-1" y2="41" stroke="#222" strokeWidth="2.5" strokeLinecap="round"/>
           <circle cx="-1.5" cy="43" r="4.5" fill="#1a1a1a" stroke={ol} strokeWidth="1"/>
         </g>
       )}
@@ -424,18 +407,22 @@ function AgentSvg({ a, mode, size = 80 }: { a: CharAttrs; mode: AgeMode; size?: 
       {/* ═══ NECK ═══ */}
       <rect x="26" y="45" width="8" height="7" rx="4" fill={skin} stroke={ol} strokeWidth="1.5"/>
 
-      {/* ═══ BODY ═══ */}
-      <rect x="18" y="49" width="24" height="21" rx="9" fill={c} stroke={ol} strokeWidth="2"/>
-      <ellipse cx="24" cy="54" rx="6.5" ry="4" fill="rgba(255,255,255,0.28)" transform="rotate(-20 24 54)"/>
-      <rect x="35" y="51" width="7" height="17" rx="4" fill="rgba(0,0,0,0.12)" opacity="0.9"/>
-      <line x1="30" y1="50" x2="30" y2="69" stroke={isLight ? "rgba(0,0,0,0.1)" : "rgba(255,255,255,0.15)"} strokeWidth="1.5"/>
+      {/* ═══ BODY — mais largo e arredondado, estilo uniforme estofado ═══ */}
+      <rect x="14" y="49" width="32" height="22" rx="11" fill={c} stroke={ol} strokeWidth="2"/>
+      {/* Brilho 3D no corpo */}
+      <ellipse cx="21" cy="54" rx="7.5" ry="4.5" fill="rgba(255,255,255,0.28)" transform="rotate(-22 21 54)"/>
+      {/* Zíper/linha frontal */}
+      <line x1="30" y1="50" x2="30" y2="70" stroke={isLight ? "rgba(0,0,0,0.12)" : "rgba(255,255,255,0.2)"} strokeWidth="1.5"/>
+      {/* Logo cerebro/NP no peito (estilo NEXO/FOKUS) */}
+      <circle cx="30" cy="58" r="5.5" fill="rgba(0,0,0,0.2)" stroke="rgba(255,255,255,0.3)" strokeWidth="1"/>
+      <path d="M27.5 57.5 Q29 55 30.5 56 Q32 55 33 57.5 Q32 60 30.5 59 Q29 60 27.5 57.5Z" fill="rgba(255,255,255,0.5)" stroke="none"/>
 
       {/* ═══ BADGE ═══ */}
       {badgeColor && (
         <g>
-          <rect x="19" y="54" width="11" height="9.5" rx="2" fill={badgeColor} stroke={ol} strokeWidth="1.2"/>
-          <rect x="19.5" y="54.5" width="10" height="3.5" rx="1.5" fill="rgba(255,255,255,0.3)"/>
-          <rect x="19.5" y="59" width="6" height="2" rx="1" fill="rgba(255,255,255,0.5)"/>
+          <rect x="17" y="54" width="11" height="9.5" rx="2" fill={badgeColor} stroke={ol} strokeWidth="1.2"/>
+          <rect x="17.5" y="54.5" width="10" height="3.5" rx="1.5" fill="rgba(255,255,255,0.3)"/>
+          <rect x="17.5" y="59" width="6" height="2" rx="1" fill="rgba(255,255,255,0.5)"/>
         </g>
       )}
 
@@ -488,40 +475,43 @@ function AgentSvg({ a, mode, size = 80 }: { a: CharAttrs; mode: AgeMode; size?: 
           fill={isLight ? "rgba(0,0,0,0.55)" : "rgba(255,255,255,0.8)"}>☠</text>
       )}
 
-      {/* ═══ ARMS ═══ */}
-      <path d="M18 52 Q7 57 6 68 L12 69 Q12 60 20 55Z"
+      {/* ═══ ARMS (mais grossos, ajustados ao corpo mais largo) ═══ */}
+      <path d="M14 53 Q3 58 3 69 L9 70 Q9 61 17 57Z"
         fill={c} stroke={ol} strokeWidth="1.8" strokeLinejoin="round"/>
-      <path d="M42 52 Q53 57 54 68 L48 69 Q48 60 40 55Z"
+      <path d="M46 53 Q57 58 57 69 L51 70 Q51 61 43 57Z"
         fill={c} stroke={ol} strokeWidth="1.8" strokeLinejoin="round"/>
+      {/* Brilho nos braços */}
+      <ellipse cx="7" cy="61" rx="2.5" ry="5" fill="rgba(255,255,255,0.15)" transform="rotate(-8 7 61)"/>
+      <ellipse cx="53" cy="61" rx="2.5" ry="5" fill="rgba(255,255,255,0.15)" transform="rotate(8 53 61)"/>
 
       {/* ═══ HANDS / LUVAS ═══ */}
       {a.extraId === "luvas" ? (
         <>
-          <ellipse cx="9" cy="70" rx="5.5" ry="5" fill="#7B2FBE" stroke={ol} strokeWidth="1.8"/>
-          <ellipse cx="51" cy="70" rx="5.5" ry="5" fill="#7B2FBE" stroke={ol} strokeWidth="1.8"/>
+          <ellipse cx="6" cy="71" rx="5.5" ry="5" fill="#7B2FBE" stroke={ol} strokeWidth="1.8"/>
+          <ellipse cx="54" cy="71" rx="5.5" ry="5" fill="#7B2FBE" stroke={ol} strokeWidth="1.8"/>
         </>
       ) : (
         <>
-          <ellipse cx="9" cy="70" rx="5.5" ry="5" fill={skin} stroke={ol} strokeWidth="1.8"/>
-          <ellipse cx="51" cy="70" rx="5.5" ry="5" fill={skin} stroke={ol} strokeWidth="1.8"/>
+          <ellipse cx="6" cy="71" rx="5.5" ry="5" fill={skin} stroke={ol} strokeWidth="1.8"/>
+          <ellipse cx="54" cy="71" rx="5.5" ry="5" fill={skin} stroke={ol} strokeWidth="1.8"/>
         </>
       )}
 
       {/* ═══ BELT ═══ */}
-      <rect x="18" y="68.5" width="24" height="5.5" rx="2.8"
+      <rect x="14" y="69.5" width="32" height="5.5" rx="2.8"
         fill={isLight ? "#37474F" : "#0d0d0d"} stroke={ol} strokeWidth="1.3"/>
-      <rect x="27" y="68.5" width="6" height="5.5" rx="2"
+      <rect x="27" y="69.5" width="6" height="5.5" rx="2"
         fill={isLight ? "#546E7A" : "rgba(255,255,255,0.35)"}/>
 
       {/* ═══ LEGS ═══ */}
-      <rect x="19" y="72" width="10" height="14" rx="5" fill={c} stroke={ol} strokeWidth="1.8"/>
-      <rect x="31" y="72" width="10" height="14" rx="5" fill={c} stroke={ol} strokeWidth="1.8"/>
+      <rect x="18" y="73" width="11" height="14" rx="5.5" fill={c} stroke={ol} strokeWidth="1.8"/>
+      <rect x="31" y="73" width="11" height="14" rx="5.5" fill={c} stroke={ol} strokeWidth="1.8"/>
 
       {/* ═══ BOOTS ═══ */}
-      <ellipse cx="24" cy="87" rx="10.5" ry="6" fill="#111" stroke={ol} strokeWidth="1.8"/>
-      <ellipse cx="36" cy="87" rx="10.5" ry="6" fill="#111" stroke={ol} strokeWidth="1.8"/>
-      <ellipse cx="21.5" cy="84.5" rx="5.5" ry="2.5" fill="rgba(255,255,255,0.18)"/>
-      <ellipse cx="33.5" cy="84.5" rx="5.5" ry="2.5" fill="rgba(255,255,255,0.18)"/>
+      <ellipse cx="23.5" cy="88" rx="11.5" ry="6.5" fill="#111" stroke={ol} strokeWidth="1.8"/>
+      <ellipse cx="36.5" cy="88" rx="11.5" ry="6.5" fill="#111" stroke={ol} strokeWidth="1.8"/>
+      <ellipse cx="20.5" cy="85" rx="6" ry="2.8" fill="rgba(255,255,255,0.22)"/>
+      <ellipse cx="33.5" cy="85" rx="6" ry="2.8" fill="rgba(255,255,255,0.22)"/>
 
     </svg>
   );
