@@ -52,29 +52,33 @@ const TUTORIAL_CARDS = [
 ];
 
 function JogoMemoriaTutorial({ theme, onDone }: { theme: Theme; onDone: () => void }) {
-  const cardBack = {
-    CLINICAL: "bg-blue-100 border-blue-300",
-    COLORFUL: "bg-gradient-to-br from-purple-400 to-pink-400",
-    GAMIFIED: "bg-gradient-to-br from-cyan-700 to-blue-800 border-cyan-600",
-  }[theme];
+  const isGamified = theme === "GAMIFIED";
+  const isColorful = theme === "COLORFUL";
 
-  const cardFront = {
-    CLINICAL: "bg-white border-blue-200",
-    COLORFUL: "bg-white border-purple-200",
-    GAMIFIED: "bg-gray-700 border-cyan-500/40",
-  }[theme];
+  const cardBackStyle: React.CSSProperties = isGamified
+    ? { background: "linear-gradient(135deg, #1a2d50, #2a4a8a)", border: "2px solid rgba(255,255,255,0.2)", borderRadius: 12 }
+    : isColorful
+    ? { background: "linear-gradient(135deg, #7c3aed, #9333ea)", border: "2px solid rgba(255,255,255,0.2)", borderRadius: 12 }
+    : { background: "linear-gradient(135deg, #1a2744, #2a4a8a)", border: "2px solid rgba(255,255,255,0.15)", borderRadius: 12 };
+
+  const cardFrontStyle: React.CSSProperties = {
+    background: "#ffffff",
+    border: "2px solid rgba(26,39,68,0.08)",
+    borderRadius: 12,
+    boxShadow: "0 4px 16px rgba(26,39,68,0.1)",
+  };
 
   const steps = [
     {
       instruction: "Memorize onde estão os pares! Você tem 3 segundos.",
       content: (onStepDone: () => void) => (
-        <JogoMemoriaShowStep theme={theme} cardFront={cardFront} onDone={onStepDone} />
+        <JogoMemoriaShowStep theme={theme} cardFrontStyle={cardFrontStyle} onDone={onStepDone} />
       ),
     },
     {
       instruction: "Agora encontre os pares! Toque duas cartas iguais.",
       content: (onStepDone: () => void) => (
-        <JogoMemoriaPlayStep theme={theme} cardBack={cardBack} cardFront={cardFront} onDone={onStepDone} />
+        <JogoMemoriaPlayStep theme={theme} cardBackStyle={cardBackStyle} cardFrontStyle={cardFrontStyle} onDone={onStepDone} />
       ),
     },
   ];
@@ -82,7 +86,7 @@ function JogoMemoriaTutorial({ theme, onDone }: { theme: Theme; onDone: () => vo
   return <TutorialBase theme={theme} title="Jogo da Memória" steps={steps} onDone={onDone} />;
 }
 
-function JogoMemoriaShowStep({ theme, cardFront, onDone }: { theme: Theme; cardFront: string; onDone: () => void }) {
+function JogoMemoriaShowStep({ theme, cardFrontStyle, onDone }: { theme: Theme; cardFrontStyle: React.CSSProperties; onDone: () => void }) {
   const [countdown, setCountdown] = useState(3);
 
   useEffect(() => {
@@ -98,12 +102,12 @@ function JogoMemoriaShowStep({ theme, cardFront, onDone }: { theme: Theme; cardF
 
   return (
     <div className="text-center">
-      <p className={`text-sm mb-3 font-medium ${theme === "GAMIFIED" ? "text-gray-400" : "text-gray-500"}`}>
+      <p style={{ fontSize: 13, marginBottom: 12, fontWeight: 500, color: theme === "GAMIFIED" ? "rgba(255,255,255,0.6)" : "#6b7280" }}>
         Memorize ({countdown}s)
       </p>
       <div className="grid grid-cols-2 gap-3 max-w-[180px] mx-auto">
         {TUTORIAL_CARDS.map((c) => (
-          <div key={c.id} className={`w-20 h-20 rounded-xl border-2 flex items-center justify-center ${cardFront}`}>
+          <div key={c.id} style={{ width: 80, height: 80, display: "flex", alignItems: "center", justifyContent: "center", ...cardFrontStyle }}>
             <MemorySymbol id={c.symbol} size={48} />
           </div>
         ))}
@@ -112,7 +116,7 @@ function JogoMemoriaShowStep({ theme, cardFront, onDone }: { theme: Theme; cardF
   );
 }
 
-function JogoMemoriaPlayStep({ theme, cardBack, cardFront, onDone }: { theme: Theme; cardBack: string; cardFront: string; onDone: () => void }) {
+function JogoMemoriaPlayStep({ theme, cardBackStyle, cardFrontStyle, onDone }: { theme: Theme; cardBackStyle: React.CSSProperties; cardFrontStyle: React.CSSProperties; onDone: () => void }) {
   const [flipped, setFlipped] = useState<number[]>([]);
   const [matched, setMatched] = useState<number[]>([]);
   const [locked, setLocked] = useState(false);
@@ -140,10 +144,10 @@ function JogoMemoriaPlayStep({ theme, cardBack, cardFront, onDone }: { theme: Th
     }
   }
 
-  function cardClass(id: number) {
-    if (matched.includes(id)) return `bg-green-100 border-green-300`;
-    if (flipped.includes(id)) return cardFront;
-    return cardBack;
+  function cardStyleFor(id: number): React.CSSProperties {
+    if (matched.includes(id)) return { background: "rgba(22,163,74,0.15)", border: "2px solid #16a34a", borderRadius: 12 };
+    if (flipped.includes(id)) return cardFrontStyle;
+    return cardBackStyle;
   }
 
   return (
@@ -155,11 +159,11 @@ function JogoMemoriaPlayStep({ theme, cardBack, cardFront, onDone }: { theme: Th
             key={c.id}
             onClick={() => handleFlip(c.id)}
             disabled={locked || matched.includes(c.id)}
-            className={`w-20 h-20 rounded-xl border-2 flex items-center justify-center ${cardClass(c.id)}`}
+            style={{ width: 80, height: 80, display: "flex", alignItems: "center", justifyContent: "center", ...cardStyleFor(c.id) }}
             whileTap={{ scale: 0.92 }}
           >
             {visible ? <MemorySymbol id={c.symbol} size={36} /> : (
-              <span className={`text-lg font-bold ${theme === "GAMIFIED" ? "text-cyan-300" : theme === "COLORFUL" ? "text-white" : "text-blue-400"}`}>?</span>
+              <span style={{ fontSize: 18, fontWeight: 700, color: theme === "GAMIFIED" ? "#22d3ee" : theme === "COLORFUL" ? "#ffffff" : "#60a5fa" }}>?</span>
             )}
           </motion.button>
         );
@@ -171,6 +175,9 @@ function JogoMemoriaPlayStep({ theme, cardBack, cardFront, onDone }: { theme: Th
 export function JogoMemoria({ difficulty, theme, onComplete }: JogoMemoriaProps) {
   const [showTutorial, setShowTutorial] = useState(true);
   const reportProgress = useExerciseProgress();
+
+  const isGamified = theme === "GAMIFIED";
+  const isColorful = theme === "COLORFUL";
 
   const [pairCount, setPairCount] = useState(initialPairs(difficulty));
   const [streak, setStreak] = useState(0);
@@ -299,46 +306,60 @@ export function JogoMemoria({ difficulty, theme, onComplete }: JogoMemoriaProps)
     return <JogoMemoriaTutorial theme={theme} onDone={() => setShowTutorial(false)} />;
   }
 
-  const cols = pairCount * 2 <= 8 ? 4 : 5;
+  // ─── Design system styles ────────────────────────────────────────────
+  const rootBg: React.CSSProperties = isGamified
+    ? { background: "linear-gradient(145deg, #0a1628 0%, #0d2244 45%, #132a52 70%, #081020 100%)" }
+    : isColorful
+    ? { background: "linear-gradient(135deg, #f0e6ff 0%, #fce4f0 55%, #ffe8e0 100%)" }
+    : { background: "linear-gradient(160deg, #ede8df 0%, #e4ddd0 55%, #dbd4c5 100%)" };
 
-  const bg = { CLINICAL: "bg-gray-50", COLORFUL: "bg-gradient-to-br from-purple-50 to-pink-50", GAMIFIED: "bg-gray-950" }[theme];
-  const card = { CLINICAL: "bg-white shadow-lg", COLORFUL: "bg-white shadow-lg", GAMIFIED: "bg-gray-800 border border-cyan-500/30" }[theme];
-  const titleClass = { CLINICAL: "text-gray-900", COLORFUL: "text-purple-700", GAMIFIED: "text-cyan-400" }[theme];
-  const subClass = { CLINICAL: "text-gray-500", COLORFUL: "text-purple-500", GAMIFIED: "text-gray-400" }[theme];
-  const cardBack = {
-    CLINICAL: "bg-blue-100 border-blue-300",
-    COLORFUL: "bg-gradient-to-br from-purple-400 to-pink-400",
-    GAMIFIED: "bg-gradient-to-br from-cyan-700 to-blue-800 border-cyan-600",
-  }[theme];
-  const cardFront = {
-    CLINICAL: "bg-white border-blue-200",
-    COLORFUL: "bg-white border-purple-200",
-    GAMIFIED: "bg-gray-700 border-cyan-500/40",
-  }[theme];
-  const cardMatched = {
-    CLINICAL: "bg-green-50 border-green-300 opacity-60",
-    COLORFUL: "bg-yellow-50 border-yellow-300 opacity-60",
-    GAMIFIED: "bg-gray-600/50 border-cyan-500/20 opacity-50",
-  }[theme];
+  const cardStyle: React.CSSProperties = isGamified
+    ? { background: "rgba(255,255,255,0.08)", backdropFilter: "blur(16px)", border: "1.5px solid rgba(255,255,255,0.15)", borderRadius: 20, boxShadow: "0 8px 40px rgba(0,0,0,0.5)" }
+    : { background: "#ffffff", border: "1.5px solid rgba(26,39,68,0.08)", borderRadius: 20, boxShadow: "0 4px 20px rgba(26,39,68,0.08)" };
+
+  const titleColor = isGamified ? "#ffffff" : "#1a2744";
+  const labelColor = isGamified ? "rgba(255,255,255,0.7)" : "#5a4a3a";
+  const progressEmptyColor = isGamified ? "rgba(255,255,255,0.12)" : "rgba(26,39,68,0.12)";
+
+  const cardBackStyle: React.CSSProperties = isGamified
+    ? { background: "linear-gradient(135deg, #1a2d50, #2a4a8a)", border: "2px solid rgba(255,255,255,0.2)", borderRadius: 14 }
+    : isColorful
+    ? { background: "linear-gradient(135deg, #7c3aed, #9333ea)", border: "2px solid rgba(255,255,255,0.15)", borderRadius: 14 }
+    : { background: "linear-gradient(135deg, #1a2744, #2a4a8a)", border: "2px solid rgba(255,255,255,0.1)", borderRadius: 14 };
+
+  const cardFrontStyle: React.CSSProperties = {
+    background: "#ffffff",
+    border: "2px solid rgba(26,39,68,0.08)",
+    borderRadius: 14,
+    boxShadow: "0 4px 16px rgba(26,39,68,0.1)",
+  };
+
+  const cardMatchedStyle: React.CSSProperties = {
+    background: "rgba(22,163,74,0.12)",
+    border: "2px solid rgba(22,163,74,0.4)",
+    borderRadius: 14,
+    opacity: 0.6,
+  };
 
   const budget = errorBudget(pairCount);
+  const cols = pairCount * 2 <= 8 ? 4 : 5;
 
-  function cardClass(c: Card) {
-    if (c.matched) return cardMatched;
-    if (flipped.includes(c.id) || gamePhase === "memorize") return cardFront;
-    return cardBack;
+  function cardStyleFor(c: Card): React.CSSProperties {
+    if (c.matched) return cardMatchedStyle;
+    if (flipped.includes(c.id) || gamePhase === "memorize") return cardFrontStyle;
+    return cardBackStyle;
   }
 
   return (
-    <div className={`min-h-screen flex flex-col items-center p-4 pt-6 ${bg}`}>
-      <div className={`w-full max-w-2xl rounded-2xl p-5 ${card}`}>
+    <div className="min-h-screen flex flex-col items-center p-4 pt-6" style={rootBg}>
+      <div className="w-full max-w-2xl p-5" style={cardStyle}>
         <div className="flex justify-between items-center mb-3">
           <div>
-            <h2 className={`font-bold text-base ${titleClass}`}>🃏 Jogo da Memória</h2>
-            <p className={`text-xs ${subClass}`}>{pairCount} pares · {budget} erro{budget !== 1 ? "s" : ""} permitido{budget !== 1 ? "s" : ""}</p>
+            <h2 style={{ fontWeight: 700, fontSize: 15, color: titleColor }}>🃏 Jogo da Memória</h2>
+            <p style={{ fontSize: 12, color: labelColor }}>{pairCount} pares · {budget} erro{budget !== 1 ? "s" : ""} permitido{budget !== 1 ? "s" : ""}</p>
           </div>
           {gamePhase === "playing" && errors > 0 && (
-            <span className="text-red-500 font-medium text-sm">{errors}/{budget} erros</span>
+            <span style={{ color: "#ef4444", fontWeight: 500, fontSize: 13 }}>{errors}/{budget} erros</span>
           )}
         </div>
 
@@ -347,18 +368,22 @@ export function JogoMemoria({ difficulty, theme, onComplete }: JogoMemoriaProps)
           {Array.from({ length: MAX_ROUNDS }).map((_, i) => (
             <div
               key={i}
-              className={`h-1.5 flex-1 rounded-full transition-colors ${
-                i < roundResults.length
-                  ? roundResults[i].correct ? "bg-green-500" : "bg-red-400"
-                  : i === round ? "bg-blue-400 animate-pulse"
-                  : theme === "GAMIFIED" ? "bg-gray-700" : "bg-gray-200"
-              }`}
+              style={{
+                height: 6,
+                flex: 1,
+                borderRadius: 9999,
+                transition: "background 0.2s",
+                background: i < roundResults.length
+                  ? roundResults[i].correct ? "#16a34a" : "#ef4444"
+                  : i === round ? "#60a5fa"
+                  : progressEmptyColor,
+              }}
             />
           ))}
         </div>
 
         {/* Instrução */}
-        <p className={`text-sm text-center mb-3 ${subClass}`}>
+        <p style={{ fontSize: 13, textAlign: "center", marginBottom: 12, color: labelColor }}>
           {gamePhase === "memorize" && `Memorize as posições! (${countdown}s)`}
           {gamePhase === "playing" && `Encontre os ${pairCount} pares`}
           {gamePhase === "feedback" && (roundCorrect ? "Correto! ✅" : "Incorreto ❌")}
@@ -373,7 +398,7 @@ export function JogoMemoria({ difficulty, theme, onComplete }: JogoMemoriaProps)
                 key={c.id}
                 onClick={() => handleFlip(c.id)}
                 disabled={gamePhase !== "playing" || c.matched || flipped.includes(c.id) || locked}
-                className={`w-20 h-20 rounded-xl border-2 flex items-center justify-center transition-all ${cardClass(c)}`}
+                style={{ width: 80, height: 80, display: "flex", alignItems: "center", justifyContent: "center", transition: "all 0.15s", ...cardStyleFor(c) }}
                 whileTap={gamePhase === "playing" ? { scale: 0.92 } : {}}
               >
                 <AnimatePresence mode="wait">
@@ -389,7 +414,7 @@ export function JogoMemoria({ difficulty, theme, onComplete }: JogoMemoriaProps)
                   ) : (
                     <motion.span
                       key="back"
-                      className={`text-lg font-bold ${theme === "GAMIFIED" ? "text-cyan-300" : theme === "COLORFUL" ? "text-white" : "text-blue-400"}`}
+                      style={{ fontSize: 18, fontWeight: 700, color: isGamified ? "#22d3ee" : isColorful ? "#ffffff" : "#60a5fa" }}
                     >
                       ?
                     </motion.span>
@@ -401,7 +426,7 @@ export function JogoMemoria({ difficulty, theme, onComplete }: JogoMemoriaProps)
         </div>
 
         {gamePhase === "playing" && (
-          <p className={`text-center text-xs mt-3 ${subClass}`}>
+          <p style={{ textAlign: "center", fontSize: 12, marginTop: 12, color: labelColor }}>
             {matchedCount}/{pairCount} pares encontrados
           </p>
         )}

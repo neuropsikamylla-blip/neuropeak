@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect, useRef } from "react";
+import React, { useState, useEffect, useRef } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { calculateExerciseScore } from "@/lib/scoring";
 import { useExerciseProgress } from "@/components/exercises/ExerciseWrapper";
@@ -220,17 +220,33 @@ export function CompraMultifuncional({ difficulty, theme, onComplete }: Props) {
   const timerRatio = timeLeft / currentRound.timeSecs;
   const timerColor = timerRatio > 0.5 ? "bg-green-500" : timerRatio > 0.25 ? "bg-amber-400" : "bg-red-500 animate-pulse";
 
+  const isGamified = theme === "GAMIFIED";
+  const isColorful = theme === "COLORFUL";
+
+  const rootBg: React.CSSProperties = isGamified
+    ? { background: "linear-gradient(145deg, #0a1628 0%, #0d2244 45%, #132a52 70%, #081020 100%)" }
+    : isColorful
+    ? { background: "linear-gradient(135deg, #f0e6ff 0%, #fce4f0 55%, #ffe8e0 100%)" }
+    : { background: "linear-gradient(160deg, #ede8df 0%, #e4ddd0 55%, #dbd4c5 100%)" };
+
+  const cardStyle: React.CSSProperties = isGamified
+    ? { background: "rgba(255,255,255,0.08)", backdropFilter: "blur(16px)", border: "1.5px solid rgba(255,255,255,0.15)", borderRadius: 20, boxShadow: "0 8px 40px rgba(0,0,0,0.5)" }
+    : { background: "#ffffff", border: "1.5px solid rgba(26,39,68,0.08)", borderRadius: 20, boxShadow: "0 4px 20px rgba(26,39,68,0.08)" };
+
+  const btnStyle: React.CSSProperties = isGamified
+    ? { background: "linear-gradient(135deg, #0891b2, #0e7490)", borderRadius: 9999, color: "white", boxShadow: "0 4px 16px rgba(8,145,178,0.4)" }
+    : isColorful
+    ? { background: "linear-gradient(135deg, #7c3aed, #db2777)", borderRadius: 9999, color: "white", boxShadow: "0 4px 20px rgba(124,58,237,0.35)" }
+    : { background: "linear-gradient(135deg, #1a2744, #2a4a8a)", borderRadius: 9999, color: "white", boxShadow: "0 4px 16px rgba(26,39,68,0.35)" };
+
   const pal = {
-    bg: theme === "GAMIFIED" ? "bg-gray-950" : theme === "COLORFUL" ? "bg-gradient-to-br from-purple-50 to-pink-50" : "bg-gray-50",
-    card: theme === "GAMIFIED" ? "bg-gray-800 border border-cyan-500/30" : "bg-white shadow-lg",
-    title: theme === "GAMIFIED" ? "text-cyan-400" : theme === "COLORFUL" ? "text-purple-700" : "text-gray-900",
-    sub: theme === "GAMIFIED" ? "text-gray-400" : "text-gray-500",
-    ruleBox: theme === "GAMIFIED" ? "bg-gray-700/60 border-gray-600" : "bg-slate-50 border-slate-200",
+    title: isGamified ? "text-white" : "text-[#1a2744]",
+    sub: isGamified ? "text-white/70" : "text-[#8a7a6a]",
+    ruleBox: isGamified ? "bg-white/10 border-white/20" : "bg-slate-50 border-slate-200",
     ruleOk: "text-green-500",
-    rulePending: theme === "GAMIFIED" ? "text-gray-500" : "text-gray-400",
-    item: theme === "GAMIFIED" ? "border-gray-600 bg-gray-700" : "border-slate-200 bg-white shadow-sm",
+    rulePending: isGamified ? "text-white/40" : "text-gray-400",
+    item: isGamified ? "border-white/20 bg-white/10" : "border-slate-200 bg-white shadow-sm",
     itemSel: "border-emerald-500 bg-emerald-50",
-    btn: theme === "GAMIFIED" ? "bg-cyan-600 hover:bg-cyan-700 text-white" : theme === "COLORFUL" ? "bg-gradient-to-r from-purple-500 to-pink-500 text-white" : "bg-indigo-600 hover:bg-indigo-700 text-white",
   };
 
   function ruleRow(ok: boolean, label: string) {
@@ -243,9 +259,9 @@ export function CompraMultifuncional({ difficulty, theme, onComplete }: Props) {
   }
 
   return (
-    <div className={`min-h-screen overflow-y-auto ${pal.bg}`}>
+    <div className="min-h-screen overflow-y-auto" style={rootBg}>
       <div className="max-w-2xl mx-auto px-4 py-4">
-        <div className={`rounded-2xl p-5 ${pal.card}`}>
+        <div className="p-5" style={cardStyle}>
 
           <div className="flex justify-between items-center mb-2">
             <h2 className={`font-bold text-base ${pal.title}`}>🛒 Compra Multifuncional</h2>
@@ -259,13 +275,13 @@ export function CompraMultifuncional({ difficulty, theme, onComplete }: Props) {
               <div key={i} className={`h-1.5 flex-1 rounded-full transition-colors ${
                 i < roundResults.length ? (roundResults[i] ? "bg-green-500" : "bg-red-400")
                 : i === round ? "bg-blue-400 animate-pulse"
-                : theme === "GAMIFIED" ? "bg-gray-700" : "bg-gray-200"
+                : isGamified ? "bg-white/10" : "bg-gray-200"
               }`} />
             ))}
           </div>
 
           {/* Timer bar */}
-          <div className={`h-1.5 rounded-full mb-3 ${theme === "GAMIFIED" ? "bg-gray-700" : "bg-gray-200"}`}>
+          <div className={`h-1.5 rounded-full mb-3 ${isGamified ? "bg-white/10" : "bg-gray-200"}`}>
             <div className={`h-full rounded-full transition-all duration-1000 ${timerColor}`} style={{ width: `${timerRatio * 100}%` }} />
           </div>
 
@@ -273,7 +289,7 @@ export function CompraMultifuncional({ difficulty, theme, onComplete }: Props) {
             {phase === "shopping" && (
               <motion.div key={`shop-${round}`} initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }}>
                 {/* Rules checklist */}
-                <div className={`rounded-xl p-3 border mb-3 space-y-1.5 ${pal.ruleBox}`}>
+                <div className="rounded-xl p-3 border mb-3 space-y-1.5" style={isGamified ? { background: "rgba(255,255,255,0.08)", border: "1.5px solid rgba(255,255,255,0.15)" } : { background: "#f8fafc", border: "1.5px solid rgba(26,39,68,0.08)" }}>
                   <p className={`text-[11px] font-bold uppercase tracking-wide mb-2 ${pal.sub}`}>Atenda todas as regras · {currentRound.domain.name}</p>
                   {ruleRow(budgetOk && selected.size > 0, `Máximo ${fmt(rules.budget)} (total: ${fmt(total)})`)}
                   {ruleRow(hasCat, `Incluir ${rules.category.emoji} ${rules.category.label}`)}
@@ -287,10 +303,10 @@ export function CompraMultifuncional({ difficulty, theme, onComplete }: Props) {
                         selected.has(item.id) ? pal.itemSel : pal.item
                       }`}>
                       <ItemSvg id={item.id} size={48} />
-                      <span className={`text-xs text-center leading-tight font-medium ${theme === "GAMIFIED" ? "text-gray-200" : "text-gray-700"}`}>
+                      <span className={`text-xs text-center leading-tight font-medium ${isGamified ? "text-white/90" : "text-gray-700"}`}>
                         {item.name}
                       </span>
-                      <span className={`text-xs font-bold tabular-nums ${theme === "GAMIFIED" ? "text-cyan-400" : "text-emerald-600"}`}>
+                      <span className={`text-xs font-bold tabular-nums ${isGamified ? "text-cyan-300" : "text-emerald-600"}`}>
                         {fmt(item.price)}
                       </span>
                       {selected.has(item.id) && <span className="text-xs text-green-600 font-bold">✓</span>}
@@ -299,7 +315,8 @@ export function CompraMultifuncional({ difficulty, theme, onComplete }: Props) {
                 </div>
 
                 <button onClick={() => finishRound(allOk)} disabled={selected.size === 0}
-                  className={`w-full h-11 rounded-xl font-bold transition-all disabled:opacity-40 ${pal.btn}`}>
+                  className="w-full h-11 font-bold transition-all disabled:opacity-40"
+                  style={btnStyle}>
                   {selected.size === 0 ? "Selecione itens" : "→ Confirmar seleção"}
                 </button>
               </motion.div>
@@ -313,7 +330,7 @@ export function CompraMultifuncional({ difficulty, theme, onComplete }: Props) {
                   {lastCorrect ? "Todas as regras cumpridas!" : "Nem todas as regras foram atendidas"}
                 </p>
                 {!lastCorrect && (
-                  <div className={`rounded-xl p-3 border space-y-1.5 ${pal.ruleBox}`}>
+                  <div className="rounded-xl p-3 border space-y-1.5" style={isGamified ? { background: "rgba(255,255,255,0.08)", border: "1.5px solid rgba(255,255,255,0.15)" } : { background: "#f8fafc", border: "1.5px solid rgba(26,39,68,0.08)" }}>
                     <p className={`text-xs font-bold mb-1 ${pal.sub}`}>O que ficou faltando:</p>
                     {!budgetOk && (
                       <div className="flex items-center gap-2 text-xs text-red-500 font-semibold">

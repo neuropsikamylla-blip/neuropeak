@@ -46,6 +46,9 @@ function MatrizTutorialGrid({
   onDone: () => void;
   showOnly?: boolean;
 }) {
+  const isGamified = theme === "GAMIFIED";
+  const isColorful = theme === "COLORFUL";
+
   const [activeCell, setActiveCell] = useState<number | null>(null);
   const [clicked, setClicked] = useState<number[]>([]);
   const [flash, setFlash] = useState<"green" | "red" | null>(null);
@@ -91,37 +94,47 @@ function MatrizTutorialGrid({
     }
   }
 
-  function cellStyle(idx: number) {
+  function cellStyleFor(idx: number): React.CSSProperties {
     const isActive = activeCell === idx;
     const isClicked = clicked.includes(idx);
     const isSeqCell = seq.includes(idx);
 
     if (isActive || (showOnly && isSeqCell && showDone)) {
-      return theme === "GAMIFIED"
-        ? "bg-cyan-500 border-cyan-300"
-        : theme === "COLORFUL"
-        ? "bg-purple-500 border-purple-300"
-        : "bg-blue-500 border-blue-300";
+      return isGamified
+        ? { background: "#06b6d4", border: "2px solid #67e8f9", borderRadius: 10 }
+        : isColorful
+        ? { background: "#8b5cf6", border: "2px solid #c4b5fd", borderRadius: 10 }
+        : { background: "#3b82f6", border: "2px solid #93c5fd", borderRadius: 10 };
     }
-    if (isClicked && flash === "green") return "bg-green-400 border-green-600";
-    if (isClicked) return theme === "GAMIFIED" ? "bg-cyan-700 border-cyan-500" : "bg-blue-300 border-blue-500";
-    return theme === "GAMIFIED"
-      ? "bg-gray-700 border-gray-600 hover:bg-gray-600"
-      : theme === "COLORFUL"
-      ? "bg-purple-50 border-purple-200 hover:bg-purple-100"
-      : "bg-gray-100 border-gray-300 hover:bg-gray-200";
+    if (isClicked && flash === "green") return { background: "#4ade80", border: "2px solid #16a34a", borderRadius: 10 };
+    if (isClicked) return isGamified
+      ? { background: "#0e7490", border: "2px solid #06b6d4", borderRadius: 10 }
+      : { background: "#93c5fd", border: "2px solid #3b82f6", borderRadius: 10 };
+    return isGamified
+      ? { background: "rgba(255,255,255,0.08)", border: "2px solid rgba(255,255,255,0.15)", borderRadius: 10 }
+      : isColorful
+      ? { background: "rgba(139,92,246,0.08)", border: "2px solid rgba(139,92,246,0.2)", borderRadius: 10 }
+      : { background: "rgba(26,39,68,0.06)", border: "2px solid rgba(26,39,68,0.15)", borderRadius: 10 };
   }
 
-  const ringClass = flash === "green" ? "ring-2 ring-green-400" : flash === "red" ? "ring-2 ring-red-400" : "";
+  const ringStyle: React.CSSProperties = flash === "green"
+    ? { outline: "3px solid #4ade80", outlineOffset: 2 }
+    : flash === "red"
+    ? { outline: "3px solid #f87171", outlineOffset: 2 }
+    : {};
 
   return (
-    <div className={`grid gap-1.5 mx-auto rounded-xl ${ringClass}`} style={{ gridTemplateColumns: "repeat(4, 1fr)", maxWidth: "220px" }}>
+    <div
+      className="grid gap-1.5 mx-auto rounded-xl"
+      style={{ gridTemplateColumns: "repeat(4, 1fr)", maxWidth: "220px", ...ringStyle }}
+    >
       {Array.from({ length: 16 }).map((_, idx) => (
         <button
           key={idx}
           onClick={() => handleClick(idx)}
           disabled={showOnly || done.current}
-          className={`aspect-square rounded-lg border-2 transition-colors ${cellStyle(idx)}`}
+          className="aspect-square transition-colors"
+          style={cellStyleFor(idx)}
         />
       ))}
     </div>
@@ -165,7 +178,7 @@ export function MatrizEspacial({ difficulty, theme, onComplete, alwaysReverse }:
   const reverse = alwaysReverse ?? REVERSE_MODE(difficulty);
   const [showTutorial, setShowTutorial] = useState(true);
   const [seqLength, setSeqLength] = useState(initialSeq(difficulty));
-  const [streak, setStreak] = useState(0); // positivo = acertos seguidos, negativo = erros
+  const [streak, setStreak] = useState(0);
   const [phase, setPhase] = useState<Phase>("showing");
   const [sequence, setSequence] = useState<number[]>([]);
   const [activeCell, setActiveCell] = useState<number | null>(null);
@@ -175,6 +188,9 @@ export function MatrizEspacial({ difficulty, theme, onComplete, alwaysReverse }:
   const [feedbackData, setFeedbackData] = useState<{ correct: boolean; userSeq: number[] } | null>(null);
   const startTime = useRef<number>(Date.now());
   const reportProgress = useExerciseProgress();
+
+  const isGamified = theme === "GAMIFIED";
+  const isColorful = theme === "COLORFUL";
 
   const generateSeq = useCallback((len: number) => {
     const cells = new Set<number>();
@@ -212,9 +228,8 @@ export function MatrizEspacial({ difficulty, theme, onComplete, alwaysReverse }:
     const newSeq = [...userSeq, idx];
     setUserSeq(newSeq);
 
-    if (newSeq.length < seqLength) return; // ainda esperando mais cliques
+    if (newSeq.length < seqLength) return;
 
-    // Avalia: na ordem direta ou inversa conforme modo
     const expected = reverse ? [...sequence].reverse() : sequence;
     const correct = newSeq.every((cell, i) => cell === expected[i]);
 
@@ -224,10 +239,9 @@ export function MatrizEspacial({ difficulty, theme, onComplete, alwaysReverse }:
     const newAttempts = [...attempts, { correct, seqLen: seqLength }];
     setAttempts(newAttempts);
 
-    // Escada 2-cima / 2-baixo
     const newStreak = correct
-      ? Math.max(streak, 0) + 1   // acerto: incrementa streak positivo
-      : Math.min(streak, 0) - 1;  // erro: incrementa streak negativo
+      ? Math.max(streak, 0) + 1
+      : Math.min(streak, 0) - 1;
 
     let nextSeqLen = seqLength;
     let nextStreak = newStreak;
@@ -265,13 +279,25 @@ export function MatrizEspacial({ difficulty, theme, onComplete, alwaysReverse }:
     return <MatrizEspacialTutorial theme={theme} reverse={reverse} onDone={() => setShowTutorial(false)} />;
   }
 
-  // ─── Estilos por tema ────────────────────────────────────────────────
-  const bg = { CLINICAL: "bg-gray-50", COLORFUL: "bg-gradient-to-br from-purple-50 to-pink-50", GAMIFIED: "bg-gray-950" }[theme];
-  const card = { CLINICAL: "bg-white shadow-lg", COLORFUL: "bg-white shadow-lg", GAMIFIED: "bg-gray-800 border border-cyan-500/30" }[theme];
-  const title = { CLINICAL: "text-gray-900", COLORFUL: "text-purple-700", GAMIFIED: "text-cyan-400" }[theme];
-  const sub = { CLINICAL: "text-gray-500", COLORFUL: "text-purple-500", GAMIFIED: "text-gray-400" }[theme];
+  // ─── Design system styles ────────────────────────────────────────────
+  const rootBg: React.CSSProperties = isGamified
+    ? { background: "linear-gradient(145deg, #0a1628 0%, #0d2244 45%, #132a52 70%, #081020 100%)" }
+    : isColorful
+    ? { background: "linear-gradient(135deg, #f0e6ff 0%, #fce4f0 55%, #ffe8e0 100%)" }
+    : { background: "linear-gradient(160deg, #ede8df 0%, #e4ddd0 55%, #dbd4c5 100%)" };
 
-  function cellStyle(idx: number) {
+  const cardStyle: React.CSSProperties = isGamified
+    ? { background: "rgba(255,255,255,0.08)", backdropFilter: "blur(16px)", border: "1.5px solid rgba(255,255,255,0.15)", borderRadius: 20, boxShadow: "0 8px 40px rgba(0,0,0,0.5)" }
+    : { background: "#ffffff", border: "1.5px solid rgba(26,39,68,0.08)", borderRadius: 20, boxShadow: "0 4px 20px rgba(26,39,68,0.08)" };
+
+  const titleColor = isGamified ? "#ffffff" : "#1a2744";
+  const labelColor = isGamified ? "rgba(255,255,255,0.7)" : "#5a4a3a";
+  const progressEmptyColor = isGamified ? "rgba(255,255,255,0.12)" : "rgba(26,39,68,0.12)";
+
+  const activeIndicatorColor = isGamified ? "#22d3ee" : isColorful ? "#8b5cf6" : "#3b82f6";
+  const inactiveIndicatorColor = isGamified ? "rgba(255,255,255,0.12)" : "rgba(26,39,68,0.12)";
+
+  function cellStyleFor(idx: number): React.CSSProperties {
     const isActive = activeCell === idx;
     const isUserSelected = userSeq.includes(idx);
     const isInSeq = sequence.includes(idx);
@@ -280,48 +306,42 @@ export function MatrizEspacial({ difficulty, theme, onComplete, alwaysReverse }:
       const posInUser = feedbackData.userSeq.indexOf(idx);
       const posInSeq = sequence.indexOf(idx);
       if (posInUser !== -1 && posInSeq !== -1 && posInUser === posInSeq) {
-        return "bg-green-400 border-green-600"; // posição correta
+        return { background: "#4ade80", border: "2px solid #16a34a", borderRadius: 12 };
       }
-      if (isInSeq) return "bg-amber-300 border-amber-500"; // célula certa, ordem errada
-      if (isUserSelected) return "bg-red-300 border-red-500"; // célula errada
+      if (isInSeq) return { background: "#fbbf24", border: "2px solid #d97706", borderRadius: 12 };
+      if (isUserSelected) return { background: "#f87171", border: "2px solid #ef4444", borderRadius: 12 };
     }
 
     if (isActive) {
-      return theme === "GAMIFIED"
-        ? "bg-cyan-500 border-cyan-300 shadow-[0_0_15px_rgba(6,182,212,0.6)]"
-        : theme === "COLORFUL"
-        ? "bg-purple-500 border-purple-300"
-        : "bg-blue-500 border-blue-300";
+      if (isGamified) return { background: "#06b6d4", border: "2px solid #67e8f9", borderRadius: 12, boxShadow: "0 0 15px rgba(6,182,212,0.6)" };
+      if (isColorful) return { background: "#8b5cf6", border: "2px solid #c4b5fd", borderRadius: 12 };
+      return { background: "#3b82f6", border: "2px solid #93c5fd", borderRadius: 12 };
     }
     if (isUserSelected && phase === "recall") {
-      return theme === "GAMIFIED"
-        ? "bg-cyan-700 border-cyan-500"
-        : theme === "COLORFUL"
-        ? "bg-purple-300 border-purple-500"
-        : "bg-blue-300 border-blue-500";
+      return isGamified
+        ? { background: "#0e7490", border: "2px solid #06b6d4", borderRadius: 12 }
+        : isColorful
+        ? { background: "#a78bfa", border: "2px solid #7c3aed", borderRadius: 12 }
+        : { background: "#93c5fd", border: "2px solid #3b82f6", borderRadius: 12 };
     }
-    return theme === "GAMIFIED"
-      ? "bg-gray-700 border-gray-600 hover:bg-gray-600"
-      : theme === "COLORFUL"
-      ? "bg-purple-50 border-purple-200 hover:bg-purple-100"
-      : "bg-gray-100 border-gray-300 hover:bg-gray-200";
+    return isGamified
+      ? { background: "rgba(255,255,255,0.08)", border: "2px solid rgba(255,255,255,0.15)", borderRadius: 12 }
+      : isColorful
+      ? { background: "rgba(139,92,246,0.08)", border: "2px solid rgba(139,92,246,0.2)", borderRadius: 12 }
+      : { background: "rgba(26,39,68,0.06)", border: "2px solid rgba(26,39,68,0.15)", borderRadius: 12 };
   }
 
-  const nextSeqDisplay = feedbackData?.correct
-    ? Math.min(seqLength + (streak + 1 >= 2 ? 1 : 0), MAX_SEQ)
-    : Math.max(seqLength + (streak - 1 <= -2 ? -1 : 0), MIN_SEQ);
-
   return (
-    <div className={`min-h-screen flex flex-col items-center p-4 pt-6 ${bg}`}>
-      <div className={`w-full max-w-sm rounded-2xl p-6 ${card}`}>
+    <div className="min-h-screen flex flex-col items-center p-4 pt-6" style={rootBg}>
+      <div className="w-full max-w-sm p-6" style={cardStyle}>
 
         {/* Header */}
         <div className="flex justify-between items-center mb-3">
           <div>
-            <h2 className={`font-bold text-base ${title}`}>
+            <h2 style={{ fontWeight: 700, fontSize: 15, color: titleColor }}>
               Matriz Espacial{reverse ? " — Inversa" : ""}
             </h2>
-            <p className={`text-xs ${sub}`}>
+            <p style={{ fontSize: 12, color: labelColor }}>
               {seqLength} célula{seqLength > 1 ? "s" : ""}
               {reverse ? " · clique ao contrário" : ""}
             </p>
@@ -333,19 +353,22 @@ export function MatrizEspacial({ difficulty, theme, onComplete, alwaysReverse }:
           {Array.from({ length: MAX_TRIALS }).map((_, i) => (
             <div
               key={i}
-              className={`h-1.5 flex-1 rounded-full transition-colors ${
-                i < attempts.length
-                  ? attempts[i].correct ? "bg-green-500" : "bg-red-400"
-                  : i === trial
-                  ? "bg-blue-400 animate-pulse"
-                  : theme === "GAMIFIED" ? "bg-gray-700" : "bg-gray-200"
-              }`}
+              style={{
+                height: 6,
+                flex: 1,
+                borderRadius: 9999,
+                transition: "background 0.2s",
+                background: i < attempts.length
+                  ? attempts[i].correct ? "#16a34a" : "#ef4444"
+                  : i === trial ? "#60a5fa"
+                  : progressEmptyColor,
+              }}
             />
           ))}
         </div>
 
         {/* Instrução */}
-        <p className={`text-sm text-center mb-4 min-h-[20px] ${sub}`}>
+        <p style={{ fontSize: 13, textAlign: "center", marginBottom: 16, minHeight: 20, color: labelColor }}>
           {phase === "showing" && (reverse ? "Observe a sequência... clique ao contrário!" : "Observe a sequência...")}
           {phase === "recall" && (reverse
             ? `Toque as ${seqLength} células em ORDEM INVERSA (última → primeira)`
@@ -363,7 +386,8 @@ export function MatrizEspacial({ difficulty, theme, onComplete, alwaysReverse }:
               key={idx}
               onClick={() => handleCellClick(idx)}
               disabled={phase !== "recall" || userSeq.includes(idx)}
-              className={`aspect-square rounded-xl border-2 transition-colors ${cellStyle(idx)}`}
+              className="aspect-square transition-colors"
+              style={cellStyleFor(idx)}
               whileTap={phase === "recall" ? { scale: 0.9 } : {}}
               animate={activeCell === idx ? { scale: [1, 1.15, 1] } : {}}
               transition={{ duration: 0.15 }}
@@ -377,11 +401,13 @@ export function MatrizEspacial({ difficulty, theme, onComplete, alwaysReverse }:
             {Array.from({ length: seqLength }).map((_, i) => (
               <div
                 key={i}
-                className={`w-3 h-3 rounded-full transition-colors ${
-                  i < userSeq.length
-                    ? theme === "GAMIFIED" ? "bg-cyan-500" : theme === "COLORFUL" ? "bg-purple-500" : "bg-blue-500"
-                    : theme === "GAMIFIED" ? "bg-gray-700" : "bg-gray-200"
-                }`}
+                style={{
+                  width: 12,
+                  height: 12,
+                  borderRadius: 9999,
+                  transition: "background 0.2s",
+                  background: i < userSeq.length ? activeIndicatorColor : inactiveIndicatorColor,
+                }}
               />
             ))}
           </div>
@@ -395,7 +421,7 @@ export function MatrizEspacial({ difficulty, theme, onComplete, alwaysReverse }:
               initial={{ opacity: 0, y: 8 }}
               animate={{ opacity: 1, y: 0 }}
             >
-              <p className={`text-sm font-semibold ${feedbackData.correct ? "text-green-600" : "text-red-500"}`}>
+              <p style={{ fontSize: 14, fontWeight: 600, color: feedbackData.correct ? "#16a34a" : "#ef4444" }}>
                 {feedbackData.correct ? "Correto! ✅" : "Incorreto ❌"}
               </p>
             </motion.div>

@@ -380,60 +380,63 @@ export function AtencaoDividida({ difficulty, theme, onComplete }: AtencaoDividi
 
   const progress = currentStimulusIndex >= 0 ? ((currentStimulusIndex + 1) / MAX_STIMULI) * 100 : 0;
   const totalErrors = misses + falseAlarms;
+  const isGamified = theme === "GAMIFIED";
+  const isColorful = theme === "COLORFUL";
 
-  const bgClass = theme === "GAMIFIED"
-    ? "bg-gray-950"
-    : theme === "COLORFUL"
-    ? "bg-gradient-to-br from-blue-50 to-rose-50"
-    : "bg-gray-50";
+  const bgStyle: React.CSSProperties = isGamified
+    ? { background: "linear-gradient(145deg, #0a1628 0%, #0d2244 45%, #132a52 70%, #081020 100%)" }
+    : isColorful
+    ? { background: "linear-gradient(135deg, #f0e6ff 0%, #fce4f0 55%, #ffe8e0 100%)" }
+    : { background: "linear-gradient(160deg, #ede8df 0%, #e4ddd0 55%, #dbd4c5 100%)" };
 
-  const cardClass = theme === "GAMIFIED"
-    ? "bg-gray-800 border border-cyan-500/30"
-    : "bg-white shadow-lg";
+  const cardStyle: React.CSSProperties = isGamified
+    ? { background: "rgba(255,255,255,0.08)", backdropFilter: "blur(16px)", border: "1.5px solid rgba(255,255,255,0.15)", borderRadius: 20, boxShadow: "0 8px 40px rgba(0,0,0,0.5)" }
+    : { background: "#ffffff", border: "1.5px solid rgba(26,39,68,0.08)", borderRadius: 20, boxShadow: "0 4px 20px rgba(26,39,68,0.08)" };
 
-  const panelLeft = theme === "GAMIFIED"
-    ? "bg-blue-950/60 border border-blue-700/50"
-    : theme === "COLORFUL"
-    ? "bg-blue-100 border-2 border-blue-300"
-    : "bg-blue-50 border-2 border-blue-200";
+  const panelLeftStyle: React.CSSProperties = isGamified
+    ? { background: "rgba(37,99,235,0.15)", border: "1.5px solid rgba(59,130,246,0.4)", borderRadius: 14 }
+    : { background: isColorful ? "#dbeafe" : "#eff6ff", border: isColorful ? "1.5px solid #93c5fd" : "1.5px solid #bfdbfe", borderRadius: 14 };
 
-  const panelRight = theme === "GAMIFIED"
-    ? "bg-rose-950/60 border border-rose-700/50"
-    : theme === "COLORFUL"
-    ? "bg-rose-100 border-2 border-rose-300"
-    : "bg-rose-50 border-2 border-rose-200";
+  const panelRightStyle: React.CSSProperties = isGamified
+    ? { background: "rgba(190,18,60,0.15)", border: "1.5px solid rgba(244,63,94,0.4)", borderRadius: 14 }
+    : { background: isColorful ? "#ffe4e6" : "#fff1f2", border: isColorful ? "1.5px solid #fda4af" : "1.5px solid #fecdd3", borderRadius: 14 };
 
-  const leftTextColor = theme === "GAMIFIED" ? "text-blue-300" : "text-blue-600";
-  const rightTextColor = theme === "GAMIFIED" ? "text-rose-300" : "text-rose-600";
+  const stimBoxStyle: React.CSSProperties = isGamified
+    ? { background: "rgba(0,0,0,0.3)", borderRadius: 10 }
+    : { background: "rgba(255,255,255,0.7)", borderRadius: 10 };
 
-  const btnLeft = theme === "GAMIFIED"
-    ? "bg-blue-600 text-white active:bg-blue-500"
-    : theme === "COLORFUL"
-    ? "bg-blue-500 text-white"
-    : "bg-blue-600 text-white";
+  const leftColor = isGamified ? "#93c5fd" : "#2563eb";
+  const rightColor = isGamified ? "#fda4af" : "#e11d48";
 
-  const btnRight = theme === "GAMIFIED"
-    ? "bg-rose-600 text-white active:bg-rose-500"
-    : theme === "COLORFUL"
-    ? "bg-rose-500 text-white"
-    : "bg-rose-600 text-white";
+  const btnLeftStyle: React.CSSProperties = {
+    background: "linear-gradient(135deg, #1d4ed8, #1e40af)",
+    borderRadius: 9999, color: "white",
+    boxShadow: "0 4px 16px rgba(29,78,216,0.4)",
+  };
+
+  const btnRightStyle: React.CSSProperties = {
+    background: "linear-gradient(135deg, #be123c, #9f1239)",
+    borderRadius: 9999, color: "white",
+    boxShadow: "0 4px 16px rgba(190,18,60,0.4)",
+  };
 
   return (
-    <div className={`min-h-screen flex flex-col items-center justify-center p-4 ${bgClass}`}>
-      <div className={`w-full max-w-sm rounded-2xl p-5 ${cardClass}`}>
+    <div className="min-h-screen flex flex-col items-center justify-center p-4" style={bgStyle}>
+      <div className="w-full max-w-sm p-5" style={cardStyle}>
         {/* Header */}
         <div className="flex justify-between text-sm mb-3">
-          <span className={`font-bold ${theme === "GAMIFIED" ? "text-green-400" : "text-green-600"}`}>✓ {hits}</span>
-          <span className={theme === "GAMIFIED" ? "text-gray-400" : "text-gray-500"}>
+          <span className="font-bold" style={{ color: "#22c55e" }}>✓ {hits}</span>
+          <span style={{ color: isGamified ? "rgba(255,255,255,0.6)" : "#8a7a6a" }}>
             {Math.max(0, currentStimulusIndex + 1)}/{MAX_STIMULI}
           </span>
-          <span className={`font-bold ${theme === "GAMIFIED" ? "text-red-400" : "text-red-500"}`}>✗ {totalErrors}</span>
+          <span className="font-bold" style={{ color: "#ef4444" }}>✗ {totalErrors}</span>
         </div>
 
         {/* Progress bar */}
-        <div className={`h-2 rounded-full mb-4 ${theme === "GAMIFIED" ? "bg-gray-700" : "bg-gray-200"}`}>
+        <div className="h-2 rounded-full mb-4" style={{ background: isGamified ? "rgba(255,255,255,0.1)" : "rgba(26,45,80,0.1)" }}>
           <motion.div
-            className={`h-full rounded-full ${theme === "GAMIFIED" ? "bg-cyan-500" : "bg-indigo-500"}`}
+            className="h-full rounded-full"
+            style={{ background: isGamified ? "#06b6d4" : "#6366f1" }}
             animate={{ width: `${progress}%` }}
             transition={{ duration: 0.3 }}
           />
@@ -442,16 +445,15 @@ export function AtencaoDividida({ difficulty, theme, onComplete }: AtencaoDividi
         {/* Dual panels */}
         <div className="flex gap-3 mb-5">
           {/* Left – Numbers */}
-          <div className={`flex-1 rounded-xl p-3 flex flex-col items-center gap-2 ${panelLeft}`}>
-            <p className={`text-xs font-bold uppercase tracking-wider ${leftTextColor}`}>Números</p>
-            <div className={`w-full h-20 rounded-lg flex items-center justify-center ${
-              theme === "GAMIFIED" ? "bg-gray-900/60" : "bg-white/70"
-            }`}>
+          <div className="flex-1 p-3 flex flex-col items-center gap-2" style={panelLeftStyle}>
+            <p className="text-xs font-bold uppercase tracking-wider" style={{ color: leftColor }}>Números</p>
+            <div className="w-full h-20 flex items-center justify-center" style={stimBoxStyle}>
               <AnimatePresence mode="wait">
                 {leftDisplay !== null && (
                   <motion.span
                     key={leftDisplay + currentStimulusIndex}
-                    className={`text-5xl font-black ${leftTextColor}`}
+                    className="text-5xl font-black"
+                    style={{ color: leftColor }}
                     initial={{ scale: 0.5, opacity: 0 }}
                     animate={{ scale: 1, opacity: 1 }}
                     exit={{ scale: 0.5, opacity: 0 }}
@@ -462,20 +464,19 @@ export function AtencaoDividida({ difficulty, theme, onComplete }: AtencaoDividi
                 )}
               </AnimatePresence>
             </div>
-            <p className={`text-xs opacity-70 ${leftTextColor}`}>toque se ÍMPAR</p>
+            <p className="text-xs" style={{ color: leftColor, opacity: 0.8 }}>toque se ÍMPAR</p>
           </div>
 
           {/* Right – Letters */}
-          <div className={`flex-1 rounded-xl p-3 flex flex-col items-center gap-2 ${panelRight}`}>
-            <p className={`text-xs font-bold uppercase tracking-wider ${rightTextColor}`}>Letras</p>
-            <div className={`w-full h-20 rounded-lg flex items-center justify-center ${
-              theme === "GAMIFIED" ? "bg-gray-900/60" : "bg-white/70"
-            }`}>
+          <div className="flex-1 p-3 flex flex-col items-center gap-2" style={panelRightStyle}>
+            <p className="text-xs font-bold uppercase tracking-wider" style={{ color: rightColor }}>Letras</p>
+            <div className="w-full h-20 flex items-center justify-center" style={stimBoxStyle}>
               <AnimatePresence mode="wait">
                 {rightDisplay !== null && (
                   <motion.span
                     key={rightDisplay + currentStimulusIndex}
-                    className={`text-5xl font-black ${rightTextColor}`}
+                    className="text-5xl font-black"
+                    style={{ color: rightColor }}
                     initial={{ scale: 0.5, opacity: 0 }}
                     animate={{ scale: 1, opacity: 1 }}
                     exit={{ scale: 0.5, opacity: 0 }}
@@ -486,7 +487,7 @@ export function AtencaoDividida({ difficulty, theme, onComplete }: AtencaoDividi
                 )}
               </AnimatePresence>
             </div>
-            <p className={`text-xs opacity-70 ${rightTextColor}`}>toque se VOGAL</p>
+            <p className="text-xs" style={{ color: rightColor, opacity: 0.8 }}>toque se VOGAL</p>
           </div>
         </div>
 
@@ -495,13 +496,15 @@ export function AtencaoDividida({ difficulty, theme, onComplete }: AtencaoDividi
           <motion.button
             onClick={handleLeftTap}
             whileTap={{ scale: 0.94 }}
-            className={`flex-1 py-5 rounded-2xl font-black text-xl relative overflow-hidden ${btnLeft}`}
+            className="flex-1 py-5 font-black text-xl relative overflow-hidden"
+            style={{ ...btnLeftStyle, borderRadius: 16 }}
           >
             ÍMPAR
             <AnimatePresence>
               {leftFeedback && (
                 <motion.div
-                  className={`absolute inset-0 rounded-2xl ${leftFeedback === "hit" ? "bg-green-400/40" : "bg-red-400/40"}`}
+                  className="absolute inset-0"
+                  style={{ borderRadius: 16, background: leftFeedback === "hit" ? "rgba(74,222,128,0.4)" : "rgba(248,113,113,0.4)" }}
                   initial={{ opacity: 0 }}
                   animate={{ opacity: 1 }}
                   exit={{ opacity: 0 }}
@@ -513,13 +516,15 @@ export function AtencaoDividida({ difficulty, theme, onComplete }: AtencaoDividi
           <motion.button
             onClick={handleRightTap}
             whileTap={{ scale: 0.94 }}
-            className={`flex-1 py-5 rounded-2xl font-black text-xl relative overflow-hidden ${btnRight}`}
+            className="flex-1 py-5 font-black text-xl relative overflow-hidden"
+            style={{ ...btnRightStyle, borderRadius: 16 }}
           >
             VOGAL
             <AnimatePresence>
               {rightFeedback && (
                 <motion.div
-                  className={`absolute inset-0 rounded-2xl ${rightFeedback === "hit" ? "bg-green-400/40" : "bg-red-400/40"}`}
+                  className="absolute inset-0"
+                  style={{ borderRadius: 16, background: rightFeedback === "hit" ? "rgba(74,222,128,0.4)" : "rgba(248,113,113,0.4)" }}
                   initial={{ opacity: 0 }}
                   animate={{ opacity: 1 }}
                   exit={{ opacity: 0 }}

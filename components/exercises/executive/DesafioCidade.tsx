@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect, useRef } from "react";
+import React, { useState, useEffect, useRef } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { calculateExerciseScore } from "@/lib/scoring";
 import { useExerciseProgress } from "@/components/exercises/ExerciseWrapper";
@@ -14,72 +14,91 @@ type Phase = "briefing" | "mission" | "result";
 // ─── Paleta por tema ──────────────────────────────────────────────────────────
 
 function pal(theme: Theme) {
-  if (theme === "GAMIFIED") return {
-    bg: "bg-gray-950",
-    wrap: "bg-gray-800 border border-gray-700",
-    card: "bg-gray-800 border border-gray-700",
-    cardHover: "hover:border-cyan-500",
-    title: "text-cyan-400",
-    sub: "text-gray-400",
-    text: "text-gray-100",
-    muted: "text-gray-400",
-    accent: "text-cyan-400",
-    badge: "bg-cyan-900 text-cyan-300",
-    btn: "bg-cyan-600 hover:bg-cyan-700 text-white",
+  const isGamified = theme === "GAMIFIED";
+  const isColorful = theme === "COLORFUL";
+  if (isGamified) return {
+    bg: "bg-transparent",
+    wrap: "border border-white/15",
+    card: "border border-white/15",
+    cardHover: "hover:border-white/30",
+    title: "text-white",
+    sub: "text-white/70",
+    text: "text-white/90",
+    muted: "text-white/60",
+    accent: "text-cyan-300",
+    badge: "bg-cyan-900/60 text-cyan-300",
+    btn: "text-white",
     sel: "border-cyan-400 bg-cyan-900/40",
-    unsel: "border-gray-600 bg-gray-700 hover:border-gray-500",
+    unsel: "border-white/20 bg-white/10 hover:border-white/30",
     correct: "border-green-500 bg-green-900/30",
     wrong: "border-red-500 bg-red-900/30",
-    bar: "bg-gray-700",
-    draggable: "border-gray-600 bg-gray-750",
-    story: "bg-cyan-900/20 border border-cyan-700",
-    storyLabel: "text-cyan-400",
-    storyBody: "text-gray-200",
+    bar: "bg-white/10",
+    draggable: "border-white/20 bg-white/10",
+    story: "bg-white/10 border border-white/20",
+    storyLabel: "text-cyan-300",
+    storyBody: "text-white/80",
   };
-  if (theme === "COLORFUL") return {
-    bg: "bg-gradient-to-br from-violet-50 via-white to-pink-50",
-    wrap: "bg-white border-2 border-violet-200 shadow-xl",
-    card: "bg-white border-2 border-violet-200 shadow-sm",
-    cardHover: "hover:border-violet-400 hover:shadow-md",
-    title: "text-violet-700",
-    sub: "text-violet-500",
+  if (isColorful) return {
+    bg: "bg-transparent",
+    wrap: "bg-white border border-[rgba(26,39,68,0.08)]",
+    card: "bg-white border border-[rgba(26,39,68,0.08)]",
+    cardHover: "hover:border-purple-300 hover:shadow-md",
+    title: "text-[#1a2744]",
+    sub: "text-[#8a7a6a]",
     text: "text-gray-800",
-    muted: "text-gray-500",
-    accent: "text-violet-600",
-    badge: "bg-violet-100 text-violet-700",
-    btn: "bg-gradient-to-r from-violet-500 to-pink-500 text-white",
-    sel: "border-violet-500 bg-violet-50",
-    unsel: "border-violet-200 bg-white hover:border-violet-400",
+    muted: "text-[#8a7a6a]",
+    accent: "text-purple-600",
+    badge: "bg-purple-100 text-purple-700",
+    btn: "text-white",
+    sel: "border-purple-500 bg-purple-50",
+    unsel: "border-[rgba(26,39,68,0.08)] bg-white hover:border-purple-300",
     correct: "border-green-400 bg-green-50",
     wrong: "border-red-400 bg-red-50",
-    bar: "bg-violet-100",
-    draggable: "border-violet-200 bg-white",
-    story: "bg-violet-50 border-2 border-violet-200",
-    storyLabel: "text-violet-600",
-    storyBody: "text-violet-900",
+    bar: "bg-purple-100",
+    draggable: "border-[rgba(26,39,68,0.08)] bg-white",
+    story: "bg-purple-50 border border-purple-200",
+    storyLabel: "text-purple-600",
+    storyBody: "text-purple-900",
   };
   return {
-    bg: "bg-gradient-to-br from-slate-50 via-white to-indigo-50/30",
-    wrap: "bg-white border border-slate-200 shadow-md",
-    card: "bg-white border border-slate-200 shadow-sm",
-    cardHover: "hover:border-indigo-300 hover:shadow-md",
-    title: "text-slate-800",
-    sub: "text-slate-500",
+    bg: "bg-transparent",
+    wrap: "bg-white border border-[rgba(26,39,68,0.08)]",
+    card: "bg-white border border-[rgba(26,39,68,0.08)]",
+    cardHover: "hover:border-blue-300 hover:shadow-md",
+    title: "text-[#1a2744]",
+    sub: "text-[#8a7a6a]",
     text: "text-gray-800",
-    muted: "text-slate-500",
-    accent: "text-indigo-600",
-    badge: "bg-indigo-50 text-indigo-600",
-    btn: "bg-indigo-600 hover:bg-indigo-700 text-white",
-    sel: "border-indigo-400 bg-indigo-50",
-    unsel: "border-slate-200 bg-white hover:border-slate-300",
+    muted: "text-[#8a7a6a]",
+    accent: "text-blue-700",
+    badge: "bg-blue-50 text-blue-700",
+    btn: "text-white",
+    sel: "border-blue-500 bg-blue-50",
+    unsel: "border-[rgba(26,39,68,0.08)] bg-white hover:border-blue-300",
     correct: "border-green-400 bg-green-50",
     wrong: "border-red-300 bg-red-50",
     bar: "bg-slate-200",
-    draggable: "border-slate-200 bg-white",
+    draggable: "border-[rgba(26,39,68,0.08)] bg-white",
     story: "bg-blue-50 border border-blue-200",
     storyLabel: "text-blue-700",
     storyBody: "text-blue-900",
   };
+}
+
+function palBtnStyle(theme: Theme): React.CSSProperties {
+  if (theme === "GAMIFIED") return { background: "linear-gradient(135deg, #0891b2, #0e7490)", borderRadius: 9999, color: "white", boxShadow: "0 4px 16px rgba(8,145,178,0.4)" };
+  if (theme === "COLORFUL") return { background: "linear-gradient(135deg, #7c3aed, #db2777)", borderRadius: 9999, color: "white", boxShadow: "0 4px 20px rgba(124,58,237,0.35)" };
+  return { background: "linear-gradient(135deg, #1a2744, #2a4a8a)", borderRadius: 9999, color: "white", boxShadow: "0 4px 16px rgba(26,39,68,0.35)" };
+}
+
+function palCardStyle(theme: Theme): React.CSSProperties {
+  if (theme === "GAMIFIED") return { background: "rgba(255,255,255,0.08)", backdropFilter: "blur(16px)", border: "1.5px solid rgba(255,255,255,0.15)", borderRadius: 20, boxShadow: "0 8px 40px rgba(0,0,0,0.5)" };
+  return { background: "#ffffff", border: "1.5px solid rgba(26,39,68,0.08)", borderRadius: 20, boxShadow: "0 4px 20px rgba(26,39,68,0.08)" };
+}
+
+function palRootBg(theme: Theme): React.CSSProperties {
+  if (theme === "GAMIFIED") return { background: "linear-gradient(145deg, #0a1628 0%, #0d2244 45%, #132a52 70%, #081020 100%)" };
+  if (theme === "COLORFUL") return { background: "linear-gradient(135deg, #f0e6ff 0%, #fce4f0 55%, #ffe8e0 100%)" };
+  return { background: "linear-gradient(160deg, #ede8df 0%, #e4ddd0 55%, #dbd4c5 100%)" };
 }
 
 function parseHour(h: string): number {
@@ -257,7 +276,8 @@ function CinemaL1({ theme, onFinish }: { theme: Theme; onFinish: (ok: boolean) =
       <button
         onClick={() => onFinish(isValidChoice())}
         disabled={!ticket || !hora}
-        className={`w-full h-11 rounded-xl font-bold transition-all ${p.btn} disabled:opacity-40`}
+        className="w-full h-11 rounded-xl font-bold transition-all disabled:opacity-40"
+        style={palBtnStyle(theme)}
       >Comprar ingresso</button>
     </div>
   );
@@ -1086,8 +1106,8 @@ export function DesafioCidade({ difficulty, theme, onComplete }: {
   );
 
   return (
-    <div className={`min-h-screen overflow-y-auto p-4 ${p.bg}`}>
-      <div className={`w-full max-w-md mx-auto rounded-2xl p-5 my-4 ${p.wrap}`}>
+    <div className="min-h-screen overflow-y-auto p-4" style={palRootBg(theme)}>
+      <div className="w-full max-w-md mx-auto p-5 my-4" style={palCardStyle(theme)}>
         <ProgressBar />
 
         <AnimatePresence mode="wait">

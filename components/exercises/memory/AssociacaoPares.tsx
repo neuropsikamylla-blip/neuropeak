@@ -37,6 +37,9 @@ type Phase = "study" | "recall";
 export function AssociacaoPares({ difficulty, theme, onComplete }: AssociacaoPares) {
   const reportProgress = useExerciseProgress();
 
+  const isGamified = theme === "GAMIFIED";
+  const isColorful = theme === "COLORFUL";
+
   // Adaptive state
   const [pairCount, setPairCount] = useState(initialPairs(difficulty));
   const [streak, setStreak] = useState(0);
@@ -129,7 +132,6 @@ export function AssociacaoPares({ difficulty, theme, onComplete }: AssociacaoPar
           },
         });
       } else if (currentQuestion + 1 >= pairCount) {
-        // End of round → staircase → new study round
         setStreak(nextStreak);
         setPairCount(nextPairCount);
         startNewRound(nextPairCount);
@@ -141,33 +143,77 @@ export function AssociacaoPares({ difficulty, theme, onComplete }: AssociacaoPar
     }, 1000);
   }
 
-  const bgClass = theme === "GAMIFIED" ? "bg-gray-950" : theme === "COLORFUL" ? "bg-gradient-to-br from-pink-50 to-yellow-50" : "bg-gray-50";
-  const cardClass = theme === "GAMIFIED" ? "bg-gray-800 border border-cyan-500/30 rounded-2xl" : "bg-white shadow-lg rounded-2xl";
-  const titleClass = theme === "GAMIFIED" ? "text-cyan-400" : theme === "COLORFUL" ? "text-pink-600" : "text-gray-900";
-  const subClass = theme === "GAMIFIED" ? "text-gray-400" : "text-gray-500";
+  // ─── Design system styles ────────────────────────────────────────────
+  const rootBg: React.CSSProperties = isGamified
+    ? { background: "linear-gradient(145deg, #0a1628 0%, #0d2244 45%, #132a52 70%, #081020 100%)" }
+    : isColorful
+    ? { background: "linear-gradient(135deg, #f0e6ff 0%, #fce4f0 55%, #ffe8e0 100%)" }
+    : { background: "linear-gradient(160deg, #ede8df 0%, #e4ddd0 55%, #dbd4c5 100%)" };
+
+  const cardStyle: React.CSSProperties = isGamified
+    ? { background: "rgba(255,255,255,0.08)", backdropFilter: "blur(16px)", border: "1.5px solid rgba(255,255,255,0.15)", borderRadius: 20, boxShadow: "0 8px 40px rgba(0,0,0,0.5)" }
+    : { background: "#ffffff", border: "1.5px solid rgba(26,39,68,0.08)", borderRadius: 20, boxShadow: "0 4px 20px rgba(26,39,68,0.08)" };
+
+  const titleColor = isGamified ? "#ffffff" : "#1a2744";
+  const labelColor = isGamified ? "rgba(255,255,255,0.7)" : "#5a4a3a";
+  const countdownColor = isGamified ? "#22d3ee" : isColorful ? "#7c3aed" : "#2a4a8a";
+
+  const studyItemStyle: React.CSSProperties = isGamified
+    ? { background: "rgba(255,255,255,0.1)", border: "1px solid rgba(255,255,255,0.15)", borderRadius: 12 }
+    : { background: "rgba(26,39,68,0.04)", border: "1px solid rgba(26,39,68,0.1)", borderRadius: 12 };
+
+  const studyItemTextColor = isGamified ? "rgba(255,255,255,0.9)" : "#1a2744";
+
+  const wordBoxStyle: React.CSSProperties = isGamified
+    ? { background: "rgba(255,255,255,0.08)", border: "1.5px solid rgba(255,255,255,0.15)", borderRadius: 16 }
+    : { background: "rgba(26,39,68,0.04)", border: "1.5px solid rgba(26,39,68,0.08)", borderRadius: 16 };
+
+  const wordBoxColor = isGamified ? "#ffffff" : "#1a2744";
+
+  function optionStyle(emoji: string): React.CSSProperties {
+    const isSelected = selected === emoji;
+    const isCorrectAnswer = emoji === pairs[currentQuestion]?.emoji;
+
+    if (selected) {
+      if (isCorrectAnswer) return { background: "rgba(22,163,74,0.15)", border: "2px solid #16a34a", borderRadius: 16, cursor: "default" };
+      if (isSelected) return { background: "rgba(220,38,38,0.15)", border: "2px solid #dc2626", borderRadius: 16, cursor: "default" };
+      return isGamified
+        ? { background: "rgba(255,255,255,0.05)", border: "2px solid rgba(255,255,255,0.1)", borderRadius: 16, opacity: 0.5, cursor: "default" }
+        : { background: "rgba(26,39,68,0.03)", border: "2px solid rgba(26,39,68,0.08)", borderRadius: 16, opacity: 0.5, cursor: "default" };
+    }
+    return isGamified
+      ? { background: "rgba(255,255,255,0.08)", border: "2px solid rgba(255,255,255,0.2)", borderRadius: 16, cursor: "pointer" }
+      : { background: "#ffffff", border: "2px solid rgba(26,39,68,0.12)", borderRadius: 16, boxShadow: "0 2px 8px rgba(26,39,68,0.06)", cursor: "pointer" };
+  }
+
+  const progressEmptyColor = isGamified ? "rgba(255,255,255,0.12)" : "rgba(26,39,68,0.12)";
 
   return (
-    <div className={`min-h-screen flex flex-col items-center justify-center p-4 ${bgClass}`}>
-      <div className={`w-full max-w-lg p-6 ${cardClass}`}>
+    <div className="min-h-screen flex flex-col items-center justify-center p-4" style={rootBg}>
+      <div className="w-full max-w-lg p-6" style={cardStyle}>
 
         {/* Barra de progresso global */}
         <div className="flex justify-between items-center mb-2">
-          <span className={`text-xs ${subClass}`}>
+          <span style={{ fontSize: 12, color: labelColor }}>
             {phase === "study" ? `Estude ${pairCount} par${pairCount > 1 ? "es" : ""}` : "Qual é a imagem?"}
           </span>
-          <span className={`text-xs font-medium ${subClass}`}>{totalAnswered}/{MAX_QUESTIONS}</span>
+          <span style={{ fontSize: 12, fontWeight: 600, color: labelColor }}>{totalAnswered}/{MAX_QUESTIONS}</span>
         </div>
         <div className="flex gap-1 mb-4">
           {Array.from({ length: MAX_QUESTIONS }).map((_, i) => (
             <div
               key={i}
-              className={`h-1.5 flex-1 rounded-full transition-colors ${
-                i < sessionResults.length
-                  ? sessionResults[i] ? "bg-green-500" : "bg-red-400"
+              style={{
+                height: 6,
+                flex: 1,
+                borderRadius: 9999,
+                transition: "background 0.2s",
+                background: i < sessionResults.length
+                  ? sessionResults[i] ? "#16a34a" : "#ef4444"
                   : i === totalAnswered && phase === "recall"
-                  ? "bg-blue-400 animate-pulse"
-                  : theme === "GAMIFIED" ? "bg-gray-700" : "bg-gray-200"
-              }`}
+                  ? "#60a5fa"
+                  : progressEmptyColor,
+              }}
             />
           ))}
         </div>
@@ -175,27 +221,25 @@ export function AssociacaoPares({ difficulty, theme, onComplete }: AssociacaoPar
         {phase === "study" && (
           <>
             <div className="flex justify-between items-center mb-4">
-              <h2 className={`font-bold text-lg ${titleClass}`}>Estude os Pares</h2>
-              <span className={`text-2xl font-bold ${theme === "GAMIFIED" ? "text-cyan-400" : "text-blue-600"}`}>
+              <h2 style={{ fontWeight: 700, fontSize: 18, color: titleColor }}>Estude os Pares</h2>
+              <span style={{ fontSize: 24, fontWeight: 700, color: countdownColor }}>
                 {studyCountdown}s
               </span>
             </div>
-            <p className={`text-sm mb-4 ${subClass}`}>
+            <p style={{ fontSize: 13, marginBottom: 16, color: labelColor }}>
               Memorize as associações palavra-imagem
             </p>
             <div className="grid grid-cols-2 gap-3">
               {pairs.map((pair, i) => (
                 <motion.div
                   key={i}
-                  className={`p-4 rounded-xl flex items-center gap-3 ${theme === "GAMIFIED" ? "bg-gray-700" : "bg-gray-50 border border-gray-200"}`}
+                  style={{ padding: "14px 16px", display: "flex", alignItems: "center", gap: 12, ...studyItemStyle }}
                   initial={{ opacity: 0, y: 20 }}
                   animate={{ opacity: 1, y: 0 }}
                   transition={{ delay: i * 0.08 }}
                 >
-                  <span className="text-3xl">{pair.emoji}</span>
-                  <span className={`font-medium ${theme === "GAMIFIED" ? "text-gray-200" : "text-gray-800"}`}>
-                    {pair.word}
-                  </span>
+                  <span style={{ fontSize: 30 }}>{pair.emoji}</span>
+                  <span style={{ fontWeight: 600, color: studyItemTextColor }}>{pair.word}</span>
                 </motion.div>
               ))}
             </div>
@@ -205,47 +249,31 @@ export function AssociacaoPares({ difficulty, theme, onComplete }: AssociacaoPar
         {phase === "recall" && (
           <>
             <div className="flex justify-between items-center mb-6">
-              <h2 className={`font-bold text-lg ${titleClass}`}>Qual é a imagem?</h2>
-              <span className={`text-sm ${subClass}`}>
+              <h2 style={{ fontWeight: 700, fontSize: 18, color: titleColor }}>Qual é a imagem?</h2>
+              <span style={{ fontSize: 13, color: labelColor }}>
                 {currentQuestion + 1}/{pairCount}
               </span>
             </div>
 
-            <div className={`text-center p-6 rounded-2xl mb-6 ${theme === "GAMIFIED" ? "bg-gray-700" : "bg-gray-50"}`}>
-              <p className={`text-3xl font-bold ${theme === "GAMIFIED" ? "text-gray-100" : "text-gray-800"}`}>
+            <div className="text-center p-6 mb-6" style={wordBoxStyle}>
+              <p style={{ fontSize: 28, fontWeight: 700, color: wordBoxColor }}>
                 {pairs[currentQuestion]?.word}
               </p>
             </div>
 
             <div className="grid grid-cols-2 gap-3">
-              {shuffledOptions.map((emoji, i) => {
-                const isSelected = selected === emoji;
-                const isCorrectAnswer = emoji === pairs[currentQuestion]?.emoji;
-                let cellStyle = "";
-
-                if (selected) {
-                  if (isCorrectAnswer) cellStyle = "bg-green-100 border-green-500 border-2";
-                  else if (isSelected) cellStyle = "bg-red-100 border-red-500 border-2";
-                  else cellStyle = theme === "GAMIFIED" ? "bg-gray-700 border-gray-600" : "bg-gray-50 border-gray-200";
-                } else {
-                  cellStyle = theme === "GAMIFIED"
-                    ? "bg-gray-700 border-gray-600 hover:bg-gray-600 cursor-pointer"
-                    : "bg-white border-gray-200 hover:border-blue-400 hover:bg-blue-50 cursor-pointer";
-                }
-
-                return (
-                  <motion.button
-                    key={i}
-                    onClick={() => handleSelect(emoji)}
-                    disabled={!!selected}
-                    className={`p-6 rounded-xl border-2 text-4xl flex items-center justify-center transition-all ${cellStyle}`}
-                    whileHover={!selected ? { scale: 1.03 } : {}}
-                    whileTap={!selected ? { scale: 0.97 } : {}}
-                  >
-                    {emoji}
-                  </motion.button>
-                );
-              })}
+              {shuffledOptions.map((emoji, i) => (
+                <motion.button
+                  key={i}
+                  onClick={() => handleSelect(emoji)}
+                  disabled={!!selected}
+                  style={{ padding: "22px 0", fontSize: 36, display: "flex", alignItems: "center", justifyContent: "center", transition: "all 0.15s", ...optionStyle(emoji) }}
+                  whileHover={!selected ? { scale: 1.03 } : {}}
+                  whileTap={!selected ? { scale: 0.97 } : {}}
+                >
+                  {emoji}
+                </motion.button>
+              ))}
             </div>
           </>
         )}

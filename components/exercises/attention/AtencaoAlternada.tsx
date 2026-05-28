@@ -282,53 +282,60 @@ export function AtencaoAlternada({ difficulty, theme, onComplete }: AtencaoAlter
   const correct = results.filter(Boolean).length;
 
   const isAnimalRule = rule === "animal-objeto";
+  const isGamified = theme === "GAMIFIED";
+  const isColorful = theme === "COLORFUL";
 
-  const bgClass = theme === "GAMIFIED"
-    ? "bg-gray-950"
-    : theme === "COLORFUL"
-    ? "bg-gradient-to-br from-amber-50 to-teal-50"
-    : "bg-gray-50";
+  const bgStyle: React.CSSProperties = isGamified
+    ? { background: "linear-gradient(145deg, #0a1628 0%, #0d2244 45%, #132a52 70%, #081020 100%)" }
+    : isColorful
+    ? { background: "linear-gradient(135deg, #f0e6ff 0%, #fce4f0 55%, #ffe8e0 100%)" }
+    : { background: "linear-gradient(160deg, #ede8df 0%, #e4ddd0 55%, #dbd4c5 100%)" };
 
-  const cardClass = theme === "GAMIFIED"
-    ? "bg-gray-800 border border-cyan-500/30"
-    : "bg-white shadow-lg";
+  const cardStyle: React.CSSProperties = isGamified
+    ? { background: "rgba(255,255,255,0.08)", backdropFilter: "blur(16px)", border: "1.5px solid rgba(255,255,255,0.15)", borderRadius: 20, boxShadow: "0 8px 40px rgba(0,0,0,0.5)" }
+    : { background: "#ffffff", border: "1.5px solid rgba(26,39,68,0.08)", borderRadius: 20, boxShadow: "0 4px 20px rgba(26,39,68,0.08)" };
 
-  const ruleBg = isAnimalRule
-    ? theme === "GAMIFIED" ? "bg-amber-900/50 border border-amber-500/40" : "bg-amber-50 border border-amber-300"
-    : theme === "GAMIFIED" ? "bg-teal-900/50 border border-teal-500/40" : "bg-teal-50 border border-teal-300";
+  const ruleAccent = isAnimalRule ? "#f59e0b" : "#14b8a6";
+  const ruleAccentLight = isAnimalRule ? "rgba(245,158,11,0.12)" : "rgba(20,184,166,0.12)";
+  const ruleAccentBorder = isAnimalRule ? "rgba(245,158,11,0.4)" : "rgba(20,184,166,0.4)";
 
-  const ruleText = isAnimalRule
-    ? theme === "GAMIFIED" ? "text-amber-300" : "text-amber-700"
-    : theme === "GAMIFIED" ? "text-teal-300" : "text-teal-700";
+  const ruleBadgeStyle: React.CSSProperties = {
+    background: isGamified ? ruleAccentLight : (isAnimalRule ? "#fffbeb" : "#f0fdfa"),
+    border: `1.5px solid ${isGamified ? ruleAccentBorder : (isAnimalRule ? "#fde68a" : "#99f6e4")}`,
+    borderRadius: 14,
+  };
 
-  const btnA = isAnimalRule
-    ? theme === "GAMIFIED" ? "bg-amber-600 text-white" : theme === "COLORFUL" ? "bg-amber-500 text-white" : "bg-amber-500 text-white"
-    : theme === "GAMIFIED" ? "bg-teal-600 text-white" : theme === "COLORFUL" ? "bg-teal-500 text-white" : "bg-teal-500 text-white";
+  const itemBoxStyle: React.CSSProperties = isGamified
+    ? { background: "rgba(255,255,255,0.06)", border: "1px solid rgba(255,255,255,0.1)", borderRadius: 20 }
+    : { background: "#f8f7f5", border: "1.5px solid rgba(26,39,68,0.08)", borderRadius: 20 };
 
-  const btnB = theme === "GAMIFIED"
-    ? "bg-gray-600 text-white"
-    : "bg-gray-200 text-gray-800";
+  const btnAStyle: React.CSSProperties = {
+    background: isAnimalRule
+      ? "linear-gradient(135deg, #d97706, #b45309)"
+      : "linear-gradient(135deg, #0d9488, #0f766e)",
+    borderRadius: 9999, color: "white",
+    boxShadow: isAnimalRule ? "0 4px 16px rgba(217,119,6,0.4)" : "0 4px 16px rgba(13,148,136,0.4)",
+  };
+
+  const btnBStyle: React.CSSProperties = isGamified
+    ? { background: "rgba(255,255,255,0.1)", border: "1.5px solid rgba(255,255,255,0.2)", borderRadius: 9999, color: "white" }
+    : { background: "#f1f0ee", border: "1.5px solid rgba(26,39,68,0.12)", borderRadius: 9999, color: "#1a2744" };
 
   return (
-    <div className={`min-h-screen flex flex-col items-center justify-center p-4 ${bgClass}`}>
-      <div className={`w-full max-w-sm rounded-2xl p-5 ${cardClass}`}>
+    <div className="min-h-screen flex flex-col items-center justify-center p-4" style={bgStyle}>
+      <div className="w-full max-w-sm p-5" style={cardStyle}>
         {/* Header */}
         <div className="flex justify-between text-sm mb-3">
-          <span className={`font-bold ${theme === "GAMIFIED" ? "text-green-400" : "text-green-600"}`}>
-            ✓ {correct}
-          </span>
-          <span className={theme === "GAMIFIED" ? "text-gray-400" : "text-gray-500"}>
-            {trialIndex}/{MAX_TRIALS}
-          </span>
-          <span className={`font-bold ${theme === "GAMIFIED" ? "text-red-400" : "text-red-500"}`}>
-            ✗ {results.filter((r) => !r).length}
-          </span>
+          <span className="font-bold" style={{ color: "#22c55e" }}>✓ {correct}</span>
+          <span style={{ color: isGamified ? "rgba(255,255,255,0.6)" : "#8a7a6a" }}>{trialIndex}/{MAX_TRIALS}</span>
+          <span className="font-bold" style={{ color: "#ef4444" }}>✗ {results.filter((r) => !r).length}</span>
         </div>
 
         {/* Progress bar */}
-        <div className={`h-2 rounded-full mb-4 ${theme === "GAMIFIED" ? "bg-gray-700" : "bg-gray-200"}`}>
+        <div className="h-2 rounded-full mb-4" style={{ background: isGamified ? "rgba(255,255,255,0.1)" : "rgba(26,45,80,0.1)" }}>
           <motion.div
-            className={`h-full rounded-full ${isAnimalRule ? "bg-amber-500" : "bg-teal-500"}`}
+            className="h-full rounded-full"
+            style={{ background: ruleAccent }}
             animate={{ width: `${progress}%` }}
             transition={{ duration: 0.3 }}
           />
@@ -337,10 +344,10 @@ export function AtencaoAlternada({ difficulty, theme, onComplete }: AtencaoAlter
         {/* Progress dots */}
         <div className="flex flex-wrap gap-1 mb-4">
           {results.map((r, i) => (
-            <div key={i} className={`w-3 h-3 rounded-full ${r ? "bg-green-500" : "bg-red-400"}`} />
+            <div key={i} className="w-3 h-3 rounded-full" style={{ background: r ? "#22c55e" : "#ef4444" }} />
           ))}
           {Array.from({ length: MAX_TRIALS - results.length }).map((_, i) => (
-            <div key={`e-${i}`} className={`w-3 h-3 rounded-full ${theme === "GAMIFIED" ? "bg-gray-700" : "bg-gray-200"}`} />
+            <div key={`e-${i}`} className="w-3 h-3 rounded-full" style={{ background: isGamified ? "rgba(255,255,255,0.15)" : "rgba(26,45,80,0.12)" }} />
           ))}
         </div>
 
@@ -351,13 +358,14 @@ export function AtencaoAlternada({ difficulty, theme, onComplete }: AtencaoAlter
             initial={{ scale: ruleJustChanged ? 1.1 : 1, opacity: 0 }}
             animate={{ scale: 1, opacity: 1 }}
             exit={{ opacity: 0 }}
-            className={`w-full rounded-xl p-3 mb-4 text-center ${ruleBg} ${ruleJustChanged ? "ring-2 ring-offset-1 ring-yellow-400" : ""}`}
+            className="w-full p-3 mb-4 text-center"
+            style={{ ...ruleBadgeStyle, outline: ruleJustChanged ? `2px solid #facc15` : undefined }}
           >
             {ruleJustChanged && (
-              <p className="text-xs font-bold text-yellow-500 mb-1 animate-pulse">⚡ REGRA MUDOU!</p>
+              <p className="text-xs font-bold mb-1 animate-pulse" style={{ color: "#facc15" }}>⚡ REGRA MUDOU!</p>
             )}
-            <p className={`text-xs font-bold uppercase tracking-wider opacity-70 ${ruleText}`}>Regra atual</p>
-            <p className={`text-lg font-black ${ruleText}`}>
+            <p className="text-xs font-bold uppercase tracking-wider mb-0.5" style={{ color: ruleAccent, opacity: 0.8 }}>Regra atual</p>
+            <p className="text-lg font-black" style={{ color: isGamified ? ruleAccent : (isAnimalRule ? "#92400e" : "#134e4a") }}>
               {isAnimalRule ? "É animal ou objeto?" : "É grande ou pequeno?"}
             </p>
           </motion.div>
@@ -370,12 +378,11 @@ export function AtencaoAlternada({ difficulty, theme, onComplete }: AtencaoAlter
             initial={{ opacity: 0, scale: 0.92 }}
             animate={{ opacity: 1, scale: 1 }}
             exit={{ opacity: 0, scale: 0.92 }}
-            className={`flex flex-col items-center gap-2 py-6 mb-6 rounded-2xl ${
-              theme === "GAMIFIED" ? "bg-gray-700" : "bg-gray-50 border border-gray-200"
-            }`}
+            className="flex flex-col items-center gap-2 py-6 mb-6"
+            style={itemBoxStyle}
           >
             <span className="text-7xl">{item.emoji}</span>
-            <p className={`text-2xl font-black tracking-wider ${theme === "GAMIFIED" ? "text-white" : "text-gray-900"}`}>
+            <p className="text-2xl font-black tracking-wider" style={{ color: isGamified ? "#ffffff" : "#1a2744" }}>
               {item.name}
             </p>
           </motion.div>
@@ -389,7 +396,8 @@ export function AtencaoAlternada({ difficulty, theme, onComplete }: AtencaoAlter
                 onClick={() => handleAnswer("ANIMAL")}
                 disabled={locked}
                 whileTap={{ scale: 0.95 }}
-                className={`flex-1 py-4 rounded-xl font-black text-lg ${btnA}`}
+                className="flex-1 py-4 font-black text-lg"
+                style={btnAStyle}
               >
                 ANIMAL
               </motion.button>
@@ -397,7 +405,8 @@ export function AtencaoAlternada({ difficulty, theme, onComplete }: AtencaoAlter
                 onClick={() => handleAnswer("OBJETO")}
                 disabled={locked}
                 whileTap={{ scale: 0.95 }}
-                className={`flex-1 py-4 rounded-xl font-black text-lg ${btnB}`}
+                className="flex-1 py-4 font-black text-lg"
+                style={btnBStyle}
               >
                 OBJETO
               </motion.button>
@@ -408,7 +417,8 @@ export function AtencaoAlternada({ difficulty, theme, onComplete }: AtencaoAlter
                 onClick={() => handleAnswer("GRANDE")}
                 disabled={locked}
                 whileTap={{ scale: 0.95 }}
-                className={`flex-1 py-4 rounded-xl font-black text-lg ${btnA}`}
+                className="flex-1 py-4 font-black text-lg"
+                style={btnAStyle}
               >
                 GRANDE
               </motion.button>
@@ -416,7 +426,8 @@ export function AtencaoAlternada({ difficulty, theme, onComplete }: AtencaoAlter
                 onClick={() => handleAnswer("PEQUENO")}
                 disabled={locked}
                 whileTap={{ scale: 0.95 }}
-                className={`flex-1 py-4 rounded-xl font-black text-lg ${btnB}`}
+                className="flex-1 py-4 font-black text-lg"
+                style={btnBStyle}
               >
                 PEQUENO
               </motion.button>

@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useRef, useCallback } from "react";
+import React, { useState, useRef, useCallback } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { calculateExerciseScore } from "@/lib/scoring";
 import { useExerciseProgress } from "@/components/exercises/ExerciseWrapper";
@@ -412,19 +412,35 @@ export function DeductiveGrid({ difficulty, theme, onComplete }: DeductiveGridPr
       onDone={() => { setShowTutorial(false); initGrid(currentPuzzle); startTime.current = Date.now(); }} />;
   }
 
+  const isGamified = theme === "GAMIFIED";
+  const isColorful = theme === "COLORFUL";
+
+  const rootBg: React.CSSProperties = isGamified
+    ? { background: "linear-gradient(145deg, #0a1628 0%, #0d2244 45%, #132a52 70%, #081020 100%)" }
+    : isColorful
+    ? { background: "linear-gradient(135deg, #f0e6ff 0%, #fce4f0 55%, #ffe8e0 100%)" }
+    : { background: "linear-gradient(160deg, #ede8df 0%, #e4ddd0 55%, #dbd4c5 100%)" };
+
+  const cardStyle: React.CSSProperties = isGamified
+    ? { background: "rgba(255,255,255,0.08)", backdropFilter: "blur(16px)", border: "1.5px solid rgba(255,255,255,0.15)", borderRadius: 20, boxShadow: "0 8px 40px rgba(0,0,0,0.5)" }
+    : { background: "#ffffff", border: "1.5px solid rgba(26,39,68,0.08)", borderRadius: 20, boxShadow: "0 4px 20px rgba(26,39,68,0.08)" };
+
+  const confirmBtnStyle: React.CSSProperties = isGamified
+    ? { background: "linear-gradient(135deg, #0891b2, #0e7490)", borderRadius: 9999, color: "white", boxShadow: "0 4px 16px rgba(8,145,178,0.4)" }
+    : isColorful
+    ? { background: "linear-gradient(135deg, #7c3aed, #db2777)", borderRadius: 9999, color: "white", boxShadow: "0 4px 20px rgba(124,58,237,0.35)" }
+    : { background: "linear-gradient(135deg, #1a2744, #2a4a8a)", borderRadius: 9999, color: "white", boxShadow: "0 4px 16px rgba(26,39,68,0.35)" };
+
   const pal = {
-    bg: theme === "GAMIFIED" ? "bg-gray-950" : theme === "COLORFUL" ? "bg-gradient-to-br from-emerald-50 to-teal-50" : "bg-slate-50",
-    card: theme === "GAMIFIED" ? "bg-gray-800 border border-cyan-500/20" : "bg-white shadow-lg",
-    title: theme === "GAMIFIED" ? "text-cyan-400" : theme === "COLORFUL" ? "text-emerald-700" : "text-slate-800",
-    sub: theme === "GAMIFIED" ? "text-gray-400" : "text-slate-500",
-    clueBox: theme === "GAMIFIED" ? "bg-gray-700/60 text-gray-300" : "bg-gray-50 text-gray-700",
-    cellEmpty: theme === "GAMIFIED" ? "bg-gray-700 border-gray-600 text-gray-500" : "bg-gray-50 border-gray-200 text-gray-300",
+    title: isGamified ? "text-white" : "text-[#1a2744]",
+    sub: isGamified ? "text-white/70" : "text-[#8a7a6a]",
+    clueBox: isGamified ? "bg-white/10 text-white/80" : "bg-gray-50 text-gray-700",
+    cellEmpty: isGamified ? "bg-white/10 border-white/20 text-white/30" : "bg-gray-50 border-gray-200 text-gray-300",
     cellYes: "bg-green-500 border-green-600 text-white",
     cellNo: "bg-red-400 border-red-500 text-white",
     cellErr: "bg-orange-400 border-orange-500 text-white ring-2 ring-orange-300",
-    personHead: theme === "GAMIFIED" ? "text-gray-300" : "text-gray-700",
-    valueHead: theme === "GAMIFIED" ? "text-gray-400" : "text-gray-500",
-    confirmBtn: theme === "GAMIFIED" ? "bg-cyan-600 text-white hover:bg-cyan-700" : "bg-emerald-600 text-white hover:bg-emerald-700",
+    personHead: isGamified ? "text-white/80" : "text-gray-700",
+    valueHead: isGamified ? "text-white/60" : "text-gray-500",
   };
 
   const allHaveYes = currentPuzzle.people.every(p =>
@@ -432,18 +448,18 @@ export function DeductiveGrid({ difficulty, theme, onComplete }: DeductiveGridPr
   );
 
   return (
-    <div className={`min-h-screen overflow-y-auto ${pal.bg}`}>
+    <div className="min-h-screen overflow-y-auto" style={rootBg}>
       <div className="max-w-sm mx-auto px-4 py-5 flex flex-col gap-4">
 
         {/* Header */}
-        <div className={`rounded-2xl p-4 ${pal.card}`}>
+        <div className="p-4" style={cardStyle}>
           <div className="flex justify-between items-center mb-1">
             <h2 className={`font-bold text-sm ${pal.title}`}>🔍 {currentPuzzle.title}</h2>
             <span className={`text-xs ${pal.sub}`}>{totalPuzzles + 1}/{PUZZLES_TO_SOLVE}</span>
           </div>
-          <div className={`h-1.5 rounded-full ${theme === "GAMIFIED" ? "bg-gray-700" : "bg-slate-200"}`}>
+          <div className={`h-1.5 rounded-full ${isGamified ? "bg-white/10" : "bg-slate-200"}`}>
             <div className={`h-full rounded-full transition-all ${
-              theme === "GAMIFIED" ? "bg-cyan-500" : "bg-emerald-500"
+              isGamified ? "bg-cyan-400" : "bg-emerald-500"
             }`} style={{ width: `${(totalPuzzles / PUZZLES_TO_SOLVE) * 100}%` }} />
           </div>
         </div>
@@ -457,7 +473,7 @@ export function DeductiveGrid({ difficulty, theme, onComplete }: DeductiveGridPr
         </div>
 
         {/* Grid */}
-        <div className={`rounded-2xl p-3 ${pal.card} overflow-x-auto`}>
+        <div className="p-3 overflow-x-auto" style={cardStyle}>
           <table className="w-full border-collapse">
             <thead>
               <tr>
@@ -510,9 +526,8 @@ export function DeductiveGrid({ difficulty, theme, onComplete }: DeductiveGridPr
         <AnimatePresence>
           {showSuccess && (
             <motion.div initial={{ scale: 0 }} animate={{ scale: 1 }}
-              className={`text-center py-3 rounded-xl font-bold text-sm ${
-                theme === "GAMIFIED" ? "bg-green-900/40 text-green-300" : "bg-green-100 text-green-800"
-              }`}>
+              className="text-center py-3 rounded-xl font-bold text-sm"
+              style={{ background: "rgba(22,163,74,0.92)", backdropFilter: "blur(20px)", border: "1.5px solid rgba(255,255,255,0.25)", color: "white" }}>
               ✅ Correto! Excelente raciocínio!
             </motion.div>
           )}
@@ -523,9 +538,8 @@ export function DeductiveGrid({ difficulty, theme, onComplete }: DeductiveGridPr
           <button
             onClick={handleConfirm}
             disabled={!allHaveYes}
-            className={`w-full py-3 rounded-xl font-bold text-sm transition-all ${
-              allHaveYes ? pal.confirmBtn : (theme === "GAMIFIED" ? "bg-gray-700 text-gray-500" : "bg-gray-200 text-gray-400")
-            }`}>
+            className="w-full py-3 font-bold text-sm transition-all disabled:opacity-40"
+            style={allHaveYes ? confirmBtnStyle : { borderRadius: 9999, background: isGamified ? "rgba(255,255,255,0.1)" : "#e5e7eb", color: isGamified ? "rgba(255,255,255,0.3)" : "#9ca3af" }}>
             {allHaveYes ? "Confirmar →" : "Marque ✓ para cada pessoa"}
           </button>
         )}

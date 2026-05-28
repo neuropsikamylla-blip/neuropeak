@@ -570,60 +570,70 @@ export function AtencaoSeletiva({ difficulty, theme, onComplete }: AtencaoSeleti
   const hits    = results.filter(r => r.isTarget && r.tapped).length;
   const misses  = results.filter(r => r.isTarget && !r.tapped).length;
   const fa      = results.filter(r => !r.isTarget && r.tapped).length;
-  // correctRejections counted inside finishSession via resultsRef
 
-  const pal = {
-    bg:       theme === "GAMIFIED" ? "bg-gray-950" : theme === "COLORFUL" ? "bg-gradient-to-br from-indigo-50 to-sky-50" : "bg-slate-50",
-    card:     theme === "GAMIFIED" ? "bg-gray-800 border border-cyan-500/20" : "bg-white shadow-lg",
-    title:    theme === "GAMIFIED" ? "text-cyan-400" : theme === "COLORFUL" ? "text-indigo-700" : "text-slate-800",
-    sub:      theme === "GAMIFIED" ? "text-gray-400" : "text-slate-500",
-    ruleBg:   theme === "GAMIFIED" ? "bg-indigo-900/40 border-indigo-600/50" : "bg-indigo-50 border-indigo-200",
-    ruleText: theme === "GAMIFIED" ? "text-indigo-300" : "text-indigo-800",
-    tapArea:  theme === "GAMIFIED" ? "bg-gray-700 border-2 border-gray-600 active:bg-gray-600" : "bg-white border-2 border-slate-200 active:bg-slate-50 shadow-md",
-    metricHit: theme === "GAMIFIED" ? "text-green-400" : "text-green-600",
-    metricFA:  theme === "GAMIFIED" ? "text-red-400" : "text-red-500",
-    metricMiss:theme === "GAMIFIED" ? "text-amber-400" : "text-amber-600",
-  };
+  const isGamified = theme === "GAMIFIED";
+  const isColorful = theme === "COLORFUL";
 
-  const tapAreaColor =
-    phase === "feedback" && lastResult === "hit"  ? "border-green-500 bg-green-900/20" :
-    phase === "feedback" && lastResult === "fa"   ? "border-red-500 bg-red-900/20" :
-    phase === "feedback" && lastResult === "miss" ? "border-amber-500 bg-amber-900/10" :
-    pal.tapArea;
+  const bgStyle: React.CSSProperties = isGamified
+    ? { background: "linear-gradient(145deg, #0a1628 0%, #0d2244 45%, #132a52 70%, #081020 100%)" }
+    : isColorful
+    ? { background: "linear-gradient(135deg, #f0e6ff 0%, #fce4f0 55%, #ffe8e0 100%)" }
+    : { background: "linear-gradient(160deg, #ede8df 0%, #e4ddd0 55%, #dbd4c5 100%)" };
+
+  const cardStyle: React.CSSProperties = isGamified
+    ? { background: "rgba(255,255,255,0.08)", backdropFilter: "blur(16px)", border: "1.5px solid rgba(255,255,255,0.15)", borderRadius: 20, boxShadow: "0 8px 40px rgba(0,0,0,0.5)" }
+    : { background: "#ffffff", border: "1.5px solid rgba(26,39,68,0.08)", borderRadius: 20, boxShadow: "0 4px 20px rgba(26,39,68,0.08)" };
+
+  const subColor = isGamified ? "rgba(255,255,255,0.6)" : "#8a7a6a";
+  const titleColor = isGamified ? "#ffffff" : "#1a2744";
+
+  const ruleBannerStyle: React.CSSProperties = isGamified
+    ? { background: "rgba(99,102,241,0.15)", border: "1.5px solid rgba(129,140,248,0.4)", borderRadius: 14 }
+    : { background: isColorful ? "#eef2ff" : "#eef2ff", border: "1.5px solid #c7d2fe", borderRadius: 14 };
+
+  const tapAreaStyle: React.CSSProperties =
+    phase === "feedback" && lastResult === "hit"
+      ? { background: "rgba(22,163,74,0.12)", border: "2px solid #22c55e", borderRadius: 28 }
+      : phase === "feedback" && lastResult === "fa"
+      ? { background: "rgba(220,38,38,0.12)", border: "2px solid #ef4444", borderRadius: 28 }
+      : phase === "feedback" && lastResult === "miss"
+      ? { background: "rgba(234,88,12,0.12)", border: "2px solid #f97316", borderRadius: 28 }
+      : isGamified
+      ? { background: "rgba(255,255,255,0.06)", border: "2px solid rgba(255,255,255,0.15)", borderRadius: 28 }
+      : { background: "#ffffff", border: "2px solid rgba(26,39,68,0.1)", borderRadius: 28, boxShadow: "0 2px 12px rgba(26,39,68,0.08)" };
 
   const stimSize = 100;
 
   return (
-    <div className={`min-h-screen overflow-y-auto ${pal.bg}`}>
+    <div className="min-h-screen overflow-y-auto" style={bgStyle}>
       <div className="max-w-sm mx-auto px-4 py-5 flex flex-col items-center gap-4">
 
         {/* Header */}
-        <div className={`w-full rounded-2xl p-4 ${pal.card}`}>
+        <div className="w-full p-4" style={cardStyle}>
           <div className="flex justify-between items-center mb-2">
-            <h2 className={`font-bold text-sm ${pal.title}`}>🎯 Atenção Seletiva</h2>
-            <span className={`text-xs ${pal.sub}`}>{Math.min(trialIdx + 1, TOTAL_TRIALS)}/{TOTAL_TRIALS}</span>
+            <h2 className="font-bold text-sm" style={{ color: titleColor }}>🎯 Atenção Seletiva</h2>
+            <span className="text-xs" style={{ color: subColor }}>{Math.min(trialIdx + 1, TOTAL_TRIALS)}/{TOTAL_TRIALS}</span>
           </div>
 
           {/* Progress bar */}
-          <div className={`h-1.5 rounded-full mb-3 ${theme === "GAMIFIED" ? "bg-gray-700" : "bg-slate-200"}`}>
-            <div className={`h-full rounded-full transition-all duration-300 ${
-              theme === "GAMIFIED" ? "bg-cyan-500" : theme === "COLORFUL" ? "bg-indigo-500" : "bg-indigo-500"
-            }`} style={{ width: `${(trialIdx / TOTAL_TRIALS) * 100}%` }} />
+          <div className="h-1.5 rounded-full mb-3" style={{ background: isGamified ? "rgba(255,255,255,0.1)" : "rgba(26,45,80,0.1)" }}>
+            <div className="h-full rounded-full transition-all duration-300"
+              style={{ width: `${(trialIdx / TOTAL_TRIALS) * 100}%`, background: isGamified ? "#06b6d4" : isColorful ? "#6366f1" : "#4f46e5" }} />
           </div>
 
           {/* Metrics row */}
           <div className="flex justify-around text-center">
             <div>
-              <p className={`text-lg font-black ${pal.metricHit}`}>{hits}</p>
-              <p className={`text-[10px] ${pal.sub}`}>Acertos</p>
+              <p className="text-lg font-black" style={{ color: "#22c55e" }}>{hits}</p>
+              <p className="text-[10px]" style={{ color: subColor }}>Acertos</p>
             </div>
             <div>
-              <p className={`text-lg font-black ${pal.metricMiss}`}>{misses}</p>
-              <p className={`text-[10px] ${pal.sub}`}>Omissões</p>
+              <p className="text-lg font-black" style={{ color: "#f59e0b" }}>{misses}</p>
+              <p className="text-[10px]" style={{ color: subColor }}>Omissões</p>
             </div>
             <div>
-              <p className={`text-lg font-black ${pal.metricFA}`}>{fa}</p>
-              <p className={`text-[10px] ${pal.sub}`}>Falsos +</p>
+              <p className="text-lg font-black" style={{ color: "#ef4444" }}>{fa}</p>
+              <p className="text-[10px]" style={{ color: subColor }}>Falsos +</p>
             </div>
           </div>
         </div>
@@ -633,17 +643,19 @@ export function AtencaoSeletiva({ difficulty, theme, onComplete }: AtencaoSeleti
           {showRuleChange ? (
             <motion.div key="rule-change"
               initial={{ opacity: 0, scale: 0.9 }} animate={{ opacity: 1, scale: 1 }} exit={{ opacity: 0 }}
-              className="w-full px-4 py-3 rounded-xl bg-orange-500 text-white text-center font-bold text-sm">
+              className="w-full px-4 py-3 text-white text-center font-bold text-sm"
+              style={{ background: "rgba(234,88,12,0.92)", backdropFilter: "blur(20px)", border: "1.5px solid rgba(255,255,255,0.25)", borderRadius: 14 }}>
               ⚠️ A regra mudou! {currentRule.description}
             </motion.div>
           ) : (
             <motion.div key={`rule-${ruleIndex}`}
               initial={{ opacity: 0, y: -4 }} animate={{ opacity: 1, y: 0 }}
-              className={`w-full flex items-center gap-2 px-4 py-2.5 rounded-xl border ${pal.ruleBg}`}>
+              className="w-full flex items-center gap-2 px-4 py-2.5"
+              style={ruleBannerStyle}>
               <span className="text-2xl">{currentRule.targetEmoji}</span>
               <div>
-                <p className={`text-xs font-bold ${pal.ruleText}`}>{currentRule.description}</p>
-                <p className={`text-[10px] ${pal.sub}`}>Ignore os outros</p>
+                <p className="text-xs font-bold" style={{ color: isGamified ? "#a5b4fc" : "#3730a3" }}>{currentRule.description}</p>
+                <p className="text-[10px]" style={{ color: subColor }}>Ignore os outros</p>
               </div>
             </motion.div>
           )}
@@ -652,13 +664,13 @@ export function AtencaoSeletiva({ difficulty, theme, onComplete }: AtencaoSeleti
         {/* Tap area */}
         <button
           onPointerDown={handleTap}
-          className={`w-56 h-56 rounded-3xl flex items-center justify-center transition-all select-none border-2 ${tapAreaColor}`}
-          style={{ touchAction: "none" }}>
+          className="w-56 h-56 flex items-center justify-center transition-all select-none"
+          style={{ ...tapAreaStyle, touchAction: "none" }}>
           <AnimatePresence mode="wait">
             {phase === "isi" && (
               <motion.div key={`isi-${trialIdx}`}
                 initial={{ opacity: 0 }} animate={{ opacity: 0.15 }} exit={{ opacity: 0 }}>
-                <div className={`w-4 h-4 rounded-full ${theme === "GAMIFIED" ? "bg-gray-500" : "bg-slate-300"}`} />
+                <div className="w-4 h-4 rounded-full" style={{ background: isGamified ? "rgba(255,255,255,0.5)" : "rgba(26,45,80,0.3)" }} />
               </motion.div>
             )}
 
@@ -697,19 +709,15 @@ export function AtencaoSeletiva({ difficulty, theme, onComplete }: AtencaoSeleti
 
         {/* Stimulus label hint (medium+) */}
         {phase === "stimulus" && difficulty >= 4 && (
-          <p className={`text-xs ${pal.sub} text-center`}>
+          <p className="text-xs text-center" style={{ color: subColor }}>
             {COLOR_LABEL[currentTrial.stimulus.color]} · {SHAPE_LABEL[currentTrial.stimulus.shape]}
           </p>
         )}
 
         {phase === "feedback" && (
           <motion.p initial={{ opacity: 0 }} animate={{ opacity: 1 }}
-            className={`text-sm font-semibold text-center ${
-              lastResult === "hit"  ? pal.metricHit  :
-              lastResult === "fa"   ? pal.metricFA   :
-              lastResult === "miss" ? pal.metricMiss :
-              pal.sub
-            }`}>
+            className="text-sm font-semibold text-center"
+            style={{ color: lastResult === "hit" ? "#22c55e" : lastResult === "fa" ? "#ef4444" : lastResult === "miss" ? "#f59e0b" : subColor }}>
             {lastResult === "hit"  ? "Acerto! ✓" :
              lastResult === "fa"   ? "Não era para tocar" :
              lastResult === "miss" ? "Resposta perdida" :

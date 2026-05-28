@@ -532,91 +532,63 @@ export function AntesDepois({ difficulty, theme, onComplete }: AntesDepoisProps)
   }
 
   // ── Theme tokens ────────────────────────────────────────────────────────────
-  const bgClass =
-    theme === "GAMIFIED"
-      ? "bg-gray-950"
-      : theme === "COLORFUL"
-      ? "bg-gradient-to-br from-indigo-50 to-violet-50"
-      : "bg-gray-50";
+  const isGamified = theme === "GAMIFIED";
+  const isColorful = theme === "COLORFUL";
 
-  const cardClass =
-    theme === "GAMIFIED"
-      ? "bg-gray-800 border border-cyan-500/30"
-      : theme === "COLORFUL"
-      ? "bg-white border-2 border-purple-200 shadow-xl"
-      : "bg-white shadow-lg border border-gray-100";
+  const bgStyle: React.CSSProperties = isGamified
+    ? { background: "linear-gradient(145deg, #0a1628 0%, #0d2244 45%, #132a52 70%, #081020 100%)" }
+    : isColorful
+    ? { background: "linear-gradient(135deg, #f0e6ff 0%, #fce4f0 55%, #ffe8e0 100%)" }
+    : { background: "linear-gradient(160deg, #ede8df 0%, #e4ddd0 55%, #dbd4c5 100%)" };
 
-  const titleColor =
-    theme === "GAMIFIED" ? "text-cyan-400" : theme === "COLORFUL" ? "text-purple-700" : "text-gray-900";
+  const cardStyle: React.CSSProperties = isGamified
+    ? { background: "rgba(255,255,255,0.08)", backdropFilter: "blur(16px)", border: "1.5px solid rgba(255,255,255,0.15)", borderRadius: 20, boxShadow: "0 8px 40px rgba(0,0,0,0.5)" }
+    : { background: "#ffffff", border: "1.5px solid rgba(26,39,68,0.08)", borderRadius: 20, boxShadow: "0 4px 20px rgba(26,39,68,0.08)" };
 
-  const labelColor =
-    theme === "GAMIFIED" ? "text-gray-400" : "text-gray-500";
+  const titleColor = isGamified ? "#ffffff" : "#1a2744";
+  const labelColor = isGamified ? "rgba(255,255,255,0.6)" : "#8a7a6a";
+  const categoryColor = isGamified ? "rgba(255,255,255,0.4)" : "#8a7a6a";
 
-  const centerCardBg =
-    theme === "GAMIFIED"
-      ? "bg-gray-700 border border-cyan-500/20"
-      : theme === "COLORFUL"
-      ? "bg-gradient-to-br from-purple-50 to-indigo-50 border border-purple-200"
-      : "bg-gray-50 border border-gray-200";
+  const centerCardStyle: React.CSSProperties = isGamified
+    ? { background: "rgba(255,255,255,0.06)", border: "1px solid rgba(255,255,255,0.12)", borderRadius: 16 }
+    : { background: "#f8f7f5", border: "1px solid rgba(26,39,68,0.1)", borderRadius: 16 };
 
-  const itemTextColor =
-    theme === "GAMIFIED" ? "text-cyan-300" : theme === "COLORFUL" ? "text-purple-700" : "text-blue-700";
+  const itemTextColor = isGamified ? "#67e8f9" : isColorful ? "#7c3aed" : "#1a4fa0";
 
-  const questionBg =
-    theme === "GAMIFIED"
-      ? "bg-gray-700/60 border border-cyan-500/10"
-      : theme === "COLORFUL"
-      ? "bg-purple-100 border border-purple-200"
-      : "bg-blue-50 border border-blue-100";
+  const questionStyle: React.CSSProperties = isGamified
+    ? { background: "rgba(255,255,255,0.06)", border: "1px solid rgba(255,255,255,0.1)", borderRadius: 12 }
+    : { background: isColorful ? "#f3e8ff" : "#eff6ff", border: isColorful ? "1px solid #d8b4fe" : "1px solid #bfdbfe", borderRadius: 12 };
 
-  const questionTextColor =
-    theme === "GAMIFIED" ? "text-cyan-300" : theme === "COLORFUL" ? "text-purple-800" : "text-blue-800";
+  const questionTextColor = isGamified ? "rgba(255,255,255,0.9)" : isColorful ? "#6b21a8" : "#1e40af";
 
-  const directionColor =
-    theme === "GAMIFIED"
-      ? direction === "antes" ? "text-amber-400" : "text-emerald-400"
-      : direction === "antes"
-      ? "text-amber-600"
-      : "text-emerald-600";
-
-  const categoryColor =
-    theme === "GAMIFIED" ? "text-gray-500" : "text-gray-400";
+  const directionColor = isGamified
+    ? (direction === "antes" ? "#fbbf24" : "#34d399")
+    : (direction === "antes" ? "#d97706" : "#059669");
 
   const correct = direction === "antes" ? currentItem.before : currentItem.after;
 
-  function optionClass(opt: string) {
-    const base = "rounded-2xl border-2 py-4 px-3 text-sm font-semibold text-center transition-colors";
+  function optionStyle(opt: string): React.CSSProperties {
     if (!feedback) {
-      const idle =
-        theme === "GAMIFIED"
-          ? "bg-gray-700 border-gray-600 text-gray-200 hover:bg-gray-600 hover:border-cyan-400 cursor-pointer"
-          : theme === "COLORFUL"
-          ? "bg-white border-purple-200 text-purple-900 hover:border-purple-500 hover:bg-purple-50 cursor-pointer"
-          : "bg-white border-gray-200 text-gray-700 hover:border-blue-400 hover:bg-blue-50 cursor-pointer";
-      return `${base} ${idle}`;
+      if (isGamified) return { background: "rgba(255,255,255,0.08)", border: "1.5px solid rgba(255,255,255,0.15)", borderRadius: 16, color: "#ffffff", cursor: "pointer" };
+      if (isColorful) return { background: "#ffffff", border: "1.5px solid #e9d5ff", borderRadius: 16, color: "#581c87", cursor: "pointer" };
+      return { background: "#ffffff", border: "1.5px solid rgba(26,39,68,0.12)", borderRadius: 16, color: "#1a2744", cursor: "pointer" };
     }
-    if (opt === correct)
-      return `${base} bg-green-100 border-green-500 text-green-700`;
-    if (opt === selected)
-      return `${base} bg-red-100 border-red-400 text-red-700`;
-    return `${base} ${
-      theme === "GAMIFIED"
-        ? "bg-gray-700 border-gray-600 text-gray-500 opacity-50"
-        : "bg-gray-50 border-gray-200 text-gray-400 opacity-50"
-    }`;
+    if (opt === correct) return { background: "#dcfce7", border: "1.5px solid #22c55e", borderRadius: 16, color: "#166534" };
+    if (opt === selected) return { background: "#fee2e2", border: "1.5px solid #ef4444", borderRadius: 16, color: "#991b1b" };
+    return { background: isGamified ? "rgba(255,255,255,0.04)" : "#f9f9f9", border: "1.5px solid rgba(128,128,128,0.2)", borderRadius: 16, color: isGamified ? "rgba(255,255,255,0.3)" : "#9ca3af", opacity: 0.5 };
   }
 
   return (
-    <div className={`min-h-screen flex flex-col items-center p-4 pt-6 ${bgClass}`}>
-      <div className={`w-full max-w-md rounded-2xl p-6 ${cardClass}`}>
+    <div className="min-h-screen flex flex-col items-center p-4 pt-6" style={bgStyle}>
+      <div className="w-full max-w-md p-6" style={cardStyle}>
 
         {/* Header */}
         <div className="flex justify-between items-center mb-3">
           <div>
-            <h2 className={`font-bold text-base ${titleColor}`}>Antes e Depois</h2>
-            <p className={`text-xs ${categoryColor}`}>{currentItem.category}</p>
+            <h2 className="font-bold text-base" style={{ color: titleColor }}>Antes e Depois</h2>
+            <p className="text-xs" style={{ color: categoryColor }}>{currentItem.category}</p>
           </div>
-          <span className={`text-xs font-mono ${labelColor}`}>
+          <span className="text-xs font-mono" style={{ color: labelColor }}>
             {trial + 1}/{MAX_TRIALS}
           </span>
         </div>
@@ -626,21 +598,15 @@ export function AntesDepois({ difficulty, theme, onComplete }: AntesDepoisProps)
           {Array.from({ length: MAX_TRIALS }).map((_, i) => (
             <div
               key={i}
-              className={`h-1.5 flex-1 rounded-full transition-colors duration-300 ${
-                i < results.length
-                  ? results[i].correct
-                    ? "bg-green-500"
-                    : "bg-red-400"
+              className="h-1.5 flex-1 rounded-full transition-colors duration-300"
+              style={{
+                background: i < results.length
+                  ? results[i].correct ? "#22c55e" : "#ef4444"
                   : i === trial
-                  ? theme === "GAMIFIED"
-                    ? "bg-cyan-400 animate-pulse"
-                    : theme === "COLORFUL"
-                    ? "bg-purple-400 animate-pulse"
-                    : "bg-blue-400 animate-pulse"
-                  : theme === "GAMIFIED"
-                  ? "bg-gray-700"
-                  : "bg-gray-200"
-              }`}
+                  ? "#8b5cf6"
+                  : isGamified ? "rgba(255,255,255,0.15)" : "rgba(26,45,80,0.12)",
+                animation: i === trial ? "pulse 2s infinite" : undefined,
+              }}
             />
           ))}
         </div>
@@ -653,22 +619,23 @@ export function AntesDepois({ difficulty, theme, onComplete }: AntesDepoisProps)
             animate={{ opacity: 1, y: 0, scale: 1 }}
             exit={{ opacity: 0, y: -16, scale: 0.95 }}
             transition={{ duration: 0.25 }}
-            className={`rounded-2xl p-5 text-center mb-4 ${centerCardBg}`}
+            className="p-5 text-center mb-4"
+            style={centerCardStyle}
           >
-            <div className="flex justify-center mb-2">
+            <div className="flex justify-center mb-2" style={{ color: itemTextColor }}>
               <ItemIcon item={currentItem} />
             </div>
-            <p className={`text-2xl font-extrabold tracking-tight ${itemTextColor}`}>
+            <p className="text-2xl font-extrabold tracking-tight" style={{ color: itemTextColor }}>
               {currentItem.item}
             </p>
           </motion.div>
         </AnimatePresence>
 
         {/* Question */}
-        <div className={`rounded-xl px-4 py-3 mb-4 text-center ${questionBg}`}>
-          <p className={`text-sm font-medium ${questionTextColor}`}>
+        <div className="px-4 py-3 mb-4 text-center" style={questionStyle}>
+          <p className="text-sm font-medium" style={{ color: questionTextColor }}>
             O que vem{" "}
-            <span className={`font-black text-base ${directionColor}`}>
+            <span className="font-black text-base" style={{ color: directionColor }}>
               {direction.toUpperCase()}
             </span>{" "}
             de{" "}
@@ -691,7 +658,8 @@ export function AntesDepois({ difficulty, theme, onComplete }: AntesDepoisProps)
                 key={`${trial}-${i}-${opt}`}
                 onClick={() => handleSelect(opt)}
                 disabled={!!feedback}
-                className={optionClass(opt)}
+                className="py-4 px-3 text-sm font-semibold text-center transition-all"
+                style={optionStyle(opt)}
                 whileHover={!feedback ? { scale: 1.04 } : {}}
                 whileTap={!feedback ? { scale: 0.94 } : {}}
               >
@@ -709,9 +677,8 @@ export function AntesDepois({ difficulty, theme, onComplete }: AntesDepoisProps)
                 initial={{ opacity: 0, y: 4 }}
                 animate={{ opacity: 1, y: 0 }}
                 exit={{ opacity: 0 }}
-                className={`text-sm font-semibold ${
-                  feedback === "correct" ? "text-green-500" : "text-red-500"
-                }`}
+                className="text-sm font-semibold"
+                style={{ color: feedback === "correct" ? "#22c55e" : "#ef4444" }}
               >
                 {feedback === "correct"
                   ? "Correto! ✅"
