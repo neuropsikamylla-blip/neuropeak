@@ -198,270 +198,309 @@ function speak(text: string) {
 }
 
 // ── Full-body Agent SVG ───────────────────────────────────────────────────────
-// viewBox 0 0 60 112 — head-to-boots full character, comic-book style
+// viewBox 0 0 60 112  —  chibi: cabeça grande (rx22), corpo pequeno (w24)
 
 function AgentSvg({ a, mode, size = 80 }: { a: CharAttrs; mode: AgeMode; size?: number }) {
   const c = a.colorHex;
-  const skin = "#FFDCC0";
-  const ol = "#111";  // outline color
-  const sw = 2;       // stroke width
-  const isLight = ["#CFD8DC", "#DDE1F0", "#FFD600"].includes(c);
-  const hairFill = mode === "child" ? "#6D4C41" : mode === "teen" ? "#1a1a1a" : "#5D4037";
-  const legShade = "rgba(0,0,0,0.22)";
-  const bodyHighlight = "rgba(255,255,255,0.22)";
-  const bodyShade = "rgba(0,0,0,0.14)";
-  const stripeCol = isLight ? "rgba(0,0,0,0.12)" : "rgba(255,255,255,0.16)";
+  const skin = "#FFD9B8";
+  const ol = "#1a1a1a";
+  const isLight = ["#CFD8DC", "#DDE1F0", "#FFD600", "#FB8C00"].includes(c);
+  const hair = mode === "child" ? "#5D3317" : mode === "teen" ? "#0d0d0d" : "#3E2723";
   const badgeColor = a.extraId ? BADGE_COLORS[a.extraId] : null;
-  const capeColor = mode === "child" ? "#7B0000" : mode === "teen" ? "#0f0520" : "#0c1633";
-  const capeShade = mode === "child" ? "#CC2222" : mode === "teen" ? "#1e0a45" : "#172450";
-  const eyeR = mode === "child" ? 3.5 : 3;
   const h = Math.round(size * 112 / 60);
 
   return (
     <svg width={size} height={h} viewBox="0 0 60 112"
-      style={{ overflow: "visible", filter: "drop-shadow(2px 6px 14px rgba(0,0,0,0.65))" }}>
+      style={{ overflow: "visible", filter: "drop-shadow(0px 6px 14px rgba(0,0,0,0.6))" }}>
 
-      {/* ── CAPE ── drawn first so it sits behind everything */}
-      <path d="M14 34 L46 34 Q57 55 57 88 Q52 106 30 110 Q8 106 3 88 Q3 55 14 34Z"
-        fill={capeColor} stroke={ol} strokeWidth={sw} strokeLinejoin="round" />
-      <path d="M18 36 L42 36 Q51 57 50 86 Q47 104 30 107 Q13 104 10 86 Q9 57 18 36Z"
-        fill={capeShade} stroke="none" opacity="0.35" />
-
-      {/* ── BOOTS ── */}
-      <rect x="13" y="101" width="14" height="7" rx="3.5" fill="#1a1a1a" stroke={ol} strokeWidth={sw} />
-      <rect x="33" y="101" width="14" height="7" rx="3.5" fill="#1a1a1a" stroke={ol} strokeWidth={sw} />
-      <ellipse cx="20" cy="107" rx="9.5" ry="3.5" fill="#222" stroke={ol} strokeWidth="1.5" />
-      <ellipse cx="40" cy="107" rx="9.5" ry="3.5" fill="#222" stroke={ol} strokeWidth="1.5" />
-
-      {/* ── LEGS ── */}
-      <path d="M20 72 Q18 87 18 102 L27 102 L30 83 L33 102 L42 102 Q42 87 40 72Z"
-        fill={c} stroke={ol} strokeWidth={sw} strokeLinejoin="round" />
-      {/* Leg inner shade */}
-      <path d="M20 72 Q18 87 18 102 L27 102 L30 83 L33 102 L42 102 Q42 87 40 72 Q35 76 30 76 Q25 76 20 72Z"
-        fill={legShade} />
-
-      {/* ── TORSO ── */}
-      <path d="M11 38 Q8 55 9 72 L51 72 Q52 55 49 38 Q44 27 30 26 Q16 27 11 38Z"
-        fill={c} stroke={ol} strokeWidth={sw} strokeLinejoin="round" />
-      {/* Torso center seam */}
-      <line x1="30" y1="26" x2="30" y2="72" stroke={stripeCol} strokeWidth="2" />
-      {/* Torso highlight (left shoulder) */}
-      <ellipse cx="21" cy="40" rx="7" ry="4" fill={bodyHighlight} transform="rotate(-25 21 40)" />
-      {/* Torso right shade */}
-      <path d="M42 38 Q49 55 49 72 L51 72 Q52 55 49 38Z" fill={bodyShade} />
-
-      {/* ── ARMS ── */}
-      <path d="M11 38 Q4 48 3 64 L9 66 Q8 53 16 44Z"
-        fill={c} stroke={ol} strokeWidth={sw} strokeLinejoin="round" />
-      <path d="M49 38 Q56 48 57 64 L51 66 Q52 53 44 44Z"
-        fill={c} stroke={ol} strokeWidth={sw} strokeLinejoin="round" />
-
-      {/* ── HANDS ── */}
-      <ellipse cx="6" cy="67" rx="5.5" ry="5" fill={skin} stroke={ol} strokeWidth={sw} />
-      <ellipse cx="54" cy="67" rx="5.5" ry="5" fill={skin} stroke={ol} strokeWidth={sw} />
-      {/* Knuckle lines */}
-      <line x1="3.5" y1="65.5" x2="4.5" y2="69.5" stroke="rgba(0,0,0,0.18)" strokeWidth="1" />
-      <line x1="6.5" y1="64.5" x2="6.5" y2="69.5" stroke="rgba(0,0,0,0.18)" strokeWidth="1" />
-
-      {/* ── BELT ── */}
-      <rect x="9" y="69" width="42" height="6" rx="3"
-        fill={isLight ? "#546E7A" : "#212121"} stroke={ol} strokeWidth="1.5" />
-      <rect x="27" y="69" width="6" height="6" rx="2.5"
-        fill={isLight ? "#78909C" : "rgba(255,255,255,0.4)"} />
-
-      {/* ── BADGE ── */}
-      {badgeColor && (
-        <g>
-          <rect x="17" y="48" width="14" height="11" rx="2.5" fill={badgeColor} stroke={ol} strokeWidth="1.5" />
-          <rect x="18" y="49" width="12" height="4" rx="1.5" fill="rgba(255,255,255,0.3)" />
-          <rect x="18" y="54" width="8" height="2.5" rx="1" fill="rgba(255,255,255,0.5)" />
-        </g>
-      )}
-
-      {/* ── BACKPACK ── */}
+      {/* ═══ BACKPACK (behind body) ═══ */}
       {a.extraId === "mochila" && (
         <g>
-          <rect x="4" y="40" width="11" height="22" rx="3" fill={isLight ? "#9E9E9E" : "#8D6E26"} stroke={ol} strokeWidth="1.5" />
-          <rect x="5.5" y="42" width="8" height="18" rx="2" fill={isLight ? "#BDBDBD" : "#A07D2E"} />
-          <line x1="7.5" y1="46" x2="11.5" y2="46" stroke="rgba(0,0,0,0.3)" strokeWidth="1.2" />
-          <line x1="7.5" y1="51" x2="11.5" y2="51" stroke="rgba(0,0,0,0.3)" strokeWidth="1.2" />
+          <rect x="2" y="51" width="14" height="20" rx="4" fill={isLight ? "#9E9E9E" : "#6D4C41"} stroke={ol} strokeWidth="1.3"/>
+          <rect x="3.5" y="53" width="11" height="16" rx="3" fill={isLight ? "#BDBDBD" : "#8D6E63"} opacity="0.9"/>
+          <line x1="6" y1="58" x2="12" y2="58" stroke="rgba(0,0,0,0.3)" strokeWidth="1.1"/>
+          <line x1="6" y1="63" x2="12" y2="63" stroke="rgba(0,0,0,0.3)" strokeWidth="1.1"/>
+          <path d="M15 53 Q19 58 18 68" fill="none" stroke={isLight ? "#888" : "#5D4037"} strokeWidth="1.4" strokeLinecap="round"/>
         </g>
       )}
 
-      {/* ── GRAVATA BORBOLETA ── */}
-      {a.extraId === "gravata" && (
-        <g transform="translate(30,36)">
-          <polygon points="-8,-3.5 0,0 -8,3.5" fill="#E53935" stroke={ol} strokeWidth="1" />
-          <polygon points="8,-3.5 0,0 8,3.5" fill="#C62828" stroke={ol} strokeWidth="1" />
-          <circle cx="0" cy="0" r="2.5" fill="#B71C1C" stroke={ol} strokeWidth="1" />
-        </g>
-      )}
-
-      {/* ── LUVAS ── */}
-      {a.extraId === "luvas" && (
-        <g>
-          <ellipse cx="6" cy="67" rx="5.5" ry="5" fill="#7B2FBE" stroke={ol} strokeWidth={sw} />
-          <ellipse cx="54" cy="67" rx="5.5" ry="5" fill="#7B2FBE" stroke={ol} strokeWidth={sw} />
-        </g>
-      )}
-
-      {/* ── SYMBOLS ON BODY ── */}
-      {a.symbolId === "estrela" && (
-        <polygon points="30,43 32.4,50.5 40.5,50.5 34,55.2 36.4,62.7 30,58 23.6,62.7 26,55.2 19.5,50.5 27.6,50.5"
-          fill="#FFD600" stroke={ol} strokeWidth="1.2" />
-      )}
-      {a.symbolId === "coracao" && (
-        <path d="M30 59 C30 59 21 52 21 46.5 C21 43 24.5 41 30 46.5 C35.5 41 39 43 39 46.5 C39 52 30 59 30 59Z"
-          fill="#F06292" stroke={ol} strokeWidth="1.2" />
-      )}
-      {a.symbolId === "raio" && (
-        <polygon points="34,42 27,54 32,51.5 27,65 38,51 32.5,53.5"
-          fill="#FFD600" stroke={ol} strokeWidth="1.2" />
-      )}
-      {a.symbolId === "triangulo" && (
-        <polygon points="30,43 39,57 21,57"
-          fill={isLight ? "rgba(0,0,0,0.45)" : "rgba(255,255,255,0.7)"} stroke={ol} strokeWidth="1.2" />
-      )}
-      {a.symbolId === "circulo" && (
-        <circle cx="30" cy="51" r="8"
-          fill={isLight ? "rgba(0,0,0,0.3)" : "rgba(255,255,255,0.55)"} stroke={ol} strokeWidth="1.2" />
-      )}
-      {a.symbolId === "quadrado" && (
-        <rect x="23" y="44" width="14" height="14"
-          fill={isLight ? "rgba(0,0,0,0.3)" : "rgba(255,255,255,0.55)"} stroke={ol} strokeWidth="1.2" />
-      )}
-      {a.symbolId === "x-mark" && (
-        <g stroke={isLight ? "rgba(0,0,0,0.65)" : "rgba(255,255,255,0.85)"} strokeWidth="3.5" strokeLinecap="round">
-          <line x1="23" y1="43" x2="37" y2="57" /><line x1="37" y1="43" x2="23" y2="57" />
-        </g>
-      )}
-      {a.symbolId === "diamante" && (
-        <polygon points="30,43 39.5,51 30,59 20.5,51"
-          fill={isLight ? "rgba(0,0,0,0.35)" : "rgba(255,255,255,0.65)"} stroke={ol} strokeWidth="1.2" />
-      )}
-      {a.symbolId === "caveira" && (
-        <text x="30" y="60" textAnchor="middle" fontSize="18"
-          fill={isLight ? "rgba(0,0,0,0.6)" : "rgba(255,255,255,0.85)"}>☠</text>
-      )}
-
-      {/* ── HEAD ── */}
-      <circle cx="30" cy="21" r="13" fill={skin} stroke={ol} strokeWidth={sw} />
-
-      {/* MÁSCARA (behind other face features) */}
-      {a.extraId === "mascara" && (
-        <rect x="21" y="25" width="18" height="12" rx="4.5" fill="#00B4D8" stroke={ol} strokeWidth="1.5" opacity="0.9" />
-      )}
-
-      {/* HAIR */}
-      <path d="M17 21 Q17 8 30 8 Q43 8 43 21 Q39 13 30 13 Q21 13 17 21Z" fill={hairFill} />
-      {/* Hair side bits */}
-      {mode === "child" && (
+      {/* ═══ HAIR (behind head, not drawn if capuz) ═══ */}
+      {a.hatId !== "capuz" && (
         <>
-          <path d="M17 21 Q15 17 16 14 Q17 12 19 13 Q17 17 17 21Z" fill={hairFill} />
-          <path d="M43 21 Q45 17 44 14 Q43 12 41 13 Q43 17 43 21Z" fill={hairFill} />
+          {mode === "child" && (
+            <>
+              {/* Fluffy blob + top knob + side puffs */}
+              <ellipse cx="30" cy="12" rx="24" ry="16" fill={hair}/>
+              <circle cx="30" cy="1" r="8" fill={hair}/>
+              <path d="M6 23 Q3 9 8 2" fill="none" stroke={hair} strokeWidth="9" strokeLinecap="round"/>
+              <path d="M54 23 Q57 9 52 2" fill="none" stroke={hair} strokeWidth="9" strokeLinecap="round"/>
+            </>
+          )}
+          {mode === "teen" && (
+            <>
+              {/* Swept asymmetric + spiky top */}
+              <path d="M8 23 Q9 1 26 0 Q41 0 53 11 Q57 18 53 23 Q49 7 33 7 Q16 7 8 23Z" fill={hair}/>
+              <path d="M53 23 Q59 9 57 1" fill="none" stroke={hair} strokeWidth="7" strokeLinecap="round"/>
+            </>
+          )}
+          {mode === "adult" && (
+            /* Neat professional cap */
+            <path d="M10 23 Q13 4 30 3 Q47 4 50 23 Q46 11 30 11 Q14 11 10 23Z" fill={hair}/>
+          )}
         </>
       )}
 
-      {/* EYEBROWS */}
-      <path d="M19.5 16 Q23.5 14 27.5 16" fill="none" stroke={hairFill} strokeWidth="2.2" strokeLinecap="round" />
-      <path d="M32.5 16 Q36.5 14 40.5 16" fill="none" stroke={hairFill} strokeWidth="2.2" strokeLinecap="round" />
+      {/* ═══ CAPUZ BACK ═══ */}
+      {a.hatId === "capuz" && (
+        <ellipse cx="30" cy="14" rx="25" ry="22" fill={c} stroke={ol} strokeWidth="1.6" opacity="0.96"/>
+      )}
 
-      {/* EYES */}
-      <circle cx="25" cy="21" r={eyeR} fill="#1a1a1a" />
-      <circle cx="35" cy="21" r={eyeR} fill="#1a1a1a" />
-      <circle cx={25 + eyeR * 0.4} cy={21 - eyeR * 0.5} r={eyeR * 0.4} fill="white" />
-      <circle cx={35 + eyeR * 0.4} cy={21 - eyeR * 0.5} r={eyeR * 0.4} fill="white" />
+      {/* ═══ HEAD ═══ */}
+      <ellipse cx="30" cy="25" rx="22" ry="22" fill={skin} stroke={ol} strokeWidth="2"/>
+      {/* Head shine */}
+      <ellipse cx="22" cy="13" rx="9" ry="5.5" fill="rgba(255,255,255,0.28)" transform="rotate(-22 22 13)"/>
 
-      {/* GLASSES (oculos extra OR adult hat oculos) */}
+      {/* ═══ CHEEKS (child only) ═══ */}
+      {mode === "child" && (
+        <>
+          <ellipse cx="13" cy="33" rx="5.5" ry="3.5" fill="#FFB3B3" opacity="0.65"/>
+          <ellipse cx="47" cy="33" rx="5.5" ry="3.5" fill="#FFB3B3" opacity="0.65"/>
+        </>
+      )}
+
+      {/* ═══ MASK (behind face) ═══ */}
+      {a.extraId === "mascara" && (
+        <rect x="14" y="24" width="32" height="15" rx="6" fill="#00B4D8" stroke={ol} strokeWidth="1.2" opacity="0.94"/>
+      )}
+
+      {/* ═══ EYEBROWS ═══ */}
+      {mode === "child" ? (
+        <>
+          <path d="M14 18 Q19.5 15 24.5 18" fill="none" stroke={hair} strokeWidth="2.6" strokeLinecap="round"/>
+          <path d="M35.5 18 Q40.5 15 46 18" fill="none" stroke={hair} strokeWidth="2.6" strokeLinecap="round"/>
+        </>
+      ) : mode === "teen" ? (
+        <>
+          <path d="M14.5 18.5 Q19.5 16 25 18" fill="none" stroke={hair} strokeWidth="2.3" strokeLinecap="round"/>
+          <path d="M35 18.5 Q40.5 16 46 17.5" fill="none" stroke={hair} strokeWidth="2.3" strokeLinecap="round"/>
+        </>
+      ) : (
+        <>
+          <path d="M15 18.5 Q20 16.5 25.5 18.5" fill="none" stroke={hair} strokeWidth="2.1" strokeLinecap="round"/>
+          <path d="M34.5 18.5 Q40 16.5 45 18.5" fill="none" stroke={hair} strokeWidth="2.1" strokeLinecap="round"/>
+        </>
+      )}
+
+      {/* ═══ EYES (big chibi ovals) ═══ */}
+      {/* Left */}
+      <ellipse cx="21" cy="28" rx="7" ry="8" fill="white" stroke={ol} strokeWidth="1.5"/>
+      <ellipse cx="22" cy="29.5" rx="4.8" ry="5.5" fill="#111"/>
+      <circle cx="25" cy="26" r="2.2" fill="white" opacity="0.95"/>
+      <circle cx="20" cy="32.5" r="1.3" fill="white" opacity="0.45"/>
+      {/* Right */}
+      <ellipse cx="39" cy="28" rx="7" ry="8" fill="white" stroke={ol} strokeWidth="1.5"/>
+      <ellipse cx="40" cy="29.5" rx="4.8" ry="5.5" fill="#111"/>
+      <circle cx="43" cy="26" r="2.2" fill="white" opacity="0.95"/>
+      <circle cx="38" cy="32.5" r="1.3" fill="white" opacity="0.45"/>
+
+      {/* ═══ GLASSES ═══ */}
       {(a.extraId === "oculos" || a.hatId === "oculos") && (
-        <g stroke="#1a1a1a" strokeWidth="2" fill="none">
-          <circle cx="25" cy="21" r="5.5" />
-          <circle cx="35" cy="21" r="5.5" />
-          <line x1="29.5" y1="21" x2="30.5" y2="21" />
-          <line x1="14.5" y1="19" x2="19.5" y2="20.5" />
-          <line x1="40.5" y1="20.5" x2="45.5" y2="19" />
+        <g stroke={ol} strokeWidth="1.8" fill="none">
+          <ellipse cx="21" cy="28" rx="8.5" ry="9.5"/>
+          <ellipse cx="39" cy="28" rx="8.5" ry="9.5"/>
+          <line x1="29.5" y1="28" x2="30.5" y2="28"/>
+          <line x1="6" y1="22.5" x2="12.5" y2="26"/>
+          <line x1="47.5" y1="26" x2="54" y2="22.5"/>
         </g>
       )}
 
-      {/* NOSE */}
-      <path d="M27.5 25.5 Q30 29 32.5 25.5" fill="none" stroke="#C4927A" strokeWidth="1.6" strokeLinecap="round" />
-
-      {/* MOUTH */}
-      {mode === "child"
-        ? <path d="M23.5 30 Q30 35.5 36.5 30" fill="none" stroke="#9A5244" strokeWidth="2.4" strokeLinecap="round" />
-        : <path d="M25 29.5 Q30 33 35 29.5" fill="none" stroke="#9A5244" strokeWidth="2" strokeLinecap="round" />
-      }
-
-      {/* VISOR */}
+      {/* ═══ VISOR ═══ */}
       {a.hatId === "visor" && (
         <g>
-          <rect x="18.5" y="16.5" width="11.5" height="8" rx="3.5" fill="#050505" opacity="0.93" />
-          <rect x="30" y="16.5" width="11.5" height="8" rx="3.5" fill="#050505" opacity="0.93" />
-          <line x1="29.5" y1="20" x2="30" y2="20" stroke="#444" strokeWidth="2" />
-          <line x1="15" y1="18.5" x2="18.5" y2="19.5" stroke="#555" strokeWidth="1.5" />
-          <line x1="41.5" y1="19.5" x2="45" y2="18.5" stroke="#555" strokeWidth="1.5" />
-          <rect x="19.5" y="17.5" width="5" height="2.5" rx="1" fill="rgba(255,255,255,0.1)" />
-          <rect x="31" y="17.5" width="5" height="2.5" rx="1" fill="rgba(255,255,255,0.1)" />
+          <ellipse cx="21" cy="28" rx="8.5" ry="9.5" fill="#020a14" opacity="0.97"/>
+          <ellipse cx="39" cy="28" rx="8.5" ry="9.5" fill="#020a14" opacity="0.97"/>
+          <line x1="29.5" y1="28" x2="30.5" y2="28" stroke="#1a3a5c" strokeWidth="2.5"/>
+          <ellipse cx="21" cy="24" rx="5.5" ry="3" fill="rgba(100,180,255,0.13)"/>
+          <ellipse cx="39" cy="24" rx="5.5" ry="3" fill="rgba(100,180,255,0.13)"/>
+          <line x1="6" y1="22.5" x2="12.5" y2="26" stroke={ol} strokeWidth="1.8"/>
+          <line x1="47.5" y1="26" x2="54" y2="22.5" stroke={ol} strokeWidth="1.8"/>
         </g>
       )}
 
-      {/* HEADSET */}
-      {a.hatId === "headset" && (
-        <g>
-          <path d="M16 19 Q16 6 30 6 Q44 6 44 19" fill="none" stroke="#2d2d2d" strokeWidth="3.5" />
-          <rect x="11.5" y="14" width="8" height="13" rx="4" fill="#444" stroke={ol} strokeWidth="1.5" />
-          <rect x="40.5" y="14" width="8" height="13" rx="4" fill="#444" stroke={ol} strokeWidth="1.5" />
-          <line x1="11.5" y1="25" x2="6" y2="32" stroke="#3d3d3d" strokeWidth="2.5" strokeLinecap="round" />
-          <circle cx="5" cy="33.5" r="3.5" fill="#333" stroke={ol} strokeWidth="1" />
-        </g>
+      {/* ═══ NOSE ═══ */}
+      <circle cx="30" cy="36.5" r="2" fill="#C4927A" opacity="0.65"/>
+
+      {/* ═══ MOUTH ═══ */}
+      {mode === "child"
+        ? <path d="M20 41.5 Q30 48 40 41.5" fill="none" stroke="#9A5244" strokeWidth="2.6" strokeLinecap="round"/>
+        : mode === "teen"
+        ? <path d="M23 41 Q30 45 37 41" fill="none" stroke="#9A5244" strokeWidth="2.1" strokeLinecap="round"/>
+        : <path d="M24 40.5 Q30 44 36 40.5" fill="none" stroke="#9A5244" strokeWidth="1.9" strokeLinecap="round"/>
+      }
+
+      {/* ═══ CAPUZ FRONT RIM ═══ */}
+      {a.hatId === "capuz" && (
+        <path d="M8 30 Q8 6 30 5 Q52 6 52 30 Q46 17 30 17 Q14 17 8 30Z"
+          fill={c} stroke={ol} strokeWidth="1.5" opacity="0.96"/>
       )}
 
-      {/* BONE */}
+      {/* ═══ BONE ═══ */}
       {a.hatId === "bone" && (
         <g>
-          <path d="M17 17 Q17 7 30 7 Q43 7 43 17" fill="#2a2a2a" stroke={ol} strokeWidth="1.5" />
-          <rect x="17" y="13.5" width="26" height="8.5" rx="4.5" fill="#333" stroke={ol} strokeWidth="1.5" />
-          <rect x="11" y="16" width="20" height="5.5" rx="2.5" fill="#444" stroke={ol} strokeWidth="1" />
-          <circle cx="30" cy="9.5" r="3" fill="#555" />
+          <ellipse cx="30" cy="8" rx="25" ry="8.5" fill="#222" stroke={ol} strokeWidth="1.5"/>
+          <rect x="7" y="4.5" width="46" height="9" rx="4.5" fill="#333" stroke={ol} strokeWidth="1.5"/>
+          <rect x="6" y="7" width="28" height="6.5" rx="3" fill="#3d3d3d" stroke={ol} strokeWidth="1"/>
+          <circle cx="30" cy="2" r="4.5" fill="#3d3d3d"/>
+          <ellipse cx="30" cy="13.5" rx="25" ry="3" fill="rgba(0,0,0,0.15)" stroke="none"/>
         </g>
       )}
 
-      {/* CHAPEU */}
+      {/* ═══ CHAPEU ═══ */}
       {a.hatId === "chapeu" && (
         <g>
-          <ellipse cx="30" cy="8" rx="20" ry="5.5" fill="#1a1a1a" stroke={ol} strokeWidth={sw} />
-          <rect x="17" y="0.5" width="26" height="10" rx="2.5" fill="#252525" stroke={ol} strokeWidth={sw} />
-          {/* Band */}
-          <rect x="17" y="7.5" width="26" height="3.5" rx="1.5" fill={c} opacity="0.85" />
+          <ellipse cx="30" cy="7" rx="27" ry="7.5" fill="#0d0d0d" stroke={ol} strokeWidth="1.8"/>
+          <rect x="12" y="-2.5" width="36" height="12.5" rx="3" fill="#1a1a1a" stroke={ol} strokeWidth="1.8"/>
+          <rect x="12" y="6" width="36" height="4.5" rx="2" fill={c} opacity="0.9"/>
+          <ellipse cx="25" cy="0" rx="8" ry="3" fill="rgba(255,255,255,0.1)" transform="rotate(-15 25 0)"/>
         </g>
       )}
 
-      {/* COROA */}
+      {/* ═══ COROA ═══ */}
       {a.hatId === "coroa" && (
         <g>
-          <polygon points="15,8 15,0 22.5,6 30,0 37.5,6 45,0 45,8"
-            fill="#FFD700" stroke={ol} strokeWidth="2" />
-          <rect x="15" y="5.5" width="30" height="7.5" rx="1.5" fill="#FFC107" stroke={ol} strokeWidth="1.5" />
-          <circle cx="30" cy="3" r="3" fill="#E53935" />
-          <circle cx="20" cy="7.5" r="2.2" fill="#2196F3" />
-          <circle cx="40" cy="7.5" r="2.2" fill="#2196F3" />
+          <polygon points="8,11 8,0 19,7 30,-0.5 41,7 52,0 52,11" fill="#FFD700" stroke={ol} strokeWidth="1.9"/>
+          <rect x="8" y="7.5" width="44" height="9" rx="2.5" fill="#FFC107" stroke={ol} strokeWidth="1.5"/>
+          <circle cx="30" cy="1.5" r="4.5" fill="#E53935"/>
+          <circle cx="17.5" cy="9" r="3.5" fill="#2196F3"/>
+          <circle cx="42.5" cy="9" r="3.5" fill="#2196F3"/>
+          <path d="M10 9 Q30 5 50 9" fill="none" stroke="rgba(255,255,255,0.3)" strokeWidth="1.5"/>
         </g>
       )}
 
-      {/* ANTENA */}
+      {/* ═══ ANTENA ═══ */}
       {a.hatId === "antena" && (
         <g>
-          <line x1="30" y1="8.5" x2="30" y2="-5" stroke="#888" strokeWidth="2.5" strokeLinecap="round" />
-          <circle cx="30" cy="-7.5" r="5.5" fill="#F44336" stroke={ol} strokeWidth="1.5" />
-          <circle cx="30" cy="-7.5" r="2.5" fill="#FF8A80" />
+          <line x1="30" y1="4" x2="30" y2="-9" stroke="#aaa" strokeWidth="2.5" strokeLinecap="round"/>
+          <circle cx="30" cy="-13" r="8" fill="#F44336" stroke={ol} strokeWidth="1.5"/>
+          <circle cx="30" cy="-13" r="4.5" fill="#FF8A80"/>
+          <circle cx="33" cy="-16" r="2" fill="rgba(255,255,255,0.5)"/>
         </g>
       )}
 
-      {/* CAPUZ */}
-      {a.hatId === "capuz" && (
-        <path d="M17 19 Q16 6 30 6 Q44 6 43 19 Q39 12 30 12 Q21 12 17 19Z"
-          fill={c} opacity="0.85" stroke={ol} strokeWidth="1.5" />
+      {/* ═══ HEADSET ═══ */}
+      {a.hatId === "headset" && (
+        <g>
+          <path d="M8 24 Q8 2 30 2 Q52 2 52 24" fill="none" stroke="#1a1a1a" strokeWidth="4.5"/>
+          <rect x="4" y="16" width="11" height="16" rx="5.5" fill="#2d2d2d" stroke={ol} strokeWidth="1.5"/>
+          <rect x="45" y="16" width="11" height="16" rx="5.5" fill="#2d2d2d" stroke={ol} strokeWidth="1.5"/>
+          <ellipse cx="9.5" cy="23" rx="4" ry="5" fill="#3d3d3d"/>
+          <ellipse cx="50.5" cy="23" rx="4" ry="5" fill="#3d3d3d"/>
+          <line x1="5" y1="30" x2="-1" y2="41" stroke="#222" strokeWidth="2.5" strokeLinecap="round"/>
+          <circle cx="-1.5" cy="43" r="4.5" fill="#1a1a1a" stroke={ol} strokeWidth="1"/>
+        </g>
       )}
+
+      {/* ═══ NECK ═══ */}
+      <rect x="26" y="45" width="8" height="7" rx="4" fill={skin} stroke={ol} strokeWidth="1.5"/>
+
+      {/* ═══ BODY ═══ */}
+      <rect x="18" y="49" width="24" height="21" rx="9" fill={c} stroke={ol} strokeWidth="2"/>
+      <ellipse cx="24" cy="54" rx="6.5" ry="4" fill="rgba(255,255,255,0.28)" transform="rotate(-20 24 54)"/>
+      <rect x="35" y="51" width="7" height="17" rx="4" fill="rgba(0,0,0,0.12)" opacity="0.9"/>
+      <line x1="30" y1="50" x2="30" y2="69" stroke={isLight ? "rgba(0,0,0,0.1)" : "rgba(255,255,255,0.15)"} strokeWidth="1.5"/>
+
+      {/* ═══ BADGE ═══ */}
+      {badgeColor && (
+        <g>
+          <rect x="19" y="54" width="11" height="9.5" rx="2" fill={badgeColor} stroke={ol} strokeWidth="1.2"/>
+          <rect x="19.5" y="54.5" width="10" height="3.5" rx="1.5" fill="rgba(255,255,255,0.3)"/>
+          <rect x="19.5" y="59" width="6" height="2" rx="1" fill="rgba(255,255,255,0.5)"/>
+        </g>
+      )}
+
+      {/* ═══ GRAVATA BORBOLETA ═══ */}
+      {a.extraId === "gravata" && (
+        <g transform="translate(30,51.5)">
+          <polygon points="-6,-3.5 0,0 -6,3.5" fill="#E53935" stroke={ol} strokeWidth="1"/>
+          <polygon points="6,-3.5 0,0 6,3.5" fill="#C62828" stroke={ol} strokeWidth="1"/>
+          <circle cx="0" cy="0" r="2.5" fill="#B71C1C" stroke={ol} strokeWidth="0.8"/>
+        </g>
+      )}
+
+      {/* ═══ BODY SYMBOLS ═══ */}
+      {a.symbolId === "estrela" && (
+        <polygon points="30,53 31.8,58.5 37.8,58.5 33,62 34.8,67.5 30,64 25.2,67.5 27,62 22.2,58.5 28.2,58.5"
+          fill="#FFD600" stroke={ol} strokeWidth="1"/>
+      )}
+      {a.symbolId === "coracao" && (
+        <path d="M30 67 C30 67 22 61 22 56 C22 53 25.5 51 30 56 C34.5 51 38 53 38 56 C38 61 30 67 30 67Z"
+          fill="#F06292" stroke={ol} strokeWidth="1"/>
+      )}
+      {a.symbolId === "raio" && (
+        <polygon points="33,50 27,61 32,58.5 26.5,71 37.5,59.5 32,62"
+          fill="#FFD600" stroke={ol} strokeWidth="1"/>
+      )}
+      {a.symbolId === "triangulo" && (
+        <polygon points="30,52 39,67 21,67"
+          fill={isLight ? "rgba(0,0,0,0.4)" : "rgba(255,255,255,0.65)"} stroke={ol} strokeWidth="1"/>
+      )}
+      {a.symbolId === "circulo" && (
+        <circle cx="30" cy="60" r="7.5"
+          fill={isLight ? "rgba(0,0,0,0.25)" : "rgba(255,255,255,0.5)"} stroke={ol} strokeWidth="1"/>
+      )}
+      {a.symbolId === "quadrado" && (
+        <rect x="22.5" y="52" width="15" height="15"
+          fill={isLight ? "rgba(0,0,0,0.25)" : "rgba(255,255,255,0.5)"} stroke={ol} strokeWidth="1"/>
+      )}
+      {a.symbolId === "x-mark" && (
+        <g stroke={isLight ? "rgba(0,0,0,0.6)" : "rgba(255,255,255,0.8)"} strokeWidth="3.2" strokeLinecap="round">
+          <line x1="23" y1="52" x2="37" y2="66"/>
+          <line x1="37" y1="52" x2="23" y2="66"/>
+        </g>
+      )}
+      {a.symbolId === "diamante" && (
+        <polygon points="30,52 38.5,60 30,68 21.5,60"
+          fill={isLight ? "rgba(0,0,0,0.3)" : "rgba(255,255,255,0.6)"} stroke={ol} strokeWidth="1"/>
+      )}
+      {a.symbolId === "caveira" && (
+        <text x="30" y="67.5" textAnchor="middle" fontSize="15"
+          fill={isLight ? "rgba(0,0,0,0.55)" : "rgba(255,255,255,0.8)"}>☠</text>
+      )}
+
+      {/* ═══ ARMS ═══ */}
+      <path d="M18 52 Q7 57 6 68 L12 69 Q12 60 20 55Z"
+        fill={c} stroke={ol} strokeWidth="1.8" strokeLinejoin="round"/>
+      <path d="M42 52 Q53 57 54 68 L48 69 Q48 60 40 55Z"
+        fill={c} stroke={ol} strokeWidth="1.8" strokeLinejoin="round"/>
+
+      {/* ═══ HANDS / LUVAS ═══ */}
+      {a.extraId === "luvas" ? (
+        <>
+          <ellipse cx="9" cy="70" rx="5.5" ry="5" fill="#7B2FBE" stroke={ol} strokeWidth="1.8"/>
+          <ellipse cx="51" cy="70" rx="5.5" ry="5" fill="#7B2FBE" stroke={ol} strokeWidth="1.8"/>
+        </>
+      ) : (
+        <>
+          <ellipse cx="9" cy="70" rx="5.5" ry="5" fill={skin} stroke={ol} strokeWidth="1.8"/>
+          <ellipse cx="51" cy="70" rx="5.5" ry="5" fill={skin} stroke={ol} strokeWidth="1.8"/>
+        </>
+      )}
+
+      {/* ═══ BELT ═══ */}
+      <rect x="18" y="68.5" width="24" height="5.5" rx="2.8"
+        fill={isLight ? "#37474F" : "#0d0d0d"} stroke={ol} strokeWidth="1.3"/>
+      <rect x="27" y="68.5" width="6" height="5.5" rx="2"
+        fill={isLight ? "#546E7A" : "rgba(255,255,255,0.35)"}/>
+
+      {/* ═══ LEGS ═══ */}
+      <rect x="19" y="72" width="10" height="14" rx="5" fill={c} stroke={ol} strokeWidth="1.8"/>
+      <rect x="31" y="72" width="10" height="14" rx="5" fill={c} stroke={ol} strokeWidth="1.8"/>
+
+      {/* ═══ BOOTS ═══ */}
+      <ellipse cx="24" cy="87" rx="10.5" ry="6" fill="#111" stroke={ol} strokeWidth="1.8"/>
+      <ellipse cx="36" cy="87" rx="10.5" ry="6" fill="#111" stroke={ol} strokeWidth="1.8"/>
+      <ellipse cx="21.5" cy="84.5" rx="5.5" ry="2.5" fill="rgba(255,255,255,0.18)"/>
+      <ellipse cx="33.5" cy="84.5" rx="5.5" ry="2.5" fill="rgba(255,255,255,0.18)"/>
 
     </svg>
   );
