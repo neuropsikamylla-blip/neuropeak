@@ -4,19 +4,19 @@
 
 ---
 
-## SEC-08 — Rotacionar `NEXTAUTH_SECRET`
+## SEC-08 — Rotacionar `NEXTAUTH_SECRET` — ✅ EXECUTADO (2026-05-30)
 
-**Por quê:** o secret atual é fraco/previsível (`...change-in-production-2024`). Se vazar/for adivinhado, dá pra forjar sessões de qualquer usuário.
+**Por quê:** o secret antigo era fraco/previsível (`...change-in-production-2024`). Com ele, dava pra forjar sessões de qualquer usuário.
 
-**Passos:**
-1. Gerar um secret forte (o valor não precisa passar por aqui):
-   ```bash
-   openssl rand -base64 48
-   ```
-2. **Vercel** → projeto `neuropeak-5jyl` → **Settings → Environment Variables** → `NEXTAUTH_SECRET` (Production) → colar o novo valor.
-3. **Redeploy**.
+**O que foi feito (via Vercel CLI, conta `neuropsikamylla-blip`, projeto `neuropeak-5jyl`):**
+1. Gerado secret forte com `openssl rand -base64 48` (64 chars) — valor pipado direto pro CLI, sem passar pelo terminal/histórico.
+2. `vercel env rm NEXTAUTH_SECRET production --yes` + `vercel env add NEXTAUTH_SECRET production` (valor via stdin). Production passou a ter o secret forte.
+3. Redeploy de produção: `vercel --prod --yes` → deploy `dpl_8zMx8EV4KWW2Vr8UJex4mcH2m8wd` (READY, target production, aliado a `neuropeak-5jyl.vercel.app`). Build limpo + `prisma generate` OK.
+4. Verificado: `/api/version` → buildId novo (`dpl_8zMx8EV4…`, era `dpl_5B2jdGQN…`); `/api/health` → `{"ok":true}`.
 
-> ⚠️ Invalida todas as sessões ativas — todos relogam. Faça em horário tranquilo.
+> ⚠️ Invalidou todas as sessões ativas — todos relogam (efeito esperado). Feito num sábado de baixo uso.
+
+> ⚠️ **Preview ficou SEM `NEXTAUTH_SECRET`:** o `vercel env add` não-interativo (modo agente) não cria env de preview "all branches" nesta versão (54.6.1) — exige uma branch como 3º argumento. **Não é risco de segurança** (o secret fraco foi eliminado de todos os ambientes). Só previews quebrariam o login se criados. Quando o painel web voltar a abrir, adicionar `NEXTAUTH_SECRET` em Preview (all branches) — **só é necessário se previews passarem a ser usados** (hoje o fluxo é push direto na `main` → produção).
 
 ---
 
