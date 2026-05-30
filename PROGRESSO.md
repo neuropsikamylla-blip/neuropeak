@@ -5,7 +5,26 @@
 ## Estado atual (2026-05-30)
 
 **Versão:** 1.9.5 (`699a34a`) — sincronizada com `origin/main` após `git pull`.
-**Atividade:** Auditoria COMPLETA do app (5 sub-auditores reais, isolados) concluída → relatório mestre em **`AUDITORIA-2026-05-30.md`**. Correções dos achados seguros parcialmente aplicadas.
+**Atividade:** Auditoria completa + correção de quase todo o backlog (sessão ultracode — workflow + agentes). Status detalhado em `AUDITORIA-2026-05-30.md`.
+
+### Backlog — fechamento da sessão ultracode (2026-05-30)
+
+**✅ RESOLVIDO e validado (tsc + lint + build + 24 testes, todos exit 0). 5 commits LOCAIS (NÃO pushed): 28fdc32, ce147db, 964f646, e9bb59f, 1b3060d.**
+- Backend/segurança/qualidade: SEC-04 (CRP gate server-side), SEC-06 (images host), SEC-07 (timingSafeEqual+fail-closed), SEC-09 (security headers/CSP), QUAL-01 (health), QUAL-02 (error boundaries), QUAL-03 (.env.example), QUAL-04 (email hardcoded), QUAL-05 (middleware matcher), BUG-04 (adesão÷0), CSPRNG (randomInt), REL-04 (mailer), REL-05 (CRP upload), DUP-03/04 (helpers), LINT-01 (ESLint8 + fix useId condicional).
+- Exercícios: PERF-01 (FocusAgents rAF), PERF-03 (MOT rAF), REL-03 (timers cleanup), BUG-06 (race NBack), DUP-02 (TTS — parcial), ARCH-01+DEAD-01 (dead code).
+- TEST-01 (Vitest, 24 testes, regressão de BUG-01/BUG-04). A11Y-01 (aria-labels). BUG-05 avaliado e descartado (não era bug).
+
+**⏸️ DEFERIDO (não são fixes seguros — justificativa honesta):**
+- **DUP-01** (tokens de tema em ~30 exercícios): NÃO é refactor "mesmas strings" — os exercícios HOJE divergem no tema; consolidar = unificar visual = mudança de DESIGN + regressão visual garantida. É projeto de design dedicado + smoke test, não fix cego.
+- **PERF-02** (over-fetch dashboard): otimização prematura (base = 1 terapeuta) e a janela de 1 ano regride adesão de inativos. Fazer com window function (top-N por paciente) quando a base crescer.
+- **ARCH-02** (quebrar god-files de ~1150 linhas): refatoração estrutural de alto risco / zero valor funcional em produção. Pular.
+
+**🔧 OPERACIONAL (preparado; execução é do dono — produção/destrutivo):**
+- **SEC-08**: NEXTAUTH_SECRET fraco → gerar forte (`openssl rand -base64 48`) e setar no Vercel. DESLOGA todas as sessões ativas.
+- **SCHEMA-01**: FK em TherapeuticSession + CHECK constraints (score/accuracy/difficulty) → migração no Supabase; exige verificar dados existentes antes (FK falha com órfãos; CHECK falha com dados fora do range).
+- **SUP-02**: nodemailer CVE moderate — sem fix disponível; monitorar.
+
+**⚠️ Antes de push/deploy:** smoke test visual dos exercícios com animação (MOT, FocusAgents — PERF-01/03 trocaram o mecanismo de animação; build não pega regressão visual).
 
 > A 1ª auditoria (skill `/auditor`) rodou em execução única (sem dispatch de sub-agentes) e só amostrou os exercícios. A 2ª rodada (5 agentes via ferramenta `Agent`) encontrou **6 críticos + 9 altos NOVOS** não detectados antes — incluindo IDORs sistêmicos e SEC-02 no `sessions/route.ts` (arquivo que eu havia editado para o fix A1 sem notar o IDOR de THERAPIST).
 
