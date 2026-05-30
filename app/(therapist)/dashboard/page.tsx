@@ -1,6 +1,7 @@
 import { getServerSession } from "next-auth";
 import { authOptions } from "@/lib/auth";
 import prisma from "@/lib/db";
+import { Prisma } from "@prisma/client";
 import { redirect } from "next/navigation";
 import Link from "next/link";
 import { StatsOverview } from "@/components/dashboard/StatsOverview";
@@ -11,6 +12,24 @@ import { calculateAdherence, calculateTrend, calculateDomainScore } from "@/lib/
 import { UserPlus } from "lucide-react";
 import { startOfWeek } from "date-fns";
 import type { PatientSummary, SessionData, Theme } from "@/types";
+
+// PERF-02: o dashboard consome apenas as 20 sessões mais recentes de cada paciente
+// (ver `.slice(0, 20)` abaixo). Esta linha de tipo descreve o retorno da query que
+// já traz só esse top-20 POR paciente (window function), em vez do histórico inteiro
+// de todos os pacientes — o volume transferido deixa de crescer sem limite.
+type DashboardSession = {
+  id: string;
+  patientId: string;
+  exerciseId: string;
+  domain: string;
+  score: number;
+  accuracy: number;
+  reactionTime: number | null;
+  difficulty: number;
+  duration: number;
+  completedAt: Date;
+  metadata: string | null;
+};
 
 export default async function DashboardPage() {
   const session = await getServerSession(authOptions);
@@ -28,9 +47,21 @@ export default async function DashboardPage() {
   const patientIds = patientList.map((p) => p.id);
 
   const [allSessions, allAlertRows, allTrainingPlans] = await Promise.all([
+    // PERF-02: top-20 sessões por paciente via window function — evita trazer o
+    // histórico completo (que cresce sem limite). Equivale ao `.slice(0, 20)` usado
+    // abaixo. patientIds vem do banco (ownership já filtrado) e é parametrizado.
     patientIds.length > 0
-      ? prisma.session.findMany({ where: { patientId: { in: patientIds } }, orderBy: { completedAt: "desc" } })
-      : [],
+      ? prisma.$queryRaw<DashboardSession[]>`
+          SELECT id, "patientId", "exerciseId", domain, score, accuracy, "reactionTime", difficulty, duration, "completedAt", metadata
+          FROM (
+            SELECT s.*, ROW_NUMBER() OVER (PARTITION BY s."patientId" ORDER BY s."completedAt" DESC) AS rn
+            FROM "Session" s
+            WHERE s."patientId" IN (${Prisma.join(patientIds)})
+          ) ranked
+          WHERE rn <= 20
+          ORDER BY "patientId", "completedAt" DESC
+        `
+      : ([] as DashboardSession[]),
     patientIds.length > 0
       ? prisma.alert.findMany({ where: { patientId: { in: patientIds }, isRead: false } })
       : [],

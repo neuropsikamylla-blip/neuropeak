@@ -4,7 +4,7 @@
 > Histórico/detalhes: `AUDITORIA-2026-05-30.md` (achados) · `PROGRESSO.md` (checkpoints).
 
 ## Onde estamos
-A auditoria completa achou ~40 problemas. **Tudo o que é código está resolvido e no ar**, o **SCHEMA-01 foi aplicado no banco** (2 FKs + 3 CHECK, verificadas) e o **SEC-08 foi executado** (Production com `NEXTAUTH_SECRET` forte; redeploy `dpl_8zMx8EV4…` no ar em 2026-05-30). **Não resta nenhuma pendência de segurança nem operacional.** O que sobra: 1 smoke test visual (você) e 3 itens deferidos por decisão de design/escopo.
+A auditoria completa achou ~40 problemas. **Tudo o que é código está resolvido e no ar**, o **SCHEMA-01 foi aplicado no banco** (2 FKs + 3 CHECK, verificadas) e o **SEC-08 foi executado** (Production com `NEXTAUTH_SECRET` forte; redeploy `dpl_8zMx8EV4…` no ar em 2026-05-30). **Não resta nenhuma pendência de segurança, operacional nem de performance.** O que sobra: 1 smoke test visual (você) e 2 itens deferidos por decisão de design/escopo (ARCH-02, DUP-01).
 
 ---
 
@@ -29,8 +29,9 @@ A auditoria completa achou ~40 problemas. **Tudo o que é código está resolvid
 | Item | O que era | Por que ficou de fora |
 |------|-----------|------------------------|
 | **DUP-01** | Unificar os "temas" visuais em ~30 exercícios | **Não é correção, é redesenho.** Os exercícios hoje divergem no visual; unificar mudaria a aparência de vários → precisa decisão de design + smoke test dedicado. Risco alto, valor cosmético. |
-| **PERF-02** | Over-fetch nas queries do dashboard | **Otimização prematura** (base = 1 terapeuta). E a solução simples regrediria a "última sessão" de pacientes inativos. Refazer com *window function* quando a base crescer. |
 | **ARCH-02** | Quebrar arquivos de ~1150 linhas em módulos | **Alto risco / zero ganho funcional** em produção. Manutenibilidade pura. |
+
+> ✅ **PERF-02 foi resolvido em 2026-05-30** (saiu daqui): o dashboard agora traz só o top-20 sessões por paciente via window function (`$queryRaw`), em vez do histórico inteiro. Equivalência verificada no banco real (`ok = true`). Ganho atual ~zero (base = 1 paciente/6 sessões), mas o volume deixa de crescer sem limite.
 
 ---
 
@@ -44,5 +45,5 @@ A auditoria completa achou ~40 problemas. **Tudo o que é código está resolvid
 ---
 
 ## ✅ Resolvido e no ar (referência rápida)
-**Segurança:** C1, C2, SEC-01–09 (inclui SEC-08 — `NEXTAUTH_SECRET` rotacionado e redeployado em 2026-05-30) · **Bugs:** A1–A4, BUG-01–04, BUG-06, M6 · **Confiabilidade:** REL-01–05 · **Performance:** PERF-01, PERF-03, SUP-01 (Next 15.5.18) · **Qualidade:** QUAL-01–05, LINT-01, TEST-01 (24 testes), A11Y-01, DUP-03/04, ARCH-01, DEAD-01 · **Banco:** SCHEMA-01 (2 FKs em `TherapeuticSession` + 3 CHECK em `Session`, aplicadas e verificadas no Supabase de produção em 2026-05-30; 3 `TherapeuticSession` órfãs removidas; FK no `schema.prisma` em `641bff5`).
+**Segurança:** C1, C2, SEC-01–09 (inclui SEC-08 — `NEXTAUTH_SECRET` rotacionado e redeployado em 2026-05-30) · **Bugs:** A1–A4, BUG-01–04, BUG-06, M6 · **Confiabilidade:** REL-01–05 · **Performance:** PERF-01, PERF-02 (window function top-20/paciente no dashboard), PERF-03, SUP-01 (Next 15.5.18) · **Qualidade:** QUAL-01–05, LINT-01, TEST-01 (24 testes), A11Y-01, DUP-03/04, ARCH-01, DEAD-01 · **Banco:** SCHEMA-01 (2 FKs em `TherapeuticSession` + 3 CHECK em `Session`, aplicadas e verificadas no Supabase de produção em 2026-05-30; 3 `TherapeuticSession` órfãs removidas; FK no `schema.prisma` em `641bff5`).
 *(BUG-05 foi avaliado e descartado — era calibração, não bug.)*
