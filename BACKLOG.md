@@ -21,7 +21,7 @@ A auditoria completa achou ~40 problemas. **Tudo o que é código** (segurança,
 | Item | O que fazer | ⚠️ Risco / cuidado |
 |------|-------------|--------------------|
 | **SEC-08** | No Vercel → Environment Variables → trocar `NEXTAUTH_SECRET` por um forte: `openssl rand -base64 48`. | **Desloga todas as sessões ativas** (todos relogam). |
-| **SCHEMA-01** | No Supabase: adicionar FK em `TherapeuticSession` (patientId/therapistId) + CHECK constraints (score 0–100, accuracy 0–1, difficulty 1–10). | **Verificar dados antes**: a FK falha se houver sessão órfã; o CHECK falha se houver score antigo > 100. Migração delicada — me chame que eu preparo o SQL + a checagem prévia. |
+| **SCHEMA-01** | FK **já feita no `schema.prisma`** (código, commitado). Falta aplicar no banco: diagnóstico → `prisma db push` (FK) → SQL das CHECK. Passo a passo pronto em **`RUNBOOK-OPERACIONAL.md`**. | Rodar o diagnóstico antes (o runbook já o tem): a FK falha com órfãos; o CHECK falha com score antigo > 100. |
 
 ---
 

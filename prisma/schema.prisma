@@ -9,47 +9,49 @@ datasource db {
 }
 
 model User {
-  id              String    @id @default(cuid())
-  email           String    @unique
-  password        String
-  name            String
-  clinicName      String?
-  role            String    @default("THERAPIST")
-  patientLicenses  Int       @default(-1)
-  crp              String?
-  crpStatus        String    @default("unverified")
-  crpDocument      String?
-  crpAcceptedTerms Boolean   @default(false)
-  crpSubmittedAt   DateTime?
-  createdAt        DateTime  @default(now())
-  updatedAt        DateTime  @updatedAt
-  patients         Patient[]
+  id                  String               @id @default(cuid())
+  email               String               @unique
+  password            String
+  name                String
+  clinicName          String?
+  role                String               @default("THERAPIST")
+  patientLicenses     Int                  @default(-1)
+  crp                 String?
+  crpStatus           String               @default("unverified")
+  crpDocument         String?
+  crpAcceptedTerms    Boolean              @default(false)
+  crpSubmittedAt      DateTime?
+  createdAt           DateTime             @default(now())
+  updatedAt           DateTime             @updatedAt
+  patients            Patient[]
+  therapeuticSessions TherapeuticSession[]
 }
 
 model Patient {
-  id               String           @id @default(cuid())
-  name             String
-  birthDate        DateTime
-  education        String?
-  medications      String?
-  therapeuticGoals String?
-  clinicalNotes    String?
-  contact          String?
-  guardian         String?
-  cid              String?
-  diagnosis        String?
-  pin              String
-  patientCode      String?          @unique
-  theme            String           @default("CLINICAL")
-  therapistId      String
-  therapist        User             @relation(fields: [therapistId], references: [id])
-  createdAt        DateTime         @default(now())
-  updatedAt        DateTime         @updatedAt
-  sessions         Session[]
-  trainingPlans    TrainingPlan[]
-  exerciseConfigs  ExerciseConfig[]
-  achievements     Achievement[]
-  alerts           Alert[]
+  id                  String               @id @default(cuid())
+  name                String
+  birthDate           DateTime
+  education           String?
+  medications         String?
+  therapeuticGoals    String?
+  clinicalNotes       String?
+  contact             String?
+  guardian            String?
+  cid                 String?
+  diagnosis           String?
+  pin                 String
+  patientCode         String?              @unique
+  theme               String               @default("CLINICAL")
+  therapistId         String
+  therapist           User                 @relation(fields: [therapistId], references: [id], onDelete: Restrict)
+  createdAt           DateTime             @default(now())
+  updatedAt           DateTime             @updatedAt
+  sessions            Session[]
+  trainingPlans       TrainingPlan[]
+  exerciseConfigs     ExerciseConfig[]
+  achievements        Achievement[]
+  alerts              Alert[]
+  therapeuticSessions TherapeuticSession[]
 }
 
 model TrainingPlan {
@@ -137,7 +139,9 @@ model PasswordResetToken {
 model TherapeuticSession {
   id                String   @id @default(cuid())
   patientId         String
+  patient           Patient  @relation(fields: [patientId], references: [id], onDelete: Cascade)
   therapistId       String
+  therapist         User     @relation(fields: [therapistId], references: [id], onDelete: Cascade)
   status            String   @default("active")
   phase             String   @default("character_creation")
   characterData     Json     @default("{}")
