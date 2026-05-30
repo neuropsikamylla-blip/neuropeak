@@ -42,3 +42,4 @@ prisma/*.db
 
 # supabase
 supabase/.temp
+.env*

@@ -3,7 +3,8 @@ import { NextRequest, NextResponse } from "next/server";
 import { getServerSession } from "next-auth";
 import { authOptions } from "@/lib/auth";
 import prisma from "@/lib/db";
-import { generatePin, generatePatientCode } from "@/lib/utils";
+import { generatePin } from "@/lib/utils";
+import { generateUniquePatientCode } from "@/lib/patients";
 import bcrypt from "bcryptjs";
 import { withApiHandler } from "@/lib/api-handler";
 
@@ -34,12 +35,7 @@ export const POST = withApiHandler(async (
 
   let patientCode = patient.patientCode;
   if (!patientCode) {
-    let unique = false;
-    do {
-      patientCode = generatePatientCode();
-      const existing = await prisma.patient.findFirst({ where: { patientCode } });
-      unique = !existing;
-    } while (!unique);
+    patientCode = await generateUniquePatientCode();
   }
 
   await prisma.patient.update({

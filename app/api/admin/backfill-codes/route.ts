@@ -1,12 +1,14 @@
 export const dynamic = "force-dynamic";
 import { NextRequest, NextResponse } from "next/server";
 import prisma from "@/lib/db";
-import { generatePatientCode } from "@/lib/utils";
 import { withApiHandler } from "@/lib/api-handler";
+import { safeSecretCompare } from "@/lib/auth-helpers";
+import { generateUniquePatientCode } from "@/lib/patients";
 
 export const POST = withApiHandler(async (req: NextRequest) => {
+  // Fail-closed: sem ADMIN_SECRET configurado, safeSecretCompare retorna false.
   const secret = req.headers.get("x-admin-secret");
-  if (!secret || secret !== process.env.ADMIN_SECRET) {
+  if (!safeSecretCompare(secret, process.env.ADMIN_SECRET)) {
     return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
   }
 
@@ -21,14 +23,7 @@ export const POST = withApiHandler(async (req: NextRequest) => {
 
   let updated = 0;
   for (const patient of patients) {
-    let patientCode: string;
-    let unique = false;
-    do {
-      patientCode = generatePatientCode();
-      const existing = await prisma.patient.findFirst({ where: { patientCode } });
-      unique = !existing;
-    } while (!unique);
-
+    const patientCode = await generateUniquePatientCode();
     await prisma.patient.update({ where: { id: patient.id }, data: { patientCode } });
     updated++;
   }

@@ -1,45 +1,5 @@
-import type { Domain, NormativeBenchmark, DomainScore, SessionData } from "@/types";
+import type { Domain, DomainScore, SessionData } from "@/types";
 import { average } from "@/lib/utils";
-
-// Normative benchmarks by age group (0-100 normalized scale)
-export const NORMATIVE_BENCHMARKS: NormativeBenchmark[] = [
-  {
-    ageGroup: "4-11",
-    minAge: 4,
-    maxAge: 11,
-    memory: { mean: 55, sd: 12 },
-    attention: { mean: 52, sd: 13 },
-    processing: { mean: 48, sd: 14 },
-    executive: { mean: 45, sd: 13 },
-  },
-  {
-    ageGroup: "12-17",
-    minAge: 12,
-    maxAge: 17,
-    memory: { mean: 68, sd: 11 },
-    attention: { mean: 70, sd: 10 },
-    processing: { mean: 65, sd: 12 },
-    executive: { mean: 66, sd: 11 },
-  },
-  {
-    ageGroup: "18-59",
-    minAge: 18,
-    maxAge: 59,
-    memory: { mean: 72, sd: 10 },
-    attention: { mean: 74, sd: 9 },
-    processing: { mean: 71, sd: 11 },
-    executive: { mean: 73, sd: 10 },
-  },
-  {
-    ageGroup: "60+",
-    minAge: 60,
-    maxAge: 120,
-    memory: { mean: 58, sd: 13 },
-    attention: { mean: 60, sd: 12 },
-    processing: { mean: 54, sd: 14 },
-    executive: { mean: 57, sd: 13 },
-  },
-];
 
 // Expected reaction times by exercise and difficulty (ms)
 const EXPECTED_REACTION_TIMES: Record<string, number> = {
@@ -122,44 +82,6 @@ export function calculateDomainScore(sessions: SessionData[]): DomainScore[] {
 }
 
 /**
- * Calculate percentile given a score and normative data
- */
-export function calculatePercentile(
-  score: number,
-  domain: Domain,
-  age: number
-): number {
-  const benchmark = NORMATIVE_BENCHMARKS.find(
-    (b) => age >= b.minAge && age <= b.maxAge
-  );
-  if (!benchmark) return 50;
-
-  const { mean, sd } = benchmark[domain];
-  const zScore = (score - mean) / sd;
-
-  // Approximate normal CDF
-  return Math.round(normalCDF(zScore) * 100);
-}
-
-function normalCDF(z: number): number {
-  const a1 = 0.254829592;
-  const a2 = -0.284496736;
-  const a3 = 1.421413741;
-  const a4 = -1.453152027;
-  const a5 = 1.061405429;
-  const p = 0.3275911;
-
-  const sign = z < 0 ? -1 : 1;
-  const x = Math.abs(z) / Math.sqrt(2);
-  const t = 1.0 / (1.0 + p * x);
-  const y =
-    1.0 -
-    ((((a5 * t + a4) * t + a3) * t + a2) * t + a1) * t * Math.exp(-x * x);
-
-  return 0.5 * (1.0 + sign * y);
-}
-
-/**
  * Calculate adherence percentage
  */
 export function calculateAdherence(
@@ -167,6 +89,10 @@ export function calculateAdherence(
   expectedFrequency: number, // sessions per week
   startDate: Date
 ): number {
+  // Guard: frequência inválida (<=0) tornaria expectedSessions=0 → divisão por
+  // zero → Infinity → 100% de aderência falso. Sem meta, aderência é indefinida → 0.
+  if (expectedFrequency <= 0) return 0;
+
   const now = new Date();
   const weeksElapsed = Math.max(
     1,

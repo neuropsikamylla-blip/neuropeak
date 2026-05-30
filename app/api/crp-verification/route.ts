@@ -43,10 +43,17 @@ export async function POST(req: NextRequest) {
     return NextResponse.json({ error: "Armazenamento de documentos indisponível" }, { status: 503 });
   }
 
-  await prisma.user.update({
-    where: { id: userId },
-    data: { crp, crpDocument: path, crpStatus: "pending", crpAcceptedTerms: true, crpSubmittedAt: new Date() },
-  });
+  try {
+    await prisma.user.update({
+      where: { id: userId },
+      data: { crp, crpDocument: path, crpStatus: "pending", crpAcceptedTerms: true, crpSubmittedAt: new Date() },
+    });
+  } catch (e) {
+    // REL-05: se o update falhar, remove o documento recém-enviado para não
+    // deixar arquivo órfão (dado sensível) acumulando no storage.
+    await getSupabase().storage.from("crp-documents").remove([path]).catch(() => {});
+    throw e;
+  }
 
   return NextResponse.json({ success: true, status: "pending" });
 }

@@ -70,12 +70,17 @@ export default function RecuperarSenhaPage() {
                   Se <strong>{email}</strong> estiver cadastrado, você receberá um email com
                   as instruções para redefinir sua senha.
                 </p>
-                <p className="text-xs text-gray-500">
-                  Não recebeu? Verifique a caixa de spam ou entre em contato com{" "}
-                  <a href="mailto:neuropsi.kamylla@gmail.com" className="text-blue-500 hover:underline">
-                    neuropsi.kamylla@gmail.com
-                  </a>
-                </p>
+                {process.env.NEXT_PUBLIC_ADMIN_EMAIL && (
+                  <p className="text-xs text-gray-500">
+                    Não recebeu? Verifique a caixa de spam ou entre em contato com{" "}
+                    <a
+                      href={`mailto:${process.env.NEXT_PUBLIC_ADMIN_EMAIL}`}
+                      className="text-blue-500 hover:underline"
+                    >
+                      {process.env.NEXT_PUBLIC_ADMIN_EMAIL}
+                    </a>
+                  </p>
+                )}
                 <Link
                   href="/login"
                   className="inline-flex items-center gap-1 text-sm text-blue-600 hover:underline"

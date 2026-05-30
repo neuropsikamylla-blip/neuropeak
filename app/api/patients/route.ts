@@ -4,7 +4,8 @@ import { getServerSession } from "next-auth";
 import { authOptions } from "@/lib/auth";
 import prisma from "@/lib/db";
 import { z } from "zod";
-import { generatePin, generatePatientCode } from "@/lib/utils";
+import { generatePin } from "@/lib/utils";
+import { generateUniquePatientCode } from "@/lib/patients";
 import bcrypt from "bcryptjs";
 import { withApiHandler } from "@/lib/api-handler";
 
@@ -57,13 +58,7 @@ export const POST = withApiHandler(async (req: NextRequest) => {
   const plainPin = generatePin();
   const pin = await bcrypt.hash(plainPin, 10);
 
-  let patientCode: string | undefined;
-  let codeIsUnique = false;
-  do {
-    patientCode = generatePatientCode();
-    const existing = await prisma.patient.findFirst({ where: { patientCode } });
-    codeIsUnique = !existing;
-  } while (!codeIsUnique);
+  const patientCode = await generateUniquePatientCode();
 
   // Licença + criação numa transação atômica. O decremento condicional
   // (updateMany onde patientLicenses > 0) evita a race condition em que duas

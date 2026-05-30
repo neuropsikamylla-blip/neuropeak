@@ -2,10 +2,13 @@ export const dynamic = "force-dynamic";
 import { NextRequest, NextResponse } from "next/server";
 import prisma from "@/lib/db";
 import { withApiHandler } from "@/lib/api-handler";
+import { safeSecretCompare } from "@/lib/auth-helpers";
 
 export const GET = withApiHandler(async (req: NextRequest) => {
+  // Fail-closed: sem CRON_SECRET configurado, safeSecretCompare retorna false.
   const authHeader = req.headers.get("authorization");
-  if (authHeader !== `Bearer ${process.env.CRON_SECRET}`) {
+  const token = authHeader?.startsWith("Bearer ") ? authHeader.slice(7) : null;
+  if (!safeSecretCompare(token, process.env.CRON_SECRET)) {
     return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
   }
 

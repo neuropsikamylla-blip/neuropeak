@@ -24,7 +24,9 @@ export const POST = withApiHandler(async (req: NextRequest) => {
     return NextResponse.json({ error: "Usuário não encontrado" }, { status: 404 });
   }
 
-  await sendLicenseRequestEmail({ ...user, clinicName: user.clinicName ?? undefined }).catch(() => {});
+  await sendLicenseRequestEmail({ ...user, clinicName: user.clinicName ?? undefined }).catch(
+    (e) => console.error("[request-license] falha ao enviar email:", e)
+  );
 
   return NextResponse.json({ success: true });
 });

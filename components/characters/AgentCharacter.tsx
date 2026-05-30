@@ -34,6 +34,10 @@ const CRD = "#8B0000";  // cap red dark
 export function AgentCharacter({
   color, accessory, size = 100, expression = "happy", className, style, imageSrc,
 }: AgentCharacterProps) {
+  // useId tem que ser chamado incondicionalmente (regras dos hooks), antes de
+  // qualquer early return. Só é usado no caminho SVG, mas a chamada é sempre feita.
+  const uid = useId().replace(/:/g, "_");
+
   // PNG disponível → usa imagem real, ignora SVG
   if (imageSrc) {
     return (
@@ -52,7 +56,6 @@ export function AgentCharacter({
       />
     );
   }
-  const uid = useId().replace(/:/g, "_");
   const c  = PALETTE[color];
   const cd = DARK[color];
   const light = color === "yellow";

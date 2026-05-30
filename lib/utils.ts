@@ -2,6 +2,7 @@ import { type ClassValue, clsx } from "clsx";
 import { twMerge } from "tailwind-merge";
 import { format, differenceInYears, differenceInDays } from "date-fns";
 import { ptBR } from "date-fns/locale";
+import { randomInt } from "crypto";
 
 export function cn(...inputs: ClassValue[]) {
   return twMerge(clsx(inputs));
@@ -60,11 +61,13 @@ export function shuffle<T>(array: T[]): T[] {
 }
 
 export function generatePin(): string {
-  return Math.floor(100000 + Math.random() * 900000).toString();
+  // CSPRNG: PIN de 6 dígitos (100000–999999) para credencial de paciente.
+  return randomInt(100000, 1000000).toString();
 }
 
 export function generatePatientCode(): string {
-  const digits = Math.floor(10000 + Math.random() * 90000).toString();
+  // CSPRNG: código de 5 dígitos (10000–99999) prefixado com COG.
+  const digits = randomInt(10000, 100000).toString();
   return `COG${digits}`;
 }
 

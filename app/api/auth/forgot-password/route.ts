@@ -45,7 +45,9 @@ export const POST = withApiHandler(async (req: NextRequest) => {
   const baseUrl = process.env.NEXTAUTH_URL || "http://localhost:3000";
   const resetUrl = `${baseUrl}/nova-senha?token=${token}`;
 
-  await sendPasswordResetEmail(user.email, resetUrl).catch(() => {});
+  await sendPasswordResetEmail(user.email, resetUrl).catch(
+    (e) => console.error("[forgot-password] falha ao enviar email:", e)
+  );
 
   return NextResponse.json({ success: true });
 });

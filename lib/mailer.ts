@@ -7,6 +7,9 @@ function createTransport() {
       user: process.env.GMAIL_USER,
       pass: process.env.GMAIL_APP_PASSWORD,
     },
+    // Sem timeout, um SMTP travado seguraria a request até o limite da função.
+    connectionTimeout: 10000,
+    socketTimeout: 10000,
   });
 }
 
@@ -49,10 +52,17 @@ export async function sendLicenseRequestEmail(therapist: {
 }) {
   if (!process.env.GMAIL_USER || !process.env.GMAIL_APP_PASSWORD) return false;
 
+  // Sem fallback hardcoded: se ADMIN_EMAIL não estiver configurado, falha
+  // explícita em vez de enviar dados a um endereço pessoal versionado.
+  const adminEmail = process.env.ADMIN_EMAIL;
+  if (!adminEmail) {
+    throw new Error("ADMIN_EMAIL não configurado");
+  }
+
   const transporter = createTransport();
   await transporter.sendMail({
     from: `"NeuroPeak" <${process.env.GMAIL_USER}>`,
-    to: process.env.ADMIN_EMAIL || "neuropsi.kamylla@gmail.com",
+    to: adminEmail,
     subject: `Solicitação de licença — ${therapist.name}`,
     html: `
       <div style="font-family: sans-serif; max-width: 480px; margin: 0 auto; padding: 24px;">

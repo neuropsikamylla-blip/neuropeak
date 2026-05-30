@@ -4,13 +4,14 @@ import { getServerSession } from "next-auth";
 import { authOptions } from "@/lib/auth";
 import prisma from "@/lib/db";
 import { withApiHandler } from "@/lib/api-handler";
+import { requireVerifiedCrp } from "@/lib/auth-helpers";
 
 export const POST = withApiHandler(async (req: NextRequest) => {
-  const session = await getServerSession(authOptions);
-  if (!session || (session.user as { role?: string }).role !== "THERAPIST") {
-    return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
-  }
-  const therapistId = (session.user as { id: string }).id;
+  // SEC-04: gate de CRP no servidor — só terapeuta com CRP verificado cria
+  // sessões do Mundo Interior (antes o gate existia apenas na UI).
+  const auth = await requireVerifiedCrp();
+  if (auth.response) return auth.response;
+  const therapistId = auth.therapistId;
   const { patientId } = await req.json();
   if (!patientId) return NextResponse.json({ error: "patientId required" }, { status: 400 });
 
