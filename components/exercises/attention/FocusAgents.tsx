@@ -45,6 +45,14 @@ function fallSpeedPx(consecutiveCorrectCount: number): number {
   return 4.2 + level * 0.9;
 }
 
+// Posição horizontal (em % da área) de um faller em função do seu Y atual.
+// Fórmula única compartilhada entre o render (base) e o rAF (posição viva),
+// para que o transform imperativo nunca divirja do que o React renderizou.
+function fallerXPct(f: FallerData, y: number): number {
+  const xRaw = f.xBase + f.xAmp * Math.sin((y / f.xFreq) * Math.PI * 2 + f.xPhase);
+  return Math.max(1, Math.min(xRaw, 76));
+}
+
 // ── Vocabulário ────────────────────────────────────────────────────────────────
 
 const NOUN: Record<Theme, string> = {
@@ -257,10 +265,18 @@ export function FocusAgents({ difficulty, theme, onComplete, forceMode, exercise
   const [displayLevel, setDisplayLevel] = useState(Math.max(1, Math.min(10, difficulty)));
   const [cmdCountdown, setCmdCountdown] = useState<number|null>(null);
 
-  const animIntervalRef     = useRef<ReturnType<typeof setInterval>|null>(null);
+  const rafRef              = useRef<number|null>(null);
   const fallersRef          = useRef<FallerData[]>([]);
+  // PERF-01: durante a fase "playing" a física corre no `fallersRef` e o
+  // movimento é aplicado direto via style.transform nos nós DOM (sem setState
+  // a cada frame). `fallerNodesRef` referencia os elementos (callback ref) e
+  // `fallerBaseRef` guarda a posição base renderizada (top px / left %) de cada
+  // faller no instante em que o play começou — o transform anima o delta.
+  const fallerNodesRef      = useRef<Map<string, HTMLDivElement>>(new Map());
+  const fallerBaseRef       = useRef<Map<string, { y: number; xPct: number }>>(new Map());
   const playAreaRef         = useRef<HTMLDivElement>(null);
   const playAreaHRef        = useRef(600);
+  const playAreaWRef        = useRef(0);
   const roundRef            = useRef(0);
   const commandFadeTimerRef = useRef<ReturnType<typeof setTimeout>|null>(null);
   const roundStart          = useRef(Date.now());
@@ -280,6 +296,7 @@ export function FocusAgents({ difficulty, theme, onComplete, forceMode, exercise
   const requiredTargetsRef  = useRef(1);
   const sequenceStepRef     = useRef(0);
   const roundTypeRef        = useRef<CommandRuleType>("single");
+  const targetPassRef       = useRef(0);
   const recentVerbsRef          = useRef<number[]>([]);
   const recentTargetAgentIdsRef = useRef<string[]>([]);
   const warmupCorrectRef        = useRef(0);
@@ -313,7 +330,7 @@ export function FocusAgents({ difficulty, theme, onComplete, forceMode, exercise
   }, [gamePhase, showTutorial]);
 
   const stopFallAnimation = () => {
-    if (animIntervalRef.current) { clearInterval(animIntervalRef.current); animIntervalRef.current = null; }
+    if (rafRef.current !== null) { cancelAnimationFrame(rafRef.current); rafRef.current = null; }
   };
 
   const prepareRound = useCallback((_r: number) => {
@@ -387,6 +404,7 @@ export function FocusAgents({ difficulty, theme, onComplete, forceMode, exercise
     setWrongUid(null);
     setFailReason(null);
     setTargetPass(0);
+    targetPassRef.current = 0;
     setCommandFaded(false);
 
     // Inicializa fallers espalhados livremente pela tela (como na imagem de referência)
@@ -429,14 +447,39 @@ export function FocusAgents({ difficulty, theme, onComplete, forceMode, exercise
     stopFallAnimation();
 
     playAreaHRef.current = playAreaRef.current?.clientHeight ?? 600;
+    playAreaWRef.current = playAreaRef.current?.clientWidth  ?? 0;
     setGamePhase("playing");
     roundStart.current = Date.now();
 
-    animIntervalRef.current = setInterval(() => {
+    // Base renderizada de cada faller (top px / left %) no instante em que o
+    // play inicia — é exatamente o que o React renderiza em `fallerPositions`.
+    // O transform imperativo no rAF anima o delta sobre esta base.
+    fallerBaseRef.current = new Map(
+      fallersRef.current.map(f => [f.uid, { y: f.y, xPct: fallerXPct(f, f.y) }]),
+    );
+
+    // PERF-01: a queda corre no rAF mutando `fallersRef` e aplicando o
+    // transform direto no DOM. setState só é disparado em eventos discretos
+    // (mudança de passagem do alvo via `setTargetPass`, e timeout/alvo perdido
+    // via `setFailReason`/`handleResult`). A velocidade é normalizada por tempo
+    // (dt/TICK_MS) para manter exatamente a mesma física do antigo setInterval
+    // de ~TICK_MS, independente da taxa de frames do rAF.
+    let prevTs: number | null = null;
+
+    const animate = (ts: number) => {
       if (resolvedIds.current.has("timeout")) { stopFallAnimation(); return; }
 
-      const speed = fallSpeedPx(consecutiveCorrect.current);
+      // dt em ms desde o frame anterior. Clampado a 100ms para que um eventual
+      // pico de lag (ou retomada após a aba ficar em background, quando o rAF
+      // pausa) não produza um salto gigante que pularia o wrap e provocaria um
+      // timeout indevido. Em operação normal (~16ms) o clamp nunca ativa.
+      const dt    = prevTs === null ? TICK_MS : Math.min(ts - prevTs, 100);
+      prevTs      = ts;
+      const ticks = dt / TICK_MS;
+
+      const speed   = fallSpeedPx(consecutiveCorrect.current) * ticks;
       const screenH = playAreaHRef.current;
+      const screenW = playAreaWRef.current;
 
       let targetLost = false;
       let newPassCount = 0;
@@ -457,22 +500,46 @@ export function FocusAgents({ difficulty, theme, onComplete, forceMode, exercise
         return { ...f, y: newY, passCount: newPass };
       });
 
-      if (newPassCount > 0) setTargetPass(newPassCount - 1);
+      // Aplica o movimento direto no DOM via transform (delta sobre a base).
+      for (const f of fallersRef.current) {
+        const node = fallerNodesRef.current.get(f.uid);
+        const base = fallerBaseRef.current.get(f.uid);
+        if (node && base) {
+          const dyPx = f.y - base.y;
+          const dxPx = ((fallerXPct(f, f.y) - base.xPct) / 100) * screenW;
+          node.style.transform = `translate(${dxPx}px, ${dyPx}px)`;
+        }
+      }
 
-      setFallerPositions([...fallersRef.current]);
+      // Evento discreto: a passagem do alvo mudou (atualiza HUD "1ª/2ª vez").
+      if (newPassCount > 0 && newPassCount - 1 !== targetPassRef.current) {
+        targetPassRef.current = newPassCount - 1;
+        setTargetPass(newPassCount - 1);
+      }
 
       if (targetLost && !resolvedIds.current.has("timeout")) {
         resolvedIds.current.add("timeout");
+        // Congela o render nas posições reais alcançadas pela física, para que
+        // o feedback não "salte" os agentes de volta à base inicial.
+        setFallerPositions([...fallersRef.current]);
         setFailReason("timeout");
         stopFallAnimation();
         setTimeout(() => handleResult(false, roundRef.current), 100);
+        return;
       }
-    }, TICK_MS);
+
+      rafRef.current = requestAnimationFrame(animate);
+    };
+    rafRef.current = requestAnimationFrame(animate);
   }
 
   function handleResult(correct: boolean, r: number) {
     if (doneRef.current) return;
     stopFallAnimation();
+    // Congela o render nas posições reais alcançadas pela física durante o
+    // play (não na base inicial), para que a transição para o feedback não
+    // "salte" os agentes. Cobre os três caminhos: acerto, toque errado e timeout.
+    setFallerPositions([...fallersRef.current]);
     if (commandFadeTimerRef.current) { clearTimeout(commandFadeTimerRef.current); commandFadeTimerRef.current = null; }
 
     const rt         = Date.now() - roundStart.current;
@@ -784,18 +851,26 @@ export function FocusAgents({ difficulty, theme, onComplete, forceMode, exercise
                 isForbid && failReason !== null ? "forbidden" :
                 isWrong    ? "wrong" : "idle";
 
-              const xRaw = f.xBase + f.xAmp * Math.sin((f.y / f.xFreq) * Math.PI * 2 + f.xPhase);
-              const xPct = Math.max(1, Math.min(xRaw, 76));
+              const xPct = fallerXPct(f, f.y);
 
               return (
                 <div
                   key={ga.uid}
+                  ref={node => {
+                    if (node) fallerNodesRef.current.set(ga.uid, node);
+                    else fallerNodesRef.current.delete(ga.uid);
+                  }}
                   style={{
                     position: "absolute",
                     top: f.y,
                     left: `calc(${xPct}% - ${CHAR_SIZE / 2}px)`,
                     width: CHAR_SIZE,
                     willChange: "transform",
+                    // Durante "playing" o transform é controlado pelo rAF (omitido
+                    // aqui para o React não sobrescrever o valor imperativo). No
+                    // feedback a base top/left já é a posição real congelada, então
+                    // zeramos o transform.
+                    ...(gamePhase === "playing" ? {} : { transform: "translate(0px, 0px)" }),
                   }}>
                   <AgentCard
                     gameAgent={ga}

@@ -57,6 +57,31 @@ Prioridade por bloco — ver `AUDITORIA-2026-05-30.md` para detalhes/IDs:
 4. **Backlog médio/baixo:** ver relatório.
 5. Subir: commit + push (e deploy Vercel se aprovado) — **com aval humano**. Decisão: acumular até fechar os críticos.
 
+## Performance — FocusAgents (2026-05-30)
+
+Refatoração de `components/exercises/attention/FocusAgents.tsx` (frente paralela ao redesign visual):
+
+- **PERF-01 ✅ CONCLUÍDO** — Loop de queda dos "fallers" migrado de `setInterval(~TICK_MS, ~20fps)` +
+  `setFallerPositions` por tick (que re-renderizava SceneBg/HUD/órbitas ~20x/s) para
+  `requestAnimationFrame` + mutação direta de `node.style.transform` via `Map<uid, HTMLDivElement>`
+  (callback ref). Padrão idêntico ao já aplicado em `MOT.tsx` (PERF-03). Detalhes:
+  - Física viva em `fallersRef`; base renderizada (top px / left %) capturada em `fallerBaseRef` no
+    início do play; transform = delta sobre a base. Helper puro `fallerXPct(f, y)` compartilhado entre
+    render e rAF (garante paridade exata; X depende do Y via `xBase + xAmp*sin(y/xFreq...)`).
+  - Velocidade normalizada por `dt/TICK_MS` (com clamp de dt a 100ms) → física idêntica ao interval
+    antigo independente da taxa de frames do rAF. **Crítico**: sem isso a queda triplicaria a 60fps.
+  - `setState` só em eventos discretos: init de round, mudança de passagem do alvo (`setTargetPass`,
+    agora disparado só na transição via `targetPassRef`), timeout e `handleResult`.
+  - `transform` omitido do style durante `playing` (rAF controla); zerado no feedback. `handleResult`
+    e o ramo de timeout fazem `setFallerPositions([...fallersRef.current])` para congelar na posição
+    real e evitar "salto" dos agentes na transição playing→feedback.
+  - Cleanup: `stopFallAnimation` agora faz `cancelAnimationFrame`; o useEffect de unmount já o chama.
+- **DUP-02 ✅ JÁ RESOLVIDO** — FocusAgents já consumia `playTTS`/`cancelTTS` de `@/lib/tts` (não havia
+  Web Speech local; `speakFn` é só um wrapper que respeita `forceMode === "visual"`). Nada alterado.
+- **Validação:** `npx tsc --noEmit` exit 0 + `eslint` no arquivo exit 0. Build NÃO rodado (orquestrador
+  roda depois com NEXTAUTH_URL setada). Comportamento preservado: física/velocidade/posições, hit-test
+  por agente, fluxo de comandos, TTS e visual — verificados por trace matemático do delta de transform.
+
 ## Notas importantes
 
 - App clínico (LGPD): dados sensíveis de pacientes. Achados de segurança têm peso real.
