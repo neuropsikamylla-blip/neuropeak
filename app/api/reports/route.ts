@@ -18,6 +18,7 @@ import { DOMAIN_LABELS } from "@/types";
 import type { SessionData } from "@/types";
 import { format } from "date-fns";
 import { ptBR } from "date-fns/locale";
+import { withApiHandler } from "@/lib/api-handler";
 
 const styles = StyleSheet.create({
   page: {
@@ -146,7 +147,7 @@ const styles = StyleSheet.create({
   },
 });
 
-export async function GET(req: NextRequest) {
+export const GET = withApiHandler(async (req: NextRequest) => {
   const session = await getServerSession(authOptions);
   if (!session || (session.user as { role?: string }).role !== "THERAPIST") {
     return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
@@ -263,4 +264,4 @@ export async function GET(req: NextRequest) {
       "Content-Disposition": `attachment; filename="relatorio_${patient.name.replace(/\s+/g, "_")}_${format(new Date(), "yyyyMMdd")}.pdf"`,
     },
   });
-}
+});

@@ -2,8 +2,9 @@ export const dynamic = "force-dynamic";
 import { NextRequest, NextResponse } from "next/server";
 import prisma from "@/lib/db";
 import { generatePatientCode } from "@/lib/utils";
+import { withApiHandler } from "@/lib/api-handler";
 
-export async function POST(req: NextRequest) {
+export const POST = withApiHandler(async (req: NextRequest) => {
   const secret = req.headers.get("x-admin-secret");
   if (!secret || secret !== process.env.ADMIN_SECRET) {
     return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
@@ -33,4 +34,4 @@ export async function POST(req: NextRequest) {
   }
 
   return NextResponse.json({ updated, message: `${updated} paciente(s) atualizado(s) com código` });
-}
+});

@@ -346,8 +346,8 @@ export default function ExercicioPage() {
     fetch(`/api/patients/${user.patientId}?config=true`)
       .then((r) => r.json())
       .then((data) => {
-        // Calculate patient age from dateOfBirth if available
-        const dob = data.patient?.dateOfBirth;
+        // Calculate patient age from birthDate if available
+        const dob = data.patient?.birthDate;
         if (dob) {
           const age = Math.floor((Date.now() - new Date(dob).getTime()) / (365.25 * 24 * 3600 * 1000));
           setPatientAge(age);

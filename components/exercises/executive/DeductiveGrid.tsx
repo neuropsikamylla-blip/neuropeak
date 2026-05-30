@@ -504,7 +504,18 @@ export function DeductiveGrid({ difficulty, theme, onComplete }: DeductiveGridPr
     setGrid(prev => {
       const cur = prev[key] ?? "empty";
       const next: CellState = cur === "empty" ? "yes" : cur === "yes" ? "no" : "empty";
-      return { ...prev, [key]: next };
+      const updated = { ...prev, [key]: next };
+      // Cada pessoa tem exatamente UM valor: ao marcar "yes", os demais "yes" da mesma
+      // linha viram "no" (dedução lógica). Impede múltiplos "yes" por pessoa, que antes
+      // corrompiam a validação — ela só conferia o primeiro "yes" via Array.find.
+      if (next === "yes") {
+        for (const v of currentPuzzle.values) {
+          if (v !== value && updated[`${person}|${v}`] === "yes") {
+            updated[`${person}|${v}`] = "no";
+          }
+        }
+      }
+      return updated;
     });
     setErrorCells(prev => { const n = new Set(prev); n.delete(`${person}|${value}`); return n; });
   }

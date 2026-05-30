@@ -25,6 +25,7 @@ export async function POST(req: NextRequest) {
 
   const { code } = result.data;
 
+  // Validação preliminar (mensagens amigáveis); o claim atômico abaixo garante corretude sob concorrência.
   const license = await prisma.licenseCode.findFirst({
     where: { code: code.trim().toUpperCase() },
   });
@@ -37,27 +38,37 @@ export async function POST(req: NextRequest) {
     return NextResponse.json({ error: "Este código já foi utilizado" }, { status: 409 });
   }
 
-  const user = await prisma.user.findUnique({
-    where: { id: therapistId },
-    select: { patientLicenses: true },
-  });
+  try {
+    // Transação atômica: marca o código como usado (claim condicional anti duplo-resgate)
+    // e credita as licenças juntos. Se um falhar, o outro reverte — sem licença paga perdida.
+    const newLicenses = await prisma.$transaction(async (tx) => {
+      const claim = await tx.licenseCode.updateMany({
+        where: { id: license.id, usedByTherapistId: null },
+        data: { usedByTherapistId: therapistId, usedAt: new Date() },
+      });
+      if (claim.count === 0) throw new Error("ALREADY_USED");
 
-  if (!user) {
-    return NextResponse.json({ error: "Usuário não encontrado" }, { status: 404 });
+      const user = await tx.user.findUnique({
+        where: { id: therapistId },
+        select: { patientLicenses: true },
+      });
+      if (!user) throw new Error("USER_NOT_FOUND");
+
+      const current = user.patientLicenses ?? -1;
+      const next = current === -1 ? license.licenses : current + license.licenses;
+      await tx.user.update({ where: { id: therapistId }, data: { patientLicenses: next } });
+      return next;
+    });
+
+    return NextResponse.json({ success: true, licenses: newLicenses });
+  } catch (e) {
+    if (e instanceof Error && e.message === "ALREADY_USED") {
+      return NextResponse.json({ error: "Este código já foi utilizado" }, { status: 409 });
+    }
+    if (e instanceof Error && e.message === "USER_NOT_FOUND") {
+      return NextResponse.json({ error: "Usuário não encontrado" }, { status: 404 });
+    }
+    console.error("[redeem-license] erro ao resgatar licença:", e);
+    return NextResponse.json({ error: "Erro ao resgatar licença" }, { status: 500 });
   }
-
-  const currentLicenses = user.patientLicenses ?? -1;
-  const newLicenses = currentLicenses === -1 ? license.licenses : currentLicenses + license.licenses;
-
-  await prisma.licenseCode.update({
-    where: { id: license.id },
-    data: { usedByTherapistId: therapistId, usedAt: new Date() },
-  });
-
-  await prisma.user.update({
-    where: { id: therapistId },
-    data: { patientLicenses: newLicenses },
-  });
-
-  return NextResponse.json({ success: true, licenses: newLicenses });
 }

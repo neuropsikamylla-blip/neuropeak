@@ -3,8 +3,9 @@ import { NextRequest, NextResponse } from "next/server";
 import { getServerSession } from "next-auth";
 import { authOptions } from "@/lib/auth";
 import prisma from "@/lib/db";
+import { withApiHandler } from "@/lib/api-handler";
 
-export async function POST(req: NextRequest) {
+export const POST = withApiHandler(async (req: NextRequest) => {
   const session = await getServerSession(authOptions);
   if (!session || (session.user as { role?: string }).role !== "THERAPIST") {
     return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
@@ -13,31 +14,40 @@ export async function POST(req: NextRequest) {
   const { patientId } = await req.json();
   if (!patientId) return NextResponse.json({ error: "patientId required" }, { status: 400 });
 
-  await prisma.therapeuticSession.updateMany({
-    where: { patientId, status: "active" },
-    data: { status: "paused" },
+  // Isolamento multi-tenant: o paciente precisa pertencer a este terapeuta.
+  const owns = await prisma.patient.findFirst({
+    where: { id: patientId, therapistId },
+    select: { id: true },
   });
+  if (!owns) return NextResponse.json({ error: "Forbidden" }, { status: 403 });
 
-  const data = await prisma.therapeuticSession.create({
-    data: {
-      patientId,
-      therapistId,
-      status: "active",
-      phase: "character_creation",
-      characterData: {},
-      currentRegion: null,
-      currentHouseIndex: 0,
-      unlockedTools: [],
-      completedRegions: [],
-      responses: [],
-      therapistNotes: "",
-    },
+  // Transação: pausar a sessão ativa e criar a nova juntas — evita paciente sem sessão ativa.
+  const data = await prisma.$transaction(async (tx) => {
+    await tx.therapeuticSession.updateMany({
+      where: { patientId, therapistId, status: "active" },
+      data: { status: "paused" },
+    });
+    return tx.therapeuticSession.create({
+      data: {
+        patientId,
+        therapistId,
+        status: "active",
+        phase: "character_creation",
+        characterData: {},
+        currentRegion: null,
+        currentHouseIndex: 0,
+        unlockedTools: [],
+        completedRegions: [],
+        responses: [],
+        therapistNotes: "",
+      },
+    });
   });
 
   return NextResponse.json(data);
-}
+});
 
-export async function GET(req: NextRequest) {
+export const GET = withApiHandler(async (req: NextRequest) => {
   const session = await getServerSession(authOptions);
   if (!session) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
 
@@ -48,8 +58,9 @@ export async function GET(req: NextRequest) {
     const therapistId = (session.user as { id: string }).id;
     const patientId = searchParams.get("patientId");
     if (patientId) {
+      // Isolamento multi-tenant: só retorna sessões deste terapeuta para o paciente.
       const data = await prisma.therapeuticSession.findMany({
-        where: { patientId },
+        where: { patientId, therapistId },
         orderBy: { createdAt: "desc" },
         take: 20,
       });
@@ -73,4 +84,4 @@ export async function GET(req: NextRequest) {
   }
 
   return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
-}
+});

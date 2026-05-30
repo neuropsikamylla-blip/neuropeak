@@ -6,6 +6,7 @@ import prisma from "@/lib/db";
 import { z } from "zod";
 import { generatePin, generatePatientCode } from "@/lib/utils";
 import bcrypt from "bcryptjs";
+import { withApiHandler } from "@/lib/api-handler";
 
 const createPatientSchema = z.object({
   name: z.string().min(2),
@@ -21,7 +22,7 @@ const createPatientSchema = z.object({
   theme: z.enum(["CLINICAL", "COLORFUL", "GAMIFIED"]).default("CLINICAL"),
 });
 
-export async function GET(req: NextRequest) {
+export const GET = withApiHandler(async (req: NextRequest) => {
   void req;
   const session = await getServerSession(authOptions);
   if (!session || (session.user as { role?: string }).role !== "THERAPIST") {
@@ -36,25 +37,15 @@ export async function GET(req: NextRequest) {
   });
 
   return NextResponse.json({ patients });
-}
+});
 
-export async function POST(req: NextRequest) {
+export const POST = withApiHandler(async (req: NextRequest) => {
   const session = await getServerSession(authOptions);
   if (!session || (session.user as { role?: string }).role !== "THERAPIST") {
     return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
   }
 
   const therapistId = (session.user as { id: string }).id;
-
-  const therapist = await prisma.user.findUnique({
-    where: { id: therapistId },
-    select: { patientLicenses: true },
-  });
-
-  const licenses = therapist?.patientLicenses ?? -1;
-  if (licenses === 0) {
-    return NextResponse.json({ error: "Licença necessária" }, { status: 402 });
-  }
 
   const body = await req.json();
   const result = createPatientSchema.safeParse(body);
@@ -74,25 +65,49 @@ export async function POST(req: NextRequest) {
     codeIsUnique = !existing;
   } while (!codeIsUnique);
 
-  const patient = await prisma.patient.create({
-    data: {
-      name,
-      birthDate: new Date(birthDate),
-      theme,
-      pin,
-      pinPlain: plainPin,
-      therapistId,
-      patientCode,
-      ...Object.fromEntries(Object.entries(rest).filter(([, v]) => v !== undefined)),
-    },
-  });
+  // Licença + criação numa transação atômica. O decremento condicional
+  // (updateMany onde patientLicenses > 0) evita a race condition em que duas
+  // requisições simultâneas leem a mesma contagem e criam pacientes além do
+  // limite. patientLicenses === -1 significa ilimitado (não decrementa).
+  const patient = await prisma
+    .$transaction(async (tx) => {
+      const therapist = await tx.user.findUnique({
+        where: { id: therapistId },
+        select: { patientLicenses: true },
+      });
+      const licenses = therapist?.patientLicenses ?? -1;
 
-  if (licenses > 0) {
-    await prisma.user.update({
-      where: { id: therapistId },
-      data: { patientLicenses: licenses - 1 },
+      if (licenses === 0) throw new Error("NO_LICENSE");
+
+      if (licenses > 0) {
+        const dec = await tx.user.updateMany({
+          where: { id: therapistId, patientLicenses: { gt: 0 } },
+          data: { patientLicenses: { decrement: 1 } },
+        });
+        if (dec.count === 0) throw new Error("NO_LICENSE");
+      }
+
+      return tx.patient.create({
+        data: {
+          name,
+          birthDate: new Date(birthDate),
+          theme,
+          pin,
+          pinPlain: plainPin,
+          therapistId,
+          patientCode,
+          ...Object.fromEntries(Object.entries(rest).filter(([, v]) => v !== undefined)),
+        },
+      });
+    })
+    .catch((e: unknown) => {
+      if (e instanceof Error && e.message === "NO_LICENSE") return null;
+      throw e;
     });
+
+  if (!patient) {
+    return NextResponse.json({ error: "Licença necessária" }, { status: 402 });
   }
 
   return NextResponse.json({ patient: { ...patient, pin: plainPin } }, { status: 201 });
-}
+});

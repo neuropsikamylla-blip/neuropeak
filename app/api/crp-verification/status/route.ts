@@ -1,10 +1,11 @@
 export const dynamic = "force-dynamic";
-import { NextResponse } from "next/server";
+import { NextRequest, NextResponse } from "next/server";
 import { getServerSession } from "next-auth";
 import { authOptions } from "@/lib/auth";
 import prisma from "@/lib/db";
+import { withApiHandler } from "@/lib/api-handler";
 
-export async function GET() {
+export const GET = withApiHandler(async (_req: NextRequest) => {
   const session = await getServerSession(authOptions);
   if (!session || (session.user as { role?: string }).role !== "THERAPIST") {
     return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
@@ -20,4 +21,4 @@ export async function GET() {
     crp: user?.crp ?? null,
     status: user?.crpStatus ?? "unverified",
   });
-}
+});

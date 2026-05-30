@@ -34,15 +34,28 @@ export async function POST(req: NextRequest) {
 
   const hashedPassword = await bcrypt.hash(newPassword, 12);
 
-  await prisma.user.update({
-    where: { id: resetToken.userId },
-    data: { password: hashedPassword },
-  });
+  try {
+    // Transação atômica: invalida o token (claim condicional anti reuso concorrente) e
+    // troca a senha juntos. Se a troca de senha falhar, o token volta a valer (rollback).
+    await prisma.$transaction(async (tx) => {
+      const claim = await tx.passwordResetToken.updateMany({
+        where: { id: resetToken.id, used: false },
+        data: { used: true },
+      });
+      if (claim.count === 0) throw new Error("ALREADY_USED");
 
-  await prisma.passwordResetToken.update({
-    where: { id: resetToken.id },
-    data: { used: true },
-  });
+      await tx.user.update({
+        where: { id: resetToken.userId },
+        data: { password: hashedPassword },
+      });
+    });
+  } catch (e) {
+    if (e instanceof Error && e.message === "ALREADY_USED") {
+      return NextResponse.json({ error: "Este link já foi utilizado" }, { status: 400 });
+    }
+    console.error("[reset-password] erro ao redefinir senha:", e);
+    return NextResponse.json({ error: "Erro ao redefinir senha" }, { status: 500 });
+  }
 
   return NextResponse.json({ success: true });
 }

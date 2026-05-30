@@ -1008,6 +1008,9 @@ function MissionResult({ correct, theme }: { correct: boolean; theme: Theme }) {
 
 const MAX_MISSIONS = 8;
 
+// Teto real de níveis por ambiente — cinema tem 4, restaurante só 3, farmácia = nº de datasets.
+const MAX_LVL: Record<EnvId, number> = { cinema: 4, restaurante: 3, farmacia: FARM_DATA.length };
+
 function initialLevel(d: number) { return Math.min(Math.max(1, Math.ceil(d / 3)), 4); }
 
 // Gera fila balanceada: cada ambiente aparece em rodízio, nunca repetindo o mesmo consecutivamente
@@ -1043,9 +1046,9 @@ export function DesafioCidade({ difficulty, theme, onComplete }: {
   }, []);
 
   const [levels, setLevels] = useState<Record<EnvId, number>>({
-    cinema:      initialLevel(difficulty),
-    restaurante: initialLevel(difficulty),
-    farmacia:    initialLevel(difficulty),
+    cinema:      Math.min(initialLevel(difficulty), MAX_LVL.cinema),
+    restaurante: Math.min(initialLevel(difficulty), MAX_LVL.restaurante),
+    farmacia:    Math.min(initialLevel(difficulty), MAX_LVL.farmacia),
   });
   const [streaks, setStreaks] = useState<Record<EnvId, number>>({ cinema: 0, restaurante: 0, farmacia: 0 });
   const p = pal(theme);
@@ -1055,7 +1058,7 @@ export function DesafioCidade({ difficulty, theme, onComplete }: {
     setLastOk(correct);
 
     const newStreak = correct ? Math.max(streaks[e], 0) + 1 : Math.min(streaks[e], 0) - 1;
-    const maxLvl = e === "farmacia" ? FARM_DATA.length : e === "restaurante" ? 3 : 4;
+    const maxLvl = MAX_LVL[e];
     let delta = 0, reset = false;
     if (newStreak >= 2)  { delta =  1; reset = true; }
     if (newStreak <= -2) { delta = -1; reset = true; }

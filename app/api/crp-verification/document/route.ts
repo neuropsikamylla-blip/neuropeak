@@ -3,8 +3,9 @@ import { NextRequest, NextResponse } from "next/server";
 import { getServerSession } from "next-auth";
 import { authOptions } from "@/lib/auth";
 import { getSupabase } from "@/lib/supabase";
+import { withApiHandler } from "@/lib/api-handler";
 
-export async function GET(req: NextRequest) {
+export const GET = withApiHandler(async (req: NextRequest) => {
   const session = await getServerSession(authOptions);
   if (!session || (session.user as { role?: string }).role !== "THERAPIST") {
     return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
@@ -26,4 +27,4 @@ export async function GET(req: NextRequest) {
   if (error || !data) return NextResponse.json({ error: "Erro ao gerar URL" }, { status: 500 });
 
   return NextResponse.json({ url: data.signedUrl });
-}
+});

@@ -384,8 +384,11 @@ export function checkAchievements(
 function hasConsecutiveDays(sessions: SessionData[], days: number): boolean {
   if (sessions.length === 0) return false;
 
+  // en-CA produz "YYYY-MM-DD": ordenável cronologicamente E parseável por new Date().
+  // (O formato pt-BR "DD/MM/YYYY" quebrava o sort lexicográfico e gerava Invalid Date → NaN,
+  // fazendo as conquistas de streak nunca desbloquearem.)
   const dayStrings = sessions.map((s) => {
-    return new Date(s.completedAt).toLocaleDateString("pt-BR", { timeZone: "America/Sao_Paulo" });
+    return new Date(s.completedAt).toLocaleDateString("en-CA", { timeZone: "America/Sao_Paulo" });
   });
   const uniqueDays = Array.from(new Set(dayStrings)).sort();
 

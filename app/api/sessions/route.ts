@@ -6,12 +6,13 @@ import prisma from "@/lib/db";
 import { z } from "zod";
 import { calculateNewDifficulty, checkAchievements } from "@/lib/adaptive";
 import type { SessionData } from "@/types";
+import { withApiHandler } from "@/lib/api-handler";
 
 const sessionSchema = z.object({
   patientId: z.string(),
   exerciseId: z.string(),
   domain: z.string(),
-  score: z.number(),
+  score: z.number().min(0).max(100),
   accuracy: z.number().min(0).max(1),
   reactionTime: z.number().optional(),
   difficulty: z.number().min(1).max(10),
@@ -19,11 +20,11 @@ const sessionSchema = z.object({
   metadata: z.record(z.unknown()).optional(),
 });
 
-export async function POST(req: NextRequest) {
+export const POST = withApiHandler(async (req: NextRequest) => {
   const session = await getServerSession(authOptions);
   if (!session) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
 
-  const user = session.user as { role?: string; patientId?: string };
+  const user = session.user as { id?: string; role?: string; patientId?: string };
 
   const body = await req.json();
   const result = sessionSchema.safeParse(body);
@@ -35,6 +36,14 @@ export async function POST(req: NextRequest) {
 
   if (user.role === "PATIENT" && user.patientId !== data.patientId) {
     return NextResponse.json({ error: "Forbidden" }, { status: 403 });
+  }
+  // Isolamento multi-tenant: terapeuta só grava sessões de pacientes seus.
+  if (user.role === "THERAPIST") {
+    const owns = await prisma.patient.findFirst({
+      where: { id: data.patientId, therapistId: user.id },
+      select: { id: true },
+    });
+    if (!owns) return NextResponse.json({ error: "Forbidden" }, { status: 403 });
   }
 
   const newSession = await prisma.session.create({
@@ -166,4 +175,4 @@ export async function POST(req: NextRequest) {
   }
 
   return NextResponse.json({ session: newSession, adaptive: adaptiveResult, newAchievements }, { status: 201 });
-}
+});

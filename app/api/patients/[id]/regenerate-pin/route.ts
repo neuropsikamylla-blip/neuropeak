@@ -5,11 +5,12 @@ import { authOptions } from "@/lib/auth";
 import prisma from "@/lib/db";
 import { generatePin, generatePatientCode } from "@/lib/utils";
 import bcrypt from "bcryptjs";
+import { withApiHandler } from "@/lib/api-handler";
 
-export async function POST(
+export const POST = withApiHandler(async (
   req: NextRequest,
   { params }: { params: Promise<{ id: string }> }
-) {
+) => {
   void req;
   const { id } = await params;
   const session = await getServerSession(authOptions);
@@ -47,4 +48,4 @@ export async function POST(
   });
 
   return NextResponse.json({ pin: plainPin, patientCode });
-}
+});

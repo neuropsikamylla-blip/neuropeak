@@ -4,12 +4,13 @@ import prisma from "@/lib/db";
 import { sendPasswordResetEmail } from "@/lib/mailer";
 import { randomUUID } from "crypto";
 import { z } from "zod";
+import { withApiHandler } from "@/lib/api-handler";
 
 const schema = z.object({
   email: z.string().email(),
 });
 
-export async function POST(req: NextRequest) {
+export const POST = withApiHandler(async (req: NextRequest) => {
   const body = await req.json();
   const result = schema.safeParse(body);
   if (!result.success) {
@@ -47,4 +48,4 @@ export async function POST(req: NextRequest) {
   await sendPasswordResetEmail(user.email, resetUrl).catch(() => {});
 
   return NextResponse.json({ success: true });
-}
+});

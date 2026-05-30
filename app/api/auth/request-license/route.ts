@@ -4,8 +4,9 @@ import { getServerSession } from "next-auth";
 import { authOptions } from "@/lib/auth";
 import prisma from "@/lib/db";
 import { sendLicenseRequestEmail } from "@/lib/mailer";
+import { withApiHandler } from "@/lib/api-handler";
 
-export async function POST(req: NextRequest) {
+export const POST = withApiHandler(async (req: NextRequest) => {
   void req;
   const session = await getServerSession(authOptions);
   if (!session || (session.user as { role?: string }).role !== "THERAPIST") {
@@ -26,4 +27,4 @@ export async function POST(req: NextRequest) {
   await sendLicenseRequestEmail({ ...user, clinicName: user.clinicName ?? undefined }).catch(() => {});
 
   return NextResponse.json({ success: true });
-}
+});

@@ -3,6 +3,7 @@ import { NextRequest, NextResponse } from "next/server";
 import prisma from "@/lib/db";
 import { z } from "zod";
 import bcrypt from "bcryptjs";
+import { withApiHandler } from "@/lib/api-handler";
 
 const registerSchema = z.object({
   name: z.string().min(2, "Nome deve ter pelo menos 2 caracteres"),
@@ -12,7 +13,7 @@ const registerSchema = z.object({
   accessCode: z.string().min(1, "Código de acesso obrigatório"),
 });
 
-export async function POST(req: NextRequest) {
+export const POST = withApiHandler(async (req: NextRequest) => {
   const body = await req.json();
   const result = registerSchema.safeParse(body);
   if (!result.success) {
@@ -44,4 +45,4 @@ export async function POST(req: NextRequest) {
   });
 
   return NextResponse.json({ success: true }, { status: 201 });
-}
+});
