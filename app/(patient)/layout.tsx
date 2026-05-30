@@ -64,6 +64,7 @@ export default function PatientLayout({ children }: { children: React.ReactNode 
             <AppUpdateButton iconClass="w-4 h-4" buttonClass={textStyles[theme]} showVersion />
             <button
               onClick={() => signOut({ callbackUrl: "/login" })}
+              aria-label="Sair"
               className={`p-1.5 rounded-lg hover:opacity-80 ${textStyles[theme]}`}
             >
               <LogOut className="w-4 h-4" />

@@ -122,7 +122,7 @@ export default function PlanoPage() {
     <div className="max-w-2xl mx-auto space-y-6">
       <div className="flex items-center gap-3">
         <Button variant="ghost" size="icon" asChild>
-          <Link href={`/pacientes/${patientId}`}><ArrowLeft className="w-5 h-5" /></Link>
+          <Link href={`/pacientes/${patientId}`} aria-label="Voltar"><ArrowLeft className="w-5 h-5" /></Link>
         </Button>
         <div>
           <h1 className="text-2xl font-bold text-gray-900">Plano de Treinamento</h1>

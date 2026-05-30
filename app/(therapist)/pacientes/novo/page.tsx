@@ -246,7 +246,7 @@ export default function NovoPacientePage() {
     <div className="max-w-2xl mx-auto">
       <div className="flex items-center gap-3 mb-6">
         <Button variant="ghost" size="icon" asChild>
-          <Link href="/pacientes"><ArrowLeft className="w-5 h-5" /></Link>
+          <Link href="/pacientes" aria-label="Voltar"><ArrowLeft className="w-5 h-5" /></Link>
         </Button>
         <div>
           <h1 className="text-2xl font-bold text-gray-900">Novo Paciente</h1>

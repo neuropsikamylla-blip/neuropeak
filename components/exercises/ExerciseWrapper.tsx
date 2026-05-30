@@ -164,6 +164,7 @@ export function ExerciseWrapper({
             {/* Fullscreen toggle button */}
             <button
               onClick={toggleFullscreen}
+              aria-label={isFullscreen ? "Sair da tela cheia" : "Tela cheia"}
               className="fixed top-4 right-4 z-[60] p-2.5 rounded-xl transition-opacity"
               style={{
                 background: theme === "GAMIFIED"

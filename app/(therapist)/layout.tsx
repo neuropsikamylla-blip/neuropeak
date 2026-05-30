@@ -252,6 +252,8 @@ export default function TherapistLayout({ children }: { children: React.ReactNod
             <AppUpdateButton iconClass="w-4 h-4" buttonClass="text-slate-400" />
             <button
               onClick={() => setMobileOpen(!mobileOpen)}
+              aria-label={mobileOpen ? "Fechar menu" : "Abrir menu"}
+              aria-expanded={mobileOpen}
               className="p-2 rounded-lg"
               style={{ color: "#64748B" }}
               onMouseEnter={(e) => { (e.currentTarget as HTMLElement).style.background = "#F1F5F9"; }}

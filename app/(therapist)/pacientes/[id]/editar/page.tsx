@@ -103,7 +103,7 @@ export default function EditarPacientePage() {
     <div className="max-w-2xl mx-auto space-y-6 pb-12">
       <div className="flex items-center gap-3">
         <Button variant="ghost" size="icon" asChild>
-          <Link href={`/pacientes/${patientId}`}><ArrowLeft className="w-5 h-5" /></Link>
+          <Link href={`/pacientes/${patientId}`} aria-label="Voltar"><ArrowLeft className="w-5 h-5" /></Link>
         </Button>
         <div>
           <h1 className="text-xl font-bold text-gray-900">Editar paciente</h1>

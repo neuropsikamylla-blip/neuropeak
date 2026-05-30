@@ -54,7 +54,7 @@ export function PatientCredentials({
             {code ? (
               <div className="flex items-center gap-2 mt-1">
                 <p className="font-mono font-bold text-blue-700 text-xl tracking-widest">{code}</p>
-                <button onClick={() => copyText(code, "code")} className="text-gray-400 hover:text-gray-600">
+                <button onClick={() => copyText(code, "code")} aria-label="Copiar código do paciente" className="text-gray-400 hover:text-gray-600">
                   {copied === "code" ? <Check className="w-4 h-4 text-green-500" /> : <Copy className="w-4 h-4" />}
                 </button>
               </div>
@@ -72,10 +72,10 @@ export function PatientCredentials({
                 <p className="font-mono font-bold text-blue-600 text-xl tracking-widest">
                   {showPin ? pin : "••••"}
                 </p>
-                <button onClick={() => setShowPin(!showPin)} className="text-gray-400 hover:text-gray-600">
+                <button onClick={() => setShowPin(!showPin)} aria-label={showPin ? "Ocultar PIN" : "Mostrar PIN"} className="text-gray-400 hover:text-gray-600">
                   {showPin ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
                 </button>
-                <button onClick={() => copyText(pin, "pin")} className="text-gray-400 hover:text-gray-600">
+                <button onClick={() => copyText(pin, "pin")} aria-label="Copiar PIN" className="text-gray-400 hover:text-gray-600">
                   {copied === "pin" ? <Check className="w-4 h-4 text-green-500" /> : <Copy className="w-4 h-4" />}
                 </button>
               </div>

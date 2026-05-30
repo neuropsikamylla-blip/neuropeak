@@ -105,7 +105,7 @@ export default function MundoInteriorTherapistPage() {
       {/* Header */}
       <div className="flex items-center gap-3 pt-2">
         <Button variant="ghost" size="icon" asChild>
-          <Link href={`/pacientes/${patientId}`}><ArrowLeft className="w-5 h-5" /></Link>
+          <Link href={`/pacientes/${patientId}`} aria-label="Voltar"><ArrowLeft className="w-5 h-5" /></Link>
         </Button>
         <div className="flex-1">
           <h1 className="text-xl font-bold text-gray-900">🌌 Mundo Interior</h1>
@@ -139,7 +139,7 @@ export default function MundoInteriorTherapistPage() {
                 <span className="text-sm font-semibold text-indigo-900">Sessão ativa</span>
               </div>
               <div className="flex items-center gap-2">
-                <button onClick={loadSessions} className="text-gray-400 hover:text-gray-600 transition-colors">
+                <button onClick={loadSessions} aria-label="Atualizar sessões" className="text-gray-400 hover:text-gray-600 transition-colors">
                   <RefreshCw className="w-4 h-4" />
                 </button>
                 <button onClick={closeSession} className="text-xs text-red-400 hover:text-red-600 transition-colors font-medium">
