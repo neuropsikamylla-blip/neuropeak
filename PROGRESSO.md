@@ -19,9 +19,14 @@
 - **PERF-02** (over-fetch dashboard): otimização prematura (base = 1 terapeuta) e a janela de 1 ano regride adesão de inativos. Fazer com window function (top-N por paciente) quando a base crescer.
 - **ARCH-02** (quebrar god-files de ~1150 linhas): refatoração estrutural de alto risco / zero valor funcional em produção. Pular.
 
+**✅ SCHEMA-01 — APLICADO NO BANCO DE PRODUÇÃO (2026-05-30):**
+- Código: FKs `TherapeuticSession.patient/therapist` (`onDelete: Cascade`) + `Patient.therapist` (`onDelete: Restrict`) no `schema.prisma` (commit `641bff5`). Validado: prisma generate + tsc + build, todos 0.
+- Banco (Supabase prod, via SQL Editor): diagnóstico (score/accuracy/difficulty 0 fora; 3 `TherapeuticSession` órfãs de paciente deletado) → `DELETE` das 3 órfãs → `BEGIN/COMMIT` criando 2 FKs (`ON DELETE CASCADE`) + 3 CHECK (`session_score_range` 0–100, `session_accuracy_range` 0–1, `session_difficulty_range` 1–10).
+- Verificação independente: `pg_get_constraintdef` confirmou as 6 constraints + `Patient.therapist` = `RESTRICT` (= schema). Banco 100% alinhado com `schema.prisma` → `db push` futuro não mexe nas FKs (só as CHECK ficam fora do schema — reaplicar se houver `db push`).
+- Impacto no código verificado (benigno): create de TherapeuticSession usa therapistId/patientId comprovadamente existentes; delete de paciente agora cascateia (corrige o bug das órfãs); não há rota que delete terapeuta.
+
 **🔧 OPERACIONAL (preparado; execução é do dono — produção/destrutivo):**
-- **SEC-08**: NEXTAUTH_SECRET fraco → gerar forte (`openssl rand -base64 48`) e setar no Vercel. DESLOGA todas as sessões ativas.
-- **SCHEMA-01**: FK em TherapeuticSession + CHECK constraints (score/accuracy/difficulty) → migração no Supabase; exige verificar dados existentes antes (FK falha com órfãos; CHECK falha com dados fora do range).
+- **SEC-08**: NEXTAUTH_SECRET fraco → gerar forte (`openssl rand -base64 48`) e setar no Vercel. DESLOGA todas as sessões ativas. (ÚNICA pendência operacional restante.)
 - **SUP-02**: nodemailer CVE moderate — sem fix disponível; monitorar.
 
 **⚠️ Antes de push/deploy:** smoke test visual dos exercícios com animação (MOT, FocusAgents — PERF-01/03 trocaram o mecanismo de animação; build não pega regressão visual).

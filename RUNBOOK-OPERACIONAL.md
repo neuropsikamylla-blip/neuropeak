@@ -20,9 +20,21 @@
 
 ---
 
-## SCHEMA-01 — FK + CHECK no banco
+## SCHEMA-01 — FK + CHECK no banco — ✅ APLICADO (2026-05-30)
 
-**Status:** a **FK já está no código** (`prisma/schema.prisma`, commitada — relações `TherapeuticSession.patient/therapist` com `onDelete: Cascade`). Falta **aplicar no banco** + adicionar as **CHECK** (que o Prisma não suporta no schema). Tudo no **Supabase → SQL Editor**, na ordem.
+**Status: CONCLUÍDO e verificado.** Aplicado no Supabase de produção em 2026-05-30, via SQL Editor (não por `prisma db push` — fizemos por SQL direto, com os nomes/ações idênticos aos que o Prisma gera, para o schema continuar alinhado).
+
+**O que foi feito, na ordem:**
+1. **Diagnóstico** — score/accuracy/difficulty todos no range (0 fora). Achadas **3 `TherapeuticSession` órfãs** (mesmo paciente já deletado, `ffc9c058…`, sessões de 25–27/mai).
+2. **Limpeza** — `DELETE` das 3 órfãs (lixo da época sem FK; o Cascade passa a prevenir).
+3. **FKs** — `TherapeuticSession_patientId_fkey` e `TherapeuticSession_therapistId_fkey`, ambas `ON DELETE CASCADE ON UPDATE CASCADE` (num `BEGIN/COMMIT`).
+4. **CHECK** — `session_score_range` (0–100), `session_accuracy_range` (0–1), `session_difficulty_range` (1–10).
+5. **Verificação** — `pg_get_constraintdef` confirmou as 6 constraints + `Patient.therapist` como `RESTRICT` (igual ao schema). Banco 100% alinhado com `schema.prisma` (commit `641bff5`).
+
+> ⚠️ **Única pegadinha futura:** as 3 CHECK **não existem no `schema.prisma`** (o Prisma não as suporta). Um `prisma db push` futuro **pode removê-las** — reaplicar o SQL do Passo 3b (abaixo) depois, **ou** migrar para `prisma migrate`. As FKs estão no schema e não têm esse risco.
+
+<details>
+<summary>Procedimento original (referência — já executado)</summary>
 
 ### Passo 1 — Diagnóstico (no Supabase SQL Editor)
 ```sql
@@ -62,3 +74,5 @@ ALTER TABLE "Session" ADD CONSTRAINT session_difficulty_range CHECK (difficulty 
 
 ### ⚠️ Nota — CHECK e `prisma db push`
 As CHECK **não existem no `schema.prisma`** (o Prisma não as suporta no schema), então um `db push` futuro **pode removê-las**. Saídas: reaplicar este SQL após um `db push`, **ou** migrar de `db push` para `prisma migrate` (versiona tudo). As **FKs** não têm esse problema (estão no schema).
+
+</details>
