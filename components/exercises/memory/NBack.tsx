@@ -166,8 +166,12 @@ export function NBack({ difficulty, theme, onComplete }: NBackProps) {
   const phaseRef = useRef<Phase>("priming");
   phaseRef.current = phase;
 
+  // Lock imperativo de reentrância: setado de forma sincrona em processAnswer
+  // (antes de qualquer setState) para que uma segunda chamada concorrente —
+  // do timer de timeout ou de duplo-clique — seja bloqueada sem depender do
+  // ciclo de render do React. NAO reatribuir a partir do state `answered`,
+  // pois isso reverteria o lock antes do flush. Mesmo padrao de StroopTask.
   const answeredRef = useRef(false);
-  answeredRef.current = answered;
 
   const trialRef = useRef(0);
   trialRef.current = trial;
@@ -178,6 +182,7 @@ export function NBack({ difficulty, theme, onComplete }: NBackProps) {
     setIsTarget(targetBool);
     isTargetRef.current = targetBool;
     setAnswered(false);
+    answeredRef.current = false;
     setLastCorrect(null);
     setPhase(isPriming ? "priming" : "active");
     historyRef.current = [...historyRef.current, letter].slice(-MAX_N);
@@ -223,6 +228,8 @@ export function NBack({ difficulty, theme, onComplete }: NBackProps) {
   }, [phase, trial]);
 
   function processAnswer(correct: boolean, currentTrial: number) {
+    if (answeredRef.current) return;
+    answeredRef.current = true;
     setLastCorrect(correct);
     setAnswered(true);
     setPhase("result");

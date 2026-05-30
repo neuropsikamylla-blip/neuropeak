@@ -182,6 +182,13 @@ export function MOT({ difficulty, theme, onComplete }: MOTProps) {
   const startTime = useRef(Date.now());
   const k = numTargets(difficulty);
 
+  // PERF-03: durante a fase "track" a fisica corre num ref e o movimento e
+  // aplicado direto via style.transform nos nos DOM (sem setState a ~60fps).
+  // O estado React (`balls`) so e reconciliado ao trocar de fase. `ballsRef`
+  // guarda a fisica viva; `ballNodes` referencia os elementos para animar.
+  const ballsRef = useRef<Ball[]>([]);
+  const ballNodes = useRef<Map<number, HTMLDivElement>>(new Map());
+
   const stopRaf = useCallback(() => {
     if (rafRef.current !== null) { cancelAnimationFrame(rafRef.current); rafRef.current = null; }
   }, []);
@@ -192,6 +199,9 @@ export function MOT({ difficulty, theme, onComplete }: MOTProps) {
 
   const startRound = useCallback((r: number) => {
     const newBalls = randomBalls(difficulty, r);
+    // A base renderizada (left/top) e `newBalls`; a fisica viva parte da mesma
+    // referencia. Durante o track o transform e aplicado como delta sobre ela.
+    ballsRef.current = newBalls;
     setBalls(newBalls);
     setSelected(new Set());
     setRoundScore(null);
@@ -199,15 +209,29 @@ export function MOT({ difficulty, theme, onComplete }: MOTProps) {
 
     timerRef.current = setTimeout(() => {
       setPhase("track");
+      // Posicao base de cada bola no momento em que o track inicia (igual ao
+      // que o React renderizou em left/top). O transform anima o delta ate ela.
+      const base = new Map(ballsRef.current.map(b => [b.id, { x: b.x, y: b.y }]));
       const startTrack = Date.now();
       const dur = trackDuration(difficulty);
 
       function animate() {
-        setBalls(prev => prev.map(stepBall));
+        // Avanca a fisica no ref (mesmo stepBall de antes) sem disparar render.
+        ballsRef.current = ballsRef.current.map(stepBall);
+        for (const ball of ballsRef.current) {
+          const node = ballNodes.current.get(ball.id);
+          const b0 = base.get(ball.id);
+          if (node && b0) {
+            node.style.transform = `translate(${ball.x - b0.x}px, ${ball.y - b0.y}px)`;
+          }
+        }
         if (Date.now() - startTrack < dur) {
           rafRef.current = requestAnimationFrame(animate);
         } else {
           stopRaf();
+          // Reconcilia: as posicoes finais da fisica viram a nova base do
+          // estado e o transform e zerado no render de "identify" (sem salto).
+          setBalls(ballsRef.current);
           setPhase("identify");
         }
       }
@@ -324,12 +348,20 @@ export function MOT({ difficulty, theme, onComplete }: MOTProps) {
 
             return (
               <div key={ball.id}
+                ref={node => {
+                  if (node) ballNodes.current.set(ball.id, node);
+                  else ballNodes.current.delete(ball.id);
+                }}
                 style={{
                   position: "absolute",
                   left: ball.x - BALL_RADIUS,
                   top: ball.y - BALL_RADIUS,
                   width: BALL_RADIUS * 2,
                   height: BALL_RADIUS * 2,
+                  // Durante "track" o transform e controlado pelo rAF (omitido
+                  // aqui para o React nao sobrescrever). Nas demais fases a base
+                  // left/top ja e a posicao real, entao zeramos o transform.
+                  ...(phase === "track" ? {} : { transform: "translate(0px, 0px)" }),
                   transition: phase === "identify" ? "none" : undefined,
                 }}
                 className={`rounded-full border-2 flex items-center justify-center text-xs font-bold cursor-pointer select-none ${

@@ -4,7 +4,6 @@ import type {
   AccessoryKey,
   ColorName,
   GeneratedCommand,
-  CommandGeneratorParams,
   BuiltRound,
   CommandRuleType,
 } from "@/types/commands";
@@ -580,24 +579,4 @@ export function buildRound(
   }
 
   return fillToN(colorFallback(n, theme), dN);
-}
-
-/**
- * Gera um comando para personagens já visíveis na tela (API externa).
- * Retorna null se nenhum template for compatível com os personagens visíveis.
- */
-export function generateCommand(params: CommandGeneratorParams): GeneratedCommand | null {
-  const { visibleCharacters, mode, difficulty, previousCommands, theme = "CLINICAL" } = params;
-  const recentVerbs = previousCommands
-    .map(c => c.verbIndex ?? -1)
-    .filter(v => v >= 0);
-
-  const level = pickLevel(difficulty);
-  const templates = COMMAND_TEMPLATES.filter(t => t.difficulty === level);
-
-  for (const tmpl of shuffle(templates)) {
-    const result = resolve(tmpl, visibleCharacters, visibleCharacters.length, theme);
-    if (result) return { ...result.command, mode, difficulty };
-  }
-  return null;
 }

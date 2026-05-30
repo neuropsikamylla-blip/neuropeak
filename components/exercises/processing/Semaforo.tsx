@@ -125,11 +125,17 @@ function SemaforoTutorial({ theme, onDone }: { theme: Theme; onDone: () => void 
 
 function TutorialStepGreen({ onDone }: { onDone: () => void }) {
   const [tapped, setTapped] = useState(false);
+  const doneTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
+
+  useEffect(() => () => {
+    if (doneTimer.current) clearTimeout(doneTimer.current);
+  }, []);
 
   function handleAdvance() {
     if (tapped) return;
     setTapped(true);
-    setTimeout(onDone, 500);
+    if (doneTimer.current) clearTimeout(doneTimer.current);
+    doneTimer.current = setTimeout(onDone, 500);
   }
 
   function handleStop() {
@@ -165,11 +171,17 @@ function TutorialStepGreen({ onDone }: { onDone: () => void }) {
 
 function TutorialStepRed({ onDone }: { onDone: () => void }) {
   const [tapped, setTapped] = useState(false);
+  const doneTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
+
+  useEffect(() => () => {
+    if (doneTimer.current) clearTimeout(doneTimer.current);
+  }, []);
 
   function handleStop() {
     if (tapped) return;
     setTapped(true);
-    setTimeout(onDone, 500);
+    if (doneTimer.current) clearTimeout(doneTimer.current);
+    doneTimer.current = setTimeout(onDone, 500);
   }
 
   function handleAdvance() {
@@ -229,6 +241,7 @@ export function Semaforo({ difficulty, theme, onComplete }: SemaforoProps) {
   const blinkTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
   const activeTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
   const feedbackTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const finishTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
   const startTime = useRef<number>(Date.now());
   const respondedRef = useRef(false);
 
@@ -237,7 +250,7 @@ export function Semaforo({ difficulty, theme, onComplete }: SemaforoProps) {
 
   // ─── Cleanup on unmount ───────────────────────────────────────────────────
   useEffect(() => () => {
-    [blinkTimer, activeTimer, feedbackTimer].forEach((r) => {
+    [blinkTimer, activeTimer, feedbackTimer, finishTimer].forEach((r) => {
       if (r.current) clearTimeout(r.current);
     });
   }, []);
@@ -257,7 +270,7 @@ export function Semaforo({ difficulty, theme, onComplete }: SemaforoProps) {
       const dur = Math.round((Date.now() - startTime.current) / 1000);
       const score = calculateExerciseScore("semaforo", accuracy, avgRT, difficulty);
 
-      setTimeout(() => {
+      finishTimer.current = setTimeout(() => {
         onComplete({
           exerciseId: "semaforo",
           domain: "processing",
@@ -287,10 +300,12 @@ export function Semaforo({ difficulty, theme, onComplete }: SemaforoProps) {
     respondedRef.current = false;
 
     // After BLINK_DURATION, reveal target color (Framer Motion handles the visual blink)
+    if (blinkTimer.current) clearTimeout(blinkTimer.current);
     blinkTimer.current = setTimeout(() => {
       setPhase("active");
       roundActiveAt.current = Date.now();
 
+      if (activeTimer.current) clearTimeout(activeTimer.current);
       activeTimer.current = setTimeout(() => {
         if (!respondedRef.current && !doneRef.current) {
           respondedRef.current = true;
@@ -318,6 +333,7 @@ export function Semaforo({ difficulty, theme, onComplete }: SemaforoProps) {
       setFeedback(correct ? "correct" : "wrong");
       setPhase("feedback");
 
+      if (feedbackTimer.current) clearTimeout(feedbackTimer.current);
       feedbackTimer.current = setTimeout(() => {
         setFeedback(null);
         if (newResults.length >= TOTAL_TRIALS) {

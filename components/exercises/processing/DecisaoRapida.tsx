@@ -58,6 +58,11 @@ function DecisaoRapidaTutorial({ theme, onDone }: { theme: Theme; onDone: () => 
 
 function DecisaoTutorialStep({ theme, onDone }: { theme: Theme; onDone: () => void }) {
   const [selected, setSelected] = useState<string | null>(null);
+  const doneTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
+
+  useEffect(() => () => {
+    if (doneTimer.current) clearTimeout(doneTimer.current);
+  }, []);
 
   const btnClass = (cat: string) => {
     const isCorrect = cat === "Animal";
@@ -79,7 +84,8 @@ function DecisaoTutorialStep({ theme, onDone }: { theme: Theme; onDone: () => vo
     if (selected) return;
     setSelected(cat);
     if (cat === "Animal") {
-      setTimeout(onDone, 600);
+      if (doneTimer.current) clearTimeout(doneTimer.current);
+      doneTimer.current = setTimeout(onDone, 600);
     }
   }
 
@@ -125,10 +131,16 @@ export function DecisaoRapida({ difficulty, theme, onComplete }: DecisaoRapidaPr
   const [done, setDone] = useState(false);
   const itemStart = useRef<number>(Date.now());
   const startTime = useRef<number>(Date.now());
+  const advanceTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
 
   useEffect(() => {
     itemStart.current = Date.now();
   }, [current]);
+
+  // Clear any pending advance timer on unmount to avoid setState after teardown
+  useEffect(() => () => {
+    if (advanceTimer.current) clearTimeout(advanceTimer.current);
+  }, []);
 
   const finishExercise = useCallback((finalResults: { correct: boolean; rt: number }[]) => {
     if (done) return;
@@ -160,7 +172,8 @@ export function DecisaoRapida({ difficulty, theme, onComplete }: DecisaoRapidaPr
     const nextCurrent = current + 1;
     reportProgress(Math.round((nextCurrent / MAX_ITEMS) * 100));
 
-    setTimeout(() => {
+    if (advanceTimer.current) clearTimeout(advanceTimer.current);
+    advanceTimer.current = setTimeout(() => {
       setFeedback(null);
       if (nextCurrent >= MAX_ITEMS) {
         finishExercise(newResults);

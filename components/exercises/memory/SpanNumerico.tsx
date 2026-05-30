@@ -3,6 +3,7 @@
 import { useState, useEffect, useCallback, useRef } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { calculateExerciseScore } from "@/lib/scoring";
+import { cancelTTS } from "@/lib/tts";
 import { useExerciseProgress } from "@/components/exercises/ExerciseWrapper";
 import { TutorialBase } from "@/components/exercises/TutorialBase";
 import type { ExerciseResult, Theme } from "@/types";
@@ -28,6 +29,12 @@ function initialSpan(difficulty: number) {
 
 const NUM_KEYS = [1, 2, 3, 4, 5, 6, 7, 8, 9, 0] as const;
 
+// NOTA (DUP-02): a sequência depende de aguardar o FIM de cada locução
+// (`await speak(...)` em `showSequence`) para revelar/ocultar o próximo dígito no
+// tempo certo. `playTTS`/`cancelTTS` de `@/lib/tts` é fire-and-forget (retorna
+// void, sem Promise nem callback de término), logo não substitui este `speak`
+// sem quebrar o timing. Mantido local até a lib expor uma forma de aguardar.
+// O cancelamento, esse sim, passou a usar `cancelTTS` (helper canônico).
 function speak(text: string): Promise<void> {
   return new Promise((resolve) => {
     if (typeof window === "undefined" || !window.speechSynthesis) { resolve(); return; }
@@ -256,7 +263,7 @@ export function SpanNumerico({ difficulty, theme, onComplete, alwaysReverse }: S
   }, []);
 
   const showSequence = useCallback(async (seq: number[]) => {
-    window.speechSynthesis?.cancel();
+    cancelTTS();
     const myId = ++seqIdRef.current;
     setPhase("showing");
     setCurrentDisplay(null);

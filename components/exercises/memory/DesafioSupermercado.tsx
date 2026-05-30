@@ -3,6 +3,7 @@
 import { useState, useEffect, useRef, useCallback, useMemo } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { calculateExerciseScore } from "@/lib/scoring";
+import { cancelTTS } from "@/lib/tts";
 import { useExerciseProgress } from "@/components/exercises/ExerciseWrapper";
 import { TutorialBase } from "@/components/exercises/TutorialBase";
 import type { ExerciseResult, Theme } from "@/types";
@@ -142,6 +143,14 @@ function buildTrial(count: number, usedLists: Set<string>): { list: Product[]; s
 
 // ── Web Speech ────────────────────────────────────────────────────────────────
 
+// NOTA (DUP-02): esta função locuciona a lista em SEQUÊNCIA (intro + cada item,
+// enfileirados em `speechSynthesis`) e usa o callback `onDone` (disparado no
+// `onend` da última fala) para desligar o indicador "Reproduzindo lista...".
+// `playTTS` de `@/lib/tts` é fire-and-forget e CANCELA a fala anterior a cada
+// chamada (`cancelTTS` interno) — chamá-lo em loop deixaria só o último item
+// audível e não oferece callback de término. Por isso a locução permanece local.
+// O cancelamento, esse sim, passou a usar `cancelTTS` (helper canônico, que
+// também aborta um eventual áudio MP3 do manifesto além do speechSynthesis).
 function speakList(items: Product[], onDone?: () => void) {
   if (typeof window === "undefined" || !window.speechSynthesis) { onDone?.(); return; }
   window.speechSynthesis.cancel();
@@ -301,7 +310,7 @@ function TutMemorizeStep({ mode, onDone }: { mode: "leitura" | "auditivo"; onDon
     const iv = setInterval(() => {
       setCountdown(p => { if (p <= 1) { clearInterval(iv); onDone(); return 0; } return p - 1; });
     }, 1000);
-    return () => { clearInterval(iv); if (typeof window !== "undefined") window.speechSynthesis?.cancel(); };
+    return () => { clearInterval(iv); cancelTTS(); };
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
@@ -461,7 +470,7 @@ export function DesafioSupermercado({ difficulty, theme, onComplete, mode = "lei
         return prev - 1;
       });
     }, 1000);
-    return () => { clearTimer(); if (typeof window !== "undefined") window.speechSynthesis?.cancel(); };
+    return () => { clearTimer(); cancelTTS(); };
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [phase, trial, showTutorial]);
 
@@ -617,7 +626,7 @@ export function DesafioSupermercado({ difficulty, theme, onComplete, mode = "lei
 
             <div style={{ padding: "8px 16px 14px", flexShrink: 0 }}>
               <button
-                onClick={() => { clearTimer(); if (typeof window !== "undefined") window.speechSynthesis?.cancel(); setPhase("shopping"); }}
+                onClick={() => { clearTimer(); cancelTTS(); setPhase("shopping"); }}
                 style={{
                   width: "100%", height: 50, borderRadius: 100,
                   background: "linear-gradient(135deg,#b45309,#92400e)",
