@@ -39,7 +39,6 @@ model Patient {
   cid              String?
   diagnosis        String?
   pin              String
-  pinPlain         String?
   patientCode      String?          @unique
   theme            String           @default("CLINICAL")
   therapistId      String

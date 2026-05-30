@@ -44,7 +44,7 @@ export const POST = withApiHandler(async (
 
   await prisma.patient.update({
     where: { id },
-    data: { pin: hashedPin, pinPlain: plainPin, patientCode },
+    data: { pin: hashedPin, patientCode },
   });
 
   return NextResponse.json({ pin: plainPin, patientCode });

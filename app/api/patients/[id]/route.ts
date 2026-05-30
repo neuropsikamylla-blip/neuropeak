@@ -45,7 +45,7 @@ export const GET = withApiHandler(async (
   const includeConfig = req.nextUrl.searchParams.get("config") === "true";
 
   // Paciente recebe apenas os campos que o app de treino consome —
-  // nunca dados clínicos (diagnosis, clinicalNotes, pinPlain, medications...).
+  // nunca dados clínicos (diagnosis, clinicalNotes, medications...).
   if (isPatient) {
     const patient = await prisma.patient.findUnique({
       where: { id },

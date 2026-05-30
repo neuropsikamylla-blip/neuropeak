@@ -8,15 +8,13 @@ import { RefreshCw, Copy, Check, Eye, EyeOff } from "lucide-react";
 interface PatientCredentialsProps {
   patientId: string;
   patientCode?: string | null;
-  pinPlain?: string | null;
 }
 
 export function PatientCredentials({
   patientId,
   patientCode: initialCode,
-  pinPlain: initialPin,
 }: PatientCredentialsProps) {
-  const [pin, setPin] = useState<string | null>(initialPin ?? null);
+  const [pin, setPin] = useState<string | null>(null);
   const [code, setCode] = useState<string | null>(initialCode ?? null);
   const [loading, setLoading] = useState(false);
   const [copied, setCopied] = useState<"code" | "pin" | null>(null);
