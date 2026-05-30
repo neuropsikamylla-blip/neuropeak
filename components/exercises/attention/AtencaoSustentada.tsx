@@ -299,8 +299,7 @@ export function AtencaoSustentada({ difficulty, theme, onComplete }: AtencaoSust
         }
         setLetter(null);
         i++;
-        const nextTimer = setTimeout(showNext, 100);
-        return () => clearTimeout(nextTimer);
+        setTimeout(showNext, 100);
       }, interval);
       return () => clearTimeout(hideTimer);
     }

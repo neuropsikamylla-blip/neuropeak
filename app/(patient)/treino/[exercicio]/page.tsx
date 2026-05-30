@@ -47,6 +47,8 @@ const MOT                  = dynamic(() => import("@/components/exercises/attent
 const DualTask             = dynamic(() => import("@/components/exercises/attention/DualTask").then(m => ({ default: m.DualTask })), { loading: ExerciseLoader });
 const DeductiveGrid        = dynamic(() => import("@/components/exercises/executive/DeductiveGrid").then(m => ({ default: m.DeductiveGrid })), { loading: ExerciseLoader });
 const FocusAgents          = dynamic(() => import("@/components/exercises/attention/FocusAgents").then(m => ({ default: m.FocusAgents })), { loading: ExerciseLoader });
+const AtencaoAlternada     = dynamic(() => import("@/components/exercises/attention/AtencaoAlternada").then(m => ({ default: m.AtencaoAlternada })), { loading: ExerciseLoader });
+const AssociacaoPares      = dynamic(() => import("@/components/exercises/memory/AssociacaoPares").then(m => ({ default: m.AssociacaoPares })), { loading: ExerciseLoader });
 
 const EXERCISE_INSTRUCTIONS: Record<string, string[]> = {
   "span-numerico": [
@@ -247,17 +249,13 @@ const EXERCISE_INSTRUCTIONS: Record<string, string[]> = {
     "Use eliminação: se souber que Bruno=Verde, marque NÃO para Ana e Carla.",
     "Confirme quando tiver certeza de todas as células!",
   ],
-  "focus-agents": [
-    "Um comando VISUAL aparecerá no topo — leia os atributos do personagem alvo.",
-    "Encontre e clique no personagem correto entre os outros na tela.",
-    "Atenção: há personagens parecidos para confundir — compare todos os atributos!",
-    "Sem áudio: treine atenção visual e leitura rápida de características.",
-  ],
-  "focus-agents-auditivo": [
-    "Você vai OUVIR o comando — preste atenção ao áudio.",
-    "Sem texto de ajuda: identifique o personagem apenas pelo que ouviu.",
-    "Clique no alto-falante para repetir o comando se precisar.",
-    "Treine a memória auditiva e atenção focada no som!",
+  "focus-agents": [],
+  "focus-agents-auditivo": [],
+  "atencao-alternada": [
+    "Um item aparecerá no centro da tela — pode ser um animal ou objeto, grande ou pequeno.",
+    "No topo, uma regra indica o que avaliar: ANIMAL vs OBJETO ou GRANDE vs PEQUENO.",
+    "Toque no botão correto para a regra ativa. A regra muda automaticamente!",
+    "Fique atento às mudanças de regra — é preciso trocar o foco rapidamente.",
   ],
 };
 
@@ -461,7 +459,9 @@ export default function ExercicioPage() {
       case "dual-task": return <DualTask {...props} />;
       case "deductive-grid": return <DeductiveGrid {...props} />;
       case "focus-agents": return <FocusAgents {...props} forceMode="visual" />;
-      case "focus-agents-auditivo": return <FocusAgents {...props} forceMode="auditivo" />;
+      case "focus-agents-auditivo": return <FocusAgents {...props} forceMode="auditivo" exerciseId="focus-agents-auditivo" />;
+      case "atencao-alternada": return <AtencaoAlternada {...props} />;
+      case "associacao-pares": return <AssociacaoPares {...props} />;
       default: return <div className="p-8 text-center text-gray-500">Exercício em desenvolvimento</div>;
     }
   }

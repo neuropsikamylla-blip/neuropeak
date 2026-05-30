@@ -42,10 +42,9 @@ function distractorCount(difficulty: number) {
   return 5;
 }
 
-let _uid = 0;
 function makeBalloon(isTarget: boolean, ms: number): Balloon {
   return {
-    id: ++_uid,
+    id: Date.now() * 1000 + Math.floor(Math.random() * 1000),
     isTarget,
     color: isTarget ? GREEN : DISTRACTOR_COLORS[Math.floor(Math.random() * DISTRACTOR_COLORS.length)],
     x: 4 + Math.random() * 78,

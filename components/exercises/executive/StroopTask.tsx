@@ -13,10 +13,10 @@ interface StroopTaskProps {
 }
 
 const COLORS = [
-  { name: "VERMELHO", hex: "#EF4444" },
-  { name: "AZUL",     hex: "#3B82F6" },
+  { name: "VERMELHO", hex: "#F43F5E" },
+  { name: "AZUL",     hex: "#2563EB" },
   { name: "VERDE",    hex: "#22C55E" },
-  { name: "AMARELO",  hex: "#EAB308" },
+  { name: "AMARELO",  hex: "#F59E0B" },
   { name: "ROXO",     hex: "#A855F7" },
 ];
 
@@ -70,41 +70,112 @@ function correctAnswer(item: TrialItem): string {
 function GlassBg() {
   return (
     <div className="fixed inset-0 -z-10 overflow-hidden">
-      <div className="absolute inset-0 bg-gradient-to-br from-[#0f0c29] via-[#302b63] to-[#24243e]" />
-      {/* bokeh circles */}
-      <div className="absolute top-1/4 left-1/4 w-72 h-72 rounded-full bg-purple-600/20 blur-3xl" />
-      <div className="absolute bottom-1/4 right-1/4 w-80 h-80 rounded-full bg-blue-600/20 blur-3xl" />
-      <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-64 h-64 rounded-full bg-indigo-500/10 blur-2xl" />
+      <div
+        className="absolute inset-0"
+        style={{
+          background:
+            "linear-gradient(145deg, #020617 0%, #0f172a 35%, #1e1b4b 65%, #0c1220 100%)",
+        }}
+      />
+      <div
+        className="absolute top-[10%] left-[5%] w-[500px] h-[500px] rounded-full"
+        style={{
+          background:
+            "radial-gradient(circle, rgba(37,99,235,0.16) 0%, transparent 70%)",
+          filter: "blur(60px)",
+        }}
+      />
+      <div
+        className="absolute bottom-[15%] right-[10%] w-[420px] h-[420px] rounded-full"
+        style={{
+          background:
+            "radial-gradient(circle, rgba(139,92,246,0.2) 0%, transparent 70%)",
+          filter: "blur(70px)",
+        }}
+      />
+      <div
+        className="absolute top-[50%] left-[50%] -translate-x-1/2 -translate-y-1/2 w-[360px] h-[360px] rounded-full"
+        style={{
+          background:
+            "radial-gradient(circle, rgba(6,182,212,0.1) 0%, transparent 70%)",
+          filter: "blur(50px)",
+        }}
+      />
+      <div
+        className="absolute top-[25%] right-[20%] w-[280px] h-[280px] rounded-full"
+        style={{
+          background:
+            "radial-gradient(circle, rgba(168,85,247,0.12) 0%, transparent 70%)",
+          filter: "blur(55px)",
+        }}
+      />
+      {/* subtle dot grid */}
+      <div
+        className="absolute inset-0"
+        style={{
+          backgroundImage:
+            "radial-gradient(circle, rgba(255,255,255,0.025) 1px, transparent 1px)",
+          backgroundSize: "32px 32px",
+        }}
+      />
     </div>
   );
 }
 
+const CARD_STYLE: React.CSSProperties = {
+  background: "rgba(10,16,34,0.82)",
+  backdropFilter: "blur(28px)",
+  WebkitBackdropFilter: "blur(28px)",
+  border: "1px solid rgba(148,163,184,0.1)",
+  boxShadow:
+    "0 32px 80px rgba(0,0,0,0.65), 0 0 0 1px rgba(255,255,255,0.03), inset 0 1px 0 rgba(255,255,255,0.06)",
+};
+
 function RuleBadge({ rule }: { rule: Rule }) {
   const isCor = rule === "COR";
+  const accent = isCor ? "#60a5fa" : "#c084fc";
+  const bgRgba = isCor ? "rgba(37,99,235,0.12)" : "rgba(139,92,246,0.12)";
+  const borderRgba = isCor
+    ? "rgba(96,165,250,0.35)"
+    : "rgba(196,129,252,0.35)";
+  const glowRgba = isCor
+    ? "rgba(37,99,235,0.18)"
+    : "rgba(139,92,246,0.22)";
+
   return (
     <motion.div
       key={rule}
-      initial={{ scale: 0.8, opacity: 0 }}
-      animate={{ scale: 1, opacity: 1 }}
-      transition={{ type: "spring", stiffness: 400, damping: 22 }}
+      initial={{ scale: 0.84, opacity: 0, y: -6 }}
+      animate={{ scale: 1, opacity: 1, y: 0 }}
+      transition={{ type: "spring", stiffness: 480, damping: 26 }}
       className="flex justify-center"
     >
       <div
-        className="px-7 py-3 rounded-2xl font-black text-2xl flex items-center gap-2 shadow-lg"
+        className="flex items-center gap-3 px-8 py-3 rounded-2xl"
         style={{
-          background: isCor
-            ? "linear-gradient(135deg, rgba(96,165,250,0.25), rgba(139,92,246,0.25))"
-            : "linear-gradient(135deg, #1a0030, #2d0050)",
-          border: `2px solid ${isCor ? "rgba(147,197,253,0.5)" : "rgba(216,180,254,0.6)"}`,
-          color: isCor ? "#93c5fd" : "#e9d5ff",
-          backdropFilter: "blur(8px)",
-          boxShadow: isCor
-            ? "0 0 20px rgba(96,165,250,0.3), inset 0 1px 0 rgba(255,255,255,0.1)"
-            : "0 0 24px rgba(168,85,247,0.5), inset 0 1px 0 rgba(255,255,255,0.15)",
+          background: bgRgba,
+          border: `1.5px solid ${borderRgba}`,
+          backdropFilter: "blur(12px)",
+          boxShadow: `0 0 28px ${glowRgba}, inset 0 1px 0 rgba(255,255,255,0.07)`,
         }}
       >
-        {isCor ? "🎨" : "📝"}
-        <span>{isCor ? "COR" : "PALAVRA"}</span>
+        <span
+          style={{
+            width: 9,
+            height: 9,
+            borderRadius: "50%",
+            background: accent,
+            boxShadow: `0 0 10px ${accent}`,
+            display: "inline-block",
+            flexShrink: 0,
+          }}
+        />
+        <span
+          className="font-black tracking-[0.18em] text-lg"
+          style={{ color: accent }}
+        >
+          {isCor ? "COR DA TINTA" : "PALAVRA ESCRITA"}
+        </span>
       </div>
     </motion.div>
   );
@@ -125,18 +196,33 @@ function ColorButton({
     <motion.button
       onPointerDown={onClick}
       disabled={disabled}
-      whileHover={{ scale: 1.04 }}
-      whileTap={{ scale: 0.93 }}
-      className="w-full py-4 rounded-full font-black text-white text-base tracking-wide flex items-center justify-center gap-2 select-none touch-none"
+      whileHover={{ scale: 1.02, y: -1 }}
+      whileTap={{ scale: 0.95 }}
+      className="w-full py-3.5 rounded-2xl font-bold text-sm tracking-[0.12em] flex items-center justify-center gap-3 select-none touch-none"
       style={{
-        background: `linear-gradient(135deg, ${color.hex}dd, ${color.hex}99)`,
+        background: glow
+          ? `rgba(255,255,255,0.1)`
+          : "rgba(255,255,255,0.055)",
+        backdropFilter: "blur(16px)",
+        WebkitBackdropFilter: "blur(16px)",
+        border: `1.5px solid ${glow ? color.hex + "66" : color.hex + "28"}`,
         boxShadow: glow
-          ? `0 0 28px ${color.hex}88, 0 4px 16px ${color.hex}55`
-          : `0 4px 16px ${color.hex}55`,
-        border: `1.5px solid ${color.hex}88`,
+          ? `0 0 22px ${color.hex}44, inset 0 1px 0 rgba(255,255,255,0.1)`
+          : `inset 0 1px 0 rgba(255,255,255,0.05), 0 2px 10px rgba(0,0,0,0.35)`,
+        color: color.hex,
       }}
     >
-      🎨 {color.name}
+      <span
+        style={{
+          width: 9,
+          height: 9,
+          borderRadius: "50%",
+          background: color.hex,
+          boxShadow: `0 0 8px ${color.hex}99`,
+          flexShrink: 0,
+        }}
+      />
+      {color.name}
     </motion.button>
   );
 }
@@ -161,22 +247,21 @@ function TutorialStep({
     <div className="min-h-screen flex flex-col items-center justify-center p-4">
       <GlassBg />
 
-      <div
-        className="w-full max-w-sm rounded-3xl p-6 space-y-4"
-        style={{
-          background: "rgba(255,255,255,0.07)",
-          backdropFilter: "blur(20px)",
-          border: "1.5px solid rgba(255,255,255,0.15)",
-          boxShadow: "0 8px 40px rgba(0,0,0,0.5)",
-        }}
-      >
+      <div className="w-full max-w-xl rounded-3xl p-6 space-y-5" style={CARD_STYLE}>
         {/* Header */}
-        <div className="text-center">
-          <span className="text-xs font-bold px-3 py-1 rounded-full bg-white/10 text-white/60 tracking-wider">
-            EXEMPLO {step + 1} de {TUTORIAL_EXAMPLES.length}
+        <div className="text-center space-y-1">
+          <span
+            className="text-[10px] font-bold px-3 py-1 rounded-full tracking-[0.2em]"
+            style={{
+              background: "rgba(255,255,255,0.07)",
+              color: "rgba(203,213,225,0.6)",
+              border: "1px solid rgba(255,255,255,0.08)",
+            }}
+          >
+            EXEMPLO {step + 1} / {TUTORIAL_EXAMPLES.length}
           </span>
-          <p className="mt-2 text-sm text-white/70">
-            Veja como funciona e tente responder!
+          <p className="text-sm text-slate-400 mt-2">
+            Veja como funciona e tente responder
           </p>
         </div>
 
@@ -185,26 +270,55 @@ function TutorialStep({
 
         {/* Explanation */}
         <div
-          className="text-center text-xs px-4 py-3 rounded-xl text-white/60"
-          style={{ background: "rgba(0,0,0,0.25)", border: "1px solid rgba(255,255,255,0.08)" }}
+          className="text-center text-xs px-4 py-3 rounded-xl text-slate-400 leading-relaxed"
+          style={{
+            background: "rgba(0,0,0,0.28)",
+            border: "1px solid rgba(255,255,255,0.06)",
+          }}
         >
           {item.rule === "COR" ? (
-            <>Quando aparece <strong className="text-blue-300">🎨 COR</strong>: clique na <strong className="text-white">cor da tinta</strong> usada para pintar a palavra.</>
+            <>
+              Quando aparecer{" "}
+              <strong className="text-blue-300 tracking-wide">COR DA TINTA</strong>
+              : clique na{" "}
+              <strong className="text-white">cor usada para pintar</strong> a
+              palavra.
+            </>
           ) : (
-            <>Quando aparece <strong className="text-purple-300">📝 PALAVRA</strong>: clique na <strong className="text-white">palavra que está escrita</strong>, ignore a tinta.</>
+            <>
+              Quando aparecer{" "}
+              <strong className="text-purple-300 tracking-wide">PALAVRA ESCRITA</strong>
+              : clique na{" "}
+              <strong className="text-white">palavra que está escrita</strong>,
+              ignore a cor da tinta.
+            </>
           )}
         </div>
 
         {/* The word */}
         <div
-          className="text-center py-6 rounded-2xl"
-          style={{ background: "rgba(0,0,0,0.3)", border: "1px solid rgba(255,255,255,0.08)" }}
+          className="text-center py-10 rounded-2xl relative"
+          style={{
+            background: "rgba(0,0,0,0.32)",
+            border: `1.5px solid ${item.inkColor.hex}28`,
+            boxShadow: `0 0 28px ${item.inkColor.hex}1a, inset 0 1px 0 rgba(255,255,255,0.04)`,
+            overflow: "hidden",
+          }}
         >
-          <span
-            className="text-6xl font-black tracking-wide drop-shadow-lg"
+          <div
+            className="absolute inset-0"
             style={{
+              backgroundImage:
+                "radial-gradient(circle, rgba(255,255,255,0.03) 1px, transparent 1px)",
+              backgroundSize: "20px 20px",
+            }}
+          />
+          <span
+            className="relative font-black tracking-wide whitespace-nowrap"
+            style={{
+              fontSize: "clamp(36px, 10vw, 72px)",
               color: item.inkColor.hex,
-              textShadow: `0 0 30px ${item.inkColor.hex}88`,
+              textShadow: `0 0 40px ${item.inkColor.hex}55, 0 2px 6px rgba(0,0,0,0.6)`,
             }}
           >
             {item.word.name}
@@ -213,9 +327,13 @@ function TutorialStep({
 
         {/* Answer buttons or feedback */}
         {!selected ? (
-          <div className="grid grid-cols-2 gap-3">
+          <div className="grid grid-cols-2 gap-2.5">
             {COLORS.map((color) => (
-              <ColorButton key={color.name} color={color} onClick={() => setSelected(color.name)} />
+              <ColorButton
+                key={color.name}
+                color={color}
+                onClick={() => setSelected(color.name)}
+              />
             ))}
           </div>
         ) : (
@@ -227,41 +345,69 @@ function TutorialStep({
               className="space-y-3"
             >
               <div
-                className={`p-4 rounded-2xl text-center border ${
-                  isCorrect
-                    ? "border-green-400/40 bg-green-500/15"
-                    : "border-orange-400/40 bg-orange-500/15"
-                }`}
+                className={`p-4 rounded-2xl text-center`}
+                style={{
+                  background: isCorrect
+                    ? "rgba(34,197,94,0.1)"
+                    : "rgba(244,63,94,0.1)",
+                  border: `1.5px solid ${isCorrect ? "rgba(74,222,128,0.3)" : "rgba(251,113,133,0.3)"}`,
+                }}
               >
-                <p className={`font-bold text-lg ${isCorrect ? "text-green-300" : "text-orange-300"}`}>
-                  {isCorrect ? "✓ Correto!" : "✗ Quase!"}
+                <p
+                  className="font-bold text-base tracking-wide"
+                  style={{ color: isCorrect ? "#4ade80" : "#fb7185" }}
+                >
+                  {isCorrect ? "✓ Correto" : "✗ Quase lá"}
                 </p>
-                <p className={`text-sm mt-1 ${isCorrect ? "text-green-200" : "text-orange-200"}`}>
+                <p className="text-sm mt-1 text-slate-300">
                   {item.rule === "COR" ? (
                     isCorrect ? (
-                      <>A cor da tinta era <strong style={{ color: item.inkColor.hex }}>{item.inkColor.name}</strong>. Correto!</>
+                      <>
+                        A cor da tinta era{" "}
+                        <strong style={{ color: item.inkColor.hex }}>
+                          {item.inkColor.name}
+                        </strong>
+                        . Perfeito!
+                      </>
                     ) : (
-                      <>A cor da tinta era <strong style={{ color: item.inkColor.hex }}>{item.inkColor.name}</strong>, não &quot;{selected}&quot;.</>
+                      <>
+                        A cor da tinta era{" "}
+                        <strong style={{ color: item.inkColor.hex }}>
+                          {item.inkColor.name}
+                        </strong>
+                        , não &quot;{selected}&quot;.
+                      </>
                     )
+                  ) : isCorrect ? (
+                    <>
+                      A palavra escrita era{" "}
+                      <strong className="text-white">{item.word.name}</strong>.
+                      Perfeito!
+                    </>
                   ) : (
-                    isCorrect ? (
-                      <>A palavra escrita era <strong>{item.word.name}</strong>. Correto!</>
-                    ) : (
-                      <>A palavra escrita era <strong>{item.word.name}</strong>, não &quot;{selected}&quot;.</>
-                    )
+                    <>
+                      A palavra escrita era{" "}
+                      <strong className="text-white">{item.word.name}</strong>,
+                      não &quot;{selected}&quot;.
+                    </>
                   )}
                 </p>
               </div>
 
               <button
                 onClick={onNext}
-                className="w-full py-3.5 rounded-full font-black text-base text-white"
+                className="w-full py-4 rounded-2xl font-black text-sm tracking-[0.12em] text-white"
                 style={{
-                  background: "linear-gradient(135deg, #6366f1, #8b5cf6)",
-                  boxShadow: "0 4px 20px rgba(99,102,241,0.5)",
+                  background:
+                    "linear-gradient(135deg, rgba(99,102,241,0.9), rgba(139,92,246,0.9))",
+                  boxShadow:
+                    "0 4px 24px rgba(99,102,241,0.45), inset 0 1px 0 rgba(255,255,255,0.15)",
+                  border: "1px solid rgba(165,180,252,0.25)",
                 }}
               >
-                {step < TUTORIAL_EXAMPLES.length - 1 ? "Próximo exemplo →" : "Entendi! Começar →"}
+                {step < TUTORIAL_EXAMPLES.length - 1
+                  ? "PRÓXIMO EXEMPLO →"
+                  : "ENTENDI — COMEÇAR →"}
               </button>
             </motion.div>
           </AnimatePresence>
@@ -380,52 +526,71 @@ export function StroopTask({ difficulty, theme, onComplete }: StroopTaskProps) {
     );
   }
 
-  const timerColor = itemProgress < 25 ? "#EF4444" : "#6366f1";
+  const timerIsLow = itemProgress < 25;
+  const timerColor = timerIsLow ? "#F43F5E" : "#6366f1";
   const correctCount = results.filter((r) => r.correct).length;
 
   return (
     <div className="min-h-screen flex flex-col items-center justify-center p-4">
       <GlassBg />
 
-      <div
-        className="w-full max-w-md rounded-3xl p-6 space-y-4"
-        style={{
-          background: "rgba(255,255,255,0.07)",
-          backdropFilter: "blur(20px)",
-          border: "1.5px solid rgba(255,255,255,0.15)",
-          boxShadow: "0 8px 40px rgba(0,0,0,0.5)",
-        }}
-      >
-        {/* Score + time */}
+      <div className="w-full max-w-xl rounded-3xl p-6 space-y-5" style={CARD_STYLE}>
+
+        {/* Score + speed */}
         <div className="flex justify-between items-center">
-          <span className="text-xs text-white/40 font-mono">
-            {(Math.round(timeMs / 100) / 10).toFixed(1)}s/item
+          <span
+            className="text-[11px] font-semibold tracking-widest"
+            style={{ color: "rgba(148,163,184,0.55)" }}
+          >
+            {(Math.round(timeMs / 100) / 10).toFixed(1)}s / ITEM
           </span>
-          <span className="text-sm font-bold text-green-400">
+          <span
+            className="text-sm font-bold tracking-wide"
+            style={{ color: "#4ade80" }}
+          >
             ✓ {correctCount} / {MAX_TRIALS}
           </span>
         </div>
 
         {/* Progress dots */}
-        <div className="flex gap-1">
+        <div className="flex gap-[3px]">
           {Array.from({ length: MAX_TRIALS }).map((_, i) => (
             <div
               key={i}
-              className={`h-1.5 flex-1 rounded-full transition-colors ${
-                i < results.length
-                  ? results[i].correct ? "bg-green-400" : "bg-red-400"
-                  : i === trial ? "bg-indigo-400 animate-pulse"
-                  : "bg-white/10"
-              }`}
+              className="h-1.5 flex-1 rounded-full transition-colors duration-200"
+              style={{
+                background:
+                  i < results.length
+                    ? results[i].correct
+                      ? "#22c55e"
+                      : "#f43f5e"
+                    : i === trial
+                    ? "#818cf8"
+                    : "rgba(255,255,255,0.08)",
+                boxShadow:
+                  i === trial ? "0 0 6px #818cf8" : undefined,
+              }}
             />
           ))}
         </div>
 
         {/* Timer bar */}
-        <div className="h-1.5 rounded-full bg-white/10">
-          <motion.div
+        <div
+          className="h-1 rounded-full overflow-hidden"
+          style={{ background: "rgba(255,255,255,0.07)" }}
+        >
+          <div
             className="h-full rounded-full"
-            style={{ width: `${itemProgress}%`, backgroundColor: timerColor, transition: "width 0.05s linear" }}
+            style={{
+              width: `${itemProgress}%`,
+              background: timerIsLow
+                ? "linear-gradient(90deg, #f43f5e, #fb7185)"
+                : "linear-gradient(90deg, #6366f1, #818cf8)",
+              boxShadow: timerIsLow
+                ? "0 0 8px rgba(244,63,94,0.6)"
+                : "0 0 6px rgba(99,102,241,0.5)",
+              transition: "width 0.05s linear, background 0.3s",
+            }}
           />
         </div>
 
@@ -433,24 +598,44 @@ export function StroopTask({ difficulty, theme, onComplete }: StroopTaskProps) {
         <RuleBadge key={`rule-${trial}`} rule={item.rule} />
 
         {/* Sub-hint */}
-        <p className="text-center text-xs text-white/40">
-          {item.rule === "COR" ? "↓ clique na cor da tinta" : "↓ clique na palavra escrita"}
+        <p
+          className="text-center text-[11px] tracking-[0.1em] font-medium"
+          style={{ color: "rgba(148,163,184,0.45)" }}
+        >
+          {item.rule === "COR"
+            ? "CLIQUE NA COR DA TINTA"
+            : "CLIQUE NA PALAVRA ESCRITA"}
         </p>
 
         {/* Stroop word */}
         <motion.div
           key={`word-${trial}`}
-          className="text-center py-6 rounded-2xl"
-          initial={{ opacity: 0, scale: 0.85 }}
-          animate={{ opacity: 1, scale: 1 }}
-          transition={{ duration: 0.12 }}
-          style={{ background: "rgba(0,0,0,0.3)", border: "1px solid rgba(255,255,255,0.08)" }}
+          className="text-center py-10 rounded-2xl relative"
+          initial={{ opacity: 0, scale: 0.88, y: 6 }}
+          animate={{ opacity: 1, scale: 1, y: 0 }}
+          transition={{ duration: 0.1, type: "spring", stiffness: 420, damping: 26 }}
+          style={{
+            background: "rgba(0,0,0,0.35)",
+            border: `1.5px solid ${item.inkColor.hex}25`,
+            boxShadow: `0 0 32px ${item.inkColor.hex}18, inset 0 1px 0 rgba(255,255,255,0.04)`,
+            overflow: "hidden",
+          }}
         >
-          <span
-            className="text-6xl font-black tracking-wide"
+          <div
+            className="absolute inset-0"
             style={{
+              backgroundImage:
+                "radial-gradient(circle, rgba(255,255,255,0.028) 1px, transparent 1px)",
+              backgroundSize: "22px 22px",
+            }}
+          />
+          <span
+            className="relative font-black tracking-wide select-none whitespace-nowrap"
+            style={{
+              fontSize: "clamp(40px, 9vw, 80px)",
               color: item.inkColor.hex,
-              textShadow: `0 0 40px ${item.inkColor.hex}99`,
+              textShadow: `0 0 48px ${item.inkColor.hex}55, 0 2px 8px rgba(0,0,0,0.7)`,
+              letterSpacing: "0.06em",
             }}
           >
             {item.word.name}
@@ -458,7 +643,7 @@ export function StroopTask({ difficulty, theme, onComplete }: StroopTaskProps) {
         </motion.div>
 
         {/* Color buttons — 2×2 + 1 centered */}
-        <div className="grid grid-cols-2 gap-3">
+        <div className="grid grid-cols-2 gap-2.5">
           {COLORS.slice(0, 4).map((color) => (
             <ColorButton
               key={color.name}
@@ -468,7 +653,7 @@ export function StroopTask({ difficulty, theme, onComplete }: StroopTaskProps) {
           ))}
         </div>
         <div className="flex justify-center">
-          <div className="w-[calc(50%-6px)]">
+          <div className="w-[calc(50%-5px)]">
             <ColorButton
               color={COLORS[4]}
               onClick={() => handleAnswer(COLORS[4].name)}

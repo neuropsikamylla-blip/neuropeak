@@ -22,20 +22,17 @@ interface Puzzle {
   values: string[];
   clues: string[];
   solution: Record<string, string>; // person → value
-  difficulty: 1 | 2 | 3; // 1=easy, 2=medium, 3=hard
+  difficulty: 1 | 2 | 3 | 4; // 1=easy, 2=medium, 3=hard, 4=expert (4×4)
 }
 
 const PUZZLES: Puzzle[] = [
-  // EASY (d=1)
+  // ── FÁCIL (d=1) — 3×3, 2 pistas, eliminação direta ──────────────────────
   {
     title: "Cores das Casas",
     people: ["Ana", "Bruno", "Carla"],
     attribute: "Casa",
     values: ["Azul", "Verde", "Amarela"],
-    clues: [
-      "Bruno tem a casa Verde.",
-      "Ana não tem a casa Azul.",
-    ],
+    clues: ["Bruno tem a casa Verde.", "Ana não tem a casa Azul."],
     solution: { Ana: "Amarela", Bruno: "Verde", Carla: "Azul" },
     difficulty: 1,
   },
@@ -44,10 +41,7 @@ const PUZZLES: Puzzle[] = [
     people: ["João", "Maria", "Pedro"],
     attribute: "Animal",
     values: ["Gato", "Cão", "Peixe"],
-    clues: [
-      "Maria tem um Cão.",
-      "João não tem um Gato.",
-    ],
+    clues: ["Maria tem um Cão.", "João não tem um Gato."],
     solution: { João: "Peixe", Maria: "Cão", Pedro: "Gato" },
     difficulty: 1,
   },
@@ -56,10 +50,7 @@ const PUZZLES: Puzzle[] = [
     people: ["Lucas", "Bia", "Teo"],
     attribute: "Fruta",
     values: ["Maçã", "Banana", "Uva"],
-    clues: [
-      "Bia prefere Banana.",
-      "Teo não gosta de Maçã.",
-    ],
+    clues: ["Bia prefere Banana.", "Teo não gosta de Maçã."],
     solution: { Lucas: "Maçã", Bia: "Banana", Teo: "Uva" },
     difficulty: 1,
   },
@@ -68,10 +59,7 @@ const PUZZLES: Puzzle[] = [
     people: ["Sara", "Rui", "Lena"],
     attribute: "Profissão",
     values: ["Médico", "Professor", "Chef"],
-    clues: [
-      "Rui é Professor.",
-      "Sara não é Chef.",
-    ],
+    clues: ["Rui é Professor.", "Sara não é Chef."],
     solution: { Sara: "Médico", Rui: "Professor", Lena: "Chef" },
     difficulty: 1,
   },
@@ -80,25 +68,40 @@ const PUZZLES: Puzzle[] = [
     people: ["Davi", "Eva", "Fabi"],
     attribute: "Cor",
     values: ["Roxo", "Laranja", "Rosa"],
-    clues: [
-      "Eva adora Laranja.",
-      "Davi não gosta de Rosa.",
-    ],
+    clues: ["Eva adora Laranja.", "Davi não gosta de Rosa."],
     solution: { Davi: "Roxo", Eva: "Laranja", Fabi: "Rosa" },
     difficulty: 1,
   },
-  // MEDIUM (d=2)
+  {
+    title: "Camisas",
+    people: ["Nico", "Olga", "Paco"],
+    attribute: "Camisa",
+    values: ["Branca", "Cinza", "Preta"],
+    clues: ["Olga usa camisa Cinza.", "Nico não usa camisa Branca."],
+    solution: { Nico: "Preta", Olga: "Cinza", Paco: "Branca" },
+    difficulty: 1,
+  },
+  {
+    title: "Bebidas Simples",
+    people: ["Raul", "Sônia", "Tino"],
+    attribute: "Bebida",
+    values: ["Café", "Chá", "Suco"],
+    clues: ["Sônia bebe Chá.", "Raul não bebe Café."],
+    solution: { Raul: "Suco", Sônia: "Chá", Tino: "Café" },
+    difficulty: 1,
+  },
+  // ── MÉDIO (d=2) — 3×3, 3-4 pistas, cadeia de eliminação ─────────────────
   {
     title: "Esportes",
     people: ["Alice", "Beto", "Cris"],
     attribute: "Esporte",
     values: ["Natação", "Futebol", "Tênis"],
     clues: [
-      "Alice não pratica Futebol.",
-      "Beto não pratica Natação.",
       "Cris pratica Tênis.",
+      "Beto não pratica Natação.",
+      "Alice não pratica Futebol.",
     ],
-    solution: { Alice: "Tênis", Beto: "Futebol", Cris: "Tênis" },
+    solution: { Alice: "Natação", Beto: "Futebol", Cris: "Tênis" },
     difficulty: 2,
   },
   {
@@ -107,11 +110,12 @@ const PUZZLES: Puzzle[] = [
     attribute: "Instrumento",
     values: ["Violão", "Piano", "Flauta"],
     clues: [
-      "Hugo toca Violão ou Piano.",
-      "Iris não toca Piano.",
       "Júlio não toca Violão.",
+      "Júlio não toca Flauta.",
+      "Iris não toca Flauta.",
+      "Hugo não toca Piano.",
     ],
-    solution: { Hugo: "Piano", Iris: "Flauta", Júlio: "Piano" },
+    solution: { Hugo: "Flauta", Iris: "Violão", Júlio: "Piano" },
     difficulty: 2,
   },
   {
@@ -120,11 +124,11 @@ const PUZZLES: Puzzle[] = [
     attribute: "Cidade",
     values: ["Rio", "SP", "BH"],
     clues: [
-      "Kim não mora em SP.",
-      "Leo não mora em Rio.",
       "Mia mora em SP.",
+      "Leo não mora em Rio.",
+      "Kim não mora em SP.",
     ],
-    solution: { Kim: "BH", Leo: "BH", Mia: "SP" },
+    solution: { Kim: "Rio", Leo: "BH", Mia: "SP" },
     difficulty: 2,
   },
   {
@@ -148,11 +152,40 @@ const PUZZLES: Puzzle[] = [
     clues: [
       "Rosa pratica Leitura.",
       "Quen não gosta de Pintura.",
+      "Sabi não pratica Xadrez.",
     ],
     solution: { Quen: "Xadrez", Rosa: "Leitura", Sabi: "Pintura" },
     difficulty: 2,
   },
-  // HARD (d=3)
+  {
+    title: "Transportes",
+    people: ["Vera", "Walt", "Xena"],
+    attribute: "Transporte",
+    values: ["Ônibus", "Bicicleta", "Carro"],
+    clues: [
+      "Vera não usa Bicicleta.",
+      "Xena não usa Carro.",
+      "Walt não usa Ônibus.",
+      "Xena não usa Ônibus.",
+    ],
+    solution: { Vera: "Ônibus", Walt: "Carro", Xena: "Bicicleta" },
+    difficulty: 2,
+  },
+  {
+    title: "Times de Futebol",
+    people: ["Alef", "Bibi", "Cadu"],
+    attribute: "Time",
+    values: ["Flamengo", "Corinthians", "Palmeiras"],
+    clues: [
+      "Bibi não torce para Flamengo.",
+      "Alef não torce para Corinthians.",
+      "Cadu não torce para Palmeiras.",
+      "Bibi não torce para Palmeiras.",
+    ],
+    solution: { Alef: "Palmeiras", Bibi: "Corinthians", Cadu: "Flamengo" },
+    difficulty: 2,
+  },
+  // ── DIFÍCIL (d=3) — 3×3, 4 pistas, cadeia longa com alternativas ─────────
   {
     title: "Viagens dos Amigos",
     people: ["Tali", "Ugo", "Vera"],
@@ -161,8 +194,8 @@ const PUZZLES: Puzzle[] = [
     clues: [
       "Ugo não vai para Paris.",
       "Tali não vai para Tóquio.",
-      "Quem vai para Nova York não é Vera.",
-      "Ugo vai para Tóquio ou Nova York.",
+      "Vera não vai para Nova York.",
+      "Tali não vai para Nova York.",
     ],
     solution: { Tali: "Paris", Ugo: "Nova York", Vera: "Tóquio" },
     difficulty: 3,
@@ -175,6 +208,7 @@ const PUZZLES: Puzzle[] = [
     clues: [
       "Yara lê Terror ou Romance.",
       "Wil não lê Terror.",
+      "Wil não lê Ficção.",
       "Xena não lê Romance.",
     ],
     solution: { Wil: "Romance", Xena: "Ficção", Yara: "Terror" },
@@ -187,10 +221,11 @@ const PUZZLES: Puzzle[] = [
     values: ["Ação", "Comédia", "Drama"],
     clues: [
       "Alex não gosta de Comédia.",
-      "Bela gosta de Drama ou Comédia.",
+      "Alex não gosta de Drama.",
       "Zara não gosta de Ação.",
+      "Zara não gosta de Comédia.",
     ],
-    solution: { Zara: "Comédia", Alex: "Ação", Bela: "Drama" },
+    solution: { Zara: "Drama", Alex: "Ação", Bela: "Comédia" },
     difficulty: 3,
   },
   {
@@ -200,8 +235,9 @@ const PUZZLES: Puzzle[] = [
     values: ["Rock", "MPB", "Jazz"],
     clues: [
       "Edu não ouve Rock.",
+      "Edu não ouve Jazz.",
       "Cleo não ouve Jazz.",
-      "Dani ouve MPB ou Jazz.",
+      "Cleo não ouve MPB.",
     ],
     solution: { Cleo: "Rock", Dani: "Jazz", Edu: "MPB" },
     difficulty: 3,
@@ -212,19 +248,140 @@ const PUZZLES: Puzzle[] = [
     attribute: "Carro",
     values: ["Branco", "Preto", "Prata"],
     clues: [
+      "Fred não tem carro Branco.",
+      "Fred não tem carro Prata.",
       "Hana não tem carro Branco.",
-      "Fred tem carro Prata ou Preto.",
       "Gabi não tem carro Preto.",
     ],
     solution: { Fred: "Preto", Gabi: "Branco", Hana: "Prata" },
     difficulty: 3,
   },
+  {
+    title: "Férias",
+    people: ["Iago", "Jade", "Kiko"],
+    attribute: "Destino",
+    values: ["Montanha", "Praia", "Campo"],
+    clues: [
+      "Jade não vai para Praia.",
+      "Kiko não vai para Montanha.",
+      "Iago não vai para Montanha.",
+      "Kiko não vai para Campo.",
+    ],
+    solution: { Iago: "Campo", Jade: "Montanha", Kiko: "Praia" },
+    difficulty: 3,
+  },
+  {
+    title: "Estilos de Dança",
+    people: ["Fran", "Guto", "Helo"],
+    attribute: "Dança",
+    values: ["Samba", "Forró", "Valsa"],
+    clues: [
+      "Guto não dança Samba.",
+      "Guto não dança Valsa.",
+      "Helo dança Forró ou Samba.",
+      "Fran não dança Forró.",
+    ],
+    solution: { Fran: "Valsa", Guto: "Forró", Helo: "Samba" },
+    difficulty: 3,
+  },
+  {
+    title: "Disciplinas Favoritas",
+    people: ["Lina", "Meco", "Nabi"],
+    attribute: "Disciplina",
+    values: ["Matemática", "História", "Ciências"],
+    clues: [
+      "Nabi não gosta de Matemática.",
+      "Nabi não gosta de Ciências.",
+      "Meco gosta de Ciências ou História.",
+      "Lina não gosta de Ciências.",
+    ],
+    solution: { Lina: "Matemática", Meco: "Ciências", Nabi: "História" },
+    difficulty: 3,
+  },
+  // ── EXPERT (d=4) — 4×4, 5 pistas, múltiplas cadeias ─────────────────────
+  {
+    title: "Bebidas dos Colegas",
+    people: ["Eli", "Fabi", "Gael", "Helo"],
+    attribute: "Bebida",
+    values: ["Café", "Chá", "Suco", "Água"],
+    clues: [
+      "Gael bebe Água.",
+      "Eli não bebe Suco.",
+      "Eli não bebe Chá.",
+      "Fabi não bebe Chá.",
+      "Helo não bebe Suco.",
+    ],
+    solution: { Eli: "Café", Fabi: "Suco", Gael: "Água", Helo: "Chá" },
+    difficulty: 4,
+  },
+  {
+    title: "Cidades de Nascimento",
+    people: ["Ana", "Beto", "Carla", "Duda"],
+    attribute: "Cidade",
+    values: ["Rio", "SP", "BH", "Curitiba"],
+    clues: [
+      "Beto nasceu em SP.",
+      "Ana não nasceu em BH.",
+      "Ana não nasceu em Curitiba.",
+      "Duda não nasceu em Rio.",
+      "Duda não nasceu em BH.",
+    ],
+    solution: { Ana: "Rio", Beto: "SP", Carla: "BH", Duda: "Curitiba" },
+    difficulty: 4,
+  },
+  {
+    title: "Esportes no Clube",
+    people: ["Isa", "José", "Keli", "Luca"],
+    attribute: "Esporte",
+    values: ["Futebol", "Tênis", "Natação", "Ciclismo"],
+    clues: [
+      "Keli pratica Futebol.",
+      "Isa não pratica Tênis.",
+      "Isa não pratica Natação.",
+      "José não pratica Futebol.",
+      "José não pratica Natação.",
+    ],
+    solution: { Isa: "Ciclismo", José: "Tênis", Keli: "Futebol", Luca: "Natação" },
+    difficulty: 4,
+  },
+  {
+    title: "Animais dos Amigos",
+    people: ["Mara", "Nilo", "Olga", "Pier"],
+    attribute: "Animal",
+    values: ["Cachorro", "Gato", "Peixe", "Hamster"],
+    clues: [
+      "Olga tem Cachorro.",
+      "Mara não tem Peixe.",
+      "Mara não tem Hamster.",
+      "Pier não tem Hamster.",
+      "Nilo não tem Gato.",
+    ],
+    solution: { Mara: "Gato", Nilo: "Hamster", Olga: "Cachorro", Pier: "Peixe" },
+    difficulty: 4,
+  },
+  {
+    title: "Destinos de Viagem",
+    people: ["Quen", "Rosa", "Sabi", "Teo"],
+    attribute: "Destino",
+    values: ["Paris", "Tóquio", "N. York", "Londres"],
+    clues: [
+      "Rosa viajou para Paris.",
+      "Quen não viajou para Tóquio.",
+      "Sabi não viajou para Tóquio.",
+      "Sabi não viajou para Londres.",
+      "Teo não viajou para Londres.",
+    ],
+    solution: { Quen: "Londres", Rosa: "Paris", Sabi: "N. York", Teo: "Tóquio" },
+    difficulty: 4,
+  },
 ];
 
 function getPuzzlePool(d: number): Puzzle[] {
-  if (d <= 3) return PUZZLES.filter(p => p.difficulty === 1);
-  if (d <= 7) return PUZZLES.filter(p => p.difficulty <= 2);
-  return PUZZLES;
+  if (d <= 2) return PUZZLES.filter(p => p.difficulty === 1);
+  if (d <= 4) return PUZZLES.filter(p => p.difficulty <= 2);
+  if (d <= 6) return PUZZLES.filter(p => p.difficulty === 2 || p.difficulty === 3);
+  if (d <= 8) return PUZZLES.filter(p => p.difficulty === 3);
+  return PUZZLES.filter(p => p.difficulty === 4);
 }
 
 type CellState = "empty" | "yes" | "no";
@@ -315,7 +472,8 @@ export function DeductiveGrid({ difficulty, theme, onComplete }: DeductiveGridPr
   const startTime = useRef(Date.now());
   const puzzleStartTime = useRef(Date.now());
   const errorsThisPuzzle = useRef(0);
-  const PUZZLES_TO_SOLVE = 3;
+  // Mais puzzles em níveis mais altos para treino progressivo
+  const PUZZLES_TO_SOLVE = difficulty <= 2 ? 3 : difficulty <= 6 ? 4 : 5;
 
   const currentPuzzle = pool.current[puzzleIdx % pool.current.length];
 
@@ -447,6 +605,11 @@ export function DeductiveGrid({ difficulty, theme, onComplete }: DeductiveGridPr
     currentPuzzle.values.some(v => grid[`${p}|${v}`] === "yes")
   );
 
+  // Células menores para grids 4×4 (expert)
+  const isExpert = currentPuzzle.values.length >= 4;
+  const cellCls = isExpert ? "w-9 h-9 text-sm" : "w-11 h-11 text-base";
+  const headCls = isExpert ? "text-[9px]" : "text-[11px]";
+
   return (
     <div className="min-h-screen overflow-y-auto" style={rootBg}>
       <div className="max-w-sm mx-auto px-4 py-5 flex flex-col gap-4">
@@ -479,7 +642,7 @@ export function DeductiveGrid({ difficulty, theme, onComplete }: DeductiveGridPr
               <tr>
                 <th className="p-1"></th>
                 {currentPuzzle.values.map(v => (
-                  <th key={v} className={`p-1 text-[11px] font-bold text-center ${pal.valueHead}`}>{v}</th>
+                  <th key={v} className={`p-1 ${headCls} font-bold text-center leading-tight ${pal.valueHead}`}>{v}</th>
                 ))}
               </tr>
             </thead>
@@ -495,7 +658,7 @@ export function DeductiveGrid({ difficulty, theme, onComplete }: DeductiveGridPr
                       <td key={value} className="p-1 text-center">
                         <button
                           onClick={() => cycleCellState(person, value)}
-                          className={`w-11 h-11 rounded-lg border-2 text-base font-bold transition-all ${
+                          className={`${cellCls} rounded-lg border-2 font-bold transition-all ${
                             isErr ? pal.cellErr :
                             state === "yes" ? pal.cellYes :
                             state === "no" ? pal.cellNo :

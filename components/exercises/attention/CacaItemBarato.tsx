@@ -104,6 +104,7 @@ function pickTwo(arr: Product[], cat1?: string, cat2?: string): [Product, Produc
   const p1 = filtered[Math.floor(Math.random() * filtered.length)];
   let pool = arr.filter(p => p.id !== p1.id);
   if (cat2) pool = arr.filter(p => p.id.slice(0, 2) === cat2 && p.id !== p1.id);
+  if (pool.length === 0) pool = arr.filter(p => p.id !== p1.id);
   const p2 = pool[Math.floor(Math.random() * pool.length)];
   return [p1, p2];
 }

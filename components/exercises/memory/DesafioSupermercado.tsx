@@ -1,12 +1,14 @@
 "use client";
 
-import { useState, useEffect, useRef, useCallback } from "react";
+import { useState, useEffect, useRef, useCallback, useMemo } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { calculateExerciseScore } from "@/lib/scoring";
 import { useExerciseProgress } from "@/components/exercises/ExerciseWrapper";
 import { TutorialBase } from "@/components/exercises/TutorialBase";
 import type { ExerciseResult, Theme } from "@/types";
 import { ProductSvg } from "./ProductSvg";
+
+// ── Types ─────────────────────────────────────────────────────────────────────
 
 export interface DesafioSupermercadoProps {
   difficulty: number;
@@ -15,47 +17,46 @@ export interface DesafioSupermercadoProps {
   mode?: "leitura" | "auditivo";
 }
 
-interface Product {
-  id: string;
-  name: string;
-}
+interface Product { id: string; name: string; }
+
+// ── Data ──────────────────────────────────────────────────────────────────────
 
 const PRODUCTS: Product[] = [
-  { id: "arroz", name: "Arroz" },
-  { id: "feijao", name: "Feijão" },
-  { id: "macarrao", name: "Macarrão" },
-  { id: "oleo", name: "Óleo" },
-  { id: "sal", name: "Sal" },
-  { id: "acucar", name: "Açúcar" },
-  { id: "cafe", name: "Café" },
-  { id: "leite", name: "Leite" },
-  { id: "manteiga", name: "Manteiga" },
-  { id: "pao", name: "Pão" },
-  { id: "ovos", name: "Ovos" },
-  { id: "queijo", name: "Queijo" },
-  { id: "iogurte", name: "Iogurte" },
-  { id: "frango", name: "Frango" },
-  { id: "carne", name: "Carne" },
-  { id: "sabao", name: "Sabão" },
-  { id: "papel", name: "Papel higiênico" },
-  { id: "shampoo", name: "Shampoo" },
-  { id: "pasta", name: "Pasta de dente" },
-  { id: "sabonete", name: "Sabonete" },
-  { id: "detergente", name: "Detergente" },
-  { id: "agua-san", name: "Água sanitária" },
-  { id: "esponja", name: "Esponja" },
-  { id: "saco-lixo", name: "Saco de lixo" },
-  { id: "agua", name: "Água" },
-  { id: "suco", name: "Suco" },
-  { id: "refrigerante", name: "Refrigerante" },
-  { id: "banana", name: "Banana" },
-  { id: "maca", name: "Maçã" },
-  { id: "tomate", name: "Tomate" },
-  { id: "alface", name: "Alface" },
-  { id: "batata", name: "Batata" },
-  { id: "cenoura", name: "Cenoura" },
-  { id: "farinha", name: "Farinha" },
-  { id: "vinagre", name: "Vinagre" },
+  { id: "arroz",       name: "Arroz" },
+  { id: "feijao",      name: "Feijão" },
+  { id: "macarrao",    name: "Macarrão" },
+  { id: "oleo",        name: "Óleo de cozinha" },
+  { id: "sal",         name: "Sal" },
+  { id: "acucar",      name: "Açúcar" },
+  { id: "cafe",        name: "Café" },
+  { id: "leite",       name: "Leite" },
+  { id: "manteiga",    name: "Manteiga" },
+  { id: "pao",         name: "Pão" },
+  { id: "ovos",        name: "Ovos" },
+  { id: "queijo",      name: "Queijo" },
+  { id: "iogurte",     name: "Iogurte" },
+  { id: "frango",      name: "Frango" },
+  { id: "carne",       name: "Carne" },
+  { id: "sabao",       name: "Sabão" },
+  { id: "papel",       name: "Papel higiênico" },
+  { id: "shampoo",     name: "Shampoo" },
+  { id: "pasta",       name: "Pasta de dente" },
+  { id: "sabonete",    name: "Sabonete" },
+  { id: "detergente",  name: "Detergente" },
+  { id: "agua-san",    name: "Água sanitária" },
+  { id: "esponja",     name: "Esponja" },
+  { id: "saco-lixo",   name: "Saco de lixo" },
+  { id: "agua",        name: "Água" },
+  { id: "suco",        name: "Suco" },
+  { id: "refrigerante",name: "Refrigerante" },
+  { id: "banana",      name: "Banana" },
+  { id: "maca",        name: "Maçã" },
+  { id: "tomate",      name: "Tomate" },
+  { id: "alface",      name: "Alface" },
+  { id: "batata",      name: "Batata" },
+  { id: "cenoura",     name: "Cenoura" },
+  { id: "farinha",     name: "Farinha" },
+  { id: "vinagre",     name: "Vinagre" },
 ];
 
 const SHOPPING_LISTS: Record<number, string[][]> = {
@@ -109,7 +110,7 @@ const SHOPPING_LISTS: Record<number, string[][]> = {
   ],
 };
 
-const PRODUCT_MAP = new Map(PRODUCTS.map((p) => [p.id, p]));
+const PRODUCT_MAP = new Map(PRODUCTS.map(p => [p.id, p]));
 
 function initialItemCount(difficulty: number): number {
   if (difficulty <= 2) return 3;
@@ -120,211 +121,209 @@ function initialItemCount(difficulty: number): number {
 }
 
 function memorizeSeconds(count: number, mode: "leitura" | "auditivo"): number {
-  // auditivo gets a bit longer to allow audio to finish
   const base = Math.max(5, 13 - count);
   return mode === "auditivo" ? base + 2 : base;
 }
 
 function buildTrial(count: number, usedLists: Set<string>): { list: Product[]; shelf: Product[] } {
-  const lists = SHOPPING_LISTS[count] ?? SHOPPING_LISTS[3];
-  const available = lists.filter((l) => !usedLists.has(l.join(",")));
-  const pool = available.length > 0 ? available : lists;
-  const chosen = pool[Math.floor(Math.random() * pool.length)];
+  const lists    = SHOPPING_LISTS[count] ?? SHOPPING_LISTS[3];
+  const available = lists.filter(l => !usedLists.has(l.join(",")));
+  const pool     = available.length > 0 ? available : lists;
+  const chosen   = pool[Math.floor(Math.random() * pool.length)];
   usedLists.add(chosen.join(","));
 
-  const listProducts = chosen.map((id) => PRODUCT_MAP.get(id)!).filter(Boolean);
-  const listIds = new Set(chosen);
-  const fillers = PRODUCTS.filter((p) => !listIds.has(p.id)).sort(() => Math.random() - 0.5);
-  const shelfSize = Math.min(PRODUCTS.length, count * 2 + 4);
-  const shelf = [...listProducts, ...fillers.slice(0, shelfSize - count)].sort(() => Math.random() - 0.5);
+  const listProducts = chosen.map(id => PRODUCT_MAP.get(id)!).filter(Boolean);
+  const listIds      = new Set(chosen);
+  const fillers      = PRODUCTS.filter(p => !listIds.has(p.id)).sort(() => Math.random() - 0.5);
+  const shelfSize    = Math.min(PRODUCTS.length, count * 2 + 4);
+  const shelf        = [...listProducts, ...fillers.slice(0, shelfSize - count)].sort(() => Math.random() - 0.5);
   return { list: listProducts, shelf };
 }
 
-// ── Web Speech ──────────────────────────────────────────────────────────────
+// ── Web Speech ────────────────────────────────────────────────────────────────
+
 function speakList(items: Product[], onDone?: () => void) {
-  if (typeof window === "undefined" || !window.speechSynthesis) {
-    onDone?.();
-    return;
-  }
+  if (typeof window === "undefined" || !window.speechSynthesis) { onDone?.(); return; }
   window.speechSynthesis.cancel();
-
-  // Intro utterance
   const intro = new SpeechSynthesisUtterance("Sua lista de compras:");
-  intro.lang = "pt-BR";
-  intro.rate = 0.88;
-  intro.pitch = 1.05;
-
-  // Item utterances with slight pauses via rate
-  const utterances = items.map((item) => {
+  intro.lang = "pt-BR"; intro.rate = 0.88; intro.pitch = 1.05;
+  const utterances = items.map(item => {
     const u = new SpeechSynthesisUtterance(item.name);
-    u.lang = "pt-BR";
-    u.rate = 0.82;
-    u.pitch = 1.0;
+    u.lang = "pt-BR"; u.rate = 0.82; u.pitch = 1.0;
     return u;
   });
-
   const last = utterances[utterances.length - 1];
   if (last) last.onend = () => onDone?.();
-
   window.speechSynthesis.speak(intro);
-  utterances.forEach((u) => window.speechSynthesis.speak(u));
+  utterances.forEach(u => window.speechSynthesis.speak(u));
 }
 
-// ── Shelf component ──────────────────────────────────────────────────────────
-const COLS = 4;
+// ── Cart SVG ──────────────────────────────────────────────────────────────────
+// O carrinho é orientado para a direita: handle à esquerda, cesta à direita.
+// Interior da cesta (viewBox 0 0 200 170): x≈48..188, y≈20..118 → slot para itens.
 
-function Shelf({
-  products,
-  selected,
-  onToggle,
-  showLabels,
-  theme,
+function CartSvg({ size = 100 }: { size?: number }) {
+  return (
+    <svg width={size} height={size * 0.85} viewBox="0 0 200 170" fill="none" xmlns="http://www.w3.org/2000/svg">
+      {/* handle */}
+      <path d="M8 38 Q12 38 48 38" stroke="#d97706" strokeWidth="8" strokeLinecap="round"/>
+      {/* basket body */}
+      <path d="M44 18 L192 18 L180 120 L56 120 Z" fill="rgba(217,119,6,0.15)" stroke="#d97706" strokeWidth="5" strokeLinejoin="round"/>
+      {/* horizontal wires */}
+      <line x1="47" y1="52"  x2="189" y2="52"  stroke="#d97706" strokeWidth="2.5" opacity="0.4"/>
+      <line x1="50" y1="86"  x2="184" y2="86"  stroke="#d97706" strokeWidth="2.5" opacity="0.4"/>
+      {/* vertical wires */}
+      <line x1="83"  y1="18" x2="74"  y2="120" stroke="#d97706" strokeWidth="2.5" opacity="0.4"/>
+      <line x1="118" y1="18" x2="118" y2="120" stroke="#d97706" strokeWidth="2.5" opacity="0.4"/>
+      <line x1="152" y1="18" x2="158" y2="120" stroke="#d97706" strokeWidth="2.5" opacity="0.4"/>
+      {/* bottom bar */}
+      <path d="M56 120 L180 120" stroke="#d97706" strokeWidth="6" strokeLinecap="round"/>
+      {/* axle rods */}
+      <line x1="82"  y1="120" x2="74"  y2="142" stroke="#d97706" strokeWidth="5.5" strokeLinecap="round"/>
+      <line x1="162" y1="120" x2="170" y2="142" stroke="#d97706" strokeWidth="5.5" strokeLinecap="round"/>
+      {/* wheels */}
+      <circle cx="74"  cy="153" r="13" fill="#1a0a00" stroke="#92400e" strokeWidth="2.5"/>
+      <circle cx="74"  cy="153" r="5"  fill="#6b4f1a"/>
+      <circle cx="170" cy="153" r="13" fill="#1a0a00" stroke="#92400e" strokeWidth="2.5"/>
+      <circle cx="170" cy="153" r="5"  fill="#6b4f1a"/>
+    </svg>
+  );
+}
+
+// Retorna as dimensões do interior da cesta para um determinado tamanho de CartSvg
+function cartInterior(size: number) {
+  const scale = size / 200;
+  return {
+    left:   Math.round(48  * scale),
+    top:    Math.round(20  * scale),
+    width:  Math.round(140 * scale),
+    height: Math.round(96  * scale),
+  };
+}
+
+// ── Full-screen Shelf ─────────────────────────────────────────────────────────
+
+const SHELF_COLS = 4;
+
+function FullShelf({
+  products, cartIds, onToggle, showLabels,
 }: {
   products: Product[];
-  selected: Set<string>;
+  cartIds: string[];
   onToggle: (id: string) => void;
   showLabels: boolean;
-  theme: Theme;
 }) {
   const rows: Product[][] = [];
-  for (let i = 0; i < products.length; i += COLS) {
-    rows.push(products.slice(i, i + COLS));
-  }
+  for (let i = 0; i < products.length; i += SHELF_COLS) rows.push(products.slice(i, i + SHELF_COLS));
 
-  const woodLight = "#c8974a";
-  const woodDark = "#a0722a";
-  const wallColor = theme === "GAMIFIED" ? "#1e293b" : "#6b4c2a";
+  const Plank = () => (
+    <div style={{
+      height: 15,
+      background: "linear-gradient(to bottom, #e8c07a 0%, #c8974a 50%, #8b6320 100%)",
+      boxShadow: "0 4px 10px rgba(0,0,0,0.6), inset 0 1px 0 rgba(255,255,255,0.28)",
+    }} />
+  );
 
   return (
-    <div
-      className="rounded-2xl overflow-hidden"
-      style={{
-        background: wallColor,
-        boxShadow: "inset 0 3px 12px rgba(0,0,0,0.5), 0 4px 16px rgba(0,0,0,0.25)",
-      }}
-    >
-      {/* Store sign strip */}
-      <div
-        className="text-center py-1.5 text-xs font-bold tracking-widest uppercase text-white"
-        style={{
-          background: theme === "GAMIFIED"
-            ? "linear-gradient(90deg,#0e7490,#0891b2)"
-            : "linear-gradient(90deg,#92400e,#b45309)",
-          letterSpacing: "0.18em",
-        }}
-      >
-        🛒 SUPERMERCADO
-      </div>
-
-      <div className="p-2 space-y-0">
-        {rows.map((row, ri) => (
-          <div key={ri}>
-            {/* Product row */}
-            <div className={`grid gap-1.5 py-1.5 px-1`} style={{ gridTemplateColumns: `repeat(${COLS}, 1fr)` }}>
-              {row.map((p) => {
-                const isSel = selected.has(p.id);
-                return (
-                  <button
-                    key={p.id}
-                    onClick={() => onToggle(p.id)}
-                    className={`flex flex-col items-center gap-0.5 p-1.5 rounded-lg border-2 transition-all active:scale-95 ${
-                      isSel
-                        ? "border-yellow-400 bg-yellow-50 shadow-lg shadow-yellow-200/50 scale-[1.04]"
-                        : theme === "GAMIFIED"
-                        ? "border-slate-600/50 bg-slate-800/70 hover:border-cyan-400/60"
-                        : "border-amber-200/40 bg-amber-50/90 hover:border-amber-400"
-                    }`}
-                  >
-                    <ProductSvg id={p.id} size={60} />
-                    {showLabels && (
-                      <span className={`text-[10px] text-center leading-tight font-semibold w-full ${
-                        isSel
-                          ? "text-amber-700"
-                          : theme === "GAMIFIED"
-                          ? "text-gray-300"
-                          : "text-gray-700"
-                      }`}>
-                        {p.name}
-                      </span>
-                    )}
-                    {isSel && (
-                      <span className="text-xs font-bold text-yellow-600">✓</span>
-                    )}
-                  </button>
-                );
-              })}
-            </div>
-            {/* Wood plank divider */}
-            <div
-              className="h-3 rounded-sm mx-0.5"
-              style={{
-                background: `linear-gradient(to bottom, ${woodLight} 0%, ${woodDark} 60%, rgba(0,0,0,0.3) 100%)`,
-                boxShadow: "0 3px 6px rgba(0,0,0,0.45), inset 0 1px 0 rgba(255,255,255,0.2)",
-              }}
-            />
+    <div style={{ background: "#2a1103" }}>
+      <Plank />
+      {rows.map((row, ri) => (
+        <div key={ri}>
+          <div style={{
+            display: "grid",
+            gridTemplateColumns: `repeat(${SHELF_COLS}, 1fr)`,
+            gap: 5, padding: "7px 5px",
+          }}>
+            {row.map(p => {
+              const inCart = cartIds.includes(p.id);
+              return (
+                <motion.button
+                  key={p.id}
+                  onClick={() => onToggle(p.id)}
+                  whileTap={{ scale: 0.86 }}
+                  style={{
+                    display: "flex", flexDirection: "column", alignItems: "center", gap: 3,
+                    padding: "8px 3px 6px",
+                    borderRadius: 10,
+                    border: inCart ? "2.5px solid #facc15" : "1.5px solid rgba(255,200,120,0.12)",
+                    background: inCart ? "rgba(250,204,21,0.13)" : "rgba(255,245,220,0.07)",
+                    position: "relative", cursor: "pointer",
+                    opacity: inCart ? 0.65 : 1,
+                    transition: "opacity 0.15s",
+                  }}
+                >
+                  <ProductSvg id={p.id} size={62} />
+                  {showLabels && (
+                    <span style={{
+                      fontSize: 9, fontWeight: 700, textAlign: "center", lineHeight: 1.2,
+                      color: inCart ? "#facc15" : "#f5e6c8",
+                      maxWidth: "100%", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap",
+                    }}>
+                      {p.name}
+                    </span>
+                  )}
+                  {inCart && (
+                    <motion.div initial={{ scale: 0 }} animate={{ scale: 1 }} style={{
+                      position: "absolute", top: 3, right: 3,
+                      width: 18, height: 18, borderRadius: "50%",
+                      background: "#facc15",
+                      display: "flex", alignItems: "center", justifyContent: "center",
+                      fontSize: 10, fontWeight: "bold", color: "#1a0e05",
+                    }}>
+                      ✓
+                    </motion.div>
+                  )}
+                </motion.button>
+              );
+            })}
           </div>
-        ))}
-      </div>
+          <Plank />
+        </div>
+      ))}
     </div>
   );
 }
 
-// ── Tutorial ─────────────────────────────────────────────────────────────────
-const TUT_LIST: Product[] = [
-  { id: "pao", name: "Pão" },
-  { id: "leite", name: "Leite" },
-];
+// ── Tutorial (compact shelf for TutorialBase) ─────────────────────────────────
+
+const TUT_LIST: Product[]  = [{ id: "pao", name: "Pão" }, { id: "leite", name: "Leite" }];
 const TUT_SHELF: Product[] = [
-  { id: "arroz", name: "Arroz" },
-  { id: "pao", name: "Pão" },
-  { id: "cafe", name: "Café" },
-  { id: "leite", name: "Leite" },
-  { id: "ovos", name: "Ovos" },
-  { id: "acucar", name: "Açúcar" },
-  { id: "maca", name: "Maçã" },
-  { id: "sal", name: "Sal" },
+  { id: "arroz", name: "Arroz" }, { id: "pao", name: "Pão" },
+  { id: "cafe",  name: "Café"  }, { id: "leite", name: "Leite" },
+  { id: "ovos",  name: "Ovos"  }, { id: "acucar", name: "Açúcar" },
+  { id: "maca",  name: "Maçã"  }, { id: "sal",    name: "Sal" },
 ];
 
-function TutMemorizeStep({ theme, mode, onDone }: { theme: Theme; mode: "leitura" | "auditivo"; onDone: () => void }) {
+function TutMemorizeStep({ mode, onDone }: { mode: "leitura" | "auditivo"; onDone: () => void }) {
   const [countdown, setCountdown] = useState(5);
-  const bg = theme === "GAMIFIED" ? "bg-slate-700" : "bg-amber-50 border border-amber-200";
-  const txt = theme === "GAMIFIED" ? "text-gray-200" : "text-gray-800";
-
   useEffect(() => {
     if (mode === "auditivo") speakList(TUT_LIST);
     const iv = setInterval(() => {
-      setCountdown((p) => {
-        if (p <= 1) { clearInterval(iv); onDone(); return 0; }
-        return p - 1;
-      });
+      setCountdown(p => { if (p <= 1) { clearInterval(iv); onDone(); return 0; } return p - 1; });
     }, 1000);
     return () => { clearInterval(iv); if (typeof window !== "undefined") window.speechSynthesis?.cancel(); };
-  // eslint-disable-next-line react-hooks/exhaustive-deps
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   return (
-    <div className={`rounded-xl p-4 space-y-3 ${bg}`}>
-      <div className="flex justify-between items-center mb-2">
-        <p className={`text-sm font-bold ${txt}`}>
-          {mode === "auditivo" ? "🔊 Ouça os itens da lista:" : "📋 Memorize a lista:"}
+    <div className="rounded-xl p-4 space-y-3 bg-amber-50 border border-amber-200">
+      <div className="flex justify-between items-center">
+        <p className="text-sm font-bold text-gray-800">
+          {mode === "auditivo" ? "🔊 Ouça os itens:" : "📋 Memorize a lista:"}
         </p>
         <div className="flex items-center gap-2">
           <span className="text-xs text-amber-600 font-mono">{countdown}s</span>
-          <button onClick={onDone} className="text-xs px-2 py-0.5 rounded-lg font-bold bg-amber-500 text-white">Pronto →</button>
+          <button onClick={onDone} className="text-xs px-2 py-0.5 rounded-lg font-bold bg-amber-500 text-white">
+            Pronto →
+          </button>
         </div>
       </div>
       <div className="grid grid-cols-2 gap-3">
-        {TUT_LIST.map((p) => (
-          <div key={p.id} className={`flex flex-col items-center gap-2 p-3 rounded-xl border-2 ${
-            theme === "GAMIFIED" ? "border-slate-500 bg-slate-800" : "border-amber-300 bg-white"
-          }`}>
+        {TUT_LIST.map(p => (
+          <div key={p.id} className="flex flex-col items-center gap-2 p-3 rounded-xl border-2 border-amber-300 bg-white">
             <ProductSvg id={p.id} size={72} />
-            {mode === "leitura" && (
-              <span className={`text-sm font-bold text-center ${txt}`}>{p.name}</span>
-            )}
-            {mode === "auditivo" && (
-              <span className="text-xl">🔊</span>
-            )}
+            {mode === "leitura" && <span className="text-sm font-bold text-center text-gray-800">{p.name}</span>}
+            {mode === "auditivo" && <span className="text-xl">🔊</span>}
           </div>
         ))}
       </div>
@@ -332,84 +331,108 @@ function TutMemorizeStep({ theme, mode, onDone }: { theme: Theme; mode: "leitura
   );
 }
 
-function TutShelfStep({ theme, mode, onDone }: { theme: Theme; mode: "leitura" | "auditivo"; onDone: () => void }) {
-  const [sel, setSel] = useState(new Set<string>());
+function TutShelfStep({ mode, onDone }: { mode: "leitura" | "auditivo"; onDone: () => void }) {
+  const [cart, setCart] = useState<string[]>([]);
   const doneRef = useRef(false);
-  const txt = theme === "GAMIFIED" ? "text-gray-200" : "text-gray-700";
 
   function tap(id: string) {
     if (doneRef.current) return;
-    setSel((prev) => {
-      const next = new Set(prev);
-      next.has(id) ? next.delete(id) : next.add(id);
-      if (next.has("pao") && next.has("leite") && !doneRef.current) {
+    setCart(prev => {
+      const next = prev.includes(id) ? prev.filter(x => x !== id) : [...prev, id];
+      if (next.includes("pao") && next.includes("leite") && !doneRef.current) {
         doneRef.current = true;
-        setTimeout(onDone, 600);
+        setTimeout(onDone, 700);
       }
       return next;
     });
   }
 
   return (
-    <div>
-      <p className={`text-xs mb-2 ${txt}`}>
-        {mode === "auditivo"
-          ? "Toque nos produtos que você OUVIU na lista."
-          : "Toque nos produtos que estavam na lista."}
+    <div className="space-y-2">
+      <p className="text-xs text-gray-700">
+        {mode === "auditivo" ? "Toque nos produtos que você ouviu." : "Toque nos produtos que estavam na lista."}
       </p>
-      <Shelf products={TUT_SHELF} selected={sel} onToggle={tap} showLabels={mode === "leitura"} theme={theme} />
+      <div className="grid grid-cols-4 gap-1.5">
+        {TUT_SHELF.map(p => {
+          const inCart = cart.includes(p.id);
+          return (
+            <button key={p.id} onClick={() => tap(p.id)}
+              className={`flex flex-col items-center gap-1 p-2 rounded-lg border-2 transition-all active:scale-95 relative ${
+                inCart ? "border-yellow-400 bg-yellow-50" : "border-amber-200/50 bg-amber-50/80"
+              }`}>
+              <ProductSvg id={p.id} size={52} />
+              {mode === "leitura" && (
+                <span className={`text-[9px] text-center font-semibold leading-tight ${inCart ? "text-amber-700" : "text-gray-700"}`}>
+                  {p.name}
+                </span>
+              )}
+              {inCart && (
+                <div className="absolute top-1 right-1 w-4 h-4 rounded-full bg-yellow-400 flex items-center justify-center text-[9px] font-bold text-yellow-900">✓</div>
+              )}
+            </button>
+          );
+        })}
+      </div>
+      {/* mini cart display */}
+      {cart.length > 0 && (
+        <div className="flex items-center gap-2 p-2 rounded-xl bg-amber-50 border border-amber-200">
+          <span className="text-sm">🛒</span>
+          <div className="flex gap-1">
+            {cart.map(id => <ProductSvg key={id} id={id} size={32} />)}
+          </div>
+        </div>
+      )}
     </div>
   );
 }
 
 function SupermercadoTutorial({ theme, mode, onDone }: { theme: Theme; mode: "leitura" | "auditivo"; onDone: () => void }) {
-  const modeLabel = mode === "auditivo" ? "Auditivo" : "Leitura";
   const steps = [
     {
       instruction: mode === "auditivo"
         ? "Você vai OUVIR uma lista de compras. Memorize os itens pelo som!"
-        : "Uma lista de compras vai aparecer. Memorize os produtos!",
-      content: (done: () => void) => <TutMemorizeStep theme={theme} mode={mode} onDone={done} />,
+        : "Uma lista de compras vai aparecer. Memorize bem os produtos!",
+      content: (done: () => void) => <TutMemorizeStep mode={mode} onDone={done} />,
     },
     {
-      instruction: mode === "auditivo"
-        ? "Agora encontre na prateleira os produtos que você ouviu — reconheça pelo desenho!"
-        : "Agora encontre na prateleira os itens que você memorizou.",
-      content: (done: () => void) => <TutShelfStep theme={theme} mode={mode} onDone={done} />,
+      instruction: "Toque nos produtos da prateleira para colocá-los no carrinho. Depois confirme!",
+      content: (done: () => void) => <TutShelfStep mode={mode} onDone={done} />,
     },
   ];
   return (
     <TutorialBase
       theme={theme}
-      title={`Desafio do Supermercado — ${modeLabel}`}
+      title={`Desafio do Supermercado${mode === "auditivo" ? " — Auditivo" : ""}`}
       steps={steps}
       onDone={onDone}
     />
   );
 }
 
-// ── Componente principal ──────────────────────────────────────────────────────
+// ── Main component ────────────────────────────────────────────────────────────
+
 const MAX_TRIALS = 8;
 
 export function DesafioSupermercado({ difficulty, theme, onComplete, mode = "leitura" }: DesafioSupermercadoProps) {
   const [showTutorial, setShowTutorial] = useState(true);
   const reportProgress = useExerciseProgress();
 
-  const [trial, setTrial] = useState(0);
+  const [trial, setTrial]             = useState(0);
   const [trialResults, setTrialResults] = useState<boolean[]>([]);
-  const [phase, setPhase] = useState<"memorizing" | "shopping" | "result">("memorizing");
-  const [countdown, setCountdown] = useState(0);
-  const [selected, setSelected] = useState<Set<string>>(new Set());
-  const [itemCount, setItemCount] = useState(() => initialItemCount(difficulty));
-  const [streak, setStreak] = useState(0);
+  const [phase, setPhase]             = useState<"memorizing" | "shopping" | "result">("memorizing");
+  const [countdown, setCountdown]     = useState(0);
+  const [cartIds, setCartIds]         = useState<string[]>([]); // insertion-ordered IDs
+  const selected                      = useMemo(() => new Set(cartIds), [cartIds]);
+  const [itemCount, setItemCount]     = useState(() => initialItemCount(difficulty));
+  const [streak, setStreak]           = useState(0);
   const [audioPlaying, setAudioPlaying] = useState(false);
 
-  const usedLists = useRef(new Set<string>());
-  const startTime = useRef(Date.now());
-  const timerRef = useRef<ReturnType<typeof setInterval> | null>(null);
+  const usedLists    = useRef(new Set<string>());
+  const startTime    = useRef(Date.now());
+  const timerRef     = useRef<ReturnType<typeof setInterval> | null>(null);
   const nextCountRef = useRef(itemCount);
 
-  const [currentList, setCurrentList] = useState<Product[]>([]);
+  const [currentList, setCurrentList]     = useState<Product[]>([]);
   const [shelfProducts, setShelfProducts] = useState<Product[]>([]);
 
   const clearTimer = () => { if (timerRef.current) { clearInterval(timerRef.current); timerRef.current = null; } };
@@ -418,7 +441,7 @@ export function DesafioSupermercado({ difficulty, theme, onComplete, mode = "lei
     const { list, shelf } = buildTrial(count, usedLists.current);
     setCurrentList(list);
     setShelfProducts(shelf);
-    setSelected(new Set());
+    setCartIds([]);
     setPhase("memorizing");
   }, []);
 
@@ -427,56 +450,37 @@ export function DesafioSupermercado({ difficulty, theme, onComplete, mode = "lei
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [showTutorial]);
 
-  // Memorization countdown + audio
   useEffect(() => {
     if (phase !== "memorizing" || showTutorial || currentList.length === 0) return;
-
     const total = memorizeSeconds(itemCount, mode);
     setCountdown(total);
-
-    if (mode === "auditivo") {
-      setAudioPlaying(true);
-      speakList(currentList, () => setAudioPlaying(false));
-    }
-
+    if (mode === "auditivo") { setAudioPlaying(true); speakList(currentList, () => setAudioPlaying(false)); }
     timerRef.current = setInterval(() => {
-      setCountdown((prev) => {
-        if (prev <= 1) {
-          clearTimer();
-          setPhase("shopping");
-          return 0;
-        }
+      setCountdown(prev => {
+        if (prev <= 1) { clearTimer(); setPhase("shopping"); return 0; }
         return prev - 1;
       });
     }, 1000);
-
-    return () => {
-      clearTimer();
-      if (typeof window !== "undefined") window.speechSynthesis?.cancel();
-    };
+    return () => { clearTimer(); if (typeof window !== "undefined") window.speechSynthesis?.cancel(); };
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [phase, trial, showTutorial]);
 
   function toggleProduct(id: string) {
     if (phase !== "shopping") return;
-    setSelected((prev) => {
-      const next = new Set(prev);
-      next.has(id) ? next.delete(id) : next.add(id);
-      return next;
-    });
+    setCartIds(prev => prev.includes(id) ? prev.filter(x => x !== id) : [...prev, id]);
   }
 
   function handleConfirm() {
-    const correctIds = new Set(currentList.map((p) => p.id));
-    const correctSelected = [...selected].filter((id) => correctIds.has(id)).length;
-    const wrongSelected = [...selected].filter((id) => !correctIds.has(id)).length;
-    const isCorrect = correctSelected === correctIds.size && wrongSelected === 0;
+    const correctIds     = new Set(currentList.map(p => p.id));
+    const correctSelected = cartIds.filter(id => correctIds.has(id)).length;
+    const wrongSelected  = cartIds.filter(id => !correctIds.has(id)).length;
+    const isCorrect      = correctSelected === correctIds.size && wrongSelected === 0;
 
     const newStreak = isCorrect ? Math.max(streak, 0) + 1 : Math.min(streak, 0) - 1;
     let nextCount = itemCount;
     let resetStreak = false;
-    if (newStreak >= 2) { nextCount = Math.min(itemCount + 1, 7); resetStreak = true; }
-    else if (newStreak <= -2) { nextCount = Math.max(itemCount - 1, 3); resetStreak = true; }
+    if (newStreak >= 2)  { nextCount = Math.min(itemCount + 1, 7); resetStreak = true; }
+    if (newStreak <= -2) { nextCount = Math.max(itemCount - 1, 3); resetStreak = true; }
     nextCountRef.current = nextCount;
     setStreak(resetStreak ? 0 : newStreak);
     setItemCount(nextCount);
@@ -484,20 +488,18 @@ export function DesafioSupermercado({ difficulty, theme, onComplete, mode = "lei
     const newResults = [...trialResults, isCorrect];
     setTrialResults(newResults);
     setPhase("result");
-
     const nextTrial = trial + 1;
     reportProgress(Math.round((nextTrial / MAX_TRIALS) * 100));
 
     setTimeout(() => {
       if (nextTrial >= MAX_TRIALS) {
-        const correct = newResults.filter(Boolean).length;
+        const correct  = newResults.filter(Boolean).length;
         const accuracy = correct / MAX_TRIALS;
         onComplete({
           exerciseId: mode === "auditivo" ? "desafio-supermercado-auditivo" : "desafio-supermercado",
           domain: "memory",
           score: calculateExerciseScore("desafio-supermercado", accuracy, undefined, difficulty),
-          accuracy,
-          difficulty,
+          accuracy, difficulty,
           duration: Math.round((Date.now() - startTime.current) / 1000),
           metadata: { trials: MAX_TRIALS, correct, mode },
         });
@@ -512,207 +514,338 @@ export function DesafioSupermercado({ difficulty, theme, onComplete, mode = "lei
     return <SupermercadoTutorial theme={theme} mode={mode} onDone={() => setShowTutorial(false)} />;
   }
 
-  // ── Design tokens ──────────────────────────────────────────────────────────
-  const isGamified = theme === "GAMIFIED";
-  const bgClass = isGamified ? "bg-slate-950" : "";
-  const bgStyle: React.CSSProperties | undefined = !isGamified
-    ? { background: "linear-gradient(160deg, #ede8df 0%, #e4ddd0 55%, #dbd4c5 100%)" }
-    : undefined;
-  const pal = {
-    card: isGamified ? "bg-slate-800 border border-slate-700" : "bg-white border border-gray-100 shadow-lg",
-    title: isGamified ? "text-cyan-400" : "text-gray-900",
-    sub: isGamified ? "text-slate-400" : "text-gray-500",
-    listCard: isGamified ? "border-slate-600 bg-slate-700/80" : "border-gray-100 bg-white shadow-sm",
-    dot: (i: number, results: boolean[]) => {
-      if (i < results.length) return results[i] ? "bg-green-500" : "bg-red-400";
-      if (i === results.length) return (isGamified ? "bg-cyan-500" : "bg-blue-600") + " animate-pulse";
-      return isGamified ? "bg-slate-700" : "bg-gray-200";
-    },
-  };
-
   const memorizeTotal = memorizeSeconds(itemCount, mode);
   const ratio = memorizeTotal > 0 ? countdown / memorizeTotal : 0;
+  const isRoundCorrect = phase === "result"
+    && currentList.every(p => selected.has(p.id))
+    && cartIds.every(id => currentList.find(p => p.id === id));
+
+  const listCols = Math.min(currentList.length, 4);
 
   return (
-    <div className={`min-h-screen flex flex-col items-center p-4 pt-6 ${bgClass}`} style={bgStyle}>
-      <div className={`w-full max-w-2xl rounded-2xl p-5 ${pal.card}`}>
+    <div style={{
+      position: "fixed", inset: 0, background: "#140a02",
+      display: "flex", flexDirection: "column", overflow: "hidden",
+    }}>
 
-        {/* Header */}
-        <div className="flex justify-between items-center mb-1">
-          <h2 className={`font-bold text-sm ${pal.title}`}>
-            {mode === "auditivo" ? "🔊 Supermercado Auditivo" : "📋 Supermercado — Leitura"}
-          </h2>
-          <span className={`text-xs ${pal.sub}`}>{trial + 1}/{MAX_TRIALS}</span>
-        </div>
-
-        {/* Progress bar */}
-        <div className="flex gap-0.5 mb-4">
+      {/* ── HUD ── */}
+      <div style={{
+        background: "linear-gradient(90deg,#7c2d12,#92400e)",
+        padding: "7px 14px", flexShrink: 0,
+        display: "flex", alignItems: "center", justifyContent: "space-between",
+        boxShadow: "0 2px 8px rgba(0,0,0,0.5)",
+      }}>
+        <span style={{ color: "white", fontWeight: 800, fontSize: 13, letterSpacing: 1 }}>
+          🛒 SUPERMERCADO
+        </span>
+        <div style={{ display: "flex", gap: 3 }}>
           {Array.from({ length: MAX_TRIALS }).map((_, i) => (
-            <div key={i} className={`h-1.5 flex-1 rounded-full transition-all ${pal.dot(i, trialResults)}`} />
+            <div key={i} style={{
+              height: 5, width: 20, borderRadius: 3,
+              background: i < trialResults.length
+                ? (trialResults[i] ? "#22c55e" : "#ef4444")
+                : i === trial ? "#facc15" : "rgba(255,255,255,0.2)",
+              transition: "background 0.3s",
+            }} />
           ))}
         </div>
+        <span style={{ color: "rgba(255,255,255,0.65)", fontSize: 11 }}>{trial + 1}/{MAX_TRIALS}</span>
+      </div>
 
-        <AnimatePresence mode="wait">
+      <AnimatePresence mode="wait">
 
-          {/* FASE: Memorização */}
-          {phase === "memorizing" && (
-            <motion.div key="mem" initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -8 }}>
-              <div className="text-center mb-3">
-                <p className={`font-bold text-sm ${pal.title}`}>
-                  {mode === "auditivo" ? "🎧 Ouça a lista de compras!" : "👀 Memorize a lista!"}
-                </p>
-                <div className="flex items-center justify-center gap-2 mt-1.5">
-                  <div className={`h-1.5 w-36 rounded-full ${theme === "GAMIFIED" ? "bg-slate-700" : "bg-amber-100"}`}>
-                    <div
-                      className={`h-full rounded-full transition-all duration-1000 ${theme === "GAMIFIED" ? "bg-cyan-400" : "bg-amber-400"}`}
-                      style={{ width: `${ratio * 100}%` }}
-                    />
+        {/* ── MEMORIZING ── */}
+        {phase === "memorizing" && (
+          <motion.div key="mem"
+            initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}
+            style={{ flex: 1, display: "flex", flexDirection: "column", overflow: "hidden" }}
+          >
+            <div style={{
+              flex: 1, overflowY: "auto", display: "flex", flexDirection: "column",
+              alignItems: "center", justifyContent: "center", padding: "16px",
+            }}>
+              <div style={{
+                width: "100%", maxWidth: 440,
+                background: "rgba(255,240,200,0.07)",
+                border: "1.5px solid rgba(255,200,100,0.2)",
+                borderRadius: 20, padding: "16px 14px",
+              }}>
+                {/* Header + timer */}
+                <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 14 }}>
+                  <span style={{ color: "#f5e6c8", fontWeight: 700, fontSize: 14 }}>
+                    {mode === "auditivo" ? "🎧 Ouça a lista!" : "📋 Memorize a lista!"}
+                  </span>
+                  <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
+                    <div style={{ width: 72, height: 6, background: "rgba(255,255,255,0.12)", borderRadius: 3, overflow: "hidden" }}>
+                      <div style={{ height: "100%", width: `${ratio * 100}%`, background: "#f59e0b", borderRadius: 3, transition: "width 1s linear" }} />
+                    </div>
+                    <span style={{ color: "#f59e0b", fontSize: 13, fontWeight: 700, minWidth: 26, textAlign: "right" }}>{countdown}s</span>
                   </div>
-                  <span className={`text-xs tabular-nums font-mono ${pal.sub}`}>{countdown}s</span>
                 </div>
-                {mode === "auditivo" && audioPlaying && (
-                  <p className="text-xs text-amber-500 mt-1 animate-pulse">🔊 Reproduzindo lista...</p>
-                )}
-              </div>
 
-              {/* Lista */}
-              <div className="rounded-xl p-3"
-                style={{ background: isGamified ? "rgba(0,0,0,0.3)" : "rgba(26,39,68,0.04)", border: isGamified ? "1px solid rgba(255,255,255,0.06)" : "1px solid rgba(26,39,68,0.08)" }}>
-                <p className="text-xs font-bold uppercase tracking-wide mb-2" style={{ color: isGamified ? "#06b6d4" : "#2a5fa5" }}>
-                  🛒 Lista ({itemCount} {itemCount === 1 ? "item" : "itens"})
-                </p>
-                <div className="grid grid-cols-3 sm:grid-cols-4 gap-2">
+                {mode === "auditivo" && audioPlaying && (
+                  <p style={{ color: "#f59e0b", fontSize: 11, textAlign: "center", marginBottom: 10, animationName: "pulse", animationDuration: "2s", animationIterationCount: "infinite" }}>
+                    🔊 Reproduzindo lista...
+                  </p>
+                )}
+
+                <div style={{ display: "grid", gridTemplateColumns: `repeat(${listCols}, 1fr)`, gap: 10 }}>
                   {currentList.map((p, idx) => (
-                    <motion.div
-                      key={p.id}
-                      initial={{ opacity: 0, scale: 0.85 }}
-                      animate={{ opacity: 1, scale: 1 }}
-                      transition={{ delay: idx * 0.07 }}
-                      className={`flex flex-col items-center gap-1.5 p-3 rounded-xl border-2 ${pal.listCard}`}
+                    <motion.div key={p.id}
+                      initial={{ opacity: 0, scale: 0.8 }} animate={{ opacity: 1, scale: 1 }}
+                      transition={{ delay: idx * 0.06 }}
+                      style={{
+                        display: "flex", flexDirection: "column", alignItems: "center", gap: 6,
+                        padding: "12px 6px",
+                        background: "rgba(255,240,210,0.1)",
+                        border: "1.5px solid rgba(255,200,100,0.25)",
+                        borderRadius: 14,
+                      }}
                     >
-                      <ProductSvg id={p.id} size={68} />
+                      <ProductSvg id={p.id} size={72} />
                       {mode === "leitura" && (
-                        <span className="text-xs font-bold text-center leading-tight"
-                          style={{ color: isGamified ? "#f1f5f9" : "#1a2744" }}>
+                        <span style={{ color: "#f5e6c8", fontSize: 11, fontWeight: 700, textAlign: "center", lineHeight: 1.2 }}>
                           {p.name}
                         </span>
                       )}
-                      {mode === "auditivo" && <span className="text-base">🔊</span>}
+                      {mode === "auditivo" && <span style={{ fontSize: 20 }}>🔊</span>}
                     </motion.div>
                   ))}
                 </div>
               </div>
+            </div>
 
+            <div style={{ padding: "8px 16px 14px", flexShrink: 0 }}>
               <button
-                onClick={() => {
-                  clearTimer();
-                  if (typeof window !== "undefined") window.speechSynthesis?.cancel();
-                  setPhase("shopping");
-                }}
-                className="w-full mt-3 h-11 rounded-full font-bold text-sm text-white active:scale-95 transition-transform"
+                onClick={() => { clearTimer(); if (typeof window !== "undefined") window.speechSynthesis?.cancel(); setPhase("shopping"); }}
                 style={{
-                  background: isGamified
-                    ? "linear-gradient(135deg, #0891b2, #0e7490)"
-                    : "linear-gradient(135deg, #1a2744, #2a4a8a)",
-                  boxShadow: isGamified
-                    ? "0 4px 16px rgba(8,145,178,0.4)"
-                    : "0 4px 16px rgba(26,39,68,0.35)",
+                  width: "100%", height: 50, borderRadius: 100,
+                  background: "linear-gradient(135deg,#b45309,#92400e)",
+                  border: "none", color: "white", fontWeight: 700, fontSize: 14, cursor: "pointer",
+                  boxShadow: "0 4px 16px rgba(180,83,9,0.4)",
                 }}
               >
-                Já memorizei → ir para a prateleira
+                Já memorizei → ir às prateleiras
               </button>
-            </motion.div>
-          )}
+            </div>
+          </motion.div>
+        )}
 
-          {/* FASE: Compras */}
-          {phase === "shopping" && (
-            <motion.div key="shop" initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -8 }}>
-              <div className="flex justify-between items-center mb-2">
-                <p className={`font-bold text-sm ${pal.title}`}>Encontre os itens na prateleira!</p>
-                <span className="text-xs font-semibold px-2 py-0.5 rounded-full"
-                  style={{
-                    background: selected.size === itemCount
-                      ? "rgba(34,197,94,0.15)"
-                      : isGamified ? "rgba(255,255,255,0.1)" : "rgba(26,39,68,0.08)",
-                    color: selected.size === itemCount ? "#15803d" : isGamified ? "#cbd5e1" : "#1a2744",
-                  }}>
-                  {selected.size}/{itemCount}
-                </span>
-              </div>
-
-              {mode === "auditivo" && (
-                <p className={`text-xs mb-2 text-center italic ${pal.sub}`}>
-                  Reconheça os produtos pelos desenhos — sem nomes!
-                </p>
-              )}
-
-              <Shelf
+        {/* ── SHOPPING ── */}
+        {phase === "shopping" && (
+          <motion.div key="shop"
+            initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}
+            style={{ flex: 1, display: "flex", flexDirection: "column", overflow: "hidden" }}
+          >
+            {/* Shelves (scrollable) */}
+            <div style={{ flex: 1, overflowY: "auto", WebkitOverflowScrolling: "touch" } as React.CSSProperties}>
+              <FullShelf
                 products={shelfProducts}
-                selected={selected}
+                cartIds={cartIds}
                 onToggle={toggleProduct}
                 showLabels={mode === "leitura"}
-                theme={theme}
               />
+            </div>
 
-              <button
-                onClick={handleConfirm}
-                disabled={selected.size === 0}
-                className="w-full mt-3 h-12 rounded-full font-bold text-base text-white active:scale-95 transition-transform disabled:opacity-40"
-                style={{
-                  background: isGamified
-                    ? "linear-gradient(135deg, #0891b2, #0e7490)"
-                    : "linear-gradient(135deg, #1a2744, #2a4a8a)",
-                  boxShadow: isGamified
-                    ? "0 4px 16px rgba(8,145,178,0.4)"
-                    : "0 4px 16px rgba(26,39,68,0.35)",
-                }}
-              >
-                Confirmar ({selected.size}/{itemCount})
-              </button>
-            </motion.div>
-          )}
+            {/* ── CART AREA ── */}
+            {(() => {
+              const CART_SIZE = 118;
+              const interior  = cartInterior(CART_SIZE);
+              // quantos itens cabem na grade interna (células de 28px)
+              const ITEM_PX   = 26;
+              return (
+                <div style={{
+                  flexShrink: 0,
+                  background: "linear-gradient(to bottom,#0f0600,#1a0e05)",
+                  borderTop: "3px solid #b45309",
+                  padding: "8px 12px 14px",
+                  display: "flex", flexDirection: "column", gap: 8,
+                }}>
 
-          {/* FASE: Resultado */}
-          {phase === "result" && (
-            <motion.div key="res" initial={{ opacity: 0, scale: 0.95 }} animate={{ opacity: 1, scale: 1 }} className="py-1">
-              <p className={`font-bold text-sm text-center mb-3 ${pal.title}`}>Resultado desta rodada</p>
-              <div className="grid grid-cols-3 sm:grid-cols-4 gap-2">
-                {currentList.map((p) => {
+                  {/* Linha principal: itens selecionados (esq) + carrinho visual (dir) */}
+                  <div style={{ display: "flex", alignItems: "flex-start", gap: 10 }}>
+
+                    {/* Esquerda: lista de itens no carrinho (toque para remover) */}
+                    <div style={{ flex: 1, display: "flex", flexDirection: "column", gap: 4 }}>
+                      <div style={{ display: "flex", alignItems: "center", gap: 6 }}>
+                        <span style={{ color: "#f5e6c8", fontWeight: 700, fontSize: 12 }}>No carrinho</span>
+                        <span style={{
+                          fontSize: 11, fontWeight: 700, padding: "1px 8px", borderRadius: 100,
+                          background: cartIds.length === itemCount ? "rgba(34,197,94,0.18)" : "rgba(255,255,255,0.08)",
+                          color: cartIds.length === itemCount ? "#4ade80" : "#94a3b8",
+                          border: `1px solid ${cartIds.length === itemCount ? "rgba(34,197,94,0.35)" : "rgba(255,255,255,0.1)"}`,
+                        }}>
+                          {cartIds.length}/{itemCount}
+                        </span>
+                      </div>
+
+                      <div style={{
+                        display: "flex", flexWrap: "wrap", gap: 5,
+                        minHeight: 60, alignContent: "flex-start",
+                      }}>
+                        <AnimatePresence mode="popLayout">
+                          {cartIds.length === 0 ? (
+                            <motion.span key="hint"
+                              initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}
+                              style={{ color: "rgba(255,255,255,0.2)", fontSize: 11, fontStyle: "italic", alignSelf: "center" }}>
+                              Toque nos produtos...
+                            </motion.span>
+                          ) : cartIds.map(id => {
+                            const p = PRODUCT_MAP.get(id);
+                            if (!p) return null;
+                            return (
+                              <motion.button
+                                key={id} layout
+                                initial={{ scale: 0, opacity: 0 }}
+                                animate={{ scale: 1, opacity: 1 }}
+                                exit={{ scale: 0, opacity: 0 }}
+                                transition={{ type: "spring", stiffness: 480, damping: 28 }}
+                                onClick={() => toggleProduct(id)}
+                                title={`Remover ${p.name}`}
+                                style={{
+                                  flexShrink: 0, cursor: "pointer",
+                                  background: "rgba(250,204,21,0.1)",
+                                  border: "1.5px solid rgba(250,204,21,0.3)",
+                                  borderRadius: 8, padding: "3px",
+                                  display: "flex", flexDirection: "column", alignItems: "center", gap: 1,
+                                  position: "relative",
+                                }}
+                              >
+                                <ProductSvg id={id} size={42} />
+                                {mode === "leitura" && (
+                                  <span style={{ fontSize: 7, color: "#facc15", fontWeight: 600, maxWidth: 48, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>
+                                    {p.name}
+                                  </span>
+                                )}
+                                {/* ícone de remover */}
+                                <div style={{
+                                  position: "absolute", top: -4, right: -4,
+                                  width: 14, height: 14, borderRadius: "50%",
+                                  background: "rgba(239,68,68,0.85)",
+                                  display: "flex", alignItems: "center", justifyContent: "center",
+                                  fontSize: 9, color: "white", fontWeight: 900, lineHeight: 1,
+                                }}>×</div>
+                              </motion.button>
+                            );
+                          })}
+                        </AnimatePresence>
+                      </div>
+                    </div>
+
+                    {/* Direita: CartSvg com itens dentro da cesta */}
+                    <div style={{ flexShrink: 0, position: "relative" }}>
+                      <CartSvg size={CART_SIZE} />
+
+                      {/* Itens caindo dentro da cesta */}
+                      <div style={{
+                        position: "absolute",
+                        left:   interior.left,
+                        top:    interior.top,
+                        width:  interior.width,
+                        height: interior.height,
+                        display: "flex", flexWrap: "wrap",
+                        gap: 2, alignContent: "flex-end", justifyContent: "center",
+                        overflow: "hidden", pointerEvents: "none",
+                      }}>
+                        <AnimatePresence>
+                          {cartIds.slice(0, 8).map((id, idx) => (
+                            <motion.div key={id}
+                              initial={{ scale: 0, opacity: 0, y: -(interior.height + 20) }}
+                              animate={{ scale: 1, opacity: 0.95, y: 0 }}
+                              exit={{ scale: 0, opacity: 0, y: -20 }}
+                              transition={{ type: "spring", stiffness: 360, damping: 22, delay: idx * 0.02 }}
+                            >
+                              <ProductSvg id={id} size={ITEM_PX} />
+                            </motion.div>
+                          ))}
+                        </AnimatePresence>
+                        {/* badge de overflow */}
+                        {cartIds.length > 8 && (
+                          <div style={{
+                            position: "absolute", bottom: 2, right: 2,
+                            background: "#d97706", borderRadius: "50%",
+                            width: 18, height: 18, fontSize: 9, fontWeight: 800,
+                            color: "white", display: "flex", alignItems: "center", justifyContent: "center",
+                          }}>+{cartIds.length - 8}</div>
+                        )}
+                      </div>
+                    </div>
+                  </div>
+
+                  {/* Botão confirmar */}
+                  <button
+                    onClick={handleConfirm}
+                    disabled={cartIds.length === 0}
+                    style={{
+                      width: "100%", height: 50, borderRadius: 100, border: "none",
+                      background: cartIds.length > 0
+                        ? "linear-gradient(135deg,#b45309,#92400e)"
+                        : "rgba(255,255,255,0.07)",
+                      color: "white", fontWeight: 700, fontSize: 14,
+                      cursor: cartIds.length > 0 ? "pointer" : "default",
+                      opacity: cartIds.length === 0 ? 0.35 : 1,
+                      boxShadow: cartIds.length > 0 ? "0 4px 16px rgba(180,83,9,0.4)" : "none",
+                      transition: "all 0.2s",
+                    }}
+                  >
+                    Confirmar compras ({cartIds.length}/{itemCount})
+                  </button>
+
+                </div>
+              );
+            })()}
+          </motion.div>
+        )}
+
+        {/* ── RESULT ── */}
+        {phase === "result" && (
+          <motion.div key="res"
+            initial={{ opacity: 0, scale: 0.95 }} animate={{ opacity: 1, scale: 1 }}
+            style={{
+              flex: 1, display: "flex", flexDirection: "column",
+              alignItems: "center", justifyContent: "center",
+              padding: 20, overflowY: "auto",
+            }}
+          >
+            <div style={{
+              width: "100%", maxWidth: 420,
+              background: "rgba(255,240,200,0.07)",
+              border: `2px solid ${isRoundCorrect ? "rgba(34,197,94,0.45)" : "rgba(239,68,68,0.45)"}`,
+              borderRadius: 20, padding: "16px 14px",
+            }}>
+              <p style={{ color: "#f5e6c8", fontWeight: 700, fontSize: 15, textAlign: "center", marginBottom: 14 }}>
+                {isRoundCorrect ? "✅ Lista correta!" : "❌ Resultado da rodada"}
+              </p>
+              <div style={{ display: "grid", gridTemplateColumns: `repeat(${listCols}, 1fr)`, gap: 8 }}>
+                {currentList.map(p => {
                   const hit = selected.has(p.id);
                   return (
-                    <div key={p.id} className="p-2 rounded-xl flex flex-col items-center gap-1"
-                      style={{
-                        border: `1.5px solid ${hit ? "rgba(34,197,94,0.35)" : "rgba(239,68,68,0.35)"}`,
-                        background: hit ? "rgba(34,197,94,0.07)" : "rgba(239,68,68,0.07)",
-                      }}>
-                      <ProductSvg id={p.id} size={52} />
-                      <span className="text-[10px] text-center leading-tight font-semibold"
-                        style={{ color: hit ? "#15803d" : "#b91c1c" }}>
+                    <div key={p.id} style={{
+                      display: "flex", flexDirection: "column", alignItems: "center", gap: 4,
+                      padding: "10px 4px",
+                      background: hit ? "rgba(34,197,94,0.1)" : "rgba(239,68,68,0.1)",
+                      border: `1.5px solid ${hit ? "rgba(34,197,94,0.4)" : "rgba(239,68,68,0.4)"}`,
+                      borderRadius: 12,
+                    }}>
+                      <ProductSvg id={p.id} size={54} />
+                      <span style={{ fontSize: 9, fontWeight: 600, textAlign: "center", color: hit ? "#4ade80" : "#f87171" }}>
                         {p.name}
                       </span>
-                      <span className="text-sm">{hit ? "✅" : "❌"}</span>
+                      <span style={{ fontSize: 16 }}>{hit ? "✅" : "❌"}</span>
                     </div>
                   );
                 })}
               </div>
-              {[...selected].some((id) => !currentList.find((p) => p.id === id)) && (
-                <p className="text-xs text-red-500 text-center mt-2">
-                  Alguns itens selecionados não estavam na lista.
+              {cartIds.some(id => !currentList.find(p => p.id === id)) && (
+                <p style={{ color: "#f87171", fontSize: 11, textAlign: "center", marginTop: 10 }}>
+                  ⚠️ Alguns itens não estavam na lista.
                 </p>
               )}
-            </motion.div>
-          )}
-
-        </AnimatePresence>
-
-        {streak !== 0 && phase !== "result" && (
-          <p className={`text-xs text-center mt-2 ${pal.sub}`}>
-            {streak > 0
-              ? `🔥 ${streak} acerto${streak > 1 ? "s" : ""} seguido${streak > 1 ? "s" : ""}`
-              : `${Math.abs(streak)} erro${Math.abs(streak) > 1 ? "s" : ""} seguido${Math.abs(streak) > 1 ? "s" : ""}`}
-          </p>
+            </div>
+          </motion.div>
         )}
-      </div>
+
+      </AnimatePresence>
     </div>
   );
 }

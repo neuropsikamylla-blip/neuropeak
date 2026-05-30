@@ -20,10 +20,8 @@ const MAX_TRIALS = 20;
 const MIN_SPAN = 2;
 const MAX_SPAN = 9;
 
-// Dificuldade 6-10: modo inverso (memória operacional)
 const REVERSE_MODE = (difficulty: number) => difficulty >= 6;
 
-// Ponto de partida do span conforme dificuldade
 function initialSpan(difficulty: number) {
   return Math.min(Math.max(2, Math.floor(difficulty * 0.5) + 1), 5);
 }
@@ -41,6 +39,172 @@ function speak(text: string): Promise<void> {
     u.onerror = () => resolve();
     window.speechSynthesis.speak(u);
   });
+}
+
+// ── Shared visuals ────────────────────────────────────────────────────────────
+
+function GlassBg() {
+  return (
+    <div className="fixed inset-0 -z-10 overflow-hidden">
+      <div
+        className="absolute inset-0"
+        style={{
+          background:
+            "linear-gradient(145deg, #020617 0%, #0f172a 35%, #1a1040 65%, #0c1220 100%)",
+        }}
+      />
+      <div
+        className="absolute top-[8%] left-[5%] w-[500px] h-[500px] rounded-full"
+        style={{
+          background: "radial-gradient(circle, rgba(99,102,241,0.18) 0%, transparent 70%)",
+          filter: "blur(64px)",
+        }}
+      />
+      <div
+        className="absolute bottom-[10%] right-[8%] w-[440px] h-[440px] rounded-full"
+        style={{
+          background: "radial-gradient(circle, rgba(139,92,246,0.2) 0%, transparent 70%)",
+          filter: "blur(72px)",
+        }}
+      />
+      <div
+        className="absolute top-[50%] left-[50%] -translate-x-1/2 -translate-y-1/2 w-[380px] h-[380px] rounded-full"
+        style={{
+          background: "radial-gradient(circle, rgba(59,130,246,0.1) 0%, transparent 70%)",
+          filter: "blur(52px)",
+        }}
+      />
+      <div
+        className="absolute inset-0"
+        style={{
+          backgroundImage:
+            "radial-gradient(circle, rgba(255,255,255,0.022) 1px, transparent 1px)",
+          backgroundSize: "32px 32px",
+        }}
+      />
+    </div>
+  );
+}
+
+const CARD_STYLE: React.CSSProperties = {
+  background: "rgba(10,16,34,0.82)",
+  backdropFilter: "blur(28px)",
+  WebkitBackdropFilter: "blur(28px)",
+  border: "1px solid rgba(148,163,184,0.1)",
+  boxShadow:
+    "0 32px 80px rgba(0,0,0,0.65), 0 0 0 1px rgba(255,255,255,0.03), inset 0 1px 0 rgba(255,255,255,0.06)",
+};
+
+// ── Tutorial sub-components ────────────────────────────────────────────────────
+
+function SpanShowStep({ seq, onDone }: { theme: Theme; seq: number[]; onDone: () => void }) {
+  const [display, setDisplay] = useState<number | null>(null);
+  const [done, setDone] = useState(false);
+
+  useEffect(() => {
+    let cancelled = false;
+    async function run() {
+      for (const n of seq) {
+        if (cancelled) return;
+        await new Promise<void>((r) => setTimeout(r, 400));
+        if (cancelled) return;
+        setDisplay(n);
+        await new Promise<void>((r) => setTimeout(r, 700));
+        if (cancelled) return;
+        setDisplay(null);
+      }
+      await new Promise<void>((r) => setTimeout(r, 400));
+      if (!cancelled) { setDone(true); onDone(); }
+    }
+    run();
+    return () => { cancelled = true; };
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+
+  return (
+    <div className="flex flex-col items-center gap-3 py-2">
+      <div
+        className="w-24 h-24 rounded-2xl flex items-center justify-center text-5xl font-black mx-auto"
+        style={{
+          background: display !== null ? "rgba(99,102,241,0.15)" : "rgba(255,255,255,0.04)",
+          border: `2px solid ${display !== null ? "rgba(99,102,241,0.5)" : "rgba(255,255,255,0.08)"}`,
+          color: "#818cf8",
+          boxShadow: display !== null ? "0 0 28px rgba(99,102,241,0.3)" : undefined,
+          transition: "all 0.15s",
+        }}
+      >
+        {display ?? ""}
+      </div>
+      {done && (
+        <p className="text-xs text-center text-slate-400">Sequência exibida!</p>
+      )}
+    </div>
+  );
+}
+
+function SpanInputStep({ answer, onDone }: { theme: Theme; answer: number[]; onDone: () => void }) {
+  const [clicked, setClicked] = useState<number[]>([]);
+  const [flash, setFlash] = useState<"green" | "red" | null>(null);
+  const done = useRef(false);
+
+  function handleClick(n: number) {
+    if (done.current) return;
+    const next = clicked.length;
+    if (n === answer[next]) {
+      const newClicked = [...clicked, n];
+      setClicked(newClicked);
+      setFlash("green");
+      setTimeout(() => setFlash(null), 300);
+      if (newClicked.length === answer.length) {
+        done.current = true;
+        setTimeout(onDone, 400);
+      }
+    } else {
+      setFlash("red");
+      setTimeout(() => { setFlash(null); setClicked([]); }, 400);
+    }
+  }
+
+  return (
+    <div
+      className="rounded-xl p-3 transition-all"
+      style={{
+        outline: flash === "green" ? "3px solid rgba(34,197,94,0.6)" : flash === "red" ? "3px solid rgba(244,63,94,0.6)" : "none",
+      }}
+    >
+      <div className="flex gap-2 justify-center mb-3">
+        {answer.map((_, i) => (
+          <div
+            key={i}
+            className="w-10 h-10 rounded-xl flex items-center justify-center font-bold text-lg"
+            style={{
+              background: i < clicked.length ? "rgba(99,102,241,0.2)" : "rgba(255,255,255,0.04)",
+              border: `2px solid ${i < clicked.length ? "rgba(129,140,248,0.6)" : "rgba(255,255,255,0.1)"}`,
+              color: i < clicked.length ? "#818cf8" : "rgba(148,163,184,0.4)",
+            }}
+          >
+            {i < clicked.length ? clicked[i] : "·"}
+          </div>
+        ))}
+      </div>
+      <div className="grid grid-cols-5 gap-1.5">
+        {[1,2,3,4,5,6,7,8,9,0].map((n) => (
+          <button
+            key={n}
+            onClick={() => handleClick(n)}
+            className="h-11 rounded-xl font-bold text-lg"
+            style={{
+              background: "rgba(255,255,255,0.06)",
+              border: "1px solid rgba(99,102,241,0.25)",
+              color: "#c7d2fe",
+            }}
+          >
+            {n}
+          </button>
+        ))}
+      </div>
+    </div>
+  );
 }
 
 function SpanNumericoTutorial({ theme, reverse, onDone }: { theme: Theme; reverse: boolean; onDone: () => void }) {
@@ -67,114 +231,13 @@ function SpanNumericoTutorial({ theme, reverse, onDone }: { theme: Theme; revers
   return <TutorialBase theme={theme} title={reverse ? "Span Numérico Inverso" : "Span Numérico"} steps={steps} onDone={onDone} />;
 }
 
-function SpanShowStep({ theme, seq, onDone }: { theme: Theme; seq: number[]; onDone: () => void }) {
-  const [display, setDisplay] = useState<number | null>(null);
-  const [done, setDone] = useState(false);
-
-  useEffect(() => {
-    let cancelled = false;
-    async function run() {
-      for (const n of seq) {
-        if (cancelled) return;
-        await new Promise<void>((r) => setTimeout(r, 400));
-        if (cancelled) return;
-        setDisplay(n);
-        await new Promise<void>((r) => setTimeout(r, 700));
-        if (cancelled) return;
-        setDisplay(null);
-      }
-      await new Promise<void>((r) => setTimeout(r, 400));
-      if (!cancelled) { setDone(true); onDone(); }
-    }
-    run();
-    return () => { cancelled = true; };
-  // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, []);
-
-  const displayBox = {
-    CLINICAL: "bg-gray-100 text-gray-900 border-2 border-gray-300",
-    COLORFUL: "bg-purple-100 text-purple-900 border-4 border-purple-400",
-    GAMIFIED: "bg-gray-700 text-cyan-400 border-2 border-cyan-500",
-  }[theme];
-
-  return (
-    <div className="flex flex-col items-center gap-3">
-      <div className={`w-24 h-24 rounded-2xl flex items-center justify-center text-5xl font-black mx-auto ${displayBox}`}>
-        {display ?? ""}
-      </div>
-      {done && (
-        <p className={`text-xs text-center ${theme === "GAMIFIED" ? "text-gray-400" : "text-gray-500"}`}>
-          Sequência exibida!
-        </p>
-      )}
-    </div>
-  );
-}
-
-function SpanInputStep({ theme, answer, onDone }: { theme: Theme; answer: number[]; onDone: () => void }) {
-  const [clicked, setClicked] = useState<number[]>([]);
-  const [flash, setFlash] = useState<"green" | "red" | null>(null);
-  const done = useRef(false);
-
-  function handleClick(n: number) {
-    if (done.current) return;
-    const next = clicked.length;
-    if (n === answer[next]) {
-      const newClicked = [...clicked, n];
-      setClicked(newClicked);
-      setFlash("green");
-      setTimeout(() => setFlash(null), 300);
-      if (newClicked.length === answer.length) {
-        done.current = true;
-        setTimeout(onDone, 400);
-      }
-    } else {
-      setFlash("red");
-      setTimeout(() => { setFlash(null); setClicked([]); }, 400);
-    }
-  }
-
-  const btnClass = {
-    CLINICAL: "bg-white border-2 border-gray-300 text-gray-800 hover:bg-blue-50 hover:border-blue-400",
-    COLORFUL: "bg-gradient-to-br from-purple-400 to-pink-400 text-white",
-    GAMIFIED: "bg-gray-700 border border-cyan-500/40 text-cyan-300",
-  }[theme];
-
-  const flashOverlay = flash === "green" ? "ring-4 ring-green-400" : flash === "red" ? "ring-4 ring-red-400" : "";
-
-  return (
-    <div className={`rounded-xl p-3 ${flashOverlay} transition-all`}>
-      <div className="flex gap-1.5 justify-center mb-3">
-        {answer.map((_, i) => (
-          <div key={i} className={`w-9 h-9 rounded-lg border-2 flex items-center justify-center font-bold text-lg ${
-            i < clicked.length
-              ? theme === "GAMIFIED" ? "bg-cyan-700 border-cyan-500 text-cyan-300" : "bg-blue-100 border-blue-400 text-blue-700"
-              : theme === "GAMIFIED" ? "bg-gray-700 border-gray-600 text-gray-500" : "bg-gray-100 border-gray-300 text-gray-400"
-          }`}>
-            {i < clicked.length ? clicked[i] : "·"}
-          </div>
-        ))}
-      </div>
-      <div className="grid grid-cols-5 gap-1.5">
-        {[1,2,3,4,5,6,7,8,9,0].map((n) => (
-          <button
-            key={n}
-            onClick={() => handleClick(n)}
-            className={`h-11 rounded-xl font-bold text-lg ${btnClass}`}
-          >
-            {n}
-          </button>
-        ))}
-      </div>
-    </div>
-  );
-}
+// ── Main exercise ─────────────────────────────────────────────────────────────
 
 export function SpanNumerico({ difficulty, theme, onComplete, alwaysReverse }: SpanNumericoProps) {
   const reverse = alwaysReverse ?? REVERSE_MODE(difficulty);
   const [showTutorial, setShowTutorial] = useState(true);
   const [spanLength, setSpanLength] = useState(initialSpan(difficulty));
-  const [streak, setStreak] = useState(0); // positivo = acertos, negativo = erros
+  const [streak, setStreak] = useState(0);
   const [phase, setPhase] = useState<Phase>("showing");
   const [sequence, setSequence] = useState<number[]>([]);
   const [currentDisplay, setCurrentDisplay] = useState<number | null>(null);
@@ -236,7 +299,6 @@ export function SpanNumerico({ difficulty, theme, onComplete, alwaysReverse }: S
   }
 
   function submit(entered: number[]) {
-    // Resposta esperada: inversa se reverse, direta se não
     const expected = reverse ? [...sequence].reverse() : sequence;
     const correct = entered.join("") === expected.join("");
 
@@ -246,7 +308,6 @@ export function SpanNumerico({ difficulty, theme, onComplete, alwaysReverse }: S
     const newAttempts = [...attempts, { correct, span: spanLength }];
     setAttempts(newAttempts);
 
-    // Escada 2-cima / 2-baixo
     const newStreak = correct
       ? Math.max(streak, 0) + 1
       : Math.min(streak, 0) - 1;
@@ -287,186 +348,254 @@ export function SpanNumerico({ difficulty, theme, onComplete, alwaysReverse }: S
     return <SpanNumericoTutorial theme={theme} reverse={reverse} onDone={() => setShowTutorial(false)} />;
   }
 
-  // ─── Estilos por tema ────────────────────────────────────────────────
-  const bg = { CLINICAL: "bg-gray-50", COLORFUL: "bg-gradient-to-br from-purple-50 to-pink-50", GAMIFIED: "bg-gray-950" }[theme];
-  const card = { CLINICAL: "bg-white shadow-lg", COLORFUL: "bg-white shadow-lg", GAMIFIED: "bg-gray-800 border border-cyan-500/30" }[theme];
-  const title = { CLINICAL: "text-gray-900", COLORFUL: "text-purple-700", GAMIFIED: "text-cyan-400" }[theme];
-  const sub = { CLINICAL: "text-gray-500", COLORFUL: "text-purple-500", GAMIFIED: "text-gray-400" }[theme];
-  const displayBox = {
-    CLINICAL: "bg-gray-100 text-gray-900 border-2 border-gray-300",
-    COLORFUL: "bg-purple-100 text-purple-900 border-4 border-purple-400",
-    GAMIFIED: "bg-gray-700 text-cyan-400 border-2 border-cyan-500 shadow-[0_0_20px_rgba(6,182,212,0.3)]",
-  }[theme];
+  const correctCount = attempts.filter((a) => a.correct).length;
+  const progressPct = (trial / MAX_TRIALS) * 100;
 
-  const numBtnBase = "h-14 flex items-center justify-center rounded-2xl text-2xl font-bold select-none active:scale-95 transition-transform duration-75 cursor-pointer";
-  const numBtn = {
-    CLINICAL: `${numBtnBase} bg-white border-2 border-gray-300 text-gray-800 hover:bg-blue-50 hover:border-blue-400 shadow-sm`,
-    COLORFUL: `${numBtnBase} bg-gradient-to-br from-purple-400 to-pink-400 text-white shadow-md`,
-    GAMIFIED: `${numBtnBase} bg-gray-700 border border-cyan-500/40 text-cyan-300 hover:bg-gray-600`,
-  }[theme];
-
-  function digitTileClass(filled: boolean) {
-    return {
-      CLINICAL: `w-10 h-12 rounded-xl border-2 flex items-center justify-center text-2xl font-bold ${filled ? "bg-blue-50 border-blue-400 text-blue-700" : "bg-gray-100 border-gray-300"}`,
-      COLORFUL: `w-10 h-12 rounded-xl border-2 flex items-center justify-center text-2xl font-bold ${filled ? "bg-purple-50 border-purple-400 text-purple-700" : "bg-purple-50/50 border-purple-200"}`,
-      GAMIFIED: `w-10 h-12 rounded-xl border flex items-center justify-center text-2xl font-bold ${filled ? "bg-gray-700 border-cyan-500 text-cyan-400" : "bg-gray-800 border-gray-600"}`,
-    }[theme];
-  }
+  // tile size: grande para poucos dígitos, menor para muitos
+  const tileSize = Math.min(96, Math.max(48, Math.floor(520 / spanLength) - 12));
+  const tileFontSize = Math.round(tileSize * 0.48);
 
   return (
-    <div className={`min-h-screen flex flex-col items-center p-4 pt-6 ${bg}`}>
-      <div className={`w-full max-w-sm rounded-2xl p-6 ${card}`}>
+    <div className="min-h-screen flex flex-col items-center justify-center p-4">
+      <GlassBg />
+
+      <div className="w-full max-w-xl rounded-3xl p-7 space-y-5" style={CARD_STYLE}>
 
         {/* Header */}
-        <div className="flex justify-between items-center mb-4">
+        <div className="flex items-start justify-between">
           <div>
-            <h2 className={`font-bold text-base ${title}`}>
-              Span Numérico{reverse ? " — Inverso" : ""}
-            </h2>
-            <p className={`text-xs ${sub}`}>
+            <p
+              className="text-[11px] font-bold tracking-[0.2em] uppercase mb-1"
+              style={{ color: "rgba(148,163,184,0.45)" }}
+            >
+              {reverse ? "Span Numérico Inverso" : "Span Numérico"}
+            </p>
+            <p className="text-2xl font-bold text-white">
               {spanLength} dígito{spanLength > 1 ? "s" : ""}
-              {reverse ? " · responda ao contrário" : ""}
+              {reverse ? <span className="text-base font-normal ml-2" style={{ color: "#818cf8" }}>· inverso</span> : null}
+            </p>
+          </div>
+          <div className="text-right">
+            <p className="text-[10px] font-semibold tracking-widest mb-1" style={{ color: "rgba(148,163,184,0.4)" }}>ACERTOS</p>
+            <p className="text-xl font-black" style={{ color: "#4ade80" }}>
+              {correctCount}<span className="text-sm font-normal text-slate-600 ml-1">/ {MAX_TRIALS}</span>
             </p>
           </div>
         </div>
 
-        {/* Barra de progresso */}
-        <div className="flex gap-1 mb-6">
-          {Array.from({ length: MAX_TRIALS }).map((_, i) => (
-            <div
-              key={i}
-              className={`h-1.5 flex-1 rounded-full transition-colors ${
-                i < attempts.length
-                  ? attempts[i].correct ? "bg-green-500" : "bg-red-400"
-                  : i === trial
-                  ? "bg-blue-400 animate-pulse"
-                  : theme === "GAMIFIED" ? "bg-gray-700" : "bg-gray-200"
-              }`}
-            />
-          ))}
+        {/* Barra de progresso — linha única */}
+        <div className="relative h-1 rounded-full overflow-hidden" style={{ background: "rgba(255,255,255,0.07)" }}>
+          <motion.div
+            className="absolute inset-y-0 left-0 rounded-full"
+            style={{ background: "linear-gradient(90deg, #6366f1, #818cf8)" }}
+            animate={{ width: `${progressPct}%` }}
+            transition={{ duration: 0.4 }}
+          />
         </div>
 
-        {/* FASE: mostrando */}
+        {/* ── FASE: mostrando número ────────────────────────────────────── */}
         {phase === "showing" && (
-          <div className="text-center">
-            <p className={`text-sm mb-6 ${sub}`}>
-              {reverse
-                ? "Ouça os números... e depois repita ao contrário"
-                : "Memorize a sequência..."}
+          <div className="flex flex-col items-center gap-5 py-2">
+            <p
+              className="text-[11px] font-semibold tracking-[0.18em] uppercase"
+              style={{ color: "rgba(148,163,184,0.4)" }}
+            >
+              {reverse ? "memorize · responda ao contrário" : "memorize a sequência"}
             </p>
+
             <AnimatePresence mode="wait">
               {currentDisplay !== null ? (
                 <motion.div
-                  key={`${trial}-${currentDisplay}-${Date.now()}`}
-                  className={`w-32 h-32 rounded-2xl flex items-center justify-center text-6xl font-black mx-auto ${displayBox}`}
-                  initial={{ scale: 0.5, opacity: 0 }}
+                  key={`num-${trial}-${currentDisplay}`}
+                  className="flex items-center justify-center rounded-3xl select-none"
+                  style={{
+                    width: "100%",
+                    height: 200,
+                    background: "rgba(99,102,241,0.1)",
+                    border: "2px solid rgba(99,102,241,0.38)",
+                    boxShadow: "0 0 56px rgba(99,102,241,0.22), inset 0 1px 0 rgba(255,255,255,0.05)",
+                    position: "relative",
+                    overflow: "hidden",
+                  }}
+                  initial={{ scale: 0.65, opacity: 0 }}
                   animate={{ scale: 1, opacity: 1 }}
-                  exit={{ scale: 0.5, opacity: 0 }}
-                  transition={{ duration: 0.15 }}
+                  exit={{ scale: 0.72, opacity: 0 }}
+                  transition={{ type: "spring", stiffness: 520, damping: 28 }}
                 >
-                  {currentDisplay}
+                  <div
+                    className="absolute inset-0"
+                    style={{
+                      backgroundImage: "radial-gradient(circle, rgba(255,255,255,0.022) 1px, transparent 1px)",
+                      backgroundSize: "24px 24px",
+                    }}
+                  />
+                  <span
+                    className="relative font-black select-none"
+                    style={{
+                      fontSize: "clamp(100px, 20vw, 144px)",
+                      color: "#a5b4fc",
+                      textShadow: "0 0 56px rgba(99,102,241,0.65), 0 0 100px rgba(99,102,241,0.25)",
+                      lineHeight: 1,
+                    }}
+                  >
+                    {currentDisplay}
+                  </span>
                 </motion.div>
               ) : (
-                <div className={`w-32 h-32 rounded-2xl mx-auto ${theme === "GAMIFIED" ? "bg-gray-700" : "bg-gray-100"}`} />
+                <motion.div
+                  key="empty"
+                  className="rounded-3xl"
+                  style={{
+                    width: "100%",
+                    height: 200,
+                    background: "rgba(255,255,255,0.025)",
+                    border: "2px solid rgba(255,255,255,0.055)",
+                  }}
+                  initial={{ opacity: 0 }}
+                  animate={{ opacity: 1 }}
+                />
               )}
             </AnimatePresence>
           </div>
         )}
 
-        {/* FASE: input — tiles + numpad */}
+        {/* ── FASE: input ───────────────────────────────────────────────── */}
         {phase === "input" && (
-          <div>
-            <p className={`text-sm text-center mb-1 font-medium ${sub}`}>
-              {reverse
-                ? "Toque os números em ORDEM INVERSA (último → primeiro):"
-                : "Toque os números na mesma ordem:"}
+          <div className="space-y-5">
+            {/* Instrução */}
+            <p
+              className="text-center text-[11px] font-bold tracking-[0.18em] uppercase"
+              style={{ color: "rgba(148,163,184,0.45)" }}
+            >
+              {reverse ? "toque na ordem inversa · último → primeiro" : "toque na mesma ordem"}
             </p>
 
-            {/* Animação de seta inversa */}
-            {reverse && (
-              <p className={`text-xs text-center mb-3 ${theme === "GAMIFIED" ? "text-cyan-500" : "text-blue-500"}`}>
-                ← da direita para a esquerda
-              </p>
-            )}
-
-            {/* Tiles de dígitos */}
-            <div className="flex justify-center gap-2 mb-5 flex-wrap">
-              {Array.from({ length: spanLength }).map((_, i) => (
-                <div key={i} className={digitTileClass(i < digits.length)}>
-                  {i < digits.length ? digits[i] : "·"}
-                </div>
-              ))}
+            {/* Tiles da sequência */}
+            <div className="flex justify-center items-center gap-3 flex-wrap">
+              {Array.from({ length: spanLength }).map((_, i) => {
+                const filled = i < digits.length;
+                return (
+                  <motion.div
+                    key={i}
+                    className="flex items-center justify-center rounded-2xl font-black select-none"
+                    style={{
+                      width: tileSize,
+                      height: tileSize,
+                      fontSize: filled ? tileFontSize : Math.round(tileSize * 0.2),
+                      background: filled ? "rgba(99,102,241,0.15)" : "rgba(255,255,255,0.04)",
+                      border: `2px solid ${filled ? "rgba(129,140,248,0.55)" : "rgba(255,255,255,0.1)"}`,
+                      color: filled ? "#a5b4fc" : "rgba(148,163,184,0.22)",
+                      boxShadow: filled ? "0 0 20px rgba(99,102,241,0.2)" : undefined,
+                      transition: "background 0.12s, border-color 0.12s, box-shadow 0.12s",
+                    }}
+                    animate={filled ? { scale: [1, 1.07, 1] } : {}}
+                    transition={{ duration: 0.14 }}
+                  >
+                    {filled ? digits[i] : "·"}
+                  </motion.div>
+                );
+              })}
             </div>
 
-            {/* Teclado moderno: 2 linhas de 5 */}
-            <div className="grid grid-cols-5 gap-2 mb-2">
-              {NUM_KEYS.map((n) => (
+            {/* Numpad: 2 linhas de 5 */}
+            <div className="space-y-2.5">
+              <div className="grid grid-cols-5 gap-2.5">
+                {[1, 2, 3, 4, 5].map((n) => (
+                  <NumKey key={n} value={n} onPress={() => handleKey(n)} />
+                ))}
+              </div>
+              <div className="grid grid-cols-5 gap-2.5">
+                {[6, 7, 8, 9, 0].map((n) => (
+                  <NumKey key={n} value={n} onPress={() => handleKey(n)} />
+                ))}
+              </div>
+              {/* Apagar + Confirmar */}
+              <div className="grid grid-cols-2 gap-2.5 pt-0.5">
                 <button
-                  key={n}
-                  onPointerDown={(e) => { e.preventDefault(); handleKey(n); }}
-                  className={numBtn}
+                  onPointerDown={(e) => { e.preventDefault(); handleKey("⌫"); }}
+                  className="h-12 rounded-2xl font-semibold text-sm select-none active:scale-95 transition-transform duration-75 flex items-center justify-center gap-2"
+                  style={{
+                    background: "rgba(251,113,133,0.07)",
+                    border: "1.5px solid rgba(251,113,133,0.22)",
+                    color: "#fb7185",
+                  }}
                 >
-                  {n}
+                  ⌫ Apagar
                 </button>
-              ))}
-            </div>
-            {/* Ações */}
-            <div className="flex gap-2">
-              <button
-                onPointerDown={(e) => { e.preventDefault(); handleKey("⌫"); }}
-                className={`flex-1 h-12 flex items-center justify-center gap-1 rounded-2xl text-sm font-bold select-none active:scale-95 transition-transform duration-75 ${
-                  theme === "CLINICAL" ? "bg-orange-50 border-2 border-orange-300 text-orange-600" :
-                  theme === "COLORFUL" ? "bg-orange-400 text-white" :
-                  "bg-gray-700 border border-orange-500/40 text-orange-400"
-                }`}
-              >
-                ← Apagar
-              </button>
-              <button
-                onPointerDown={(e) => { e.preventDefault(); if (digits.length > 0) handleKey("✓"); }}
-                disabled={digits.length === 0}
-                className={`flex-1 h-12 flex items-center justify-center gap-1 rounded-2xl text-sm font-bold select-none active:scale-95 transition-transform duration-75 ${digits.length === 0 ? "opacity-40 cursor-not-allowed " : ""}${
-                  theme === "CLINICAL" ? "bg-blue-600 text-white" :
-                  theme === "COLORFUL" ? "bg-gradient-to-br from-green-400 to-teal-400 text-white" :
-                  "bg-cyan-600 text-white"
-                }`}
-              >
-                Confirmar ✓
-              </button>
+                <button
+                  onPointerDown={(e) => { e.preventDefault(); if (digits.length > 0) handleKey("✓"); }}
+                  disabled={digits.length === 0}
+                  className="h-12 rounded-2xl font-semibold text-sm select-none active:scale-95 transition-transform duration-75 flex items-center justify-center gap-2"
+                  style={{
+                    background: digits.length === 0 ? "rgba(255,255,255,0.03)" : "rgba(34,197,94,0.1)",
+                    border: `1.5px solid ${digits.length === 0 ? "rgba(255,255,255,0.05)" : "rgba(74,222,128,0.28)"}`,
+                    color: digits.length === 0 ? "rgba(148,163,184,0.2)" : "#4ade80",
+                    cursor: digits.length === 0 ? "not-allowed" : "pointer",
+                  }}
+                >
+                  Confirmar ✓
+                </button>
+              </div>
             </div>
           </div>
         )}
 
-        {/* FASE: feedback */}
+        {/* ── FASE: feedback ───────────────────────────────────────────── */}
         {phase === "feedback" && (
           <AnimatePresence>
             <motion.div
-              className="text-center py-2"
-              initial={{ scale: 0.8, opacity: 0 }}
+              className="flex flex-col items-center py-4 gap-4"
+              initial={{ scale: 0.85, opacity: 0 }}
               animate={{ scale: 1, opacity: 1 }}
+              transition={{ type: "spring", stiffness: 380, damping: 24 }}
             >
-              <div className="text-5xl mb-3">{feedback === "correct" ? "✅" : "❌"}</div>
-              <p className={`text-base font-bold mb-1 ${feedback === "correct" ? "text-green-500" : "text-red-500"}`}>
+              <div
+                className="w-20 h-20 rounded-full flex items-center justify-center text-3xl font-black"
+                style={{
+                  background: feedback === "correct" ? "rgba(34,197,94,0.1)" : "rgba(244,63,94,0.1)",
+                  border: `2px solid ${feedback === "correct" ? "rgba(74,222,128,0.38)" : "rgba(251,113,133,0.38)"}`,
+                  boxShadow: `0 0 32px ${feedback === "correct" ? "rgba(34,197,94,0.18)" : "rgba(244,63,94,0.18)"}`,
+                  color: feedback === "correct" ? "#4ade80" : "#fb7185",
+                }}
+              >
+                {feedback === "correct" ? "✓" : "✗"}
+              </div>
+
+              <p
+                className="text-xl font-black tracking-wide"
+                style={{ color: feedback === "correct" ? "#4ade80" : "#fb7185" }}
+              >
                 {feedback === "correct" ? "Correto!" : "Incorreto"}
               </p>
-              <p className={`text-sm ${sub}`}>
-                {reverse ? "Resposta correta: " : "Sequência: "}
-                <span className="font-mono font-bold">
+
+              <div
+                className="px-6 py-4 rounded-2xl text-center"
+                style={{
+                  background: "rgba(255,255,255,0.035)",
+                  border: "1px solid rgba(255,255,255,0.07)",
+                }}
+              >
+                <p className="text-[11px] text-slate-500 mb-2 tracking-widest uppercase">
+                  {reverse ? "resposta correta" : "sequência"}
+                </p>
+                <p className="font-mono font-black text-3xl tracking-[0.25em]" style={{ color: "#a5b4fc" }}>
                   {(reverse ? [...sequence].reverse() : sequence).join(" ")}
-                </span>
-              </p>
-              {reverse && (
-                <p className={`text-xs mt-1 ${sub}`}>
-                  (apresentado: {sequence.join(" ")})
+                </p>
+                {reverse && (
+                  <p className="text-[11px] text-slate-600 mt-1.5">
+                    apresentado: {sequence.join(" ")}
+                  </p>
+                )}
+              </div>
+
+              {trial + 1 < MAX_TRIALS && feedback === "correct" && streak + 1 >= 2 && (
+                <p className="text-sm font-semibold" style={{ color: "#818cf8" }}>
+                  Próximo: {Math.min(spanLength + 1, MAX_SPAN)} dígitos ↑
                 </p>
               )}
-              {trial + 1 < MAX_TRIALS && (
-                <p className={`text-xs mt-2 font-medium ${feedback === "correct" && streak + 1 >= 2 ? (theme === "GAMIFIED" ? "text-cyan-400" : "text-blue-600") : sub}`}>
-                  {feedback === "correct" && streak + 1 >= 2
-                    ? `Próxima: ${Math.min(spanLength + 1, MAX_SPAN)} dígitos ↑`
-                    : feedback !== "correct" && streak - 1 <= -2 && spanLength > MIN_SPAN
-                    ? `Próxima: ${Math.max(spanLength - 1, MIN_SPAN)} dígitos ↓`
-                    : ""}
+              {trial + 1 < MAX_TRIALS && feedback !== "correct" && streak - 1 <= -2 && spanLength > MIN_SPAN && (
+                <p className="text-sm font-semibold" style={{ color: "#f97316" }}>
+                  Próximo: {Math.max(spanLength - 1, MIN_SPAN)} dígitos ↓
                 </p>
               )}
             </motion.div>
@@ -475,5 +604,24 @@ export function SpanNumerico({ difficulty, theme, onComplete, alwaysReverse }: S
 
       </div>
     </div>
+  );
+}
+
+function NumKey({ value, onPress }: { value: number; onPress: () => void }) {
+  return (
+    <motion.button
+      onPointerDown={(e) => { e.preventDefault(); onPress(); }}
+      whileTap={{ scale: 0.91 }}
+      className="h-16 rounded-2xl font-black text-2xl select-none flex items-center justify-center"
+      style={{
+        background: "rgba(255,255,255,0.05)",
+        border: "1.5px solid rgba(99,102,241,0.2)",
+        color: "#c7d2fe",
+        backdropFilter: "blur(8px)",
+        boxShadow: "inset 0 1px 0 rgba(255,255,255,0.07), 0 4px 14px rgba(0,0,0,0.35)",
+      }}
+    >
+      {value}
+    </motion.button>
   );
 }

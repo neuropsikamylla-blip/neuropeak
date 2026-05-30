@@ -359,6 +359,46 @@ export const EXERCISE_DEFINITIONS = {
     estimatedMinutes: 10,
     icon: "🔍",
   },
+  "vigilancia": {
+    id: "vigilancia",
+    name: "Vigilância",
+    domain: "attention" as Domain,
+    description: "Identifique o estímulo-alvo em meio a uma sequência rápida de letras e números",
+    estimatedMinutes: 7,
+    icon: "👁️",
+  },
+  "decisao-rapida": {
+    id: "decisao-rapida",
+    name: "Decisão Rápida",
+    domain: "processing" as Domain,
+    description: "Classifique rapidamente imagens entre animais e objetos",
+    estimatedMinutes: 6,
+    icon: "⚡",
+  },
+  "identificacao-simbolos": {
+    id: "identificacao-simbolos",
+    name: "Identificação de Símbolos",
+    domain: "processing" as Domain,
+    description: "Encontre o símbolo-alvo o mais rápido possível entre distratores",
+    estimatedMinutes: 6,
+    icon: "🔎",
+  },
+  "nback": {
+    id: "nback",
+    name: "N-Back",
+    domain: "memory" as Domain,
+    description: "Decida se a letra atual é igual à de N posições atrás — memória operacional",
+    estimatedMinutes: 8,
+    icon: "🧠",
+  },
+  "associacao-pares": {
+    id: "associacao-pares",
+    name: "Associação de Pares",
+    domain: "memory" as Domain,
+    description: "Memorize pares de palavras e imagens e recupere as associações",
+    estimatedMinutes: 7,
+    icon: "🔗",
+  },
 } as const;
 
 export type ExerciseId = keyof typeof EXERCISE_DEFINITIONS;

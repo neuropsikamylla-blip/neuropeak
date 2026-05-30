@@ -193,7 +193,8 @@ export function TrilhaVisual({ difficulty, theme, onComplete }: TrilhaVisualProp
     if (roundPhase !== "playing") return;
     if (!firstClick.current) firstClick.current = true;
 
-    const clickedCell = cells.find((c) => c.id === cellId)!;
+    const clickedCell = cells.find((c) => c.id === cellId);
+    if (!clickedCell) return;
 
     if (cellId === nextExpected) {
       setPath((prev) => [...prev, { x: clickedCell.x, y: clickedCell.y }]);

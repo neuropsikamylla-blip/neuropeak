@@ -13,8 +13,6 @@ interface DualTaskProps {
   onComplete: (result: ExerciseResult) => void;
 }
 
-// ── Timing ────────────────────────────────────────────────────────────────
-
 function shapeIntervalMs(d: number): number {
   return d <= 3 ? 1800 : d <= 6 ? 1400 : d <= 8 ? 1100 : 900;
 }
@@ -23,7 +21,7 @@ function digitIntervalMs(d: number): number {
   return d <= 3 ? 2000 : d <= 6 ? 1700 : d <= 8 ? 1400 : 1200;
 }
 
-const TOTAL_SHAPES = 30;
+const TOTAL_SHAPES = 50;
 const COLORS = ["green", "red", "blue", "yellow", "orange"] as const;
 type ShapeColor = (typeof COLORS)[number];
 
@@ -37,7 +35,7 @@ const COLOR_HEX: Record<ShapeColor, string> = {
 
 interface ShapeTrial {
   color: ShapeColor;
-  isTarget: boolean; // green = target
+  isTarget: boolean;
 }
 
 interface ShapeResult {
@@ -46,16 +44,41 @@ interface ShapeResult {
 }
 
 interface DigitResult {
-  isMatch: boolean; // current === prev
+  isMatch: boolean;
   tapped: boolean;
 }
 
-function buildShapeSequence(): ShapeTrial[] {
-  return Array.from({ length: TOTAL_SHAPES }, () => {
-    const idx = Math.floor(Math.random() * COLORS.length);
-    const color = COLORS[idx];
-    return { color, isTarget: color === "green" };
-  });
+function buildShapeSequence(length: number): ShapeTrial[] {
+  const nonGreen = COLORS.filter(c => c !== "green");
+  const result: ShapeTrial[] = [];
+  let consecutiveNonGreen = 0;
+  for (let i = 0; i < length; i++) {
+    // Force green if 3 non-greens in a row; else 35% chance
+    const forceGreen = consecutiveNonGreen >= 3;
+    if (forceGreen || Math.random() < 0.35) {
+      result.push({ color: "green" as ShapeColor, isTarget: true });
+      consecutiveNonGreen = 0;
+    } else {
+      const c = nonGreen[Math.floor(Math.random() * nonGreen.length)];
+      result.push({ color: c, isTarget: false });
+      consecutiveNonGreen++;
+    }
+  }
+  return result;
+}
+
+function buildDigitSequence(length: number): number[] {
+  const digits: number[] = [];
+  for (let i = 0; i < length; i++) {
+    if (i > 0 && Math.random() < 0.28) {
+      digits.push(digits[i - 1]);
+    } else {
+      let d: number;
+      do { d = Math.floor(Math.random() * 9) + 1; } while (i > 0 && d === digits[i - 1]);
+      digits.push(d);
+    }
+  }
+  return digits;
 }
 
 // ── Tutorial ──────────────────────────────────────────────────────────────
@@ -68,7 +91,7 @@ function TutStep1({ theme, onDone }: { theme: Theme; onDone: () => void }) {
       <div className="flex gap-4 items-center">
         <div className="flex flex-col items-center gap-1">
           <div className="w-14 h-14 rounded-full bg-green-500 border-2 border-white shadow" />
-          <span className={`text-xs font-bold text-green-600`}>← TOQUE</span>
+          <span className="text-xs font-bold text-green-600">← TOQUE</span>
         </div>
         <div className="flex flex-col items-center gap-1">
           <div className="w-14 h-14 rounded-full bg-red-500 border-2 border-white shadow" />
@@ -124,7 +147,9 @@ export function DualTask({ difficulty, theme, onComplete }: DualTaskProps) {
   const [showTutorial, setShowTutorial] = useState(true);
   const reportProgress = useExerciseProgress();
 
-  const [shapes] = useState<ShapeTrial[]>(() => buildShapeSequence());
+  const [shapes] = useState<ShapeTrial[]>(() => buildShapeSequence(TOTAL_SHAPES));
+  const [digitSeq] = useState<number[]>(() => buildDigitSequence(200));
+
   const [shapeIdx, setShapeIdx] = useState(-1);
   const [shapeFeedback, setShapeFeedback] = useState<"hit" | "fa" | "miss" | null>(null);
   const [shapePhase, setShapePhase] = useState<"isi" | "show">("isi");
@@ -133,6 +158,7 @@ export function DualTask({ difficulty, theme, onComplete }: DualTaskProps) {
   const [prevDigit, setPrevDigit] = useState<number | null>(null);
   const [digitFeedback, setDigitFeedback] = useState<"hit" | "fa" | null>(null);
   const [equalPressed, setEqualPressed] = useState(false);
+  const [digitKey, setDigitKey] = useState(0);
 
   const shapeResults = useRef<ShapeResult[]>([]);
   const digitResults = useRef<DigitResult[]>([]);
@@ -143,12 +169,27 @@ export function DualTask({ difficulty, theme, onComplete }: DualTaskProps) {
   const digitTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const allDoneRef = useRef(false);
 
-  const shapeInterval = shapeIntervalMs(difficulty);
+  // Loop control refs — allow tap handler to access current loop state
+  const shapeIdxRef = useRef(0);
+  const shapePhaseRef = useRef<"isi" | "show">("isi"); // ref espelho de shapePhase para handlers
+  const advanceShapeRef = useRef<(() => void) | null>(null);
+  const digitIdxRef = useRef(0);
+  const currentDigitRef = useRef<number | null>(null);
+  const prevDigitRef = useRef<number | null>(null);
+
+  // Adaptive staircase (3-down / 1-up)
+  const adaptiveLevelRef = useRef(difficulty);
+  const consecutiveCorrectRef = useRef(0);
+  const consecutiveWrongRef = useRef(0);
+
   const digitInterval = digitIntervalMs(difficulty);
 
   const finishSession = useCallback(() => {
     if (allDoneRef.current) return;
     allDoneRef.current = true;
+    if (shapeTimerRef.current) clearTimeout(shapeTimerRef.current);
+    if (digitTimerRef.current) clearTimeout(digitTimerRef.current);
+
     const sRes = shapeResults.current;
     const dRes = digitResults.current;
 
@@ -172,70 +213,83 @@ export function DualTask({ difficulty, theme, onComplete }: DualTaskProps) {
       accuracy: combinedAcc,
       difficulty,
       duration,
-      metadata: { hits_A: hitsA, fa_A: faA, acc_A: Math.round(accA * 100), hits_B: hitsB, acc_B: Math.round(accB * 100) },
+      metadata: {
+        hits_A: hitsA, fa_A: faA, acc_A: Math.round(accA * 100),
+        hits_B: hitsB, acc_B: Math.round(accB * 100),
+      },
     });
   }, [difficulty, onComplete]);
 
-  // Shape task loop
+  // Shape task loop — uses shapeIdxRef so tap handler can advance it
   useEffect(() => {
     if (showTutorial) return;
-    let idx = 0;
 
-    function nextShape() {
+    function scheduleNextShape() {
       if (allDoneRef.current) return;
+      const idx = shapeIdxRef.current;
       if (idx >= TOTAL_SHAPES) { finishSession(); return; }
+
+      shapePhaseRef.current = "show";
       setShapeIdx(idx);
       setShapePhase("show");
       shapeRespondedRef.current = false;
       setShapeFeedback(null);
       reportProgress(Math.round(((idx + 1) / TOTAL_SHAPES) * 100));
 
+      // Read adaptive level fresh each iteration
+      const interval = shapeIntervalMs(adaptiveLevelRef.current);
       shapeTimerRef.current = setTimeout(() => {
+        if (allDoneRef.current) return;
         const trial = shapes[idx];
-        if (trial.isTarget && !shapeRespondedRef.current) {
-          shapeResults.current.push({ isTarget: true, tapped: false });
-          setShapeFeedback("miss");
-        } else if (!shapeRespondedRef.current) {
-          shapeResults.current.push({ isTarget: false, tapped: false });
+        if (!shapeRespondedRef.current) {
+          shapeResults.current.push({ isTarget: trial.isTarget, tapped: false });
+          if (trial.isTarget) setShapeFeedback("miss");
         }
+        shapeIdxRef.current++;
+        shapePhaseRef.current = "isi";
         setShapePhase("isi");
-        idx++;
-        shapeTimerRef.current = setTimeout(nextShape, 300);
-      }, shapeInterval);
+        shapeTimerRef.current = setTimeout(scheduleNextShape, 300);
+      }, interval);
     }
 
-    shapeTimerRef.current = setTimeout(nextShape, 500);
+    advanceShapeRef.current = scheduleNextShape;
+    shapeTimerRef.current = setTimeout(scheduleNextShape, 500);
     return () => { if (shapeTimerRef.current) clearTimeout(shapeTimerRef.current); };
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [showTutorial]);
 
-  // Digit task loop
+  // Digit task loop — uses pre-generated sequence for controlled match rate
   useEffect(() => {
     if (showTutorial) return;
-    let prev: number | null = null;
 
-    function nextDigit() {
+    function scheduleNextDigit() {
       if (allDoneRef.current) return;
-      const d = Math.floor(Math.random() * 9) + 1;
-      setPrevDigit(prev);
+      const idx = digitIdxRef.current;
+      if (idx >= digitSeq.length) return;
+
+      const d = digitSeq[idx];
+      const prev = idx > 0 ? digitSeq[idx - 1] : null;
+      currentDigitRef.current = d;
+      prevDigitRef.current = prev;
       setCurrentDigit(d);
+      setPrevDigit(prev);
+      setDigitKey(k => k + 1);
       digitRespondedRef.current = false;
       setEqualPressed(false);
       setDigitFeedback(null);
+      digitIdxRef.current++;
 
       const isMatch = prev !== null && d === prev;
       digitTimerRef.current = setTimeout(() => {
-        if (isMatch && !digitRespondedRef.current) {
-          digitResults.current.push({ isMatch: true, tapped: false });
-        } else if (!isMatch && !digitRespondedRef.current) {
-          digitResults.current.push({ isMatch: false, tapped: false });
+        if (allDoneRef.current) return;
+        if (!digitRespondedRef.current) {
+          digitResults.current.push({ isMatch, tapped: false });
         }
-        prev = d;
-        digitTimerRef.current = setTimeout(nextDigit, 150);
+        digitTimerRef.current = setTimeout(scheduleNextDigit, 150);
       }, digitInterval);
     }
 
-    const t = setTimeout(nextDigit, 700);
+    const t = setTimeout(scheduleNextDigit, 700);
     return () => {
       clearTimeout(t);
       if (digitTimerRef.current) clearTimeout(digitTimerRef.current);
@@ -244,31 +298,50 @@ export function DualTask({ difficulty, theme, onComplete }: DualTaskProps) {
   }, [showTutorial]);
 
   function handleShapeTap() {
-    if (shapePhase !== "show" || shapeRespondedRef.current || allDoneRef.current) return;
+    // Usa ref em vez de state para evitar closure stale entre re-renders do dígito
+    if (shapePhaseRef.current !== "show" || shapeRespondedRef.current || allDoneRef.current) return;
     if (shapeTimerRef.current) clearTimeout(shapeTimerRef.current);
     shapeRespondedRef.current = true;
-    const trial = shapes[shapeIdx];
+
+    const idx = shapeIdxRef.current;
+    const trial = shapes[idx];
+    if (!trial) return; // guard de segurança
     const isHit = trial.isTarget;
     shapeResults.current.push({ isTarget: trial.isTarget, tapped: true });
     setShapeFeedback(isHit ? "hit" : "fa");
-    if (!isHit) {
-      // False alarm — continue after brief delay
-      shapeTimerRef.current = setTimeout(() => {
-        setShapePhase("isi");
-        const nextIdx = shapeIdx + 1;
-        reportProgress(Math.round(((nextIdx + 1) / TOTAL_SHAPES) * 100));
-        if (nextIdx >= TOTAL_SHAPES) { finishSession(); return; }
-        setShapeIdx(nextIdx);
-        setShapePhase("show");
-        shapeRespondedRef.current = false;
-        setShapeFeedback(null);
-      }, 400);
+
+    // Adaptive staircase: 3 acertos → sobe nível, 2 erros → desce
+    if (isHit) {
+      consecutiveCorrectRef.current++;
+      consecutiveWrongRef.current = 0;
+      if (consecutiveCorrectRef.current >= 3) {
+        adaptiveLevelRef.current = Math.min(10, adaptiveLevelRef.current + 1);
+        consecutiveCorrectRef.current = 0;
+      }
+    } else {
+      consecutiveWrongRef.current++;
+      consecutiveCorrectRef.current = 0;
+      if (consecutiveWrongRef.current >= 2) {
+        adaptiveLevelRef.current = Math.max(1, adaptiveLevelRef.current - 1);
+        consecutiveWrongRef.current = 0;
+      }
     }
+
+    // After feedback, advance and resume loop via advanceShapeRef
+    shapeTimerRef.current = setTimeout(() => {
+      shapeIdxRef.current++;
+      shapePhaseRef.current = "isi";
+      setShapePhase("isi");
+      shapeTimerRef.current = setTimeout(() => {
+        if (advanceShapeRef.current) advanceShapeRef.current();
+      }, 300);
+    }, 400);
   }
 
   function handleEqualTap() {
     if (equalPressed || allDoneRef.current) return;
-    const isMatch = prevDigit !== null && currentDigit === prevDigit;
+    // Use refs for fresh values, not potentially-stale state
+    const isMatch = prevDigitRef.current !== null && currentDigitRef.current === prevDigitRef.current;
     setEqualPressed(true);
     digitRespondedRef.current = true;
     digitResults.current.push({ isMatch, tapped: true });
@@ -282,6 +355,13 @@ export function DualTask({ difficulty, theme, onComplete }: DualTaskProps) {
   }
 
   const currentShape = shapeIdx >= 0 && shapeIdx < TOTAL_SHAPES ? shapes[shapeIdx] : null;
+
+  // Single display state — prevents AnimatePresence from receiving two children simultaneously
+  const displayState =
+    shapeFeedback === "hit" ? "fb-hit" :
+    shapeFeedback === "fa" ? "fb-fa" :
+    shapeFeedback === "miss" ? "fb-miss" :
+    (shapePhase === "show" && currentShape !== null) ? "shape" : "idle";
 
   const pal = {
     bg: theme === "GAMIFIED" ? "bg-gray-950" : theme === "COLORFUL" ? "bg-gradient-to-br from-fuchsia-50 to-pink-50" : "bg-slate-50",
@@ -306,10 +386,10 @@ export function DualTask({ difficulty, theme, onComplete }: DualTaskProps) {
         {/* Header */}
         <div className="flex justify-between items-center">
           <h2 className={`font-bold text-sm ${pal.title}`}>🧠 Dupla Tarefa</h2>
-          <div className={`text-xs ${pal.sub}`}>{shapeIdx + 1}/{TOTAL_SHAPES}</div>
+          <div className={`text-xs ${pal.sub}`}>{Math.max(0, shapeIdx + 1)}/{TOTAL_SHAPES}</div>
         </div>
 
-        {/* Panel A — Visual */}
+        {/* Panel A — Visual shape task */}
         <div className={`rounded-2xl p-4 ${pal.panelA}`} style={{ minHeight: 200 }}>
           <div className="flex justify-between items-center mb-2">
             <p className={`text-xs font-bold ${pal.title}`}>SUPERIOR — Forme Verde</p>
@@ -321,15 +401,15 @@ export function DualTask({ difficulty, theme, onComplete }: DualTaskProps) {
 
           <div
             className={`w-full flex items-center justify-center rounded-2xl border-2 cursor-pointer transition-all ${
-              shapeFeedback === "hit" ? "border-green-500 bg-green-500/10" :
-              shapeFeedback === "fa" ? "border-red-500 bg-red-500/10" :
-              shapeFeedback === "miss" ? "border-amber-500 bg-amber-500/10" :
+              displayState === "fb-hit" ? "border-green-500 bg-green-500/10" :
+              displayState === "fb-fa"  ? "border-red-500 bg-red-500/10" :
+              displayState === "fb-miss" ? "border-amber-500 bg-amber-500/10" :
               theme === "GAMIFIED" ? "border-gray-600 bg-gray-700" : "border-slate-200 bg-slate-50"
             }`}
             style={{ height: 140 }}
             onPointerDown={handleShapeTap}>
             <AnimatePresence mode="wait">
-              {shapePhase === "show" && currentShape && (
+              {displayState === "shape" && currentShape && (
                 <motion.div key={`shape-${shapeIdx}`}
                   initial={{ scale: 0.5, opacity: 0 }} animate={{ scale: 1, opacity: 1 }}
                   exit={{ scale: 0.5, opacity: 0 }}>
@@ -340,17 +420,18 @@ export function DualTask({ difficulty, theme, onComplete }: DualTaskProps) {
                   </svg>
                 </motion.div>
               )}
-              {shapeFeedback && (
-                <motion.span key={`fb-${shapeFeedback}`} initial={{ scale: 0 }} animate={{ scale: 1 }}
+              {displayState.startsWith("fb-") && (
+                <motion.span key={displayState}
+                  initial={{ scale: 0 }} animate={{ scale: 1 }} exit={{ scale: 0 }}
                   className="text-5xl">
-                  {shapeFeedback === "hit" ? "✅" : shapeFeedback === "fa" ? "❌" : "⏱️"}
+                  {displayState === "fb-hit" ? "✅" : displayState === "fb-fa" ? "❌" : "⏱️"}
                 </motion.span>
               )}
             </AnimatePresence>
           </div>
         </div>
 
-        {/* Panel B — Digit monitoring */}
+        {/* Panel B — Digit n-back task */}
         <div className={`rounded-2xl p-4 ${pal.panelB}`}>
           <div className="flex justify-between items-center mb-3">
             <p className={`text-xs font-bold ${pal.title}`}>INFERIOR — N-back 1 (Igual?)</p>
@@ -358,7 +439,7 @@ export function DualTask({ difficulty, theme, onComplete }: DualTaskProps) {
           </div>
 
           <div className="flex items-center gap-4">
-            {/* Prev digit */}
+            {/* Previous digit */}
             <div className="flex flex-col items-center gap-1">
               <p className={`text-[10px] ${pal.sub}`}>Anterior</p>
               <div className={`w-12 h-12 rounded-xl flex items-center justify-center font-black text-2xl ${pal.digitBox}`}>
@@ -370,11 +451,11 @@ export function DualTask({ difficulty, theme, onComplete }: DualTaskProps) {
             <div className="flex flex-col items-center gap-1 flex-1">
               <p className={`text-[10px] ${pal.sub}`}>Atual</p>
               <AnimatePresence mode="wait">
-                <motion.div key={`dig-${currentDigit}`}
+                <motion.div key={digitKey}
                   initial={{ scale: 0.5, opacity: 0 }} animate={{ scale: 1, opacity: 1 }}
                   className={`w-16 h-16 rounded-xl flex items-center justify-center font-black text-3xl border-2 ${
                     digitFeedback === "hit" ? "border-green-500 bg-green-500/20" :
-                    digitFeedback === "fa" ? "border-red-500 bg-red-500/20" :
+                    digitFeedback === "fa"  ? "border-red-500 bg-red-500/20" :
                     `${pal.digitBox} border-transparent`
                   }`}>
                   <span className={pal.digitText}>{currentDigit ?? "—"}</span>
@@ -385,9 +466,7 @@ export function DualTask({ difficulty, theme, onComplete }: DualTaskProps) {
             {/* Equal button */}
             <button
               onPointerDown={handleEqualTap}
-              className={`px-4 py-3 rounded-xl font-bold text-sm transition-all ${pal.eqBtn} ${
-                equalPressed ? "opacity-50" : ""
-              }`}
+              className={`px-4 py-3 rounded-xl font-bold text-sm transition-all ${pal.eqBtn} ${equalPressed ? "opacity-50" : ""}`}
               style={{ touchAction: "none" }}>
               IGUAL
             </button>

@@ -246,7 +246,7 @@ export function MOT({ difficulty, theme, onComplete }: MOTProps) {
     reportProgress(Math.round((nextRound / TOTAL_ROUNDS) * 100));
 
     if (nextRound >= TOTAL_ROUNDS) {
-      const accuracy = (totalCorrect + correct) / (totalTargets + k);
+      const accuracy = (totalCorrect + correct) / Math.max(1, totalTargets + k);
       const duration = Math.round((Date.now() - startTime.current) / 1000);
       const sc = calculateExerciseScore("mot", accuracy, undefined, difficulty);
       onComplete({
