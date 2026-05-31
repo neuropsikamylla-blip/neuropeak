@@ -1,6 +1,7 @@
 # PROGRESSO — NeuroPeak
 
 > Checkpoint de contexto para continuidade entre sessões. Atualizado automaticamente.
+> 👉 Visão geral e handoff para o próximo Claude: **`ESTADO-DO-PROJETO.md`** (leia primeiro).
 
 ## Estado atual (2026-05-30)
 

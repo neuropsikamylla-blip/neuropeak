@@ -1,7 +1,7 @@
 # BACKLOG — NeuroPeak
 
 > **Fonte única de pendências.** Atualizado: 2026-05-30.
-> Histórico/detalhes: `AUDITORIA-2026-05-30.md` (achados) · `PROGRESSO.md` (checkpoints).
+> 👉 Visão geral / handoff: **`ESTADO-DO-PROJETO.md`** (leia primeiro). Histórico/detalhes: `AUDITORIA-2026-05-30.md` (achados) · `PROGRESSO.md` (checkpoints).
 
 ## Onde estamos
 A auditoria completa achou ~40 problemas. **Tudo o que é código está resolvido e no ar**, o **SCHEMA-01 foi aplicado no banco** (2 FKs + 3 CHECK, verificadas) e o **SEC-08 foi executado** (Production com `NEXTAUTH_SECRET` forte; redeploy `dpl_8zMx8EV4…` no ar em 2026-05-30). **Não resta nenhuma pendência de segurança, operacional nem de performance.** O que sobra: 1 smoke test visual (você) e 2 itens deferidos por decisão de design/escopo (ARCH-02, DUP-01).
