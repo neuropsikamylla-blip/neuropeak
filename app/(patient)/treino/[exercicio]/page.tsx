@@ -6,6 +6,7 @@ import { useSession } from "next-auth/react";
 import dynamic from "next/dynamic";
 import { ExerciseWrapper } from "@/components/exercises/ExerciseWrapper";
 import { EXERCISE_DEFINITIONS, type ExerciseResult, type Theme } from "@/types";
+import { planExerciseSettings } from "@/lib/exercise-plan";
 import { useToast } from "@/components/ui/use-toast";
 import { Loader2, CheckCircle2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
@@ -332,6 +333,7 @@ export default function ExercicioPage() {
   const exerciseId = params.exercicio as string;
 
   const [difficulty, setDifficulty] = useState(1);
+  const [exerciseSettings, setExerciseSettings] = useState<Record<string, unknown> | undefined>();
   const [loading, setLoading] = useState(true);
   const [theme, setTheme] = useState<Theme>("CLINICAL");
   const [blockedToday, setBlockedToday] = useState(false);
@@ -352,6 +354,10 @@ export default function ExercicioPage() {
           const age = Math.floor((Date.now() - new Date(dob).getTime()) / (365.25 * 24 * 3600 * 1000));
           setPatientAge(age);
         }
+
+        // Config do terapeuta para este exercício (vinda da prescrição do plano).
+        const activePlan = data.patient?.trainingPlans?.[0];
+        if (activePlan) setExerciseSettings(planExerciseSettings(activePlan.exercises, exerciseId));
 
         const configs = data.patient?.exerciseConfigs ?? [];
         const config = configs.find(
@@ -426,7 +432,7 @@ export default function ExercicioPage() {
     const props = { difficulty, theme, onComplete };
 
     switch (exerciseId) {
-      case "span-numerico": return <SpanNumerico {...props} />;
+      case "span-numerico": return <SpanNumerico {...props} settings={exerciseSettings} />;
       case "matriz-espacial": return <MatrizEspacial {...props} />;
       case "atencao-seletiva": return <AtencaoSeletiva {...props} />;
       case "trilha-visual": return <TrilhaVisual {...props} />;
@@ -438,7 +444,7 @@ export default function ExercicioPage() {
       case "torre-hanoi": return <TorreHanoi {...props} />;
       case "labirinto": return <Labirinto {...props} />;
       case "jogo-memoria": return <JogoMemoria {...props} />;
-      case "span-numerico-inverso": return <SpanNumericoInverso {...props} />;
+      case "span-numerico-inverso": return <SpanNumericoInverso {...props} settings={exerciseSettings} />;
       case "matriz-espacial-inversa": return <MatrizEspacialInversa {...props} />;
       case "nback": return <NBack {...props} />;
       case "ordem-historia": return <OrdemHistoria {...props} />;

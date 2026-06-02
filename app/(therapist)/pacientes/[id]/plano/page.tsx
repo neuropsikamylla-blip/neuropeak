@@ -11,6 +11,10 @@ import { ArrowLeft, Loader2, Save } from "lucide-react";
 import Link from "next/link";
 import { EXERCISE_DEFINITIONS, DOMAIN_LABELS, type Domain } from "@/types";
 import { ExerciseScienceCard } from "@/components/exercises/ExerciseScienceCard";
+import { parsePlanExercises, buildPlanExercises } from "@/lib/exercise-plan";
+import { DEFAULT_SPAN_SETTINGS, type SpanSettings } from "@/components/exercises/memory/SpanNumerico";
+
+const SPAN_IDS = ["span-numerico", "span-numerico-inverso"];
 
 const ALL_DOMAINS: Domain[] = ["memory", "attention", "processing", "executive"];
 
@@ -31,6 +35,7 @@ export default function PlanoPage() {
   const [loadingPlan, setLoadingPlan] = useState(true);
   const [selectedDomains, setSelectedDomains] = useState<Domain[]>([]);
   const [selectedExercises, setSelectedExercises] = useState<string[]>([]);
+  const [exerciseSettings, setExerciseSettings] = useState<Record<string, Record<string, unknown>>>({});
   const [sessionDuration, setSessionDuration] = useState(30);
   const [frequency, setFrequency] = useState(3);
 
@@ -41,9 +46,12 @@ export default function PlanoPage() {
         const plan = data.patient?.trainingPlans?.[0];
         if (plan) {
           const domains: Domain[] = typeof plan.domains === "string" ? JSON.parse(plan.domains) : plan.domains ?? [];
-          const exercises: string[] = typeof plan.exercises === "string" ? JSON.parse(plan.exercises) : plan.exercises ?? [];
+          const parsed = parsePlanExercises(plan.exercises);
           setSelectedDomains(domains);
-          setSelectedExercises(exercises);
+          setSelectedExercises(parsed.map(e => e.id));
+          const settings: Record<string, Record<string, unknown>> = {};
+          parsed.forEach(e => { if (e.settings) settings[e.id] = e.settings; });
+          setExerciseSettings(settings);
           setSessionDuration(plan.sessionDuration ?? 30);
           setFrequency(plan.frequency ?? 3);
         } else {
@@ -78,6 +86,16 @@ export default function PlanoPage() {
     );
   }
 
+  // Config do terapeuta para os exercícios de Span (treino/avaliação, áudio, tentativas).
+  const spanCfg = (exId: string): SpanSettings =>
+    ({ ...DEFAULT_SPAN_SETTINGS, ...(exerciseSettings[exId] as Partial<SpanSettings> ?? {}) });
+  function setSpanCfg<K extends keyof SpanSettings>(exId: string, key: K, value: SpanSettings[K]) {
+    setExerciseSettings((prev) => ({
+      ...prev,
+      [exId]: { ...DEFAULT_SPAN_SETTINGS, ...(prev[exId] ?? {}), [key]: value },
+    }));
+  }
+
   async function handleSave() {
     if (selectedExercises.length === 0) {
       toast({ title: "Selecione ao menos um exercício", variant: "destructive" });
@@ -92,7 +110,7 @@ export default function PlanoPage() {
         body: JSON.stringify({
           trainingPlan: {
             domains: selectedDomains,
-            exercises: selectedExercises,
+            exercises: buildPlanExercises(selectedExercises, exerciseSettings),
             sessionDuration,
             frequency,
           },
@@ -206,6 +224,49 @@ export default function PlanoPage() {
                         </div>
                       </label>
                       <ExerciseScienceCard exerciseId={exId} />
+
+                      {/* Config do terapeuta (Span) — fixa para o paciente */}
+                      {SPAN_IDS.includes(exId) && selectedExercises.includes(exId) && (() => {
+                        const c = spanCfg(exId);
+                        const Pill = ({ on, onClick, children }: { on: boolean; onClick: () => void; children: React.ReactNode }) => (
+                          <button type="button" onClick={onClick}
+                            className={`px-2.5 py-1 rounded-md text-xs font-semibold border ${
+                              on ? "bg-indigo-600 text-white border-indigo-600" : "bg-white text-gray-600 border-gray-300"}`}>
+                            {children}
+                          </button>
+                        );
+                        const CfgRow = ({ label, children }: { label: string; children: React.ReactNode }) => (
+                          <div className="flex items-center justify-between gap-2">
+                            <span className="text-xs text-gray-600">{label}</span>
+                            <div className="flex gap-1.5">{children}</div>
+                          </div>
+                        );
+                        return (
+                          <div className="mt-2 ml-7 mr-1 p-3 rounded-lg bg-indigo-50 border border-indigo-200 space-y-2">
+                            <p className="text-[11px] font-bold text-indigo-700 uppercase tracking-wide">⚙️ Configuração (fixa para o paciente)</p>
+                            <CfgRow label="Modo">
+                              <Pill on={c.showAnswerOnError} onClick={() => setSpanCfg(exId, "showAnswerOnError", true)}>Treino</Pill>
+                              <Pill on={!c.showAnswerOnError} onClick={() => setSpanCfg(exId, "showAnswerOnError", false)}>Avaliação</Pill>
+                            </CfgRow>
+                            <CfgRow label="Tentativas">
+                              {[10, 15, 20, 30].map(t => (
+                                <Pill key={t} on={c.trials === t} onClick={() => setSpanCfg(exId, "trials", t)}>{t}</Pill>
+                              ))}
+                            </CfgRow>
+                            <CfgRow label="Repetir áudio">
+                              <Pill on={c.allowReplay} onClick={() => setSpanCfg(exId, "allowReplay", true)}>Sim</Pill>
+                              <Pill on={!c.allowReplay} onClick={() => setSpanCfg(exId, "allowReplay", false)}>Não</Pill>
+                            </CfgRow>
+                            {c.allowReplay && (
+                              <CfgRow label="Repetir custa pontos">
+                                <Pill on={c.replayPenalty} onClick={() => setSpanCfg(exId, "replayPenalty", true)}>Sim</Pill>
+                                <Pill on={!c.replayPenalty} onClick={() => setSpanCfg(exId, "replayPenalty", false)}>Não</Pill>
+                              </CfgRow>
+                            )}
+                            <p className="text-[10px] text-indigo-500/80 pt-0.5">O nível é automático (o paciente retoma onde parou).</p>
+                          </div>
+                        );
+                      })()}
                     </div>
                   );
                 })}

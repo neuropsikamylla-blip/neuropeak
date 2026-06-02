@@ -5,6 +5,7 @@ import { redirect } from "next/navigation";
 import Link from "next/link";
 import { calculateAge } from "@/lib/utils";
 import { EXERCISE_DEFINITIONS, DOMAIN_LABELS, DOMAIN_COLORS, type Domain, type Theme, type SessionData } from "@/types";
+import { planExerciseIds } from "@/lib/exercise-plan";
 import { Trophy, Flame, Star } from "lucide-react";
 
 export default async function InicioPage() {
@@ -35,9 +36,7 @@ export default async function InicioPage() {
 
   const theme = patient.theme as Theme;
   const activePlan = patient.trainingPlans[0];
-  const exercises = activePlan
-    ? (JSON.parse(activePlan.exercises) as string[])
-    : [];
+  const exercises = activePlan ? planExerciseIds(activePlan.exercises) : [];
 
   const typedSessions = patient.sessions as SessionData[];
   const typedAchievements = patient.achievements as unknown as Array<{ id: string; icon: string; title: string; unlockedAt: string }>;

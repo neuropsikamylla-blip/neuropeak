@@ -20,7 +20,11 @@ const updateSchema = z.object({
   medications: z.string().optional(),
   trainingPlan: z.object({
     domains: z.array(z.string()),
-    exercises: z.array(z.string()),
+    // Aceita id simples (string) ou { id, settings } com a config do terapeuta.
+    exercises: z.array(z.union([
+      z.string(),
+      z.object({ id: z.string(), settings: z.record(z.unknown()).optional() }),
+    ])),
     sessionDuration: z.number().min(5).max(120),
     frequency: z.number().min(1).max(7),
   }).optional(),
@@ -54,6 +58,12 @@ export const GET = withApiHandler(async (
         birthDate: true,
         theme: true,
         exerciseConfigs: includeConfig,
+        // Só o plano ativo (config dos exercícios) — sem dados clínicos.
+        trainingPlans: {
+          where: { isActive: true },
+          take: 1,
+          select: { exercises: true },
+        },
       },
     });
     if (!patient) return NextResponse.json({ error: "Not found" }, { status: 404 });

@@ -8,25 +8,42 @@ import type { ExerciseResult, Theme } from "@/types";
 
 // ── Tipos ───────────────────────────────────────────────────────────────────────
 
-interface SpanNumericoProps {
-  difficulty: number;
-  theme: Theme;
-  onComplete: (result: ExerciseResult) => void;
-  /** true = ordem inversa (Span Numérico Auditivo Inverso) */
-  reverse?: boolean;
-}
-
-type Phase = "config" | "listen" | "input" | "feedback";
-
-interface SpanConfig {
-  difficultyMode: "auto" | "manual";
-  startLevel: number;          // 1–7
+/** Configuração definida pelo TERAPEUTA na prescrição (fixa para o paciente). */
+export interface SpanSettings {
   trials: number;              // nº de tentativas da sessão
   allowReplay: boolean;        // permitir repetir o áudio
   replayPenalty: boolean;      // repetir custa pontos
   showAnswerOnError: boolean;  // treino (mostra a sequência) × avaliação (não mostra)
-  startFullscreen: boolean;
 }
+
+export const DEFAULT_SPAN_SETTINGS: SpanSettings = {
+  trials: 15,
+  allowReplay: true,
+  replayPenalty: false,
+  showAnswerOnError: true,
+};
+
+interface SpanNumericoProps {
+  difficulty: number;   // 1–10 (progresso do paciente; vira o nível inicial)
+  theme: Theme;
+  onComplete: (result: ExerciseResult) => void;
+  /** true = ordem inversa (Span Numérico Auditivo Inverso) */
+  reverse?: boolean;
+  /** Config do terapeuta (prescrição, vinda do JSON do plano). Ausente = padrões. */
+  settings?: Record<string, unknown>;
+}
+
+/** Normaliza a config (que vem do JSON do plano) com validação de tipo + padrões. */
+function normalizeSettings(s?: Record<string, unknown>): SpanSettings {
+  return {
+    trials:            typeof s?.trials === "number" ? s.trials : DEFAULT_SPAN_SETTINGS.trials,
+    allowReplay:       typeof s?.allowReplay === "boolean" ? s.allowReplay : DEFAULT_SPAN_SETTINGS.allowReplay,
+    replayPenalty:     typeof s?.replayPenalty === "boolean" ? s.replayPenalty : DEFAULT_SPAN_SETTINGS.replayPenalty,
+    showAnswerOnError: typeof s?.showAnswerOnError === "boolean" ? s.showAnswerOnError : DEFAULT_SPAN_SETTINGS.showAnswerOnError,
+  };
+}
+
+type Phase = "ready" | "listen" | "input" | "feedback";
 
 // ── Constantes ────────────────────────────────────────────────────────────────
 
@@ -34,27 +51,10 @@ const MAX_LEVEL = 7;                          // Nível 7 = 8 dígitos
 const digitsForLevel = (lv: number) => lv + 1; // N1=2, N2=3 … N7=8
 const clampLevel = (lv: number) => Math.max(1, Math.min(MAX_LEVEL, lv));
 
-const DEFAULT_CONFIG: SpanConfig = {
-  difficultyMode: "auto",
-  startLevel: 1,
-  trials: 15,
-  allowReplay: true,
-  replayPenalty: false,
-  showAnswerOnError: true,
-  startFullscreen: false,
-};
+// Nível inicial automático a partir do progresso salvo do paciente (difficulty 1–10).
+const levelFromDifficulty = (d: number) => clampLevel(Math.ceil(Math.max(1, d) * 0.7));
 
-const TRIAL_OPTIONS = [10, 15, 20, 30];
 const KEYPAD = [1, 2, 3, 4, 5, 6, 7, 8, 9];
-
-function loadConfig(key: string): SpanConfig {
-  if (typeof window === "undefined") return DEFAULT_CONFIG;
-  try {
-    const raw = window.localStorage.getItem(key);
-    if (raw) return { ...DEFAULT_CONFIG, ...JSON.parse(raw) };
-  } catch { /* ignore */ }
-  return DEFAULT_CONFIG;
-}
 
 // ── Fundo (estética adulta/limpa) ───────────────────────────────────────────────
 
@@ -134,19 +134,18 @@ function Beads({ total, filled, active }: { total: number; filled: number; activ
 
 // ── Componente principal ────────────────────────────────────────────────────────
 
-export function SpanNumerico({ difficulty, onComplete, reverse = false }: SpanNumericoProps) {
+export function SpanNumerico({ difficulty, onComplete, reverse = false, settings }: SpanNumericoProps) {
   const exerciseId = reverse ? "span-numerico-inverso" : "span-numerico";
   const title = reverse ? "Span Numérico Auditivo Inverso" : "Span Numérico Auditivo Direto";
   const reportProgress = useExerciseProgress();
 
-  const [config, setConfig] = useState<SpanConfig>(() => {
-    const c = loadConfig(`span-config-${exerciseId}`);
-    // nível inicial coerente com a dificuldade prescrita, se em automático
-    return { ...c, startLevel: c.startLevel || clampLevel(Math.ceil(difficulty / 1.5)) };
-  });
+  // Config do TERAPEUTA (prescrição) — fixa para o paciente. Ausente = padrões.
+  const cfg: SpanSettings = normalizeSettings(settings);
+  // Nível inicial AUTOMÁTICO a partir do progresso salvo do paciente.
+  const initialLevel = levelFromDifficulty(difficulty);
 
-  const [phase, setPhase]       = useState<Phase>("config");
-  const [level, setLevel]       = useState(config.startLevel);
+  const [phase, setPhase]       = useState<Phase>("ready");
+  const [level, setLevel]       = useState(initialLevel);
   const [sequence, setSequence] = useState<number[]>([]);
   const [entered, setEntered]   = useState<number[]>([]);
   const [activeBead, setActiveBead] = useState(-1);
@@ -157,7 +156,8 @@ export function SpanNumerico({ difficulty, onComplete, reverse = false }: SpanNu
   const [replayed, setReplayed] = useState(false);
 
   const streakRef   = useRef(0);
-  const levelRef    = useRef(config.startLevel);
+  const levelRef    = useRef(initialLevel);
+  const maxLevelRef = useRef(initialLevel);
   const seqIdRef    = useRef(0);
   const audioRef    = useRef<HTMLAudioElement | null>(null);
   const startTime   = useRef(Date.now());
@@ -220,36 +220,38 @@ export function SpanNumerico({ difficulty, onComplete, reverse = false }: SpanNu
     setAttempts(newAttempts);
 
     if (correct) {
-      const gain = digits * 10 * (replayed && config.replayPenalty ? 0.5 : 1);
+      const gain = digits * 10 * (replayed && cfg.replayPenalty ? 0.5 : 1);
       setPoints(p => p + Math.round(gain));
     }
 
-    // Progressão (apenas em modo automático)
+    // Nível automático: 2 acertos seguidos sobem 1 dígito; 2 erros descem 1.
     let nextLevel = levelRef.current;
-    if (config.difficultyMode === "auto") {
-      const s = correct ? Math.max(streakRef.current, 0) + 1 : Math.min(streakRef.current, 0) - 1;
-      if (s >= 2)  { nextLevel = clampLevel(levelRef.current + 1); streakRef.current = 0; }
-      else if (s <= -2) { nextLevel = clampLevel(levelRef.current - 1); streakRef.current = 0; }
-      else streakRef.current = s;
-    }
+    const s = correct ? Math.max(streakRef.current, 0) + 1 : Math.min(streakRef.current, 0) - 1;
+    if (s >= 2)  { nextLevel = clampLevel(levelRef.current + 1); streakRef.current = 0; }
+    else if (s <= -2) { nextLevel = clampLevel(levelRef.current - 1); streakRef.current = 0; }
+    else streakRef.current = s;
+    maxLevelRef.current = Math.max(maxLevelRef.current, nextLevel);
 
     const nextTrial = trial + 1;
-    reportProgress(Math.round((nextTrial / config.trials) * 100));
+    reportProgress(Math.round((nextTrial / cfg.trials) * 100));
 
     setTimeout(() => {
-      if (nextTrial >= config.trials) {
+      if (nextTrial >= cfg.trials) {
         const correctCount = newAttempts.filter(a => a.correct).length;
-        const accuracy = correctCount / config.trials;
+        const accuracy = correctCount / cfg.trials;
         const maxDigits = Math.max(...newAttempts.map(a => a.digits));
         const duration = Math.round((Date.now() - startTime.current) / 1000);
+        // Reporta a dificuldade (1–10) correspondente ao nível alcançado, para o
+        // sistema salvar o progresso e o paciente retomar nesse ponto.
+        const reachedDifficulty = clampLevel(maxLevelRef.current) * 10 / MAX_LEVEL;
         onComplete({
           exerciseId,
           domain: "memory",
           score: calculateExerciseScore("span-numerico", accuracy, undefined, difficulty),
           accuracy,
-          difficulty,
+          difficulty: Math.round(reachedDifficulty),
           duration,
-          metadata: { spanLength: maxDigits, reverse, trials: config.trials, correct: correctCount },
+          metadata: { spanLength: maxDigits, reverse, trials: cfg.trials, correct: correctCount },
         });
       } else {
         levelRef.current = nextLevel;
@@ -257,9 +259,9 @@ export function SpanNumerico({ difficulty, onComplete, reverse = false }: SpanNu
         setTrial(nextTrial);
         startRound(nextLevel);
       }
-    }, config.showAnswerOnError && !correct ? 2600 : 1400);
+    }, cfg.showAnswerOnError && !correct ? 2600 : 1400);
   // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [sequence, attempts, digits, trial, config, replayed, reverse, exerciseId, difficulty]);
+  }, [sequence, attempts, digits, trial, cfg, replayed, reverse, exerciseId, difficulty]);
 
   // ── Toque no teclado ────────────────────────────────────────────────────────
   function handleKey(n: number) {
@@ -272,7 +274,7 @@ export function SpanNumerico({ difficulty, onComplete, reverse = false }: SpanNu
   }
 
   function replayAudio() {
-    if (!config.allowReplay) return;
+    if (!cfg.allowReplay) return;
     if (phase !== "listen" && phase !== "input") return;
     setReplayed(true);
     seqIdRef.current++;
@@ -286,25 +288,25 @@ export function SpanNumerico({ difficulty, onComplete, reverse = false }: SpanNu
 
   useEffect(() => () => { stopAudio(); seqIdRef.current++; }, [stopAudio]);
 
-  // ── Início da sessão (a partir da tela de config) ────────────────────────────
-  function beginSession() {
-    try { window.localStorage.setItem(`span-config-${exerciseId}`, JSON.stringify(config)); } catch { /* ignore */ }
-    levelRef.current = config.startLevel;
+  // ── Início da sessão (a partir da tela inicial do paciente) ──────────────────
+  function beginSession(fullscreen: boolean) {
+    levelRef.current = initialLevel;
+    maxLevelRef.current = initialLevel;
     streakRef.current = 0;
     startTime.current = Date.now();
-    setLevel(config.startLevel);
+    setLevel(initialLevel);
     setTrial(0);
     setAttempts([]);
     setPoints(0);
-    if (config.startFullscreen && typeof document !== "undefined" && !document.fullscreenElement) {
+    if (fullscreen && typeof document !== "undefined" && !document.fullscreenElement) {
       document.documentElement.requestFullscreen?.().catch(() => {});
     }
-    startRound(config.startLevel);
+    startRound(initialLevel);
   }
 
-  // ── Tela de configuração ──────────────────────────────────────────────────────
-  if (phase === "config") {
-    return <ConfigScreen title={title} reverse={reverse} config={config} setConfig={setConfig} onStart={beginSession} />;
+  // ── Tela inicial do paciente (nível é automático; só decide tela cheia) ──────
+  if (phase === "ready") {
+    return <ReadyScreen title={title} reverse={reverse} level={initialLevel} onStart={beginSession} />;
   }
 
   const correctCount = attempts.filter(a => a.correct).length;
@@ -329,7 +331,7 @@ export function SpanNumerico({ difficulty, onComplete, reverse = false }: SpanNu
         <div className="relative h-1 rounded-full overflow-hidden" style={{ background: "rgba(255,255,255,0.07)" }}>
           <motion.div className="absolute inset-y-0 left-0 rounded-full"
             style={{ background: "linear-gradient(90deg,#6366f1,#818cf8)" }}
-            animate={{ width: `${(trial / config.trials) * 100}%` }} transition={{ duration: 0.4 }} />
+            animate={{ width: `${(trial / cfg.trials) * 100}%` }} transition={{ duration: 0.4 }} />
         </div>
 
         {/* ── FASE: ouvir ───────────────────────────────────────────────── */}
@@ -338,11 +340,11 @@ export function SpanNumerico({ difficulty, onComplete, reverse = false }: SpanNu
             <p className="text-sm font-semibold tracking-wide" style={{ color: "#a5b4fc" }}>Ouça com atenção</p>
             <BrainListening pulsing={activeBead >= 0} />
             <Beads total={digits} filled={0} active={activeBead} />
-            {config.allowReplay && (
+            {cfg.allowReplay && (
               <button onClick={replayAudio}
                 className="text-xs font-semibold px-4 py-2 rounded-xl active:scale-95"
                 style={{ background: "rgba(99,102,241,0.15)", border: "1px solid rgba(99,102,241,0.4)", color: "#c7d2fe" }}>
-                🔊 Ouvir novamente{config.replayPenalty ? " (−pontos)" : ""}
+                🔊 Ouvir novamente{cfg.replayPenalty ? " (−pontos)" : ""}
               </button>
             )}
           </div>
@@ -373,11 +375,11 @@ export function SpanNumerico({ difficulty, onComplete, reverse = false }: SpanNu
               <div />
             </div>
 
-            {config.allowReplay && (
+            {cfg.allowReplay && (
               <button onClick={replayAudio}
                 className="text-xs font-semibold px-4 py-2 rounded-xl active:scale-95 mt-1"
                 style={{ background: "rgba(99,102,241,0.12)", border: "1px solid rgba(99,102,241,0.35)", color: "#a5b4fc" }}>
-                🔊 Ouvir novamente{config.replayPenalty ? " (−pontos)" : ""}
+                🔊 Ouvir novamente{cfg.replayPenalty ? " (−pontos)" : ""}
               </button>
             )}
           </div>
@@ -391,7 +393,7 @@ export function SpanNumerico({ difficulty, onComplete, reverse = false }: SpanNu
             <p className="text-2xl font-black" style={{ color: feedback === "correct" ? "#4ade80" : "#f87171" }}>
               {feedback === "correct" ? "Correto" : "Incorreto"}
             </p>
-            {feedback === "incorrect" && config.showAnswerOnError && (
+            {feedback === "incorrect" && cfg.showAnswerOnError && (
               <div className="text-center text-sm space-y-1 mt-1">
                 <p style={{ color: "rgba(148,163,184,0.85)" }}>
                   Sequência correta: <span className="font-bold text-white">{expected.join(" — ")}</span>
@@ -406,7 +408,7 @@ export function SpanNumerico({ difficulty, onComplete, reverse = false }: SpanNu
 
         {/* rodapé acertos */}
         <div className="flex justify-between text-xs pt-1" style={{ color: "rgba(148,163,184,0.5)" }}>
-          <span>Tentativa {Math.min(trial + 1, config.trials)}/{config.trials}</span>
+          <span>Tentativa {Math.min(trial + 1, cfg.trials)}/{cfg.trials}</span>
           <span>{correctCount} acertos</span>
         </div>
       </div>
@@ -414,81 +416,38 @@ export function SpanNumerico({ difficulty, onComplete, reverse = false }: SpanNu
   );
 }
 
-// ── Tela de configuração ─────────────────────────────────────────────────────────
+// ── Tela inicial do paciente (nível automático; decide só tela cheia) ────────────
 
-function ConfigScreen({ title, reverse, config, setConfig, onStart }: {
-  title: string; reverse: boolean; config: SpanConfig;
-  setConfig: (c: SpanConfig) => void; onStart: () => void;
+function ReadyScreen({ title, reverse, level, onStart }: {
+  title: string; reverse: boolean; level: number; onStart: (fullscreen: boolean) => void;
 }) {
-  const set = <K extends keyof SpanConfig>(k: K, v: SpanConfig[K]) => setConfig({ ...config, [k]: v });
-
-  const Row = ({ label, children }: { label: string; children: React.ReactNode }) => (
-    <div className="flex items-center justify-between gap-3 py-2.5">
-      <span className="text-sm text-white/85">{label}</span>
-      <div className="flex gap-1.5">{children}</div>
-    </div>
-  );
-  const Opt = ({ on, onClick, children }: { on: boolean; onClick: () => void; children: React.ReactNode }) => (
-    <button onClick={onClick}
-      className="px-3 py-1.5 rounded-lg text-xs font-bold active:scale-95"
-      style={{
-        background: on ? "linear-gradient(135deg,#7c3aed,#4f46e5)" : "rgba(255,255,255,0.05)",
-        border: `1px solid ${on ? "rgba(167,139,250,0.7)" : "rgba(148,163,184,0.2)"}`,
-        color: on ? "#fff" : "rgba(199,210,254,0.7)",
-      }}>
-      {children}
-    </button>
-  );
-
+  const [fullscreen, setFullscreen] = useState(false);
   return (
     <div className="min-h-screen w-full flex flex-col items-center justify-center p-4" style={{ background: "#020617" }}>
       <GlassBg />
-      <div className="w-full max-w-md rounded-3xl p-6" style={CARD_STYLE}>
-        <p className="text-[11px] font-bold tracking-[0.2em] uppercase mb-1" style={{ color: "rgba(148,163,184,0.45)" }}>
-          Configuração
-        </p>
+      <div className="w-full max-w-md rounded-3xl p-6 text-center" style={CARD_STYLE}>
+        <div className="mx-auto mb-4"><BrainListening pulsing={false} /></div>
         <h2 className="text-lg font-bold text-white mb-1">{title}</h2>
-        <p className="text-xs mb-4" style={{ color: "rgba(148,163,184,0.6)" }}>
-          {reverse ? "Ouça e toque os números na ordem inversa." : "Ouça e toque os números na mesma ordem."}
+        <p className="text-sm mb-1" style={{ color: "rgba(148,163,184,0.85)" }}>
+          {reverse ? "Ouça os números e toque na ordem INVERSA." : "Ouça os números e toque na MESMA ordem."}
+        </p>
+        <p className="text-xs mb-5" style={{ color: "rgba(148,163,184,0.55)" }}>
+          Você começa no nível {level} ({digitsForLevel(level)} dígitos) — onde parou da última vez.
         </p>
 
-        <div className="divide-y" style={{ borderColor: "rgba(148,163,184,0.08)" }}>
-          <Row label="Dificuldade">
-            <Opt on={config.difficultyMode === "auto"} onClick={() => set("difficultyMode", "auto")}>Automática</Opt>
-            <Opt on={config.difficultyMode === "manual"} onClick={() => set("difficultyMode", "manual")}>Manual</Opt>
-          </Row>
-          <Row label={config.difficultyMode === "manual" ? "Nível (fixo)" : "Nível inicial"}>
-            {[1, 2, 3, 4, 5, 6, 7].map(lv => (
-              <Opt key={lv} on={config.startLevel === lv} onClick={() => set("startLevel", lv)}>{lv}</Opt>
-            ))}
-          </Row>
-          <Row label="Tentativas">
-            {TRIAL_OPTIONS.map(t => (
-              <Opt key={t} on={config.trials === t} onClick={() => set("trials", t)}>{t}</Opt>
-            ))}
-          </Row>
-          <Row label="Repetir áudio">
-            <Opt on={config.allowReplay} onClick={() => set("allowReplay", true)}>Sim</Opt>
-            <Opt on={!config.allowReplay} onClick={() => set("allowReplay", false)}>Não</Opt>
-          </Row>
-          {config.allowReplay && (
-            <Row label="Repetir custa pontos">
-              <Opt on={config.replayPenalty} onClick={() => set("replayPenalty", true)}>Sim</Opt>
-              <Opt on={!config.replayPenalty} onClick={() => set("replayPenalty", false)}>Não</Opt>
-            </Row>
-          )}
-          <Row label="Mostrar resposta no erro">
-            <Opt on={config.showAnswerOnError} onClick={() => set("showAnswerOnError", true)}>Treino</Opt>
-            <Opt on={!config.showAnswerOnError} onClick={() => set("showAnswerOnError", false)}>Avaliação</Opt>
-          </Row>
-          <Row label="Iniciar em tela cheia">
-            <Opt on={config.startFullscreen} onClick={() => set("startFullscreen", true)}>Sim</Opt>
-            <Opt on={!config.startFullscreen} onClick={() => set("startFullscreen", false)}>Não</Opt>
-          </Row>
-        </div>
+        <button onClick={() => setFullscreen(v => !v)}
+          className="w-full flex items-center justify-between gap-3 px-4 py-3 rounded-2xl mb-3 active:scale-[0.98]"
+          style={{ background: "rgba(255,255,255,0.05)", border: "1px solid rgba(148,163,184,0.2)" }}>
+          <span className="text-sm text-white/85">⛶ Iniciar em tela cheia</span>
+          <span className="text-xs font-bold px-2.5 py-1 rounded-lg"
+            style={{ background: fullscreen ? "linear-gradient(135deg,#7c3aed,#4f46e5)" : "rgba(255,255,255,0.08)",
+              color: fullscreen ? "#fff" : "rgba(199,210,254,0.7)" }}>
+            {fullscreen ? "SIM" : "NÃO"}
+          </span>
+        </button>
 
-        <button onClick={onStart}
-          className="w-full h-13 mt-5 rounded-2xl font-bold text-white text-sm flex items-center justify-center py-3.5 active:scale-95"
+        <button onClick={() => onStart(fullscreen)}
+          className="w-full rounded-2xl font-bold text-white text-sm flex items-center justify-center py-3.5 active:scale-95"
           style={{ background: "linear-gradient(135deg,#7c3aed,#4f46e5)", boxShadow: "0 4px 20px rgba(124,58,237,0.5)" }}>
           Começar →
         </button>
