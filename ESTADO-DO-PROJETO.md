@@ -1,7 +1,22 @@
 # 📍 Estado do Projeto — NeuroPeak (LEIA PRIMEIRO)
 
-> **Handoff / ponto de entrada.** Atualizado em **2026-05-30**. Versão **1.9.7**.
-> Se você é o assistente (Claude) da Kamylla começando agora: **leia este arquivo inteiro antes de qualquer coisa.** Ele resume o que foi feito, onde estamos e o que falta. Os detalhes estão nos outros documentos (mapa no fim).
+> **Handoff / ponto de entrada.** Atualizado em **2026-06-02**. Versão **1.16.6**.
+> Se você é dev/assistente começando agora: **leia este arquivo inteiro antes de qualquer coisa.** Ele resume o que foi feito, onde estamos e o que falta.
+
+---
+
+## ⚡ Atualização jun/2026 — Reformulação de exercícios (v1.10.0 → 1.16.6)
+
+Fase de melhorias de exercícios com a Kamylla (tudo em produção, validado com build + tsc + lint + 24 testes Vitest a cada deploy). Fluxo: push na `main` → deploy Vercel.
+
+- **Focus Agentes** (`components/exercises/attention/FocusAgents.tsx`): reformulado em **arena** (movimento livre, sem cards, personagens grandes) + **imagens otimizadas** (`public/exercises/agents/*` 1024→512px). Agora tem **4 modos** selecionáveis (Foco/Inibição/Alternância/Desafio Executivo) × 5 níveis, mecânica **"capturar todos da regra"** (go/no-go), Inibição em 2 linhas claras, modos com **troca de regra** (fases), e **progressão por degraus** (acertos) com indicador de "Ritmo". Gerador: `utils/generateCommand.ts` (`buildModeRound`/`buildCaptureAll`/`buildPhased`) + `data/commandTemplates.ts`. Spec: `FOCUS-AGENTES-REDESIGN.md`.
+- **Span Numérico Auditivo Direto/Inverso** (`components/exercises/memory/SpanNumerico.tsx`): **auditivo puro** (áudios em `public/exercises/audio/numeros/0-9.m4a`, voz Luciana via `say`), teclado grande, validação automática, **nível automático** (retoma o progresso do paciente via `ExerciseConfig`) e **config do terapeuta na prescrição** do plano (modo treino/avaliação, tentativas, repetir áudio). ⚠️ áudios: gerar com mapeamento explícito (zsh é 1-indexed — ver histórico do commit 2f4606a).
+- **Config do terapeuta no plano**: o campo `exercises` do `TrainingPlan` agora aceita `id` simples OU `{ id, settings }` — helper `lib/exercise-plan.ts` (retrocompatível, sem migração de banco). Lido em `app/(patient)/treino/[exercicio]/page.tsx` e na página de plano.
+- **Cores e Palavras (Stroop)** (`components/exercises/executive/StroopTask.tsx`): progressão de dificuldade por **degraus** (pegadinhas + troca de regra + tempo) + indicador de Ritmo.
+- **Matriz Espacial / Inversa** (`components/exercises/memory/MatrizEspacial.tsx`): **som** (Web Audio) + brilho ao acender, grade maior, células modernizadas (3 temas), tutorial mais didático.
+- **Supermercado** (`components/exercises/memory/DesafioSupermercado.tsx`): layout em **2 colunas** (prateleira esquerda + carrinho lateral à direita).
+
+**Pendências/sugestões abertas** (não-bloqueantes): tornar o Supermercado **responsivo** (empilhar no celular); persistir a config do terapeuta no **banco** (hoje no JSON do plano); calibração fina de níveis conforme uso clínico. NÃO usar o nome "Genius" (marca registrada).
 
 ---
 
