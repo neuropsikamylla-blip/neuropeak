@@ -43,22 +43,28 @@ function getOtherColors(excluded: (typeof COLORS)[number]) {
   return COLORS.filter((c) => c !== excluded);
 }
 
-function generateTrial(difficulty: number): TrialItem {
+// Progressão por degraus DENTRO da sessão: a dificuldade efetiva = base (progresso
+// do paciente) + degrau (sobe a cada 2 acertos seguidos, desce ao errar). Tudo —
+// pegadinhas (incongruência), troca de regra COR↔PALAVRA e tempo — deriva dela.
+const MAX_INTRA_STEP = 5;
+const HITS_PER_STEP  = 2;
+const effLevel = (base: number, step: number) => Math.max(1, Math.min(10, base + step));
+
+function generateTrial(eff: number): TrialItem {
   const word = COLORS[Math.floor(Math.random() * COLORS.length)];
-  const congruentChance = difficulty <= 2 ? 0.2 : difficulty <= 4 ? 0.1 : 0.03;
+  // Quanto maior a dificuldade efetiva, mais "pegadinhas" (palavra ≠ cor).
+  const congruentChance = eff <= 2 ? 0.25 : eff <= 4 ? 0.12 : eff <= 6 ? 0.06 : 0.02;
   const congruent = Math.random() < congruentChance;
   const others = getOtherColors(word);
   const inkColor = congruent ? word : others[Math.floor(Math.random() * others.length)];
-  let rule: Rule;
-  if (difficulty >= 7)      rule = Math.random() < 0.5  ? "PALAVRA" : "COR";
-  else if (difficulty >= 5) rule = Math.random() < 0.45 ? "PALAVRA" : "COR";
-  else if (difficulty >= 3) rule = Math.random() < 0.4  ? "PALAVRA" : "COR";
-  else                      rule = Math.random() < 0.35 ? "PALAVRA" : "COR";
+  // E mais troca de regra (PALAVRA aparece com mais frequência → mais alternância).
+  const palavraChance = eff <= 2 ? 0.3 : eff <= 4 ? 0.4 : eff <= 6 ? 0.48 : 0.55;
+  const rule: Rule = Math.random() < palavraChance ? "PALAVRA" : "COR";
   return { word, inkColor, rule };
 }
 
-function initialTimeMs(difficulty: number): number {
-  return Math.max(MIN_TIME_MS, Math.round(2800 - (difficulty - 1) * 300));
+function initialTimeMs(eff: number): number {
+  return Math.max(MIN_TIME_MS, Math.round(2800 - (eff - 1) * 300));
 }
 
 function correctAnswer(item: TrialItem): string {
@@ -425,7 +431,7 @@ export function StroopTask({ difficulty, theme, onComplete }: StroopTaskProps) {
   const [phase, setPhase] = useState<Phase>("tutorial");
   const [tutorialStep, setTutorialStep] = useState(0);
   const [timeMs, setTimeMs] = useState(initialTimeMs(difficulty));
-  const [streak, setStreak] = useState(0);
+  const [intraStep, setIntraStep] = useState(0);
   const [trial, setTrial] = useState(0);
   const [item, setItem] = useState<TrialItem>(() => generateTrial(difficulty));
   const [results, setResults] = useState<{ correct: boolean; rt: number }[]>([]);
@@ -437,6 +443,8 @@ export function StroopTask({ difficulty, theme, onComplete }: StroopTaskProps) {
   const answeredRef = useRef(false);
   const itemStartRef = useRef(Date.now());
   const sessionStartRef = useRef(Date.now());
+  const intraStepRef = useRef(0);   // degrau de dificuldade dentro da sessão
+  const consecRef = useRef(0);      // acertos seguidos para subir degrau
 
   trialRef.current = trial;
 
@@ -456,11 +464,21 @@ export function StroopTask({ difficulty, theme, onComplete }: StroopTaskProps) {
     const newResults = [...results, { correct, rt }];
     setResults(newResults);
 
-    const newStreak = correct ? Math.max(streak, 0) + 1 : Math.min(streak, 0) - 1;
-    let nextTime = currentTimeMs;
-    let nextStreak = newStreak;
-    if (newStreak >= 2)  { nextTime = Math.max(currentTimeMs - 500, MIN_TIME_MS); nextStreak = 0; }
-    if (newStreak <= -2) { nextTime = Math.min(currentTimeMs + 350, MAX_TIME_MS); nextStreak = 0; }
+    // Degraus: 2 acertos seguidos sobem 1; errar desce 1. A dificuldade efetiva
+    // (base + degrau) determina pegadinhas, troca de regra e tempo.
+    if (correct) {
+      consecRef.current++;
+      if (consecRef.current >= HITS_PER_STEP) {
+        consecRef.current = 0;
+        intraStepRef.current = Math.min(MAX_INTRA_STEP, intraStepRef.current + 1);
+      }
+    } else {
+      consecRef.current = 0;
+      intraStepRef.current = Math.max(0, intraStepRef.current - 1);
+    }
+    const eff = effLevel(difficulty, intraStepRef.current);
+    const nextTime = initialTimeMs(eff);
+    setIntraStep(intraStepRef.current);
 
     const nextTrial = trialRef.current + 1;
     reportProgress(Math.round((nextTrial / MAX_TRIALS) * 100));
@@ -478,10 +496,9 @@ export function StroopTask({ difficulty, theme, onComplete }: StroopTaskProps) {
         metadata: { total: MAX_TRIALS, correct: newResults.filter((r) => r.correct).length, finalTimeMs: nextTime },
       });
     } else {
-      setStreak(nextStreak);
       setTimeMs(nextTime);
       setTrial(nextTrial);
-      setItem(generateTrial(difficulty));
+      setItem(generateTrial(eff));
     }
   }
 
@@ -536,8 +553,8 @@ export function StroopTask({ difficulty, theme, onComplete }: StroopTaskProps) {
 
       <div className="w-full max-w-xl rounded-3xl p-6 space-y-5" style={CARD_STYLE}>
 
-        {/* Score + speed */}
-        <div className="flex justify-between items-center">
+        {/* Score + ritmo + speed */}
+        <div className="flex justify-between items-center gap-2">
           <span
             className="text-[11px] font-semibold tracking-widest"
             style={{ color: "rgba(148,163,184,0.55)" }}
@@ -545,7 +562,14 @@ export function StroopTask({ difficulty, theme, onComplete }: StroopTaskProps) {
             {(Math.round(timeMs / 100) / 10).toFixed(1)}s / ITEM
           </span>
           <span
-            className="text-sm font-bold tracking-wide"
+            className="text-xs font-bold tracking-tight"
+            title="Ritmo (sobe a cada 2 acertos seguidos)"
+            style={{ color: "#fbbf24" }}
+          >
+            ⚡{"▰".repeat(intraStep)}{"▱".repeat(MAX_INTRA_STEP - intraStep)}
+          </span>
+          <span
+            className="text-sm font-bold tracking-wide whitespace-nowrap"
             style={{ color: "#4ade80" }}
           >
             ✓ {correctCount} / {MAX_TRIALS}
