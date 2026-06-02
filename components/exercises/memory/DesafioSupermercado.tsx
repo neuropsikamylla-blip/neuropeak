@@ -212,7 +212,7 @@ function cartInterior(size: number) {
 
 // ── Full-screen Shelf ─────────────────────────────────────────────────────────
 
-const SHELF_COLS = 4;
+const SHELF_COLS = 3;  // prateleira fica ao lado do carrinho — 3 colunas cabem melhor
 
 function FullShelf({
   products, cartIds, onToggle, showLabels,
@@ -644,10 +644,10 @@ export function DesafioSupermercado({ difficulty, theme, onComplete, mode = "lei
         {phase === "shopping" && (
           <motion.div key="shop"
             initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}
-            style={{ flex: 1, display: "flex", flexDirection: "column", overflow: "hidden" }}
+            style={{ flex: 1, display: "flex", flexDirection: "row", overflow: "hidden" }}
           >
-            {/* Shelves (scrollable) */}
-            <div style={{ flex: 1, overflowY: "auto", WebkitOverflowScrolling: "touch" } as React.CSSProperties}>
+            {/* Prateleira à ESQUERDA (scrollable) */}
+            <div style={{ flex: 1, minWidth: 0, overflowY: "auto", WebkitOverflowScrolling: "touch" } as React.CSSProperties}>
               <FullShelf
                 products={shelfProducts}
                 cartIds={cartIds}
@@ -656,27 +656,26 @@ export function DesafioSupermercado({ difficulty, theme, onComplete, mode = "lei
               />
             </div>
 
-            {/* ── CART AREA ── */}
+            {/* ── CARRINHO à DIREITA (coluna maior) ── */}
             {(() => {
-              const CART_SIZE = 118;
+              const CART_SIZE = 150;
               const interior  = cartInterior(CART_SIZE);
-              // quantos itens cabem na grade interna (células de 28px)
               const ITEM_PX   = 26;
               return (
                 <div style={{
-                  flexShrink: 0,
-                  background: "linear-gradient(to bottom,#0f0600,#1a0e05)",
-                  borderTop: "3px solid #b45309",
-                  padding: "8px 12px 14px",
-                  display: "flex", flexDirection: "column", gap: 8,
+                  flexShrink: 0, width: "40%", maxWidth: 280, minWidth: 150,
+                  background: "linear-gradient(to bottom,#1a0e05,#0f0600)",
+                  borderLeft: "3px solid #b45309",
+                  padding: "12px 10px",
+                  display: "flex", flexDirection: "column", gap: 10, overflowY: "auto",
                 }}>
 
-                  {/* Linha principal: itens selecionados (esq) + carrinho visual (dir) */}
-                  <div style={{ display: "flex", alignItems: "flex-start", gap: 10 }}>
+                  {/* Carrinho (cima) + itens selecionados (baixo) — column-reverse */}
+                  <div style={{ display: "flex", flexDirection: "column-reverse", alignItems: "center", gap: 10, width: "100%" }}>
 
-                    {/* Esquerda: lista de itens no carrinho (toque para remover) */}
-                    <div style={{ flex: 1, display: "flex", flexDirection: "column", gap: 4 }}>
-                      <div style={{ display: "flex", alignItems: "center", gap: 6 }}>
+                    {/* Itens no carrinho (toque para remover) */}
+                    <div style={{ width: "100%", display: "flex", flexDirection: "column", gap: 4 }}>
+                      <div style={{ display: "flex", alignItems: "center", justifyContent: "center", gap: 6 }}>
                         <span style={{ color: "#f5e6c8", fontWeight: 700, fontSize: 12 }}>No carrinho</span>
                         <span style={{
                           fontSize: 11, fontWeight: 700, padding: "1px 8px", borderRadius: 100,
@@ -689,8 +688,8 @@ export function DesafioSupermercado({ difficulty, theme, onComplete, mode = "lei
                       </div>
 
                       <div style={{
-                        display: "flex", flexWrap: "wrap", gap: 5,
-                        minHeight: 60, alignContent: "flex-start",
+                        display: "flex", flexWrap: "wrap", gap: 5, justifyContent: "center",
+                        minHeight: 50, alignContent: "flex-start",
                       }}>
                         <AnimatePresence mode="popLayout">
                           {cartIds.length === 0 ? (
@@ -786,18 +785,19 @@ export function DesafioSupermercado({ difficulty, theme, onComplete, mode = "lei
                     onClick={handleConfirm}
                     disabled={cartIds.length === 0}
                     style={{
-                      width: "100%", height: 50, borderRadius: 100, border: "none",
+                      width: "100%", height: 48, borderRadius: 100, border: "none",
+                      marginTop: "auto", flexShrink: 0,
                       background: cartIds.length > 0
                         ? "linear-gradient(135deg,#b45309,#92400e)"
                         : "rgba(255,255,255,0.07)",
-                      color: "white", fontWeight: 700, fontSize: 14,
+                      color: "white", fontWeight: 700, fontSize: 13,
                       cursor: cartIds.length > 0 ? "pointer" : "default",
                       opacity: cartIds.length === 0 ? 0.35 : 1,
                       boxShadow: cartIds.length > 0 ? "0 4px 16px rgba(180,83,9,0.4)" : "none",
                       transition: "all 0.2s",
                     }}
                   >
-                    Confirmar compras ({cartIds.length}/{itemCount})
+                    Confirmar ({cartIds.length}/{itemCount})
                   </button>
 
                 </div>
