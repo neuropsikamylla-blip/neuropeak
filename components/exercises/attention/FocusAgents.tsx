@@ -41,10 +41,11 @@ const CHAR_H    = CHAR_SIZE * 1.5; // imagens são 2:3 (512×768)
 const TICK_MS   = 50;
 
 // Velocidade-base da arena (px/tick). A velocidade efetiva = base × fator do nível.
-const BASE_ARENA_SPEED = 2.6;
+const BASE_ARENA_SPEED = 2.4;
 
 // Multiplicador de velocidade por nível do modo (1–5): lento → rápido.
-const LEVEL_SPEED = [0.7, 0.85, 1.0, 1.2, 1.45];
+// Calibrado para os níveis altos continuarem desafiadores sem ficarem frenéticos.
+const LEVEL_SPEED = [0.55, 0.7, 0.85, 1.0, 1.1];
 
 // Metadados dos 4 modos cognitivos (rótulo, ícone, descrição e flag de avançado).
 const MODE_META: Record<FocusMode, { label: string; icon: string; desc: string; advanced?: boolean }> = {
@@ -363,8 +364,8 @@ export function FocusAgents({ difficulty, theme, onComplete, forceMode, exercise
   const [targetPass, setTargetPass]     = useState(0);
   const [commandFaded, setCommandFaded] = useState(false);
   const [roundResults, setRoundResults] = useState<{ correct:boolean; rt:number }[]>([]);
-  const [displayLevel, setDisplayLevel] = useState(Math.max(1, Math.min(10, difficulty)));
-  const [cmdCountdown, setCmdCountdown] = useState<number|null>(null);
+  const [displayLevel, setDisplayLevel] = useState(1);
+  const [lastCorrect, setLastCorrect]   = useState(false);
 
   const rafRef              = useRef<number|null>(null);
   const fallersRef          = useRef<FallerData[]>([]);
@@ -385,8 +386,6 @@ export function FocusAgents({ difficulty, theme, onComplete, forceMode, exercise
   const roundResultsRef     = useRef(roundResults);
   const resolvedIds         = useRef(new Set<string>());
   const doneRef             = useRef(false);
-  const cmdCountdownRef     = useRef<ReturnType<typeof setInterval>|null>(null);
-  const autoStartFnRef      = useRef<(()=>void)|null>(null);
   const targetUidsRef       = useRef<string[]>([]);
   const foundUidsRef        = useRef<string[]>([]);
   const forbiddenRef        = useRef<string[]>([]);
@@ -400,33 +399,6 @@ export function FocusAgents({ difficulty, theme, onComplete, forceMode, exercise
   const modeRef                 = useRef<FocusMode>("foco");
   const levelRef                = useRef(1);
   roundResultsRef.current = roundResults;
-
-  // Auto-start countdown durante fase de comando
-  useEffect(() => {
-    if (showTutorial || gamePhase !== "command" || doneRef.current) {
-      setCmdCountdown(null);
-      if (cmdCountdownRef.current) { clearInterval(cmdCountdownRef.current); cmdCountdownRef.current = null; }
-      return;
-    }
-    const SECS = 3;
-    setCmdCountdown(SECS);
-    let count = SECS;
-    cmdCountdownRef.current = setInterval(() => {
-      count--;
-      if (count <= 0) {
-        clearInterval(cmdCountdownRef.current!);
-        cmdCountdownRef.current = null;
-        setCmdCountdown(null);
-        autoStartFnRef.current?.();
-      } else {
-        setCmdCountdown(count);
-      }
-    }, 1000);
-    return () => {
-      if (cmdCountdownRef.current) { clearInterval(cmdCountdownRef.current); cmdCountdownRef.current = null; }
-    };
-  // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [gamePhase, showTutorial]);
 
   const stopFallAnimation = () => {
     if (rafRef.current !== null) { cancelAnimationFrame(rafRef.current); rafRef.current = null; }
@@ -530,8 +502,6 @@ export function FocusAgents({ difficulty, theme, onComplete, forceMode, exercise
   }, [theme, forceMode, speakFn]);
 
   function startPlaying() {
-    if (cmdCountdownRef.current) { clearInterval(cmdCountdownRef.current); cmdCountdownRef.current = null; }
-    setCmdCountdown(null);
     stopFallAnimation();
 
     const W = playAreaRef.current?.clientWidth  ?? 0;
@@ -656,6 +626,7 @@ export function FocusAgents({ difficulty, theme, onComplete, forceMode, exercise
     const newResults = [...roundResultsRef.current, { correct, rt }];
     setRoundResults(newResults);
     roundResultsRef.current = newResults;
+    setLastCorrect(correct);   // resultado real da jogada (usado no overlay de feedback)
     setGamePhase("feedback");
 
     const nextRound = r + 1;
@@ -751,7 +722,6 @@ export function FocusAgents({ difficulty, theme, onComplete, forceMode, exercise
     return () => {
       stopFallAnimation();
       if (commandFadeTimerRef.current) clearTimeout(commandFadeTimerRef.current);
-      if (cmdCountdownRef.current) clearInterval(cmdCountdownRef.current);
       cancelTTS();
     };
   // eslint-disable-next-line react-hooks/exhaustive-deps
@@ -780,11 +750,11 @@ export function FocusAgents({ difficulty, theme, onComplete, forceMode, exercise
   const isSeqMode     = roundType === "sequence"  || roundType === "advanced";
   const isMultiTarget = roundType === "multiTarget";
 
-  autoStartFnRef.current = startPlaying;
-
   const totalTargets   = targetUids.length;
   const foundCount     = foundUids.length;
-  const isCorrect      = foundCount >= totalTargets && totalTargets > 0;
+  // Usa o resultado real da última jogada (corrige o feedback do modo Inibição,
+  // onde os alvos não são contados por foundCount).
+  const isCorrect      = lastCorrect;
   const firstTargetAg  = gameAgents.find(ga => ga.uid === targetUids[0])?.agent;
 
   const gameTitle = `${MODE_META[mode].icon} ${MODE_META[mode].label}`;
@@ -904,12 +874,10 @@ export function FocusAgents({ difficulty, theme, onComplete, forceMode, exercise
                   <button onClick={startPlaying}
                     className="flex-1 h-12 rounded-2xl font-bold text-white text-sm flex items-center justify-center gap-2 active:scale-95"
                     style={{ background:"linear-gradient(135deg,#7c3aed,#4f46e5)", boxShadow:"0 4px 20px rgba(124,58,237,0.5)" }}>
-                    {cmdCountdown !== null && cmdCountdown > 0
-                      ? <span className="text-xl font-black">{cmdCountdown}</span>
-                      : isSeqMode ? "Capturar em sequência →"
-                      : isNegMode ? "Capturar — cuidado →"
-                      : isMultiTarget ? "Capturar os dois →"
-                      : "Capturar! →"}
+                    {isSeqMode ? "OK, capturar em sequência →"
+                      : isNegMode ? "OK, capturar — cuidado →"
+                      : isMultiTarget ? "OK, capturar os dois →"
+                      : "OK, capturar! →"}
                   </button>
                 </div>
               </div>

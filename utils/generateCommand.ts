@@ -598,9 +598,18 @@ const MODE_LEVEL_DIFF: Record<FocusMode, [number, number, number, number, number
 };
 
 // Personagens "ativos" (n) e total exibido (dN) por nível (1–5).
+// Mantido enxuto de propósito: muitos personagens viram poluição visual e
+// dificultam achar o alvo sem necessidade (o desafio vem dos atributos + velocidade).
 const MODE_LEVEL_N: [number, number][] = [
-  [4, 12], [5, 16], [6, 20], [7, 24], [8, 28],
+  [4, 8], [4, 10], [5, 12], [6, 14], [6, 16],
 ];
+
+// Formatos de comando que dependem de detalhes sutis/ambíguos (cor do cabelo,
+// cor do acessório, "sem X") — evitados para que o alvo descrito seja sempre
+// claramente identificável na cena.
+const SUBTLE_FORMATS = new Set<string>([
+  "hair-color", "hair-color-acc", "acc-with-acc-color", "contrast-acc-color", "color-no-acc",
+]);
 
 /**
  * Gera uma rodada para um MODO e NÍVEL fixos (escolhidos pelo terapeuta), em vez
@@ -623,7 +632,9 @@ export function buildModeRound(
   const diff = MODE_LEVEL_DIFF[mode][lv - 1];
   const [n, dN] = MODE_LEVEL_N[lv - 1];
 
-  const levelTemplates = COMMAND_TEMPLATES.filter(t => t.difficulty === diff);
+  const levelTemplates = COMMAND_TEMPLATES.filter(
+    t => t.difficulty === diff && !SUBTLE_FORMATS.has(t.formatType),
+  );
   const recentSet = new Set(recentVerbs.slice(-3));
   const ordered = [
     ...shuffle(levelTemplates.filter(t => !recentSet.has(t.verbIndex))),
@@ -638,7 +649,10 @@ export function buildModeRound(
   // Fallback: tenta as outras dificuldades do MESMO modo (mantém a categoria).
   for (const fb of MODE_LEVEL_DIFF[mode]) {
     if (fb === diff) continue;
-    for (const tmpl of shuffle(COMMAND_TEMPLATES.filter(t => t.difficulty === fb))) {
+    const fbTemplates = shuffle(
+      COMMAND_TEMPLATES.filter(t => t.difficulty === fb && !SUBTLE_FORMATS.has(t.formatType)),
+    );
+    for (const tmpl of fbTemplates) {
       const result = resolve(tmpl, characterAttributes, n, theme);
       if (result) return fillToN(result, dN);
     }
