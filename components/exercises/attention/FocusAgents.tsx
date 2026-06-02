@@ -47,16 +47,18 @@ const BASE_ARENA_SPEED = 2.4;
 // Calibrado para os níveis altos continuarem desafiadores sem ficarem frenéticos.
 const LEVEL_SPEED = [0.55, 0.7, 0.85, 1.0, 1.1];
 
-// Dificuldade progressiva DENTRO do nível: a velocidade parte da velocidade do
-// nível atual (rodada 0) e cresce ao longo das rodadas em direção à do próximo
-// nível (até ~75% do caminho na última rodada) — sem ficar repetitivo e já
-// preparando o paciente para o nível seguinte.
-function levelSpeedFactor(level: number, round: number, maxRounds: number): number {
-  const lv   = Math.max(1, Math.min(5, level));
-  const base = LEVEL_SPEED[lv - 1];
-  const next = lv < 5 ? LEVEL_SPEED[lv] : base * 1.2;
-  const t    = maxRounds > 1 ? Math.min(1, Math.max(0, round) / (maxRounds - 1)) : 0;
-  return base + (next - base) * t * 0.75;
+// Dificuldade progressiva DENTRO do nível, ligada aos ACERTOS do paciente: a cada
+// 2 acertos seguidos sobe um "degrau" de intensidade (mais velocidade); errar
+// desce um degrau. Vai até um teto um pouco acima do próximo nível — preparando o
+// paciente para o nível seguinte sem mudar o nível em si.
+const INTRA_STEP_PCT = 0.2;       // +20% de velocidade por degrau
+const HITS_PER_STEP  = 2;         // acertos seguidos para subir um degrau
+const MAX_INTRA_STEP = 5;
+function levelSpeed(level: number, step: number): number {
+  const lv      = Math.max(1, Math.min(5, level));
+  const base    = LEVEL_SPEED[lv - 1];
+  const ceiling = lv < 5 ? LEVEL_SPEED[lv] * 1.15 : base * 1.3;
+  return Math.min(base * (1 + step * INTRA_STEP_PCT), ceiling);
 }
 
 // Metadados dos 4 modos cognitivos (rótulo, ícone, descrição e flag de avançado).
@@ -381,6 +383,7 @@ export function FocusAgents({ difficulty, theme, onComplete, forceMode, exercise
   const [targetPass, setTargetPass]     = useState(0);
   const [commandFaded, setCommandFaded] = useState(false);
   const [phaseHint, setPhaseHint]       = useState<string|null>(null);
+  const [intensity, setIntensity]       = useState(0);   // degrau de dificuldade (HUD)
   const [roundResults, setRoundResults] = useState<{ correct:boolean; rt:number }[]>([]);
   const [displayLevel, setDisplayLevel] = useState(1);
   const [lastCorrect, setLastCorrect]   = useState(false);
@@ -421,6 +424,9 @@ export function FocusAgents({ difficulty, theme, onComplete, forceMode, exercise
   const currentPhaseRef         = useRef(0);
   const phaseLockRef            = useRef(false);
   const isPhasedRef             = useRef(false);
+  // Dificuldade progressiva dentro do nível (degraus por acertos seguidos).
+  const intraStepRef            = useRef(0);
+  const consecCorrectRef        = useRef(0);
   roundResultsRef.current = roundResults;
 
   // Pré-carrega as imagens dos personagens (durante a seleção/tutorial) para que
@@ -436,6 +442,11 @@ export function FocusAgents({ difficulty, theme, onComplete, forceMode, exercise
 
   const prepareRound = useCallback((_r: number) => {
     roundRef.current = _r;
+    if (_r === 0) {
+      intraStepRef.current = 0;
+      consecCorrectRef.current = 0;
+      setIntensity(0);
+    }
 
     // Modo + nível são fixos na sessão (escolhidos na tela de seleção). A
     // adaptação automática entra na Fase 2 (config clínica).
@@ -594,7 +605,7 @@ export function FocusAgents({ difficulty, theme, onComplete, forceMode, exercise
       prevTs      = ts;
       const ticks = dt / TICK_MS;
 
-      const lvSpeed = levelSpeedFactor(levelRef.current, roundRef.current, MAX_ROUNDS);
+      const lvSpeed = levelSpeed(levelRef.current, intraStepRef.current);
       const mult = BASE_ARENA_SPEED * lvSpeed * ticks;
       const W2   = playAreaWRef.current;
       const H2   = playAreaHRef.current;
@@ -677,8 +688,19 @@ export function FocusAgents({ difficulty, theme, onComplete, forceMode, exercise
     const nextRound = r + 1;
     reportProgress(Math.round((nextRound / MAX_ROUNDS) * 100));
 
-    // Parte 1: modo e nível são fixos na sessão (sem adaptação automática — a
-    // adaptação dentro do modo entra na Fase 2, junto da config clínica).
+    // Dificuldade progressiva DENTRO do nível (o nível em si fica fixo): a cada
+    // HITS_PER_STEP acertos seguidos sobe um degrau de intensidade; errar desce um.
+    if (correct) {
+      consecCorrectRef.current++;
+      if (consecCorrectRef.current >= HITS_PER_STEP) {
+        consecCorrectRef.current = 0;
+        intraStepRef.current = Math.min(MAX_INTRA_STEP, intraStepRef.current + 1);
+      }
+    } else {
+      consecCorrectRef.current = 0;
+      intraStepRef.current = Math.max(0, intraStepRef.current - 1);
+    }
+    setIntensity(intraStepRef.current);
 
     setTimeout(() => {
       if (nextRound >= MAX_ROUNDS) {
@@ -889,9 +911,9 @@ export function FocusAgents({ difficulty, theme, onComplete, forceMode, exercise
             Nível {displayLevel}
           </span>
           {gamePhase === "playing" && (
-            <span className={`text-xs font-bold px-1.5 py-0.5 rounded-lg whitespace-nowrap ${
-              targetPass >= 1 ? "bg-orange-500 text-white" : "bg-black/20 text-white/70"}`}>
-              {targetPass >= 1 ? "⚠️ 2ª vez" : "1ª vez"}
+            <span className="text-xs font-bold px-1.5 py-0.5 rounded-lg bg-black/20 whitespace-nowrap tracking-tight"
+              title="Ritmo (sobe a cada 2 acertos seguidos)" style={{ color:"#fbbf24" }}>
+              ⚡{"▰".repeat(intensity)}{"▱".repeat(MAX_INTRA_STEP - intensity)}
             </span>
           )}
         </div>
