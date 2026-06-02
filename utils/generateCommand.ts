@@ -6,6 +6,7 @@ import type {
   GeneratedCommand,
   BuiltRound,
   CommandRuleType,
+  FocusMode,
 } from "@/types/commands";
 import { characterAttributes } from "@/data/agentAttributes";
 import {
@@ -572,6 +573,71 @@ export function buildRound(
 
   for (const fb of [level - 1, level - 2, 1]) {
     if (fb < 1) continue;
+    for (const tmpl of shuffle(COMMAND_TEMPLATES.filter(t => t.difficulty === fb))) {
+      const result = resolve(tmpl, characterAttributes, n, theme);
+      if (result) return fillToN(result, dN);
+    }
+  }
+
+  return fillToN(colorFallback(n, theme), dN);
+}
+
+// ── API por MODO (redesign 4 modos × 5 níveis) ──────────────────────────────────
+
+// Para cada modo cognitivo, qual "difficulty interna" dos templates usar por nível
+// (1–5). O modo seleciona a CATEGORIA de comando; o nível escala a complexidade.
+//   foco        → seleção por atributos (single/colorAttribute/multiAttribute)
+//   inibicao    → exceções (contrast "não o de…" / negative "exceto…")
+//   alternancia → sequência ("primeiro… depois…")
+//   desafio     → multiTarget + advanced (sequência + exceção)
+const MODE_LEVEL_DIFF: Record<FocusMode, [number, number, number, number, number]> = {
+  foco:        [1, 2, 2, 5, 5],
+  inibicao:    [3, 3, 7, 7, 8],
+  alternancia: [6, 6, 6, 6, 6],
+  desafio:     [4, 4, 8, 8, 8],
+};
+
+// Personagens "ativos" (n) e total exibido (dN) por nível (1–5).
+const MODE_LEVEL_N: [number, number][] = [
+  [4, 12], [5, 16], [6, 20], [7, 24], [8, 28],
+];
+
+/**
+ * Gera uma rodada para um MODO e NÍVEL fixos (escolhidos pelo terapeuta), em vez
+ * da dificuldade adaptativa aleatória de `buildRound`. Reaproveita toda a lógica
+ * de geração existente (`resolve`/`fillToN`), apenas restringindo a categoria de
+ * comando ao modo e escalando pelo nível.
+ *
+ * @param mode   Modo cognitivo (foco/inibicao/alternancia/desafio)
+ * @param level  Nível 1–5
+ * @param theme  Tema visual
+ * @param recentVerbs Índices de verbos usados recentemente (evita repetição)
+ */
+export function buildModeRound(
+  mode: FocusMode,
+  level: number,
+  theme: Theme,
+  recentVerbs: number[] = [],
+): BuiltRound {
+  const lv   = Math.max(1, Math.min(5, Math.round(level)));
+  const diff = MODE_LEVEL_DIFF[mode][lv - 1];
+  const [n, dN] = MODE_LEVEL_N[lv - 1];
+
+  const levelTemplates = COMMAND_TEMPLATES.filter(t => t.difficulty === diff);
+  const recentSet = new Set(recentVerbs.slice(-3));
+  const ordered = [
+    ...shuffle(levelTemplates.filter(t => !recentSet.has(t.verbIndex))),
+    ...shuffle(levelTemplates.filter(t => recentSet.has(t.verbIndex))),
+  ];
+
+  for (const tmpl of ordered) {
+    const result = resolve(tmpl, characterAttributes, n, theme);
+    if (result) return fillToN(result, dN);
+  }
+
+  // Fallback: tenta as outras dificuldades do MESMO modo (mantém a categoria).
+  for (const fb of MODE_LEVEL_DIFF[mode]) {
+    if (fb === diff) continue;
     for (const tmpl of shuffle(COMMAND_TEMPLATES.filter(t => t.difficulty === fb))) {
       const result = resolve(tmpl, characterAttributes, n, theme);
       if (result) return fillToN(result, dN);

@@ -10,6 +10,9 @@ export type CommandRuleType =
   | "negative"
   | "advanced";
 
+/** Modo cognitivo escolhido pelo terapeuta no Focus Agentes. */
+export type FocusMode = "foco" | "inibicao" | "alternancia" | "desafio";
+
 export type AccessoryKey =
   | "fone"
   | "oculos"
