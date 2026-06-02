@@ -29,6 +29,33 @@ function initialSeq(difficulty: number) {
   return Math.min(Math.max(2, Math.floor(difficulty * 0.5) + 1), 5);
 }
 
+// ── Som estilo Genius (Web Audio, sem arquivos) ─────────────────────────────────
+// Tons FIXOS (não variam por posição) para preservar a natureza visuoespacial
+// (Corsi) — o som é só um feedback satisfatório, não uma pista de "onde".
+let audioCtx: AudioContext | null = null;
+function beep(freq: number, durMs = 180, type: OscillatorType = "sine", gain = 0.14) {
+  if (typeof window === "undefined") return;
+  try {
+    const Ctx = window.AudioContext || (window as unknown as { webkitAudioContext: typeof AudioContext }).webkitAudioContext;
+    audioCtx = audioCtx || new Ctx();
+    if (audioCtx.state === "suspended") audioCtx.resume();
+    const ctx = audioCtx;
+    const osc = ctx.createOscillator();
+    const g = ctx.createGain();
+    osc.type = type;
+    osc.frequency.value = freq;
+    g.gain.setValueAtTime(gain, ctx.currentTime);
+    g.gain.exponentialRampToValueAtTime(0.0001, ctx.currentTime + durMs / 1000);
+    osc.connect(g); g.connect(ctx.destination);
+    osc.start();
+    osc.stop(ctx.currentTime + durMs / 1000);
+  } catch { /* áudio indisponível — silencioso */ }
+}
+const soundLight   = () => beep(523, 200, "sine");          // célula acende (apresentação)
+const soundTap     = () => beep(659, 120, "sine", 0.12);    // toque do paciente
+const soundCorrect = () => { beep(659, 120); setTimeout(() => beep(988, 220), 120); }; // acerto
+const soundWrong   = () => beep(160, 260, "square", 0.1);   // erro
+
 // Tutorial cells: indices in a 4x4 grid
 const TSEQ_DIRECT = [4, 12]; // cells 5 and 13 (0-indexed: 4 and 12)
 const TSEQ_INVERSE = [2, 9]; // cells 3 and 10 (0-indexed: 2 and 9)
@@ -64,6 +91,7 @@ function MatrizTutorialGrid({
         await new Promise<void>((r) => setTimeout(r, 400));
         if (cancelled) return;
         setActiveCell(cell);
+        soundLight();
         await new Promise<void>((r) => setTimeout(r, 600));
         if (cancelled) return;
         setActiveCell(null);
@@ -206,6 +234,7 @@ export function MatrizEspacial({ difficulty, theme, onComplete, alwaysReverse }:
     for (const cell of seq) {
       await new Promise<void>((r) => setTimeout(r, 350));
       setActiveCell(cell);
+      soundLight();
       await new Promise<void>((r) => setTimeout(r, 750));
       setActiveCell(null);
     }
@@ -227,11 +256,13 @@ export function MatrizEspacial({ difficulty, theme, onComplete, alwaysReverse }:
 
     const newSeq = [...userSeq, idx];
     setUserSeq(newSeq);
+    soundTap();
 
     if (newSeq.length < seqLength) return;
 
     const expected = reverse ? [...sequence].reverse() : sequence;
     const correct = newSeq.every((cell, i) => cell === expected[i]);
+    if (correct) soundCorrect(); else soundWrong();
 
     setFeedbackData({ correct, userSeq: newSeq });
     setPhase("feedback");
@@ -313,9 +344,10 @@ export function MatrizEspacial({ difficulty, theme, onComplete, alwaysReverse }:
     }
 
     if (isActive) {
-      if (isGamified) return { background: "#06b6d4", border: "2px solid #67e8f9", borderRadius: 12, boxShadow: "0 0 15px rgba(6,182,212,0.6)" };
-      if (isColorful) return { background: "#8b5cf6", border: "2px solid #c4b5fd", borderRadius: 12 };
-      return { background: "#3b82f6", border: "2px solid #93c5fd", borderRadius: 12 };
+      // Brilho vibrante estilo Genius (glow) em todos os temas.
+      if (isGamified) return { background: "#22d3ee", border: "2px solid #a5f3fc", borderRadius: 12, boxShadow: "0 0 24px 5px rgba(34,211,238,0.8)" };
+      if (isColorful) return { background: "#a78bfa", border: "2px solid #ddd6fe", borderRadius: 12, boxShadow: "0 0 24px 5px rgba(167,139,250,0.75)" };
+      return { background: "#60a5fa", border: "2px solid #bfdbfe", borderRadius: 12, boxShadow: "0 0 24px 5px rgba(96,165,250,0.7)" };
     }
     if (isUserSelected && phase === "recall") {
       return isGamified
@@ -389,8 +421,8 @@ export function MatrizEspacial({ difficulty, theme, onComplete, alwaysReverse }:
               className="aspect-square transition-colors"
               style={cellStyleFor(idx)}
               whileTap={phase === "recall" ? { scale: 0.9 } : {}}
-              animate={activeCell === idx ? { scale: [1, 1.15, 1] } : {}}
-              transition={{ duration: 0.15 }}
+              animate={activeCell === idx ? { scale: [1, 1.22, 1] } : {}}
+              transition={{ duration: 0.28, ease: "easeOut" }}
             />
           ))}
         </div>
