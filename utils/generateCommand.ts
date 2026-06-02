@@ -611,6 +611,63 @@ const SUBTLE_FORMATS = new Set<string>([
   "hair-color", "hair-color-acc", "acc-with-acc-color", "contrast-acc-color", "color-no-acc",
 ]);
 
+// ── Parte 2: "capturar todos da regra" (go/no-go) ───────────────────────────────
+// Em vez de 1 alvo, marca TODOS os personagens que batem a regra como alvos.
+// Foco: só alvos (capture todos os X). Inibição: alvos GO + proibidos NO-GO,
+// com texto em 2 linhas (✅ capturar / 🚫 não tocar) — claro, sem "X, não o Y".
+
+function distinctByColor(c: ColorName, max: number): CharacterAttributes[] {
+  return pickDistinctAgents(withUniformColor(characterAttributes, c), max);
+}
+function distinctByAcc(a: AccessoryKey, max: number): CharacterAttributes[] {
+  return pickDistinctAgents(withAccessory(characterAttributes, a), max);
+}
+
+function buildCaptureAll(mode: FocusMode, level: number, theme: Theme): BuiltRound | null {
+  const noun = NOUN[theme] ?? "agente";
+  const lv = Math.max(1, Math.min(5, level));
+  const dN = MODE_LEVEL_N[lv - 1][1];
+
+  if (mode === "foco") {
+    // N2 = por acessório; demais = por cor (ambos garantem vários alvos).
+    if (lv === 2) {
+      const acc = shuffle(ALL_ACCESSORIES).find(a => distinctByAcc(a, 3).length >= 2);
+      if (acc) {
+        const targets = distinctByAcc(acc, 4);
+        const exclude = new Set(targets.map(t => t.agentId));
+        const distract = pickDistinctAgents(withoutAccessory(characterAttributes, acc), dN - targets.length, exclude);
+        return mkResult(targets, distract, [], false, targets.length, "multiTarget",
+          `Capture todos os ${noun}s com ${ACC_PT[acc]}`, 0);
+      }
+    }
+    const col = shuffle(ALL_UNIFORM_COLORS).find(c => distinctByColor(c, 3).length >= 2);
+    if (!col) return null;
+    const targets = distinctByColor(col, lv >= 4 ? 4 : 3);
+    const exclude = new Set(targets.map(t => t.agentId));
+    const distract = pickDistinctAgents(
+      characterAttributes.filter(c => c.uniformColor !== col), dN - targets.length, exclude);
+    return mkResult(targets, distract, [], false, targets.length, "multiTarget",
+      `Capture todos os ${noun}s ${COLOR_PT[col]}`, 0);
+  }
+
+  if (mode === "inibicao") {
+    const colors = shuffle(ALL_UNIFORM_COLORS).filter(c => distinctByColor(c, 3).length >= 2);
+    if (colors.length < 2) return null;
+    const go = colors[0], nogo = colors[1];
+    const targets = distinctByColor(go, 3);
+    const forbidden = distinctByColor(nogo, lv >= 4 ? 3 : 2);
+    const exclude = new Set([...targets, ...forbidden].map(c => c.agentId));
+    const neutral = pickDistinctAgents(
+      characterAttributes.filter(c => c.uniformColor !== go && c.uniformColor !== nogo),
+      Math.max(0, dN - targets.length - forbidden.length), exclude);
+    // 2 linhas claras (renderizadas com whitespace-pre-line; TTS lê as duas).
+    const text = `✅ Capture os ${noun}s ${COLOR_PT[go]}\n🚫 NÃO toque nos ${COLOR_PT[nogo]}`;
+    return mkResult(targets, neutral, forbidden, false, targets.length, "multiTarget", text, 0);
+  }
+
+  return null;
+}
+
 /**
  * Gera uma rodada para um MODO e NÍVEL fixos (escolhidos pelo terapeuta), em vez
  * da dificuldade adaptativa aleatória de `buildRound`. Reaproveita toda a lógica
@@ -631,6 +688,13 @@ export function buildModeRound(
   const lv   = Math.max(1, Math.min(5, Math.round(level)));
   const diff = MODE_LEVEL_DIFF[mode][lv - 1];
   const [n, dN] = MODE_LEVEL_N[lv - 1];
+
+  // Parte 2: Foco e Inibição usam "capturar todos da regra" (go/no-go).
+  // A cena já vem completa (figuras distintas) — sem fillToN para não repetir.
+  if (mode === "foco" || mode === "inibicao") {
+    const all = buildCaptureAll(mode, lv, theme);
+    if (all) return all;
+  }
 
   const levelTemplates = COMMAND_TEMPLATES.filter(
     t => t.difficulty === diff && !SUBTLE_FORMATS.has(t.formatType),

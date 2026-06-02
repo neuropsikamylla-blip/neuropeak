@@ -73,6 +73,11 @@ const PALETTE_HEX: Record<string, string> = {
 function noop(_: string) {}
 function shuffle<T>(arr: T[]): T[] { return [...arr].sort(() => Math.random() - 0.5); }
 
+// Remove emojis/quebras do comando antes de enviar ao TTS (vozes leem "✅"/"🚫").
+function cleanForSpeech(text: string): string {
+  return text.replace(/[✅🚫]/g, "").replace(/\n+/g, ". ").trim();
+}
+
 // ── AgentCard ─────────────────────────────────────────────────────────────────
 
 function AgentCard({ gameAgent, onClick, state, size }: {
@@ -497,7 +502,8 @@ export function FocusAgents({ difficulty, theme, onComplete, forceMode, exercise
       forceMode === "visual"   ? "visual" :
       forceMode === "auditivo" ? "audio"  : "both";
 
-    if (instrMode !== "visual") speakFn(built.command.text);
+    // Fala o comando sem os emojis/quebras (que algumas vozes leem em voz alta).
+    if (instrMode !== "visual") speakFn(cleanForSpeech(built.command.text));
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [theme, forceMode, speakFn]);
 
@@ -574,7 +580,9 @@ export function FocusAgents({ difficulty, theme, onComplete, forceMode, exercise
         if (y > H2)              { y = -CHAR_H;    wrapped = true; }
         else if (y < -CHAR_H)    { y = H2;         wrapped = true; }
 
-        if (wrapped && targetUidsRef.current.includes(f.uid)) {
+        // Só conta escapada de alvo AINDA NÃO capturado (no "capturar todos",
+        // um alvo já capturado que cruza a borda não deve causar falha).
+        if (wrapped && targetUidsRef.current.includes(f.uid) && !foundUidsRef.current.includes(f.uid)) {
           pass++;
           newPassCount = pass;
           if (pass >= 2) targetLost = true;
@@ -746,9 +754,12 @@ export function FocusAgents({ difficulty, theme, onComplete, forceMode, exercise
     forceMode === "visual"   ? "visual" :
     forceMode === "auditivo" ? "audio"  : "both";
 
-  const isNegMode     = roundType === "negative" || roundType === "advanced";
-  const isSeqMode     = roundType === "sequence"  || roundType === "advanced";
-  const isMultiTarget = roundType === "multiTarget";
+  // Parte 2: Foco e Inibição usam "capturar todos da regra".
+  const isCaptureAll  = mode === "foco" || mode === "inibicao";
+  const isInhibition  = mode === "inibicao";
+  const isNegMode     = !isCaptureAll && (roundType === "negative" || roundType === "advanced");
+  const isSeqMode     = !isCaptureAll && (roundType === "sequence"  || roundType === "advanced");
+  const isMultiTarget = !isCaptureAll && roundType === "multiTarget";
 
   const totalTargets   = targetUids.length;
   const foundCount     = foundUids.length;
@@ -783,7 +794,7 @@ export function FocusAgents({ difficulty, theme, onComplete, forceMode, exercise
             ))}
           </div>
           <span className="text-xs font-bold opacity-70 whitespace-nowrap">{round+1}/{MAX_ROUNDS}</span>
-          {(isMultiTarget || isSeqMode) && gamePhase === "playing" && foundCount > 0 && (
+          {(isMultiTarget || isSeqMode || isCaptureAll) && gamePhase === "playing" && totalTargets > 1 && (
             <span className="text-xs font-bold px-1.5 py-0.5 rounded-lg bg-green-500/40 whitespace-nowrap">
               {foundCount}/{totalTargets} ✓
             </span>
@@ -814,6 +825,8 @@ export function FocusAgents({ difficulty, theme, onComplete, forceMode, exercise
               <div className="px-4 py-2 text-center text-xs font-bold uppercase tracking-widest"
                 style={{ background:"rgba(255,255,255,0.08)", color:"rgba(255,255,255,0.6)" }}>
                 {instrMode === "audio" ? "👂 Ouça com atenção"
+                  : isInhibition ? "🚫 Capture os certos · evite os proibidos"
+                  : isCaptureAll ? "🎯 Capture todos os certos"
                   : isSeqMode && isNegMode ? "⚠️ Sequência + Proibido"
                   : isSeqMode ? "🔢 Sequência"
                   : isNegMode ? "⚠️ Modo Negativo"
@@ -837,7 +850,8 @@ export function FocusAgents({ difficulty, theme, onComplete, forceMode, exercise
                         <motion.p key="cmd"
                           initial={{ opacity:1 }} animate={{ opacity:1 }} exit={{ opacity:0, y:-4 }}
                           transition={{ duration:0.5 }}
-                          className="text-center font-bold text-lg leading-snug text-white">
+                          className="text-center font-bold text-lg leading-snug text-white"
+                          style={{ whiteSpace: "pre-line" }}>
                           {command}
                         </motion.p>
                       ) : (
@@ -855,7 +869,7 @@ export function FocusAgents({ difficulty, theme, onComplete, forceMode, exercise
                   <div className="text-center space-y-3 py-2">
                     <div className="text-4xl animate-pulse">🔊</div>
                     <p className="font-bold text-base text-violet-300">Modo Auditivo</p>
-                    <button onClick={() => speakFn(command)}
+                    <button onClick={() => speakFn(cleanForSpeech(command))}
                       className="mx-auto flex items-center gap-2 px-5 py-2.5 rounded-2xl font-bold text-sm text-violet-300 active:scale-95"
                       style={{ background:"rgba(139,92,246,0.15)", border:"1.5px solid rgba(139,92,246,0.4)" }}>
                       🔁 Ouvir novamente
@@ -865,7 +879,7 @@ export function FocusAgents({ difficulty, theme, onComplete, forceMode, exercise
 
                 <div className="flex gap-3">
                   {instrMode === "both" && (
-                    <button onClick={() => speakFn(command)}
+                    <button onClick={() => speakFn(cleanForSpeech(command))}
                       className="flex-1 h-12 rounded-2xl font-bold text-sm flex items-center justify-center gap-2 text-violet-300 active:scale-95"
                       style={{ background:"rgba(139,92,246,0.15)", border:"1.5px solid rgba(139,92,246,0.4)" }}>
                       🔊 Ouvir
@@ -977,11 +991,20 @@ export function FocusAgents({ difficulty, theme, onComplete, forceMode, exercise
               {isSeqMode && isCorrect && (
                 <p className="text-sm opacity-80 mt-1">Sequência completa!</p>
               )}
+              {isCaptureAll && isCorrect && totalTargets > 1 && (
+                <p className="text-sm opacity-80 mt-1">Capturou todos os {totalTargets}!</p>
+              )}
+              {failReason === "wrong-tap" && wrongUid !== null && forbidden.includes(wrongUid) && (
+                <p className="text-sm opacity-80 mt-1">Esse era proibido! 🚫</p>
+              )}
+              {isInhibition && failReason === "wrong-tap" && wrongUid !== null && !forbidden.includes(wrongUid) && (
+                <p className="text-sm opacity-80 mt-1">Esse não era para capturar.</p>
+              )}
               {isNegMode && failReason === "wrong-tap" && (
                 <p className="text-sm opacity-80 mt-1">Tocou no personagem proibido!</p>
               )}
-              {(isMultiTarget || isSeqMode) && !isCorrect && foundCount > 0 && (
-                <p className="text-sm opacity-80 mt-1">{foundCount} de {totalTargets} encontrado{foundCount>1?"s":""}</p>
+              {(isMultiTarget || isSeqMode || isCaptureAll) && !isCorrect && foundCount > 0 && (
+                <p className="text-sm opacity-80 mt-1">{foundCount} de {totalTargets} capturado{foundCount>1?"s":""}</p>
               )}
             </div>
           </motion.div>
