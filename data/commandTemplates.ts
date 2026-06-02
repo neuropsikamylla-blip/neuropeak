@@ -30,47 +30,48 @@ export const COLOR_PT: Record<ColorName, string> = {
   rosa:     "rosa",
 };
 
-/** 10 verbos como funções (recebem "o {noun}" e devolvem o prefixo completo) */
+/** 10 verbos como funções (recebem "o {noun}" e devolvem o prefixo completo).
+ *  Tema do jogo: CAPTURAR alvos em movimento na arena. */
 export const VERB_PREFIX_FNS: Array<(noun: string) => string> = [
-  noun => `Ache o ${noun}`,          // 0 – ache
-  noun => `Encontre o ${noun}`,      // 1 – encontre
-  noun => `Toque no ${noun}`,        // 2 – toque no
-  noun => `Selecione o ${noun}`,     // 3 – selecione
-  noun => `Marque o ${noun}`,        // 4 – marque
-  noun => `Escolha o ${noun}`,       // 5 – escolha
-  noun => `Identifique o ${noun}`,   // 6 – identifique
-  noun => `Procure o ${noun}`,       // 7 – procure
-  noun => `Localize o ${noun}`,      // 8 – localize
-  noun => `Pressione o ${noun}`,     // 9 – pressione
+  noun => `Capture o ${noun}`,       // 0 – capture
+  noun => `Pegue o ${noun}`,         // 1 – pegue
+  noun => `Capture o ${noun}`,       // 2 – capture
+  noun => `Pegue o ${noun}`,         // 3 – pegue
+  noun => `Capture o ${noun}`,       // 4 – capture
+  noun => `Pegue o ${noun}`,         // 5 – pegue
+  noun => `Capture o ${noun}`,       // 6 – capture
+  noun => `Pegue o ${noun}`,         // 7 – pegue
+  noun => `Capture o ${noun}`,       // 8 – capture
+  noun => `Pegue o ${noun}`,         // 9 – pegue
 ];
 
 /** Prefixos de sequência (para L6 e L8) */
 export const SEQ_FIRST_FNS: Array<(noun: string) => string> = [
-  noun => `Primeiro toque no ${noun}`,
-  noun => `Primeiro encontre o ${noun}`,
-  noun => `Primeiramente selecione o ${noun}`,
-  noun => `Primeiro pressione o ${noun}`,
-  noun => `Primeiro marque o ${noun}`,
-  noun => `Primeiro localize o ${noun}`,
-  noun => `Primeiro ache o ${noun}`,
-  noun => `Primeiro identifique o ${noun}`,
+  noun => `Primeiro capture o ${noun}`,
+  noun => `Comece capturando o ${noun}`,
+  noun => `Primeiro pegue o ${noun}`,
+  noun => `Capture primeiro o ${noun}`,
+  noun => `Primeiro capture o ${noun}`,
+  noun => `Comece pegando o ${noun}`,
+  noun => `Primeiro pegue o ${noun}`,
+  noun => `Capture primeiro o ${noun}`,
 ];
 
 export const SEQ_THEN = [
-  "depois o", "depois toque no", "em seguida o",
-  "em seguida, pressione o", "então toque no", "depois encontre o",
+  "depois o", "depois capture o", "em seguida o",
+  "em seguida pegue o", "então capture o", "depois pegue o",
 ];
 
 /** Prefixos duais (para L4 multiTarget) */
 export const DUAL_PREFIX_FNS: Array<(noun: string) => string> = [
-  noun => `Selecione o ${noun}`,
-  noun => `Encontre o ${noun}`,
-  noun => `Ache o ${noun}`,
-  noun => `Toque no ${noun}`,
-  noun => `Marque o ${noun}`,
-  noun => `Localize o ${noun}`,
-  noun => `Identifique o ${noun}`,
-  noun => `Pressione o ${noun}`,
+  noun => `Capture o ${noun}`,
+  noun => `Pegue o ${noun}`,
+  noun => `Capture o ${noun}`,
+  noun => `Pegue o ${noun}`,
+  noun => `Capture o ${noun}`,
+  noun => `Pegue o ${noun}`,
+  noun => `Capture o ${noun}`,
+  noun => `Pegue o ${noun}`,
 ];
 
 // ── Definição dos templates ───────────────────────────────────────────────────

@@ -13,44 +13,38 @@ import { buildRound } from "@/utils/generateCommand";
 
 // ── Types ──────────────────────────────────────────────────────────────────────
 
-interface WaveParams { amp: number; dur: number; delay: number; }
-
 interface GameAgent {
   uid:      string;
   agent:    AgentConfig;
   variant:  number;
   isTarget: boolean;
-  wave:     WaveParams;
 }
 
+// Estado vivo de cada personagem na arena. Movimento livre por (x,y) em px,
+// com direção própria (angle), velocidade individual (speed) e leve curvatura
+// (turn) — alguns vão reto, outros descrevem trajetórias curvas.
 interface FallerData {
   uid:       string;
-  xBase:     number; // posição base esquerda em % (posicionamento livre)
-  y:         number;
-  passCount: number;
-  xAmp:      number;
-  xFreq:     number;
-  xPhase:    number;
+  x:         number; // px — canto esquerdo
+  y:         number; // px — topo
+  angle:     number; // rad — direção do movimento
+  speed:     number; // multiplicador individual de velocidade
+  turn:      number; // rad/tick — curvatura suave da trajetória
+  passCount: number; // quantas vezes o alvo escapou por uma borda
 }
 
 type InstrMode  = "both" | "visual" | "audio";
 type FailReason = "wrong-tap" | "timeout" | null;
 
-const COLS      = 4;
-const CHAR_SIZE = 74;
+const CHAR_SIZE = 112;             // +51% vs. 74 — personagens grandes e legíveis
+const CHAR_H    = CHAR_SIZE * 1.5; // imagens são 2:3 (512×768)
 const TICK_MS   = 50;
 
-function fallSpeedPx(consecutiveCorrectCount: number): number {
+// Magnitude global de velocidade da arena (px/tick base). Devagar no começo,
+// acelera a cada 3 acertos seguidos (nível) — sem virar frenético.
+function speedMag(consecutiveCorrectCount: number): number {
   const level = Math.floor(consecutiveCorrectCount / 3);
-  return 4.2 + level * 0.9;
-}
-
-// Posição horizontal (em % da área) de um faller em função do seu Y atual.
-// Fórmula única compartilhada entre o render (base) e o rAF (posição viva),
-// para que o transform imperativo nunca divirja do que o React renderizou.
-function fallerXPct(f: FallerData, y: number): number {
-  const xRaw = f.xBase + f.xAmp * Math.sin((y / f.xFreq) * Math.PI * 2 + f.xPhase);
-  return Math.max(1, Math.min(xRaw, 76));
+  return 2.4 + level * 0.8;
 }
 
 // ── Vocabulário ────────────────────────────────────────────────────────────────
@@ -82,24 +76,43 @@ function AgentCard({ gameAgent, onClick, state, size }: {
   gameAgent: GameAgent; onClick: () => void;
   state: "idle" | "correct" | "wrong" | "forbidden"; size: number;
 }) {
-  const src  = gameAgent.agent.images[gameAgent.variant]?.src ?? gameAgent.agent.images[0].src;
-  const ring =
-    state === "correct"   ? "ring-4 ring-green-400 bg-green-500/20 scale-105" :
-    state === "wrong"     ? "ring-4 ring-red-400 bg-red-500/20 opacity-50" :
-    state === "forbidden" ? "ring-4 ring-orange-400 bg-orange-500/20 opacity-40" :
-    "ring-1 ring-white/20 active:scale-95 bg-white/5";
+  const src = gameAgent.agent.images[gameAgent.variant]?.src ?? gameAgent.agent.images[0].src;
+
+  // Sem card: o personagem fica solto no ambiente. Uma sombra base garante
+  // legibilidade contra o fundo escuro; os estados acrescentam um brilho (glow)
+  // colorido em vez da antiga caixa/anel.
+  const baseShadow = "drop-shadow(0 3px 6px rgba(0,0,0,0.6))";
+  const glow =
+    state === "correct"   ? " drop-shadow(0 0 10px rgba(74,222,128,0.95)) drop-shadow(0 0 20px rgba(74,222,128,0.7))" :
+    state === "wrong"     ? " drop-shadow(0 0 10px rgba(248,113,113,0.95))" :
+    state === "forbidden" ? " drop-shadow(0 0 10px rgba(251,146,60,0.95))"  : "";
+  const dim   = state === "wrong" || state === "forbidden";
+  const scale = state === "correct" ? 1.08 : 1;
 
   return (
     <motion.button
       onClick={onClick}
-      whileTap={{ scale: 0.88 }}
-      className={`relative rounded-xl cursor-pointer transition-all duration-150 ${ring}`}
-      style={{ touchAction: "manipulation", width: size }}
+      animate={{ scale }}
+      whileTap={{ scale: scale * 0.9 }}
+      transition={{ duration: 0.15 }}
+      className="relative cursor-pointer"
+      style={{ touchAction: "manipulation", width: size, background: "transparent", border: "none", padding: 0 }}
     >
       {/* eslint-disable-next-line @next/next/no-img-element */}
       <img src={src} alt={gameAgent.agent.name}
-        style={{ width: "100%", height: "auto", display: "block", userSelect: "none" }}
+        style={{
+          width: "100%", height: "auto", display: "block", userSelect: "none",
+          opacity: dim ? 0.5 : 1,
+          filter: baseShadow + glow,
+          transition: "filter 150ms, opacity 150ms",
+        }}
         draggable={false} />
+      {state === "correct" && (
+        <div className="absolute -top-1 -right-1 w-7 h-7 rounded-full bg-green-500 flex items-center justify-center text-white text-sm font-black shadow-lg">✓</div>
+      )}
+      {state === "wrong" && (
+        <div className="absolute -top-1 -right-1 w-7 h-7 rounded-full bg-red-500 flex items-center justify-center text-white text-sm font-black shadow-lg">✕</div>
+      )}
     </motion.button>
   );
 }
@@ -123,7 +136,7 @@ function FocusTutorial({ theme, onDone }: { theme: Theme; onDone: () => void }) 
 
       <h2 className="text-white font-black text-xl mb-1 text-center">Como jogar</h2>
       <p className="text-white/60 text-sm mb-5 text-center">
-        Encontre o {noun} certo entre vários em movimento
+        Capture o {noun} certo se movendo pela arena
       </p>
 
       {/* Exemplo de comando */}
@@ -136,7 +149,7 @@ function FocusTutorial({ theme, onDone }: { theme: Theme; onDone: () => void }) 
         <div className="px-4 py-3 flex items-center gap-2">
           <div className="w-4 h-4 rounded-full flex-shrink-0 border-2 border-white/30"
             style={{ background: "#1E88E5" }} />
-          <p className="text-white font-bold text-sm">Encontre o {noun} azul com fone</p>
+          <p className="text-white font-bold text-sm">Capture o {noun} azul com fone</p>
         </div>
       </div>
 
@@ -147,14 +160,14 @@ function FocusTutorial({ theme, onDone }: { theme: Theme; onDone: () => void }) 
             animate={{ y: [0, -da.wave.amp, 0, da.wave.amp, 0] }}
             transition={{ duration: da.wave.dur, repeat: Infinity, ease: "easeInOut", delay: da.wave.delay }}
             className="relative flex items-center justify-center">
-            <div className={`rounded-xl overflow-hidden ${da.isTarget
-              ? "ring-4 ring-green-400 bg-green-500/20"
-              : "ring-1 ring-white/15 bg-white/5"}`}>
-              {/* eslint-disable-next-line @next/next/no-img-element */}
-              <img src={da.src} alt="" style={{ width: 86, height: "auto", display: "block", userSelect: "none" }} draggable={false} />
-            </div>
+            {/* eslint-disable-next-line @next/next/no-img-element */}
+            <img src={da.src} alt="" draggable={false}
+              style={{ width: 86, height: "auto", display: "block", userSelect: "none",
+                filter: da.isTarget
+                  ? "drop-shadow(0 3px 6px rgba(0,0,0,0.6)) drop-shadow(0 0 10px rgba(74,222,128,0.95)) drop-shadow(0 0 20px rgba(74,222,128,0.7))"
+                  : "drop-shadow(0 3px 6px rgba(0,0,0,0.6))" }} />
             {da.isTarget && (
-              <div className="absolute -top-2 -right-2 w-7 h-7 rounded-full bg-green-500 flex items-center justify-center text-white text-xs font-black shadow-lg">✓</div>
+              <div className="absolute -top-1 -right-1 w-7 h-7 rounded-full bg-green-500 flex items-center justify-center text-white text-xs font-black shadow-lg">✓</div>
             )}
           </motion.div>
         ))}
@@ -164,10 +177,10 @@ function FocusTutorial({ theme, onDone }: { theme: Theme; onDone: () => void }) 
       <div className="w-full max-w-xs rounded-2xl px-4 py-3 mb-6 space-y-2"
         style={{ background: "rgba(255,255,255,0.05)", border: "1px solid rgba(255,255,255,0.1)" }}>
         <p className="text-white/70 text-xs leading-relaxed">
-          • Os {noun}s descem pela tela em <span className="text-white font-semibold">velocidades diferentes</span>
+          • Os {noun}s se movem pela arena em <span className="text-white font-semibold">direções e velocidades diferentes</span>
         </p>
         <p className="text-white/70 text-xs leading-relaxed">
-          • O alvo passa <span className="text-white font-semibold">2 vezes</span> — toque antes de desaparecer!
+          • <span className="text-white font-semibold">Capture o alvo</span> antes que ele escape <span className="text-white font-semibold">2 vezes</span> pelas bordas!
         </p>
         <p className="text-white/70 text-xs leading-relaxed">
           • A cada 3 acertos seguidos, velocidade e comandos ficam <span className="text-white font-semibold">mais difíceis</span>
@@ -270,10 +283,10 @@ export function FocusAgents({ difficulty, theme, onComplete, forceMode, exercise
   // PERF-01: durante a fase "playing" a física corre no `fallersRef` e o
   // movimento é aplicado direto via style.transform nos nós DOM (sem setState
   // a cada frame). `fallerNodesRef` referencia os elementos (callback ref) e
-  // `fallerBaseRef` guarda a posição base renderizada (top px / left %) de cada
+  // `fallerBaseRef` guarda a posição base renderizada (top/left em px) de cada
   // faller no instante em que o play começou — o transform anima o delta.
   const fallerNodesRef      = useRef<Map<string, HTMLDivElement>>(new Map());
-  const fallerBaseRef       = useRef<Map<string, { y: number; xPct: number }>>(new Map());
+  const fallerBaseRef       = useRef<Map<string, { x: number; y: number }>>(new Map());
   const playAreaRef         = useRef<HTMLDivElement>(null);
   const playAreaHRef        = useRef(600);
   const playAreaWRef        = useRef(0);
@@ -370,11 +383,6 @@ export function FocusAgents({ difficulty, theme, onComplete, forceMode, exercise
         agent,
         variant:  attr.variantIndex,
         isTarget: built.command.targets.includes(attr.id),
-        wave: {
-          amp:   7 + Math.random() * 8,
-          dur:   2.4 + Math.random() * 1.4,
-          delay: Math.random() * 2.0,
-        },
       };
     }).filter(Boolean) as GameAgent[];
 
@@ -407,18 +415,17 @@ export function FocusAgents({ difficulty, theme, onComplete, forceMode, exercise
     targetPassRef.current = 0;
     setCommandFaded(false);
 
-    // Inicializa fallers espalhados livremente pela tela (como na imagem de referência)
-    const screenH = playAreaHRef.current || 600;
-    const shuffled = shuffle([...newGameAgents]);
-    const totalSpread = screenH + CHAR_SIZE * 2;
-    const newFallers: FallerData[] = shuffled.map((ga, i) => ({
+    // Cada personagem ganha direção, velocidade e curvatura próprias. As
+    // posições (x,y) em px são definidas em startPlaying, quando a arena já
+    // foi medida (largura/altura reais).
+    const newFallers: FallerData[] = newGameAgents.map(ga => ({
       uid:       ga.uid,
-      xBase:     4 + Math.random() * 72,          // spread livre 4%–76%
-      y:         -(CHAR_SIZE + (i / shuffled.length) * totalSpread + Math.random() * 40),
+      x:         0,
+      y:         0,
+      angle:     Math.random() * Math.PI * 2,
+      speed:     0.7 + Math.random() * 0.7,                       // 0.7–1.4
+      turn:      Math.random() < 0.5 ? (Math.random() - 0.5) * 0.012 : 0,
       passCount: 0,
-      xAmp:      2.5 + Math.random() * 2,         // drift suave
-      xFreq:     220 + Math.random() * 100,       // onda lenta
-      xPhase:    Math.random() * Math.PI * 2,
     }));
     fallersRef.current = newFallers;
     setFallerPositions([...newFallers]);
@@ -446,58 +453,81 @@ export function FocusAgents({ difficulty, theme, onComplete, forceMode, exercise
     setCmdCountdown(null);
     stopFallAnimation();
 
-    playAreaHRef.current = playAreaRef.current?.clientHeight ?? 600;
-    playAreaWRef.current = playAreaRef.current?.clientWidth  ?? 0;
+    const W = playAreaRef.current?.clientWidth  ?? 0;
+    const H = playAreaRef.current?.clientHeight ?? 600;
+    playAreaWRef.current = W;
+    playAreaHRef.current = H;
+
+    // Posiciona os personagens espalhados pela arena. Uma grade com jitter
+    // evita que tudo se amontoe num canto; o movimento livre + tamanho grande
+    // cuidam da sobreposição parcial natural ao longo da rodada.
+    const list  = fallersRef.current;
+    const n     = list.length;
+    const cols  = Math.max(1, Math.round(Math.sqrt(n * (W / Math.max(H, 1)))));
+    const rows  = Math.max(1, Math.ceil(n / cols));
+    const order = shuffle(list.map((_, i) => i));
+    const cellW = W / cols;
+    const cellH = H / rows;
+    const placed = list.map((f, idx) => {
+      const slot = order.indexOf(idx);
+      const cx   = slot % cols;
+      const cy   = Math.floor(slot / cols);
+      const x    = cx * cellW + Math.random() * Math.max(1, cellW - CHAR_SIZE);
+      const y    = cy * cellH + Math.random() * Math.max(1, cellH - CHAR_H);
+      return { ...f, x, y };
+    });
+    fallersRef.current = placed;
+    setFallerPositions([...placed]);
+
+    // Base renderizada (top/left px) no instante do play — o transform
+    // imperativo no rAF anima o delta sobre esta base (PERF-01).
+    fallerBaseRef.current = new Map(placed.map(f => [f.uid, { x: f.x, y: f.y }]));
+
     setGamePhase("playing");
     roundStart.current = Date.now();
 
-    // Base renderizada de cada faller (top px / left %) no instante em que o
-    // play inicia — é exatamente o que o React renderiza em `fallerPositions`.
-    // O transform imperativo no rAF anima o delta sobre esta base.
-    fallerBaseRef.current = new Map(
-      fallersRef.current.map(f => [f.uid, { y: f.y, xPct: fallerXPct(f, f.y) }]),
-    );
-
-    // PERF-01: a queda corre no rAF mutando `fallersRef` e aplicando o
-    // transform direto no DOM. setState só é disparado em eventos discretos
-    // (mudança de passagem do alvo via `setTargetPass`, e timeout/alvo perdido
-    // via `setFailReason`/`handleResult`). A velocidade é normalizada por tempo
-    // (dt/TICK_MS) para manter exatamente a mesma física do antigo setInterval
-    // de ~TICK_MS, independente da taxa de frames do rAF.
+    // O movimento corre no rAF mutando `fallersRef` e aplicando o transform
+    // direto no DOM (sem setState por frame). setState só em eventos discretos
+    // (passagem do alvo, alvo perdido). A velocidade é normalizada por tempo
+    // (dt/TICK_MS) para a física não depender da taxa de frames.
     let prevTs: number | null = null;
 
     const animate = (ts: number) => {
       if (resolvedIds.current.has("timeout")) { stopFallAnimation(); return; }
 
-      // dt em ms desde o frame anterior. Clampado a 100ms para que um eventual
-      // pico de lag (ou retomada após a aba ficar em background, quando o rAF
-      // pausa) não produza um salto gigante que pularia o wrap e provocaria um
-      // timeout indevido. Em operação normal (~16ms) o clamp nunca ativa.
+      // dt clampado a 100ms para que um pico de lag (ou retomada após a aba
+      // ficar em background) não produza um salto gigante.
       const dt    = prevTs === null ? TICK_MS : Math.min(ts - prevTs, 100);
       prevTs      = ts;
       const ticks = dt / TICK_MS;
 
-      const speed   = fallSpeedPx(consecutiveCorrect.current) * ticks;
-      const screenH = playAreaHRef.current;
-      const screenW = playAreaWRef.current;
+      const mult = speedMag(consecutiveCorrect.current) * ticks;
+      const W2   = playAreaWRef.current;
+      const H2   = playAreaHRef.current;
 
       let targetLost = false;
       let newPassCount = 0;
 
       fallersRef.current = fallersRef.current.map(f => {
-        let newY = f.y + speed;
-        let newPass = f.passCount;
+        const angle = f.angle + f.turn * ticks;
+        let x = f.x + Math.cos(angle) * f.speed * mult;
+        let y = f.y + Math.sin(angle) * f.speed * mult;
+        let pass = f.passCount;
 
-        if (newY > screenH) {
-          const isTarget = targetUidsRef.current.includes(f.uid);
-          newY = -(CHAR_SIZE + Math.random() * 40);
-          if (isTarget) {
-            newPass++;
-            newPassCount = newPass;
-            if (newPass >= 2) targetLost = true;
-          }
+        // Wrap toroidal: ao sair por uma borda, reaparece pela oposta.
+        // Se o alvo cruzar uma borda, conta uma "escapada".
+        let wrapped = false;
+        if (x > W2)              { x = -CHAR_SIZE; wrapped = true; }
+        else if (x < -CHAR_SIZE) { x = W2;         wrapped = true; }
+        if (y > H2)              { y = -CHAR_H;    wrapped = true; }
+        else if (y < -CHAR_H)    { y = H2;         wrapped = true; }
+
+        if (wrapped && targetUidsRef.current.includes(f.uid)) {
+          pass++;
+          newPassCount = pass;
+          if (pass >= 2) targetLost = true;
         }
-        return { ...f, y: newY, passCount: newPass };
+        return { ...f, x, y, angle, passCount: pass };
       });
 
       // Aplica o movimento direto no DOM via transform (delta sobre a base).
@@ -505,13 +535,11 @@ export function FocusAgents({ difficulty, theme, onComplete, forceMode, exercise
         const node = fallerNodesRef.current.get(f.uid);
         const base = fallerBaseRef.current.get(f.uid);
         if (node && base) {
-          const dyPx = f.y - base.y;
-          const dxPx = ((fallerXPct(f, f.y) - base.xPct) / 100) * screenW;
-          node.style.transform = `translate(${dxPx}px, ${dyPx}px)`;
+          node.style.transform = `translate(${f.x - base.x}px, ${f.y - base.y}px)`;
         }
       }
 
-      // Evento discreto: a passagem do alvo mudou (atualiza HUD "1ª/2ª vez").
+      // Evento discreto: a escapada do alvo mudou (atualiza HUD "1ª/2ª vez").
       if (newPassCount > 0 && newPassCount - 1 !== targetPassRef.current) {
         targetPassRef.current = newPassCount - 1;
         setTargetPass(newPassCount - 1);
@@ -687,7 +715,7 @@ export function FocusAgents({ difficulty, theme, onComplete, forceMode, exercise
   const firstTargetAg  = gameAgents.find(ga => ga.uid === targetUids[0])?.agent;
 
   const gameTitle = theme === "COLORFUL" ? "🎯 Focus Personagens"
-                  : theme === "GAMIFIED" ? "🎮 Focus Avatares" : "🔍 Focus Agentes";
+                  : theme === "GAMIFIED" ? "🎮 Focus Avatares" : "🎯 Focus Agentes";
 
   const dotColor = (i: number) => {
     if (i < roundResults.length) return roundResults[i].correct ? "bg-green-400" : "bg-red-400";
@@ -774,7 +802,7 @@ export function FocusAgents({ difficulty, theme, onComplete, forceMode, exercise
                         <motion.p key="faded"
                           initial={{ opacity:0 }} animate={{ opacity:1 }} transition={{ duration:0.4 }}
                           className="text-center text-sm text-white/35 italic py-1">
-                          Confie na memória — encontre o personagem!
+                          Confie na memória — capture o alvo!
                         </motion.p>
                       )}
                     </AnimatePresence>
@@ -806,10 +834,10 @@ export function FocusAgents({ difficulty, theme, onComplete, forceMode, exercise
                     style={{ background:"linear-gradient(135deg,#7c3aed,#4f46e5)", boxShadow:"0 4px 20px rgba(124,58,237,0.5)" }}>
                     {cmdCountdown !== null && cmdCountdown > 0
                       ? <span className="text-xl font-black">{cmdCountdown}</span>
-                      : isSeqMode ? "Começar sequência →"
-                      : isNegMode ? "Começar — cuidado →"
-                      : isMultiTarget ? "Encontrar os dois →"
-                      : "Encontrar! →"}
+                      : isSeqMode ? "Capturar em sequência →"
+                      : isNegMode ? "Capturar — cuidado →"
+                      : isMultiTarget ? "Capturar os dois →"
+                      : "Capturar! →"}
                   </button>
                 </div>
               </div>
@@ -818,72 +846,70 @@ export function FocusAgents({ difficulty, theme, onComplete, forceMode, exercise
         )}
       </AnimatePresence>
 
-      {/* Área de queda — fase de jogo e feedback */}
-      {(gamePhase === "playing" || gamePhase === "feedback") && (
-        <div className="relative z-10 flex flex-col flex-1 min-h-0">
+      {/* Arena — sempre montada para que largura/altura possam ser medidas em
+          startPlaying. Os personagens só são renderizados em jogo/feedback;
+          durante a fase de comando o card de comando (z-30) cobre a arena. */}
+      <div className="relative z-10 flex flex-col flex-1 min-h-0">
 
-          {/* Barra de comando — só no feedback para mostrar o que era o alvo */}
-          {gamePhase === "feedback" && (
-            <div className="flex-shrink-0 px-3 py-1.5">
-              <div className="rounded-2xl px-3 py-2 flex items-center gap-2"
-                style={{ background:"rgba(255,255,255,0.07)", border:"1px solid rgba(255,255,255,0.12)" }}>
-                {!isNegMode && !isSeqMode && !isMultiTarget && firstTargetAg && (
-                  <div className="w-3 h-3 rounded-full flex-shrink-0"
-                    style={{ background: PALETTE_HEX[firstTargetAg.color] }} />
-                )}
-                <p className="text-white/60 text-xs leading-tight flex-1 line-clamp-2">{command}</p>
-              </div>
+        {/* Barra de comando — só no feedback para mostrar o que era o alvo */}
+        {gamePhase === "feedback" && (
+          <div className="flex-shrink-0 px-3 py-1.5">
+            <div className="rounded-2xl px-3 py-2 flex items-center gap-2"
+              style={{ background:"rgba(255,255,255,0.07)", border:"1px solid rgba(255,255,255,0.12)" }}>
+              {!isNegMode && !isSeqMode && !isMultiTarget && firstTargetAg && (
+                <div className="w-3 h-3 rounded-full flex-shrink-0"
+                  style={{ background: PALETTE_HEX[firstTargetAg.color] }} />
+              )}
+              <p className="text-white/60 text-xs leading-tight flex-1 line-clamp-2">{command}</p>
             </div>
-          )}
-
-          {/* Área de personagens caindo */}
-          <div ref={playAreaRef} className="relative flex-1 overflow-hidden">
-            {fallerPositions.map(f => {
-              const ga = gameAgents.find(g => g.uid === f.uid);
-              if (!ga) return null;
-              const isFound    = foundUids.includes(ga.uid);
-              const isWrong    = wrongUid === ga.uid;
-              const isForbid   = forbidden.includes(ga.uid);
-              const isRevealed = failReason !== null && ga.isTarget && !isFound;
-              const state: "idle"|"correct"|"wrong"|"forbidden" =
-                isFound    ? "correct" :
-                isRevealed ? "correct" :
-                isForbid && failReason !== null ? "forbidden" :
-                isWrong    ? "wrong" : "idle";
-
-              const xPct = fallerXPct(f, f.y);
-
-              return (
-                <div
-                  key={ga.uid}
-                  ref={node => {
-                    if (node) fallerNodesRef.current.set(ga.uid, node);
-                    else fallerNodesRef.current.delete(ga.uid);
-                  }}
-                  style={{
-                    position: "absolute",
-                    top: f.y,
-                    left: `calc(${xPct}% - ${CHAR_SIZE / 2}px)`,
-                    width: CHAR_SIZE,
-                    willChange: "transform",
-                    // Durante "playing" o transform é controlado pelo rAF (omitido
-                    // aqui para o React não sobrescrever o valor imperativo). No
-                    // feedback a base top/left já é a posição real congelada, então
-                    // zeramos o transform.
-                    ...(gamePhase === "playing" ? {} : { transform: "translate(0px, 0px)" }),
-                  }}>
-                  <AgentCard
-                    gameAgent={ga}
-                    onClick={() => handleCharTap(ga)}
-                    state={state}
-                    size={CHAR_SIZE}
-                  />
-                </div>
-              );
-            })}
           </div>
+        )}
+
+        {/* Área da arena */}
+        <div ref={playAreaRef} className="relative flex-1 overflow-hidden">
+          {(gamePhase === "playing" || gamePhase === "feedback") && fallerPositions.map(f => {
+            const ga = gameAgents.find(g => g.uid === f.uid);
+            if (!ga) return null;
+            const isFound    = foundUids.includes(ga.uid);
+            const isWrong    = wrongUid === ga.uid;
+            const isForbid   = forbidden.includes(ga.uid);
+            const isRevealed = failReason !== null && ga.isTarget && !isFound;
+            const state: "idle"|"correct"|"wrong"|"forbidden" =
+              isFound    ? "correct" :
+              isRevealed ? "correct" :
+              isForbid && failReason !== null ? "forbidden" :
+              isWrong    ? "wrong" : "idle";
+
+            return (
+              <div
+                key={ga.uid}
+                ref={node => {
+                  if (node) fallerNodesRef.current.set(ga.uid, node);
+                  else fallerNodesRef.current.delete(ga.uid);
+                }}
+                style={{
+                  position: "absolute",
+                  top: f.y,
+                  left: f.x,
+                  width: CHAR_SIZE,
+                  willChange: "transform",
+                  // Durante "playing" o transform é controlado pelo rAF (omitido
+                  // aqui para o React não sobrescrever o valor imperativo). No
+                  // feedback a base top/left já é a posição real congelada, então
+                  // zeramos o transform.
+                  ...(gamePhase === "playing" ? {} : { transform: "translate(0px, 0px)" }),
+                }}>
+                <AgentCard
+                  gameAgent={ga}
+                  onClick={() => handleCharTap(ga)}
+                  state={state}
+                  size={CHAR_SIZE}
+                />
+              </div>
+            );
+          })}
         </div>
-      )}
+      </div>
 
       {/* Overlay de feedback */}
       <AnimatePresence>

@@ -465,7 +465,7 @@ function resolve(
       const valid = pickDistinctAgents(validPool, n - 1, new Set([forbidden.agentId]));
       if (valid.length < 2) return null;
       return mkResult(valid, [], [forbidden], false, 1, "negative",
-        `Toque em qualquer ${noun}, exceto no que usa ${ACC_PT[acc]}`, vi);
+        `Capture qualquer ${noun}, exceto o que usa ${ACC_PT[acc]}`, vi);
     }
 
     // L7 ── negativo (variações de formulação)
@@ -481,10 +481,10 @@ function resolve(
       if (valid.length < 2) return null;
       const variants = [
         `${vb(vi, noun)} que não tem ${ACC_PT[acc]}`,
-        `Selecione qualquer ${noun} sem ${ACC_PT[acc]}`,
-        `Ache um ${noun} diferente do que usa ${ACC_PT[acc]}`,
-        `Marque qualquer ${noun} que não usa ${ACC_PT[acc]}`,
-        `Localize um ${noun} sem ${ACC_PT[acc]}`,
+        `Capture qualquer ${noun} sem ${ACC_PT[acc]}`,
+        `Capture um ${noun} diferente do que usa ${ACC_PT[acc]}`,
+        `Capture qualquer ${noun} que não usa ${ACC_PT[acc]}`,
+        `Capture um ${noun} sem ${ACC_PT[acc]}`,
       ];
       const text = variants[vi % variants.length];
       return mkResult(valid, [], [forbidden], false, 1, "negative", text, vi);
@@ -531,7 +531,7 @@ function colorFallback(n: number, theme: Theme): BuiltRound {
   return {
     characters: shuffle(pool),
     command: {
-      text: `Ache o ${noun} ${COLOR_PT[target.uniformColor]}`,
+      text: `Capture o ${noun} ${COLOR_PT[target.uniformColor]}`,
       mode: "visual", difficulty: 1, verbIndex: 0,
       targets: [target.id], distractors: rest.map(c => c.id),
       forbidden: [], sequenced: false, requiredTargets: 1,
