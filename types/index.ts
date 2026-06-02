@@ -113,11 +113,11 @@ export interface ReportData {
 export const EXERCISE_DEFINITIONS = {
   "span-numerico": {
     id: "span-numerico",
-    name: "Span Numérico",
+    name: "Span Numérico Auditivo Direto",
     domain: "memory" as Domain,
-    description: "Memorize e repita sequências de números",
+    description: "Ouça a sequência de números e repita na mesma ordem",
     estimatedMinutes: 7,
-    icon: "🔢",
+    icon: "🎧",
   },
   "matriz-espacial": {
     id: "matriz-espacial",
@@ -137,11 +137,11 @@ export const EXERCISE_DEFINITIONS = {
   },
   "span-numerico-inverso": {
     id: "span-numerico-inverso",
-    name: "Span Numérico Inverso",
+    name: "Span Numérico Auditivo Inverso",
     domain: "memory" as Domain,
-    description: "Repita sequências de números em ordem contrária",
+    description: "Ouça a sequência de números e repita na ordem inversa",
     estimatedMinutes: 7,
-    icon: "🔁",
+    icon: "🎧",
   },
   "matriz-espacial-inversa": {
     id: "matriz-espacial-inversa",

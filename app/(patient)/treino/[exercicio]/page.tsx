@@ -52,10 +52,10 @@ const AssociacaoPares      = dynamic(() => import("@/components/exercises/memory
 
 const EXERCISE_INSTRUCTIONS: Record<string, string[]> = {
   "span-numerico": [
-    "Uma sequência de números será exibida, um por vez, na tela.",
-    "Memorize os números na ordem em que aparecem.",
-    "Após a sequência, digite os números na ordem correta.",
-    "Tente se concentrar e evite distrações.",
+    "Você vai OUVIR uma sequência de números (eles não aparecem na tela).",
+    "As bolinhas indicam quantos números foram falados.",
+    "Depois, toque os números no teclado na MESMA ordem em que ouviu.",
+    "Use fones ou aumente o volume e evite distrações.",
   ],
   "matriz-espacial": [
     "Células de uma grade serão iluminadas em sequência.",
@@ -130,10 +130,10 @@ const EXERCISE_INSTRUCTIONS: Record<string, string[]> = {
     "Cuidado: erros demais encerram a rodada antes de terminar!",
   ],
   "span-numerico-inverso": [
-    "Uma sequência de números será exibida, um por vez.",
-    "Memorize os números — mas responda em ORDEM INVERSA.",
-    "Se ouvir 3 → 7 → 2, responda 2 → 7 → 3.",
-    "Este exercício treina memória operacional (working memory).",
+    "Você vai OUVIR uma sequência de números (eles não aparecem na tela).",
+    "As bolinhas indicam quantos números foram falados.",
+    "Depois, toque os números no teclado em ORDEM INVERSA. Se ouvir 3 → 7 → 2, toque 2 → 7 → 3.",
+    "Treina memória operacional (working memory). Use fones ou bom volume.",
   ],
   "matriz-espacial-inversa": [
     "Células de uma grade serão iluminadas em sequência.",

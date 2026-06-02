@@ -10,16 +10,12 @@ interface SpanNumericoInversoProps {
 }
 
 export function SpanNumericoInverso({ difficulty, theme, onComplete }: SpanNumericoInversoProps) {
-  function handleComplete(result: ExerciseResult) {
-    onComplete({ ...result, exerciseId: "span-numerico-inverso" });
-  }
-
   return (
     <SpanNumerico
       difficulty={difficulty}
       theme={theme}
-      onComplete={handleComplete}
-      alwaysReverse={true}
+      onComplete={onComplete}
+      reverse
     />
   );
 }
