@@ -192,15 +192,11 @@ export function ExerciseWrapper({
                   ? "bg-white/95 border-2 border-purple-300 backdrop-blur-sm"
                   : "bg-white/95 border border-gray-200 backdrop-blur-sm shadow-md"
               }`}>
-                <p className={`text-xs font-bold mb-0.5 ${
+                <p className={`text-xs font-bold mb-1 flex items-center justify-between gap-2 ${
                   theme === "GAMIFIED" ? "text-cyan-400" : theme === "COLORFUL" ? "text-purple-700" : "text-gray-800"
                 }`}>
-                  Nível {difficulty}
-                </p>
-                <p className={`text-xs mb-1.5 ${
-                  theme === "GAMIFIED" ? "text-gray-400" : "text-gray-500"
-                }`}>
-                  Progresso {Math.round(sessionProgress)}%
+                  <span>Progresso da sessão</span>
+                  <span className="tabular-nums">{Math.round(sessionProgress)}%</span>
                 </p>
                 <div className={`h-1.5 rounded-full ${theme === "GAMIFIED" ? "bg-gray-600" : "bg-gray-200"}`}>
                   <motion.div

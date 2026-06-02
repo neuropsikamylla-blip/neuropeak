@@ -2,6 +2,7 @@
 
 import { useState, useEffect, useCallback, useRef } from "react";
 import { motion } from "framer-motion";
+import { Headphones } from "lucide-react";
 import { calculateExerciseScore } from "@/lib/scoring";
 import { useExerciseProgress } from "@/components/exercises/ExerciseWrapper";
 import type { ExerciseResult, Theme } from "@/types";
@@ -102,8 +103,7 @@ function BrainListening({ pulsing }: { pulsing: boolean }) {
           boxShadow: pulsing ? "0 0 44px rgba(99,102,241,0.5)" : "0 0 22px rgba(99,102,241,0.25)",
           transition: "box-shadow 0.3s",
         }}>
-        <span style={{ fontSize: 46, lineHeight: 1 }}>🧠</span>
-        <span className="absolute" style={{ fontSize: 26, top: -6, right: -4 }}>🎧</span>
+        <Headphones size={46} strokeWidth={1.75} color="#c7d2fe" />
       </div>
     </div>
   );
