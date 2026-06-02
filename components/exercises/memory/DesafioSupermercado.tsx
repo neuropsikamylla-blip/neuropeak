@@ -167,37 +167,41 @@ function speakList(items: Product[], onDone?: () => void) {
   utterances.forEach(u => window.speechSynthesis.speak(u));
 }
 
-// ── Cart SVG (VISTA DE CIMA) ────────────────────────────────────────────────────
-// Carrinho visto de cima: cesta trapezoidal (frente mais estreita), 4 rodinhas nos
-// cantos e a alça na traseira. Preenche a largura do container (width 100%).
-// A área interna onde os itens aparecem é dada por CART_INTERIOR (em % do container).
+// ── Cart SVG (VISTA LATERAL) ────────────────────────────────────────────────────
+// Carrinho visto de lado: alça à esquerda, cesta à direita, 2 rodas. Preenche a
+// largura do container (width 100%). Itens aparecem dentro da cesta (CART_INTERIOR, %).
 
 function CartSvg() {
   return (
-    <svg width="100%" viewBox="0 0 200 250" preserveAspectRatio="xMidYMid meet"
+    <svg width="100%" viewBox="0 0 200 170" preserveAspectRatio="xMidYMid meet"
       fill="none" xmlns="http://www.w3.org/2000/svg" style={{ display: "block" }}>
-      {/* rodinhas (vistas de cima) */}
-      <ellipse cx="40"  cy="50"  rx="9" ry="15" fill="#1a0a00" stroke="#92400e" strokeWidth="2"/>
-      <ellipse cx="160" cy="50"  rx="9" ry="15" fill="#1a0a00" stroke="#92400e" strokeWidth="2"/>
-      <ellipse cx="30"  cy="206" rx="9" ry="15" fill="#1a0a00" stroke="#92400e" strokeWidth="2"/>
-      <ellipse cx="170" cy="206" rx="9" ry="15" fill="#1a0a00" stroke="#92400e" strokeWidth="2"/>
-      {/* cesta (trapézio, vista de cima) */}
-      <path d="M58 30 L142 30 L168 212 L32 212 Z" fill="rgba(217,119,6,0.13)" stroke="#d97706" strokeWidth="6" strokeLinejoin="round"/>
-      {/* arames (grade) sutis */}
-      <line x1="54"  y1="80"  x2="146" y2="80"  stroke="#d97706" strokeWidth="2" opacity="0.32"/>
-      <line x1="49"  y1="135" x2="151" y2="135" stroke="#d97706" strokeWidth="2" opacity="0.32"/>
-      <line x1="44"  y1="185" x2="156" y2="185" stroke="#d97706" strokeWidth="2" opacity="0.32"/>
-      <line x1="100" y1="30"  x2="100" y2="212" stroke="#d97706" strokeWidth="2" opacity="0.28"/>
-      <line x1="76"  y1="30"  x2="58"  y2="212" stroke="#d97706" strokeWidth="2" opacity="0.22"/>
-      <line x1="124" y1="30"  x2="142" y2="212" stroke="#d97706" strokeWidth="2" opacity="0.22"/>
-      {/* alça (handle) na traseira */}
-      <path d="M42 226 Q100 248 158 226" stroke="#d97706" strokeWidth="9" strokeLinecap="round" fill="none"/>
+      {/* alça */}
+      <path d="M8 38 Q12 38 48 38" stroke="#d97706" strokeWidth="8" strokeLinecap="round"/>
+      {/* cesta */}
+      <path d="M44 18 L192 18 L180 120 L56 120 Z" fill="rgba(217,119,6,0.15)" stroke="#d97706" strokeWidth="5" strokeLinejoin="round"/>
+      {/* arames horizontais */}
+      <line x1="47" y1="52"  x2="189" y2="52"  stroke="#d97706" strokeWidth="2.5" opacity="0.4"/>
+      <line x1="50" y1="86"  x2="184" y2="86"  stroke="#d97706" strokeWidth="2.5" opacity="0.4"/>
+      {/* arames verticais */}
+      <line x1="83"  y1="18" x2="74"  y2="120" stroke="#d97706" strokeWidth="2.5" opacity="0.4"/>
+      <line x1="118" y1="18" x2="118" y2="120" stroke="#d97706" strokeWidth="2.5" opacity="0.4"/>
+      <line x1="152" y1="18" x2="158" y2="120" stroke="#d97706" strokeWidth="2.5" opacity="0.4"/>
+      {/* barra inferior */}
+      <path d="M56 120 L180 120" stroke="#d97706" strokeWidth="6" strokeLinecap="round"/>
+      {/* hastes das rodas */}
+      <line x1="82"  y1="120" x2="74"  y2="142" stroke="#d97706" strokeWidth="5.5" strokeLinecap="round"/>
+      <line x1="162" y1="120" x2="170" y2="142" stroke="#d97706" strokeWidth="5.5" strokeLinecap="round"/>
+      {/* rodas */}
+      <circle cx="74"  cy="153" r="13" fill="#1a0a00" stroke="#92400e" strokeWidth="2.5"/>
+      <circle cx="74"  cy="153" r="5"  fill="#6b4f1a"/>
+      <circle cx="170" cy="153" r="13" fill="#1a0a00" stroke="#92400e" strokeWidth="2.5"/>
+      <circle cx="170" cy="153" r="5"  fill="#6b4f1a"/>
     </svg>
   );
 }
 
-// Área interna da cesta onde os itens aparecem — em % do container do carrinho.
-const CART_INTERIOR = { left: "23%", top: "15%", width: "54%", height: "66%" };
+// Área interna da cesta (lateral) onde os itens aparecem — em % do container.
+const CART_INTERIOR = { left: "24%", top: "12%", width: "68%", height: "55%" };
 
 // ── Full-screen Shelf ─────────────────────────────────────────────────────────
 
@@ -647,7 +651,7 @@ export function DesafioSupermercado({ difficulty, theme, onComplete, mode = "lei
 
             {/* ── CARRINHO à DIREITA (coluna maior) ── */}
             {(() => {
-              const ITEM_PX = 30;
+              const ITEM_PX = 24;
               return (
                 <div style={{
                   flexShrink: 0, width: "40%", maxWidth: 280, minWidth: 150,
@@ -743,9 +747,9 @@ export function DesafioSupermercado({ difficulty, theme, onComplete, mode = "lei
                         overflow: "hidden", pointerEvents: "none",
                       }}>
                         <AnimatePresence>
-                          {cartIds.slice(0, 10).map((id, idx) => (
+                          {cartIds.slice(0, 8).map((id, idx) => (
                             <motion.div key={id}
-                              initial={{ scale: 0, opacity: 0, y: -60 }}
+                              initial={{ scale: 0, opacity: 0, y: -50 }}
                               animate={{ scale: 1, opacity: 0.97, y: 0 }}
                               exit={{ scale: 0, opacity: 0, y: -20 }}
                               transition={{ type: "spring", stiffness: 360, damping: 22, delay: idx * 0.02 }}
@@ -755,13 +759,13 @@ export function DesafioSupermercado({ difficulty, theme, onComplete, mode = "lei
                           ))}
                         </AnimatePresence>
                         {/* badge de overflow */}
-                        {cartIds.length > 10 && (
+                        {cartIds.length > 8 && (
                           <div style={{
                             position: "absolute", bottom: 2, right: 2,
                             background: "#d97706", borderRadius: "50%",
                             width: 18, height: 18, fontSize: 9, fontWeight: 800,
                             color: "white", display: "flex", alignItems: "center", justifyContent: "center",
-                          }}>+{cartIds.length - 10}</div>
+                          }}>+{cartIds.length - 8}</div>
                         )}
                       </div>
                     </div>
