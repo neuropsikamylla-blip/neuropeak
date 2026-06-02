@@ -47,6 +47,18 @@ const BASE_ARENA_SPEED = 2.4;
 // Calibrado para os níveis altos continuarem desafiadores sem ficarem frenéticos.
 const LEVEL_SPEED = [0.55, 0.7, 0.85, 1.0, 1.1];
 
+// Dificuldade progressiva DENTRO do nível: a velocidade parte da velocidade do
+// nível atual (rodada 0) e cresce ao longo das rodadas em direção à do próximo
+// nível (até ~75% do caminho na última rodada) — sem ficar repetitivo e já
+// preparando o paciente para o nível seguinte.
+function levelSpeedFactor(level: number, round: number, maxRounds: number): number {
+  const lv   = Math.max(1, Math.min(5, level));
+  const base = LEVEL_SPEED[lv - 1];
+  const next = lv < 5 ? LEVEL_SPEED[lv] : base * 1.2;
+  const t    = maxRounds > 1 ? Math.min(1, Math.max(0, round) / (maxRounds - 1)) : 0;
+  return base + (next - base) * t * 0.75;
+}
+
 // Metadados dos 4 modos cognitivos (rótulo, ícone, descrição e flag de avançado).
 const MODE_META: Record<FocusMode, { label: string; icon: string; desc: string; advanced?: boolean }> = {
   foco:        { label: "Foco",              icon: "🎯", desc: "Atenção seletiva — capture por cor e atributos" },
@@ -411,6 +423,13 @@ export function FocusAgents({ difficulty, theme, onComplete, forceMode, exercise
   const isPhasedRef             = useRef(false);
   roundResultsRef.current = roundResults;
 
+  // Pré-carrega as imagens dos personagens (durante a seleção/tutorial) para que
+  // apareçam todas juntas ao iniciar o jogo, sem o efeito de "surgir 1s depois".
+  useEffect(() => {
+    if (typeof window === "undefined") return;
+    agents.forEach(a => a.images.forEach(img => { const im = new window.Image(); im.src = img.src; }));
+  }, []);
+
   const stopFallAnimation = () => {
     if (rafRef.current !== null) { cancelAnimationFrame(rafRef.current); rafRef.current = null; }
   };
@@ -575,7 +594,7 @@ export function FocusAgents({ difficulty, theme, onComplete, forceMode, exercise
       prevTs      = ts;
       const ticks = dt / TICK_MS;
 
-      const lvSpeed = LEVEL_SPEED[Math.max(1, Math.min(5, levelRef.current)) - 1];
+      const lvSpeed = levelSpeedFactor(levelRef.current, roundRef.current, MAX_ROUNDS);
       const mult = BASE_ARENA_SPEED * lvSpeed * ticks;
       const W2   = playAreaWRef.current;
       const H2   = playAreaHRef.current;
