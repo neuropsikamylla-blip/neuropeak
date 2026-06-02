@@ -29,11 +29,11 @@ function initialSeq(difficulty: number) {
   return Math.min(Math.max(2, Math.floor(difficulty * 0.5) + 1), 5);
 }
 
-// ── Som estilo Genius (Web Audio, sem arquivos) ─────────────────────────────────
+// ── Som de feedback (Web Audio, sem arquivos) ──────────────────────────────────
 // Tons FIXOS (não variam por posição) para preservar a natureza visuoespacial
 // (Corsi) — o som é só um feedback satisfatório, não uma pista de "onde".
 let audioCtx: AudioContext | null = null;
-function beep(freq: number, durMs = 180, type: OscillatorType = "sine", gain = 0.14) {
+function beep(freq: number, durMs = 180, type: OscillatorType = "sine", gain = 0.08) {
   if (typeof window === "undefined") return;
   try {
     const Ctx = window.AudioContext || (window as unknown as { webkitAudioContext: typeof AudioContext }).webkitAudioContext;
@@ -51,10 +51,10 @@ function beep(freq: number, durMs = 180, type: OscillatorType = "sine", gain = 0
     osc.stop(ctx.currentTime + durMs / 1000);
   } catch { /* áudio indisponível — silencioso */ }
 }
-const soundLight   = () => beep(523, 200, "sine");          // célula acende (apresentação)
-const soundTap     = () => beep(659, 120, "sine", 0.12);    // toque do paciente
-const soundCorrect = () => { beep(659, 120); setTimeout(() => beep(988, 220), 120); }; // acerto
-const soundWrong   = () => beep(160, 260, "square", 0.1);   // erro
+const soundLight   = () => beep(523, 200, "sine", 0.08);          // célula acende (apresentação)
+const soundTap     = () => beep(659, 110, "sine", 0.06);          // toque do paciente
+const soundCorrect = () => { beep(659, 120, "sine", 0.08); setTimeout(() => beep(988, 220, "sine", 0.08), 120); }; // acerto
+const soundWrong   = () => beep(160, 260, "square", 0.06);        // erro
 
 // Tutorial cells: indices in a 4x4 grid
 const TSEQ_DIRECT = [4, 12]; // cells 5 and 13 (0-indexed: 4 and 12)
@@ -153,8 +153,8 @@ function MatrizTutorialGrid({
 
   return (
     <div
-      className="grid gap-1.5 mx-auto rounded-xl"
-      style={{ gridTemplateColumns: "repeat(4, 1fr)", maxWidth: "220px", ...ringStyle }}
+      className="grid gap-2 mx-auto rounded-xl w-full"
+      style={{ gridTemplateColumns: "repeat(4, 1fr)", maxWidth: "300px", ...ringStyle }}
     >
       {Array.from({ length: 16 }).map((_, idx) => (
         <button
@@ -176,16 +176,16 @@ function MatrizEspacialTutorial({ theme, reverse, onDone }: { theme: Theme; reve
   const steps = [
     {
       instruction: reverse
-        ? "Células vão acender em sequência. Você vai responder em ORDEM INVERSA!"
-        : "Células vão acender em sequência. Preste atenção na ordem!",
+        ? "1) Observe com atenção: as células vão ACENDER uma de cada vez, com um som. Guarde a ORDEM em que acendem."
+        : "1) Observe com atenção: as células vão ACENDER uma de cada vez, com um som. Guarde a ORDEM em que acendem.",
       content: (onStepDone: () => void) => (
         <MatrizTutorialGrid theme={theme} seq={seq} expectedOrder={answerOrder} onDone={onStepDone} showOnly />
       ),
     },
     {
       instruction: reverse
-        ? "Acendeu posição 1 depois posição 2. Clique: posição 2, depois posição 1"
-        : "Agora clique nas mesmas células na mesma ordem",
+        ? "2) Agora repita na ORDEM CONTRÁRIA: toque da ÚLTIMA célula que acendeu para a PRIMEIRA."
+        : "2) Agora é a sua vez: TOQUE as mesmas células, na MESMA ordem em que acenderam.",
       content: (onStepDone: () => void) => (
         <MatrizTutorialGrid theme={theme} seq={seq} expectedOrder={answerOrder} onDone={onStepDone} />
       ),
@@ -344,7 +344,7 @@ export function MatrizEspacial({ difficulty, theme, onComplete, alwaysReverse }:
     }
 
     if (isActive) {
-      // Brilho vibrante estilo Genius (glow) em todos os temas.
+      // Brilho vibrante (glow) ao acender, em todos os temas.
       if (isGamified) return { background: "#22d3ee", border: "2px solid #a5f3fc", borderRadius: 12, boxShadow: "0 0 24px 5px rgba(34,211,238,0.8)" };
       if (isColorful) return { background: "#a78bfa", border: "2px solid #ddd6fe", borderRadius: 12, boxShadow: "0 0 24px 5px rgba(167,139,250,0.75)" };
       return { background: "#60a5fa", border: "2px solid #bfdbfe", borderRadius: 12, boxShadow: "0 0 24px 5px rgba(96,165,250,0.7)" };
@@ -365,7 +365,7 @@ export function MatrizEspacial({ difficulty, theme, onComplete, alwaysReverse }:
 
   return (
     <div className="min-h-screen flex flex-col items-center p-4 pt-6" style={rootBg}>
-      <div className="w-full max-w-sm p-6" style={cardStyle}>
+      <div className="w-full max-w-md p-6" style={cardStyle}>
 
         {/* Header */}
         <div className="flex justify-between items-center mb-3">
@@ -410,8 +410,8 @@ export function MatrizEspacial({ difficulty, theme, onComplete, alwaysReverse }:
 
         {/* Grid 4×4 */}
         <div
-          className="grid gap-2 mx-auto mb-4"
-          style={{ gridTemplateColumns: `repeat(${GRID}, 1fr)`, maxWidth: "280px" }}
+          className="grid gap-2.5 mx-auto mb-4 w-full"
+          style={{ gridTemplateColumns: `repeat(${GRID}, 1fr)`, maxWidth: "380px" }}
         >
           {Array.from({ length: GRID * GRID }).map((_, idx) => (
             <motion.button
