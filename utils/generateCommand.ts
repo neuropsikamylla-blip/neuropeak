@@ -668,6 +668,65 @@ function buildCaptureAll(mode: FocusMode, level: number, theme: Theme): BuiltRou
   return null;
 }
 
+// Alternância (troca de regra) e Desafio (troca + cor proibida constante).
+// Cada fase = capturar todos de uma cor; o Desafio acrescenta uma cor proibida
+// que vale durante toda a rodada.
+function buildPhased(mode: FocusMode, level: number, theme: Theme): BuiltRound | null {
+  const noun = NOUN[theme] ?? "agente";
+  const lv = Math.max(1, Math.min(5, level));
+  const dN = MODE_LEVEL_N[lv - 1][1];
+  const numPhases = lv <= 2 ? 2 : 3;
+  const isDesafio = mode === "desafio";
+
+  const colors = shuffle(ALL_UNIFORM_COLORS).filter(c => distinctByColor(c, 2).length >= 2);
+  if (colors.length < numPhases + (isDesafio ? 1 : 0)) return null;
+
+  const phaseColors = colors.slice(0, numPhases);
+  const forbidColor = isDesafio ? colors[numPhases] : null;
+
+  const usedIds = new Set<string>();
+  const allTargets: CharacterAttributes[] = [];
+  const phases: { text: string; targetIds: string[] }[] = [];
+
+  for (const col of phaseColors) {
+    const targets = distinctByColor(col, 3).filter(t => !usedIds.has(t.agentId));
+    if (targets.length === 0) return null;
+    targets.forEach(t => usedIds.add(t.agentId));
+    allTargets.push(...targets);
+    phases.push({ text: `Capture os ${noun}s ${COLOR_PT[col]}`, targetIds: targets.map(t => t.id) });
+  }
+
+  let forbidden: CharacterAttributes[] = [];
+  if (forbidColor) {
+    forbidden = distinctByColor(forbidColor, 2).filter(t => !usedIds.has(t.agentId));
+    forbidden.forEach(t => usedIds.add(t.agentId));
+  }
+
+  const neutral = pickDistinctAgents(
+    characterAttributes.filter(c => !phaseColors.includes(c.uniformColor) && c.uniformColor !== forbidColor),
+    Math.max(0, dN - allTargets.length - forbidden.length),
+    usedIds,
+  );
+
+  const firstText = forbidColor
+    ? `${phases[0].text}\n🚫 NUNCA toque nos ${COLOR_PT[forbidColor]}`
+    : phases[0].text;
+
+  const command: GeneratedCommand = {
+    text: firstText,
+    mode: "visual",
+    difficulty: 0,
+    targets: phases[0].targetIds,
+    distractors: neutral.map(c => c.id),
+    forbidden: forbidden.map(c => c.id),
+    sequenced: false,
+    requiredTargets: phases[0].targetIds.length,
+    rule: { type: "sequence" },
+    phases,
+  };
+  return { characters: shuffle([...allTargets, ...forbidden, ...neutral]), command };
+}
+
 /**
  * Gera uma rodada para um MODO e NÍVEL fixos (escolhidos pelo terapeuta), em vez
  * da dificuldade adaptativa aleatória de `buildRound`. Reaproveita toda a lógica
@@ -694,6 +753,11 @@ export function buildModeRound(
   if (mode === "foco" || mode === "inibicao") {
     const all = buildCaptureAll(mode, lv, theme);
     if (all) return all;
+  }
+  // Alternância e Desafio: rodada com troca de regra (fases).
+  if (mode === "alternancia" || mode === "desafio") {
+    const ph = buildPhased(mode, lv, theme);
+    if (ph) return ph;
   }
 
   const levelTemplates = COMMAND_TEMPLATES.filter(

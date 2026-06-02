@@ -368,6 +368,7 @@ export function FocusAgents({ difficulty, theme, onComplete, forceMode, exercise
   const [fallerPositions, setFallerPositions] = useState<FallerData[]>([]);
   const [targetPass, setTargetPass]     = useState(0);
   const [commandFaded, setCommandFaded] = useState(false);
+  const [phaseHint, setPhaseHint]       = useState<string|null>(null);
   const [roundResults, setRoundResults] = useState<{ correct:boolean; rt:number }[]>([]);
   const [displayLevel, setDisplayLevel] = useState(1);
   const [lastCorrect, setLastCorrect]   = useState(false);
@@ -403,6 +404,11 @@ export function FocusAgents({ difficulty, theme, onComplete, forceMode, exercise
   const recentTargetAgentIdsRef = useRef<string[]>([]);
   const modeRef                 = useRef<FocusMode>("foco");
   const levelRef                = useRef(1);
+  // Fases (modos Alternância e Desafio): troca de regra durante a rodada.
+  const phasesRef               = useRef<{ text: string; uids: string[] }[]>([]);
+  const currentPhaseRef         = useRef(0);
+  const phaseLockRef            = useRef(false);
+  const isPhasedRef             = useRef(false);
   roundResultsRef.current = roundResults;
 
   const stopFallAnimation = () => {
@@ -454,6 +460,17 @@ export function FocusAgents({ difficulty, theme, onComplete, forceMode, exercise
     const newRequired   = built.command.requiredTargets;
     const newType       = built.command.rule.type;
     const verbIdx       = built.command.verbIndex ?? 0;
+
+    // Fases (Alternância/Desafio): mapeia os alvos de cada fase para uids.
+    const builtPhases = built.command.phases ?? [];
+    phasesRef.current = builtPhases.map(p => ({
+      text: p.text,
+      uids: p.targetIds.map(id => uidMap.get(id)!).filter(Boolean),
+    }));
+    currentPhaseRef.current = 0;
+    phaseLockRef.current = false;
+    isPhasedRef.current = builtPhases.length > 0;
+    setPhaseHint(null);
 
     recentVerbsRef.current = [...recentVerbsRef.current.slice(-4), verbIdx];
 
@@ -581,8 +598,9 @@ export function FocusAgents({ difficulty, theme, onComplete, forceMode, exercise
         else if (y < -CHAR_H)    { y = H2;         wrapped = true; }
 
         // Só conta escapada de alvo AINDA NÃO capturado (no "capturar todos",
-        // um alvo já capturado que cruza a borda não deve causar falha).
-        if (wrapped && targetUidsRef.current.includes(f.uid) && !foundUidsRef.current.includes(f.uid)) {
+        // um alvo já capturado que cruza a borda não deve causar falha). Nos modos
+        // com troca de regra (fases) a escapada não falha — o foco é flexibilidade.
+        if (!isPhasedRef.current && wrapped && targetUidsRef.current.includes(f.uid) && !foundUidsRef.current.includes(f.uid)) {
           pass++;
           newPassCount = pass;
           if (pass >= 2) targetLost = true;
@@ -663,9 +681,57 @@ export function FocusAgents({ difficulty, theme, onComplete, forceMode, exercise
     }, 1100);
   }
 
+  // Avança para a próxima fase (troca de regra): mostra o aviso, e após uma
+  // breve pausa aplica a nova regra (novos alvos). Bloqueia toques durante o aviso.
+  function advancePhase(next: number) {
+    phaseLockRef.current = true;
+    currentPhaseRef.current = next;
+    const phase = phasesRef.current[next];
+    setPhaseHint(phase.text);
+    setTimeout(() => {
+      targetUidsRef.current = phase.uids;
+      setTargetUids(phase.uids);
+      requiredTargetsRef.current = phase.uids.length;
+      setRequiredTargets(phase.uids.length);
+      foundUidsRef.current = [];
+      setFoundUids([]);
+      setCommand(phase.text);
+      setPhaseHint(null);
+      phaseLockRef.current = false;
+    }, 1500);
+  }
+
   function handleCharTap(ga: GameAgent) {
     if (gamePhase !== "playing") return;
+    if (phaseLockRef.current) return;
     if (resolvedIds.current.has(ga.uid)) return;
+
+    // ── Modos com troca de regra (Alternância / Desafio) ──
+    if (isPhasedRef.current) {
+      resolvedIds.current.add(ga.uid);
+      // Proibido constante (Desafio) → erro
+      if (forbiddenRef.current.includes(ga.uid)) {
+        resolvedIds.current.add("timeout");
+        setWrongUid(ga.uid); setFailReason("wrong-tap");
+        handleResult(false, round); return;
+      }
+      // Alvo da regra ATUAL → captura
+      if (targetUidsRef.current.includes(ga.uid)) {
+        const newFound = [...foundUidsRef.current, ga.uid];
+        foundUidsRef.current = newFound; setFoundUids(newFound);
+        if (newFound.length >= targetUidsRef.current.length) {
+          const next = currentPhaseRef.current + 1;
+          if (next < phasesRef.current.length) advancePhase(next);
+          else { resolvedIds.current.add("timeout"); handleResult(true, round); }
+        }
+        return;
+      }
+      // Tocou fora da regra atual (perseveração ou neutro) → erro
+      resolvedIds.current.add("timeout");
+      setWrongUid(ga.uid); setFailReason("wrong-tap");
+      handleResult(false, round); return;
+    }
+
     resolvedIds.current.add(ga.uid);
 
     const isNeg = roundTypeRef.current === "negative";
@@ -757,6 +823,7 @@ export function FocusAgents({ difficulty, theme, onComplete, forceMode, exercise
   // Parte 2: Foco e Inibição usam "capturar todos da regra".
   const isCaptureAll  = mode === "foco" || mode === "inibicao";
   const isInhibition  = mode === "inibicao";
+  const isPhased      = mode === "alternancia" || mode === "desafio";
   const isNegMode     = !isCaptureAll && (roundType === "negative" || roundType === "advanced");
   const isSeqMode     = !isCaptureAll && (roundType === "sequence"  || roundType === "advanced");
   const isMultiTarget = !isCaptureAll && roundType === "multiTarget";
@@ -794,7 +861,7 @@ export function FocusAgents({ difficulty, theme, onComplete, forceMode, exercise
             ))}
           </div>
           <span className="text-xs font-bold opacity-70 whitespace-nowrap">{round+1}/{MAX_ROUNDS}</span>
-          {(isMultiTarget || isSeqMode || isCaptureAll) && gamePhase === "playing" && totalTargets > 1 && (
+          {(isMultiTarget || isSeqMode || isCaptureAll || isPhased) && gamePhase === "playing" && totalTargets > 1 && (
             <span className="text-xs font-bold px-1.5 py-0.5 rounded-lg bg-green-500/40 whitespace-nowrap">
               {foundCount}/{totalTargets} ✓
             </span>
@@ -827,6 +894,7 @@ export function FocusAgents({ difficulty, theme, onComplete, forceMode, exercise
                 {instrMode === "audio" ? "👂 Ouça com atenção"
                   : isInhibition ? "🚫 Capture os certos · evite os proibidos"
                   : isCaptureAll ? "🎯 Capture todos os certos"
+                  : isPhased ? "🔄 Atenção: a regra muda durante o jogo"
                   : isSeqMode && isNegMode ? "⚠️ Sequência + Proibido"
                   : isSeqMode ? "🔢 Sequência"
                   : isNegMode ? "⚠️ Modo Negativo"
@@ -838,7 +906,7 @@ export function FocusAgents({ difficulty, theme, onComplete, forceMode, exercise
 
                 {instrMode !== "audio" && (
                   <>
-                    {!isMultiTarget && !isSeqMode && !isNegMode && firstTargetAg && (
+                    {!isMultiTarget && !isSeqMode && !isNegMode && !isCaptureAll && !isPhased && firstTargetAg && (
                       <div className="flex justify-center">
                         <div className="w-5 h-5 rounded-full border-2 border-white/40"
                           style={{ background: PALETTE_HEX[firstTargetAg.color] }} />
@@ -910,11 +978,21 @@ export function FocusAgents({ difficulty, theme, onComplete, forceMode, exercise
           <div className="flex-shrink-0 px-3 py-1.5">
             <div className="rounded-2xl px-3 py-2 flex items-center gap-2"
               style={{ background:"rgba(255,255,255,0.07)", border:"1px solid rgba(255,255,255,0.12)" }}>
-              {!isNegMode && !isSeqMode && !isMultiTarget && firstTargetAg && (
+              {!isNegMode && !isSeqMode && !isMultiTarget && !isCaptureAll && !isPhased && firstTargetAg && (
                 <div className="w-3 h-3 rounded-full flex-shrink-0"
                   style={{ background: PALETTE_HEX[firstTargetAg.color] }} />
               )}
-              <p className="text-white/60 text-xs leading-tight flex-1 line-clamp-2">{command}</p>
+              <p className="text-white/60 text-xs leading-tight flex-1 line-clamp-2" style={{ whiteSpace:"pre-line" }}>{command}</p>
+            </div>
+          </div>
+        )}
+
+        {/* Regra atual (modos com fases) — lembrete durante o jogo */}
+        {isPhased && gamePhase === "playing" && (
+          <div className="flex-shrink-0 px-3 py-1.5">
+            <div className="rounded-2xl px-3 py-2 text-center"
+              style={{ background:"rgba(124,58,237,0.2)", border:"1px solid rgba(167,139,250,0.4)" }}>
+              <p className="text-white text-sm font-bold leading-tight" style={{ whiteSpace:"pre-line" }}>{command}</p>
             </div>
           </div>
         )}
@@ -965,6 +1043,23 @@ export function FocusAgents({ difficulty, theme, onComplete, forceMode, exercise
         </div>
       </div>
 
+      {/* Aviso de troca de regra (Alternância/Desafio) */}
+      <AnimatePresence>
+        {phaseHint && (
+          <motion.div className="absolute inset-0 z-30 flex items-center justify-center pointer-events-none px-6"
+            initial={{ opacity:0, scale:0.85 }} animate={{ opacity:1, scale:1 }} exit={{ opacity:0 }}
+            transition={{ duration:0.2 }}>
+            <div className="px-8 py-6 rounded-3xl text-center text-white"
+              style={{ background:"rgba(124,58,237,0.95)", backdropFilter:"blur(16px)",
+                border:"1.5px solid rgba(255,255,255,0.3)", boxShadow:"0 8px 40px rgba(0,0,0,0.6)" }}>
+              <p className="text-4xl mb-2">🔄</p>
+              <p className="text-sm font-bold uppercase tracking-widest opacity-80 mb-1">A regra mudou!</p>
+              <p className="text-xl font-black" style={{ whiteSpace:"pre-line" }}>{phaseHint}</p>
+            </div>
+          </motion.div>
+        )}
+      </AnimatePresence>
+
       {/* Overlay de feedback */}
       <AnimatePresence>
         {gamePhase === "feedback" && (
@@ -993,6 +1088,12 @@ export function FocusAgents({ difficulty, theme, onComplete, forceMode, exercise
               )}
               {isCaptureAll && isCorrect && totalTargets > 1 && (
                 <p className="text-sm opacity-80 mt-1">Capturou todos os {totalTargets}!</p>
+              )}
+              {isPhased && isCorrect && (
+                <p className="text-sm opacity-80 mt-1">Todas as regras concluídas! 🔄</p>
+              )}
+              {isPhased && failReason === "wrong-tap" && wrongUid !== null && !forbidden.includes(wrongUid) && (
+                <p className="text-sm opacity-80 mt-1">Atenção: essa não era a regra atual!</p>
               )}
               {failReason === "wrong-tap" && wrongUid !== null && forbidden.includes(wrongUid) && (
                 <p className="text-sm opacity-80 mt-1">Esse era proibido! 🚫</p>

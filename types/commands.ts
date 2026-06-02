@@ -59,6 +59,12 @@ export interface CommandRule {
   sequence?: string[];
 }
 
+/** Uma fase de uma rodada com troca de regra (modos Alternância e Desafio). */
+export interface CommandPhase {
+  text: string;
+  targetIds: string[];
+}
+
 export interface GeneratedCommand {
   text: string;
   mode: "visual" | "auditory";
@@ -70,6 +76,8 @@ export interface GeneratedCommand {
   requiredTargets: number;
   rule: CommandRule;
   verbIndex?: number;
+  /** Fases (troca de regra durante a rodada). Se presente, `targets` = 1ª fase. */
+  phases?: CommandPhase[];
 }
 
 export interface CommandGeneratorParams {
