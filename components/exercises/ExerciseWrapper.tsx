@@ -185,7 +185,7 @@ export function ExerciseWrapper({
             </button>
 
             {difficulty !== undefined && (
-              <div className={`fixed bottom-6 right-4 z-50 rounded-2xl px-4 py-3 min-w-[150px] shadow-lg ${
+              <div className={`fixed bottom-6 left-4 z-50 pointer-events-none rounded-2xl px-4 py-3 min-w-[150px] shadow-lg ${
                 theme === "GAMIFIED"
                   ? "bg-gray-800/95 border border-cyan-500/40 backdrop-blur-sm"
                   : theme === "COLORFUL"
