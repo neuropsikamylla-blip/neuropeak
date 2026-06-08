@@ -13,15 +13,34 @@ interface AntesDepoisProps {
   onComplete: (result: ExerciseResult) => void;
 }
 
-// ─── Áudio: voz do próprio aparelho (Web Speech). Frases curtas e diretas. ──────
+// ─── Áudio: voz do próprio aparelho (Web Speech) — escolhe a voz pt-BR mais natural ─
+let ptVoice: SpeechSynthesisVoice | null | undefined;
+function pickPtVoice(): SpeechSynthesisVoice | null {
+  if (typeof window === "undefined" || !window.speechSynthesis) return null;
+  const voices = window.speechSynthesis.getVoices();
+  const pt = voices.filter((v) => /pt[-_]?br/i.test(v.lang) || /^pt/i.test(v.lang));
+  // Prefere as vozes mais naturais disponíveis no aparelho (menos robóticas).
+  const prefer = ["luciana", "google", "natural", "maria", "francisca", "helena", "fernanda"];
+  for (const name of prefer) {
+    const v = pt.find((vc) => vc.name.toLowerCase().includes(name));
+    if (v) return v;
+  }
+  return pt[0] ?? null;
+}
+if (typeof window !== "undefined" && window.speechSynthesis) {
+  window.speechSynthesis.onvoiceschanged = () => { ptVoice = pickPtVoice(); };
+}
 function speak(text: string) {
   if (typeof window === "undefined" || !window.speechSynthesis) return;
   try {
     window.speechSynthesis.cancel();
     const u = new SpeechSynthesisUtterance(text);
     u.lang = "pt-BR";
-    u.rate = 0.9;   // um pouco mais devagar — facilita a compreensão
-    u.pitch = 1.05;
+    if (ptVoice === undefined) ptVoice = pickPtVoice();
+    if (ptVoice) u.voice = ptVoice;
+    u.rate = 0.95;   // ritmo natural
+    u.pitch = 1.0;   // tom natural (sem robotizar)
+    u.volume = 0.9;
     window.speechSynthesis.speak(u);
   } catch { /* sem áudio — segue visual */ }
 }
@@ -131,22 +150,20 @@ export function AntesDepois({ difficulty, theme, onComplete }: AntesDepoisProps)
   function handlePick(opt: Scene) {
     if (picked || reveal) return;
     attempts.current++;
-    speak(opt.label);
+    speak(opt.label); // narra só a alternativa escolhida (sem áudio de "muito bem"/"errou")
     if (opt.key === trial.answer.key) {
       hits.current++;
       setPicked(opt.key);
-      setTimeout(() => speak("Muito bem! Você acertou."), 600);
-      setTimeout(nextTrial, 2400);
+      setTimeout(nextTrial, 1900); // feedback é VISUAL (⭐)
     } else {
       wrongInTrial.current++;
       setPicked(opt.key);
-      setTimeout(() => speak("Vamos tentar de novo."), 600);
       if (wrongInTrial.current >= 2) {
-        // mostra a resposta certa com destaque + áudio explicativo
-        setTimeout(() => { setReveal(true); speak(`A resposta certa é: ${trial.answer.label}.`); }, 1700);
-        setTimeout(nextTrial, 4200);
+        // após 2 erros, revela a resposta certa em destaque (visual)
+        setTimeout(() => setReveal(true), 700);
+        setTimeout(nextTrial, 3000);
       } else {
-        setTimeout(() => setPicked(null), 1600);
+        setTimeout(() => setPicked(null), 1300); // feedback é VISUAL (🔁)
       }
     }
   }
@@ -205,6 +222,24 @@ export function AntesDepois({ difficulty, theme, onComplete }: AntesDepoisProps)
           style={{ flexShrink: 0, background: C.accent, color: C.accentText, border: "none", borderRadius: "50%", width: 60, height: 60, fontSize: 28, cursor: "pointer", boxShadow: "0 4px 14px rgba(0,0,0,0.18)" }}>
           🔊
         </button>
+      </div>
+
+      {/* Feedback VISUAL (símbolo) — substitui o áudio "muito bem"/"tentar de novo" */}
+      <div style={{ height: 60, display: "flex", alignItems: "center", justifyContent: "center", marginTop: -6, marginBottom: 6 }}>
+        <AnimatePresence mode="wait">
+          {showResult && (
+            <motion.span
+              key={picked ?? "fb"}
+              initial={{ scale: 0, opacity: 0, rotate: -8 }}
+              animate={{ scale: 1, opacity: 1, rotate: 0 }}
+              exit={{ scale: 0, opacity: 0 }}
+              transition={{ type: "spring", stiffness: 360, damping: 16 }}
+              style={{ fontSize: 54, lineHeight: 1 }}
+            >
+              {picked === trial.answer.key ? "⭐" : "🔁"}
+            </motion.span>
+          )}
+        </AnimatePresence>
       </div>
 
       {/* Alternativas (imagens grandes + rótulo + áudio ao tocar) */}
