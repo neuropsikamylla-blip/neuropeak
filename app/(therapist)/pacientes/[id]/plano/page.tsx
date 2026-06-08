@@ -18,12 +18,48 @@ const SPAN_IDS = ["span-numerico", "span-numerico-inverso"];
 
 const ALL_DOMAINS: Domain[] = ["memory", "attention", "processing", "executive"];
 
-const DOMAIN_EXERCISES: Record<Domain, string[]> = {
-  memory: ["span-numerico", "span-numerico-inverso", "matriz-espacial", "matriz-espacial-inversa", "jogo-memoria", "desafio-supermercado", "desafio-supermercado-auditivo"],
-  attention: ["trilha-visual", "antes-depois", "caca-item-barato", "atencao-seletiva", "atencao-sustentada", "mot", "dual-task", "focus-agents", "focus-agents-auditivo"],
-  processing: ["tempo-reacao", "certo-ou-errado", "semaforo", "corrida-tempo"],
-  executive: ["torre-hanoi", "labirinto", "stroop-task", "ordem-historia", "desafio-orcamento", "mudanca-regras", "compra-multifuncional", "task-switching", "deductive-grid"],
+// ── Modalidade de cada exercício (padrão: visual) ────────────────────────────
+type Modality = "visual" | "auditivo" | "ambos";
+const MODALITY: Record<string, Modality> = {
+  "span-numerico": "auditivo",
+  "span-numerico-inverso": "auditivo",
+  "desafio-supermercado-auditivo": "auditivo",
+  "focus-agents-auditivo": "auditivo",
+  "antes-depois": "ambos",
 };
+const modOf = (id: string): Modality => MODALITY[id] ?? "visual";
+const MOD_LABEL: Record<Modality, string> = { visual: "👁️ Visual", auditivo: "🎧 Auditivo", ambos: "👁️🎧 Visual + Auditivo" };
+const MOD_BADGE: Record<Modality, string> = { visual: "👁️", auditivo: "🎧", ambos: "👁️🎧" };
+
+// ── Hierarquia: Domínio → Subárea → Exercícios ───────────────────────────────
+const DOMAIN_SUBAREAS: Record<Domain, { subarea: string; exercises: string[] }[]> = {
+  memory: [
+    { subarea: "Memória de trabalho", exercises: ["span-numerico", "span-numerico-inverso"] },
+    { subarea: "Memória visuoespacial", exercises: ["matriz-espacial", "matriz-espacial-inversa"] },
+    { subarea: "Memória do cotidiano", exercises: ["jogo-memoria", "desafio-supermercado", "desafio-supermercado-auditivo"] },
+  ],
+  attention: [
+    { subarea: "Atenção seletiva", exercises: ["trilha-visual", "caca-item-barato", "atencao-seletiva"] },
+    { subarea: "Atenção sustentada", exercises: ["atencao-sustentada"] },
+    { subarea: "Atenção alternada / dividida", exercises: ["dual-task"] },
+    { subarea: "Rastreamento atencional", exercises: ["mot", "focus-agents", "focus-agents-auditivo"] },
+    { subarea: "Sequência temporal", exercises: ["antes-depois"] },
+  ],
+  processing: [
+    { subarea: "Tempo de reação", exercises: ["tempo-reacao", "semaforo"] },
+    { subarea: "Decisão rápida", exercises: ["certo-ou-errado", "corrida-tempo"] },
+  ],
+  executive: [
+    { subarea: "Planejamento", exercises: ["torre-hanoi", "labirinto"] },
+    { subarea: "Controle inibitório", exercises: ["stroop-task"] },
+    { subarea: "Flexibilidade cognitiva", exercises: ["mudanca-regras", "task-switching"] },
+    { subarea: "Raciocínio lógico", exercises: ["deductive-grid", "ordem-historia"] },
+    { subarea: "Cognição funcional", exercises: ["desafio-orcamento", "compra-multifuncional"] },
+  ],
+};
+const DOMAIN_EXERCISES: Record<Domain, string[]> = Object.fromEntries(
+  ALL_DOMAINS.map((d) => [d, DOMAIN_SUBAREAS[d].flatMap((s) => s.exercises)])
+) as Record<Domain, string[]>;
 
 export default function PlanoPage() {
   const params = useParams();
@@ -37,6 +73,7 @@ export default function PlanoPage() {
   const [selectedExercises, setSelectedExercises] = useState<string[]>([]);
   const [exerciseSettings, setExerciseSettings] = useState<Record<string, Record<string, unknown>>>({});
   const [exerciseLevels, setExerciseLevels] = useState<Record<string, number>>({});
+  const [modalityFilter, setModalityFilter] = useState<"todos" | Modality>("todos");
   const [sessionDuration, setSessionDuration] = useState(30);
   const [frequency, setFrequency] = useState(3);
 
@@ -77,7 +114,6 @@ export default function PlanoPage() {
     setSelectedDomains((prev) => {
       if (prev.includes(domain)) {
         const next = prev.filter((d) => d !== domain);
-        // Also remove exercises from this domain
         const domainExs = DOMAIN_EXERCISES[domain];
         setSelectedExercises((exs) => exs.filter((e) => !domainExs.includes(e)));
         return next;
@@ -149,6 +185,113 @@ export default function PlanoPage() {
     );
   }
 
+  // Renderiza um exercício (checkbox + nível + config Span). É uma FUNÇÃO (não um
+  // componente aninhado) para o slider de nível não remontar/perder foco ao arrastar.
+  const renderExerciseRow = (exId: string) => {
+    const ex = EXERCISE_DEFINITIONS[exId as keyof typeof EXERCISE_DEFINITIONS];
+    if (!ex) return null;
+    const mod = modOf(exId);
+    const selected = selectedExercises.includes(exId);
+    return (
+      <div key={exId}>
+        <label
+          className={`flex items-center gap-3 p-3 rounded-lg border-2 cursor-pointer transition-all ${
+            selected ? "border-blue-400 bg-blue-50" : "border-gray-200 hover:border-gray-300"
+          }`}
+        >
+          <input
+            type="checkbox"
+            checked={selected}
+            onChange={() => toggleExercise(exId)}
+            className="w-4 h-4 text-blue-600 rounded"
+          />
+          <span className="text-xl">{ex.icon}</span>
+          <div className="flex-1 min-w-0">
+            <div className="flex items-center gap-1.5 flex-wrap">
+              <p className="font-medium text-sm text-gray-800">{ex.name}</p>
+              <span
+                title={MOD_LABEL[mod]}
+                className={`text-[10px] px-1.5 py-0.5 rounded-full font-semibold ${
+                  mod === "auditivo" ? "bg-amber-100 text-amber-700"
+                  : mod === "ambos" ? "bg-violet-100 text-violet-700"
+                  : "bg-sky-100 text-sky-700"
+                }`}
+              >
+                {MOD_BADGE[mod]}
+              </span>
+            </div>
+            <p className="text-xs text-gray-500">{ex.description} · ~{ex.estimatedMinutes}min</p>
+          </div>
+        </label>
+        <ExerciseScienceCard exerciseId={exId} />
+
+        {/* Nível de dificuldade inicial — escolhido pelo terapeuta (1 a 10) */}
+        {selected && !SPAN_IDS.includes(exId) && (
+          <div className="mt-2 ml-7 mr-1 p-3 rounded-lg bg-emerald-50 border border-emerald-200">
+            <div className="flex items-center justify-between gap-2 mb-1">
+              <span className="text-[11px] font-bold text-emerald-700 uppercase tracking-wide">🎚️ Nível inicial</span>
+              <span className="text-sm font-bold text-emerald-800 tabular-nums">
+                {exerciseLevels[exId] ?? 1} <span className="text-emerald-500/70 font-normal">/ 10</span>
+              </span>
+            </div>
+            <input
+              type="range" min={1} max={10} step={1}
+              value={exerciseLevels[exId] ?? 1}
+              onChange={(e) => setExerciseLevels((prev) => ({ ...prev, [exId]: Number(e.target.value) }))}
+              className="w-full accent-emerald-600 cursor-pointer"
+            />
+            <p className="text-[10px] text-emerald-600/80 pt-1">
+              Começa neste nível e sobe/desce sozinho conforme o paciente acerta ou erra.
+            </p>
+          </div>
+        )}
+
+        {/* Config do terapeuta (Span) — fixa para o paciente */}
+        {SPAN_IDS.includes(exId) && selected && (() => {
+          const c = spanCfg(exId);
+          const Pill = ({ on, onClick, children }: { on: boolean; onClick: () => void; children: React.ReactNode }) => (
+            <button type="button" onClick={onClick}
+              className={`px-2.5 py-1 rounded-md text-xs font-semibold border ${
+                on ? "bg-indigo-600 text-white border-indigo-600" : "bg-white text-gray-600 border-gray-300"}`}>
+              {children}
+            </button>
+          );
+          const CfgRow = ({ label, children }: { label: string; children: React.ReactNode }) => (
+            <div className="flex items-center justify-between gap-2">
+              <span className="text-xs text-gray-600">{label}</span>
+              <div className="flex gap-1.5">{children}</div>
+            </div>
+          );
+          return (
+            <div className="mt-2 ml-7 mr-1 p-3 rounded-lg bg-indigo-50 border border-indigo-200 space-y-2">
+              <p className="text-[11px] font-bold text-indigo-700 uppercase tracking-wide">⚙️ Configuração (fixa para o paciente)</p>
+              <CfgRow label="Mostrar resposta ao errar">
+                <Pill on={c.showAnswerOnError} onClick={() => setSpanCfg(exId, "showAnswerOnError", true)}>Sim</Pill>
+                <Pill on={!c.showAnswerOnError} onClick={() => setSpanCfg(exId, "showAnswerOnError", false)}>Não</Pill>
+              </CfgRow>
+              <CfgRow label="Tentativas">
+                {[10, 15, 20, 30].map(t => (
+                  <Pill key={t} on={c.trials === t} onClick={() => setSpanCfg(exId, "trials", t)}>{t}</Pill>
+                ))}
+              </CfgRow>
+              <CfgRow label="Repetir áudio">
+                <Pill on={c.allowReplay} onClick={() => setSpanCfg(exId, "allowReplay", true)}>Sim</Pill>
+                <Pill on={!c.allowReplay} onClick={() => setSpanCfg(exId, "allowReplay", false)}>Não</Pill>
+              </CfgRow>
+              {c.allowReplay && (
+                <CfgRow label="Repetir custa pontos">
+                  <Pill on={c.replayPenalty} onClick={() => setSpanCfg(exId, "replayPenalty", true)}>Sim</Pill>
+                  <Pill on={!c.replayPenalty} onClick={() => setSpanCfg(exId, "replayPenalty", false)}>Não</Pill>
+                </CfgRow>
+              )}
+              <p className="text-[10px] text-indigo-500/80 pt-0.5">O nível é automático (o paciente retoma onde parou).</p>
+            </div>
+          );
+        })()}
+      </div>
+    );
+  }
+
   return (
     <div className="max-w-2xl mx-auto space-y-6">
       <div className="flex items-center gap-3">
@@ -167,151 +310,73 @@ export default function PlanoPage() {
         <CardContent className="grid grid-cols-2 gap-4">
           <div>
             <Label>Duração da sessão (min)</Label>
-            <Input
-              type="number"
-              min={10}
-              max={90}
-              value={sessionDuration}
-              onChange={(e) => setSessionDuration(Number(e.target.value))}
-              className="mt-1"
-            />
+            <Input type="number" min={10} max={90} value={sessionDuration}
+              onChange={(e) => setSessionDuration(Number(e.target.value))} className="mt-1" />
           </div>
           <div>
             <Label>Frequência (sessões/semana)</Label>
-            <Input
-              type="number"
-              min={1}
-              max={7}
-              value={frequency}
-              onChange={(e) => setFrequency(Number(e.target.value))}
-              className="mt-1"
-            />
+            <Input type="number" min={1} max={7} value={frequency}
+              onChange={(e) => setFrequency(Number(e.target.value))} className="mt-1" />
           </div>
         </CardContent>
       </Card>
 
-      {/* Domains and exercises */}
-      {ALL_DOMAINS.map((domain) => (
-        <Card key={domain}>
-          <CardHeader className="pb-3">
-            <div className="flex items-center gap-3">
-              <input
-                type="checkbox"
-                id={domain}
-                checked={selectedDomains.includes(domain)}
-                onChange={() => toggleDomain(domain)}
-                className="w-4 h-4 text-blue-600 rounded"
-              />
-              <CardTitle className="text-base">
-                <label htmlFor={domain} className="cursor-pointer">
-                  {DOMAIN_LABELS[domain]}
-                </label>
-              </CardTitle>
-            </div>
-          </CardHeader>
-          {selectedDomains.includes(domain) && (
-            <CardContent>
-              <div className="grid grid-cols-1 gap-2">
-                {DOMAIN_EXERCISES[domain].map((exId) => {
-                  const ex = EXERCISE_DEFINITIONS[exId as keyof typeof EXERCISE_DEFINITIONS];
-                  if (!ex) return null;
-                  return (
-                    <div key={exId}>
-                      <label
-                        className={`flex items-center gap-3 p-3 rounded-lg border-2 cursor-pointer transition-all ${
-                          selectedExercises.includes(exId)
-                            ? "border-blue-400 bg-blue-50"
-                            : "border-gray-200 hover:border-gray-300"
-                        }`}
-                      >
-                        <input
-                          type="checkbox"
-                          checked={selectedExercises.includes(exId)}
-                          onChange={() => toggleExercise(exId)}
-                          className="w-4 h-4 text-blue-600 rounded"
-                        />
-                        <span className="text-xl">{ex.icon}</span>
-                        <div>
-                          <p className="font-medium text-sm text-gray-800">{ex.name}</p>
-                          <p className="text-xs text-gray-500">{ex.description} · ~{ex.estimatedMinutes}min</p>
-                        </div>
-                      </label>
-                      <ExerciseScienceCard exerciseId={exId} />
+      {/* Filtro por modalidade */}
+      <Card>
+        <CardContent className="py-3">
+          <div className="flex items-center gap-2 flex-wrap">
+            <span className="text-xs font-semibold text-gray-500 mr-1">Modalidade:</span>
+            {([["todos", "Todos"], ["visual", "👁️ Visual"], ["auditivo", "🎧 Auditivo"], ["ambos", "👁️🎧 Ambos"]] as const).map(([val, lab]) => (
+              <button key={val} type="button" onClick={() => setModalityFilter(val)}
+                className={`px-3 py-1 rounded-full text-xs font-semibold border transition-colors ${
+                  modalityFilter === val ? "bg-blue-600 text-white border-blue-600" : "bg-white text-gray-600 border-gray-300 hover:border-blue-300"
+                }`}>
+                {lab}
+              </button>
+            ))}
+          </div>
+        </CardContent>
+      </Card>
 
-                      {/* Nível de dificuldade inicial — escolhido pelo terapeuta (1 a 10) */}
-                      {selectedExercises.includes(exId) && !SPAN_IDS.includes(exId) && (
-                        <div className="mt-2 ml-7 mr-1 p-3 rounded-lg bg-emerald-50 border border-emerald-200">
-                          <div className="flex items-center justify-between gap-2 mb-1">
-                            <span className="text-[11px] font-bold text-emerald-700 uppercase tracking-wide">🎚️ Nível inicial</span>
-                            <span className="text-sm font-bold text-emerald-800 tabular-nums">
-                              {exerciseLevels[exId] ?? 1} <span className="text-emerald-500/70 font-normal">/ 10</span>
-                            </span>
-                          </div>
-                          <input
-                            type="range" min={1} max={10} step={1}
-                            value={exerciseLevels[exId] ?? 1}
-                            onChange={(e) => setExerciseLevels((prev) => ({ ...prev, [exId]: Number(e.target.value) }))}
-                            className="w-full accent-emerald-600 cursor-pointer"
-                          />
-                          <p className="text-[10px] text-emerald-600/80 pt-1">
-                            Começa neste nível e sobe/desce sozinho conforme o paciente acerta ou erra.
-                          </p>
-                        </div>
-                      )}
-
-                      {/* Config do terapeuta (Span) — fixa para o paciente */}
-                      {SPAN_IDS.includes(exId) && selectedExercises.includes(exId) && (() => {
-                        const c = spanCfg(exId);
-                        const Pill = ({ on, onClick, children }: { on: boolean; onClick: () => void; children: React.ReactNode }) => (
-                          <button type="button" onClick={onClick}
-                            className={`px-2.5 py-1 rounded-md text-xs font-semibold border ${
-                              on ? "bg-indigo-600 text-white border-indigo-600" : "bg-white text-gray-600 border-gray-300"}`}>
-                            {children}
-                          </button>
-                        );
-                        const CfgRow = ({ label, children }: { label: string; children: React.ReactNode }) => (
-                          <div className="flex items-center justify-between gap-2">
-                            <span className="text-xs text-gray-600">{label}</span>
-                            <div className="flex gap-1.5">{children}</div>
-                          </div>
-                        );
-                        return (
-                          <div className="mt-2 ml-7 mr-1 p-3 rounded-lg bg-indigo-50 border border-indigo-200 space-y-2">
-                            <p className="text-[11px] font-bold text-indigo-700 uppercase tracking-wide">⚙️ Configuração (fixa para o paciente)</p>
-                            <CfgRow label="Mostrar resposta ao errar">
-                              <Pill on={c.showAnswerOnError} onClick={() => setSpanCfg(exId, "showAnswerOnError", true)}>Sim</Pill>
-                              <Pill on={!c.showAnswerOnError} onClick={() => setSpanCfg(exId, "showAnswerOnError", false)}>Não</Pill>
-                            </CfgRow>
-                            <CfgRow label="Tentativas">
-                              {[10, 15, 20, 30].map(t => (
-                                <Pill key={t} on={c.trials === t} onClick={() => setSpanCfg(exId, "trials", t)}>{t}</Pill>
-                              ))}
-                            </CfgRow>
-                            <CfgRow label="Repetir áudio">
-                              <Pill on={c.allowReplay} onClick={() => setSpanCfg(exId, "allowReplay", true)}>Sim</Pill>
-                              <Pill on={!c.allowReplay} onClick={() => setSpanCfg(exId, "allowReplay", false)}>Não</Pill>
-                            </CfgRow>
-                            {c.allowReplay && (
-                              <CfgRow label="Repetir custa pontos">
-                                <Pill on={c.replayPenalty} onClick={() => setSpanCfg(exId, "replayPenalty", true)}>Sim</Pill>
-                                <Pill on={!c.replayPenalty} onClick={() => setSpanCfg(exId, "replayPenalty", false)}>Não</Pill>
-                              </CfgRow>
-                            )}
-                            <p className="text-[10px] text-indigo-500/80 pt-0.5">O nível é automático (o paciente retoma onde parou).</p>
-                          </div>
-                        );
-                      })()}
-                    </div>
-                  );
-                })}
+      {/* Domínios → Subáreas → Exercícios */}
+      {ALL_DOMAINS.map((domain) => {
+        const subareas = DOMAIN_SUBAREAS[domain]
+          .map((sa) => ({ ...sa, exercises: sa.exercises.filter((id) => modalityFilter === "todos" || modOf(id) === modalityFilter) }))
+          .filter((sa) => sa.exercises.length > 0);
+        return (
+          <Card key={domain}>
+            <CardHeader className="pb-3">
+              <div className="flex items-center gap-3">
+                <input type="checkbox" id={domain}
+                  checked={selectedDomains.includes(domain)}
+                  onChange={() => toggleDomain(domain)}
+                  className="w-4 h-4 text-blue-600 rounded" />
+                <CardTitle className="text-base">
+                  <label htmlFor={domain} className="cursor-pointer">{DOMAIN_LABELS[domain]}</label>
+                </CardTitle>
               </div>
-            </CardContent>
-          )}
-        </Card>
-      ))}
+            </CardHeader>
+            {selectedDomains.includes(domain) && (
+              <CardContent className="space-y-4">
+                {subareas.length === 0 ? (
+                  <p className="text-xs text-gray-400 italic">Nenhum exercício desta modalidade neste domínio.</p>
+                ) : (
+                  subareas.map((sa) => (
+                    <div key={sa.subarea}>
+                      <p className="text-[11px] font-bold uppercase tracking-wide text-gray-400 mb-1.5 pl-1">{sa.subarea}</p>
+                      <div className="grid grid-cols-1 gap-2">
+                        {sa.exercises.map((exId) => renderExerciseRow(exId))}
+                      </div>
+                    </div>
+                  ))
+                )}
+              </CardContent>
+            )}
+          </Card>
+        );
+      })}
 
-      {/* Desafio da Cidade — reservado para a área do Mundo Interior (a desenvolver).
-          Removido da seleção de exercícios cognitivos a pedido da Kamylla. */}
+      {/* Desafio da Cidade — reservado para a área do Mundo Interior (a desenvolver). */}
 
       <div className="flex gap-3">
         <Button variant="outline" asChild className="flex-1">
