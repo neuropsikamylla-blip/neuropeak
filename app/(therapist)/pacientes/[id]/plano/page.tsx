@@ -9,14 +9,15 @@ import { Input } from "@/components/ui/input";
 import { useToast } from "@/components/ui/use-toast";
 import { ArrowLeft, Loader2, Save } from "lucide-react";
 import Link from "next/link";
-import { EXERCISE_DEFINITIONS, DOMAIN_LABELS, type Domain } from "@/types";
+import { EXERCISE_DEFINITIONS, DOMAIN_LABELS, DOMAIN_COLORS, type Domain } from "@/types";
+import { DomainSelector } from "@/components/plano/DomainSelector";
 import { ExerciseScienceCard } from "@/components/exercises/ExerciseScienceCard";
 import { parsePlanExercises, buildPlanExercises } from "@/lib/exercise-plan";
 import { DEFAULT_SPAN_SETTINGS, type SpanSettings } from "@/components/exercises/memory/SpanNumerico";
 
 const SPAN_IDS = ["span-numerico", "span-numerico-inverso"];
 
-const ALL_DOMAINS: Domain[] = ["memory", "attention", "processing", "executive"];
+const ALL_DOMAINS: Domain[] = ["memory", "attention", "executive", "processing", "functional"];
 
 // ── Modalidade de cada exercício (padrão: visual) ────────────────────────────
 type Modality = "visual" | "auditivo" | "ambos";
@@ -36,30 +37,38 @@ const DOMAIN_SUBAREAS: Record<Domain, { subarea: string; exercises: string[] }[]
   memory: [
     { subarea: "Memória de trabalho", exercises: ["span-numerico", "span-numerico-inverso"] },
     { subarea: "Memória visuoespacial", exercises: ["matriz-espacial", "matriz-espacial-inversa"] },
-    { subarea: "Memória do cotidiano", exercises: ["jogo-memoria", "desafio-supermercado", "desafio-supermercado-auditivo"] },
+    { subarea: "Memória do cotidiano", exercises: ["jogo-memoria"] },
   ],
   attention: [
-    { subarea: "Atenção seletiva", exercises: ["trilha-visual", "caca-item-barato", "atencao-seletiva"] },
+    { subarea: "Atenção seletiva", exercises: ["trilha-visual", "atencao-seletiva"] },
     { subarea: "Atenção sustentada", exercises: ["atencao-sustentada"] },
     { subarea: "Atenção alternada / dividida", exercises: ["dual-task"] },
     { subarea: "Rastreamento atencional", exercises: ["mot", "focus-agents", "focus-agents-auditivo"] },
-    { subarea: "Sequência temporal", exercises: ["antes-depois"] },
-  ],
-  processing: [
-    { subarea: "Tempo de reação", exercises: ["tempo-reacao", "semaforo"] },
-    { subarea: "Decisão rápida", exercises: ["certo-ou-errado", "corrida-tempo"] },
   ],
   executive: [
     { subarea: "Planejamento", exercises: ["torre-hanoi", "labirinto"] },
     { subarea: "Controle inibitório", exercises: ["stroop-task"] },
     { subarea: "Flexibilidade cognitiva", exercises: ["mudanca-regras", "task-switching"] },
     { subarea: "Raciocínio lógico", exercises: ["deductive-grid", "ordem-historia"] },
-    { subarea: "Cognição funcional", exercises: ["desafio-orcamento", "compra-multifuncional"] },
+  ],
+  processing: [
+    { subarea: "Tempo de reação", exercises: ["tempo-reacao", "semaforo"] },
+    { subarea: "Decisão rápida", exercises: ["certo-ou-errado", "corrida-tempo"] },
+  ],
+  // Desenvolvimento Funcional — exercícios do cotidiano (compras, dinheiro, rotina).
+  functional: [
+    { subarea: "Compras e mercado", exercises: ["desafio-supermercado", "desafio-supermercado-auditivo", "caca-item-barato", "compra-multifuncional"] },
+    { subarea: "Dinheiro e orçamento", exercises: ["desafio-orcamento"] },
+    { subarea: "Rotina e sequência", exercises: ["antes-depois"] },
   ],
 };
 const DOMAIN_EXERCISES: Record<Domain, string[]> = Object.fromEntries(
   ALL_DOMAINS.map((d) => [d, DOMAIN_SUBAREAS[d].flatMap((s) => s.exercises)])
 ) as Record<Domain, string[]>;
+// Quantidade real de exercícios por domínio (mostrada nos cards de seleção).
+const DOMAIN_COUNTS: Record<Domain, number> = Object.fromEntries(
+  ALL_DOMAINS.map((d) => [d, DOMAIN_EXERCISES[d].length])
+) as Record<Domain, number>;
 
 export default function PlanoPage() {
   const params = useParams();
@@ -292,9 +301,11 @@ export default function PlanoPage() {
     );
   }
 
+  const activeDomains = ALL_DOMAINS.filter((d) => selectedDomains.includes(d));
+
   return (
-    <div className="max-w-2xl mx-auto space-y-6">
-      <div className="flex items-center gap-3">
+    <div className="max-w-6xl mx-auto space-y-6">
+      <div className="flex items-center gap-3 max-w-3xl mx-auto w-full">
         <Button variant="ghost" size="icon" asChild>
           <Link href={`/pacientes/${patientId}`} aria-label="Voltar"><ArrowLeft className="w-5 h-5" /></Link>
         </Button>
@@ -304,88 +315,95 @@ export default function PlanoPage() {
         </div>
       </div>
 
-      {/* Session settings */}
-      <Card>
-        <CardHeader><CardTitle className="text-base">Configurações de Sessão</CardTitle></CardHeader>
-        <CardContent className="grid grid-cols-2 gap-4">
-          <div>
-            <Label>Duração da sessão (min)</Label>
-            <Input type="number" min={10} max={90} value={sessionDuration}
-              onChange={(e) => setSessionDuration(Number(e.target.value))} className="mt-1" />
-          </div>
-          <div>
-            <Label>Frequência (sessões/semana)</Label>
-            <Input type="number" min={1} max={7} value={frequency}
-              onChange={(e) => setFrequency(Number(e.target.value))} className="mt-1" />
-          </div>
-        </CardContent>
-      </Card>
+      {/* Seleção de domínios — seção premium (largura total) */}
+      <DomainSelector selected={selectedDomains} onToggle={toggleDomain} counts={DOMAIN_COUNTS} />
 
-      {/* Filtro por modalidade */}
-      <Card>
-        <CardContent className="py-3">
-          <div className="flex items-center gap-2 flex-wrap">
-            <span className="text-xs font-semibold text-gray-500 mr-1">Modalidade:</span>
-            {([["todos", "Todos"], ["visual", "👁️ Visual"], ["auditivo", "🎧 Auditivo"], ["ambos", "👁️🎧 Ambos"]] as const).map(([val, lab]) => (
-              <button key={val} type="button" onClick={() => setModalityFilter(val)}
-                className={`px-3 py-1 rounded-full text-xs font-semibold border transition-colors ${
-                  modalityFilter === val ? "bg-blue-600 text-white border-blue-600" : "bg-white text-gray-600 border-gray-300 hover:border-blue-300"
-                }`}>
-                {lab}
-              </button>
-            ))}
-          </div>
-        </CardContent>
-      </Card>
+      {/* Demais configurações — container central mais estreito */}
+      <div className="max-w-3xl mx-auto w-full space-y-6">
+        {/* Session settings */}
+        <Card>
+          <CardHeader><CardTitle className="text-base">Configurações de Sessão</CardTitle></CardHeader>
+          <CardContent className="grid grid-cols-2 gap-4">
+            <div>
+              <Label>Duração da sessão (min)</Label>
+              <Input type="number" min={10} max={90} value={sessionDuration}
+                onChange={(e) => setSessionDuration(Number(e.target.value))} className="mt-1" />
+            </div>
+            <div>
+              <Label>Frequência (sessões/semana)</Label>
+              <Input type="number" min={1} max={7} value={frequency}
+                onChange={(e) => setFrequency(Number(e.target.value))} className="mt-1" />
+            </div>
+          </CardContent>
+        </Card>
 
-      {/* Domínios → Subáreas → Exercícios */}
-      {ALL_DOMAINS.map((domain) => {
-        const subareas = DOMAIN_SUBAREAS[domain]
-          .map((sa) => ({ ...sa, exercises: sa.exercises.filter((id) => modalityFilter === "todos" || modOf(id) === modalityFilter) }))
-          .filter((sa) => sa.exercises.length > 0);
-        return (
-          <Card key={domain}>
-            <CardHeader className="pb-3">
-              <div className="flex items-center gap-3">
-                <input type="checkbox" id={domain}
-                  checked={selectedDomains.includes(domain)}
-                  onChange={() => toggleDomain(domain)}
-                  className="w-4 h-4 text-blue-600 rounded" />
-                <CardTitle className="text-base">
-                  <label htmlFor={domain} className="cursor-pointer">{DOMAIN_LABELS[domain]}</label>
-                </CardTitle>
-              </div>
-            </CardHeader>
-            {selectedDomains.includes(domain) && (
-              <CardContent className="space-y-4">
-                {subareas.length === 0 ? (
-                  <p className="text-xs text-gray-400 italic">Nenhum exercício desta modalidade neste domínio.</p>
-                ) : (
-                  subareas.map((sa) => (
-                    <div key={sa.subarea}>
-                      <p className="text-[11px] font-bold uppercase tracking-wide text-gray-400 mb-1.5 pl-1">{sa.subarea}</p>
-                      <div className="grid grid-cols-1 gap-2">
-                        {sa.exercises.map((exId) => renderExerciseRow(exId))}
-                      </div>
-                    </div>
-                  ))
-                )}
-              </CardContent>
-            )}
+        {/* Filtro por modalidade */}
+        <Card>
+          <CardContent className="py-3">
+            <div className="flex items-center gap-2 flex-wrap">
+              <span className="text-xs font-semibold text-gray-500 mr-1">Modalidade:</span>
+              {([["todos", "Todos"], ["visual", "👁️ Visual"], ["auditivo", "🎧 Auditivo"], ["ambos", "👁️🎧 Ambos"]] as const).map(([val, lab]) => (
+                <button key={val} type="button" onClick={() => setModalityFilter(val)}
+                  className={`px-3 py-1 rounded-full text-xs font-semibold border transition-colors ${
+                    modalityFilter === val ? "bg-blue-600 text-white border-blue-600" : "bg-white text-gray-600 border-gray-300 hover:border-blue-300"
+                  }`}>
+                  {lab}
+                </button>
+              ))}
+            </div>
+          </CardContent>
+        </Card>
+
+        {/* Exercícios dos domínios selecionados → Subáreas → Exercícios */}
+        {activeDomains.length === 0 ? (
+          <Card>
+            <CardContent className="py-10 text-center text-sm text-gray-400">
+              Selecione ao menos um domínio acima para escolher os exercícios.
+            </CardContent>
           </Card>
-        );
-      })}
+        ) : (
+          activeDomains.map((domain) => {
+            const subareas = DOMAIN_SUBAREAS[domain]
+              .map((sa) => ({ ...sa, exercises: sa.exercises.filter((id) => modalityFilter === "todos" || modOf(id) === modalityFilter) }))
+              .filter((sa) => sa.exercises.length > 0);
+            return (
+              <Card key={domain}>
+                <CardHeader className="pb-3">
+                  <CardTitle className="text-base flex items-center gap-2">
+                    <span className="w-2.5 h-2.5 rounded-full" style={{ backgroundColor: DOMAIN_COLORS[domain] }} />
+                    <span style={{ color: DOMAIN_COLORS[domain] }}>{DOMAIN_LABELS[domain]}</span>
+                  </CardTitle>
+                </CardHeader>
+                <CardContent className="space-y-4">
+                  {subareas.length === 0 ? (
+                    <p className="text-xs text-gray-400 italic">Nenhum exercício desta modalidade neste domínio.</p>
+                  ) : (
+                    subareas.map((sa) => (
+                      <div key={sa.subarea}>
+                        <p className="text-[11px] font-bold uppercase tracking-wide text-gray-400 mb-1.5 pl-1">{sa.subarea}</p>
+                        <div className="grid grid-cols-1 gap-2">
+                          {sa.exercises.map((exId) => renderExerciseRow(exId))}
+                        </div>
+                      </div>
+                    ))
+                  )}
+                </CardContent>
+              </Card>
+            );
+          })
+        )}
 
-      {/* Desafio da Cidade — reservado para a área do Mundo Interior (a desenvolver). */}
+        {/* Desafio da Cidade — reservado para a área do Mundo Interior (a desenvolver). */}
 
-      <div className="flex gap-3">
-        <Button variant="outline" asChild className="flex-1">
-          <Link href={`/pacientes/${patientId}`}>Cancelar</Link>
-        </Button>
-        <Button onClick={handleSave} disabled={loading} className="flex-1">
-          {loading ? <Loader2 className="w-4 h-4 animate-spin mr-2" /> : <Save className="w-4 h-4 mr-2" />}
-          Salvar Plano
-        </Button>
+        <div className="flex gap-3">
+          <Button variant="outline" asChild className="flex-1">
+            <Link href={`/pacientes/${patientId}`}>Cancelar</Link>
+          </Button>
+          <Button onClick={handleSave} disabled={loading} className="flex-1">
+            {loading ? <Loader2 className="w-4 h-4 animate-spin mr-2" /> : <Save className="w-4 h-4 mr-2" />}
+            Salvar Plano
+          </Button>
+        </div>
       </div>
     </div>
   );

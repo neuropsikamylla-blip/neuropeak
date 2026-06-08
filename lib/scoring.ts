@@ -141,6 +141,7 @@ export function generateRecommendations(domainScores: DomainScore[]): string {
         attention: "Atenção",
         processing: "Velocidade de Processamento",
         executive: "Funções Executivas",
+        functional: "Desenvolvimento Funcional",
       };
       recommendations.push(
         `Aumentar frequência de exercícios de ${domainLabels[ds.domain]} (pontuação atual: ${ds.score}/100).`

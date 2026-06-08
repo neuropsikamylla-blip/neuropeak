@@ -1,7 +1,7 @@
 export type UserRole = "THERAPIST" | "PATIENT";
 export type Theme = "CLINICAL" | "COLORFUL" | "GAMIFIED";
 export type AlertType = "MISSED_SESSION" | "PERFORMANCE_DROP" | "GOAL_REACHED" | "CYCLE_COMPLETE";
-export type Domain = "memory" | "attention" | "processing" | "executive";
+export type Domain = "memory" | "attention" | "processing" | "executive" | "functional";
 
 export interface ExerciseResult {
   exerciseId: string;
@@ -408,11 +408,22 @@ export const DOMAIN_LABELS: Record<Domain, string> = {
   attention: "Atenção",
   processing: "Velocidade de Processamento",
   executive: "Funções Executivas",
+  functional: "Desenvolvimento Funcional",
 };
 
 export const DOMAIN_COLORS: Record<Domain, string> = {
   memory: "#2563EB",
-  attention: "#7C3AED",
+  attention: "#059669",
   processing: "#EA580C",
-  executive: "#0D9488",
+  executive: "#6D28D9",
+  functional: "#0F766E",
+};
+
+// Descrição curta de cada domínio cognitivo — usada nos cards de seleção do plano.
+export const DOMAIN_DESCRIPTIONS: Record<Domain, string> = {
+  memory: "Retenção, armazenamento e recuperação de informações.",
+  attention: "Foco, concentração e controle atencional.",
+  executive: "Planejamento, organização, flexibilidade e controle.",
+  processing: "Agilidade mental e rapidez nas respostas.",
+  functional: "Aplicação no cotidiano, rotina e habilidades práticas.",
 };
