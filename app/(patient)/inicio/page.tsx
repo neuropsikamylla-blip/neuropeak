@@ -85,17 +85,17 @@ export default async function InicioPage() {
       progressBar: "bg-indigo-500",
     },
     COLORFUL: {
-      bg: "bg-gradient-to-br from-purple-50 via-pink-50 to-yellow-50",
+      bg: "bg-gradient-to-br from-teal-50 via-cyan-50 to-yellow-50",
       header: "bg-white/80 backdrop-blur rounded-2xl mb-4 shadow",
-      card: "bg-white rounded-2xl shadow-lg border-2 border-purple-100",
-      title: "text-purple-700 text-3xl font-bold",
-      sub: "text-purple-400",
-      accent: "text-pink-500",
-      exCard: "bg-white rounded-2xl border-2 border-purple-100 hover:border-purple-400 hover:shadow-lg transition-all",
-      exDone: "bg-purple-50 rounded-2xl border-2 border-purple-100 opacity-60",
-      stat: "bg-gradient-to-br from-purple-100 to-pink-100 rounded-2xl",
-      progress: "bg-purple-200",
-      progressBar: "bg-purple-500",
+      card: "bg-white rounded-2xl shadow-lg border-2 border-teal-100",
+      title: "text-teal-700 text-3xl font-bold",
+      sub: "text-teal-400",
+      accent: "text-cyan-500",
+      exCard: "bg-white rounded-2xl border-2 border-teal-100 hover:border-teal-400 hover:shadow-lg transition-all",
+      exDone: "bg-teal-50 rounded-2xl border-2 border-teal-100 opacity-60",
+      stat: "bg-gradient-to-br from-teal-100 to-cyan-100 rounded-2xl",
+      progress: "bg-teal-200",
+      progressBar: "bg-teal-500",
     },
     GAMIFIED: {
       bg: "bg-gray-950",
@@ -144,7 +144,7 @@ export default async function InicioPage() {
           <p className={`text-xs ${s.sub}`}>{theme === "COLORFUL" ? "Pontos ⭐" : "Pontos"}</p>
         </div>
         <div className={`p-3 text-center ${s.stat}`}>
-          <Star className={`w-5 h-5 mx-auto mb-1 ${theme === "GAMIFIED" ? "text-yellow-400" : "text-purple-500"}`} />
+          <Star className={`w-5 h-5 mx-auto mb-1 ${theme === "GAMIFIED" ? "text-yellow-400" : "text-teal-500"}`} />
           <p className={`text-xl font-bold ${theme === "GAMIFIED" ? "text-white" : "text-gray-900"}`}>{typedAchievements.length}</p>
           <p className={`text-xs ${s.sub}`}>{theme === "COLORFUL" ? "Conquistas 🏅" : "Conquistas"}</p>
         </div>
@@ -181,7 +181,7 @@ export default async function InicioPage() {
 
       {/* Today's plan */}
       <div>
-        <h2 className={`font-bold mb-3 ${theme === "GAMIFIED" ? "text-gray-200" : theme === "COLORFUL" ? "text-purple-700 text-lg" : "text-gray-800"}`}>
+        <h2 className={`font-bold mb-3 ${theme === "GAMIFIED" ? "text-gray-200" : theme === "COLORFUL" ? "text-teal-700 text-lg" : "text-gray-800"}`}>
           {theme === "GAMIFIED" ? "EXERCÍCIOS DE HOJE" : theme === "COLORFUL" ? "Seu treino de hoje 🎯" : "Treino de hoje"}
         </h2>
 
@@ -251,7 +251,7 @@ export default async function InicioPage() {
       {/* Recent achievements */}
       {typedAchievements.length > 0 && (
         <div>
-          <h2 className={`font-bold mb-3 ${theme === "GAMIFIED" ? "text-gray-200" : theme === "COLORFUL" ? "text-purple-700 text-lg" : "text-gray-800"}`}>
+          <h2 className={`font-bold mb-3 ${theme === "GAMIFIED" ? "text-gray-200" : theme === "COLORFUL" ? "text-teal-700 text-lg" : "text-gray-800"}`}>
             {theme === "COLORFUL" ? "Suas conquistas 🏆" : "Conquistas"}
           </h2>
           <div className="flex gap-3 overflow-x-auto pb-2">

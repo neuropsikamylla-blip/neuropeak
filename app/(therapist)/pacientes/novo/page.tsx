@@ -332,7 +332,7 @@ export default function NovoPacientePage() {
             <div className="grid grid-cols-3 gap-3">
               {[
                 { value: "CLINICAL", label: "Clínico", desc: "Adultos e idosos", color: "bg-gray-100 border-gray-300" },
-                { value: "COLORFUL", label: "Colorido", desc: "Crianças 4-11", color: "bg-purple-100 border-purple-400" },
+                { value: "COLORFUL", label: "Colorido", desc: "Crianças 4-11", color: "bg-teal-100 border-teal-400" },
                 { value: "GAMIFIED", label: "Gamificado", desc: "Adolescentes 12-17", color: "bg-gray-900 border-cyan-500" },
               ].map((t) => (
                 <button

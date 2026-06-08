@@ -77,12 +77,12 @@ function ColorfulBg() {
   return (
     <div className="absolute inset-0">
       <div className="absolute inset-0" style={{
-        background: "linear-gradient(135deg, #f0e6ff 0%, #fce4f0 55%, #ffe8e0 100%)"
+        background: "linear-gradient(135deg, #e6fffb 0%, #d7f7f4 55%, #e0f7ff 100%)"
       }} />
       <div className="absolute top-0 left-1/4 w-64 h-64 rounded-full pointer-events-none opacity-40"
-        style={{ background: "radial-gradient(circle, #d4aaff, transparent)", filter: "blur(30px)" }} />
+        style={{ background: "radial-gradient(circle, #7ee8d8, transparent)", filter: "blur(30px)" }} />
       <div className="absolute bottom-0 right-1/4 w-72 h-72 rounded-full pointer-events-none opacity-35"
-        style={{ background: "radial-gradient(circle, #ffaadd, transparent)", filter: "blur(30px)" }} />
+        style={{ background: "radial-gradient(circle, #88dded, transparent)", filter: "blur(30px)" }} />
     </div>
   );
 }
@@ -106,17 +106,17 @@ export function TutorialBase({ theme, title, steps, onDone }: TutorialBaseProps)
     ? { background: "#faf6ef", borderRadius: 20, boxShadow: "0 20px 60px rgba(0,0,0,0.55)", border: "1px solid rgba(200,180,130,0.3)" }
     : { background: "#ffffff", borderRadius: 20, boxShadow: "0 8px 40px rgba(60,40,20,0.18)", border: "1px solid rgba(200,185,160,0.3)" };
 
-  const titleColor = isGamified ? "#1a2d50" : isColorful ? "#7c3aed" : "#1a2744";
-  const subColor = isGamified ? "#5a7899" : isColorful ? "#9d71cc" : "#8a7a6a";
-  const instructionBg = isGamified ? "#f0ebe0" : isColorful ? "#f8f4ff" : "#f8f4ee";
-  const instructionColor = isGamified ? "#2d4060" : isColorful ? "#5b3a8a" : "#3a3028";
-  const dotActive = isGamified ? "#2a5fa5" : isColorful ? "#8b5cf6" : "#2a5fa5";
-  const dotInactive = isGamified ? "rgba(26,45,80,0.12)" : isColorful ? "rgba(139,92,246,0.12)" : "rgba(26,39,68,0.1)";
+  const titleColor = isGamified ? "#1a2d50" : isColorful ? "#0d9488" : "#1a2744";
+  const subColor = isGamified ? "#5a7899" : isColorful ? "#3a9d92" : "#8a7a6a";
+  const instructionBg = isGamified ? "#f0ebe0" : isColorful ? "#f0fdfa" : "#f8f4ee";
+  const instructionColor = isGamified ? "#2d4060" : isColorful ? "#115e59" : "#3a3028";
+  const dotActive = isGamified ? "#2a5fa5" : isColorful ? "#14b8a6" : "#2a5fa5";
+  const dotInactive = isGamified ? "rgba(26,45,80,0.12)" : isColorful ? "rgba(20,184,166,0.12)" : "rgba(26,39,68,0.1)";
 
   const btnStyle: React.CSSProperties = isGamified
     ? { background: "linear-gradient(135deg, #1a2d50 0%, #2a4a8a 100%)", boxShadow: "0 4px 20px rgba(26,45,80,0.4)" }
     : isColorful
-    ? { background: "linear-gradient(135deg, #7c3aed 0%, #db2777 100%)", boxShadow: "0 4px 20px rgba(124,58,237,0.35)" }
+    ? { background: "linear-gradient(135deg, #0d9488 0%, #0891b2 100%)", boxShadow: "0 4px 20px rgba(13,148,136,0.35)" }
     : { background: "linear-gradient(135deg, #1a2744 0%, #2a4a8a 100%)", boxShadow: "0 4px 20px rgba(26,39,68,0.4)" };
 
   return (

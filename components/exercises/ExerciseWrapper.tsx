@@ -73,11 +73,11 @@ export function ExerciseWrapper({
       btn: "bg-indigo-600 hover:bg-indigo-700 text-white rounded-xl font-semibold",
     },
     COLORFUL: {
-      bg: "bg-gradient-to-br from-blue-50 via-white to-rose-50 min-h-screen",
-      card: "bg-white rounded-3xl shadow-xl border-2 border-blue-300 p-8 max-w-2xl mx-auto",
-      title: "text-blue-800 text-3xl font-bold",
+      bg: "bg-gradient-to-br from-teal-50 via-white to-cyan-50 min-h-screen",
+      card: "bg-white rounded-3xl shadow-xl border-2 border-teal-300 p-8 max-w-2xl mx-auto",
+      title: "text-teal-800 text-3xl font-bold",
       text: "text-gray-800",
-      btn: "bg-gradient-to-r from-rose-700 to-blue-700 text-white rounded-full text-lg font-bold",
+      btn: "bg-gradient-to-r from-teal-600 to-cyan-600 text-white rounded-full text-lg font-bold",
     },
     GAMIFIED: {
       bg: "bg-gray-950 min-h-screen",
@@ -105,8 +105,8 @@ export function ExerciseWrapper({
             <p className={`${s.text} text-sm mb-4 opacity-70`}>Leia as instruções antes de começar</p>
 
             {functional && (
-              <div className={`rounded-xl p-4 mb-5 ${theme === "GAMIFIED" ? "bg-cyan-900/30 border border-cyan-500/20" : theme === "COLORFUL" ? "bg-purple-50 border border-purple-200" : "bg-indigo-50/60 border border-indigo-100"}`}>
-                <p className={`text-xs font-bold uppercase tracking-wide mb-1 ${theme === "GAMIFIED" ? "text-cyan-400" : theme === "COLORFUL" ? "text-purple-600" : "text-indigo-600"}`}>
+              <div className={`rounded-xl p-4 mb-5 ${theme === "GAMIFIED" ? "bg-cyan-900/30 border border-cyan-500/20" : theme === "COLORFUL" ? "bg-teal-50 border border-teal-200" : "bg-indigo-50/60 border border-indigo-100"}`}>
+                <p className={`text-xs font-bold uppercase tracking-wide mb-1 ${theme === "GAMIFIED" ? "text-cyan-400" : theme === "COLORFUL" ? "text-teal-600" : "text-indigo-600"}`}>
                   Para que serve no dia a dia
                 </p>
                 <p className={`text-sm leading-relaxed ${s.text}`}>{functional.scenario}</p>
@@ -116,7 +116,7 @@ export function ExerciseWrapper({
             <div className="space-y-3 mb-5">
               {instructions.map((inst, i) => (
                 <div key={i} className="flex gap-3 items-start">
-                  <span className={`w-6 h-6 rounded-full flex items-center justify-center text-sm font-bold flex-shrink-0 mt-0.5 ${theme === "GAMIFIED" ? "bg-cyan-500 text-gray-900" : theme === "COLORFUL" ? "bg-purple-500 text-white" : "bg-indigo-500 text-white"}`}>
+                  <span className={`w-6 h-6 rounded-full flex items-center justify-center text-sm font-bold flex-shrink-0 mt-0.5 ${theme === "GAMIFIED" ? "bg-cyan-500 text-gray-900" : theme === "COLORFUL" ? "bg-teal-500 text-white" : "bg-indigo-500 text-white"}`}>
                     {i + 1}
                   </span>
                   <p className={`${s.text} text-sm leading-relaxed`}>{inst}</p>
@@ -189,11 +189,11 @@ export function ExerciseWrapper({
                 theme === "GAMIFIED"
                   ? "bg-gray-800/95 border border-cyan-500/40 backdrop-blur-sm"
                   : theme === "COLORFUL"
-                  ? "bg-white/95 border-2 border-purple-300 backdrop-blur-sm"
+                  ? "bg-white/95 border-2 border-teal-300 backdrop-blur-sm"
                   : "bg-white/95 border border-gray-200 backdrop-blur-sm shadow-md"
               }`}>
                 <p className={`text-xs font-bold mb-1 flex items-center justify-between gap-2 ${
-                  theme === "GAMIFIED" ? "text-cyan-400" : theme === "COLORFUL" ? "text-purple-700" : "text-gray-800"
+                  theme === "GAMIFIED" ? "text-cyan-400" : theme === "COLORFUL" ? "text-teal-700" : "text-gray-800"
                 }`}>
                   <span>Progresso da sessão</span>
                   <span className="tabular-nums">{Math.round(sessionProgress)}%</span>
@@ -201,7 +201,7 @@ export function ExerciseWrapper({
                 <div className={`h-1.5 rounded-full ${theme === "GAMIFIED" ? "bg-gray-600" : "bg-gray-200"}`}>
                   <motion.div
                     className={`h-full rounded-full ${
-                      theme === "GAMIFIED" ? "bg-cyan-500" : theme === "COLORFUL" ? "bg-purple-500" : "bg-blue-500"
+                      theme === "GAMIFIED" ? "bg-cyan-500" : theme === "COLORFUL" ? "bg-teal-500" : "bg-blue-500"
                     }`}
                     animate={{ width: `${sessionProgress}%` }}
                     transition={{ duration: 0.4 }}
