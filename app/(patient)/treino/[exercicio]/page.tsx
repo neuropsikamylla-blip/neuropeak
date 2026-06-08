@@ -254,7 +254,7 @@ const EXERCISE_INSTRUCTIONS: Record<string, string[]> = {
   "focus-agents-auditivo": [],
   "atencao-alternada": [
     "Um item aparecerá no centro da tela — pode ser um animal ou objeto, grande ou pequeno.",
-    "No topo, uma regra indica o que avaliar: ANIMAL vs OBJETO ou GRANDE vs PEQUENO.",
+    "No topo, uma regra indica o que observar: ANIMAL vs OBJETO ou GRANDE vs PEQUENO.",
     "Toque no botão correto para a regra ativa. A regra muda automaticamente!",
     "Fique atento às mudanças de regra — é preciso trocar o foco rapidamente.",
   ],

@@ -93,7 +93,7 @@ export default function PlanoPage() {
     );
   }
 
-  // Config do terapeuta para os exercícios de Span (treino/avaliação, áudio, tentativas).
+  // Config do terapeuta para os exercícios de Span (mostrar resposta, áudio, tentativas).
   const spanCfg = (exId: string): SpanSettings =>
     ({ ...DEFAULT_SPAN_SETTINGS, ...(exerciseSettings[exId] as Partial<SpanSettings> ?? {}) });
   function setSpanCfg<K extends keyof SpanSettings>(exId: string, key: K, value: SpanSettings[K]) {
@@ -278,9 +278,9 @@ export default function PlanoPage() {
                         return (
                           <div className="mt-2 ml-7 mr-1 p-3 rounded-lg bg-indigo-50 border border-indigo-200 space-y-2">
                             <p className="text-[11px] font-bold text-indigo-700 uppercase tracking-wide">⚙️ Configuração (fixa para o paciente)</p>
-                            <CfgRow label="Modo">
-                              <Pill on={c.showAnswerOnError} onClick={() => setSpanCfg(exId, "showAnswerOnError", true)}>Treino</Pill>
-                              <Pill on={!c.showAnswerOnError} onClick={() => setSpanCfg(exId, "showAnswerOnError", false)}>Avaliação</Pill>
+                            <CfgRow label="Mostrar resposta ao errar">
+                              <Pill on={c.showAnswerOnError} onClick={() => setSpanCfg(exId, "showAnswerOnError", true)}>Sim</Pill>
+                              <Pill on={!c.showAnswerOnError} onClick={() => setSpanCfg(exId, "showAnswerOnError", false)}>Não</Pill>
                             </CfgRow>
                             <CfgRow label="Tentativas">
                               {[10, 15, 20, 30].map(t => (
