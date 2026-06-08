@@ -20,7 +20,7 @@ const MAX_ROUNDS = 8;
 
 function gridCount(d: number) { return d <= 4 ? 12 : 16; }
 function targetCount(d: number) { return d <= 3 ? 4 : d <= 6 ? 5 : 6; }
-function timeSecs(d: number) { return d <= 3 ? 25 : d <= 6 ? 20 : 15; }
+function timeSecs(d: number) { return d <= 3 ? 18 : d <= 6 ? 14 : 10; }
 
 function buildGrid(domain: FlexDomain, cat: FlexCategory, d: number): GridItem[] {
   const nT = targetCount(d);
@@ -110,6 +110,7 @@ export function CorridaContraOTempo({ difficulty, theme, onComplete }: Props) {
   const hitsRef = useRef(0);
   const totalRef = useRef(0);
   const roundRef = useRef(0);
+  const lastCatRef = useRef<string | null>(null);
   const resultsRef = useRef<{ correct: boolean; hits: number; total: number }[]>([]);
   const startTime = useRef(Date.now());
 
@@ -155,7 +156,10 @@ export function CorridaContraOTempo({ difficulty, theme, onComplete }: Props) {
     }
     const domain = domainRef.current;
     const cats = domain.categories;
-    const cat = cats[Math.floor(Math.random() * cats.length)];
+    // evita repetir a mesma categoria-alvo da rodada anterior
+    const pool = cats.length > 1 ? cats.filter(c => c.id !== lastCatRef.current) : cats;
+    const cat = pool[Math.floor(Math.random() * pool.length)];
+    lastCatRef.current = cat.id;
     const newItems = buildGrid(domain, cat, difficulty);
     roundEndedRef.current = false;
     hitsRef.current = 0;
