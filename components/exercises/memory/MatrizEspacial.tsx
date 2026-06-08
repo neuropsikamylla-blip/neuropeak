@@ -131,7 +131,7 @@ function MatrizTutorialGrid({
       return isGamified
         ? { background: "#06b6d4", border: "2px solid #67e8f9", borderRadius: 10 }
         : isColorful
-        ? { background: "#8b5cf6", border: "2px solid #c4b5fd", borderRadius: 10 }
+        ? { background: "#14b8a6", border: "2px solid #5eead4", borderRadius: 10 }
         : { background: "#3b82f6", border: "2px solid #93c5fd", borderRadius: 10 };
     }
     if (isClicked && flash === "green") return { background: "#4ade80", border: "2px solid #16a34a", borderRadius: 10 };
@@ -139,10 +139,10 @@ function MatrizTutorialGrid({
       ? { background: "#0e7490", border: "2px solid #06b6d4", borderRadius: 10 }
       : { background: "#93c5fd", border: "2px solid #3b82f6", borderRadius: 10 };
     return isGamified
-      ? { background: "rgba(255,255,255,0.08)", border: "2px solid rgba(255,255,255,0.15)", borderRadius: 10 }
+      ? { background: "rgba(255,255,255,0.1)", border: "2px solid rgba(255,255,255,0.25)", borderRadius: 10 }
       : isColorful
-      ? { background: "rgba(139,92,246,0.08)", border: "2px solid rgba(139,92,246,0.2)", borderRadius: 10 }
-      : { background: "rgba(26,39,68,0.06)", border: "2px solid rgba(26,39,68,0.15)", borderRadius: 10 };
+      ? { background: "#d4f7f0", border: "2px solid #7fe0d2", borderRadius: 10 }
+      : { background: "#e7ecf3", border: "2px solid #aebfd5", borderRadius: 10 };
   }
 
   const ringStyle: React.CSSProperties = flash === "green"
@@ -314,7 +314,7 @@ export function MatrizEspacial({ difficulty, theme, onComplete, alwaysReverse }:
   const rootBg: React.CSSProperties = isGamified
     ? { background: "linear-gradient(145deg, #0a1628 0%, #0d2244 45%, #132a52 70%, #081020 100%)" }
     : isColorful
-    ? { background: "linear-gradient(135deg, #f0e6ff 0%, #fce4f0 55%, #ffe8e0 100%)" }
+    ? { background: "linear-gradient(135deg, #e6fffb 0%, #d7f7f4 55%, #e0f7ff 100%)" }
     : { background: "linear-gradient(160deg, #ede8df 0%, #e4ddd0 55%, #dbd4c5 100%)" };
 
   const cardStyle: React.CSSProperties = isGamified
@@ -325,7 +325,7 @@ export function MatrizEspacial({ difficulty, theme, onComplete, alwaysReverse }:
   const labelColor = isGamified ? "rgba(255,255,255,0.7)" : "#5a4a3a";
   const progressEmptyColor = isGamified ? "rgba(255,255,255,0.12)" : "rgba(26,39,68,0.12)";
 
-  const activeIndicatorColor = isGamified ? "#22d3ee" : isColorful ? "#8b5cf6" : "#3b82f6";
+  const activeIndicatorColor = isGamified ? "#22d3ee" : isColorful ? "#14b8a6" : "#3b82f6";
   const inactiveIndicatorColor = isGamified ? "rgba(255,255,255,0.12)" : "rgba(26,39,68,0.12)";
 
   function cellStyleFor(idx: number): React.CSSProperties {
@@ -347,12 +347,12 @@ export function MatrizEspacial({ difficulty, theme, onComplete, alwaysReverse }:
     if (isActive) {
       // Brilho vibrante (glow) ao acender, em todos os temas.
       if (isGamified) return { background: "linear-gradient(150deg,#67e8f9,#22d3ee)", border: "2px solid #a5f3fc", borderRadius: R, boxShadow: "0 0 26px 6px rgba(34,211,238,0.85)" };
-      if (isColorful) return { background: "linear-gradient(150deg,#c4b5fd,#a78bfa)", border: "2px solid #ddd6fe", borderRadius: R, boxShadow: "0 0 26px 6px rgba(167,139,250,0.8)" };
+      if (isColorful) return { background: "linear-gradient(150deg,#5eead4,#2dd4bf)", border: "2px solid #99f6e4", borderRadius: R, boxShadow: "0 0 26px 6px rgba(45,212,191,0.8)" };
       return { background: "linear-gradient(150deg,#93c5fd,#60a5fa)", border: "2px solid #bfdbfe", borderRadius: R, boxShadow: "0 0 26px 6px rgba(96,165,250,0.75)" };
     }
     if (isUserSelected && phase === "recall") {
       if (isGamified) return { background: "linear-gradient(150deg,#22d3ee,#0e7490)", border: "2px solid #06b6d4", borderRadius: R, boxShadow: "0 0 14px rgba(34,211,238,0.45)" };
-      if (isColorful) return { background: "linear-gradient(150deg,#a78bfa,#7c3aed)", border: "2px solid #8b5cf6", borderRadius: R, boxShadow: "0 0 14px rgba(139,92,246,0.4)" };
+      if (isColorful) return { background: "linear-gradient(150deg,#2dd4bf,#0d9488)", border: "2px solid #14b8a6", borderRadius: R, boxShadow: "0 0 14px rgba(20,184,166,0.4)" };
       return { background: "linear-gradient(150deg,#93c5fd,#3b82f6)", border: "2px solid #3b82f6", borderRadius: R, boxShadow: "0 0 14px rgba(59,130,246,0.35)" };
     }
     // Célula inativa — "botão" tátil com profundidade (gradiente + brilho interno + sombra).
@@ -362,9 +362,9 @@ export function MatrizEspacial({ difficulty, theme, onComplete, alwaysReverse }:
       boxShadow: "inset 0 1px 0 rgba(255,255,255,0.14), 0 2px 6px rgba(0,0,0,0.35)",
     };
     if (isColorful) return {
-      background: "linear-gradient(150deg, #ffffff, #f3e8ff)",
-      border: "1.5px solid rgba(139,92,246,0.22)", borderRadius: R,
-      boxShadow: "inset 0 1px 0 rgba(255,255,255,0.85), 0 2px 7px rgba(139,92,246,0.13)",
+      background: "linear-gradient(150deg, #ffffff, #ccfbf1)",
+      border: "1.5px solid rgba(20,184,166,0.22)", borderRadius: R,
+      boxShadow: "inset 0 1px 0 rgba(255,255,255,0.85), 0 2px 7px rgba(20,184,166,0.13)",
     };
     return {
       background: "linear-gradient(150deg, #ffffff, #f1ece1)",
@@ -385,7 +385,7 @@ export function MatrizEspacial({ difficulty, theme, onComplete, alwaysReverse }:
           <span style={{
             fontSize: 12, fontWeight: 700, whiteSpace: "nowrap",
             color: activeIndicatorColor,
-            background: isGamified ? "rgba(34,211,238,0.12)" : isColorful ? "rgba(139,92,246,0.1)" : "rgba(59,130,246,0.08)",
+            background: isGamified ? "rgba(34,211,238,0.12)" : isColorful ? "rgba(20,184,166,0.1)" : "rgba(59,130,246,0.08)",
             border: `1px solid ${activeIndicatorColor}33`,
             padding: "4px 11px", borderRadius: 999,
           }}>
