@@ -40,8 +40,8 @@ function ballSpeed(d: number): number {
 
 const TOTAL_ROUNDS = 9;
 const BALL_RADIUS = 22;
-const AREA_W = 320;
-const AREA_H = 260;
+const AREA_W = 400;
+const AREA_H = 360;
 
 interface Ball {
   id: number;

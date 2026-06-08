@@ -379,7 +379,7 @@ function TutorialShowStep({ theme, onDone }: { theme: Theme; onDone: () => void 
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
-  const containerPx = 200;
+  const containerPx = 260;
   const playerPos = { r: 0, c: 0 };
   const explored = new Set([cellKey(0, 0)]);
 
@@ -418,7 +418,7 @@ function TutorialInteractStep({ theme, onDone }: { theme: Theme; onDone: () => v
   const playerRef = useRef({ r: 0, c: 0 });
   playerRef.current = player;
 
-  const containerPx = 200;
+  const containerPx = 260;
   const size = 5;
 
   const tryMove = useCallback(
@@ -615,7 +615,7 @@ export function Labirinto({ difficulty, theme, onComplete }: LabirintoProps) {
     window.addEventListener("resize", onResize);
     return () => window.removeEventListener("resize", onResize);
   }, []);
-  const containerPx = Math.min(windowWidth - 24, 420);
+  const containerPx = Math.min(windowWidth - 24, 480);
 
   // ── Timer ───────────────────────────────────────────────────────────────
   useEffect(() => {
