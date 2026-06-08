@@ -36,11 +36,12 @@ export default function PlanoPage() {
   const [selectedDomains, setSelectedDomains] = useState<Domain[]>([]);
   const [selectedExercises, setSelectedExercises] = useState<string[]>([]);
   const [exerciseSettings, setExerciseSettings] = useState<Record<string, Record<string, unknown>>>({});
+  const [exerciseLevels, setExerciseLevels] = useState<Record<string, number>>({});
   const [sessionDuration, setSessionDuration] = useState(30);
   const [frequency, setFrequency] = useState(3);
 
   useEffect(() => {
-    fetch(`/api/patients/${patientId}`)
+    fetch(`/api/patients/${patientId}?config=true`)
       .then(r => r.json())
       .then(data => {
         const plan = data.patient?.trainingPlans?.[0];
@@ -58,6 +59,11 @@ export default function PlanoPage() {
           setSelectedDomains(["memory", "attention"]);
           setSelectedExercises(["span-numerico", "stroop-task"]);
         }
+        // Níveis atuais de dificuldade de cada exercício (definidos pelo terapeuta ou pela progressão).
+        const cfgs: { exerciseId: string; currentDifficulty: number }[] = data.patient?.exerciseConfigs ?? [];
+        const levels: Record<string, number> = {};
+        cfgs.forEach(c => { levels[c.exerciseId] = c.currentDifficulty; });
+        setExerciseLevels(levels);
       })
       .catch(() => {
         setSelectedDomains(["memory", "attention"]);
@@ -114,6 +120,12 @@ export default function PlanoPage() {
             sessionDuration,
             frequency,
           },
+          // Nível inicial de cada exercício escolhido pelo terapeuta (Span gerencia o seu próprio nível).
+          exerciseLevels: Object.fromEntries(
+            selectedExercises
+              .filter((exId) => !SPAN_IDS.includes(exId))
+              .map((exId) => [exId, exerciseLevels[exId] ?? 1])
+          ),
         }),
       });
 
@@ -224,6 +236,27 @@ export default function PlanoPage() {
                         </div>
                       </label>
                       <ExerciseScienceCard exerciseId={exId} />
+
+                      {/* Nível de dificuldade inicial — escolhido pelo terapeuta (1 a 10) */}
+                      {selectedExercises.includes(exId) && !SPAN_IDS.includes(exId) && (
+                        <div className="mt-2 ml-7 mr-1 p-3 rounded-lg bg-emerald-50 border border-emerald-200">
+                          <div className="flex items-center justify-between gap-2 mb-1">
+                            <span className="text-[11px] font-bold text-emerald-700 uppercase tracking-wide">🎚️ Nível inicial</span>
+                            <span className="text-sm font-bold text-emerald-800 tabular-nums">
+                              {exerciseLevels[exId] ?? 1} <span className="text-emerald-500/70 font-normal">/ 10</span>
+                            </span>
+                          </div>
+                          <input
+                            type="range" min={1} max={10} step={1}
+                            value={exerciseLevels[exId] ?? 1}
+                            onChange={(e) => setExerciseLevels((prev) => ({ ...prev, [exId]: Number(e.target.value) }))}
+                            className="w-full accent-emerald-600 cursor-pointer"
+                          />
+                          <p className="text-[10px] text-emerald-600/80 pt-1">
+                            Começa neste nível e sobe/desce sozinho conforme o paciente acerta ou erra.
+                          </p>
+                        </div>
+                      )}
 
                       {/* Config do terapeuta (Span) — fixa para o paciente */}
                       {SPAN_IDS.includes(exId) && selectedExercises.includes(exId) && (() => {

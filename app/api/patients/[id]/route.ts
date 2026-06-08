@@ -28,6 +28,8 @@ const updateSchema = z.object({
     sessionDuration: z.number().min(5).max(120),
     frequency: z.number().min(1).max(7),
   }).optional(),
+  // Níveis de dificuldade definidos pelo terapeuta (exerciseId -> 1..10) → upsert em ExerciseConfig.
+  exerciseLevels: z.record(z.number().int().min(1).max(10)).optional(),
 });
 
 export const GET = withApiHandler(async (
@@ -119,7 +121,7 @@ export const PATCH = withApiHandler(async (
     return NextResponse.json({ error: result.error.errors }, { status: 400 });
   }
 
-  const { trainingPlan, ...patientUpdates } = result.data;
+  const { trainingPlan, exerciseLevels, ...patientUpdates } = result.data;
 
   if (Object.keys(patientUpdates).length > 0) {
     const data: Record<string, unknown> = { ...patientUpdates };
@@ -145,6 +147,20 @@ export const PATCH = withApiHandler(async (
         },
       }),
     ]);
+  }
+
+  // Níveis escolhidos pelo terapeuta → grava como dificuldade atual de cada exercício.
+  // A partir daí a progressão automática (lib/adaptive.ts) continua a ajustar sozinha.
+  if (exerciseLevels && Object.keys(exerciseLevels).length > 0) {
+    await prisma.$transaction(
+      Object.entries(exerciseLevels).map(([exerciseId, level]) =>
+        prisma.exerciseConfig.upsert({
+          where: { patientId_exerciseId: { patientId: id, exerciseId } },
+          update: { currentDifficulty: level },
+          create: { patientId: id, exerciseId, currentDifficulty: level },
+        })
+      )
+    );
   }
 
   return NextResponse.json({ success: true });
