@@ -91,7 +91,11 @@ export function ExerciseWrapper({
   const s = themeStyles[theme];
 
   return (
-    <div className={`${s.bg} p-4 flex items-center justify-center`}>
+    <div className={`${s.bg} p-4 flex items-center justify-center relative overflow-hidden`}>
+      {/* Cérebro discreto de fundo (decorativo) */}
+      <div aria-hidden className="pointer-events-none select-none absolute inset-0 flex items-center justify-center">
+        <span style={{ fontSize: "min(80vw, 540px)", lineHeight: 1, opacity: 0.045, filter: "blur(0.5px)" }}>🧠</span>
+      </div>
       <AnimatePresence mode="wait">
         {phase === "instructions" && (
           <motion.div

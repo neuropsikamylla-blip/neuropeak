@@ -651,7 +651,7 @@ export function DesafioSupermercado({ difficulty, theme, onComplete, mode = "lei
 
             {/* ── CARRINHO à DIREITA (coluna maior) ── */}
             {(() => {
-              const ITEM_PX = 24;
+              const ITEM_PX = 34;
               return (
                 <div style={{
                   flexShrink: 0, width: "40%", maxWidth: 280, minWidth: 150,
