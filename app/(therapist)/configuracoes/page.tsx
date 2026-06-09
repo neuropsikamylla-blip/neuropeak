@@ -104,15 +104,15 @@ export default function ConfiguracoesPage() {
   return (
     <div className="max-w-2xl mx-auto space-y-6">
       <div>
-        <h1 className="text-2xl font-bold text-gray-900">Configurações</h1>
-        <p className="text-gray-500 text-sm mt-1">Gerencie suas informações e credenciais de acesso</p>
+        <h1 className="text-2xl font-bold text-slate-100">Configurações</h1>
+        <p className="text-slate-400 text-sm mt-1">Gerencie suas informações e credenciais de acesso</p>
       </div>
 
       {/* Perfil */}
       <Card>
         <CardHeader>
           <div className="flex items-center gap-2">
-            <User className="w-5 h-5 text-blue-600" />
+            <User className="w-5 h-5 text-blue-400" />
             <CardTitle className="text-base">Dados do Perfil</CardTitle>
           </div>
           <CardDescription>Nome, email e clínica exibidos na plataforma</CardDescription>
@@ -161,7 +161,7 @@ export default function ConfiguracoesPage() {
       <Card>
         <CardHeader>
           <div className="flex items-center gap-2">
-            <Lock className="w-5 h-5 text-blue-600" />
+            <Lock className="w-5 h-5 text-blue-400" />
             <CardTitle className="text-base">Alterar Senha</CardTitle>
           </div>
           <CardDescription>Use uma senha forte com pelo menos 8 caracteres</CardDescription>
@@ -210,7 +210,7 @@ export default function ConfiguracoesPage() {
       <Card>
         <CardHeader>
           <div className="flex items-center gap-2">
-            <Package className="w-5 h-5 text-blue-600" />
+            <Package className="w-5 h-5 text-blue-400" />
             <CardTitle className="text-base">Licenças de Pacientes</CardTitle>
           </div>
           <CardDescription>Resgatar um código para adicionar novos pacientes à plataforma</CardDescription>
@@ -260,7 +260,7 @@ export default function ConfiguracoesPage() {
                 onChange={(e) => setLicenseCode(e.target.value.toUpperCase())}
                 className="mt-1 font-mono"
               />
-              <p className="text-xs text-gray-500 mt-1">
+              <p className="text-xs text-slate-400 mt-1">
                 O código é fornecido pela NeuroPeak após a compra de licenças.
               </p>
             </div>
@@ -275,39 +275,39 @@ export default function ConfiguracoesPage() {
       <Card>
         <CardHeader>
           <div className="flex items-center gap-2">
-            <ShieldCheck className="w-5 h-5 text-blue-600" />
+            <ShieldCheck className="w-5 h-5 text-blue-400" />
             <CardTitle className="text-base">Verificação de CRP</CardTitle>
           </div>
           <CardDescription>Obrigatório para acessar o módulo Mundo Interior</CardDescription>
         </CardHeader>
         <CardContent>
           {crpStatus === "verified" && (
-            <div className="flex items-center gap-2 p-3 rounded-xl bg-green-50 border border-green-200">
-              <CheckCircle2 className="w-5 h-5 text-green-600" />
+            <div className="flex items-center gap-2 p-3 rounded-xl bg-green-500/10 border border-green-500/30">
+              <CheckCircle2 className="w-5 h-5 text-green-400" />
               <div>
-                <p className="text-sm font-semibold text-green-800">CRP verificado</p>
-                <p className="text-xs text-green-700">Acesso ao Mundo Interior liberado.</p>
+                <p className="text-sm font-semibold text-green-200">CRP verificado</p>
+                <p className="text-xs text-green-300/80">Acesso ao Mundo Interior liberado.</p>
               </div>
             </div>
           )}
 
           {crpStatus === "pending" && (
-            <div className="flex items-center gap-2 p-3 rounded-xl bg-yellow-50 border border-yellow-200">
-              <Clock className="w-5 h-5 text-yellow-600" />
+            <div className="flex items-center gap-2 p-3 rounded-xl bg-yellow-500/10 border border-yellow-500/30">
+              <Clock className="w-5 h-5 text-yellow-400" />
               <div>
-                <p className="text-sm font-semibold text-yellow-800">Em análise</p>
-                <p className="text-xs text-yellow-700">Seu documento foi enviado e está aguardando aprovação.</p>
+                <p className="text-sm font-semibold text-yellow-200">Em análise</p>
+                <p className="text-xs text-yellow-300/80">Seu documento foi enviado e está aguardando aprovação.</p>
               </div>
             </div>
           )}
 
           {crpStatus === "rejected" && (
             <div className="space-y-3">
-              <div className="flex items-center gap-2 p-3 rounded-xl bg-red-50 border border-red-200">
-                <XCircle className="w-5 h-5 text-red-500" />
+              <div className="flex items-center gap-2 p-3 rounded-xl bg-red-500/10 border border-red-500/30">
+                <XCircle className="w-5 h-5 text-red-400" />
                 <div>
-                  <p className="text-sm font-semibold text-red-800">Verificação rejeitada</p>
-                  <p className="text-xs text-red-700">Envie um novo documento para solicitar revisão.</p>
+                  <p className="text-sm font-semibold text-red-200">Verificação rejeitada</p>
+                  <p className="text-xs text-red-300/80">Envie um novo documento para solicitar revisão.</p>
                 </div>
               </div>
             </div>
@@ -350,18 +350,18 @@ export default function ConfiguracoesPage() {
               </div>
               <div>
                 <Label>Documento comprobatório</Label>
-                <p className="text-xs text-gray-500 mb-2">Foto ou PDF da carteirinha do CRP ou certidão do CFP (máx. 5MB)</p>
+                <p className="text-xs text-slate-400 mb-2">Foto ou PDF da carteirinha do CRP ou certidão do CFP (máx. 5MB)</p>
                 <div
-                  className="border-2 border-dashed border-gray-200 rounded-xl p-4 text-center cursor-pointer hover:border-blue-300 transition-colors"
+                  className="border-2 border-dashed border-white/15 rounded-xl p-4 text-center cursor-pointer hover:border-blue-400/50 transition-colors"
                   onClick={() => fileRef.current?.click()}
                 >
                   {crpFile ? (
-                    <p className="text-sm text-blue-700 font-medium">{crpFile.name}</p>
+                    <p className="text-sm text-blue-300 font-medium">{crpFile.name}</p>
                   ) : (
                     <>
-                      <Upload className="w-6 h-6 text-gray-400 mx-auto mb-1" />
-                      <p className="text-sm text-gray-500">Clique para selecionar</p>
-                      <p className="text-xs text-gray-400">JPG, PNG ou PDF</p>
+                      <Upload className="w-6 h-6 text-slate-400 mx-auto mb-1" />
+                      <p className="text-sm text-slate-400">Clique para selecionar</p>
+                      <p className="text-xs text-slate-500">JPG, PNG ou PDF</p>
                     </>
                   )}
                 </div>
@@ -373,7 +373,7 @@ export default function ConfiguracoesPage() {
                   onChange={(e) => setCrpFile(e.target.files?.[0] ?? null)}
                 />
               </div>
-              <div className="flex items-start gap-2 p-3 rounded-xl bg-gray-50 border border-gray-200">
+              <div className="flex items-start gap-2 p-3 rounded-xl bg-white/5 border border-white/10">
                 <input
                   type="checkbox"
                   id="terms"
@@ -381,7 +381,7 @@ export default function ConfiguracoesPage() {
                   onChange={(e) => setCrpForm({ ...crpForm, acceptedTerms: e.target.checked })}
                   className="mt-0.5 flex-shrink-0"
                 />
-                <label htmlFor="terms" className="text-xs text-gray-700 leading-relaxed cursor-pointer">
+                <label htmlFor="terms" className="text-xs text-slate-300 leading-relaxed cursor-pointer">
                   Declaro ser psicólogo(a) devidamente registrado(a) no CRP e que utilizarei o módulo Mundo Interior exclusivamente em sessões clínicas mediadas por mim. Estou ciente de que a ferramenta é um recurso auxiliar e não substitui psicoterapia, não realiza diagnóstico e não deve ser usada de forma autônoma pelo paciente.
                 </label>
               </div>
@@ -416,7 +416,7 @@ function AdminLink({ email }: { email?: string }) {
   return (
     <a
       href="/admin"
-      className="flex items-center gap-2 text-xs text-gray-400 hover:text-gray-600 transition-colors mt-2"
+      className="flex items-center gap-2 text-xs text-slate-400 hover:text-slate-200 transition-colors mt-2"
     >
       <ShieldCheck className="w-3.5 h-3.5" />
       Painel de verificação de CRP

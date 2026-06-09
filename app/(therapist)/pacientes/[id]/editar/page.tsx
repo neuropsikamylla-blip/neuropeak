@@ -96,7 +96,7 @@ export default function EditarPacientePage() {
   })();
 
   if (loading) {
-    return <div className="p-8 text-center text-gray-400 text-sm animate-pulse">Carregando...</div>;
+    return <div className="p-8 text-center text-slate-400 text-sm animate-pulse">Carregando...</div>;
   }
 
   return (
@@ -106,8 +106,8 @@ export default function EditarPacientePage() {
           <Link href={`/pacientes/${patientId}`} aria-label="Voltar"><ArrowLeft className="w-5 h-5" /></Link>
         </Button>
         <div>
-          <h1 className="text-xl font-bold text-gray-900">Editar paciente</h1>
-          <p className="text-sm text-gray-500">{form.name}</p>
+          <h1 className="text-xl font-bold text-slate-100">Editar paciente</h1>
+          <p className="text-sm text-slate-400">{form.name}</p>
         </div>
       </div>
 
@@ -125,7 +125,7 @@ export default function EditarPacientePage() {
               <div className="flex items-center gap-2 mt-1">
                 <Input id="birthDate" type="date" value={form.birthDate} onChange={(e) => handleChange("birthDate", e.target.value)} required />
                 {age !== null && (
-                  <span className="text-sm text-gray-500 whitespace-nowrap">{age} anos</span>
+                  <span className="text-sm text-slate-400 whitespace-nowrap">{age} anos</span>
                 )}
               </div>
             </div>
@@ -179,7 +179,7 @@ export default function EditarPacientePage() {
               <SelectTrigger>
                 <SelectValue />
               </SelectTrigger>
-              <SelectContent>
+              <SelectContent className="dark">
                 <SelectItem value="CLINICAL">Clínico — interface limpa e profissional</SelectItem>
                 <SelectItem value="COLORFUL">Colorido — vibrante, indicado para crianças</SelectItem>
                 <SelectItem value="GAMIFIED">Gamificado — escuro e dinâmico, para adolescentes</SelectItem>

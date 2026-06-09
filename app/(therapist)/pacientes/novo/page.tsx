@@ -130,18 +130,18 @@ export default function NovoPacientePage() {
   if (needsLicense) {
     return (
       <div className="max-w-lg mx-auto">
-        <Card className="border-amber-200 shadow-lg">
+        <Card className="border-amber-500/30 shadow-lg">
           <CardHeader>
             <div className="flex items-center gap-2">
-              <Package className="w-5 h-5 text-amber-600" />
-              <CardTitle className="text-amber-700">Licença necessária</CardTitle>
+              <Package className="w-5 h-5 text-amber-400" />
+              <CardTitle className="text-amber-300">Licença necessária</CardTitle>
             </div>
           </CardHeader>
           <CardContent className="space-y-4">
             {requestingSent ? (
-              <div className="bg-green-50 rounded-xl p-4 border border-green-200 text-center space-y-2">
-                <p className="text-green-700 font-medium">Solicitação enviada!</p>
-                <p className="text-sm text-gray-600">
+              <div className="bg-green-500/10 rounded-xl p-4 border border-green-500/30 text-center space-y-2">
+                <p className="text-green-300 font-medium">Solicitação enviada!</p>
+                <p className="text-sm text-slate-300">
                   Entraremos em contato em breve com um código de licença para ativar a criação de
                   novos pacientes.
                 </p>
@@ -151,12 +151,12 @@ export default function NovoPacientePage() {
               </div>
             ) : (
               <>
-                <p className="text-sm text-gray-700">
+                <p className="text-sm text-slate-200">
                   Você atingiu o limite de pacientes do seu plano atual. Para adicionar um novo
                   paciente, é necessário adquirir uma licença.
                 </p>
-                <div className="bg-amber-50 rounded-xl p-4 border border-amber-200">
-                  <p className="text-xs text-amber-700 font-medium">
+                <div className="bg-amber-500/10 rounded-xl p-4 border border-amber-500/30">
+                  <p className="text-xs text-amber-200 font-medium">
                     Ao clicar em &quot;Solicitar licença&quot;, nossa equipe receberá sua solicitação e
                     enviará um código para você resgatar em <strong>Configurações → Licenças</strong>.
                   </p>
@@ -185,38 +185,38 @@ export default function NovoPacientePage() {
   if (created) {
     return (
       <div className="max-w-lg mx-auto">
-        <Card className="border-green-200 shadow-lg">
+        <Card className="border-green-500/30 shadow-lg">
           <CardHeader>
-            <CardTitle className="text-green-700">Paciente criado com sucesso!</CardTitle>
+            <CardTitle className="text-green-300">Paciente criado com sucesso!</CardTitle>
           </CardHeader>
           <CardContent className="space-y-4">
-            <div className="bg-green-50 rounded-xl p-4 border border-green-200">
-              <p className="text-sm text-green-700 font-medium mb-3">
+            <div className="bg-green-500/10 rounded-xl p-4 border border-green-500/30">
+              <p className="text-sm text-green-300 font-medium mb-3">
                 Compartilhe estas informações de acesso com o paciente <strong>{created.name}</strong>:
               </p>
               <div className="space-y-2">
                 {created.patientCode && (
-                  <div className="flex items-center justify-between bg-white rounded-lg p-3 border">
+                  <div className="flex items-center justify-between bg-[#0f2147] rounded-lg p-3 border border-white/10">
                     <div>
-                      <p className="text-xs text-gray-500">Código do Paciente</p>
-                      <p className="font-mono font-bold text-2xl tracking-widest text-blue-700">{created.patientCode}</p>
+                      <p className="text-xs text-slate-400">Código do Paciente</p>
+                      <p className="font-mono font-bold text-2xl tracking-widest text-blue-300">{created.patientCode}</p>
                     </div>
                     <Button variant="ghost" size="sm" onClick={() => { navigator.clipboard.writeText(created.patientCode!); }}>
                       <Copy className="w-4 h-4" />
                     </Button>
                   </div>
                 )}
-                <div className="flex items-center justify-between bg-white rounded-lg p-3 border">
+                <div className="flex items-center justify-between bg-[#0f2147] rounded-lg p-3 border border-white/10">
                   <div>
-                    <p className="text-xs text-gray-500">PIN de acesso</p>
-                    <p className="font-mono font-bold text-2xl tracking-widest text-blue-600">{created.pin}</p>
+                    <p className="text-xs text-slate-400">PIN de acesso</p>
+                    <p className="font-mono font-bold text-2xl tracking-widest text-blue-300">{created.pin}</p>
                   </div>
                   <Button variant="ghost" size="sm" onClick={copyPin}>
-                    {pinCopied ? <Check className="w-4 h-4 text-green-500" /> : <Copy className="w-4 h-4" />}
+                    {pinCopied ? <Check className="w-4 h-4 text-green-400" /> : <Copy className="w-4 h-4" />}
                   </Button>
                 </div>
               </div>
-              <p className="text-xs text-orange-600 mt-3 font-medium">
+              <p className="text-xs text-orange-300 mt-3 font-medium">
                 ⚠️ Anote o PIN agora — ele não pode ser recuperado depois!
               </p>
             </div>
@@ -249,8 +249,8 @@ export default function NovoPacientePage() {
           <Link href="/pacientes" aria-label="Voltar"><ArrowLeft className="w-5 h-5" /></Link>
         </Button>
         <div>
-          <h1 className="text-2xl font-bold text-gray-900">Novo Paciente</h1>
-          <p className="text-sm text-gray-500">Preencha os dados do paciente</p>
+          <h1 className="text-2xl font-bold text-slate-100">Novo Paciente</h1>
+          <p className="text-sm text-slate-400">Preencha os dados do paciente</p>
         </div>
       </div>
 
@@ -261,14 +261,14 @@ export default function NovoPacientePage() {
             <div className="sm:col-span-2">
               <Label htmlFor="name">Nome completo *</Label>
               <Input id="name" value={form.name} onChange={(e) => handleChange("name", e.target.value)} placeholder="Nome do paciente" className="mt-1" />
-              {errors.name && <p className="text-red-500 text-xs mt-1">{errors.name}</p>}
+              {errors.name && <p className="text-red-400 text-xs mt-1">{errors.name}</p>}
             </div>
             <div>
               <Label htmlFor="birthDate">Data de nascimento *</Label>
               <div className="flex items-center gap-2 mt-1">
                 <Input id="birthDate" type="date" value={form.birthDate} onChange={(e) => handleChange("birthDate", e.target.value)} />
                 {form.birthDate && (
-                  <span className="text-sm text-gray-500 whitespace-nowrap">
+                  <span className="text-sm text-slate-400 whitespace-nowrap">
                     {(() => {
                       const today = new Date();
                       const birth = new Date(form.birthDate);
@@ -280,7 +280,7 @@ export default function NovoPacientePage() {
                   </span>
                 )}
               </div>
-              {errors.birthDate && <p className="text-red-500 text-xs mt-1">{errors.birthDate}</p>}
+              {errors.birthDate && <p className="text-red-400 text-xs mt-1">{errors.birthDate}</p>}
             </div>
             <div>
               <Label htmlFor="education">Escolaridade</Label>
@@ -326,7 +326,7 @@ export default function NovoPacientePage() {
         <Card>
           <CardHeader>
             <CardTitle className="text-base">Tema Visual</CardTitle>
-            <p className="text-sm text-gray-500">Escolha a interface que o paciente verá durante o treinamento</p>
+            <p className="text-sm text-slate-400">Escolha a interface que o paciente verá durante o treinamento</p>
           </CardHeader>
           <CardContent>
             <div className="grid grid-cols-3 gap-3">

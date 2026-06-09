@@ -92,7 +92,7 @@ export default async function PatientProfilePage({ params }: { params: Promise<{
             <Link href="/pacientes" aria-label="Voltar"><ArrowLeft className="w-5 h-5" /></Link>
           </Button>
           <div>
-            <h1 className="text-2xl font-bold text-gray-900">{patient.name}</h1>
+            <h1 className="text-2xl font-bold text-slate-100">{patient.name}</h1>
             <div className="flex items-center gap-2 mt-1">
               <Badge variant="secondary">{age} anos</Badge>
               <Badge variant="info">{patient.theme}</Badge>
@@ -131,22 +131,22 @@ export default async function PatientProfilePage({ params }: { params: Promise<{
       {/* Info cards */}
       <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
         <Card><CardContent className="p-4">
-          <p className="text-xs text-gray-500">Data de Nascimento</p>
-          <p className="font-semibold text-gray-900">{formatDate(patient.birthDate)}</p>
+          <p className="text-xs text-slate-400">Data de Nascimento</p>
+          <p className="font-semibold text-slate-100">{formatDate(patient.birthDate)}</p>
         </CardContent></Card>
         <Card><CardContent className="p-4">
-          <p className="text-xs text-gray-500">Total de Sessões</p>
-          <p className="font-semibold text-gray-900">{sessions.length}</p>
+          <p className="text-xs text-slate-400">Total de Sessões</p>
+          <p className="font-semibold text-slate-100">{sessions.length}</p>
         </CardContent></Card>
         <Card><CardContent className="p-4">
-          <p className="text-xs text-gray-500">Adesão</p>
-          <p className={`font-semibold ${adherence >= 70 ? "text-green-600" : "text-orange-600"}`}>{adherence}%</p>
+          <p className="text-xs text-slate-400">Adesão</p>
+          <p className={`font-semibold ${adherence >= 70 ? "text-green-400" : "text-orange-300"}`}>{adherence}%</p>
         </CardContent></Card>
         <PatientCredentials patientId={patient.id} patientCode={patient.patientCode} />
       </div>
 
       <Tabs defaultValue="overview">
-        <TabsList className="bg-gray-100">
+        <TabsList className="bg-white/5">
           <TabsTrigger value="overview">Visão Geral</TabsTrigger>
           <TabsTrigger value="sessions">Sessões</TabsTrigger>
           <TabsTrigger value="clinical">Dados Clínicos</TabsTrigger>
@@ -161,9 +161,9 @@ export default async function PatientProfilePage({ params }: { params: Promise<{
                 <DomainRadarChart scores={domainScores} height={260} />
                 <div className="grid grid-cols-2 gap-2 mt-4">
                   {domainScores.map((ds) => (
-                    <div key={ds.domain} className="flex justify-between items-center p-2 bg-gray-50 rounded-lg">
-                      <span className="text-sm text-gray-600">{DOMAIN_LABELS[ds.domain]}</span>
-                      <span className={`font-bold text-sm ${ds.score >= 70 ? "text-green-600" : ds.score >= 50 ? "text-yellow-600" : "text-red-500"}`}>
+                    <div key={ds.domain} className="flex justify-between items-center p-2 bg-white/5 rounded-lg">
+                      <span className="text-sm text-slate-300">{DOMAIN_LABELS[ds.domain]}</span>
+                      <span className={`font-bold text-sm ${ds.score >= 70 ? "text-green-400" : ds.score >= 50 ? "text-yellow-400" : "text-red-400"}`}>
                         {ds.score}
                       </span>
                     </div>
@@ -178,7 +178,7 @@ export default async function PatientProfilePage({ params }: { params: Promise<{
                 {chartData.length > 0 ? (
                   <EvolutionChart data={chartData} height={300} />
                 ) : (
-                  <div className="flex items-center justify-center h-48 text-gray-400 text-sm">
+                  <div className="flex items-center justify-center h-48 text-slate-400 text-sm">
                     Sem dados suficientes ainda
                   </div>
                 )}
@@ -191,7 +191,7 @@ export default async function PatientProfilePage({ params }: { params: Promise<{
               <CardHeader><CardTitle className="text-base">Distribuição do Plano de Treino</CardTitle></CardHeader>
               <CardContent>
                 <DistributionChart counts={planDistribution} />
-                <p className="text-xs text-gray-400 mt-3">
+                <p className="text-xs text-slate-400 mt-3">
                   {planExerciseIds.length} exercício{planExerciseIds.length !== 1 ? "s" : ""} no plano ativo.
                 </p>
               </CardContent>
@@ -202,7 +202,7 @@ export default async function PatientProfilePage({ params }: { params: Promise<{
             <Card>
               <CardHeader><CardTitle className="text-base">Objetivos do Programa</CardTitle></CardHeader>
               <CardContent>
-                <p className="text-gray-700 text-sm">{patient.therapeuticGoals}</p>
+                <p className="text-slate-300 text-sm">{patient.therapeuticGoals}</p>
               </CardContent>
             </Card>
           )}
@@ -213,12 +213,12 @@ export default async function PatientProfilePage({ params }: { params: Promise<{
             <CardHeader><CardTitle className="text-base">Histórico de Sessões</CardTitle></CardHeader>
             <CardContent>
               {sessions.length === 0 ? (
-                <p className="text-gray-500 text-sm text-center py-8">Nenhuma sessão realizada ainda.</p>
+                <p className="text-slate-400 text-sm text-center py-8">Nenhuma sessão realizada ainda.</p>
               ) : (
                 <div className="overflow-x-auto">
                   <table className="w-full text-sm">
                     <thead>
-                      <tr className="border-b text-gray-500">
+                      <tr className="border-b text-slate-400">
                         <th className="text-left pb-2">Data</th>
                         <th className="text-left pb-2">Exercício</th>
                         <th className="text-left pb-2">Domínio</th>
@@ -229,15 +229,15 @@ export default async function PatientProfilePage({ params }: { params: Promise<{
                     </thead>
                     <tbody>
                       {sessions.slice(0, 20).map((s, i) => (
-                        <tr key={i} className="border-b border-gray-50 hover:bg-gray-50">
-                          <td className="py-2 text-gray-600">{formatDateTime(s.completedAt)}</td>
-                          <td className="py-2 font-medium text-gray-800">{s.exerciseId}</td>
+                        <tr key={i} className="border-b border-white/5 hover:bg-white/5">
+                          <td className="py-2 text-slate-300">{formatDateTime(s.completedAt)}</td>
+                          <td className="py-2 font-medium text-slate-100">{s.exerciseId}</td>
                           <td className="py-2">
                             <Badge variant="secondary" className="text-xs">{DOMAIN_LABELS[s.domain as Domain]}</Badge>
                           </td>
-                          <td className="py-2 text-right font-bold text-blue-600">{Math.round(s.score)}</td>
+                          <td className="py-2 text-right font-bold text-blue-300">{Math.round(s.score)}</td>
                           <td className="py-2 text-right">{Math.round(s.accuracy * 100)}%</td>
-                          <td className="py-2 text-right text-gray-500">{formatDuration(s.duration)}</td>
+                          <td className="py-2 text-right text-slate-400">{formatDuration(s.duration)}</td>
                         </tr>
                       ))}
                     </tbody>
@@ -259,8 +259,8 @@ export default async function PatientProfilePage({ params }: { params: Promise<{
             ].map(({ label, value }) => value && (
               <Card key={label}>
                 <CardContent className="p-4">
-                  <p className="text-xs text-gray-500 mb-1">{label}</p>
-                  <p className="text-gray-800 font-medium">{value}</p>
+                  <p className="text-xs text-slate-400 mb-1">{label}</p>
+                  <p className="text-slate-100 font-medium">{value}</p>
                 </CardContent>
               </Card>
             ))}
@@ -268,8 +268,8 @@ export default async function PatientProfilePage({ params }: { params: Promise<{
             {patient.medications && (
               <Card className="md:col-span-2">
                 <CardContent className="p-4">
-                  <p className="text-xs text-gray-500 mb-1">Medicamentos</p>
-                  <p className="text-gray-800 whitespace-pre-line">{patient.medications}</p>
+                  <p className="text-xs text-slate-400 mb-1">Medicamentos</p>
+                  <p className="text-slate-100 whitespace-pre-line">{patient.medications}</p>
                 </CardContent>
               </Card>
             )}
@@ -277,8 +277,8 @@ export default async function PatientProfilePage({ params }: { params: Promise<{
             {patient.clinicalNotes && (
               <Card className="md:col-span-2">
                 <CardContent className="p-4">
-                  <p className="text-xs text-gray-500 mb-1">Notas Clínicas</p>
-                  <p className="text-gray-800 whitespace-pre-line">{patient.clinicalNotes}</p>
+                  <p className="text-xs text-slate-400 mb-1">Notas Clínicas</p>
+                  <p className="text-slate-100 whitespace-pre-line">{patient.clinicalNotes}</p>
                 </CardContent>
               </Card>
             )}
@@ -290,14 +290,14 @@ export default async function PatientProfilePage({ params }: { params: Promise<{
             <CardHeader><CardTitle className="text-base">Conquistas Desbloqueadas</CardTitle></CardHeader>
             <CardContent>
               {typedAchievements.length === 0 ? (
-                <p className="text-gray-500 text-sm text-center py-8">Nenhuma conquista ainda.</p>
+                <p className="text-slate-400 text-sm text-center py-8">Nenhuma conquista ainda.</p>
               ) : (
                 <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-3">
                   {typedAchievements.map((a) => (
-                    <div key={a.id} className="flex flex-col items-center p-4 bg-yellow-50 border-2 border-yellow-200 rounded-xl text-center">
+                    <div key={a.id} className="flex flex-col items-center p-4 bg-yellow-500/10 border-2 border-yellow-500/30 rounded-xl text-center">
                       <span className="text-3xl mb-2">{a.icon}</span>
-                      <p className="font-semibold text-sm text-gray-800">{a.title}</p>
-                      <p className="text-xs text-gray-500 mt-1">{formatDate(a.unlockedAt)}</p>
+                      <p className="font-semibold text-sm text-slate-100">{a.title}</p>
+                      <p className="text-xs text-slate-400 mt-1">{formatDate(a.unlockedAt)}</p>
                     </div>
                   ))}
                 </div>
