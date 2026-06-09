@@ -5,6 +5,7 @@ import { Brain, ChevronDown } from "lucide-react";
 import { EXERCISE_DEFINITIONS, DOMAIN_LABELS, DOMAIN_COLORS, DOMAIN_DESCRIPTIONS, type Domain } from "@/types";
 import { DOMAIN_ORDER, DOMAIN_ICONS } from "@/components/plano/DomainSelector";
 import { DOMAIN_SUBDOMAINS, DOMAIN_COUNTS } from "@/lib/domain-taxonomy";
+import { ExerciseIcon } from "@/components/ExerciseIcon";
 
 export default function TreinoCognitivoPage() {
   // Domínio em foco no catálogo (clicar num card expande seus exercícios).
@@ -122,7 +123,7 @@ export default function TreinoCognitivoPage() {
                             key={ex.id}
                             className="flex items-start gap-3 rounded-xl bg-white border border-gray-200 p-3"
                           >
-                            <span className="text-2xl leading-none mt-0.5">{ex.icon}</span>
+                            <ExerciseIcon id={ex.id} emoji={ex.icon} size={32} className="mt-0.5" />
                             <div className="min-w-0">
                               <p className="font-medium text-sm text-gray-800">{ex.name}</p>
                               <p className="text-xs text-gray-500 leading-snug">

@@ -4,6 +4,7 @@ import { useState } from "react";
 import { X, SlidersHorizontal, ChevronUp, ChevronDown } from "lucide-react";
 import { DEFAULT_SPAN_SETTINGS, type SpanSettings } from "@/components/exercises/memory/SpanNumerico";
 import { EXERCISE_SUBDOMAIN, EXERCISE_SUBDOMAIN_ID } from "@/lib/domain-taxonomy";
+import { ExerciseIcon } from "@/components/ExerciseIcon";
 import { SubdomainTag } from "./ExerciseTags";
 
 interface ExerciseCardProps {
@@ -57,7 +58,7 @@ export function ExerciseCard({
           </button>
         </div>
 
-        <span className="text-xl leading-none shrink-0">{icon}</span>
+        <ExerciseIcon id={id} emoji={icon} size={28} />
         <div className="min-w-0 flex-1">
           <p className="text-sm font-semibold text-gray-800 truncate">{name}</p>
           <div className="flex items-center gap-2 mt-0.5">
