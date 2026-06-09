@@ -4,9 +4,9 @@ import { signOut, useSession } from "next-auth/react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import Image from "next/image";
-import { LayoutDashboard, Users, FileText, LogOut, Menu, X, Settings, Globe, Brain, ShieldCheck } from "lucide-react";
+import { LayoutDashboard, Users, FileText, LogOut, Menu, X, Settings, Globe, Brain, ShieldCheck, ChevronLeft, ChevronRight } from "lucide-react";
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { cn } from "@/lib/utils";
 import { AppUpdateButton } from "@/components/AppUpdateButton";
 
@@ -94,6 +94,11 @@ export default function TherapistLayout({ children }: { children: React.ReactNod
   const { data: session } = useSession();
   const pathname = usePathname();
   const [mobileOpen, setMobileOpen] = useState(false);
+  // Barra lateral recolhível (desktop) — recolhe sozinha na tela de plano para
+  // dar mais área ao plano de treino; uma setinha permite reabrir.
+  const [collapsed, setCollapsed] = useState(false);
+  const isPlano = /\/pacientes\/[^/]+\/plano$/.test(pathname);
+  useEffect(() => { setCollapsed(isPlano); }, [isPlano]);
 
   const user = session?.user as { name?: string; role?: string; clinicName?: string; email?: string } | undefined;
   const isAdmin = user?.email === process.env.NEXT_PUBLIC_ADMIN_EMAIL;
@@ -107,7 +112,8 @@ export default function TherapistLayout({ children }: { children: React.ReactNod
       <aside
         className={cn(
           "fixed inset-y-0 left-0 z-50 w-64 flex flex-col transform transition-transform duration-300",
-          mobileOpen ? "translate-x-0" : "-translate-x-full lg:translate-x-0"
+          mobileOpen ? "translate-x-0" : "-translate-x-full",
+          collapsed ? "lg:-translate-x-full" : "lg:translate-x-0"
         )}
         style={{
           background: "#FFFFFF",
@@ -122,6 +128,13 @@ export default function TherapistLayout({ children }: { children: React.ReactNod
             <span className="font-bold text-lg" style={{ color: "#0F172A" }}>NeuroPeak</span>
             <p className="text-xs" style={{ color: "#94A3B8" }}>Painel Clínico</p>
           </div>
+          <button
+            onClick={() => setCollapsed(true)}
+            className="hidden lg:flex ml-auto items-center justify-center w-7 h-7 rounded-lg text-slate-400 hover:bg-slate-100 hover:text-slate-600 transition-colors"
+            aria-label="Recolher menu"
+          >
+            <ChevronLeft className="w-5 h-5" />
+          </button>
         </div>
 
         {/* Nav */}
@@ -233,8 +246,25 @@ export default function TherapistLayout({ children }: { children: React.ReactNod
         />
       )}
 
+      {/* Setinha flutuante para reabrir o menu (desktop, quando recolhido) */}
+      {collapsed && (
+        <button
+          onClick={() => setCollapsed(false)}
+          className="hidden lg:flex fixed left-0 top-1/2 -translate-y-1/2 z-50 items-center justify-center w-6 h-16 rounded-r-xl bg-white border border-l-0 border-slate-200 shadow-md text-slate-400 hover:text-blue-600 hover:w-7 transition-all"
+          aria-label="Expandir menu"
+        >
+          <ChevronRight className="w-4 h-4" />
+        </button>
+      )}
+
       {/* Main content */}
-      <div className="flex-1 lg:ml-64 flex flex-col min-h-screen" style={{ position: "relative", zIndex: 1 }}>
+      <div
+        className={cn(
+          "flex-1 flex flex-col min-h-screen transition-[margin] duration-300",
+          collapsed ? "lg:ml-0" : "lg:ml-64"
+        )}
+        style={{ position: "relative", zIndex: 1 }}
+      >
         {/* Mobile header */}
         <header
           className="lg:hidden px-4 py-3 flex items-center justify-between sticky top-0 z-30"
