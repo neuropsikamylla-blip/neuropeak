@@ -21,7 +21,7 @@ export function DistributionChart({ counts }: DistributionChartProps) {
     <div className="flex items-center gap-4">
       <svg viewBox="0 0 80 80" className="w-20 h-20 shrink-0 -rotate-90">
         {total === 0 ? (
-          <circle cx="40" cy="40" r={R} fill="none" stroke="#F1F5F9" strokeWidth={STROKE} />
+          <circle cx="40" cy="40" r={R} fill="none" stroke="rgba(255,255,255,0.08)" strokeWidth={STROKE} />
         ) : (
           items.map((item) => {
             const len = (item.count / total) * C;
@@ -44,13 +44,13 @@ export function DistributionChart({ counts }: DistributionChartProps) {
 
       <div className="flex-1 min-w-0 space-y-1">
         {total === 0 ? (
-          <p className="text-xs text-gray-400">Adicione exercícios para ver a distribuição.</p>
+          <p className="text-xs text-slate-400">Adicione exercícios para ver a distribuição.</p>
         ) : (
           DOMAIN_ORDER.filter((d) => (counts[d] ?? 0) > 0).map((d) => (
             <div key={d} className="flex items-center gap-2">
               <span className="w-2 h-2 rounded-full shrink-0" style={{ backgroundColor: DOMAIN_COLORS[d] }} />
-              <span className="text-xs text-gray-600 flex-1 truncate">{DOMAIN_LABELS[d]}</span>
-              <span className="text-xs font-semibold text-gray-500 tabular-nums">{counts[d]}</span>
+              <span className="text-xs font-medium flex-1 truncate" style={{ color: DOMAIN_COLORS[d] }}>{DOMAIN_LABELS[d]}</span>
+              <span className="text-xs font-bold text-slate-100 tabular-nums">{counts[d]}</span>
             </div>
           ))
         )}

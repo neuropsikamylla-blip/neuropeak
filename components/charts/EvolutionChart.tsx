@@ -41,9 +41,9 @@ export function EvolutionChart({
   return (
     <ResponsiveContainer width="100%" height={height}>
       <LineChart data={formatted} margin={{ top: 5, right: 20, left: 0, bottom: 5 }}>
-        <CartesianGrid strokeDasharray="3 3" stroke="#f0f0f0" />
-        <XAxis dataKey="displayDate" tick={{ fontSize: 12 }} />
-        <YAxis domain={[0, 100]} tick={{ fontSize: 12 }} tickFormatter={(v) => `${v}`} />
+        <CartesianGrid strokeDasharray="3 3" stroke="rgba(255,255,255,0.1)" />
+        <XAxis dataKey="displayDate" tick={{ fontSize: 12, fill: "#7e93b6" }} stroke="rgba(255,255,255,0.2)" />
+        <YAxis domain={[0, 100]} tick={{ fontSize: 12, fill: "#7e93b6" }} stroke="rgba(255,255,255,0.2)" tickFormatter={(v) => `${v}`} />
         <Tooltip
           formatter={(value: number, name: string) => [
             `${value.toFixed(1)}`,
