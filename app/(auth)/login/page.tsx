@@ -72,7 +72,7 @@ export default function LoginPage() {
   }
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-blue-50 via-white to-teal-50 flex items-center justify-center p-4">
+    <div className="min-h-screen bg-gradient-to-br from-[#0a1631] via-[#0d1b3e] to-[#10234d] flex items-center justify-center p-4">
       <motion.div
         initial={{ opacity: 0, y: 30 }}
         animate={{ opacity: 1, y: 0 }}
@@ -93,32 +93,32 @@ export default function LoginPage() {
               priority
             />
           </motion.div>
-          <h1 className="text-3xl font-bold text-gray-900">NeuroPeak</h1>
-          <p className="text-gray-500 text-sm mt-1">Plataforma de Treinamento Cognitivo</p>
+          <h1 className="text-3xl font-bold text-white">NeuroPeak</h1>
+          <p className="text-blue-200/70 text-sm mt-1">Plataforma de Treinamento Cognitivo</p>
         </div>
 
-        <Card className="shadow-xl border-0">
+        <Card className="shadow-2xl border border-white/10 bg-[#11213f]/90 backdrop-blur">
           <CardHeader className="pb-4">
             {/* Mode toggle */}
-            <div className="flex gap-1 p-1 bg-gray-100 rounded-xl mb-4">
+            <div className="flex gap-1 p-1 bg-white/5 rounded-xl mb-4">
               <button
-                className={`flex-1 py-2 rounded-lg text-sm font-medium transition-all ${mode === "therapist" ? "bg-white shadow text-blue-700" : "text-gray-500 hover:text-gray-700"}`}
+                className={`flex-1 py-2 rounded-lg text-sm font-medium transition-all ${mode === "therapist" ? "bg-white/15 shadow text-white" : "text-blue-200/60 hover:text-blue-100"}`}
                 onClick={() => setMode("therapist")}
               >
                 Terapeuta
               </button>
               <button
-                className={`flex-1 py-2 rounded-lg text-sm font-medium transition-all ${mode === "patient" ? "bg-white shadow text-blue-700" : "text-gray-500 hover:text-gray-700"}`}
+                className={`flex-1 py-2 rounded-lg text-sm font-medium transition-all ${mode === "patient" ? "bg-white/15 shadow text-white" : "text-blue-200/60 hover:text-blue-100"}`}
                 onClick={() => setMode("patient")}
               >
                 Paciente
               </button>
             </div>
 
-            <CardTitle className="text-lg">
+            <CardTitle className="text-lg text-white">
               {mode === "therapist" ? "Acesso do Terapeuta" : "Acesso do Paciente"}
             </CardTitle>
-            <CardDescription>
+            <CardDescription className="text-blue-200/60">
               {mode === "therapist"
                 ? "Entre com seu email e senha"
                 : "Entre com seu código (ex: COG09834) e PIN"}
@@ -129,7 +129,7 @@ export default function LoginPage() {
             {mode === "therapist" ? (
               <form onSubmit={handleTherapistLogin} className="space-y-4">
                 <div>
-                  <Label htmlFor="email">Email</Label>
+                  <Label htmlFor="email" className="text-blue-100">Email</Label>
                   <Input
                     id="email"
                     type="email"
@@ -137,11 +137,11 @@ export default function LoginPage() {
                     value={email}
                     onChange={(e) => setEmail(e.target.value)}
                     required
-                    className="mt-1"
+                    className="mt-1 bg-white/5 border-white/15 text-white placeholder:text-blue-200/40"
                   />
                 </div>
                 <div>
-                  <Label htmlFor="password">Senha</Label>
+                  <Label htmlFor="password" className="text-blue-100">Senha</Label>
                   <div className="relative mt-1">
                     <Input
                       id="password"
@@ -150,12 +150,12 @@ export default function LoginPage() {
                       value={password}
                       onChange={(e) => setPassword(e.target.value)}
                       required
-                      className="pr-10"
+                      className="pr-10 bg-white/5 border-white/15 text-white placeholder:text-blue-200/40"
                     />
                     <button
                       type="button"
                       onClick={() => setShowPassword(!showPassword)}
-                      className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600"
+                      className="absolute right-3 top-1/2 -translate-y-1/2 text-blue-200/50 hover:text-blue-100"
                     >
                       {showPassword ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
                     </button>
@@ -169,7 +169,7 @@ export default function LoginPage() {
             ) : (
               <form onSubmit={handlePatientLogin} className="space-y-4">
                 <div>
-                  <Label htmlFor="patientId">Código do Paciente</Label>
+                  <Label htmlFor="patientId" className="text-blue-100">Código do Paciente</Label>
                   <Input
                     id="patientId"
                     type="text"
@@ -177,11 +177,11 @@ export default function LoginPage() {
                     value={patientId}
                     onChange={(e) => setPatientId(e.target.value.toUpperCase())}
                     required
-                    className="mt-1 font-mono text-lg tracking-widest text-center uppercase"
+                    className="mt-1 font-mono text-lg tracking-widest text-center uppercase bg-white/5 border-white/15 text-white placeholder:text-blue-200/40"
                   />
                 </div>
                 <div>
-                  <Label htmlFor="pin">PIN</Label>
+                  <Label htmlFor="pin" className="text-blue-100">PIN</Label>
                   <Input
                     id="pin"
                     type="password"
@@ -192,7 +192,7 @@ export default function LoginPage() {
                     value={pin}
                     onChange={(e) => setPin(e.target.value.replace(/\D/g, ""))}
                     required
-                    className="mt-1 text-center text-2xl tracking-widest"
+                    className="mt-1 text-center text-2xl tracking-widest bg-white/5 border-white/15 text-white placeholder:text-blue-200/40"
                   />
                 </div>
                 <Button type="submit" className="w-full h-11 bg-teal-600 hover:bg-teal-700" disabled={loading}>
@@ -204,9 +204,9 @@ export default function LoginPage() {
           </CardContent>
         </Card>
 
-        <p className="text-center text-xs text-gray-400 mt-6">
+        <p className="text-center text-xs text-blue-200/50 mt-6">
           É terapeuta?{" "}
-          <a href="/cadastro" className="text-blue-500 hover:underline">Criar conta</a>
+          <a href="/cadastro" className="text-blue-300 hover:underline">Criar conta</a>
           {" · "}NeuroPeak © {new Date().getFullYear()}
         </p>
       </motion.div>
