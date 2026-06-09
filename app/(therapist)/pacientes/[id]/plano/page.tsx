@@ -10,14 +10,13 @@ import { useToast } from "@/components/ui/use-toast";
 import { ArrowLeft, Loader2, Save } from "lucide-react";
 import Link from "next/link";
 import { EXERCISE_DEFINITIONS, DOMAIN_LABELS, DOMAIN_COLORS, type Domain } from "@/types";
+import { ALL_DOMAINS, DOMAIN_SUBAREAS, DOMAIN_EXERCISES, DOMAIN_COUNTS } from "@/lib/domain-taxonomy";
 import { DomainSelector } from "@/components/plano/DomainSelector";
 import { ExerciseScienceCard } from "@/components/exercises/ExerciseScienceCard";
 import { parsePlanExercises, buildPlanExercises } from "@/lib/exercise-plan";
 import { DEFAULT_SPAN_SETTINGS, type SpanSettings } from "@/components/exercises/memory/SpanNumerico";
 
 const SPAN_IDS = ["span-numerico", "span-numerico-inverso"];
-
-const ALL_DOMAINS: Domain[] = ["memory", "attention", "executive", "processing", "functional"];
 
 // ── Modalidade de cada exercício (padrão: visual) ────────────────────────────
 type Modality = "visual" | "auditivo" | "ambos";
@@ -31,44 +30,6 @@ const MODALITY: Record<string, Modality> = {
 const modOf = (id: string): Modality => MODALITY[id] ?? "visual";
 const MOD_LABEL: Record<Modality, string> = { visual: "👁️ Visual", auditivo: "🎧 Auditivo", ambos: "👁️🎧 Visual + Auditivo" };
 const MOD_BADGE: Record<Modality, string> = { visual: "👁️", auditivo: "🎧", ambos: "👁️🎧" };
-
-// ── Hierarquia: Domínio → Subárea → Exercícios ───────────────────────────────
-const DOMAIN_SUBAREAS: Record<Domain, { subarea: string; exercises: string[] }[]> = {
-  memory: [
-    { subarea: "Memória de trabalho", exercises: ["span-numerico", "span-numerico-inverso"] },
-    { subarea: "Memória visuoespacial", exercises: ["matriz-espacial", "matriz-espacial-inversa"] },
-    { subarea: "Memória do cotidiano", exercises: ["jogo-memoria"] },
-  ],
-  attention: [
-    { subarea: "Atenção seletiva", exercises: ["trilha-visual", "atencao-seletiva"] },
-    { subarea: "Atenção sustentada", exercises: ["atencao-sustentada"] },
-    { subarea: "Atenção alternada / dividida", exercises: ["dual-task"] },
-    { subarea: "Rastreamento atencional", exercises: ["mot", "focus-agents", "focus-agents-auditivo"] },
-  ],
-  executive: [
-    { subarea: "Planejamento", exercises: ["torre-hanoi", "labirinto"] },
-    { subarea: "Controle inibitório", exercises: ["stroop-task"] },
-    { subarea: "Flexibilidade cognitiva", exercises: ["mudanca-regras", "task-switching"] },
-    { subarea: "Raciocínio lógico", exercises: ["deductive-grid", "ordem-historia"] },
-  ],
-  processing: [
-    { subarea: "Tempo de reação", exercises: ["tempo-reacao", "semaforo"] },
-    { subarea: "Decisão rápida", exercises: ["certo-ou-errado", "corrida-tempo"] },
-  ],
-  // Desenvolvimento Funcional — exercícios do cotidiano (compras, dinheiro, rotina).
-  functional: [
-    { subarea: "Compras e mercado", exercises: ["desafio-supermercado", "desafio-supermercado-auditivo", "caca-item-barato", "compra-multifuncional"] },
-    { subarea: "Dinheiro e orçamento", exercises: ["desafio-orcamento"] },
-    { subarea: "Rotina e sequência", exercises: ["antes-depois"] },
-  ],
-};
-const DOMAIN_EXERCISES: Record<Domain, string[]> = Object.fromEntries(
-  ALL_DOMAINS.map((d) => [d, DOMAIN_SUBAREAS[d].flatMap((s) => s.exercises)])
-) as Record<Domain, string[]>;
-// Quantidade real de exercícios por domínio (mostrada nos cards de seleção).
-const DOMAIN_COUNTS: Record<Domain, number> = Object.fromEntries(
-  ALL_DOMAINS.map((d) => [d, DOMAIN_EXERCISES[d].length])
-) as Record<Domain, number>;
 
 export default function PlanoPage() {
   const params = useParams();

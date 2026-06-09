@@ -1,166 +1,138 @@
-import { getServerSession } from "next-auth";
-import { authOptions } from "@/lib/auth";
-import prisma from "@/lib/db";
-import { redirect } from "next/navigation";
-import Link from "next/link";
-import { Brain, Target, TrendingUp, TrendingDown, Minus, Plus, Clock } from "lucide-react";
-import { Button } from "@/components/ui/button";
-import { Badge } from "@/components/ui/badge";
-import { calculateAdherence } from "@/lib/scoring";
-import { DOMAIN_LABELS } from "@/types";
-import type { SessionData, Domain } from "@/types";
+"use client";
 
-export const dynamic = "force-dynamic";
+import { useState, type CSSProperties } from "react";
+import { Brain, ChevronDown } from "lucide-react";
+import { EXERCISE_DEFINITIONS, DOMAIN_LABELS, DOMAIN_COLORS, DOMAIN_DESCRIPTIONS, type Domain } from "@/types";
+import { DOMAIN_ORDER, DOMAIN_ICONS } from "@/components/plano/DomainSelector";
+import { DOMAIN_SUBAREAS, DOMAIN_COUNTS } from "@/lib/domain-taxonomy";
 
-export default async function TreinoCognitivoPage() {
-  const session = await getServerSession(authOptions);
-  if (!session || (session.user as { role?: string }).role !== "THERAPIST") {
-    redirect("/login");
-  }
-
-  const therapistId = (session.user as { id: string }).id;
-
-  const patientList = await prisma.patient.findMany({
-    where: { therapistId },
-    select: { id: true, name: true, theme: true, createdAt: true },
-    orderBy: { name: "asc" },
-  });
-  const patientIds = patientList.map((p) => p.id);
-
-  if (patientIds.length === 0) {
-    return (
-      <div className="max-w-4xl mx-auto space-y-6">
-        <div className="flex items-center gap-3">
-          <Brain className="w-6 h-6 text-blue-600" />
-          <div>
-            <h1 className="text-2xl font-bold text-gray-900">Treino Cognitivo</h1>
-            <p className="text-sm text-gray-500">Planos de treino para prática em casa</p>
-          </div>
-        </div>
-        <div className="text-center py-16 bg-white rounded-xl border border-gray-200">
-          <Brain className="w-12 h-12 text-gray-300 mx-auto mb-3" />
-          <p className="text-gray-500 text-sm">Nenhum paciente cadastrado ainda.</p>
-          <Button asChild className="mt-4">
-            <Link href="/pacientes/novo">Cadastrar paciente</Link>
-          </Button>
-        </div>
-      </div>
-    );
-  }
-
-  const [allSessions, allPlans] = await Promise.all([
-    prisma.session.findMany({
-      where: { patientId: { in: patientIds } },
-      select: { patientId: true, completedAt: true, score: true, domain: true, accuracy: true, duration: true },
-      orderBy: { completedAt: "desc" },
-    }),
-    prisma.trainingPlan.findMany({ where: { patientId: { in: patientIds }, isActive: true } }),
-  ]);
-
-  const rows = patientList.map((p) => {
-    const sessions = (allSessions.filter((s) => s.patientId === p.id) as unknown as SessionData[]);
-    const plan = allPlans.find((t) => t.patientId === p.id);
-    const adherence = plan
-      ? calculateAdherence(sessions, plan.frequency, new Date(p.createdAt))
-      : null;
-    const lastSession = sessions[0] ?? null;
-
-    const recentSessions = sessions.slice(0, 20);
-    const olderSessions = sessions.slice(20, 40);
-    const recentAvg = recentSessions.length
-      ? recentSessions.reduce((a, s) => a + s.score, 0) / recentSessions.length
-      : null;
-    const olderAvg = olderSessions.length
-      ? olderSessions.reduce((a, s) => a + s.score, 0) / olderSessions.length
-      : null;
-    const trend =
-      recentAvg !== null && olderAvg !== null
-        ? recentAvg - olderAvg > 3 ? "up" : recentAvg - olderAvg < -3 ? "down" : "stable"
-        : "stable";
-
-    const domains: string[] = plan?.domains ? JSON.parse(plan.domains) : [];
-
-    return { p, plan, adherence, lastSession, trend, sessions: sessions.length, domains };
-  });
+export default function TreinoCognitivoPage() {
+  // Domínio em foco no catálogo (clicar num card expande seus exercícios).
+  const [active, setActive] = useState<Domain | null>("memory");
 
   return (
-    <div className="max-w-4xl mx-auto space-y-6">
-      <div className="flex items-center justify-between">
-        <div className="flex items-center gap-3">
-          <Brain className="w-6 h-6 text-blue-600" />
-          <div>
-            <h1 className="text-2xl font-bold text-gray-900">Treino Cognitivo</h1>
-            <p className="text-sm text-gray-500">Planos de treino para prática em casa — {patientList.length} paciente{patientList.length !== 1 ? "s" : ""}</p>
-          </div>
+    <div className="max-w-6xl mx-auto space-y-6">
+      <div className="flex items-center gap-3">
+        <Brain className="w-6 h-6 text-blue-600" />
+        <div>
+          <h1 className="text-2xl font-bold text-gray-900">Treino Cognitivo</h1>
+          <p className="text-sm text-gray-500">Domínios cognitivos e os exercícios de cada um</p>
         </div>
       </div>
 
-      <div className="space-y-3">
-        {rows.map(({ p, plan, adherence, lastSession, trend, sessions, domains }) => (
-          <div key={p.id} className="bg-white rounded-xl border border-gray-200 p-4 hover:border-blue-200 transition-all">
-            <div className="flex items-start justify-between gap-4">
-              {/* Patient info */}
-              <div className="flex-1 min-w-0">
-                <div className="flex items-center gap-2 flex-wrap">
-                  <p className="font-semibold text-gray-900">{p.name}</p>
-                  {plan ? (
-                    <Badge variant="secondary" className="text-xs">Plano ativo</Badge>
-                  ) : (
-                    <Badge variant="outline" className="text-xs text-orange-600 border-orange-200">Sem plano</Badge>
-                  )}
-                </div>
+      {/* Catálogo de domínios — seção premium */}
+      <section className="bg-white border border-[#E5E7EB] rounded-[24px] p-8 shadow-[0_1px_3px_rgba(0,0,0,0.04),0_10px_30px_-16px_rgba(0,0,0,0.12)]">
+        <h2 className="text-xl font-bold text-gray-900">Domínios de treino</h2>
+        <p className="text-sm text-gray-500 mt-1">
+          Clique em um domínio para ver os exercícios que ele desenvolve.
+        </p>
 
-                {/* Domains */}
-                {domains.length > 0 && (
-                  <div className="flex gap-1.5 flex-wrap mt-1.5">
-                    {domains.map((d) => (
-                      <span key={d} className="text-xs bg-blue-50 text-blue-700 px-2 py-0.5 rounded-full">
-                        {DOMAIN_LABELS[d as Domain] ?? d}
-                      </span>
-                    ))}
-                  </div>
-                )}
+        <div className="grid grid-cols-1 md:grid-cols-3 lg:grid-cols-5 gap-5 mt-6">
+          {DOMAIN_ORDER.map((domain) => {
+            const color = DOMAIN_COLORS[domain];
+            const Icon = DOMAIN_ICONS[domain];
+            const isActive = active === domain;
+            const count = DOMAIN_COUNTS[domain] ?? 0;
 
-                {/* Stats */}
-                <div className="flex items-center gap-4 mt-2 text-xs text-gray-500">
-                  {plan && (
-                    <span className="flex items-center gap-1">
-                      <Clock className="w-3 h-3" />
-                      {plan.sessionDuration} min · {plan.frequency}×/sem
-                    </span>
-                  )}
-                  <span>{sessions} sessão{sessions !== 1 ? "ões" : ""}</span>
-                  {lastSession && (
-                    <span>
-                      Último treino: {new Date(lastSession.completedAt).toLocaleDateString("pt-BR")}
-                    </span>
-                  )}
-                </div>
-              </div>
+            const cardStyle: CSSProperties = {
+              ["--dc" as string]: color,
+              ...(isActive ? { borderColor: color, backgroundColor: `${color}0D` } : {}),
+            };
 
-              {/* Adherence + trend */}
-              <div className="flex items-center gap-3 flex-shrink-0">
-                {adherence !== null && (
-                  <div className="text-right">
-                    <p className={`text-lg font-bold ${adherence >= 70 ? "text-green-600" : adherence >= 40 ? "text-yellow-600" : "text-red-500"}`}>
-                      {adherence}%
+            return (
+              <button
+                key={domain}
+                type="button"
+                aria-expanded={isActive}
+                aria-label={DOMAIN_LABELS[domain]}
+                onClick={() => setActive((prev) => (prev === domain ? null : domain))}
+                style={cardStyle}
+                className={`group relative flex flex-col items-center text-center min-h-[280px] rounded-[20px] border-2 p-6 transition-all duration-200 cursor-pointer outline-none focus-visible:ring-2 focus-visible:ring-offset-2 focus-visible:ring-[var(--dc)] ${
+                  isActive
+                    ? "shadow-[0_12px_30px_-14px_var(--dc)]"
+                    : "border-[#E5E7EB] bg-white hover:border-[var(--dc)] hover:-translate-y-[3px] hover:shadow-[0_16px_32px_-14px_rgba(0,0,0,0.2)]"
+                }`}
+              >
+                {/* Indicador de expansão no canto superior direito */}
+                <span
+                  className="absolute top-4 right-4 flex items-center justify-center w-6 h-6 rounded-full transition-all"
+                  style={isActive ? { backgroundColor: color } : { backgroundColor: `${color}14` }}
+                >
+                  <ChevronDown
+                    className={`w-3.5 h-3.5 transition-transform ${isActive ? "rotate-180 text-white" : ""}`}
+                    style={isActive ? undefined : { color }}
+                    strokeWidth={3}
+                  />
+                </span>
+
+                {/* Ícone grande em círculo translúcido */}
+                <span
+                  className="flex items-center justify-center w-20 h-20 rounded-full mt-2"
+                  style={{ backgroundColor: `${color}14` }}
+                >
+                  <Icon className="w-9 h-9" style={{ color }} strokeWidth={1.75} />
+                </span>
+
+                <h3 className="mt-5 text-base font-bold leading-tight" style={{ color }}>
+                  {DOMAIN_LABELS[domain]}
+                </h3>
+                <p className="mt-2 text-sm font-semibold" style={{ color }}>
+                  {count} exercício{count !== 1 ? "s" : ""}
+                </p>
+                <span className="block w-16 h-px bg-gray-200 my-4" />
+                <p className="text-sm text-gray-500 leading-relaxed">{DOMAIN_DESCRIPTIONS[domain]}</p>
+              </button>
+            );
+          })}
+        </div>
+
+        {/* Painel de exercícios do domínio em foco */}
+        {active && (
+          <div
+            className="mt-6 rounded-2xl border p-5 sm:p-6"
+            style={{ borderColor: `${DOMAIN_COLORS[active]}33`, backgroundColor: `${DOMAIN_COLORS[active]}08` }}
+          >
+            <div className="flex items-center gap-2 mb-4">
+              <span className="w-2.5 h-2.5 rounded-full" style={{ backgroundColor: DOMAIN_COLORS[active] }} />
+              <h3 className="text-base font-bold" style={{ color: DOMAIN_COLORS[active] }}>
+                Exercícios de {DOMAIN_LABELS[active]}
+              </h3>
+            </div>
+
+            <div className="space-y-5">
+              {DOMAIN_SUBAREAS[active].map((sa) => {
+                const exercises = sa.exercises
+                  .map((id) => EXERCISE_DEFINITIONS[id as keyof typeof EXERCISE_DEFINITIONS])
+                  .filter(Boolean);
+                if (exercises.length === 0) return null;
+                return (
+                  <div key={sa.subarea}>
+                    <p className="text-[11px] font-bold uppercase tracking-wide text-gray-400 mb-2 pl-1">
+                      {sa.subarea}
                     </p>
-                    <p className="text-xs text-gray-400">aderência</p>
+                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-2.5">
+                      {exercises.map((ex) => (
+                        <div
+                          key={ex.id}
+                          className="flex items-start gap-3 rounded-xl bg-white border border-gray-200 p-3"
+                        >
+                          <span className="text-2xl leading-none mt-0.5">{ex.icon}</span>
+                          <div className="min-w-0">
+                            <p className="font-medium text-sm text-gray-800">{ex.name}</p>
+                            <p className="text-xs text-gray-500 leading-snug">
+                              {ex.description} · ~{ex.estimatedMinutes}min
+                            </p>
+                          </div>
+                        </div>
+                      ))}
+                    </div>
                   </div>
-                )}
-                {trend === "up" && <TrendingUp className="w-4 h-4 text-green-500" />}
-                {trend === "down" && <TrendingDown className="w-4 h-4 text-red-400" />}
-                {trend === "stable" && sessions > 0 && <Minus className="w-4 h-4 text-gray-400" />}
-                <Button variant="outline" size="sm" asChild>
-                  <Link href={`/pacientes/${p.id}/plano`}>
-                    {plan ? <><Target className="w-3.5 h-3.5 mr-1" />Editar plano</> : <><Plus className="w-3.5 h-3.5 mr-1" />Criar plano</>}
-                  </Link>
-                </Button>
-              </div>
+                );
+              })}
             </div>
           </div>
-        ))}
-      </div>
+        )}
+      </section>
     </div>
   );
 }

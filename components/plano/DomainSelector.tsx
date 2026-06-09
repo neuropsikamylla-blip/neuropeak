@@ -4,7 +4,7 @@ import type { CSSProperties } from "react";
 import { Brain, Target, Puzzle, Gauge, Sprout, Lightbulb, Check, type LucideIcon } from "lucide-react";
 import { DOMAIN_LABELS, DOMAIN_COLORS, DOMAIN_DESCRIPTIONS, type Domain } from "@/types";
 
-const ICONS: Record<Domain, LucideIcon> = {
+export const DOMAIN_ICONS: Record<Domain, LucideIcon> = {
   memory: Brain,
   attention: Target,
   executive: Puzzle,
@@ -13,7 +13,7 @@ const ICONS: Record<Domain, LucideIcon> = {
 };
 
 // Ordem dos cards (igual à referência clínica).
-const ORDER: Domain[] = ["memory", "attention", "executive", "processing", "functional"];
+export const DOMAIN_ORDER: Domain[] = ["memory", "attention", "executive", "processing", "functional"];
 
 interface DomainSelectorProps {
   selected: Domain[];
@@ -35,9 +35,9 @@ export function DomainSelector({ selected, onToggle, counts }: DomainSelectorPro
       </p>
 
       <div className="grid grid-cols-1 md:grid-cols-3 lg:grid-cols-5 gap-5 mt-6">
-        {ORDER.map((domain) => {
+        {DOMAIN_ORDER.map((domain) => {
           const color = DOMAIN_COLORS[domain];
-          const Icon = ICONS[domain];
+          const Icon = DOMAIN_ICONS[domain];
           const isSelected = selected.includes(domain);
           const count = counts[domain] ?? 0;
 
