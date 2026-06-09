@@ -1,5 +1,5 @@
 import { DOMAIN_LABELS, DOMAIN_COLORS, type Domain } from "@/types";
-import { DOMAIN_ORDER } from "./DomainSelector";
+import { ALL_DOMAINS as DOMAIN_ORDER } from "@/lib/domain-taxonomy";
 
 interface DistributionChartProps {
   /** Quantidade de exercícios por domínio. */

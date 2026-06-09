@@ -2,11 +2,10 @@
 
 import { useState } from "react";
 import { Loader2, Save, Eye, ClipboardList, GripVertical } from "lucide-react";
-import { EXERCISE_DEFINITIONS, DOMAIN_COLORS, type Domain } from "@/types";
-import { ALL_DOMAINS, EXERCISE_DOMAIN } from "@/lib/domain-taxonomy";
+import { EXERCISE_DEFINITIONS, DOMAIN_COLORS } from "@/types";
+import { EXERCISE_DOMAIN } from "@/lib/domain-taxonomy";
 import type { SpanSettings } from "@/components/exercises/memory/SpanNumerico";
 import { ExerciseCard } from "./ExerciseCard";
-import { DistributionChart } from "./DistributionChart";
 
 const SPAN_IDS = ["span-numerico", "span-numerico-inverso"];
 const exDef = (id: string) => EXERCISE_DEFINITIONS[id as keyof typeof EXERCISE_DEFINITIONS];
@@ -39,9 +38,6 @@ export function PlanBuilderSidebar(props: PlanBuilderSidebarProps) {
 
   const items = selectedExercises.map(exDef).filter(Boolean);
   const totalMinutes = items.reduce((sum, ex) => sum + (ex.estimatedMinutes ?? 0), 0);
-
-  const counts = Object.fromEntries(ALL_DOMAINS.map((d) => [d, 0])) as Record<Domain, number>;
-  selectedExercises.forEach((id) => { const d = EXERCISE_DOMAIN[id]; if (d) counts[d] += 1; });
 
   return (
     <aside className="rounded-[20px] border border-[#E5E7EB] bg-white p-5 flex flex-col gap-4 shadow-[0_1px_3px_rgba(0,0,0,0.04)]">
@@ -105,12 +101,6 @@ export function PlanBuilderSidebar(props: PlanBuilderSidebarProps) {
             </div>
           ))
         )}
-      </div>
-
-      {/* Distribuição por domínio (donut) */}
-      <div>
-        <p className="text-[11px] font-semibold uppercase tracking-wide text-gray-400 mb-2">Distribuição por domínio</p>
-        <DistributionChart counts={counts} />
       </div>
 
       {/* Resumo */}

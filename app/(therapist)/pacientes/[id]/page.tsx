@@ -10,6 +10,9 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { EvolutionChart } from "@/components/charts/EvolutionChart";
 import { DomainRadarChart } from "@/components/charts/DomainRadarChart";
 import { calculateDomainScore, calculateAdherence } from "@/lib/scoring";
+import { DistributionChart } from "@/components/plano/DistributionChart";
+import { parsePlanExercises } from "@/lib/exercise-plan";
+import { ALL_DOMAINS, EXERCISE_DOMAIN } from "@/lib/domain-taxonomy";
 import { formatDate, formatDateTime, calculateAge, formatDuration } from "@/lib/utils";
 import { ArrowLeft, FileText, Target, Globe, Pencil } from "lucide-react";
 import { PatientCredentials } from "@/components/patient/PatientCredentials";
@@ -54,6 +57,11 @@ export default async function PatientProfilePage({ params }: { params: Promise<{
   const adherence = activePlan
     ? calculateAdherence(sessions, activePlan.frequency, new Date(patient.createdAt))
     : 0;
+
+  // Distribuição dos exercícios prescritos por domínio (do plano ativo).
+  const planExerciseIds = activePlan ? parsePlanExercises(activePlan.exercises).map((e) => e.id) : [];
+  const planDistribution = Object.fromEntries(ALL_DOMAINS.map((d) => [d, 0])) as Record<Domain, number>;
+  planExerciseIds.forEach((id) => { const d = EXERCISE_DOMAIN[id]; if (d) planDistribution[d] += 1; });
 
   // Build evolution chart data (last 30 days)
   const last30 = sessions.filter(
@@ -177,6 +185,18 @@ export default async function PatientProfilePage({ params }: { params: Promise<{
               </CardContent>
             </Card>
           </div>
+
+          {planExerciseIds.length > 0 && (
+            <Card>
+              <CardHeader><CardTitle className="text-base">Distribuição do Plano de Treino</CardTitle></CardHeader>
+              <CardContent>
+                <DistributionChart counts={planDistribution} />
+                <p className="text-xs text-gray-400 mt-3">
+                  {planExerciseIds.length} exercício{planExerciseIds.length !== 1 ? "s" : ""} no plano ativo.
+                </p>
+              </CardContent>
+            </Card>
+          )}
 
           {patient.therapeuticGoals && (
             <Card>
