@@ -10,3 +10,9 @@ export const EXERCISE_ICON_IDS = new Set<string>([
   "span-numerico-inverso",
   "dual-task",
 ]);
+
+// Escala por ícone (1 = padrão). Alguns têm composição "espalhada" e ficam
+// melhores um pouco maiores para parecerem do mesmo tamanho dos demais.
+export const ICON_SCALE: Record<string, number> = {
+  mot: 1.4,
+};
