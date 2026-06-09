@@ -14,11 +14,11 @@ export interface ExerciseMeta {
 
 export const EXERCISE_META: Record<string, ExerciseMeta> = {
   // Memória
-  "span-numerico": { type: "auditiva", difficulty: "medio", secondary: ["Atenção Sustentada"] },
-  "span-numerico-inverso": { type: "auditiva", difficulty: "dificil", secondary: ["Flexibilidade Cognitiva", "Atenção Sustentada"] },
-  "matriz-espacial": { type: "espacial", difficulty: "facil", secondary: ["Atenção Seletiva"] },
-  "matriz-espacial-inversa": { type: "espacial", difficulty: "medio", secondary: ["Flexibilidade Cognitiva"] },
-  "jogo-memoria": { type: "visual", difficulty: "facil", secondary: ["Atenção Seletiva"] },
+  "span-numerico": { type: "auditiva", difficulty: "facil", secondary: ["Atenção Sustentada"] },
+  "span-numerico-inverso": { type: "auditiva", difficulty: "medio", secondary: ["Atenção Sustentada", "Memória de Trabalho"] },
+  "matriz-espacial": { type: "espacial", difficulty: "facil", secondary: ["Atenção Visual", "Percepção Espacial"] },
+  "matriz-espacial-inversa": { type: "espacial", difficulty: "medio", secondary: ["Atenção Visual", "Memória de Trabalho"] },
+  "jogo-memoria": { type: "visual", difficulty: "facil", secondary: ["Atenção Visual", "Discriminação Visual"] },
   "desafio-supermercado": { type: "visual", difficulty: "medio", secondary: ["Atenção Seletiva", "Atividades de Vida Diária"] },
   "desafio-supermercado-auditivo": { type: "auditiva", difficulty: "medio", secondary: ["Atenção Seletiva", "Atividades de Vida Diária"] },
   // Atenção

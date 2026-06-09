@@ -1,7 +1,8 @@
 import { Plus, Check } from "lucide-react";
 import { metaOf } from "@/lib/exercise-meta";
-import { EXERCISE_SUBDOMAIN } from "@/lib/domain-taxonomy";
-import { TypeBadge, DifficultyDots } from "./badges";
+import { EXERCISE_SUBDOMAIN, EXERCISE_SUBDOMAIN_ID } from "@/lib/domain-taxonomy";
+import { DifficultyDots } from "./badges";
+import { SubdomainTag, SecondaryChips } from "./ExerciseTags";
 
 export interface ExerciseInfo {
   id: string;
@@ -17,39 +18,40 @@ interface ExerciseRowProps {
   onToggle: (id: string) => void;
 }
 
-/** Linha da tabela de exercícios (estilo SaaS premium). */
+/** Linha da tabela: Exercício · Subdomínio · Habilidades Secundárias · Dificuldade · Duração · Ação. */
 export function ExerciseRow({ exercise, added, onToggle }: ExerciseRowProps) {
   const meta = metaOf(exercise.id);
+  const subLabel = EXERCISE_SUBDOMAIN[exercise.id];
+  const subId = EXERCISE_SUBDOMAIN_ID[exercise.id];
+
   return (
-    <div className="grid grid-cols-[1fr_auto] sm:grid-cols-[minmax(0,1fr)_110px_120px_88px_56px] items-center gap-3 px-4 py-3.5 border-b border-gray-100 last:border-b-0 hover:bg-gray-50/70 transition-colors">
-      {/* Exercício: ícone + nome + descrição */}
+    <div className="grid grid-cols-[1fr_auto] sm:grid-cols-[minmax(0,2fr)_132px_minmax(0,1.6fr)_104px_66px_52px] items-center gap-3 px-4 py-4 border-b border-gray-100 last:border-b-0 hover:bg-gray-50/70 transition-colors">
+      {/* Exercício */}
       <div className="flex items-start gap-3 min-w-0">
         <span className="text-2xl leading-none mt-0.5 shrink-0">{exercise.icon}</span>
         <div className="min-w-0">
-          <p className="font-medium text-sm text-gray-800 truncate">{exercise.name}</p>
-          <p className="text-xs text-gray-500 leading-snug line-clamp-2">{exercise.description}</p>
-          {meta.secondary.length > 0 && (
-            <p className="text-[11px] text-gray-400 mt-0.5 truncate">
-              <span className="text-gray-300">+ também:</span> {meta.secondary.join(" · ")}
-            </p>
-          )}
-          {/* Tipo + dificuldade em telas pequenas (as colunas somem no mobile) */}
-          <div className="flex items-center gap-2 mt-1.5 sm:hidden">
-            <TypeBadge type={meta.type} />
+          <p className="font-medium text-sm text-gray-800 leading-tight">{exercise.name}</p>
+          <p className="text-xs text-gray-500 leading-snug mt-0.5 line-clamp-2">{exercise.description}</p>
+          {/* Em telas pequenas, mostra metadados embaixo (colunas somem) */}
+          <div className="flex flex-wrap items-center gap-1.5 mt-2 sm:hidden">
+            {subLabel && <SubdomainTag id={subId} label={subLabel} />}
             <DifficultyDots difficulty={meta.difficulty} showLabel={false} />
             <span className="text-xs text-gray-400">{exercise.estimatedMinutes} min</span>
           </div>
         </div>
       </div>
 
-      {/* Tipo */}
-      <div className="hidden sm:flex justify-start"><TypeBadge type={meta.type} /></div>
+      {/* Subdomínio */}
+      <div className="hidden sm:block">{subLabel && <SubdomainTag id={subId} label={subLabel} />}</div>
+
+      {/* Habilidades Secundárias */}
+      <div className="hidden sm:block"><SecondaryChips skills={meta.secondary} /></div>
 
       {/* Dificuldade */}
-      <div className="hidden sm:flex justify-start"><DifficultyDots difficulty={meta.difficulty} /></div>
+      <div className="hidden sm:block"><DifficultyDots difficulty={meta.difficulty} /></div>
 
       {/* Duração */}
-      <div className="hidden sm:block text-sm text-gray-500 tabular-nums">{exercise.estimatedMinutes} min</div>
+      <div className="hidden sm:block text-sm text-gray-500 tabular-nums">~{exercise.estimatedMinutes} min</div>
 
       {/* Ação */}
       <div className="flex justify-end">

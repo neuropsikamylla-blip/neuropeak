@@ -62,9 +62,41 @@ export const EXERCISE_DOMAIN: Record<string, Domain> = (() => {
   return map;
 })();
 
-// Subdomínio (label) de cada exercício.
+// Subdomínio (id e label) de cada exercício.
 export const EXERCISE_SUBDOMAIN: Record<string, string> = (() => {
   const map: Record<string, string> = {};
   for (const d of ALL_DOMAINS) for (const s of DOMAIN_SUBDOMAINS[d]) for (const ex of s.exercises) map[ex] = s.label;
   return map;
 })();
+export const EXERCISE_SUBDOMAIN_ID: Record<string, string> = (() => {
+  const map: Record<string, string> = {};
+  for (const d of ALL_DOMAINS) for (const s of DOMAIN_SUBDOMAINS[d]) for (const ex of s.exercises) map[ex] = s.id;
+  return map;
+})();
+
+// Cor suave de cada subdomínio (tag de categoria). Dentro de um domínio as
+// cores são distintas, como numa biblioteca clínica.
+const PALETTE: Record<string, { bg: string; text: string }> = {
+  azul: { bg: "#EFF6FF", text: "#2563EB" },
+  roxo: { bg: "#F5F3FF", text: "#7C3AED" },
+  rosa: { bg: "#FDF2F8", text: "#DB2777" },
+  verde: { bg: "#F0FDF4", text: "#16A34A" },
+  ambar: { bg: "#FFFBEB", text: "#D97706" },
+  teal: { bg: "#F0FDFA", text: "#0D9488" },
+  indigo: { bg: "#EEF2FF", text: "#4F46E5" },
+};
+const SUBDOMAIN_PALETTE: Record<string, keyof typeof PALETTE> = {
+  // Memória
+  operacional: "azul", visuoespacial: "roxo", episodica: "rosa", semantica: "verde",
+  // Atenção
+  seletiva: "ambar", sustentada: "azul", alternada: "roxo", dividida: "rosa",
+  // Funções Executivas
+  planejamento: "azul", inibitorio: "ambar", flexibilidade: "roxo", decisao: "rosa", problemas: "teal", logico: "indigo",
+  // Velocidade de Processamento
+  reacao: "azul", "busca-visual": "ambar", "resposta-rapida": "rosa",
+  // Desenvolvimento Funcional
+  rotina: "verde", sequenciamento: "azul", avd: "ambar", autonomia: "roxo",
+};
+const NEUTRAL = { bg: "#F1F5F9", text: "#475569" };
+export const subdomainColor = (id: string): { bg: string; text: string } =>
+  PALETTE[SUBDOMAIN_PALETTE[id]] ?? NEUTRAL;
