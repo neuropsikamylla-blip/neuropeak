@@ -16,6 +16,7 @@ interface PlanBuilderSidebarProps {
   onLevel: (id: string, value: number) => void;
   onSpanCfg: <K extends keyof SpanSettings>(id: string, key: K, value: SpanSettings[K]) => void;
   onRemove: (id: string) => void;
+  onMove: (id: string, dir: -1 | 1) => void;
   sessionDuration: number;
   frequency: number;
   onSessionDuration: (v: number) => void;
@@ -28,7 +29,7 @@ interface PlanBuilderSidebarProps {
 /** Coluna direita — "Plano em construção", exercícios agrupados por domínio. */
 export function PlanBuilderSidebar(props: PlanBuilderSidebarProps) {
   const {
-    selectedExercises, exerciseLevels, exerciseSettings, onLevel, onSpanCfg, onRemove,
+    selectedExercises, exerciseLevels, exerciseSettings, onLevel, onSpanCfg, onRemove, onMove,
     sessionDuration, frequency, onSessionDuration, onFrequency, onSave, onVisualize, saving,
   } = props;
 
@@ -50,7 +51,7 @@ export function PlanBuilderSidebar(props: PlanBuilderSidebarProps) {
       {/* Configurações de sessão */}
       <div className="grid grid-cols-2 gap-2">
         <label className="block">
-          <span className="text-[11px] font-semibold text-gray-500">Duração total (min)</span>
+          <span className="text-[11px] font-semibold text-gray-500">Duração da sessão (min)</span>
           <input type="number" min={10} max={90} value={sessionDuration}
             onChange={(e) => onSessionDuration(Number(e.target.value))}
             className="mt-1 w-full px-2.5 py-1.5 rounded-lg border border-gray-200 text-sm focus:outline-none focus:ring-2 focus:ring-blue-100 focus:border-blue-300" />
@@ -64,7 +65,7 @@ export function PlanBuilderSidebar(props: PlanBuilderSidebarProps) {
       </div>
 
       {/* Lista de exercícios agrupada por domínio */}
-      <div className="space-y-3 max-h-[46vh] overflow-y-auto -mr-1 pr-1">
+      <div className="space-y-3 max-h-[58vh] overflow-y-auto -mr-1 pr-1">
         {items.length === 0 ? (
           <div className="py-8 text-center">
             <p className="text-sm text-gray-400">Nenhum exercício ainda.</p>
@@ -80,7 +81,7 @@ export function PlanBuilderSidebar(props: PlanBuilderSidebarProps) {
                 </span>
                 <span className="text-[11px] text-gray-400 font-semibold">· {group.items.length}</span>
               </div>
-              {group.items.map((ex) => (
+              {group.items.map((ex, i) => (
                 <ExerciseCard
                   key={ex.id}
                   id={ex.id}
@@ -94,6 +95,9 @@ export function PlanBuilderSidebar(props: PlanBuilderSidebarProps) {
                   spanCfg={exerciseSettings[ex.id] as unknown as Partial<SpanSettings> | undefined}
                   onSpanCfg={onSpanCfg}
                   onRemove={onRemove}
+                  onMove={onMove}
+                  isFirst={i === 0}
+                  isLast={i === group.items.length - 1}
                 />
               ))}
             </div>

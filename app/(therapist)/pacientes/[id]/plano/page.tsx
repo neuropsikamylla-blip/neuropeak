@@ -73,6 +73,20 @@ export default function PlanoPage() {
     );
   }
 
+  // Reordena um exercício dentro do seu domínio (setas ↑↓ no painel).
+  function moveExercise(id: string, dir: -1 | 1) {
+    setSelectedExercises((prev) => {
+      const dom = EXERCISE_DOMAIN[id];
+      const same = prev.filter((x) => EXERCISE_DOMAIN[x] === dom);
+      const idx = same.indexOf(id);
+      const swap = idx + dir;
+      if (swap < 0 || swap >= same.length) return prev;
+      [same[idx], same[swap]] = [same[swap], same[idx]];
+      let k = 0;
+      return prev.map((x) => (EXERCISE_DOMAIN[x] === dom ? same[k++] : x));
+    });
+  }
+
   function setSpanCfg<K extends keyof SpanSettings>(exId: string, key: K, value: SpanSettings[K]) {
     setExerciseSettings((prev) => ({
       ...prev,
@@ -180,7 +194,7 @@ export default function PlanoPage() {
       {/* Abas de domínio */}
       <DomainTabs active={activeDomain} onSelect={selectDomain} counts={DOMAIN_COUNTS} />
 
-      <div className="grid grid-cols-1 lg:grid-cols-[minmax(0,1fr)_340px] gap-5 items-start">
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-5 items-start">
         {/* Área central */}
         <div className="space-y-4 min-w-0">
           {/* Cabeçalho do domínio */}
@@ -220,6 +234,7 @@ export default function PlanoPage() {
             onLevel={setLevel}
             onSpanCfg={setSpanCfg}
             onRemove={toggleExercise}
+            onMove={moveExercise}
             sessionDuration={sessionDuration}
             frequency={frequency}
             onSessionDuration={setSessionDuration}

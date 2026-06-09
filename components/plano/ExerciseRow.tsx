@@ -18,22 +18,25 @@ interface ExerciseRowProps {
   onToggle: (id: string) => void;
 }
 
-/** Linha da tabela: Exercício · Subdomínio · Habilidades Secundárias · Dificuldade · Duração · Ação. */
+/** Linha da tabela: Exercício (com habilidades) · Subdomínio · Dificuldade · Duração · Ação. */
 export function ExerciseRow({ exercise, added, onToggle }: ExerciseRowProps) {
   const meta = metaOf(exercise.id);
   const subLabel = EXERCISE_SUBDOMAIN[exercise.id];
   const subId = EXERCISE_SUBDOMAIN_ID[exercise.id];
 
   return (
-    <div className="grid grid-cols-[1fr_auto] sm:grid-cols-[minmax(0,2fr)_132px_minmax(0,1.6fr)_104px_66px_52px] items-center gap-3 px-4 py-4 border-b border-gray-100 last:border-b-0 hover:bg-gray-50/70 transition-colors">
+    <div className="grid grid-cols-[1fr_auto] sm:grid-cols-[minmax(0,1fr)_124px_104px_64px_48px] items-center gap-3 px-4 py-3.5 border-b border-gray-100 last:border-b-0 hover:bg-gray-50/70 transition-colors">
       {/* Exercício */}
       <div className="flex items-start gap-3 min-w-0">
         <span className="text-2xl leading-none mt-0.5 shrink-0">{exercise.icon}</span>
         <div className="min-w-0">
           <p className="font-medium text-sm text-gray-800 leading-tight">{exercise.name}</p>
-          <p className="text-xs text-gray-500 leading-snug mt-0.5 line-clamp-2">{exercise.description}</p>
-          {/* Em telas pequenas, mostra metadados embaixo (colunas somem) */}
-          <div className="flex flex-wrap items-center gap-1.5 mt-2 sm:hidden">
+          <p className="text-xs text-gray-500 leading-snug mt-0.5 line-clamp-1">{exercise.description}</p>
+          {meta.secondary.length > 0 && (
+            <div className="mt-1.5"><SecondaryChips skills={meta.secondary} /></div>
+          )}
+          {/* Em telas pequenas, metadados embaixo (colunas somem) */}
+          <div className="flex flex-wrap items-center gap-2 mt-2 sm:hidden">
             {subLabel && <SubdomainTag id={subId} label={subLabel} />}
             <DifficultyDots difficulty={meta.difficulty} showLabel={false} />
             <span className="text-xs text-gray-400">{exercise.estimatedMinutes} min</span>
@@ -43,9 +46,6 @@ export function ExerciseRow({ exercise, added, onToggle }: ExerciseRowProps) {
 
       {/* Subdomínio */}
       <div className="hidden sm:block">{subLabel && <SubdomainTag id={subId} label={subLabel} />}</div>
-
-      {/* Habilidades Secundárias */}
-      <div className="hidden sm:block"><SecondaryChips skills={meta.secondary} /></div>
 
       {/* Dificuldade */}
       <div className="hidden sm:block"><DifficultyDots difficulty={meta.difficulty} /></div>
