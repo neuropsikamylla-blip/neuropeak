@@ -7,14 +7,13 @@ import { useToast } from "@/components/ui/use-toast";
 import { ArrowLeft, ArrowRight, Loader2 } from "lucide-react";
 import Link from "next/link";
 import { EXERCISE_DEFINITIONS, DOMAIN_LABELS, DOMAIN_COLORS, DOMAIN_DESCRIPTIONS, type Domain } from "@/types";
-import { ALL_DOMAINS, DOMAIN_EXERCISES, DOMAIN_COUNTS, EXERCISE_DOMAIN } from "@/lib/domain-taxonomy";
+import { ALL_DOMAINS, DOMAIN_SUBDOMAINS, DOMAIN_EXERCISES, DOMAIN_COUNTS, EXERCISE_DOMAIN } from "@/lib/domain-taxonomy";
 import { metaOf } from "@/lib/exercise-meta";
 import { DomainSelector, DOMAIN_ICONS } from "@/components/plano/DomainSelector";
-import { DomainSidebar } from "@/components/plano/DomainSidebar";
+import { DomainSidebar, type SubdomainSelection } from "@/components/plano/DomainSidebar";
 import { ExerciseFilters, type TypeFilter } from "@/components/plano/ExerciseFilters";
-import { ExerciseTable } from "@/components/plano/ExerciseTable";
+import { ExerciseTable, type ExerciseGroup } from "@/components/plano/ExerciseTable";
 import { PlanBuilderSidebar } from "@/components/plano/PlanBuilderSidebar";
-import type { ExerciseInfo } from "@/components/plano/ExerciseRow";
 import { parsePlanExercises, buildPlanExercises } from "@/lib/exercise-plan";
 import { DEFAULT_SPAN_SETTINGS, type SpanSettings } from "@/components/exercises/memory/SpanNumerico";
 
@@ -36,9 +35,8 @@ export default function PlanoPage() {
   const [sessionDuration, setSessionDuration] = useState(30);
   const [frequency, setFrequency] = useState(3);
 
-  // Fluxo de 2 etapas + estado da etapa de exercícios.
   const [step, setStep] = useState<"domains" | "exercises">("domains");
-  const [activeDomain, setActiveDomain] = useState<Domain>("memory");
+  const [activeSel, setActiveSel] = useState<SubdomainSelection>({ domain: "memory", subdomain: null });
   const [typeFilter, setTypeFilter] = useState<TypeFilter>("todos");
   const [query, setQuery] = useState("");
 
@@ -51,7 +49,6 @@ export default function PlanoPage() {
           const domains: Domain[] = typeof plan.domains === "string" ? JSON.parse(plan.domains) : plan.domains ?? [];
           const parsed = parsePlanExercises(plan.exercises);
           setSelectedDomains(domains);
-          // Desafio da Cidade saiu dos exercícios (vai para o Mundo Interior).
           setSelectedExercises(parsed.map(e => e.id).filter((id) => id !== "desafio-cidade"));
           const settings: Record<string, Record<string, unknown>> = {};
           parsed.forEach(e => { if (e.settings) settings[e.id] = e.settings; });
@@ -62,7 +59,6 @@ export default function PlanoPage() {
           setSelectedDomains(["memory", "attention"]);
           setSelectedExercises([]);
         }
-        // Níveis atuais de dificuldade de cada exercício (definidos pelo terapeuta ou pela progressão).
         const cfgs: { exerciseId: string; currentDifficulty: number }[] = data.patient?.exerciseConfigs ?? [];
         const levels: Record<string, number> = {};
         cfgs.forEach(c => { levels[c.exerciseId] = c.currentDifficulty; });
@@ -106,7 +102,7 @@ export default function PlanoPage() {
 
   function goToExercises() {
     const first = ALL_DOMAINS.find((d) => selectedDomains.includes(d)) ?? "memory";
-    setActiveDomain(first);
+    setActiveSel({ domain: first, subdomain: null });
     setStep("exercises");
   }
 
@@ -144,19 +140,23 @@ export default function PlanoPage() {
     }
   }
 
-  // Domínio em foco garantidamente válido (entre os selecionados).
-  const activeSafe: Domain = selectedDomains.includes(activeDomain) ? activeDomain : (selectedDomains[0] ?? "memory");
+  const activeDomain: Domain = selectedDomains.includes(activeSel.domain) ? activeSel.domain : (selectedDomains[0] ?? "memory");
 
-  // Exercícios visíveis na tabela (do domínio em foco, filtrados por tipo + busca).
-  const visibleExercises = useMemo<ExerciseInfo[]>(() => {
+  const visibleGroups = useMemo<ExerciseGroup[]>(() => {
     const q = query.trim().toLowerCase();
-    return (DOMAIN_EXERCISES[activeSafe] ?? [])
-      .map((id) => exDef(id))
-      .filter(Boolean)
-      .filter((ex) => typeFilter === "todos" || metaOf(ex.id).type === typeFilter)
-      .filter((ex) => !q || ex.name.toLowerCase().includes(q) || ex.description.toLowerCase().includes(q))
-      .map((ex) => ({ id: ex.id, name: ex.name, description: ex.description, estimatedMinutes: ex.estimatedMinutes, icon: ex.icon }));
-  }, [activeSafe, typeFilter, query]);
+    return (DOMAIN_SUBDOMAINS[activeDomain] ?? [])
+      .filter((sd) => activeSel.subdomain === null || activeSel.subdomain === sd.id)
+      .map((sd) => ({
+        id: sd.id,
+        label: sd.label,
+        exercises: sd.exercises
+          .map((id) => exDef(id))
+          .filter(Boolean)
+          .filter((ex) => typeFilter === "todos" || metaOf(ex.id).type === typeFilter)
+          .filter((ex) => !q || ex.name.toLowerCase().includes(q) || ex.description.toLowerCase().includes(q))
+          .map((ex) => ({ id: ex.id, name: ex.name, description: ex.description, estimatedMinutes: ex.estimatedMinutes, icon: ex.icon })),
+      }));
+  }, [activeDomain, activeSel.subdomain, typeFilter, query]);
 
   const addedIds = useMemo(() => new Set(selectedExercises), [selectedExercises]);
   const addedCounts = useMemo(() => {
@@ -199,8 +199,11 @@ export default function PlanoPage() {
   }
 
   // ── ETAPA 2 — seleção de exercícios (3 colunas) ────────────────────────────
-  const Icon = DOMAIN_ICONS[activeSafe];
-  const color = DOMAIN_COLORS[activeSafe];
+  const Icon = DOMAIN_ICONS[activeDomain];
+  const color = DOMAIN_COLORS[activeDomain];
+  const activeSubLabel = activeSel.subdomain
+    ? DOMAIN_SUBDOMAINS[activeDomain].find((s) => s.id === activeSel.subdomain)?.label
+    : null;
 
   return (
     <div className="max-w-7xl mx-auto space-y-6">
@@ -215,29 +218,35 @@ export default function PlanoPage() {
       </div>
 
       <div className="grid grid-cols-1 lg:grid-cols-[260px_minmax(0,1fr)_320px] gap-5 items-start">
-        {/* Coluna 1 — domínios */}
-        <DomainSidebar selected={selectedDomains} active={activeSafe} onFocus={setActiveDomain} addedCounts={addedCounts} />
+        {/* Coluna 1 — domínios e subdomínios */}
+        <DomainSidebar
+          selected={selectedDomains}
+          active={{ domain: activeDomain, subdomain: activeSel.subdomain }}
+          onSelect={setActiveSel}
+          addedIds={addedIds}
+        />
 
         {/* Coluna 2 — área principal */}
         <div className="space-y-4 min-w-0">
-          {/* Cabeçalho do domínio */}
           <div className="flex items-start gap-3">
             <span className="flex items-center justify-center w-12 h-12 rounded-xl shrink-0" style={{ backgroundColor: `${color}14` }}>
               <Icon className="w-6 h-6" style={{ color }} strokeWidth={1.9} />
             </span>
-            <div>
+            <div className="min-w-0">
               <div className="flex items-center gap-2 flex-wrap">
-                <h2 className="text-lg font-bold" style={{ color }}>{DOMAIN_LABELS[activeSafe]}</h2>
+                <h2 className="text-lg font-bold" style={{ color }}>{DOMAIN_LABELS[activeDomain]}</h2>
+                {activeSubLabel && <span className="text-gray-300">›</span>}
+                {activeSubLabel && <span className="text-lg font-bold text-gray-700">{activeSubLabel}</span>}
                 <span className="px-2 py-0.5 rounded-full text-xs font-semibold" style={{ color, backgroundColor: `${color}14` }}>
-                  {DOMAIN_COUNTS[activeSafe]} exercícios
+                  {DOMAIN_COUNTS[activeDomain]} exercícios
                 </span>
               </div>
-              <p className="text-sm text-gray-500">{DOMAIN_DESCRIPTIONS[activeSafe]}</p>
+              <p className="text-sm text-gray-500">{DOMAIN_DESCRIPTIONS[activeDomain]}</p>
             </div>
           </div>
 
           <ExerciseFilters active={typeFilter} onChange={setTypeFilter} query={query} onQuery={setQuery} />
-          <ExerciseTable exercises={visibleExercises} addedIds={addedIds} onToggle={toggleExercise} />
+          <ExerciseTable groups={visibleGroups} addedIds={addedIds} onToggle={toggleExercise} />
         </div>
 
         {/* Coluna 3 — plano em construção */}

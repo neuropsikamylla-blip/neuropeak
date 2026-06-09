@@ -8,46 +8,48 @@ export type Difficulty = "facil" | "medio" | "dificil";
 export interface ExerciseMeta {
   type: ExerciseType;
   difficulty: Difficulty;
+  /** Habilidades secundárias trabalhadas (além do domínio/subdomínio principal). */
+  secondary: string[];
 }
 
 export const EXERCISE_META: Record<string, ExerciseMeta> = {
   // Memória
-  "span-numerico": { type: "auditiva", difficulty: "medio" },
-  "span-numerico-inverso": { type: "auditiva", difficulty: "dificil" },
-  "matriz-espacial": { type: "espacial", difficulty: "facil" },
-  "matriz-espacial-inversa": { type: "espacial", difficulty: "medio" },
-  "jogo-memoria": { type: "visual", difficulty: "facil" },
+  "span-numerico": { type: "auditiva", difficulty: "medio", secondary: ["Atenção Sustentada"] },
+  "span-numerico-inverso": { type: "auditiva", difficulty: "dificil", secondary: ["Flexibilidade Cognitiva", "Atenção Sustentada"] },
+  "matriz-espacial": { type: "espacial", difficulty: "facil", secondary: ["Atenção Seletiva"] },
+  "matriz-espacial-inversa": { type: "espacial", difficulty: "medio", secondary: ["Flexibilidade Cognitiva"] },
+  "jogo-memoria": { type: "visual", difficulty: "facil", secondary: ["Atenção Seletiva"] },
+  "desafio-supermercado": { type: "visual", difficulty: "medio", secondary: ["Atenção Seletiva", "Atividades de Vida Diária"] },
+  "desafio-supermercado-auditivo": { type: "auditiva", difficulty: "medio", secondary: ["Atenção Seletiva", "Atividades de Vida Diária"] },
   // Atenção
-  "trilha-visual": { type: "visual", difficulty: "facil" },
-  "atencao-seletiva": { type: "visual", difficulty: "medio" },
-  "atencao-sustentada": { type: "visual", difficulty: "medio" },
-  "dual-task": { type: "visual", difficulty: "dificil" },
-  "mot": { type: "espacial", difficulty: "dificil" },
-  "focus-agents": { type: "visual", difficulty: "medio" },
-  "focus-agents-auditivo": { type: "auditiva", difficulty: "medio" },
+  "trilha-visual": { type: "visual", difficulty: "facil", secondary: ["Tempo de Reação"] },
+  "atencao-seletiva": { type: "visual", difficulty: "medio", secondary: ["Busca Visual Rápida"] },
+  "atencao-sustentada": { type: "visual", difficulty: "medio", secondary: ["Controle Inibitório"] },
+  "dual-task": { type: "visual", difficulty: "dificil", secondary: ["Flexibilidade Cognitiva"] },
+  "mot": { type: "espacial", difficulty: "dificil", secondary: ["Atenção Seletiva"] },
+  "focus-agents": { type: "visual", difficulty: "medio", secondary: ["Atenção Seletiva"] },
+  "focus-agents-auditivo": { type: "auditiva", difficulty: "medio", secondary: ["Atenção Seletiva"] },
   // Funções Executivas
-  "torre-hanoi": { type: "espacial", difficulty: "dificil" },
-  "labirinto": { type: "espacial", difficulty: "medio" },
-  "stroop-task": { type: "visual", difficulty: "medio" },
-  "mudanca-regras": { type: "visual", difficulty: "medio" },
-  "task-switching": { type: "visual", difficulty: "dificil" },
-  "deductive-grid": { type: "espacial", difficulty: "dificil" },
-  "ordem-historia": { type: "verbal", difficulty: "medio" },
+  "torre-hanoi": { type: "espacial", difficulty: "dificil", secondary: ["Resolução de Problemas"] },
+  "labirinto": { type: "espacial", difficulty: "medio", secondary: ["Memória Visuoespacial"] },
+  "stroop-task": { type: "visual", difficulty: "medio", secondary: ["Atenção Seletiva"] },
+  "mudanca-regras": { type: "visual", difficulty: "medio", secondary: ["Tomada de Decisão"] },
+  "task-switching": { type: "visual", difficulty: "dificil", secondary: ["Atenção Alternada"] },
+  "deductive-grid": { type: "espacial", difficulty: "dificil", secondary: ["Resolução de Problemas"] },
+  "ordem-historia": { type: "verbal", difficulty: "medio", secondary: ["Sequenciamento Temporal"] },
   // Velocidade de Processamento
-  "tempo-reacao": { type: "visual", difficulty: "facil" },
-  "semaforo": { type: "visual", difficulty: "facil" },
-  "certo-ou-errado": { type: "verbal", difficulty: "facil" },
-  "corrida-tempo": { type: "visual", difficulty: "medio" },
+  "tempo-reacao": { type: "visual", difficulty: "facil", secondary: ["Atenção Sustentada"] },
+  "semaforo": { type: "visual", difficulty: "facil", secondary: ["Controle Inibitório"] },
+  "certo-ou-errado": { type: "verbal", difficulty: "facil", secondary: ["Controle Inibitório"] },
+  "corrida-tempo": { type: "visual", difficulty: "medio", secondary: ["Atenção Seletiva"] },
   // Desenvolvimento Funcional
-  "desafio-supermercado": { type: "visual", difficulty: "medio" },
-  "desafio-supermercado-auditivo": { type: "auditiva", difficulty: "medio" },
-  "caca-item-barato": { type: "visual", difficulty: "facil" },
-  "compra-multifuncional": { type: "visual", difficulty: "dificil" },
-  "desafio-orcamento": { type: "verbal", difficulty: "medio" },
-  "antes-depois": { type: "verbal", difficulty: "facil" },
+  "caca-item-barato": { type: "visual", difficulty: "facil", secondary: ["Atenção Seletiva"] },
+  "compra-multifuncional": { type: "visual", difficulty: "dificil", secondary: ["Tomada de Decisão", "Memória Operacional"] },
+  "desafio-orcamento": { type: "verbal", difficulty: "medio", secondary: ["Raciocínio Lógico"] },
+  "antes-depois": { type: "verbal", difficulty: "facil", secondary: ["Memória Episódica"] },
 };
 
-export const DEFAULT_META: ExerciseMeta = { type: "visual", difficulty: "medio" };
+export const DEFAULT_META: ExerciseMeta = { type: "visual", difficulty: "medio", secondary: [] };
 export const metaOf = (id: string): ExerciseMeta => EXERCISE_META[id] ?? DEFAULT_META;
 
 // ── Apresentação ─────────────────────────────────────────────────────────────

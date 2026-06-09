@@ -4,7 +4,7 @@ import { useState, type CSSProperties } from "react";
 import { Brain, ChevronDown } from "lucide-react";
 import { EXERCISE_DEFINITIONS, DOMAIN_LABELS, DOMAIN_COLORS, DOMAIN_DESCRIPTIONS, type Domain } from "@/types";
 import { DOMAIN_ORDER, DOMAIN_ICONS } from "@/components/plano/DomainSelector";
-import { DOMAIN_SUBAREAS, DOMAIN_COUNTS } from "@/lib/domain-taxonomy";
+import { DOMAIN_SUBDOMAINS, DOMAIN_COUNTS } from "@/lib/domain-taxonomy";
 
 export default function TreinoCognitivoPage() {
   // Domínio em foco no catálogo (clicar num card expande seus exercícios).
@@ -100,32 +100,39 @@ export default function TreinoCognitivoPage() {
             </div>
 
             <div className="space-y-5">
-              {DOMAIN_SUBAREAS[active].map((sa) => {
-                const exercises = sa.exercises
+              {DOMAIN_SUBDOMAINS[active].map((sd) => {
+                const exercises = sd.exercises
                   .map((id) => EXERCISE_DEFINITIONS[id as keyof typeof EXERCISE_DEFINITIONS])
                   .filter(Boolean);
-                if (exercises.length === 0) return null;
+                const empty = exercises.length === 0;
                 return (
-                  <div key={sa.subarea}>
-                    <p className="text-[11px] font-bold uppercase tracking-wide text-gray-400 mb-2 pl-1">
-                      {sa.subarea}
+                  <div key={sd.id}>
+                    <p className="text-[11px] font-bold uppercase tracking-wide text-gray-400 mb-2 pl-1 flex items-center gap-2">
+                      {sd.label}
+                      {empty && <span className="text-[10px] italic font-normal text-gray-300 normal-case tracking-normal">em breve</span>}
                     </p>
-                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-2.5">
-                      {exercises.map((ex) => (
-                        <div
-                          key={ex.id}
-                          className="flex items-start gap-3 rounded-xl bg-white border border-gray-200 p-3"
-                        >
-                          <span className="text-2xl leading-none mt-0.5">{ex.icon}</span>
-                          <div className="min-w-0">
-                            <p className="font-medium text-sm text-gray-800">{ex.name}</p>
-                            <p className="text-xs text-gray-500 leading-snug">
-                              {ex.description} · ~{ex.estimatedMinutes}min
-                            </p>
+                    {empty ? (
+                      <div className="rounded-xl border border-dashed border-gray-200 bg-white/50 px-3 py-2.5">
+                        <p className="text-xs text-gray-400">Subdomínio em construção — novos exercícios em breve.</p>
+                      </div>
+                    ) : (
+                      <div className="grid grid-cols-1 sm:grid-cols-2 gap-2.5">
+                        {exercises.map((ex) => (
+                          <div
+                            key={ex.id}
+                            className="flex items-start gap-3 rounded-xl bg-white border border-gray-200 p-3"
+                          >
+                            <span className="text-2xl leading-none mt-0.5">{ex.icon}</span>
+                            <div className="min-w-0">
+                              <p className="font-medium text-sm text-gray-800">{ex.name}</p>
+                              <p className="text-xs text-gray-500 leading-snug">
+                                {ex.description} · ~{ex.estimatedMinutes}min
+                              </p>
+                            </div>
                           </div>
-                        </div>
-                      ))}
-                    </div>
+                        ))}
+                      </div>
+                    )}
                   </div>
                 );
               })}

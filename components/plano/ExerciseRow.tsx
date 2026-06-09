@@ -1,5 +1,6 @@
 import { Plus, Check } from "lucide-react";
 import { metaOf } from "@/lib/exercise-meta";
+import { EXERCISE_SUBDOMAIN } from "@/lib/domain-taxonomy";
 import { TypeBadge, DifficultyDots } from "./badges";
 
 export interface ExerciseInfo {
@@ -27,6 +28,11 @@ export function ExerciseRow({ exercise, added, onToggle }: ExerciseRowProps) {
         <div className="min-w-0">
           <p className="font-medium text-sm text-gray-800 truncate">{exercise.name}</p>
           <p className="text-xs text-gray-500 leading-snug line-clamp-2">{exercise.description}</p>
+          {meta.secondary.length > 0 && (
+            <p className="text-[11px] text-gray-400 mt-0.5 truncate">
+              <span className="text-gray-300">+ também:</span> {meta.secondary.join(" · ")}
+            </p>
+          )}
           {/* Tipo + dificuldade em telas pequenas (as colunas somem no mobile) */}
           <div className="flex items-center gap-2 mt-1.5 sm:hidden">
             <TypeBadge type={meta.type} />
