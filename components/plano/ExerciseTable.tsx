@@ -1,0 +1,35 @@
+import { ExerciseRow, type ExerciseInfo } from "./ExerciseRow";
+
+interface ExerciseTableProps {
+  exercises: ExerciseInfo[];
+  addedIds: Set<string>;
+  onToggle: (id: string) => void;
+}
+
+/** Tabela moderna de exercícios. */
+export function ExerciseTable({ exercises, addedIds, onToggle }: ExerciseTableProps) {
+  if (exercises.length === 0) {
+    return (
+      <div className="rounded-2xl border border-gray-200 bg-white py-14 text-center">
+        <p className="text-sm text-gray-400">Nenhum exercício encontrado com esses filtros.</p>
+      </div>
+    );
+  }
+
+  return (
+    <div className="rounded-2xl border border-gray-200 bg-white overflow-hidden">
+      {/* Cabeçalho */}
+      <div className="hidden sm:grid grid-cols-[minmax(0,1fr)_110px_120px_88px_56px] gap-3 px-4 py-2.5 bg-gray-50/80 border-b border-gray-200">
+        {["Exercício", "Tipo", "Dificuldade", "Duração", ""].map((h, i) => (
+          <span key={i} className="text-[11px] font-semibold uppercase tracking-wide text-gray-400">{h}</span>
+        ))}
+      </div>
+      {/* Linhas */}
+      <div>
+        {exercises.map((ex) => (
+          <ExerciseRow key={ex.id} exercise={ex} added={addedIds.has(ex.id)} onToggle={onToggle} />
+        ))}
+      </div>
+    </div>
+  );
+}

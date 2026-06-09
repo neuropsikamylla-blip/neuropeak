@@ -48,3 +48,10 @@ export const DOMAIN_EXERCISES: Record<Domain, string[]> = Object.fromEntries(
 export const DOMAIN_COUNTS: Record<Domain, number> = Object.fromEntries(
   ALL_DOMAINS.map((d) => [d, DOMAIN_EXERCISES[d].length])
 ) as Record<Domain, number>;
+
+// Domínio de cada exercício segundo a taxonomia (não o domain de EXERCISE_DEFINITIONS).
+export const EXERCISE_DOMAIN: Record<string, Domain> = (() => {
+  const map: Record<string, Domain> = {};
+  for (const d of ALL_DOMAINS) for (const ex of DOMAIN_EXERCISES[d]) map[ex] = d;
+  return map;
+})();

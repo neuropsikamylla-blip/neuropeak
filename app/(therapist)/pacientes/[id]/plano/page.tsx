@@ -1,35 +1,25 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, useMemo } from "react";
 import { useRouter, useParams } from "next/navigation";
 import { Button } from "@/components/ui/button";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Label } from "@/components/ui/label";
-import { Input } from "@/components/ui/input";
 import { useToast } from "@/components/ui/use-toast";
-import { ArrowLeft, Loader2, Save } from "lucide-react";
+import { ArrowLeft, ArrowRight, Loader2 } from "lucide-react";
 import Link from "next/link";
-import { EXERCISE_DEFINITIONS, DOMAIN_LABELS, DOMAIN_COLORS, type Domain } from "@/types";
-import { ALL_DOMAINS, DOMAIN_SUBAREAS, DOMAIN_EXERCISES, DOMAIN_COUNTS } from "@/lib/domain-taxonomy";
-import { DomainSelector } from "@/components/plano/DomainSelector";
-import { ExerciseScienceCard } from "@/components/exercises/ExerciseScienceCard";
+import { EXERCISE_DEFINITIONS, DOMAIN_LABELS, DOMAIN_COLORS, DOMAIN_DESCRIPTIONS, type Domain } from "@/types";
+import { ALL_DOMAINS, DOMAIN_EXERCISES, DOMAIN_COUNTS, EXERCISE_DOMAIN } from "@/lib/domain-taxonomy";
+import { metaOf } from "@/lib/exercise-meta";
+import { DomainSelector, DOMAIN_ICONS } from "@/components/plano/DomainSelector";
+import { DomainSidebar } from "@/components/plano/DomainSidebar";
+import { ExerciseFilters, type TypeFilter } from "@/components/plano/ExerciseFilters";
+import { ExerciseTable } from "@/components/plano/ExerciseTable";
+import { PlanBuilderSidebar } from "@/components/plano/PlanBuilderSidebar";
+import type { ExerciseInfo } from "@/components/plano/ExerciseRow";
 import { parsePlanExercises, buildPlanExercises } from "@/lib/exercise-plan";
 import { DEFAULT_SPAN_SETTINGS, type SpanSettings } from "@/components/exercises/memory/SpanNumerico";
 
 const SPAN_IDS = ["span-numerico", "span-numerico-inverso"];
-
-// ── Modalidade de cada exercício (padrão: visual) ────────────────────────────
-type Modality = "visual" | "auditivo" | "ambos";
-const MODALITY: Record<string, Modality> = {
-  "span-numerico": "auditivo",
-  "span-numerico-inverso": "auditivo",
-  "desafio-supermercado-auditivo": "auditivo",
-  "focus-agents-auditivo": "auditivo",
-  "antes-depois": "ambos",
-};
-const modOf = (id: string): Modality => MODALITY[id] ?? "visual";
-const MOD_LABEL: Record<Modality, string> = { visual: "👁️ Visual", auditivo: "🎧 Auditivo", ambos: "👁️🎧 Visual + Auditivo" };
-const MOD_BADGE: Record<Modality, string> = { visual: "👁️", auditivo: "🎧", ambos: "👁️🎧" };
+const exDef = (id: string) => EXERCISE_DEFINITIONS[id as keyof typeof EXERCISE_DEFINITIONS];
 
 export default function PlanoPage() {
   const params = useParams();
@@ -43,9 +33,14 @@ export default function PlanoPage() {
   const [selectedExercises, setSelectedExercises] = useState<string[]>([]);
   const [exerciseSettings, setExerciseSettings] = useState<Record<string, Record<string, unknown>>>({});
   const [exerciseLevels, setExerciseLevels] = useState<Record<string, number>>({});
-  const [modalityFilter, setModalityFilter] = useState<"todos" | Modality>("todos");
   const [sessionDuration, setSessionDuration] = useState(30);
   const [frequency, setFrequency] = useState(3);
+
+  // Fluxo de 2 etapas + estado da etapa de exercícios.
+  const [step, setStep] = useState<"domains" | "exercises">("domains");
+  const [activeDomain, setActiveDomain] = useState<Domain>("memory");
+  const [typeFilter, setTypeFilter] = useState<TypeFilter>("todos");
+  const [query, setQuery] = useState("");
 
   useEffect(() => {
     fetch(`/api/patients/${patientId}?config=true`)
@@ -65,7 +60,7 @@ export default function PlanoPage() {
           setFrequency(plan.frequency ?? 3);
         } else {
           setSelectedDomains(["memory", "attention"]);
-          setSelectedExercises(["span-numerico", "stroop-task"]);
+          setSelectedExercises([]);
         }
         // Níveis atuais de dificuldade de cada exercício (definidos pelo terapeuta ou pela progressão).
         const cfgs: { exerciseId: string; currentDifficulty: number }[] = data.patient?.exerciseConfigs ?? [];
@@ -75,7 +70,7 @@ export default function PlanoPage() {
       })
       .catch(() => {
         setSelectedDomains(["memory", "attention"]);
-        setSelectedExercises(["span-numerico", "stroop-task"]);
+        setSelectedExercises([]);
       })
       .finally(() => setLoadingPlan(false));
   }, [patientId]);
@@ -87,9 +82,8 @@ export default function PlanoPage() {
         const domainExs = DOMAIN_EXERCISES[domain];
         setSelectedExercises((exs) => exs.filter((e) => !domainExs.includes(e)));
         return next;
-      } else {
-        return [...prev, domain];
       }
+      return [...prev, domain];
     });
   }
 
@@ -99,9 +93,6 @@ export default function PlanoPage() {
     );
   }
 
-  // Config do terapeuta para os exercícios de Span (mostrar resposta, áudio, tentativas).
-  const spanCfg = (exId: string): SpanSettings =>
-    ({ ...DEFAULT_SPAN_SETTINGS, ...(exerciseSettings[exId] as Partial<SpanSettings> ?? {}) });
   function setSpanCfg<K extends keyof SpanSettings>(exId: string, key: K, value: SpanSettings[K]) {
     setExerciseSettings((prev) => ({
       ...prev,
@@ -109,12 +100,21 @@ export default function PlanoPage() {
     }));
   }
 
+  function setLevel(exId: string, value: number) {
+    setExerciseLevels((prev) => ({ ...prev, [exId]: value }));
+  }
+
+  function goToExercises() {
+    const first = ALL_DOMAINS.find((d) => selectedDomains.includes(d)) ?? "memory";
+    setActiveDomain(first);
+    setStep("exercises");
+  }
+
   async function handleSave() {
     if (selectedExercises.length === 0) {
       toast({ title: "Selecione ao menos um exercício", variant: "destructive" });
       return;
     }
-
     setLoading(true);
     try {
       const res = await fetch(`/api/patients/${patientId}`, {
@@ -127,7 +127,6 @@ export default function PlanoPage() {
             sessionDuration,
             frequency,
           },
-          // Nível inicial de cada exercício escolhido pelo terapeuta (Span gerencia o seu próprio nível).
           exerciseLevels: Object.fromEntries(
             selectedExercises
               .filter((exId) => !SPAN_IDS.includes(exId))
@@ -135,9 +134,7 @@ export default function PlanoPage() {
           ),
         }),
       });
-
       if (!res.ok) throw new Error("Erro ao salvar plano");
-
       toast({ title: "Plano salvo com sucesso!" });
       router.push(`/pacientes/${patientId}`);
     } catch {
@@ -147,6 +144,27 @@ export default function PlanoPage() {
     }
   }
 
+  // Domínio em foco garantidamente válido (entre os selecionados).
+  const activeSafe: Domain = selectedDomains.includes(activeDomain) ? activeDomain : (selectedDomains[0] ?? "memory");
+
+  // Exercícios visíveis na tabela (do domínio em foco, filtrados por tipo + busca).
+  const visibleExercises = useMemo<ExerciseInfo[]>(() => {
+    const q = query.trim().toLowerCase();
+    return (DOMAIN_EXERCISES[activeSafe] ?? [])
+      .map((id) => exDef(id))
+      .filter(Boolean)
+      .filter((ex) => typeFilter === "todos" || metaOf(ex.id).type === typeFilter)
+      .filter((ex) => !q || ex.name.toLowerCase().includes(q) || ex.description.toLowerCase().includes(q))
+      .map((ex) => ({ id: ex.id, name: ex.name, description: ex.description, estimatedMinutes: ex.estimatedMinutes, icon: ex.icon }));
+  }, [activeSafe, typeFilter, query]);
+
+  const addedIds = useMemo(() => new Set(selectedExercises), [selectedExercises]);
+  const addedCounts = useMemo(() => {
+    const m = Object.fromEntries(ALL_DOMAINS.map((d) => [d, 0])) as Record<Domain, number>;
+    selectedExercises.forEach((id) => { const d = EXERCISE_DOMAIN[id]; if (d) m[d] += 1; });
+    return m;
+  }, [selectedExercises]);
+
   if (loadingPlan) {
     return (
       <div className="flex items-center justify-center min-h-[40vh]">
@@ -155,215 +173,90 @@ export default function PlanoPage() {
     );
   }
 
-  // Renderiza um exercício (checkbox + nível + config Span). É uma FUNÇÃO (não um
-  // componente aninhado) para o slider de nível não remontar/perder foco ao arrastar.
-  const renderExerciseRow = (exId: string) => {
-    const ex = EXERCISE_DEFINITIONS[exId as keyof typeof EXERCISE_DEFINITIONS];
-    if (!ex) return null;
-    const mod = modOf(exId);
-    const selected = selectedExercises.includes(exId);
+  // ── ETAPA 1 — seleção de domínios ──────────────────────────────────────────
+  if (step === "domains") {
     return (
-      <div key={exId}>
-        <label
-          className={`flex items-center gap-3 p-3 rounded-lg border-2 cursor-pointer transition-all ${
-            selected ? "border-blue-400 bg-blue-50" : "border-gray-200 hover:border-gray-300"
-          }`}
-        >
-          <input
-            type="checkbox"
-            checked={selected}
-            onChange={() => toggleExercise(exId)}
-            className="w-4 h-4 text-blue-600 rounded"
-          />
-          <span className="text-xl">{ex.icon}</span>
-          <div className="flex-1 min-w-0">
-            <div className="flex items-center gap-1.5 flex-wrap">
-              <p className="font-medium text-sm text-gray-800">{ex.name}</p>
-              <span
-                title={MOD_LABEL[mod]}
-                className={`text-[10px] px-1.5 py-0.5 rounded-full font-semibold ${
-                  mod === "auditivo" ? "bg-amber-100 text-amber-700"
-                  : mod === "ambos" ? "bg-violet-100 text-violet-700"
-                  : "bg-sky-100 text-sky-700"
-                }`}
-              >
-                {MOD_BADGE[mod]}
-              </span>
-            </div>
-            <p className="text-xs text-gray-500">{ex.description} · ~{ex.estimatedMinutes}min</p>
+      <div className="max-w-7xl mx-auto space-y-6">
+        <div className="flex items-center gap-3 max-w-3xl mx-auto w-full">
+          <Button variant="ghost" size="icon" asChild>
+            <Link href={`/pacientes/${patientId}`} aria-label="Voltar"><ArrowLeft className="w-5 h-5" /></Link>
+          </Button>
+          <div>
+            <h1 className="text-2xl font-bold text-gray-900">Plano de Treinamento</h1>
+            <p className="text-sm text-gray-500">Etapa 1 de 2 — escolha os domínios</p>
           </div>
-        </label>
-        <ExerciseScienceCard exerciseId={exId} />
+        </div>
 
-        {/* Nível de dificuldade inicial — escolhido pelo terapeuta (1 a 10) */}
-        {selected && !SPAN_IDS.includes(exId) && (
-          <div className="mt-2 ml-7 mr-1 p-3 rounded-lg bg-emerald-50 border border-emerald-200">
-            <div className="flex items-center justify-between gap-2 mb-1">
-              <span className="text-[11px] font-bold text-emerald-700 uppercase tracking-wide">🎚️ Nível inicial</span>
-              <span className="text-sm font-bold text-emerald-800 tabular-nums">
-                {exerciseLevels[exId] ?? 1} <span className="text-emerald-500/70 font-normal">/ 10</span>
-              </span>
-            </div>
-            <input
-              type="range" min={1} max={10} step={1}
-              value={exerciseLevels[exId] ?? 1}
-              onChange={(e) => setExerciseLevels((prev) => ({ ...prev, [exId]: Number(e.target.value) }))}
-              className="w-full accent-emerald-600 cursor-pointer"
-            />
-            <p className="text-[10px] text-emerald-600/80 pt-1">
-              Começa neste nível e sobe/desce sozinho conforme o paciente acerta ou erra.
-            </p>
-          </div>
-        )}
+        <DomainSelector selected={selectedDomains} onToggle={toggleDomain} counts={DOMAIN_COUNTS} />
 
-        {/* Config do terapeuta (Span) — fixa para o paciente */}
-        {SPAN_IDS.includes(exId) && selected && (() => {
-          const c = spanCfg(exId);
-          const Pill = ({ on, onClick, children }: { on: boolean; onClick: () => void; children: React.ReactNode }) => (
-            <button type="button" onClick={onClick}
-              className={`px-2.5 py-1 rounded-md text-xs font-semibold border ${
-                on ? "bg-indigo-600 text-white border-indigo-600" : "bg-white text-gray-600 border-gray-300"}`}>
-              {children}
-            </button>
-          );
-          const CfgRow = ({ label, children }: { label: string; children: React.ReactNode }) => (
-            <div className="flex items-center justify-between gap-2">
-              <span className="text-xs text-gray-600">{label}</span>
-              <div className="flex gap-1.5">{children}</div>
-            </div>
-          );
-          return (
-            <div className="mt-2 ml-7 mr-1 p-3 rounded-lg bg-indigo-50 border border-indigo-200 space-y-2">
-              <p className="text-[11px] font-bold text-indigo-700 uppercase tracking-wide">⚙️ Configuração (fixa para o paciente)</p>
-              <CfgRow label="Mostrar resposta ao errar">
-                <Pill on={c.showAnswerOnError} onClick={() => setSpanCfg(exId, "showAnswerOnError", true)}>Sim</Pill>
-                <Pill on={!c.showAnswerOnError} onClick={() => setSpanCfg(exId, "showAnswerOnError", false)}>Não</Pill>
-              </CfgRow>
-              <CfgRow label="Tentativas">
-                {[10, 15, 20, 30].map(t => (
-                  <Pill key={t} on={c.trials === t} onClick={() => setSpanCfg(exId, "trials", t)}>{t}</Pill>
-                ))}
-              </CfgRow>
-              <CfgRow label="Repetir áudio">
-                <Pill on={c.allowReplay} onClick={() => setSpanCfg(exId, "allowReplay", true)}>Sim</Pill>
-                <Pill on={!c.allowReplay} onClick={() => setSpanCfg(exId, "allowReplay", false)}>Não</Pill>
-              </CfgRow>
-              {c.allowReplay && (
-                <CfgRow label="Repetir custa pontos">
-                  <Pill on={c.replayPenalty} onClick={() => setSpanCfg(exId, "replayPenalty", true)}>Sim</Pill>
-                  <Pill on={!c.replayPenalty} onClick={() => setSpanCfg(exId, "replayPenalty", false)}>Não</Pill>
-                </CfgRow>
-              )}
-              <p className="text-[10px] text-indigo-500/80 pt-0.5">O nível é automático (o paciente retoma onde parou).</p>
-            </div>
-          );
-        })()}
+        <div className="flex justify-end max-w-7xl mx-auto w-full">
+          <Button onClick={goToExercises} disabled={selectedDomains.length === 0} className="gap-2">
+            Avançar para exercícios <ArrowRight className="w-4 h-4" />
+          </Button>
+        </div>
       </div>
     );
   }
 
-  const activeDomains = ALL_DOMAINS.filter((d) => selectedDomains.includes(d));
+  // ── ETAPA 2 — seleção de exercícios (3 colunas) ────────────────────────────
+  const Icon = DOMAIN_ICONS[activeSafe];
+  const color = DOMAIN_COLORS[activeSafe];
 
   return (
-    <div className="max-w-6xl mx-auto space-y-6">
-      <div className="flex items-center gap-3 max-w-3xl mx-auto w-full">
-        <Button variant="ghost" size="icon" asChild>
-          <Link href={`/pacientes/${patientId}`} aria-label="Voltar"><ArrowLeft className="w-5 h-5" /></Link>
+    <div className="max-w-7xl mx-auto space-y-6">
+      <div className="flex items-center gap-3">
+        <Button variant="ghost" size="icon" onClick={() => setStep("domains")} aria-label="Voltar aos domínios">
+          <ArrowLeft className="w-5 h-5" />
         </Button>
         <div>
           <h1 className="text-2xl font-bold text-gray-900">Plano de Treinamento</h1>
-          <p className="text-sm text-gray-500">Configure os exercícios do paciente</p>
+          <p className="text-sm text-gray-500">Etapa 2 de 2 — escolha os exercícios</p>
         </div>
       </div>
 
-      {/* Seleção de domínios — seção premium (largura total) */}
-      <DomainSelector selected={selectedDomains} onToggle={toggleDomain} counts={DOMAIN_COUNTS} />
+      <div className="grid grid-cols-1 lg:grid-cols-[260px_minmax(0,1fr)_320px] gap-5 items-start">
+        {/* Coluna 1 — domínios */}
+        <DomainSidebar selected={selectedDomains} active={activeSafe} onFocus={setActiveDomain} addedCounts={addedCounts} />
 
-      {/* Demais configurações — container central mais estreito */}
-      <div className="max-w-3xl mx-auto w-full space-y-6">
-        {/* Session settings */}
-        <Card>
-          <CardHeader><CardTitle className="text-base">Configurações de Sessão</CardTitle></CardHeader>
-          <CardContent className="grid grid-cols-2 gap-4">
+        {/* Coluna 2 — área principal */}
+        <div className="space-y-4 min-w-0">
+          {/* Cabeçalho do domínio */}
+          <div className="flex items-start gap-3">
+            <span className="flex items-center justify-center w-12 h-12 rounded-xl shrink-0" style={{ backgroundColor: `${color}14` }}>
+              <Icon className="w-6 h-6" style={{ color }} strokeWidth={1.9} />
+            </span>
             <div>
-              <Label>Duração da sessão (min)</Label>
-              <Input type="number" min={10} max={90} value={sessionDuration}
-                onChange={(e) => setSessionDuration(Number(e.target.value))} className="mt-1" />
+              <div className="flex items-center gap-2 flex-wrap">
+                <h2 className="text-lg font-bold" style={{ color }}>{DOMAIN_LABELS[activeSafe]}</h2>
+                <span className="px-2 py-0.5 rounded-full text-xs font-semibold" style={{ color, backgroundColor: `${color}14` }}>
+                  {DOMAIN_COUNTS[activeSafe]} exercícios
+                </span>
+              </div>
+              <p className="text-sm text-gray-500">{DOMAIN_DESCRIPTIONS[activeSafe]}</p>
             </div>
-            <div>
-              <Label>Frequência (sessões/semana)</Label>
-              <Input type="number" min={1} max={7} value={frequency}
-                onChange={(e) => setFrequency(Number(e.target.value))} className="mt-1" />
-            </div>
-          </CardContent>
-        </Card>
+          </div>
 
-        {/* Filtro por modalidade */}
-        <Card>
-          <CardContent className="py-3">
-            <div className="flex items-center gap-2 flex-wrap">
-              <span className="text-xs font-semibold text-gray-500 mr-1">Modalidade:</span>
-              {([["todos", "Todos"], ["visual", "👁️ Visual"], ["auditivo", "🎧 Auditivo"], ["ambos", "👁️🎧 Ambos"]] as const).map(([val, lab]) => (
-                <button key={val} type="button" onClick={() => setModalityFilter(val)}
-                  className={`px-3 py-1 rounded-full text-xs font-semibold border transition-colors ${
-                    modalityFilter === val ? "bg-blue-600 text-white border-blue-600" : "bg-white text-gray-600 border-gray-300 hover:border-blue-300"
-                  }`}>
-                  {lab}
-                </button>
-              ))}
-            </div>
-          </CardContent>
-        </Card>
+          <ExerciseFilters active={typeFilter} onChange={setTypeFilter} query={query} onQuery={setQuery} />
+          <ExerciseTable exercises={visibleExercises} addedIds={addedIds} onToggle={toggleExercise} />
+        </div>
 
-        {/* Exercícios dos domínios selecionados → Subáreas → Exercícios */}
-        {activeDomains.length === 0 ? (
-          <Card>
-            <CardContent className="py-10 text-center text-sm text-gray-400">
-              Selecione ao menos um domínio acima para escolher os exercícios.
-            </CardContent>
-          </Card>
-        ) : (
-          activeDomains.map((domain) => {
-            const subareas = DOMAIN_SUBAREAS[domain]
-              .map((sa) => ({ ...sa, exercises: sa.exercises.filter((id) => modalityFilter === "todos" || modOf(id) === modalityFilter) }))
-              .filter((sa) => sa.exercises.length > 0);
-            return (
-              <Card key={domain}>
-                <CardHeader className="pb-3">
-                  <CardTitle className="text-base flex items-center gap-2">
-                    <span className="w-2.5 h-2.5 rounded-full" style={{ backgroundColor: DOMAIN_COLORS[domain] }} />
-                    <span style={{ color: DOMAIN_COLORS[domain] }}>{DOMAIN_LABELS[domain]}</span>
-                  </CardTitle>
-                </CardHeader>
-                <CardContent className="space-y-4">
-                  {subareas.length === 0 ? (
-                    <p className="text-xs text-gray-400 italic">Nenhum exercício desta modalidade neste domínio.</p>
-                  ) : (
-                    subareas.map((sa) => (
-                      <div key={sa.subarea}>
-                        <p className="text-[11px] font-bold uppercase tracking-wide text-gray-400 mb-1.5 pl-1">{sa.subarea}</p>
-                        <div className="grid grid-cols-1 gap-2">
-                          {sa.exercises.map((exId) => renderExerciseRow(exId))}
-                        </div>
-                      </div>
-                    ))
-                  )}
-                </CardContent>
-              </Card>
-            );
-          })
-        )}
-
-        {/* Desafio da Cidade — reservado para a área do Mundo Interior (a desenvolver). */}
-
-        <div className="flex gap-3">
-          <Button variant="outline" asChild className="flex-1">
-            <Link href={`/pacientes/${patientId}`}>Cancelar</Link>
-          </Button>
-          <Button onClick={handleSave} disabled={loading} className="flex-1">
-            {loading ? <Loader2 className="w-4 h-4 animate-spin mr-2" /> : <Save className="w-4 h-4 mr-2" />}
-            Salvar Plano
-          </Button>
+        {/* Coluna 3 — plano em construção */}
+        <div className="lg:sticky lg:top-6">
+          <PlanBuilderSidebar
+            selectedExercises={selectedExercises}
+            exerciseLevels={exerciseLevels}
+            exerciseSettings={exerciseSettings}
+            onLevel={setLevel}
+            onSpanCfg={setSpanCfg}
+            onRemove={toggleExercise}
+            sessionDuration={sessionDuration}
+            frequency={frequency}
+            onSessionDuration={setSessionDuration}
+            onFrequency={setFrequency}
+            onSave={handleSave}
+            onVisualize={() => router.push(`/pacientes/${patientId}`)}
+            saving={loading}
+          />
         </div>
       </div>
     </div>
