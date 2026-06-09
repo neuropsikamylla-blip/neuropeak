@@ -58,7 +58,7 @@ export function ExerciseCard({
           </button>
         </div>
 
-        <ExerciseIcon id={id} emoji={icon} size={28} />
+        <ExerciseIcon id={id} emoji={icon} size={38} />
         <div className="min-w-0 flex-1">
           <p className="text-sm font-semibold text-gray-800 truncate">{name}</p>
           <div className="flex items-center gap-2 mt-0.5">

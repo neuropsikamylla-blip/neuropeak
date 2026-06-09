@@ -29,7 +29,7 @@ export function ExerciseRow({ exercise, added, onToggle }: ExerciseRowProps) {
     <div className="grid grid-cols-[1fr_auto] sm:grid-cols-[minmax(0,1fr)_124px_104px_64px_48px] items-center gap-3 px-4 py-3.5 border-b border-gray-100 last:border-b-0 hover:bg-gray-50/70 transition-colors">
       {/* Exercício */}
       <div className="flex items-start gap-3 min-w-0">
-        <ExerciseIcon id={exercise.id} emoji={exercise.icon} size={34} className="mt-0.5" />
+        <ExerciseIcon id={exercise.id} emoji={exercise.icon} size={44} className="mt-0.5" />
         <div className="min-w-0">
           <p className="font-medium text-sm text-gray-800 leading-tight">{exercise.name}</p>
           <p className="text-xs text-gray-500 leading-snug mt-0.5 line-clamp-1">{exercise.description}</p>

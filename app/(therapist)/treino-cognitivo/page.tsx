@@ -123,7 +123,7 @@ export default function TreinoCognitivoPage() {
                             key={ex.id}
                             className="flex items-start gap-3 rounded-xl bg-white border border-gray-200 p-3"
                           >
-                            <ExerciseIcon id={ex.id} emoji={ex.icon} size={32} className="mt-0.5" />
+                            <ExerciseIcon id={ex.id} emoji={ex.icon} size={42} className="mt-0.5" />
                             <div className="min-w-0">
                               <p className="font-medium text-sm text-gray-800">{ex.name}</p>
                               <p className="text-xs text-gray-500 leading-snug">
