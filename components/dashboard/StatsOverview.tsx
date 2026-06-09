@@ -40,35 +40,35 @@ export function StatsOverview({ totalPatients, sessionsThisWeek, pendingAlerts, 
       value: totalPatients,
       suffix: "",
       icon: Users,
-      iconBg: "#EFF6FF",
-      iconColor: "#2563EB",
-      sparkColor: "#2563EB",
+      iconBg: "rgba(96,165,250,0.15)",
+      iconColor: "#60A5FA",
+      sparkColor: "#60A5FA",
       sparkPoints: [1, 1.5, 1, 2, 1.8, 2.2, Math.max(totalPatients, 1)],
       trend: "up" as const,
       trendPct: "12%",
-      trendColor: "#10B981",
+      trendColor: "#34D399",
     },
     {
       label: "Sessões esta semana",
       value: sessionsThisWeek,
       suffix: "",
       icon: Calendar,
-      iconBg: "#ECFDF5",
-      iconColor: "#10B981",
-      sparkColor: "#10B981",
+      iconBg: "rgba(52,211,153,0.15)",
+      iconColor: "#34D399",
+      sparkColor: "#34D399",
       sparkPoints: [2, 3, 2.5, 4, 3.2, 5, Math.max(sessionsThisWeek, 2)],
       trend: "up" as const,
       trendPct: "25%",
-      trendColor: "#10B981",
+      trendColor: "#34D399",
     },
     {
       label: "Alertas pendentes",
       value: pendingAlerts,
       suffix: "",
       icon: Bell,
-      iconBg: pendingAlerts > 0 ? "#FFFBEB" : "#F8FAFC",
-      iconColor: pendingAlerts > 0 ? "#F59E0B" : "#94A3B8",
-      sparkColor: pendingAlerts > 0 ? "#F59E0B" : "#CBD5E1",
+      iconBg: pendingAlerts > 0 ? "rgba(251,191,36,0.15)" : "rgba(255,255,255,0.06)",
+      iconColor: pendingAlerts > 0 ? "#FBBF24" : "#94A3B8",
+      sparkColor: pendingAlerts > 0 ? "#FBBF24" : "#64748B",
       sparkPoints: [3, 2, 3, 1, 2, pendingAlerts > 0 ? 1 : 0, pendingAlerts],
       trend: "stable" as const,
       trendPct: "0%",
@@ -79,13 +79,13 @@ export function StatsOverview({ totalPatients, sessionsThisWeek, pendingAlerts, 
       value: avgAdherence,
       suffix: "%",
       icon: TrendingUp,
-      iconBg: "#F5F3FF",
-      iconColor: "#7C3AED",
-      sparkColor: "#7C3AED",
+      iconBg: "rgba(167,139,250,0.15)",
+      iconColor: "#A78BFA",
+      sparkColor: "#A78BFA",
       sparkPoints: [70, 76, 74, 82, 88, 94, Math.max(avgAdherence, 60)],
       trend: "up" as const,
       trendPct: "8%",
-      trendColor: "#10B981",
+      trendColor: "#34D399",
     },
   ];
 
@@ -100,20 +100,20 @@ export function StatsOverview({ totalPatients, sessionsThisWeek, pendingAlerts, 
         >
           <div
             style={{
-              background: "#FFFFFF",
+              background: "#14264e",
               borderRadius: 20,
-              border: "1px solid #F1F5F9",
-              boxShadow: "0 1px 3px rgba(0,0,0,0.04), 0 4px 16px rgba(0,0,0,0.04)",
+              border: "1px solid rgba(255,255,255,0.08)",
+              boxShadow: "0 1px 3px rgba(0,0,0,0.2), 0 4px 16px rgba(0,0,0,0.18)",
               padding: "1.25rem",
               transition: "box-shadow 0.2s ease, transform 0.2s ease",
               cursor: "default",
             }}
             onMouseEnter={(e) => {
-              (e.currentTarget as HTMLElement).style.boxShadow = "0 4px 24px rgba(37,99,235,0.09), 0 1px 3px rgba(0,0,0,0.05)";
+              (e.currentTarget as HTMLElement).style.boxShadow = "0 4px 24px rgba(96,165,250,0.18), 0 1px 3px rgba(0,0,0,0.25)";
               (e.currentTarget as HTMLElement).style.transform = "translateY(-2px)";
             }}
             onMouseLeave={(e) => {
-              (e.currentTarget as HTMLElement).style.boxShadow = "0 1px 3px rgba(0,0,0,0.04), 0 4px 16px rgba(0,0,0,0.04)";
+              (e.currentTarget as HTMLElement).style.boxShadow = "0 1px 3px rgba(0,0,0,0.2), 0 4px 16px rgba(0,0,0,0.18)";
               (e.currentTarget as HTMLElement).style.transform = "translateY(0)";
             }}
           >
@@ -126,10 +126,10 @@ export function StatsOverview({ totalPatients, sessionsThisWeek, pendingAlerts, 
                 <stat.icon style={{ width: 20, height: 20, color: stat.iconColor }} />
               </div>
               <div>
-                <p style={{ fontSize: "1.8rem", fontWeight: 800, color: "#0F172A", lineHeight: 1.1, letterSpacing: "-0.02em" }}>
+                <p style={{ fontSize: "1.8rem", fontWeight: 800, color: "#F1F5F9", lineHeight: 1.1, letterSpacing: "-0.02em" }}>
                   {stat.value}{stat.suffix}
                 </p>
-                <p style={{ fontSize: "0.73rem", color: "#94A3B8", marginTop: 1, fontWeight: 500 }}>
+                <p style={{ fontSize: "0.73rem", color: "#8A9BBC", marginTop: 1, fontWeight: 500 }}>
                   {stat.label}
                 </p>
               </div>

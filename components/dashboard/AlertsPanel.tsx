@@ -22,22 +22,22 @@ interface AlertsPanelProps {
 function AlertIcon({ type }: { type: Alert["type"] }) {
   switch (type) {
     case "MISSED_SESSION":
-      return <Clock style={{ width: 17, height: 17, color: "#F59E0B", flexShrink: 0 }} />;
+      return <Clock style={{ width: 17, height: 17, color: "#FBBF24", flexShrink: 0 }} />;
     case "PERFORMANCE_DROP":
-      return <TrendingDown style={{ width: 17, height: 17, color: "#EF4444", flexShrink: 0 }} />;
+      return <TrendingDown style={{ width: 17, height: 17, color: "#F87171", flexShrink: 0 }} />;
     case "GOAL_REACHED":
-      return <CheckCircle2 style={{ width: 17, height: 17, color: "#10B981", flexShrink: 0 }} />;
+      return <CheckCircle2 style={{ width: 17, height: 17, color: "#34D399", flexShrink: 0 }} />;
     case "CYCLE_COMPLETE":
-      return <CheckCircle2 style={{ width: 17, height: 17, color: "#2563EB", flexShrink: 0 }} />;
+      return <CheckCircle2 style={{ width: 17, height: 17, color: "#60A5FA", flexShrink: 0 }} />;
   }
 }
 
 function alertBadge(type: Alert["type"]): React.CSSProperties {
   switch (type) {
-    case "MISSED_SESSION": return { background: "#FFFBEB", color: "#D97706", border: "1px solid #FEF3C7" };
-    case "PERFORMANCE_DROP": return { background: "#FEF2F2", color: "#EF4444", border: "1px solid #FECACA" };
-    case "GOAL_REACHED": return { background: "#ECFDF5", color: "#10B981", border: "1px solid #D1FAE5" };
-    case "CYCLE_COMPLETE": return { background: "#EFF6FF", color: "#2563EB", border: "1px solid #DBEAFE" };
+    case "MISSED_SESSION": return { background: "rgba(251,191,36,0.15)", color: "#FBBF24", border: "1px solid rgba(251,191,36,0.3)" };
+    case "PERFORMANCE_DROP": return { background: "rgba(248,113,113,0.15)", color: "#F87171", border: "1px solid rgba(248,113,113,0.3)" };
+    case "GOAL_REACHED": return { background: "rgba(52,211,153,0.15)", color: "#34D399", border: "1px solid rgba(52,211,153,0.3)" };
+    case "CYCLE_COMPLETE": return { background: "rgba(96,165,250,0.15)", color: "#60A5FA", border: "1px solid rgba(96,165,250,0.3)" };
   }
 }
 
@@ -75,30 +75,30 @@ export function AlertsPanel({ alerts: initial }: AlertsPanelProps) {
 
   return (
     <div style={{
-      background: "#FFFFFF",
+      background: "#14264e",
       borderRadius: 20,
-      border: "1px solid #F1F5F9",
-      boxShadow: "0 1px 3px rgba(0,0,0,0.04), 0 4px 16px rgba(0,0,0,0.04)",
+      border: "1px solid rgba(255,255,255,0.08)",
+      boxShadow: "0 1px 3px rgba(0,0,0,0.2), 0 4px 16px rgba(0,0,0,0.18)",
       overflow: "hidden",
     }}>
       {/* Header */}
-      <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", padding: "1rem 1.25rem", borderBottom: "1px solid #F1F5F9" }}>
+      <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", padding: "1rem 1.25rem", borderBottom: "1px solid rgba(255,255,255,0.07)" }}>
         <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
-          <AlertCircle style={{ width: 18, height: 18, color: "#EF4444" }} />
-          <span style={{ fontWeight: 700, fontSize: "0.95rem", color: "#0F172A" }}>Alertas</span>
+          <AlertCircle style={{ width: 18, height: 18, color: "#F87171" }} />
+          <span style={{ fontWeight: 700, fontSize: "0.95rem", color: "#F1F5F9" }}>Alertas</span>
           {unread.length > 0 && (
-            <span style={{ fontSize: "0.68rem", fontWeight: 700, borderRadius: 99, padding: "2px 7px", background: "#FEF2F2", color: "#EF4444", border: "1px solid #FECACA" }}>
+            <span style={{ fontSize: "0.68rem", fontWeight: 700, borderRadius: 99, padding: "2px 7px", background: "rgba(248,113,113,0.15)", color: "#F87171", border: "1px solid rgba(248,113,113,0.3)" }}>
               {unread.length}
             </span>
           )}
         </div>
         {unread.length > 1 && (
           <button
-            style={{ fontSize: "0.73rem", color: "#94A3B8", background: "transparent", border: "none", cursor: "pointer", padding: "4px 8px", borderRadius: 8, transition: "color 0.15s" }}
+            style={{ fontSize: "0.73rem", color: "#8A9BBC", background: "transparent", border: "none", cursor: "pointer", padding: "4px 8px", borderRadius: 8, transition: "color 0.15s" }}
             onClick={markAllRead}
             disabled={loading === "all"}
-            onMouseEnter={(e) => { (e.currentTarget as HTMLElement).style.color = "#2563EB"; }}
-            onMouseLeave={(e) => { (e.currentTarget as HTMLElement).style.color = "#94A3B8"; }}
+            onMouseEnter={(e) => { (e.currentTarget as HTMLElement).style.color = "#60A5FA"; }}
+            onMouseLeave={(e) => { (e.currentTarget as HTMLElement).style.color = "#8A9BBC"; }}
           >
             {loading === "all" ? <Loader2 style={{ width: 12, height: 12, display: "inline" }} className="animate-spin" /> : "Marcar todos"}
           </button>
@@ -109,10 +109,10 @@ export function AlertsPanel({ alerts: initial }: AlertsPanelProps) {
       <div style={{ padding: "0.875rem 1rem 1rem" }}>
         {alerts.length === 0 ? (
           <div style={{ textAlign: "center", padding: "2rem 1rem" }}>
-            <div style={{ width: 56, height: 56, borderRadius: "50%", background: "#FEF2F2", display: "flex", alignItems: "center", justifyContent: "center", margin: "0 auto 0.75rem" }}>
-              <Bell style={{ width: 24, height: 24, color: "#FECACA" }} />
+            <div style={{ width: 56, height: 56, borderRadius: "50%", background: "rgba(248,113,113,0.12)", display: "flex", alignItems: "center", justifyContent: "center", margin: "0 auto 0.75rem" }}>
+              <Bell style={{ width: 24, height: 24, color: "rgba(248,113,113,0.55)" }} />
             </div>
-            <p style={{ fontSize: "0.875rem", color: "#94A3B8", fontWeight: 500 }}>Nenhum alerta no momento.</p>
+            <p style={{ fontSize: "0.875rem", color: "#8A9BBC", fontWeight: 500 }}>Nenhum alerta no momento.</p>
           </div>
         ) : (
           <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
@@ -123,9 +123,9 @@ export function AlertsPanel({ alerts: initial }: AlertsPanelProps) {
                   display: "flex", alignItems: "flex-start", gap: 10,
                   padding: "0.75rem",
                   borderRadius: 12,
-                  background: alert.isRead ? "#FAFAFA" : "#FFFFFF",
-                  border: `1px solid ${alert.isRead ? "#F1F5F9" : "#E2E8F0"}`,
-                  opacity: alert.isRead ? 0.55 : 1,
+                  background: alert.isRead ? "#101f42" : "#182a52",
+                  border: `1px solid ${alert.isRead ? "rgba(255,255,255,0.05)" : "rgba(255,255,255,0.1)"}`,
+                  opacity: alert.isRead ? 0.6 : 1,
                   transition: "opacity 0.2s",
                 }}
               >
@@ -134,21 +134,21 @@ export function AlertsPanel({ alerts: initial }: AlertsPanelProps) {
                   <span style={{ fontSize: "0.67rem", fontWeight: 600, borderRadius: 99, padding: "2px 8px", display: "inline-block", marginBottom: 4, ...alertBadge(alert.type) }}>
                     {alertLabel(alert.type)}
                   </span>
-                  <div style={{ fontSize: "0.67rem", color: "#94A3B8" }}>{formatDate(alert.createdAt)}</div>
+                  <div style={{ fontSize: "0.67rem", color: "#8A9BBC" }}>{formatDate(alert.createdAt)}</div>
                   <Link
                     href={`/pacientes/${alert.patientId}`}
-                    style={{ display: "block", fontSize: "0.84rem", fontWeight: 600, color: "#2563EB", marginTop: 2 }}
+                    style={{ display: "block", fontSize: "0.84rem", fontWeight: 600, color: "#60A5FA", marginTop: 2 }}
                   >
                     {alert.patientName}
                   </Link>
-                  <p style={{ fontSize: "0.75rem", color: "#64748B", marginTop: 2 }}>{alert.message}</p>
+                  <p style={{ fontSize: "0.75rem", color: "#B6C4DE", marginTop: 2 }}>{alert.message}</p>
                   {!alert.isRead && (
                     <button
-                      style={{ marginTop: 6, fontSize: "0.71rem", color: "#94A3B8", background: "transparent", border: "none", cursor: "pointer", padding: 0, transition: "color 0.15s" }}
+                      style={{ marginTop: 6, fontSize: "0.71rem", color: "#8A9BBC", background: "transparent", border: "none", cursor: "pointer", padding: 0, transition: "color 0.15s" }}
                       onClick={() => markRead(alert.id)}
                       disabled={loading === alert.id}
-                      onMouseEnter={(e) => { (e.currentTarget as HTMLElement).style.color = "#2563EB"; }}
-                      onMouseLeave={(e) => { (e.currentTarget as HTMLElement).style.color = "#94A3B8"; }}
+                      onMouseEnter={(e) => { (e.currentTarget as HTMLElement).style.color = "#60A5FA"; }}
+                      onMouseLeave={(e) => { (e.currentTarget as HTMLElement).style.color = "#8A9BBC"; }}
                     >
                       {loading === alert.id ? <Loader2 style={{ width: 11, height: 11, display: "inline" }} className="animate-spin" /> : "Marcar como lido"}
                     </button>

@@ -130,10 +130,10 @@ export default async function DashboardPage() {
       {/* Header */}
       <div className="flex justify-between items-center">
         <div>
-          <h1 style={{ fontSize: "1.6rem", fontWeight: 800, color: "#0F172A", lineHeight: 1.2, letterSpacing: "-0.02em" }}>
+          <h1 style={{ fontSize: "1.6rem", fontWeight: 800, color: "#F1F5F9", lineHeight: 1.2, letterSpacing: "-0.02em" }}>
             Dashboard
           </h1>
-          <p style={{ color: "#94A3B8", fontSize: "0.875rem", marginTop: 2, fontWeight: 400 }}>
+          <p style={{ color: "#8A9BBC", fontSize: "0.875rem", marginTop: 2, fontWeight: 400 }}>
             Visão geral dos seus pacientes
           </p>
         </div>
@@ -153,12 +153,12 @@ export default async function DashboardPage() {
         {/* Patient list */}
         <div className="lg:col-span-2">
           <div className="flex items-center justify-between mb-4">
-            <h2 style={{ fontSize: "1.1rem", fontWeight: 700, color: "#0F172A" }}>
+            <h2 style={{ fontSize: "1.1rem", fontWeight: 700, color: "#F1F5F9" }}>
               Pacientes
             </h2>
             <Link
               href="/pacientes"
-              style={{ fontSize: "0.875rem", color: "#2563EB", fontWeight: 500, display: "flex", alignItems: "center", gap: 4 }}
+              style={{ fontSize: "0.875rem", color: "#60A5FA", fontWeight: 500, display: "flex", alignItems: "center", gap: 4 }}
               className="hover:underline"
             >
               Ver todos →
@@ -170,13 +170,13 @@ export default async function DashboardPage() {
                 style={{
                   textAlign: "center",
                   padding: "3rem 1.5rem",
-                  background: "#FFFFFF",
-                  border: "1px solid #F1F5F9",
+                  background: "#14264e",
+                  border: "1px solid rgba(255,255,255,0.08)",
                   borderRadius: 16,
-                  boxShadow: "0 1px 3px rgba(0,0,0,0.04)",
+                  boxShadow: "0 1px 3px rgba(0,0,0,0.2)",
                 }}
               >
-                <p style={{ color: "#94A3B8", marginBottom: "0.75rem", fontSize: "0.875rem" }}>
+                <p style={{ color: "#8A9BBC", marginBottom: "0.75rem", fontSize: "0.875rem" }}>
                   Nenhum paciente cadastrado ainda.
                 </p>
                 <Link

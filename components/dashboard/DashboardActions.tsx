@@ -9,9 +9,9 @@ export function DashboardActions() {
       <Link
         href="/relatorios"
         className="flex items-center gap-2 px-4 py-2 rounded-full text-sm font-medium transition-all"
-        style={{ background: "#FFFFFF", border: "1px solid #E2E8F0", color: "#374151", boxShadow: "0 1px 3px rgba(0,0,0,0.04)" }}
-        onMouseEnter={(e) => { (e.currentTarget as HTMLElement).style.borderColor = "#DBEAFE"; (e.currentTarget as HTMLElement).style.color = "#2563EB"; }}
-        onMouseLeave={(e) => { (e.currentTarget as HTMLElement).style.borderColor = "#E2E8F0"; (e.currentTarget as HTMLElement).style.color = "#374151"; }}
+        style={{ background: "rgba(255,255,255,0.06)", border: "1px solid rgba(255,255,255,0.12)", color: "#CBD5E1", boxShadow: "0 1px 3px rgba(0,0,0,0.15)" }}
+        onMouseEnter={(e) => { (e.currentTarget as HTMLElement).style.borderColor = "rgba(96,165,250,0.5)"; (e.currentTarget as HTMLElement).style.color = "#60A5FA"; }}
+        onMouseLeave={(e) => { (e.currentTarget as HTMLElement).style.borderColor = "rgba(255,255,255,0.12)"; (e.currentTarget as HTMLElement).style.color = "#CBD5E1"; }}
       >
         <FileText style={{ width: 15, height: 15 }} />
         Relatórios
