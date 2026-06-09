@@ -69,8 +69,8 @@ export default async function PacientesPage() {
     <div className="max-w-4xl mx-auto space-y-6">
       <div className="flex justify-between items-center">
         <div>
-          <h1 className="text-2xl font-bold text-gray-900">Pacientes</h1>
-          <p className="text-gray-500 text-sm">{patients.length} paciente{patients.length !== 1 ? "s" : ""} cadastrado{patients.length !== 1 ? "s" : ""}</p>
+          <h1 className="text-2xl font-bold text-slate-100">Pacientes</h1>
+          <p className="text-slate-400 text-sm">{patients.length} paciente{patients.length !== 1 ? "s" : ""} cadastrado{patients.length !== 1 ? "s" : ""}</p>
         </div>
         <Button asChild>
           <Link href="/pacientes/novo">
@@ -81,12 +81,12 @@ export default async function PacientesPage() {
       </div>
 
       {patientSummaries.length === 0 ? (
-        <div className="text-center py-16 bg-white rounded-xl border border-gray-200">
-          <div className="w-16 h-16 bg-gray-100 rounded-full flex items-center justify-center mx-auto mb-4">
-            <UserPlus className="w-8 h-8 text-gray-400" />
+        <div className="text-center py-16 bg-[#14264e] rounded-xl border border-white/10">
+          <div className="w-16 h-16 bg-white/10 rounded-full flex items-center justify-center mx-auto mb-4">
+            <UserPlus className="w-8 h-8 text-slate-400" />
           </div>
-          <h3 className="text-gray-700 font-semibold mb-2">Nenhum paciente cadastrado</h3>
-          <p className="text-gray-500 text-sm mb-4">Adicione seu primeiro paciente para começar.</p>
+          <h3 className="text-slate-200 font-semibold mb-2">Nenhum paciente cadastrado</h3>
+          <p className="text-slate-400 text-sm mb-4">Adicione seu primeiro paciente para começar.</p>
           <Button asChild>
             <Link href="/pacientes/novo">Adicionar Paciente</Link>
           </Button>

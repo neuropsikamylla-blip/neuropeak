@@ -75,43 +75,43 @@ export default function AdminPage() {
     window.open(url, "_blank");
   }
 
-  if (loading) return <div className="p-8 text-center text-gray-400 animate-pulse">Carregando...</div>;
+  if (loading) return <div className="p-8 text-center text-slate-400 animate-pulse">Carregando...</div>;
 
   return (
     <div className="max-w-3xl mx-auto space-y-6">
       <div className="flex items-center gap-3">
-        <ShieldCheck className="w-6 h-6 text-blue-600" />
+        <ShieldCheck className="w-6 h-6 text-blue-400" />
         <div>
-          <h1 className="text-2xl font-bold text-gray-900">Verificação de CRP</h1>
-          <p className="text-sm text-gray-500">Aprovar ou rejeitar solicitações de acesso ao Mundo Interior</p>
+          <h1 className="text-2xl font-bold text-slate-100">Verificação de CRP</h1>
+          <p className="text-sm text-slate-400">Aprovar ou rejeitar solicitações de acesso ao Mundo Interior</p>
         </div>
       </div>
 
       {requests.length === 0 && (
-        <div className="text-center py-16 bg-white rounded-xl border border-gray-200">
-          <Clock className="w-10 h-10 text-gray-300 mx-auto mb-3" />
-          <p className="text-gray-500 text-sm">Nenhuma solicitação ainda.</p>
+        <div className="text-center py-16 bg-[#14264e] rounded-xl border border-white/10">
+          <Clock className="w-10 h-10 text-slate-500 mx-auto mb-3" />
+          <p className="text-slate-400 text-sm">Nenhuma solicitação ainda.</p>
         </div>
       )}
 
       <div className="space-y-3">
         {requests.map((r) => (
-          <div key={r.id} className="bg-white rounded-xl border border-gray-200 p-4 space-y-3">
+          <div key={r.id} className="bg-[#14264e] rounded-xl border border-white/10 p-4 space-y-3">
             <div className="flex items-start justify-between gap-4">
               <div>
-                <p className="font-semibold text-gray-900">{r.name}</p>
-                <p className="text-sm text-gray-500">{r.email}</p>
-                <p className="text-sm text-blue-700 font-medium mt-0.5">CRP {r.crp}</p>
+                <p className="font-semibold text-slate-100">{r.name}</p>
+                <p className="text-sm text-slate-400">{r.email}</p>
+                <p className="text-sm text-blue-300 font-medium mt-0.5">CRP {r.crp}</p>
                 {r.crpSubmittedAt && (
-                  <p className="text-xs text-gray-400 mt-0.5">
+                  <p className="text-xs text-slate-500 mt-0.5">
                     Enviado em {new Date(r.crpSubmittedAt).toLocaleDateString("pt-BR", { day: "2-digit", month: "2-digit", year: "numeric", hour: "2-digit", minute: "2-digit" })}
                   </p>
                 )}
               </div>
               <span className={`text-xs px-2 py-1 rounded-full font-medium ${
-                r.crpStatus === "verified" ? "bg-green-50 text-green-700 border border-green-200" :
-                r.crpStatus === "rejected" ? "bg-red-50 text-red-600 border border-red-200" :
-                "bg-yellow-50 text-yellow-700 border border-yellow-200"
+                r.crpStatus === "verified" ? "bg-green-500/15 text-green-300 border border-green-500/30" :
+                r.crpStatus === "rejected" ? "bg-red-500/15 text-red-300 border border-red-500/30" :
+                "bg-yellow-500/15 text-yellow-300 border border-yellow-500/30"
               }`}>
                 {STATUS_LABEL[r.crpStatus] ?? r.crpStatus}
               </span>
@@ -132,7 +132,7 @@ export default function AdminPage() {
                     Aprovar
                   </Button>
                   <Button size="sm" variant="outline" onClick={() => decide(r.id, "rejected")} disabled={acting === r.id}
-                    className="border-red-200 text-red-600 hover:bg-red-50">
+                    className="border-red-500/40 text-red-300 hover:bg-red-500/15">
                     <XCircle className="w-3.5 h-3.5 mr-1" />
                     Rejeitar
                   </Button>
@@ -140,7 +140,7 @@ export default function AdminPage() {
               )}
               {r.crpStatus === "verified" && (
                 <Button size="sm" variant="outline" onClick={() => decide(r.id, "rejected")} disabled={acting === r.id}
-                  className="border-red-200 text-red-600 hover:bg-red-50 text-xs">
+                  className="border-red-500/40 text-red-300 hover:bg-red-500/15 text-xs">
                   <ShieldX className="w-3.5 h-3.5 mr-1" />
                   Revogar acesso
                 </Button>

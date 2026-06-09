@@ -105,7 +105,7 @@ export default function TherapistLayout({ children }: { children: React.ReactNod
   const initials = user?.name?.split(" ").map((n) => n[0]).slice(0, 2).join("").toUpperCase() ?? "T";
 
   return (
-    <div className="min-h-screen flex" style={{ background: "#0b1a38" }}>
+    <div className="dark min-h-screen flex text-foreground" style={{ background: "#0b1a38" }}>
       <NeuronBg />
 
       {/* Sidebar */}

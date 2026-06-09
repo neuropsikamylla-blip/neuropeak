@@ -69,14 +69,14 @@ function RelatoriosContent() {
   return (
     <div className="max-w-2xl mx-auto space-y-6">
       <div>
-        <h1 className="text-2xl font-bold text-gray-900">Relatórios Clínicos</h1>
-        <p className="text-gray-500 text-sm mt-1">Gere relatórios em PDF para seus pacientes</p>
+        <h1 className="text-2xl font-bold text-slate-100">Relatórios Clínicos</h1>
+        <p className="text-slate-400 text-sm mt-1">Gere relatórios em PDF para seus pacientes</p>
       </div>
 
       <Card>
         <CardHeader>
           <CardTitle className="text-base flex items-center gap-2">
-            <FileText className="w-5 h-5 text-blue-600" />
+            <FileText className="w-5 h-5 text-blue-400" />
             Gerar Relatório PDF
           </CardTitle>
         </CardHeader>
@@ -87,7 +87,7 @@ function RelatoriosContent() {
               <SelectTrigger className="mt-1">
                 <SelectValue placeholder="Selecione um paciente" />
               </SelectTrigger>
-              <SelectContent>
+              <SelectContent className="dark">
                 {patients.map((p) => (
                   <SelectItem key={p.id} value={p.id}>{p.name}</SelectItem>
                 ))}
@@ -119,7 +119,7 @@ function RelatoriosContent() {
       <Card>
         <CardHeader><CardTitle className="text-base">O relatório inclui:</CardTitle></CardHeader>
         <CardContent>
-          <ul className="space-y-2 text-sm text-gray-600">
+          <ul className="space-y-2 text-sm text-slate-300">
             {[
               "Identificação do paciente e dados clínicos",
               "Resumo do período de treinamento",
@@ -130,7 +130,7 @@ function RelatoriosContent() {
               "Espaço para assinatura do terapeuta",
             ].map((item, i) => (
               <li key={i} className="flex items-center gap-2">
-                <span className="text-green-500">✓</span>
+                <span className="text-green-400">✓</span>
                 {item}
               </li>
             ))}
@@ -143,7 +143,7 @@ function RelatoriosContent() {
 
 export default function RelatoriosPage() {
   return (
-    <Suspense fallback={<div className="flex items-center justify-center h-48"><Loader2 className="w-8 h-8 animate-spin text-blue-600" /></div>}>
+    <Suspense fallback={<div className="flex items-center justify-center h-48"><Loader2 className="w-8 h-8 animate-spin text-blue-400" /></div>}>
       <RelatoriosContent />
     </Suspense>
   );

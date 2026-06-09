@@ -28,26 +28,27 @@
     --font-serif: "Georgia", serif;
   }
 
+  /* Tema escuro NeuroPeak — azul marinho do ícone do app (#0d1b3e) */
   .dark {
-    --background: 222.2 84% 4.9%;
-    --foreground: 210 40% 98%;
-    --card: 222.2 84% 4.9%;
-    --card-foreground: 210 40% 98%;
-    --popover: 222.2 84% 4.9%;
-    --popover-foreground: 210 40% 98%;
-    --primary: 217.2 91.2% 59.8%;
-    --primary-foreground: 222.2 47.4% 11.2%;
-    --secondary: 217.2 32.6% 17.5%;
-    --secondary-foreground: 210 40% 98%;
-    --muted: 217.2 32.6% 17.5%;
-    --muted-foreground: 215 20.2% 65.1%;
-    --accent: 217.2 32.6% 17.5%;
-    --accent-foreground: 210 40% 98%;
-    --destructive: 0 62.8% 30.6%;
-    --destructive-foreground: 210 40% 98%;
-    --border: 217.2 32.6% 17.5%;
-    --input: 217.2 32.6% 17.5%;
-    --ring: 224.3 76.3% 48%;
+    --background: 220 67% 13%;
+    --foreground: 210 40% 96%;
+    --card: 221 59% 19%;
+    --card-foreground: 210 40% 96%;
+    --popover: 221 55% 16%;
+    --popover-foreground: 210 40% 96%;
+    --primary: 217 91% 60%;
+    --primary-foreground: 0 0% 100%;
+    --secondary: 218 38% 24%;
+    --secondary-foreground: 210 40% 96%;
+    --muted: 218 35% 22%;
+    --muted-foreground: 216 25% 72%;
+    --accent: 218 38% 24%;
+    --accent-foreground: 210 40% 96%;
+    --destructive: 0 72% 51%;
+    --destructive-foreground: 0 0% 100%;
+    --border: 218 30% 27%;
+    --input: 218 30% 27%;
+    --ring: 217 91% 60%;
   }
 }
 
