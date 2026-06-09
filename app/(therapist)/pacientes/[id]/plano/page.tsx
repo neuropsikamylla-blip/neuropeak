@@ -73,15 +73,6 @@ export default function PlanoPage() {
     );
   }
 
-  function reorderExercises(from: number, to: number) {
-    setSelectedExercises((prev) => {
-      const next = [...prev];
-      const [moved] = next.splice(from, 1);
-      next.splice(to, 0, moved);
-      return next;
-    });
-  }
-
   function setSpanCfg<K extends keyof SpanSettings>(exId: string, key: K, value: SpanSettings[K]) {
     setExerciseSettings((prev) => ({
       ...prev,
@@ -229,7 +220,6 @@ export default function PlanoPage() {
             onLevel={setLevel}
             onSpanCfg={setSpanCfg}
             onRemove={toggleExercise}
-            onReorder={reorderExercises}
             sessionDuration={sessionDuration}
             frequency={frequency}
             onSessionDuration={setSessionDuration}

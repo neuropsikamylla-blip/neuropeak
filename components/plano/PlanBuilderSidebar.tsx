@@ -1,9 +1,8 @@
 "use client";
 
-import { useState } from "react";
-import { Loader2, Save, Eye, ClipboardList, GripVertical } from "lucide-react";
-import { EXERCISE_DEFINITIONS, DOMAIN_COLORS } from "@/types";
-import { EXERCISE_DOMAIN } from "@/lib/domain-taxonomy";
+import { Loader2, Save, Eye, ClipboardList } from "lucide-react";
+import { EXERCISE_DEFINITIONS, DOMAIN_COLORS, DOMAIN_LABELS } from "@/types";
+import { ALL_DOMAINS, EXERCISE_DOMAIN } from "@/lib/domain-taxonomy";
 import type { SpanSettings } from "@/components/exercises/memory/SpanNumerico";
 import { ExerciseCard } from "./ExerciseCard";
 
@@ -17,7 +16,6 @@ interface PlanBuilderSidebarProps {
   onLevel: (id: string, value: number) => void;
   onSpanCfg: <K extends keyof SpanSettings>(id: string, key: K, value: SpanSettings[K]) => void;
   onRemove: (id: string) => void;
-  onReorder: (from: number, to: number) => void;
   sessionDuration: number;
   frequency: number;
   onSessionDuration: (v: number) => void;
@@ -27,17 +25,20 @@ interface PlanBuilderSidebarProps {
   saving: boolean;
 }
 
-/** Coluna direita — painel "Plano em construção" com drag-and-drop e donut. */
+/** Coluna direita — "Plano em construção", exercícios agrupados por domínio. */
 export function PlanBuilderSidebar(props: PlanBuilderSidebarProps) {
   const {
-    selectedExercises, exerciseLevels, exerciseSettings, onLevel, onSpanCfg, onRemove, onReorder,
+    selectedExercises, exerciseLevels, exerciseSettings, onLevel, onSpanCfg, onRemove,
     sessionDuration, frequency, onSessionDuration, onFrequency, onSave, onVisualize, saving,
   } = props;
 
-  const [dragIndex, setDragIndex] = useState<number | null>(null);
-
   const items = selectedExercises.map(exDef).filter(Boolean);
   const totalMinutes = items.reduce((sum, ex) => sum + (ex.estimatedMinutes ?? 0), 0);
+
+  // Agrupa os exercícios escolhidos por domínio (mesma estrutura da biblioteca).
+  const grouped = ALL_DOMAINS
+    .map((d) => ({ domain: d, items: selectedExercises.filter((id) => EXERCISE_DOMAIN[id] === d).map(exDef).filter(Boolean) }))
+    .filter((g) => g.items.length > 0);
 
   return (
     <aside className="rounded-[20px] border border-[#E5E7EB] bg-white p-5 flex flex-col gap-4 shadow-[0_1px_3px_rgba(0,0,0,0.04)]">
@@ -62,34 +63,31 @@ export function PlanBuilderSidebar(props: PlanBuilderSidebarProps) {
         </label>
       </div>
 
-      {/* Lista de exercícios — arrastar para reordenar */}
-      <div className="space-y-2 max-h-[38vh] overflow-y-auto -mr-1 pr-1">
+      {/* Lista de exercícios agrupada por domínio */}
+      <div className="space-y-3 max-h-[46vh] overflow-y-auto -mr-1 pr-1">
         {items.length === 0 ? (
           <div className="py-8 text-center">
             <p className="text-sm text-gray-400">Nenhum exercício ainda.</p>
             <p className="text-xs text-gray-300 mt-1">Toque em <span className="font-semibold">+</span> na tabela para adicionar.</p>
           </div>
         ) : (
-          items.map((ex, i) => (
-            <div
-              key={ex.id}
-              draggable
-              onDragStart={() => setDragIndex(i)}
-              onDragOver={(e) => e.preventDefault()}
-              onDrop={() => { if (dragIndex !== null && dragIndex !== i) onReorder(dragIndex, i); setDragIndex(null); }}
-              onDragEnd={() => setDragIndex(null)}
-              className={`flex items-stretch gap-1 transition-opacity ${dragIndex === i ? "opacity-40" : ""}`}
-            >
-              <span className="flex items-center text-gray-300 hover:text-gray-500 cursor-grab active:cursor-grabbing shrink-0" aria-hidden>
-                <GripVertical className="w-4 h-4" />
-              </span>
-              <div className="flex-1 min-w-0">
+          grouped.map((group) => (
+            <div key={group.domain} className="space-y-1.5">
+              <div className="flex items-center gap-2 px-0.5">
+                <span className="w-2 h-2 rounded-full shrink-0" style={{ backgroundColor: DOMAIN_COLORS[group.domain] }} />
+                <span className="text-[11px] font-bold uppercase tracking-wide" style={{ color: DOMAIN_COLORS[group.domain] }}>
+                  {DOMAIN_LABELS[group.domain]}
+                </span>
+                <span className="text-[11px] text-gray-400 font-semibold">· {group.items.length}</span>
+              </div>
+              {group.items.map((ex) => (
                 <ExerciseCard
+                  key={ex.id}
                   id={ex.id}
                   name={ex.name}
                   icon={ex.icon}
                   minutes={ex.estimatedMinutes}
-                  color={DOMAIN_COLORS[EXERCISE_DOMAIN[ex.id] ?? "memory"]}
+                  color={DOMAIN_COLORS[group.domain]}
                   isSpan={SPAN_IDS.includes(ex.id)}
                   level={exerciseLevels[ex.id] ?? 1}
                   onLevel={onLevel}
@@ -97,7 +95,7 @@ export function PlanBuilderSidebar(props: PlanBuilderSidebarProps) {
                   onSpanCfg={onSpanCfg}
                   onRemove={onRemove}
                 />
-              </div>
+              ))}
             </div>
           ))
         )}

@@ -3,6 +3,8 @@
 import { useState } from "react";
 import { X, SlidersHorizontal } from "lucide-react";
 import { DEFAULT_SPAN_SETTINGS, type SpanSettings } from "@/components/exercises/memory/SpanNumerico";
+import { EXERCISE_SUBDOMAIN, EXERCISE_SUBDOMAIN_ID } from "@/lib/domain-taxonomy";
+import { SubdomainTag } from "./ExerciseTags";
 
 interface ExerciseCardProps {
   id: string;
@@ -26,6 +28,8 @@ export function ExerciseCard({
 }: ExerciseCardProps) {
   const [open, setOpen] = useState(false);
   const c: SpanSettings = { ...DEFAULT_SPAN_SETTINGS, ...(spanCfg ?? {}) };
+  const subLabel = EXERCISE_SUBDOMAIN[id];
+  const subId = EXERCISE_SUBDOMAIN_ID[id];
 
   const Pill = ({ on, onClick, children }: { on: boolean; onClick: () => void; children: React.ReactNode }) => (
     <button type="button" onClick={onClick}
@@ -40,8 +44,11 @@ export function ExerciseCard({
       <div className="flex items-center gap-2.5 p-2.5">
         <span className="text-lg leading-none shrink-0">{icon}</span>
         <div className="min-w-0 flex-1">
-          <p className="text-sm font-medium text-gray-800 truncate">{name}</p>
-          <p className="text-xs text-gray-400">{minutes} min</p>
+          <p className="text-sm font-medium text-gray-800 leading-tight line-clamp-2">{name}</p>
+          <div className="flex items-center gap-1.5 mt-1">
+            {subLabel && <SubdomainTag id={subId} label={subLabel} />}
+            <span className="text-xs text-gray-400 shrink-0">{minutes} min</span>
+          </div>
         </div>
         <button
           type="button"
