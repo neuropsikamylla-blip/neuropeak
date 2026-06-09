@@ -72,16 +72,16 @@ export default async function InicioPage() {
 
   const styles = {
     CLINICAL: {
-      bg: "bg-gradient-to-br from-slate-50 via-white to-indigo-50/40",
-      header: "bg-white border border-slate-200/70 shadow-sm rounded-2xl",
-      card: "bg-white rounded-2xl shadow-sm border border-slate-200/70",
-      title: "text-slate-800 text-2xl font-bold tracking-tight",
-      sub: "text-slate-500",
-      accent: "text-indigo-600",
-      exCard: "bg-white rounded-2xl border border-slate-200/70 shadow-sm hover:border-indigo-300 hover:shadow-md transition-all duration-200",
-      exDone: "bg-slate-50/80 rounded-2xl border border-slate-200/50 opacity-70",
-      stat: "bg-white rounded-2xl border border-slate-200/70 shadow-sm",
-      progress: "bg-slate-200",
+      bg: "bg-[#0b1a38]",
+      header: "bg-[#14264e] border border-white/10 shadow-sm rounded-2xl",
+      card: "bg-[#14264e] rounded-2xl shadow-sm border border-white/10",
+      title: "text-slate-100 text-2xl font-bold tracking-tight",
+      sub: "text-slate-400",
+      accent: "text-indigo-400",
+      exCard: "bg-[#14264e] rounded-2xl border border-white/10 shadow-sm hover:border-indigo-400/50 hover:shadow-md transition-all duration-200",
+      exDone: "bg-[#101f42] rounded-2xl border border-white/5 opacity-70",
+      stat: "bg-[#14264e] rounded-2xl border border-white/10 shadow-sm",
+      progress: "bg-white/10",
       progressBar: "bg-indigo-500",
     },
     COLORFUL: {
@@ -113,6 +113,8 @@ export default async function InicioPage() {
   };
 
   const s = styles[theme];
+  // Clínico e Gamificado têm fundo escuro → textos claros; só Colorido é claro.
+  const isDark = theme === "GAMIFIED" || theme === "CLINICAL";
   const firstName = patient.name.split(" ")[0];
 
   return (
@@ -135,17 +137,17 @@ export default async function InicioPage() {
       <div className="grid grid-cols-3 gap-3">
         <div className={`p-3 text-center ${s.stat}`}>
           <Flame className={`w-5 h-5 mx-auto mb-1 ${uniqueDays.size > 0 ? "text-orange-500" : "text-gray-400"}`} />
-          <p className={`text-xl font-bold ${theme === "GAMIFIED" ? "text-white" : "text-gray-900"}`}>{uniqueDays.size}</p>
+          <p className={`text-xl font-bold ${isDark ? "text-white" : "text-gray-900"}`}>{uniqueDays.size}</p>
           <p className={`text-xs ${s.sub}`}>{theme === "COLORFUL" ? "Dias ativos 🔥" : "Dias"}</p>
         </div>
         <div className={`p-3 text-center ${s.stat}`}>
           <Trophy className={`w-5 h-5 mx-auto mb-1 ${theme === "GAMIFIED" ? "text-cyan-400" : "text-yellow-500"}`} />
-          <p className={`text-xl font-bold ${theme === "GAMIFIED" ? "text-white" : "text-gray-900"}`}>{totalPoints}</p>
+          <p className={`text-xl font-bold ${isDark ? "text-white" : "text-gray-900"}`}>{totalPoints}</p>
           <p className={`text-xs ${s.sub}`}>{theme === "COLORFUL" ? "Pontos ⭐" : "Pontos"}</p>
         </div>
         <div className={`p-3 text-center ${s.stat}`}>
           <Star className={`w-5 h-5 mx-auto mb-1 ${theme === "GAMIFIED" ? "text-yellow-400" : "text-teal-500"}`} />
-          <p className={`text-xl font-bold ${theme === "GAMIFIED" ? "text-white" : "text-gray-900"}`}>{typedAchievements.length}</p>
+          <p className={`text-xl font-bold ${isDark ? "text-white" : "text-gray-900"}`}>{typedAchievements.length}</p>
           <p className={`text-xs ${s.sub}`}>{theme === "COLORFUL" ? "Conquistas 🏅" : "Conquistas"}</p>
         </div>
       </div>
@@ -154,7 +156,7 @@ export default async function InicioPage() {
       {activePlan && cycleTarget > 0 && (
         <div className={`p-4 ${s.card}`}>
           <div className="flex justify-between items-center mb-2">
-            <span className={`text-sm font-medium ${theme === "GAMIFIED" ? "text-gray-300" : "text-gray-700"}`}>
+            <span className={`text-sm font-medium ${isDark ? "text-gray-300" : "text-gray-700"}`}>
               {theme === "GAMIFIED" ? "PROGRESSO DO CICLO" : theme === "COLORFUL" ? "Progresso do ciclo 📈" : "Progresso do ciclo"}
             </span>
             <span className={`text-sm font-bold ${s.accent}`}>
@@ -168,7 +170,7 @@ export default async function InicioPage() {
             />
           </div>
           {cycleComplete ? (
-            <p className="text-xs text-green-600 mt-2 font-medium text-center">
+            <p className="text-xs text-green-500 mt-2 font-medium text-center">
               {theme === "GAMIFIED" ? "✓ CICLO COMPLETO — Aguarde nova missão do terapeuta" : theme === "COLORFUL" ? "🎊 Ciclo concluído! Aguarde seu terapeuta configurar o próximo." : "Ciclo concluído. Aguarde seu terapeuta configurar o próximo."}
             </p>
           ) : (
@@ -181,7 +183,7 @@ export default async function InicioPage() {
 
       {/* Today's plan */}
       <div>
-        <h2 className={`font-bold mb-3 ${theme === "GAMIFIED" ? "text-gray-200" : theme === "COLORFUL" ? "text-teal-700 text-lg" : "text-gray-800"}`}>
+        <h2 className={`font-bold mb-3 ${theme === "GAMIFIED" ? "text-gray-200" : theme === "COLORFUL" ? "text-teal-700 text-lg" : "text-slate-200"}`}>
           {theme === "GAMIFIED" ? "EXERCÍCIOS DE HOJE" : theme === "COLORFUL" ? "Seu treino de hoje 🎯" : "Treino de hoje"}
         </h2>
 
@@ -206,7 +208,7 @@ export default async function InicioPage() {
                   <span className="text-3xl">{ex.icon}</span>
                   <div className="flex-1 min-w-0">
                     <div className="flex items-center gap-2 flex-wrap">
-                      <p className={`font-semibold ${theme === "GAMIFIED" ? "text-gray-100" : "text-gray-800"}`}>
+                      <p className={`font-semibold ${theme === "COLORFUL" ? "text-gray-800" : "text-gray-100"}`}>
                         {ex.name}
                       </p>
                       {doneToday && (
@@ -251,14 +253,14 @@ export default async function InicioPage() {
       {/* Recent achievements */}
       {typedAchievements.length > 0 && (
         <div>
-          <h2 className={`font-bold mb-3 ${theme === "GAMIFIED" ? "text-gray-200" : theme === "COLORFUL" ? "text-teal-700 text-lg" : "text-gray-800"}`}>
+          <h2 className={`font-bold mb-3 ${theme === "GAMIFIED" ? "text-gray-200" : theme === "COLORFUL" ? "text-teal-700 text-lg" : "text-slate-200"}`}>
             {theme === "COLORFUL" ? "Suas conquistas 🏆" : "Conquistas"}
           </h2>
           <div className="flex gap-3 overflow-x-auto pb-2">
             {typedAchievements.slice(0, 5).map((a) => (
-              <div key={a.id} className={`flex-shrink-0 p-3 text-center rounded-2xl border ${theme === "GAMIFIED" ? "bg-gray-800 border-yellow-500/30" : "bg-yellow-50 border-yellow-200"}`}>
+              <div key={a.id} className={`flex-shrink-0 p-3 text-center rounded-2xl border ${theme === "COLORFUL" ? "bg-yellow-50 border-yellow-200" : theme === "GAMIFIED" ? "bg-gray-800 border-yellow-500/30" : "bg-[#14264e] border-yellow-500/30"}`}>
                 <span className="text-3xl">{a.icon}</span>
-                <p className={`text-xs font-medium mt-1 ${theme === "GAMIFIED" ? "text-gray-300" : "text-gray-700"}`}>{a.title}</p>
+                <p className={`text-xs font-medium mt-1 ${theme === "COLORFUL" ? "text-gray-700" : "text-gray-300"}`}>{a.title}</p>
               </div>
             ))}
           </div>

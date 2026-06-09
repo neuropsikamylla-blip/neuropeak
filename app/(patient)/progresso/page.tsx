@@ -39,12 +39,12 @@ export default async function ProgressoPage() {
 
   const styles = {
     CLINICAL: {
-      bg: "bg-gray-50",
-      card: "bg-white rounded-xl border border-gray-200 shadow-sm",
-      title: "text-gray-900 font-bold text-xl",
-      sub: "text-gray-500 text-sm",
-      accent: "text-blue-600",
-      scoreBg: "bg-gray-50",
+      bg: "bg-[#0b1a38]",
+      card: "bg-[#14264e] rounded-xl border border-white/10 shadow-sm",
+      title: "text-slate-100 font-bold text-xl",
+      sub: "text-slate-400 text-sm",
+      accent: "text-blue-400",
+      scoreBg: "bg-white/5",
     },
     COLORFUL: {
       bg: "bg-gradient-to-br from-purple-50 to-pink-50",
@@ -65,6 +65,8 @@ export default async function ProgressoPage() {
   };
 
   const s = styles[theme];
+  // Clínico e Gamificado têm fundo escuro → textos claros; só Colorido é claro.
+  const isDark = theme === "GAMIFIED" || theme === "CLINICAL";
 
   return (
     <div className={`min-h-screen ${s.bg} p-4 space-y-4`}>
@@ -86,8 +88,8 @@ export default async function ProgressoPage() {
 
       {/* Domain scores */}
       <div className={s.card}>
-        <div className="p-4 border-b border-gray-100">
-          <h2 className={`font-semibold ${theme === "GAMIFIED" ? "text-gray-200" : "text-gray-800"}`}>
+        <div className="p-4 border-b border-white/10">
+          <h2 className={`font-semibold ${isDark ? "text-gray-200" : "text-gray-800"}`}>
             {theme === "COLORFUL" ? "Seus superpoderes 🧠" : "Desempenho por domínio"}
           </h2>
         </div>
@@ -95,14 +97,14 @@ export default async function ProgressoPage() {
           {domainScores.map((ds) => (
             <div key={ds.domain}>
               <div className="flex justify-between mb-1">
-                <span className={`text-sm font-medium ${theme === "GAMIFIED" ? "text-gray-300" : "text-gray-700"}`}>
+                <span className={`text-sm font-medium ${isDark ? "text-gray-300" : "text-gray-700"}`}>
                   {DOMAIN_LABELS[ds.domain]}
                 </span>
                 <span className={`text-sm font-bold ${ds.score >= 70 ? "text-green-500" : ds.score >= 50 ? "text-yellow-500" : "text-red-500"}`}>
                   {ds.score}/100
                 </span>
               </div>
-              <div className={`h-3 rounded-full ${theme === "GAMIFIED" ? "bg-gray-700" : "bg-gray-200"}`}>
+              <div className={`h-3 rounded-full ${isDark ? "bg-gray-700" : "bg-gray-200"}`}>
                 <div
                   className={`h-full rounded-full transition-all ${
                     ds.score >= 70 ? "bg-green-500" : ds.score >= 50 ? "bg-yellow-500" : "bg-red-400"
@@ -119,8 +121,8 @@ export default async function ProgressoPage() {
       {/* Achievements */}
       {achievements.length > 0 && (
         <div className={s.card}>
-          <div className="p-4 border-b border-gray-100">
-            <h2 className={`font-semibold ${theme === "GAMIFIED" ? "text-gray-200" : "text-gray-800"}`}>
+          <div className="p-4 border-b border-white/10">
+            <h2 className={`font-semibold ${isDark ? "text-gray-200" : "text-gray-800"}`}>
               {theme === "COLORFUL" ? "Minhas conquistas 🏆" : "Conquistas"}
             </h2>
           </div>
@@ -129,7 +131,7 @@ export default async function ProgressoPage() {
               <div key={a.id} className={`flex items-center gap-3 p-3 rounded-xl ${s.scoreBg}`}>
                 <span className="text-2xl">{a.icon}</span>
                 <div>
-                  <p className={`text-sm font-semibold ${theme === "GAMIFIED" ? "text-gray-200" : "text-gray-800"}`}>{a.title}</p>
+                  <p className={`text-sm font-semibold ${isDark ? "text-gray-200" : "text-gray-800"}`}>{a.title}</p>
                   <p className={`text-xs ${s.sub}`}>{formatDate(a.unlockedAt)}</p>
                 </div>
               </div>
@@ -140,16 +142,16 @@ export default async function ProgressoPage() {
 
       {/* Recent sessions */}
       <div className={s.card}>
-        <div className="p-4 border-b border-gray-100">
-          <h2 className={`font-semibold ${theme === "GAMIFIED" ? "text-gray-200" : "text-gray-800"}`}>
+        <div className="p-4 border-b border-white/10">
+          <h2 className={`font-semibold ${isDark ? "text-gray-200" : "text-gray-800"}`}>
             {theme === "COLORFUL" ? "Sessões recentes 📋" : "Sessões recentes"}
           </h2>
         </div>
-        <div className="divide-y divide-gray-100">
+        <div className="divide-y divide-white/10">
           {sessions.slice(0, 10).map((s2, i) => (
             <div key={i} className="px-4 py-3 flex items-center justify-between">
               <div>
-                <p className={`text-sm font-medium ${theme === "GAMIFIED" ? "text-gray-200" : "text-gray-800"}`}>{s2.exerciseId}</p>
+                <p className={`text-sm font-medium ${isDark ? "text-gray-200" : "text-gray-800"}`}>{s2.exerciseId}</p>
                 <p className={s.sub}>{format(new Date(s2.completedAt), "dd/MM/yyyy HH:mm")}</p>
               </div>
               <div className="text-right">
