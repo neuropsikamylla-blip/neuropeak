@@ -151,6 +151,14 @@ export const EXERCISE_DEFINITIONS = {
     estimatedMinutes: 6,
     icon: "🔤",
   },
+  "padroes-rotacao": {
+    id: "padroes-rotacao",
+    name: "Padrões com Rotação",
+    domain: "memory" as Domain,
+    description: "Treina memória operacional visuoespacial e rotação mental: memorizar posições na grade e marcá-las após ela girar.",
+    estimatedMinutes: 6,
+    icon: "🔄",
+  },
   "matriz-espacial-inversa": {
     id: "matriz-espacial-inversa",
     name: "Matriz Espacial Inversa",
