@@ -81,8 +81,8 @@ export default async function InicioPage() {
       exCard: "bg-[#14264e] rounded-2xl border border-white/10 shadow-sm hover:border-indigo-400/50 hover:shadow-md transition-all duration-200",
       exDone: "bg-[#101f42] rounded-2xl border border-white/5 opacity-70",
       stat: "bg-[#14264e] rounded-2xl border border-white/10 shadow-sm",
-      progress: "bg-white/10",
-      progressBar: "bg-indigo-500",
+      progress: "bg-black/25",
+      progressBar: "bg-gradient-to-r from-blue-500 to-indigo-400",
     },
     COLORFUL: {
       bg: "bg-gradient-to-br from-teal-50 via-cyan-50 to-yellow-50",

@@ -16,7 +16,7 @@ export function SubdomainTabs({ subdomains, active, onSelect }: SubdomainTabsPro
         type="button"
         onClick={() => onSelect(null)}
         className={`px-3 py-1.5 rounded-lg text-sm font-medium border transition-colors ${
-          active === null ? "bg-blue-600 text-white border-blue-600" : "bg-white text-gray-600 border-gray-200 hover:bg-gray-50"
+          active === null ? "bg-blue-600 text-white border-blue-600" : "bg-white/5 text-slate-300 border-white/15 hover:bg-white/10"
         }`}
       >
         Todos
@@ -34,8 +34,8 @@ export function SubdomainTabs({ subdomains, active, onSelect }: SubdomainTabsPro
             onClick={() => onSelect(sd.id)}
             style={isActive ? { backgroundColor: c.text, borderColor: c.text, color: "#fff" } : undefined}
             className={`px-3 py-1.5 rounded-lg text-sm font-medium border transition-colors ${
-              empty ? "bg-gray-50 text-gray-300 border-gray-100 cursor-default"
-              : isActive ? "" : "bg-white text-gray-600 border-gray-200 hover:bg-gray-50"
+              empty ? "bg-white/5 text-slate-500 border-white/10 cursor-default"
+              : isActive ? "" : "bg-white/5 text-slate-300 border-white/15 hover:bg-white/10"
             }`}
           >
             {sd.label}

@@ -15,11 +15,11 @@ export function SubdomainTag({ id, label }: { id: string; label: string }) {
 
 /** Habilidades secundárias — chips menores e discretos (não são filtros). */
 export function SecondaryChips({ skills }: { skills: string[] }) {
-  if (skills.length === 0) return <span className="text-xs text-gray-300">—</span>;
+  if (skills.length === 0) return <span className="text-xs text-slate-500">—</span>;
   return (
     <div className="flex flex-wrap gap-1">
       {skills.map((s) => (
-        <span key={s} className="inline-block px-1.5 py-0.5 rounded text-[11px] font-medium bg-gray-100 text-gray-500">
+        <span key={s} className="inline-block px-1.5 py-0.5 rounded text-[11px] font-medium bg-white/10 text-slate-300">
           {s}
         </span>
       ))}

@@ -175,9 +175,9 @@ export default function PlanoPage() {
             <Link href={`/pacientes/${patientId}`} aria-label="Voltar"><ArrowLeft className="w-5 h-5" /></Link>
           </Button>
           <div>
-            <h1 className="text-2xl font-bold text-gray-900">Montar plano de treino</h1>
-            <p className="text-sm text-gray-500">
-              {patientName || "Paciente"}{hasPlan && <span className="text-emerald-600"> · Plano ativo</span>}
+            <h1 className="text-2xl font-bold text-slate-100">Montar plano de treino</h1>
+            <p className="text-sm text-slate-400">
+              {patientName || "Paciente"}{hasPlan && <span className="text-emerald-400"> · Plano ativo</span>}
             </p>
           </div>
         </div>
@@ -209,14 +209,14 @@ export default function PlanoPage() {
                   {DOMAIN_COUNTS[activeDomain]} exercícios
                 </span>
               </div>
-              <p className="text-sm text-gray-500">{DOMAIN_DESCRIPTIONS[activeDomain]}</p>
+              <p className="text-sm text-slate-400">{DOMAIN_DESCRIPTIONS[activeDomain]}</p>
             </div>
           </div>
 
           {/* Subdomínios + busca */}
           <div className="flex items-end justify-between gap-3 flex-wrap">
             <div>
-              <p className="text-[11px] font-bold uppercase tracking-wide text-gray-400 mb-2">Subdomínios</p>
+              <p className="text-[11px] font-bold uppercase tracking-wide text-slate-400 mb-2">Subdomínios</p>
               <SubdomainTabs subdomains={DOMAIN_SUBDOMAINS[activeDomain]} active={activeSubdomain} onSelect={setActiveSubdomain} />
             </div>
             <ExerciseSearch query={query} onQuery={setQuery} difficulty={difficulty} onDifficulty={setDifficulty} />

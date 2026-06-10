@@ -104,7 +104,7 @@ export default async function ProgressoPage() {
                   {ds.score}/100
                 </span>
               </div>
-              <div className={`h-3 rounded-full ${isDark ? "bg-gray-700" : "bg-gray-200"}`}>
+              <div className={`h-3 rounded-full ${isDark ? "bg-black/25" : "bg-gray-200"}`}>
                 <div
                   className={`h-full rounded-full transition-all ${
                     ds.score >= 70 ? "bg-green-500" : ds.score >= 50 ? "bg-yellow-500" : "bg-red-400"

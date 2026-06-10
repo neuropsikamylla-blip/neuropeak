@@ -13,13 +13,13 @@ interface DomainTabsProps {
 /** Abas horizontais de domínios cognitivos (navegação principal). */
 export function DomainTabs({ active, onSelect, counts }: DomainTabsProps) {
   return (
-    <div className="flex gap-2 overflow-x-auto p-1.5 rounded-2xl bg-gray-50 border border-gray-100">
+    <div className="flex gap-2 overflow-x-auto p-1.5 rounded-2xl bg-white/5 border border-white/10">
       {DOMAIN_ORDER.map((domain) => {
         const color = DOMAIN_COLORS[domain];
         const Icon = DOMAIN_ICONS[domain];
         const isActive = active === domain;
         const style: CSSProperties = isActive
-          ? { backgroundColor: "#fff", borderColor: color, boxShadow: "0 1px 4px rgba(0,0,0,0.06)" }
+          ? { backgroundColor: "#0f2147", borderColor: color, boxShadow: "0 1px 6px rgba(0,0,0,0.3)" }
           : {};
         return (
           <button
@@ -29,17 +29,17 @@ export function DomainTabs({ active, onSelect, counts }: DomainTabsProps) {
             aria-current={isActive}
             style={style}
             className={`flex items-center gap-2.5 px-4 py-2.5 rounded-xl border whitespace-nowrap transition-all ${
-              isActive ? "" : "border-transparent hover:bg-white/60"
+              isActive ? "" : "border-transparent hover:bg-white/10"
             }`}
           >
             <span className="flex items-center justify-center w-8 h-8 rounded-lg shrink-0" style={{ backgroundColor: `${color}14` }}>
               <Icon className="w-5 h-5" style={{ color }} strokeWidth={1.9} />
             </span>
             <span className="text-left">
-              <span className="block text-sm font-semibold leading-tight" style={{ color: isActive ? color : "#374151" }}>
+              <span className="block text-sm font-semibold leading-tight" style={{ color: isActive ? color : "#cbd5e1" }}>
                 {DOMAIN_LABELS[domain]}
               </span>
-              <span className="block text-xs text-gray-400">{counts[domain]} exercícios</span>
+              <span className="block text-xs text-slate-400">{counts[domain]} exercícios</span>
             </span>
           </button>
         );

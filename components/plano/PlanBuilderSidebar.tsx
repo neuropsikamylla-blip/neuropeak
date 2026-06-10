@@ -42,25 +42,25 @@ export function PlanBuilderSidebar(props: PlanBuilderSidebarProps) {
     .filter((g) => g.items.length > 0);
 
   return (
-    <aside className="rounded-[20px] border border-[#E5E7EB] bg-white p-5 flex flex-col gap-4 shadow-[0_1px_3px_rgba(0,0,0,0.04)]">
+    <aside className="rounded-[20px] border border-white/10 bg-[#14264e] p-5 flex flex-col gap-4 shadow-[0_1px_3px_rgba(0,0,0,0.2)]">
       <div className="flex items-center gap-2">
-        <ClipboardList className="w-4 h-4 text-gray-500" />
-        <h3 className="text-base font-bold text-gray-900">Plano em construção</h3>
+        <ClipboardList className="w-4 h-4 text-slate-400" />
+        <h3 className="text-base font-bold text-slate-100">Plano em construção</h3>
       </div>
 
       {/* Configurações de sessão */}
       <div className="grid grid-cols-2 gap-2">
         <label className="block">
-          <span className="text-[11px] font-semibold text-gray-500">Duração da sessão (min)</span>
+          <span className="text-[11px] font-semibold text-slate-400">Duração da sessão (min)</span>
           <input type="number" min={10} max={90} value={sessionDuration}
             onChange={(e) => onSessionDuration(Number(e.target.value))}
-            className="mt-1 w-full px-2.5 py-1.5 rounded-lg border border-gray-200 text-sm focus:outline-none focus:ring-2 focus:ring-blue-100 focus:border-blue-300" />
+            className="mt-1 w-full px-2.5 py-1.5 rounded-lg border border-white/15 bg-white/5 text-slate-100 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500/30 focus:border-blue-400" />
         </label>
         <label className="block">
-          <span className="text-[11px] font-semibold text-gray-500">Frequência (×/sem)</span>
+          <span className="text-[11px] font-semibold text-slate-400">Frequência (×/sem)</span>
           <input type="number" min={1} max={7} value={frequency}
             onChange={(e) => onFrequency(Number(e.target.value))}
-            className="mt-1 w-full px-2.5 py-1.5 rounded-lg border border-gray-200 text-sm focus:outline-none focus:ring-2 focus:ring-blue-100 focus:border-blue-300" />
+            className="mt-1 w-full px-2.5 py-1.5 rounded-lg border border-white/15 bg-white/5 text-slate-100 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500/30 focus:border-blue-400" />
         </label>
       </div>
 
@@ -68,8 +68,8 @@ export function PlanBuilderSidebar(props: PlanBuilderSidebarProps) {
       <div className="space-y-3 max-h-[58vh] overflow-y-auto -mr-1 pr-1">
         {items.length === 0 ? (
           <div className="py-8 text-center">
-            <p className="text-sm text-gray-400">Nenhum exercício ainda.</p>
-            <p className="text-xs text-gray-300 mt-1">Toque em <span className="font-semibold">+</span> na tabela para adicionar.</p>
+            <p className="text-sm text-slate-400">Nenhum exercício ainda.</p>
+            <p className="text-xs text-slate-500 mt-1">Toque em <span className="font-semibold">+</span> na tabela para adicionar.</p>
           </div>
         ) : (
           grouped.map((group) => (
@@ -79,7 +79,7 @@ export function PlanBuilderSidebar(props: PlanBuilderSidebarProps) {
                 <span className="text-[11px] font-bold uppercase tracking-wide" style={{ color: DOMAIN_COLORS[group.domain] }}>
                   {DOMAIN_LABELS[group.domain]}
                 </span>
-                <span className="text-[11px] text-gray-400 font-semibold">· {group.items.length}</span>
+                <span className="text-[11px] text-slate-400 font-semibold">· {group.items.length}</span>
               </div>
               {group.items.map((ex, i) => (
                 <ExerciseCard
@@ -106,14 +106,14 @@ export function PlanBuilderSidebar(props: PlanBuilderSidebarProps) {
       </div>
 
       {/* Resumo */}
-      <div className="flex items-center justify-between rounded-xl bg-gray-50 px-3.5 py-2.5">
+      <div className="flex items-center justify-between rounded-xl bg-white/5 px-3.5 py-2.5">
         <div>
-          <p className="text-xs text-gray-500">Total de exercícios</p>
-          <p className="text-lg font-bold text-gray-900 tabular-nums">{items.length}</p>
+          <p className="text-xs text-slate-400">Total de exercícios</p>
+          <p className="text-lg font-bold text-slate-100 tabular-nums">{items.length}</p>
         </div>
         <div className="text-right">
-          <p className="text-xs text-gray-500">Tempo total estimado</p>
-          <p className="text-lg font-bold text-gray-900 tabular-nums">{totalMinutes} min</p>
+          <p className="text-xs text-slate-400">Tempo total estimado</p>
+          <p className="text-lg font-bold text-slate-100 tabular-nums">{totalMinutes} min</p>
         </div>
       </div>
 
@@ -131,7 +131,7 @@ export function PlanBuilderSidebar(props: PlanBuilderSidebarProps) {
         <button
           type="button"
           onClick={onVisualize}
-          className="w-full flex items-center justify-center gap-2 py-2.5 rounded-xl bg-white border border-gray-200 text-gray-700 text-sm font-semibold hover:bg-gray-50 transition-colors"
+          className="w-full flex items-center justify-center gap-2 py-2.5 rounded-xl bg-white/5 border border-white/15 text-slate-200 text-sm font-semibold hover:bg-white/10 transition-colors"
         >
           <Eye className="w-4 h-4" />
           Visualizar plano

@@ -10,18 +10,18 @@ interface ExerciseTableProps {
 export function ExerciseTable({ exercises, addedIds, onToggle }: ExerciseTableProps) {
   if (exercises.length === 0) {
     return (
-      <div className="rounded-2xl border border-gray-200 bg-white py-14 text-center">
-        <p className="text-sm text-gray-400">Nenhum exercício encontrado.</p>
+      <div className="rounded-2xl border border-white/10 bg-[#14264e] py-14 text-center">
+        <p className="text-sm text-slate-400">Nenhum exercício encontrado.</p>
       </div>
     );
   }
 
   return (
-    <div className="rounded-2xl border border-gray-200 bg-white overflow-hidden">
+    <div className="rounded-2xl border border-white/10 bg-[#14264e] overflow-hidden">
       {/* Cabeçalho */}
-      <div className="hidden sm:grid grid-cols-[minmax(0,1fr)_124px_104px_64px_48px] gap-3 px-4 py-2.5 bg-gray-50/80 border-b border-gray-200">
+      <div className="hidden sm:grid grid-cols-[minmax(0,1fr)_124px_104px_64px_48px] gap-3 px-4 py-2.5 bg-white/5 border-b border-white/10">
         {["Exercício", "Subdomínio", "Dificuldade", "Duração", "Ação"].map((h, i) => (
-          <span key={i} className="text-[11px] font-semibold uppercase tracking-wide text-gray-400">{h}</span>
+          <span key={i} className="text-[11px] font-semibold uppercase tracking-wide text-slate-400">{h}</span>
         ))}
       </div>
 

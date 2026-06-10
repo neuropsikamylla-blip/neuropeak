@@ -21,13 +21,13 @@ export function ExerciseSearch({ query, onQuery, difficulty, onDifficulty }: Exe
   return (
     <div className="flex items-center gap-2">
       <div className="relative flex-1 max-w-xs">
-        <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400" />
+        <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400" />
         <input
           type="text"
           value={query}
           onChange={(e) => onQuery(e.target.value)}
           placeholder="Buscar exercício..."
-          className="w-full pl-9 pr-3 py-2 rounded-lg border border-gray-200 text-sm text-gray-700 placeholder:text-gray-400 focus:outline-none focus:ring-2 focus:ring-blue-100 focus:border-blue-300 transition-all"
+          className="w-full pl-9 pr-3 py-2 rounded-lg border border-white/15 bg-white/5 text-sm text-slate-100 placeholder:text-slate-400 focus:outline-none focus:ring-2 focus:ring-blue-500/30 focus:border-blue-400 transition-all"
         />
       </div>
 
@@ -36,7 +36,7 @@ export function ExerciseSearch({ query, onQuery, difficulty, onDifficulty }: Exe
           type="button"
           onClick={() => setOpen((o) => !o)}
           className={`flex items-center gap-1.5 px-3 py-2 rounded-lg border text-sm font-medium transition-colors ${
-            filtering || open ? "border-blue-300 text-blue-600 bg-blue-50" : "border-gray-200 text-gray-600 hover:bg-gray-50"
+            filtering || open ? "border-blue-400/50 text-blue-300 bg-blue-500/15" : "border-white/15 text-slate-300 hover:bg-white/10"
           }`}
         >
           <SlidersHorizontal className="w-4 h-4" />
@@ -47,8 +47,8 @@ export function ExerciseSearch({ query, onQuery, difficulty, onDifficulty }: Exe
         {open && (
           <>
             <div className="fixed inset-0 z-10" onClick={() => setOpen(false)} />
-            <div className="absolute right-0 mt-2 w-48 z-20 rounded-xl border border-gray-200 bg-white shadow-lg p-3">
-              <p className="text-[11px] font-bold uppercase tracking-wide text-gray-400 mb-2">Dificuldade</p>
+            <div className="absolute right-0 mt-2 w-48 z-20 rounded-xl border border-white/10 bg-[#0f2147] shadow-lg p-3">
+              <p className="text-[11px] font-bold uppercase tracking-wide text-slate-400 mb-2">Dificuldade</p>
               <div className="space-y-1">
                 {(["todas", "facil", "medio", "dificil"] as const).map((d) => {
                   const label = d === "todas" ? "Todas" : DIFFICULTY_INFO[d].label;
@@ -59,7 +59,7 @@ export function ExerciseSearch({ query, onQuery, difficulty, onDifficulty }: Exe
                       type="button"
                       onClick={() => { onDifficulty(d); setOpen(false); }}
                       className={`w-full text-left px-2.5 py-1.5 rounded-lg text-sm transition-colors ${
-                        isActive ? "bg-blue-50 text-blue-700 font-semibold" : "text-gray-600 hover:bg-gray-50"
+                        isActive ? "bg-blue-500/15 text-blue-300 font-semibold" : "text-slate-300 hover:bg-white/10"
                       }`}
                     >
                       {label}

@@ -26,13 +26,13 @@ export function ExerciseRow({ exercise, added, onToggle }: ExerciseRowProps) {
   const subId = EXERCISE_SUBDOMAIN_ID[exercise.id];
 
   return (
-    <div className="grid grid-cols-[1fr_auto] sm:grid-cols-[minmax(0,1fr)_124px_104px_64px_48px] items-center gap-3 px-4 py-3.5 border-b border-gray-100 last:border-b-0 hover:bg-gray-50/70 transition-colors">
+    <div className="grid grid-cols-[1fr_auto] sm:grid-cols-[minmax(0,1fr)_124px_104px_64px_48px] items-center gap-3 px-4 py-3.5 border-b border-white/5 last:border-b-0 hover:bg-white/5 transition-colors">
       {/* Exercício */}
       <div className="flex items-start gap-3 min-w-0">
         <ExerciseIcon id={exercise.id} emoji={exercise.icon} size={44} className="mt-0.5" />
         <div className="min-w-0">
-          <p className="font-medium text-sm text-gray-800 leading-tight">{exercise.name}</p>
-          <p className="text-xs text-gray-500 leading-snug mt-0.5 line-clamp-1">{exercise.description}</p>
+          <p className="font-medium text-sm text-slate-100 leading-tight">{exercise.name}</p>
+          <p className="text-xs text-slate-400 leading-snug mt-0.5 line-clamp-1">{exercise.description}</p>
           {meta.secondary.length > 0 && (
             <div className="mt-1.5"><SecondaryChips skills={meta.secondary} /></div>
           )}
@@ -40,7 +40,7 @@ export function ExerciseRow({ exercise, added, onToggle }: ExerciseRowProps) {
           <div className="flex flex-wrap items-center gap-2 mt-2 sm:hidden">
             {subLabel && <SubdomainTag id={subId} label={subLabel} />}
             <DifficultyDots difficulty={meta.difficulty} showLabel={false} />
-            <span className="text-xs text-gray-400">{exercise.estimatedMinutes} min</span>
+            <span className="text-xs text-slate-400">{exercise.estimatedMinutes} min</span>
           </div>
         </div>
       </div>
@@ -52,7 +52,7 @@ export function ExerciseRow({ exercise, added, onToggle }: ExerciseRowProps) {
       <div className="hidden sm:block"><DifficultyDots difficulty={meta.difficulty} /></div>
 
       {/* Duração */}
-      <div className="hidden sm:block text-sm text-gray-500 tabular-nums">~{exercise.estimatedMinutes} min</div>
+      <div className="hidden sm:block text-sm text-slate-400 tabular-nums">~{exercise.estimatedMinutes} min</div>
 
       {/* Ação */}
       <div className="flex justify-end">
@@ -63,7 +63,7 @@ export function ExerciseRow({ exercise, added, onToggle }: ExerciseRowProps) {
           className={`flex items-center justify-center w-9 h-9 rounded-lg border transition-all ${
             added
               ? "bg-blue-600 border-blue-600 text-white hover:bg-blue-700"
-              : "bg-white border-gray-300 text-gray-500 hover:border-blue-400 hover:text-blue-600"
+              : "bg-white/5 border-white/15 text-slate-300 hover:border-blue-400 hover:text-blue-300"
           }`}
         >
           {added ? <Check className="w-4 h-4" strokeWidth={2.5} /> : <Plus className="w-4 h-4" strokeWidth={2.5} />}
