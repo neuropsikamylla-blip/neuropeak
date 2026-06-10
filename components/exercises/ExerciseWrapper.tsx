@@ -66,10 +66,10 @@ export function ExerciseWrapper({
 
   const themeStyles = {
     CLINICAL: {
-      bg: "bg-gradient-to-br from-slate-50 via-white to-indigo-50/30 min-h-screen",
-      card: "bg-white rounded-2xl shadow-md border border-slate-200/70 p-8 max-w-2xl mx-auto",
-      title: "text-slate-800 text-2xl font-bold tracking-tight",
-      text: "text-slate-600",
+      bg: "bg-[#0b1a38] min-h-screen",
+      card: "bg-[#14264e] rounded-2xl shadow-md border border-white/10 p-8 max-w-2xl mx-auto",
+      title: "text-slate-100 text-2xl font-bold tracking-tight",
+      text: "text-slate-300",
       btn: "bg-indigo-600 hover:bg-indigo-700 text-white rounded-xl font-semibold",
     },
     COLORFUL: {
@@ -109,8 +109,8 @@ export function ExerciseWrapper({
             <p className={`${s.text} text-sm mb-4 opacity-70`}>Leia as instruções antes de começar</p>
 
             {functional && (
-              <div className={`rounded-xl p-4 mb-5 ${theme === "GAMIFIED" ? "bg-cyan-900/30 border border-cyan-500/20" : theme === "COLORFUL" ? "bg-teal-50 border border-teal-200" : "bg-indigo-50/60 border border-indigo-100"}`}>
-                <p className={`text-xs font-bold uppercase tracking-wide mb-1 ${theme === "GAMIFIED" ? "text-cyan-400" : theme === "COLORFUL" ? "text-teal-600" : "text-indigo-600"}`}>
+              <div className={`rounded-xl p-4 mb-5 ${theme === "GAMIFIED" ? "bg-cyan-900/30 border border-cyan-500/20" : theme === "COLORFUL" ? "bg-teal-50 border border-teal-200" : "bg-indigo-500/10 border border-indigo-400/20"}`}>
+                <p className={`text-xs font-bold uppercase tracking-wide mb-1 ${theme === "GAMIFIED" ? "text-cyan-400" : theme === "COLORFUL" ? "text-teal-600" : "text-indigo-300"}`}>
                   Para que serve no dia a dia
                 </p>
                 <p className={`text-sm leading-relaxed ${s.text}`}>{functional.scenario}</p>
@@ -129,8 +129,8 @@ export function ExerciseWrapper({
             </div>
 
             {functional && (
-              <div className={`rounded-xl p-4 mb-5 ${theme === "GAMIFIED" ? "bg-gray-700/50" : theme === "COLORFUL" ? "bg-yellow-50 border border-yellow-200" : "bg-gray-50 border border-gray-100"}`}>
-                <p className={`text-xs font-bold uppercase tracking-wide mb-2 ${theme === "GAMIFIED" ? "text-yellow-400" : theme === "COLORFUL" ? "text-yellow-700" : "text-gray-600"}`}>
+              <div className={`rounded-xl p-4 mb-5 ${theme === "GAMIFIED" ? "bg-gray-700/50" : theme === "COLORFUL" ? "bg-yellow-50 border border-yellow-200" : "bg-white/5 border border-white/10"}`}>
+                <p className={`text-xs font-bold uppercase tracking-wide mb-2 ${theme === "GAMIFIED" ? "text-yellow-400" : theme === "COLORFUL" ? "text-yellow-700" : "text-slate-300"}`}>
                   Estratégias
                 </p>
                 <ul className="space-y-1.5">
@@ -249,7 +249,7 @@ export function ExerciseWrapper({
             </div>
 
             <div className="grid grid-cols-3 gap-4 mb-8">
-              <div className={`text-center p-4 rounded-xl ${theme === "GAMIFIED" ? "bg-gray-700" : "bg-gray-50"}`}>
+              <div className={`text-center p-4 rounded-xl ${theme === "GAMIFIED" ? "bg-gray-700" : theme === "COLORFUL" ? "bg-gray-50" : "bg-white/5"}`}>
                 <ScoreDisplay
                   score={result.score}
                   theme={theme === "CLINICAL" ? "clinical" : theme === "COLORFUL" ? "colorful" : "gamified"}
@@ -258,15 +258,15 @@ export function ExerciseWrapper({
                 <p className={`${s.text} text-xs mt-1 opacity-70`}>Pontuação</p>
               </div>
 
-              <div className={`text-center p-4 rounded-xl ${theme === "GAMIFIED" ? "bg-gray-700" : "bg-gray-50"}`}>
+              <div className={`text-center p-4 rounded-xl ${theme === "GAMIFIED" ? "bg-gray-700" : theme === "COLORFUL" ? "bg-gray-50" : "bg-white/5"}`}>
                 <div className={`text-2xl font-bold ${result.accuracy >= 0.8 ? "text-green-500" : result.accuracy >= 0.5 ? "text-yellow-500" : "text-red-500"}`}>
                   {Math.round(result.accuracy * 100)}%
                 </div>
                 <p className={`${s.text} text-xs mt-1 opacity-70`}>Precisão</p>
               </div>
 
-              <div className={`text-center p-4 rounded-xl ${theme === "GAMIFIED" ? "bg-gray-700" : "bg-gray-50"}`}>
-                <div className={`text-2xl font-bold ${theme === "GAMIFIED" ? "text-cyan-400" : "text-blue-600"}`}>
+              <div className={`text-center p-4 rounded-xl ${theme === "GAMIFIED" ? "bg-gray-700" : theme === "COLORFUL" ? "bg-gray-50" : "bg-white/5"}`}>
+                <div className={`text-2xl font-bold ${theme === "GAMIFIED" ? "text-cyan-400" : theme === "COLORFUL" ? "text-blue-600" : "text-blue-400"}`}>
                   <Clock className="w-5 h-5 inline mr-1" />
                   {formatDuration(result.duration)}
                 </div>
@@ -275,7 +275,7 @@ export function ExerciseWrapper({
             </div>
 
             {result.reactionTime && (
-              <div className={`flex items-center justify-center gap-2 mb-4 p-3 rounded-lg ${theme === "GAMIFIED" ? "bg-gray-700" : "bg-blue-50"}`}>
+              <div className={`flex items-center justify-center gap-2 mb-4 p-3 rounded-lg ${theme === "GAMIFIED" ? "bg-gray-700" : theme === "COLORFUL" ? "bg-blue-50" : "bg-blue-500/10"}`}>
                 <Zap className="w-4 h-4 text-yellow-500" />
                 <span className={`${s.text} text-sm`}>
                   Tempo de reação médio: <strong>{formatReactionTime(result.reactionTime)}</strong>
@@ -284,11 +284,11 @@ export function ExerciseWrapper({
             )}
 
             {functional && (
-              <div className={`rounded-xl p-4 mb-6 ${theme === "GAMIFIED" ? "bg-cyan-900/30 border border-cyan-500/20" : theme === "COLORFUL" ? "bg-green-50 border border-green-200" : "bg-green-50 border border-green-100"}`}>
+              <div className={`rounded-xl p-4 mb-6 ${theme === "GAMIFIED" ? "bg-cyan-900/30 border border-cyan-500/20" : theme === "COLORFUL" ? "bg-green-50 border border-green-200" : "bg-green-500/10 border border-green-500/20"}`}>
                 <div className="flex items-start gap-2">
-                  <Lightbulb className={`w-4 h-4 shrink-0 mt-0.5 ${theme === "GAMIFIED" ? "text-cyan-400" : "text-green-600"}`} />
+                  <Lightbulb className={`w-4 h-4 shrink-0 mt-0.5 ${theme === "GAMIFIED" ? "text-cyan-400" : theme === "COLORFUL" ? "text-green-600" : "text-green-400"}`} />
                   <div>
-                    <p className={`text-xs font-bold uppercase tracking-wide mb-1 ${theme === "GAMIFIED" ? "text-cyan-400" : "text-green-700"}`}>
+                    <p className={`text-xs font-bold uppercase tracking-wide mb-1 ${theme === "GAMIFIED" ? "text-cyan-400" : theme === "COLORFUL" ? "text-green-700" : "text-green-300"}`}>
                       Leve para o seu dia
                     </p>
                     <p className={`text-sm leading-relaxed ${s.text}`}>{functional.dailyTip}</p>

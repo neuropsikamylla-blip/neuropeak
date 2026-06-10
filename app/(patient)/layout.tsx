@@ -20,25 +20,25 @@ export default function PatientLayout({ children }: { children: React.ReactNode 
   const theme = (user?.theme ?? "CLINICAL") as "CLINICAL" | "COLORFUL" | "GAMIFIED";
 
   const bgStyles = {
-    CLINICAL: "bg-gray-50",
+    CLINICAL: "bg-[#0b1a38]",
     COLORFUL: "bg-gradient-to-br from-purple-50 to-pink-50",
     GAMIFIED: "bg-gray-950",
   };
 
   const navStyles = {
-    CLINICAL: "bg-white border-t border-gray-200",
+    CLINICAL: "bg-[#0f2147] border-t border-white/10",
     COLORFUL: "bg-white border-t border-purple-200",
     GAMIFIED: "bg-gray-900 border-t border-gray-700",
   };
 
   const textStyles = {
-    CLINICAL: "text-gray-600",
+    CLINICAL: "text-slate-400",
     COLORFUL: "text-purple-600",
     GAMIFIED: "text-gray-400",
   };
 
   const activeStyles = {
-    CLINICAL: "text-blue-600",
+    CLINICAL: "text-blue-400",
     COLORFUL: "text-purple-700",
     GAMIFIED: "text-cyan-400",
   };
@@ -53,12 +53,12 @@ export default function PatientLayout({ children }: { children: React.ReactNode 
         <header className={`sticky top-0 z-30 px-4 py-3 flex items-center justify-between ${navStyles[theme]}`}>
           <div className="flex items-center gap-2">
             <Image src="/icon-48.png" alt="NeuroPeak" width={28} height={28} className="rounded-lg" />
-            <span className={`font-bold ${theme === "GAMIFIED" ? "text-white" : "text-gray-900"}`}>
+            <span className={`font-bold ${theme === "COLORFUL" ? "text-gray-900" : "text-white"}`}>
               NeuroPeak
             </span>
           </div>
           <div className="flex items-center gap-3">
-            <span className={`text-sm ${theme === "GAMIFIED" ? "text-gray-300" : "text-gray-600"}`}>
+            <span className={`text-sm ${theme === "COLORFUL" ? "text-gray-600" : "text-gray-300"}`}>
               {user?.name?.split(" ")[0]}
             </span>
             <AppUpdateButton iconClass="w-4 h-4" buttonClass={textStyles[theme]} showVersion />
