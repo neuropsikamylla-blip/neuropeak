@@ -132,7 +132,7 @@ export default async function MundoInteriorOverviewPage() {
           <p className="text-sm text-slate-400 text-center py-8">Nenhum paciente cadastrado ainda.</p>
         )}
         {otherPatients.map((p) => (
-          <div key={p.id} className="flex items-center justify-between p-4 rounded-2xl border border-white/10 bg-[#14264e] hover:border-white/20 transition-all">
+          <div key={p.id} className="flex items-center justify-between p-4 rounded-2xl border border-white/10 bg-[#0D2547] hover:border-white/20 transition-all">
             <p className="font-medium text-slate-100">{p.name}</p>
             <Button variant="outline" size="sm" asChild>
               <Link href={`/pacientes/${p.id}/mundo-interior`}>

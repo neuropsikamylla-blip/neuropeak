@@ -47,7 +47,7 @@ export function ExerciseSearch({ query, onQuery, difficulty, onDifficulty }: Exe
         {open && (
           <>
             <div className="fixed inset-0 z-10" onClick={() => setOpen(false)} />
-            <div className="absolute right-0 mt-2 w-48 z-20 rounded-xl border border-white/10 bg-[#0f2147] shadow-lg p-3">
+            <div className="absolute right-0 mt-2 w-48 z-20 rounded-xl border border-white/10 bg-[#07162D] shadow-lg p-3">
               <p className="text-[11px] font-bold uppercase tracking-wide text-slate-400 mb-2">Dificuldade</p>
               <div className="space-y-1">
                 {(["todas", "facil", "medio", "dificil"] as const).map((d) => {

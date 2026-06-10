@@ -28,27 +28,37 @@
     --font-serif: "Georgia", serif;
   }
 
-  /* Tema escuro NeuroPeak — azul marinho do ícone do app (#0d1b3e) */
+  /* Tema escuro NeuroPeak — dark blue clínico premium */
   .dark {
-    --background: 220 67% 13%;
-    --foreground: 210 40% 96%;
-    --card: 221 59% 19%;
-    --card-foreground: 210 40% 96%;
-    --popover: 221 55% 16%;
-    --popover-foreground: 210 40% 96%;
-    --primary: 217 91% 60%;
+    --background: 216 73% 9%;        /* #061326 */
+    --foreground: 213 50% 97%;       /* #F4F7FB */
+    --card: 215 69% 16%;             /* #0D2547 */
+    --card-foreground: 213 50% 97%;
+    --popover: 215 71% 13%;          /* #0A1E3A */
+    --popover-foreground: 213 50% 97%;
+    --primary: 217 91% 60%;          /* #3B82F6 */
     --primary-foreground: 0 0% 100%;
-    --secondary: 218 38% 24%;
-    --secondary-foreground: 210 40% 96%;
-    --muted: 218 35% 22%;
-    --muted-foreground: 216 25% 72%;
-    --accent: 218 38% 24%;
-    --accent-foreground: 210 40% 96%;
+    --secondary: 215 70% 21%;        /* #102E59 */
+    --secondary-foreground: 213 50% 97%;
+    --muted: 215 55% 18%;
+    --muted-foreground: 219 22% 72%; /* #A8B3C7 */
+    --accent: 215 70% 21%;           /* #102E59 */
+    --accent-foreground: 213 50% 97%;
     --destructive: 0 72% 51%;
     --destructive-foreground: 0 0% 100%;
-    --border: 218 30% 27%;
-    --input: 218 30% 27%;
+    --border: 215 28% 24%;           /* ~rgba(148,163,184,.14) sobre escuro */
+    --input: 215 28% 24%;
     --ring: 217 91% 60%;
+    /* Tokens hex de apoio (uso direto em alguns componentes) */
+    --np-bg-app: #061326;
+    --np-bg-sidebar: #07162D;
+    --np-bg-panel: #0A1E3A;
+    --np-bg-card: #0D2547;
+    --np-bg-card-hover: #102E59;
+    --np-border-soft: rgba(148, 163, 184, 0.14);
+    --np-border-medium: rgba(148, 163, 184, 0.22);
+    --np-text-secondary: #A8B3C7;
+    --np-text-muted: #6F7F99;
   }
 }
 
@@ -80,4 +90,36 @@
 
 .float-animation {
   animation: float 3s ease-in-out infinite;
+}
+
+/* ── Fundo premium da área escura: leve radial glow + gradiente vertical ── */
+.np-app-bg {
+  background:
+    radial-gradient(circle at top left, rgba(59, 130, 246, 0.16), transparent 34%),
+    radial-gradient(circle at top right, rgba(20, 214, 164, 0.07), transparent 30%),
+    linear-gradient(180deg, #061326 0%, #040c1a 100%);
+  background-attachment: fixed;
+}
+
+/* Painel principal translúcido com sombra discreta */
+.np-panel {
+  background: rgba(10, 30, 58, 0.82);
+  border: 1px solid var(--np-border-soft, rgba(148, 163, 184, 0.14));
+  box-shadow: 0 24px 70px rgba(0, 0, 0, 0.22);
+}
+
+/* Card de domínio premium */
+.np-domain-card {
+  background: linear-gradient(180deg, rgba(13, 37, 71, 0.92), rgba(8, 25, 50, 0.92));
+  border: 1px solid var(--np-border-soft, rgba(148, 163, 184, 0.14));
+  box-shadow: 0 14px 36px rgba(0, 0, 0, 0.16);
+  transition: background 0.2s ease, border-color 0.2s ease, box-shadow 0.2s ease, transform 0.2s ease;
+}
+.np-domain-card:hover {
+  background: linear-gradient(180deg, rgba(16, 46, 89, 0.95), rgba(10, 31, 61, 0.95));
+  border-color: var(--np-border-medium, rgba(148, 163, 184, 0.22));
+}
+.np-domain-card.np-active {
+  border: 1.5px solid rgba(59, 130, 246, 0.85);
+  box-shadow: 0 0 0 1px rgba(59, 130, 246, 0.18), 0 18px 48px rgba(37, 99, 235, 0.20);
 }

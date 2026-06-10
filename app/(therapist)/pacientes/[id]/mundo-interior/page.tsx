@@ -162,7 +162,7 @@ export default function MundoInteriorTherapistPage() {
 
             {/* Character */}
             {char?.name && (
-              <div className="bg-[#0f2147] rounded-xl p-3 space-y-1.5 border border-indigo-400/20">
+              <div className="bg-[#07162D] rounded-xl p-3 space-y-1.5 border border-indigo-400/20">
                 <p className="text-xs font-semibold text-slate-400 uppercase tracking-wider">Personagem</p>
                 <div className="flex items-center gap-2">
                   <span className="text-2xl">{char.avatar}</span>
@@ -207,7 +207,7 @@ export default function MundoInteriorTherapistPage() {
               </p>
               <div className="space-y-2 max-h-72 overflow-y-auto rounded-xl">
                 {[...activeSession.responses].reverse().map((r, i) => (
-                  <div key={i} className="bg-[#0f2147] rounded-xl p-3 border border-white/10 space-y-1">
+                  <div key={i} className="bg-[#07162D] rounded-xl p-3 border border-white/10 space-y-1">
                     <p className="text-xs text-slate-500">{r.houseId.replace(/_/g, " · ")} · {new Date(r.timestamp).toLocaleTimeString("pt-BR", { hour: "2-digit", minute: "2-digit" })}</p>
                     <p className="text-xs text-slate-400 italic">"{r.question}"</p>
                     <p className="text-sm text-slate-100 font-medium">{r.answer}</p>

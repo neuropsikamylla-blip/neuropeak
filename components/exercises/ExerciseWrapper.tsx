@@ -66,8 +66,8 @@ export function ExerciseWrapper({
 
   const themeStyles = {
     CLINICAL: {
-      bg: "bg-[#0b1a38] min-h-screen",
-      card: "bg-[#14264e] rounded-2xl shadow-md border border-white/10 p-8 max-w-2xl mx-auto",
+      bg: "bg-[#061326] min-h-screen",
+      card: "bg-[#0D2547] rounded-2xl shadow-md border border-white/10 p-8 max-w-2xl mx-auto",
       title: "text-slate-100 text-2xl font-bold tracking-tight",
       text: "text-slate-300",
       btn: "bg-indigo-600 hover:bg-indigo-700 text-white rounded-xl font-semibold",

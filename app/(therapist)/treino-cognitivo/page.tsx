@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, type CSSProperties } from "react";
+import { useState } from "react";
 import { Brain, ChevronDown } from "lucide-react";
 import { EXERCISE_DEFINITIONS, DOMAIN_LABELS, DOMAIN_COLORS, DOMAIN_DESCRIPTIONS, type Domain } from "@/types";
 import { DOMAIN_ORDER, DOMAIN_ICONS } from "@/components/plano/DomainSelector";
@@ -22,7 +22,7 @@ export default function TreinoCognitivoPage() {
       </div>
 
       {/* Catálogo de domínios — seção premium */}
-      <section className="bg-[#14264e] border border-white/10 rounded-[24px] p-8 shadow-[0_1px_3px_rgba(0,0,0,0.2),0_10px_30px_-16px_rgba(0,0,0,0.45)]">
+      <section className="np-panel rounded-[24px] p-8">
         <h2 className="text-xl font-bold text-slate-100">Domínios de treino</h2>
         <p className="text-sm text-slate-400 mt-1">
           Clique em um domínio para ver os exercícios que ele desenvolve.
@@ -35,11 +35,6 @@ export default function TreinoCognitivoPage() {
             const isActive = active === domain;
             const count = DOMAIN_COUNTS[domain] ?? 0;
 
-            const cardStyle: CSSProperties = {
-              ["--dc" as string]: color,
-              ...(isActive ? { borderColor: color, backgroundColor: `${color}24` } : {}),
-            };
-
             return (
               <button
                 key={domain}
@@ -47,12 +42,7 @@ export default function TreinoCognitivoPage() {
                 aria-expanded={isActive}
                 aria-label={DOMAIN_LABELS[domain]}
                 onClick={() => setActive((prev) => (prev === domain ? null : domain))}
-                style={cardStyle}
-                className={`group relative flex flex-col items-center text-center min-h-[280px] rounded-[20px] border-2 p-6 transition-all duration-200 cursor-pointer outline-none focus-visible:ring-2 focus-visible:ring-offset-2 focus-visible:ring-offset-[#14264e] focus-visible:ring-[var(--dc)] ${
-                  isActive
-                    ? "shadow-[0_12px_30px_-14px_var(--dc)]"
-                    : "border-white/10 bg-[#182a52] hover:border-[var(--dc)] hover:-translate-y-[3px] hover:shadow-[0_16px_32px_-14px_rgba(0,0,0,0.5)]"
-                }`}
+                className={`np-domain-card ${isActive ? "np-active" : "hover:-translate-y-[3px]"} group relative flex flex-col items-center text-center min-h-[280px] rounded-[20px] p-6 cursor-pointer outline-none focus-visible:ring-2 focus-visible:ring-offset-2 focus-visible:ring-offset-[#0A1E3A] focus-visible:ring-[#3B82F6]`}
               >
                 {/* Indicador de expansão no canto superior direito */}
                 <span
@@ -69,7 +59,7 @@ export default function TreinoCognitivoPage() {
                 {/* Ícone grande em círculo translúcido */}
                 <span
                   className="flex items-center justify-center w-20 h-20 rounded-full mt-2"
-                  style={{ backgroundColor: `${color}26` }}
+                  style={{ backgroundColor: `${color}1A`, border: "1px solid rgba(255,255,255,0.06)" }}
                 >
                   <Icon className="w-9 h-9" style={{ color }} strokeWidth={1.75} />
                 </span>
@@ -121,7 +111,7 @@ export default function TreinoCognitivoPage() {
                         {exercises.map((ex) => (
                           <div
                             key={ex.id}
-                            className="flex items-start gap-3 rounded-xl bg-[#182a52] border border-white/10 p-3"
+                            className="flex items-start gap-3 rounded-xl bg-[#102E59] border border-white/10 p-3"
                           >
                             <ExerciseIcon id={ex.id} emoji={ex.icon} size={52} className="mt-0.5" />
                             <div className="min-w-0">

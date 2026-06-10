@@ -130,10 +130,10 @@ export default async function DashboardPage() {
       {/* Header */}
       <div className="flex justify-between items-center">
         <div>
-          <h1 style={{ fontSize: "1.6rem", fontWeight: 800, color: "#F1F5F9", lineHeight: 1.2, letterSpacing: "-0.02em" }}>
+          <h1 style={{ fontSize: "1.6rem", fontWeight: 800, color: "#F4F7FB", lineHeight: 1.2, letterSpacing: "-0.02em" }}>
             Dashboard
           </h1>
-          <p style={{ color: "#8A9BBC", fontSize: "0.875rem", marginTop: 2, fontWeight: 400 }}>
+          <p style={{ color: "#A8B3C7", fontSize: "0.875rem", marginTop: 2, fontWeight: 400 }}>
             Visão geral dos seus pacientes
           </p>
         </div>
@@ -153,7 +153,7 @@ export default async function DashboardPage() {
         {/* Patient list */}
         <div className="lg:col-span-2">
           <div className="flex items-center justify-between mb-4">
-            <h2 style={{ fontSize: "1.1rem", fontWeight: 700, color: "#F1F5F9" }}>
+            <h2 style={{ fontSize: "1.1rem", fontWeight: 700, color: "#F4F7FB" }}>
               Pacientes
             </h2>
             <Link
@@ -170,13 +170,13 @@ export default async function DashboardPage() {
                 style={{
                   textAlign: "center",
                   padding: "3rem 1.5rem",
-                  background: "#14264e",
-                  border: "1px solid rgba(255,255,255,0.08)",
+                  background: "#0D2547",
+                  border: "1px solid rgba(148,163,184,0.14)",
                   borderRadius: 16,
                   boxShadow: "0 1px 3px rgba(0,0,0,0.2)",
                 }}
               >
-                <p style={{ color: "#8A9BBC", marginBottom: "0.75rem", fontSize: "0.875rem" }}>
+                <p style={{ color: "#A8B3C7", marginBottom: "0.75rem", fontSize: "0.875rem" }}>
                   Nenhum paciente cadastrado ainda.
                 </p>
                 <Link

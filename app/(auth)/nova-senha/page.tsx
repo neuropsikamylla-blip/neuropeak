@@ -128,7 +128,7 @@ function NovaSenhaForm() {
 
 export default function NovaSenhaPage() {
   return (
-    <div className="min-h-screen bg-gradient-to-br from-[#0a1631] via-[#0d1b3e] to-[#10234d] flex items-center justify-center p-4">
+    <div className="min-h-screen bg-gradient-to-br from-[#061326] via-[#07162D] to-[#0A1E3A] flex items-center justify-center p-4">
       <motion.div
         initial={{ opacity: 0, y: 30 }}
         animate={{ opacity: 1, y: 0 }}
@@ -139,7 +139,7 @@ export default function NovaSenhaPage() {
           <h1 className="text-3xl font-bold text-white">NeuroPeak</h1>
         </div>
 
-        <Card className="shadow-2xl border border-white/10 bg-[#11213f]/90 backdrop-blur">
+        <Card className="shadow-2xl border border-white/10 bg-[#0D2547]/90 backdrop-blur">
           <CardHeader>
             <CardTitle className="text-lg text-white">Nova senha</CardTitle>
             <CardDescription className="text-blue-200/60">Crie uma senha forte para sua conta</CardDescription>

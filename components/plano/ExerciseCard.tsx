@@ -42,7 +42,7 @@ export function ExerciseCard({
   );
 
   return (
-    <div className="rounded-xl border border-white/10 bg-[#0f2147] hover:border-white/20 transition-colors">
+    <div className="rounded-xl border border-white/10 bg-[#07162D] hover:border-white/20 transition-colors">
       <div className="flex items-center gap-2 p-2.5">
         {/* Reordenar */}
         <div className="flex flex-col shrink-0">

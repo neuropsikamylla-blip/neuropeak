@@ -19,77 +19,6 @@ const NAV_ITEMS = [
   { href: "/configuracoes", label: "Configurações", icon: Settings },
 ];
 
-function NeuronBg() {
-  return (
-    <div className="fixed inset-0 pointer-events-none overflow-hidden" style={{ zIndex: 0 }}>
-      <svg
-        className="absolute w-full h-full"
-        viewBox="0 0 1440 900"
-        preserveAspectRatio="xMidYMid slice"
-        xmlns="http://www.w3.org/2000/svg"
-      >
-        {/* Top-right neuron cluster */}
-        <g strokeLinecap="round" strokeLinejoin="round">
-          <circle cx="1190" cy="110" r="24" fill="#60A5FA" fillOpacity="0.07" stroke="none" />
-          <path d="M1214 110 C1260 92 1320 78 1395 62" stroke="#60A5FA" strokeOpacity="0.07" strokeWidth="1.8" fill="none" />
-          <path d="M1190 86 C1175 58 1172 28 1184 4" stroke="#60A5FA" strokeOpacity="0.06" strokeWidth="1.5" fill="none" />
-          <path d="M1190 86 C1155 70 1122 52 1090 38" stroke="#60A5FA" strokeOpacity="0.06" strokeWidth="1.5" fill="none" />
-          <path d="M1166 110 C1128 120 1095 134 1068 152" stroke="#60A5FA" strokeOpacity="0.05" strokeWidth="1.4" fill="none" />
-          <path d="M1190 134 C1196 168 1188 202 1168 230" stroke="#60A5FA" strokeOpacity="0.05" strokeWidth="1.4" fill="none" />
-          <path d="M1210 130 C1252 142 1296 150 1338 144" stroke="#60A5FA" strokeOpacity="0.05" strokeWidth="1.2" fill="none" />
-          <circle cx="1395" cy="62" r="4" fill="#60A5FA" fillOpacity="0.16" stroke="none" />
-          <circle cx="1184" cy="4" r="3.5" fill="#60A5FA" fillOpacity="0.16" stroke="none" />
-          <circle cx="1090" cy="38" r="3" fill="#60A5FA" fillOpacity="0.16" stroke="none" />
-          <circle cx="1068" cy="152" r="3" fill="#60A5FA" fillOpacity="0.14" stroke="none" />
-          <circle cx="1168" cy="230" r="3" fill="#60A5FA" fillOpacity="0.14" stroke="none" />
-          <circle cx="1338" cy="144" r="3.5" fill="#60A5FA" fillOpacity="0.14" stroke="none" />
-          {/* Secondary soma */}
-          <circle cx="1090" cy="260" r="16" fill="#60A5FA" fillOpacity="0.06" stroke="none" />
-          <path d="M1090 244 C1088 218 1090 194 1098 172" stroke="#60A5FA" strokeOpacity="0.05" strokeWidth="1.1" fill="none" />
-          <path d="M1074 260 C1044 252 1018 242 996 232" stroke="#60A5FA" strokeOpacity="0.05" strokeWidth="1.1" fill="none" />
-          <path d="M1090 276 C1086 302 1074 322 1054 336" stroke="#60A5FA" strokeOpacity="0.05" strokeWidth="1.1" fill="none" />
-          <path d="M1106 268 C1138 276 1166 278 1192 270" stroke="#60A5FA" strokeOpacity="0.05" strokeWidth="1.1" fill="none" />
-          <circle cx="996" cy="232" r="2.5" fill="#60A5FA" fillOpacity="0.14" stroke="none" />
-          <circle cx="1054" cy="336" r="2.5" fill="#60A5FA" fillOpacity="0.14" stroke="none" />
-          <path d="M1090 38 C1090 96 1090 182 1090 244" stroke="#60A5FA" strokeOpacity="0.035" strokeWidth="0.8" strokeDasharray="5 4" fill="none" />
-        </g>
-
-        {/* Bottom-right neuron cluster */}
-        <g strokeLinecap="round" strokeLinejoin="round">
-          <circle cx="1275" cy="795" r="28" fill="#60A5FA" fillOpacity="0.06" stroke="none" />
-          <path d="M1303 795 C1348 775 1398 758 1440 746" stroke="#60A5FA" strokeOpacity="0.05" strokeWidth="1.8" fill="none" />
-          <path d="M1275 767 C1290 736 1300 705 1290 672" stroke="#60A5FA" strokeOpacity="0.05" strokeWidth="1.5" fill="none" />
-          <path d="M1247 795 C1210 814 1176 830 1142 848" stroke="#60A5FA" strokeOpacity="0.05" strokeWidth="1.5" fill="none" />
-          <path d="M1275 823 C1280 856 1272 882 1252 900" stroke="#60A5FA" strokeOpacity="0.045" strokeWidth="1.4" fill="none" />
-          <path d="M1305 820 C1344 832 1386 838 1424 830" stroke="#60A5FA" strokeOpacity="0.045" strokeWidth="1.3" fill="none" />
-          <circle cx="1290" cy="672" r="4.5" fill="#60A5FA" fillOpacity="0.14" stroke="none" />
-          <circle cx="1142" cy="848" r="4" fill="#60A5FA" fillOpacity="0.14" stroke="none" />
-          <circle cx="1424" cy="830" r="4" fill="#60A5FA" fillOpacity="0.14" stroke="none" />
-          {/* Minor soma */}
-          <circle cx="1155" cy="724" r="16" fill="#60A5FA" fillOpacity="0.05" stroke="none" />
-          <path d="M1139 724 C1110 712 1084 700 1062 688" stroke="#60A5FA" strokeOpacity="0.045" strokeWidth="1.1" fill="none" />
-          <path d="M1155 708 C1152 682 1156 658 1170 638" stroke="#60A5FA" strokeOpacity="0.045" strokeWidth="1.1" fill="none" />
-          <path d="M1171 724 C1200 722 1226 724 1250 732" stroke="#60A5FA" strokeOpacity="0.045" strokeWidth="1.1" fill="none" />
-          <path d="M1155 740 C1150 764 1138 784 1120 798" stroke="#60A5FA" strokeOpacity="0.045" strokeWidth="1.1" fill="none" />
-          <circle cx="1062" cy="688" r="2.5" fill="#60A5FA" fillOpacity="0.13" stroke="none" />
-          <circle cx="1170" cy="638" r="2.5" fill="#60A5FA" fillOpacity="0.13" stroke="none" />
-          <circle cx="1120" cy="798" r="2.5" fill="#60A5FA" fillOpacity="0.13" stroke="none" />
-        </g>
-
-        {/* Top-left faint neuron */}
-        <g strokeLinecap="round" strokeLinejoin="round">
-          <circle cx="80" cy="160" r="14" fill="#60A5FA" fillOpacity="0.045" stroke="none" />
-          <path d="M80 160 C52 144 28 128 8 118" stroke="#60A5FA" strokeOpacity="0.04" strokeWidth="1" fill="none" />
-          <path d="M80 160 C96 186 102 214 90 240" stroke="#60A5FA" strokeOpacity="0.04" strokeWidth="1" fill="none" />
-          <path d="M80 160 C112 154 144 150 172 148" stroke="#60A5FA" strokeOpacity="0.04" strokeWidth="1" fill="none" />
-          <circle cx="8" cy="118" r="2" fill="#60A5FA" fillOpacity="0.1" stroke="none" />
-          <circle cx="90" cy="240" r="2" fill="#60A5FA" fillOpacity="0.1" stroke="none" />
-        </g>
-      </svg>
-    </div>
-  );
-}
-
 export default function TherapistLayout({ children }: { children: React.ReactNode }) {
   const { data: session } = useSession();
   const pathname = usePathname();
@@ -105,9 +34,7 @@ export default function TherapistLayout({ children }: { children: React.ReactNod
   const initials = user?.name?.split(" ").map((n) => n[0]).slice(0, 2).join("").toUpperCase() ?? "T";
 
   return (
-    <div className="dark min-h-screen flex text-foreground" style={{ background: "#0b1a38" }}>
-      <NeuronBg />
-
+    <div className="dark np-app-bg min-h-screen flex text-foreground">
       {/* Sidebar */}
       <aside
         className={cn(
@@ -116,17 +43,17 @@ export default function TherapistLayout({ children }: { children: React.ReactNod
           collapsed ? "lg:-translate-x-full" : "lg:translate-x-0"
         )}
         style={{
-          background: "#0f2147",
-          borderRight: "1px solid rgba(255,255,255,0.08)",
-          boxShadow: "2px 0 24px rgba(0,0,0,0.25)",
+          background: "linear-gradient(180deg, #07162D 0%, #050E1F 100%)",
+          borderRight: "1px solid rgba(148,163,184,0.14)",
+          boxShadow: "2px 0 28px rgba(0,0,0,0.3)",
         }}
       >
         {/* Logo */}
-        <div className="flex items-center gap-3 px-6 py-5" style={{ borderBottom: "1px solid rgba(255,255,255,0.07)" }}>
+        <div className="flex items-center gap-3 px-6 py-5" style={{ borderBottom: "1px solid rgba(148,163,184,0.12)" }}>
           <Image src="/icon-48.png" alt="NeuroPeak" width={36} height={36} className="rounded-xl" />
           <div>
-            <span className="font-bold text-lg" style={{ color: "#F1F5F9" }}>NeuroPeak</span>
-            <p className="text-xs" style={{ color: "#7E92B6" }}>Painel Clínico</p>
+            <span className="font-bold text-lg" style={{ color: "#F4F7FB" }}>NeuroPeak</span>
+            <p className="text-xs" style={{ color: "#6F7F99" }}>Painel Clínico</p>
           </div>
           <button
             onClick={() => setCollapsed(true)}
@@ -153,7 +80,7 @@ export default function TherapistLayout({ children }: { children: React.ReactNod
                 }
                 onMouseEnter={(e) => {
                   if (!active) {
-                    (e.currentTarget as HTMLElement).style.background = "rgba(255,255,255,0.05)";
+                    (e.currentTarget as HTMLElement).style.background = "rgba(148,163,184,0.1)";
                     (e.currentTarget as HTMLElement).style.color = "#DBEAFE";
                   }
                 }}
@@ -164,7 +91,7 @@ export default function TherapistLayout({ children }: { children: React.ReactNod
                   }
                 }}
               >
-                <item.icon className="w-5 h-5 flex-shrink-0" style={{ color: active ? "#60A5FA" : "#7E92B6" }} />
+                <item.icon className="w-5 h-5 flex-shrink-0" style={{ color: active ? "#60A5FA" : "#6F7F99" }} />
                 {item.label}
               </Link>
             );
@@ -184,7 +111,7 @@ export default function TherapistLayout({ children }: { children: React.ReactNod
               }
               onMouseEnter={(e) => {
                 if (pathname !== "/admin") {
-                  (e.currentTarget as HTMLElement).style.background = "rgba(255,255,255,0.05)";
+                  (e.currentTarget as HTMLElement).style.background = "rgba(148,163,184,0.1)";
                   (e.currentTarget as HTMLElement).style.color = "#DBEAFE";
                 }
               }}
@@ -195,14 +122,14 @@ export default function TherapistLayout({ children }: { children: React.ReactNod
                 }
               }}
             >
-              <ShieldCheck className="w-5 h-5 flex-shrink-0" style={{ color: pathname === "/admin" ? "#60A5FA" : "#7E92B6" }} />
+              <ShieldCheck className="w-5 h-5 flex-shrink-0" style={{ color: pathname === "/admin" ? "#60A5FA" : "#6F7F99" }} />
               Admin CRP
             </Link>
           </div>
         )}
 
         {/* User */}
-        <div className="px-4 py-4" style={{ borderTop: "1px solid rgba(255,255,255,0.07)" }}>
+        <div className="px-4 py-4" style={{ borderTop: "1px solid rgba(148,163,184,0.12)" }}>
           <div className="flex items-center gap-3 mb-3">
             <Avatar className="w-9 h-9">
               <AvatarFallback
@@ -213,10 +140,10 @@ export default function TherapistLayout({ children }: { children: React.ReactNod
               </AvatarFallback>
             </Avatar>
             <div className="min-w-0 flex-1">
-              <p className="text-sm font-semibold truncate" style={{ color: "#F1F5F9" }}>
+              <p className="text-sm font-semibold truncate" style={{ color: "#F4F7FB" }}>
                 {user?.name ?? "Terapeuta"}
               </p>
-              <p className="text-xs truncate" style={{ color: "#7E92B6" }}>
+              <p className="text-xs truncate" style={{ color: "#6F7F99" }}>
                 {user?.clinicName ?? "Clínica"}
               </p>
             </div>
@@ -250,7 +177,7 @@ export default function TherapistLayout({ children }: { children: React.ReactNod
       {collapsed && (
         <button
           onClick={() => setCollapsed(false)}
-          className="hidden lg:flex fixed left-0 top-1/2 -translate-y-1/2 z-50 items-center justify-center w-6 h-16 rounded-r-xl bg-[#0f2147] border border-l-0 border-white/10 shadow-md text-slate-400 hover:text-blue-300 hover:w-7 transition-all"
+          className="hidden lg:flex fixed left-0 top-1/2 -translate-y-1/2 z-50 items-center justify-center w-6 h-16 rounded-r-xl bg-[#07162D] border border-l-0 border-white/10 shadow-md text-slate-400 hover:text-blue-300 hover:w-7 transition-all"
           aria-label="Expandir menu"
         >
           <ChevronRight className="w-4 h-4" />
@@ -271,12 +198,12 @@ export default function TherapistLayout({ children }: { children: React.ReactNod
           style={{
             background: "rgba(11,26,56,0.96)",
             backdropFilter: "blur(12px)",
-            borderBottom: "1px solid rgba(255,255,255,0.08)",
+            borderBottom: "1px solid rgba(148,163,184,0.14)",
           }}
         >
           <div className="flex items-center gap-2">
             <Image src="/icon-48.png" alt="NeuroPeak" width={28} height={28} className="rounded-lg" />
-            <span className="font-bold" style={{ color: "#F1F5F9" }}>NeuroPeak</span>
+            <span className="font-bold" style={{ color: "#F4F7FB" }}>NeuroPeak</span>
           </div>
           <div className="flex items-center gap-2">
             <AppUpdateButton iconClass="w-4 h-4" buttonClass="text-slate-400" />
@@ -286,7 +213,7 @@ export default function TherapistLayout({ children }: { children: React.ReactNod
               aria-expanded={mobileOpen}
               className="p-2 rounded-lg"
               style={{ color: "#94A3B8" }}
-              onMouseEnter={(e) => { (e.currentTarget as HTMLElement).style.background = "rgba(255,255,255,0.08)"; }}
+              onMouseEnter={(e) => { (e.currentTarget as HTMLElement).style.background = "rgba(148,163,184,0.14)"; }}
               onMouseLeave={(e) => { (e.currentTarget as HTMLElement).style.background = "transparent"; }}
             >
               {mobileOpen ? <X className="w-5 h-5" /> : <Menu className="w-5 h-5" />}

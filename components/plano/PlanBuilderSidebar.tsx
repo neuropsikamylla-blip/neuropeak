@@ -42,7 +42,7 @@ export function PlanBuilderSidebar(props: PlanBuilderSidebarProps) {
     .filter((g) => g.items.length > 0);
 
   return (
-    <aside className="rounded-[20px] border border-white/10 bg-[#14264e] p-5 flex flex-col gap-4 shadow-[0_1px_3px_rgba(0,0,0,0.2)]">
+    <aside className="rounded-[20px] border border-white/10 bg-[#0D2547] p-5 flex flex-col gap-4 shadow-[0_1px_3px_rgba(0,0,0,0.2)]">
       <div className="flex items-center gap-2">
         <ClipboardList className="w-4 h-4 text-slate-400" />
         <h3 className="text-base font-bold text-slate-100">Plano em construção</h3>

@@ -196,7 +196,7 @@ export default function NovoPacientePage() {
               </p>
               <div className="space-y-2">
                 {created.patientCode && (
-                  <div className="flex items-center justify-between bg-[#0f2147] rounded-lg p-3 border border-white/10">
+                  <div className="flex items-center justify-between bg-[#07162D] rounded-lg p-3 border border-white/10">
                     <div>
                       <p className="text-xs text-slate-400">Código do Paciente</p>
                       <p className="font-mono font-bold text-2xl tracking-widest text-blue-300">{created.patientCode}</p>
@@ -206,7 +206,7 @@ export default function NovoPacientePage() {
                     </Button>
                   </div>
                 )}
-                <div className="flex items-center justify-between bg-[#0f2147] rounded-lg p-3 border border-white/10">
+                <div className="flex items-center justify-between bg-[#07162D] rounded-lg p-3 border border-white/10">
                   <div>
                     <p className="text-xs text-slate-400">PIN de acesso</p>
                     <p className="font-mono font-bold text-2xl tracking-widest text-blue-300">{created.pin}</p>

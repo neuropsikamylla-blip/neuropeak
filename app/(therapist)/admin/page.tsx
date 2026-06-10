@@ -88,7 +88,7 @@ export default function AdminPage() {
       </div>
 
       {requests.length === 0 && (
-        <div className="text-center py-16 bg-[#14264e] rounded-xl border border-white/10">
+        <div className="text-center py-16 bg-[#0D2547] rounded-xl border border-white/10">
           <Clock className="w-10 h-10 text-slate-500 mx-auto mb-3" />
           <p className="text-slate-400 text-sm">Nenhuma solicitação ainda.</p>
         </div>
@@ -96,7 +96,7 @@ export default function AdminPage() {
 
       <div className="space-y-3">
         {requests.map((r) => (
-          <div key={r.id} className="bg-[#14264e] rounded-xl border border-white/10 p-4 space-y-3">
+          <div key={r.id} className="bg-[#0D2547] rounded-xl border border-white/10 p-4 space-y-3">
             <div className="flex items-start justify-between gap-4">
               <div>
                 <p className="font-semibold text-slate-100">{r.name}</p>

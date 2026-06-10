@@ -21,7 +21,7 @@ export function DistributionChart({ counts }: DistributionChartProps) {
     <div className="flex items-center gap-4">
       <svg viewBox="0 0 80 80" className="w-20 h-20 shrink-0 -rotate-90">
         {total === 0 ? (
-          <circle cx="40" cy="40" r={R} fill="none" stroke="rgba(255,255,255,0.08)" strokeWidth={STROKE} />
+          <circle cx="40" cy="40" r={R} fill="none" stroke="rgba(148,163,184,0.14)" strokeWidth={STROKE} />
         ) : (
           items.map((item) => {
             const len = (item.count / total) * C;

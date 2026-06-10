@@ -66,7 +66,7 @@ export function StatsOverview({ totalPatients, sessionsThisWeek, pendingAlerts, 
       value: pendingAlerts,
       suffix: "",
       icon: Bell,
-      iconBg: pendingAlerts > 0 ? "rgba(251,191,36,0.15)" : "rgba(255,255,255,0.06)",
+      iconBg: pendingAlerts > 0 ? "rgba(251,191,36,0.15)" : "rgba(148,163,184,0.1)",
       iconColor: pendingAlerts > 0 ? "#FBBF24" : "#94A3B8",
       sparkColor: pendingAlerts > 0 ? "#FBBF24" : "#64748B",
       sparkPoints: [3, 2, 3, 1, 2, pendingAlerts > 0 ? 1 : 0, pendingAlerts],
@@ -100,9 +100,9 @@ export function StatsOverview({ totalPatients, sessionsThisWeek, pendingAlerts, 
         >
           <div
             style={{
-              background: "#14264e",
+              background: "#0D2547",
               borderRadius: 20,
-              border: "1px solid rgba(255,255,255,0.08)",
+              border: "1px solid rgba(148,163,184,0.14)",
               boxShadow: "0 1px 3px rgba(0,0,0,0.2), 0 4px 16px rgba(0,0,0,0.18)",
               padding: "1.25rem",
               transition: "box-shadow 0.2s ease, transform 0.2s ease",
@@ -126,10 +126,10 @@ export function StatsOverview({ totalPatients, sessionsThisWeek, pendingAlerts, 
                 <stat.icon style={{ width: 20, height: 20, color: stat.iconColor }} />
               </div>
               <div>
-                <p style={{ fontSize: "1.8rem", fontWeight: 800, color: "#F1F5F9", lineHeight: 1.1, letterSpacing: "-0.02em" }}>
+                <p style={{ fontSize: "1.8rem", fontWeight: 800, color: "#F4F7FB", lineHeight: 1.1, letterSpacing: "-0.02em" }}>
                   {stat.value}{stat.suffix}
                 </p>
-                <p style={{ fontSize: "0.73rem", color: "#8A9BBC", marginTop: 1, fontWeight: 500 }}>
+                <p style={{ fontSize: "0.73rem", color: "#A8B3C7", marginTop: 1, fontWeight: 500 }}>
                   {stat.label}
                 </p>
               </div>

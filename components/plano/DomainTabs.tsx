@@ -19,7 +19,7 @@ export function DomainTabs({ active, onSelect, counts }: DomainTabsProps) {
         const Icon = DOMAIN_ICONS[domain];
         const isActive = active === domain;
         const style: CSSProperties = isActive
-          ? { backgroundColor: "#0f2147", borderColor: color, boxShadow: "0 1px 6px rgba(0,0,0,0.3)" }
+          ? { backgroundColor: "#07162D", borderColor: color, boxShadow: "0 1px 6px rgba(0,0,0,0.3)" }
           : {};
         return (
           <button

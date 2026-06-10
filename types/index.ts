@@ -411,13 +411,13 @@ export const DOMAIN_LABELS: Record<Domain, string> = {
   functional: "Desenvolvimento Funcional",
 };
 
-// Cores dos domínios — calibradas para vibrar sobre o fundo escuro azul marinho.
+// Cores dos domínios — paleta premium calibrada para o dark blue clínico.
 export const DOMAIN_COLORS: Record<Domain, string> = {
   memory: "#3B82F6",
-  attention: "#10B981",
+  attention: "#14D6A4",
   processing: "#F97316",
   executive: "#8B5CF6",
-  functional: "#2DD4BF",
+  functional: "#22D3C5",
 };
 
 // Descrição curta de cada domínio cognitivo — usada nos cards de seleção do plano.

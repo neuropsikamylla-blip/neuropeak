@@ -39,8 +39,8 @@ export default async function ProgressoPage() {
 
   const styles = {
     CLINICAL: {
-      bg: "bg-[#0b1a38]",
-      card: "bg-[#14264e] rounded-xl border border-white/10 shadow-sm",
+      bg: "np-app-bg",
+      card: "bg-[#0D2547] rounded-xl border border-white/10 shadow-sm",
       title: "text-slate-100 font-bold text-xl",
       sub: "text-slate-400 text-sm",
       accent: "text-blue-400",

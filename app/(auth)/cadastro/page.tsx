@@ -67,8 +67,8 @@ export default function CadastroPage() {
   };
 
   return (
-    <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-[#0a1631] via-[#0d1b3e] to-[#10234d] p-4">
-      <Card className="w-full max-w-md shadow-2xl border border-white/10 bg-[#11213f]/90 backdrop-blur">
+    <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-[#061326] via-[#07162D] to-[#0A1E3A] p-4">
+      <Card className="w-full max-w-md shadow-2xl border border-white/10 bg-[#0D2547]/90 backdrop-blur">
         <CardHeader className="text-center pb-2">
           <div className="flex justify-center mb-3">
             <Image src="/icon-96.png" alt="NeuroPeak" width={56} height={56} className="rounded-2xl mx-auto" />

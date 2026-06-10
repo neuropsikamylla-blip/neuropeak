@@ -73,15 +73,15 @@ export default async function InicioPage() {
 
   const styles = {
     CLINICAL: {
-      bg: "bg-[#0b1a38]",
-      header: "bg-[#14264e] border border-white/10 shadow-sm rounded-2xl",
-      card: "bg-[#14264e] rounded-2xl shadow-sm border border-white/10",
+      bg: "np-app-bg",
+      header: "bg-[#0D2547] border border-white/10 shadow-sm rounded-2xl",
+      card: "bg-[#0D2547] rounded-2xl shadow-sm border border-white/10",
       title: "text-slate-100 text-2xl font-bold tracking-tight",
       sub: "text-slate-400",
       accent: "text-indigo-400",
-      exCard: "bg-[#14264e] rounded-2xl border border-white/10 shadow-sm hover:border-indigo-400/50 hover:shadow-md transition-all duration-200",
-      exDone: "bg-[#101f42] rounded-2xl border border-white/5 opacity-70",
-      stat: "bg-[#14264e] rounded-2xl border border-white/10 shadow-sm",
+      exCard: "bg-[#0D2547] rounded-2xl border border-white/10 shadow-sm hover:border-indigo-400/50 hover:shadow-md transition-all duration-200",
+      exDone: "bg-[#0A1E3A] rounded-2xl border border-white/5 opacity-70",
+      stat: "bg-[#0D2547] rounded-2xl border border-white/10 shadow-sm",
       progress: "bg-black/25",
       progressBar: "bg-gradient-to-r from-blue-500 to-indigo-400",
     },
@@ -259,7 +259,7 @@ export default async function InicioPage() {
           </h2>
           <div className="flex gap-3 overflow-x-auto pb-2">
             {typedAchievements.slice(0, 5).map((a) => (
-              <div key={a.id} className={`flex-shrink-0 p-3 text-center rounded-2xl border ${theme === "COLORFUL" ? "bg-yellow-50 border-yellow-200" : theme === "GAMIFIED" ? "bg-gray-800 border-yellow-500/30" : "bg-[#14264e] border-yellow-500/30"}`}>
+              <div key={a.id} className={`flex-shrink-0 p-3 text-center rounded-2xl border ${theme === "COLORFUL" ? "bg-yellow-50 border-yellow-200" : theme === "GAMIFIED" ? "bg-gray-800 border-yellow-500/30" : "bg-[#0D2547] border-yellow-500/30"}`}>
                 <span className="text-3xl">{a.icon}</span>
                 <p className={`text-xs font-medium mt-1 ${theme === "COLORFUL" ? "text-gray-700" : "text-gray-300"}`}>{a.title}</p>
               </div>

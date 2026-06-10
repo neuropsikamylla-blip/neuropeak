@@ -45,7 +45,7 @@ function MiniSparkline({ adherence }: { adherence: number }) {
 function adherenceBadge(pct: number): React.CSSProperties {
   if (pct >= 80) return { background: "rgba(52,211,153,0.15)", color: "#34D399", border: "1px solid rgba(52,211,153,0.3)" };
   if (pct >= 60) return { background: "rgba(251,191,36,0.15)", color: "#FBBF24", border: "1px solid rgba(251,191,36,0.3)" };
-  if (pct >= 40) return { background: "rgba(255,255,255,0.06)", color: "#94A3B8", border: "1px solid rgba(255,255,255,0.12)" };
+  if (pct >= 40) return { background: "rgba(148,163,184,0.1)", color: "#94A3B8", border: "1px solid rgba(255,255,255,0.12)" };
   return { background: "rgba(248,113,113,0.15)", color: "#F87171", border: "1px solid rgba(248,113,113,0.3)" };
 }
 
@@ -76,9 +76,9 @@ export function PatientCard({ patient, index = 0 }: PatientCardProps) {
       <Link href={`/pacientes/${patient.id}`} style={{ display: "block" }}>
         <div
           style={{
-            background: "#14264e",
+            background: "#0D2547",
             borderRadius: 16,
-            border: "1px solid rgba(255,255,255,0.08)",
+            border: "1px solid rgba(148,163,184,0.14)",
             boxShadow: "0 1px 3px rgba(0,0,0,0.2), 0 2px 8px rgba(0,0,0,0.15)",
             display: "flex",
             alignItems: "center",
@@ -92,7 +92,7 @@ export function PatientCard({ patient, index = 0 }: PatientCardProps) {
           }}
           onMouseLeave={(e) => {
             (e.currentTarget as HTMLElement).style.boxShadow = "0 1px 3px rgba(0,0,0,0.2), 0 2px 8px rgba(0,0,0,0.15)";
-            (e.currentTarget as HTMLElement).style.borderColor = "rgba(255,255,255,0.08)";
+            (e.currentTarget as HTMLElement).style.borderColor = "rgba(148,163,184,0.14)";
           }}
         >
           {/* Blue left accent bar */}
@@ -113,7 +113,7 @@ export function PatientCard({ patient, index = 0 }: PatientCardProps) {
           {/* Info */}
           <div style={{ flex: 1, minWidth: 0, marginLeft: 12, paddingTop: "0.875rem", paddingBottom: "0.875rem" }}>
             <div style={{ display: "flex", alignItems: "center", gap: 6 }}>
-              <span style={{ fontWeight: 600, color: "#F1F5F9", fontSize: "0.9rem", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>
+              <span style={{ fontWeight: 600, color: "#F4F7FB", fontSize: "0.9rem", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>
                 {patient.name}
               </span>
               {patient.alertCount > 0 && (
@@ -125,7 +125,7 @@ export function PatientCard({ patient, index = 0 }: PatientCardProps) {
                 </span>
               )}
             </div>
-            <div style={{ display: "flex", alignItems: "center", gap: 4, marginTop: 3, color: "#8A9BBC", fontSize: "0.76rem" }}>
+            <div style={{ display: "flex", alignItems: "center", gap: 4, marginTop: 3, color: "#A8B3C7", fontSize: "0.76rem" }}>
               <Calendar style={{ width: 10, height: 10 }} />
               {lastSessionDays === null
                 ? "Sem sessões"

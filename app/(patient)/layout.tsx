@@ -20,13 +20,13 @@ export default function PatientLayout({ children }: { children: React.ReactNode 
   const theme = (user?.theme ?? "CLINICAL") as "CLINICAL" | "COLORFUL" | "GAMIFIED";
 
   const bgStyles = {
-    CLINICAL: "bg-[#0b1a38]",
+    CLINICAL: "np-app-bg",
     COLORFUL: "bg-gradient-to-br from-purple-50 to-pink-50",
     GAMIFIED: "bg-gray-950",
   };
 
   const navStyles = {
-    CLINICAL: "bg-[#0f2147] border-t border-white/10",
+    CLINICAL: "bg-[#07162D] border-t border-white/10",
     COLORFUL: "bg-white border-t border-purple-200",
     GAMIFIED: "bg-gray-900 border-t border-gray-700",
   };
