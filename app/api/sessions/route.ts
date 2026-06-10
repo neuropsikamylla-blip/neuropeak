@@ -4,7 +4,7 @@ import { getServerSession } from "next-auth";
 import { authOptions } from "@/lib/auth";
 import prisma from "@/lib/db";
 import { z } from "zod";
-import { calculateNewDifficulty, checkAchievements } from "@/lib/adaptive";
+import { calculateNewDifficulty, calculateDualTaskProgression, checkAchievements } from "@/lib/adaptive";
 import type { SessionData } from "@/types";
 import { withApiHandler } from "@/lib/api-handler";
 
@@ -46,6 +46,39 @@ export const POST = withApiHandler(async (req: NextRequest) => {
     if (!owns) return NextResponse.json({ error: "Forbidden" }, { status: 403 });
   }
 
+  // Dupla Tarefa: progressão clínica própria (exige as duas tarefas boas para subir,
+  // mantém "nível consolidado"). Calculada antes de gravar para enriquecer o metadata.
+  const meta = (data.metadata ?? {}) as Record<string, unknown>;
+  let dualProg: ReturnType<typeof calculateDualTaskProgression> | null = null;
+  if (
+    data.exerciseId === "dual-task" &&
+    typeof meta.accTop === "number" && typeof meta.accBottom === "number" && typeof meta.accTotal === "number"
+  ) {
+    const lastDual = await prisma.session.findFirst({
+      where: { patientId: data.patientId, exerciseId: "dual-task" },
+      orderBy: { completedAt: "desc" },
+      select: { metadata: true },
+    });
+    let prevConsolidated = 1;
+    try {
+      const pm = lastDual?.metadata ? JSON.parse(lastDual.metadata) : null;
+      if (pm && typeof pm.consolidatedLevel === "number") prevConsolidated = pm.consolidatedLevel;
+    } catch { /* metadata antigo sem consolidado */ }
+    dualProg = calculateDualTaskProgression(
+      data.difficulty,
+      {
+        accTop: meta.accTop as number, accBottom: meta.accBottom as number, accTotal: meta.accTotal as number,
+        fpTop: Number(meta.fpTop ?? 0), fpBottom: Number(meta.fpBottom ?? 0),
+        omTop: Number(meta.omTop ?? 0), omBottom: Number(meta.omBottom ?? 0),
+      },
+      prevConsolidated,
+    );
+    meta.endedLevel = dualProg.nextLevel;
+    meta.consolidatedLevel = dualProg.consolidatedLevel;
+    meta.progressionAction = dualProg.action;
+    meta.progressionReason = dualProg.reason;
+  }
+
   const newSession = await prisma.session.create({
     data: {
       patientId: data.patientId,
@@ -56,7 +89,7 @@ export const POST = withApiHandler(async (req: NextRequest) => {
       reactionTime: data.reactionTime ?? null,
       difficulty: data.difficulty,
       duration: data.duration,
-      metadata: data.metadata ? JSON.stringify(data.metadata) : null,
+      metadata: Object.keys(meta).length ? JSON.stringify(meta) : null,
     },
   });
 
@@ -67,11 +100,13 @@ export const POST = withApiHandler(async (req: NextRequest) => {
     select: { exerciseId: true, domain: true, score: true, accuracy: true, reactionTime: true, difficulty: true, duration: true, completedAt: true },
   });
 
-  const adaptiveResult = calculateNewDifficulty(
-    data.difficulty,
-    recentSessions as unknown as SessionData[],
-    data.exerciseId
-  );
+  const adaptiveResult = dualProg
+    ? { newDifficulty: dualProg.nextLevel, action: dualProg.action, reason: dualProg.reason }
+    : calculateNewDifficulty(
+        data.difficulty,
+        recentSessions as unknown as SessionData[],
+        data.exerciseId,
+      );
 
   await prisma.exerciseConfig.upsert({
     where: { patientId_exerciseId: { patientId: data.patientId, exerciseId: data.exerciseId } },

@@ -50,6 +50,72 @@ export function calculateNewDifficulty(
   };
 }
 
+// ── Progressão clínica da Dupla Tarefa ───────────────────────────────────────
+// Diferente da engine genérica: exige que AS DUAS tarefas estejam boas para subir,
+// limita o passo (±1; -2 só se muito ruim) e mantém um "nível consolidado" (o maior
+// nível executado com desempenho suficiente), que não é simplesmente o último alcançado.
+export interface DualTaskMetrics {
+  accTop: number;
+  accBottom: number;
+  accTotal: number;
+  fpTop: number;
+  fpBottom: number;
+  omTop: number;
+  omBottom: number;
+}
+export interface DualTaskProgression {
+  nextLevel: number;          // nível em que a próxima sessão começa (nextStartLevel)
+  action: "increase" | "maintain" | "decrease";
+  consolidatedLevel: number;  // maior nível executado com desempenho suficiente
+  reason: string;
+}
+
+export function calculateDualTaskProgression(
+  currentLevel: number,
+  m: DualTaskMetrics,
+  prevConsolidated: number,
+): DualTaskProgression {
+  const lvl = Math.min(10, Math.max(1, Math.round(currentLevel)));
+  const pct = (v: number) => Math.round(v * 100);
+
+  // Nível consolidado: só conta se as duas tarefas E o total ficaram ≥ 80%.
+  const consolidatedLevel = (m.accTop >= 0.80 && m.accBottom >= 0.80 && m.accTotal >= 0.80)
+    ? Math.max(prevConsolidated, lvl)
+    : prevConsolidated;
+
+  // Erros impulsivos (falsos positivos) ou desatentos (omissões) em excesso travam a subida.
+  const tooImpulsive = m.fpTop > 5 || m.fpBottom > 5;
+  const tooInattentive = m.omTop > 6 || m.omBottom > 6;
+
+  let nextLevel = lvl;
+  let action: "increase" | "maintain" | "decrease" = "maintain";
+  let reason: string;
+
+  if (m.accTotal < 0.45) {
+    nextLevel = Math.max(1, lvl - 2);
+    action = "decrease";
+    reason = `Desempenho muito baixo (${pct(m.accTotal)}%). Reduz 2 níveis.`;
+  } else if (m.accTotal < 0.65) {
+    nextLevel = Math.max(1, lvl - 1);
+    action = "decrease";
+    reason = `Total abaixo de 65% (${pct(m.accTotal)}%). Reduz 1 nível.`;
+  } else if (
+    m.accTop >= 0.80 && m.accBottom >= 0.80 && m.accTotal >= 0.85 &&
+    !tooImpulsive && !tooInattentive && lvl < 10
+  ) {
+    nextLevel = Math.min(10, lvl + 1);
+    action = "increase";
+    reason = `As duas tarefas ≥80% e total ≥85% (cima ${pct(m.accTop)}%, baixo ${pct(m.accBottom)}%). Sobe 1 nível.`;
+  } else {
+    const weak = m.accTop < 0.80 ? "a tarefa visual" : m.accBottom < 0.80 ? "a tarefa numérica"
+      : tooImpulsive ? "o controle de impulsos (muitos toques errados)"
+      : tooInattentive ? "a atenção (muitas omissões)" : "o total";
+    reason = `Mantém o nível — ${weak} ainda não consolidou (cima ${pct(m.accTop)}%, baixo ${pct(m.accBottom)}%).`;
+  }
+
+  return { nextLevel, action, consolidatedLevel, reason };
+}
+
 /**
  * Check achievements based on session history
  */
