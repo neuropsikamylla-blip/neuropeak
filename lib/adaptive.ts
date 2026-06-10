@@ -70,6 +70,62 @@ export interface DualTaskProgression {
   reason: string;
 }
 
+// ── Engine de progressão genérica (reutilizável por qualquer exercício novo) ─────
+// Implementa a "Regra geral" das specs: sobe ≥0.85, mantém 0.70-0.85, desce <0.65,
+// -2 só se <0.45; nível consolidado só com ≥0.80; passo limitado a ±1 (exceto -2);
+// se houver dimensões (ex.: item + ordem), não sobe se alguma estiver < 0.80.
+export interface ProgressionInput {
+  accTotal: number;
+  dims?: number[];      // dimensões que precisam estar ≥0.80 para subir (item, ordem, etc.)
+  impulsive?: boolean;  // muitos erros por impulsividade/omissão travam a subida
+}
+export interface ProgressionResult {
+  nextLevel: number;
+  action: "increase" | "maintain" | "decrease";
+  consolidatedLevel: number;
+  reason: string;
+}
+
+export function calculateProgression(
+  currentLevel: number,
+  m: ProgressionInput,
+  prevConsolidated: number,
+): ProgressionResult {
+  const lvl = Math.min(10, Math.max(1, Math.round(currentLevel)));
+  const pct = (v: number) => Math.round(v * 100);
+  const dimsOk = !m.dims || m.dims.every((d) => d >= 0.80);
+
+  const consolidatedLevel = (m.accTotal >= 0.80 && dimsOk)
+    ? Math.max(prevConsolidated, lvl)
+    : prevConsolidated;
+
+  let nextLevel = lvl;
+  let action: "increase" | "maintain" | "decrease" = "maintain";
+  let reason: string;
+
+  if (m.accTotal < 0.45) {
+    nextLevel = Math.max(1, lvl - 2);
+    action = "decrease";
+    reason = `Desempenho muito baixo (${pct(m.accTotal)}%). Reduz 2 níveis.`;
+  } else if (m.accTotal < 0.65) {
+    nextLevel = Math.max(1, lvl - 1);
+    action = "decrease";
+    reason = `Total abaixo de 65% (${pct(m.accTotal)}%). Reduz 1 nível.`;
+  } else if (m.accTotal >= 0.85 && dimsOk && !m.impulsive && lvl < 10) {
+    nextLevel = Math.min(10, lvl + 1);
+    action = "increase";
+    reason = `Desempenho ≥85% e tudo consolidado. Sobe 1 nível.`;
+  } else {
+    reason = !dimsOk
+      ? `Mantém o nível — uma das partes (item ou ordem) ainda não consolidou.`
+      : m.impulsive
+      ? `Mantém o nível — muitos erros por impulsividade/omissão.`
+      : `Mantém o nível (${pct(m.accTotal)}%).`;
+  }
+
+  return { nextLevel, action, consolidatedLevel, reason };
+}
+
 export function calculateDualTaskProgression(
   currentLevel: number,
   m: DualTaskMetrics,

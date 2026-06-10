@@ -14,7 +14,7 @@ export const ALL_DOMAINS: Domain[] = ["memory", "attention", "executive", "proce
 
 export const DOMAIN_SUBDOMAINS: Record<Domain, Subdomain[]> = {
   memory: [
-    { id: "operacional", label: "Memória Operacional", exercises: ["span-numerico", "span-numerico-inverso", "desafio-supermercado", "desafio-supermercado-auditivo"] },
+    { id: "operacional", label: "Memória Operacional", exercises: ["span-numerico", "span-numerico-inverso", "letras-sequencia", "desafio-supermercado", "desafio-supermercado-auditivo"] },
     { id: "visuoespacial", label: "Memória Visuoespacial", exercises: ["jogo-memoria", "matriz-espacial", "matriz-espacial-inversa"] },
     { id: "episodica", label: "Memória Episódica", exercises: [] },
     { id: "semantica", label: "Memória Semântica", exercises: [] },

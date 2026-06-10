@@ -41,6 +41,7 @@ const CorridaContraOTempo = dynamic(() => import("@/components/exercises/process
 const CacaItemBarato      = dynamic(() => import("@/components/exercises/attention/CacaItemBarato").then(m => ({ default: m.CacaItemBarato })), { loading: ExerciseLoader, ssr: false });
 const MudancaRegras       = dynamic(() => import("@/components/exercises/executive/MudancaRegras").then(m => ({ default: m.MudancaRegras })), { loading: ExerciseLoader, ssr: false });
 const CompraMultifuncional = dynamic(() => import("@/components/exercises/executive/CompraMultifuncional").then(m => ({ default: m.CompraMultifuncional })), { loading: ExerciseLoader, ssr: false });
+const LetrasSequencia     = dynamic(() => import("@/components/exercises/memory/LetrasSequencia").then(m => ({ default: m.LetrasSequencia })), { loading: ExerciseLoader, ssr: false });
 const TaskSwitching        = dynamic(() => import("@/components/exercises/executive/TaskSwitching").then(m => ({ default: m.TaskSwitching })), { loading: ExerciseLoader, ssr: false });
 const AtencaoSustentada    = dynamic(() => import("@/components/exercises/attention/AtencaoSustentada").then(m => ({ default: m.AtencaoSustentada })), { loading: ExerciseLoader, ssr: false });
 const MOT                  = dynamic(() => import("@/components/exercises/attention/MOT").then(m => ({ default: m.MOT })), { loading: ExerciseLoader, ssr: false });
@@ -200,6 +201,12 @@ const EXERCISE_INSTRUCTIONS: Record<string, string[]> = {
     "Selecione itens para atingir o objetivo: máximo, faixa ou valor exato.",
     "O total aparece em tempo real — confirme quando estiver satisfeito.",
     "Fique atento: ultrapassar o orçamento desabilita a confirmação!",
+  ],
+  "letras-sequencia": [
+    "Você verá (ou ouvirá) uma sequência de letras ou sílabas, uma de cada vez.",
+    "Memorize a ordem. Depois toque nas letras para reproduzir a sequência.",
+    "Em alguns níveis você repete na MESMA ordem; em outros, na ordem INVERSA.",
+    "Conforme você acerta, as sequências ficam maiores e mais desafiadoras.",
   ],
   "caca-item-barato": [
     "Você verá etiquetas de produtos com preço, peso, quantidade e validade.",
@@ -459,6 +466,7 @@ export default function ExercicioPage() {
       case "caca-item-barato": return <CacaItemBarato {...props} />;
       case "mudanca-regras": return <MudancaRegras {...props} />;
       case "compra-multifuncional": return <CompraMultifuncional {...props} />;
+      case "letras-sequencia": return <LetrasSequencia {...props} />;
       case "task-switching": return <TaskSwitching {...props} />;
       case "atencao-sustentada": return <AtencaoSustentada {...props} />;
       case "mot": return <MOT {...props} />;

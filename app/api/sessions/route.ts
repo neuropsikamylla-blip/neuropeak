@@ -4,7 +4,7 @@ import { getServerSession } from "next-auth";
 import { authOptions } from "@/lib/auth";
 import prisma from "@/lib/db";
 import { z } from "zod";
-import { calculateNewDifficulty, calculateDualTaskProgression, checkAchievements } from "@/lib/adaptive";
+import { calculateNewDifficulty, calculateDualTaskProgression, calculateProgression, checkAchievements } from "@/lib/adaptive";
 import type { SessionData } from "@/types";
 import { withApiHandler } from "@/lib/api-handler";
 
@@ -50,6 +50,7 @@ export const POST = withApiHandler(async (req: NextRequest) => {
   // mantém "nível consolidado"). Calculada antes de gravar para enriquecer o metadata.
   const meta = (data.metadata ?? {}) as Record<string, unknown>;
   let dualProg: ReturnType<typeof calculateDualTaskProgression> | null = null;
+  let genericProg: ReturnType<typeof calculateProgression> | null = null;
   if (
     data.exerciseId === "dual-task" &&
     typeof meta.accTop === "number" && typeof meta.accBottom === "number" && typeof meta.accTotal === "number"
@@ -77,6 +78,31 @@ export const POST = withApiHandler(async (req: NextRequest) => {
     meta.consolidatedLevel = dualProg.consolidatedLevel;
     meta.progressionAction = dualProg.action;
     meta.progressionReason = dualProg.reason;
+  } else if (meta.progressionV2 === true && typeof meta.accTotal === "number") {
+    // Exercícios novos: engine de progressão clínica genérica + nível consolidado.
+    const lastSess = await prisma.session.findFirst({
+      where: { patientId: data.patientId, exerciseId: data.exerciseId },
+      orderBy: { completedAt: "desc" },
+      select: { metadata: true },
+    });
+    let prevConsolidated = 1;
+    try {
+      const pm = lastSess?.metadata ? JSON.parse(lastSess.metadata) : null;
+      if (pm && typeof pm.consolidatedLevel === "number") prevConsolidated = pm.consolidatedLevel;
+    } catch { /* metadata antigo */ }
+    genericProg = calculateProgression(
+      data.difficulty,
+      {
+        accTotal: meta.accTotal as number,
+        dims: Array.isArray(meta.dims) ? (meta.dims as number[]) : undefined,
+        impulsive: meta.impulsive === true,
+      },
+      prevConsolidated,
+    );
+    meta.endedLevel = genericProg.nextLevel;
+    meta.consolidatedLevel = genericProg.consolidatedLevel;
+    meta.progressionAction = genericProg.action;
+    meta.progressionReason = genericProg.reason;
   }
 
   const newSession = await prisma.session.create({
@@ -102,6 +128,8 @@ export const POST = withApiHandler(async (req: NextRequest) => {
 
   const adaptiveResult = dualProg
     ? { newDifficulty: dualProg.nextLevel, action: dualProg.action, reason: dualProg.reason }
+    : genericProg
+    ? { newDifficulty: genericProg.nextLevel, action: genericProg.action, reason: genericProg.reason }
     : calculateNewDifficulty(
         data.difficulty,
         recentSessions as unknown as SessionData[],

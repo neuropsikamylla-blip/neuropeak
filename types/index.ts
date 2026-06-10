@@ -143,6 +143,14 @@ export const EXERCISE_DEFINITIONS = {
     estimatedMinutes: 7,
     icon: "🎧",
   },
+  "letras-sequencia": {
+    id: "letras-sequencia",
+    name: "Letras em Sequência",
+    domain: "memory" as Domain,
+    description: "Treina memória operacional verbal: memorizar e repetir sequências de letras ou sílabas, na ordem direta ou inversa.",
+    estimatedMinutes: 6,
+    icon: "🔤",
+  },
   "matriz-espacial-inversa": {
     id: "matriz-espacial-inversa",
     name: "Matriz Espacial Inversa",
