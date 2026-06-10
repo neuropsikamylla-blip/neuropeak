@@ -43,6 +43,7 @@ const MudancaRegras       = dynamic(() => import("@/components/exercises/executi
 const CompraMultifuncional = dynamic(() => import("@/components/exercises/executive/CompraMultifuncional").then(m => ({ default: m.CompraMultifuncional })), { loading: ExerciseLoader, ssr: false });
 const LetrasSequencia     = dynamic(() => import("@/components/exercises/memory/LetrasSequencia").then(m => ({ default: m.LetrasSequencia })), { loading: ExerciseLoader, ssr: false });
 const PadroesRotacao      = dynamic(() => import("@/components/exercises/memory/PadroesRotacao").then(m => ({ default: m.PadroesRotacao })), { loading: ExerciseLoader, ssr: false });
+const SequenciaItens      = dynamic(() => import("@/components/exercises/memory/SequenciaItens").then(m => ({ default: m.SequenciaItens })), { loading: ExerciseLoader, ssr: false });
 const TaskSwitching        = dynamic(() => import("@/components/exercises/executive/TaskSwitching").then(m => ({ default: m.TaskSwitching })), { loading: ExerciseLoader, ssr: false });
 const AtencaoSustentada    = dynamic(() => import("@/components/exercises/attention/AtencaoSustentada").then(m => ({ default: m.AtencaoSustentada })), { loading: ExerciseLoader, ssr: false });
 const MOT                  = dynamic(() => import("@/components/exercises/attention/MOT").then(m => ({ default: m.MOT })), { loading: ExerciseLoader, ssr: false });
@@ -214,6 +215,12 @@ const EXERCISE_INSTRUCTIONS: Record<string, string[]> = {
     "A grade então gira (90° ou 180°). Preste atenção para que lado ela girou.",
     "Marque as posições onde os pontos ficam DEPOIS da rotação.",
     "Conforme você acerta, a grade fica maior e a rotação mais difícil.",
+  ],
+  "sequencia-itens": [
+    "Você verá (ou ouvirá) uma sequência de figuras, uma de cada vez.",
+    "Memorize a ordem em que elas aparecem.",
+    "Depois, toque nas figuras na MESMA ordem — atenção aos distratores parecidos!",
+    "Conforme você acerta, as sequências ficam maiores e com mais alternativas.",
   ],
   "caca-item-barato": [
     "Você verá etiquetas de produtos com preço, peso, quantidade e validade.",
@@ -475,6 +482,7 @@ export default function ExercicioPage() {
       case "compra-multifuncional": return <CompraMultifuncional {...props} />;
       case "letras-sequencia": return <LetrasSequencia {...props} />;
       case "padroes-rotacao": return <PadroesRotacao {...props} />;
+      case "sequencia-itens": return <SequenciaItens {...props} />;
       case "task-switching": return <TaskSwitching {...props} />;
       case "atencao-sustentada": return <AtencaoSustentada {...props} />;
       case "mot": return <MOT {...props} />;

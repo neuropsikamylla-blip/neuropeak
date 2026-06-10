@@ -159,6 +159,14 @@ export const EXERCISE_DEFINITIONS = {
     estimatedMinutes: 6,
     icon: "🔄",
   },
+  "sequencia-itens": {
+    id: "sequencia-itens",
+    name: "Sequência de Itens",
+    domain: "memory" as Domain,
+    description: "Treina memória operacional visual-verbal: memorizar uma sequência de figuras e reproduzi-la na ordem correta.",
+    estimatedMinutes: 6,
+    icon: "🐱",
+  },
   "matriz-espacial-inversa": {
     id: "matriz-espacial-inversa",
     name: "Matriz Espacial Inversa",
