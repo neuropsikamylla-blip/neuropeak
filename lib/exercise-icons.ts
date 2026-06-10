@@ -7,6 +7,10 @@ export const EXERCISE_ICON_IDS = new Set<string>([
   "matriz-espacial",
   "matriz-espacial-inversa",
   "jogo-memoria",
+  "letras-sequencia",
+  "padroes-rotacao",
+  // (sequencia-itens, lista-distracao, restaurante-ordem: ícones já na pasta,
+  //  serão adicionados ao Set quando cada exercício for criado)
   // atenção
   "trilha-visual",
   "caca-item-barato",
