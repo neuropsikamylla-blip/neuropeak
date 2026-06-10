@@ -12,21 +12,38 @@ export interface NormalizedPlanExercise {
   settings?: Record<string, unknown>;
 }
 
-/** Aceita string JSON ou array já parseado; devolve a lista normalizada. */
+// Exercícios fundidos/aposentados → id atual. Planos antigos são convertidos
+// na leitura (sem migração de banco). "desafio-orcamento" foi fundido na
+// "compra-multifuncional" (que já cobre orçamento + categoria + quantidade + tempo).
+const EXERCISE_ALIASES: Record<string, string> = {
+  "desafio-orcamento": "compra-multifuncional",
+};
+
+/** Aceita string JSON ou array já parseado; devolve a lista normalizada
+ *  (aliases de exercícios fundidos aplicados + deduplicada, preservando a ordem). */
 export function parsePlanExercises(raw: unknown): NormalizedPlanExercise[] {
   let arr: unknown = raw;
   if (typeof raw === "string") {
     try { arr = JSON.parse(raw); } catch { arr = []; }
   }
   if (!Array.isArray(arr)) return [];
-  return arr.map((e): NormalizedPlanExercise => {
-    if (typeof e === "string") return { id: e };
-    if (e && typeof e === "object" && typeof (e as { id?: unknown }).id === "string") {
+
+  const seen = new Set<string>();
+  const out: NormalizedPlanExercise[] = [];
+  for (const e of arr) {
+    let entry: NormalizedPlanExercise;
+    if (typeof e === "string") entry = { id: e };
+    else if (e && typeof e === "object" && typeof (e as { id?: unknown }).id === "string") {
       const obj = e as { id: string; settings?: Record<string, unknown> };
-      return obj.settings ? { id: obj.id, settings: obj.settings } : { id: obj.id };
-    }
-    return { id: String(e) };
-  });
+      entry = obj.settings ? { id: obj.id, settings: obj.settings } : { id: obj.id };
+    } else entry = { id: String(e) };
+
+    const id = EXERCISE_ALIASES[entry.id] ?? entry.id;
+    if (seen.has(id)) continue; // dedupe (ex.: plano que tinha os dois antes da fusão)
+    seen.add(id);
+    out.push(entry.settings ? { id, settings: entry.settings } : { id });
+  }
+  return out;
 }
 
 /** Só os ids (para listas, checkboxes, validação). */

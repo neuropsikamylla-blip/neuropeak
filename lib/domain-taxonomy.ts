@@ -41,8 +41,8 @@ export const DOMAIN_SUBDOMAINS: Record<Domain, Subdomain[]> = {
   functional: [
     { id: "rotina", label: "Rotina", exercises: [] },
     { id: "sequenciamento", label: "Sequenciamento Temporal", exercises: ["antes-depois"] },
-    { id: "avd", label: "Atividades de Vida Diária", exercises: ["compra-multifuncional", "caca-item-barato"] },
-    { id: "autonomia", label: "Autonomia", exercises: ["desafio-orcamento"] },
+    { id: "avd", label: "Atividades de Vida Diária", exercises: ["caca-item-barato"] },
+    { id: "autonomia", label: "Autonomia", exercises: ["compra-multifuncional"] },
   ],
 };
 

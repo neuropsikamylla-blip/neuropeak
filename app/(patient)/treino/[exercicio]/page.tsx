@@ -38,7 +38,6 @@ const Semaforo            = dynamic(() => import("@/components/exercises/process
 const DesafioSupermercado = dynamic(() => import("@/components/exercises/memory/DesafioSupermercado").then(m => ({ default: m.DesafioSupermercado })), { loading: ExerciseLoader, ssr: false });
 const DesafioCidade       = dynamic(() => import("@/components/exercises/executive/DesafioCidade").then(m => ({ default: m.DesafioCidade })), { loading: ExerciseLoader, ssr: false });
 const CorridaContraOTempo = dynamic(() => import("@/components/exercises/processing/CorridaContraOTempo").then(m => ({ default: m.CorridaContraOTempo })), { loading: ExerciseLoader, ssr: false });
-const DesafioOrcamento    = dynamic(() => import("@/components/exercises/executive/DesafioOrcamento").then(m => ({ default: m.DesafioOrcamento })), { loading: ExerciseLoader, ssr: false });
 const CacaItemBarato      = dynamic(() => import("@/components/exercises/attention/CacaItemBarato").then(m => ({ default: m.CacaItemBarato })), { loading: ExerciseLoader, ssr: false });
 const MudancaRegras       = dynamic(() => import("@/components/exercises/executive/MudancaRegras").then(m => ({ default: m.MudancaRegras })), { loading: ExerciseLoader, ssr: false });
 const CompraMultifuncional = dynamic(() => import("@/components/exercises/executive/CompraMultifuncional").then(m => ({ default: m.CompraMultifuncional })), { loading: ExerciseLoader, ssr: false });
@@ -455,7 +454,8 @@ export default function ExercicioPage() {
       case "desafio-supermercado-auditivo": return <DesafioSupermercado {...props} mode="auditivo" />;
       case "desafio-cidade": return <DesafioCidade {...props} />;
       case "corrida-tempo": return <CorridaContraOTempo {...props} />;
-      case "desafio-orcamento": return <DesafioOrcamento {...props} />;
+      // "desafio-orcamento" foi fundido na Compra Multifuncional (fallback p/ links antigos)
+      case "desafio-orcamento": return <CompraMultifuncional {...props} />;
       case "caca-item-barato": return <CacaItemBarato {...props} />;
       case "mudanca-regras": return <MudancaRegras {...props} />;
       case "compra-multifuncional": return <CompraMultifuncional {...props} />;
