@@ -94,7 +94,7 @@ export default function MundoInteriorTherapistPage() {
   }
 
   if (loading) {
-    return <div className="p-8 text-center text-gray-500 text-sm animate-pulse">Carregando...</div>;
+    return <div className="p-8 text-center text-slate-400 text-sm animate-pulse">Carregando...</div>;
   }
 
   const char = activeSession?.characterData;
@@ -108,8 +108,8 @@ export default function MundoInteriorTherapistPage() {
           <Link href={`/pacientes/${patientId}`} aria-label="Voltar"><ArrowLeft className="w-5 h-5" /></Link>
         </Button>
         <div className="flex-1">
-          <h1 className="text-xl font-bold text-gray-900">🌌 Mundo Interior</h1>
-          <p className="text-sm text-gray-500">Ferramenta gamificada de apoio ao acompanhamento psicológico</p>
+          <h1 className="text-xl font-bold text-slate-100">🌌 Mundo Interior</h1>
+          <p className="text-sm text-slate-400">Ferramenta gamificada de apoio ao acompanhamento psicológico</p>
         </div>
         <Button onClick={createSession} disabled={creating || !!activeSession} size="sm">
           <Plus className="w-4 h-4 mr-1" />
@@ -118,9 +118,9 @@ export default function MundoInteriorTherapistPage() {
       </div>
 
       {/* Disclaimer */}
-      <div className="flex items-start gap-3 rounded-xl bg-amber-50 border border-amber-200 px-4 py-3">
-        <ShieldAlert className="w-4 h-4 text-amber-600 flex-shrink-0 mt-0.5" />
-        <p className="text-xs text-amber-800">
+      <div className="flex items-start gap-3 rounded-xl bg-amber-500/10 border border-amber-500/30 px-4 py-3">
+        <ShieldAlert className="w-4 h-4 text-amber-400 flex-shrink-0 mt-0.5" />
+        <p className="text-xs text-amber-200">
           Ferramenta auxiliar de apoio ao acompanhamento psicológico. Não realiza diagnóstico e não substitui psicoterapia. Use exclusivamente em sessão mediada pelo psicólogo.
         </p>
       </div>
@@ -129,20 +129,20 @@ export default function MundoInteriorTherapistPage() {
       {activeSession ? (
         <div className="space-y-4">
           {/* Status card */}
-          <div className="rounded-2xl border-2 border-indigo-200 bg-indigo-50 p-4 space-y-3">
+          <div className="rounded-2xl border-2 border-indigo-400/30 bg-indigo-500/10 p-4 space-y-3">
             <div className="flex items-center justify-between">
               <div className="flex items-center gap-2">
                 <span className="relative flex h-2.5 w-2.5">
                   <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-green-400 opacity-75"></span>
                   <span className="relative inline-flex rounded-full h-2.5 w-2.5 bg-green-500"></span>
                 </span>
-                <span className="text-sm font-semibold text-indigo-900">Sessão ativa</span>
+                <span className="text-sm font-semibold text-indigo-200">Sessão ativa</span>
               </div>
               <div className="flex items-center gap-2">
-                <button onClick={loadSessions} aria-label="Atualizar sessões" className="text-gray-400 hover:text-gray-600 transition-colors">
+                <button onClick={loadSessions} aria-label="Atualizar sessões" className="text-slate-400 hover:text-slate-200 transition-colors">
                   <RefreshCw className="w-4 h-4" />
                 </button>
-                <button onClick={closeSession} className="text-xs text-red-400 hover:text-red-600 transition-colors font-medium">
+                <button onClick={closeSession} className="text-xs text-red-400 hover:text-red-300 transition-colors font-medium">
                   Encerrar
                 </button>
               </div>
@@ -150,11 +150,11 @@ export default function MundoInteriorTherapistPage() {
 
             {/* Phase */}
             <div className="flex items-center gap-2">
-              <span className="text-xs text-indigo-600 font-medium bg-indigo-100 px-2 py-0.5 rounded-full">
+              <span className="text-xs text-indigo-200 font-medium bg-indigo-500/20 px-2 py-0.5 rounded-full">
                 {PHASE_LABELS[activeSession.phase] ?? activeSession.phase}
               </span>
               {region && (
-                <span className="text-xs text-gray-600 bg-white px-2 py-0.5 rounded-full border">
+                <span className="text-xs text-slate-300 bg-white/5 px-2 py-0.5 rounded-full border border-white/10">
                   {region.emoji} {region.name} — casa {activeSession.currentHouseIndex + 1}/6
                 </span>
               )}
@@ -162,14 +162,14 @@ export default function MundoInteriorTherapistPage() {
 
             {/* Character */}
             {char?.name && (
-              <div className="bg-white rounded-xl p-3 space-y-1.5 border border-indigo-100">
-                <p className="text-xs font-semibold text-gray-500 uppercase tracking-wider">Personagem</p>
+              <div className="bg-[#0f2147] rounded-xl p-3 space-y-1.5 border border-indigo-400/20">
+                <p className="text-xs font-semibold text-slate-400 uppercase tracking-wider">Personagem</p>
                 <div className="flex items-center gap-2">
                   <span className="text-2xl">{char.avatar}</span>
                   <div>
-                    <p className="font-bold text-gray-800">{char.name}</p>
-                    <p className="text-xs text-gray-500">{char.power} · evita: {char.fear}</p>
-                    <p className="text-xs text-gray-400">{char.energyType}</p>
+                    <p className="font-bold text-slate-100">{char.name}</p>
+                    <p className="text-xs text-slate-400">{char.power} · evita: {char.fear}</p>
+                    <p className="text-xs text-slate-500">{char.energyType}</p>
                   </div>
                 </div>
               </div>
@@ -179,7 +179,7 @@ export default function MundoInteriorTherapistPage() {
             {activeSession.unlockedTools.length > 0 && (
               <div className="flex flex-wrap gap-2">
                 {activeSession.unlockedTools.map(t => (
-                  <span key={t} className="text-xs bg-amber-50 text-amber-700 border border-amber-200 px-2 py-0.5 rounded-full">⭐ {t}</span>
+                  <span key={t} className="text-xs bg-amber-500/10 text-amber-200 border border-amber-500/30 px-2 py-0.5 rounded-full">⭐ {t}</span>
                 ))}
               </div>
             )}
@@ -190,7 +190,7 @@ export default function MundoInteriorTherapistPage() {
                 const done = activeSession.completedRegions.includes(r.id);
                 const current = activeSession.currentRegion === r.id;
                 return (
-                  <span key={r.id} className={`text-xs px-2 py-0.5 rounded-full border ${done ? "bg-green-50 text-green-700 border-green-200" : current ? "bg-blue-50 text-blue-700 border-blue-200" : "bg-gray-50 text-gray-400 border-gray-200"}`}>
+                  <span key={r.id} className={`text-xs px-2 py-0.5 rounded-full border ${done ? "bg-green-500/15 text-green-300 border-green-500/30" : current ? "bg-blue-500/15 text-blue-300 border-blue-500/30" : "bg-white/5 text-slate-400 border-white/10"}`}>
                     {r.emoji} {done ? "✓" : current ? "..." : "○"}
                   </span>
                 );
@@ -201,16 +201,16 @@ export default function MundoInteriorTherapistPage() {
           {/* Responses */}
           {activeSession.responses.length > 0 && (
             <div className="space-y-2">
-              <p className="text-sm font-semibold text-gray-700 flex items-center gap-2">
+              <p className="text-sm font-semibold text-slate-200 flex items-center gap-2">
                 <FileText className="w-4 h-4" />
                 Respostas do paciente ({activeSession.responses.length})
               </p>
               <div className="space-y-2 max-h-72 overflow-y-auto rounded-xl">
                 {[...activeSession.responses].reverse().map((r, i) => (
-                  <div key={i} className="bg-white rounded-xl p-3 border border-gray-100 space-y-1">
-                    <p className="text-xs text-gray-400">{r.houseId.replace(/_/g, " · ")} · {new Date(r.timestamp).toLocaleTimeString("pt-BR", { hour: "2-digit", minute: "2-digit" })}</p>
-                    <p className="text-xs text-gray-500 italic">"{r.question}"</p>
-                    <p className="text-sm text-gray-800 font-medium">{r.answer}</p>
+                  <div key={i} className="bg-[#0f2147] rounded-xl p-3 border border-white/10 space-y-1">
+                    <p className="text-xs text-slate-500">{r.houseId.replace(/_/g, " · ")} · {new Date(r.timestamp).toLocaleTimeString("pt-BR", { hour: "2-digit", minute: "2-digit" })}</p>
+                    <p className="text-xs text-slate-400 italic">"{r.question}"</p>
+                    <p className="text-sm text-slate-100 font-medium">{r.answer}</p>
                   </div>
                 ))}
               </div>
@@ -219,12 +219,12 @@ export default function MundoInteriorTherapistPage() {
 
           {/* Therapist notes */}
           <div className="space-y-2">
-            <p className="text-sm font-semibold text-gray-700">Notas do terapeuta</p>
+            <p className="text-sm font-semibold text-slate-200">Notas do terapeuta</p>
             <textarea
               value={notes}
               onChange={e => setNotes(e.target.value)}
               placeholder="Observações clínicas, hipóteses, pontos para aprofundar..."
-              className="w-full rounded-xl border border-gray-200 px-3 py-2.5 text-sm text-gray-700 focus:outline-none focus:border-indigo-400 resize-none"
+              className="w-full rounded-xl border border-white/15 bg-white/5 px-3 py-2.5 text-sm text-slate-100 placeholder:text-slate-500 focus:outline-none focus:border-indigo-400 resize-none"
               rows={4}
             />
             <Button onClick={saveNotes} disabled={saving} size="sm" variant="outline">
@@ -233,10 +233,10 @@ export default function MundoInteriorTherapistPage() {
           </div>
         </div>
       ) : (
-        <div className="rounded-2xl border-2 border-dashed border-gray-200 p-8 text-center space-y-3">
+        <div className="rounded-2xl border-2 border-dashed border-white/15 p-8 text-center space-y-3">
           <span className="text-5xl">🌌</span>
-          <p className="font-semibold text-gray-700">Nenhuma sessão ativa</p>
-          <p className="text-sm text-gray-500 max-w-xs mx-auto">Inicie uma nova sessão e peça ao paciente para acessar o Mundo Interior no aplicativo.</p>
+          <p className="font-semibold text-slate-200">Nenhuma sessão ativa</p>
+          <p className="text-sm text-slate-400 max-w-xs mx-auto">Inicie uma nova sessão e peça ao paciente para acessar o Mundo Interior no aplicativo.</p>
           <Button onClick={createSession} disabled={creating}>
             <Plus className="w-4 h-4 mr-2" />
             {creating ? "Criando..." : "Iniciar sessão"}
@@ -247,17 +247,17 @@ export default function MundoInteriorTherapistPage() {
       {/* Session history */}
       {sessions.filter(s => s.status !== "active").length > 0 && (
         <div className="space-y-2">
-          <p className="text-sm font-semibold text-gray-700">Sessões anteriores</p>
+          <p className="text-sm font-semibold text-slate-200">Sessões anteriores</p>
           <div className="space-y-2">
             {sessions.filter(s => s.status !== "active").slice(0, 5).map(s => (
-              <div key={s.id} className="bg-gray-50 rounded-xl p-3 border border-gray-100 flex items-center justify-between">
+              <div key={s.id} className="bg-white/5 rounded-xl p-3 border border-white/10 flex items-center justify-between">
                 <div>
-                  <p className="text-sm text-gray-700">
+                  <p className="text-sm text-slate-200">
                     {s.characterData.avatar} {s.characterData.name || "Sem personagem"} · {s.responses.length} respostas
                   </p>
-                  <p className="text-xs text-gray-400">{s.completedRegions.length}/{REGIONS.length} regiões</p>
+                  <p className="text-xs text-slate-500">{s.completedRegions.length}/{REGIONS.length} regiões</p>
                 </div>
-                <span className={`text-xs px-2 py-0.5 rounded-full ${s.status === "completed" ? "bg-green-50 text-green-600" : "bg-gray-100 text-gray-500"}`}>
+                <span className={`text-xs px-2 py-0.5 rounded-full ${s.status === "completed" ? "bg-green-500/15 text-green-300" : "bg-white/10 text-slate-400"}`}>
                   {s.status === "completed" ? "completo" : "pausado"}
                 </span>
               </div>
