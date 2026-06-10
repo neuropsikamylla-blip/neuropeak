@@ -7,6 +7,7 @@ import { calculateAge } from "@/lib/utils";
 import { EXERCISE_DEFINITIONS, DOMAIN_LABELS, DOMAIN_COLORS, type Domain, type Theme, type SessionData } from "@/types";
 import { planExerciseIds } from "@/lib/exercise-plan";
 import { Trophy, Flame, Star } from "lucide-react";
+import { ExerciseIcon } from "@/components/ExerciseIcon";
 
 export default async function InicioPage() {
   const session = await getServerSession(authOptions);
@@ -205,7 +206,7 @@ export default async function InicioPage() {
                   className={`p-4 flex items-center gap-4 overflow-hidden relative ${doneToday ? s.exDone : `cursor-pointer ${s.exCard}`}`}
                   style={theme === "CLINICAL" ? { borderLeft: `3px solid ${doneToday ? "#cbd5e1" : domainColor}` } : undefined}
                 >
-                  <span className="text-3xl">{ex.icon}</span>
+                  <ExerciseIcon id={exId} emoji={ex.icon} size={52} />
                   <div className="flex-1 min-w-0">
                     <div className="flex items-center gap-2 flex-wrap">
                       <p className={`font-semibold ${theme === "COLORFUL" ? "text-gray-800" : "text-gray-100"}`}>
