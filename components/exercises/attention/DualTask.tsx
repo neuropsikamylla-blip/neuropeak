@@ -29,17 +29,19 @@ interface LevelSpec {
   speedLabel: "lenta" | "moderada" | "rápida";
 }
 
+// Tempos generosos: a forma fica visível tempo suficiente para reagir mesmo
+// na dupla tarefa (lenta ~2,6s · moderada ~2,1s · rápida ~1,7s).
 const LEVELS: Record<number, LevelSpec> = {
-  1:  { topRule: "any-green",    nback: 1, shapeMs: 1800, digitMs: 2000, shapes: false, greenLures: false, speedLabel: "lenta" },
-  2:  { topRule: "any-green",    nback: 1, shapeMs: 1400, digitMs: 1700, shapes: false, greenLures: false, speedLabel: "moderada" },
-  3:  { topRule: "any-green",    nback: 1, shapeMs: 1050, digitMs: 1400, shapes: false, greenLures: false, speedLabel: "rápida" },
-  4:  { topRule: "green-circle", nback: 1, shapeMs: 1400, digitMs: 1700, shapes: true,  greenLures: true,  speedLabel: "moderada" },
-  5:  { topRule: "green-circle", nback: 1, shapeMs: 1050, digitMs: 1400, shapes: true,  greenLures: true,  speedLabel: "rápida" },
-  6:  { topRule: "green-circle", nback: 2, shapeMs: 1800, digitMs: 2000, shapes: true,  greenLures: true,  speedLabel: "lenta" },
-  7:  { topRule: "green-circle", nback: 2, shapeMs: 1400, digitMs: 1700, shapes: true,  greenLures: true,  speedLabel: "moderada" },
-  8:  { topRule: "block-alt",    nback: 2, shapeMs: 1400, digitMs: 1700, shapes: true,  greenLures: true,  speedLabel: "moderada" },
-  9:  { topRule: "block-alt",    nback: 2, shapeMs: 1050, digitMs: 1400, shapes: true,  greenLures: true,  speedLabel: "rápida" },
-  10: { topRule: "block-alt",    nback: 2, shapeMs: 950,  digitMs: 1250, shapes: true,  greenLures: true,  speedLabel: "rápida" },
+  1:  { topRule: "any-green",    nback: 1, shapeMs: 2600, digitMs: 2600, shapes: false, greenLures: false, speedLabel: "lenta" },
+  2:  { topRule: "any-green",    nback: 1, shapeMs: 2100, digitMs: 2200, shapes: false, greenLures: false, speedLabel: "moderada" },
+  3:  { topRule: "any-green",    nback: 1, shapeMs: 1700, digitMs: 1900, shapes: false, greenLures: false, speedLabel: "rápida" },
+  4:  { topRule: "green-circle", nback: 1, shapeMs: 2100, digitMs: 2200, shapes: true,  greenLures: true,  speedLabel: "moderada" },
+  5:  { topRule: "green-circle", nback: 1, shapeMs: 1700, digitMs: 1900, shapes: true,  greenLures: true,  speedLabel: "rápida" },
+  6:  { topRule: "green-circle", nback: 2, shapeMs: 2600, digitMs: 2600, shapes: true,  greenLures: true,  speedLabel: "lenta" },
+  7:  { topRule: "green-circle", nback: 2, shapeMs: 2100, digitMs: 2200, shapes: true,  greenLures: true,  speedLabel: "moderada" },
+  8:  { topRule: "block-alt",    nback: 2, shapeMs: 2100, digitMs: 2200, shapes: true,  greenLures: true,  speedLabel: "moderada" },
+  9:  { topRule: "block-alt",    nback: 2, shapeMs: 1700, digitMs: 1900, shapes: true,  greenLures: true,  speedLabel: "rápida" },
+  10: { topRule: "block-alt",    nback: 2, shapeMs: 1550, digitMs: 1750, shapes: true,  greenLures: true,  speedLabel: "rápida" },
 };
 const levelOf = (d: number): LevelSpec => LEVELS[Math.min(10, Math.max(1, Math.round(d)))];
 
@@ -111,13 +113,18 @@ function buildShapeSequence(spec: LevelSpec, length: number): ShapeTrial[] {
 
 function buildDigitSequence(length: number, nback: 1 | 2): number[] {
   const digits: number[] = [];
+  let sinceMatch = 0;
   for (let i = 0; i < length; i++) {
-    if (i >= nback && Math.random() < 0.28) {
-      digits.push(digits[i - nback]); // cria um "match" no n-back atual
+    const canMatch = i >= nback;
+    const force = canMatch && sinceMatch >= 3; // evita trechos longos sem nenhum "igual"
+    if (canMatch && (force || Math.random() < 0.40)) {
+      digits.push(digits[i - nback]); // cria um IGUAL no n-back atual
+      sinceMatch = 0;
     } else {
       let d: number;
-      do { d = Math.floor(Math.random() * 9) + 1; } while (i >= nback && d === digits[i - nback]);
+      do { d = Math.floor(Math.random() * 9) + 1; } while (canMatch && d === digits[i - nback]);
       digits.push(d);
+      if (canMatch) sinceMatch++;
     }
   }
   return digits;
@@ -403,7 +410,7 @@ export function DualTask({ difficulty, theme, onComplete }: DualTaskProps) {
 
   return (
     <div className={`min-h-screen overflow-y-auto ${pal.bg}`}>
-      <div className="max-w-sm mx-auto px-4 py-4 flex flex-col gap-3">
+      <div className="max-w-md mx-auto px-4 py-4 flex flex-col gap-3">
         {/* Header */}
         <div className="flex justify-between items-center">
           <h2 className={`font-bold text-sm ${pal.title}`}>🧠 Dupla Tarefa</h2>
@@ -417,7 +424,7 @@ export function DualTask({ difficulty, theme, onComplete }: DualTaskProps) {
         </div>
 
         {/* Panel A — tarefa visual */}
-        <div className={`rounded-2xl p-4 ${pal.panelA}`} style={{ minHeight: 200 }}>
+        <div className={`rounded-2xl p-4 ${pal.panelA}`} style={{ minHeight: 250 }}>
           <div className="flex justify-between items-center mb-2">
             <p className={`text-xs font-bold ${pal.title}`}>SUPERIOR</p>
             <div className="flex gap-3 text-xs">
@@ -432,11 +439,11 @@ export function DualTask({ difficulty, theme, onComplete }: DualTaskProps) {
               displayState === "fb-miss" ? "border-amber-500 bg-amber-500/10" :
               theme === "GAMIFIED" ? "border-gray-600 bg-gray-700" : "border-slate-200 bg-slate-50"
             }`}
-            style={{ height: 140 }} onPointerDown={handleShapeTap}>
+            style={{ height: 190 }} onPointerDown={handleShapeTap}>
             <AnimatePresence mode="wait">
               {displayState === "shape" && currentShape && (
                 <motion.div key={`shape-${shapeIdx}`} initial={{ scale: 0.5, opacity: 0 }} animate={{ scale: 1, opacity: 1 }} exit={{ scale: 0.5, opacity: 0 }}>
-                  <ShapeSvg color={currentShape.color} kind={currentShape.kind} size={90} />
+                  <ShapeSvg color={currentShape.color} kind={currentShape.kind} size={128} />
                 </motion.div>
               )}
               {displayState.startsWith("fb-") && (
@@ -457,7 +464,7 @@ export function DualTask({ difficulty, theme, onComplete }: DualTaskProps) {
           <div className="flex items-center gap-4">
             <div className="flex flex-col items-center gap-1">
               <p className={`text-[10px] ${pal.sub}`}>{nback === 1 ? "Anterior" : "2 atrás"}</p>
-              <div className={`w-12 h-12 rounded-xl flex items-center justify-center font-black text-2xl ${pal.digitBox}`}>
+              <div className={`w-14 h-14 rounded-xl flex items-center justify-center font-black text-3xl ${pal.digitBox}`}>
                 <span className={pal.sub}>{refDigit ?? "—"}</span>
               </div>
             </div>
@@ -465,7 +472,7 @@ export function DualTask({ difficulty, theme, onComplete }: DualTaskProps) {
               <p className={`text-[10px] ${pal.sub}`}>Atual</p>
               <AnimatePresence mode="wait">
                 <motion.div key={digitKey} initial={{ scale: 0.5, opacity: 0 }} animate={{ scale: 1, opacity: 1 }}
-                  className={`w-16 h-16 rounded-xl flex items-center justify-center font-black text-3xl border-2 ${
+                  className={`w-20 h-20 rounded-xl flex items-center justify-center font-black text-4xl border-2 ${
                     digitFeedback === "hit" ? "border-green-500 bg-green-500/20" :
                     digitFeedback === "fa" ? "border-red-500 bg-red-500/20" : `${pal.digitBox} border-transparent`
                   }`}>
@@ -474,7 +481,7 @@ export function DualTask({ difficulty, theme, onComplete }: DualTaskProps) {
               </AnimatePresence>
             </div>
             <button onPointerDown={handleEqualTap}
-              className={`px-4 py-3 rounded-xl font-bold text-sm transition-all ${pal.eqBtn} ${equalPressed ? "opacity-50" : ""}`}
+              className={`px-5 py-4 rounded-xl font-bold text-base transition-all ${pal.eqBtn} ${equalPressed ? "opacity-50" : ""}`}
               style={{ touchAction: "none" }}>IGUAL</button>
           </div>
         </div>
