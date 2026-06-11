@@ -1,10 +1,9 @@
 "use client";
 
-import { useState, useRef, useCallback } from "react";
-import { motion, AnimatePresence, Reorder } from "framer-motion";
+import { useState, useRef, useCallback, useEffect } from "react";
+import { Reorder } from "framer-motion";
 import { calculateExerciseScore } from "@/lib/scoring";
 import { useExerciseProgress } from "@/components/exercises/ExerciseWrapper";
-import { TutorialBase } from "@/components/exercises/TutorialBase";
 import type { ExerciseResult, Theme } from "@/types";
 
 interface OrdemHistoriaProps {
@@ -13,694 +12,372 @@ interface OrdemHistoriaProps {
   onComplete: (result: ExerciseResult) => void;
 }
 
-interface Panel {
-  id: string;
-  emoji: string;
-  label: string;
-  correctIndex: number;
-}
+interface Step { e: string; t: string; }
+interface Story { id: string; name: string; emoji: string; steps: Step[]; distractors?: Step[]; }
 
-interface Story {
-  name: string;
-  emoji: string;
-  panels: { emoji: string; label: string }[];
-}
-
-// ── Banco de histórias: 3 painéis (fácil) ──────────────────────────────────
-const STORIES_3: Story[] = [
-  { name: "Lavar as mãos", emoji: "🤲", panels: [
-    { emoji: "🚰", label: "Abrir a torneira" },
-    { emoji: "🫧", label: "Passar sabão nas mãos" },
-    { emoji: "🧻", label: "Secar com toalha" },
-  ]},
-  { name: "Fazer uma ligação", emoji: "📞", panels: [
-    { emoji: "📱", label: "Pegar o celular" },
-    { emoji: "🔢", label: "Discar o número" },
-    { emoji: "🗣️", label: "Falar e encerrar" },
-  ]},
-  { name: "Tomar um comprimido", emoji: "💊", panels: [
-    { emoji: "💊", label: "Pegar o comprimido" },
-    { emoji: "💧", label: "Beber água" },
-    { emoji: "✅", label: "Guardar o remédio" },
-  ]},
-  { name: "Fazer café", emoji: "☕", panels: [
-    { emoji: "🥄", label: "Medir e colocar o pó" },
-    { emoji: "💧", label: "Despejar água quente" },
-    { emoji: "☕", label: "Servir na xícara" },
-  ]},
-  { name: "Mandar uma mensagem", emoji: "📲", panels: [
-    { emoji: "📱", label: "Abrir o aplicativo" },
-    { emoji: "✍️", label: "Digitar a mensagem" },
-    { emoji: "📤", label: "Enviar" },
-  ]},
-  { name: "Pagar com cartão", emoji: "💳", panels: [
-    { emoji: "💳", label: "Passar o cartão na maquininha" },
-    { emoji: "🔢", label: "Digitar a senha" },
-    { emoji: "🧾", label: "Pegar o comprovante" },
-  ]},
-  { name: "Acender a televisão", emoji: "📺", panels: [
-    { emoji: "📟", label: "Pegar o controle remoto" },
-    { emoji: "🔘", label: "Apertar o botão ligar" },
-    { emoji: "📺", label: "Escolher o canal" },
-  ]},
-  { name: "Abrir uma janela", emoji: "🪟", panels: [
-    { emoji: "🔓", label: "Destravar a janela" },
-    { emoji: "🪟", label: "Empurrar para abrir" },
-    { emoji: "🌬️", label: "Deixar o ar entrar" },
-  ]},
-  { name: "Varrer o chão", emoji: "🧹", panels: [
-    { emoji: "🧹", label: "Pegar a vassoura" },
-    { emoji: "🌀", label: "Varrer em direção à sujeira" },
-    { emoji: "🗑️", label: "Recolher no lixo" },
-  ]},
+// ── Banco de histórias funcionais (20), em ORDEM correta ─────────────────────────
+const STORIES: Story[] = [
+  // 3 etapas
+  { id: "lavar-maos", name: "Lavar as mãos", emoji: "🧼", steps: [
+    { e: "🚰", t: "Abrir a torneira" }, { e: "🧼", t: "Passar sabonete" }, { e: "💦", t: "Enxaguar as mãos" } ] },
+  { id: "escovar-dentes", name: "Escovar os dentes", emoji: "🪥", steps: [
+    { e: "🧴", t: "Colocar pasta na escova" }, { e: "🪥", t: "Escovar os dentes" }, { e: "💦", t: "Enxaguar a boca" } ] },
+  { id: "calcar-sapato", name: "Calçar o sapato", emoji: "👟", steps: [
+    { e: "👟", t: "Pegar o sapato" }, { e: "🦶", t: "Colocar o pé no sapato" }, { e: "🪢", t: "Amarrar o cadarço" } ] },
+  { id: "beber-agua", name: "Beber água", emoji: "🥤", steps: [
+    { e: "🥛", t: "Pegar um copo" }, { e: "🚰", t: "Colocar água" }, { e: "😋", t: "Beber" } ] },
+  { id: "fazer-cafe", name: "Fazer café", emoji: "☕", steps: [
+    { e: "💧", t: "Colocar água" }, { e: "☕", t: "Colocar café" }, { e: "🍵", t: "Servir na xícara" } ] },
+  { id: "arrumar-cama", name: "Arrumar a cama", emoji: "🛏️", steps: [
+    { e: "🛏️", t: "Esticar o lençol" }, { e: "🪶", t: "Arrumar o travesseiro" }, { e: "🧣", t: "Dobrar a coberta" } ] },
+  // 4 etapas
+  { id: "tomar-banho", name: "Tomar banho", emoji: "🚿", steps: [
+    { e: "🚪", t: "Entrar no banheiro" }, { e: "🚿", t: "Ligar o chuveiro" }, { e: "🧴", t: "Ensaboar o corpo" }, { e: "💦", t: "Se enxaguar" } ] },
+  { id: "sanduiche", name: "Fazer um sanduíche", emoji: "🥪", steps: [
+    { e: "🍞", t: "Pegar o pão" }, { e: "🧀", t: "Colocar o recheio" }, { e: "🥪", t: "Fechar o sanduíche" }, { e: "🍽️", t: "Servir" } ] },
+  { id: "mandar-mensagem", name: "Mandar uma mensagem", emoji: "💬", steps: [
+    { e: "📱", t: "Abrir o aplicativo" }, { e: "👤", t: "Escolher o contato" }, { e: "⌨️", t: "Digitar a mensagem" }, { e: "📤", t: "Enviar" } ] },
+  { id: "preparar-lanche", name: "Preparar um lanche", emoji: "🥗", steps: [
+    { e: "🚰", t: "Lavar os ingredientes" }, { e: "🔪", t: "Cortar os ingredientes" }, { e: "🥪", t: "Montar o lanche" }, { e: "🍽️", t: "Servir o lanche" } ] },
+  { id: "guardar-compras", name: "Guardar compras", emoji: "🛍️", steps: [
+    { e: "🛍️", t: "Tirar os itens da sacola" }, { e: "🗂️", t: "Separar por tipo" }, { e: "🚪", t: "Guardar nos armários" }, { e: "🧊", t: "Guardar frios na geladeira" } ] },
+  { id: "preparar-mochila", name: "Preparar a mochila", emoji: "🎒", steps: [
+    { e: "📋", t: "Verificar o que levar" }, { e: "📚", t: "Separar os materiais" }, { e: "🎒", t: "Colocar tudo na mochila" }, { e: "🔒", t: "Fechar a mochila" } ] },
+  // 5 etapas
+  { id: "pagar-conta", name: "Pagar uma conta", emoji: "🧾", steps: [
+    { e: "🧾", t: "Verificar o valor da conta" }, { e: "🏦", t: "Abrir o app do banco" }, { e: "🔍", t: "Conferir os dados" }, { e: "✅", t: "Confirmar o pagamento" }, { e: "📄", t: "Guardar o comprovante" } ] },
+  { id: "marcar-consulta", name: "Marcar uma consulta", emoji: "🩺", steps: [
+    { e: "🩺", t: "Escolher a especialidade" }, { e: "📅", t: "Verificar horários" }, { e: "✅", t: "Confirmar data e horário" }, { e: "📝", t: "Anotar o compromisso" }, { e: "📄", t: "Separar documentos" } ] },
+  { id: "pegar-onibus", name: "Pegar ônibus", emoji: "🚌", steps: [
+    { e: "🗺️", t: "Conferir o trajeto" }, { e: "🚏", t: "Ir até o ponto" }, { e: "⏳", t: "Esperar o ônibus certo" }, { e: "🚌", t: "Entrar no ônibus" }, { e: "📍", t: "Descer no ponto certo" } ] },
+  { id: "organizar-documentos", name: "Organizar documentos", emoji: "🗂️", steps: [
+    { e: "📄", t: "Separar os papéis" }, { e: "🔖", t: "Identificar o tipo" }, { e: "📁", t: "Colocar em pastas" }, { e: "🏷️", t: "Etiquetar as pastas" }, { e: "🗄️", t: "Guardar no local certo" } ] },
+  // 6 etapas (com distrator)
+  { id: "enviar-email", name: "Enviar documento por e-mail", emoji: "📧", steps: [
+    { e: "📎", t: "Localizar o arquivo" }, { e: "📧", t: "Abrir o e-mail" }, { e: "👤", t: "Escrever o destinatário" }, { e: "📌", t: "Anexar o arquivo" }, { e: "🔍", t: "Conferir a mensagem" }, { e: "📤", t: "Enviar" } ],
+    distractors: [{ e: "🖨️", t: "Imprimir uma foto" }] },
+  { id: "organizar-remedios", name: "Organizar remédios", emoji: "💊", steps: [
+    { e: "📋", t: "Conferir a prescrição" }, { e: "💊", t: "Separar os remédios" }, { e: "⏰", t: "Verificar os horários" }, { e: "🗓️", t: "Colocar no organizador" }, { e: "🔒", t: "Guardar em local seguro" }, { e: "🔔", t: "Marcar lembrete" } ],
+    distractors: [{ e: "👕", t: "Escolher uma roupa" }] },
+  { id: "compra-online", name: "Fazer compra online", emoji: "🛒", steps: [
+    { e: "🔍", t: "Pesquisar o produto" }, { e: "⚖️", t: "Comparar as opções" }, { e: "🛒", t: "Colocar no carrinho" }, { e: "📍", t: "Conferir endereço" }, { e: "💳", t: "Escolher pagamento" }, { e: "✅", t: "Confirmar compra" } ],
+    distractors: [{ e: "🗑️", t: "Apagar uma mensagem" }] },
+  // 7 etapas
+  { id: "preparar-consulta", name: "Preparar-se para a consulta", emoji: "🩺", steps: [
+    { e: "📅", t: "Conferir data e horário" }, { e: "📄", t: "Separar documentos" }, { e: "🩻", t: "Separar exames anteriores" }, { e: "📍", t: "Confirmar endereço" }, { e: "⏱️", t: "Calcular o deslocamento" }, { e: "🚪", t: "Sair com antecedência" }, { e: "🛎️", t: "Fazer check-in na recepção" } ],
+    distractors: [{ e: "🍰", t: "Comprar sobremesa" }, { e: "🔑", t: "Trocar senha do celular" }] },
 ];
 
-// ── Banco de histórias: 4 painéis (médio) ──────────────────────────────────
-const STORIES_4: Story[] = [
-  { name: "Manhã em casa", emoji: "🌅", panels: [
-    { emoji: "⏰", label: "O despertador toca" },
-    { emoji: "🚿", label: "Tomar banho" },
-    { emoji: "☕", label: "Tomar café da manhã" },
-    { emoji: "🚪", label: "Sair de casa" },
-  ]},
-  { name: "Ir à farmácia", emoji: "💊", panels: [
-    { emoji: "📋", label: "Pegar a receita médica" },
-    { emoji: "🚶", label: "Caminhar até a farmácia" },
-    { emoji: "🧾", label: "Entregar a receita e pagar" },
-    { emoji: "💊", label: "Guardar o remédio em casa" },
-  ]},
-  { name: "Cozinhar arroz", emoji: "🍚", panels: [
-    { emoji: "🚿", label: "Lavar o arroz na peneira" },
-    { emoji: "🍳", label: "Refogar o alho na panela" },
-    { emoji: "💧", label: "Adicionar água e tampa" },
-    { emoji: "🍚", label: "Servir o arroz cozido" },
-  ]},
-  { name: "Lavar a roupa", emoji: "👕", panels: [
-    { emoji: "🧺", label: "Separar as roupas sujas" },
-    { emoji: "🫧", label: "Colocar na máquina com sabão" },
-    { emoji: "👕", label: "Estender no varal" },
-    { emoji: "🗄️", label: "Dobrar e guardar no armário" },
-  ]},
-  { name: "Fazer compras no mercado", emoji: "🛒", panels: [
-    { emoji: "📝", label: "Fazer a lista de compras" },
-    { emoji: "🛒", label: "Pegar os produtos nas prateleiras" },
-    { emoji: "💳", label: "Pagar no caixa" },
-    { emoji: "🛍️", label: "Guardar as compras em casa" },
-  ]},
-  { name: "Visita ao médico", emoji: "🏥", panels: [
-    { emoji: "📅", label: "Agendar a consulta" },
-    { emoji: "🚌", label: "Ir até a clínica" },
-    { emoji: "🩺", label: "Ser atendido pelo médico" },
-    { emoji: "💊", label: "Buscar o remédio indicado" },
-  ]},
-  { name: "Trocar um pneu", emoji: "🔧", panels: [
-    { emoji: "🚗", label: "Parar o carro em lugar seguro" },
-    { emoji: "🔧", label: "Remover os parafusos com chave" },
-    { emoji: "🛞", label: "Colocar o pneu reserva" },
-    { emoji: "✅", label: "Apertar os parafusos e guardar" },
-  ]},
-  { name: "Fazer uma videochamada", emoji: "📹", panels: [
-    { emoji: "📱", label: "Pegar o celular e abrir o app" },
-    { emoji: "📡", label: "Verificar a conexão com a internet" },
-    { emoji: "📹", label: "Iniciar a chamada de vídeo" },
-    { emoji: "👋", label: "Encerrar a chamada ao terminar" },
-  ]},
-  { name: "Plantar uma semente", emoji: "🌱", panels: [
-    { emoji: "🪴", label: "Preparar o vaso com terra" },
-    { emoji: "👇", label: "Fazer um buraco na terra" },
-    { emoji: "🫘", label: "Depositar a semente" },
-    { emoji: "💧", label: "Regar com pouca água" },
-  ]},
-  { name: "Pagar uma conta online", emoji: "💻", panels: [
-    { emoji: "💻", label: "Abrir o banco pelo computador" },
-    { emoji: "🔑", label: "Digitar a senha de acesso" },
-    { emoji: "📄", label: "Selecionar a conta e o código" },
-    { emoji: "✅", label: "Confirmar o pagamento" },
-  ]},
-  { name: "Rotina de dormir", emoji: "🌙", panels: [
-    { emoji: "📵", label: "Guardar o celular longe da cama" },
-    { emoji: "🪥", label: "Escovar os dentes" },
-    { emoji: "🛏️", label: "Deitar e apagar a luz" },
-    { emoji: "😴", label: "Adormecer" },
-  ]},
-  { name: "Enviar uma encomenda", emoji: "📦", panels: [
-    { emoji: "📦", label: "Colocar na caixa para enviar" },
-    { emoji: "🏷️", label: "Colar a etiqueta com o endereço" },
-    { emoji: "🚶", label: "Levar até a agência dos Correios" },
-    { emoji: "🧾", label: "Receber o comprovante de envio" },
-  ]},
-  { name: "Trocar uma lâmpada", emoji: "💡", panels: [
-    { emoji: "🪜", label: "Posicionar a escada com segurança" },
-    { emoji: "🔌", label: "Desligar o interruptor" },
-    { emoji: "💡", label: "Trocar a lâmpada queimada" },
-    { emoji: "✅", label: "Ligar e testar" },
-  ]},
-  { name: "Alugar um filme", emoji: "🎬", panels: [
-    { emoji: "📱", label: "Abrir o aplicativo de streaming" },
-    { emoji: "🔍", label: "Buscar o filme desejado" },
-    { emoji: "💳", label: "Confirmar o aluguel e pagar" },
-    { emoji: "▶️", label: "Assistir ao filme" },
-  ]},
-  { name: "Preparar um sanduíche", emoji: "🥪", panels: [
-    { emoji: "🍞", label: "Pegar duas fatias de pão" },
-    { emoji: "🧀", label: "Colocar o recheio escolhido" },
-    { emoji: "🥪", label: "Montar e pressionar levemente" },
-    { emoji: "🍽️", label: "Servir no prato" },
-  ]},
-  { name: "Fazer uma transferência PIX", emoji: "🏦", panels: [
-    { emoji: "📱", label: "Abrir o aplicativo do banco" },
-    { emoji: "🔑", label: "Acessar a área PIX" },
-    { emoji: "📝", label: "Informar a chave e o valor" },
-    { emoji: "✅", label: "Confirmar e salvar o comprovante" },
-  ]},
-  { name: "O Cachorro Azul", emoji: "🐕", panels: [
-    { emoji: "🔍", label: "No parque, procurando o cachorro" },
-    { emoji: "😔", label: "Sentado triste na calçada" },
-    { emoji: "🏃", label: "Correndo pedir ajuda às crianças" },
-    { emoji: "🎈", label: "Cachorro voltou! Balão sobe no céu" },
-  ]},
+const GLOBAL_DISTRACTORS: Step[] = [
+  { e: "📸", t: "Tirar uma foto" }, { e: "📺", t: "Ligar a televisão" }, { e: "🪴", t: "Regar as plantas" },
+  { e: "🎵", t: "Ouvir uma música" }, { e: "🛋️", t: "Sentar no sofá" }, { e: "🧹", t: "Varrer a sala" },
+  { e: "☎️", t: "Atender o telefone" },
 ];
 
-// ── Banco de histórias: 5 painéis (difícil) ────────────────────────────────
-const STORIES_5: Story[] = [
-  { name: "Preparar uma mala de viagem", emoji: "🧳", panels: [
-    { emoji: "📝", label: "Fazer lista do que levar" },
-    { emoji: "👕", label: "Separar as roupas necessárias" },
-    { emoji: "🧴", label: "Pegar os itens de higiene" },
-    { emoji: "🧳", label: "Organizar tudo na mala" },
-    { emoji: "🔒", label: "Fechar e verificar o peso" },
-  ]},
-  { name: "Fazer um bolo", emoji: "🎂", panels: [
-    { emoji: "📖", label: "Ler a receita completa" },
-    { emoji: "🥚", label: "Separar e medir os ingredientes" },
-    { emoji: "🥣", label: "Misturar a massa" },
-    { emoji: "🔥", label: "Assar no forno pelo tempo certo" },
-    { emoji: "🎂", label: "Decorar depois de esfriar" },
-  ]},
-  { name: "Ir ao banco presencialmente", emoji: "🏦", panels: [
-    { emoji: "📋", label: "Separar os documentos necessários" },
-    { emoji: "🚌", label: "Ir até o banco" },
-    { emoji: "🔢", label: "Pegar a senha de atendimento" },
-    { emoji: "🪑", label: "Aguardar ser chamado" },
-    { emoji: "💼", label: "Realizar o atendimento" },
-  ]},
-  { name: "Montar um móvel", emoji: "🪑", panels: [
-    { emoji: "📄", label: "Ler o manual de montagem" },
-    { emoji: "🔩", label: "Identificar e separar as peças" },
-    { emoji: "🔧", label: "Montar a estrutura principal" },
-    { emoji: "✅", label: "Apertar todos os parafusos" },
-    { emoji: "🧹", label: "Limpar e posicionar o móvel" },
-  ]},
-  { name: "Organizar a geladeira", emoji: "❄️", panels: [
-    { emoji: "🛍️", label: "Chegar com as compras" },
-    { emoji: "🗑️", label: "Retirar o que está vencido" },
-    { emoji: "🧹", label: "Limpar as prateleiras" },
-    { emoji: "📍", label: "Organizar os itens por categoria" },
-    { emoji: "✅", label: "Guardar os novos produtos" },
-  ]},
-  { name: "Planejar um passeio", emoji: "🗺️", panels: [
-    { emoji: "📍", label: "Escolher o destino" },
-    { emoji: "🌐", label: "Verificar horário de funcionamento" },
-    { emoji: "🗺️", label: "Traçar o melhor caminho" },
-    { emoji: "🎒", label: "Preparar o que levar" },
-    { emoji: "🚶", label: "Sair para o passeio" },
-  ]},
-  { name: "Fazer uma consulta médica completa", emoji: "👨‍⚕️", panels: [
-    { emoji: "📅", label: "Agendar a consulta" },
-    { emoji: "📋", label: "Separar os exames anteriores" },
-    { emoji: "🚌", label: "Ir até o consultório" },
-    { emoji: "🩺", label: "Ser atendido pelo médico" },
-    { emoji: "💊", label: "Buscar o remédio indicado" },
-  ]},
-  { name: "Renovar a carteira de motorista", emoji: "🪪", panels: [
-    { emoji: "🌐", label: "Agendar online no Detran" },
-    { emoji: "📋", label: "Reunir os documentos necessários" },
-    { emoji: "🚌", label: "Ir até o Detran no dia marcado" },
-    { emoji: "📸", label: "Tirar a foto biométrica" },
-    { emoji: "🪪", label: "Receber o protocolo de entrega" },
-  ]},
-  { name: "Pintar um cômodo", emoji: "🎨", panels: [
-    { emoji: "🛒", label: "Comprar tinta e materiais" },
-    { emoji: "🪑", label: "Retirar e cobrir os móveis" },
-    { emoji: "🧹", label: "Lixar e limpar a parede" },
-    { emoji: "🎨", label: "Aplicar a tinta em camadas" },
-    { emoji: "✅", label: "Aguardar secar e recolocar os móveis" },
-  ]},
-];
+// ── Progressão (10 níveis) ───────────────────────────────────────────────────────
+type Fb = "full" | "moderate" | "minimal";
+interface SLevel { steps: number; distractors: number; feedback: Fb; }
+const S_LEVELS: Record<number, SLevel> = {
+  1:  { steps: 3, distractors: 0, feedback: "full" },
+  2:  { steps: 3, distractors: 0, feedback: "full" },
+  3:  { steps: 4, distractors: 0, feedback: "moderate" },
+  4:  { steps: 4, distractors: 0, feedback: "moderate" },
+  5:  { steps: 5, distractors: 0, feedback: "minimal" },
+  6:  { steps: 5, distractors: 1, feedback: "minimal" },
+  7:  { steps: 6, distractors: 1, feedback: "minimal" },
+  8:  { steps: 6, distractors: 1, feedback: "minimal" },
+  9:  { steps: 6, distractors: 2, feedback: "minimal" },
+  10: { steps: 7, distractors: 2, feedback: "minimal" },
+};
+const levelOf = (d: number): number => Math.min(10, Math.max(1, Math.round(d)));
+const TRIALS = 5;
 
-function getStoryPool(panelLevel: number): Story[] {
-  if (panelLevel === 1) return STORIES_3;
-  if (panelLevel === 2) return STORIES_4;
-  return STORIES_5;
-}
+function shuffle<T>(a: T[]): T[] { const r = [...a]; for (let i = r.length - 1; i > 0; i--) { const j = Math.floor(Math.random() * (i + 1)); [r[i], r[j]] = [r[j], r[i]]; } return r; }
 
-function initialPanelLevel(difficulty: number): number {
-  if (difficulty <= 3) return 1;
-  if (difficulty <= 6) return 2;
-  return 3;
-}
+interface Card { id: string; e: string; t: string; order: number; } // order: índice correto; -1 = distrator
 
-const MAX_TRIALS = 15;
+function buildRound(spec: SLevel, recent: Set<string>): { story: Story; cards: Card[]; correctN: number; distractorCount: number } {
+  const pool = STORIES.filter((s) => s.steps.length === spec.steps);
+  const avail = pool.filter((s) => !recent.has(s.id));
+  const list = avail.length ? avail : pool;
+  const story = list[Math.floor(Math.random() * list.length)];
 
-function shuffleAway<T extends { correctIndex: number }>(arr: T[]): T[] {
-  if (arr.length <= 1) return [...arr];
-  let result: T[];
-  let attempts = 0;
-  do {
-    result = [...arr].sort(() => Math.random() - 0.5);
-    attempts++;
-  } while (result.every((v, i) => v.correctIndex === i) && attempts < 30);
-  return result;
-}
+  const correct: Card[] = story.steps.map((s, i) => ({ id: `s${i}`, e: s.e, t: s.t, order: i }));
 
-const SCENE_PALETTE = [
-  "from-sky-100 to-cyan-50",
-  "from-amber-100 to-yellow-50",
-  "from-violet-100 to-purple-50",
-  "from-emerald-100 to-teal-50",
-  "from-rose-100 to-pink-50",
-  "from-orange-100 to-amber-50",
-  "from-indigo-100 to-blue-50",
-  "from-teal-100 to-cyan-50",
-];
-
-function sceneBg(emoji: string): string {
-  const code = emoji.codePointAt(0) ?? 0;
-  return SCENE_PALETTE[code % SCENE_PALETTE.length];
-}
-
-function pickFromPool(pool: Story[], used: Set<number>): { story: Story; idx: number } {
-  const available = pool.map((_, i) => i).filter((i) => !used.has(i));
-
-  if (available.length === 0) {
-    const recent = [...used].slice(-2);
-    used.clear();
-    recent.forEach((i) => used.add(i));
-    return pickFromPool(pool, used);
+  let distr: Step[] = [];
+  if (spec.distractors > 0) {
+    const own = story.distractors ? [...story.distractors] : [];
+    const extra = shuffle(GLOBAL_DISTRACTORS.filter((g) => !story.steps.some((s) => s.t === g.t)));
+    distr = [...own, ...extra].slice(0, spec.distractors);
   }
+  const distractorCards: Card[] = distr.map((s, i) => ({ id: `d${i}`, e: s.e, t: s.t, order: -1 }));
 
-  const idx = available[Math.floor(Math.random() * available.length)];
-  used.add(idx);
-  return { story: pool[idx], idx };
+  // embaralhar evitando que o 1º card seja a etapa correta nº 1 (anti-previsibilidade)
+  let cards = shuffle([...correct, ...distractorCards]);
+  let guard = 0;
+  while (cards[0].order === 0 && guard++ < 12) cards = shuffle(cards);
+
+  return { story, cards, correctN: correct.length, distractorCount: distractorCards.length };
 }
 
-function buildTrialData(panelLevel: number, used3: Set<number>, used4: Set<number>, used5: Set<number>) {
-  const pool = getStoryPool(panelLevel);
-  const usedSet = panelLevel === 1 ? used3 : panelLevel === 2 ? used4 : used5;
-  const { story } = pickFromPool(pool, usedSet);
+type Phase = "ready" | "playing" | "feedback";
+const VIOLET = "#7c5cf0";
 
-  const panels: Panel[] = story.panels.map((p, i) => ({
-    id: `panel-${Math.random().toString(36).slice(2)}`,
-    emoji: p.emoji,
-    label: p.label,
-    correctIndex: i,
-  }));
-
-  return {
-    name: story.name,
-    taskEmoji: story.emoji,
-    panels,
-    panelCount: panels.length,
-  };
-}
-
-// ── Tutorial ──────────────────────────────────────────────────────────────
-const TUTORIAL_PANELS_INITIAL: Panel[] = [
-  { id: "tp3", emoji: "🍽️", label: "Servir na mesa", correctIndex: 2 },
-  { id: "tp1", emoji: "🛒", label: "Comprar os ingredientes", correctIndex: 0 },
-  { id: "tp2", emoji: "🍳", label: "Cozinhar a refeição", correctIndex: 1 },
-];
-
-function OrdemHistoriaDragStep({ theme, onDone }: { theme: Theme; onDone: () => void }) {
-  const [panels, setPanels] = useState<Panel[]>(TUTORIAL_PANELS_INITIAL);
-  const [correct, setCorrect] = useState(false);
-  const done = useRef(false);
-
-  function handleReorder(newOrder: Panel[]) {
-    setPanels(newOrder);
-    const isCorrect = newOrder.every((p, i) => p.correctIndex === i);
-    if (isCorrect && !done.current) {
-      done.current = true;
-      setCorrect(true);
-      setTimeout(onDone, 700);
-    }
-  }
-
-  const isDark = theme === "GAMIFIED";
-
-  return (
-    <div className="space-y-2">
-      <p className="text-xs text-center mb-3" style={{ color: isDark ? "#9ca3af" : "#8a7a6a" }}>
-        Arraste os painéis para colocá-los na ordem correta da história
-      </p>
-      <Reorder.Group axis="y" values={panels} onReorder={handleReorder} className="flex flex-col gap-2">
-        {panels.map((panel, idx) => (
-          <Reorder.Item
-            key={panel.id}
-            value={panel}
-            layout
-            dragMomentum={false}
-            whileDrag={{ scale: 1.03, boxShadow: "0 12px 32px rgba(0,0,0,0.22)", zIndex: 20 }}
-            transition={{ duration: 0.15 }}
-            className={`flex items-center gap-3 rounded-2xl overflow-hidden select-none cursor-grab active:cursor-grabbing ${
-              isDark ? "bg-gray-700" : "bg-white"
-            }`}
-            style={{
-              border: correct
-                ? "1.5px solid rgba(34,197,94,0.4)"
-                : isDark ? "1px solid rgba(255,255,255,0.07)" : "1.5px solid rgba(26,39,68,0.08)",
-              background: correct
-                ? isDark ? "rgba(34,197,94,0.1)" : "rgba(34,197,94,0.06)"
-                : undefined,
-              boxShadow: isDark ? "none" : "0 2px 10px rgba(26,39,68,0.06)",
-            }}
-          >
-            <div className="w-10 flex items-center justify-center py-4 flex-shrink-0"
-              style={{ background: correct ? "rgba(34,197,94,0.12)" : isDark ? "rgba(0,0,0,0.2)" : "rgba(26,39,68,0.05)" }}>
-              <span className="w-7 h-7 rounded-full flex items-center justify-center text-sm font-black text-white"
-                style={{ background: correct ? "#22c55e" : isDark ? "#06b6d4" : "#1a2744" }}>
-                {idx + 1}
-              </span>
-            </div>
-            <div className={`flex items-center justify-center w-12 h-12 flex-shrink-0 rounded-xl bg-gradient-to-br ${sceneBg(panel.emoji)}`}>
-              <span className="text-3xl leading-none">{panel.emoji}</span>
-            </div>
-            <span className="flex-1 text-sm font-bold uppercase tracking-tight"
-              style={{ color: correct ? "#15803d" : isDark ? "#e2e8f0" : "#1a2744" }}>
-              {panel.label}
-            </span>
-            <span className="text-xl mr-3" style={{ color: isDark ? "#4b5563" : "#d1d5db" }}>⠿</span>
-          </Reorder.Item>
-        ))}
-      </Reorder.Group>
-      <p className="text-xs text-center mt-2" style={{ color: isDark ? "#6b7280" : "#9a9080" }}>
-        Ordem correta: Comprar → Cozinhar → Servir
-      </p>
-    </div>
-  );
-}
-
-function OrdemHistoriaTutorial({ theme, onDone }: { theme: Theme; onDone: () => void }) {
-  const steps = [
-    {
-      instruction:
-        "Você verá painéis de uma situação do dia a dia em ordem embaralhada. Arraste os painéis para cima ou para baixo até colocá-los na sequência correta da história.",
-      content: (onStepDone: () => void) => (
-        <OrdemHistoriaDragStep theme={theme} onDone={onStepDone} />
-      ),
-    },
-  ];
-
-  return <TutorialBase theme={theme} title="Ordem da História" steps={steps} onDone={onDone} />;
-}
-
-// ── Componente principal ───────────────────────────────────────────────────
-export function OrdemHistoria({ difficulty, theme, onComplete }: OrdemHistoriaProps) {
-  const [showTutorial, setShowTutorial] = useState(true);
+export function OrdemHistoria({ difficulty, onComplete }: OrdemHistoriaProps) {
   const reportProgress = useExerciseProgress();
+  const startLevel = levelOf(difficulty);
+  const spec = S_LEVELS[startLevel];
 
+  const [phase, setPhase] = useState<Phase>("ready");
+  const [story, setStory] = useState<Story | null>(null);
+  const [cards, setCards] = useState<Card[]>([]);
+  const [discarded, setDiscarded] = useState<Card[]>([]);
   const [trial, setTrial] = useState(0);
-  const [trialResults, setTrialResults] = useState<boolean[]>([]);
-  const [submitted, setSubmitted] = useState(false);
-  const [streak, setStreak] = useState(0);
-  const [panelLevel, setPanelLevel] = useState(() => initialPanelLevel(difficulty));
+  const [result, setResult] = useState<{ exact: boolean } | null>(null);
 
-  const used3 = useRef(new Set<number>());
-  const used4 = useRef(new Set<number>());
-  const used5 = useRef(new Set<number>());
-  const startTime = useRef<number>(Date.now());
+  const recentRef = useRef<string[]>([]);
+  const correctNRef = useRef(spec.steps);
+  const distractorCountRef = useRef(spec.distractors);
+  const gradedRef = useRef<number[]>([]);
+  const posCorrectRef = useRef(0);
+  const posWrongRef = useRef(0);
+  const distractorErrRef = useRef(0);
+  const swapsRef = useRef(0);
+  const rtsRef = useRef<number[]>([]);
+  const startRoundAt = useRef(0);
+  const startTime = useRef(Date.now());
 
-  const [trialData, setTrialData] = useState(() => {
-    const initLevel = initialPanelLevel(difficulty);
-    const data = buildTrialData(initLevel, used3.current, used4.current, used5.current);
-    return { ...data, shuffled: shuffleAway([...data.panels]) };
-  });
+  const startRound = useCallback(() => {
+    const r = buildRound(spec, new Set(recentRef.current));
+    recentRef.current = [r.story.id, ...recentRef.current].slice(0, 3);
+    correctNRef.current = r.correctN;
+    distractorCountRef.current = r.distractorCount;
+    setStory(r.story); setCards(r.cards); setDiscarded([]); setResult(null);
+    startRoundAt.current = Date.now();
+    setPhase("playing");
+  }, [spec]);
 
-  const [orderedPanels, setOrderedPanels] = useState<Panel[]>(trialData.shuffled);
+  function begin() {
+    gradedRef.current = []; posCorrectRef.current = 0; posWrongRef.current = 0; distractorErrRef.current = 0;
+    swapsRef.current = 0; rtsRef.current = []; startTime.current = Date.now(); setTrial(0);
+    startRound();
+  }
 
-  const startNewTrial = useCallback(
-    (nextLevel: number) => {
-      const data = buildTrialData(nextLevel, used3.current, used4.current, used5.current);
-      const shuffled = shuffleAway([...data.panels]);
-      setTrialData({ ...data, shuffled });
-      setOrderedPanels(shuffled);
-      setSubmitted(false);
-    },
-    []
-  );
+  function onReorder(next: Card[]) { swapsRef.current++; setCards(next); }
+  function discard(card: Card) {
+    if (phase !== "playing") return;
+    setCards((cs) => cs.filter((c) => c.id !== card.id));
+    setDiscarded((d) => [...d, card]);
+  }
+  function restore(card: Card) {
+    if (phase !== "playing") return;
+    setDiscarded((d) => d.filter((c) => c.id !== card.id));
+    setCards((cs) => [...cs, card]);
+  }
 
-  function handleSubmit() {
-    const isCorrect = orderedPanels.every((p, i) => p.correctIndex === i);
+  const finish = useCallback(() => {
+    const accTotal = gradedRef.current.length ? gradedRef.current.reduce((a, b) => a + b, 0) / gradedRef.current.length : 0;
+    const exactCount = gradedRef.current.filter((g) => g >= 0.999).length;
+    const meanRT = rtsRef.current.length ? Math.round(rtsRef.current.reduce((a, b) => a + b, 0) / rtsRef.current.length) : null;
+    const duration = Math.round((Date.now() - startTime.current) / 1000);
+    onComplete({
+      exerciseId: "ordem-historia",
+      domain: "executive",
+      score: calculateExerciseScore("ordem-historia", accTotal, meanRT ?? undefined, difficulty),
+      accuracy: accTotal,
+      reactionTime: meanRT ?? undefined,
+      difficulty: startLevel,
+      duration,
+      metadata: {
+        progressionV2: true,
+        accTotal: Number(accTotal.toFixed(3)),
+        impulsive: distractorErrRef.current > TRIALS,
+        level: startLevel,
+        startedLevel: startLevel,
+        steps: spec.steps,
+        distractors: spec.distractors,
+        feedbackLevel: spec.feedback,
+        positionsCorrect: posCorrectRef.current,
+        positionsWrong: posWrongRef.current,
+        distractorErrors: distractorErrRef.current,
+        swaps: swapsRef.current,
+        sequencesCorrect: exactCount,
+        sequencesIncorrect: TRIALS - exactCount,
+        meanReactionTimeMs: meanRT,
+      },
+    });
+  }, [onComplete, difficulty, startLevel, spec]);
 
-    const newResults = [...trialResults, isCorrect];
-    setTrialResults(newResults);
-    setSubmitted(true);
+  function confirmOrder() {
+    if (phase !== "playing") return;
+    const N = correctNRef.current;
+    const posCorrect = cards.filter((c, i) => c.order === i && c.order >= 0).length;
+    const distrInActive = cards.filter((c) => c.order < 0).length;
+    const realDiscarded = discarded.filter((c) => c.order >= 0).length;
+    const distractorErrors = distrInActive + realDiscarded;
+    const exact = posCorrect === N && distractorErrors === 0 && cards.length === N;
+    const graded = Math.max(0, (posCorrect - distractorErrors) / N);
 
-    const newStreak = isCorrect ? Math.max(streak, 0) + 1 : Math.min(streak, 0) - 1;
-    let nextLevel = panelLevel;
-    let resetStreak = false;
+    gradedRef.current.push(graded);
+    posCorrectRef.current += posCorrect;
+    posWrongRef.current += (cards.length - posCorrect);
+    distractorErrRef.current += distractorErrors;
+    rtsRef.current.push(Date.now() - startRoundAt.current);
 
-    if (newStreak >= 2) {
-      nextLevel = Math.min(panelLevel + 1, 3);
-      resetStreak = true;
-    } else if (newStreak <= -2) {
-      nextLevel = Math.max(panelLevel - 1, 1);
-      resetStreak = true;
-    }
-
-    const nextStreak = resetStreak ? 0 : newStreak;
-    setStreak(nextStreak);
-    setPanelLevel(nextLevel);
-
+    setResult({ exact });
+    setPhase("feedback");
     const nextTrial = trial + 1;
-    reportProgress(Math.round((nextTrial / MAX_TRIALS) * 100));
-
-    setTimeout(() => {
-      if (nextTrial >= MAX_TRIALS) {
-        const correctCount = newResults.filter(Boolean).length;
-        const accuracy = correctCount / MAX_TRIALS;
-        const duration = Math.round((Date.now() - startTime.current) / 1000);
-        const score = calculateExerciseScore("ordem-historia", accuracy, undefined, difficulty);
-        onComplete({
-          exerciseId: "ordem-historia",
-          domain: "executive",
-          score,
-          accuracy,
-          difficulty,
-          duration,
-          metadata: { trials: MAX_TRIALS, correct: correctCount },
-        });
-      } else {
-        setTrial(nextTrial);
-        startNewTrial(nextLevel);
-      }
-    }, 1800);
+    reportProgress(Math.round((nextTrial / TRIALS) * 100));
+    setTimeout(() => { if (nextTrial >= TRIALS) finish(); else { setTrial(nextTrial); startRound(); } }, exact ? 1600 : 2800);
   }
 
-  if (showTutorial) {
-    return <OrdemHistoriaTutorial theme={theme} onDone={() => setShowTutorial(false)} />;
-  }
+  useEffect(() => () => {}, []);
 
-  // ── Design tokens ─────────────────────────────────────────────────────────
-  const isGamified = theme === "GAMIFIED";
+  const pct = Math.round((trial / TRIALS) * 100);
 
-  const bgClass = isGamified ? "bg-gray-950" : "";
-  const bgStyle: React.CSSProperties | undefined = !isGamified
-    ? { background: "linear-gradient(160deg, #ede8df 0%, #e4ddd0 55%, #dbd4c5 100%)" }
-    : undefined;
-
-  const card = isGamified
-    ? "bg-gray-800 border border-gray-700"
-    : "bg-white border border-gray-100 shadow-lg";
-
-  const levelLabel =
-    panelLevel === 1 ? "3 etapas" : panelLevel === 2 ? "4 etapas" : "5 etapas";
-
-  const lastResult = trialResults[trialResults.length - 1];
-
-  // Render helper for a single panel row
-  function renderPanelRow(panel: Panel, idx: number, isSubmitted: boolean) {
-    const emojiBg = isGamified
-      ? "rgba(255,255,255,0.07)"
-      : `var(--tw-gradient-from, #f0f4f8)`;
-    const sceneGradient = isGamified ? undefined : `bg-gradient-to-br ${sceneBg(panel.emoji)}`;
-
-    if (isSubmitted) {
-      const ok = panel.correctIndex === idx;
-      return (
-        <div className="flex items-center gap-3 rounded-2xl overflow-hidden"
-          style={{
-            background: ok ? "rgba(34,197,94,0.07)" : "rgba(239,68,68,0.07)",
-            border: `1.5px solid ${ok ? "rgba(34,197,94,0.3)" : "rgba(239,68,68,0.3)"}`,
-          }}>
-          <div className="w-10 flex items-center justify-center py-4 flex-shrink-0"
-            style={{ background: ok ? "rgba(34,197,94,0.12)" : "rgba(239,68,68,0.12)" }}>
-            <span className="w-7 h-7 rounded-full flex items-center justify-center text-sm font-black text-white"
-              style={{ background: ok ? "#22c55e" : "#ef4444" }}>
-              {idx + 1}
-            </span>
-          </div>
-          <div className={`flex items-center justify-center w-14 h-14 flex-shrink-0 rounded-xl ${sceneGradient ?? ""}`}
-            style={isGamified ? { background: emojiBg } : undefined}>
-            <span className="text-3xl leading-none">{panel.emoji}</span>
-          </div>
-          <p className="flex-1 text-sm font-bold uppercase tracking-tight"
-            style={{ color: ok ? "#15803d" : "#b91c1c" }}>
-            {panel.label}
-          </p>
-          <span className="text-lg mr-3">{ok ? "✅" : "❌"}</span>
-        </div>
-      );
-    }
-
+  // ── READY ──
+  if (phase === "ready" || !story) {
     return (
-      <div className={`flex items-center gap-3 rounded-2xl overflow-hidden ${isGamified ? "bg-gray-700" : "bg-white"}`}
-        style={{
-          border: isGamified ? "1px solid rgba(255,255,255,0.08)" : "1.5px solid rgba(26,39,68,0.08)",
-          boxShadow: isGamified ? "none" : "0 2px 10px rgba(26,39,68,0.06)",
-        }}>
-        <div className="w-10 flex items-center justify-center py-4 flex-shrink-0"
-          style={{ background: isGamified ? "rgba(0,0,0,0.2)" : "rgba(26,39,68,0.05)" }}>
-          <span className="w-7 h-7 rounded-full flex items-center justify-center text-sm font-black text-white"
-            style={{ background: isGamified ? "#06b6d4" : "#1a2744" }}>
-            {idx + 1}
-          </span>
+      <div style={{ position: "fixed", inset: 0, display: "flex", alignItems: "center", justifyContent: "center", padding: 18,
+        background: "linear-gradient(180deg,#f3f0fb 0%,#eaeefb 55%,#eef0f8 100%)" }}>
+        <div style={{ width: "100%", maxWidth: 440, background: "#fff", borderRadius: 26, padding: "26px 22px", textAlign: "center",
+          boxShadow: "0 22px 60px rgba(80,60,140,0.18)" }}>
+          <div style={{ margin: "0 auto 14px", width: 70, height: 70, borderRadius: "50%", background: "rgba(124,92,240,0.12)",
+            border: "1px solid rgba(124,92,240,0.28)", display: "flex", alignItems: "center", justifyContent: "center", fontSize: 34 }}>📖</div>
+          <h2 style={{ fontSize: 20, fontWeight: 900, color: "#2a2440", marginBottom: 8 }}>Ordem da História</h2>
+          <div style={{ textAlign: "left", fontSize: 13, color: "#5b5470", margin: "0 auto 8px", maxWidth: 320, lineHeight: 1.7 }}>
+            <div>1. Leia a situação do dia a dia.</div>
+            <div>2. Arraste os cartões para a ordem correta.</div>
+            <div>3. Pense no que precisa acontecer primeiro.</div>
+            {spec.distractors > 0 && <div>4. Descarte as etapas que não fazem parte.</div>}
+            <div>{spec.distractors > 0 ? "5." : "4."} Toque em <b>Confirmar Ordem</b>.</div>
+          </div>
+          <p style={{ fontSize: 11.5, color: "#9a93b0", marginBottom: 18 }}>
+            Começa no nível {startLevel} ({spec.steps} etapas{spec.distractors ? ` · ${spec.distractors} distrator(es)` : ""}) — onde parou.
+          </p>
+          <button onClick={begin} style={{ width: "100%", height: 52, borderRadius: 16, border: "none", color: "#fff", fontWeight: 800, fontSize: 15,
+            cursor: "pointer", background: "linear-gradient(135deg,#7c5cf0,#6d4fd6)", boxShadow: "0 6px 18px rgba(109,79,214,0.4)" }}>Começar →</button>
         </div>
-        <div className={`flex items-center justify-center w-14 h-14 flex-shrink-0 rounded-xl ${sceneGradient ?? ""}`}
-          style={isGamified ? { background: emojiBg } : undefined}>
-          <span className="text-3xl leading-none">{panel.emoji}</span>
-        </div>
-        <p className="flex-1 text-sm font-bold uppercase tracking-tight"
-          style={{ color: isGamified ? "#e2e8f0" : "#1a2744" }}>
-          {panel.label}
-        </p>
-        <span className="text-xl mr-3" style={{ color: isGamified ? "#4b5563" : "#d1d5db" }}>⠿</span>
       </div>
     );
   }
 
+  const showCorrectOrder = phase === "feedback" && !result?.exact && spec.feedback === "full";
+
   return (
-    <div className={`min-h-screen flex flex-col items-center p-4 pt-5 ${bgClass}`} style={bgStyle}>
-      <div className={`w-full max-w-2xl rounded-2xl p-5 ${card}`}>
-
-        {/* Header */}
-        <div className="flex justify-between items-center mb-1">
-          <h2 className="font-bold text-base" style={{ color: isGamified ? "#22d3ee" : "#1a2744" }}>
-            📖 Ordem da História
-          </h2>
-          <span className="text-xs font-mono" style={{ color: isGamified ? "#6b7280" : "#8a7a6a" }}>
-            {trial + 1}/{MAX_TRIALS}
-          </span>
-        </div>
-
-        {/* Nível atual */}
-        <p className="text-xs mb-2 font-semibold" style={{ color: isGamified ? "#22d3ee" : "#2a5fa5" }}>
-          Nível: {levelLabel}
-          {streak >= 1 && " · 🔥 " + streak + " seguidos"}
-          {streak <= -1 && " · " + Math.abs(streak) + " erros seguidos"}
-        </p>
-
-        {/* Barra de progresso */}
-        <div className="flex gap-0.5 mb-4">
-          {Array.from({ length: MAX_TRIALS }).map((_, i) => (
-            <div key={i} className="h-1.5 flex-1 rounded-full transition-colors"
-              style={{
-                background: i < trialResults.length
-                  ? trialResults[i] ? "#22c55e" : "#ef4444"
-                  : i === trial
-                  ? isGamified ? "#06b6d4" : "#2a5fa5"
-                  : isGamified ? "rgba(255,255,255,0.1)" : "rgba(26,39,68,0.1)"
-              }} />
-          ))}
-        </div>
-
-        {/* Título da história */}
-        <div className="flex items-center gap-3 mb-4 px-4 py-3 rounded-2xl"
-          style={{
-            background: isGamified ? "rgba(255,255,255,0.05)" : "rgba(26,39,68,0.05)",
-            border: isGamified ? "1px solid rgba(255,255,255,0.08)" : "1px solid rgba(26,39,68,0.08)",
-          }}>
-          <span className="text-3xl">{trialData.taskEmoji}</span>
+    <div style={{ position: "fixed", inset: 0, display: "flex", flexDirection: "column", overflow: "hidden",
+      background: "linear-gradient(180deg,#f3f0fb 0%,#eaeefb 55%,#eef0f8 100%)" }}>
+      {/* Header */}
+      <div style={{ flexShrink: 0, padding: "14px 18px 8px" }}>
+        <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 8 }}>
           <div>
-            <p className="font-bold text-base" style={{ color: isGamified ? "#e2e8f0" : "#1a2744" }}>
-              {trialData.name}
-            </p>
-            <p className="text-xs mt-0.5" style={{ color: isGamified ? "#6b7280" : "#8a7a6a" }}>
-              Arraste os painéis para definir a ordem correta
-            </p>
+            <div style={{ fontSize: 15, fontWeight: 900, color: "#2a2440" }}>Ordem da História</div>
+            <div style={{ fontSize: 11.5, color: "#9a93b0" }}>Nível {startLevel} · {spec.steps} etapas{spec.distractors ? ` · descarte ${spec.distractors}` : ""}</div>
           </div>
+          <div style={{ fontSize: 12, fontWeight: 800, color: VIOLET }}>{Math.min(trial + 1, TRIALS)}/{TRIALS}</div>
         </div>
+        <div style={{ height: 7, borderRadius: 4, background: "#e2dcf3", overflow: "hidden" }}>
+          <div style={{ height: "100%", width: `${pct}%`, background: "linear-gradient(90deg,#7c5cf0,#a78bfa)", borderRadius: 4, transition: "width .4s" }} />
+        </div>
+      </div>
 
-        {/* Lista de painéis (arrastável / resultado) */}
-        {submitted ? (
-          <div className="flex flex-col gap-2 my-4">
-            {orderedPanels.map((panel, idx) => (
-              <div key={panel.id}>
-                {renderPanelRow(panel, idx, true)}
-              </div>
-            ))}
-          </div>
-        ) : (
-          <Reorder.Group
-            axis="y"
-            values={orderedPanels}
-            onReorder={setOrderedPanels}
-            className="flex flex-col gap-2 my-4"
-          >
-            {orderedPanels.map((panel, idx) => (
-              <Reorder.Item
-                key={panel.id}
-                value={panel}
-                layout
-                dragMomentum={false}
-                whileDrag={{ scale: 1.03, boxShadow: "0 10px 28px rgba(0,0,0,0.16)", zIndex: 20 }}
-                transition={{ duration: 0.15 }}
-                className="select-none cursor-grab active:cursor-grabbing rounded-2xl"
-              >
-                {renderPanelRow(panel, idx, false)}
-              </Reorder.Item>
-            ))}
+      {/* Situação */}
+      <div style={{ flexShrink: 0, textAlign: "center", padding: "4px 18px 10px" }}>
+        <div style={{ display: "inline-flex", alignItems: "center", gap: 9, padding: "7px 16px", borderRadius: 100, background: "#fff",
+          boxShadow: "0 4px 14px rgba(80,60,140,0.12)" }}>
+          <span style={{ fontSize: 22 }}>{story.emoji}</span>
+          <span style={{ fontSize: 16, fontWeight: 800, color: "#2a2440" }}>{story.name}</span>
+        </div>
+        <p style={{ fontSize: 12.5, color: "#7c7596", marginTop: 8 }}>
+          {phase === "feedback"
+            ? (result?.exact ? "✅ Sequência correta!" : "Quase lá — veja abaixo")
+            : "Coloque as etapas na ordem certa, do primeiro ao último."}
+        </p>
+      </div>
+
+      {/* Lista arrastável */}
+      <div style={{ flex: 1, overflowY: "auto", padding: "0 16px 8px" }}>
+        <div style={{ maxWidth: 480, margin: "0 auto" }}>
+          <Reorder.Group axis="y" values={cards} onReorder={onReorder} style={{ listStyle: "none", margin: 0, padding: 0, display: "flex", flexDirection: "column", gap: 10 }}>
+            {cards.map((card, i) => {
+              const fbCorrect = phase === "feedback" && card.order === i && card.order >= 0;
+              const fbWrong = phase === "feedback" && card.order !== i;
+              const border = fbCorrect ? "#34d399" : fbWrong ? "#f59e0b" : "rgba(124,92,240,0.18)";
+              const numBg = fbCorrect ? "#34d399" : fbWrong ? "#f59e0b" : VIOLET;
+              return (
+                <Reorder.Item key={card.id} value={card} drag={phase === "playing" ? "y" : false}
+                  whileDrag={{ scale: 1.04, boxShadow: "0 14px 30px rgba(80,60,140,0.3)", zIndex: 5 }}
+                  style={{ listStyle: "none" }}>
+                  <div style={{ display: "flex", alignItems: "center", gap: 12, padding: "12px 12px", background: "#fff", borderRadius: 16,
+                    border: `2px solid ${border}`, boxShadow: "0 3px 10px rgba(80,60,140,0.1)", cursor: phase === "playing" ? "grab" : "default" }}>
+                    <div style={{ width: 30, height: 30, borderRadius: "50%", flexShrink: 0, background: numBg, color: "#fff", fontWeight: 900, fontSize: 14,
+                      display: "flex", alignItems: "center", justifyContent: "center" }}>{i + 1}</div>
+                    <span style={{ fontSize: 30, flexShrink: 0 }}>{card.e}</span>
+                    <span style={{ flex: 1, minWidth: 0, fontSize: 14.5, fontWeight: 700, color: "#322c4a" }}>{card.t}</span>
+                    {phase === "feedback" && <span style={{ fontSize: 18 }}>{fbCorrect ? "✅" : "⚠️"}</span>}
+                    {phase === "playing" && distractorCountRef.current > 0 && (
+                      <button onPointerDownCapture={(e) => e.stopPropagation()} onClick={() => discard(card)} title="Descartar etapa"
+                        style={{ width: 26, height: 26, borderRadius: "50%", flexShrink: 0, border: "none", cursor: "pointer",
+                          background: "#fdecec", color: "#e05757", fontWeight: 900, fontSize: 14, lineHeight: 1 }}>×</button>
+                    )}
+                    {phase === "playing" && <span style={{ flexShrink: 0, color: "#c4bce0", fontSize: 18, paddingRight: 2 }}>⠿</span>}
+                  </div>
+                </Reorder.Item>
+              );
+            })}
           </Reorder.Group>
-        )}
 
-        {/* Área de ação */}
-        {!submitted ? (
-          <button onClick={handleSubmit}
-            className="w-full h-12 rounded-full font-bold text-white text-sm active:scale-95 transition-transform"
-            style={{
-              background: isGamified
-                ? "linear-gradient(135deg, #0891b2, #0e7490)"
-                : "linear-gradient(135deg, #1a2744, #2a4a8a)",
-              boxShadow: isGamified
-                ? "0 4px 16px rgba(8,145,178,0.4)"
-                : "0 4px 16px rgba(26,39,68,0.35)",
-            }}>
+          {/* Descartados */}
+          {(discarded.length > 0 || (phase === "playing" && distractorCountRef.current > 0)) && (
+            <div style={{ marginTop: 14 }}>
+              <div style={{ fontSize: 11, fontWeight: 800, color: "#9a93b0", textTransform: "uppercase", letterSpacing: 0.5, marginBottom: 6 }}>
+                🗑️ Descartados {phase === "playing" ? "(toque para devolver)" : ""}
+              </div>
+              <div style={{ display: "flex", flexWrap: "wrap", gap: 8, minHeight: 40 }}>
+                {discarded.length === 0 ? (
+                  <span style={{ fontSize: 12, color: "#b3acc8", fontStyle: "italic" }}>Use o × para descartar etapas que não fazem parte.</span>
+                ) : discarded.map((card) => {
+                  const wrongDiscard = phase === "feedback" && card.order >= 0;
+                  return (
+                    <button key={card.id} onClick={() => restore(card)} disabled={phase !== "playing"}
+                      style={{ display: "flex", alignItems: "center", gap: 6, padding: "6px 10px", borderRadius: 12, cursor: phase === "playing" ? "pointer" : "default",
+                        background: "#fff", border: `1.5px solid ${wrongDiscard ? "#f59e0b" : "#e2dcf3"}`, opacity: 0.92 }}>
+                      <span style={{ fontSize: 18 }}>{card.e}</span>
+                      <span style={{ fontSize: 12.5, fontWeight: 600, color: "#7c7596", textDecoration: "line-through" }}>{card.t}</span>
+                      {phase === "feedback" && <span style={{ fontSize: 13 }}>{card.order < 0 ? "✅" : "⚠️"}</span>}
+                    </button>
+                  );
+                })}
+              </div>
+            </div>
+          )}
+
+          {/* Ordem correta (só feedback completo + erro) */}
+          {showCorrectOrder && (
+            <div style={{ marginTop: 14, padding: "10px 12px", borderRadius: 14, background: "rgba(52,211,153,0.1)", border: "1px solid rgba(52,211,153,0.35)" }}>
+              <div style={{ fontSize: 11, fontWeight: 800, color: "#0f9d6e", marginBottom: 6 }}>Ordem correta:</div>
+              <div style={{ display: "flex", flexWrap: "wrap", gap: 8 }}>
+                {story.steps.map((s, i) => (
+                  <span key={i} style={{ display: "flex", alignItems: "center", gap: 4, fontSize: 12.5, color: "#2a2440", fontWeight: 600 }}>
+                    <b style={{ color: "#0f9d6e" }}>{i + 1}.</b> {s.e} {s.t}{i < story.steps.length - 1 ? " →" : ""}
+                  </span>
+                ))}
+              </div>
+            </div>
+          )}
+        </div>
+      </div>
+
+      {/* Confirmar */}
+      {phase === "playing" && (
+        <div style={{ flexShrink: 0, padding: "8px 16px 16px" }}>
+          <button onClick={confirmOrder} disabled={cards.length === 0}
+            style={{ width: "100%", maxWidth: 480, margin: "0 auto", display: "block", height: 52, borderRadius: 16, border: "none", color: "#fff",
+              fontWeight: 800, fontSize: 15, cursor: "pointer", background: "linear-gradient(135deg,#7c5cf0,#6d4fd6)", boxShadow: "0 6px 18px rgba(109,79,214,0.4)" }}>
             Confirmar Ordem
           </button>
-        ) : (
-          <AnimatePresence>
-            <motion.div
-              className="text-center p-4 rounded-2xl"
-              style={{
-                background: lastResult ? "rgba(34,197,94,0.08)" : "rgba(239,68,68,0.08)",
-                border: `1.5px solid ${lastResult ? "rgba(34,197,94,0.3)" : "rgba(239,68,68,0.3)"}`,
-              }}
-              initial={{ scale: 0.9, opacity: 0 }}
-              animate={{ scale: 1, opacity: 1 }}
-              transition={{ duration: 0.2 }}
-            >
-              <p className="font-bold text-base" style={{ color: lastResult ? "#15803d" : "#b91c1c" }}>
-                {lastResult ? "✅ Ordem correta!" : "❌ Ordem incorreta"}
-              </p>
-              <p className="text-xs text-gray-500 mt-1">
-                {lastResult
-                  ? "Muito bem! Próxima história em instantes."
-                  : "Observe os destaques e tente memorizar a sequência."}
-              </p>
-            </motion.div>
-          </AnimatePresence>
-        )}
-      </div>
+        </div>
+      )}
     </div>
   );
 }

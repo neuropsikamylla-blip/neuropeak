@@ -153,10 +153,11 @@ const EXERCISE_INSTRUCTIONS: Record<string, string[]> = {
     "Responda SIM ou NÃO antes que a próxima letra apareça.",
   ],
   "ordem-historia": [
-    "Você verá 4 painéis de uma situação do dia a dia em ordem embaralhada.",
-    "Arraste os painéis para colocá-los em ordem cronológica: do primeiro ao último.",
-    "Pense em qual etapa precisa acontecer antes da próxima.",
-    "Clique em 'Verificar' quando estiver satisfeito com a ordem.",
+    "Leia a situação do dia a dia que aparece no topo.",
+    "Arraste os cartões para colocar as etapas na ordem correta.",
+    "Pense no que precisa acontecer primeiro — do primeiro passo ao último.",
+    "Nos níveis avançados, há etapas que NÃO fazem parte: descarte-as.",
+    "Toque em 'Confirmar Ordem' quando terminar.",
   ],
   "certo-ou-errado": [
     "Você verá uma situação do cotidiano descrita em texto.",
