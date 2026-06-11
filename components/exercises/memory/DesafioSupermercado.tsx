@@ -7,7 +7,6 @@ import { cancelTTS } from "@/lib/tts";
 import { useExerciseProgress } from "@/components/exercises/ExerciseWrapper";
 import { TutorialBase } from "@/components/exercises/TutorialBase";
 import type { ExerciseResult, Theme } from "@/types";
-import { ProductSvg } from "./ProductSvg";
 
 // ── Types ─────────────────────────────────────────────────────────────────────
 
@@ -20,65 +19,60 @@ export interface DesafioSupermercadoProps {
 
 interface Product { id: string; name: string; }
 
-// ── Banco de produtos (agrupado por categoria) ─────────────────────────────────
-// As categorias servem a dois propósitos clínicos:
-//  1. gerar listas VARIADAS (um item de categorias diferentes) → evita a sensação
-//     de "sequência sempre igual" das listas fixas antigas;
-//  2. nos níveis altos, escolher distratores da MESMA categoria dos itens da lista
-//     (ex.: lista tem "leite" → distrator "iogurte") aumentando a interferência
-//     semântica — mais exigente para a memória operacional.
+// ── Catálogo realista (fotos em /public/exercises/produtos) ─────────────────────
+// Agrupado por categoria: gera listas VARIADAS (1 item de categorias diferentes) e,
+// nos níveis altos, distratores da MESMA categoria (interferência semântica).
 
 const CATEGORIES: Record<string, Product[]> = {
-  basicos: [
-    { id: "arroz",    name: "Arroz" },
-    { id: "feijao",   name: "Feijão" },
-    { id: "macarrao", name: "Macarrão" },
-    { id: "farinha",  name: "Farinha" },
-    { id: "acucar",   name: "Açúcar" },
-    { id: "sal",      name: "Sal" },
-    { id: "oleo",     name: "Óleo de cozinha" },
-    { id: "vinagre",  name: "Vinagre" },
-    { id: "cafe",     name: "Café" },
+  hortifruti: [
+    { id: "abacaxi", name: "Abacaxi" }, { id: "manga", name: "Manga" },
+    { id: "melancia", name: "Melancia" }, { id: "morango", name: "Morango" },
+    { id: "limao", name: "Limão" }, { id: "cebola", name: "Cebola" },
+    { id: "brocolis", name: "Brócolis" }, { id: "pepino", name: "Pepino" },
   ],
-  laticinios: [
-    { id: "leite",    name: "Leite" },
-    { id: "manteiga", name: "Manteiga" },
-    { id: "queijo",   name: "Queijo" },
-    { id: "iogurte",  name: "Iogurte" },
-    { id: "ovos",     name: "Ovos" },
+  mercearia: [
+    { id: "aveia", name: "Aveia" }, { id: "granola", name: "Granola" },
+    { id: "cereal", name: "Cereal" }, { id: "amido", name: "Amido de milho" },
+    { id: "fermento", name: "Fermento em pó" }, { id: "batata-frita", name: "Batata frita" },
+    { id: "biscoito", name: "Biscoito recheado" }, { id: "achocolatado", name: "Achocolatado" },
   ],
-  padaria: [
-    { id: "pao",      name: "Pão" },
+  enlatados: [
+    { id: "milho", name: "Milho em lata" }, { id: "ervilha", name: "Ervilha em lata" },
+  ],
+  molhos: [
+    { id: "extrato", name: "Extrato de tomate" }, { id: "maionese", name: "Maionese" },
+    { id: "ketchup", name: "Ketchup" }, { id: "mostarda", name: "Mostarda" },
+  ],
+  frios: [
+    { id: "presunto", name: "Presunto" }, { id: "requeijao", name: "Requeijão" },
+    { id: "creme-leite", name: "Creme de leite" }, { id: "leite-condensado", name: "Leite condensado" },
+    { id: "leite", name: "Leite" },
   ],
   carnes: [
-    { id: "frango",   name: "Frango" },
-    { id: "carne",    name: "Carne" },
+    { id: "peixe", name: "Peixe" }, { id: "linguica", name: "Linguiça" },
+    { id: "salsicha", name: "Salsicha" }, { id: "hamburguer", name: "Hambúrguer" },
   ],
-  limpeza: [
-    { id: "sabao",     name: "Sabão" },
-    { id: "detergente",name: "Detergente" },
-    { id: "agua-san",  name: "Água sanitária" },
-    { id: "esponja",   name: "Esponja" },
-    { id: "saco-lixo", name: "Saco de lixo" },
+  congelados: [
+    { id: "nuggets", name: "Nuggets" }, { id: "pizza", name: "Pizza congelada" },
+    { id: "sorvete", name: "Sorvete" },
   ],
-  higiene: [
-    { id: "papel",    name: "Papel higiênico" },
-    { id: "shampoo",  name: "Shampoo" },
-    { id: "pasta",    name: "Pasta de dente" },
-    { id: "sabonete", name: "Sabonete" },
+  padaria: [
+    { id: "bolo", name: "Bolo" }, { id: "cookies", name: "Cookies" },
+    { id: "pao", name: "Pão" }, { id: "croissant", name: "Croissant" },
+    { id: "donut", name: "Donut" },
   ],
   bebidas: [
-    { id: "agua",        name: "Água" },
-    { id: "suco",        name: "Suco" },
-    { id: "refrigerante",name: "Refrigerante" },
+    { id: "energetico", name: "Energético" }, { id: "agua-coco", name: "Água de coco" },
   ],
-  hortifruti: [
-    { id: "banana",  name: "Banana" },
-    { id: "maca",    name: "Maçã" },
-    { id: "tomate",  name: "Tomate" },
-    { id: "alface",  name: "Alface" },
-    { id: "batata",  name: "Batata" },
-    { id: "cenoura", name: "Cenoura" },
+  limpeza: [
+    { id: "sabao-liquido", name: "Sabão líquido" }, { id: "alcool", name: "Álcool" },
+    { id: "detergente", name: "Detergente" }, { id: "pano", name: "Pano de limpeza" },
+    { id: "luva", name: "Luva" },
+  ],
+  higiene: [
+    { id: "sabonete", name: "Sabonete" }, { id: "cotonete", name: "Cotonete" },
+    { id: "fralda", name: "Fralda" }, { id: "escova", name: "Escova de dente" },
+    { id: "fio-dental", name: "Fio dental" }, { id: "shampoo", name: "Shampoo" },
   ],
 };
 
@@ -90,9 +84,17 @@ for (const [cat, items] of Object.entries(CATEGORIES)) {
 }
 const CATEGORY_KEYS = Object.keys(CATEGORIES);
 
+// Renderiza a foto realista do produto
+function ProductImg({ id, size }: { id: string; size: number }) {
+  return (
+    // eslint-disable-next-line @next/next/no-img-element
+    <img src={`/exercises/produtos/${id}.png`} alt="" draggable={false}
+      width={size} height={size}
+      style={{ width: size, height: size, objectFit: "contain", display: "block", userSelect: "none" }} />
+  );
+}
+
 // ── Tabela de níveis (1–10) — dificuldade multifatorial ─────────────────────────
-// Cada nível combina: nº de itens a memorizar, nº de distratores na prateleira,
-// tempo de memorização e se os distratores são semanticamente semelhantes.
 interface LevelConfig { count: number; extra: number; memSec: number; similar: boolean; }
 
 const LEVELS: LevelConfig[] = [
@@ -111,45 +113,28 @@ const LEVELS: LevelConfig[] = [
 function clampLevel(difficulty: number): number {
   return Math.min(10, Math.max(1, Math.round(difficulty)));
 }
-
 function levelConfig(level: number): LevelConfig {
   return LEVELS[level - 1] ?? LEVELS[0];
 }
-
 function memorizeSeconds(level: number, mode: "leitura" | "auditivo"): number {
   const base = levelConfig(level).memSec;
   return mode === "auditivo" ? base + 2 : base;
 }
+function shuffle<T>(arr: T[]): T[] { return [...arr].sort(() => Math.random() - 0.5); }
+function pickOne<T>(arr: T[]): T { return arr[Math.floor(Math.random() * arr.length)]; }
 
-function shuffle<T>(arr: T[]): T[] {
-  return [...arr].sort(() => Math.random() - 0.5);
-}
-
-function pickOne<T>(arr: T[]): T {
-  return arr[Math.floor(Math.random() * arr.length)];
-}
-
-// Gera uma lista VARIADA: percorre categorias embaralhadas pegando 1 item de cada,
-// evitando itens recém-usados (recentIds). Cai para qualquer item se faltar.
+// Gera uma lista VARIADA percorrendo categorias embaralhadas, evitando recentes.
 function buildList(count: number, recentIds: Set<string>): Product[] {
   const picked: Product[] = [];
   const pickedIds = new Set<string>();
   const cats = shuffle(CATEGORY_KEYS);
-
   for (let round = 0; round < 4 && picked.length < count; round++) {
     for (const cat of cats) {
       if (picked.length >= count) break;
-      const candidates = CATEGORIES[cat].filter(
-        p => !pickedIds.has(p.id) && (round > 0 || !recentIds.has(p.id)),
-      );
-      if (candidates.length) {
-        const chosen = pickOne(candidates);
-        picked.push(chosen);
-        pickedIds.add(chosen.id);
-      }
+      const cands = CATEGORIES[cat].filter(p => !pickedIds.has(p.id) && (round > 0 || !recentIds.has(p.id)));
+      if (cands.length) { const c = pickOne(cands); picked.push(c); pickedIds.add(c.id); }
     }
   }
-  // Preenchimento de segurança (ignora recentes) caso ainda falte.
   if (picked.length < count) {
     for (const p of shuffle(PRODUCTS)) {
       if (picked.length >= count) break;
@@ -159,13 +144,11 @@ function buildList(count: number, recentIds: Set<string>): Product[] {
   return picked;
 }
 
-// Monta a prateleira: itens da lista + distratores. Se `similar`, prioriza
-// distratores da MESMA categoria dos itens da lista (mais confundíveis).
+// Prateleira = itens da lista + distratores (mesma categoria se `similar`).
 function buildShelf(list: Product[], extra: number, similar: boolean): Product[] {
   const listIds = new Set(list.map(p => p.id));
   const pool = PRODUCTS.filter(p => !listIds.has(p.id));
   let distractors: Product[];
-
   if (similar) {
     const listCats = new Set(list.map(p => CAT_OF.get(p.id)));
     const sameCat = pool.filter(p => listCats.has(CAT_OF.get(p.id)));
@@ -174,27 +157,23 @@ function buildShelf(list: Product[], extra: number, similar: boolean): Product[]
   } else {
     distractors = shuffle(pool).slice(0, extra);
   }
-
   return shuffle([...list, ...distractors]);
 }
 
 function buildTrial(level: number, recentIds: Set<string>): { list: Product[]; shelf: Product[] } {
-  const cfg  = levelConfig(level);
+  const cfg = levelConfig(level);
   const list = buildList(cfg.count, recentIds);
-  const shelf = buildShelf(list, cfg.extra, cfg.similar);
-  return { list, shelf };
+  return { list, shelf: buildShelf(list, cfg.extra, cfg.similar) };
 }
 
-// ── Web Speech ────────────────────────────────────────────────────────────────
+// ── Web Speech ──────────────────────────────────────────────────────────────────
 
-// Escolhe a voz pt-BR mais natural disponível no aparelho (evita a robótica padrão).
 function pickPtBrVoice(): SpeechSynthesisVoice | null {
   const voices = window.speechSynthesis.getVoices();
   if (!voices.length) return null;
   const pt   = voices.filter(v => /pt[-_]?BR/i.test(v.lang) || /portugu/i.test(v.name));
   const pool = pt.length ? pt : voices.filter(v => /^pt/i.test(v.lang));
   if (!pool.length) return null;
-  // vozes conhecidas por soarem mais naturais (iOS/Android/Windows)
   const prefer = ["luciana", "google português do brasil", "google portugues do brasil",
                   "microsoft francisca", "francisca", "maria", "fernanda", "felipe", "microsoft daniel", "daniel"];
   for (const name of prefer) {
@@ -204,9 +183,6 @@ function pickPtBrVoice(): SpeechSynthesisVoice | null {
   return pool[0];
 }
 
-// Locuciona a lista numa ÚNICA fala (mais confiável que enfileirar várias —
-// o speechSynthesis do Chrome às vezes pula itens de uma fila longa) usando a
-// melhor voz pt-BR do aparelho, em ritmo suave. `onDone` no fim da fala.
 function speakList(items: Product[], onDone?: () => void) {
   if (typeof window === "undefined" || !window.speechSynthesis) { onDone?.(); return; }
   const synth = window.speechSynthesis;
@@ -219,110 +195,185 @@ function speakList(items: Product[], onDone?: () => void) {
     u.onerror = () => onDone?.();
     synth.speak(u);
   };
-  // garante que as vozes já carregaram (senão a 1ª fala costuma falhar)
   if (synth.getVoices().length === 0) {
     let started = false;
     const start = () => { if (started) return; started = true; synth.onvoiceschanged = null; run(); };
     synth.onvoiceschanged = start;
     setTimeout(start, 300);
-  } else {
-    run();
-  }
+  } else { run(); }
 }
 
-// ── Prateleira (tema claro) ─────────────────────────────────────────────────────
+// ── Fundo de mercado (recriado via CSS) ──────────────────────────────────────────
 
-const SHELF_COLS = 3;  // prateleira fica ao lado do carrinho — 3 colunas cabem melhor
-
-function FullShelf({
-  products, cartIds, onToggle, showLabels,
-}: {
-  products: Product[];
-  cartIds: string[];
-  onToggle: (id: string) => void;
-  showLabels: boolean;
-}) {
-  const rows: Product[][] = [];
-  for (let i = 0; i < products.length; i += SHELF_COLS) rows.push(products.slice(i, i + SHELF_COLS));
-
-  const Plank = () => (
+function StoreBg() {
+  // prateleiras desfocadas ao fundo sugeridas por blocos coloridos
+  const shelfRow = (top: string, colors: string[]) => (
     <div style={{
-      height: 13,
-      background: "linear-gradient(to bottom,#f0dcbb 0%,#e0bd8a 55%,#c79a5e 100%)",
-      boxShadow: "0 3px 7px rgba(140,100,50,0.28), inset 0 1px 0 rgba(255,255,255,0.6)",
-    }} />
-  );
-
-  return (
-    <div style={{ background: "#f6efe3" }}>
-      <Plank />
-      {rows.map((row, ri) => (
-        <div key={ri}>
-          <div style={{
-            display: "grid",
-            gridTemplateColumns: `repeat(${SHELF_COLS}, 1fr)`,
-            gap: 6, padding: "9px 6px",
-          }}>
-            {row.map(p => {
-              const inCart = cartIds.includes(p.id);
-              return (
-                <motion.button
-                  key={p.id}
-                  onClick={() => onToggle(p.id)}
-                  whileTap={{ scale: 0.86 }}
-                  style={{
-                    display: "flex", flexDirection: "column", alignItems: "center", gap: 3,
-                    padding: "9px 3px 7px",
-                    borderRadius: 12,
-                    border: inCart ? "2.5px solid #16a34a" : "1.5px solid #e6dcc8",
-                    background: inCart ? "#e9f9ee" : "#ffffff",
-                    boxShadow: inCart
-                      ? "0 2px 8px rgba(22,163,74,0.18)"
-                      : "0 2px 6px rgba(120,90,50,0.10)",
-                    position: "relative", cursor: "pointer",
-                    transition: "all 0.15s",
-                  }}
-                >
-                  <ProductSvg id={p.id} size={62} />
-                  {showLabels && (
-                    <span style={{
-                      fontSize: 9, fontWeight: 700, textAlign: "center", lineHeight: 1.2,
-                      color: inCart ? "#15803d" : "#4b5563",
-                      maxWidth: "100%", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap",
-                    }}>
-                      {p.name}
-                    </span>
-                  )}
-                  {inCart && (
-                    <motion.div initial={{ scale: 0 }} animate={{ scale: 1 }} style={{
-                      position: "absolute", top: 3, right: 3,
-                      width: 18, height: 18, borderRadius: "50%",
-                      background: "#16a34a",
-                      display: "flex", alignItems: "center", justifyContent: "center",
-                      fontSize: 10, fontWeight: "bold", color: "#ffffff",
-                    }}>
-                      ✓
-                    </motion.div>
-                  )}
-                </motion.button>
-              );
-            })}
-          </div>
-          <Plank />
-        </div>
+      position: "absolute", left: "-4%", right: "-4%", top, height: "12%",
+      display: "flex", gap: 10, padding: "0 12px", filter: "blur(11px)", opacity: 0.45,
+    }}>
+      {colors.map((c, i) => (
+        <div key={i} style={{ flex: 1, borderRadius: 6, background: c }} />
       ))}
+    </div>
+  );
+  return (
+    <div style={{ position: "absolute", inset: 0, overflow: "hidden" }}>
+      <div style={{ position: "absolute", inset: 0,
+        background: "linear-gradient(180deg,#d2dded 0%,#e4ebf3 24%,#f0ead9 56%,#ebe0cb 100%)" }} />
+      {shelfRow("6%",  ["#f0c266", "#e0876b", "#7eb0dd", "#92c294", "#e2b766", "#c4a3cc"])}
+      {shelfRow("21%", ["#92c294", "#e6a173", "#84bdd6", "#ecce6b", "#d68585", "#85aede"])}
+      {/* letreiro de corredor */}
+      <div style={{ position: "absolute", left: "5%", top: "3.5%", padding: "3px 12px", borderRadius: 4,
+        background: "rgba(40,68,118,0.4)", color: "rgba(255,255,255,0.7)", fontSize: 11, fontWeight: 800,
+        letterSpacing: 2, filter: "blur(0.4px)" }}>LATICÍNIOS</div>
+      {/* leve profundidade + chão claro */}
+      <div style={{ position: "absolute", inset: 0,
+        background: "radial-gradient(ellipse at 50% 30%, rgba(255,255,255,0.25), transparent 55%)" }} />
+      <div style={{ position: "absolute", left: 0, right: 0, bottom: 0, height: "26%",
+        background: "linear-gradient(180deg, transparent, rgba(200,165,115,0.22))" }} />
     </div>
   );
 }
 
-// ── Tutorial (compact shelf for TutorialBase) ─────────────────────────────────
+// ── Cesta ilustrada (painel do carrinho) ─────────────────────────────────────────
+
+function BasketArt() {
+  return (
+    <svg width="100%" viewBox="0 0 120 96" style={{ display: "block" }} xmlns="http://www.w3.org/2000/svg">
+      {/* itens dentro */}
+      <rect x="34" y="34" width="20" height="26" rx="3" fill="#e9c98f" stroke="#caa45f" strokeWidth="1.5"/>
+      <rect x="52" y="28" width="14" height="32" rx="3" fill="#bcd6ef" stroke="#7ba9d8" strokeWidth="1.5"/>
+      <circle cx="74" cy="44" r="10" fill="#e06a5a"/>
+      <path d="M74 34 q6 -6 11 -2" stroke="#5aa05a" strokeWidth="3" fill="none" strokeLinecap="round"/>
+      {/* cesta */}
+      <path d="M22 54 L98 54 L92 88 Q91 92 86 92 L34 92 Q29 92 28 88 Z"
+        fill="#e7c79a" stroke="#b8894f" strokeWidth="2.5" strokeLinejoin="round"/>
+      <rect x="20" y="50" width="80" height="8" rx="4" fill="#d8ad6e" stroke="#b8894f" strokeWidth="2"/>
+      {[34,46,58,70,82].map((x,i) => <line key={i} x1={x} y1="58" x2={x-2+i} y2="90" stroke="#b8894f" strokeWidth="1.4" opacity="0.5"/>)}
+      <line x1="26" y1="68" x2="94" y2="68" stroke="#b8894f" strokeWidth="1.4" opacity="0.45"/>
+      <line x1="24" y1="80" x2="92" y2="80" stroke="#b8894f" strokeWidth="1.4" opacity="0.45"/>
+    </svg>
+  );
+}
+
+// ── Prateleira de madeira ────────────────────────────────────────────────────────
+
+const SHELF_COLS = 3;
+
+function WoodShelf({
+  products, cartIds, onToggle, showLabels,
+}: {
+  products: Product[]; cartIds: string[]; onToggle: (id: string) => void; showLabels: boolean;
+}) {
+  const rows: Product[][] = [];
+  for (let i = 0; i < products.length; i += SHELF_COLS) rows.push(products.slice(i, i + SHELF_COLS));
+
+  return (
+    <div style={{
+      borderRadius: 22, padding: 13,
+      background: "linear-gradient(135deg,#e9cda0 0%,#dcb27e 55%,#c89a62 100%)",
+      boxShadow: "0 18px 44px rgba(70,45,15,0.4), inset 0 2px 3px rgba(255,255,255,0.55), inset 0 -3px 6px rgba(120,80,40,0.4)",
+    }}>
+      <div style={{ background: "#f4ecdc", borderRadius: 14, padding: "10px 10px 4px", boxShadow: "inset 0 2px 8px rgba(120,90,50,0.18)" }}>
+        {rows.map((row, ri) => (
+          <div key={ri}>
+            <div style={{ display: "grid", gridTemplateColumns: `repeat(${SHELF_COLS}, 1fr)`, gap: 10, marginBottom: 8 }}>
+              {row.map(p => {
+                const inCart = cartIds.includes(p.id);
+                return (
+                  <motion.button key={p.id} onClick={() => onToggle(p.id)} whileTap={{ scale: 0.9 }}
+                    style={{
+                      position: "relative", cursor: "pointer", borderRadius: 14, padding: "10px 6px 6px",
+                      display: "flex", flexDirection: "column", alignItems: "center", gap: 4,
+                      background: "#ffffff",
+                      border: inCart ? "3px solid #2f9e8f" : "1px solid #ece2cf",
+                      boxShadow: inCart ? "0 4px 14px rgba(47,158,143,0.28)" : "0 3px 9px rgba(120,90,50,0.13)",
+                      transition: "border-color .15s, box-shadow .15s",
+                    }}>
+                    <ProductImg id={p.id} size={66} />
+                    {showLabels && (
+                      <span style={{ fontSize: 11, fontWeight: 700, textAlign: "center", lineHeight: 1.15,
+                        color: inCart ? "#1d7a6e" : "#3f4a52", maxWidth: "100%",
+                        overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{p.name}</span>
+                    )}
+                    {inCart && (
+                      <motion.div initial={{ scale: 0 }} animate={{ scale: 1 }} style={{
+                        position: "absolute", top: 6, right: 6, width: 22, height: 22, borderRadius: "50%",
+                        background: "#2f9e8f", display: "flex", alignItems: "center", justifyContent: "center",
+                        fontSize: 12, fontWeight: "bold", color: "#fff", boxShadow: "0 2px 5px rgba(0,0,0,0.2)" }}>✓</motion.div>
+                    )}
+                  </motion.button>
+                );
+              })}
+            </div>
+            {/* tábua da prateleira */}
+            <div style={{ height: 10, margin: "0 -4px 10px", borderRadius: 3,
+              background: "linear-gradient(180deg,#e2bd8a,#cc9f64 60%,#b07f44)",
+              boxShadow: "0 4px 8px rgba(90,60,25,0.3)" }} />
+          </div>
+        ))}
+      </div>
+    </div>
+  );
+}
+
+// ── HUD (barra azul-marinho) ─────────────────────────────────────────────────────
+
+function Hud({ level, trial, trialResults, mode }: {
+  level: number; trial: number; trialResults: boolean[]; mode: "leitura" | "auditivo";
+}) {
+  return (
+    <div style={{
+      flexShrink: 0, display: "flex", alignItems: "center", gap: 14,
+      padding: "9px 16px", background: "linear-gradient(90deg,#0c1c3c,#13294f)",
+      borderBottom: "1px solid rgba(120,150,200,0.18)", boxShadow: "0 2px 14px rgba(5,12,35,0.5)",
+    }}>
+      {/* esquerda: ícone + título + nível */}
+      <div style={{ display: "flex", alignItems: "center", gap: 10, flexShrink: 0 }}>
+        <div style={{ width: 38, height: 38, borderRadius: 11, flexShrink: 0,
+          background: "linear-gradient(135deg,#f0b94a,#d98f2a)", display: "flex", alignItems: "center",
+          justifyContent: "center", fontSize: 20, boxShadow: "0 3px 9px rgba(180,120,20,0.5)" }}>🛒</div>
+        <div style={{ lineHeight: 1.1 }}>
+          <span style={{ color: "#fff", fontWeight: 900, fontSize: 16, letterSpacing: 0.5 }}>SUPERMERCADO</span>
+          <span style={{ color: "#f3bf57", fontWeight: 800, fontSize: 14, marginLeft: 8 }}>NÍVEL {level}</span>
+        </div>
+      </div>
+
+      {/* centro: progresso em segmentos */}
+      <div style={{ flex: 1, display: "flex", gap: 5, justifyContent: "center", minWidth: 0 }}>
+        {Array.from({ length: MAX_TRIALS }).map((_, i) => (
+          <div key={i} style={{ height: 7, flex: "0 1 34px", maxWidth: 34, borderRadius: 4,
+            background: i < trialResults.length ? (trialResults[i] ? "#f3bf57" : "#e2796f")
+              : i === trial ? "#f3bf57" : "rgba(150,175,215,0.22)",
+            boxShadow: (i < trialResults.length || i === trial) ? "0 0 6px rgba(243,191,87,0.5)" : "none",
+            transition: "background .3s" }} />
+        ))}
+      </div>
+
+      {/* direita: Treino de Memória */}
+      <div style={{ display: "flex", alignItems: "center", gap: 9, flexShrink: 0 }} className="np-hud-right">
+        <div style={{ width: 34, height: 34, borderRadius: 10, flexShrink: 0,
+          background: "rgba(120,160,220,0.16)", border: "1px solid rgba(140,175,225,0.3)",
+          display: "flex", alignItems: "center", justifyContent: "center", fontSize: 17 }}>🧠</div>
+        <div style={{ lineHeight: 1.15, textAlign: "right" }}>
+          <div style={{ color: "#fff", fontWeight: 800, fontSize: 13 }}>Treino de Memória</div>
+          <div style={{ color: "rgba(190,205,230,0.75)", fontSize: 11 }}>
+            {mode === "auditivo" ? "Selecione os itens que você ouviu." : "Selecione os itens que estavam na lista."}
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+// ── Tutorial ─────────────────────────────────────────────────────────────────────
 
 const TUT_LIST: Product[]  = [{ id: "pao", name: "Pão" }, { id: "leite", name: "Leite" }];
 const TUT_SHELF: Product[] = [
-  { id: "arroz", name: "Arroz" }, { id: "pao", name: "Pão" },
-  { id: "cafe",  name: "Café"  }, { id: "leite", name: "Leite" },
-  { id: "ovos",  name: "Ovos"  }, { id: "acucar", name: "Açúcar" },
-  { id: "maca",  name: "Maçã"  }, { id: "sal",    name: "Sal" },
+  { id: "pao", name: "Pão" }, { id: "leite", name: "Leite" }, { id: "cookies", name: "Cookies" },
+  { id: "morango", name: "Morango" }, { id: "donut", name: "Donut" }, { id: "sabonete", name: "Sabonete" },
+  { id: "melancia", name: "Melancia" }, { id: "shampoo", name: "Shampoo" },
 ];
 
 function TutMemorizeStep({ mode, onDone }: { mode: "leitura" | "auditivo"; onDone: () => void }) {
@@ -335,24 +386,19 @@ function TutMemorizeStep({ mode, onDone }: { mode: "leitura" | "auditivo"; onDon
     return () => { clearInterval(iv); cancelTTS(); };
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
-
   return (
     <div className="rounded-xl p-4 space-y-3 bg-emerald-50 border border-emerald-200">
       <div className="flex justify-between items-center">
-        <p className="text-sm font-bold text-gray-800">
-          {mode === "auditivo" ? "🔊 Ouça os itens:" : "📋 Memorize a lista:"}
-        </p>
+        <p className="text-sm font-bold text-gray-800">{mode === "auditivo" ? "🔊 Ouça os itens:" : "📋 Memorize a lista:"}</p>
         <div className="flex items-center gap-2">
           <span className="text-xs text-emerald-600 font-mono">{countdown}s</span>
-          <button onClick={onDone} className="text-xs px-2 py-0.5 rounded-lg font-bold bg-emerald-500 text-white">
-            Pronto →
-          </button>
+          <button onClick={onDone} className="text-xs px-2 py-0.5 rounded-lg font-bold bg-emerald-500 text-white">Pronto →</button>
         </div>
       </div>
       <div className="grid grid-cols-2 gap-3">
         {TUT_LIST.map(p => (
           <div key={p.id} className="flex flex-col items-center gap-2 p-3 rounded-xl border-2 border-emerald-200 bg-white">
-            <ProductSvg id={p.id} size={72} />
+            <ProductImg id={p.id} size={70} />
             {mode === "leitura" && <span className="text-sm font-bold text-center text-gray-800">{p.name}</span>}
             {mode === "auditivo" && <span className="text-xl">🔊</span>}
           </div>
@@ -365,52 +411,34 @@ function TutMemorizeStep({ mode, onDone }: { mode: "leitura" | "auditivo"; onDon
 function TutShelfStep({ mode, onDone }: { mode: "leitura" | "auditivo"; onDone: () => void }) {
   const [cart, setCart] = useState<string[]>([]);
   const doneRef = useRef(false);
-
   function tap(id: string) {
     if (doneRef.current) return;
     setCart(prev => {
       const next = prev.includes(id) ? prev.filter(x => x !== id) : [...prev, id];
-      if (next.includes("pao") && next.includes("leite") && !doneRef.current) {
-        doneRef.current = true;
-        setTimeout(onDone, 700);
-      }
+      if (next.includes("pao") && next.includes("leite") && !doneRef.current) { doneRef.current = true; setTimeout(onDone, 700); }
       return next;
     });
   }
-
   return (
     <div className="space-y-2">
-      <p className="text-xs text-gray-700">
-        {mode === "auditivo" ? "Toque nos produtos que você ouviu." : "Toque nos produtos que estavam na lista."}
-      </p>
+      <p className="text-xs text-gray-700">{mode === "auditivo" ? "Toque nos produtos que você ouviu." : "Toque nos produtos que estavam na lista."}</p>
       <div className="grid grid-cols-4 gap-1.5">
         {TUT_SHELF.map(p => {
           const inCart = cart.includes(p.id);
           return (
             <button key={p.id} onClick={() => tap(p.id)}
-              className={`flex flex-col items-center gap-1 p-2 rounded-lg border-2 transition-all active:scale-95 relative ${
-                inCart ? "border-emerald-400 bg-emerald-50" : "border-gray-200 bg-white"
-              }`}>
-              <ProductSvg id={p.id} size={52} />
-              {mode === "leitura" && (
-                <span className={`text-[9px] text-center font-semibold leading-tight ${inCart ? "text-emerald-700" : "text-gray-700"}`}>
-                  {p.name}
-                </span>
-              )}
-              {inCart && (
-                <div className="absolute top-1 right-1 w-4 h-4 rounded-full bg-emerald-500 flex items-center justify-center text-[9px] font-bold text-white">✓</div>
-              )}
+              className={`flex flex-col items-center gap-1 p-2 rounded-lg border-2 transition-all active:scale-95 relative ${inCart ? "border-emerald-400 bg-emerald-50" : "border-gray-200 bg-white"}`}>
+              <ProductImg id={p.id} size={50} />
+              {mode === "leitura" && <span className={`text-[9px] text-center font-semibold leading-tight ${inCart ? "text-emerald-700" : "text-gray-700"}`}>{p.name}</span>}
+              {inCart && <div className="absolute top-1 right-1 w-4 h-4 rounded-full bg-emerald-500 flex items-center justify-center text-[9px] font-bold text-white">✓</div>}
             </button>
           );
         })}
       </div>
-      {/* mini cart display */}
       {cart.length > 0 && (
         <div className="flex items-center gap-2 p-2 rounded-xl bg-emerald-50 border border-emerald-200">
           <span className="text-sm">🛒</span>
-          <div className="flex gap-1">
-            {cart.map(id => <ProductSvg key={id} id={id} size={32} />)}
-          </div>
+          <div className="flex gap-1">{cart.map(id => <ProductImg key={id} id={id} size={30} />)}</div>
         </div>
       )}
     </div>
@@ -419,28 +447,15 @@ function TutShelfStep({ mode, onDone }: { mode: "leitura" | "auditivo"; onDone: 
 
 function SupermercadoTutorial({ theme, mode, onDone }: { theme: Theme; mode: "leitura" | "auditivo"; onDone: () => void }) {
   const steps = [
-    {
-      instruction: mode === "auditivo"
-        ? "Você vai OUVIR uma lista de compras. Memorize os itens pelo som!"
-        : "Uma lista de compras vai aparecer. Memorize bem os produtos!",
-      content: (done: () => void) => <TutMemorizeStep mode={mode} onDone={done} />,
-    },
-    {
-      instruction: "Toque nos produtos da prateleira para colocá-los no carrinho. Depois confirme!",
-      content: (done: () => void) => <TutShelfStep mode={mode} onDone={done} />,
-    },
+    { instruction: mode === "auditivo" ? "Você vai OUVIR uma lista de compras. Memorize os itens pelo som!" : "Uma lista de compras vai aparecer. Memorize bem os produtos!",
+      content: (done: () => void) => <TutMemorizeStep mode={mode} onDone={done} /> },
+    { instruction: "Toque nos produtos da prateleira para colocá-los no carrinho. Depois confirme!",
+      content: (done: () => void) => <TutShelfStep mode={mode} onDone={done} /> },
   ];
-  return (
-    <TutorialBase
-      theme={theme}
-      title={`Desafio do Supermercado${mode === "auditivo" ? " — Auditivo" : ""}`}
-      steps={steps}
-      onDone={onDone}
-    />
-  );
+  return <TutorialBase theme={theme} title={`Desafio do Supermercado${mode === "auditivo" ? " — Auditivo" : ""}`} steps={steps} onDone={onDone} />;
 }
 
-// ── Main component ────────────────────────────────────────────────────────────
+// ── Main component ────────────────────────────────────────────────────────────────
 
 const MAX_TRIALS = 8;
 
@@ -448,9 +463,6 @@ export function DesafioSupermercado({ difficulty, theme, onComplete, mode = "lei
   const [showTutorial, setShowTutorial] = useState(true);
   const reportProgress = useExerciseProgress();
 
-  // Começa no nível salvo do paciente (ExerciseConfig.currentDifficulty) e PROGRIDE
-  // dentro da sessão: 2 acertos seguidos sobem 1 nível, 2 erros descem 1. O nível
-  // final é persistido pelo servidor (progressionV2) com o nível consolidado.
   const startLevel = useMemo(() => clampLevel(difficulty), [difficulty]);
   const [sessionLevel, setSessionLevel] = useState(startLevel);
   const [streak, setStreak]             = useState(0);
@@ -460,13 +472,13 @@ export function DesafioSupermercado({ difficulty, theme, onComplete, mode = "lei
   const [trialResults, setTrialResults] = useState<boolean[]>([]);
   const [phase, setPhase]               = useState<"memorizing" | "shopping" | "result">("memorizing");
   const [countdown, setCountdown]       = useState(0);
-  const [cartIds, setCartIds]           = useState<string[]>([]); // insertion-ordered IDs
+  const [cartIds, setCartIds]           = useState<string[]>([]);
   const selected                        = useMemo(() => new Set(cartIds), [cartIds]);
   const [audioPlaying, setAudioPlaying] = useState(false);
 
-  const recentRef  = useRef<string[]>([]);   // ids das últimas listas — evita repetição imediata
-  const gradedRef  = useRef<number[]>([]);    // acerto graduado por rodada (0–1) → accTotal
-  const wrongRef   = useRef(0);               // total de itens errados marcados (sinal de impulsividade)
+  const recentRef  = useRef<string[]>([]);
+  const gradedRef  = useRef<number[]>([]);
+  const wrongRef   = useRef(0);
   const startTime  = useRef(Date.now());
   const timerRef   = useRef<ReturnType<typeof setInterval> | null>(null);
 
@@ -477,7 +489,6 @@ export function DesafioSupermercado({ difficulty, theme, onComplete, mode = "lei
 
   const initTrial = useCallback((lvl: number) => {
     const { list, shelf } = buildTrial(lvl, new Set(recentRef.current));
-    // mantém uma janela das ~2 últimas listas para a randomização controlada
     recentRef.current = [...list.map(p => p.id), ...recentRef.current].slice(0, levelConfig(lvl).count * 2);
     setCurrentList(list);
     setShelfProducts(shelf);
@@ -485,7 +496,6 @@ export function DesafioSupermercado({ difficulty, theme, onComplete, mode = "lei
     setPhase("memorizing");
   }, []);
 
-  // sincroniza o nível inicial quando o difficulty do paciente carrega (assíncrono)
   useEffect(() => { setSessionLevel(startLevel); setStreak(0); }, [startLevel]);
 
   useEffect(() => {
@@ -499,10 +509,7 @@ export function DesafioSupermercado({ difficulty, theme, onComplete, mode = "lei
     setCountdown(total);
     if (mode === "auditivo") { setAudioPlaying(true); speakList(currentList, () => setAudioPlaying(false)); }
     timerRef.current = setInterval(() => {
-      setCountdown(prev => {
-        if (prev <= 1) { clearTimer(); setPhase("shopping"); return 0; }
-        return prev - 1;
-      });
+      setCountdown(prev => { if (prev <= 1) { clearTimer(); setPhase("shopping"); return 0; } return prev - 1; });
     }, 1000);
     return () => { clearTimer(); cancelTTS(); };
     // eslint-disable-next-line react-hooks/exhaustive-deps
@@ -519,7 +526,6 @@ export function DesafioSupermercado({ difficulty, theme, onComplete, mode = "lei
     const wrongSelected   = cartIds.filter(id => !correctIds.has(id)).length;
     const isCorrect       = correctSelected === correctIds.size && wrongSelected === 0;
 
-    // acerto graduado: recompensa itens certos, penaliza marcações erradas
     const graded = Math.max(0, (correctSelected - wrongSelected) / correctIds.size);
     gradedRef.current.push(graded);
     wrongRef.current += wrongSelected;
@@ -542,17 +548,14 @@ export function DesafioSupermercado({ difficulty, theme, onComplete, mode = "lei
       if (nextTrial >= MAX_TRIALS) {
         const correct   = newResults.filter(Boolean).length;
         const accTotal  = gradedRef.current.reduce((a, b) => a + b, 0) / MAX_TRIALS;
-        const impulsive = wrongRef.current > MAX_TRIALS; // > 1 erro/rodada em média
+        const impulsive = wrongRef.current > MAX_TRIALS;
         onComplete({
           exerciseId: mode === "auditivo" ? "desafio-supermercado-auditivo" : "desafio-supermercado",
           domain: "memory",
           score: calculateExerciseScore("desafio-supermercado", accTotal, undefined, nextLevel),
           accuracy: accTotal, difficulty: nextLevel,
           duration: Math.round((Date.now() - startTime.current) / 1000),
-          metadata: {
-            trials: MAX_TRIALS, correct, mode, startLevel, level: nextLevel,
-            progressionV2: true, accTotal, impulsive,
-          },
+          metadata: { trials: MAX_TRIALS, correct, mode, startLevel, level: nextLevel, progressionV2: true, accTotal, impulsive },
         });
       } else {
         setTrial(nextTrial);
@@ -570,287 +573,183 @@ export function DesafioSupermercado({ difficulty, theme, onComplete, mode = "lei
   const isRoundCorrect = phase === "result"
     && currentList.every(p => selected.has(p.id))
     && cartIds.every(id => currentList.find(p => p.id === id));
-
   const listCols = Math.min(currentList.length, 4);
+  const sessionPct = Math.round((trial / MAX_TRIALS) * 100);
 
   return (
-    <div style={{
-      position: "fixed", inset: 0, background: "#eef2f6",
-      display: "flex", flexDirection: "column", overflow: "hidden",
-    }}>
+    <div style={{ position: "fixed", inset: 0, display: "flex", flexDirection: "column", overflow: "hidden", background: "#e8e0d0" }}>
+      <StoreBg />
 
-      {/* ── HUD ── */}
-      <div style={{
-        background: "linear-gradient(90deg,#15803d,#22c55e)",
-        padding: "7px 14px", flexShrink: 0,
-        display: "flex", alignItems: "center", justifyContent: "space-between",
-        boxShadow: "0 2px 8px rgba(21,128,61,0.35)",
-      }}>
-        <span style={{ color: "white", fontWeight: 800, fontSize: 13, letterSpacing: 1 }}>
-          🛒 SUPERMERCADO · N{sessionLevel}
-        </span>
-        <div style={{ display: "flex", gap: 3 }}>
-          {Array.from({ length: MAX_TRIALS }).map((_, i) => (
-            <div key={i} style={{
-              height: 5, width: 20, borderRadius: 3,
-              background: i < trialResults.length
-                ? (trialResults[i] ? "#bbf7d0" : "#fecaca")
-                : i === trial ? "#fde68a" : "rgba(255,255,255,0.28)",
-              transition: "background 0.3s",
-            }} />
-          ))}
-        </div>
-        <span style={{ color: "rgba(255,255,255,0.85)", fontSize: 11 }}>{trial + 1}/{MAX_TRIALS}</span>
-      </div>
+      <div style={{ position: "relative", zIndex: 2, display: "flex", flexDirection: "column", height: "100%" }}>
+        <Hud level={sessionLevel} trial={trial} trialResults={trialResults} mode={mode} />
 
-      <AnimatePresence mode="wait">
+        <AnimatePresence mode="wait">
 
-        {/* ── MEMORIZING ── */}
-        {phase === "memorizing" && (
-          <motion.div key="mem"
-            initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}
-            style={{ flex: 1, display: "flex", flexDirection: "column", overflow: "hidden" }}
-          >
-            <div style={{
-              flex: 1, overflowY: "auto", display: "flex", flexDirection: "column",
-              alignItems: "center", justifyContent: "center", padding: "16px",
-            }}>
-              <div style={{
-                width: "100%", maxWidth: 440,
-                background: "#ffffff",
-                border: "1px solid #e6dcc8",
-                borderRadius: 22, padding: "18px 16px",
-                boxShadow: "0 8px 28px rgba(120,90,40,0.12)",
-              }}>
-                {/* Header + timer */}
-                <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 16 }}>
-                  <span style={{ color: "#1f2937", fontWeight: 800, fontSize: 15 }}>
-                    {mode === "auditivo" ? "🎧 Ouça a lista!" : "📋 Memorize a lista!"}
-                  </span>
-                  <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
-                    <div style={{ width: 72, height: 6, background: "#e5e7eb", borderRadius: 3, overflow: "hidden" }}>
-                      <div style={{ height: "100%", width: `${ratio * 100}%`, background: "#16a34a", borderRadius: 3, transition: "width 1s linear" }} />
+          {/* ── MEMORIZING ── */}
+          {phase === "memorizing" && (
+            <motion.div key="mem" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}
+              style={{ flex: 1, display: "flex", flexDirection: "column", overflow: "hidden" }}>
+              <div style={{ flex: 1, overflowY: "auto", display: "flex", flexDirection: "column",
+                alignItems: "center", justifyContent: "center", padding: 16 }}>
+                <div style={{ width: "100%", maxWidth: 460, background: "rgba(255,255,255,0.96)",
+                  border: "1px solid rgba(200,180,140,0.5)", borderRadius: 22, padding: "18px 16px",
+                  boxShadow: "0 18px 44px rgba(40,30,15,0.28)" }}>
+                  <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 16 }}>
+                    <span style={{ color: "#1f2937", fontWeight: 800, fontSize: 15 }}>
+                      {mode === "auditivo" ? "🎧 Ouça a lista!" : "📋 Memorize a lista!"}
+                    </span>
+                    <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
+                      <div style={{ width: 72, height: 6, background: "#e5e7eb", borderRadius: 3, overflow: "hidden" }}>
+                        <div style={{ height: "100%", width: `${ratio * 100}%`, background: "#2f9e8f", borderRadius: 3, transition: "width 1s linear" }} />
+                      </div>
+                      <span style={{ color: "#1d7a6e", fontSize: 14, fontWeight: 800, minWidth: 26, textAlign: "right" }}>{countdown}s</span>
                     </div>
-                    <span style={{ color: "#16a34a", fontSize: 14, fontWeight: 800, minWidth: 26, textAlign: "right" }}>{countdown}s</span>
+                  </div>
+                  {mode === "auditivo" && audioPlaying && (
+                    <p style={{ color: "#1d7a6e", fontSize: 12, textAlign: "center", marginBottom: 12 }}>🔊 Reproduzindo lista...</p>
+                  )}
+                  <div style={{ display: "grid", gridTemplateColumns: `repeat(${listCols}, 1fr)`, gap: 10 }}>
+                    {currentList.map((p, idx) => (
+                      <motion.div key={p.id} initial={{ opacity: 0, scale: 0.8 }} animate={{ opacity: 1, scale: 1 }} transition={{ delay: idx * 0.06 }}
+                        style={{ display: "flex", flexDirection: "column", alignItems: "center", gap: 6, padding: "12px 6px",
+                          background: "#f4ecdc", border: "1px solid #e6dcc8", borderRadius: 14 }}>
+                        <ProductImg id={p.id} size={72} />
+                        {mode === "leitura" && <span style={{ color: "#374151", fontSize: 11, fontWeight: 700, textAlign: "center", lineHeight: 1.2 }}>{p.name}</span>}
+                        {mode === "auditivo" && <span style={{ fontSize: 20 }}>🔊</span>}
+                      </motion.div>
+                    ))}
+                  </div>
+                </div>
+              </div>
+              <div style={{ padding: "8px 16px 14px", flexShrink: 0 }}>
+                <button onClick={() => { clearTimer(); cancelTTS(); setPhase("shopping"); }}
+                  style={{ width: "100%", height: 50, borderRadius: 100, background: "linear-gradient(135deg,#2f9e8f,#1d7a6e)",
+                    border: "none", color: "white", fontWeight: 700, fontSize: 14, cursor: "pointer", boxShadow: "0 4px 16px rgba(29,122,110,0.4)" }}>
+                  Já memorizei → ir às prateleiras
+                </button>
+              </div>
+            </motion.div>
+          )}
+
+          {/* ── SHOPPING ── */}
+          {phase === "shopping" && (
+            <motion.div key="shop" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}
+              style={{ flex: 1, display: "flex", flexDirection: "row", overflow: "hidden", padding: 12, gap: 12 }}>
+              {/* prateleira */}
+              <div style={{ flex: 1, minWidth: 0, overflowY: "auto", WebkitOverflowScrolling: "touch" } as React.CSSProperties}>
+                <WoodShelf products={shelfProducts} cartIds={cartIds} onToggle={toggleProduct} showLabels={mode === "leitura"} />
+              </div>
+
+              {/* painel do carrinho */}
+              <div style={{ flexShrink: 0, width: "33%", maxWidth: 300, minWidth: 156,
+                background: "rgba(247,242,232,0.97)", borderRadius: 20, border: "1px solid rgba(200,180,140,0.5)",
+                boxShadow: "0 14px 36px rgba(40,30,15,0.28)", padding: 12,
+                display: "flex", flexDirection: "column", gap: 10, overflow: "hidden" }}>
+
+                <div style={{ display: "flex", alignItems: "center", gap: 9, flexShrink: 0 }}>
+                  <div style={{ width: 36, height: 36, borderRadius: 11, flexShrink: 0, background: "rgba(47,158,143,0.14)",
+                    border: "1px solid rgba(47,158,143,0.3)", display: "flex", alignItems: "center", justifyContent: "center", fontSize: 18 }}>🧺</div>
+                  <div style={{ lineHeight: 1.15, flex: 1, minWidth: 0 }}>
+                    <div style={{ display: "flex", alignItems: "center", gap: 7 }}>
+                      <span style={{ color: "#26303a", fontWeight: 800, fontSize: 15 }}>No carrinho</span>
+                      <span style={{ fontSize: 12, fontWeight: 800, padding: "1px 9px", borderRadius: 100,
+                        background: cartIds.length === itemCount ? "#d3f3ec" : "#eef1f4",
+                        color: cartIds.length === itemCount ? "#1d7a6e" : "#7b8794",
+                        border: `1px solid ${cartIds.length === itemCount ? "#9ad9cc" : "#e2e8f0"}` }}>{cartIds.length}/{itemCount}</span>
+                    </div>
+                    <div style={{ color: "#8a94a0", fontSize: 11 }}>Estes são os itens que você selecionou.</div>
                   </div>
                 </div>
 
-                {mode === "auditivo" && audioPlaying && (
-                  <p style={{ color: "#16a34a", fontSize: 12, textAlign: "center", marginBottom: 12, animationName: "pulse", animationDuration: "2s", animationIterationCount: "infinite" }}>
-                    🔊 Reproduzindo lista...
-                  </p>
-                )}
-
-                <div style={{ display: "grid", gridTemplateColumns: `repeat(${listCols}, 1fr)`, gap: 10 }}>
-                  {currentList.map((p, idx) => (
-                    <motion.div key={p.id}
-                      initial={{ opacity: 0, scale: 0.8 }} animate={{ opacity: 1, scale: 1 }}
-                      transition={{ delay: idx * 0.06 }}
-                      style={{
-                        display: "flex", flexDirection: "column", alignItems: "center", gap: 6,
-                        padding: "12px 6px",
-                        background: "#f6efe3",
-                        border: "1.5px solid #e6dcc8",
-                        borderRadius: 14,
-                      }}
-                    >
-                      <ProductSvg id={p.id} size={72} />
-                      {mode === "leitura" && (
-                        <span style={{ color: "#374151", fontSize: 11, fontWeight: 700, textAlign: "center", lineHeight: 1.2 }}>
-                          {p.name}
-                        </span>
-                      )}
-                      {mode === "auditivo" && <span style={{ fontSize: 20 }}>🔊</span>}
-                    </motion.div>
-                  ))}
+                {/* linhas de itens */}
+                <div style={{ flex: 1, overflowY: "auto", display: "flex", flexDirection: "column", gap: 7, minHeight: 0 }}>
+                  <AnimatePresence mode="popLayout">
+                    {cartIds.length === 0 ? (
+                      <motion.div key="empty" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}
+                        style={{ color: "#a3acb8", fontSize: 12, fontStyle: "italic", textAlign: "center", padding: "18px 6px" }}>
+                        Toque nos produtos da prateleira...
+                      </motion.div>
+                    ) : cartIds.map(id => {
+                      const p = PRODUCT_MAP.get(id); if (!p) return null;
+                      return (
+                        <motion.div key={id} layout initial={{ scale: 0.9, opacity: 0 }} animate={{ scale: 1, opacity: 1 }}
+                          exit={{ scale: 0.9, opacity: 0 }} transition={{ type: "spring", stiffness: 460, damping: 30 }}
+                          style={{ display: "flex", alignItems: "center", gap: 9, padding: "6px 8px", background: "#fff",
+                            borderRadius: 12, border: "1px solid #ece3d1", boxShadow: "0 2px 6px rgba(120,90,50,0.08)" }}>
+                          <ProductImg id={id} size={34} />
+                          <span style={{ flex: 1, minWidth: 0, fontSize: 12.5, fontWeight: 700, color: "#37424d",
+                            overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{p.name}</span>
+                          <button onClick={() => toggleProduct(id)} title={`Remover ${p.name}`}
+                            style={{ width: 24, height: 24, borderRadius: "50%", flexShrink: 0, cursor: "pointer", border: "none",
+                              background: "#fbe3cf", color: "#e07a3a", fontWeight: 900, fontSize: 14, lineHeight: 1,
+                              display: "flex", alignItems: "center", justifyContent: "center" }}>×</button>
+                        </motion.div>
+                      );
+                    })}
+                  </AnimatePresence>
                 </div>
+
+                {/* cesta ilustrada */}
+                <div style={{ flexShrink: 0, padding: "0 18%" }}><BasketArt /></div>
+
+                {/* confirmar */}
+                <button onClick={handleConfirm} disabled={cartIds.length === 0}
+                  style={{ width: "100%", height: 50, borderRadius: 14, border: "none", flexShrink: 0,
+                    background: cartIds.length > 0 ? "linear-gradient(135deg,#2f9e8f,#1d6e62)" : "#dfe3e8",
+                    color: cartIds.length > 0 ? "#fff" : "#9aa3ad", fontWeight: 800, fontSize: 14,
+                    cursor: cartIds.length > 0 ? "pointer" : "default", display: "flex", alignItems: "center", justifyContent: "center", gap: 8,
+                    boxShadow: cartIds.length > 0 ? "0 5px 16px rgba(29,110,98,0.4)" : "none", transition: "all .2s" }}>
+                  🛒 Confirmar ({cartIds.length}/{itemCount})
+                </button>
               </div>
-            </div>
+            </motion.div>
+          )}
 
-            <div style={{ padding: "8px 16px 14px", flexShrink: 0 }}>
-              <button
-                onClick={() => { clearTimer(); cancelTTS(); setPhase("shopping"); }}
-                style={{
-                  width: "100%", height: 50, borderRadius: 100,
-                  background: "linear-gradient(135deg,#16a34a,#15803d)",
-                  border: "none", color: "white", fontWeight: 700, fontSize: 14, cursor: "pointer",
-                  boxShadow: "0 4px 16px rgba(21,128,61,0.32)",
-                }}
-              >
-                Já memorizei → ir às prateleiras
-              </button>
-            </div>
-          </motion.div>
-        )}
-
-        {/* ── SHOPPING ── */}
-        {phase === "shopping" && (
-          <motion.div key="shop"
-            initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}
-            style={{ flex: 1, display: "flex", flexDirection: "row", overflow: "hidden" }}
-          >
-            {/* Prateleira à ESQUERDA (scrollable) */}
-            <div style={{ flex: 1, minWidth: 0, overflowY: "auto", WebkitOverflowScrolling: "touch" } as React.CSSProperties}>
-              <FullShelf
-                products={shelfProducts}
-                cartIds={cartIds}
-                onToggle={toggleProduct}
-                showLabels={mode === "leitura"}
-              />
-            </div>
-
-            {/* ── CARRINHO à DIREITA (painel limpo) ── */}
-            <div style={{
-              flexShrink: 0, width: "40%", maxWidth: 280, minWidth: 150,
-              background: "#ffffff",
-              borderLeft: "3px solid #16a34a",
-              padding: "12px 10px",
-              display: "flex", flexDirection: "column", gap: 10, overflowY: "auto",
-              boxShadow: "-6px 0 16px rgba(120,90,40,0.08)",
-            }}>
-
-              {/* Cabeçalho: 🛒 No carrinho + progresso X/Y */}
-              <div style={{ display: "flex", alignItems: "center", justifyContent: "center", gap: 6, flexShrink: 0 }}>
-                <span style={{ color: "#1f2937", fontWeight: 800, fontSize: 13 }}>🛒 No carrinho</span>
-                <span style={{
-                  fontSize: 11, fontWeight: 800, padding: "1px 9px", borderRadius: 100,
-                  background: cartIds.length === itemCount ? "#dcfce7" : "#f1f5f9",
-                  color: cartIds.length === itemCount ? "#15803d" : "#64748b",
-                  border: `1px solid ${cartIds.length === itemCount ? "#86efac" : "#e2e8f0"}`,
-                }}>
-                  {cartIds.length}/{itemCount}
-                </span>
-              </div>
-
-              {/* Itens no carrinho (toque para remover) */}
-              <div style={{
-                flex: 1,
-                display: "flex", flexWrap: "wrap", gap: 6, justifyContent: "center",
-                alignContent: "flex-start", minHeight: 50,
-              }}>
-                <AnimatePresence mode="popLayout">
-                  {cartIds.length === 0 ? (
-                    <motion.span key="hint"
-                      initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}
-                      style={{ color: "#94a3b8", fontSize: 11, fontStyle: "italic", alignSelf: "center" }}>
-                      Toque nos produtos...
-                    </motion.span>
-                  ) : cartIds.map(id => {
-                    const p = PRODUCT_MAP.get(id);
-                    if (!p) return null;
+          {/* ── RESULT ── */}
+          {phase === "result" && (
+            <motion.div key="res" initial={{ opacity: 0, scale: 0.95 }} animate={{ opacity: 1, scale: 1 }}
+              style={{ flex: 1, display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", padding: 20, overflowY: "auto" }}>
+              <div style={{ width: "100%", maxWidth: 440, background: "rgba(255,255,255,0.97)",
+                border: `2px solid ${isRoundCorrect ? "#86d9cb" : "#f3b0a8"}`, borderRadius: 20, padding: "18px 16px",
+                boxShadow: "0 18px 44px rgba(40,30,15,0.28)" }}>
+                <p style={{ color: isRoundCorrect ? "#1d7a6e" : "#c2463a", fontWeight: 800, fontSize: 16, textAlign: "center", marginBottom: 14 }}>
+                  {isRoundCorrect ? "✅ Lista correta!" : "❌ Resultado da rodada"}
+                </p>
+                <div style={{ display: "grid", gridTemplateColumns: `repeat(${listCols}, 1fr)`, gap: 8 }}>
+                  {currentList.map(p => {
+                    const hit = selected.has(p.id);
                     return (
-                      <motion.button
-                        key={id} layout
-                        initial={{ scale: 0, opacity: 0 }}
-                        animate={{ scale: 1, opacity: 1 }}
-                        exit={{ scale: 0, opacity: 0 }}
-                        transition={{ type: "spring", stiffness: 480, damping: 28 }}
-                        onClick={() => toggleProduct(id)}
-                        title={`Remover ${p.name}`}
-                        style={{
-                          flexShrink: 0, cursor: "pointer",
-                          background: "#f0fdf4",
-                          border: "1.5px solid #bbf7d0",
-                          borderRadius: 10, padding: "5px",
-                          display: "flex", flexDirection: "column", alignItems: "center", gap: 2,
-                          position: "relative",
-                        }}
-                      >
-                        <ProductSvg id={id} size={46} />
-                        {mode === "leitura" && (
-                          <span style={{ fontSize: 8, color: "#15803d", fontWeight: 700, maxWidth: 52, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>
-                            {p.name}
-                          </span>
-                        )}
-                        {/* ícone de remover */}
-                        <div style={{
-                          position: "absolute", top: -5, right: -5,
-                          width: 16, height: 16, borderRadius: "50%",
-                          background: "#ef4444",
-                          display: "flex", alignItems: "center", justifyContent: "center",
-                          fontSize: 10, color: "white", fontWeight: 900, lineHeight: 1,
-                          boxShadow: "0 1px 3px rgba(0,0,0,0.2)",
-                        }}>×</div>
-                      </motion.button>
+                      <div key={p.id} style={{ display: "flex", flexDirection: "column", alignItems: "center", gap: 4, padding: "10px 4px",
+                        background: hit ? "#eafaf6" : "#fdeeec", border: `1.5px solid ${hit ? "#a7e3d7" : "#f6c4bd"}`, borderRadius: 12 }}>
+                        <ProductImg id={p.id} size={52} />
+                        <span style={{ fontSize: 9.5, fontWeight: 700, textAlign: "center", color: hit ? "#1d7a6e" : "#c2463a" }}>{p.name}</span>
+                        <span style={{ fontSize: 16 }}>{hit ? "✅" : "❌"}</span>
+                      </div>
                     );
                   })}
-                </AnimatePresence>
+                </div>
+                {cartIds.some(id => !currentList.find(p => p.id === id)) && (
+                  <p style={{ color: "#c2463a", fontSize: 11, textAlign: "center", marginTop: 10 }}>⚠️ Alguns itens não estavam na lista.</p>
+                )}
               </div>
+            </motion.div>
+          )}
 
-              {/* Botão confirmar */}
-              <button
-                onClick={handleConfirm}
-                disabled={cartIds.length === 0}
-                style={{
-                  width: "100%", height: 48, borderRadius: 100, border: "none",
-                  flexShrink: 0,
-                  background: cartIds.length > 0
-                    ? "linear-gradient(135deg,#16a34a,#15803d)"
-                    : "#e5e7eb",
-                  color: cartIds.length > 0 ? "white" : "#9ca3af",
-                  fontWeight: 800, fontSize: 13,
-                  cursor: cartIds.length > 0 ? "pointer" : "default",
-                  boxShadow: cartIds.length > 0 ? "0 4px 16px rgba(21,128,61,0.32)" : "none",
-                  transition: "all 0.2s",
-                }}
-              >
-                Confirmar ({cartIds.length}/{itemCount})
-              </button>
+        </AnimatePresence>
+      </div>
 
-            </div>
-          </motion.div>
-        )}
-
-        {/* ── RESULT ── */}
-        {phase === "result" && (
-          <motion.div key="res"
-            initial={{ opacity: 0, scale: 0.95 }} animate={{ opacity: 1, scale: 1 }}
-            style={{
-              flex: 1, display: "flex", flexDirection: "column",
-              alignItems: "center", justifyContent: "center",
-              padding: 20, overflowY: "auto",
-            }}
-          >
-            <div style={{
-              width: "100%", maxWidth: 420,
-              background: "#ffffff",
-              border: `2px solid ${isRoundCorrect ? "#86efac" : "#fca5a5"}`,
-              borderRadius: 20, padding: "18px 16px",
-              boxShadow: "0 8px 28px rgba(120,90,40,0.12)",
-            }}>
-              <p style={{ color: isRoundCorrect ? "#15803d" : "#b91c1c", fontWeight: 800, fontSize: 16, textAlign: "center", marginBottom: 14 }}>
-                {isRoundCorrect ? "✅ Lista correta!" : "❌ Resultado da rodada"}
-              </p>
-              <div style={{ display: "grid", gridTemplateColumns: `repeat(${listCols}, 1fr)`, gap: 8 }}>
-                {currentList.map(p => {
-                  const hit = selected.has(p.id);
-                  return (
-                    <div key={p.id} style={{
-                      display: "flex", flexDirection: "column", alignItems: "center", gap: 4,
-                      padding: "10px 4px",
-                      background: hit ? "#f0fdf4" : "#fef2f2",
-                      border: `1.5px solid ${hit ? "#bbf7d0" : "#fecaca"}`,
-                      borderRadius: 12,
-                    }}>
-                      <ProductSvg id={p.id} size={54} />
-                      <span style={{ fontSize: 9, fontWeight: 700, textAlign: "center", color: hit ? "#15803d" : "#b91c1c" }}>
-                        {p.name}
-                      </span>
-                      <span style={{ fontSize: 16 }}>{hit ? "✅" : "❌"}</span>
-                    </div>
-                  );
-                })}
-              </div>
-              {cartIds.some(id => !currentList.find(p => p.id === id)) && (
-                <p style={{ color: "#b91c1c", fontSize: 11, textAlign: "center", marginTop: 10 }}>
-                  ⚠️ Alguns itens não estavam na lista.
-                </p>
-              )}
-            </div>
-          </motion.div>
-        )}
-
-      </AnimatePresence>
+      {/* progresso da sessão (flutuante) */}
+      <div style={{ position: "absolute", left: 12, bottom: 12, zIndex: 3, display: "flex", alignItems: "center", gap: 10,
+        padding: "8px 14px", borderRadius: 14, background: "rgba(247,242,232,0.95)", border: "1px solid rgba(200,180,140,0.5)",
+        boxShadow: "0 6px 18px rgba(40,30,15,0.2)" }}>
+        <div style={{ lineHeight: 1.1 }}>
+          <div style={{ fontSize: 10, fontWeight: 700, color: "#8a7a5e", textTransform: "uppercase", letterSpacing: 0.5 }}>Progresso da sessão</div>
+          <div style={{ width: 130, height: 7, background: "#e6ddcb", borderRadius: 4, marginTop: 4, overflow: "hidden" }}>
+            <div style={{ height: "100%", width: `${sessionPct}%`, background: "linear-gradient(90deg,#f0b94a,#d98f2a)", borderRadius: 4, transition: "width .4s" }} />
+          </div>
+        </div>
+        <span style={{ fontSize: 14, fontWeight: 900, color: "#d98f2a" }}>{sessionPct}%</span>
+      </div>
     </div>
   );
 }
