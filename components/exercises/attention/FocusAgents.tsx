@@ -122,7 +122,7 @@ function AgentCard({ gameAgent, onClick, state, size }: {
       style={{ touchAction: "manipulation", width: size, background: "transparent", border: "none", padding: 0 }}
     >
       {/* eslint-disable-next-line @next/next/no-img-element */}
-      <img src={src} alt={gameAgent.agent.name}
+      <img src={src + AGENT_V} alt={gameAgent.agent.name}
         style={{
           width: "100%", height: "auto", display: "block", userSelect: "none",
           opacity: dim ? 0.5 : 1,
@@ -142,6 +142,10 @@ function AgentCard({ gameAgent, onClick, state, size }: {
 
 // ── Tutorial ──────────────────────────────────────────────────────────────────
 
+// cache-bust: força o navegador a buscar as imagens novas (transparentes),
+// mesmo que tenha a versão antiga (com fundo) guardada em cache. Subir este
+// número sempre que reprocessar as imagens dos agentes.
+const AGENT_V = "?v=2";
 const DEMO_AGENTS = [
   { id: "d-1", src: "/exercises/agentes-personagens/01_agente_azul_com_fone.png",       isTarget: true,  wave: { amp: 10, dur: 3.0, delay: 0.0 } },
   { id: "d-2", src: "/exercises/agentes-personagens/05_agente_vermelho_com_bone.png",   isTarget: false, wave: { amp:  8, dur: 2.5, delay: 0.6 } },
@@ -268,7 +272,7 @@ function FocusTutorial({ theme, onDone }: { theme: Theme; onDone: () => void }) 
             transition={{ duration: da.wave.dur, repeat: Infinity, ease: "easeInOut", delay: da.wave.delay }}
             className="relative flex items-center justify-center">
             {/* eslint-disable-next-line @next/next/no-img-element */}
-            <img src={da.src} alt="" draggable={false}
+            <img src={da.src + AGENT_V} alt="" draggable={false}
               style={{ width: 86, height: "auto", display: "block", userSelect: "none",
                 filter: da.isTarget
                   ? "drop-shadow(0 3px 6px rgba(0,0,0,0.6)) drop-shadow(0 0 10px rgba(74,222,128,0.95)) drop-shadow(0 0 20px rgba(74,222,128,0.7))"
@@ -434,7 +438,7 @@ export function FocusAgents({ difficulty, theme, onComplete, forceMode, exercise
   // apareçam todas juntas ao iniciar o jogo, sem o efeito de "surgir 1s depois".
   useEffect(() => {
     if (typeof window === "undefined") return;
-    agents.forEach(a => a.images.forEach(img => { const im = new window.Image(); im.src = img.src; }));
+    agents.forEach(a => a.images.forEach(img => { const im = new window.Image(); im.src = img.src + AGENT_V; }));
   }, []);
 
   const stopFallAnimation = () => {
