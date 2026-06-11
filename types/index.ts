@@ -153,9 +153,9 @@ export const EXERCISE_DEFINITIONS = {
   },
   "padroes-rotacao": {
     id: "padroes-rotacao",
-    name: "Padrões com Rotação",
+    name: "Matriz com Rotações",
     domain: "memory" as Domain,
-    description: "Treina memória operacional visuoespacial e rotação mental: memorizar posições na grade e marcá-las após ela girar.",
+    description: "Treina memória operacional visuoespacial e rotação mental: memorizar um padrão na matriz e reproduzi-lo depois que o tabuleiro inteiro gira.",
     estimatedMinutes: 6,
     icon: "🔄",
   },

@@ -213,10 +213,10 @@ const EXERCISE_INSTRUCTIONS: Record<string, string[]> = {
     "Conforme você acerta, as sequências ficam maiores e mais desafiadoras.",
   ],
   "padroes-rotacao": [
-    "Uma grade aparece com algumas posições acesas — memorize onde elas estão.",
-    "A grade então gira (90° ou 180°). Preste atenção para que lado ela girou.",
-    "Marque as posições onde os pontos ficam DEPOIS da rotação.",
-    "Conforme você acerta, a grade fica maior e a rotação mais difícil.",
+    "Observe as posições acesas na matriz e memorize o padrão.",
+    "A matriz inteira vai girar como um tabuleiro — observe a rotação.",
+    "Marque onde os pontos ficam DEPOIS da rotação e confirme.",
+    "Conforme você acerta, a matriz fica maior e a rotação mais difícil.",
   ],
   "sequencia-itens": [
     "Você verá (ou ouvirá) uma sequência de figuras, uma de cada vez.",
