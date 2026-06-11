@@ -39,6 +39,7 @@ type FailReason = "wrong-tap" | "timeout" | null;
 const CHAR_SIZE = 112;             // +51% vs. 74 — personagens grandes e legíveis
 const CHAR_H    = CHAR_SIZE * 1.5; // imagens são 2:3 (512×768)
 const TICK_MS   = 50;
+const ARENA_MARGIN = 8;            // margem de segurança: agentes nunca cortam na borda
 
 // Velocidade-base da arena (px/tick). A velocidade efetiva = base × fator do nível.
 const BASE_ARENA_SPEED = 2.4;
@@ -142,12 +143,12 @@ function AgentCard({ gameAgent, onClick, state, size }: {
 // ── Tutorial ──────────────────────────────────────────────────────────────────
 
 const DEMO_AGENTS = [
-  { id: "d-neo",    src: "/exercises/agents/neo-1.png",    isTarget: true,  wave: { amp: 10, dur: 3.0, delay: 0.0 } },
-  { id: "d-nexo",   src: "/exercises/agents/nexo-1.png",   isTarget: false, wave: { amp:  8, dur: 2.5, delay: 0.6 } },
-  { id: "d-mindra", src: "/exercises/agents/mindra-2.png", isTarget: false, wave: { amp: 12, dur: 3.5, delay: 1.1 } },
-  { id: "d-fokus",  src: "/exercises/agents/fokus-2.png",  isTarget: false, wave: { amp:  9, dur: 2.8, delay: 0.4 } },
-  { id: "d-ignite", src: "/exercises/agents/ignite-1.png", isTarget: false, wave: { amp: 11, dur: 3.2, delay: 1.7 } },
-  { id: "d-redex",  src: "/exercises/agents/redex-1.png",  isTarget: false, wave: { amp:  7, dur: 2.6, delay: 0.9 } },
+  { id: "d-1", src: "/exercises/agentes-novos/agente_01_azul_com_fone.png",     isTarget: true,  wave: { amp: 10, dur: 3.0, delay: 0.0 } },
+  { id: "d-2", src: "/exercises/agentes-novos/agente_03_vermelho_com_bone.png", isTarget: false, wave: { amp:  8, dur: 2.5, delay: 0.6 } },
+  { id: "d-3", src: "/exercises/agentes-novos/agente_05_verde_com_oculos.png",  isTarget: false, wave: { amp: 12, dur: 3.5, delay: 1.1 } },
+  { id: "d-4", src: "/exercises/agentes-novos/agente_07_roxo_com_raquete.png",  isTarget: false, wave: { amp:  9, dur: 2.8, delay: 0.4 } },
+  { id: "d-5", src: "/exercises/agentes-novos/agente_09_laranja_com_skate.png", isTarget: false, wave: { amp: 11, dur: 3.2, delay: 1.7 } },
+  { id: "d-6", src: "/exercises/agentes-novos/agente_11_amarelo_com_mochila.png", isTarget: false, wave: { amp:  7, dur: 2.6, delay: 0.9 } },
 ];
 
 // ── Tela de seleção de modo + nível ─────────────────────────────────────────────
@@ -617,25 +618,18 @@ export function FocusAgents({ difficulty, theme, onComplete, forceMode, exercise
         const angle = f.angle + f.turn * ticks;
         let x = f.x + Math.cos(angle) * f.speed * mult;
         let y = f.y + Math.sin(angle) * f.speed * mult;
-        let pass = f.passCount;
+        let na = angle;
 
-        // Wrap toroidal: ao sair por uma borda, reaparece pela oposta.
-        // Se o alvo cruzar uma borda, conta uma "escapada".
-        let wrapped = false;
-        if (x > W2)              { x = -CHAR_SIZE; wrapped = true; }
-        else if (x < -CHAR_SIZE) { x = W2;         wrapped = true; }
-        if (y > H2)              { y = -CHAR_H;    wrapped = true; }
-        else if (y < -CHAR_H)    { y = H2;         wrapped = true; }
-
-        // Só conta escapada de alvo AINDA NÃO capturado (no "capturar todos",
-        // um alvo já capturado que cruza a borda não deve causar falha). Nos modos
-        // com troca de regra (fases) a escapada não falha — o foco é flexibilidade.
-        if (!isPhasedRef.current && wrapped && targetUidsRef.current.includes(f.uid) && !foundUidsRef.current.includes(f.uid)) {
-          pass++;
-          newPassCount = pass;
-          if (pass >= 2) targetLost = true;
-        }
-        return { ...f, x, y, angle, passCount: pass };
+        // Arena delimitada: o agente QUICA nas paredes e nunca sai/corta na borda
+        // (margem de segurança). Tira a pressão motora — a dificuldade vem da regra
+        // cognitiva e dos distratores, não da velocidade de fuga dos alvos.
+        const maxX = Math.max(ARENA_MARGIN, W2 - CHAR_SIZE - ARENA_MARGIN);
+        const maxY = Math.max(ARENA_MARGIN, H2 - CHAR_H - ARENA_MARGIN);
+        if (x < ARENA_MARGIN)  { x = ARENA_MARGIN; na = Math.PI - na; }
+        else if (x > maxX)     { x = maxX;         na = Math.PI - na; }
+        if (y < ARENA_MARGIN)  { y = ARENA_MARGIN; na = -na; }
+        else if (y > maxY)     { y = maxY;         na = -na; }
+        return { ...f, x, y, angle: na, passCount: f.passCount };
       });
 
       // Aplica o movimento direto no DOM via transform (delta sobre a base).

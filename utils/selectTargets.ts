@@ -112,8 +112,7 @@ export const ALL_UNIFORM_COLORS: ColorName[] = [
   "azul", "verde", "roxo", "laranja", "vermelho", "amarelo",
 ];
 
-/** Lista de acessórios disponíveis (com pelo menos 1 personagem) */
+/** Acessórios disponíveis nos 36 agentes padronizados (cada um tem pelo menos 1 portador). */
 export const ALL_ACCESSORIES: AccessoryKey[] = [
-  "fone", "oculos", "oculos-escuros", "microfone", "capuz", "mochila",
-  "bone", "touca", "tablet", "gravata", "cesta", "skate", "raquete", "viseira",
+  "fone", "oculos", "bone", "mochila", "raquete", "skate",
 ];

@@ -1,213 +1,88 @@
-export type AgentId =
-  | "neo"
-  | "nexo"
-  | "mindra"
-  | "fokus"
-  | "ignite"
-  | "redex"
-  | "axon"
-  | "lumen"
-  | "voxe"
-  | "flora"
-  | "solax"
-  | "ember";
+export type AgentId = string;
 
-export type AgentColor =
-  | "blue"
-  | "green"
-  | "purple"
-  | "orange"
-  | "red"
-  | "gray"
-  | "yellow";
+export type AgentColor = "blue" | "green" | "purple" | "orange" | "red" | "gray" | "yellow";
+export type AgentAccessory = "none" | "headphones" | "red-cap" | "glasses" | "hood" | "beanie" | "robot-helmet";
+export type AgentExpression = "neutral" | "happy" | "focused";
 
-export type AgentAccessory =
-  | "none"
-  | "headphones"
-  | "red-cap"
-  | "glasses"
-  | "hood"
-  | "beanie"
-  | "robot-helmet";
-
-export type AgentExpression =
-  | "neutral"
-  | "happy"
-  | "focused";
-
-export interface AgentVariant {
-  src: string;
-  /** Descrição dos itens visíveis — usada nos comandos de variante */
-  label: string;
-  /** Tags dos itens visíveis — usadas pelo gerador de comandos */
-  tags: string[];
-}
+export interface AgentVariant { src: string; label: string; tags: string[]; }
 
 export interface AgentConfig {
-  id: AgentId;
-  name: string;
-  color: AgentColor;
-  accessory: AgentAccessory;
-  expression: AgentExpression;
-  description: string;
-  images: AgentVariant[];
+  id: AgentId; name: string; color: AgentColor; accessory: AgentAccessory;
+  expression: AgentExpression; description: string; images: AgentVariant[];
 }
 
+// 36 agentes padronizados (cor + com/sem acessório). 1 estado fixo por agente.
 export const agents: AgentConfig[] = [
-  {
-    id: "neo",
-    name: "NEO",
-    color: "blue",
-    accessory: "headphones",
-    expression: "happy",
-    description: "Agente azul com fone grande",
-    images: [
-      { src: "/exercises/agents/neo-1.png", label: "com fone de ouvido",                    tags: ["fone"] },
-      { src: "/exercises/agents/neo-2.png", label: "sem acessório",                          tags: [] },
-      { src: "/exercises/agents/neo-3.png", label: "com fone, óculos escuros e relógio",     tags: ["fone", "oculos-escuros", "relogio"] },
-    ],
-  },
-  {
-    id: "nexo",
-    name: "NEXO",
-    color: "blue",
-    accessory: "red-cap",
-    expression: "focused",
-    description: "Agente azul com boné vermelho",
-    images: [
-      { src: "/exercises/agents/nexo-1.png", label: "com boné vermelho",                    tags: ["bone"] },
-      { src: "/exercises/agents/nexo-2.png", label: "com microfone",                         tags: ["microfone"] },
-      { src: "/exercises/agents/nexo-3.png", label: "com boné, mochila e microfone",         tags: ["bone", "mochila", "microfone"] },
-    ],
-  },
-  {
-    id: "mindra",
-    name: "MINDRA",
-    color: "purple",
-    accessory: "glasses",
-    expression: "focused",
-    description: "Agente roxa com óculos",
-    images: [
-      { src: "/exercises/agents/mindra-1.png", label: "com óculos",                         tags: ["oculos"] },
-      { src: "/exercises/agents/mindra-2.png", label: "sem acessório",                       tags: [] },
-      { src: "/exercises/agents/mindra-3.png", label: "com óculos, fone e tablet",           tags: ["oculos", "fone", "tablet"] },
-    ],
-  },
-  {
-    id: "fokus",
-    name: "FOKUS",
-    color: "green",
-    accessory: "headphones",
-    expression: "neutral",
-    description: "Agente verde com fone",
-    images: [
-      { src: "/exercises/agents/fokus-1.png", label: "com fone de ouvido",                  tags: ["fone"] },
-      { src: "/exercises/agents/fokus-2.png", label: "com capuz",                            tags: ["capuz"] },
-      { src: "/exercises/agents/fokus-3.png", label: "com fone e cesta",                     tags: ["fone", "cesta"] },
-    ],
-  },
-  {
-    id: "ignite",
-    name: "IGNITE",
-    color: "orange",
-    accessory: "hood",
-    expression: "happy",
-    description: "Agente laranja com capuz",
-    images: [
-      { src: "/exercises/agents/ignite-1.png", label: "com capuz",                          tags: ["capuz"] },
-      { src: "/exercises/agents/ignite-2.png", label: "com capuz e mochila",                tags: ["capuz", "mochila"] },
-      { src: "/exercises/agents/ignite-3.png", label: "com capuz, gravata e skate",           tags: ["capuz", "gravata", "skate"] },
-    ],
-  },
-  {
-    id: "redex",
-    name: "REDEX",
-    color: "red",
-    accessory: "hood",
-    expression: "neutral",
-    description: "Agente vermelho com capuz",
-    images: [
-      { src: "/exercises/agents/redex-1.png", label: "com capuz",                           tags: ["capuz"] },
-      { src: "/exercises/agents/redex-2.png", label: "com capuz e mochila",                 tags: ["capuz", "mochila"] },
-      { src: "/exercises/agents/redex-3.png", label: "com capuz e fone azul",               tags: ["capuz", "fone", "fone-azul"] },
-    ],
-  },
-  {
-    id: "axon",
-    name: "AXON",
-    color: "gray",
-    accessory: "robot-helmet",
-    expression: "neutral",
-    description: "Robô",
-    images: [
-      { src: "/exercises/agents/axon-1.png", label: "de uniforme cinza",                    tags: ["uniforme-cinza"] },
-      { src: "/exercises/agents/axon-2.png", label: "de uniforme rosa",                     tags: ["uniforme-rosa"] },
-      { src: "/exercises/agents/axon-3.png", label: "de uniforme laranja",                  tags: ["uniforme-laranja"] },
-    ],
-  },
-  {
-    id: "lumen",
-    name: "LUMEN",
-    color: "yellow",
-    accessory: "beanie",
-    expression: "happy",
-    description: "Agente amarelo com touca",
-    images: [
-      { src: "/exercises/agents/lumen-1.png", label: "com touca",                           tags: ["touca"] },
-      { src: "/exercises/agents/lumen-2.png", label: "sem touca",                            tags: [] },
-      { src: "/exercises/agents/lumen-3.png", label: "com touca, fone e óculos escuros",    tags: ["touca", "fone", "oculos-escuros"] },
-    ],
-  },
-  {
-    id: "voxe",
-    name: "VOXE",
-    color: "purple",
-    accessory: "none",
-    expression: "neutral",
-    description: "Agente roxo sem acessório",
-    images: [
-      { src: "/exercises/agents/voxo-1.png", label: "sem acessório",                        tags: [] },
-      { src: "/exercises/agents/voxe-2.png", label: "com mochila",                          tags: ["mochila"] },
-      { src: "/exercises/agents/voxe-3.png", label: "com microfone, mochila e gravata",     tags: ["microfone", "mochila", "gravata"] },
-    ],
-  },
-  {
-    id: "flora",
-    name: "FLORA",
-    color: "green",
-    accessory: "none",
-    expression: "happy",
-    description: "Agente verde sem acessório",
-    images: [
-      { src: "/exercises/agents/flora-1.png", label: "sem acessório",                       tags: [] },
-      { src: "/exercises/agents/flora-2.png", label: "com boné",                            tags: ["bone"] },
-      { src: "/exercises/agents/flora-3.png", label: "com tablet e raquete",                tags: ["tablet", "raquete"] },
-    ],
-  },
-  {
-    id: "solax",
-    name: "SOLAX",
-    color: "yellow",
-    accessory: "glasses",
-    expression: "focused",
-    description: "Agente amarela com óculos",
-    images: [
-      { src: "/exercises/agents/solax-1.png", label: "com óculos de grau",                  tags: ["oculos"] },
-      { src: "/exercises/agents/solax-2.png", label: "com óculos e fone de ouvido",         tags: ["oculos", "fone"] },
-      { src: "/exercises/agents/solax-3.png", label: "com óculos escuros e skate",          tags: ["oculos-escuros", "skate"] },
-    ],
-  },
-  {
-    id: "ember",
-    name: "EMBER",
-    color: "red",
-    accessory: "none",
-    expression: "happy",
-    description: "Agente vermelha com microfone",
-    images: [
-      { src: "/exercises/agents/ember-1.png", label: "com microfone",                       tags: ["microfone"] },
-      { src: "/exercises/agents/ember-2.png", label: "com cesta",                           tags: ["cesta"] },
-      { src: "/exercises/agents/ember-3.png", label: "com óculos escuros e microfone",      tags: ["oculos-escuros", "microfone"] },
-    ],
-  },
+  { id: "ag01", name: "Agente 01", color: "blue", accessory: "none", expression: "neutral", description: "Agente azul com fone de ouvido",
+    images: [{ src: "/exercises/agentes-novos/agente_01_azul_com_fone.png", label: "com fone de ouvido", tags: ["fone"] }] },
+  { id: "ag02", name: "Agente 02", color: "blue", accessory: "none", expression: "neutral", description: "Agente azul sem fone de ouvido",
+    images: [{ src: "/exercises/agentes-novos/agente_02_azul_sem_fone.png", label: "sem acessório", tags: [] }] },
+  { id: "ag03", name: "Agente 03", color: "red", accessory: "none", expression: "neutral", description: "Agente vermelho com boné",
+    images: [{ src: "/exercises/agentes-novos/agente_03_vermelho_com_bone.png", label: "com boné", tags: ["bone"] }] },
+  { id: "ag04", name: "Agente 04", color: "red", accessory: "none", expression: "neutral", description: "Agente vermelho sem boné",
+    images: [{ src: "/exercises/agentes-novos/agente_04_vermelho_sem_bone.png", label: "sem acessório", tags: [] }] },
+  { id: "ag05", name: "Agente 05", color: "green", accessory: "none", expression: "neutral", description: "Agente verde com óculos",
+    images: [{ src: "/exercises/agentes-novos/agente_05_verde_com_oculos.png", label: "com óculos", tags: ["oculos"] }] },
+  { id: "ag06", name: "Agente 06", color: "green", accessory: "none", expression: "neutral", description: "Agente verde sem óculos",
+    images: [{ src: "/exercises/agentes-novos/agente_06_verde_sem_oculos.png", label: "sem acessório", tags: [] }] },
+  { id: "ag07", name: "Agente 07", color: "purple", accessory: "none", expression: "neutral", description: "Agente roxo com raquete",
+    images: [{ src: "/exercises/agentes-novos/agente_07_roxo_com_raquete.png", label: "com raquete", tags: ["raquete"] }] },
+  { id: "ag08", name: "Agente 08", color: "purple", accessory: "none", expression: "neutral", description: "Agente roxo sem raquete",
+    images: [{ src: "/exercises/agentes-novos/agente_08_roxo_sem_raquete.png", label: "sem acessório", tags: [] }] },
+  { id: "ag09", name: "Agente 09", color: "orange", accessory: "none", expression: "neutral", description: "Agente laranja com skate",
+    images: [{ src: "/exercises/agentes-novos/agente_09_laranja_com_skate.png", label: "com skate", tags: ["skate"] }] },
+  { id: "ag10", name: "Agente 10", color: "orange", accessory: "none", expression: "neutral", description: "Agente laranja sem skate",
+    images: [{ src: "/exercises/agentes-novos/agente_10_laranja_sem_skate.png", label: "sem acessório", tags: [] }] },
+  { id: "ag11", name: "Agente 11", color: "yellow", accessory: "none", expression: "neutral", description: "Agente amarelo com mochila",
+    images: [{ src: "/exercises/agentes-novos/agente_11_amarelo_com_mochila.png", label: "com mochila", tags: ["mochila"] }] },
+  { id: "ag12", name: "Agente 12", color: "yellow", accessory: "none", expression: "neutral", description: "Agente amarelo sem mochila",
+    images: [{ src: "/exercises/agentes-novos/agente_12_amarelo_sem_mochila.png", label: "sem acessório", tags: [] }] },
+  { id: "ag13", name: "Agente 13", color: "blue", accessory: "none", expression: "neutral", description: "Agente azul com boné",
+    images: [{ src: "/exercises/agentes-novos/agente_13_azul_com_bone.png", label: "com boné", tags: ["bone"] }] },
+  { id: "ag14", name: "Agente 14", color: "blue", accessory: "none", expression: "neutral", description: "Agente azul sem boné",
+    images: [{ src: "/exercises/agentes-novos/agente_14_azul_sem_bone.png", label: "sem acessório", tags: [] }] },
+  { id: "ag15", name: "Agente 15", color: "green", accessory: "none", expression: "neutral", description: "Agente verde com raquete",
+    images: [{ src: "/exercises/agentes-novos/agente_15_verde_com_raquete.png", label: "com raquete", tags: ["raquete"] }] },
+  { id: "ag16", name: "Agente 16", color: "green", accessory: "none", expression: "neutral", description: "Agente verde sem raquete",
+    images: [{ src: "/exercises/agentes-novos/agente_16_verde_sem_raquete.png", label: "sem acessório", tags: [] }] },
+  { id: "ag17", name: "Agente 17", color: "purple", accessory: "none", expression: "neutral", description: "Agente roxo com mochila",
+    images: [{ src: "/exercises/agentes-novos/agente_17_roxo_com_mochila.png", label: "com mochila", tags: ["mochila"] }] },
+  { id: "ag18", name: "Agente 18", color: "purple", accessory: "none", expression: "neutral", description: "Agente roxo sem mochila",
+    images: [{ src: "/exercises/agentes-novos/agente_18_roxo_sem_mochila.png", label: "sem acessório", tags: [] }] },
+  { id: "ag19", name: "Agente 19", color: "red", accessory: "none", expression: "neutral", description: "Agente vermelho com óculos",
+    images: [{ src: "/exercises/agentes-novos/agente_19_vermelho_com_oculos.png", label: "com óculos", tags: ["oculos"] }] },
+  { id: "ag20", name: "Agente 20", color: "red", accessory: "none", expression: "neutral", description: "Agente vermelho sem óculos",
+    images: [{ src: "/exercises/agentes-novos/agente_20_vermelho_sem_oculos.png", label: "sem acessório", tags: [] }] },
+  { id: "ag21", name: "Agente 21", color: "yellow", accessory: "none", expression: "neutral", description: "Agente amarelo sem mochila",
+    images: [{ src: "/exercises/agentes-novos/agente_21_amarelo_sem_mochila.png", label: "sem acessório", tags: [] }] },
+  { id: "ag22", name: "Agente 22", color: "purple", accessory: "none", expression: "neutral", description: "Agente roxo com mochila",
+    images: [{ src: "/exercises/agentes-novos/agente_22_roxo_com_mochila.png", label: "com mochila", tags: ["mochila"] }] },
+  { id: "ag23", name: "Agente 23", color: "orange", accessory: "none", expression: "neutral", description: "Agente laranja com óculos",
+    images: [{ src: "/exercises/agentes-novos/agente_23_laranja_com_oculos.png", label: "com óculos", tags: ["oculos"] }] },
+  { id: "ag24", name: "Agente 24", color: "orange", accessory: "none", expression: "neutral", description: "Agente laranja sem óculos",
+    images: [{ src: "/exercises/agentes-novos/agente_24_laranja_sem_oculos.png", label: "sem acessório", tags: [] }] },
+  { id: "ag25", name: "Agente 25", color: "blue", accessory: "none", expression: "neutral", description: "Agente azul com mochila",
+    images: [{ src: "/exercises/agentes-novos/agente_25_azul_com_mochila.png", label: "com mochila", tags: ["mochila"] }] },
+  { id: "ag26", name: "Agente 26", color: "blue", accessory: "none", expression: "neutral", description: "Agente azul sem mochila",
+    images: [{ src: "/exercises/agentes-novos/agente_26_azul_sem_mochila.png", label: "sem acessório", tags: [] }] },
+  { id: "ag27", name: "Agente 27", color: "red", accessory: "none", expression: "neutral", description: "Agente vermelho com raquete",
+    images: [{ src: "/exercises/agentes-novos/agente_27_vermelho_com_raquete.png", label: "com raquete", tags: ["raquete"] }] },
+  { id: "ag28", name: "Agente 28", color: "red", accessory: "none", expression: "neutral", description: "Agente vermelho sem raquete",
+    images: [{ src: "/exercises/agentes-novos/agente_28_vermelho_sem_raquete.png", label: "sem acessório", tags: [] }] },
+  { id: "ag29", name: "Agente 29", color: "green", accessory: "none", expression: "neutral", description: "Agente verde com boné",
+    images: [{ src: "/exercises/agentes-novos/agente_29_verde_com_bone.png", label: "com boné", tags: ["bone"] }] },
+  { id: "ag30", name: "Agente 30", color: "green", accessory: "none", expression: "neutral", description: "Agente verde sem boné",
+    images: [{ src: "/exercises/agentes-novos/agente_30_verde_sem_bone.png", label: "sem acessório", tags: [] }] },
+  { id: "ag31", name: "Agente 31", color: "purple", accessory: "none", expression: "neutral", description: "Agente roxo com óculos",
+    images: [{ src: "/exercises/agentes-novos/agente_31_roxo_com_oculos.png", label: "com óculos", tags: ["oculos"] }] },
+  { id: "ag32", name: "Agente 32", color: "purple", accessory: "none", expression: "neutral", description: "Agente roxo sem óculos",
+    images: [{ src: "/exercises/agentes-novos/agente_32_roxo_sem_oculos.png", label: "sem acessório", tags: [] }] },
+  { id: "ag33", name: "Agente 33", color: "orange", accessory: "none", expression: "neutral", description: "Agente laranja com fone de ouvido",
+    images: [{ src: "/exercises/agentes-novos/agente_33_laranja_com_fone.png", label: "com fone de ouvido", tags: ["fone"] }] },
+  { id: "ag34", name: "Agente 34", color: "orange", accessory: "none", expression: "neutral", description: "Agente laranja sem fone de ouvido",
+    images: [{ src: "/exercises/agentes-novos/agente_34_laranja_sem_fone.png", label: "sem acessório", tags: [] }] },
+  { id: "ag35", name: "Agente 35", color: "yellow", accessory: "none", expression: "neutral", description: "Agente amarelo com óculos",
+    images: [{ src: "/exercises/agentes-novos/agente_35_amarelo_com_oculos.png", label: "com óculos", tags: ["oculos"] }] },
+  { id: "ag36", name: "Agente 36", color: "yellow", accessory: "none", expression: "neutral", description: "Agente amarelo sem óculos",
+    images: [{ src: "/exercises/agentes-novos/agente_36_amarelo_sem_oculos.png", label: "sem acessório", tags: [] }] },
 ];
