@@ -96,16 +96,16 @@ const CATEGORY_KEYS = Object.keys(CATEGORIES);
 interface LevelConfig { count: number; extra: number; memSec: number; similar: boolean; }
 
 const LEVELS: LevelConfig[] = [
-  /*  1 */ { count: 3, extra: 3,  memSec: 9, similar: false },
-  /*  2 */ { count: 3, extra: 5,  memSec: 8, similar: false },
-  /*  3 */ { count: 4, extra: 5,  memSec: 8, similar: false },
-  /*  4 */ { count: 4, extra: 7,  memSec: 7, similar: false },
-  /*  5 */ { count: 5, extra: 7,  memSec: 7, similar: true  },
-  /*  6 */ { count: 5, extra: 9,  memSec: 6, similar: true  },
-  /*  7 */ { count: 6, extra: 10, memSec: 6, similar: true  },
-  /*  8 */ { count: 6, extra: 12, memSec: 5, similar: true  },
-  /*  9 */ { count: 7, extra: 13, memSec: 5, similar: true  },
-  /* 10 */ { count: 8, extra: 15, memSec: 4, similar: true  },
+  /*  1 */ { count: 3, extra: 3,  memSec: 8, similar: false },
+  /*  2 */ { count: 4, extra: 4,  memSec: 8, similar: false },
+  /*  3 */ { count: 5, extra: 5,  memSec: 7, similar: false },
+  /*  4 */ { count: 5, extra: 7,  memSec: 7, similar: true  },
+  /*  5 */ { count: 6, extra: 8,  memSec: 6, similar: true  },
+  /*  6 */ { count: 6, extra: 10, memSec: 6, similar: true  },
+  /*  7 */ { count: 7, extra: 11, memSec: 5, similar: true  },
+  /*  8 */ { count: 7, extra: 13, memSec: 5, similar: true  },
+  /*  9 */ { count: 8, extra: 14, memSec: 4, similar: true  },
+  /* 10 */ { count: 8, extra: 16, memSec: 4, similar: true  },
 ];
 
 function clampLevel(difficulty: number): number {
@@ -187,23 +187,47 @@ function buildTrial(level: number, recentIds: Set<string>): { list: Product[]; s
 
 // ── Web Speech ────────────────────────────────────────────────────────────────
 
-// NOTA (DUP-02): esta função locuciona a lista em SEQUÊNCIA (intro + cada item,
-// enfileirados em `speechSynthesis`) e usa o callback `onDone` (disparado no
-// `onend` da última fala) para desligar o indicador "Reproduzindo lista...".
+// Escolhe a voz pt-BR mais natural disponível no aparelho (evita a robótica padrão).
+function pickPtBrVoice(): SpeechSynthesisVoice | null {
+  const voices = window.speechSynthesis.getVoices();
+  if (!voices.length) return null;
+  const pt   = voices.filter(v => /pt[-_]?BR/i.test(v.lang) || /portugu/i.test(v.name));
+  const pool = pt.length ? pt : voices.filter(v => /^pt/i.test(v.lang));
+  if (!pool.length) return null;
+  // vozes conhecidas por soarem mais naturais (iOS/Android/Windows)
+  const prefer = ["luciana", "google português do brasil", "google portugues do brasil",
+                  "microsoft francisca", "francisca", "maria", "fernanda", "felipe", "microsoft daniel", "daniel"];
+  for (const name of prefer) {
+    const v = pool.find(v => v.name.toLowerCase().includes(name));
+    if (v) return v;
+  }
+  return pool[0];
+}
+
+// Locuciona a lista numa ÚNICA fala (mais confiável que enfileirar várias —
+// o speechSynthesis do Chrome às vezes pula itens de uma fila longa) usando a
+// melhor voz pt-BR do aparelho, em ritmo suave. `onDone` no fim da fala.
 function speakList(items: Product[], onDone?: () => void) {
   if (typeof window === "undefined" || !window.speechSynthesis) { onDone?.(); return; }
-  window.speechSynthesis.cancel();
-  const intro = new SpeechSynthesisUtterance("Sua lista de compras:");
-  intro.lang = "pt-BR"; intro.rate = 0.88; intro.pitch = 1.05;
-  const utterances = items.map(item => {
-    const u = new SpeechSynthesisUtterance(item.name);
-    u.lang = "pt-BR"; u.rate = 0.82; u.pitch = 1.0;
-    return u;
-  });
-  const last = utterances[utterances.length - 1];
-  if (last) last.onend = () => onDone?.();
-  window.speechSynthesis.speak(intro);
-  utterances.forEach(u => window.speechSynthesis.speak(u));
+  const synth = window.speechSynthesis;
+  const run = () => {
+    synth.cancel();
+    const u = new SpeechSynthesisUtterance("Sua lista de compras. " + items.map(i => i.name).join(", ") + ".");
+    u.lang = "pt-BR"; u.rate = 0.9; u.pitch = 1.0; u.volume = 1;
+    const v = pickPtBrVoice(); if (v) u.voice = v;
+    u.onend = () => onDone?.();
+    u.onerror = () => onDone?.();
+    synth.speak(u);
+  };
+  // garante que as vozes já carregaram (senão a 1ª fala costuma falhar)
+  if (synth.getVoices().length === 0) {
+    let started = false;
+    const start = () => { if (started) return; started = true; synth.onvoiceschanged = null; run(); };
+    synth.onvoiceschanged = start;
+    setTimeout(start, 300);
+  } else {
+    run();
+  }
 }
 
 // ── Prateleira (tema claro) ─────────────────────────────────────────────────────
@@ -424,11 +448,13 @@ export function DesafioSupermercado({ difficulty, theme, onComplete, mode = "lei
   const [showTutorial, setShowTutorial] = useState(true);
   const reportProgress = useExerciseProgress();
 
-  // Nível FIXO na sessão = nível salvo do paciente (vem de ExerciseConfig.currentDifficulty).
-  // A progressão (subir/manter/descer) é decidida no servidor após a sessão (progressionV2).
-  const level   = useMemo(() => clampLevel(difficulty), [difficulty]);
-  const cfg      = useMemo(() => levelConfig(level), [level]);
-  const itemCount = cfg.count;
+  // Começa no nível salvo do paciente (ExerciseConfig.currentDifficulty) e PROGRIDE
+  // dentro da sessão: 2 acertos seguidos sobem 1 nível, 2 erros descem 1. O nível
+  // final é persistido pelo servidor (progressionV2) com o nível consolidado.
+  const startLevel = useMemo(() => clampLevel(difficulty), [difficulty]);
+  const [sessionLevel, setSessionLevel] = useState(startLevel);
+  const [streak, setStreak]             = useState(0);
+  const itemCount = levelConfig(sessionLevel).count;
 
   const [trial, setTrial]               = useState(0);
   const [trialResults, setTrialResults] = useState<boolean[]>([]);
@@ -449,24 +475,27 @@ export function DesafioSupermercado({ difficulty, theme, onComplete, mode = "lei
 
   const clearTimer = () => { if (timerRef.current) { clearInterval(timerRef.current); timerRef.current = null; } };
 
-  const initTrial = useCallback(() => {
-    const { list, shelf } = buildTrial(level, new Set(recentRef.current));
+  const initTrial = useCallback((lvl: number) => {
+    const { list, shelf } = buildTrial(lvl, new Set(recentRef.current));
     // mantém uma janela das ~2 últimas listas para a randomização controlada
-    recentRef.current = [...list.map(p => p.id), ...recentRef.current].slice(0, itemCount * 2);
+    recentRef.current = [...list.map(p => p.id), ...recentRef.current].slice(0, levelConfig(lvl).count * 2);
     setCurrentList(list);
     setShelfProducts(shelf);
     setCartIds([]);
     setPhase("memorizing");
-  }, [level, itemCount]);
+  }, []);
+
+  // sincroniza o nível inicial quando o difficulty do paciente carrega (assíncrono)
+  useEffect(() => { setSessionLevel(startLevel); setStreak(0); }, [startLevel]);
 
   useEffect(() => {
-    if (!showTutorial) initTrial();
+    if (!showTutorial) initTrial(startLevel);
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [showTutorial]);
 
   useEffect(() => {
     if (phase !== "memorizing" || showTutorial || currentList.length === 0) return;
-    const total = memorizeSeconds(level, mode);
+    const total = memorizeSeconds(sessionLevel, mode);
     setCountdown(total);
     if (mode === "auditivo") { setAudioPlaying(true); speakList(currentList, () => setAudioPlaying(false)); }
     timerRef.current = setInterval(() => {
@@ -495,6 +524,14 @@ export function DesafioSupermercado({ difficulty, theme, onComplete, mode = "lei
     gradedRef.current.push(graded);
     wrongRef.current += wrongSelected;
 
+    // progressão DENTRO da sessão: 2 acertos seguidos sobem 1 nível, 2 erros descem 1
+    const newStreak = isCorrect ? Math.max(streak, 0) + 1 : Math.min(streak, 0) - 1;
+    let nextLevel = sessionLevel, resetStreak = false;
+    if (newStreak >= 2)  { nextLevel = Math.min(sessionLevel + 1, 10); resetStreak = true; }
+    if (newStreak <= -2) { nextLevel = Math.max(sessionLevel - 1, 1);  resetStreak = true; }
+    setStreak(resetStreak ? 0 : newStreak);
+    setSessionLevel(nextLevel);
+
     const newResults = [...trialResults, isCorrect];
     setTrialResults(newResults);
     setPhase("result");
@@ -509,17 +546,17 @@ export function DesafioSupermercado({ difficulty, theme, onComplete, mode = "lei
         onComplete({
           exerciseId: mode === "auditivo" ? "desafio-supermercado-auditivo" : "desafio-supermercado",
           domain: "memory",
-          score: calculateExerciseScore("desafio-supermercado", accTotal, undefined, level),
-          accuracy: accTotal, difficulty: level,
+          score: calculateExerciseScore("desafio-supermercado", accTotal, undefined, nextLevel),
+          accuracy: accTotal, difficulty: nextLevel,
           duration: Math.round((Date.now() - startTime.current) / 1000),
           metadata: {
-            trials: MAX_TRIALS, correct, mode, level,
+            trials: MAX_TRIALS, correct, mode, startLevel, level: nextLevel,
             progressionV2: true, accTotal, impulsive,
           },
         });
       } else {
         setTrial(nextTrial);
-        initTrial();
+        initTrial(nextLevel);
       }
     }, 1800);
   }
@@ -528,7 +565,7 @@ export function DesafioSupermercado({ difficulty, theme, onComplete, mode = "lei
     return <SupermercadoTutorial theme={theme} mode={mode} onDone={() => setShowTutorial(false)} />;
   }
 
-  const memorizeTotal = memorizeSeconds(level, mode);
+  const memorizeTotal = memorizeSeconds(sessionLevel, mode);
   const ratio = memorizeTotal > 0 ? countdown / memorizeTotal : 0;
   const isRoundCorrect = phase === "result"
     && currentList.every(p => selected.has(p.id))
@@ -550,7 +587,7 @@ export function DesafioSupermercado({ difficulty, theme, onComplete, mode = "lei
         boxShadow: "0 2px 8px rgba(21,128,61,0.35)",
       }}>
         <span style={{ color: "white", fontWeight: 800, fontSize: 13, letterSpacing: 1 }}>
-          🛒 SUPERMERCADO · N{level}
+          🛒 SUPERMERCADO · N{sessionLevel}
         </span>
         <div style={{ display: "flex", gap: 3 }}>
           {Array.from({ length: MAX_TRIALS }).map((_, i) => (
