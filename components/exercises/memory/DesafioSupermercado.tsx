@@ -20,125 +20,169 @@ export interface DesafioSupermercadoProps {
 
 interface Product { id: string; name: string; }
 
-// ── Data ──────────────────────────────────────────────────────────────────────
+// ── Banco de produtos (agrupado por categoria) ─────────────────────────────────
+// As categorias servem a dois propósitos clínicos:
+//  1. gerar listas VARIADAS (um item de categorias diferentes) → evita a sensação
+//     de "sequência sempre igual" das listas fixas antigas;
+//  2. nos níveis altos, escolher distratores da MESMA categoria dos itens da lista
+//     (ex.: lista tem "leite" → distrator "iogurte") aumentando a interferência
+//     semântica — mais exigente para a memória operacional.
 
-const PRODUCTS: Product[] = [
-  { id: "arroz",       name: "Arroz" },
-  { id: "feijao",      name: "Feijão" },
-  { id: "macarrao",    name: "Macarrão" },
-  { id: "oleo",        name: "Óleo de cozinha" },
-  { id: "sal",         name: "Sal" },
-  { id: "acucar",      name: "Açúcar" },
-  { id: "cafe",        name: "Café" },
-  { id: "leite",       name: "Leite" },
-  { id: "manteiga",    name: "Manteiga" },
-  { id: "pao",         name: "Pão" },
-  { id: "ovos",        name: "Ovos" },
-  { id: "queijo",      name: "Queijo" },
-  { id: "iogurte",     name: "Iogurte" },
-  { id: "frango",      name: "Frango" },
-  { id: "carne",       name: "Carne" },
-  { id: "sabao",       name: "Sabão" },
-  { id: "papel",       name: "Papel higiênico" },
-  { id: "shampoo",     name: "Shampoo" },
-  { id: "pasta",       name: "Pasta de dente" },
-  { id: "sabonete",    name: "Sabonete" },
-  { id: "detergente",  name: "Detergente" },
-  { id: "agua-san",    name: "Água sanitária" },
-  { id: "esponja",     name: "Esponja" },
-  { id: "saco-lixo",   name: "Saco de lixo" },
-  { id: "agua",        name: "Água" },
-  { id: "suco",        name: "Suco" },
-  { id: "refrigerante",name: "Refrigerante" },
-  { id: "banana",      name: "Banana" },
-  { id: "maca",        name: "Maçã" },
-  { id: "tomate",      name: "Tomate" },
-  { id: "alface",      name: "Alface" },
-  { id: "batata",      name: "Batata" },
-  { id: "cenoura",     name: "Cenoura" },
-  { id: "farinha",     name: "Farinha" },
-  { id: "vinagre",     name: "Vinagre" },
-];
-
-const SHOPPING_LISTS: Record<number, string[][]> = {
-  3: [
-    ["arroz", "feijao", "sal"],
-    ["sabao", "papel", "sabonete"],
-    ["pao", "manteiga", "cafe"],
-    ["banana", "maca", "suco"],
-    ["frango", "tomate", "alface"],
-    ["pasta", "shampoo", "detergente"],
-    ["leite", "ovos", "queijo"],
-    ["refrigerante", "batata", "cenoura"],
-    ["oleo", "acucar", "farinha"],
-    ["agua", "iogurte", "manteiga"],
+const CATEGORIES: Record<string, Product[]> = {
+  basicos: [
+    { id: "arroz",    name: "Arroz" },
+    { id: "feijao",   name: "Feijão" },
+    { id: "macarrao", name: "Macarrão" },
+    { id: "farinha",  name: "Farinha" },
+    { id: "acucar",   name: "Açúcar" },
+    { id: "sal",      name: "Sal" },
+    { id: "oleo",     name: "Óleo de cozinha" },
+    { id: "vinagre",  name: "Vinagre" },
+    { id: "cafe",     name: "Café" },
   ],
-  4: [
-    ["arroz", "feijao", "oleo", "sal"],
-    ["sabao", "papel", "sabonete", "detergente"],
-    ["pao", "manteiga", "cafe", "leite"],
-    ["banana", "maca", "tomate", "alface"],
-    ["frango", "ovos", "queijo", "iogurte"],
-    ["macarrao", "oleo", "acucar", "cafe"],
-    ["shampoo", "pasta", "agua-san", "esponja"],
-    ["refrigerante", "suco", "batata", "cenoura"],
-    ["carne", "arroz", "feijao", "tomate"],
-    ["agua", "frango", "alface", "sal"],
+  laticinios: [
+    { id: "leite",    name: "Leite" },
+    { id: "manteiga", name: "Manteiga" },
+    { id: "queijo",   name: "Queijo" },
+    { id: "iogurte",  name: "Iogurte" },
+    { id: "ovos",     name: "Ovos" },
   ],
-  5: [
-    ["arroz", "feijao", "oleo", "sal", "macarrao"],
-    ["sabao", "papel", "sabonete", "detergente", "esponja"],
-    ["pao", "manteiga", "cafe", "leite", "ovos"],
-    ["banana", "maca", "tomate", "alface", "cenoura"],
-    ["frango", "ovos", "queijo", "iogurte", "leite"],
-    ["shampoo", "pasta", "agua-san", "esponja", "saco-lixo"],
-    ["refrigerante", "suco", "agua", "batata", "cenoura"],
-    ["carne", "arroz", "feijao", "tomate", "oleo"],
+  padaria: [
+    { id: "pao",      name: "Pão" },
   ],
-  6: [
-    ["arroz", "feijao", "oleo", "sal", "macarrao", "acucar"],
-    ["sabao", "papel", "sabonete", "detergente", "esponja", "saco-lixo"],
-    ["pao", "manteiga", "cafe", "leite", "ovos", "queijo"],
-    ["banana", "maca", "tomate", "alface", "cenoura", "batata"],
-    ["frango", "carne", "ovos", "queijo", "iogurte", "leite"],
-    ["shampoo", "pasta", "agua-san", "esponja", "saco-lixo", "sabonete"],
+  carnes: [
+    { id: "frango",   name: "Frango" },
+    { id: "carne",    name: "Carne" },
   ],
-  7: [
-    ["arroz", "feijao", "oleo", "sal", "macarrao", "acucar", "cafe"],
-    ["sabao", "papel", "sabonete", "detergente", "esponja", "saco-lixo", "agua-san"],
-    ["pao", "manteiga", "cafe", "leite", "ovos", "queijo", "iogurte"],
-    ["banana", "maca", "tomate", "alface", "cenoura", "batata", "frango"],
+  limpeza: [
+    { id: "sabao",     name: "Sabão" },
+    { id: "detergente",name: "Detergente" },
+    { id: "agua-san",  name: "Água sanitária" },
+    { id: "esponja",   name: "Esponja" },
+    { id: "saco-lixo", name: "Saco de lixo" },
+  ],
+  higiene: [
+    { id: "papel",    name: "Papel higiênico" },
+    { id: "shampoo",  name: "Shampoo" },
+    { id: "pasta",    name: "Pasta de dente" },
+    { id: "sabonete", name: "Sabonete" },
+  ],
+  bebidas: [
+    { id: "agua",        name: "Água" },
+    { id: "suco",        name: "Suco" },
+    { id: "refrigerante",name: "Refrigerante" },
+  ],
+  hortifruti: [
+    { id: "banana",  name: "Banana" },
+    { id: "maca",    name: "Maçã" },
+    { id: "tomate",  name: "Tomate" },
+    { id: "alface",  name: "Alface" },
+    { id: "batata",  name: "Batata" },
+    { id: "cenoura", name: "Cenoura" },
   ],
 };
 
+const PRODUCTS: Product[] = Object.values(CATEGORIES).flat();
 const PRODUCT_MAP = new Map(PRODUCTS.map(p => [p.id, p]));
+const CAT_OF = new Map<string, string>();
+for (const [cat, items] of Object.entries(CATEGORIES)) {
+  for (const p of items) CAT_OF.set(p.id, cat);
+}
+const CATEGORY_KEYS = Object.keys(CATEGORIES);
 
-function initialItemCount(difficulty: number): number {
-  if (difficulty <= 2) return 3;
-  if (difficulty <= 4) return 4;
-  if (difficulty <= 6) return 5;
-  if (difficulty <= 8) return 6;
-  return 7;
+// ── Tabela de níveis (1–10) — dificuldade multifatorial ─────────────────────────
+// Cada nível combina: nº de itens a memorizar, nº de distratores na prateleira,
+// tempo de memorização e se os distratores são semanticamente semelhantes.
+interface LevelConfig { count: number; extra: number; memSec: number; similar: boolean; }
+
+const LEVELS: LevelConfig[] = [
+  /*  1 */ { count: 3, extra: 3,  memSec: 9, similar: false },
+  /*  2 */ { count: 3, extra: 5,  memSec: 8, similar: false },
+  /*  3 */ { count: 4, extra: 5,  memSec: 8, similar: false },
+  /*  4 */ { count: 4, extra: 7,  memSec: 7, similar: false },
+  /*  5 */ { count: 5, extra: 7,  memSec: 7, similar: true  },
+  /*  6 */ { count: 5, extra: 9,  memSec: 6, similar: true  },
+  /*  7 */ { count: 6, extra: 10, memSec: 6, similar: true  },
+  /*  8 */ { count: 6, extra: 12, memSec: 5, similar: true  },
+  /*  9 */ { count: 7, extra: 13, memSec: 5, similar: true  },
+  /* 10 */ { count: 8, extra: 15, memSec: 4, similar: true  },
+];
+
+function clampLevel(difficulty: number): number {
+  return Math.min(10, Math.max(1, Math.round(difficulty)));
 }
 
-function memorizeSeconds(count: number, mode: "leitura" | "auditivo"): number {
-  const base = Math.max(5, 13 - count);
+function levelConfig(level: number): LevelConfig {
+  return LEVELS[level - 1] ?? LEVELS[0];
+}
+
+function memorizeSeconds(level: number, mode: "leitura" | "auditivo"): number {
+  const base = levelConfig(level).memSec;
   return mode === "auditivo" ? base + 2 : base;
 }
 
-function buildTrial(count: number, usedLists: Set<string>): { list: Product[]; shelf: Product[] } {
-  const lists    = SHOPPING_LISTS[count] ?? SHOPPING_LISTS[3];
-  const available = lists.filter(l => !usedLists.has(l.join(",")));
-  const pool     = available.length > 0 ? available : lists;
-  const chosen   = pool[Math.floor(Math.random() * pool.length)];
-  usedLists.add(chosen.join(","));
+function shuffle<T>(arr: T[]): T[] {
+  return [...arr].sort(() => Math.random() - 0.5);
+}
 
-  const listProducts = chosen.map(id => PRODUCT_MAP.get(id)!).filter(Boolean);
-  const listIds      = new Set(chosen);
-  const fillers      = PRODUCTS.filter(p => !listIds.has(p.id)).sort(() => Math.random() - 0.5);
-  const shelfSize    = Math.min(PRODUCTS.length, count * 2 + 4);
-  const shelf        = [...listProducts, ...fillers.slice(0, shelfSize - count)].sort(() => Math.random() - 0.5);
-  return { list: listProducts, shelf };
+function pickOne<T>(arr: T[]): T {
+  return arr[Math.floor(Math.random() * arr.length)];
+}
+
+// Gera uma lista VARIADA: percorre categorias embaralhadas pegando 1 item de cada,
+// evitando itens recém-usados (recentIds). Cai para qualquer item se faltar.
+function buildList(count: number, recentIds: Set<string>): Product[] {
+  const picked: Product[] = [];
+  const pickedIds = new Set<string>();
+  const cats = shuffle(CATEGORY_KEYS);
+
+  for (let round = 0; round < 4 && picked.length < count; round++) {
+    for (const cat of cats) {
+      if (picked.length >= count) break;
+      const candidates = CATEGORIES[cat].filter(
+        p => !pickedIds.has(p.id) && (round > 0 || !recentIds.has(p.id)),
+      );
+      if (candidates.length) {
+        const chosen = pickOne(candidates);
+        picked.push(chosen);
+        pickedIds.add(chosen.id);
+      }
+    }
+  }
+  // Preenchimento de segurança (ignora recentes) caso ainda falte.
+  if (picked.length < count) {
+    for (const p of shuffle(PRODUCTS)) {
+      if (picked.length >= count) break;
+      if (!pickedIds.has(p.id)) { picked.push(p); pickedIds.add(p.id); }
+    }
+  }
+  return picked;
+}
+
+// Monta a prateleira: itens da lista + distratores. Se `similar`, prioriza
+// distratores da MESMA categoria dos itens da lista (mais confundíveis).
+function buildShelf(list: Product[], extra: number, similar: boolean): Product[] {
+  const listIds = new Set(list.map(p => p.id));
+  const pool = PRODUCTS.filter(p => !listIds.has(p.id));
+  let distractors: Product[];
+
+  if (similar) {
+    const listCats = new Set(list.map(p => CAT_OF.get(p.id)));
+    const sameCat = pool.filter(p => listCats.has(CAT_OF.get(p.id)));
+    const others  = pool.filter(p => !listCats.has(CAT_OF.get(p.id)));
+    distractors = [...shuffle(sameCat), ...shuffle(others)].slice(0, extra);
+  } else {
+    distractors = shuffle(pool).slice(0, extra);
+  }
+
+  return shuffle([...list, ...distractors]);
+}
+
+function buildTrial(level: number, recentIds: Set<string>): { list: Product[]; shelf: Product[] } {
+  const cfg  = levelConfig(level);
+  const list = buildList(cfg.count, recentIds);
+  const shelf = buildShelf(list, cfg.extra, cfg.similar);
+  return { list, shelf };
 }
 
 // ── Web Speech ────────────────────────────────────────────────────────────────
@@ -146,11 +190,6 @@ function buildTrial(count: number, usedLists: Set<string>): { list: Product[]; s
 // NOTA (DUP-02): esta função locuciona a lista em SEQUÊNCIA (intro + cada item,
 // enfileirados em `speechSynthesis`) e usa o callback `onDone` (disparado no
 // `onend` da última fala) para desligar o indicador "Reproduzindo lista...".
-// `playTTS` de `@/lib/tts` é fire-and-forget e CANCELA a fala anterior a cada
-// chamada (`cancelTTS` interno) — chamá-lo em loop deixaria só o último item
-// audível e não oferece callback de término. Por isso a locução permanece local.
-// O cancelamento, esse sim, passou a usar `cancelTTS` (helper canônico, que
-// também aborta um eventual áudio MP3 do manifesto além do speechSynthesis).
 function speakList(items: Product[], onDone?: () => void) {
   if (typeof window === "undefined" || !window.speechSynthesis) { onDone?.(); return; }
   window.speechSynthesis.cancel();
@@ -167,43 +206,7 @@ function speakList(items: Product[], onDone?: () => void) {
   utterances.forEach(u => window.speechSynthesis.speak(u));
 }
 
-// ── Cart SVG (VISTA LATERAL) ────────────────────────────────────────────────────
-// Carrinho visto de lado: alça à esquerda, cesta à direita, 2 rodas. Preenche a
-// largura do container (width 100%). Itens aparecem dentro da cesta (CART_INTERIOR, %).
-
-function CartSvg() {
-  return (
-    <svg width="100%" viewBox="0 0 200 170" preserveAspectRatio="xMidYMid meet"
-      fill="none" xmlns="http://www.w3.org/2000/svg" style={{ display: "block" }}>
-      {/* alça */}
-      <path d="M8 38 Q12 38 48 38" stroke="#d97706" strokeWidth="8" strokeLinecap="round"/>
-      {/* cesta */}
-      <path d="M44 18 L192 18 L180 120 L56 120 Z" fill="rgba(217,119,6,0.15)" stroke="#d97706" strokeWidth="5" strokeLinejoin="round"/>
-      {/* arames horizontais */}
-      <line x1="47" y1="52"  x2="189" y2="52"  stroke="#d97706" strokeWidth="2.5" opacity="0.4"/>
-      <line x1="50" y1="86"  x2="184" y2="86"  stroke="#d97706" strokeWidth="2.5" opacity="0.4"/>
-      {/* arames verticais */}
-      <line x1="83"  y1="18" x2="74"  y2="120" stroke="#d97706" strokeWidth="2.5" opacity="0.4"/>
-      <line x1="118" y1="18" x2="118" y2="120" stroke="#d97706" strokeWidth="2.5" opacity="0.4"/>
-      <line x1="152" y1="18" x2="158" y2="120" stroke="#d97706" strokeWidth="2.5" opacity="0.4"/>
-      {/* barra inferior */}
-      <path d="M56 120 L180 120" stroke="#d97706" strokeWidth="6" strokeLinecap="round"/>
-      {/* hastes das rodas */}
-      <line x1="82"  y1="120" x2="74"  y2="142" stroke="#d97706" strokeWidth="5.5" strokeLinecap="round"/>
-      <line x1="162" y1="120" x2="170" y2="142" stroke="#d97706" strokeWidth="5.5" strokeLinecap="round"/>
-      {/* rodas */}
-      <circle cx="74"  cy="153" r="13" fill="#1a0a00" stroke="#92400e" strokeWidth="2.5"/>
-      <circle cx="74"  cy="153" r="5"  fill="#6b4f1a"/>
-      <circle cx="170" cy="153" r="13" fill="#1a0a00" stroke="#92400e" strokeWidth="2.5"/>
-      <circle cx="170" cy="153" r="5"  fill="#6b4f1a"/>
-    </svg>
-  );
-}
-
-// Área interna da cesta (lateral) onde os itens aparecem — em % do container.
-const CART_INTERIOR = { left: "24%", top: "12%", width: "68%", height: "55%" };
-
-// ── Full-screen Shelf ─────────────────────────────────────────────────────────
+// ── Prateleira (tema claro) ─────────────────────────────────────────────────────
 
 const SHELF_COLS = 3;  // prateleira fica ao lado do carrinho — 3 colunas cabem melhor
 
@@ -220,21 +223,21 @@ function FullShelf({
 
   const Plank = () => (
     <div style={{
-      height: 15,
-      background: "linear-gradient(to bottom, #e8c07a 0%, #c8974a 50%, #8b6320 100%)",
-      boxShadow: "0 4px 10px rgba(0,0,0,0.6), inset 0 1px 0 rgba(255,255,255,0.28)",
+      height: 13,
+      background: "linear-gradient(to bottom,#f0dcbb 0%,#e0bd8a 55%,#c79a5e 100%)",
+      boxShadow: "0 3px 7px rgba(140,100,50,0.28), inset 0 1px 0 rgba(255,255,255,0.6)",
     }} />
   );
 
   return (
-    <div style={{ background: "#2a1103" }}>
+    <div style={{ background: "#f6efe3" }}>
       <Plank />
       {rows.map((row, ri) => (
         <div key={ri}>
           <div style={{
             display: "grid",
             gridTemplateColumns: `repeat(${SHELF_COLS}, 1fr)`,
-            gap: 5, padding: "7px 5px",
+            gap: 6, padding: "9px 6px",
           }}>
             {row.map(p => {
               const inCart = cartIds.includes(p.id);
@@ -245,20 +248,22 @@ function FullShelf({
                   whileTap={{ scale: 0.86 }}
                   style={{
                     display: "flex", flexDirection: "column", alignItems: "center", gap: 3,
-                    padding: "8px 3px 6px",
-                    borderRadius: 10,
-                    border: inCart ? "2.5px solid #facc15" : "1.5px solid rgba(255,200,120,0.12)",
-                    background: inCart ? "rgba(250,204,21,0.13)" : "rgba(255,245,220,0.07)",
+                    padding: "9px 3px 7px",
+                    borderRadius: 12,
+                    border: inCart ? "2.5px solid #16a34a" : "1.5px solid #e6dcc8",
+                    background: inCart ? "#e9f9ee" : "#ffffff",
+                    boxShadow: inCart
+                      ? "0 2px 8px rgba(22,163,74,0.18)"
+                      : "0 2px 6px rgba(120,90,50,0.10)",
                     position: "relative", cursor: "pointer",
-                    opacity: inCart ? 0.65 : 1,
-                    transition: "opacity 0.15s",
+                    transition: "all 0.15s",
                   }}
                 >
                   <ProductSvg id={p.id} size={62} />
                   {showLabels && (
                     <span style={{
                       fontSize: 9, fontWeight: 700, textAlign: "center", lineHeight: 1.2,
-                      color: inCart ? "#facc15" : "#f5e6c8",
+                      color: inCart ? "#15803d" : "#4b5563",
                       maxWidth: "100%", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap",
                     }}>
                       {p.name}
@@ -268,9 +273,9 @@ function FullShelf({
                     <motion.div initial={{ scale: 0 }} animate={{ scale: 1 }} style={{
                       position: "absolute", top: 3, right: 3,
                       width: 18, height: 18, borderRadius: "50%",
-                      background: "#facc15",
+                      background: "#16a34a",
                       display: "flex", alignItems: "center", justifyContent: "center",
-                      fontSize: 10, fontWeight: "bold", color: "#1a0e05",
+                      fontSize: 10, fontWeight: "bold", color: "#ffffff",
                     }}>
                       ✓
                     </motion.div>
@@ -308,21 +313,21 @@ function TutMemorizeStep({ mode, onDone }: { mode: "leitura" | "auditivo"; onDon
   }, []);
 
   return (
-    <div className="rounded-xl p-4 space-y-3 bg-amber-50 border border-amber-200">
+    <div className="rounded-xl p-4 space-y-3 bg-emerald-50 border border-emerald-200">
       <div className="flex justify-between items-center">
         <p className="text-sm font-bold text-gray-800">
           {mode === "auditivo" ? "🔊 Ouça os itens:" : "📋 Memorize a lista:"}
         </p>
         <div className="flex items-center gap-2">
-          <span className="text-xs text-amber-600 font-mono">{countdown}s</span>
-          <button onClick={onDone} className="text-xs px-2 py-0.5 rounded-lg font-bold bg-amber-500 text-white">
+          <span className="text-xs text-emerald-600 font-mono">{countdown}s</span>
+          <button onClick={onDone} className="text-xs px-2 py-0.5 rounded-lg font-bold bg-emerald-500 text-white">
             Pronto →
           </button>
         </div>
       </div>
       <div className="grid grid-cols-2 gap-3">
         {TUT_LIST.map(p => (
-          <div key={p.id} className="flex flex-col items-center gap-2 p-3 rounded-xl border-2 border-amber-300 bg-white">
+          <div key={p.id} className="flex flex-col items-center gap-2 p-3 rounded-xl border-2 border-emerald-200 bg-white">
             <ProductSvg id={p.id} size={72} />
             {mode === "leitura" && <span className="text-sm font-bold text-center text-gray-800">{p.name}</span>}
             {mode === "auditivo" && <span className="text-xl">🔊</span>}
@@ -360,16 +365,16 @@ function TutShelfStep({ mode, onDone }: { mode: "leitura" | "auditivo"; onDone: 
           return (
             <button key={p.id} onClick={() => tap(p.id)}
               className={`flex flex-col items-center gap-1 p-2 rounded-lg border-2 transition-all active:scale-95 relative ${
-                inCart ? "border-yellow-400 bg-yellow-50" : "border-amber-200/50 bg-amber-50/80"
+                inCart ? "border-emerald-400 bg-emerald-50" : "border-gray-200 bg-white"
               }`}>
               <ProductSvg id={p.id} size={52} />
               {mode === "leitura" && (
-                <span className={`text-[9px] text-center font-semibold leading-tight ${inCart ? "text-amber-700" : "text-gray-700"}`}>
+                <span className={`text-[9px] text-center font-semibold leading-tight ${inCart ? "text-emerald-700" : "text-gray-700"}`}>
                   {p.name}
                 </span>
               )}
               {inCart && (
-                <div className="absolute top-1 right-1 w-4 h-4 rounded-full bg-yellow-400 flex items-center justify-center text-[9px] font-bold text-yellow-900">✓</div>
+                <div className="absolute top-1 right-1 w-4 h-4 rounded-full bg-emerald-500 flex items-center justify-center text-[9px] font-bold text-white">✓</div>
               )}
             </button>
           );
@@ -377,7 +382,7 @@ function TutShelfStep({ mode, onDone }: { mode: "leitura" | "auditivo"; onDone: 
       </div>
       {/* mini cart display */}
       {cart.length > 0 && (
-        <div className="flex items-center gap-2 p-2 rounded-xl bg-amber-50 border border-amber-200">
+        <div className="flex items-center gap-2 p-2 rounded-xl bg-emerald-50 border border-emerald-200">
           <span className="text-sm">🛒</span>
           <div className="flex gap-1">
             {cart.map(id => <ProductSvg key={id} id={id} size={32} />)}
@@ -419,42 +424,49 @@ export function DesafioSupermercado({ difficulty, theme, onComplete, mode = "lei
   const [showTutorial, setShowTutorial] = useState(true);
   const reportProgress = useExerciseProgress();
 
-  const [trial, setTrial]             = useState(0);
+  // Nível FIXO na sessão = nível salvo do paciente (vem de ExerciseConfig.currentDifficulty).
+  // A progressão (subir/manter/descer) é decidida no servidor após a sessão (progressionV2).
+  const level   = useMemo(() => clampLevel(difficulty), [difficulty]);
+  const cfg      = useMemo(() => levelConfig(level), [level]);
+  const itemCount = cfg.count;
+
+  const [trial, setTrial]               = useState(0);
   const [trialResults, setTrialResults] = useState<boolean[]>([]);
-  const [phase, setPhase]             = useState<"memorizing" | "shopping" | "result">("memorizing");
-  const [countdown, setCountdown]     = useState(0);
-  const [cartIds, setCartIds]         = useState<string[]>([]); // insertion-ordered IDs
-  const selected                      = useMemo(() => new Set(cartIds), [cartIds]);
-  const [itemCount, setItemCount]     = useState(() => initialItemCount(difficulty));
-  const [streak, setStreak]           = useState(0);
+  const [phase, setPhase]               = useState<"memorizing" | "shopping" | "result">("memorizing");
+  const [countdown, setCountdown]       = useState(0);
+  const [cartIds, setCartIds]           = useState<string[]>([]); // insertion-ordered IDs
+  const selected                        = useMemo(() => new Set(cartIds), [cartIds]);
   const [audioPlaying, setAudioPlaying] = useState(false);
 
-  const usedLists    = useRef(new Set<string>());
-  const startTime    = useRef(Date.now());
-  const timerRef     = useRef<ReturnType<typeof setInterval> | null>(null);
-  const nextCountRef = useRef(itemCount);
+  const recentRef  = useRef<string[]>([]);   // ids das últimas listas — evita repetição imediata
+  const gradedRef  = useRef<number[]>([]);    // acerto graduado por rodada (0–1) → accTotal
+  const wrongRef   = useRef(0);               // total de itens errados marcados (sinal de impulsividade)
+  const startTime  = useRef(Date.now());
+  const timerRef   = useRef<ReturnType<typeof setInterval> | null>(null);
 
   const [currentList, setCurrentList]     = useState<Product[]>([]);
   const [shelfProducts, setShelfProducts] = useState<Product[]>([]);
 
   const clearTimer = () => { if (timerRef.current) { clearInterval(timerRef.current); timerRef.current = null; } };
 
-  const initTrial = useCallback((count: number) => {
-    const { list, shelf } = buildTrial(count, usedLists.current);
+  const initTrial = useCallback(() => {
+    const { list, shelf } = buildTrial(level, new Set(recentRef.current));
+    // mantém uma janela das ~2 últimas listas para a randomização controlada
+    recentRef.current = [...list.map(p => p.id), ...recentRef.current].slice(0, itemCount * 2);
     setCurrentList(list);
     setShelfProducts(shelf);
     setCartIds([]);
     setPhase("memorizing");
-  }, []);
+  }, [level, itemCount]);
 
   useEffect(() => {
-    if (!showTutorial) initTrial(itemCount);
+    if (!showTutorial) initTrial();
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [showTutorial]);
 
   useEffect(() => {
     if (phase !== "memorizing" || showTutorial || currentList.length === 0) return;
-    const total = memorizeSeconds(itemCount, mode);
+    const total = memorizeSeconds(level, mode);
     setCountdown(total);
     if (mode === "auditivo") { setAudioPlaying(true); speakList(currentList, () => setAudioPlaying(false)); }
     timerRef.current = setInterval(() => {
@@ -473,19 +485,15 @@ export function DesafioSupermercado({ difficulty, theme, onComplete, mode = "lei
   }
 
   function handleConfirm() {
-    const correctIds     = new Set(currentList.map(p => p.id));
+    const correctIds      = new Set(currentList.map(p => p.id));
     const correctSelected = cartIds.filter(id => correctIds.has(id)).length;
-    const wrongSelected  = cartIds.filter(id => !correctIds.has(id)).length;
-    const isCorrect      = correctSelected === correctIds.size && wrongSelected === 0;
+    const wrongSelected   = cartIds.filter(id => !correctIds.has(id)).length;
+    const isCorrect       = correctSelected === correctIds.size && wrongSelected === 0;
 
-    const newStreak = isCorrect ? Math.max(streak, 0) + 1 : Math.min(streak, 0) - 1;
-    let nextCount = itemCount;
-    let resetStreak = false;
-    if (newStreak >= 2)  { nextCount = Math.min(itemCount + 1, 7); resetStreak = true; }
-    if (newStreak <= -2) { nextCount = Math.max(itemCount - 1, 3); resetStreak = true; }
-    nextCountRef.current = nextCount;
-    setStreak(resetStreak ? 0 : newStreak);
-    setItemCount(nextCount);
+    // acerto graduado: recompensa itens certos, penaliza marcações erradas
+    const graded = Math.max(0, (correctSelected - wrongSelected) / correctIds.size);
+    gradedRef.current.push(graded);
+    wrongRef.current += wrongSelected;
 
     const newResults = [...trialResults, isCorrect];
     setTrialResults(newResults);
@@ -495,19 +503,23 @@ export function DesafioSupermercado({ difficulty, theme, onComplete, mode = "lei
 
     setTimeout(() => {
       if (nextTrial >= MAX_TRIALS) {
-        const correct  = newResults.filter(Boolean).length;
-        const accuracy = correct / MAX_TRIALS;
+        const correct   = newResults.filter(Boolean).length;
+        const accTotal  = gradedRef.current.reduce((a, b) => a + b, 0) / MAX_TRIALS;
+        const impulsive = wrongRef.current > MAX_TRIALS; // > 1 erro/rodada em média
         onComplete({
           exerciseId: mode === "auditivo" ? "desafio-supermercado-auditivo" : "desafio-supermercado",
           domain: "memory",
-          score: calculateExerciseScore("desafio-supermercado", accuracy, undefined, difficulty),
-          accuracy, difficulty,
+          score: calculateExerciseScore("desafio-supermercado", accTotal, undefined, level),
+          accuracy: accTotal, difficulty: level,
           duration: Math.round((Date.now() - startTime.current) / 1000),
-          metadata: { trials: MAX_TRIALS, correct, mode },
+          metadata: {
+            trials: MAX_TRIALS, correct, mode, level,
+            progressionV2: true, accTotal, impulsive,
+          },
         });
       } else {
         setTrial(nextTrial);
-        initTrial(nextCountRef.current);
+        initTrial();
       }
     }, 1800);
   }
@@ -516,7 +528,7 @@ export function DesafioSupermercado({ difficulty, theme, onComplete, mode = "lei
     return <SupermercadoTutorial theme={theme} mode={mode} onDone={() => setShowTutorial(false)} />;
   }
 
-  const memorizeTotal = memorizeSeconds(itemCount, mode);
+  const memorizeTotal = memorizeSeconds(level, mode);
   const ratio = memorizeTotal > 0 ? countdown / memorizeTotal : 0;
   const isRoundCorrect = phase === "result"
     && currentList.every(p => selected.has(p.id))
@@ -526,32 +538,32 @@ export function DesafioSupermercado({ difficulty, theme, onComplete, mode = "lei
 
   return (
     <div style={{
-      position: "fixed", inset: 0, background: "#140a02",
+      position: "fixed", inset: 0, background: "#eef2f6",
       display: "flex", flexDirection: "column", overflow: "hidden",
     }}>
 
       {/* ── HUD ── */}
       <div style={{
-        background: "linear-gradient(90deg,#7c2d12,#92400e)",
+        background: "linear-gradient(90deg,#15803d,#22c55e)",
         padding: "7px 14px", flexShrink: 0,
         display: "flex", alignItems: "center", justifyContent: "space-between",
-        boxShadow: "0 2px 8px rgba(0,0,0,0.5)",
+        boxShadow: "0 2px 8px rgba(21,128,61,0.35)",
       }}>
         <span style={{ color: "white", fontWeight: 800, fontSize: 13, letterSpacing: 1 }}>
-          🛒 SUPERMERCADO
+          🛒 SUPERMERCADO · N{level}
         </span>
         <div style={{ display: "flex", gap: 3 }}>
           {Array.from({ length: MAX_TRIALS }).map((_, i) => (
             <div key={i} style={{
               height: 5, width: 20, borderRadius: 3,
               background: i < trialResults.length
-                ? (trialResults[i] ? "#22c55e" : "#ef4444")
-                : i === trial ? "#facc15" : "rgba(255,255,255,0.2)",
+                ? (trialResults[i] ? "#bbf7d0" : "#fecaca")
+                : i === trial ? "#fde68a" : "rgba(255,255,255,0.28)",
               transition: "background 0.3s",
             }} />
           ))}
         </div>
-        <span style={{ color: "rgba(255,255,255,0.65)", fontSize: 11 }}>{trial + 1}/{MAX_TRIALS}</span>
+        <span style={{ color: "rgba(255,255,255,0.85)", fontSize: 11 }}>{trial + 1}/{MAX_TRIALS}</span>
       </div>
 
       <AnimatePresence mode="wait">
@@ -568,25 +580,26 @@ export function DesafioSupermercado({ difficulty, theme, onComplete, mode = "lei
             }}>
               <div style={{
                 width: "100%", maxWidth: 440,
-                background: "rgba(255,240,200,0.07)",
-                border: "1.5px solid rgba(255,200,100,0.2)",
-                borderRadius: 20, padding: "16px 14px",
+                background: "#ffffff",
+                border: "1px solid #e6dcc8",
+                borderRadius: 22, padding: "18px 16px",
+                boxShadow: "0 8px 28px rgba(120,90,40,0.12)",
               }}>
                 {/* Header + timer */}
-                <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 14 }}>
-                  <span style={{ color: "#f5e6c8", fontWeight: 700, fontSize: 14 }}>
+                <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 16 }}>
+                  <span style={{ color: "#1f2937", fontWeight: 800, fontSize: 15 }}>
                     {mode === "auditivo" ? "🎧 Ouça a lista!" : "📋 Memorize a lista!"}
                   </span>
                   <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
-                    <div style={{ width: 72, height: 6, background: "rgba(255,255,255,0.12)", borderRadius: 3, overflow: "hidden" }}>
-                      <div style={{ height: "100%", width: `${ratio * 100}%`, background: "#f59e0b", borderRadius: 3, transition: "width 1s linear" }} />
+                    <div style={{ width: 72, height: 6, background: "#e5e7eb", borderRadius: 3, overflow: "hidden" }}>
+                      <div style={{ height: "100%", width: `${ratio * 100}%`, background: "#16a34a", borderRadius: 3, transition: "width 1s linear" }} />
                     </div>
-                    <span style={{ color: "#f59e0b", fontSize: 13, fontWeight: 700, minWidth: 26, textAlign: "right" }}>{countdown}s</span>
+                    <span style={{ color: "#16a34a", fontSize: 14, fontWeight: 800, minWidth: 26, textAlign: "right" }}>{countdown}s</span>
                   </div>
                 </div>
 
                 {mode === "auditivo" && audioPlaying && (
-                  <p style={{ color: "#f59e0b", fontSize: 11, textAlign: "center", marginBottom: 10, animationName: "pulse", animationDuration: "2s", animationIterationCount: "infinite" }}>
+                  <p style={{ color: "#16a34a", fontSize: 12, textAlign: "center", marginBottom: 12, animationName: "pulse", animationDuration: "2s", animationIterationCount: "infinite" }}>
                     🔊 Reproduzindo lista...
                   </p>
                 )}
@@ -599,14 +612,14 @@ export function DesafioSupermercado({ difficulty, theme, onComplete, mode = "lei
                       style={{
                         display: "flex", flexDirection: "column", alignItems: "center", gap: 6,
                         padding: "12px 6px",
-                        background: "rgba(255,240,210,0.1)",
-                        border: "1.5px solid rgba(255,200,100,0.25)",
+                        background: "#f6efe3",
+                        border: "1.5px solid #e6dcc8",
                         borderRadius: 14,
                       }}
                     >
                       <ProductSvg id={p.id} size={72} />
                       {mode === "leitura" && (
-                        <span style={{ color: "#f5e6c8", fontSize: 11, fontWeight: 700, textAlign: "center", lineHeight: 1.2 }}>
+                        <span style={{ color: "#374151", fontSize: 11, fontWeight: 700, textAlign: "center", lineHeight: 1.2 }}>
                           {p.name}
                         </span>
                       )}
@@ -622,9 +635,9 @@ export function DesafioSupermercado({ difficulty, theme, onComplete, mode = "lei
                 onClick={() => { clearTimer(); cancelTTS(); setPhase("shopping"); }}
                 style={{
                   width: "100%", height: 50, borderRadius: 100,
-                  background: "linear-gradient(135deg,#b45309,#92400e)",
+                  background: "linear-gradient(135deg,#16a34a,#15803d)",
                   border: "none", color: "white", fontWeight: 700, fontSize: 14, cursor: "pointer",
-                  boxShadow: "0 4px 16px rgba(180,83,9,0.4)",
+                  boxShadow: "0 4px 16px rgba(21,128,61,0.32)",
                 }}
               >
                 Já memorizei → ir às prateleiras
@@ -649,151 +662,105 @@ export function DesafioSupermercado({ difficulty, theme, onComplete, mode = "lei
               />
             </div>
 
-            {/* ── CARRINHO à DIREITA (coluna maior) ── */}
-            {(() => {
-              const ITEM_PX = 34;
-              return (
-                <div style={{
-                  flexShrink: 0, width: "40%", maxWidth: 280, minWidth: 150,
-                  background: "linear-gradient(to bottom,#1a0e05,#0f0600)",
-                  borderLeft: "3px solid #b45309",
-                  padding: "12px 10px",
-                  display: "flex", flexDirection: "column", gap: 10, overflowY: "auto",
+            {/* ── CARRINHO à DIREITA (painel limpo) ── */}
+            <div style={{
+              flexShrink: 0, width: "40%", maxWidth: 280, minWidth: 150,
+              background: "#ffffff",
+              borderLeft: "3px solid #16a34a",
+              padding: "12px 10px",
+              display: "flex", flexDirection: "column", gap: 10, overflowY: "auto",
+              boxShadow: "-6px 0 16px rgba(120,90,40,0.08)",
+            }}>
+
+              {/* Cabeçalho: 🛒 No carrinho + progresso X/Y */}
+              <div style={{ display: "flex", alignItems: "center", justifyContent: "center", gap: 6, flexShrink: 0 }}>
+                <span style={{ color: "#1f2937", fontWeight: 800, fontSize: 13 }}>🛒 No carrinho</span>
+                <span style={{
+                  fontSize: 11, fontWeight: 800, padding: "1px 9px", borderRadius: 100,
+                  background: cartIds.length === itemCount ? "#dcfce7" : "#f1f5f9",
+                  color: cartIds.length === itemCount ? "#15803d" : "#64748b",
+                  border: `1px solid ${cartIds.length === itemCount ? "#86efac" : "#e2e8f0"}`,
                 }}>
+                  {cartIds.length}/{itemCount}
+                </span>
+              </div>
 
-                  {/* Carrinho (cima) + itens selecionados (baixo) — column-reverse */}
-                  <div style={{ display: "flex", flexDirection: "column-reverse", alignItems: "center", gap: 10, width: "100%" }}>
-
-                    {/* Itens no carrinho (toque para remover) */}
-                    <div style={{ width: "100%", display: "flex", flexDirection: "column", gap: 4 }}>
-                      <div style={{ display: "flex", alignItems: "center", justifyContent: "center", gap: 6 }}>
-                        <span style={{ color: "#f5e6c8", fontWeight: 700, fontSize: 12 }}>No carrinho</span>
-                        <span style={{
-                          fontSize: 11, fontWeight: 700, padding: "1px 8px", borderRadius: 100,
-                          background: cartIds.length === itemCount ? "rgba(34,197,94,0.18)" : "rgba(255,255,255,0.08)",
-                          color: cartIds.length === itemCount ? "#4ade80" : "#94a3b8",
-                          border: `1px solid ${cartIds.length === itemCount ? "rgba(34,197,94,0.35)" : "rgba(255,255,255,0.1)"}`,
-                        }}>
-                          {cartIds.length}/{itemCount}
-                        </span>
-                      </div>
-
-                      <div style={{
-                        display: "flex", flexWrap: "wrap", gap: 5, justifyContent: "center",
-                        minHeight: 50, alignContent: "flex-start",
-                      }}>
-                        <AnimatePresence mode="popLayout">
-                          {cartIds.length === 0 ? (
-                            <motion.span key="hint"
-                              initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}
-                              style={{ color: "rgba(255,255,255,0.2)", fontSize: 11, fontStyle: "italic", alignSelf: "center" }}>
-                              Toque nos produtos...
-                            </motion.span>
-                          ) : cartIds.map(id => {
-                            const p = PRODUCT_MAP.get(id);
-                            if (!p) return null;
-                            return (
-                              <motion.button
-                                key={id} layout
-                                initial={{ scale: 0, opacity: 0 }}
-                                animate={{ scale: 1, opacity: 1 }}
-                                exit={{ scale: 0, opacity: 0 }}
-                                transition={{ type: "spring", stiffness: 480, damping: 28 }}
-                                onClick={() => toggleProduct(id)}
-                                title={`Remover ${p.name}`}
-                                style={{
-                                  flexShrink: 0, cursor: "pointer",
-                                  background: "rgba(250,204,21,0.1)",
-                                  border: "1.5px solid rgba(250,204,21,0.3)",
-                                  borderRadius: 8, padding: "3px",
-                                  display: "flex", flexDirection: "column", alignItems: "center", gap: 1,
-                                  position: "relative",
-                                }}
-                              >
-                                <ProductSvg id={id} size={42} />
-                                {mode === "leitura" && (
-                                  <span style={{ fontSize: 7, color: "#facc15", fontWeight: 600, maxWidth: 48, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>
-                                    {p.name}
-                                  </span>
-                                )}
-                                {/* ícone de remover */}
-                                <div style={{
-                                  position: "absolute", top: -4, right: -4,
-                                  width: 14, height: 14, borderRadius: "50%",
-                                  background: "rgba(239,68,68,0.85)",
-                                  display: "flex", alignItems: "center", justifyContent: "center",
-                                  fontSize: 9, color: "white", fontWeight: 900, lineHeight: 1,
-                                }}>×</div>
-                              </motion.button>
-                            );
-                          })}
-                        </AnimatePresence>
-                      </div>
-                    </div>
-
-                    {/* Carrinho (vista de cima) preenchendo a largura, com itens dentro da cesta */}
-                    <div style={{ width: "100%", position: "relative" }}>
-                      <CartSvg />
-
-                      {/* Itens caindo dentro da cesta (área em % do carrinho) */}
-                      <div style={{
-                        position: "absolute",
-                        left:   CART_INTERIOR.left,
-                        top:    CART_INTERIOR.top,
-                        width:  CART_INTERIOR.width,
-                        height: CART_INTERIOR.height,
-                        display: "flex", flexWrap: "wrap",
-                        gap: 3, alignContent: "flex-end", justifyContent: "center",
-                        overflow: "hidden", pointerEvents: "none",
-                      }}>
-                        <AnimatePresence>
-                          {cartIds.slice(0, 8).map((id, idx) => (
-                            <motion.div key={id}
-                              initial={{ scale: 0, opacity: 0, y: -50 }}
-                              animate={{ scale: 1, opacity: 0.97, y: 0 }}
-                              exit={{ scale: 0, opacity: 0, y: -20 }}
-                              transition={{ type: "spring", stiffness: 360, damping: 22, delay: idx * 0.02 }}
-                            >
-                              <ProductSvg id={id} size={ITEM_PX} />
-                            </motion.div>
-                          ))}
-                        </AnimatePresence>
-                        {/* badge de overflow */}
-                        {cartIds.length > 8 && (
-                          <div style={{
-                            position: "absolute", bottom: 2, right: 2,
-                            background: "#d97706", borderRadius: "50%",
-                            width: 18, height: 18, fontSize: 9, fontWeight: 800,
-                            color: "white", display: "flex", alignItems: "center", justifyContent: "center",
-                          }}>+{cartIds.length - 8}</div>
+              {/* Itens no carrinho (toque para remover) */}
+              <div style={{
+                flex: 1,
+                display: "flex", flexWrap: "wrap", gap: 6, justifyContent: "center",
+                alignContent: "flex-start", minHeight: 50,
+              }}>
+                <AnimatePresence mode="popLayout">
+                  {cartIds.length === 0 ? (
+                    <motion.span key="hint"
+                      initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}
+                      style={{ color: "#94a3b8", fontSize: 11, fontStyle: "italic", alignSelf: "center" }}>
+                      Toque nos produtos...
+                    </motion.span>
+                  ) : cartIds.map(id => {
+                    const p = PRODUCT_MAP.get(id);
+                    if (!p) return null;
+                    return (
+                      <motion.button
+                        key={id} layout
+                        initial={{ scale: 0, opacity: 0 }}
+                        animate={{ scale: 1, opacity: 1 }}
+                        exit={{ scale: 0, opacity: 0 }}
+                        transition={{ type: "spring", stiffness: 480, damping: 28 }}
+                        onClick={() => toggleProduct(id)}
+                        title={`Remover ${p.name}`}
+                        style={{
+                          flexShrink: 0, cursor: "pointer",
+                          background: "#f0fdf4",
+                          border: "1.5px solid #bbf7d0",
+                          borderRadius: 10, padding: "5px",
+                          display: "flex", flexDirection: "column", alignItems: "center", gap: 2,
+                          position: "relative",
+                        }}
+                      >
+                        <ProductSvg id={id} size={46} />
+                        {mode === "leitura" && (
+                          <span style={{ fontSize: 8, color: "#15803d", fontWeight: 700, maxWidth: 52, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>
+                            {p.name}
+                          </span>
                         )}
-                      </div>
-                    </div>
-                  </div>
+                        {/* ícone de remover */}
+                        <div style={{
+                          position: "absolute", top: -5, right: -5,
+                          width: 16, height: 16, borderRadius: "50%",
+                          background: "#ef4444",
+                          display: "flex", alignItems: "center", justifyContent: "center",
+                          fontSize: 10, color: "white", fontWeight: 900, lineHeight: 1,
+                          boxShadow: "0 1px 3px rgba(0,0,0,0.2)",
+                        }}>×</div>
+                      </motion.button>
+                    );
+                  })}
+                </AnimatePresence>
+              </div>
 
-                  {/* Botão confirmar */}
-                  <button
-                    onClick={handleConfirm}
-                    disabled={cartIds.length === 0}
-                    style={{
-                      width: "100%", height: 48, borderRadius: 100, border: "none",
-                      marginTop: "auto", flexShrink: 0,
-                      background: cartIds.length > 0
-                        ? "linear-gradient(135deg,#b45309,#92400e)"
-                        : "rgba(255,255,255,0.07)",
-                      color: "white", fontWeight: 700, fontSize: 13,
-                      cursor: cartIds.length > 0 ? "pointer" : "default",
-                      opacity: cartIds.length === 0 ? 0.35 : 1,
-                      boxShadow: cartIds.length > 0 ? "0 4px 16px rgba(180,83,9,0.4)" : "none",
-                      transition: "all 0.2s",
-                    }}
-                  >
-                    Confirmar ({cartIds.length}/{itemCount})
-                  </button>
+              {/* Botão confirmar */}
+              <button
+                onClick={handleConfirm}
+                disabled={cartIds.length === 0}
+                style={{
+                  width: "100%", height: 48, borderRadius: 100, border: "none",
+                  flexShrink: 0,
+                  background: cartIds.length > 0
+                    ? "linear-gradient(135deg,#16a34a,#15803d)"
+                    : "#e5e7eb",
+                  color: cartIds.length > 0 ? "white" : "#9ca3af",
+                  fontWeight: 800, fontSize: 13,
+                  cursor: cartIds.length > 0 ? "pointer" : "default",
+                  boxShadow: cartIds.length > 0 ? "0 4px 16px rgba(21,128,61,0.32)" : "none",
+                  transition: "all 0.2s",
+                }}
+              >
+                Confirmar ({cartIds.length}/{itemCount})
+              </button>
 
-                </div>
-              );
-            })()}
+            </div>
           </motion.div>
         )}
 
@@ -809,11 +776,12 @@ export function DesafioSupermercado({ difficulty, theme, onComplete, mode = "lei
           >
             <div style={{
               width: "100%", maxWidth: 420,
-              background: "rgba(255,240,200,0.07)",
-              border: `2px solid ${isRoundCorrect ? "rgba(34,197,94,0.45)" : "rgba(239,68,68,0.45)"}`,
-              borderRadius: 20, padding: "16px 14px",
+              background: "#ffffff",
+              border: `2px solid ${isRoundCorrect ? "#86efac" : "#fca5a5"}`,
+              borderRadius: 20, padding: "18px 16px",
+              boxShadow: "0 8px 28px rgba(120,90,40,0.12)",
             }}>
-              <p style={{ color: "#f5e6c8", fontWeight: 700, fontSize: 15, textAlign: "center", marginBottom: 14 }}>
+              <p style={{ color: isRoundCorrect ? "#15803d" : "#b91c1c", fontWeight: 800, fontSize: 16, textAlign: "center", marginBottom: 14 }}>
                 {isRoundCorrect ? "✅ Lista correta!" : "❌ Resultado da rodada"}
               </p>
               <div style={{ display: "grid", gridTemplateColumns: `repeat(${listCols}, 1fr)`, gap: 8 }}>
@@ -823,12 +791,12 @@ export function DesafioSupermercado({ difficulty, theme, onComplete, mode = "lei
                     <div key={p.id} style={{
                       display: "flex", flexDirection: "column", alignItems: "center", gap: 4,
                       padding: "10px 4px",
-                      background: hit ? "rgba(34,197,94,0.1)" : "rgba(239,68,68,0.1)",
-                      border: `1.5px solid ${hit ? "rgba(34,197,94,0.4)" : "rgba(239,68,68,0.4)"}`,
+                      background: hit ? "#f0fdf4" : "#fef2f2",
+                      border: `1.5px solid ${hit ? "#bbf7d0" : "#fecaca"}`,
                       borderRadius: 12,
                     }}>
                       <ProductSvg id={p.id} size={54} />
-                      <span style={{ fontSize: 9, fontWeight: 600, textAlign: "center", color: hit ? "#4ade80" : "#f87171" }}>
+                      <span style={{ fontSize: 9, fontWeight: 700, textAlign: "center", color: hit ? "#15803d" : "#b91c1c" }}>
                         {p.name}
                       </span>
                       <span style={{ fontSize: 16 }}>{hit ? "✅" : "❌"}</span>
@@ -837,7 +805,7 @@ export function DesafioSupermercado({ difficulty, theme, onComplete, mode = "lei
                 })}
               </div>
               {cartIds.some(id => !currentList.find(p => p.id === id)) && (
-                <p style={{ color: "#f87171", fontSize: 11, textAlign: "center", marginTop: 10 }}>
+                <p style={{ color: "#b91c1c", fontSize: 11, textAlign: "center", marginTop: 10 }}>
                   ⚠️ Alguns itens não estavam na lista.
                 </p>
               )}
