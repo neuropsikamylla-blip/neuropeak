@@ -167,6 +167,14 @@ export const EXERCISE_DEFINITIONS = {
     estimatedMinutes: 6,
     icon: "🐱",
   },
+  "lista-distracao": {
+    id: "lista-distracao",
+    name: "Lista com Distração",
+    domain: "memory" as Domain,
+    description: "Treina memória operacional e resistência à interferência: memorizar uma lista, fazer uma tarefa distratora e recuperar os itens.",
+    estimatedMinutes: 7,
+    icon: "📝",
+  },
   "matriz-espacial-inversa": {
     id: "matriz-espacial-inversa",
     name: "Matriz Espacial Inversa",

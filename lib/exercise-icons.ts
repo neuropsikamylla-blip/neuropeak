@@ -10,8 +10,8 @@ export const EXERCISE_ICON_IDS = new Set<string>([
   "letras-sequencia",
   "padroes-rotacao",
   "sequencia-itens",
-  // (lista-distracao, restaurante-ordem: ícones já na pasta,
-  //  serão adicionados ao Set quando cada exercício for criado)
+  "lista-distracao",
+  // (restaurante-ordem: ícone já na pasta, será adicionado quando o exercício for criado)
   // atenção
   "trilha-visual",
   "caca-item-barato",
