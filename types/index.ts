@@ -175,6 +175,14 @@ export const EXERCISE_DEFINITIONS = {
     estimatedMinutes: 7,
     icon: "📝",
   },
+  "restaurante-ordem": {
+    id: "restaurante-ordem",
+    name: "Restaurante — Ordem de Instruções",
+    domain: "memory" as Domain,
+    description: "Treina memória operacional funcional: ouvir ou ler pedidos e executar as ações na ordem correta (direta, inversa ou com exclusão).",
+    estimatedMinutes: 7,
+    icon: "🍽️",
+  },
   "matriz-espacial-inversa": {
     id: "matriz-espacial-inversa",
     name: "Matriz Espacial Inversa",
