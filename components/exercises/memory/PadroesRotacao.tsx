@@ -47,6 +47,28 @@ function rotLabel(deg: number): string { return `${deg}° ↻`; }
 const cellKey = (r: number, c: number) => `${r},${c}`;
 const sleep = (ms: number) => new Promise((r) => setTimeout(r, ms));
 
+// ── Som (Web Audio) — bipes curtos, igual à Matriz Espacial ──────────────────────
+let audioCtx: AudioContext | null = null;
+function beep(freq: number, durMs = 180, type: OscillatorType = "sine", gain = 0.08) {
+  if (typeof window === "undefined") return;
+  try {
+    const Ctx = window.AudioContext || (window as unknown as { webkitAudioContext: typeof AudioContext }).webkitAudioContext;
+    audioCtx = audioCtx || new Ctx();
+    if (audioCtx.state === "suspended") audioCtx.resume();
+    const ctx = audioCtx;
+    const osc = ctx.createOscillator(); const g = ctx.createGain();
+    osc.type = type; osc.frequency.value = freq;
+    g.gain.setValueAtTime(gain, ctx.currentTime);
+    g.gain.exponentialRampToValueAtTime(0.0001, ctx.currentTime + durMs / 1000);
+    osc.connect(g); g.connect(ctx.destination);
+    osc.start(); osc.stop(ctx.currentTime + durMs / 1000);
+  } catch { /* áudio indisponível */ }
+}
+const soundLight   = () => beep(523, 200, "sine", 0.08);   // célula pisca (apresentação)
+const soundTap     = () => beep(659, 110, "sine", 0.06);   // toque do paciente
+const soundCorrect = () => { beep(659, 120, "sine", 0.08); setTimeout(() => beep(988, 220, "sine", 0.08), 120); };
+const soundWrong   = () => beep(160, 260, "square", 0.06);
+
 type Phase = "tutorial" | "ready" | "show" | "rotating" | "delay" | "input" | "feedback";
 
 const TEAL = "#22d3c5";
@@ -173,14 +195,23 @@ export function PadroesRotacao({ difficulty, onComplete }: PadroesRotacaoProps) 
   const startTime = useRef(Date.now());
   const runRef = useRef(0);
 
-  const present = useCallback(async (orig: Set<string>, rotDeg: number, myRun: number) => {
-    setLit(orig); setPhase("show");
-    await sleep(spec.showMs); if (runRef.current !== myRun) return;
-    setLit(new Set()); setPhase("rotating");        // o tabuleiro inteiro gira
+  // Apresentação: pisca UMA célula por vez (com bipe), igual à Matriz Espacial.
+  const present = useCallback(async (origArr: string[], rotDeg: number, myRun: number) => {
+    setPhase("show"); setLit(new Set());
+    const onMs = startLevel <= 5 ? 600 : startLevel <= 8 ? 480 : 380;
+    await sleep(450); if (runRef.current !== myRun) return;
+    for (const cell of origArr) {
+      if (runRef.current !== myRun) return;
+      setLit(new Set([cell])); soundLight();
+      await sleep(onMs); if (runRef.current !== myRun) return;
+      setLit(new Set());
+      await sleep(170); if (runRef.current !== myRun) return;
+    }
+    setPhase("rotating");                            // o tabuleiro inteiro gira
     await sleep(1500); if (runRef.current !== myRun) return;
     if (spec.delayMs > 0) { setPhase("delay"); await sleep(spec.delayMs); if (runRef.current !== myRun) return; }
     setPicked(new Set()); inputAt.current = Date.now(); setPhase("input");
-  }, [spec]);
+  }, [spec, startLevel]);
 
   const startRound = useCallback(() => {
     const k = spec.kMin + Math.floor(Math.random() * (spec.kMax - spec.kMin + 1));
@@ -188,14 +219,15 @@ export function PadroesRotacao({ difficulty, onComplete }: PadroesRotacaoProps) 
     const all: string[] = [];
     for (let r = 0; r < N; r++) for (let c = 0; c < N; c++) all.push(cellKey(r, c));
     for (let i = all.length - 1; i > 0; i--) { const j = Math.floor(Math.random() * (i + 1)); [all[i], all[j]] = [all[j], all[i]]; }
-    const orig = new Set(all.slice(0, k));
+    const origArr = all.slice(0, k);
+    const orig = new Set(origArr);
     const rotDeg = spec.rots[Math.floor(Math.random() * spec.rots.length)];
     const expected = new Set<string>();
     orig.forEach((key) => { const [r, c] = key.split(",").map(Number); const [nr, nc] = rotatePos(r, c, N, rotDeg); expected.add(cellKey(nr, nc)); });
     expectedRef.current = expected;
     runRef.current++;
     setDeg(rotDeg); setFeedback(null);
-    present(orig, rotDeg, runRef.current);
+    present(origArr, rotDeg, runRef.current);
   }, [N, spec, present]);
 
   const finish = useCallback(() => {
@@ -240,6 +272,7 @@ export function PadroesRotacao({ difficulty, onComplete }: PadroesRotacaoProps) 
     if (exact) correctRef.current++;
     hitRef.current += hits; wrongRef.current += wrong; omRef.current += om; expTotalRef.current += expected.size;
     rtsRef.current.push(Date.now() - inputAt.current);
+    if (exact) soundCorrect(); else soundWrong();
     setFeedback(exact ? "correct" : "incorrect");
     setPhase("feedback");
     const nextTrial = trial + 1;
@@ -251,7 +284,7 @@ export function PadroesRotacao({ difficulty, onComplete }: PadroesRotacaoProps) 
     if (phase !== "input") return;
     const key = cellKey(r, c);
     const next = new Set(picked);
-    if (next.has(key)) next.delete(key); else next.add(key);
+    if (next.has(key)) next.delete(key); else { next.add(key); soundTap(); }
     setPicked(next);
   }
   function confirmInput() { if (phase === "input" && picked.size > 0) submit(picked); }

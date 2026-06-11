@@ -2,7 +2,7 @@
 
 import { useState, useRef, useCallback, useEffect } from "react";
 import { motion } from "framer-motion";
-import { Volume2, UtensilsCrossed, ChefHat, Star, ClipboardList, CheckCircle2 } from "lucide-react";
+import { Volume2, UtensilsCrossed, ChefHat, ClipboardList, CheckCircle2, BarChart3, Package, ArrowRight, MessageSquare } from "lucide-react";
 import { calculateExerciseScore } from "@/lib/scoring";
 import { useExerciseProgress } from "@/components/exercises/ExerciseWrapper";
 import type { ExerciseResult, Theme } from "@/types";
@@ -84,77 +84,73 @@ function RestaurantBg() {
   );
   return (
     <div style={{ position: "absolute", inset: 0, overflow: "hidden" }}>
-      <div style={{ position: "absolute", inset: 0, background: "linear-gradient(180deg,#3f2818 0%,#5e3c24 32%,#6f4a2e 60%,#3c2616 100%)" }} />
+      <div style={{ position: "absolute", inset: 0, background: "linear-gradient(180deg,#7a5636 0%,#9a7350 32%,#a9805a 60%,#7c5838 100%)" }} />
       {/* janelas claras à direita */}
-      <div style={{ position: "absolute", right: 0, top: 0, width: "36%", height: "100%",
-        background: "linear-gradient(180deg, rgba(205,218,228,0.55), rgba(150,168,182,0.22) 70%, transparent)", filter: "blur(20px)" }} />
+      <div style={{ position: "absolute", right: 0, top: 0, width: "34%", height: "100%",
+        background: "linear-gradient(180deg, rgba(220,230,238,0.6), rgba(180,196,210,0.3) 70%, transparent)", filter: "blur(22px)" }} />
       {/* plantas à direita */}
-      <div style={{ position: "absolute", right: "6%", bottom: "8%", width: 120, height: 150,
-        background: "radial-gradient(circle, rgba(70,110,60,0.5), transparent 70%)", filter: "blur(16px)" }} />
-      {/* balcão/bar escuro à esquerda */}
-      <div style={{ position: "absolute", left: 0, top: "44%", width: "44%", height: "56%",
-        background: "linear-gradient(180deg, rgba(36,22,12,0.55), rgba(22,13,7,0.72))", filter: "blur(16px)" }} />
+      <div style={{ position: "absolute", right: "5%", bottom: "8%", width: 130, height: 160,
+        background: "radial-gradient(circle, rgba(90,135,75,0.5), transparent 70%)", filter: "blur(16px)" }} />
+      {/* balcão/bar à esquerda */}
+      <div style={{ position: "absolute", left: 0, top: "46%", width: "42%", height: "54%",
+        background: "linear-gradient(180deg, rgba(70,46,26,0.4), rgba(50,32,16,0.55))", filter: "blur(16px)" }} />
       {/* lâmpadas pendentes */}
       {bulb("12%", 70)}{bulb("21%", 120)}{bulb("30%", 55)}
       {/* bokeh quente */}
-      <div style={{ position: "absolute", left: "46%", top: "16%", width: 70, height: 70, borderRadius: "50%",
-        background: "radial-gradient(circle, rgba(255,200,120,0.35), transparent 70%)", filter: "blur(10px)" }} />
-      {/* vinheta */}
-      <div style={{ position: "absolute", inset: 0, background: "radial-gradient(ellipse at 50% 42%, transparent 32%, rgba(18,10,4,0.5))" }} />
+      <div style={{ position: "absolute", left: "46%", top: "14%", width: 80, height: 80, borderRadius: "50%",
+        background: "radial-gradient(circle, rgba(255,210,140,0.4), transparent 70%)", filter: "blur(10px)" }} />
+      {/* leve profundidade (vinheta suave) */}
+      <div style={{ position: "absolute", inset: 0, background: "radial-gradient(ellipse at 50% 40%, transparent 45%, rgba(40,24,10,0.32))" }} />
     </div>
   );
 }
 
-// ── HUD verde-petróleo ───────────────────────────────────────────────────────────
-function Hud({ level, pct }: { level: number; pct: number }) {
+// ── Chip (cápsula do cabeçalho) ──────────────────────────────────────────────────
+function Chip({ icon, text, color }: { icon: React.ReactNode; text: string; color: string }) {
   return (
-    <div style={{ flexShrink: 0, display: "flex", alignItems: "center", gap: 14, padding: "9px 16px",
-      background: "linear-gradient(90deg,#0d3a3c,#11514f)", borderBottom: "1px solid rgba(120,180,175,0.18)",
-      boxShadow: "0 2px 14px rgba(5,25,24,0.5)" }}>
-      <div style={{ display: "flex", alignItems: "center", gap: 10, flexShrink: 0 }}>
-        <div style={{ width: 38, height: 38, borderRadius: "50%", background: "rgba(120,200,190,0.16)",
-          border: "1px solid rgba(140,215,205,0.4)", display: "flex", alignItems: "center", justifyContent: "center" }}>
-          <ChefHat size={21} color="#bff0e6" />
-        </div>
-        <span style={{ color: "#fff", fontWeight: 900, fontSize: 16, letterSpacing: 0.5 }}>RESTAURANTE</span>
-        <span style={{ width: 1, height: 20, background: "rgba(255,255,255,0.18)" }} />
-        <span style={{ padding: "3px 12px", borderRadius: 100, background: "rgba(255,255,255,0.08)",
-          border: "1px solid rgba(255,255,255,0.15)", color: "#cfeee8", fontWeight: 800, fontSize: 12 }}>NÍVEL {level}</span>
-      </div>
-      <div style={{ flex: 1, display: "flex", alignItems: "center", gap: 9, justifyContent: "flex-end", minWidth: 0 }}>
-        <Star size={18} color="#f5b740" fill="#f5b740" />
-        <div style={{ flex: "0 1 220px", height: 8, borderRadius: 5, background: "rgba(255,255,255,0.12)", overflow: "hidden" }}>
-          <div style={{ height: "100%", width: `${pct}%`, background: "linear-gradient(90deg,#f0a836,#f5c45e)", borderRadius: 5, transition: "width .4s" }} />
-        </div>
-        <span style={{ color: "#fff", fontWeight: 800, fontSize: 14, minWidth: 38, textAlign: "right" }}>{pct}%</span>
-      </div>
-    </div>
+    <span style={{ display: "inline-flex", alignItems: "center", gap: 5, padding: "4px 11px", borderRadius: 100,
+      background: `${color}1a`, border: `1px solid ${color}40`, color, fontSize: 12.5, fontWeight: 800, whiteSpace: "nowrap" }}>
+      {icon}{text}
+    </span>
   );
 }
 
-// ── Bandeja de madeira ───────────────────────────────────────────────────────────
-function Tray({ items }: { items: Item[] }) {
+// ── Bandeja de madeira clara com slots numerados ─────────────────────────────────
+function Tray({ items, slots }: { items: Item[]; slots: number }) {
+  const Handle = ({ side }: { side: "left" | "right" }) => (
+    <div style={{ position: "absolute", top: "50%", [side]: -11, transform: "translateY(-50%)", width: 20, height: 52,
+      borderRadius: 10, background: "linear-gradient(180deg,#e0bd8a,#c79a64)", boxShadow: "0 3px 8px rgba(120,80,35,0.3)" }}>
+      <div style={{ position: "absolute", inset: "16px 6px", borderRadius: 6, background: "rgba(90,55,20,0.32)" }} />
+    </div>
+  );
   return (
-    <div style={{ borderRadius: 22, padding: 9, background: "linear-gradient(135deg,#7a5230,#5c3c20)",
-      boxShadow: "0 10px 26px rgba(50,30,12,0.4), inset 0 2px 3px rgba(255,220,170,0.3)" }}>
-      <div style={{ minHeight: 86, borderRadius: 15, background: "linear-gradient(180deg,#3a2415,#2a1a0e)",
-        boxShadow: "inset 0 3px 10px rgba(0,0,0,0.55)", display: "flex", alignItems: "center",
-        justifyContent: "center", gap: 10, flexWrap: "wrap", padding: "10px 12px" }}>
-        {items.length === 0 ? (
-          <div style={{ display: "flex", flexDirection: "column", alignItems: "center", gap: 4, opacity: 0.5 }}>
-            <UtensilsCrossed size={26} color="#d9b88f" />
-            <span style={{ color: "#d9b88f", fontSize: 11, fontWeight: 800, letterSpacing: 3 }}>BANDEJA</span>
-          </div>
-        ) : items.map((it, i) => (
-          <motion.div key={i} initial={{ scale: 0.5, y: -16, opacity: 0 }} animate={{ scale: 1, y: 0, opacity: 1 }}
-            transition={{ type: "spring", stiffness: 420, damping: 24 }}
-            style={{ position: "relative", display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center",
-              width: 56, height: 62, borderRadius: 13, background: "rgba(255,238,210,0.95)", boxShadow: "0 4px 10px rgba(0,0,0,0.35)" }}>
-            <span style={{ position: "absolute", top: -7, left: -7, width: 20, height: 20, borderRadius: "50%",
-              background: "#11514f", color: "#fff", fontSize: 11, fontWeight: 900, display: "flex", alignItems: "center", justifyContent: "center" }}>{i + 1}</span>
-            <span style={{ fontSize: 30, lineHeight: 1 }}>{it.e}</span>
-          </motion.div>
-        ))}
+    <div style={{ position: "relative", margin: "0 14px" }}>
+      <Handle side="left" /><Handle side="right" />
+      <div style={{ borderRadius: 20, padding: 11,
+        background: "linear-gradient(160deg,#ecd0a4,#d9b27e 55%,#c69a64)",
+        boxShadow: "0 12px 30px rgba(120,80,35,0.32), inset 0 2px 3px rgba(255,243,218,0.7), inset 0 -3px 6px rgba(150,100,50,0.35)" }}>
+        <div style={{ borderRadius: 14, padding: 12, background: "linear-gradient(180deg,#f3e2c4,#e9d0a6)",
+          boxShadow: "inset 0 3px 10px rgba(150,100,50,0.25)", display: "grid", gridTemplateColumns: `repeat(${Math.min(slots, 4)}, 1fr)`, gap: 9 }}>
+          {Array.from({ length: slots }).map((_, i) => {
+            const it = items[i];
+            return (
+              <div key={i} style={{ position: "relative", minHeight: 66, borderRadius: 13,
+                border: it ? "2px solid #2f9e8f" : "2px dashed rgba(160,115,65,0.45)",
+                background: it ? "#fffdf7" : "rgba(255,250,240,0.45)",
+                display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center" }}>
+                <span style={{ position: "absolute", top: -8, left: -8, width: 20, height: 20, borderRadius: "50%",
+                  background: it ? "#2f9e8f" : "#c9a474", color: "#fff", fontSize: 11, fontWeight: 900,
+                  display: "flex", alignItems: "center", justifyContent: "center" }}>{i + 1}</span>
+                {it ? (
+                  <motion.span initial={{ scale: 0.4, y: -14, opacity: 0 }} animate={{ scale: 1, y: 0, opacity: 1 }}
+                    transition={{ type: "spring", stiffness: 440, damping: 22 }} style={{ fontSize: 32, lineHeight: 1 }}>{it.e}</motion.span>
+                ) : (
+                  <span style={{ fontSize: 12, fontWeight: 800, color: "rgba(150,110,60,0.65)" }}>{i + 1}º</span>
+                )}
+              </div>
+            );
+          })}
+        </div>
       </div>
     </div>
   );
@@ -185,7 +181,7 @@ export function RestauranteOrdem({ difficulty, onComplete }: RestauranteOrdemPro
 
   const modeHint = spec.mode === "inversa" ? "Monte começando pelo ÚLTIMO item (ordem inversa)."
     : spec.mode === "exclusao" ? "NÃO coloque o item que o pedido mandou ignorar."
-    : "Monte na ordem do pedido.";
+    : "Monte o pedido na ordem correta.";
 
   const startRound = useCallback(async () => {
     runRef.current++; const myRun = runRef.current;
@@ -273,7 +269,8 @@ export function RestauranteOrdem({ difficulty, onComplete }: RestauranteOrdemPro
   function begin() { correctRef.current = 0; rtsRef.current = []; startTime.current = Date.now(); setTrial(0); startRound(); }
 
   const pct = Math.round((trial / TRIALS) * 100);
-  const subtitle = `Nível ${startLevel} · ${spec.count} itens · ${MODE_LABEL[spec.mode]} · ${spec.audio ? "áudio" : "texto"}`;
+  const orderPct = expected.length ? Math.round((tray.length / expected.length) * 100) : 0;
+  const shake = phase === "feedback" && feedback === "incorrect";
 
   // ── READY ──
   if (phase === "ready") {
@@ -307,25 +304,29 @@ export function RestauranteOrdem({ difficulty, onComplete }: RestauranteOrdemPro
     <div style={{ position: "fixed", inset: 0, display: "flex", flexDirection: "column", overflow: "hidden", background: "#3c2616" }}>
       <RestaurantBg />
       <div style={{ position: "relative", zIndex: 2, display: "flex", flexDirection: "column", height: "100%" }}>
-        <Hud level={startLevel} pct={pct} />
-
-        <div style={{ flex: 1, overflowY: "auto", display: "flex", alignItems: "flex-start", justifyContent: "center", padding: "18px 16px" }}>
-          <div style={{ width: "100%", maxWidth: 560, background: "#f6efe0", borderRadius: 26, padding: "20px 20px 16px",
-            boxShadow: "0 22px 60px rgba(30,18,8,0.45)" }}>
+        <div style={{ flex: 1, overflowY: "auto", display: "flex", alignItems: "center", justifyContent: "center", padding: "18px 16px" }}>
+          <motion.div animate={shake ? { x: [0, -9, 9, -7, 7, 0] } : { x: 0 }} transition={{ duration: 0.45 }}
+            style={{ width: "100%", maxWidth: 600, background: "#faf3e6", borderRadius: 28, padding: "22px 22px 16px",
+            boxShadow: "0 26px 64px rgba(30,18,8,0.4)" }}>
 
             {/* cabeçalho do card */}
             <div style={{ display: "flex", alignItems: "center", gap: 12, marginBottom: 14 }}>
-              <div style={{ width: 46, height: 46, borderRadius: "50%", flexShrink: 0, background: "rgba(17,81,79,0.12)",
+              <div style={{ width: 50, height: 50, borderRadius: "50%", flexShrink: 0, background: "rgba(17,81,79,0.12)",
                 border: "1px solid rgba(17,81,79,0.25)", display: "flex", alignItems: "center", justifyContent: "center" }}>
-                <UtensilsCrossed size={24} color="#11514f" />
+                <UtensilsCrossed size={26} color="#11514f" />
               </div>
-              <div style={{ lineHeight: 1.25 }}>
-                <div style={{ fontSize: 19, fontWeight: 900, color: "#2a2018" }}>Restaurante</div>
-                <div style={{ fontSize: 12.5, color: "#9a8f7e" }}>{subtitle}</div>
+              <div style={{ flex: 1, minWidth: 0 }}>
+                <div style={{ fontSize: 22, fontWeight: 900, color: "#2a2018", marginBottom: 6 }}>Restaurante</div>
+                <div style={{ display: "flex", flexWrap: "wrap", gap: 6 }}>
+                  <Chip icon={<BarChart3 size={13} />} text={`Nível ${startLevel}`} color="#1d7a6e" />
+                  <Chip icon={<Package size={13} />} text={`${spec.count} itens`} color="#e0892a" />
+                  <Chip icon={<ArrowRight size={13} />} text={`Ordem ${MODE_LABEL[spec.mode]}`} color="#2563eb" />
+                  <Chip icon={spec.audio ? <Volume2 size={13} /> : <MessageSquare size={13} />} text={spec.audio ? "Áudio" : "Texto"} color="#7c5cf0" />
+                </div>
               </div>
             </div>
-            <div style={{ height: 7, borderRadius: 4, background: "#e6ddca", overflow: "hidden", marginBottom: 18 }}>
-              <div style={{ height: "100%", width: `${pct}%`, background: "linear-gradient(90deg,#f0a836,#f5c45e)", borderRadius: 4, transition: "width .4s" }} />
+            <div style={{ height: 8, borderRadius: 4, background: "#ece0c8", overflow: "hidden", marginBottom: 18 }}>
+              <div style={{ height: "100%", width: `${orderPct}%`, background: "linear-gradient(90deg,#f0a836,#f5c45e)", borderRadius: 4, transition: "width .4s" }} />
             </div>
 
             {/* ── ORDER (apresentar pedido) ── */}
@@ -356,23 +357,30 @@ export function RestauranteOrdem({ difficulty, onComplete }: RestauranteOrdemPro
             {/* ── INPUT (montar bandeja) ── */}
             {phase === "input" && (
               <div style={{ display: "flex", flexDirection: "column", gap: 14 }}>
-                <p style={{ textAlign: "center", fontSize: 15, fontWeight: 800, color: "#2a2018" }}>{modeHint}</p>
-                <Tray items={tray} />
+                <p style={{ textAlign: "center", fontSize: 15.5, fontWeight: 800, color: "#2a2018" }}>{modeHint}</p>
+                <Tray items={tray} slots={expected.length} />
                 {tray.length > 0 && (
                   <button onClick={undo} style={{ alignSelf: "center", fontSize: 12, fontWeight: 700, padding: "5px 14px", borderRadius: 10,
                     background: "#ece3d1", color: "#6b6052", border: "none", cursor: "pointer" }}>↩ desfazer</button>
                 )}
-                <div style={{ display: "grid", gridTemplateColumns: "repeat(4, 1fr)", gap: 10 }}>
+                <div style={{ display: "grid", gridTemplateColumns: `repeat(${Math.min(keys.length, 4)}, 1fr)`, gap: 11 }}>
                   {keys.map((it, i) => {
                     const used = tray.some((x) => x.n === it.n);
                     return (
-                      <motion.button key={`${it.n}-${i}`} onClick={() => place(it)} disabled={used} whileTap={{ scale: 0.92 }}
-                        style={{ height: 78, borderRadius: 16, cursor: used ? "default" : "pointer",
-                          display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", gap: 3,
-                          background: "#fffdf7", border: "1px solid #e6ddca", boxShadow: used ? "none" : "0 3px 8px rgba(120,90,50,0.12)",
-                          opacity: used ? 0.32 : 1, transition: "opacity .2s" }}>
-                        <span style={{ fontSize: 30, lineHeight: 1 }}>{it.e}</span>
-                        <span style={{ fontSize: 11, fontWeight: 700, color: "#5c5345" }}>{it.n}</span>
+                      <motion.button key={`${it.n}-${i}`} onClick={() => place(it)} disabled={used} whileTap={{ scale: 0.93 }}
+                        style={{ borderRadius: 18, cursor: used ? "default" : "pointer", padding: "12px 6px 10px",
+                          display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", gap: 7,
+                          background: used ? "#eef6f4" : "#fffdf7", border: used ? "2px solid #2f9e8f" : "1.5px solid #ece0c8",
+                          boxShadow: used ? "0 2px 8px rgba(47,158,143,0.18)" : "0 4px 12px rgba(120,90,50,0.12)",
+                          transition: "all .2s" }}>
+                        <span style={{ width: 58, height: 58, borderRadius: "50%", position: "relative",
+                          background: "radial-gradient(circle at 50% 38%, #ffffff, #f0e7d4)", boxShadow: "inset 0 2px 5px rgba(150,110,60,0.15)",
+                          display: "flex", alignItems: "center", justifyContent: "center", fontSize: 34 }}>
+                          {it.e}
+                          {used && <span style={{ position: "absolute", top: -3, right: -3, width: 20, height: 20, borderRadius: "50%",
+                            background: "#2f9e8f", color: "#fff", fontSize: 12, display: "flex", alignItems: "center", justifyContent: "center" }}>✓</span>}
+                        </span>
+                        <span style={{ fontSize: 13.5, fontWeight: 800, color: used ? "#1d7a6e" : "#4a4234" }}>{it.n}</span>
                       </motion.button>
                     );
                   })}
@@ -408,10 +416,10 @@ export function RestauranteOrdem({ difficulty, onComplete }: RestauranteOrdemPro
               </span>
               <span style={{ display: "flex", alignItems: "center", gap: 6, fontSize: 12.5, fontWeight: 700, color: "#1d7a6e" }}>
                 <CheckCircle2 size={15} color="#1d7a6e" />
-                {correctRef.current} certos
+                Acertos: {correctRef.current}
               </span>
             </div>
-          </div>
+          </motion.div>
         </div>
       </div>
 
