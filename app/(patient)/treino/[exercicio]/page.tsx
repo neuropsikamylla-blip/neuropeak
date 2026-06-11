@@ -166,10 +166,9 @@ const EXERCISE_INSTRUCTIONS: Record<string, string[]> = {
     "Velocidade e precisão contam — confie no seu julgamento!",
   ],
   "antes-depois": [
-    "Uma palavra aparece no centro — pode ser um dia, mês, número ou rotina.",
-    "A pergunta indica: O que vem ANTES? ou O que vem DEPOIS?",
-    "Escolha a opção correta entre as 4 alternativas.",
-    "Tente responder antes que o tempo acabe — rapidez e precisão valem!",
+    "Uma figura ou palavra aparece no centro (dia, mês, número, letra ou rotina).",
+    "Veja se a pergunta pede o que vem ANTES ou DEPOIS dela.",
+    "Toque na alternativa certa. Use o 🔊 para ouvir a pergunta de novo.",
   ],
   "semaforo": [
     "Três semáforos aparecem na tela e piscam ao mesmo tempo.",
