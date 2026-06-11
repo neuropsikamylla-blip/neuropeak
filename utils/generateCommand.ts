@@ -601,7 +601,7 @@ const MODE_LEVEL_DIFF: Record<FocusMode, [number, number, number, number, number
 // Mantido enxuto de propósito: muitos personagens viram poluição visual e
 // dificultam achar o alvo sem necessidade (o desafio vem dos atributos + velocidade).
 const MODE_LEVEL_N: [number, number][] = [
-  [4, 8], [4, 10], [5, 12], [6, 14], [6, 16],
+  [5, 10], [6, 13], [7, 16], [8, 18], [9, 20],
 ];
 
 // Formatos de comando que dependem de detalhes sutis/ambíguos (cor do cabelo,
@@ -642,7 +642,7 @@ function buildCaptureAll(mode: FocusMode, level: number, theme: Theme): BuiltRou
     }
     const col = shuffle(ALL_UNIFORM_COLORS).find(c => distinctByColor(c, 3).length >= 2);
     if (!col) return null;
-    const targets = distinctByColor(col, lv >= 4 ? 4 : 3);
+    const targets = distinctByColor(col, lv >= 3 ? 5 : 4);
     const exclude = new Set(targets.map(t => t.agentId));
     const distract = pickDistinctAgents(
       characterAttributes.filter(c => c.uniformColor !== col), dN - targets.length, exclude);
