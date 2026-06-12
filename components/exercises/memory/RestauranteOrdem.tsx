@@ -176,32 +176,13 @@ function setAmbienceMuted(muted: boolean) {
 
 // ── Fundo de restaurante (recriado via CSS) ─────────────────────────────────────
 function RestaurantBg() {
-  const bulb = (left: string, cord: number) => (
-    <div style={{ position: "absolute", left, top: 0, display: "flex", flexDirection: "column", alignItems: "center" }}>
-      <div style={{ width: 2, height: cord, background: "rgba(40,28,18,0.6)" }} />
-      <div style={{ width: 44, height: 44, borderRadius: "50%",
-        background: "radial-gradient(circle at 50% 40%, rgba(255,224,150,0.95), rgba(255,180,80,0.4) 55%, transparent 72%)", filter: "blur(2px)" }} />
-    </div>
-  );
   return (
-    <div style={{ position: "absolute", inset: 0, overflow: "hidden" }}>
-      <div style={{ position: "absolute", inset: 0, background: "linear-gradient(180deg,#7a5636 0%,#9a7350 32%,#a9805a 60%,#7c5838 100%)" }} />
-      {/* janelas claras à direita */}
-      <div style={{ position: "absolute", right: 0, top: 0, width: "34%", height: "100%",
-        background: "linear-gradient(180deg, rgba(220,230,238,0.6), rgba(180,196,210,0.3) 70%, transparent)", filter: "blur(22px)" }} />
-      {/* plantas à direita */}
-      <div style={{ position: "absolute", right: "5%", bottom: "8%", width: 130, height: 160,
-        background: "radial-gradient(circle, rgba(90,135,75,0.5), transparent 70%)", filter: "blur(16px)" }} />
-      {/* balcão/bar à esquerda */}
-      <div style={{ position: "absolute", left: 0, top: "46%", width: "42%", height: "54%",
-        background: "linear-gradient(180deg, rgba(70,46,26,0.4), rgba(50,32,16,0.55))", filter: "blur(16px)" }} />
-      {/* lâmpadas pendentes */}
-      {bulb("12%", 70)}{bulb("21%", 120)}{bulb("30%", 55)}
-      {/* bokeh quente */}
-      <div style={{ position: "absolute", left: "46%", top: "14%", width: 80, height: 80, borderRadius: "50%",
-        background: "radial-gradient(circle, rgba(255,210,140,0.4), transparent 70%)", filter: "blur(10px)" }} />
-      {/* leve profundidade (vinheta suave) */}
-      <div style={{ position: "absolute", inset: 0, background: "radial-gradient(ellipse at 50% 40%, transparent 45%, rgba(40,24,10,0.32))" }} />
+    <div style={{ position: "absolute", inset: 0, overflow: "hidden", background: "#3c2616" }}>
+      {/* foto real do restaurante, com leve desfoque p/ não competir com o card */}
+      <div style={{ position: "absolute", inset: -14, backgroundImage: "url(/exercises/restaurante/fundo.jpg)",
+        backgroundSize: "cover", backgroundPosition: "center", filter: "blur(2.5px)", transform: "scale(1.04)" }} />
+      {/* leve escurecimento p/ o card creme destacar */}
+      <div style={{ position: "absolute", inset: 0, background: "rgba(28,16,6,0.22)" }} />
     </div>
   );
 }
