@@ -27,6 +27,11 @@ const ITEMS: Item[] = [
   { id: "maca", n: "maçã", art: "a" }, { id: "sorvete", n: "sorvete", art: "o" },
   { id: "pudim", n: "pudim", art: "o" }, { id: "donut", n: "donut", art: "o" },
   { id: "torrada", n: "torrada", art: "a" },
+  { id: "salada", n: "salada", art: "a" }, { id: "sopa", n: "sopa", art: "a" },
+  { id: "macarrao", n: "macarrão", art: "o" }, { id: "lasanha", n: "lasanha", art: "a" },
+  { id: "cachorro-quente", n: "cachorro-quente", art: "o" }, { id: "taco", n: "taco", art: "o" },
+  { id: "arroz", n: "arroz", art: "o" }, { id: "feijao", n: "feijão", art: "o" },
+  { id: "bife", n: "bife", art: "o" },
 ];
 
 // Renderiza a foto realista do item
