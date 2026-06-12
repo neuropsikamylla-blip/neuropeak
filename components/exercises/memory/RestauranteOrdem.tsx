@@ -34,12 +34,15 @@ const ITEMS: Item[] = [
   { id: "bife", n: "bife", art: "o" },
 ];
 
-// Bebidas vão no copo/xícara (SEM prato); o resto vai sobre o pratinho branco.
-const DRINKS = new Set(["agua", "suco", "cafe", "cha", "refrigerante", "vitamina", "agua-coco", "chocolate-quente"]);
+// Itens que JÁ vêm no próprio recipiente (copo/xícara/tigela) — NÃO levam prato.
+const NO_PLATE = new Set([
+  "agua", "suco", "cafe", "cha", "refrigerante", "vitamina", "agua-coco", "chocolate-quente", // bebidas (copo/xícara)
+  "arroz", "feijao", "sopa", "salada", // já vêm em tigela
+]);
 
-// Renderiza a foto realista do item (comida sobre o prato; bebida sem prato)
+// Renderiza a foto realista do item (comida no prato; bebida/tigela sem prato)
 function ItemImg({ id, size }: { id: string; size: number }) {
-  if (!DRINKS.has(id)) {
+  if (!NO_PLATE.has(id)) {
     return (
       <div style={{ position: "relative", width: size, height: size }}>
         {/* eslint-disable-next-line @next/next/no-img-element */}
@@ -47,7 +50,7 @@ function ItemImg({ id, size }: { id: string; size: number }) {
           style={{ position: "absolute", inset: 0, width: size, height: size, objectFit: "contain", userSelect: "none" }} />
         {/* eslint-disable-next-line @next/next/no-img-element */}
         <img src={`/exercises/restaurante/${id}.png`} alt="" draggable={false}
-          style={{ position: "absolute", left: size * 0.19, top: size * 0.13, width: size * 0.62, height: size * 0.62, objectFit: "contain", userSelect: "none" }} />
+          style={{ position: "absolute", left: size * 0.13, top: size * 0.10, width: size * 0.74, height: size * 0.74, objectFit: "contain", userSelect: "none" }} />
       </div>
     );
   }
@@ -250,7 +253,8 @@ function Tray({ items }: { items: Item[] }) {
 export function RestauranteOrdem({ difficulty, onComplete }: RestauranteOrdemProps) {
   const reportProgress = useExerciseProgress();
   const startLevel = levelOf(difficulty);
-  const spec = R_LEVELS[startLevel];
+  const [sessionLevel, setSessionLevel] = useState(startLevel); // sobe na sessão (2 acertos = lista maior)
+  const spec = R_LEVELS[sessionLevel];
 
   const [phase, setPhase] = useState<Phase>("ready");
   const [order, setOrder] = useState<Item[]>([]);
@@ -270,6 +274,8 @@ export function RestauranteOrdem({ difficulty, onComplete }: RestauranteOrdemPro
   const trayRef = useRef<Item[]>([]);
   const startTime = useRef(Date.now());
   const runRef = useRef(0);
+  const levelRef = useRef(startLevel);   // nível atual da sessão (fonte da verdade p/ a rodada)
+  const streakRef = useRef(0);
 
   const modeHint = spec.mode === "inversa" ? "Monte começando pelo ÚLTIMO item (ordem inversa)."
     : spec.mode === "exclusao" ? "NÃO coloque o item que o pedido mandou ignorar."
@@ -277,19 +283,20 @@ export function RestauranteOrdem({ difficulty, onComplete }: RestauranteOrdemPro
 
   const startRound = useCallback(async () => {
     runRef.current++; const myRun = runRef.current;
-    const picks = shuffle(ITEMS).slice(0, spec.count);
+    const sp = R_LEVELS[levelRef.current];   // lê o nível atual (pode ter subido)
+    const picks = shuffle(ITEMS).slice(0, sp.count);
     let exc: Item | null = null;
     let exp: Item[];
-    if (spec.mode === "exclusao") {
+    if (sp.mode === "exclusao") {
       exc = picks[1 + Math.floor(Math.random() * (picks.length - 1))];
       exp = picks.filter((x) => x.n !== exc!.n);
-    } else if (spec.mode === "inversa") {
+    } else if (sp.mode === "inversa") {
       exp = [...picks].reverse();
     } else exp = picks;
-    const sent = spec.mode === "exclusao"
+    const sent = sp.mode === "exclusao"
       ? `O cliente quer ${listText(picks)}, mas NÃO ${exc!.art} ${exc!.n}.`
       : `O cliente quer ${listText(picks)}.`;
-    const distract = shuffle(ITEMS.filter((x) => !picks.some((p) => p.n === x.n))).slice(0, spec.distractors);
+    const distract = shuffle(ITEMS.filter((x) => !picks.some((p) => p.n === x.n))).slice(0, sp.distractors);
 
     setOrder(picks); setExcluded(exc); setExpected(exp); setSentence(sent);
     setKeys(shuffle([...picks, ...distract]));
@@ -297,51 +304,57 @@ export function RestauranteOrdem({ difficulty, onComplete }: RestauranteOrdemPro
     setFeedback(null);
     setPhase("order");
 
-    if (spec.audio) {
+    if (sp.audio) {
       setSpeaking(true);
       await speak(sent);
       if (runRef.current !== myRun) return;
       setSpeaking(false);
     }
-  }, [spec]);
+  }, []);
 
   const finish = useCallback(() => {
+    const endLevel = levelRef.current;
+    const sp = R_LEVELS[endLevel];
     const accTotal = correctRef.current / TRIALS;
     const meanRT = rtsRef.current.length ? Math.round(rtsRef.current.reduce((a, b) => a + b, 0) / rtsRef.current.length) : null;
     const duration = Math.round((Date.now() - startTime.current) / 1000);
     onComplete({
       exerciseId: "restaurante-ordem",
       domain: "memory",
-      score: calculateExerciseScore("span-numerico", accTotal, meanRT ?? undefined, difficulty),
+      score: calculateExerciseScore("span-numerico", accTotal, meanRT ?? undefined, endLevel),
       accuracy: accTotal,
       reactionTime: meanRT ?? undefined,
-      difficulty: startLevel,
+      difficulty: endLevel,
       duration,
       metadata: {
         progressionV2: true,
         accTotal: Number(accTotal.toFixed(3)),
-        level: startLevel,
+        level: endLevel,
         startedLevel: startLevel,
-        items: spec.count,
-        rule: spec.mode,
-        presentation: spec.audio ? "auditiva" : "visual",
-        distractors: spec.distractors,
+        items: sp.count,
+        rule: sp.mode,
+        presentation: sp.audio ? "auditiva" : "visual",
+        distractors: sp.distractors,
         sequencesCorrect: correctRef.current,
         sequencesIncorrect: TRIALS - correctRef.current,
         meanReactionTimeMs: meanRT,
       },
     });
-  }, [onComplete, difficulty, startLevel, spec]);
+  }, [onComplete, startLevel]);
 
   const validate = useCallback((picks: Item[]) => {
     const correct = picks.map((x) => x.n).join("·") === expected.map((x) => x.n).join("·");
     if (correct) correctRef.current++;
     rtsRef.current.push(Date.now() - inputAt.current);
+    // progressão na sessão: 2 acertos seguidos sobem 1 nível (lista maior); 2 erros descem
+    streakRef.current = correct ? Math.max(streakRef.current, 0) + 1 : Math.min(streakRef.current, 0) - 1;
+    if (streakRef.current >= 2)  { levelRef.current = Math.min(levelRef.current + 1, 10); streakRef.current = 0; setSessionLevel(levelRef.current); }
+    else if (streakRef.current <= -2) { levelRef.current = Math.max(levelRef.current - 1, 1); streakRef.current = 0; setSessionLevel(levelRef.current); }
     setFeedback(correct ? "correct" : "incorrect");
     setPhase("feedback");
     const nextTrial = trial + 1;
     reportProgress(Math.round((nextTrial / TRIALS) * 100));
-    setTimeout(() => { if (nextTrial >= TRIALS) finish(); else { setTrial(nextTrial); startRound(); } }, correct ? 1400 : 2600);
+    setTimeout(() => { if (nextTrial >= TRIALS) finish(); else { setTrial(nextTrial); startRound(); } }, correct ? 3600 : 5200);
   }, [expected, trial, reportProgress, startRound, finish]);
 
   function place(it: Item) {
@@ -358,7 +371,16 @@ export function RestauranteOrdem({ difficulty, onComplete }: RestauranteOrdemPro
   function goInput() { inputAt.current = Date.now(); setPhase("input"); }
 
   useEffect(() => () => { runRef.current++; if (typeof window !== "undefined") window.speechSynthesis?.cancel(); stopAmbience(); }, []);
-  function begin() { correctRef.current = 0; rtsRef.current = []; startTime.current = Date.now(); setTrial(0); startAmbience(); setAmbienceMuted(!musicOn); startRound(); }
+  // pré-carrega as fotos (tira o delay de aparecimento)
+  useEffect(() => {
+    if (typeof window === "undefined") return;
+    ["prato-base", ...ITEMS.map((i) => i.id)].forEach((id) => { const im = new window.Image(); im.src = `/exercises/restaurante/${id}.png`; });
+  }, []);
+  function begin() {
+    correctRef.current = 0; rtsRef.current = []; startTime.current = Date.now(); setTrial(0);
+    levelRef.current = startLevel; streakRef.current = 0; setSessionLevel(startLevel);
+    startAmbience(); setAmbienceMuted(!musicOn); startRound();
+  }
   function toggleMusic() { setMusicOn((m) => { const next = !m; setAmbienceMuted(!next); return next; }); }
 
   const pct = Math.round((trial / TRIALS) * 100);
@@ -419,7 +441,7 @@ export function RestauranteOrdem({ difficulty, onComplete }: RestauranteOrdemPro
               <div style={{ flex: 1, minWidth: 0 }}>
                 <div style={{ fontSize: 22, fontWeight: 900, color: "#2a2018", marginBottom: 6 }}>Restaurante</div>
                 <div style={{ display: "flex", flexWrap: "wrap", gap: 6 }}>
-                  <Chip icon={<BarChart3 size={13} />} text={`Nível ${startLevel}`} color="#1d7a6e" />
+                  <Chip icon={<BarChart3 size={13} />} text={`Nível ${sessionLevel}`} color="#1d7a6e" />
                   <Chip icon={<Package size={13} />} text={`${spec.count} itens`} color="#e0892a" />
                   <Chip icon={<ArrowRight size={13} />} text={`Ordem ${MODE_LABEL[spec.mode]}`} color="#2563eb" />
                   <Chip icon={spec.audio ? <Volume2 size={13} /> : <MessageSquare size={13} />} text={spec.audio ? "Áudio" : "Texto"} color="#7c5cf0" />
