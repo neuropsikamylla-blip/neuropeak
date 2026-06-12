@@ -190,8 +190,8 @@ export function RestauranteOrdem({ difficulty, onComplete }: RestauranteOrdemPro
       exp = [...picks].reverse();
     } else exp = picks;
     const sent = spec.mode === "exclusao"
-      ? `Pegue ${listText(picks)}, mas NÃO coloque ${exc!.art} ${exc!.n}.`
-      : `Pegue ${listText(picks)}.`;
+      ? `O cliente quer ${listText(picks)}, mas NÃO ${exc!.art} ${exc!.n}.`
+      : `O cliente quer ${listText(picks)}.`;
     const distract = shuffle(ITEMS.filter((x) => !picks.some((p) => p.n === x.n))).slice(0, spec.distractors);
 
     setOrder(picks); setExcluded(exc); setExpected(exp); setSentence(sent);
@@ -327,7 +327,9 @@ export function RestauranteOrdem({ difficulty, onComplete }: RestauranteOrdemPro
             {/* ── ORDER (apresentar pedido) ── */}
             {phase === "order" && (
               <div style={{ display: "flex", flexDirection: "column", alignItems: "center", gap: 16, paddingBottom: 6 }}>
-                <span style={{ fontSize: 13, fontWeight: 800, color: "#1d7a6e", textTransform: "uppercase", letterSpacing: 1 }}>📋 Pedido do cliente</span>
+                <span style={{ display: "flex", alignItems: "center", gap: 9, fontSize: 13, fontWeight: 800, color: "#1d7a6e", textTransform: "uppercase", letterSpacing: 1 }}>
+                  <span style={{ color: "#caa86a" }}>✦</span>📋 Pedido do cliente<span style={{ color: "#caa86a" }}>✦</span>
+                </span>
                 {spec.audio ? (
                   <div style={{ display: "flex", flexDirection: "column", alignItems: "center", gap: 12 }}>
                     <motion.div animate={{ scale: speaking ? [1, 1.12, 1] : 1 }} transition={{ duration: 0.7, repeat: speaking ? Infinity : 0 }}
@@ -343,9 +345,14 @@ export function RestauranteOrdem({ difficulty, onComplete }: RestauranteOrdemPro
                     background: "rgba(17,81,79,0.07)", border: "1px solid rgba(17,81,79,0.18)" }}>{sentence}</p>
                 )}
                 <p style={{ fontSize: 12.5, color: "#9a8f7e", textAlign: "center" }}>{modeHint}</p>
-                <button onClick={goInput} style={{ width: "100%", height: 50, borderRadius: 16, border: "none",
+                <button onClick={goInput} style={{ width: "100%", height: 52, borderRadius: 100, border: "none",
                   background: "linear-gradient(135deg,#11514f,#0d3a3c)", color: "#fff", fontWeight: 800, fontSize: 14.5, cursor: "pointer",
-                  boxShadow: "0 6px 18px rgba(13,58,60,0.35)" }}>Montar bandeja →</button>
+                  display: "flex", alignItems: "center", justifyContent: "center", gap: 12, boxShadow: "0 6px 18px rgba(13,58,60,0.35)" }}>
+                  <span style={{ width: 30, height: 30, borderRadius: "50%", background: "rgba(255,255,255,0.16)", display: "flex", alignItems: "center", justifyContent: "center" }}>
+                    <svg width="17" height="14" viewBox="0 0 24 20" fill="none"><path d="M2.5 18 H21.5 M4.5 18 a7.5 7.5 0 0 1 15 0 M12 5.5 V3.2" stroke="#fff" strokeWidth="2" strokeLinecap="round"/><circle cx="12" cy="2.6" r="1.4" fill="#fff"/></svg>
+                  </span>
+                  Montar bandeja →
+                </button>
               </div>
             )}
 
