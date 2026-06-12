@@ -115,41 +115,36 @@ function Chip({ icon, text, color }: { icon: React.ReactNode; text: string; colo
   );
 }
 
-// ── Bandeja de madeira clara com slots numerados ─────────────────────────────────
-function Tray({ items, slots }: { items: Item[]; slots: number }) {
+// ── Bandeja de restaurante realista (nogueira + alças de latão) ──────────────────
+// Sem slots/pontilhado/texto — bandeja limpa; os itens aparecem em ordem nela.
+function Tray({ items }: { items: Item[] }) {
   const Handle = ({ side }: { side: "left" | "right" }) => (
-    <div style={{ position: "absolute", top: "50%", [side]: -11, transform: "translateY(-50%)", width: 20, height: 52,
-      borderRadius: 10, background: "linear-gradient(180deg,#e0bd8a,#c79a64)", boxShadow: "0 3px 8px rgba(120,80,35,0.3)" }}>
-      <div style={{ position: "absolute", inset: "16px 6px", borderRadius: 6, background: "rgba(90,55,20,0.32)" }} />
+    <div style={{ position: "absolute", top: "50%", [side]: -15, transform: "translateY(-50%)", width: 30, height: 50, zIndex: 0 }}>
+      <div style={{ position: "absolute", inset: 0, borderRadius: "45%", border: "5px solid #c8a24e",
+        boxShadow: "0 2px 6px rgba(50,30,8,0.4), inset 0 1px 2px rgba(255,238,190,0.7)" }} />
     </div>
   );
   return (
-    <div style={{ position: "relative", margin: "0 14px" }}>
+    <div style={{ position: "relative", margin: "0 20px" }}>
       <Handle side="left" /><Handle side="right" />
-      <div style={{ borderRadius: 20, padding: 11,
-        background: "linear-gradient(160deg,#ecd0a4,#d9b27e 55%,#c69a64)",
-        boxShadow: "0 12px 30px rgba(120,80,35,0.32), inset 0 2px 3px rgba(255,243,218,0.7), inset 0 -3px 6px rgba(150,100,50,0.35)" }}>
-        <div style={{ borderRadius: 14, padding: 12, background: "linear-gradient(180deg,#f3e2c4,#e9d0a6)",
-          boxShadow: "inset 0 3px 10px rgba(150,100,50,0.25)", display: "grid", gridTemplateColumns: `repeat(${Math.min(slots, 4)}, 1fr)`, gap: 9 }}>
-          {Array.from({ length: slots }).map((_, i) => {
-            const it = items[i];
-            return (
-              <div key={i} style={{ position: "relative", minHeight: 66, borderRadius: 13,
-                border: it ? "2px solid #2f9e8f" : "2px dashed rgba(160,115,65,0.45)",
-                background: it ? "#fffdf7" : "rgba(255,250,240,0.45)",
-                display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center" }}>
-                <span style={{ position: "absolute", top: -8, left: -8, width: 20, height: 20, borderRadius: "50%",
-                  background: it ? "#2f9e8f" : "#c9a474", color: "#fff", fontSize: 11, fontWeight: 900,
-                  display: "flex", alignItems: "center", justifyContent: "center" }}>{i + 1}</span>
-                {it ? (
-                  <motion.span initial={{ scale: 0.4, y: -14, opacity: 0 }} animate={{ scale: 1, y: 0, opacity: 1 }}
-                    transition={{ type: "spring", stiffness: 440, damping: 22 }} style={{ fontSize: 32, lineHeight: 1 }}>{it.e}</motion.span>
-                ) : (
-                  <span style={{ fontSize: 12, fontWeight: 800, color: "rgba(150,110,60,0.65)" }}>{i + 1}º</span>
-                )}
-              </div>
-            );
-          })}
+      {/* rim/moldura de nogueira */}
+      <div style={{ position: "relative", zIndex: 1, borderRadius: 22, padding: 13,
+        background: "linear-gradient(160deg,#7a5230 0%,#5c3d22 55%,#492f18 100%)",
+        boxShadow: "0 16px 36px rgba(50,30,10,0.4), inset 0 2px 3px rgba(255,228,185,0.3), inset 0 -3px 7px rgba(30,18,6,0.55)" }}>
+        {/* poço interno (madeira com grão sutil) */}
+        <div style={{ minHeight: 104, borderRadius: 15,
+          backgroundImage: "repeating-linear-gradient(96deg, rgba(255,220,170,0.045) 0 2px, transparent 2px 8px), linear-gradient(160deg,#62431f,#49321a)",
+          boxShadow: "inset 0 5px 16px rgba(18,10,3,0.6)",
+          display: "flex", alignItems: "center", justifyContent: "center", gap: 14, flexWrap: "wrap", padding: "14px 16px" }}>
+          {items.map((it, i) => (
+            <motion.div key={i} initial={{ scale: 0.4, y: -20, opacity: 0 }} animate={{ scale: 1, y: 0, opacity: 1 }}
+              transition={{ type: "spring", stiffness: 440, damping: 22 }}
+              style={{ width: 64, height: 64, borderRadius: "50%", flexShrink: 0,
+                background: "radial-gradient(circle at 50% 36%, #ffffff, #efe6d2)", boxShadow: "0 5px 12px rgba(15,9,3,0.5)",
+                display: "flex", alignItems: "center", justifyContent: "center", fontSize: 38 }}>
+              {it.e}
+            </motion.div>
+          ))}
         </div>
       </div>
     </div>
@@ -358,7 +353,7 @@ export function RestauranteOrdem({ difficulty, onComplete }: RestauranteOrdemPro
             {phase === "input" && (
               <div style={{ display: "flex", flexDirection: "column", gap: 14 }}>
                 <p style={{ textAlign: "center", fontSize: 15.5, fontWeight: 800, color: "#2a2018" }}>{modeHint}</p>
-                <Tray items={tray} slots={expected.length} />
+                <Tray items={tray} />
                 {tray.length > 0 && (
                   <button onClick={undo} style={{ alignSelf: "center", fontSize: 12, fontWeight: 700, padding: "5px 14px", borderRadius: 10,
                     background: "#ece3d1", color: "#6b6052", border: "none", cursor: "pointer" }}>↩ desfazer</button>
