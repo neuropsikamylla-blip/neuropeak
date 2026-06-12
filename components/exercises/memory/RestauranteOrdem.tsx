@@ -80,7 +80,7 @@ let ambCtx: AudioContext | null = null;
 let ambMaster: GainNode | null = null;
 let ambTimer: ReturnType<typeof setTimeout> | null = null;
 let ambStopPad: (() => void) | null = null;
-const AMB_LEVEL = 0.08;
+const AMB_LEVEL = 0.17;   // ~2x mais alto que antes (0.08)
 
 function startAmbience() {
   if (typeof window === "undefined") return;
@@ -91,32 +91,40 @@ function startAmbience() {
     if (ambMaster) return; // já tocando
     const ctx = ambCtx;
     const master = ctx.createGain(); master.gain.value = 0; master.connect(ctx.destination);
-    master.gain.linearRampToValueAtTime(AMB_LEVEL, ctx.currentTime + 2.5);
+    master.gain.linearRampToValueAtTime(AMB_LEVEL, ctx.currentTime + 1.5);
     ambMaster = master;
+    const warm = ctx.createBiquadFilter(); warm.type = "lowpass"; warm.frequency.value = 2000; warm.connect(master);
 
-    // pad quente (acorde grave) com filtro passa-baixa
-    const lp = ctx.createBiquadFilter(); lp.type = "lowpass"; lp.frequency.value = 760;
-    const padGain = ctx.createGain(); padGain.gain.value = 0.12; lp.connect(padGain); padGain.connect(master);
-    const padOscs = [130.81, 196.00, 246.94].map((f) => { const o = ctx.createOscillator(); o.type = "triangle"; o.frequency.value = f; o.connect(lp); o.start(); return o; });
-
-    // notas esparsas suaves
-    const scale = [523.25, 587.33, 659.25, 783.99, 880.00];
-    let stopped = false;
-    const tick = () => {
-      if (stopped || !ambCtx || !ambMaster) return;
-      const f = scale[Math.floor(Math.random() * scale.length)] * (Math.random() < 0.4 ? 0.5 : 1);
-      const o = ctx.createOscillator(); o.type = "sine"; o.frequency.value = f;
+    // progressão de acordes em clima café/lounge — arpejo dá movimento (mais animado)
+    const CHORDS = [
+      { bass: 130.81, notes: [261.63, 329.63, 392.00, 493.88] }, // Cmaj7
+      { bass: 110.00, notes: [261.63, 329.63, 392.00, 440.00] }, // Am7
+      { bass: 146.83, notes: [293.66, 349.23, 440.00, 523.25] }, // Dm7
+      { bass: 196.00, notes: [293.66, 349.23, 392.00, 493.88] }, // G7
+    ];
+    const note = (freq: number, dur: number, peak: number, type: OscillatorType) => {
+      const o = ctx.createOscillator(); o.type = type; o.frequency.value = freq;
       const g = ctx.createGain(); g.gain.value = 0;
-      o.connect(g); g.connect(ambMaster);
+      o.connect(g); g.connect(warm);
       const t = ctx.currentTime;
       g.gain.setValueAtTime(0, t);
-      g.gain.linearRampToValueAtTime(0.14, t + 0.06);
-      g.gain.exponentialRampToValueAtTime(0.0001, t + 2.2);
-      o.start(t); o.stop(t + 2.3);
-      ambTimer = setTimeout(tick, 1900 + Math.random() * 2400);
+      g.gain.linearRampToValueAtTime(peak, t + 0.02);
+      g.gain.exponentialRampToValueAtTime(0.0001, t + dur);
+      o.start(t); o.stop(t + dur + 0.05);
     };
-    ambTimer = setTimeout(tick, 1000);
-    ambStopPad = () => { stopped = true; padOscs.forEach((o) => { try { o.stop(); } catch { /* */ } }); };
+    let stopped = false, ci = 0, beat = 0;
+    const tick = () => {
+      if (stopped || !ambMaster) return;
+      const ch = CHORDS[ci];
+      if (beat === 0) note(ch.bass, 1.8, 0.46, "triangle");                       // baixo no início do acorde
+      note(ch.notes[beat % ch.notes.length], 1.3, 0.30, "sine");                   // arpejo
+      if (Math.random() < 0.3) note(ch.notes[(beat + 2) % ch.notes.length] * 2, 1.0, 0.12, "sine"); // brilho agudo
+      beat++;
+      if (beat >= 4) { beat = 0; ci = (ci + 1) % CHORDS.length; }
+      ambTimer = setTimeout(tick, 400 + (Math.random() * 40 - 20));                // tempo com leve swing
+    };
+    tick();
+    ambStopPad = () => { stopped = true; };
   } catch { /* sem áudio — segue sem música */ }
 }
 function stopAmbience() {
