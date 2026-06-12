@@ -359,9 +359,10 @@ export function RestauranteOrdem({ difficulty, onComplete }: RestauranteOrdemPro
 
   function place(it: Item) {
     if (phase !== "input" || trayRef.current.some((x) => x.n === it.n)) return;
+    if (trayRef.current.length >= expected.length) return; // já tem o nº de itens do pedido
     const next = [...trayRef.current, it];
     trayRef.current = next; setTray(next);
-    if (next.length >= expected.length) setTimeout(() => validate(next), 250);
+    // NÃO envia automático — a pessoa confirma no botão "Pronto" (pode ajustar antes)
   }
   function undo() {
     if (phase !== "input") return;
@@ -513,6 +514,17 @@ export function RestauranteOrdem({ difficulty, onComplete }: RestauranteOrdemPro
                     );
                   })}
                 </div>
+
+                {/* Pronto — a pessoa confirma quando terminar (e pode ajustar antes) */}
+                <button onClick={() => validate(trayRef.current)} disabled={tray.length === 0}
+                  style={{ width: "100%", height: 52, borderRadius: 100, border: "none", marginTop: 4,
+                    background: tray.length > 0 ? "linear-gradient(135deg,#11514f,#0d3a3c)" : "#e2dcce",
+                    color: tray.length > 0 ? "#fff" : "#a89a82", fontWeight: 800, fontSize: 15,
+                    cursor: tray.length > 0 ? "pointer" : "default",
+                    display: "flex", alignItems: "center", justifyContent: "center", gap: 10,
+                    boxShadow: tray.length > 0 ? "0 6px 18px rgba(13,58,60,0.35)" : "none", transition: "all .2s" }}>
+                  ✓ Pronto {tray.length > 0 ? `(${tray.length}/${expected.length})` : ""}
+                </button>
               </div>
             )}
 
