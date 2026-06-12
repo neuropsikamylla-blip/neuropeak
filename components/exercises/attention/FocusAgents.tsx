@@ -145,7 +145,7 @@ function AgentCard({ gameAgent, onClick, state, size }: {
 // cache-bust: força o navegador a buscar as imagens novas (transparentes),
 // mesmo que tenha a versão antiga (com fundo) guardada em cache. Subir este
 // número sempre que reprocessar as imagens dos agentes.
-const AGENT_V = "?v=4";
+const AGENT_V = "?v=5";
 const DEMO_AGENTS = [
   { id: "d-1", src: "/exercises/agentes-personagens/01_agente_azul_com_fone.png",       isTarget: true,  wave: { amp: 10, dur: 3.0, delay: 0.0 } },
   { id: "d-2", src: "/exercises/agentes-personagens/05_agente_vermelho_com_bone.png",   isTarget: false, wave: { amp:  8, dur: 2.5, delay: 0.6 } },
