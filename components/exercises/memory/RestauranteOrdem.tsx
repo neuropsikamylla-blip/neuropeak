@@ -13,17 +13,30 @@ interface RestauranteOrdemProps {
   onComplete: (result: ExerciseResult) => void;
 }
 
-interface Item { n: string; e: string; art: "o" | "a"; }
+interface Item { id: string; n: string; art: string; } // foto em /exercises/restaurante/<id>.png
 const ITEMS: Item[] = [
-  { n: "água", e: "💧", art: "a" }, { n: "suco", e: "🧃", art: "o" },
-  { n: "café", e: "☕", art: "o" }, { n: "chá", e: "🍵", art: "o" },
-  { n: "sanduíche", e: "🥪", art: "o" }, { n: "salada", e: "🥗", art: "a" },
-  { n: "sopa", e: "🍲", art: "a" }, { n: "bolo", e: "🍰", art: "o" },
-  { n: "maçã", e: "🍎", art: "a" }, { n: "pão", e: "🍞", art: "o" },
-  { n: "queijo", e: "🧀", art: "o" }, { n: "garfo", e: "🍴", art: "o" },
-  { n: "colher", e: "🥄", art: "a" }, { n: "prato", e: "🍽️", art: "o" },
-  { n: "copo", e: "🥤", art: "o" },
+  { id: "agua", n: "água", art: "a" }, { id: "suco", n: "suco", art: "o" },
+  { id: "cafe", n: "café", art: "o" }, { id: "cha", n: "chá", art: "o" },
+  { id: "refrigerante", n: "refrigerante", art: "o" }, { id: "vitamina", n: "vitamina", art: "a" },
+  { id: "agua-coco", n: "água de coco", art: "a" }, { id: "chocolate-quente", n: "chocolate quente", art: "o" },
+  { id: "sanduiche", n: "sanduíche", art: "o" }, { id: "pizza", n: "pizza", art: "a" },
+  { id: "nuggets", n: "nuggets", art: "os" }, { id: "batata-frita", n: "batata frita", art: "a" },
+  { id: "ovo", n: "ovo", art: "o" }, { id: "panqueca", n: "panqueca", art: "a" },
+  { id: "frango", n: "frango", art: "o" }, { id: "pao", n: "pão", art: "o" },
+  { id: "bolo", n: "bolo", art: "o" }, { id: "queijo", n: "queijo", art: "o" },
+  { id: "maca", n: "maçã", art: "a" }, { id: "sorvete", n: "sorvete", art: "o" },
+  { id: "pudim", n: "pudim", art: "o" }, { id: "donut", n: "donut", art: "o" },
+  { id: "torrada", n: "torrada", art: "a" },
 ];
+
+// Renderiza a foto realista do item
+function ItemImg({ id, size }: { id: string; size: number }) {
+  return (
+    // eslint-disable-next-line @next/next/no-img-element
+    <img src={`/exercises/restaurante/${id}.png`} alt="" draggable={false} width={size} height={size}
+      style={{ width: size, height: size, objectFit: "contain", display: "block", userSelect: "none" }} />
+  );
+}
 
 type Mode = "direta" | "inversa" | "exclusao";
 interface RLevel { count: number; mode: Mode; audio: boolean; distractors: number; }
@@ -204,10 +217,8 @@ function Tray({ items }: { items: Item[] }) {
           {items.map((it, i) => (
             <motion.div key={i} initial={{ scale: 0.4, y: -20, opacity: 0 }} animate={{ scale: 1, y: 0, opacity: 1 }}
               transition={{ type: "spring", stiffness: 440, damping: 22 }}
-              style={{ width: 64, height: 64, borderRadius: "50%", flexShrink: 0,
-                background: "radial-gradient(circle at 50% 36%, #ffffff, #efe6d2)", boxShadow: "0 5px 12px rgba(15,9,3,0.5)",
-                display: "flex", alignItems: "center", justifyContent: "center", fontSize: 38 }}>
-              {it.e}
+              style={{ flexShrink: 0, filter: "drop-shadow(0 6px 10px rgba(10,6,2,0.55))" }}>
+              <ItemImg id={it.id} size={74} />
             </motion.div>
           ))}
         </div>
@@ -450,11 +461,9 @@ export function RestauranteOrdem({ difficulty, onComplete }: RestauranteOrdemPro
                           background: used ? "#eef6f4" : "#fffdf7", border: used ? "2px solid #2f9e8f" : "1.5px solid #ece0c8",
                           boxShadow: used ? "0 2px 8px rgba(47,158,143,0.18)" : "0 4px 12px rgba(120,90,50,0.12)",
                           transition: "all .2s" }}>
-                        <span style={{ width: 58, height: 58, borderRadius: "50%", position: "relative",
-                          background: "radial-gradient(circle at 50% 38%, #ffffff, #f0e7d4)", boxShadow: "inset 0 2px 5px rgba(150,110,60,0.15)",
-                          display: "flex", alignItems: "center", justifyContent: "center", fontSize: 34 }}>
-                          {it.e}
-                          {used && <span style={{ position: "absolute", top: -3, right: -3, width: 20, height: 20, borderRadius: "50%",
+                        <span style={{ position: "relative", display: "flex", alignItems: "center", justifyContent: "center" }}>
+                          <ItemImg id={it.id} size={62} />
+                          {used && <span style={{ position: "absolute", top: -4, right: -4, width: 20, height: 20, borderRadius: "50%",
                             background: "#2f9e8f", color: "#fff", fontSize: 12, display: "flex", alignItems: "center", justifyContent: "center" }}>✓</span>}
                         </span>
                         <span style={{ fontSize: 13.5, fontWeight: 800, color: used ? "#1d7a6e" : "#4a4234" }}>{it.n}</span>
@@ -476,9 +485,15 @@ export function RestauranteOrdem({ difficulty, onComplete }: RestauranteOrdemPro
                 </p>
                 {feedback === "incorrect" && startLevel <= 5 && (
                   <div style={{ textAlign: "center", marginTop: 2 }}>
-                    <p style={{ fontSize: 13, color: "#9a8f7e", marginBottom: 4 }}>Ordem correta:</p>
-                    <p style={{ fontSize: 30 }}>{expected.map((x) => x.e).join("  ")}</p>
-                    <p style={{ fontSize: 15, color: "#9a8f7e", marginTop: 4 }}>Você: {tray.map((x) => x.e).join(" ") || "—"}</p>
+                    <p style={{ fontSize: 12.5, fontWeight: 700, color: "#9a8f7e", marginBottom: 6 }}>Ordem correta:</p>
+                    <div style={{ display: "flex", gap: 8, justifyContent: "center", flexWrap: "wrap" }}>
+                      {expected.map((x, i) => (
+                        <span key={i} style={{ display: "flex", flexDirection: "column", alignItems: "center", gap: 2 }}>
+                          <span style={{ fontSize: 10, fontWeight: 900, color: "#1d7a6e" }}>{i + 1}</span>
+                          <ItemImg id={x.id} size={46} />
+                        </span>
+                      ))}
+                    </div>
                   </div>
                 )}
               </div>
