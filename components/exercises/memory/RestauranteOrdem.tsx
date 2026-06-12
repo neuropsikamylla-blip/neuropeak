@@ -73,6 +73,63 @@ function speak(text: string): Promise<void> {
 
 type Phase = "ready" | "order" | "input" | "feedback";
 
+// ── Música ambiente sintetizada (Web Audio) — 100% sem direitos autorais ─────────
+// Um pad quente grave + notinhas esparsas de uma escala pentatônica, em volume
+// baixo. Gerada na hora pelo app (nada de arquivo/música protegida).
+let ambCtx: AudioContext | null = null;
+let ambMaster: GainNode | null = null;
+let ambTimer: ReturnType<typeof setTimeout> | null = null;
+let ambStopPad: (() => void) | null = null;
+const AMB_LEVEL = 0.08;
+
+function startAmbience() {
+  if (typeof window === "undefined") return;
+  try {
+    const Ctx = window.AudioContext || (window as unknown as { webkitAudioContext: typeof AudioContext }).webkitAudioContext;
+    if (!ambCtx) ambCtx = new Ctx();
+    if (ambCtx.state === "suspended") ambCtx.resume();
+    if (ambMaster) return; // já tocando
+    const ctx = ambCtx;
+    const master = ctx.createGain(); master.gain.value = 0; master.connect(ctx.destination);
+    master.gain.linearRampToValueAtTime(AMB_LEVEL, ctx.currentTime + 2.5);
+    ambMaster = master;
+
+    // pad quente (acorde grave) com filtro passa-baixa
+    const lp = ctx.createBiquadFilter(); lp.type = "lowpass"; lp.frequency.value = 760;
+    const padGain = ctx.createGain(); padGain.gain.value = 0.12; lp.connect(padGain); padGain.connect(master);
+    const padOscs = [130.81, 196.00, 246.94].map((f) => { const o = ctx.createOscillator(); o.type = "triangle"; o.frequency.value = f; o.connect(lp); o.start(); return o; });
+
+    // notas esparsas suaves
+    const scale = [523.25, 587.33, 659.25, 783.99, 880.00];
+    let stopped = false;
+    const tick = () => {
+      if (stopped || !ambCtx || !ambMaster) return;
+      const f = scale[Math.floor(Math.random() * scale.length)] * (Math.random() < 0.4 ? 0.5 : 1);
+      const o = ctx.createOscillator(); o.type = "sine"; o.frequency.value = f;
+      const g = ctx.createGain(); g.gain.value = 0;
+      o.connect(g); g.connect(ambMaster);
+      const t = ctx.currentTime;
+      g.gain.setValueAtTime(0, t);
+      g.gain.linearRampToValueAtTime(0.14, t + 0.06);
+      g.gain.exponentialRampToValueAtTime(0.0001, t + 2.2);
+      o.start(t); o.stop(t + 2.3);
+      ambTimer = setTimeout(tick, 1900 + Math.random() * 2400);
+    };
+    ambTimer = setTimeout(tick, 1000);
+    ambStopPad = () => { stopped = true; padOscs.forEach((o) => { try { o.stop(); } catch { /* */ } }); };
+  } catch { /* sem áudio — segue sem música */ }
+}
+function stopAmbience() {
+  if (ambTimer) { clearTimeout(ambTimer); ambTimer = null; }
+  if (ambStopPad) { ambStopPad(); ambStopPad = null; }
+  const m = ambMaster; ambMaster = null;
+  if (m && ambCtx) { try { m.gain.linearRampToValueAtTime(0, ambCtx.currentTime + 0.4); } catch { /* */ } }
+  setTimeout(() => { if (m) { try { m.disconnect(); } catch { /* */ } } }, 600);
+}
+function setAmbienceMuted(muted: boolean) {
+  if (ambMaster && ambCtx) { try { ambMaster.gain.linearRampToValueAtTime(muted ? 0 : AMB_LEVEL, ambCtx.currentTime + 0.3); } catch { /* */ } }
+}
+
 // ── Fundo de restaurante (recriado via CSS) ─────────────────────────────────────
 function RestaurantBg() {
   const bulb = (left: string, cord: number) => (
@@ -166,6 +223,7 @@ export function RestauranteOrdem({ difficulty, onComplete }: RestauranteOrdemPro
   const [trial, setTrial] = useState(0);
   const [feedback, setFeedback] = useState<"correct" | "incorrect" | null>(null);
   const [speaking, setSpeaking] = useState(false);
+  const [musicOn, setMusicOn] = useState(true);
 
   const correctRef = useRef(0);
   const rtsRef = useRef<number[]>([]);
@@ -260,8 +318,9 @@ export function RestauranteOrdem({ difficulty, onComplete }: RestauranteOrdemPro
   }
   function goInput() { inputAt.current = Date.now(); setPhase("input"); }
 
-  useEffect(() => () => { runRef.current++; if (typeof window !== "undefined") window.speechSynthesis?.cancel(); }, []);
-  function begin() { correctRef.current = 0; rtsRef.current = []; startTime.current = Date.now(); setTrial(0); startRound(); }
+  useEffect(() => () => { runRef.current++; if (typeof window !== "undefined") window.speechSynthesis?.cancel(); stopAmbience(); }, []);
+  function begin() { correctRef.current = 0; rtsRef.current = []; startTime.current = Date.now(); setTrial(0); startAmbience(); setAmbienceMuted(!musicOn); startRound(); }
+  function toggleMusic() { setMusicOn((m) => { const next = !m; setAmbienceMuted(!next); return next; }); }
 
   const pct = Math.round((trial / TRIALS) * 100);
   const orderPct = expected.length ? Math.round((tray.length / expected.length) * 100) : 0;
@@ -301,8 +360,16 @@ export function RestauranteOrdem({ difficulty, onComplete }: RestauranteOrdemPro
       <div style={{ position: "relative", zIndex: 2, display: "flex", flexDirection: "column", height: "100%" }}>
         <div style={{ flex: 1, overflowY: "auto", display: "flex", alignItems: "center", justifyContent: "center", padding: "18px 16px" }}>
           <motion.div animate={shake ? { x: [0, -9, 9, -7, 7, 0] } : { x: 0 }} transition={{ duration: 0.45 }}
-            style={{ width: "100%", maxWidth: 600, background: "#faf3e6", borderRadius: 28, padding: "22px 22px 16px",
+            style={{ position: "relative", width: "100%", maxWidth: 600, background: "#faf3e6", borderRadius: 28, padding: "22px 22px 16px",
             boxShadow: "0 26px 64px rgba(30,18,8,0.4)" }}>
+
+            {/* botão de música (ambiência) */}
+            <button onClick={toggleMusic} title={musicOn ? "Música de fundo: ligada" : "Música de fundo: muda"}
+              style={{ position: "absolute", top: 14, right: 14, width: 36, height: 36, borderRadius: "50%", zIndex: 5,
+                border: "1px solid #e7dcc4", background: "#fffdf7", cursor: "pointer", fontSize: 15,
+                display: "flex", alignItems: "center", justifyContent: "center", boxShadow: "0 2px 6px rgba(120,90,50,0.12)" }}>
+              {musicOn ? "🔊" : "🔇"}
+            </button>
 
             {/* cabeçalho do card */}
             <div style={{ display: "flex", alignItems: "center", gap: 12, marginBottom: 14 }}>
