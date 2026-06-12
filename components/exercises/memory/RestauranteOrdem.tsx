@@ -34,8 +34,23 @@ const ITEMS: Item[] = [
   { id: "bife", n: "bife", art: "o" },
 ];
 
-// Renderiza a foto realista do item
+// Bebidas vão no copo/xícara (SEM prato); o resto vai sobre o pratinho branco.
+const DRINKS = new Set(["agua", "suco", "cafe", "cha", "refrigerante", "vitamina", "agua-coco", "chocolate-quente"]);
+
+// Renderiza a foto realista do item (comida sobre o prato; bebida sem prato)
 function ItemImg({ id, size }: { id: string; size: number }) {
+  if (!DRINKS.has(id)) {
+    return (
+      <div style={{ position: "relative", width: size, height: size }}>
+        {/* eslint-disable-next-line @next/next/no-img-element */}
+        <img src="/exercises/restaurante/prato-base.png" alt="" draggable={false}
+          style={{ position: "absolute", inset: 0, width: size, height: size, objectFit: "contain", userSelect: "none" }} />
+        {/* eslint-disable-next-line @next/next/no-img-element */}
+        <img src={`/exercises/restaurante/${id}.png`} alt="" draggable={false}
+          style={{ position: "absolute", left: size * 0.19, top: size * 0.13, width: size * 0.62, height: size * 0.62, objectFit: "contain", userSelect: "none" }} />
+      </div>
+    );
+  }
   return (
     // eslint-disable-next-line @next/next/no-img-element
     <img src={`/exercises/restaurante/${id}.png`} alt="" draggable={false} width={size} height={size}
@@ -223,7 +238,7 @@ function Tray({ items }: { items: Item[] }) {
             <motion.div key={i} initial={{ scale: 0.4, y: -20, opacity: 0 }} animate={{ scale: 1, y: 0, opacity: 1 }}
               transition={{ type: "spring", stiffness: 440, damping: 22 }}
               style={{ flexShrink: 0, filter: "drop-shadow(0 6px 10px rgba(10,6,2,0.55))" }}>
-              <ItemImg id={it.id} size={74} />
+              <ItemImg id={it.id} size={82} />
             </motion.div>
           ))}
         </div>
@@ -467,7 +482,7 @@ export function RestauranteOrdem({ difficulty, onComplete }: RestauranteOrdemPro
                           boxShadow: used ? "0 2px 8px rgba(47,158,143,0.18)" : "0 4px 12px rgba(120,90,50,0.12)",
                           transition: "all .2s" }}>
                         <span style={{ position: "relative", display: "flex", alignItems: "center", justifyContent: "center" }}>
-                          <ItemImg id={it.id} size={62} />
+                          <ItemImg id={it.id} size={72} />
                           {used && <span style={{ position: "absolute", top: -4, right: -4, width: 20, height: 20, borderRadius: "50%",
                             background: "#2f9e8f", color: "#fff", fontSize: 12, display: "flex", alignItems: "center", justifyContent: "center" }}>✓</span>}
                         </span>
@@ -495,7 +510,7 @@ export function RestauranteOrdem({ difficulty, onComplete }: RestauranteOrdemPro
                       {expected.map((x, i) => (
                         <span key={i} style={{ display: "flex", flexDirection: "column", alignItems: "center", gap: 2 }}>
                           <span style={{ fontSize: 10, fontWeight: 900, color: "#1d7a6e" }}>{i + 1}</span>
-                          <ItemImg id={x.id} size={46} />
+                          <ItemImg id={x.id} size={54} />
                         </span>
                       ))}
                     </div>
