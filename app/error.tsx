@@ -10,6 +10,15 @@ export default function Error({
   reset: () => void;
 }) {
   useEffect(() => {
+    // falha de carregamento de arquivo (chunk) → recarrega uma vez para buscar a versão atual
+    const msg = `${error?.name || ""} ${error?.message || ""}`;
+    if (/Loading chunk|ChunkLoadError|dynamically imported module|Importing a module script failed|error loading dynamically imported/i.test(msg)) {
+      try {
+        const k = "np-chunk-reload-eb";
+        const last = Number(sessionStorage.getItem(k)) || 0;
+        if (Date.now() - last > 15000) { sessionStorage.setItem(k, String(Date.now())); window.location.reload(); return; }
+      } catch { /* */ }
+    }
     console.error(error);
   }, [error]);
 
