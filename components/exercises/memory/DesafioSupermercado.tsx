@@ -4,6 +4,8 @@ import { useState, useEffect, useRef, useCallback, useMemo } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { calculateExerciseScore } from "@/lib/scoring";
 import { cancelTTS } from "@/lib/tts";
+import { resolveVoice, ensureVoices } from "@/lib/voicePrefs";
+import { VoicePicker } from "@/components/exercises/VoicePicker";
 import { useExerciseProgress } from "@/components/exercises/ExerciseWrapper";
 import { TutorialBase } from "@/components/exercises/TutorialBase";
 import type { ExerciseResult, Theme } from "@/types";
@@ -166,22 +168,7 @@ function buildTrial(level: number, recentIds: Set<string>): { list: Product[]; s
   return { list, shelf: buildShelf(list, cfg.extra, cfg.similar) };
 }
 
-// ── Web Speech ──────────────────────────────────────────────────────────────────
-
-function pickPtBrVoice(): SpeechSynthesisVoice | null {
-  const voices = window.speechSynthesis.getVoices();
-  if (!voices.length) return null;
-  const pt   = voices.filter(v => /pt[-_]?BR/i.test(v.lang) || /portugu/i.test(v.name));
-  const pool = pt.length ? pt : voices.filter(v => /^pt/i.test(v.lang));
-  if (!pool.length) return null;
-  const prefer = ["luciana", "google português do brasil", "google portugues do brasil",
-                  "microsoft francisca", "francisca", "maria", "fernanda", "felipe", "microsoft daniel", "daniel"];
-  for (const name of prefer) {
-    const v = pool.find(v => v.name.toLowerCase().includes(name));
-    if (v) return v;
-  }
-  return pool[0];
-}
+// ── Web Speech (voz escolhida pela terapeuta — ver lib/voicePrefs) ───────────────
 
 function speakList(items: Product[], onDone?: () => void) {
   if (typeof window === "undefined" || !window.speechSynthesis) { onDone?.(); return; }
@@ -189,18 +176,13 @@ function speakList(items: Product[], onDone?: () => void) {
   const run = () => {
     synth.cancel();
     const u = new SpeechSynthesisUtterance("Sua lista de compras. " + items.map(i => i.name).join(", ") + ".");
-    u.lang = "pt-BR"; u.rate = 0.9; u.pitch = 1.0; u.volume = 1;
-    const v = pickPtBrVoice(); if (v) u.voice = v;
+    u.lang = "pt-BR"; u.rate = 0.92; u.pitch = 1.0; u.volume = 1;
+    const v = resolveVoice(); if (v) u.voice = v;
     u.onend = () => onDone?.();
     u.onerror = () => onDone?.();
     synth.speak(u);
   };
-  if (synth.getVoices().length === 0) {
-    let started = false;
-    const start = () => { if (started) return; started = true; synth.onvoiceschanged = null; run(); };
-    synth.onvoiceschanged = start;
-    setTimeout(start, 300);
-  } else { run(); }
+  ensureVoices(run);
 }
 
 // ── Fundo de mercado (recriado via CSS) ──────────────────────────────────────────
@@ -475,6 +457,13 @@ export function DesafioSupermercado({ difficulty, theme, onComplete, mode = "lei
   const [cartIds, setCartIds]           = useState<string[]>([]);
   const selected                        = useMemo(() => new Set(cartIds), [cartIds]);
   const [audioPlaying, setAudioPlaying] = useState(false);
+  const [showVoice, setShowVoice]       = useState(false);
+
+  // pré-carrega TODAS as fotos de produto (corrige o travamento ao abrir as prateleiras)
+  useEffect(() => {
+    if (typeof window === "undefined") return;
+    PRODUCTS.forEach(p => { const im = new window.Image(); im.src = `/exercises/produtos/${p.id}.png`; });
+  }, []);
 
   const recentRef  = useRef<string[]>([]);
   const gradedRef  = useRef<number[]>([]);
@@ -579,6 +568,7 @@ export function DesafioSupermercado({ difficulty, theme, onComplete, mode = "lei
   return (
     <div style={{ position: "fixed", inset: 0, display: "flex", flexDirection: "column", overflow: "hidden", background: "#e8e0d0" }}>
       <StoreBg />
+      {showVoice && <VoicePicker onClose={() => setShowVoice(false)} />}
 
       <div style={{ position: "relative", zIndex: 2, display: "flex", flexDirection: "column", height: "100%" }}>
         <Hud level={sessionLevel} trial={trial} trialResults={trialResults} mode={mode} />
@@ -605,8 +595,19 @@ export function DesafioSupermercado({ difficulty, theme, onComplete, mode = "lei
                       <span style={{ color: "#1d7a6e", fontSize: 14, fontWeight: 800, minWidth: 26, textAlign: "right" }}>{countdown}s</span>
                     </div>
                   </div>
-                  {mode === "auditivo" && audioPlaying && (
-                    <p style={{ color: "#1d7a6e", fontSize: 12, textAlign: "center", marginBottom: 12 }}>🔊 Reproduzindo lista...</p>
+                  {mode === "auditivo" && (
+                    <div style={{ display: "flex", gap: 8, justifyContent: "center", marginBottom: 12, flexWrap: "wrap" }}>
+                      <button onClick={() => { setAudioPlaying(true); speakList(currentList, () => setAudioPlaying(false)); }}
+                        style={{ fontSize: 12.5, fontWeight: 700, padding: "7px 14px", borderRadius: 100, cursor: "pointer",
+                          background: "rgba(47,158,143,0.12)", border: "1px solid rgba(47,158,143,0.35)", color: "#1d7a6e" }}>
+                        {audioPlaying ? "🔊 Reproduzindo..." : "🔊 Ouvir de novo"}
+                      </button>
+                      <button onClick={() => setShowVoice(true)}
+                        style={{ fontSize: 12.5, fontWeight: 700, padding: "7px 14px", borderRadius: 100, cursor: "pointer",
+                          background: "#fff", border: "1px solid #e2d8c2", color: "#8a7c63" }}>
+                        🎚️ Trocar voz
+                      </button>
+                    </div>
                   )}
                   <div style={{ display: "grid", gridTemplateColumns: `repeat(${listCols}, 1fr)`, gap: 10 }}>
                     {currentList.map((p, idx) => (
