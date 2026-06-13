@@ -13,47 +13,62 @@ interface RestauranteOrdemProps {
   onComplete: (result: ExerciseResult) => void;
 }
 
-interface Item { id: string; n: string; art: string; } // foto em /exercises/restaurante/<id>.png
+interface Item { id: string; n: string; art: string; pl?: string; qOk?: boolean; } // foto: /exercises/restaurante/<id>.png
+// Catálogo "bistrô" — itens já vêm pré-montados no prato/copo/tigela (foto realista).
+// art = artigo indefinido (um/uma/uns); pl = plural p/ quantidades; qOk = aceita quantidade (>1).
 const ITEMS: Item[] = [
-  { id: "agua", n: "água", art: "a" }, { id: "suco", n: "suco", art: "o" },
-  { id: "cafe", n: "café", art: "o" }, { id: "cha", n: "chá", art: "o" },
-  { id: "refrigerante", n: "refrigerante", art: "o" }, { id: "vitamina", n: "vitamina", art: "a" },
-  { id: "agua-coco", n: "água de coco", art: "a" }, { id: "chocolate-quente", n: "chocolate quente", art: "o" },
-  { id: "sanduiche", n: "sanduíche", art: "o" }, { id: "pizza", n: "pizza", art: "a" },
-  { id: "nuggets", n: "nuggets", art: "os" }, { id: "batata-frita", n: "batata frita", art: "a" },
-  { id: "ovo", n: "ovo", art: "o" }, { id: "panqueca", n: "panqueca", art: "a" },
-  { id: "frango", n: "frango", art: "o" }, { id: "pao", n: "pão", art: "o" },
-  { id: "bolo", n: "bolo", art: "o" }, { id: "queijo", n: "queijo", art: "o" },
-  { id: "maca", n: "maçã", art: "a" }, { id: "sorvete", n: "sorvete", art: "o" },
-  { id: "pudim", n: "pudim", art: "o" }, { id: "donut", n: "donut", art: "o" },
-  { id: "torrada", n: "torrada", art: "a" },
-  { id: "salada", n: "salada", art: "a" }, { id: "sopa", n: "sopa", art: "a" },
-  { id: "macarrao", n: "macarrão", art: "o" }, { id: "lasanha", n: "lasanha", art: "a" },
-  { id: "cachorro-quente", n: "cachorro-quente", art: "o" }, { id: "taco", n: "taco", art: "o" },
-  { id: "arroz", n: "arroz", art: "o" }, { id: "feijao", n: "feijão", art: "o" },
-  { id: "bife", n: "bife", art: "o" },
+  // bebidas
+  { id: "agua", n: "água", art: "uma", pl: "águas", qOk: true },
+  { id: "agua-coco", n: "água de coco", art: "uma", pl: "águas de coco", qOk: true },
+  { id: "refrigerante", n: "refrigerante", art: "um", pl: "refrigerantes", qOk: true },
+  { id: "suco-laranja", n: "suco de laranja", art: "um", pl: "sucos de laranja", qOk: true },
+  { id: "vitamina", n: "vitamina", art: "uma", pl: "vitaminas", qOk: true },
+  // pratos principais
+  { id: "arroz-feijao", n: "arroz com feijão", art: "um" },
+  { id: "frango-batata", n: "frango com batata", art: "um" },
+  { id: "bife-legumes", n: "bife com legumes", art: "um" },
+  { id: "macarrao-bolonhesa", n: "macarrão à bolonhesa", art: "um" },
+  { id: "lasanha", n: "lasanha", art: "uma", pl: "lasanhas", qOk: true },
+  { id: "risoto-cogumelo", n: "risoto de cogumelo", art: "um", pl: "risotos de cogumelo", qOk: true },
+  { id: "omelete", n: "omelete", art: "uma", pl: "omeletes", qOk: true },
+  { id: "arroz-frutos-mar", n: "arroz com frutos do mar", art: "um" },
+  { id: "batata-frita", n: "batata frita", art: "uma", pl: "batatas fritas", qOk: true },
+  { id: "salmao", n: "salmão", art: "um" },
+  // sobremesas
+  { id: "bolo", n: "bolo", art: "um", pl: "bolos", qOk: true },
+  { id: "pudim", n: "pudim", art: "um", pl: "pudins", qOk: true },
+  { id: "sorvete", n: "sorvete", art: "um", pl: "sorvetes", qOk: true },
+  { id: "mousse", n: "mousse", art: "uma", pl: "mousses", qOk: true },
+  { id: "torta", n: "torta", art: "uma", pl: "tortas", qOk: true },
+  { id: "rosquinha", n: "rosquinha", art: "uma", pl: "rosquinhas", qOk: true },
+  { id: "maca", n: "maçã", art: "uma", pl: "maçãs", qOk: true },
+  { id: "salada-frutas", n: "salada de frutas", art: "uma", pl: "saladas de frutas", qOk: true },
+  { id: "brigadeiro", n: "brigadeiro", art: "um", pl: "brigadeiros", qOk: true },
+  { id: "brownie", n: "brownie", art: "um", pl: "brownies", qOk: true },
+  // lanches
+  { id: "hamburguer", n: "hambúrguer", art: "um", pl: "hambúrgueres", qOk: true },
+  { id: "sanduiche-frio", n: "sanduíche frio", art: "um", pl: "sanduíches frios", qOk: true },
+  { id: "pizza", n: "pizza", art: "uma", pl: "pizzas", qOk: true },
+  { id: "cachorro-quente", n: "cachorro-quente", art: "um", pl: "cachorros-quentes", qOk: true },
+  { id: "nuggets", n: "nuggets", art: "uns" },
+  { id: "pastel", n: "pastel", art: "um", pl: "pastéis", qOk: true },
+  { id: "tapioca", n: "tapioca", art: "uma", pl: "tapiocas", qOk: true },
+  { id: "croissant", n: "croissant", art: "um", pl: "croissants", qOk: true },
+  { id: "pao-queijo", n: "pão de queijo", art: "um", pl: "pães de queijo", qOk: true },
+  // outros pratos
+  { id: "bruschetta", n: "bruschetta", art: "uma", pl: "bruschettas", qOk: true },
+  { id: "caldo", n: "caldo", art: "um", pl: "caldos", qOk: true },
+  { id: "cesta-paes", n: "cesta de pães", art: "uma", pl: "cestas de pães", qOk: true },
+  { id: "legumes-grelhados", n: "legumes grelhados", art: "uns" },
+  { id: "ovo-frito", n: "ovo frito", art: "um", pl: "ovos fritos", qOk: true },
+  { id: "peixe", n: "peixe", art: "um" },
+  { id: "salada", n: "salada", art: "uma", pl: "saladas", qOk: true },
+  { id: "sopa", n: "sopa", art: "uma", pl: "sopas", qOk: true },
+  { id: "tabua-queijos", n: "tábua de queijos", art: "uma", pl: "tábuas de queijos", qOk: true },
 ];
 
-// Itens que JÁ vêm no próprio recipiente (copo/xícara/tigela) — NÃO levam prato.
-const NO_PLATE = new Set([
-  "agua", "suco", "cafe", "cha", "refrigerante", "vitamina", "agua-coco", "chocolate-quente", // bebidas (copo/xícara)
-  "arroz", "feijao", "sopa", "salada", // já vêm em tigela
-]);
-
-// Renderiza a foto realista do item (comida no prato; bebida/tigela sem prato)
+// Itens já vêm pré-montados (prato/copo/tigela próprios) — renderiza a foto direto.
 function ItemImg({ id, size }: { id: string; size: number }) {
-  if (!NO_PLATE.has(id)) {
-    return (
-      <div style={{ position: "relative", width: size, height: size }}>
-        {/* eslint-disable-next-line @next/next/no-img-element */}
-        <img src="/exercises/restaurante/prato-base.png" alt="" draggable={false}
-          style={{ position: "absolute", inset: 0, width: size, height: size, objectFit: "contain", userSelect: "none" }} />
-        {/* eslint-disable-next-line @next/next/no-img-element */}
-        <img src={`/exercises/restaurante/${id}.png`} alt="" draggable={false}
-          style={{ position: "absolute", left: size * 0.13, top: size * 0.10, width: size * 0.74, height: size * 0.74, objectFit: "contain", userSelect: "none" }} />
-      </div>
-    );
-  }
   return (
     // eslint-disable-next-line @next/next/no-img-element
     <img src={`/exercises/restaurante/${id}.png`} alt="" draggable={false} width={size} height={size}
@@ -62,27 +77,46 @@ function ItemImg({ id, size }: { id: string; size: number }) {
 }
 
 type Mode = "direta" | "inversa" | "exclusao";
-interface RLevel { count: number; mode: Mode; audio: boolean; distractors: number; }
+// maxQty = quantidade máxima por item (1 = sem repetição; 2/3 = "dois sucos" etc.)
+interface RLevel { count: number; maxQty: number; mode: Mode; audio: boolean; distractors: number; }
 const R_LEVELS: Record<number, RLevel> = {
-  1:  { count: 2, mode: "direta",   audio: false, distractors: 2 },
-  2:  { count: 3, mode: "direta",   audio: false, distractors: 2 },
-  3:  { count: 4, mode: "direta",   audio: false, distractors: 3 },
-  4:  { count: 3, mode: "direta",   audio: true,  distractors: 3 },
-  5:  { count: 4, mode: "direta",   audio: true,  distractors: 4 },
-  6:  { count: 3, mode: "inversa",  audio: false, distractors: 3 },
-  7:  { count: 4, mode: "inversa",  audio: true,  distractors: 4 },
-  8:  { count: 4, mode: "exclusao", audio: false, distractors: 4 },
-  9:  { count: 5, mode: "exclusao", audio: true,  distractors: 5 },
-  10: { count: 5, mode: "inversa",  audio: true,  distractors: 6 },
+  1:  { count: 2, maxQty: 1, mode: "direta",   audio: false, distractors: 2 },
+  2:  { count: 2, maxQty: 1, mode: "direta",   audio: false, distractors: 3 },
+  3:  { count: 3, maxQty: 1, mode: "direta",   audio: false, distractors: 3 },
+  4:  { count: 3, maxQty: 1, mode: "direta",   audio: true,  distractors: 4 },
+  5:  { count: 3, maxQty: 2, mode: "direta",   audio: false, distractors: 4 },  // entram quantidades (em texto)
+  6:  { count: 4, maxQty: 2, mode: "direta",   audio: true,  distractors: 5 },  // quantidades no áudio
+  7:  { count: 3, maxQty: 1, mode: "inversa",  audio: false, distractors: 4 },  // ordem inversa
+  8:  { count: 4, maxQty: 1, mode: "inversa",  audio: true,  distractors: 5 },
+  9:  { count: 4, maxQty: 1, mode: "exclusao", audio: true,  distractors: 5 },  // inibição (NÃO X)
+  10: { count: 5, maxQty: 2, mode: "direta",   audio: true,  distractors: 6 },  // memória ampla + quantidades
 };
 const MODE_LABEL: Record<Mode, string> = { direta: "direta", inversa: "inversa", exclusao: "exclusão" };
 const levelOf = (d: number): number => Math.min(10, Math.max(1, Math.round(d)));
-const TRIALS = 6;
+const TRIALS = 10;
 
 function shuffle<T>(a: T[]): T[] { const r = [...a]; for (let i = r.length - 1; i > 0; i--) { const j = Math.floor(Math.random() * (i + 1)); [r[i], r[j]] = [r[j], r[i]]; } return r; }
-function listText(items: Item[]): string {
-  const p = items.map((it) => `${it.art} ${it.n}`);
-  return p.length === 1 ? p[0] : p.slice(0, -1).join(", ") + " e " + p[p.length - 1];
+// quantidade por extenso (concorda em gênero com o artigo do item)
+function qtyWord(it: Item, q: number): string {
+  if (q <= 1) return it.art;                       // um / uma / uns
+  if (q === 2) return it.art === "uma" ? "duas" : "dois";
+  return "três";
+}
+function lineText(it: Item, q: number): string {
+  return `${qtyWord(it, q)} ${q > 1 && it.pl ? it.pl : it.n}`;
+}
+function joinList(parts: string[]): string {
+  return parts.length === 1 ? parts[0] : parts.slice(0, -1).join(", ") + " e " + parts[parts.length - 1];
+}
+// frases de garçom anotando o pedido (variadas; mesa numerada em algumas)
+function orderSentence(list: string, table: number): string {
+  switch (Math.floor(Math.random() * 5)) {
+    case 0:  return `O cliente pediu ${list}.`;
+    case 1:  return `Anote o pedido: ${list}.`;
+    case 2:  return `A mesa ${table} pediu ${list}.`;
+    case 3:  return `Para a mesa ${table}: ${list}.`;
+    default: return `O cliente quer ${list}.`;
+  }
 }
 function pickPtBrVoice(): SpeechSynthesisVoice | null {
   const voices = window.speechSynthesis.getVoices();
@@ -238,8 +272,6 @@ export function RestauranteOrdem({ difficulty, onComplete }: RestauranteOrdemPro
   const spec = R_LEVELS[sessionLevel];
 
   const [phase, setPhase] = useState<Phase>("ready");
-  const [order, setOrder] = useState<Item[]>([]);
-  const [excluded, setExcluded] = useState<Item | null>(null);
   const [expected, setExpected] = useState<Item[]>([]);
   const [sentence, setSentence] = useState("");
   const [keys, setKeys] = useState<Item[]>([]);
@@ -260,26 +292,48 @@ export function RestauranteOrdem({ difficulty, onComplete }: RestauranteOrdemPro
 
   const modeHint = spec.mode === "inversa" ? "Monte começando pelo ÚLTIMO item (ordem inversa)."
     : spec.mode === "exclusao" ? "NÃO coloque o item que o pedido mandou ignorar."
+    : spec.maxQty > 1 ? "Monte o pedido na ordem certa — repita o item na quantidade pedida."
     : "Monte o pedido na ordem correta.";
 
   const startRound = useCallback(async () => {
     runRef.current++; const myRun = runRef.current;
     const sp = R_LEVELS[levelRef.current];   // lê o nível atual (pode ter subido)
     const picks = shuffle(ITEMS).slice(0, sp.count);
-    let exc: Item | null = null;
-    let exp: Item[];
-    if (sp.mode === "exclusao") {
-      exc = picks[1 + Math.floor(Math.random() * (picks.length - 1))];
-      exp = picks.filter((x) => x.n !== exc!.n);
-    } else if (sp.mode === "inversa") {
-      exp = [...picks].reverse();
-    } else exp = picks;
-    const sent = sp.mode === "exclusao"
-      ? `O cliente quer ${listText(picks)}, mas NÃO ${exc!.art} ${exc!.n}.`
-      : `O cliente quer ${listText(picks)}.`;
-    const distract = shuffle(ITEMS.filter((x) => !picks.some((p) => p.n === x.n))).slice(0, sp.distractors);
 
-    setOrder(picks); setExcluded(exc); setExpected(exp); setSentence(sent);
+    // quantidade por linha do pedido (só itens "contáveis" repetem)
+    const qtys = picks.map((it) => {
+      if (sp.maxQty <= 1 || !it.qOk) return 1;
+      if (Math.random() < 0.5) return 1;
+      return sp.maxQty >= 3 && Math.random() < 0.35 ? 3 : 2;
+    });
+    // garante ao menos UMA quantidade > 1 quando o nível pede
+    if (sp.maxQty > 1 && !qtys.some((q) => q > 1)) {
+      const idx = picks.findIndex((it) => it.qOk);
+      if (idx >= 0) qtys[idx] = 2;
+    }
+    const lines = picks.map((it, i) => ({ it, q: qtys[i] }));
+
+    // exclusão: remove uma linha inteira do esperado (mas ela aparece na frase p/ inibir)
+    let excIdx = -1;
+    if (sp.mode === "exclusao") excIdx = 1 + Math.floor(Math.random() * (picks.length - 1));
+    const included = lines.filter((_, i) => i !== excIdx);
+
+    // lista achatada esperada (com repetições por quantidade)
+    let flat: Item[] = [];
+    for (const l of included) for (let k = 0; k < l.q; k++) flat.push(l.it);
+    if (sp.mode === "inversa") flat = [...flat].reverse();
+
+    // frase do pedido (garçom anotando)
+    const listStr = joinList(lines.map((l) => lineText(l.it, l.q)));
+    const table = 2 + Math.floor(Math.random() * 8);
+    const exc = excIdx >= 0 ? picks[excIdx] : null;
+    const sent = exc
+      ? `A mesa ${table} pediu ${listStr}, mas NÃO quer ${exc.art} ${exc.n}.`
+      : orderSentence(listStr, table);
+
+    const distract = shuffle(ITEMS.filter((x) => !picks.some((p) => p.id === x.id))).slice(0, sp.distractors);
+
+    setExpected(flat); setSentence(sent);
     setKeys(shuffle([...picks, ...distract]));
     setTray([]); trayRef.current = [];
     setFeedback(null);
@@ -314,6 +368,7 @@ export function RestauranteOrdem({ difficulty, onComplete }: RestauranteOrdemPro
         startedLevel: startLevel,
         items: sp.count,
         rule: sp.mode,
+        quantities: sp.maxQty > 1,
         presentation: sp.audio ? "auditiva" : "visual",
         distractors: sp.distractors,
         sequencesCorrect: correctRef.current,
@@ -339,8 +394,8 @@ export function RestauranteOrdem({ difficulty, onComplete }: RestauranteOrdemPro
   }, [expected, trial, reportProgress, startRound, finish]);
 
   function place(it: Item) {
-    if (phase !== "input" || trayRef.current.some((x) => x.n === it.n)) return;
-    if (trayRef.current.length >= expected.length) return; // já tem o nº de itens do pedido
+    if (phase !== "input") return;
+    if (trayRef.current.length >= expected.length) return; // já tem o nº de itens do pedido (permite repetir item)
     const next = [...trayRef.current, it];
     trayRef.current = next; setTray(next);
     // NÃO envia automático — a pessoa confirma no botão "Pronto" (pode ajustar antes)
@@ -356,7 +411,7 @@ export function RestauranteOrdem({ difficulty, onComplete }: RestauranteOrdemPro
   // pré-carrega as fotos (tira o delay de aparecimento)
   useEffect(() => {
     if (typeof window === "undefined") return;
-    ["prato-base", ...ITEMS.map((i) => i.id)].forEach((id) => { const im = new window.Image(); im.src = `/exercises/restaurante/${id}.png`; });
+    ITEMS.forEach((i) => { const im = new window.Image(); im.src = `/exercises/restaurante/${i.id}.png`; });
   }, []);
   function begin() {
     correctRef.current = 0; rtsRef.current = []; startTime.current = Date.now(); setTrial(0);
@@ -365,7 +420,6 @@ export function RestauranteOrdem({ difficulty, onComplete }: RestauranteOrdemPro
   }
   function toggleMusic() { setMusicOn((m) => { const next = !m; setAmbienceMuted(!next); return next; }); }
 
-  const pct = Math.round((trial / TRIALS) * 100);
   const orderPct = expected.length ? Math.round((tray.length / expected.length) * 100) : 0;
   const shake = phase === "feedback" && feedback === "incorrect";
 
@@ -477,20 +531,23 @@ export function RestauranteOrdem({ difficulty, onComplete }: RestauranteOrdemPro
                 )}
                 <div style={{ display: "grid", gridTemplateColumns: `repeat(${Math.min(keys.length, 4)}, 1fr)`, gap: 11 }}>
                   {keys.map((it, i) => {
-                    const used = tray.some((x) => x.n === it.n);
+                    const placed = tray.filter((x) => x.n === it.n).length; // quantas vezes já está na bandeja
+                    const sel = placed > 0;
+                    const full = tray.length >= expected.length;
                     return (
-                      <motion.button key={`${it.n}-${i}`} onClick={() => place(it)} disabled={used} whileTap={{ scale: 0.93 }}
-                        style={{ borderRadius: 18, cursor: used ? "default" : "pointer", padding: "12px 6px 10px",
+                      <motion.button key={`${it.id}-${i}`} onClick={() => place(it)} disabled={full} whileTap={{ scale: 0.93 }}
+                        style={{ borderRadius: 18, cursor: full ? "default" : "pointer", padding: "12px 6px 10px",
                           display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", gap: 7,
-                          background: used ? "#eef6f4" : "#fffdf7", border: used ? "2px solid #2f9e8f" : "1.5px solid #ece0c8",
-                          boxShadow: used ? "0 2px 8px rgba(47,158,143,0.18)" : "0 4px 12px rgba(120,90,50,0.12)",
+                          opacity: full && !sel ? 0.5 : 1,
+                          background: sel ? "#eef6f4" : "#fffdf7", border: sel ? "2px solid #2f9e8f" : "1.5px solid #ece0c8",
+                          boxShadow: sel ? "0 2px 8px rgba(47,158,143,0.18)" : "0 4px 12px rgba(120,90,50,0.12)",
                           transition: "all .2s" }}>
                         <span style={{ position: "relative", display: "flex", alignItems: "center", justifyContent: "center" }}>
                           <ItemImg id={it.id} size={72} />
-                          {used && <span style={{ position: "absolute", top: -4, right: -4, width: 20, height: 20, borderRadius: "50%",
-                            background: "#2f9e8f", color: "#fff", fontSize: 12, display: "flex", alignItems: "center", justifyContent: "center" }}>✓</span>}
+                          {placed > 0 && <span style={{ position: "absolute", top: -4, right: -4, minWidth: 20, height: 20, padding: "0 5px", borderRadius: 10,
+                            background: "#2f9e8f", color: "#fff", fontSize: 12, fontWeight: 900, display: "flex", alignItems: "center", justifyContent: "center" }}>{placed > 1 ? `×${placed}` : "✓"}</span>}
                         </span>
-                        <span style={{ fontSize: 13.5, fontWeight: 800, color: used ? "#1d7a6e" : "#4a4234" }}>{it.n}</span>
+                        <span style={{ fontSize: 13.5, fontWeight: 800, color: sel ? "#1d7a6e" : "#4a4234" }}>{it.n}</span>
                       </motion.button>
                     );
                   })}
@@ -548,21 +605,6 @@ export function RestauranteOrdem({ difficulty, onComplete }: RestauranteOrdemPro
             </div>
           </motion.div>
         </div>
-      </div>
-
-      {/* progresso da sessão (flutuante) */}
-      <div style={{ position: "absolute", left: 12, bottom: 12, zIndex: 3, display: "flex", alignItems: "center", gap: 10,
-        padding: "8px 14px", borderRadius: 14, background: "rgba(246,239,224,0.95)", border: "1px solid rgba(180,150,110,0.4)",
-        boxShadow: "0 6px 18px rgba(30,18,8,0.28)" }}>
-        <div style={{ width: 26, height: 26, borderRadius: "50%", background: "rgba(17,81,79,0.12)",
-          display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0 }}>🧠</div>
-        <div style={{ lineHeight: 1.1 }}>
-          <div style={{ fontSize: 10, fontWeight: 700, color: "#9a8f7e", textTransform: "uppercase", letterSpacing: 0.5 }}>Progresso da sessão</div>
-          <div style={{ width: 120, height: 6, background: "#e6ddca", borderRadius: 4, marginTop: 3, overflow: "hidden" }}>
-            <div style={{ height: "100%", width: `${pct}%`, background: "linear-gradient(90deg,#f0a836,#f5c45e)", borderRadius: 4, transition: "width .4s" }} />
-          </div>
-        </div>
-        <span style={{ fontSize: 14, fontWeight: 900, color: "#e0892a" }}>{pct}%</span>
       </div>
     </div>
   );
