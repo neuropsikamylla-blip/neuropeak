@@ -248,24 +248,47 @@ function StoreBg() {
   );
 }
 
-// ── Cesta ilustrada (painel do carrinho) ─────────────────────────────────────────
-
-function BasketArt() {
+// ── Cesta de vime com os produtos selecionados DENTRO (painel do carrinho) ────────
+function CartBasket({ items }: { items: Product[] }) {
+  const show = items.slice(-5);                 // últimos produtos colocados
+  const W = ["", "46%", "40%", "36%", "32%", "28%"][show.length] || "28%";
   return (
-    <svg width="100%" viewBox="0 0 120 96" style={{ display: "block" }} xmlns="http://www.w3.org/2000/svg">
-      {/* itens dentro */}
-      <rect x="34" y="34" width="20" height="26" rx="3" fill="#e9c98f" stroke="#caa45f" strokeWidth="1.5"/>
-      <rect x="52" y="28" width="14" height="32" rx="3" fill="#bcd6ef" stroke="#7ba9d8" strokeWidth="1.5"/>
-      <circle cx="74" cy="44" r="10" fill="#e06a5a"/>
-      <path d="M74 34 q6 -6 11 -2" stroke="#5aa05a" strokeWidth="3" fill="none" strokeLinecap="round"/>
-      {/* cesta */}
-      <path d="M22 54 L98 54 L92 88 Q91 92 86 92 L34 92 Q29 92 28 88 Z"
-        fill="#e7c79a" stroke="#b8894f" strokeWidth="2.5" strokeLinejoin="round"/>
-      <rect x="20" y="50" width="80" height="8" rx="4" fill="#d8ad6e" stroke="#b8894f" strokeWidth="2"/>
-      {[34,46,58,70,82].map((x,i) => <line key={i} x1={x} y1="58" x2={x-2+i} y2="90" stroke="#b8894f" strokeWidth="1.4" opacity="0.5"/>)}
-      <line x1="26" y1="68" x2="94" y2="68" stroke="#b8894f" strokeWidth="1.4" opacity="0.45"/>
-      <line x1="24" y1="80" x2="92" y2="80" stroke="#b8894f" strokeWidth="1.4" opacity="0.45"/>
-    </svg>
+    <div style={{ position: "relative", width: "100%", aspectRatio: "120 / 100" }}>
+      {/* produtos caindo dentro da cesta (a parte de baixo fica atrás da frente) */}
+      <div style={{ position: "absolute", left: "15%", right: "15%", bottom: "30%", height: "50%",
+        display: "flex", alignItems: "flex-end", justifyContent: "center" }}>
+        <AnimatePresence mode="popLayout">
+          {show.map((p, i) => (
+            <motion.div key={`${p.id}-${i}`} layout initial={{ y: -28, opacity: 0, scale: 0.5 }} animate={{ y: 0, opacity: 1, scale: 1 }}
+              exit={{ opacity: 0, scale: 0.6 }} transition={{ type: "spring", stiffness: 420, damping: 24 }}
+              style={{ width: W, marginLeft: i ? "-8%" : 0, zIndex: i, filter: "drop-shadow(0 3px 5px rgba(80,50,20,0.4))" }}>
+              {/* eslint-disable-next-line @next/next/no-img-element */}
+              <img src={`/exercises/produtos/${p.id}.png`} alt="" draggable={false}
+                style={{ width: "100%", height: "auto", display: "block", userSelect: "none" }} />
+            </motion.div>
+          ))}
+        </AnimatePresence>
+      </div>
+      {/* cesta de vime (frente, sobre os produtos) */}
+      <svg viewBox="0 0 120 100" style={{ position: "absolute", inset: 0, width: "100%", height: "100%", display: "block" }} xmlns="http://www.w3.org/2000/svg">
+        <defs>
+          <linearGradient id="bkBody" x1="0" y1="0" x2="0" y2="1">
+            <stop offset="0" stopColor="#e7c187" /><stop offset="1" stopColor="#c5985a" />
+          </linearGradient>
+        </defs>
+        {/* alças laterais (atrás do aro) */}
+        <path d="M26 52 q-10 -16 7 -20" fill="none" stroke="#b78a4e" strokeWidth="3.4" strokeLinecap="round" />
+        <path d="M94 52 q10 -16 -7 -20" fill="none" stroke="#b78a4e" strokeWidth="3.4" strokeLinecap="round" />
+        {/* corpo da cesta */}
+        <path d="M20 56 L100 56 L92 95 Q90 99 84 99 L36 99 Q30 99 28 95 Z" fill="url(#bkBody)" stroke="#a87a44" strokeWidth="2.5" strokeLinejoin="round" />
+        {/* trama vertical */}
+        {[30, 42, 54, 66, 78, 90].map((x, i) => <path key={i} d={`M${x} 60 L${x - 3} 96`} stroke="#a87a44" strokeWidth="1.3" opacity="0.38" fill="none" />)}
+        {/* trama horizontal */}
+        {[67, 78, 89].map((y, i) => <path key={i} d={`M${26 + i} ${y} L${94 - i} ${y}`} stroke="#a87a44" strokeWidth="1.5" opacity="0.4" fill="none" />)}
+        {/* aro superior */}
+        <rect x="14" y="50" width="92" height="10" rx="5" fill="#dcae66" stroke="#a87a44" strokeWidth="2" />
+      </svg>
+    </div>
   );
 }
 
@@ -616,7 +639,6 @@ export function DesafioSupermercado({ difficulty, theme, onComplete, mode = "lei
   const ratio = memorizeTotal > 0 ? countdown / memorizeTotal : 0;
   const isRoundCorrect = lastCorrect;
   const listCols = Math.min(currentList.length, 4);
-  const sessionPct = Math.round((trial / MAX_TRIALS) * 100);
   const ordered = order !== "none";
   const targetSeq = order === "reverse" ? [...currentList].reverse() : currentList;
   const instruction = `Compre ${memoLists.length > 1 ? `a lista da ${labels[targetIdx]}` : "a lista"}${order === "direct" ? ", na mesma ordem" : order === "reverse" ? ", de trás para frente" : ""}.`;
@@ -775,7 +797,9 @@ export function DesafioSupermercado({ difficulty, theme, onComplete, mode = "lei
                 </div>
 
                 {/* cesta ilustrada */}
-                <div style={{ flexShrink: 0, padding: "0 18%" }}><BasketArt /></div>
+                <div style={{ flexShrink: 0, padding: "0 14%" }}>
+                  <CartBasket items={cartIds.map(id => PRODUCT_MAP.get(id)).filter(Boolean) as Product[]} />
+                </div>
 
                 {/* confirmar */}
                 <button onClick={handleConfirm} disabled={cartIds.length === 0}
@@ -828,19 +852,6 @@ export function DesafioSupermercado({ difficulty, theme, onComplete, mode = "lei
           )}
 
         </AnimatePresence>
-      </div>
-
-      {/* progresso da sessão (flutuante) */}
-      <div style={{ position: "absolute", left: 12, bottom: 12, zIndex: 3, display: "flex", alignItems: "center", gap: 10,
-        padding: "8px 14px", borderRadius: 14, background: "rgba(247,242,232,0.95)", border: "1px solid rgba(200,180,140,0.5)",
-        boxShadow: "0 6px 18px rgba(40,30,15,0.2)" }}>
-        <div style={{ lineHeight: 1.1 }}>
-          <div style={{ fontSize: 10, fontWeight: 700, color: "#8a7a5e", textTransform: "uppercase", letterSpacing: 0.5 }}>Progresso da sessão</div>
-          <div style={{ width: 130, height: 7, background: "#e6ddcb", borderRadius: 4, marginTop: 4, overflow: "hidden" }}>
-            <div style={{ height: "100%", width: `${sessionPct}%`, background: "linear-gradient(90deg,#f0b94a,#d98f2a)", borderRadius: 4, transition: "width .4s" }} />
-          </div>
-        </div>
-        <span style={{ fontSize: 14, fontWeight: 900, color: "#d98f2a" }}>{sessionPct}%</span>
       </div>
     </div>
   );
