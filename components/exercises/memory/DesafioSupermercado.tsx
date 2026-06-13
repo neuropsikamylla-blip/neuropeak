@@ -96,24 +96,29 @@ function ProductImg({ id, size }: { id: string; size: number }) {
   );
 }
 
-// ── Tabela de níveis (1–10) — dificuldade multifatorial ─────────────────────────
-interface LevelConfig { count: number; extra: number; memSec: number; similar: boolean; }
+// ── Tabela de níveis (1–12) — progressão da Kamylla ──────────────────────────────
+// lists: 1 ou 2 listas (mãe/avó); order: livre / ordem direta / de trás para frente.
+type OrderKind = "none" | "direct" | "reverse";
+interface LevelConfig { lists: 1 | 2; count: number; order: OrderKind; extra: number; memSec: number; similar: boolean; }
 
 const LEVELS: LevelConfig[] = [
-  /*  1 */ { count: 3, extra: 3,  memSec: 8, similar: false },
-  /*  2 */ { count: 4, extra: 4,  memSec: 8, similar: false },
-  /*  3 */ { count: 5, extra: 5,  memSec: 7, similar: false },
-  /*  4 */ { count: 5, extra: 7,  memSec: 7, similar: true  },
-  /*  5 */ { count: 6, extra: 8,  memSec: 6, similar: true  },
-  /*  6 */ { count: 6, extra: 10, memSec: 6, similar: true  },
-  /*  7 */ { count: 7, extra: 11, memSec: 5, similar: true  },
-  /*  8 */ { count: 7, extra: 13, memSec: 5, similar: true  },
-  /*  9 */ { count: 8, extra: 14, memSec: 4, similar: true  },
-  /* 10 */ { count: 8, extra: 16, memSec: 4, similar: true  },
+  /*  1 */ { lists: 1, count: 2, order: "none",    extra: 8,  memSec: 6,  similar: false },
+  /*  2 */ { lists: 1, count: 3, order: "none",    extra: 10, memSec: 7,  similar: false },
+  /*  3 */ { lists: 1, count: 4, order: "none",    extra: 12, memSec: 8,  similar: false },
+  /*  4 */ { lists: 1, count: 4, order: "direct",  extra: 12, memSec: 9,  similar: true  },
+  /*  5 */ { lists: 1, count: 5, order: "direct",  extra: 14, memSec: 10, similar: true  },
+  /*  6 */ { lists: 2, count: 2, order: "none",    extra: 10, memSec: 9,  similar: false },
+  /*  7 */ { lists: 2, count: 3, order: "none",    extra: 12, memSec: 11, similar: true  },
+  /*  8 */ { lists: 2, count: 4, order: "none",    extra: 14, memSec: 13, similar: true  },
+  /*  9 */ { lists: 1, count: 4, order: "reverse", extra: 14, memSec: 9,  similar: true  },
+  /* 10 */ { lists: 1, count: 5, order: "reverse", extra: 16, memSec: 10, similar: true  },
+  /* 11 */ { lists: 2, count: 3, order: "reverse", extra: 14, memSec: 12, similar: true  },
+  /* 12 */ { lists: 2, count: 4, order: "reverse", extra: 16, memSec: 14, similar: true  },
 ];
+const MAX_LEVEL = 12;
 
 function clampLevel(difficulty: number): number {
-  return Math.min(10, Math.max(1, Math.round(difficulty)));
+  return Math.min(MAX_LEVEL, Math.max(1, Math.round(difficulty)));
 }
 function levelConfig(level: number): LevelConfig {
   return LEVELS[level - 1] ?? LEVELS[0];
@@ -125,57 +130,82 @@ function memorizeSeconds(level: number, mode: "leitura" | "auditivo"): number {
 function shuffle<T>(arr: T[]): T[] { return [...arr].sort(() => Math.random() - 0.5); }
 function pickOne<T>(arr: T[]): T { return arr[Math.floor(Math.random() * arr.length)]; }
 
-// Gera uma lista VARIADA percorrendo categorias embaralhadas, evitando recentes.
-function buildList(count: number, recentIds: Set<string>): Product[] {
+// Escolhe uma lista VARIADA (1 item por categoria), excluindo ids já usados.
+function pickList(count: number, exclude: Set<string>): Product[] {
   const picked: Product[] = [];
   const pickedIds = new Set<string>();
   const cats = shuffle(CATEGORY_KEYS);
-  for (let round = 0; round < 4 && picked.length < count; round++) {
+  for (let round = 0; round < 6 && picked.length < count; round++) {
     for (const cat of cats) {
       if (picked.length >= count) break;
-      const cands = CATEGORIES[cat].filter(p => !pickedIds.has(p.id) && (round > 0 || !recentIds.has(p.id)));
+      const cands = CATEGORIES[cat].filter(p => !pickedIds.has(p.id) && !exclude.has(p.id));
       if (cands.length) { const c = pickOne(cands); picked.push(c); pickedIds.add(c.id); }
     }
   }
   if (picked.length < count) {
     for (const p of shuffle(PRODUCTS)) {
       if (picked.length >= count) break;
-      if (!pickedIds.has(p.id)) { picked.push(p); pickedIds.add(p.id); }
+      if (!pickedIds.has(p.id) && !exclude.has(p.id)) { picked.push(p); pickedIds.add(p.id); }
     }
   }
   return picked;
 }
 
-// Prateleira = itens da lista + distratores (mesma categoria se `similar`).
-function buildShelf(list: Product[], extra: number, similar: boolean): Product[] {
-  const listIds = new Set(list.map(p => p.id));
-  const pool = PRODUCTS.filter(p => !listIds.has(p.id));
+// Prateleira = itens das listas + distratores (mesma categoria se `similar`) — bem cheia.
+function buildShelf(listItems: Product[], extra: number, similar: boolean): Product[] {
+  const ids = new Set(listItems.map(p => p.id));
+  const pool = PRODUCTS.filter(p => !ids.has(p.id));
   let distractors: Product[];
   if (similar) {
-    const listCats = new Set(list.map(p => CAT_OF.get(p.id)));
-    const sameCat = pool.filter(p => listCats.has(CAT_OF.get(p.id)));
-    const others  = pool.filter(p => !listCats.has(CAT_OF.get(p.id)));
+    const cats = new Set(listItems.map(p => CAT_OF.get(p.id)));
+    const sameCat = pool.filter(p => cats.has(CAT_OF.get(p.id)));
+    const others  = pool.filter(p => !cats.has(CAT_OF.get(p.id)));
     distractors = [...shuffle(sameCat), ...shuffle(others)].slice(0, extra);
   } else {
     distractors = shuffle(pool).slice(0, extra);
   }
-  return shuffle([...list, ...distractors]);
+  return shuffle([...listItems, ...distractors]);
 }
 
-function buildTrial(level: number, recentIds: Set<string>): { list: Product[]; shelf: Product[] } {
+interface Trial { lists: Product[][]; labels: string[]; target: number; order: OrderKind; shelf: Product[]; }
+
+function buildTrial(level: number, recentIds: Set<string>): Trial {
   const cfg = levelConfig(level);
-  const list = buildList(cfg.count, recentIds);
-  return { list, shelf: buildShelf(list, cfg.extra, cfg.similar) };
+  const exclude = new Set(recentIds);
+  const lists: Product[][] = [];
+  for (let i = 0; i < cfg.lists; i++) {
+    const l = pickList(cfg.count, exclude);
+    l.forEach(p => exclude.add(p.id));
+    lists.push(l);
+  }
+  const labels = cfg.lists === 2 ? ["mãe", "avó"] : [""];
+  const target = cfg.lists === 2 ? Math.floor(Math.random() * 2) : 0;
+  const shelf = buildShelf(lists.flat(), cfg.extra, cfg.similar);
+  return { lists, labels, target, order: cfg.order, shelf };
+}
+
+// Texto falado (auditivo) das listas a memorizar.
+function memoSpeechText(lists: Product[][], labels: string[]): string {
+  if (lists.length > 1) {
+    return lists.map((l, i) => `A ${labels[i]} pediu: ${l.map(p => p.name).join(", ")}.`).join(" ");
+  }
+  return "Sua lista de compras: " + lists[0].map(p => p.name).join(", ") + ".";
+}
+// Instrução exibida nas prateleiras (qual lista + ordem).
+function shopInstruction(t: Trial): string {
+  const who = t.lists.length > 1 ? `a lista da ${t.labels[t.target]}` : "a lista";
+  const ord = t.order === "direct" ? ", na mesma ordem" : t.order === "reverse" ? ", de trás para frente" : "";
+  return `Compre ${who}${ord}.`;
 }
 
 // ── Web Speech (voz escolhida pela terapeuta — ver lib/voicePrefs) ───────────────
 
-function speakList(items: Product[], onDone?: () => void) {
+function speakMemo(lists: Product[][], labels: string[], onDone?: () => void) {
   if (typeof window === "undefined" || !window.speechSynthesis) { onDone?.(); return; }
   const synth = window.speechSynthesis;
   const run = () => {
     synth.cancel();
-    const u = new SpeechSynthesisUtterance("Sua lista de compras. " + items.map(i => i.name).join(", ") + ".");
+    const u = new SpeechSynthesisUtterance(memoSpeechText(lists, labels));
     u.lang = "pt-BR"; u.rate = 0.92; u.pitch = 1.0; u.volume = 1;
     const v = resolveVoice(); if (v) u.voice = v;
     u.onend = () => onDone?.();
@@ -361,7 +391,7 @@ const TUT_SHELF: Product[] = [
 function TutMemorizeStep({ mode, onDone }: { mode: "leitura" | "auditivo"; onDone: () => void }) {
   const [countdown, setCountdown] = useState(5);
   useEffect(() => {
-    if (mode === "auditivo") speakList(TUT_LIST);
+    if (mode === "auditivo") speakMemo([TUT_LIST], [""]);
     const iv = setInterval(() => {
       setCountdown(p => { if (p <= 1) { clearInterval(iv); onDone(); return 0; } return p - 1; });
     }, 1000);
@@ -447,7 +477,6 @@ export function DesafioSupermercado({ difficulty, theme, onComplete, mode = "lei
 
   const startLevel = useMemo(() => clampLevel(difficulty), [difficulty]);
   const [sessionLevel, setSessionLevel] = useState(startLevel);
-  const [streak, setStreak]             = useState(0);
   const itemCount = levelConfig(sessionLevel).count;
 
   const [trial, setTrial]               = useState(0);
@@ -470,22 +499,32 @@ export function DesafioSupermercado({ difficulty, theme, onComplete, mode = "lei
   const wrongRef   = useRef(0);
   const startTime  = useRef(Date.now());
   const timerRef   = useRef<ReturnType<typeof setInterval> | null>(null);
+  const histRef    = useRef<boolean[]>([]);   // histórico p/ desbloqueio (3 seguidas ou 3 de 5)
 
-  const [currentList, setCurrentList]     = useState<Product[]>([]);
+  const [memoLists, setMemoLists]         = useState<Product[][]>([]);
+  const [labels, setLabels]               = useState<string[]>([""]);
+  const [targetIdx, setTargetIdx]         = useState(0);
+  const [order, setOrder]                 = useState<OrderKind>("none");
+  const [currentList, setCurrentList]     = useState<Product[]>([]);   // lista-alvo (a que deve comprar)
   const [shelfProducts, setShelfProducts] = useState<Product[]>([]);
+  const [lastCorrect, setLastCorrect]     = useState(false);
 
   const clearTimer = () => { if (timerRef.current) { clearInterval(timerRef.current); timerRef.current = null; } };
 
   const initTrial = useCallback((lvl: number) => {
-    const { list, shelf } = buildTrial(lvl, new Set(recentRef.current));
-    recentRef.current = [...list.map(p => p.id), ...recentRef.current].slice(0, levelConfig(lvl).count * 2);
-    setCurrentList(list);
-    setShelfProducts(shelf);
+    const t = buildTrial(lvl, new Set(recentRef.current));
+    recentRef.current = [...t.lists.flat().map(p => p.id), ...recentRef.current].slice(0, 18);
+    setMemoLists(t.lists);
+    setLabels(t.labels);
+    setTargetIdx(t.target);
+    setOrder(t.order);
+    setCurrentList(t.lists[t.target]);
+    setShelfProducts(t.shelf);
     setCartIds([]);
     setPhase("memorizing");
   }, []);
 
-  useEffect(() => { setSessionLevel(startLevel); setStreak(0); }, [startLevel]);
+  useEffect(() => { setSessionLevel(startLevel); histRef.current = []; }, [startLevel]);
 
   useEffect(() => {
     if (!showTutorial) initTrial(startLevel);
@@ -493,10 +532,10 @@ export function DesafioSupermercado({ difficulty, theme, onComplete, mode = "lei
   }, [showTutorial]);
 
   useEffect(() => {
-    if (phase !== "memorizing" || showTutorial || currentList.length === 0) return;
+    if (phase !== "memorizing" || showTutorial || memoLists.length === 0) return;
     const total = memorizeSeconds(sessionLevel, mode);
     setCountdown(total);
-    if (mode === "auditivo") { setAudioPlaying(true); speakList(currentList, () => setAudioPlaying(false)); }
+    if (mode === "auditivo") { setAudioPlaying(true); speakMemo(memoLists, labels, () => setAudioPlaying(false)); }
     timerRef.current = setInterval(() => {
       setCountdown(prev => { if (prev <= 1) { clearTimer(); setPhase("shopping"); return 0; } return prev - 1; });
     }, 1000);
@@ -510,21 +549,34 @@ export function DesafioSupermercado({ difficulty, theme, onComplete, mode = "lei
   }
 
   function handleConfirm() {
-    const correctIds      = new Set(currentList.map(p => p.id));
-    const correctSelected = cartIds.filter(id => correctIds.has(id)).length;
-    const wrongSelected   = cartIds.filter(id => !correctIds.has(id)).length;
-    const isCorrect       = correctSelected === correctIds.size && wrongSelected === 0;
+    const targetIds  = currentList.map(p => p.id);
+    const targetSet  = new Set(targetIds);
+    const expectSeq  = order === "reverse" ? [...targetIds].reverse() : targetIds;
+    const wrongSel   = cartIds.filter(id => !targetSet.has(id)).length;
 
-    const graded = Math.max(0, (correctSelected - wrongSelected) / correctIds.size);
+    let isCorrect: boolean, graded: number;
+    if (order === "none") {
+      const correctSel = cartIds.filter(id => targetSet.has(id)).length;
+      isCorrect = correctSel === targetSet.size && wrongSel === 0;
+      graded = Math.max(0, (correctSel - wrongSel) / targetSet.size);
+    } else {
+      isCorrect = cartIds.length === expectSeq.length && cartIds.every((id, i) => id === expectSeq[i]);
+      const posOk = cartIds.filter((id, i) => expectSeq[i] === id).length;
+      graded = Math.max(0, (posOk - wrongSel) / expectSeq.length);
+    }
     gradedRef.current.push(graded);
-    wrongRef.current += wrongSelected;
+    wrongRef.current += wrongSel;
+    setLastCorrect(isCorrect);
 
-    // progressão DENTRO da sessão: 2 acertos seguidos sobem 1 nível, 2 erros descem 1
-    const newStreak = isCorrect ? Math.max(streak, 0) + 1 : Math.min(streak, 0) - 1;
-    let nextLevel = sessionLevel, resetStreak = false;
-    if (newStreak >= 2)  { nextLevel = Math.min(sessionLevel + 1, 10); resetStreak = true; }
-    if (newStreak <= -2) { nextLevel = Math.max(sessionLevel - 1, 1);  resetStreak = true; }
-    setStreak(resetStreak ? 0 : newStreak);
+    // desbloqueio (regra da Kamylla): sobe 1 nível com 3 acertos seguidos OU 3 de 5; desce com 2 erros seguidos
+    histRef.current = [...histRef.current, isCorrect].slice(-5);
+    const h = histRef.current;
+    const last3 = h.slice(-3);
+    const up   = (last3.length === 3 && last3.every(Boolean)) || (h.length >= 5 && h.filter(Boolean).length >= 3);
+    const down = h.slice(-2).length === 2 && h.slice(-2).every(x => !x);
+    let nextLevel = sessionLevel;
+    if (up && sessionLevel < MAX_LEVEL)  { nextLevel = sessionLevel + 1; histRef.current = []; }
+    else if (down && sessionLevel > 1)   { nextLevel = sessionLevel - 1; histRef.current = []; }
     setSessionLevel(nextLevel);
 
     const newResults = [...trialResults, isCorrect];
@@ -559,11 +611,12 @@ export function DesafioSupermercado({ difficulty, theme, onComplete, mode = "lei
 
   const memorizeTotal = memorizeSeconds(sessionLevel, mode);
   const ratio = memorizeTotal > 0 ? countdown / memorizeTotal : 0;
-  const isRoundCorrect = phase === "result"
-    && currentList.every(p => selected.has(p.id))
-    && cartIds.every(id => currentList.find(p => p.id === id));
+  const isRoundCorrect = lastCorrect;
   const listCols = Math.min(currentList.length, 4);
   const sessionPct = Math.round((trial / MAX_TRIALS) * 100);
+  const ordered = order !== "none";
+  const targetSeq = order === "reverse" ? [...currentList].reverse() : currentList;
+  const instruction = `Compre ${memoLists.length > 1 ? `a lista da ${labels[targetIdx]}` : "a lista"}${order === "direct" ? ", na mesma ordem" : order === "reverse" ? ", de trás para frente" : ""}.`;
 
   return (
     <div style={{ position: "fixed", inset: 0, display: "flex", flexDirection: "column", overflow: "hidden", background: "#e8e0d0" }}>
@@ -586,7 +639,7 @@ export function DesafioSupermercado({ difficulty, theme, onComplete, mode = "lei
                   boxShadow: "0 18px 44px rgba(40,30,15,0.28)" }}>
                   <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 16 }}>
                     <span style={{ color: "#1f2937", fontWeight: 800, fontSize: 15 }}>
-                      {mode === "auditivo" ? "🎧 Ouça a lista!" : "📋 Memorize a lista!"}
+                      {mode === "auditivo" ? "🎧 Ouça" : "📋 Memorize"} {memoLists.length > 1 ? "as listas!" : "a lista!"}
                     </span>
                     <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
                       <div style={{ width: 72, height: 6, background: "#e5e7eb", borderRadius: 3, overflow: "hidden" }}>
@@ -597,7 +650,7 @@ export function DesafioSupermercado({ difficulty, theme, onComplete, mode = "lei
                   </div>
                   {mode === "auditivo" && (
                     <div style={{ display: "flex", gap: 8, justifyContent: "center", marginBottom: 12, flexWrap: "wrap" }}>
-                      <button onClick={() => { setAudioPlaying(true); speakList(currentList, () => setAudioPlaying(false)); }}
+                      <button onClick={() => { setAudioPlaying(true); speakMemo(memoLists, labels, () => setAudioPlaying(false)); }}
                         style={{ fontSize: 12.5, fontWeight: 700, padding: "7px 14px", borderRadius: 100, cursor: "pointer",
                           background: "rgba(47,158,143,0.12)", border: "1px solid rgba(47,158,143,0.35)", color: "#1d7a6e" }}>
                         {audioPlaying ? "🔊 Reproduzindo..." : "🔊 Ouvir de novo"}
@@ -609,17 +662,35 @@ export function DesafioSupermercado({ difficulty, theme, onComplete, mode = "lei
                       </button>
                     </div>
                   )}
-                  <div style={{ display: "grid", gridTemplateColumns: `repeat(${listCols}, 1fr)`, gap: 10 }}>
-                    {currentList.map((p, idx) => (
-                      <motion.div key={p.id} initial={{ opacity: 0, scale: 0.8 }} animate={{ opacity: 1, scale: 1 }} transition={{ delay: idx * 0.06 }}
-                        style={{ display: "flex", flexDirection: "column", alignItems: "center", gap: 6, padding: "12px 6px",
-                          background: "#f4ecdc", border: "1px solid #e6dcc8", borderRadius: 14 }}>
-                        <ProductImg id={p.id} size={72} />
-                        {mode === "leitura" && <span style={{ color: "#374151", fontSize: 11, fontWeight: 700, textAlign: "center", lineHeight: 1.2 }}>{p.name}</span>}
-                        {mode === "auditivo" && <span style={{ fontSize: 20 }}>🔊</span>}
-                      </motion.div>
-                    ))}
-                  </div>
+                  {ordered && (
+                    <p style={{ fontSize: 12, fontWeight: 700, color: "#b06a1a", textAlign: "center", marginBottom: 10 }}>
+                      🔢 Preste atenção na ORDEM dos itens.
+                    </p>
+                  )}
+                  {memoLists.map((lst, li) => (
+                    <div key={li} style={{ marginBottom: li < memoLists.length - 1 ? 16 : 0 }}>
+                      {memoLists.length > 1 && (
+                        <div style={{ fontSize: 13.5, fontWeight: 900, color: "#1d6e62", marginBottom: 8 }}>
+                          {li === 0 ? "👩 A mãe pediu:" : "👵 A avó pediu:"}
+                        </div>
+                      )}
+                      <div style={{ display: "grid", gridTemplateColumns: `repeat(${Math.min(lst.length, 4)}, 1fr)`, gap: 10 }}>
+                        {lst.map((p, idx) => (
+                          <motion.div key={p.id} initial={{ opacity: 0, scale: 0.8 }} animate={{ opacity: 1, scale: 1 }} transition={{ delay: idx * 0.06 }}
+                            style={{ position: "relative", display: "flex", flexDirection: "column", alignItems: "center", gap: 6, padding: "12px 6px",
+                              background: "#f4ecdc", border: "1px solid #e6dcc8", borderRadius: 14 }}>
+                            {ordered && (
+                              <span style={{ position: "absolute", top: -8, left: -8, width: 22, height: 22, borderRadius: "50%", zIndex: 2,
+                                background: "#2f9e8f", color: "#fff", fontSize: 12, fontWeight: 900, display: "flex", alignItems: "center", justifyContent: "center" }}>{idx + 1}</span>
+                            )}
+                            <ProductImg id={p.id} size={66} />
+                            {mode === "leitura" && <span style={{ color: "#374151", fontSize: 11, fontWeight: 700, textAlign: "center", lineHeight: 1.2 }}>{p.name}</span>}
+                            {mode === "auditivo" && <span style={{ fontSize: 20 }}>🔊</span>}
+                          </motion.div>
+                        ))}
+                      </div>
+                    </div>
+                  ))}
                 </div>
               </div>
               <div style={{ padding: "8px 16px 14px", flexShrink: 0 }}>
@@ -635,7 +706,15 @@ export function DesafioSupermercado({ difficulty, theme, onComplete, mode = "lei
           {/* ── SHOPPING ── */}
           {phase === "shopping" && (
             <motion.div key="shop" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}
-              style={{ flex: 1, display: "flex", flexDirection: "row", overflow: "hidden", padding: 12, gap: 12 }}>
+              style={{ flex: 1, display: "flex", flexDirection: "column", overflow: "hidden", padding: 12, gap: 10 }}>
+              {/* instrução: qual lista comprar + ordem */}
+              <div style={{ flexShrink: 0, display: "flex", alignItems: "center", gap: 10, padding: "10px 14px", borderRadius: 14,
+                background: ordered ? "rgba(217,143,42,0.16)" : "rgba(47,158,143,0.12)",
+                border: `1px solid ${ordered ? "rgba(217,143,42,0.45)" : "rgba(47,158,143,0.35)"}` }}>
+                <span style={{ fontSize: 22, flexShrink: 0 }}>{memoLists.length > 1 ? (targetIdx === 0 ? "👩" : "👵") : "🛒"}</span>
+                <span style={{ fontSize: 14.5, fontWeight: 800, color: "#3a2f1c", lineHeight: 1.25 }}>{instruction}</span>
+              </div>
+              <div style={{ flex: 1, display: "flex", flexDirection: "row", overflow: "hidden", gap: 12, minHeight: 0 }}>
               {/* prateleira */}
               <div style={{ flex: 1, minWidth: 0, overflowY: "auto", WebkitOverflowScrolling: "touch" } as React.CSSProperties}>
                 <WoodShelf products={shelfProducts} cartIds={cartIds} onToggle={toggleProduct} showLabels={mode === "leitura"} />
@@ -670,13 +749,15 @@ export function DesafioSupermercado({ difficulty, theme, onComplete, mode = "lei
                         style={{ color: "#a3acb8", fontSize: 12, fontStyle: "italic", textAlign: "center", padding: "18px 6px" }}>
                         Toque nos produtos da prateleira...
                       </motion.div>
-                    ) : cartIds.map(id => {
+                    ) : cartIds.map((id, idx) => {
                       const p = PRODUCT_MAP.get(id); if (!p) return null;
                       return (
                         <motion.div key={id} layout initial={{ scale: 0.9, opacity: 0 }} animate={{ scale: 1, opacity: 1 }}
                           exit={{ scale: 0.9, opacity: 0 }} transition={{ type: "spring", stiffness: 460, damping: 30 }}
                           style={{ display: "flex", alignItems: "center", gap: 9, padding: "6px 8px", background: "#fff",
                             borderRadius: 12, border: "1px solid #ece3d1", boxShadow: "0 2px 6px rgba(120,90,50,0.08)" }}>
+                          {ordered && <span style={{ width: 20, height: 20, flexShrink: 0, borderRadius: "50%", background: "#2f9e8f",
+                            color: "#fff", fontSize: 11, fontWeight: 900, display: "flex", alignItems: "center", justifyContent: "center" }}>{idx + 1}</span>}
                           <ProductImg id={id} size={34} />
                           <span style={{ flex: 1, minWidth: 0, fontSize: 12.5, fontWeight: 700, color: "#37424d",
                             overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{p.name}</span>
@@ -703,6 +784,7 @@ export function DesafioSupermercado({ difficulty, theme, onComplete, mode = "lei
                   🛒 Confirmar ({cartIds.length}/{itemCount})
                 </button>
               </div>
+              </div>
             </motion.div>
           )}
 
@@ -713,15 +795,21 @@ export function DesafioSupermercado({ difficulty, theme, onComplete, mode = "lei
               <div style={{ width: "100%", maxWidth: 440, background: "rgba(255,255,255,0.97)",
                 border: `2px solid ${isRoundCorrect ? "#86d9cb" : "#f3b0a8"}`, borderRadius: 20, padding: "18px 16px",
                 boxShadow: "0 18px 44px rgba(40,30,15,0.28)" }}>
-                <p style={{ color: isRoundCorrect ? "#1d7a6e" : "#c2463a", fontWeight: 800, fontSize: 16, textAlign: "center", marginBottom: 14 }}>
-                  {isRoundCorrect ? "✅ Lista correta!" : "❌ Resultado da rodada"}
+                <p style={{ color: isRoundCorrect ? "#1d7a6e" : "#c2463a", fontWeight: 800, fontSize: 16, textAlign: "center", marginBottom: 4 }}>
+                  {isRoundCorrect ? "✅ Compra correta!" : "❌ Resultado da rodada"}
+                </p>
+                <p style={{ color: "#8a7c63", fontSize: 12, textAlign: "center", marginBottom: 14 }}>
+                  {ordered ? `Ordem certa (${order === "reverse" ? "de trás para frente" : "da lista"}):`
+                    : memoLists.length > 1 ? `Lista da ${labels[targetIdx]}:` : "Sua lista era:"}
                 </p>
                 <div style={{ display: "grid", gridTemplateColumns: `repeat(${listCols}, 1fr)`, gap: 8 }}>
-                  {currentList.map(p => {
-                    const hit = selected.has(p.id);
+                  {targetSeq.map((p, idx) => {
+                    const hit = ordered ? (cartIds[idx] === p.id) : selected.has(p.id);
                     return (
-                      <div key={p.id} style={{ display: "flex", flexDirection: "column", alignItems: "center", gap: 4, padding: "10px 4px",
+                      <div key={p.id} style={{ position: "relative", display: "flex", flexDirection: "column", alignItems: "center", gap: 4, padding: "10px 4px",
                         background: hit ? "#eafaf6" : "#fdeeec", border: `1.5px solid ${hit ? "#a7e3d7" : "#f6c4bd"}`, borderRadius: 12 }}>
+                        {ordered && <span style={{ position: "absolute", top: -7, left: -7, width: 20, height: 20, borderRadius: "50%",
+                          background: "#2f9e8f", color: "#fff", fontSize: 11, fontWeight: 900, display: "flex", alignItems: "center", justifyContent: "center" }}>{idx + 1}</span>}
                         <ProductImg id={p.id} size={52} />
                         <span style={{ fontSize: 9.5, fontWeight: 700, textAlign: "center", color: hit ? "#1d7a6e" : "#c2463a" }}>{p.name}</span>
                         <span style={{ fontSize: 16 }}>{hit ? "✅" : "❌"}</span>
@@ -730,7 +818,7 @@ export function DesafioSupermercado({ difficulty, theme, onComplete, mode = "lei
                   })}
                 </div>
                 {cartIds.some(id => !currentList.find(p => p.id === id)) && (
-                  <p style={{ color: "#c2463a", fontSize: 11, textAlign: "center", marginTop: 10 }}>⚠️ Alguns itens não estavam na lista.</p>
+                  <p style={{ color: "#c2463a", fontSize: 11, textAlign: "center", marginTop: 10 }}>⚠️ Você pegou itens que não estavam na lista certa.</p>
                 )}
               </div>
             </motion.div>
