@@ -67,11 +67,15 @@ const ITEMS: Item[] = [
   { id: "tabua-queijos", n: "tábua de queijos", art: "uma", pl: "tábuas de queijos", qOk: true },
 ];
 
+// versão das fotos — subir quando reprocessar imagens (força recarga / fura cache)
+const IMG_V = "?v=2";
+const photo = (id: string) => `/exercises/restaurante/${id}.png${IMG_V}`;
+
 // Itens já vêm pré-montados (prato/copo/tigela próprios) — renderiza a foto direto.
 function ItemImg({ id, size }: { id: string; size: number }) {
   return (
     // eslint-disable-next-line @next/next/no-img-element
-    <img src={`/exercises/restaurante/${id}.png`} alt="" draggable={false} width={size} height={size}
+    <img src={photo(id)} alt="" draggable={false} width={size} height={size}
       style={{ width: size, height: size, objectFit: "contain", display: "block", userSelect: "none" }} />
   );
 }
@@ -416,7 +420,7 @@ export function RestauranteOrdem({ difficulty, onComplete }: RestauranteOrdemPro
   // pré-carrega as fotos (tira o delay de aparecimento)
   useEffect(() => {
     if (typeof window === "undefined") return;
-    ITEMS.forEach((i) => { const im = new window.Image(); im.src = `/exercises/restaurante/${i.id}.png`; });
+    ITEMS.forEach((i) => { const im = new window.Image(); im.src = photo(i.id); });
   }, []);
   function begin() {
     correctRef.current = 0; rtsRef.current = []; startTime.current = Date.now(); setTrial(0);
@@ -549,7 +553,7 @@ export function RestauranteOrdem({ difficulty, onComplete }: RestauranteOrdemPro
                           transition: "all .2s" }}>
                         <span style={{ position: "relative", width: "100%", maxWidth: 150, aspectRatio: "1 / 1" }}>
                           {/* eslint-disable-next-line @next/next/no-img-element */}
-                          <img src={`/exercises/restaurante/${it.id}.png`} alt="" draggable={false}
+                          <img src={photo(it.id)} alt="" draggable={false}
                             style={{ width: "100%", height: "100%", objectFit: "contain", display: "block", userSelect: "none" }} />
                           {placed > 0 && <span style={{ position: "absolute", top: -2, right: -2, minWidth: 24, height: 24, padding: "0 6px", borderRadius: 12,
                             background: "#2f9e8f", color: "#fff", fontSize: 13.5, fontWeight: 900, display: "flex", alignItems: "center", justifyContent: "center", boxShadow: "0 2px 6px rgba(47,158,143,0.4)" }}>{placed > 1 ? `×${placed}` : "✓"}</span>}
