@@ -251,8 +251,8 @@ function Chip({ icon, text, color }: { icon: React.ReactNode; text: string; colo
   );
 }
 
-// ── Bandeja de nogueira (alças de latão) ──────────────────────────────────────────
-function Tray({ items, itemSize = 96, minH = 120 }: { items: Item[]; itemSize?: number; minH?: number }) {
+// ── Bandeja de nogueira com VAGAS (espaços visíveis = nº de itens do pedido) ───────
+function Tray({ items, slots, itemMax = 64 }: { items: Item[]; slots: number; itemMax?: number }) {
   const Handle = ({ side }: { side: "left" | "right" }) => (
     <div style={{ position: "absolute", top: "50%", [side]: -15, transform: "translateY(-50%)", width: 30, height: 50, zIndex: 0 }}>
       <div style={{ position: "absolute", inset: 0, borderRadius: "45%", border: "5px solid #c8a24e",
@@ -260,22 +260,34 @@ function Tray({ items, itemSize = 96, minH = 120 }: { items: Item[]; itemSize?: 
     </div>
   );
   return (
-    <div style={{ position: "relative", margin: "0 20px" }}>
+    <div style={{ position: "relative", margin: "0 18px" }}>
       <Handle side="left" /><Handle side="right" />
-      <div style={{ position: "relative", zIndex: 1, borderRadius: 22, padding: 13,
+      <div style={{ position: "relative", zIndex: 1, borderRadius: 22, padding: 12,
         background: "linear-gradient(160deg,#7a5230 0%,#5c3d22 55%,#492f18 100%)",
         boxShadow: "0 16px 36px rgba(50,30,10,0.4), inset 0 2px 3px rgba(255,228,185,0.3), inset 0 -3px 7px rgba(30,18,6,0.55)" }}>
-        <div style={{ minHeight: minH, borderRadius: 15,
+        <div style={{ borderRadius: 15,
           backgroundImage: "repeating-linear-gradient(96deg, rgba(255,220,170,0.045) 0 2px, transparent 2px 8px), linear-gradient(160deg,#62431f,#49321a)",
           boxShadow: "inset 0 5px 16px rgba(18,10,3,0.6)",
-          display: "flex", alignItems: "center", justifyContent: "center", gap: 12, flexWrap: "wrap", padding: "12px 14px" }}>
-          {items.map((it, i) => (
-            <motion.div key={i} initial={{ scale: 0.4, y: -20, opacity: 0 }} animate={{ scale: 1, y: 0, opacity: 1 }}
-              transition={{ type: "spring", stiffness: 440, damping: 22 }}
-              style={{ flexShrink: 0, filter: "drop-shadow(0 6px 10px rgba(10,6,2,0.55))" }}>
-              <ItemImg id={it.id} size={itemSize} />
-            </motion.div>
-          ))}
+          display: "flex", alignItems: "flex-start", justifyContent: "center", gap: 8, flexWrap: "nowrap", padding: "12px 12px" }}>
+          {Array.from({ length: slots }).map((_, i) => {
+            const it = items[i];
+            return (
+              <div key={i} style={{ flex: "1 1 0", minWidth: 0, maxWidth: itemMax + 16, display: "flex", flexDirection: "column", alignItems: "center", gap: 4 }}>
+                <div style={{ width: "100%", maxWidth: itemMax, aspectRatio: "1 / 1", display: "flex", alignItems: "center", justifyContent: "center" }}>
+                  {it ? (
+                    <motion.div initial={{ scale: 0.4, opacity: 0 }} animate={{ scale: 1, opacity: 1 }} transition={{ type: "spring", stiffness: 440, damping: 22 }}
+                      style={{ width: "100%", height: "100%", filter: "drop-shadow(0 5px 9px rgba(10,6,2,0.5))" }}>
+                      {/* eslint-disable-next-line @next/next/no-img-element */}
+                      <img src={photo(it.id)} alt="" draggable={false} style={{ width: "100%", height: "100%", objectFit: "contain", display: "block", userSelect: "none" }} />
+                    </motion.div>
+                  ) : (
+                    <div style={{ width: "84%", height: "84%", borderRadius: 12, border: "2px dashed rgba(225,205,165,0.4)", background: "rgba(255,235,200,0.04)" }} />
+                  )}
+                </div>
+                <span style={{ fontSize: 10.5, fontWeight: 700, color: it ? "#f3e8d2" : "transparent", textAlign: "center", lineHeight: 1.05, minHeight: 24, overflow: "hidden" }}>{it ? it.n : "·"}</span>
+              </div>
+            );
+          })}
         </div>
       </div>
     </div>
@@ -396,6 +408,12 @@ export function RestauranteOrdem({ difficulty, onComplete }: RestauranteOrdemPro
     const ac = activeRef.current;
     if (!traysRef.current[ac]?.length) return;
     const nt = traysRef.current.map((t, i) => (i === ac ? t.slice(0, -1) : t));
+    traysRef.current = nt; setTrays(nt);
+  }
+  function clearTray() {
+    if (phase !== "input") return;
+    const ac = activeRef.current;
+    const nt = traysRef.current.map((t, i) => (i === ac ? [] : t));
     traysRef.current = nt; setTrays(nt);
   }
   function selectClient(c: number) { activeRef.current = c; setActive(c); }
@@ -541,9 +559,10 @@ export function RestauranteOrdem({ difficulty, onComplete }: RestauranteOrdemPro
 
                     {trays.map((t, c) => {
                       const isActive = active === c && spec.clients > 1;
+                      const slots = round.finals[c].length;
                       return (
                         <div key={c} onClick={() => spec.clients > 1 && selectClient(c)}
-                          style={{ borderRadius: 18, padding: spec.clients > 1 ? "8px 6px 6px" : 0, cursor: spec.clients > 1 ? "pointer" : "default",
+                          style={{ borderRadius: 18, padding: spec.clients > 1 ? "6px 4px 4px" : 0, cursor: spec.clients > 1 ? "pointer" : "default",
                             border: spec.clients > 1 ? `2px solid ${isActive ? "#2f9e8f" : "transparent"}` : "none",
                             background: spec.clients > 1 ? (isActive ? "rgba(47,158,143,0.07)" : "transparent") : "transparent" }}>
                           {spec.clients > 1 && (
@@ -552,7 +571,7 @@ export function RestauranteOrdem({ difficulty, onComplete }: RestauranteOrdemPro
                               <Users size={14} /> Cliente {c + 1} {isActive && <span style={{ fontSize: 11.5, fontWeight: 800 }}>▸ montando</span>}
                             </div>
                           )}
-                          <Tray items={t} itemSize={spec.clients > 1 ? 74 : 96} minH={spec.clients > 1 ? 92 : 120} />
+                          <Tray items={t} slots={slots} itemMax={spec.clients > 1 ? 56 : 68} />
                         </div>
                       );
                     })}
@@ -562,41 +581,50 @@ export function RestauranteOrdem({ difficulty, onComplete }: RestauranteOrdemPro
                         background: "#ece3d1", color: "#6b6052", border: "none", cursor: "pointer" }}>↩ desfazer{spec.clients > 1 ? ` (Cliente ${active + 1})` : ""}</button>
                     )}
 
-                    <div style={{ display: "grid", gridTemplateColumns: `repeat(${Math.min(round.keys.length, 3)}, 1fr)`, gap: 12 }}>
+                    <div style={{ display: "grid", gridTemplateColumns: `repeat(${Math.min(round.keys.length, 4)}, 1fr)`, gap: 10 }}>
                       {round.keys.map((it, i) => {
                         const placed = traysRef.current[active]?.filter((x) => x.id === it.id).length || 0;
                         const sel = trays.some((t) => t.some((x) => x.id === it.id));
                         const full = (roundRef.current && traysRef.current[active]?.length >= roundRef.current.finals[active].length) || false;
                         return (
                           <motion.button key={`${it.id}-${i}`} onClick={() => place(it)} disabled={full} whileTap={{ scale: 0.93 }}
-                            style={{ borderRadius: 18, cursor: full ? "default" : "pointer", padding: "12px 8px 10px",
-                              display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", gap: 8,
+                            style={{ borderRadius: 16, cursor: full ? "default" : "pointer", padding: "10px 6px 8px",
+                              display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", gap: 6,
                               opacity: full && !placed ? 0.5 : 1,
                               background: sel ? "#eef6f4" : "#fffdf7", border: sel ? "2px solid #2f9e8f" : "1.5px solid #ece0c8",
                               boxShadow: sel ? "0 2px 8px rgba(47,158,143,0.18)" : "0 4px 12px rgba(120,90,50,0.12)",
                               transition: "all .2s" }}>
-                            <span style={{ position: "relative", width: "100%", maxWidth: 150, aspectRatio: "1 / 1" }}>
+                            <span style={{ position: "relative", width: "100%", maxWidth: 104, aspectRatio: "1 / 1" }}>
                               {/* eslint-disable-next-line @next/next/no-img-element */}
                               <img src={photo(it.id)} alt="" draggable={false}
                                 style={{ width: "100%", height: "100%", objectFit: "contain", display: "block", userSelect: "none" }} />
-                              {placed > 0 && <span style={{ position: "absolute", top: -2, right: -2, minWidth: 24, height: 24, padding: "0 6px", borderRadius: 12,
-                                background: "#2f9e8f", color: "#fff", fontSize: 13.5, fontWeight: 900, display: "flex", alignItems: "center", justifyContent: "center", boxShadow: "0 2px 6px rgba(47,158,143,0.4)" }}>✓</span>}
+                              {placed > 0 && <span style={{ position: "absolute", top: -2, right: -2, minWidth: 22, height: 22, padding: "0 5px", borderRadius: 11,
+                                background: "#2f9e8f", color: "#fff", fontSize: 12.5, fontWeight: 900, display: "flex", alignItems: "center", justifyContent: "center", boxShadow: "0 2px 6px rgba(47,158,143,0.4)" }}>✓</span>}
                             </span>
-                            <span style={{ fontSize: 14.5, fontWeight: 800, color: sel ? "#1d7a6e" : "#4a4234", textAlign: "center", lineHeight: 1.15 }}>{it.n}</span>
+                            <span style={{ fontSize: 13, fontWeight: 800, color: sel ? "#1d7a6e" : "#4a4234", textAlign: "center", lineHeight: 1.12 }}>{it.n}</span>
                           </motion.button>
                         );
                       })}
                     </div>
 
-                    <button onClick={validate} disabled={totalPlaced === 0}
-                      style={{ width: "100%", height: 52, borderRadius: 100, border: "none", marginTop: 4,
-                        background: totalPlaced > 0 ? "linear-gradient(135deg,#11514f,#0d3a3c)" : "#e2dcce",
-                        color: totalPlaced > 0 ? "#fff" : "#a89a82", fontWeight: 800, fontSize: 15,
-                        cursor: totalPlaced > 0 ? "pointer" : "default",
-                        display: "flex", alignItems: "center", justifyContent: "center", gap: 10,
-                        boxShadow: totalPlaced > 0 ? "0 6px 18px rgba(13,58,60,0.35)" : "none", transition: "all .2s" }}>
-                      ✓ Pronto
-                    </button>
+                    {/* limpar bandeja + pronto */}
+                    <div style={{ display: "flex", gap: 10, marginTop: 4 }}>
+                      <button onClick={clearTray} disabled={!traysRef.current[active]?.length}
+                        style={{ flex: "0 0 auto", height: 50, padding: "0 18px", borderRadius: 100, fontWeight: 800, fontSize: 13.5,
+                          background: "#fffdf7", border: "1.5px solid #e1d6bd", color: traysRef.current[active]?.length ? "#8a7c63" : "#c3b89e",
+                          cursor: traysRef.current[active]?.length ? "pointer" : "default", display: "flex", alignItems: "center", justifyContent: "center", gap: 7 }}>
+                        🗑 limpar bandeja
+                      </button>
+                      <button onClick={validate} disabled={totalPlaced === 0}
+                        style={{ flex: 1, height: 50, borderRadius: 100, border: "none",
+                          background: totalPlaced > 0 ? "linear-gradient(135deg,#11514f,#0d3a3c)" : "#e2dcce",
+                          color: totalPlaced > 0 ? "#fff" : "#a89a82", fontWeight: 800, fontSize: 15,
+                          cursor: totalPlaced > 0 ? "pointer" : "default",
+                          display: "flex", alignItems: "center", justifyContent: "center", gap: 10,
+                          boxShadow: totalPlaced > 0 ? "0 6px 18px rgba(13,58,60,0.35)" : "none", transition: "all .2s" }}>
+                        ✓ pronto
+                      </button>
+                    </div>
                   </div>
                 )}
 
