@@ -262,8 +262,12 @@ function Chip({ icon, text, color }: { icon: React.ReactNode; text: string; colo
   );
 }
 
-// ── Bandeja de nogueira com VAGAS (espaços visíveis = nº de itens do pedido) ───────
-function Tray({ items, slots, itemMax = 64 }: { items: Item[]; slots: number; itemMax?: number }) {
+// ── Bandeja de nogueira — só imagens dos alimentos (sem nomes/vagas) ───────────────
+// O tamanho dos alimentos varia pelo nº de pedidos: 1 = grande, 2 = médio, 3 = menor.
+function Tray({ items, count }: { items: Item[]; count: number }) {
+  const sz = count >= 3 ? { item: 64, gap: 10, minH: 82 }
+    : count === 2 ? { item: 86, gap: 14, minH: 102 }
+    : { item: 132, gap: 22, minH: 150 };
   const Handle = ({ side }: { side: "left" | "right" }) => (
     <div style={{ position: "absolute", top: "50%", [side]: -15, transform: "translateY(-50%)", width: 30, height: 50, zIndex: 0 }}>
       <div style={{ position: "absolute", inset: 0, borderRadius: "45%", border: "5px solid #c8a24e",
@@ -276,29 +280,17 @@ function Tray({ items, slots, itemMax = 64 }: { items: Item[]; slots: number; it
       <div style={{ position: "relative", zIndex: 1, borderRadius: 22, padding: 12,
         background: "linear-gradient(160deg,#7a5230 0%,#5c3d22 55%,#492f18 100%)",
         boxShadow: "0 16px 36px rgba(50,30,10,0.4), inset 0 2px 3px rgba(255,228,185,0.3), inset 0 -3px 7px rgba(30,18,6,0.55)" }}>
-        <div style={{ borderRadius: 15,
+        <div style={{ borderRadius: 15, minHeight: sz.minH,
           backgroundImage: "repeating-linear-gradient(96deg, rgba(255,220,170,0.045) 0 2px, transparent 2px 8px), linear-gradient(160deg,#62431f,#49321a)",
           boxShadow: "inset 0 5px 16px rgba(18,10,3,0.6)",
-          display: "flex", alignItems: "flex-start", justifyContent: "center", gap: 8, flexWrap: "nowrap", padding: "12px 12px" }}>
-          {Array.from({ length: slots }).map((_, i) => {
-            const it = items[i];
-            return (
-              <div key={i} style={{ flex: "1 1 0", minWidth: 0, maxWidth: itemMax + 16, display: "flex", flexDirection: "column", alignItems: "center", gap: 4 }}>
-                <div style={{ width: "100%", maxWidth: itemMax, aspectRatio: "1 / 1", display: "flex", alignItems: "center", justifyContent: "center" }}>
-                  {it ? (
-                    <motion.div initial={{ scale: 0.4, opacity: 0 }} animate={{ scale: 1, opacity: 1 }} transition={{ type: "spring", stiffness: 440, damping: 22 }}
-                      style={{ width: "100%", height: "100%", filter: "drop-shadow(0 5px 9px rgba(10,6,2,0.5))" }}>
-                      {/* eslint-disable-next-line @next/next/no-img-element */}
-                      <img src={photo(it.id)} alt="" draggable={false} style={{ width: "100%", height: "100%", objectFit: "contain", display: "block", userSelect: "none" }} />
-                    </motion.div>
-                  ) : (
-                    <div style={{ width: "84%", height: "84%", borderRadius: 12, border: "2px dashed rgba(225,205,165,0.4)", background: "rgba(255,235,200,0.04)" }} />
-                  )}
-                </div>
-                <span style={{ fontSize: 10.5, fontWeight: 700, color: it ? "#f3e8d2" : "transparent", textAlign: "center", lineHeight: 1.05, minHeight: 24, overflow: "hidden" }}>{it ? it.n : "·"}</span>
-              </div>
-            );
-          })}
+          display: "flex", alignItems: "center", justifyContent: "center", gap: sz.gap, flexWrap: "nowrap", padding: "10px 14px" }}>
+          {items.map((it, i) => (
+            <motion.div key={i} initial={{ scale: 0.4, opacity: 0 }} animate={{ scale: 1, opacity: 1 }} transition={{ type: "spring", stiffness: 440, damping: 22 }}
+              style={{ width: sz.item, aspectRatio: "1 / 1", flexShrink: 1, minWidth: 0, filter: "drop-shadow(0 6px 10px rgba(10,6,2,0.55))" }}>
+              {/* eslint-disable-next-line @next/next/no-img-element */}
+              <img src={photo(it.id)} alt="" draggable={false} style={{ width: "100%", height: "100%", objectFit: "contain", display: "block", userSelect: "none" }} />
+            </motion.div>
+          ))}
         </div>
       </div>
     </div>
@@ -424,9 +416,9 @@ export function RestauranteOrdem({ difficulty, onComplete, auditory = false }: R
   }
   function clearTray() {
     if (phase !== "input") return;
-    const ac = activeRef.current;
-    const nt = traysRef.current.map((t, i) => (i === ac ? [] : t));
+    const nt = traysRef.current.map(() => [] as Item[]);   // limpa todas as bandejas
     traysRef.current = nt; setTrays(nt);
+    activeRef.current = 0; setActive(0);                    // volta o foco ao 1º pedido
   }
   function selectClient(c: number) { activeRef.current = c; setActive(c); }
   function goAfterOrder() { if (round && round.mods.length) setPhase("mod"); else goInput(); }
@@ -612,32 +604,38 @@ export function RestauranteOrdem({ difficulty, onComplete, auditory = false }: R
                 {phase === "input" && (
                   <div style={{ display: "flex", flexDirection: "column", gap: 14 }}>
                     <p style={{ textAlign: "center", fontSize: 14.5, fontWeight: 800, color: "#2a2018" }}>
-                      {spec.clients === 1 ? "Monte o pedido na ordem certa." : "Toque em um cliente e monte o pedido dele na ordem certa."}
+                      {spec.clients === 1 ? "Monte o pedido na ordem certa." : "Monte os pedidos na ordem certa."}
                       {round.mods.length ? " Aplique as mudanças!" : ""}
                     </p>
 
                     {trays.map((t, c) => {
-                      const isActive = active === c && spec.clients > 1;
-                      const slots = round.finals[c].length;
+                      const multi = spec.clients > 1;
+                      const isActive = multi && active === c;
                       return (
-                        <div key={c} onClick={() => spec.clients > 1 && selectClient(c)}
-                          style={{ borderRadius: 18, padding: spec.clients > 1 ? "6px 4px 4px" : 0, cursor: spec.clients > 1 ? "pointer" : "default",
-                            border: spec.clients > 1 ? `2px solid ${isActive ? "#2f9e8f" : "transparent"}` : "none",
-                            background: spec.clients > 1 ? (isActive ? "rgba(47,158,143,0.07)" : "transparent") : "transparent" }}>
-                          {spec.clients > 1 && (
-                            <div style={{ display: "flex", alignItems: "center", justifyContent: "center", gap: 7, marginBottom: 6,
-                              fontSize: 13, fontWeight: 900, color: isActive ? "#1d7a6e" : "#9a8f7e" }}>
-                              <Users size={14} /> Cliente {c + 1} {isActive && <span style={{ fontSize: 11.5, fontWeight: 800 }}>▸ montando</span>}
+                        <div key={c} onClick={() => multi && selectClient(c)}
+                          style={{ display: "flex", alignItems: "center", gap: 6, borderRadius: 16,
+                            padding: multi ? "5px 6px" : 0, cursor: multi ? "pointer" : "default",
+                            border: multi ? `2px solid ${isActive ? "#2f9e8f" : "transparent"}` : "none",
+                            background: multi && isActive ? "rgba(47,158,143,0.10)" : "transparent",
+                            boxShadow: isActive ? "0 0 14px rgba(47,158,143,0.22)" : "none", transition: "all .2s" }}>
+                          {multi && (
+                            <div style={{ flexShrink: 0, width: 46, display: "flex", flexDirection: "column", alignItems: "center", gap: 3 }}>
+                              <div style={{ width: 30, height: 30, borderRadius: "50%", background: isActive ? "#2f9e8f" : "#c4cdc6",
+                                color: "#fff", fontWeight: 900, fontSize: 15, display: "flex", alignItems: "center", justifyContent: "center",
+                                boxShadow: isActive ? "0 2px 8px rgba(47,158,143,0.5)" : "none" }}>{c + 1}</div>
+                              <div style={{ fontSize: 10.5, fontWeight: 800, color: isActive ? "#1d7a6e" : "#9a8f7e", textAlign: "center", lineHeight: 1.05 }}>{c + 1}º pedido</div>
                             </div>
                           )}
-                          <Tray items={t} slots={slots} itemMax={spec.clients > 1 ? 56 : 68} />
+                          <div style={{ flex: 1, minWidth: 0 }}>
+                            <Tray items={t} count={spec.clients} />
+                          </div>
                         </div>
                       );
                     })}
 
                     {traysRef.current[active]?.length > 0 && (
                       <button onClick={undo} style={{ alignSelf: "center", fontSize: 12, fontWeight: 700, padding: "5px 14px", borderRadius: 10,
-                        background: "#ece3d1", color: "#6b6052", border: "none", cursor: "pointer" }}>↩ desfazer{spec.clients > 1 ? ` (Cliente ${active + 1})` : ""}</button>
+                        background: "#ece3d1", color: "#6b6052", border: "none", cursor: "pointer" }}>↩ desfazer</button>
                     )}
 
                     <div style={{ display: "grid", gridTemplateColumns: `repeat(${Math.min(round.keys.length, 4)}, 1fr)`, gap: 10 }}>
@@ -666,13 +664,13 @@ export function RestauranteOrdem({ difficulty, onComplete, auditory = false }: R
                       })}
                     </div>
 
-                    {/* limpar bandeja + pronto */}
+                    {/* limpar bandeja(s) + pronto */}
                     <div style={{ display: "flex", gap: 10, marginTop: 4 }}>
-                      <button onClick={clearTray} disabled={!traysRef.current[active]?.length}
+                      <button onClick={clearTray} disabled={totalPlaced === 0}
                         style={{ flex: "0 0 auto", height: 50, padding: "0 18px", borderRadius: 100, fontWeight: 800, fontSize: 13.5,
-                          background: "#fffdf7", border: "1.5px solid #e1d6bd", color: traysRef.current[active]?.length ? "#8a7c63" : "#c3b89e",
-                          cursor: traysRef.current[active]?.length ? "pointer" : "default", display: "flex", alignItems: "center", justifyContent: "center", gap: 7 }}>
-                        🗑 limpar bandeja
+                          background: "#fffdf7", border: "1.5px solid #e1d6bd", color: totalPlaced > 0 ? "#8a7c63" : "#c3b89e",
+                          cursor: totalPlaced > 0 ? "pointer" : "default", display: "flex", alignItems: "center", justifyContent: "center", gap: 7 }}>
+                        🗑 Limpar bandeja{spec.clients > 1 ? "s" : ""}
                       </button>
                       <button onClick={validate} disabled={totalPlaced === 0}
                         style={{ flex: 1, height: 50, borderRadius: 100, border: "none",
@@ -681,7 +679,7 @@ export function RestauranteOrdem({ difficulty, onComplete, auditory = false }: R
                           cursor: totalPlaced > 0 ? "pointer" : "default",
                           display: "flex", alignItems: "center", justifyContent: "center", gap: 10,
                           boxShadow: totalPlaced > 0 ? "0 6px 18px rgba(13,58,60,0.35)" : "none", transition: "all .2s" }}>
-                        ✓ pronto
+                        ✓ Pronto
                       </button>
                     </div>
                   </div>
