@@ -108,14 +108,19 @@ function lineText(it: Item, q: number): string {
 function joinList(parts: string[]): string {
   return parts.length === 1 ? parts[0] : parts.slice(0, -1).join(", ") + " e " + parts[parts.length - 1];
 }
-// frases de garçom anotando o pedido (variadas; mesa numerada em algumas)
+// artigo definido (p/ a frase de exclusão soar natural: "não quer o sorvete")
+function defArt(it: Item): string {
+  return it.art === "uma" ? "a" : it.art === "uns" ? "os" : "o";
+}
+// frases de garçom/cozinha — imitam um pedido real de restaurante (variadas; mesa numerada)
 function orderSentence(list: string, table: number): string {
-  switch (Math.floor(Math.random() * 5)) {
-    case 0:  return `O cliente pediu ${list}.`;
-    case 1:  return `Anote o pedido: ${list}.`;
-    case 2:  return `A mesa ${table} pediu ${list}.`;
-    case 3:  return `Para a mesa ${table}: ${list}.`;
-    default: return `O cliente quer ${list}.`;
+  switch (Math.floor(Math.random() * 6)) {
+    case 0:  return `O cliente da mesa ${table} pediu ${list}.`;
+    case 1:  return `Mesa ${table}, anote o pedido: ${list}.`;
+    case 2:  return `O garçom levou para a cozinha: ${list}.`;
+    case 3:  return `Pedido da mesa ${table}: ${list}.`;
+    case 4:  return `Para a mesa ${table}, ${list}, por favor.`;
+    default: return `O cliente pediu ${list}.`;
   }
 }
 function pickPtBrVoice(): SpeechSynthesisVoice | null {
@@ -248,7 +253,7 @@ function Tray({ items }: { items: Item[] }) {
         background: "linear-gradient(160deg,#7a5230 0%,#5c3d22 55%,#492f18 100%)",
         boxShadow: "0 16px 36px rgba(50,30,10,0.4), inset 0 2px 3px rgba(255,228,185,0.3), inset 0 -3px 7px rgba(30,18,6,0.55)" }}>
         {/* poço interno (madeira com grão sutil) */}
-        <div style={{ minHeight: 104, borderRadius: 15,
+        <div style={{ minHeight: 124, borderRadius: 15,
           backgroundImage: "repeating-linear-gradient(96deg, rgba(255,220,170,0.045) 0 2px, transparent 2px 8px), linear-gradient(160deg,#62431f,#49321a)",
           boxShadow: "inset 0 5px 16px rgba(18,10,3,0.6)",
           display: "flex", alignItems: "center", justifyContent: "center", gap: 14, flexWrap: "wrap", padding: "14px 16px" }}>
@@ -256,7 +261,7 @@ function Tray({ items }: { items: Item[] }) {
             <motion.div key={i} initial={{ scale: 0.4, y: -20, opacity: 0 }} animate={{ scale: 1, y: 0, opacity: 1 }}
               transition={{ type: "spring", stiffness: 440, damping: 22 }}
               style={{ flexShrink: 0, filter: "drop-shadow(0 6px 10px rgba(10,6,2,0.55))" }}>
-              <ItemImg id={it.id} size={82} />
+              <ItemImg id={it.id} size={100} />
             </motion.div>
           ))}
         </div>
@@ -328,7 +333,7 @@ export function RestauranteOrdem({ difficulty, onComplete }: RestauranteOrdemPro
     const table = 2 + Math.floor(Math.random() * 8);
     const exc = excIdx >= 0 ? picks[excIdx] : null;
     const sent = exc
-      ? `A mesa ${table} pediu ${listStr}, mas NÃO quer ${exc.art} ${exc.n}.`
+      ? `A mesa ${table} pediu ${listStr} — mas atenção: NÃO quer ${defArt(exc)} ${exc.n}.`
       : orderSentence(listStr, table);
 
     const distract = shuffle(ITEMS.filter((x) => !picks.some((p) => p.id === x.id))).slice(0, sp.distractors);
@@ -529,25 +534,27 @@ export function RestauranteOrdem({ difficulty, onComplete }: RestauranteOrdemPro
                   <button onClick={undo} style={{ alignSelf: "center", fontSize: 12, fontWeight: 700, padding: "5px 14px", borderRadius: 10,
                     background: "#ece3d1", color: "#6b6052", border: "none", cursor: "pointer" }}>↩ desfazer</button>
                 )}
-                <div style={{ display: "grid", gridTemplateColumns: `repeat(${Math.min(keys.length, 4)}, 1fr)`, gap: 11 }}>
+                <div style={{ display: "grid", gridTemplateColumns: `repeat(${Math.min(keys.length, 3)}, 1fr)`, gap: 12 }}>
                   {keys.map((it, i) => {
                     const placed = tray.filter((x) => x.n === it.n).length; // quantas vezes já está na bandeja
                     const sel = placed > 0;
                     const full = tray.length >= expected.length;
                     return (
                       <motion.button key={`${it.id}-${i}`} onClick={() => place(it)} disabled={full} whileTap={{ scale: 0.93 }}
-                        style={{ borderRadius: 18, cursor: full ? "default" : "pointer", padding: "12px 6px 10px",
-                          display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", gap: 7,
+                        style={{ borderRadius: 18, cursor: full ? "default" : "pointer", padding: "12px 8px 10px",
+                          display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", gap: 8,
                           opacity: full && !sel ? 0.5 : 1,
                           background: sel ? "#eef6f4" : "#fffdf7", border: sel ? "2px solid #2f9e8f" : "1.5px solid #ece0c8",
                           boxShadow: sel ? "0 2px 8px rgba(47,158,143,0.18)" : "0 4px 12px rgba(120,90,50,0.12)",
                           transition: "all .2s" }}>
-                        <span style={{ position: "relative", display: "flex", alignItems: "center", justifyContent: "center" }}>
-                          <ItemImg id={it.id} size={72} />
-                          {placed > 0 && <span style={{ position: "absolute", top: -4, right: -4, minWidth: 20, height: 20, padding: "0 5px", borderRadius: 10,
-                            background: "#2f9e8f", color: "#fff", fontSize: 12, fontWeight: 900, display: "flex", alignItems: "center", justifyContent: "center" }}>{placed > 1 ? `×${placed}` : "✓"}</span>}
+                        <span style={{ position: "relative", width: "100%", maxWidth: 150, aspectRatio: "1 / 1" }}>
+                          {/* eslint-disable-next-line @next/next/no-img-element */}
+                          <img src={`/exercises/restaurante/${it.id}.png`} alt="" draggable={false}
+                            style={{ width: "100%", height: "100%", objectFit: "contain", display: "block", userSelect: "none" }} />
+                          {placed > 0 && <span style={{ position: "absolute", top: -2, right: -2, minWidth: 24, height: 24, padding: "0 6px", borderRadius: 12,
+                            background: "#2f9e8f", color: "#fff", fontSize: 13.5, fontWeight: 900, display: "flex", alignItems: "center", justifyContent: "center", boxShadow: "0 2px 6px rgba(47,158,143,0.4)" }}>{placed > 1 ? `×${placed}` : "✓"}</span>}
                         </span>
-                        <span style={{ fontSize: 13.5, fontWeight: 800, color: sel ? "#1d7a6e" : "#4a4234" }}>{it.n}</span>
+                        <span style={{ fontSize: 14.5, fontWeight: 800, color: sel ? "#1d7a6e" : "#4a4234", textAlign: "center", lineHeight: 1.15 }}>{it.n}</span>
                       </motion.button>
                     );
                   })}
@@ -581,8 +588,8 @@ export function RestauranteOrdem({ difficulty, onComplete }: RestauranteOrdemPro
                     <div style={{ display: "flex", gap: 8, justifyContent: "center", flexWrap: "wrap" }}>
                       {expected.map((x, i) => (
                         <span key={i} style={{ display: "flex", flexDirection: "column", alignItems: "center", gap: 2 }}>
-                          <span style={{ fontSize: 10, fontWeight: 900, color: "#1d7a6e" }}>{i + 1}</span>
-                          <ItemImg id={x.id} size={54} />
+                          <span style={{ fontSize: 11, fontWeight: 900, color: "#1d7a6e" }}>{i + 1}</span>
+                          <ItemImg id={x.id} size={68} />
                         </span>
                       ))}
                     </div>
