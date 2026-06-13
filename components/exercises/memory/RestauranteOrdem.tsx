@@ -2,7 +2,7 @@
 
 import { useState, useRef, useCallback, useEffect } from "react";
 import { motion } from "framer-motion";
-import { Volume2, UtensilsCrossed, ChefHat, CheckCircle2, BarChart3, Users, Package, ArrowLeftRight, Ban } from "lucide-react";
+import { UtensilsCrossed, ChefHat, CheckCircle2, BarChart3, Users, Package, ArrowLeftRight, Ban } from "lucide-react";
 import { calculateExerciseScore } from "@/lib/scoring";
 import { useExerciseProgress } from "@/components/exercises/ExerciseWrapper";
 import type { ExerciseResult, Theme } from "@/types";
@@ -167,32 +167,6 @@ function modText(clients: number, m: ModInfo): string {
     ? `${who} trocou ${defArt(m.oldItem)} ${m.oldItem.n} ${pelo(m.newItem!)} ${m.newItem!.n}.`
     : `${who} cancelou ${defArt(m.oldItem)} ${m.oldItem.n}.`;
 }
-function orderSpeech(round: Round, clients: number): string {
-  const parts = round.initial.map((o, c) =>
-    `${clients === 1 ? "O cliente pediu" : `Cliente ${c + 1} pediu`} ${joinList(o.map((i) => i.n))}`);
-  return parts.join(". ") + ".";
-}
-
-// ── Voz (TTS) ────────────────────────────────────────────────────────────────────
-function pickPtBrVoice(): SpeechSynthesisVoice | null {
-  const voices = window.speechSynthesis.getVoices();
-  if (!voices.length) return null;
-  const pool = voices.filter(v => /pt[-_]?BR/i.test(v.lang) || /portugu/i.test(v.name) || /^pt/i.test(v.lang));
-  if (!pool.length) return null;
-  const prefer = ["luciana", "google português do brasil", "google portugues do brasil", "francisca", "maria", "fernanda", "felipe", "daniel"];
-  for (const name of prefer) { const v = pool.find(v => v.name.toLowerCase().includes(name)); if (v) return v; }
-  return pool[0];
-}
-function speak(text: string) {
-  if (typeof window === "undefined" || !window.speechSynthesis) return;
-  try {
-    window.speechSynthesis.cancel();
-    const u = new SpeechSynthesisUtterance(text); u.lang = "pt-BR"; u.rate = 0.95; u.pitch = 1.0;
-    const v = pickPtBrVoice(); if (v) u.voice = v;
-    window.speechSynthesis.speak(u);
-  } catch { /* sem voz */ }
-}
-
 type Phase = "ready" | "order" | "mod" | "input" | "feedback";
 
 // ── Música ambiente sintetizada (Web Audio) — 100% sem direitos autorais ─────────
@@ -298,9 +272,7 @@ function Tray({ items, itemSize = 96, minH = 120 }: { items: Item[]; itemSize?: 
           {items.map((it, i) => (
             <motion.div key={i} initial={{ scale: 0.4, y: -20, opacity: 0 }} animate={{ scale: 1, y: 0, opacity: 1 }}
               transition={{ type: "spring", stiffness: 440, damping: 22 }}
-              style={{ position: "relative", flexShrink: 0, filter: "drop-shadow(0 6px 10px rgba(10,6,2,0.55))" }}>
-              <span style={{ position: "absolute", top: -6, left: -6, width: 20, height: 20, borderRadius: "50%", zIndex: 2,
-                background: "#11514f", color: "#fff", fontSize: 11, fontWeight: 900, display: "flex", alignItems: "center", justifyContent: "center" }}>{i + 1}</span>
+              style={{ flexShrink: 0, filter: "drop-shadow(0 6px 10px rgba(10,6,2,0.55))" }}>
               <ItemImg id={it.id} size={itemSize} />
             </motion.div>
           ))}
@@ -310,20 +282,14 @@ function Tray({ items, itemSize = 96, minH = 120 }: { items: Item[]; itemSize?: 
   );
 }
 
-// ── Sequência do pedido (cards numerados) ─────────────────────────────────────────
-function OrderSeq({ items }: { items: Item[] }) {
+// ── Sequência do pedido em TEXTO (nomes separados por seta) ───────────────────────
+function OrderSeqText({ items }: { items: Item[] }) {
   return (
-    <div style={{ display: "flex", flexWrap: "wrap", gap: 8, justifyContent: "center" }}>
+    <p style={{ fontSize: 16, fontWeight: 800, color: "#2a2018", textAlign: "center", lineHeight: 1.4 }}>
       {items.map((it, i) => (
-        <div key={i} style={{ position: "relative", display: "flex", flexDirection: "column", alignItems: "center", gap: 2,
-          width: 78, padding: "6px 4px", borderRadius: 12, background: "#fffdf7", border: "1.5px solid #ece0c8" }}>
-          <span style={{ position: "absolute", top: -7, left: -7, width: 20, height: 20, borderRadius: "50%",
-            background: "#11514f", color: "#fff", fontSize: 11, fontWeight: 900, display: "flex", alignItems: "center", justifyContent: "center" }}>{i + 1}</span>
-          <ItemImg id={it.id} size={56} />
-          <span style={{ fontSize: 11.5, fontWeight: 700, color: "#4a4234", textAlign: "center", lineHeight: 1.1 }}>{it.n}</span>
-        </div>
+        <span key={i}>{i > 0 && <span style={{ color: "#caa86a", margin: "0 4px" }}>→</span>}{it.n}</span>
       ))}
-    </div>
+    </p>
   );
 }
 
@@ -524,16 +490,16 @@ export function RestauranteOrdem({ difficulty, onComplete }: RestauranteOrdemPro
                       <span style={{ color: "#caa86a" }}>✦</span>📋 Pedido{spec.clients > 1 ? "s" : ""} do{spec.clients > 1 ? "s clientes" : " cliente"}<span style={{ color: "#caa86a" }}>✦</span>
                     </span>
                     {round.initial.map((o, c) => (
-                      <div key={c} style={{ width: "100%", padding: "14px 14px", borderRadius: 16,
+                      <div key={c} style={{ width: "100%", padding: "14px 16px", borderRadius: 16,
                         background: "rgba(17,81,79,0.06)", border: "1px solid rgba(17,81,79,0.16)" }}>
-                        <div style={{ fontSize: 13.5, fontWeight: 900, color: "#11514f", marginBottom: 10, textAlign: "center" }}>
+                        <div style={{ fontSize: 13.5, fontWeight: 900, color: "#11514f", marginBottom: 8, textAlign: "center" }}>
                           {spec.clients === 1 ? "O cliente pediu:" : `Cliente ${c + 1} pediu:`}
                         </div>
-                        <OrderSeq items={o} />
+                        <p style={{ fontSize: 18, fontWeight: 800, color: "#2a2018", textAlign: "center", lineHeight: 1.4 }}>
+                          {joinList(o.map((i) => i.n))}.
+                        </p>
                       </div>
                     ))}
-                    <button onClick={() => speak(orderSpeech(round, spec.clients))} style={{ fontSize: 12.5, fontWeight: 700, padding: "8px 16px", borderRadius: 12,
-                      background: "rgba(17,81,79,0.1)", border: "1px solid rgba(17,81,79,0.3)", color: "#11514f", cursor: "pointer" }}>🔊 Ouvir o pedido</button>
                     <button onClick={goAfterOrder} style={{ width: "100%", height: 52, borderRadius: 100, border: "none",
                       background: "linear-gradient(135deg,#11514f,#0d3a3c)", color: "#fff", fontWeight: 800, fontSize: 14.5, cursor: "pointer",
                       boxShadow: "0 6px 18px rgba(13,58,60,0.35)" }}>
@@ -559,8 +525,6 @@ export function RestauranteOrdem({ difficulty, onComplete }: RestauranteOrdemPro
                         <p style={{ flex: 1, fontSize: 16, fontWeight: 800, color: "#2a2018" }}>{modText(spec.clients, m)}</p>
                       </div>
                     ))}
-                    <button onClick={() => speak(round.mods.map((m) => modText(spec.clients, m)).join(" "))} style={{ fontSize: 12.5, fontWeight: 700, padding: "8px 16px", borderRadius: 12,
-                      background: "rgba(17,81,79,0.1)", border: "1px solid rgba(17,81,79,0.3)", color: "#11514f", cursor: "pointer" }}>🔊 Ouvir</button>
                     <button onClick={goInput} style={{ width: "100%", height: 52, borderRadius: 100, border: "none",
                       background: "linear-gradient(135deg,#11514f,#0d3a3c)", color: "#fff", fontWeight: 800, fontSize: 14.5, cursor: "pointer",
                       boxShadow: "0 6px 18px rgba(13,58,60,0.35)" }}>Montar bandeja →</button>
@@ -654,7 +618,7 @@ export function RestauranteOrdem({ difficulty, onComplete }: RestauranteOrdemPro
                             {spec.clients > 1 && <div style={{ fontSize: 12.5, fontWeight: 900, color: clientsOk[c] ? "#1d7a6e" : "#c2463a", textAlign: "center", marginBottom: 6 }}>
                               Cliente {c + 1} {clientsOk[c] ? "✓" : "✗"}
                             </div>}
-                            <OrderSeq items={exp} />
+                            <OrderSeqText items={exp} />
                           </div>
                         ))}
                       </div>
