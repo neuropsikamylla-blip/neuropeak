@@ -430,7 +430,7 @@ export function RestauranteOrdem({ difficulty, onComplete, auditory = false }: R
   }
   function selectClient(c: number) { activeRef.current = c; setActive(c); }
   function goAfterOrder() { if (round && round.mods.length) setPhase("mod"); else goInput(); }
-  function goInput() { inputAt.current = Date.now(); setPhase("input"); }
+  function goInput() { if (typeof window !== "undefined") window.speechSynthesis?.cancel(); inputAt.current = Date.now(); setPhase("input"); }
 
   useEffect(() => () => { runRef.current++; if (typeof window !== "undefined") window.speechSynthesis?.cancel(); stopAmbience(); }, []);
   useEffect(() => {

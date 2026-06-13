@@ -487,6 +487,8 @@ export function DesafioSupermercado({ difficulty, theme, onComplete, mode = "lei
   const selected                        = useMemo(() => new Set(cartIds), [cartIds]);
   const [audioPlaying, setAudioPlaying] = useState(false);
   const [showVoice, setShowVoice]       = useState(false);
+  const showVoiceRef = useRef(false);
+  useEffect(() => { showVoiceRef.current = showVoice; }, [showVoice]);
 
   // pré-carrega TODAS as fotos de produto (corrige o travamento ao abrir as prateleiras)
   useEffect(() => {
@@ -537,6 +539,7 @@ export function DesafioSupermercado({ difficulty, theme, onComplete, mode = "lei
     setCountdown(total);
     if (mode === "auditivo") { setAudioPlaying(true); speakMemo(memoLists, labels, () => setAudioPlaying(false)); }
     timerRef.current = setInterval(() => {
+      if (showVoiceRef.current) return;   // pausa a contagem enquanto escolhe a voz
       setCountdown(prev => { if (prev <= 1) { clearTimer(); setPhase("shopping"); return 0; } return prev - 1; });
     }, 1000);
     return () => { clearTimer(); cancelTTS(); };
