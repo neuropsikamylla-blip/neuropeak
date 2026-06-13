@@ -2,8 +2,10 @@
 
 import { useState, useRef, useCallback, useEffect } from "react";
 import { motion } from "framer-motion";
-import { UtensilsCrossed, ChefHat, CheckCircle2, BarChart3, Users, Package, ArrowLeftRight, Ban } from "lucide-react";
+import { Volume2, UtensilsCrossed, ChefHat, CheckCircle2, BarChart3, Users, Package, ArrowLeftRight, Ban } from "lucide-react";
 import { calculateExerciseScore } from "@/lib/scoring";
+import { speakText } from "@/lib/voicePrefs";
+import { VoicePicker } from "@/components/exercises/VoicePicker";
 import { useExerciseProgress } from "@/components/exercises/ExerciseWrapper";
 import type { ExerciseResult, Theme } from "@/types";
 
@@ -11,6 +13,7 @@ interface RestauranteOrdemProps {
   difficulty: number;
   theme: Theme;
   onComplete: (result: ExerciseResult) => void;
+  auditory?: boolean;
 }
 
 interface Item { id: string; n: string; art: string; } // foto: /exercises/restaurante/<id>.png
@@ -167,6 +170,14 @@ function modText(clients: number, m: ModInfo): string {
     ? `${who} trocou ${defArt(m.oldItem)} ${m.oldItem.n} ${pelo(m.newItem!)} ${m.newItem!.n}.`
     : `${who} cancelou ${defArt(m.oldItem)} ${m.oldItem.n}.`;
 }
+// Texto falado do pedido (modo auditivo) — 1 ou 2 clientes.
+function orderSpeechText(round: Round, clients: number): string {
+  return round.initial.map((o, c) =>
+    `${clients === 1 ? "O cliente pediu" : `Cliente ${c + 1} pediu`}: ${joinList(o.map((i) => i.n))}.`).join(" ");
+}
+function modSpeechText(round: Round, clients: number): string {
+  return round.mods.map((m) => modText(clients, m)).join(" ");
+}
 type Phase = "ready" | "order" | "mod" | "input" | "feedback";
 
 // ── Música ambiente sintetizada (Web Audio) — 100% sem direitos autorais ─────────
@@ -305,7 +316,7 @@ function OrderSeqText({ items }: { items: Item[] }) {
   );
 }
 
-export function RestauranteOrdem({ difficulty, onComplete }: RestauranteOrdemProps) {
+export function RestauranteOrdem({ difficulty, onComplete, auditory = false }: RestauranteOrdemProps) {
   const reportProgress = useExerciseProgress();
   const startLevel = levelOf(difficulty);
   const [sessionLevel, setSessionLevel] = useState(startLevel);
@@ -319,6 +330,7 @@ export function RestauranteOrdem({ difficulty, onComplete }: RestauranteOrdemPro
   const [feedback, setFeedback] = useState<"correct" | "incorrect" | null>(null);
   const [clientsOk, setClientsOk] = useState<boolean[]>([]);
   const [musicOn, setMusicOn] = useState(true);
+  const [showVoice, setShowVoice] = useState(false);
 
   const correctRef = useRef(0);
   const startTime = useRef(Date.now());
@@ -351,7 +363,7 @@ export function RestauranteOrdem({ difficulty, onComplete }: RestauranteOrdemPro
     const meanRT = rtsRef.current.length ? Math.round(rtsRef.current.reduce((a, b) => a + b, 0) / rtsRef.current.length) : null;
     const duration = Math.round((Date.now() - startTime.current) / 1000);
     onComplete({
-      exerciseId: "restaurante-ordem",
+      exerciseId: auditory ? "restaurante-ordem-auditivo" : "restaurante-ordem",
       domain: "memory",
       score: calculateExerciseScore("span-numerico", accTotal, meanRT ?? undefined, endLevel),
       accuracy: accTotal,
@@ -371,7 +383,7 @@ export function RestauranteOrdem({ difficulty, onComplete }: RestauranteOrdemPro
         meanReactionTimeMs: meanRT,
       },
     });
-  }, [onComplete, startLevel]);
+  }, [onComplete, startLevel, auditory]);
 
   const validate = useCallback(() => {
     const r = roundRef.current; if (!r) return;
@@ -425,6 +437,19 @@ export function RestauranteOrdem({ difficulty, onComplete }: RestauranteOrdemPro
     if (typeof window === "undefined") return;
     ITEMS.forEach((i) => { const im = new window.Image(); im.src = photo(i.id); });
   }, []);
+  // modo auditivo: fala o pedido (fase order) / a mudança (fase mod) ao entrar
+  useEffect(() => {
+    if (!auditory || !round) return;
+    if (phase === "order") speakText(orderSpeechText(round, round.initial.length), { rate: 0.95 });
+    else if (phase === "mod") speakText(modSpeechText(round, round.initial.length), { rate: 0.95 });
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [phase, round, auditory]);
+
+  function replay() {
+    if (!round) return;
+    if (phase === "order") speakText(orderSpeechText(round, round.initial.length), { rate: 0.95 });
+    else if (phase === "mod") speakText(modSpeechText(round, round.initial.length), { rate: 0.95 });
+  }
 
   function begin() {
     correctRef.current = 0; rtsRef.current = []; startTime.current = Date.now(); setTrial(0);
@@ -442,20 +467,25 @@ export function RestauranteOrdem({ difficulty, onComplete }: RestauranteOrdemPro
     return (
       <div style={{ position: "fixed", inset: 0, display: "flex", flexDirection: "column", overflow: "hidden", background: "#3c2616" }}>
         <RestaurantBg />
+        {showVoice && <VoicePicker onClose={() => setShowVoice(false)} />}
         <div style={{ position: "relative", zIndex: 2, flex: 1, display: "flex", alignItems: "center", justifyContent: "center", padding: 18 }}>
           <div style={{ width: "100%", maxWidth: 440, background: "#f6efe0", borderRadius: 26, padding: "26px 22px",
             textAlign: "center", boxShadow: "0 22px 60px rgba(30,18,8,0.45)" }}>
             <div style={{ margin: "0 auto 14px", width: 70, height: 70, borderRadius: "50%",
               background: "rgba(17,81,79,0.12)", border: "1px solid rgba(17,81,79,0.25)", display: "flex", alignItems: "center", justifyContent: "center" }}>
-              <ChefHat size={36} color="#11514f" />
+              {auditory ? <Volume2 size={36} color="#11514f" /> : <ChefHat size={36} color="#11514f" />}
             </div>
-            <h2 style={{ fontSize: 20, fontWeight: 900, color: "#2a2018", marginBottom: 6 }}>Restaurante</h2>
+            <h2 style={{ fontSize: 20, fontWeight: 900, color: "#2a2018", marginBottom: 6 }}>Restaurante{auditory ? " — Auditivo" : ""}</h2>
             <p style={{ fontSize: 13.5, color: "#6b6052", marginBottom: 6 }}>
-              Leia o pedido e monte cada bandeja na ordem certa. Nos níveis mais altos o cliente pode <b>trocar</b> ou <b>cancelar</b> um item.
+              {auditory ? <>Você vai <b>ouvir</b> o pedido (sem ler) e montar cada bandeja na ordem certa.</> : <>Leia o pedido e monte cada bandeja na ordem certa.</>} Nos níveis mais altos o cliente pode <b>trocar</b> ou <b>cancelar</b> um item.
             </p>
-            <p style={{ fontSize: 12, color: "#9a8f7e", marginBottom: 20 }}>
+            <p style={{ fontSize: 12, color: "#9a8f7e", marginBottom: 18 }}>
               Você começa no nível {startLevel} ({spec.clients === 1 ? "1 cliente" : "2 clientes"} · {spec.items} itens{mc ? ` · ${mc.text.toLowerCase()}` : ""}) — onde parou.
             </p>
+            {auditory && (
+              <button onClick={() => setShowVoice(true)} style={{ width: "100%", height: 44, marginBottom: 10, borderRadius: 14, cursor: "pointer",
+                background: "#fffdf7", border: "1px solid #e2d8c2", color: "#8a7c63", fontWeight: 800, fontSize: 13.5 }}>🎚️ Escolher a voz (feminina/masculina)</button>
+            )}
             <button onClick={begin} style={{ width: "100%", height: 52, borderRadius: 16, border: "none",
               background: "linear-gradient(135deg,#11514f,#0d3a3c)", color: "#fff", fontWeight: 800, fontSize: 15, cursor: "pointer",
               boxShadow: "0 6px 18px rgba(13,58,60,0.4)" }}>Começar →</button>
@@ -468,6 +498,7 @@ export function RestauranteOrdem({ difficulty, onComplete }: RestauranteOrdemPro
   return (
     <div style={{ position: "fixed", inset: 0, display: "flex", flexDirection: "column", overflow: "hidden", background: "#3c2616" }}>
       <RestaurantBg />
+      {showVoice && <VoicePicker onClose={() => setShowVoice(false)} />}
       <div style={{ position: "relative", zIndex: 2, display: "flex", flexDirection: "column", height: "100%" }}>
         <div style={{ flex: 1, overflowY: "auto", display: "flex", alignItems: "center", justifyContent: "center", padding: "18px 16px" }}>
           <motion.div animate={shake ? { x: [0, -9, 9, -7, 7, 0] } : { x: 0 }} transition={{ duration: 0.45 }}
@@ -505,9 +536,26 @@ export function RestauranteOrdem({ difficulty, onComplete }: RestauranteOrdemPro
                 {phase === "order" && (
                   <div style={{ display: "flex", flexDirection: "column", alignItems: "center", gap: 16, paddingBottom: 4 }}>
                     <span style={{ display: "flex", alignItems: "center", gap: 9, fontSize: 13, fontWeight: 800, color: "#1d7a6e", textTransform: "uppercase", letterSpacing: 1 }}>
-                      <span style={{ color: "#caa86a" }}>✦</span>📋 Pedido{spec.clients > 1 ? "s" : ""} do{spec.clients > 1 ? "s clientes" : " cliente"}<span style={{ color: "#caa86a" }}>✦</span>
+                      <span style={{ color: "#caa86a" }}>✦</span>{auditory ? "🎧 Ouça o pedido" : `📋 Pedido${spec.clients > 1 ? "s" : ""} do${spec.clients > 1 ? "s clientes" : " cliente"}`}<span style={{ color: "#caa86a" }}>✦</span>
                     </span>
-                    {round.initial.map((o, c) => (
+                    {auditory ? (
+                      <div style={{ display: "flex", flexDirection: "column", alignItems: "center", gap: 14, width: "100%", padding: "8px 0" }}>
+                        <motion.div animate={{ scale: [1, 1.09, 1] }} transition={{ duration: 1.1, repeat: Infinity }}
+                          style={{ width: 92, height: 92, borderRadius: "50%", background: "rgba(17,81,79,0.1)", border: "1px solid rgba(17,81,79,0.3)",
+                            display: "flex", alignItems: "center", justifyContent: "center" }}>
+                          <Volume2 size={44} color="#11514f" />
+                        </motion.div>
+                        <p style={{ fontSize: 14, color: "#6b6052", textAlign: "center", maxWidth: 320 }}>
+                          Ouça {spec.clients > 1 ? "os pedidos dos clientes" : "o pedido do cliente"} e memorize para montar na ordem certa.
+                        </p>
+                        <div style={{ display: "flex", gap: 8, flexWrap: "wrap", justifyContent: "center" }}>
+                          <button onClick={replay} style={{ fontSize: 12.5, fontWeight: 700, padding: "9px 16px", borderRadius: 100, cursor: "pointer",
+                            background: "rgba(17,81,79,0.1)", border: "1px solid rgba(17,81,79,0.3)", color: "#11514f" }}>🔊 Ouvir de novo</button>
+                          <button onClick={() => setShowVoice(true)} style={{ fontSize: 12.5, fontWeight: 700, padding: "9px 16px", borderRadius: 100, cursor: "pointer",
+                            background: "#fffdf7", border: "1px solid #e2d8c2", color: "#8a7c63" }}>🎚️ Trocar voz</button>
+                        </div>
+                      </div>
+                    ) : round.initial.map((o, c) => (
                       <div key={c} style={{ width: "100%", padding: "14px 16px", borderRadius: 16,
                         background: "rgba(17,81,79,0.06)", border: "1px solid rgba(17,81,79,0.16)" }}>
                         <div style={{ fontSize: 13.5, fontWeight: 900, color: "#11514f", marginBottom: 8, textAlign: "center" }}>
@@ -532,7 +580,18 @@ export function RestauranteOrdem({ difficulty, onComplete }: RestauranteOrdemPro
                     <span style={{ display: "flex", alignItems: "center", gap: 8, fontSize: 13, fontWeight: 800, color: "#c2463a", textTransform: "uppercase", letterSpacing: 1 }}>
                       📣 Mudança no pedido!
                     </span>
-                    {round.mods.map((m, i) => (
+                    {auditory ? (
+                      <div style={{ display: "flex", flexDirection: "column", alignItems: "center", gap: 14, width: "100%", padding: "8px 0" }}>
+                        <motion.div animate={{ scale: [1, 1.09, 1] }} transition={{ duration: 1.1, repeat: Infinity }}
+                          style={{ width: 84, height: 84, borderRadius: "50%", background: "rgba(194,70,58,0.1)", border: "1px solid rgba(194,70,58,0.3)",
+                            display: "flex", alignItems: "center", justifyContent: "center" }}>
+                          <Volume2 size={40} color="#c2463a" />
+                        </motion.div>
+                        <p style={{ fontSize: 14, color: "#6b6052", textAlign: "center", maxWidth: 320 }}>Ouça a mudança no pedido e ajuste o que for montar.</p>
+                        <button onClick={replay} style={{ fontSize: 12.5, fontWeight: 700, padding: "9px 16px", borderRadius: 100, cursor: "pointer",
+                          background: "rgba(17,81,79,0.1)", border: "1px solid rgba(17,81,79,0.3)", color: "#11514f" }}>🔊 Ouvir de novo</button>
+                      </div>
+                    ) : round.mods.map((m, i) => (
                       <div key={i} style={{ width: "100%", display: "flex", alignItems: "center", gap: 12, padding: "16px 16px", borderRadius: 16,
                         background: m.kind === "cancel" ? "rgba(194,70,58,0.08)" : "rgba(217,119,43,0.08)",
                         border: `1px solid ${m.kind === "cancel" ? "rgba(194,70,58,0.3)" : "rgba(217,119,43,0.3)"}` }}>

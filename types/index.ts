@@ -183,6 +183,14 @@ export const EXERCISE_DEFINITIONS = {
     estimatedMinutes: 7,
     icon: "🍽️",
   },
+  "restaurante-ordem-auditivo": {
+    id: "restaurante-ordem-auditivo",
+    name: "Restaurante — Ordem de Instruções (Auditivo)",
+    domain: "memory" as Domain,
+    description: "Treina memória operacional auditiva: OUVIR os pedidos dos clientes e montar as bandejas na ordem correta, com trocas e cancelamentos.",
+    estimatedMinutes: 7,
+    icon: "🍽️",
+  },
   "matriz-espacial-inversa": {
     id: "matriz-espacial-inversa",
     name: "Matriz Espacial Inversa",

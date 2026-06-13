@@ -236,6 +236,12 @@ const EXERCISE_INSTRUCTIONS: Record<string, string[]> = {
     "Atenção à regra: às vezes é na ordem inversa, ou um item deve ser ignorado.",
     "Cuidado com os distratores — só coloque o que o pedido pediu!",
   ],
+  "restaurante-ordem-auditivo": [
+    "Você vai OUVIR o pedido dos clientes — ouça com atenção, sem ler!",
+    "Memorize os itens e a ordem; toque em 🔊 para ouvir de novo.",
+    "Monte a bandeja de cada cliente na ordem certa.",
+    "Nos níveis mais altos, o cliente pode TROCAR ou CANCELAR um item — fique atento à mudança!",
+  ],
   "caca-item-barato": [
     "Você verá etiquetas de produtos com preço, peso, quantidade e validade.",
     "Leia as informações e responda a pergunta sobre o produto ou compare embalagens.",
@@ -499,6 +505,7 @@ export default function ExercicioPage() {
       case "sequencia-itens": return <SequenciaItens {...props} />;
       case "lista-distracao": return <ListaDistracao {...props} />;
       case "restaurante-ordem": return <RestauranteOrdem {...props} />;
+      case "restaurante-ordem-auditivo": return <RestauranteOrdem {...props} auditory />;
       case "task-switching": return <TaskSwitching {...props} />;
       case "atencao-sustentada": return <AtencaoSustentada {...props} />;
       case "mot": return <MOT {...props} />;
