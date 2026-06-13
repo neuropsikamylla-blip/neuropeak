@@ -2,7 +2,7 @@
 
 import { useState, useRef, useCallback, useEffect } from "react";
 import { motion } from "framer-motion";
-import { Volume2, UtensilsCrossed, ChefHat, ClipboardList, CheckCircle2, BarChart3, Package, ArrowRight, MessageSquare } from "lucide-react";
+import { Volume2, UtensilsCrossed, ChefHat, CheckCircle2, BarChart3, Users, Package, ArrowLeftRight, Ban } from "lucide-react";
 import { calculateExerciseScore } from "@/lib/scoring";
 import { useExerciseProgress } from "@/components/exercises/ExerciseWrapper";
 import type { ExerciseResult, Theme } from "@/types";
@@ -13,58 +13,56 @@ interface RestauranteOrdemProps {
   onComplete: (result: ExerciseResult) => void;
 }
 
-interface Item { id: string; n: string; art: string; pl?: string; qOk?: boolean; } // foto: /exercises/restaurante/<id>.png
-// Catálogo "bistrô" — itens já vêm pré-montados no prato/copo/tigela (foto realista).
-// art = artigo indefinido (um/uma/uns); pl = plural p/ quantidades; qOk = aceita quantidade (>1).
+interface Item { id: string; n: string; art: string; } // foto: /exercises/restaurante/<id>.png
 const ITEMS: Item[] = [
   // bebidas
-  { id: "agua", n: "água", art: "uma", pl: "águas", qOk: true },
-  { id: "agua-coco", n: "água de coco", art: "uma", pl: "águas de coco", qOk: true },
-  { id: "refrigerante", n: "refrigerante", art: "um", pl: "refrigerantes", qOk: true },
-  { id: "suco-laranja", n: "suco de laranja", art: "um", pl: "sucos de laranja", qOk: true },
-  { id: "vitamina", n: "vitamina", art: "uma", pl: "vitaminas", qOk: true },
+  { id: "agua", n: "água", art: "uma" },
+  { id: "agua-coco", n: "água de coco", art: "uma" },
+  { id: "refrigerante", n: "refrigerante", art: "um" },
+  { id: "suco-laranja", n: "suco de laranja", art: "um" },
+  { id: "vitamina", n: "vitamina", art: "uma" },
   // pratos principais
   { id: "arroz-feijao", n: "arroz com feijão", art: "um" },
   { id: "frango-batata", n: "frango com batata", art: "um" },
   { id: "bife-legumes", n: "bife com legumes", art: "um" },
   { id: "macarrao-bolonhesa", n: "macarrão à bolonhesa", art: "um" },
-  { id: "lasanha", n: "lasanha", art: "uma", pl: "lasanhas", qOk: true },
-  { id: "risoto-cogumelo", n: "risoto de cogumelo", art: "um", pl: "risotos de cogumelo", qOk: true },
-  { id: "omelete", n: "omelete", art: "uma", pl: "omeletes", qOk: true },
+  { id: "lasanha", n: "lasanha", art: "uma" },
+  { id: "risoto-cogumelo", n: "risoto de cogumelo", art: "um" },
+  { id: "omelete", n: "omelete", art: "uma" },
   { id: "arroz-frutos-mar", n: "arroz com frutos do mar", art: "um" },
-  { id: "batata-frita", n: "batata frita", art: "uma", pl: "batatas fritas", qOk: true },
+  { id: "batata-frita", n: "batata frita", art: "uma" },
   { id: "salmao", n: "salmão", art: "um" },
   // sobremesas
-  { id: "bolo", n: "bolo", art: "um", pl: "bolos", qOk: true },
-  { id: "pudim", n: "pudim", art: "um", pl: "pudins", qOk: true },
-  { id: "sorvete", n: "sorvete", art: "um", pl: "sorvetes", qOk: true },
-  { id: "mousse", n: "mousse", art: "uma", pl: "mousses", qOk: true },
-  { id: "torta", n: "torta", art: "uma", pl: "tortas", qOk: true },
-  { id: "rosquinha", n: "rosquinha", art: "uma", pl: "rosquinhas", qOk: true },
-  { id: "maca", n: "maçã", art: "uma", pl: "maçãs", qOk: true },
-  { id: "salada-frutas", n: "salada de frutas", art: "uma", pl: "saladas de frutas", qOk: true },
-  { id: "brigadeiro", n: "brigadeiro", art: "um", pl: "brigadeiros", qOk: true },
-  { id: "brownie", n: "brownie", art: "um", pl: "brownies", qOk: true },
+  { id: "bolo", n: "bolo", art: "um" },
+  { id: "pudim", n: "pudim", art: "um" },
+  { id: "sorvete", n: "sorvete", art: "um" },
+  { id: "mousse", n: "mousse", art: "uma" },
+  { id: "torta", n: "torta", art: "uma" },
+  { id: "rosquinha", n: "rosquinha", art: "uma" },
+  { id: "maca", n: "maçã", art: "uma" },
+  { id: "salada-frutas", n: "salada de frutas", art: "uma" },
+  { id: "brigadeiro", n: "brigadeiro", art: "um" },
+  { id: "brownie", n: "brownie", art: "um" },
   // lanches
-  { id: "hamburguer", n: "hambúrguer", art: "um", pl: "hambúrgueres", qOk: true },
-  { id: "sanduiche-frio", n: "sanduíche frio", art: "um", pl: "sanduíches frios", qOk: true },
-  { id: "pizza", n: "pizza", art: "uma", pl: "pizzas", qOk: true },
-  { id: "cachorro-quente", n: "cachorro-quente", art: "um", pl: "cachorros-quentes", qOk: true },
+  { id: "hamburguer", n: "hambúrguer", art: "um" },
+  { id: "sanduiche-frio", n: "sanduíche frio", art: "um" },
+  { id: "pizza", n: "pizza", art: "uma" },
+  { id: "cachorro-quente", n: "cachorro-quente", art: "um" },
   { id: "nuggets", n: "nuggets", art: "uns" },
-  { id: "pastel", n: "pastel", art: "um", pl: "pastéis", qOk: true },
-  { id: "tapioca", n: "tapioca", art: "uma", pl: "tapiocas", qOk: true },
-  { id: "croissant", n: "croissant", art: "um", pl: "croissants", qOk: true },
-  { id: "pao-queijo", n: "pão de queijo", art: "um", pl: "pães de queijo", qOk: true },
+  { id: "pastel", n: "pastel", art: "um" },
+  { id: "tapioca", n: "tapioca", art: "uma" },
+  { id: "croissant", n: "croissant", art: "um" },
+  { id: "pao-queijo", n: "pão de queijo", art: "um" },
   // outros pratos
-  { id: "bruschetta", n: "bruschetta", art: "uma", pl: "bruschettas", qOk: true },
-  { id: "caldo", n: "caldo", art: "um", pl: "caldos", qOk: true },
-  { id: "cesta-paes", n: "cesta de pães", art: "uma", pl: "cestas de pães", qOk: true },
+  { id: "bruschetta", n: "bruschetta", art: "uma" },
+  { id: "caldo", n: "caldo", art: "um" },
+  { id: "cesta-paes", n: "cesta de pães", art: "uma" },
   { id: "legumes-grelhados", n: "legumes grelhados", art: "uns" },
-  { id: "ovo-frito", n: "ovo frito", art: "um", pl: "ovos fritos", qOk: true },
+  { id: "ovo-frito", n: "ovo frito", art: "um" },
   { id: "peixe", n: "peixe", art: "um" },
-  { id: "salada", n: "salada", art: "uma", pl: "saladas", qOk: true },
-  { id: "sopa", n: "sopa", art: "uma", pl: "sopas", qOk: true },
-  { id: "tabua-queijos", n: "tábua de queijos", art: "uma", pl: "tábuas de queijos", qOk: true },
+  { id: "salada", n: "salada", art: "uma" },
+  { id: "sopa", n: "sopa", art: "uma" },
+  { id: "tabua-queijos", n: "tábua de queijos", art: "uma" },
 ];
 
 // versão das fotos — subir quando reprocessar imagens (força recarga / fura cache)
@@ -80,53 +78,102 @@ function ItemImg({ id, size }: { id: string; size: number }) {
   );
 }
 
-type Mode = "direta" | "inversa" | "exclusao";
-// maxQty = quantidade máxima por item (1 = sem repetição; 2/3 = "dois sucos" etc.)
-interface RLevel { count: number; maxQty: number; mode: Mode; audio: boolean; distractors: number; }
+// ── Níveis (progressão da Kamylla): 1 cliente c/ + itens → 2 clientes → troca → cancelamento → 2 mudanças ──
+type ModKind = "swap" | "swapMid" | "cancel";
+interface RLevel { clients: 1 | 2; items: number; mods: ModKind[]; }
 const R_LEVELS: Record<number, RLevel> = {
-  1:  { count: 2, maxQty: 1, mode: "direta",   audio: false, distractors: 2 },
-  2:  { count: 2, maxQty: 1, mode: "direta",   audio: false, distractors: 3 },
-  3:  { count: 3, maxQty: 1, mode: "direta",   audio: false, distractors: 3 },
-  4:  { count: 3, maxQty: 1, mode: "direta",   audio: true,  distractors: 4 },
-  5:  { count: 3, maxQty: 2, mode: "direta",   audio: false, distractors: 4 },  // entram quantidades (em texto)
-  6:  { count: 4, maxQty: 2, mode: "direta",   audio: true,  distractors: 5 },  // quantidades no áudio
-  7:  { count: 3, maxQty: 1, mode: "inversa",  audio: false, distractors: 4 },  // ordem inversa
-  8:  { count: 4, maxQty: 1, mode: "inversa",  audio: true,  distractors: 5 },
-  9:  { count: 4, maxQty: 1, mode: "exclusao", audio: true,  distractors: 5 },  // inibição (NÃO X)
-  10: { count: 5, maxQty: 2, mode: "direta",   audio: true,  distractors: 6 },  // memória ampla + quantidades
+  1:  { clients: 1, items: 2, mods: [] },
+  2:  { clients: 1, items: 3, mods: [] },
+  3:  { clients: 1, items: 4, mods: [] },
+  4:  { clients: 1, items: 5, mods: [] },
+  5:  { clients: 2, items: 2, mods: [] },
+  6:  { clients: 2, items: 3, mods: [] },
+  7:  { clients: 2, items: 3, mods: ["swap"] },     // troca simples
+  8:  { clients: 2, items: 3, mods: ["cancel"] },   // cancelamento
+  9:  { clients: 2, items: 4, mods: ["swapMid"] },  // troca em item do meio
+  10: { clients: 2, items: 4, mods: ["swap", "cancel"] }, // duas mudanças
 };
-const MODE_LABEL: Record<Mode, string> = { direta: "direta", inversa: "inversa", exclusao: "exclusão" };
 const levelOf = (d: number): number => Math.min(10, Math.max(1, Math.round(d)));
 const TRIALS = 10;
 
+function modChip(sp: RLevel): { text: string; color: string } | null {
+  if (sp.mods.includes("swap") && sp.mods.includes("cancel")) return { text: "Troca + cancelamento", color: "#c2463a" };
+  if (sp.mods.includes("cancel")) return { text: "Cancelamento", color: "#c2463a" };
+  if (sp.mods.includes("swapMid")) return { text: "Troca (no meio)", color: "#d9772b" };
+  if (sp.mods.includes("swap")) return { text: "Troca", color: "#d9772b" };
+  return null;
+}
+
 function shuffle<T>(a: T[]): T[] { const r = [...a]; for (let i = r.length - 1; i > 0; i--) { const j = Math.floor(Math.random() * (i + 1)); [r[i], r[j]] = [r[j], r[i]]; } return r; }
-// quantidade por extenso (concorda em gênero com o artigo do item)
-function qtyWord(it: Item, q: number): string {
-  if (q <= 1) return it.art;                       // um / uma / uns
-  if (q === 2) return it.art === "uma" ? "duas" : "dois";
-  return "três";
-}
-function lineText(it: Item, q: number): string {
-  return `${qtyWord(it, q)} ${q > 1 && it.pl ? it.pl : it.n}`;
-}
 function joinList(parts: string[]): string {
   return parts.length === 1 ? parts[0] : parts.slice(0, -1).join(", ") + " e " + parts[parts.length - 1];
 }
-// artigo definido (p/ a frase de exclusão soar natural: "não quer o sorvete")
-function defArt(it: Item): string {
-  return it.art === "uma" ? "a" : it.art === "uns" ? "os" : "o";
-}
-// frases de garçom/cozinha — imitam um pedido real de restaurante (variadas; mesa numerada)
-function orderSentence(list: string, table: number): string {
-  switch (Math.floor(Math.random() * 6)) {
-    case 0:  return `O cliente da mesa ${table} pediu ${list}.`;
-    case 1:  return `Mesa ${table}, anote o pedido: ${list}.`;
-    case 2:  return `O garçom levou para a cozinha: ${list}.`;
-    case 3:  return `Pedido da mesa ${table}: ${list}.`;
-    case 4:  return `Para a mesa ${table}, ${list}, por favor.`;
-    default: return `O cliente pediu ${list}.`;
+function defArt(it: Item): string { return it.art === "uma" ? "a" : it.art === "uns" ? "os" : "o"; }
+function pelo(it: Item): string { const d = defArt(it); return d === "a" ? "pela" : d === "os" ? "pelos" : "pelo"; }
+function uniqById(arr: Item[]): Item[] { const s = new Set<string>(); const o: Item[] = []; for (const x of arr) if (!s.has(x.id)) { s.add(x.id); o.push(x); } return o; }
+
+// ── Geração da rodada ────────────────────────────────────────────────────────────
+interface ModInfo { client: number; kind: "swap" | "cancel"; oldItem: Item; newItem?: Item; }
+interface Round { initial: Item[][]; finals: Item[][]; mods: ModInfo[]; keys: Item[]; }
+
+function buildRound(sp: RLevel): Round {
+  const pool = shuffle(ITEMS);
+  let p = 0;
+  const initial: Item[][] = [];
+  for (let c = 0; c < sp.clients; c++) { initial.push(pool.slice(p, p + sp.items)); p += sp.items; }
+  const finals = initial.map((o) => [...o]);
+  const mods: ModInfo[] = [];
+  const extras: Item[] = []; // itens trocados/cancelados — viram distratores naturais
+
+  // se há 2 modificações, em clientes diferentes (troca no 1, cancelamento no 2 — ordem aleatória)
+  const twoMods = sp.mods.length > 1;
+  let swapClient = 0, cancelClient = sp.clients > 1 ? 1 : 0;
+  if (twoMods && Math.random() < 0.5) { swapClient = 1; cancelClient = 0; }
+  else if (!twoMods && sp.clients === 2) { const c = Math.floor(Math.random() * 2); swapClient = c; cancelClient = c; }
+
+  for (const kind of sp.mods) {
+    if (kind === "swap" || kind === "swapMid") {
+      const c = swapClient;
+      const list = finals[c];
+      const pos = kind === "swapMid"
+        ? 1 + Math.floor(Math.random() * Math.max(1, list.length - 2))   // posição interior
+        : Math.floor(Math.random() * list.length);
+      const oldItem = list[pos];
+      const newItem = pool[p++];   // item inédito (distinto de todos)
+      list[pos] = newItem;
+      mods.push({ client: c, kind: "swap", oldItem, newItem });
+      extras.push(oldItem);
+    } else { // cancel
+      const c = cancelClient;
+      const list = finals[c];
+      const pos = Math.floor(Math.random() * list.length);
+      const removed = list.splice(pos, 1)[0];
+      mods.push({ client: c, kind: "cancel", oldItem: removed });
+      extras.push(removed);
+    }
   }
+
+  const inPlay = uniqById([...finals.flat(), ...extras]);
+  const distractN = sp.clients === 2 ? 3 : 2;
+  const distract = shuffle(ITEMS.filter((x) => !inPlay.some((i) => i.id === x.id))).slice(0, distractN);
+  const keys = shuffle([...inPlay, ...distract]);
+  return { initial, finals, mods, keys };
 }
+
+const whoLabel = (clients: number, c: number) => clients === 1 ? "O cliente" : `O Cliente ${c + 1}`;
+function modText(clients: number, m: ModInfo): string {
+  const who = whoLabel(clients, m.client);
+  return m.kind === "swap"
+    ? `${who} trocou ${defArt(m.oldItem)} ${m.oldItem.n} ${pelo(m.newItem!)} ${m.newItem!.n}.`
+    : `${who} cancelou ${defArt(m.oldItem)} ${m.oldItem.n}.`;
+}
+function orderSpeech(round: Round, clients: number): string {
+  const parts = round.initial.map((o, c) =>
+    `${clients === 1 ? "O cliente pediu" : `Cliente ${c + 1} pediu`} ${joinList(o.map((i) => i.n))}`);
+  return parts.join(". ") + ".";
+}
+
+// ── Voz (TTS) ────────────────────────────────────────────────────────────────────
 function pickPtBrVoice(): SpeechSynthesisVoice | null {
   const voices = window.speechSynthesis.getVoices();
   if (!voices.length) return null;
@@ -136,30 +183,24 @@ function pickPtBrVoice(): SpeechSynthesisVoice | null {
   for (const name of prefer) { const v = pool.find(v => v.name.toLowerCase().includes(name)); if (v) return v; }
   return pool[0];
 }
-function speak(text: string): Promise<void> {
-  return new Promise((resolve) => {
-    if (typeof window === "undefined" || !window.speechSynthesis) { setTimeout(resolve, 1200); return; }
-    try {
-      window.speechSynthesis.cancel();
-      const u = new SpeechSynthesisUtterance(text); u.lang = "pt-BR"; u.rate = 0.9; u.pitch = 1.0;
-      const v = pickPtBrVoice(); if (v) u.voice = v;
-      u.onend = () => resolve(); u.onerror = () => resolve();
-      window.speechSynthesis.speak(u);
-      setTimeout(resolve, Math.max(2500, text.length * 90));
-    } catch { setTimeout(resolve, 1200); }
-  });
+function speak(text: string) {
+  if (typeof window === "undefined" || !window.speechSynthesis) return;
+  try {
+    window.speechSynthesis.cancel();
+    const u = new SpeechSynthesisUtterance(text); u.lang = "pt-BR"; u.rate = 0.95; u.pitch = 1.0;
+    const v = pickPtBrVoice(); if (v) u.voice = v;
+    window.speechSynthesis.speak(u);
+  } catch { /* sem voz */ }
 }
 
-type Phase = "ready" | "order" | "input" | "feedback";
+type Phase = "ready" | "order" | "mod" | "input" | "feedback";
 
 // ── Música ambiente sintetizada (Web Audio) — 100% sem direitos autorais ─────────
-// Um pad quente grave + notinhas esparsas de uma escala pentatônica, em volume
-// baixo. Gerada na hora pelo app (nada de arquivo/música protegida).
 let ambCtx: AudioContext | null = null;
 let ambMaster: GainNode | null = null;
 let ambTimer: ReturnType<typeof setTimeout> | null = null;
 let ambStopPad: (() => void) | null = null;
-const AMB_LEVEL = 0.17;   // ~2x mais alto que antes (0.08)
+const AMB_LEVEL = 0.17;
 
 function startAmbience() {
   if (typeof window === "undefined") return;
@@ -167,19 +208,17 @@ function startAmbience() {
     const Ctx = window.AudioContext || (window as unknown as { webkitAudioContext: typeof AudioContext }).webkitAudioContext;
     if (!ambCtx) ambCtx = new Ctx();
     if (ambCtx.state === "suspended") ambCtx.resume();
-    if (ambMaster) return; // já tocando
+    if (ambMaster) return;
     const ctx = ambCtx;
     const master = ctx.createGain(); master.gain.value = 0; master.connect(ctx.destination);
     master.gain.linearRampToValueAtTime(AMB_LEVEL, ctx.currentTime + 1.5);
     ambMaster = master;
     const warm = ctx.createBiquadFilter(); warm.type = "lowpass"; warm.frequency.value = 2000; warm.connect(master);
-
-    // progressão de acordes em clima café/lounge — arpejo dá movimento (mais animado)
     const CHORDS = [
-      { bass: 130.81, notes: [261.63, 329.63, 392.00, 493.88] }, // Cmaj7
-      { bass: 110.00, notes: [261.63, 329.63, 392.00, 440.00] }, // Am7
-      { bass: 146.83, notes: [293.66, 349.23, 440.00, 523.25] }, // Dm7
-      { bass: 196.00, notes: [293.66, 349.23, 392.00, 493.88] }, // G7
+      { bass: 130.81, notes: [261.63, 329.63, 392.00, 493.88] },
+      { bass: 110.00, notes: [261.63, 329.63, 392.00, 440.00] },
+      { bass: 146.83, notes: [293.66, 349.23, 440.00, 523.25] },
+      { bass: 196.00, notes: [293.66, 349.23, 392.00, 493.88] },
     ];
     const note = (freq: number, dur: number, peak: number, type: OscillatorType) => {
       const o = ctx.createOscillator(); o.type = type; o.frequency.value = freq;
@@ -195,16 +234,16 @@ function startAmbience() {
     const tick = () => {
       if (stopped || !ambMaster) return;
       const ch = CHORDS[ci];
-      if (beat === 0) note(ch.bass, 1.8, 0.46, "triangle");                       // baixo no início do acorde
-      note(ch.notes[beat % ch.notes.length], 1.3, 0.30, "sine");                   // arpejo
-      if (Math.random() < 0.3) note(ch.notes[(beat + 2) % ch.notes.length] * 2, 1.0, 0.12, "sine"); // brilho agudo
+      if (beat === 0) note(ch.bass, 1.8, 0.46, "triangle");
+      note(ch.notes[beat % ch.notes.length], 1.3, 0.30, "sine");
+      if (Math.random() < 0.3) note(ch.notes[(beat + 2) % ch.notes.length] * 2, 1.0, 0.12, "sine");
       beat++;
       if (beat >= 4) { beat = 0; ci = (ci + 1) % CHORDS.length; }
-      ambTimer = setTimeout(tick, 400 + (Math.random() * 40 - 20));                // tempo com leve swing
+      ambTimer = setTimeout(tick, 400 + (Math.random() * 40 - 20));
     };
     tick();
     ambStopPad = () => { stopped = true; };
-  } catch { /* sem áudio — segue sem música */ }
+  } catch { /* sem áudio */ }
 }
 function stopAmbience() {
   if (ambTimer) { clearTimeout(ambTimer); ambTimer = null; }
@@ -217,20 +256,18 @@ function setAmbienceMuted(muted: boolean) {
   if (ambMaster && ambCtx) { try { ambMaster.gain.linearRampToValueAtTime(muted ? 0 : AMB_LEVEL, ambCtx.currentTime + 0.3); } catch { /* */ } }
 }
 
-// ── Fundo de restaurante (recriado via CSS) ─────────────────────────────────────
+// ── Fundo de restaurante ─────────────────────────────────────────────────────────
 function RestaurantBg() {
   return (
     <div style={{ position: "absolute", inset: 0, overflow: "hidden", background: "#3c2616" }}>
-      {/* foto real do restaurante, com leve desfoque p/ não competir com o card */}
       <div style={{ position: "absolute", inset: -14, backgroundImage: "url(/exercises/restaurante/fundo.jpg)",
         backgroundSize: "cover", backgroundPosition: "center", filter: "blur(2.5px)", transform: "scale(1.04)" }} />
-      {/* leve escurecimento p/ o card creme destacar */}
       <div style={{ position: "absolute", inset: 0, background: "rgba(28,16,6,0.22)" }} />
     </div>
   );
 }
 
-// ── Chip (cápsula do cabeçalho) ──────────────────────────────────────────────────
+// ── Chip do cabeçalho ──────────────────────────────────────────────────────────────
 function Chip({ icon, text, color }: { icon: React.ReactNode; text: string; color: string }) {
   return (
     <span style={{ display: "inline-flex", alignItems: "center", gap: 5, padding: "4px 11px", borderRadius: 100,
@@ -240,9 +277,8 @@ function Chip({ icon, text, color }: { icon: React.ReactNode; text: string; colo
   );
 }
 
-// ── Bandeja de restaurante realista (nogueira + alças de latão) ──────────────────
-// Sem slots/pontilhado/texto — bandeja limpa; os itens aparecem em ordem nela.
-function Tray({ items }: { items: Item[] }) {
+// ── Bandeja de nogueira (alças de latão) ──────────────────────────────────────────
+function Tray({ items, itemSize = 96, minH = 120 }: { items: Item[]; itemSize?: number; minH?: number }) {
   const Handle = ({ side }: { side: "left" | "right" }) => (
     <div style={{ position: "absolute", top: "50%", [side]: -15, transform: "translateY(-50%)", width: 30, height: 50, zIndex: 0 }}>
       <div style={{ position: "absolute", inset: 0, borderRadius: "45%", border: "5px solid #c8a24e",
@@ -252,20 +288,20 @@ function Tray({ items }: { items: Item[] }) {
   return (
     <div style={{ position: "relative", margin: "0 20px" }}>
       <Handle side="left" /><Handle side="right" />
-      {/* rim/moldura de nogueira */}
       <div style={{ position: "relative", zIndex: 1, borderRadius: 22, padding: 13,
         background: "linear-gradient(160deg,#7a5230 0%,#5c3d22 55%,#492f18 100%)",
         boxShadow: "0 16px 36px rgba(50,30,10,0.4), inset 0 2px 3px rgba(255,228,185,0.3), inset 0 -3px 7px rgba(30,18,6,0.55)" }}>
-        {/* poço interno (madeira com grão sutil) */}
-        <div style={{ minHeight: 124, borderRadius: 15,
+        <div style={{ minHeight: minH, borderRadius: 15,
           backgroundImage: "repeating-linear-gradient(96deg, rgba(255,220,170,0.045) 0 2px, transparent 2px 8px), linear-gradient(160deg,#62431f,#49321a)",
           boxShadow: "inset 0 5px 16px rgba(18,10,3,0.6)",
-          display: "flex", alignItems: "center", justifyContent: "center", gap: 14, flexWrap: "wrap", padding: "14px 16px" }}>
+          display: "flex", alignItems: "center", justifyContent: "center", gap: 12, flexWrap: "wrap", padding: "12px 14px" }}>
           {items.map((it, i) => (
             <motion.div key={i} initial={{ scale: 0.4, y: -20, opacity: 0 }} animate={{ scale: 1, y: 0, opacity: 1 }}
               transition={{ type: "spring", stiffness: 440, damping: 22 }}
-              style={{ flexShrink: 0, filter: "drop-shadow(0 6px 10px rgba(10,6,2,0.55))" }}>
-              <ItemImg id={it.id} size={100} />
+              style={{ position: "relative", flexShrink: 0, filter: "drop-shadow(0 6px 10px rgba(10,6,2,0.55))" }}>
+              <span style={{ position: "absolute", top: -6, left: -6, width: 20, height: 20, borderRadius: "50%", zIndex: 2,
+                background: "#11514f", color: "#fff", fontSize: 11, fontWeight: 900, display: "flex", alignItems: "center", justifyContent: "center" }}>{i + 1}</span>
+              <ItemImg id={it.id} size={itemSize} />
             </motion.div>
           ))}
         </div>
@@ -274,86 +310,60 @@ function Tray({ items }: { items: Item[] }) {
   );
 }
 
+// ── Sequência do pedido (cards numerados) ─────────────────────────────────────────
+function OrderSeq({ items }: { items: Item[] }) {
+  return (
+    <div style={{ display: "flex", flexWrap: "wrap", gap: 8, justifyContent: "center" }}>
+      {items.map((it, i) => (
+        <div key={i} style={{ position: "relative", display: "flex", flexDirection: "column", alignItems: "center", gap: 2,
+          width: 78, padding: "6px 4px", borderRadius: 12, background: "#fffdf7", border: "1.5px solid #ece0c8" }}>
+          <span style={{ position: "absolute", top: -7, left: -7, width: 20, height: 20, borderRadius: "50%",
+            background: "#11514f", color: "#fff", fontSize: 11, fontWeight: 900, display: "flex", alignItems: "center", justifyContent: "center" }}>{i + 1}</span>
+          <ItemImg id={it.id} size={56} />
+          <span style={{ fontSize: 11.5, fontWeight: 700, color: "#4a4234", textAlign: "center", lineHeight: 1.1 }}>{it.n}</span>
+        </div>
+      ))}
+    </div>
+  );
+}
+
 export function RestauranteOrdem({ difficulty, onComplete }: RestauranteOrdemProps) {
   const reportProgress = useExerciseProgress();
   const startLevel = levelOf(difficulty);
-  const [sessionLevel, setSessionLevel] = useState(startLevel); // sobe na sessão (2 acertos = lista maior)
+  const [sessionLevel, setSessionLevel] = useState(startLevel);
   const spec = R_LEVELS[sessionLevel];
 
   const [phase, setPhase] = useState<Phase>("ready");
-  const [expected, setExpected] = useState<Item[]>([]);
-  const [sentence, setSentence] = useState("");
-  const [keys, setKeys] = useState<Item[]>([]);
-  const [tray, setTray] = useState<Item[]>([]);
+  const [round, setRound] = useState<Round | null>(null);
+  const [trays, setTrays] = useState<Item[][]>([]);
+  const [active, setActive] = useState(0);
   const [trial, setTrial] = useState(0);
   const [feedback, setFeedback] = useState<"correct" | "incorrect" | null>(null);
-  const [speaking, setSpeaking] = useState(false);
+  const [clientsOk, setClientsOk] = useState<boolean[]>([]);
   const [musicOn, setMusicOn] = useState(true);
 
   const correctRef = useRef(0);
-  const rtsRef = useRef<number[]>([]);
-  const inputAt = useRef(0);
-  const trayRef = useRef<Item[]>([]);
   const startTime = useRef(Date.now());
+  const inputAt = useRef(0);
+  const rtsRef = useRef<number[]>([]);
   const runRef = useRef(0);
-  const levelRef = useRef(startLevel);   // nível atual da sessão (fonte da verdade p/ a rodada)
+  const levelRef = useRef(startLevel);
   const streakRef = useRef(0);
+  const traysRef = useRef<Item[][]>([]);
+  const activeRef = useRef(0);
+  const roundRef = useRef<Round | null>(null);
 
-  const modeHint = spec.mode === "inversa" ? "Monte começando pelo ÚLTIMO item (ordem inversa)."
-    : spec.mode === "exclusao" ? "NÃO coloque o item que o pedido mandou ignorar."
-    : spec.maxQty > 1 ? "Monte o pedido na ordem certa — repita o item na quantidade pedida."
-    : "Monte o pedido na ordem correta.";
-
-  const startRound = useCallback(async () => {
-    runRef.current++; const myRun = runRef.current;
-    const sp = R_LEVELS[levelRef.current];   // lê o nível atual (pode ter subido)
-    const picks = shuffle(ITEMS).slice(0, sp.count);
-
-    // quantidade por linha do pedido (só itens "contáveis" repetem)
-    const qtys = picks.map((it) => {
-      if (sp.maxQty <= 1 || !it.qOk) return 1;
-      if (Math.random() < 0.5) return 1;
-      return sp.maxQty >= 3 && Math.random() < 0.35 ? 3 : 2;
-    });
-    // garante ao menos UMA quantidade > 1 quando o nível pede
-    if (sp.maxQty > 1 && !qtys.some((q) => q > 1)) {
-      const idx = picks.findIndex((it) => it.qOk);
-      if (idx >= 0) qtys[idx] = 2;
-    }
-    const lines = picks.map((it, i) => ({ it, q: qtys[i] }));
-
-    // exclusão: remove uma linha inteira do esperado (mas ela aparece na frase p/ inibir)
-    let excIdx = -1;
-    if (sp.mode === "exclusao") excIdx = 1 + Math.floor(Math.random() * (picks.length - 1));
-    const included = lines.filter((_, i) => i !== excIdx);
-
-    // lista achatada esperada (com repetições por quantidade)
-    let flat: Item[] = [];
-    for (const l of included) for (let k = 0; k < l.q; k++) flat.push(l.it);
-    if (sp.mode === "inversa") flat = [...flat].reverse();
-
-    // frase do pedido (garçom anotando)
-    const listStr = joinList(lines.map((l) => lineText(l.it, l.q)));
-    const table = 2 + Math.floor(Math.random() * 8);
-    const exc = excIdx >= 0 ? picks[excIdx] : null;
-    const sent = exc
-      ? `A mesa ${table} pediu ${listStr} — mas atenção: NÃO quer ${defArt(exc)} ${exc.n}.`
-      : orderSentence(listStr, table);
-
-    const distract = shuffle(ITEMS.filter((x) => !picks.some((p) => p.id === x.id))).slice(0, sp.distractors);
-
-    setExpected(flat); setSentence(sent);
-    setKeys(shuffle([...picks, ...distract]));
-    setTray([]); trayRef.current = [];
-    setFeedback(null);
+  const startRound = useCallback(() => {
+    runRef.current++;
+    const sp = R_LEVELS[levelRef.current];
+    const r = buildRound(sp);
+    roundRef.current = r;
+    setRound(r);
+    const empties = r.finals.map(() => [] as Item[]);
+    traysRef.current = empties; setTrays(empties);
+    activeRef.current = 0; setActive(0);
+    setFeedback(null); setClientsOk([]);
     setPhase("order");
-
-    if (sp.audio) {
-      setSpeaking(true);
-      await speak(sent);
-      if (runRef.current !== myRun) return;
-      setSpeaking(false);
-    }
   }, []);
 
   const finish = useCallback(() => {
@@ -375,11 +385,9 @@ export function RestauranteOrdem({ difficulty, onComplete }: RestauranteOrdemPro
         accTotal: Number(accTotal.toFixed(3)),
         level: endLevel,
         startedLevel: startLevel,
-        items: sp.count,
-        rule: sp.mode,
-        quantities: sp.maxQty > 1,
-        presentation: sp.audio ? "auditiva" : "visual",
-        distractors: sp.distractors,
+        clients: sp.clients,
+        itemsPerClient: sp.items,
+        modifications: sp.mods.join("+") || "nenhuma",
         sequencesCorrect: correctRef.current,
         sequencesIncorrect: TRIALS - correctRef.current,
         meanReactionTimeMs: meanRT,
@@ -387,41 +395,53 @@ export function RestauranteOrdem({ difficulty, onComplete }: RestauranteOrdemPro
     });
   }, [onComplete, startLevel]);
 
-  const validate = useCallback((picks: Item[]) => {
-    const correct = picks.map((x) => x.n).join("·") === expected.map((x) => x.n).join("·");
+  const validate = useCallback(() => {
+    const r = roundRef.current; if (!r) return;
+    const ok = r.finals.map((exp, c) => traysRef.current[c].map((x) => x.id).join("·") === exp.map((x) => x.id).join("·"));
+    const correct = ok.every(Boolean);
     if (correct) correctRef.current++;
     rtsRef.current.push(Date.now() - inputAt.current);
-    // progressão na sessão: 2 acertos seguidos sobem 1 nível (lista maior); 2 erros descem
     streakRef.current = correct ? Math.max(streakRef.current, 0) + 1 : Math.min(streakRef.current, 0) - 1;
-    if (streakRef.current >= 2)  { levelRef.current = Math.min(levelRef.current + 1, 10); streakRef.current = 0; setSessionLevel(levelRef.current); }
+    if (streakRef.current >= 2) { levelRef.current = Math.min(levelRef.current + 1, 10); streakRef.current = 0; setSessionLevel(levelRef.current); }
     else if (streakRef.current <= -2) { levelRef.current = Math.max(levelRef.current - 1, 1); streakRef.current = 0; setSessionLevel(levelRef.current); }
+    setClientsOk(ok);
     setFeedback(correct ? "correct" : "incorrect");
     setPhase("feedback");
     const nextTrial = trial + 1;
     reportProgress(Math.round((nextTrial / TRIALS) * 100));
-    setTimeout(() => { if (nextTrial >= TRIALS) finish(); else { setTrial(nextTrial); startRound(); } }, correct ? 3600 : 5200);
-  }, [expected, trial, reportProgress, startRound, finish]);
+    setTimeout(() => { if (nextTrial >= TRIALS) finish(); else { setTrial(nextTrial); startRound(); } }, correct ? 3200 : 5000);
+  }, [trial, reportProgress, startRound, finish]);
 
   function place(it: Item) {
     if (phase !== "input") return;
-    if (trayRef.current.length >= expected.length) return; // já tem o nº de itens do pedido (permite repetir item)
-    const next = [...trayRef.current, it];
-    trayRef.current = next; setTray(next);
-    // NÃO envia automático — a pessoa confirma no botão "Pronto" (pode ajustar antes)
+    const r = roundRef.current; if (!r) return;
+    const ac = activeRef.current;
+    if (traysRef.current[ac].length >= r.finals[ac].length) return; // bandeja do cliente ativa cheia
+    const nt = traysRef.current.map((t, i) => (i === ac ? [...t, it] : t));
+    traysRef.current = nt; setTrays(nt);
+    // avança sozinho se a bandeja ativa encheu e houver outra incompleta
+    if (nt[ac].length >= r.finals[ac].length) {
+      const next = nt.findIndex((t, i) => t.length < r.finals[i].length);
+      if (next >= 0) { activeRef.current = next; setActive(next); }
+    }
   }
   function undo() {
     if (phase !== "input") return;
-    const next = trayRef.current.slice(0, -1);
-    trayRef.current = next; setTray(next);
+    const ac = activeRef.current;
+    if (!traysRef.current[ac]?.length) return;
+    const nt = traysRef.current.map((t, i) => (i === ac ? t.slice(0, -1) : t));
+    traysRef.current = nt; setTrays(nt);
   }
+  function selectClient(c: number) { activeRef.current = c; setActive(c); }
+  function goAfterOrder() { if (round && round.mods.length) setPhase("mod"); else goInput(); }
   function goInput() { inputAt.current = Date.now(); setPhase("input"); }
 
   useEffect(() => () => { runRef.current++; if (typeof window !== "undefined") window.speechSynthesis?.cancel(); stopAmbience(); }, []);
-  // pré-carrega as fotos (tira o delay de aparecimento)
   useEffect(() => {
     if (typeof window === "undefined") return;
     ITEMS.forEach((i) => { const im = new window.Image(); im.src = photo(i.id); });
   }, []);
+
   function begin() {
     correctRef.current = 0; rtsRef.current = []; startTime.current = Date.now(); setTrial(0);
     levelRef.current = startLevel; streakRef.current = 0; setSessionLevel(startLevel);
@@ -429,8 +449,9 @@ export function RestauranteOrdem({ difficulty, onComplete }: RestauranteOrdemPro
   }
   function toggleMusic() { setMusicOn((m) => { const next = !m; setAmbienceMuted(!next); return next; }); }
 
-  const orderPct = expected.length ? Math.round((tray.length / expected.length) * 100) : 0;
   const shake = phase === "feedback" && feedback === "incorrect";
+  const totalPlaced = trays.reduce((s, t) => s + t.length, 0);
+  const mc = modChip(spec);
 
   // ── READY ──
   if (phase === "ready") {
@@ -446,10 +467,10 @@ export function RestauranteOrdem({ difficulty, onComplete }: RestauranteOrdemPro
             </div>
             <h2 style={{ fontSize: 20, fontWeight: 900, color: "#2a2018", marginBottom: 6 }}>Restaurante</h2>
             <p style={{ fontSize: 13.5, color: "#6b6052", marginBottom: 6 }}>
-              Leia ou ouça o pedido e monte a bandeja na ordem certa.
+              Leia o pedido e monte cada bandeja na ordem certa. Nos níveis mais altos o cliente pode <b>trocar</b> ou <b>cancelar</b> um item.
             </p>
             <p style={{ fontSize: 12, color: "#9a8f7e", marginBottom: 20 }}>
-              Você começa no nível {startLevel} ({spec.count} itens · {MODE_LABEL[spec.mode]}) — onde parou.
+              Você começa no nível {startLevel} ({spec.clients === 1 ? "1 cliente" : "2 clientes"} · {spec.items} itens{mc ? ` · ${mc.text.toLowerCase()}` : ""}) — onde parou.
             </p>
             <button onClick={begin} style={{ width: "100%", height: 52, borderRadius: 16, border: "none",
               background: "linear-gradient(135deg,#11514f,#0d3a3c)", color: "#fff", fontWeight: 800, fontSize: 15, cursor: "pointer",
@@ -469,7 +490,7 @@ export function RestauranteOrdem({ difficulty, onComplete }: RestauranteOrdemPro
             style={{ position: "relative", width: "100%", maxWidth: 600, background: "#faf3e6", borderRadius: 28, padding: "22px 22px 16px",
             boxShadow: "0 26px 64px rgba(30,18,8,0.4)" }}>
 
-            {/* botão de música (ambiência) */}
+            {/* botão de música */}
             <button onClick={toggleMusic} title={musicOn ? "Música de fundo: ligada" : "Música de fundo: muda"}
               style={{ position: "absolute", top: 14, right: 14, width: 36, height: 36, borderRadius: "50%", zIndex: 5,
                 border: "1px solid #e7dcc4", background: "#fffdf7", cursor: "pointer", fontSize: 15,
@@ -477,7 +498,7 @@ export function RestauranteOrdem({ difficulty, onComplete }: RestauranteOrdemPro
               {musicOn ? "🔊" : "🔇"}
             </button>
 
-            {/* cabeçalho do card */}
+            {/* cabeçalho */}
             <div style={{ display: "flex", alignItems: "center", gap: 12, marginBottom: 14 }}>
               <div style={{ width: 50, height: 50, borderRadius: "50%", flexShrink: 0, background: "rgba(17,81,79,0.12)",
                 border: "1px solid rgba(17,81,79,0.25)", display: "flex", alignItems: "center", justifyContent: "center" }}>
@@ -487,126 +508,167 @@ export function RestauranteOrdem({ difficulty, onComplete }: RestauranteOrdemPro
                 <div style={{ fontSize: 22, fontWeight: 900, color: "#2a2018", marginBottom: 6 }}>Restaurante</div>
                 <div style={{ display: "flex", flexWrap: "wrap", gap: 6 }}>
                   <Chip icon={<BarChart3 size={13} />} text={`Nível ${sessionLevel}`} color="#1d7a6e" />
-                  <Chip icon={<Package size={13} />} text={`${spec.count} itens`} color="#e0892a" />
-                  <Chip icon={<ArrowRight size={13} />} text={`Ordem ${MODE_LABEL[spec.mode]}`} color="#2563eb" />
-                  <Chip icon={spec.audio ? <Volume2 size={13} /> : <MessageSquare size={13} />} text={spec.audio ? "Áudio" : "Texto"} color="#7c5cf0" />
+                  <Chip icon={<Users size={13} />} text={spec.clients === 1 ? "1 cliente" : "2 clientes"} color="#2563eb" />
+                  <Chip icon={<Package size={13} />} text={`${spec.items} itens`} color="#e0892a" />
+                  {mc && <Chip icon={mc.text.includes("ancel") ? <Ban size={13} /> : <ArrowLeftRight size={13} />} text={mc.text} color={mc.color} />}
                 </div>
               </div>
             </div>
-            <div style={{ height: 8, borderRadius: 4, background: "#ece0c8", overflow: "hidden", marginBottom: 18 }}>
-              <div style={{ height: "100%", width: `${orderPct}%`, background: "linear-gradient(90deg,#f0a836,#f5c45e)", borderRadius: 4, transition: "width .4s" }} />
-            </div>
 
-            {/* ── ORDER (apresentar pedido) ── */}
-            {phase === "order" && (
-              <div style={{ display: "flex", flexDirection: "column", alignItems: "center", gap: 16, paddingBottom: 6 }}>
-                <span style={{ display: "flex", alignItems: "center", gap: 9, fontSize: 13, fontWeight: 800, color: "#1d7a6e", textTransform: "uppercase", letterSpacing: 1 }}>
-                  <span style={{ color: "#caa86a" }}>✦</span>📋 Pedido do cliente<span style={{ color: "#caa86a" }}>✦</span>
-                </span>
-                {spec.audio ? (
-                  <div style={{ display: "flex", flexDirection: "column", alignItems: "center", gap: 12 }}>
-                    <motion.div animate={{ scale: speaking ? [1, 1.12, 1] : 1 }} transition={{ duration: 0.7, repeat: speaking ? Infinity : 0 }}
-                      style={{ width: 76, height: 76, borderRadius: "50%", background: "rgba(17,81,79,0.1)", border: "1px solid rgba(17,81,79,0.3)",
-                        display: "flex", alignItems: "center", justifyContent: "center" }}>
-                      <Volume2 size={36} color="#11514f" />
-                    </motion.div>
-                    <button onClick={() => speak(sentence)} style={{ fontSize: 12.5, fontWeight: 700, padding: "8px 16px", borderRadius: 12,
-                      background: "rgba(17,81,79,0.1)", border: "1px solid rgba(17,81,79,0.3)", color: "#11514f", cursor: "pointer" }}>🔊 Ouvir de novo</button>
+            {round && (
+              <>
+                {/* ── ORDER ── */}
+                {phase === "order" && (
+                  <div style={{ display: "flex", flexDirection: "column", alignItems: "center", gap: 16, paddingBottom: 4 }}>
+                    <span style={{ display: "flex", alignItems: "center", gap: 9, fontSize: 13, fontWeight: 800, color: "#1d7a6e", textTransform: "uppercase", letterSpacing: 1 }}>
+                      <span style={{ color: "#caa86a" }}>✦</span>📋 Pedido{spec.clients > 1 ? "s" : ""} do{spec.clients > 1 ? "s clientes" : " cliente"}<span style={{ color: "#caa86a" }}>✦</span>
+                    </span>
+                    {round.initial.map((o, c) => (
+                      <div key={c} style={{ width: "100%", padding: "14px 14px", borderRadius: 16,
+                        background: "rgba(17,81,79,0.06)", border: "1px solid rgba(17,81,79,0.16)" }}>
+                        <div style={{ fontSize: 13.5, fontWeight: 900, color: "#11514f", marginBottom: 10, textAlign: "center" }}>
+                          {spec.clients === 1 ? "O cliente pediu:" : `Cliente ${c + 1} pediu:`}
+                        </div>
+                        <OrderSeq items={o} />
+                      </div>
+                    ))}
+                    <button onClick={() => speak(orderSpeech(round, spec.clients))} style={{ fontSize: 12.5, fontWeight: 700, padding: "8px 16px", borderRadius: 12,
+                      background: "rgba(17,81,79,0.1)", border: "1px solid rgba(17,81,79,0.3)", color: "#11514f", cursor: "pointer" }}>🔊 Ouvir o pedido</button>
+                    <button onClick={goAfterOrder} style={{ width: "100%", height: 52, borderRadius: 100, border: "none",
+                      background: "linear-gradient(135deg,#11514f,#0d3a3c)", color: "#fff", fontWeight: 800, fontSize: 14.5, cursor: "pointer",
+                      boxShadow: "0 6px 18px rgba(13,58,60,0.35)" }}>
+                      {round.mods.length ? "Continuar →" : "Montar bandeja →"}
+                    </button>
                   </div>
-                ) : (
-                  <p style={{ textAlign: "center", fontSize: 19, fontWeight: 800, color: "#2a2018", padding: "16px 18px", borderRadius: 16,
-                    background: "rgba(17,81,79,0.07)", border: "1px solid rgba(17,81,79,0.18)" }}>{sentence}</p>
                 )}
-                <p style={{ fontSize: 12.5, color: "#9a8f7e", textAlign: "center" }}>{modeHint}</p>
-                <button onClick={goInput} style={{ width: "100%", height: 52, borderRadius: 100, border: "none",
-                  background: "linear-gradient(135deg,#11514f,#0d3a3c)", color: "#fff", fontWeight: 800, fontSize: 14.5, cursor: "pointer",
-                  display: "flex", alignItems: "center", justifyContent: "center", gap: 12, boxShadow: "0 6px 18px rgba(13,58,60,0.35)" }}>
-                  <span style={{ width: 30, height: 30, borderRadius: "50%", background: "rgba(255,255,255,0.16)", display: "flex", alignItems: "center", justifyContent: "center" }}>
-                    <svg width="17" height="14" viewBox="0 0 24 20" fill="none"><path d="M2.5 18 H21.5 M4.5 18 a7.5 7.5 0 0 1 15 0 M12 5.5 V3.2" stroke="#fff" strokeWidth="2" strokeLinecap="round"/><circle cx="12" cy="2.6" r="1.4" fill="#fff"/></svg>
-                  </span>
-                  Montar bandeja →
-                </button>
-              </div>
-            )}
 
-            {/* ── INPUT (montar bandeja) ── */}
-            {phase === "input" && (
-              <div style={{ display: "flex", flexDirection: "column", gap: 14 }}>
-                <p style={{ textAlign: "center", fontSize: 15.5, fontWeight: 800, color: "#2a2018" }}>{modeHint}</p>
-                <Tray items={tray} />
-                {tray.length > 0 && (
-                  <button onClick={undo} style={{ alignSelf: "center", fontSize: 12, fontWeight: 700, padding: "5px 14px", borderRadius: 10,
-                    background: "#ece3d1", color: "#6b6052", border: "none", cursor: "pointer" }}>↩ desfazer</button>
+                {/* ── MOD (troca/cancelamento) ── */}
+                {phase === "mod" && (
+                  <div style={{ display: "flex", flexDirection: "column", alignItems: "center", gap: 16, padding: "8px 0 4px" }}>
+                    <span style={{ display: "flex", alignItems: "center", gap: 8, fontSize: 13, fontWeight: 800, color: "#c2463a", textTransform: "uppercase", letterSpacing: 1 }}>
+                      📣 Mudança no pedido!
+                    </span>
+                    {round.mods.map((m, i) => (
+                      <div key={i} style={{ width: "100%", display: "flex", alignItems: "center", gap: 12, padding: "16px 16px", borderRadius: 16,
+                        background: m.kind === "cancel" ? "rgba(194,70,58,0.08)" : "rgba(217,119,43,0.08)",
+                        border: `1px solid ${m.kind === "cancel" ? "rgba(194,70,58,0.3)" : "rgba(217,119,43,0.3)"}` }}>
+                        <div style={{ width: 40, height: 40, flexShrink: 0, borderRadius: "50%", display: "flex", alignItems: "center", justifyContent: "center",
+                          background: m.kind === "cancel" ? "rgba(194,70,58,0.15)" : "rgba(217,119,43,0.15)" }}>
+                          {m.kind === "cancel" ? <Ban size={22} color="#c2463a" /> : <ArrowLeftRight size={22} color="#d9772b" />}
+                        </div>
+                        <p style={{ flex: 1, fontSize: 16, fontWeight: 800, color: "#2a2018" }}>{modText(spec.clients, m)}</p>
+                      </div>
+                    ))}
+                    <button onClick={() => speak(round.mods.map((m) => modText(spec.clients, m)).join(" "))} style={{ fontSize: 12.5, fontWeight: 700, padding: "8px 16px", borderRadius: 12,
+                      background: "rgba(17,81,79,0.1)", border: "1px solid rgba(17,81,79,0.3)", color: "#11514f", cursor: "pointer" }}>🔊 Ouvir</button>
+                    <button onClick={goInput} style={{ width: "100%", height: 52, borderRadius: 100, border: "none",
+                      background: "linear-gradient(135deg,#11514f,#0d3a3c)", color: "#fff", fontWeight: 800, fontSize: 14.5, cursor: "pointer",
+                      boxShadow: "0 6px 18px rgba(13,58,60,0.35)" }}>Montar bandeja →</button>
+                  </div>
                 )}
-                <div style={{ display: "grid", gridTemplateColumns: `repeat(${Math.min(keys.length, 3)}, 1fr)`, gap: 12 }}>
-                  {keys.map((it, i) => {
-                    const placed = tray.filter((x) => x.n === it.n).length; // quantas vezes já está na bandeja
-                    const sel = placed > 0;
-                    const full = tray.length >= expected.length;
-                    return (
-                      <motion.button key={`${it.id}-${i}`} onClick={() => place(it)} disabled={full} whileTap={{ scale: 0.93 }}
-                        style={{ borderRadius: 18, cursor: full ? "default" : "pointer", padding: "12px 8px 10px",
-                          display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", gap: 8,
-                          opacity: full && !sel ? 0.5 : 1,
-                          background: sel ? "#eef6f4" : "#fffdf7", border: sel ? "2px solid #2f9e8f" : "1.5px solid #ece0c8",
-                          boxShadow: sel ? "0 2px 8px rgba(47,158,143,0.18)" : "0 4px 12px rgba(120,90,50,0.12)",
-                          transition: "all .2s" }}>
-                        <span style={{ position: "relative", width: "100%", maxWidth: 150, aspectRatio: "1 / 1" }}>
-                          {/* eslint-disable-next-line @next/next/no-img-element */}
-                          <img src={photo(it.id)} alt="" draggable={false}
-                            style={{ width: "100%", height: "100%", objectFit: "contain", display: "block", userSelect: "none" }} />
-                          {placed > 0 && <span style={{ position: "absolute", top: -2, right: -2, minWidth: 24, height: 24, padding: "0 6px", borderRadius: 12,
-                            background: "#2f9e8f", color: "#fff", fontSize: 13.5, fontWeight: 900, display: "flex", alignItems: "center", justifyContent: "center", boxShadow: "0 2px 6px rgba(47,158,143,0.4)" }}>{placed > 1 ? `×${placed}` : "✓"}</span>}
-                        </span>
-                        <span style={{ fontSize: 14.5, fontWeight: 800, color: sel ? "#1d7a6e" : "#4a4234", textAlign: "center", lineHeight: 1.15 }}>{it.n}</span>
-                      </motion.button>
-                    );
-                  })}
-                </div>
 
-                {/* Pronto — a pessoa confirma quando terminar (e pode ajustar antes) */}
-                <button onClick={() => validate(trayRef.current)} disabled={tray.length === 0}
-                  style={{ width: "100%", height: 52, borderRadius: 100, border: "none", marginTop: 4,
-                    background: tray.length > 0 ? "linear-gradient(135deg,#11514f,#0d3a3c)" : "#e2dcce",
-                    color: tray.length > 0 ? "#fff" : "#a89a82", fontWeight: 800, fontSize: 15,
-                    cursor: tray.length > 0 ? "pointer" : "default",
-                    display: "flex", alignItems: "center", justifyContent: "center", gap: 10,
-                    boxShadow: tray.length > 0 ? "0 6px 18px rgba(13,58,60,0.35)" : "none", transition: "all .2s" }}>
-                  ✓ Pronto {tray.length > 0 ? `(${tray.length}/${expected.length})` : ""}
-                </button>
-              </div>
-            )}
+                {/* ── INPUT ── */}
+                {phase === "input" && (
+                  <div style={{ display: "flex", flexDirection: "column", gap: 14 }}>
+                    <p style={{ textAlign: "center", fontSize: 14.5, fontWeight: 800, color: "#2a2018" }}>
+                      {spec.clients === 1 ? "Monte o pedido na ordem certa." : "Toque em um cliente e monte o pedido dele na ordem certa."}
+                      {round.mods.length ? " Aplique as mudanças!" : ""}
+                    </p>
 
-            {/* ── FEEDBACK ── */}
-            {phase === "feedback" && (
-              <div style={{ display: "flex", flexDirection: "column", alignItems: "center", gap: 12, padding: "18px 0" }}>
-                <motion.div initial={{ scale: 0.6, opacity: 0 }} animate={{ scale: 1, opacity: 1 }} style={{ fontSize: 54 }}>
-                  {feedback === "correct" ? "✅" : "❌"}
-                </motion.div>
-                <p style={{ fontSize: 22, fontWeight: 900, color: feedback === "correct" ? "#1d7a6e" : "#c2463a" }}>
-                  {feedback === "correct" ? "Pedido certo!" : "Pedido errado"}
-                </p>
-                {feedback === "incorrect" && startLevel <= 5 && (
-                  <div style={{ textAlign: "center", marginTop: 2 }}>
-                    <p style={{ fontSize: 12.5, fontWeight: 700, color: "#9a8f7e", marginBottom: 6 }}>Ordem correta:</p>
-                    <div style={{ display: "flex", gap: 8, justifyContent: "center", flexWrap: "wrap" }}>
-                      {expected.map((x, i) => (
-                        <span key={i} style={{ display: "flex", flexDirection: "column", alignItems: "center", gap: 2 }}>
-                          <span style={{ fontSize: 11, fontWeight: 900, color: "#1d7a6e" }}>{i + 1}</span>
-                          <ItemImg id={x.id} size={68} />
-                        </span>
-                      ))}
+                    {trays.map((t, c) => {
+                      const isActive = active === c && spec.clients > 1;
+                      return (
+                        <div key={c} onClick={() => spec.clients > 1 && selectClient(c)}
+                          style={{ borderRadius: 18, padding: spec.clients > 1 ? "8px 6px 6px" : 0, cursor: spec.clients > 1 ? "pointer" : "default",
+                            border: spec.clients > 1 ? `2px solid ${isActive ? "#2f9e8f" : "transparent"}` : "none",
+                            background: spec.clients > 1 ? (isActive ? "rgba(47,158,143,0.07)" : "transparent") : "transparent" }}>
+                          {spec.clients > 1 && (
+                            <div style={{ display: "flex", alignItems: "center", justifyContent: "center", gap: 7, marginBottom: 6,
+                              fontSize: 13, fontWeight: 900, color: isActive ? "#1d7a6e" : "#9a8f7e" }}>
+                              <Users size={14} /> Cliente {c + 1} {isActive && <span style={{ fontSize: 11.5, fontWeight: 800 }}>▸ montando</span>}
+                            </div>
+                          )}
+                          <Tray items={t} itemSize={spec.clients > 1 ? 74 : 96} minH={spec.clients > 1 ? 92 : 120} />
+                        </div>
+                      );
+                    })}
+
+                    {traysRef.current[active]?.length > 0 && (
+                      <button onClick={undo} style={{ alignSelf: "center", fontSize: 12, fontWeight: 700, padding: "5px 14px", borderRadius: 10,
+                        background: "#ece3d1", color: "#6b6052", border: "none", cursor: "pointer" }}>↩ desfazer{spec.clients > 1 ? ` (Cliente ${active + 1})` : ""}</button>
+                    )}
+
+                    <div style={{ display: "grid", gridTemplateColumns: `repeat(${Math.min(round.keys.length, 3)}, 1fr)`, gap: 12 }}>
+                      {round.keys.map((it, i) => {
+                        const placed = traysRef.current[active]?.filter((x) => x.id === it.id).length || 0;
+                        const sel = trays.some((t) => t.some((x) => x.id === it.id));
+                        const full = (roundRef.current && traysRef.current[active]?.length >= roundRef.current.finals[active].length) || false;
+                        return (
+                          <motion.button key={`${it.id}-${i}`} onClick={() => place(it)} disabled={full} whileTap={{ scale: 0.93 }}
+                            style={{ borderRadius: 18, cursor: full ? "default" : "pointer", padding: "12px 8px 10px",
+                              display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", gap: 8,
+                              opacity: full && !placed ? 0.5 : 1,
+                              background: sel ? "#eef6f4" : "#fffdf7", border: sel ? "2px solid #2f9e8f" : "1.5px solid #ece0c8",
+                              boxShadow: sel ? "0 2px 8px rgba(47,158,143,0.18)" : "0 4px 12px rgba(120,90,50,0.12)",
+                              transition: "all .2s" }}>
+                            <span style={{ position: "relative", width: "100%", maxWidth: 150, aspectRatio: "1 / 1" }}>
+                              {/* eslint-disable-next-line @next/next/no-img-element */}
+                              <img src={photo(it.id)} alt="" draggable={false}
+                                style={{ width: "100%", height: "100%", objectFit: "contain", display: "block", userSelect: "none" }} />
+                              {placed > 0 && <span style={{ position: "absolute", top: -2, right: -2, minWidth: 24, height: 24, padding: "0 6px", borderRadius: 12,
+                                background: "#2f9e8f", color: "#fff", fontSize: 13.5, fontWeight: 900, display: "flex", alignItems: "center", justifyContent: "center", boxShadow: "0 2px 6px rgba(47,158,143,0.4)" }}>✓</span>}
+                            </span>
+                            <span style={{ fontSize: 14.5, fontWeight: 800, color: sel ? "#1d7a6e" : "#4a4234", textAlign: "center", lineHeight: 1.15 }}>{it.n}</span>
+                          </motion.button>
+                        );
+                      })}
                     </div>
+
+                    <button onClick={validate} disabled={totalPlaced === 0}
+                      style={{ width: "100%", height: 52, borderRadius: 100, border: "none", marginTop: 4,
+                        background: totalPlaced > 0 ? "linear-gradient(135deg,#11514f,#0d3a3c)" : "#e2dcce",
+                        color: totalPlaced > 0 ? "#fff" : "#a89a82", fontWeight: 800, fontSize: 15,
+                        cursor: totalPlaced > 0 ? "pointer" : "default",
+                        display: "flex", alignItems: "center", justifyContent: "center", gap: 10,
+                        boxShadow: totalPlaced > 0 ? "0 6px 18px rgba(13,58,60,0.35)" : "none", transition: "all .2s" }}>
+                      ✓ Pronto
+                    </button>
                   </div>
                 )}
-              </div>
+
+                {/* ── FEEDBACK ── */}
+                {phase === "feedback" && (
+                  <div style={{ display: "flex", flexDirection: "column", alignItems: "center", gap: 12, padding: "12px 0" }}>
+                    <motion.div initial={{ scale: 0.6, opacity: 0 }} animate={{ scale: 1, opacity: 1 }} style={{ fontSize: 54 }}>
+                      {feedback === "correct" ? "✅" : "❌"}
+                    </motion.div>
+                    <p style={{ fontSize: 22, fontWeight: 900, color: feedback === "correct" ? "#1d7a6e" : "#c2463a" }}>
+                      {feedback === "correct" ? "Pedido certo!" : "Pedido errado"}
+                    </p>
+                    {feedback === "incorrect" && (
+                      <div style={{ width: "100%", display: "flex", flexDirection: "column", gap: 10, marginTop: 2 }}>
+                        <p style={{ fontSize: 12.5, fontWeight: 700, color: "#9a8f7e", textAlign: "center" }}>Ordem correta:</p>
+                        {round.finals.map((exp, c) => (
+                          <div key={c} style={{ padding: "10px 8px", borderRadius: 14, background: clientsOk[c] ? "rgba(29,122,110,0.08)" : "rgba(194,70,58,0.07)",
+                            border: `1px solid ${clientsOk[c] ? "rgba(29,122,110,0.25)" : "rgba(194,70,58,0.22)"}` }}>
+                            {spec.clients > 1 && <div style={{ fontSize: 12.5, fontWeight: 900, color: clientsOk[c] ? "#1d7a6e" : "#c2463a", textAlign: "center", marginBottom: 6 }}>
+                              Cliente {c + 1} {clientsOk[c] ? "✓" : "✗"}
+                            </div>}
+                            <OrderSeq items={exp} />
+                          </div>
+                        ))}
+                      </div>
+                    )}
+                  </div>
+                )}
+              </>
             )}
 
             {/* rodapé */}
             <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginTop: 16, paddingTop: 12,
               borderTop: "1px solid #e6ddca" }}>
               <span style={{ display: "flex", alignItems: "center", gap: 6, fontSize: 12.5, fontWeight: 700, color: "#9a8f7e" }}>
-                <ClipboardList size={15} color="#a89a82" />
+                <UtensilsCrossed size={15} color="#a89a82" />
                 Pedido <span style={{ color: "#e0892a", fontWeight: 900 }}>{Math.min(trial + 1, TRIALS)}/{TRIALS}</span>
               </span>
               <span style={{ display: "flex", alignItems: "center", gap: 6, fontSize: 12.5, fontWeight: 700, color: "#1d7a6e" }}>
