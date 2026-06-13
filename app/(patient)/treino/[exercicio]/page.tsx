@@ -178,15 +178,15 @@ const EXERCISE_INSTRUCTIONS: Record<string, string[]> = {
   ],
   "desafio-supermercado": [
     "Uma lista de compras aparecerá na tela — leia e memorize os itens com nome e desenho!",
-    "Após a lista sumir, você verá uma prateleira com vários produtos.",
-    "Selecione apenas os itens que estavam na sua lista e confirme.",
-    "A dificuldade aumenta conforme você acerta: mais itens na lista!",
+    "Após a lista sumir, encontre e selecione na prateleira só os itens que estavam na lista.",
+    "Conforme você acerta, surgem variações: DUAS listas (mãe e avó — compre só a pedida).",
+    "E também comprar na ORDEM da lista, ou de TRÁS PARA FRENTE. Siga a instrução de cada rodada!",
   ],
   "desafio-supermercado-auditivo": [
     "Você vai OUVIR a lista de compras lida em voz alta — ouça com atenção!",
-    "Memorize os produtos pelo SOM do nome — os desenhos não terão legenda.",
-    "Após a lista, encontre os produtos na prateleira reconhecendo-os pelo desenho.",
-    "Treine sua memória auditiva e reconhecimento visual ao mesmo tempo!",
+    "Memorize os produtos pelo SOM e encontre-os na prateleira pelo desenho.",
+    "Conforme você acerta, surgem variações: DUAS listas (mãe e avó — compre só a pedida).",
+    "E também comprar na ORDEM, ou de TRÁS PARA FRENTE. Siga a instrução de cada rodada!",
   ],
   "desafio-cidade": [
     "Você está em uma cidade com diferentes ambientes: Mercado, Cinema e mais.",

@@ -480,12 +480,35 @@ function TutShelfStep({ mode, onDone }: { mode: "leitura" | "auditivo"; onDone: 
   );
 }
 
+function TutVariationsStep({ onDone }: { onDone: () => void }) {
+  const Row = ({ emoji, title, text }: { emoji: string; title: string; text: string }) => (
+    <div className="flex items-start gap-3 p-2.5 rounded-xl bg-white border border-emerald-100">
+      <span className="text-2xl leading-none">{emoji}</span>
+      <div>
+        <p className="text-sm font-bold text-gray-800">{title}</p>
+        <p className="text-xs text-gray-500 leading-snug">{text}</p>
+      </div>
+    </div>
+  );
+  return (
+    <div className="space-y-2.5">
+      <p className="text-xs text-gray-600">Conforme você acerta, o jogo evolui. Fique atento à instrução de cada rodada:</p>
+      <Row emoji="👩👵" title="Duas listas (mãe e avó)" text="Memorize as DUAS, mas compre só a lista que for pedida." />
+      <Row emoji="➡️" title="Na ordem da lista" text="Em alguns níveis, pegue os itens na MESMA ordem da lista." />
+      <Row emoji="↩️" title="De trás para frente" text="Em outros, compre na ordem INVERSA — do último ao primeiro." />
+      <button onClick={onDone} className="w-full mt-1 h-10 rounded-xl font-bold bg-emerald-500 text-white">Entendi →</button>
+    </div>
+  );
+}
+
 function SupermercadoTutorial({ theme, mode, onDone }: { theme: Theme; mode: "leitura" | "auditivo"; onDone: () => void }) {
   const steps = [
     { instruction: mode === "auditivo" ? "Você vai OUVIR uma lista de compras. Memorize os itens pelo som!" : "Uma lista de compras vai aparecer. Memorize bem os produtos!",
       content: (done: () => void) => <TutMemorizeStep mode={mode} onDone={done} /> },
     { instruction: "Toque nos produtos da prateleira para colocá-los no carrinho. Depois confirme!",
       content: (done: () => void) => <TutShelfStep mode={mode} onDone={done} /> },
+    { instruction: "Por último, as variações que vão aparecer conforme você avança:",
+      content: (done: () => void) => <TutVariationsStep onDone={done} /> },
   ];
   return <TutorialBase theme={theme} title={`Desafio do Supermercado${mode === "auditivo" ? " — Auditivo" : ""}`} steps={steps} onDone={onDone} />;
 }
