@@ -51,3 +51,19 @@ export const HISTORIAS: HistoriaDef[] = [
 
 export const HIST_DIFF_PANELS: Record<HistDiff, number> = { faceis: 4, media: 5, dificil: 6, "muito-dificil": 8 };
 export const histPanelSrc = (id: string, i: number) => `/exercises/historias/${id}/${i}.png`;
+
+// ── Encontre o Intruso (desbloqueio do nível 10) ──
+// 8 cenas: as cenas com order 0..6 formam a história em ordem; `intruder` (=7) é a cena que NÃO pertence.
+export interface HistoriaIntruso { id: string; n: number; a: number; intruder: number; }
+export const HISTORIAS_INTRUSO: HistoriaIntruso[] = [
+  { id: "i1", n: 8, a: 1.8, intruder: 7 },
+  { id: "i2", n: 8, a: 1.39, intruder: 7 },
+  { id: "i3", n: 8, a: 1.66, intruder: 7 },
+  { id: "i4", n: 8, a: 1.7, intruder: 7 },
+  { id: "i5", n: 8, a: 1.39, intruder: 7 },
+  { id: "i6", n: 8, a: 1.39, intruder: 7 },
+  { id: "i7", n: 8, a: 1.44, intruder: 7 },
+  { id: "i8", n: 8, a: 1.4, intruder: 7 },
+  { id: "i9", n: 8, a: 1.38, intruder: 7 },
+  { id: "i10", n: 8, a: 1.44, intruder: 7 },
+];
