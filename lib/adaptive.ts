@@ -126,6 +126,50 @@ export function calculateProgression(
   return { nextLevel, action, consolidatedLevel, reason };
 }
 
+// ── Trilha da "Ordem da História" ────────────────────────────────────────────────
+// Estágios (em currentDifficulty): 1-10 = ordenar (fácil→muito difícil);
+// 11 = Encontre o Intruso; 12 = Descubra o que falta.
+// Regra da Kamylla: libera o próximo desafio com ≥80% de acerto; regride se errar muito.
+export function calculateStoryTrailProgression(
+  currentLevel: number,
+  m: ProgressionInput,
+  prevConsolidated: number,
+): ProgressionResult {
+  const lvl = Math.min(12, Math.max(1, Math.round(currentLevel)));
+  const acc = m.accTotal;
+  const pct = (v: number) => Math.round(v * 100);
+  const consolidatedLevel = acc >= 0.80 ? Math.max(prevConsolidated, lvl) : prevConsolidated;
+
+  let nextLevel = lvl;
+  let action: "increase" | "maintain" | "decrease" = "maintain";
+  let reason: string;
+
+  if (lvl <= 9) {
+    // Ordenar (antes do topo): regra padrão de subir/manter/descer.
+    if (acc < 0.45) { nextLevel = Math.max(1, lvl - 2); action = "decrease"; reason = `Desempenho muito baixo (${pct(acc)}%). Reduz 2 níveis.`; }
+    else if (acc < 0.65) { nextLevel = Math.max(1, lvl - 1); action = "decrease"; reason = `Abaixo de 65% (${pct(acc)}%). Reduz 1 nível.`; }
+    else if (acc >= 0.85) { nextLevel = lvl + 1; action = "increase"; reason = `≥85%. Sobe 1 nível.`; }
+    else reason = `Mantém o nível (${pct(acc)}%).`;
+  } else if (lvl === 10) {
+    // Muito difícil (topo do ordenar) → desbloqueia o Intruso com ≥80%.
+    if (acc < 0.45) { nextLevel = 8; action = "decrease"; reason = `Desempenho muito baixo (${pct(acc)}%). Volta para difícil.`; }
+    else if (acc < 0.65) { nextLevel = 9; action = "decrease"; reason = `Abaixo de 65% (${pct(acc)}%). Reduz 1 nível.`; }
+    else if (acc >= 0.80) { nextLevel = 11; action = "increase"; reason = `≥80% no muito difícil! Desbloqueia o Encontre o Intruso.`; }
+    else reason = `Quase lá (${pct(acc)}%). Precisa de 80% para desbloquear o desafio.`;
+  } else if (lvl === 11) {
+    // Encontre o Intruso → desbloqueia o Descubra com ≥80%; volta a ordenar se errar muito.
+    if (acc < 0.45) { nextLevel = 10; action = "decrease"; reason = `Muitos erros no Intruso (${pct(acc)}%). Volta para a ordem da história.`; }
+    else if (acc >= 0.80) { nextLevel = 12; action = "increase"; reason = `≥80% no Intruso! Desbloqueia o Descubra o que falta.`; }
+    else reason = `Continua no Intruso (${pct(acc)}%). Precisa de 80% para avançar.`;
+  } else {
+    // lvl === 12: Descubra o que falta (topo). Regride para o Intruso se errar muito.
+    if (acc < 0.45) { nextLevel = 11; action = "decrease"; reason = `Muitos erros no Descubra (${pct(acc)}%). Volta para o Intruso.`; }
+    else reason = `No último desafio da trilha (${pct(acc)}%).`;
+  }
+
+  return { nextLevel, action, consolidatedLevel, reason };
+}
+
 export function calculateDualTaskProgression(
   currentLevel: number,
   m: DualTaskMetrics,

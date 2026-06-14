@@ -411,8 +411,10 @@ export default function ExercicioPage() {
             // Already done today — block
             setBlockedToday(true);
           } else if (lastAttempt) {
-            // New day: warm-up at 2 below last reached difficulty
-            setDifficulty(Math.max(1, config.currentDifficulty - 2));
+            // New day: warm-up at 2 below last reached difficulty.
+            // Exceção: na trilha da Ordem da História, os estágios de desafio (11=Intruso, 12=Descubra) não aquecem.
+            const isTrailChallenge = exerciseId === "ordem-historia" && config.currentDifficulty >= 11;
+            setDifficulty(isTrailChallenge ? config.currentDifficulty : Math.max(1, config.currentDifficulty - 2));
           } else {
             setDifficulty(config.currentDifficulty);
           }

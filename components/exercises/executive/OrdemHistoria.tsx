@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useRef, useCallback, useEffect, useMemo } from "react";
+import { useState, useRef, useCallback, useEffect } from "react";
 import {
   DndContext, closestCenter, MouseSensor, TouchSensor, KeyboardSensor,
   useSensor, useSensors, type DragEndEvent,
@@ -26,7 +26,6 @@ interface OrdemHistoriaProps {
 const VIOLET = "#7c5cf0";
 const TRIALS = 5;
 const INTRUDER_ORDER = 7;                 // intruso: a cena com order===7 é a que NÃO pertence
-const levelOf = (d: number): number => Math.min(10, Math.max(1, Math.round(d)));
 
 type RoundMode = "ordem" | "intruso" | "falta";
 
@@ -152,24 +151,19 @@ function SortableScene({
 
 export function OrdemHistoria({ difficulty, onComplete, settings }: OrdemHistoriaProps) {
   const reportProgress = useExerciseProgress();
-  const startLevel = levelOf(difficulty);
-  const tier = tierForLevel(startLevel);
-
-  // Desafios ativos: liberados pelo terapeuta (settings) OU automaticamente ao dominar o nível 10.
+  // Trilha (estágio salvo em currentDifficulty): 1-10 = ordenar; 11 = Encontre o Intruso; 12 = Descubra o que falta.
+  const stage = Math.min(12, Math.max(1, Math.round(difficulty)));
+  // Atalho do terapeuta: ligar um desafio sobe o estágio efetivo da sessão.
   const sIntruso = settings?.unlockIntruso === true;
   const sFalta = settings?.unlockFalta === true;
-  const challenges = useMemo<RoundMode[]>(() => {
-    const c: RoundMode[] = [];
-    if (startLevel >= 10 || sIntruso) c.push("intruso");
-    if (startLevel >= 10 || sFalta) c.push("falta");
-    return c;
-  }, [startLevel, sIntruso, sFalta]);
-  const unlocked = challenges.length > 0;
-
-  const modeForRound = useCallback((idx: number): RoundMode => {
-    if (challenges.length === 0) return "ordem";
-    return challenges[idx % challenges.length];       // alterna entre os desafios ativos
-  }, [challenges]);
+  let effStage = stage;
+  if (sFalta) effStage = Math.max(effStage, 12);
+  else if (sIntruso) effStage = Math.max(effStage, 11);
+  const sessionMode: RoundMode = effStage >= 12 ? "falta" : effStage === 11 ? "intruso" : "ordem";
+  const unlocked = sessionMode !== "ordem";
+  const startLevel = Math.min(10, effStage);   // nível de ordenação (1-10) p/ tier e rótulos
+  const reportLevel = effStage;                // estágio salvo na progressão (1-12)
+  const tier = tierForLevel(startLevel);
 
   const [phase, setPhase] = useState<Phase>("ready");
   const [roundMode, setRoundMode] = useState<RoundMode>("ordem");
@@ -207,27 +201,26 @@ export function OrdemHistoria({ difficulty, onComplete, settings }: OrdemHistori
     useSensor(KeyboardSensor, { coordinateGetter: sortableKeyboardCoordinates }),
   );
 
-  const startRound = useCallback((idx: number) => {
-    const mode = modeForRound(idx);
-    setRoundMode(mode); setMarked(null); setPicked(null); setResult(null);
-    if (mode === "falta") {
+  const startRound = useCallback(() => {
+    setRoundMode(sessionMode); setMarked(null); setPicked(null); setResult(null);
+    if (sessionMode === "falta") {
       const r = buildFalta(new Set(recentRef.current));
       recentRef.current = [r.storyId, ...recentRef.current].slice(0, 6);
       setStoryId(r.storyId); setStoryA(r.a); setCards(r.cards); setOptions(r.options);
     } else {
-      const r = buildOrdem(mode === "intruso", tier, new Set(recentRef.current));
+      const r = buildOrdem(sessionMode === "intruso", tier, new Set(recentRef.current));
       recentRef.current = [r.storyId, ...recentRef.current].slice(0, 6);
       setStoryId(r.storyId); setStoryA(r.a); setCards(r.cards); setOptions([]);
     }
     startRoundAt.current = Date.now();
     setPhase("playing");
-  }, [tier, modeForRound]);
+  }, [tier, sessionMode]);
 
   function begin() {
     gradedRef.current = []; posCorrectRef.current = 0; posWrongRef.current = 0;
     swapsRef.current = 0; intruderHitsRef.current = 0; faltaHitsRef.current = 0;
     rtsRef.current = []; startTime.current = Date.now(); setTrial(0);
-    startRound(0);
+    startRound();
   }
 
   function onDragEnd(e: DragEndEvent) {
@@ -253,17 +246,17 @@ export function OrdemHistoria({ difficulty, onComplete, settings }: OrdemHistori
     onComplete({
       exerciseId: "ordem-historia",
       domain: "executive",
-      score: calculateExerciseScore("ordem-historia", accTotal, meanRT ?? undefined, difficulty),
+      score: calculateExerciseScore("ordem-historia", accTotal, meanRT ?? undefined, Math.min(10, difficulty)),
       accuracy: accTotal,
       reactionTime: meanRT ?? undefined,
-      difficulty: startLevel,
+      difficulty: reportLevel,
       duration,
       metadata: {
         progressionV2: true,
         accTotal: Number(accTotal.toFixed(3)),
-        level: startLevel,
-        startedLevel: startLevel,
-        mode: unlocked ? "desafios" : "ordem",
+        level: reportLevel,
+        startedLevel: reportLevel,
+        mode: sessionMode,
         tier,
         positionsCorrect: posCorrectRef.current,
         positionsWrong: posWrongRef.current,
@@ -275,7 +268,7 @@ export function OrdemHistoria({ difficulty, onComplete, settings }: OrdemHistori
         meanReactionTimeMs: meanRT,
       },
     });
-  }, [onComplete, difficulty, startLevel, tier, unlocked]);
+  }, [onComplete, difficulty, reportLevel, tier, sessionMode]);
 
   function submit() {
     if (phase !== "playing") return;
@@ -311,7 +304,7 @@ export function OrdemHistoria({ difficulty, onComplete, settings }: OrdemHistori
     setPhase("feedback");
     const nextTrial = trial + 1;
     reportProgress(Math.round((nextTrial / TRIALS) * 100));
-    setTimeout(() => { if (nextTrial >= TRIALS) finish(); else { setTrial(nextTrial); startRound(nextTrial); } }, exact ? 1900 : 3200);
+    setTimeout(() => { if (nextTrial >= TRIALS) finish(); else { setTrial(nextTrial); startRound(); } }, exact ? 1900 : 3200);
   }
 
   const pct = Math.round((trial / TRIALS) * 100);
@@ -339,16 +332,16 @@ export function OrdemHistoria({ difficulty, onComplete, settings }: OrdemHistori
         <div style={{ width: "100%", maxWidth: 440, background: "#fff", borderRadius: 26, padding: "26px 22px", textAlign: "center",
           boxShadow: "0 22px 60px rgba(80,60,140,0.18)" }}>
           <div style={{ margin: "0 auto 14px", width: 70, height: 70, borderRadius: "50%", background: unlocked ? "rgba(239,68,68,0.12)" : "rgba(124,92,240,0.12)",
-            border: `1px solid ${unlocked ? "rgba(239,68,68,0.3)" : "rgba(124,92,240,0.28)"}`, display: "flex", alignItems: "center", justifyContent: "center", fontSize: 34 }}>{unlocked ? "🏆" : "📖"}</div>
-          {unlocked && <div style={{ fontSize: 12, fontWeight: 900, color: "#ef4444", letterSpacing: 0.5, marginBottom: 4 }}>🔓 DESAFIOS DESBLOQUEADOS</div>}
-          <h2 style={{ fontSize: 20, fontWeight: 900, color: "#2a2440", marginBottom: 8 }}>{unlocked ? "Modo Desafio" : "Ordem da História"}</h2>
+            border: `1px solid ${unlocked ? "rgba(239,68,68,0.3)" : "rgba(124,92,240,0.28)"}`, display: "flex", alignItems: "center", justifyContent: "center", fontSize: 34 }}>{sessionMode === "intruso" ? "🔍" : sessionMode === "falta" ? "🧩" : "📖"}</div>
+          {unlocked && <div style={{ fontSize: 12, fontWeight: 900, color: "#ef4444", letterSpacing: 0.5, marginBottom: 4 }}>🔓 DESAFIO DESBLOQUEADO</div>}
+          <h2 style={{ fontSize: 20, fontWeight: 900, color: "#2a2440", marginBottom: 8 }}>{sessionMode === "intruso" ? "Encontre o Intruso" : sessionMode === "falta" ? "Descubra o que falta" : "Ordem da História"}</h2>
           <div style={{ textAlign: "left", fontSize: 13, color: "#5b5470", margin: "0 auto 10px", maxWidth: 320, lineHeight: 1.7 }}>
             {unlocked ? (
-              <>
-                {challenges.includes("intruso") && <div><b>🔍 Encontre o Intruso:</b> toque na cena que não pertence e ordene as outras.</div>}
-                {challenges.includes("falta") && <div style={{ marginTop: 6 }}><b>🧩 Descubra o que falta:</b> veja a história e escolha (A, B ou C) a cena que a completa.</div>}
-                {challenges.length > 1 && <div style={{ marginTop: 6 }}>Os desafios se alternam.</div>}
-              </>
+              sessionMode === "intruso" ? (
+                <div><b>🔍 Encontre o Intruso:</b> uma das cenas não faz parte da história. Toque na intrusa (✗) e ordene as outras.</div>
+              ) : (
+                <div><b>🧩 Descubra o que falta:</b> veja a história e escolha (A, B ou C) a cena que a completa.</div>
+              )
             ) : (
               <>
                 <div>1. Veja as cenas da história — estão fora de ordem.</div>

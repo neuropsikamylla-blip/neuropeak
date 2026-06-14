@@ -124,7 +124,7 @@ export function ExerciseCard({
                       <Pill on={!cfg?.unlockFalta} onClick={() => onSetting?.(id, "unlockFalta", false)}>Não</Pill>
                     </div>
                   </div>
-                  <p className="text-[11px] text-slate-400">Quando ligado, o paciente já faz o desafio. No nível 10 eles liberam sozinhos.</p>
+                  <p className="text-[11px] text-slate-400">Atalho: liga o desafio agora. Sem isso, a trilha libera sozinha por desempenho (acertar ≥80%): ordenar → Intruso → Descubra.</p>
                 </div>
               )}
             </div>

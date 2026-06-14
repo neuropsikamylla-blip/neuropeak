@@ -4,7 +4,7 @@ import { getServerSession } from "next-auth";
 import { authOptions } from "@/lib/auth";
 import prisma from "@/lib/db";
 import { z } from "zod";
-import { calculateNewDifficulty, calculateDualTaskProgression, calculateProgression, checkAchievements } from "@/lib/adaptive";
+import { calculateNewDifficulty, calculateDualTaskProgression, calculateProgression, calculateStoryTrailProgression, checkAchievements } from "@/lib/adaptive";
 import type { SessionData } from "@/types";
 import { withApiHandler } from "@/lib/api-handler";
 
@@ -78,6 +78,27 @@ export const POST = withApiHandler(async (req: NextRequest) => {
     meta.consolidatedLevel = dualProg.consolidatedLevel;
     meta.progressionAction = dualProg.action;
     meta.progressionReason = dualProg.reason;
+  } else if (data.exerciseId === "ordem-historia" && meta.progressionV2 === true && typeof meta.accTotal === "number") {
+    // Trilha da Ordem da História: 1-10 ordenar, 11 Encontre o Intruso, 12 Descubra (libera com ≥80%).
+    const lastTrail = await prisma.session.findFirst({
+      where: { patientId: data.patientId, exerciseId: data.exerciseId },
+      orderBy: { completedAt: "desc" },
+      select: { metadata: true },
+    });
+    let prevConsolidated = 1;
+    try {
+      const pm = lastTrail?.metadata ? JSON.parse(lastTrail.metadata) : null;
+      if (pm && typeof pm.consolidatedLevel === "number") prevConsolidated = pm.consolidatedLevel;
+    } catch { /* metadata antigo */ }
+    genericProg = calculateStoryTrailProgression(
+      data.difficulty,
+      { accTotal: meta.accTotal as number },
+      prevConsolidated,
+    );
+    meta.endedLevel = genericProg.nextLevel;
+    meta.consolidatedLevel = genericProg.consolidatedLevel;
+    meta.progressionAction = genericProg.action;
+    meta.progressionReason = genericProg.reason;
   } else if (meta.progressionV2 === true && typeof meta.accTotal === "number") {
     // Exercícios novos: engine de progressão clínica genérica + nível consolidado.
     const lastSess = await prisma.session.findFirst({
