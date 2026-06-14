@@ -7,10 +7,9 @@ export const ITEM_IMAGE_IDS = new Set<string>([
   "gato", "cachorro", "peixe", "passaro", "coelho", "sapo", "leao", "elefante", "borboleta", "girafa", "tartaruga",
   // objetos
   "livro", "carro", "sino", "bola", "chave", "copo", "caneta", "oculos", "telefone", "relogio", "mochila", "guarda-chuva",
-  "sapato", "mesa", "aviao", "barco", "casa",
+  "sapato", "mesa", "aviao", "barco", "casa", "cadeira", "lapis",
   // natureza & comida
   "flor", "maca", "arvore", "sol", "lua", "estrela", "coracao",
-  // faltam (emoji por enquanto): cadeira, lapis
 ]);
 
 // versão das imagens — subir quando reprocessar (fura cache)
