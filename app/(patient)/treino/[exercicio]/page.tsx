@@ -153,10 +153,10 @@ const EXERCISE_INSTRUCTIONS: Record<string, string[]> = {
     "Responda SIM ou NÃO antes que a próxima letra apareça.",
   ],
   "ordem-historia": [
-    "Leia a situação do dia a dia que aparece no topo.",
-    "Arraste os cartões para colocar as etapas na ordem correta.",
-    "Pense no que precisa acontecer primeiro — do primeiro passo ao último.",
-    "Nos níveis avançados, há etapas que NÃO fazem parte: descarte-as.",
+    "Você verá as cenas de uma história — mas fora de ordem!",
+    "Arraste os cartões de cima para baixo, na ordem em que a história acontece.",
+    "Pense no que vem primeiro, depois, até o final.",
+    "Quanto mais você avança, mais cenas tem a história.",
     "Toque em 'Confirmar Ordem' quando terminar.",
   ],
   "certo-ou-errado": [
