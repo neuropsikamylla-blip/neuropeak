@@ -31,7 +31,7 @@ function shuffle<T>(a: T[]): T[] { const r = [...a]; for (let i = r.length - 1; 
 
 interface Card { id: string; order: number; } // order = índice correto (0-based); imagem = histPanelSrc(story.id, order+1)
 
-function buildRound(tier: HistDiff, recent: Set<string>): { storyId: string; n: number; cards: Card[] } {
+function buildRound(tier: HistDiff, recent: Set<string>): { storyId: string; n: number; a: number; cards: Card[] } {
   const pool = HISTORIAS.filter((h) => h.diff === tier);
   const avail = pool.filter((h) => !recent.has(h.id));
   const list = avail.length ? avail : pool;
@@ -40,7 +40,7 @@ function buildRound(tier: HistDiff, recent: Set<string>): { storyId: string; n: 
   let cards = shuffle(correct);
   let guard = 0;
   while (cards[0].order === 0 && guard++ < 12) cards = shuffle(cards);   // anti-previsibilidade
-  return { storyId: story.id, n: story.n, cards };
+  return { storyId: story.id, n: story.n, a: story.a, cards };
 }
 
 type Phase = "ready" | "playing" | "feedback";
@@ -53,6 +53,7 @@ export function OrdemHistoria({ difficulty, onComplete }: OrdemHistoriaProps) {
 
   const [phase, setPhase] = useState<Phase>("ready");
   const [storyId, setStoryId] = useState("");
+  const [storyA, setStoryA] = useState(1.5);
   const [cards, setCards] = useState<Card[]>([]);
   const [trial, setTrial] = useState(0);
   const [result, setResult] = useState<{ exact: boolean } | null>(null);
@@ -69,7 +70,7 @@ export function OrdemHistoria({ difficulty, onComplete }: OrdemHistoriaProps) {
   const startRound = useCallback(() => {
     const r = buildRound(tier, new Set(recentRef.current));
     recentRef.current = [r.storyId, ...recentRef.current].slice(0, 5);
-    setStoryId(r.storyId); setCards(r.cards); setResult(null);
+    setStoryId(r.storyId); setStoryA(r.a); setCards(r.cards); setResult(null);
     startRoundAt.current = Date.now();
     setPhase("playing");
   }, [tier]);
@@ -128,7 +129,9 @@ export function OrdemHistoria({ difficulty, onComplete }: OrdemHistoriaProps) {
   }
 
   const pct = Math.round((trial / TRIALS) * 100);
-  const imgH = nPanels <= 4 ? 118 : nPanels <= 5 ? 104 : nPanels <= 6 ? 92 : 80;
+  // mostra a CENA INTEIRA (sem cortar): altura controlada p/ caber vários; largura = formato da cena
+  const capH = nPanels <= 4 ? 168 : nPanels <= 5 ? 146 : nPanels <= 6 ? 130 : 108;
+  const cardW = Math.round(capH * storyA);
 
   // ── READY ──
   if (phase === "ready" || !storyId) {
@@ -194,11 +197,11 @@ export function OrdemHistoria({ difficulty, onComplete }: OrdemHistoriaProps) {
                 <Reorder.Item key={card.id} value={card} drag={phase === "playing" ? "y" : false}
                   whileDrag={{ scale: 1.03, boxShadow: "0 14px 30px rgba(80,60,140,0.3)", zIndex: 5 }}
                   style={{ listStyle: "none" }}>
-                  <div style={{ position: "relative", borderRadius: 16, overflow: "hidden", background: "#fff",
+                  <div style={{ position: "relative", width: cardW, maxWidth: "100%", margin: "0 auto", borderRadius: 16, overflow: "hidden", background: "#fff",
                     border: `3px solid ${border}`, boxShadow: "0 4px 12px rgba(80,60,140,0.12)", cursor: phase === "playing" ? "grab" : "default" }}>
                     {/* eslint-disable-next-line @next/next/no-img-element */}
                     <img src={histPanelSrc(storyId, card.order + 1)} alt="" draggable={false}
-                      style={{ width: "100%", height: imgH, objectFit: "cover", display: "block", userSelect: "none", pointerEvents: "none" }} />
+                      style={{ width: "100%", height: capH, objectFit: "contain", display: "block", userSelect: "none", pointerEvents: "none" }} />
                     {/* número aparece só quando a ordem está CERTA */}
                     {fb && result?.exact && (
                       <span style={{ position: "absolute", top: 8, left: 8, width: 30, height: 30, borderRadius: "50%", background: "#34d399",
