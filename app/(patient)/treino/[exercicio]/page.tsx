@@ -154,7 +154,7 @@ const EXERCISE_INSTRUCTIONS: Record<string, string[]> = {
   ],
   "ordem-historia": [
     "Você verá as cenas de uma história — mas fora de ordem!",
-    "Arraste os cartões de cima para baixo, na ordem em que a história acontece.",
+    "Arraste os cartões para a ordem em que a história acontece. O número no canto mostra a posição de cada cena.",
     "Pense no que vem primeiro, depois, até o final.",
     "Quanto mais você avança, mais cenas tem a história.",
     "Toque em 'Confirmar Ordem' quando terminar.",

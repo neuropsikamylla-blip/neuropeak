@@ -1,7 +1,15 @@
 "use client";
 
 import { useState, useRef, useCallback } from "react";
-import { Reorder } from "framer-motion";
+import {
+  DndContext, closestCenter, MouseSensor, TouchSensor, KeyboardSensor,
+  useSensor, useSensors, type DragEndEvent,
+} from "@dnd-kit/core";
+import {
+  SortableContext, sortableKeyboardCoordinates, rectSortingStrategy,
+  useSortable, arrayMove,
+} from "@dnd-kit/sortable";
+import { CSS } from "@dnd-kit/utilities";
 import { calculateExerciseScore } from "@/lib/scoring";
 import { useExerciseProgress } from "@/components/exercises/ExerciseWrapper";
 import { HISTORIAS, histPanelSrc, type HistDiff } from "@/data/historias";
@@ -45,6 +53,67 @@ function buildRound(tier: HistDiff, recent: Set<string>): { storyId: string; n: 
 
 type Phase = "ready" | "playing" | "feedback";
 
+// ── Card arrastável (grade) ──
+function SortableScene({
+  card, index, storyId, storyA, aspect, phase, exact,
+}: {
+  card: Card; index: number; storyId: string; storyA: number; aspect: number;
+  phase: Phase; exact: boolean;
+}) {
+  const { attributes, listeners, setNodeRef, transform, transition, isDragging } =
+    useSortable({ id: card.id, disabled: phase !== "playing" });
+
+  const fb = phase === "feedback";
+  const correctPos = card.order === index;
+  const border = fb ? (correctPos ? "#34d399" : "#f59e0b") : "rgba(124,92,240,0.35)";
+  // cor do número da posição
+  const numBg = fb ? (correctPos ? "#34d399" : "#f59e0b") : VIOLET;
+
+  const style: React.CSSProperties = {
+    transform: CSS.Transform.toString(transform),
+    transition: transition ?? undefined,
+    touchAction: "manipulation",         // deslizar rola a tela; segurar+mover arrasta o card
+    zIndex: isDragging ? 10 : 1,
+    opacity: isDragging ? 0.92 : 1,
+  };
+
+  return (
+    <div ref={setNodeRef} style={style} {...attributes} {...(phase === "playing" ? listeners : {})}>
+      <div style={{
+        position: "relative", borderRadius: 14, overflow: "hidden", background: "#fff",
+        border: `3px solid ${border}`,
+        boxShadow: isDragging ? "0 14px 30px rgba(80,60,140,0.35)" : "0 3px 10px rgba(80,60,140,0.14)",
+        cursor: phase === "playing" ? "grab" : "default",
+        transform: isDragging ? "scale(1.04)" : "none", transition: "box-shadow .15s, transform .12s",
+      }}>
+        {/* cena (inteira, sem cortar) */}
+        <div style={{ width: "100%", aspectRatio: String(aspect), background: "#f4f1fb" }}>
+          {/* eslint-disable-next-line @next/next/no-img-element */}
+          <img src={histPanelSrc(storyId, card.order + 1)} alt="" draggable={false}
+            style={{ width: "100%", height: "100%", objectFit: "cover", display: "block", userSelect: "none", pointerEvents: "none" }} />
+        </div>
+
+        {/* número da POSIÇÃO atual (sempre visível) */}
+        <span style={{
+          position: "absolute", top: 6, left: 6, minWidth: 26, height: 26, padding: "0 6px", borderRadius: 13,
+          background: numBg, color: "#fff", fontWeight: 900, fontSize: 14,
+          display: "flex", alignItems: "center", justifyContent: "center",
+          boxShadow: "0 2px 6px rgba(0,0,0,0.28)",
+        }}>{fb ? (correctPos ? "✓" : index + 1) : index + 1}</span>
+
+        {/* alça discreta de arrastar */}
+        {phase === "playing" && (
+          <span aria-hidden style={{
+            position: "absolute", top: 6, right: 6, width: 24, height: 24, borderRadius: 7,
+            background: "rgba(44,36,64,0.45)", color: "#fff", fontSize: 13, fontWeight: 900,
+            display: "flex", alignItems: "center", justifyContent: "center", lineHeight: 1,
+          }}>⠿</span>
+        )}
+      </div>
+    </div>
+  );
+}
+
 export function OrdemHistoria({ difficulty, onComplete }: OrdemHistoriaProps) {
   const reportProgress = useExerciseProgress();
   const startLevel = levelOf(difficulty);
@@ -67,6 +136,12 @@ export function OrdemHistoria({ difficulty, onComplete }: OrdemHistoriaProps) {
   const startRoundAt = useRef(0);
   const startTime = useRef(Date.now());
 
+  const sensors = useSensors(
+    useSensor(MouseSensor, { activationConstraint: { distance: 5 } }),
+    useSensor(TouchSensor, { activationConstraint: { delay: 160, tolerance: 8 } }),
+    useSensor(KeyboardSensor, { coordinateGetter: sortableKeyboardCoordinates }),
+  );
+
   const startRound = useCallback(() => {
     const r = buildRound(tier, new Set(recentRef.current));
     recentRef.current = [r.storyId, ...recentRef.current].slice(0, 5);
@@ -80,7 +155,19 @@ export function OrdemHistoria({ difficulty, onComplete }: OrdemHistoriaProps) {
     swapsRef.current = 0; rtsRef.current = []; startTime.current = Date.now(); setTrial(0);
     startRound();
   }
-  function onReorder(next: Card[]) { if (phase === "playing") { swapsRef.current++; setCards(next); } }
+
+  function onDragEnd(e: DragEndEvent) {
+    if (phase !== "playing") return;
+    const { active, over } = e;
+    if (!over || active.id === over.id) return;
+    setCards((prev) => {
+      const from = prev.findIndex((c) => c.id === active.id);
+      const to = prev.findIndex((c) => c.id === over.id);
+      if (from < 0 || to < 0) return prev;
+      swapsRef.current++;
+      return arrayMove(prev, from, to);
+    });
+  }
 
   const finish = useCallback(() => {
     const accTotal = gradedRef.current.length ? gradedRef.current.reduce((a, b) => a + b, 0) / gradedRef.current.length : 0;
@@ -129,9 +216,9 @@ export function OrdemHistoria({ difficulty, onComplete }: OrdemHistoriaProps) {
   }
 
   const pct = Math.round((trial / TRIALS) * 100);
-  // mostra a CENA INTEIRA (sem cortar): altura controlada p/ caber vários; largura = formato da cena
-  const capH = nPanels <= 4 ? 168 : nPanels <= 5 ? 146 : nPanels <= 6 ? 130 : 108;
-  const cardW = Math.round(capH * storyA);
+  // grade: até 4 cenas = 2 colunas; 5+ = responsivo (4 col no desktop, 2 no celular)
+  const gridCols = nPanels <= 4 ? "repeat(2, minmax(0,1fr))" : "repeat(auto-fill, minmax(150px, 1fr))";
+  const gridMax = nPanels <= 4 ? 420 : 700;
 
   // ── READY ──
   if (phase === "ready" || !storyId) {
@@ -145,8 +232,8 @@ export function OrdemHistoria({ difficulty, onComplete }: OrdemHistoriaProps) {
           <h2 style={{ fontSize: 20, fontWeight: 900, color: "#2a2440", marginBottom: 8 }}>Ordem da História</h2>
           <div style={{ textAlign: "left", fontSize: 13, color: "#5b5470", margin: "0 auto 10px", maxWidth: 320, lineHeight: 1.7 }}>
             <div>1. Veja as cenas da história — estão fora de ordem.</div>
-            <div>2. Arraste os cartões de cima para baixo na ordem certa.</div>
-            <div>3. Pense no que acontece primeiro até o final.</div>
+            <div>2. Arraste os cartões para montar a sequência certa.</div>
+            <div>3. O número no canto mostra a posição de cada cena.</div>
             <div>4. Toque em <b>Confirmar Ordem</b>.</div>
           </div>
           <p style={{ fontSize: 11.5, color: "#9a93b0", marginBottom: 18 }}>
@@ -180,51 +267,23 @@ export function OrdemHistoria({ difficulty, onComplete }: OrdemHistoriaProps) {
       <div style={{ flexShrink: 0, textAlign: "center", padding: "2px 18px 8px" }}>
         <p style={{ fontSize: 13, fontWeight: 700, color: "#5b5470" }}>
           {phase === "feedback"
-            ? (result?.exact ? "✅ Ordem correta!" : "Quase! Veja as cenas marcadas")
+            ? (result?.exact ? "✅ Ordem correta!" : "Quase! Veja os números marcados")
             : "Arraste as cenas para a ordem certa — do começo ao fim."}
         </p>
       </div>
 
-      {/* Lista arrastável de cenas */}
-      <div style={{ flex: 1, overflowY: "auto", padding: "0 16px 8px" }}>
-        <div style={{ maxWidth: 460, margin: "0 auto" }}>
-          <Reorder.Group axis="y" values={cards} onReorder={onReorder} style={{ listStyle: "none", margin: 0, padding: 0, display: "flex", flexDirection: "column", gap: 10 }}>
-            {cards.map((card, i) => {
-              const correctPos = card.order === i;
-              const fb = phase === "feedback";
-              const border = fb ? (correctPos ? "#34d399" : "#f59e0b") : "rgba(124,92,240,0.25)";
-              return (
-                <Reorder.Item key={card.id} value={card} drag={phase === "playing" ? "y" : false}
-                  whileDrag={{ scale: 1.03, boxShadow: "0 14px 30px rgba(80,60,140,0.3)", zIndex: 5 }}
-                  style={{ listStyle: "none" }}>
-                  <div style={{ position: "relative", width: cardW, maxWidth: "100%", margin: "0 auto", borderRadius: 16, overflow: "hidden", background: "#fff",
-                    border: `3px solid ${border}`, boxShadow: "0 4px 12px rgba(80,60,140,0.12)", cursor: phase === "playing" ? "grab" : "default" }}>
-                    {/* eslint-disable-next-line @next/next/no-img-element */}
-                    <img src={histPanelSrc(storyId, card.order + 1)} alt="" draggable={false}
-                      style={{ width: "100%", height: capH, objectFit: "contain", display: "block", userSelect: "none", pointerEvents: "none" }} />
-                    {/* número aparece só quando a ordem está CERTA */}
-                    {fb && result?.exact && (
-                      <span style={{ position: "absolute", top: 8, left: 8, width: 30, height: 30, borderRadius: "50%", background: "#34d399",
-                        color: "#fff", fontWeight: 900, fontSize: 15, display: "flex", alignItems: "center", justifyContent: "center",
-                        boxShadow: "0 2px 8px rgba(0,0,0,0.3)" }}>{i + 1}</span>
-                    )}
-                    {/* feedback de posição (quando errou) */}
-                    {fb && !result?.exact && (
-                      <span style={{ position: "absolute", top: 8, right: 8, width: 28, height: 28, borderRadius: "50%",
-                        background: correctPos ? "#34d399" : "#f59e0b", color: "#fff", fontSize: 15, display: "flex", alignItems: "center", justifyContent: "center",
-                        boxShadow: "0 2px 8px rgba(0,0,0,0.3)" }}>{correctPos ? "✓" : "↕"}</span>
-                    )}
-                    {/* alça de arrastar */}
-                    {phase === "playing" && (
-                      <span style={{ position: "absolute", top: 8, right: 8, padding: "3px 9px", borderRadius: 100, background: "rgba(44,36,64,0.55)",
-                        color: "#fff", fontSize: 11, fontWeight: 800, display: "flex", alignItems: "center", gap: 4 }}>⠿ arrastar</span>
-                    )}
-                  </div>
-                </Reorder.Item>
-              );
-            })}
-          </Reorder.Group>
-        </div>
+      {/* Grade arrastável de cenas */}
+      <div style={{ flex: 1, overflowY: "auto", padding: "2px 16px 8px" }}>
+        <DndContext sensors={sensors} collisionDetection={closestCenter} onDragEnd={onDragEnd}>
+          <SortableContext items={cards.map((c) => c.id)} strategy={rectSortingStrategy}>
+            <div style={{ display: "grid", gridTemplateColumns: gridCols, gap: 10, maxWidth: gridMax, margin: "0 auto" }}>
+              {cards.map((card, i) => (
+                <SortableScene key={card.id} card={card} index={i} storyId={storyId} storyA={storyA}
+                  aspect={storyA} phase={phase} exact={!!result?.exact} />
+              ))}
+            </div>
+          </SortableContext>
+        </DndContext>
       </div>
 
       {/* Confirmar */}
