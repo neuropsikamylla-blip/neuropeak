@@ -12,7 +12,7 @@ import {
 import { CSS } from "@dnd-kit/utilities";
 import { calculateExerciseScore } from "@/lib/scoring";
 import { useExerciseProgress } from "@/components/exercises/ExerciseWrapper";
-import { HISTORIAS, HISTORIAS_INTRUSO, histPanelSrc, type HistDiff } from "@/data/historias";
+import { HISTORIAS, HISTORIAS_INTRUSO, HISTORIAS_DESCUBRA, histPanelSrc, descubraScene, descubraOption, type HistDiff } from "@/data/historias";
 import type { ExerciseResult, Theme } from "@/types";
 
 interface OrdemHistoriaProps {
@@ -48,7 +48,7 @@ function pickFrom<T extends { id: string }>(pool: T[], recent: Set<string>): T {
 }
 
 interface Card { id: string; order: number; } // order = índice correto (0-based); imagem = histPanelSrc(story.id, order+1)
-interface Option { id: string; storyId: string; scene: number; a: number; correct: boolean; }
+interface Option { id: string; src: string; a: number; correct: boolean; }
 
 function buildOrdem(intruso: boolean, tier: HistDiff, recent: Set<string>): { storyId: string; a: number; cards: Card[] } {
   const story = intruso
@@ -61,18 +61,15 @@ function buildOrdem(intruso: boolean, tier: HistDiff, recent: Set<string>): { st
   return { storyId: story.id, a: story.a, cards };
 }
 
-// "Descubra o que falta": mostra as 7 primeiras cenas (em ordem) de uma história de 8;
-// a resposta é a 8ª cena; 2 distratores vêm de outras histórias de 8 cenas.
+// "Descubra o que falta": base DEDICADA — 7 cenas (em ordem) + 3 opções da própria prancha.
+// A opção certa (story.correct) é embaralhada entre A/B/C a cada partida.
 function buildFalta(recent: Set<string>): { storyId: string; a: number; cards: Card[]; options: Option[] } {
-  const pool = HISTORIAS.filter((h) => h.diff === "muito-dificil");
-  const story = pickFrom(pool, recent);
-  const cards: Card[] = Array.from({ length: 7 }, (_, i) => ({ id: `c${i}`, order: i }));   // cenas 1..7 em ordem
-  const correct: Option = { id: "opt-correct", storyId: story.id, scene: 8, a: story.a, correct: true };
-  const others = shuffle(pool.filter((s) => s.id !== story.id)).slice(0, 2);
-  const distractors: Option[] = others.map((s, i) => ({
-    id: `opt-d${i}`, storyId: s.id, scene: 1 + Math.floor(Math.random() * 8), a: s.a, correct: false,
+  const story = pickFrom(HISTORIAS_DESCUBRA, recent);
+  const cards: Card[] = Array.from({ length: 7 }, (_, i) => ({ id: `c${i}`, order: i }));   // cena1..7 em ordem
+  const opts: Option[] = [1, 2, 3].map((n) => ({
+    id: `op${n}`, src: descubraOption(story.id, n), a: story.oa, correct: (n - 1) === story.correct,
   }));
-  return { storyId: story.id, a: story.a, cards, options: shuffle([correct, ...distractors]) };
+  return { storyId: story.id, a: story.a, cards, options: shuffle(opts) };
 }
 
 type Phase = "ready" | "playing" | "feedback";
@@ -414,8 +411,8 @@ export function OrdemHistoria({ difficulty, onComplete, settings }: OrdemHistori
                 <div key={c.id} style={{ position: "relative", borderRadius: 12, overflow: "hidden", background: "#fff", border: "2px solid #e2dcf3" }}>
                   <div style={{ width: "100%", aspectRatio: String(storyA), background: "#f4f1fb" }}>
                     {/* eslint-disable-next-line @next/next/no-img-element */}
-                    <img src={histPanelSrc(storyId, i + 1)} alt="" draggable={false}
-                      style={{ width: "100%", height: "100%", objectFit: "cover", display: "block" }} />
+                    <img src={descubraScene(storyId, i + 1)} alt="" draggable={false}
+                      style={{ width: "100%", height: "100%", objectFit: "contain", display: "block" }} />
                   </div>
                   <span style={{ position: "absolute", top: 4, left: 4, width: 20, height: 20, borderRadius: 10, background: VIOLET,
                     color: "#fff", fontWeight: 900, fontSize: 11, display: "flex", alignItems: "center", justifyContent: "center" }}>{i + 1}</span>
@@ -445,8 +442,8 @@ export function OrdemHistoria({ difficulty, onComplete, settings }: OrdemHistori
                     <div style={{ fontSize: 18, fontWeight: 900, color: "#fff", padding: "6px 0", background: fb && o.correct ? "#15803d" : fb && isPicked ? "#b91c1c" : "#2a2440" }}>{letter}</div>
                     <div style={{ width: "100%", aspectRatio: String(o.a), background: "#f4f1fb" }}>
                       {/* eslint-disable-next-line @next/next/no-img-element */}
-                      <img src={histPanelSrc(o.storyId, o.scene)} alt={`Opção ${letter}`} draggable={false}
-                        style={{ width: "100%", height: "100%", objectFit: "cover", display: "block" }} />
+                      <img src={o.src} alt={`Opção ${letter}`} draggable={false}
+                        style={{ width: "100%", height: "100%", objectFit: "contain", display: "block" }} />
                     </div>
                   </button>
                 );

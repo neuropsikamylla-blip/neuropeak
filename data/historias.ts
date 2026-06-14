@@ -55,6 +55,25 @@ export const histPanelSrc = (id: string, i: number) => `/exercises/historias/${i
 // ── Encontre o Intruso (desbloqueio do nível 10) ──
 // 8 cenas: as cenas com order 0..6 formam a história em ordem; `intruder` (=7) é a cena que NÃO pertence.
 export interface HistoriaIntruso { id: string; n: number; a: number; intruder: number; }
+// "Descubra o que falta" — base DEDICADA (10 histórias próprias, NÃO reusa as de ordenar).
+// Cada história: 7 cenas em ordem (cena1..7) + 3 opções (op1..3). `correct` = índice (0-based) da opção certa.
+// No jogo as 3 opções são embaralhadas, então `correct` pode ser sempre 0 sem o paciente decorar.
+export interface HistoriaDescubra { id: string; a: number; oa: number; correct: number; }
+export const HISTORIAS_DESCUBRA: HistoriaDescubra[] = [
+  { id: "q1", a: 1.99, oa: 1.24, correct: 0 },
+  { id: "q2", a: 1.06, oa: 1.16, correct: 0 },
+  { id: "q3", a: 1.92, oa: 1.79, correct: 0 },
+  { id: "q4", a: 1.87, oa: 1.42, correct: 0 },
+  { id: "q5", a: 1.98, oa: 1.39, correct: 0 },
+  { id: "q6", a: 1.02, oa: 1.12, correct: 0 },
+  { id: "q7", a: 1.98, oa: 1.45, correct: 0 },
+  { id: "q8", a: 2.02, oa: 1.46, correct: 0 },
+  { id: "q9", a: 1.89, oa: 1.35, correct: 0 },
+  { id: "q10", a: 1.92, oa: 1.47, correct: 0 },
+];
+export const descubraScene = (id: string, i: number) => `/exercises/descubra/${id}/cena${i}.png`;
+export const descubraOption = (id: string, i: number) => `/exercises/descubra/${id}/op${i}.png`;
+
 export const HISTORIAS_INTRUSO: HistoriaIntruso[] = [
   { id: "i1", n: 8, a: 1.8, intruder: 7 },
   { id: "i2", n: 8, a: 1.39, intruder: 7 },
