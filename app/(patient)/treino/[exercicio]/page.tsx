@@ -487,7 +487,7 @@ export default function ExercicioPage() {
       case "span-numerico-inverso": return <SpanNumericoInverso {...props} settings={exerciseSettings} />;
       case "matriz-espacial-inversa": return <MatrizEspacialInversa {...props} />;
       case "nback": return <NBack {...props} />;
-      case "ordem-historia": return <OrdemHistoria {...props} />;
+      case "ordem-historia": return <OrdemHistoria {...props} settings={exerciseSettings as { unlockIntruso?: boolean; unlockFalta?: boolean } | undefined} />;
       case "certo-ou-errado": return <CertoOuErrado {...props} patientAge={patientAge} />;
       case "antes-depois": return <AntesDepois {...props} />;
       case "semaforo": return <Semaforo {...props} />;

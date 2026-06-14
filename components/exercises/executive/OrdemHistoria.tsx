@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useRef, useCallback, useEffect } from "react";
+import { useState, useRef, useCallback, useEffect, useMemo } from "react";
 import {
   DndContext, closestCenter, MouseSensor, TouchSensor, KeyboardSensor,
   useSensor, useSensors, type DragEndEvent,
@@ -19,6 +19,8 @@ interface OrdemHistoriaProps {
   difficulty: number;
   theme: Theme;
   onComplete: (result: ExerciseResult) => void;
+  // Liberação dos desafios pelo terapeuta (config do plano). Sem isso, só desbloqueia sozinho no nível 10.
+  settings?: { unlockIntruso?: boolean; unlockFalta?: boolean };
 }
 
 const VIOLET = "#7c5cf0";
@@ -151,16 +153,26 @@ function SortableScene({
   );
 }
 
-export function OrdemHistoria({ difficulty, onComplete }: OrdemHistoriaProps) {
+export function OrdemHistoria({ difficulty, onComplete, settings }: OrdemHistoriaProps) {
   const reportProgress = useExerciseProgress();
   const startLevel = levelOf(difficulty);
-  const unlocked = startLevel >= 10;                 // domina o muito difícil → desafios desbloqueados
   const tier = tierForLevel(startLevel);
 
+  // Desafios ativos: liberados pelo terapeuta (settings) OU automaticamente ao dominar o nível 10.
+  const sIntruso = settings?.unlockIntruso === true;
+  const sFalta = settings?.unlockFalta === true;
+  const challenges = useMemo<RoundMode[]>(() => {
+    const c: RoundMode[] = [];
+    if (startLevel >= 10 || sIntruso) c.push("intruso");
+    if (startLevel >= 10 || sFalta) c.push("falta");
+    return c;
+  }, [startLevel, sIntruso, sFalta]);
+  const unlocked = challenges.length > 0;
+
   const modeForRound = useCallback((idx: number): RoundMode => {
-    if (!unlocked) return "ordem";
-    return idx % 2 === 0 ? "intruso" : "falta";       // 0,2,4 = intruso · 1,3 = falta
-  }, [unlocked]);
+    if (challenges.length === 0) return "ordem";
+    return challenges[idx % challenges.length];       // alterna entre os desafios ativos
+  }, [challenges]);
 
   const [phase, setPhase] = useState<Phase>("ready");
   const [roundMode, setRoundMode] = useState<RoundMode>("ordem");
@@ -336,9 +348,9 @@ export function OrdemHistoria({ difficulty, onComplete }: OrdemHistoriaProps) {
           <div style={{ textAlign: "left", fontSize: 13, color: "#5b5470", margin: "0 auto 10px", maxWidth: 320, lineHeight: 1.7 }}>
             {unlocked ? (
               <>
-                <div><b>🔍 Encontre o Intruso:</b> toque na cena que não pertence e ordene as outras.</div>
-                <div style={{ marginTop: 6 }}><b>🧩 Descubra o que falta:</b> veja a história e escolha (A, B ou C) a cena que a completa.</div>
-                <div style={{ marginTop: 6 }}>Os dois desafios se alternam.</div>
+                {challenges.includes("intruso") && <div><b>🔍 Encontre o Intruso:</b> toque na cena que não pertence e ordene as outras.</div>}
+                {challenges.includes("falta") && <div style={{ marginTop: 6 }}><b>🧩 Descubra o que falta:</b> veja a história e escolha (A, B ou C) a cena que a completa.</div>}
+                {challenges.length > 1 && <div style={{ marginTop: 6 }}>Os desafios se alternam.</div>}
               </>
             ) : (
               <>

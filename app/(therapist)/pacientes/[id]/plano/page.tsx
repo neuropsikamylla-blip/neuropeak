@@ -94,6 +94,14 @@ export default function PlanoPage() {
     }));
   }
 
+  // Setter genérico de config por exercício (ex.: liberar desafios do Ordem da História).
+  function setExSetting(exId: string, key: string, value: unknown) {
+    setExerciseSettings((prev) => ({
+      ...prev,
+      [exId]: { ...(prev[exId] ?? {}), [key]: value },
+    }));
+  }
+
   function setLevel(exId: string, value: number) {
     setExerciseLevels((prev) => ({ ...prev, [exId]: value }));
   }
@@ -233,6 +241,7 @@ export default function PlanoPage() {
             exerciseSettings={exerciseSettings}
             onLevel={setLevel}
             onSpanCfg={setSpanCfg}
+            onSetting={setExSetting}
             onRemove={toggleExercise}
             onMove={moveExercise}
             sessionDuration={sessionDuration}

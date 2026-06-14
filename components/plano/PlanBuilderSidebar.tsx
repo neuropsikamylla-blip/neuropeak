@@ -15,6 +15,7 @@ interface PlanBuilderSidebarProps {
   exerciseSettings: Record<string, Record<string, unknown>>;
   onLevel: (id: string, value: number) => void;
   onSpanCfg: <K extends keyof SpanSettings>(id: string, key: K, value: SpanSettings[K]) => void;
+  onSetting: (id: string, key: string, value: unknown) => void;
   onRemove: (id: string) => void;
   onMove: (id: string, dir: -1 | 1) => void;
   sessionDuration: number;
@@ -29,7 +30,7 @@ interface PlanBuilderSidebarProps {
 /** Coluna direita — "Plano em construção", exercícios agrupados por domínio. */
 export function PlanBuilderSidebar(props: PlanBuilderSidebarProps) {
   const {
-    selectedExercises, exerciseLevels, exerciseSettings, onLevel, onSpanCfg, onRemove, onMove,
+    selectedExercises, exerciseLevels, exerciseSettings, onLevel, onSpanCfg, onSetting, onRemove, onMove,
     sessionDuration, frequency, onSessionDuration, onFrequency, onSave, onVisualize, saving,
   } = props;
 
@@ -94,6 +95,8 @@ export function PlanBuilderSidebar(props: PlanBuilderSidebarProps) {
                   onLevel={onLevel}
                   spanCfg={exerciseSettings[ex.id] as unknown as Partial<SpanSettings> | undefined}
                   onSpanCfg={onSpanCfg}
+                  cfg={exerciseSettings[ex.id]}
+                  onSetting={onSetting}
                   onRemove={onRemove}
                   onMove={onMove}
                   isFirst={i === 0}

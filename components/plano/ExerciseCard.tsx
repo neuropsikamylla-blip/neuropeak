@@ -18,6 +18,8 @@ interface ExerciseCardProps {
   onLevel: (id: string, value: number) => void;
   spanCfg?: Partial<SpanSettings>;
   onSpanCfg?: <K extends keyof SpanSettings>(id: string, key: K, value: SpanSettings[K]) => void;
+  cfg?: Record<string, unknown>;
+  onSetting?: (id: string, key: string, value: unknown) => void;
   onRemove: (id: string) => void;
   onMove: (id: string, dir: -1 | 1) => void;
   isFirst: boolean;
@@ -26,10 +28,11 @@ interface ExerciseCardProps {
 
 /** Item do plano — card largo com reordenar, ajustes e remover. */
 export function ExerciseCard({
-  id, name, icon, minutes, color, isSpan, level, onLevel, spanCfg, onSpanCfg, onRemove, onMove, isFirst, isLast,
+  id, name, icon, minutes, color, isSpan, level, onLevel, spanCfg, onSpanCfg, cfg, onSetting, onRemove, onMove, isFirst, isLast,
 }: ExerciseCardProps) {
   const [open, setOpen] = useState(false);
   const c: SpanSettings = { ...DEFAULT_SPAN_SETTINGS, ...(spanCfg ?? {}) };
+  const isOrdemHistoria = id === "ordem-historia";
   const subLabel = EXERCISE_SUBDOMAIN[id];
   const subId = EXERCISE_SUBDOMAIN_ID[id];
 
@@ -103,6 +106,27 @@ export function ExerciseCard({
                 style={{ accentColor: color }}
               />
               <p className="text-[11px] text-slate-400 pt-1.5">Começa neste nível e sobe/desce sozinho conforme o paciente acerta ou erra.</p>
+
+              {isOrdemHistoria && (
+                <div className="mt-3 pt-3 border-t border-white/10 space-y-2.5">
+                  <p className="text-[11px] font-bold uppercase tracking-wide text-slate-400">Liberar desafios</p>
+                  <div className="flex items-center justify-between gap-2">
+                    <span className="text-xs text-slate-300">🔍 Encontre o Intruso</span>
+                    <div className="flex gap-1.5">
+                      <Pill on={!!cfg?.unlockIntruso} onClick={() => onSetting?.(id, "unlockIntruso", true)}>Sim</Pill>
+                      <Pill on={!cfg?.unlockIntruso} onClick={() => onSetting?.(id, "unlockIntruso", false)}>Não</Pill>
+                    </div>
+                  </div>
+                  <div className="flex items-center justify-between gap-2">
+                    <span className="text-xs text-slate-300">🧩 Descubra o que falta</span>
+                    <div className="flex gap-1.5">
+                      <Pill on={!!cfg?.unlockFalta} onClick={() => onSetting?.(id, "unlockFalta", true)}>Sim</Pill>
+                      <Pill on={!cfg?.unlockFalta} onClick={() => onSetting?.(id, "unlockFalta", false)}>Não</Pill>
+                    </div>
+                  </div>
+                  <p className="text-[11px] text-slate-400">Quando ligado, o paciente já faz o desafio. No nível 10 eles liberam sozinhos.</p>
+                </div>
+              )}
             </div>
           ) : (
             <div className="pt-2.5 space-y-2.5">
