@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useRef, useCallback } from "react";
+import { useState, useRef, useCallback, useEffect } from "react";
 import {
   DndContext, closestCenter, MouseSensor, TouchSensor, KeyboardSensor,
   useSensor, useSensors, type DragEndEvent,
@@ -23,8 +23,10 @@ interface OrdemHistoriaProps {
 
 const VIOLET = "#7c5cf0";
 const TRIALS = 5;
-const INTRUDER_ORDER = 7;                 // no modo intruso, a cena com order===7 é a que NÃO pertence
+const INTRUDER_ORDER = 7;                 // intruso: a cena com order===7 é a que NÃO pertence
 const levelOf = (d: number): number => Math.min(10, Math.max(1, Math.round(d)));
+
+type RoundMode = "ordem" | "intruso" | "falta";
 
 // nível (1-10) → dificuldade das histórias (nº de cenas)
 function tierForLevel(lvl: number): HistDiff {
@@ -37,35 +39,43 @@ const DIFF_LABEL: Record<HistDiff, string> = { faceis: "fácil", media: "média"
 const PANELS: Record<HistDiff, number> = { faceis: 4, media: 5, dificil: 6, "muito-dificil": 8 };
 
 function shuffle<T>(a: T[]): T[] { const r = [...a]; for (let i = r.length - 1; i > 0; i--) { const j = Math.floor(Math.random() * (i + 1)); [r[i], r[j]] = [r[j], r[i]]; } return r; }
-
-interface Card { id: string; order: number; } // order = índice correto (0-based); imagem = histPanelSrc(story.id, order+1)
-
-function buildRound(intruso: boolean, tier: HistDiff, recent: Set<string>): { storyId: string; n: number; a: number; cards: Card[] } {
-  if (intruso) {
-    const pool = HISTORIAS_INTRUSO;
-    const avail = pool.filter((h) => !recent.has(h.id));
-    const list = avail.length ? avail : pool;
-    const story = list[Math.floor(Math.random() * list.length)];
-    const correct: Card[] = Array.from({ length: story.n }, (_, i) => ({ id: `c${i}`, order: i })); // order 7 = intrusa
-    let cards = shuffle(correct);
-    let guard = 0;
-    while (cards[0].order === 0 && guard++ < 12) cards = shuffle(cards);   // anti-previsibilidade
-    return { storyId: story.id, n: story.n, a: story.a, cards };
-  }
-  const pool = HISTORIAS.filter((h) => h.diff === tier);
+function pickFrom<T extends { id: string }>(pool: T[], recent: Set<string>): T {
   const avail = pool.filter((h) => !recent.has(h.id));
   const list = avail.length ? avail : pool;
-  const story = list[Math.floor(Math.random() * list.length)];
-  const correct: Card[] = Array.from({ length: story.n }, (_, i) => ({ id: `c${i}`, order: i }));
+  return list[Math.floor(Math.random() * list.length)];
+}
+
+interface Card { id: string; order: number; } // order = índice correto (0-based); imagem = histPanelSrc(story.id, order+1)
+interface Option { id: string; storyId: string; scene: number; a: number; correct: boolean; }
+
+function buildOrdem(intruso: boolean, tier: HistDiff, recent: Set<string>): { storyId: string; a: number; cards: Card[] } {
+  const story = intruso
+    ? pickFrom(HISTORIAS_INTRUSO, recent)
+    : pickFrom(HISTORIAS.filter((h) => h.diff === tier), recent);
+  const correct: Card[] = Array.from({ length: story.n }, (_, i) => ({ id: `c${i}`, order: i })); // intruso: order 7 = intrusa
   let cards = shuffle(correct);
   let guard = 0;
-  while (cards[0].order === 0 && guard++ < 12) cards = shuffle(cards);
-  return { storyId: story.id, n: story.n, a: story.a, cards };
+  while (cards[0].order === 0 && guard++ < 12) cards = shuffle(cards);   // anti-previsibilidade
+  return { storyId: story.id, a: story.a, cards };
+}
+
+// "Descubra o que falta": mostra as 7 primeiras cenas (em ordem) de uma história de 8;
+// a resposta é a 8ª cena; 2 distratores vêm de outras histórias de 8 cenas.
+function buildFalta(recent: Set<string>): { storyId: string; a: number; cards: Card[]; options: Option[] } {
+  const pool = HISTORIAS.filter((h) => h.diff === "muito-dificil");
+  const story = pickFrom(pool, recent);
+  const cards: Card[] = Array.from({ length: 7 }, (_, i) => ({ id: `c${i}`, order: i }));   // cenas 1..7 em ordem
+  const correct: Option = { id: "opt-correct", storyId: story.id, scene: 8, a: story.a, correct: true };
+  const others = shuffle(pool.filter((s) => s.id !== story.id)).slice(0, 2);
+  const distractors: Option[] = others.map((s, i) => ({
+    id: `opt-d${i}`, storyId: s.id, scene: 1 + Math.floor(Math.random() * 8), a: s.a, correct: false,
+  }));
+  return { storyId: story.id, a: story.a, cards, options: shuffle([correct, ...distractors]) };
 }
 
 type Phase = "ready" | "playing" | "feedback";
 
-// ── Card arrastável (grade) ──
+// ── Card arrastável (modos ordem/intruso) ──
 function SortableScene({
   card, posNum, isMarked, intruso, storyId, aspect, phase, onMark,
 }: {
@@ -76,7 +86,6 @@ function SortableScene({
     useSortable({ id: card.id, disabled: phase !== "playing" });
 
   const fb = phase === "feedback";
-  // correção: posição esperada (0-based) = posNum-1; intrusa correta = order===7
   const correctPos = posNum != null && card.order === posNum - 1;
   const intruderRight = card.order === INTRUDER_ORDER;
 
@@ -89,7 +98,7 @@ function SortableScene({
   const style: React.CSSProperties = {
     transform: CSS.Transform.toString(transform),
     transition: transition ?? undefined,
-    touchAction: "manipulation",         // deslizar rola a tela; segurar+mover arrasta o card
+    touchAction: "manipulation",
     zIndex: isDragging ? 10 : 1,
     opacity: isDragging ? 0.92 : isMarked && !fb ? 0.62 : 1,
   };
@@ -103,55 +112,39 @@ function SortableScene({
         cursor: phase === "playing" ? "grab" : "default",
         transform: isDragging ? "scale(1.04)" : "none", transition: "box-shadow .15s, transform .12s",
       }}>
-        {/* cena (inteira, sem cortar) */}
         <div style={{ width: "100%", aspectRatio: String(aspect), background: "#f4f1fb" }}>
           {/* eslint-disable-next-line @next/next/no-img-element */}
           <img src={histPanelSrc(storyId, card.order + 1)} alt="" draggable={false}
             style={{ width: "100%", height: "100%", objectFit: "cover", display: "block", userSelect: "none", pointerEvents: "none" }} />
         </div>
 
-        {/* marca de intrusa (modo intruso) */}
         {intruso && isMarked && (
-          <div style={{
-            position: "absolute", inset: 0, background: fb && intruderRight ? "rgba(52,211,153,0.32)" : "rgba(239,68,68,0.32)",
-            display: "flex", alignItems: "center", justifyContent: "center",
-          }}>
+          <div style={{ position: "absolute", inset: 0, background: fb && intruderRight ? "rgba(52,211,153,0.32)" : "rgba(239,68,68,0.32)",
+            display: "flex", alignItems: "center", justifyContent: "center" }}>
             <span style={{ fontSize: 40, fontWeight: 900, color: "#fff", textShadow: "0 2px 8px rgba(0,0,0,0.45)" }}>
               {fb ? (intruderRight ? "✓" : "✗") : "✗"}
             </span>
           </div>
         )}
 
-        {/* número da POSIÇÃO atual (some quando a cena está marcada como intrusa) */}
         {posNum != null && (
-          <span style={{
-            position: "absolute", top: 6, left: 6, minWidth: 26, height: 26, padding: "0 6px", borderRadius: 13,
-            background: numBg, color: "#fff", fontWeight: 900, fontSize: 14,
-            display: "flex", alignItems: "center", justifyContent: "center",
-            boxShadow: "0 2px 6px rgba(0,0,0,0.28)",
-          }}>{fb ? (correctPos ? "✓" : posNum) : posNum}</span>
+          <span style={{ position: "absolute", top: 6, left: 6, minWidth: 26, height: 26, padding: "0 6px", borderRadius: 13,
+            background: numBg, color: "#fff", fontWeight: 900, fontSize: 14, display: "flex", alignItems: "center", justifyContent: "center",
+            boxShadow: "0 2px 6px rgba(0,0,0,0.28)" }}>{fb ? (correctPos ? "✓" : posNum) : posNum}</span>
         )}
 
-        {/* botão: marcar/desmarcar intrusa (modo intruso) */}
         {intruso && phase === "playing" && (
-          <button
-            onPointerDown={(e) => e.stopPropagation()}
-            onClick={(e) => { e.stopPropagation(); onMark(card.id); }}
+          <button onPointerDown={(e) => e.stopPropagation()} onClick={(e) => { e.stopPropagation(); onMark(card.id); }}
             aria-label={isMarked ? "desfazer intrusa" : "marcar como intrusa"}
-            style={{
-              position: "absolute", top: 6, right: 6, height: 26, padding: "0 9px", borderRadius: 13, border: "none",
+            style={{ position: "absolute", top: 6, right: 6, height: 26, padding: "0 9px", borderRadius: 13, border: "none",
               background: isMarked ? "#ef4444" : "rgba(44,36,64,0.6)", color: "#fff", fontSize: 11.5, fontWeight: 900,
-              display: "flex", alignItems: "center", gap: 3, cursor: "pointer", boxShadow: "0 2px 6px rgba(0,0,0,0.28)",
-            }}>{isMarked ? "↩ tirar" : "✗ não é"}</button>
+              display: "flex", alignItems: "center", gap: 3, cursor: "pointer", boxShadow: "0 2px 6px rgba(0,0,0,0.28)" }}>{isMarked ? "↩ tirar" : "✗ não é"}</button>
         )}
 
-        {/* alça discreta de arrastar (modo normal) */}
         {!intruso && phase === "playing" && (
-          <span aria-hidden style={{
-            position: "absolute", top: 6, right: 6, width: 24, height: 24, borderRadius: 7,
+          <span aria-hidden style={{ position: "absolute", top: 6, right: 6, width: 24, height: 24, borderRadius: 7,
             background: "rgba(44,36,64,0.45)", color: "#fff", fontSize: 13, fontWeight: 900,
-            display: "flex", alignItems: "center", justifyContent: "center", lineHeight: 1,
-          }}>⠿</span>
+            display: "flex", alignItems: "center", justifyContent: "center", lineHeight: 1 }}>⠿</span>
         )}
       </div>
     </div>
@@ -161,17 +154,32 @@ function SortableScene({
 export function OrdemHistoria({ difficulty, onComplete }: OrdemHistoriaProps) {
   const reportProgress = useExerciseProgress();
   const startLevel = levelOf(difficulty);
-  const intruso = startLevel >= 10;                 // desbloqueio: domina o muito difícil → Encontre o Intruso
+  const unlocked = startLevel >= 10;                 // domina o muito difícil → desafios desbloqueados
   const tier = tierForLevel(startLevel);
-  const nPanels = intruso ? 8 : PANELS[tier];
+
+  const modeForRound = useCallback((idx: number): RoundMode => {
+    if (!unlocked) return "ordem";
+    return idx % 2 === 0 ? "intruso" : "falta";       // 0,2,4 = intruso · 1,3 = falta
+  }, [unlocked]);
 
   const [phase, setPhase] = useState<Phase>("ready");
+  const [roundMode, setRoundMode] = useState<RoundMode>("ordem");
   const [storyId, setStoryId] = useState("");
   const [storyA, setStoryA] = useState(1.5);
   const [cards, setCards] = useState<Card[]>([]);
   const [marked, setMarked] = useState<string | null>(null);
+  const [options, setOptions] = useState<Option[]>([]);
+  const [picked, setPicked] = useState<string | null>(null);
   const [trial, setTrial] = useState(0);
   const [result, setResult] = useState<{ exact: boolean } | null>(null);
+  const [wide, setWide] = useState(false);   // tela larga (computador) → cards maiores
+
+  useEffect(() => {
+    const onResize = () => setWide(window.innerWidth >= 760);
+    onResize();
+    window.addEventListener("resize", onResize);
+    return () => window.removeEventListener("resize", onResize);
+  }, []);
 
   const recentRef = useRef<string[]>([]);
   const gradedRef = useRef<number[]>([]);
@@ -179,6 +187,7 @@ export function OrdemHistoria({ difficulty, onComplete }: OrdemHistoriaProps) {
   const posWrongRef = useRef(0);
   const swapsRef = useRef(0);
   const intruderHitsRef = useRef(0);
+  const faltaHitsRef = useRef(0);
   const rtsRef = useRef<number[]>([]);
   const startRoundAt = useRef(0);
   const startTime = useRef(Date.now());
@@ -189,18 +198,27 @@ export function OrdemHistoria({ difficulty, onComplete }: OrdemHistoriaProps) {
     useSensor(KeyboardSensor, { coordinateGetter: sortableKeyboardCoordinates }),
   );
 
-  const startRound = useCallback(() => {
-    const r = buildRound(intruso, tier, new Set(recentRef.current));
-    recentRef.current = [r.storyId, ...recentRef.current].slice(0, 5);
-    setStoryId(r.storyId); setStoryA(r.a); setCards(r.cards); setMarked(null); setResult(null);
+  const startRound = useCallback((idx: number) => {
+    const mode = modeForRound(idx);
+    setRoundMode(mode); setMarked(null); setPicked(null); setResult(null);
+    if (mode === "falta") {
+      const r = buildFalta(new Set(recentRef.current));
+      recentRef.current = [r.storyId, ...recentRef.current].slice(0, 6);
+      setStoryId(r.storyId); setStoryA(r.a); setCards(r.cards); setOptions(r.options);
+    } else {
+      const r = buildOrdem(mode === "intruso", tier, new Set(recentRef.current));
+      recentRef.current = [r.storyId, ...recentRef.current].slice(0, 6);
+      setStoryId(r.storyId); setStoryA(r.a); setCards(r.cards); setOptions([]);
+    }
     startRoundAt.current = Date.now();
     setPhase("playing");
-  }, [tier, intruso]);
+  }, [tier, modeForRound]);
 
   function begin() {
     gradedRef.current = []; posCorrectRef.current = 0; posWrongRef.current = 0;
-    swapsRef.current = 0; intruderHitsRef.current = 0; rtsRef.current = []; startTime.current = Date.now(); setTrial(0);
-    startRound();
+    swapsRef.current = 0; intruderHitsRef.current = 0; faltaHitsRef.current = 0;
+    rtsRef.current = []; startTime.current = Date.now(); setTrial(0);
+    startRound(0);
   }
 
   function onDragEnd(e: DragEndEvent) {
@@ -216,10 +234,7 @@ export function OrdemHistoria({ difficulty, onComplete }: OrdemHistoriaProps) {
     });
   }
 
-  function toggleMark(id: string) {
-    if (phase !== "playing") return;
-    setMarked((prev) => (prev === id ? null : id));
-  }
+  function toggleMark(id: string) { if (phase === "playing") setMarked((prev) => (prev === id ? null : id)); }
 
   const finish = useCallback(() => {
     const accTotal = gradedRef.current.length ? gradedRef.current.reduce((a, b) => a + b, 0) / gradedRef.current.length : 0;
@@ -239,43 +254,46 @@ export function OrdemHistoria({ difficulty, onComplete }: OrdemHistoriaProps) {
         accTotal: Number(accTotal.toFixed(3)),
         level: startLevel,
         startedLevel: startLevel,
-        mode: intruso ? "intruso" : "ordem",
+        mode: unlocked ? "desafios" : "ordem",
         tier,
-        scenes: nPanels,
         positionsCorrect: posCorrectRef.current,
         positionsWrong: posWrongRef.current,
         swaps: swapsRef.current,
         intruderHits: intruderHitsRef.current,
+        faltaHits: faltaHitsRef.current,
         sequencesCorrect: exactCount,
         sequencesIncorrect: TRIALS - exactCount,
         meanReactionTimeMs: meanRT,
       },
     });
-  }, [onComplete, difficulty, startLevel, tier, nPanels, intruso]);
+  }, [onComplete, difficulty, startLevel, tier, unlocked]);
 
-  function confirmOrder() {
+  function submit() {
     if (phase !== "playing") return;
-    if (intruso && !marked) return;       // precisa marcar a intrusa
 
     let acc: number, exact: boolean;
-    if (intruso) {
+    if (roundMode === "falta") {
+      if (!picked) return;
+      const opt = options.find((o) => o.id === picked);
+      exact = !!opt?.correct;
+      acc = exact ? 1 : 0;
+      if (exact) faltaHitsRef.current++;
+    } else if (roundMode === "intruso") {
+      if (!marked) return;
       const markedCard = cards.find((c) => c.id === marked);
       const intruderRight = !!markedCard && markedCard.order === INTRUDER_ORDER;
-      const seq = cards.filter((c) => c.id !== marked);                  // 7 cenas restantes, na ordem da grade
+      const seq = cards.filter((c) => c.id !== marked);
       const posCorrect = seq.filter((c, i) => c.order === i).length;
-      const orderRight = posCorrect === seq.length;
-      exact = intruderRight && orderRight;
+      exact = intruderRight && posCorrect === seq.length;
       acc = ((intruderRight ? 1 : 0) + posCorrect) / 8;
-      posCorrectRef.current += posCorrect;
-      posWrongRef.current += (seq.length - posCorrect);
+      posCorrectRef.current += posCorrect; posWrongRef.current += (seq.length - posCorrect);
       if (intruderRight) intruderHitsRef.current++;
     } else {
       const n = cards.length;
       const posCorrect = cards.filter((c, i) => c.order === i).length;
       exact = posCorrect === n;
       acc = n ? posCorrect / n : 0;
-      posCorrectRef.current += posCorrect;
-      posWrongRef.current += (n - posCorrect);
+      posCorrectRef.current += posCorrect; posWrongRef.current += (n - posCorrect);
     }
 
     gradedRef.current.push(acc);
@@ -284,15 +302,22 @@ export function OrdemHistoria({ difficulty, onComplete }: OrdemHistoriaProps) {
     setPhase("feedback");
     const nextTrial = trial + 1;
     reportProgress(Math.round((nextTrial / TRIALS) * 100));
-    setTimeout(() => { if (nextTrial >= TRIALS) finish(); else { setTrial(nextTrial); startRound(); } }, exact ? 1900 : 3200);
+    setTimeout(() => { if (nextTrial >= TRIALS) finish(); else { setTrial(nextTrial); startRound(nextTrial); } }, exact ? 1900 : 3200);
   }
 
   const pct = Math.round((trial / TRIALS) * 100);
-  // grade: até 4 cenas = 2 colunas; 5+ = responsivo (4 col no desktop, 2 no celular)
-  const gridCols = nPanels <= 4 ? "repeat(2, minmax(0,1fr))" : "repeat(auto-fill, minmax(150px, 1fr))";
-  const gridMax = nPanels <= 4 ? 420 : 700;
+  const intruso = roundMode === "intruso";
+  const falta = roundMode === "falta";
 
-  // numeração de posição (no intruso, pula a cena marcada)
+  // grade dos modos ordem/intruso — no computador (wide) os cards crescem; no celular mantém 2 colunas
+  const nPanels = falta ? 7 : (intruso ? 8 : PANELS[tier]);
+  const cols = !wide ? 2 : nPanels <= 4 ? 2 : nPanels <= 6 ? 3 : 4;
+  const cardTarget = nPanels <= 4 ? 300 : nPanels <= 6 ? 250 : 210;   // largura-alvo do card no desktop
+  const gridCols = `repeat(${cols}, minmax(0,1fr))`;
+  const gridMax = wide ? cols * cardTarget : 460;
+  const faltaMax = wide ? 760 : 520;
+
+  // numeração (intruso pula a marcada)
   const posOf: Record<string, number> = {};
   let pcount = 0;
   for (const c of cards) { if (intruso && c.id === marked) continue; pcount++; posOf[c.id] = pcount; }
@@ -304,17 +329,16 @@ export function OrdemHistoria({ difficulty, onComplete }: OrdemHistoriaProps) {
         background: "linear-gradient(180deg,#f3f0fb 0%,#eaeefb 55%,#eef0f8 100%)" }}>
         <div style={{ width: "100%", maxWidth: 440, background: "#fff", borderRadius: 26, padding: "26px 22px", textAlign: "center",
           boxShadow: "0 22px 60px rgba(80,60,140,0.18)" }}>
-          <div style={{ margin: "0 auto 14px", width: 70, height: 70, borderRadius: "50%", background: intruso ? "rgba(239,68,68,0.12)" : "rgba(124,92,240,0.12)",
-            border: `1px solid ${intruso ? "rgba(239,68,68,0.3)" : "rgba(124,92,240,0.28)"}`, display: "flex", alignItems: "center", justifyContent: "center", fontSize: 34 }}>{intruso ? "🔍" : "📖"}</div>
-          {intruso && <div style={{ fontSize: 12, fontWeight: 900, color: "#ef4444", letterSpacing: 0.5, marginBottom: 4 }}>🔓 DESAFIO DESBLOQUEADO</div>}
-          <h2 style={{ fontSize: 20, fontWeight: 900, color: "#2a2440", marginBottom: 8 }}>{intruso ? "Encontre o Intruso" : "Ordem da História"}</h2>
+          <div style={{ margin: "0 auto 14px", width: 70, height: 70, borderRadius: "50%", background: unlocked ? "rgba(239,68,68,0.12)" : "rgba(124,92,240,0.12)",
+            border: `1px solid ${unlocked ? "rgba(239,68,68,0.3)" : "rgba(124,92,240,0.28)"}`, display: "flex", alignItems: "center", justifyContent: "center", fontSize: 34 }}>{unlocked ? "🏆" : "📖"}</div>
+          {unlocked && <div style={{ fontSize: 12, fontWeight: 900, color: "#ef4444", letterSpacing: 0.5, marginBottom: 4 }}>🔓 DESAFIOS DESBLOQUEADOS</div>}
+          <h2 style={{ fontSize: 20, fontWeight: 900, color: "#2a2440", marginBottom: 8 }}>{unlocked ? "Modo Desafio" : "Ordem da História"}</h2>
           <div style={{ textAlign: "left", fontSize: 13, color: "#5b5470", margin: "0 auto 10px", maxWidth: 320, lineHeight: 1.7 }}>
-            {intruso ? (
+            {unlocked ? (
               <>
-                <div>1. Uma das cenas <b>não faz parte</b> da história.</div>
-                <div>2. Toque em <b>✗ não é</b> na cena intrusa.</div>
-                <div>3. Arraste as outras cenas na ordem certa.</div>
-                <div>4. Toque em <b>Confirmar</b>.</div>
+                <div><b>🔍 Encontre o Intruso:</b> toque na cena que não pertence e ordene as outras.</div>
+                <div style={{ marginTop: 6 }}><b>🧩 Descubra o que falta:</b> veja a história e escolha (A, B ou C) a cena que a completa.</div>
+                <div style={{ marginTop: 6 }}>Os dois desafios se alternam.</div>
               </>
             ) : (
               <>
@@ -326,16 +350,25 @@ export function OrdemHistoria({ difficulty, onComplete }: OrdemHistoriaProps) {
             )}
           </div>
           <p style={{ fontSize: 11.5, color: "#9a93b0", marginBottom: 18 }}>
-            {intruso ? "Você dominou a Ordem da História! Hora do desafio." : `Começa no nível ${startLevel} (${nPanels} cenas · ${DIFF_LABEL[tier]}) — onde parou.`}
+            {unlocked ? "Você dominou a Ordem da História! Hora dos desafios." : `Começa no nível ${startLevel} (${PANELS[tier]} cenas · ${DIFF_LABEL[tier]}) — onde parou.`}
           </p>
           <button onClick={begin} style={{ width: "100%", height: 52, borderRadius: 16, border: "none", color: "#fff", fontWeight: 800, fontSize: 15,
-            cursor: "pointer", background: intruso ? "linear-gradient(135deg,#ef4444,#dc2626)" : "linear-gradient(135deg,#7c5cf0,#6d4fd6)", boxShadow: "0 6px 18px rgba(109,79,214,0.4)" }}>Começar →</button>
+            cursor: "pointer", background: unlocked ? "linear-gradient(135deg,#ef4444,#dc2626)" : "linear-gradient(135deg,#7c5cf0,#6d4fd6)", boxShadow: "0 6px 18px rgba(109,79,214,0.4)" }}>Começar →</button>
         </div>
       </div>
     );
   }
 
-  const canConfirm = phase === "playing" && (!intruso || !!marked);
+  const canSubmit = phase === "playing" && (falta ? !!picked : intruso ? !!marked : true);
+  const headerTitle = falta ? "🧩 Descubra o que falta" : intruso ? "🔍 Encontre o Intruso" : "Ordem da História";
+  const headerSub = falta ? "Escolha a cena que completa a história"
+    : intruso ? "Ache a cena errada e ordene as outras"
+    : `Nível ${startLevel} · ${nPanels} cenas · ${DIFF_LABEL[tier]}`;
+  const instruction = phase === "feedback"
+    ? (result?.exact ? (falta ? "✅ Isso! Cena certa." : intruso ? "✅ Mandou bem!" : "✅ Ordem correta!") : (falta ? "Não era essa. Veja a certa (verde)." : "Quase! Veja as marcações"))
+    : (falta ? "Veja a história e toque na opção (A, B ou C) que completa."
+      : intruso ? "Marque a cena intrusa (✗) e arraste as outras na ordem."
+      : "Arraste as cenas para a ordem certa — do começo ao fim.");
 
   return (
     <div style={{ position: "fixed", inset: 0, display: "flex", flexDirection: "column", overflow: "hidden",
@@ -344,8 +377,8 @@ export function OrdemHistoria({ difficulty, onComplete }: OrdemHistoriaProps) {
       <div style={{ flexShrink: 0, padding: "14px 18px 8px" }}>
         <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 8 }}>
           <div>
-            <div style={{ fontSize: 15, fontWeight: 900, color: "#2a2440" }}>{intruso ? "🔍 Encontre o Intruso" : "Ordem da História"}</div>
-            <div style={{ fontSize: 11.5, color: "#9a93b0" }}>{intruso ? "Ache a cena errada e ordene as outras" : `Nível ${startLevel} · ${nPanels} cenas · ${DIFF_LABEL[tier]}`}</div>
+            <div style={{ fontSize: 15, fontWeight: 900, color: "#2a2440" }}>{headerTitle}</div>
+            <div style={{ fontSize: 11.5, color: "#9a93b0" }}>{headerSub}</div>
           </div>
           <div style={{ fontSize: 12, fontWeight: 800, color: VIOLET }}>{Math.min(trial + 1, TRIALS)}/{TRIALS}</div>
         </div>
@@ -356,25 +389,70 @@ export function OrdemHistoria({ difficulty, onComplete }: OrdemHistoriaProps) {
 
       {/* Instrução */}
       <div style={{ flexShrink: 0, textAlign: "center", padding: "2px 18px 8px" }}>
-        <p style={{ fontSize: 13, fontWeight: 700, color: "#5b5470" }}>
-          {phase === "feedback"
-            ? (result?.exact ? (intruso ? "✅ Mandou bem!" : "✅ Ordem correta!") : "Quase! Veja as marcações")
-            : (intruso ? "Marque a cena intrusa (✗) e arraste as outras na ordem." : "Arraste as cenas para a ordem certa — do começo ao fim.")}
-        </p>
+        <p style={{ fontSize: 13, fontWeight: 700, color: "#5b5470" }}>{instruction}</p>
       </div>
 
-      {/* Grade arrastável de cenas */}
+      {/* Corpo */}
       <div style={{ flex: 1, overflowY: "auto", padding: "2px 16px 8px" }}>
-        <DndContext sensors={sensors} collisionDetection={closestCenter} onDragEnd={onDragEnd}>
-          <SortableContext items={cards.map((c) => c.id)} strategy={rectSortingStrategy}>
-            <div style={{ display: "grid", gridTemplateColumns: gridCols, gap: 10, maxWidth: gridMax, margin: "0 auto" }}>
-              {cards.map((card) => (
-                <SortableScene key={card.id} card={card} posNum={posOf[card.id]} isMarked={intruso && marked === card.id}
-                  intruso={intruso} storyId={storyId} aspect={storyA} phase={phase} onMark={toggleMark} />
+        {falta ? (
+          <div style={{ maxWidth: faltaMax, margin: "0 auto" }}>
+            {/* história (7 cenas, em ordem, só leitura) */}
+            <div style={{ display: "grid", gridTemplateColumns: "repeat(4, 1fr)", gap: 8, marginBottom: 14 }}>
+              {cards.map((c, i) => (
+                <div key={c.id} style={{ position: "relative", borderRadius: 12, overflow: "hidden", background: "#fff", border: "2px solid #e2dcf3" }}>
+                  <div style={{ width: "100%", aspectRatio: String(storyA), background: "#f4f1fb" }}>
+                    {/* eslint-disable-next-line @next/next/no-img-element */}
+                    <img src={histPanelSrc(storyId, i + 1)} alt="" draggable={false}
+                      style={{ width: "100%", height: "100%", objectFit: "cover", display: "block" }} />
+                  </div>
+                  <span style={{ position: "absolute", top: 4, left: 4, width: 20, height: 20, borderRadius: 10, background: VIOLET,
+                    color: "#fff", fontWeight: 900, fontSize: 11, display: "flex", alignItems: "center", justifyContent: "center" }}>{i + 1}</span>
+                </div>
               ))}
+              {/* lacuna "?" da cena que falta */}
+              <div style={{ position: "relative", borderRadius: 12, overflow: "hidden", background: "#efeaff", border: "2px dashed #b5a6f0",
+                display: "flex", alignItems: "center", justifyContent: "center", aspectRatio: String(storyA) }}>
+                <span style={{ fontSize: 30, fontWeight: 900, color: "#8b7bdc" }}>?</span>
+              </div>
             </div>
-          </SortableContext>
-        </DndContext>
+
+            <p style={{ textAlign: "center", fontSize: 13.5, fontWeight: 800, color: "#2a2440", margin: "0 0 10px" }}>Qual cena completa a história?</p>
+
+            {/* opções A/B/C */}
+            <div style={{ display: "grid", gridTemplateColumns: "repeat(3, 1fr)", gap: 10 }}>
+              {options.map((o, i) => {
+                const letter = ["A", "B", "C"][i];
+                const fb = phase === "feedback";
+                const isPicked = picked === o.id;
+                let bd = isPicked ? VIOLET : "transparent";
+                if (fb) bd = o.correct ? "#34d399" : isPicked ? "#ef4444" : "transparent";
+                return (
+                  <button key={o.id} onClick={() => phase === "playing" && setPicked(o.id)} disabled={phase !== "playing"}
+                    style={{ padding: 0, border: `4px solid ${bd}`, borderRadius: 16, overflow: "hidden", background: "#fff",
+                      cursor: phase === "playing" ? "pointer" : "default", boxShadow: "0 3px 10px rgba(80,60,140,0.14)", display: "block" }}>
+                    <div style={{ fontSize: 18, fontWeight: 900, color: "#fff", padding: "6px 0", background: fb && o.correct ? "#15803d" : fb && isPicked ? "#b91c1c" : "#2a2440" }}>{letter}</div>
+                    <div style={{ width: "100%", aspectRatio: String(o.a), background: "#f4f1fb" }}>
+                      {/* eslint-disable-next-line @next/next/no-img-element */}
+                      <img src={histPanelSrc(o.storyId, o.scene)} alt={`Opção ${letter}`} draggable={false}
+                        style={{ width: "100%", height: "100%", objectFit: "cover", display: "block" }} />
+                    </div>
+                  </button>
+                );
+              })}
+            </div>
+          </div>
+        ) : (
+          <DndContext sensors={sensors} collisionDetection={closestCenter} onDragEnd={onDragEnd}>
+            <SortableContext items={cards.map((c) => c.id)} strategy={rectSortingStrategy}>
+              <div style={{ display: "grid", gridTemplateColumns: gridCols, gap: 10, maxWidth: gridMax, margin: "0 auto" }}>
+                {cards.map((card) => (
+                  <SortableScene key={card.id} card={card} posNum={posOf[card.id]} isMarked={intruso && marked === card.id}
+                    intruso={intruso} storyId={storyId} aspect={storyA} phase={phase} onMark={toggleMark} />
+                ))}
+              </div>
+            </SortableContext>
+          </DndContext>
+        )}
       </div>
 
       {/* Confirmar */}
@@ -382,12 +460,15 @@ export function OrdemHistoria({ difficulty, onComplete }: OrdemHistoriaProps) {
         {intruso && phase === "playing" && !marked && (
           <p style={{ textAlign: "center", fontSize: 11.5, color: "#ef4444", fontWeight: 700, margin: "0 0 6px" }}>Toque na cena que não pertence para liberar o Confirmar.</p>
         )}
-        <button onClick={confirmOrder} disabled={!canConfirm}
+        {falta && phase === "playing" && !picked && (
+          <p style={{ textAlign: "center", fontSize: 11.5, color: "#7c5cf0", fontWeight: 700, margin: "0 0 6px" }}>Toque em A, B ou C para escolher.</p>
+        )}
+        <button onClick={submit} disabled={!canSubmit}
           style={{ width: "100%", height: 52, borderRadius: 16, border: "none", color: "#fff", fontWeight: 800, fontSize: 15,
-            cursor: canConfirm ? "pointer" : "default",
-            background: canConfirm ? "linear-gradient(135deg,#7c5cf0,#6d4fd6)" : "#cfc7e6",
-            boxShadow: canConfirm ? "0 6px 18px rgba(109,79,214,0.4)" : "none", maxWidth: 460, margin: "0 auto", display: "block" }}>
-          ✓ {intruso ? "Confirmar" : "Confirmar Ordem"}
+            cursor: canSubmit ? "pointer" : "default",
+            background: canSubmit ? "linear-gradient(135deg,#7c5cf0,#6d4fd6)" : "#cfc7e6",
+            boxShadow: canSubmit ? "0 6px 18px rgba(109,79,214,0.4)" : "none", maxWidth: 460, margin: "0 auto", display: "block" }}>
+          ✓ {falta ? "Confirmar" : intruso ? "Confirmar" : "Confirmar Ordem"}
         </button>
       </div>
     </div>
