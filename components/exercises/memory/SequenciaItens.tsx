@@ -249,9 +249,12 @@ export function SequenciaItens({ difficulty, onComplete }: SequenciaItensProps) 
             <motion.div initial={{ scale: 0.6, opacity: 0 }} animate={{ scale: 1, opacity: 1 }} className="text-5xl">{feedback === "correct" ? "✅" : "❌"}</motion.div>
             <p className="text-2xl font-black" style={{ color: feedback === "correct" ? "#4ade80" : "#f87171" }}>{feedback === "correct" ? "Correto" : "Incorreto"}</p>
             {feedback === "incorrect" && (
-              <div className="text-center text-2xl space-y-1 mt-1">
-                <p>{sequence.map((x) => x.e).join(" ")}</p>
-                <p className="text-base" style={{ color: "rgba(148,163,184,0.6)" }}>Você: {entered.map((x) => x.e).join(" ") || "—"}</p>
+              <div className="flex flex-col items-center gap-2 mt-1">
+                <div className="flex items-center gap-2">{sequence.map((x, i) => <ItemVisual key={i} name={x.n} emoji={x.e} size={44} />)}</div>
+                <div className="flex items-center gap-2">
+                  <span className="text-base" style={{ color: "rgba(148,163,184,0.6)" }}>Você:</span>
+                  {entered.length ? entered.map((x, i) => <ItemVisual key={i} name={x.n} emoji={x.e} size={34} />) : <span style={{ color: "rgba(148,163,184,0.6)" }}>—</span>}
+                </div>
               </div>
             )}
           </div>
