@@ -5,6 +5,7 @@ import { motion } from "framer-motion";
 import { calculateExerciseScore } from "@/lib/scoring";
 import { shuffle } from "@/lib/utils";
 import { useExerciseProgress } from "@/components/exercises/ExerciseWrapper";
+import { ItemVisual } from "@/components/exercises/ItemVisual";
 import type { ExerciseResult, Theme } from "@/types";
 
 interface AssociacaoPares {
@@ -238,7 +239,7 @@ export function AssociacaoPares({ difficulty, theme, onComplete }: AssociacaoPar
                   animate={{ opacity: 1, y: 0 }}
                   transition={{ delay: i * 0.08 }}
                 >
-                  <span style={{ fontSize: 30 }}>{pair.emoji}</span>
+                  <ItemVisual name={pair.word} emoji={pair.emoji} size={36} />
                   <span style={{ fontWeight: 600, color: studyItemTextColor }}>{pair.word}</span>
                 </motion.div>
               ))}
@@ -267,11 +268,11 @@ export function AssociacaoPares({ difficulty, theme, onComplete }: AssociacaoPar
                   key={i}
                   onClick={() => handleSelect(emoji)}
                   disabled={!!selected}
-                  style={{ padding: "22px 0", fontSize: 36, display: "flex", alignItems: "center", justifyContent: "center", transition: "all 0.15s", ...optionStyle(emoji) }}
+                  style={{ padding: "16px 0", fontSize: 36, display: "flex", alignItems: "center", justifyContent: "center", transition: "all 0.15s", ...optionStyle(emoji) }}
                   whileHover={!selected ? { scale: 1.03 } : {}}
                   whileTap={!selected ? { scale: 0.97 } : {}}
                 >
-                  {emoji}
+                  <ItemVisual name={pairs.find((p) => p.emoji === emoji)?.word ?? ""} emoji={emoji} size={48} />
                 </motion.button>
               ))}
             </div>

@@ -5,6 +5,7 @@ import { motion, AnimatePresence } from "framer-motion";
 import { Eye, Headphones } from "lucide-react";
 import { calculateExerciseScore } from "@/lib/scoring";
 import { useExerciseProgress } from "@/components/exercises/ExerciseWrapper";
+import { ItemVisual } from "@/components/exercises/ItemVisual";
 import type { ExerciseResult, Theme } from "@/types";
 
 interface SequenciaItensProps {
@@ -205,7 +206,7 @@ export function SequenciaItens({ difficulty, onComplete }: SequenciaItensProps) 
                   <motion.div key={showIdx} initial={{ scale: 0.4, opacity: 0 }} animate={{ scale: 1, opacity: 1 }} exit={{ scale: 0.4, opacity: 0 }}
                     className="w-24 h-24 rounded-3xl flex items-center justify-center text-6xl"
                     style={{ background: "linear-gradient(135deg,#312e81,#4c1d95)", boxShadow: "0 8px 32px rgba(99,102,241,0.5)" }}>
-                    {sequence[showIdx]?.e}
+                    {sequence[showIdx] && <ItemVisual name={sequence[showIdx].n} emoji={sequence[showIdx].e} size={78} />}
                   </motion.div>
                 )}
                 {spec.audio && (
@@ -227,7 +228,7 @@ export function SequenciaItens({ difficulty, onComplete }: SequenciaItensProps) 
             <div className="flex gap-2 flex-wrap justify-center min-h-[44px]">
               {Array.from({ length: spec.count }).map((_, i) => (
                 <div key={i} className="w-11 h-11 rounded-xl flex items-center justify-center text-2xl border"
-                  style={{ background: "rgba(255,255,255,0.04)", borderColor: "rgba(99,102,241,0.3)" }}>{entered[i]?.e ?? ""}</div>
+                  style={{ background: "rgba(255,255,255,0.04)", borderColor: "rgba(99,102,241,0.3)" }}>{entered[i] && <ItemVisual name={entered[i].n} emoji={entered[i].e} size={34} />}</div>
               ))}
             </div>
             <div className="grid grid-cols-4 gap-2.5 w-full mt-1">
@@ -235,8 +236,8 @@ export function SequenciaItens({ difficulty, onComplete }: SequenciaItensProps) 
                 const used = entered.filter((e) => e.e === it.e).length >= 1;
                 return (
                   <button key={`${it.e}-${i}`} onClick={() => handleKey(it)} disabled={used}
-                    className="h-16 rounded-2xl text-3xl active:scale-95 transition-transform disabled:opacity-25"
-                    style={{ background: "rgba(255,255,255,0.05)", border: "1.5px solid rgba(99,102,241,0.35)" }}>{it.e}</button>
+                    className="h-16 rounded-2xl text-3xl active:scale-95 transition-transform disabled:opacity-25 flex items-center justify-center"
+                    style={{ background: "rgba(255,255,255,0.05)", border: "1.5px solid rgba(99,102,241,0.35)" }}><ItemVisual name={it.n} emoji={it.e} size={46} /></button>
                 );
               })}
             </div>

@@ -6,6 +6,7 @@ import { calculateExerciseScore } from "@/lib/scoring";
 import { shuffle } from "@/lib/utils";
 import { useExerciseProgress } from "@/components/exercises/ExerciseWrapper";
 import { TutorialBase } from "@/components/exercises/TutorialBase";
+import { ItemVisual } from "@/components/exercises/ItemVisual";
 import type { ExerciseResult, Theme } from "@/types";
 
 interface DecisaoRapidaProps {
@@ -235,7 +236,7 @@ export function DecisaoRapida({ difficulty, theme, onComplete }: DecisaoRapidaPr
             exit={{ scale: 0.8, opacity: 0 }}
             transition={{ duration: 0.2 }}
           >
-            <div className="text-6xl mb-3">{sequence[current]?.emoji}</div>
+            <div className="mb-3 flex items-center justify-center">{sequence[current] && <ItemVisual name={sequence[current].label} emoji={sequence[current].emoji} size={92} />}</div>
             <p className={`text-2xl font-bold ${theme === "GAMIFIED" ? "text-gray-100" : "text-gray-800"}`}>
               {sequence[current]?.label}
             </p>
