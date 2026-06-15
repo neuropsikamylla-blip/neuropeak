@@ -251,17 +251,21 @@ function StoreBg() {
 // ── Cesta de vime com os produtos selecionados DENTRO (painel do carrinho) ────────
 function CartBasket({ items }: { items: Product[] }) {
   const show = items.slice(-5);                 // últimos produtos colocados
-  const W = ["", "46%", "40%", "36%", "32%", "28%"][show.length] || "28%";
+  const W = ["", "52%", "45%", "40%", "35%", "31%"][show.length] || "31%";
   return (
     <div style={{ position: "relative", width: "100%", aspectRatio: "120 / 100" }}>
-      {/* produtos caindo dentro da cesta (a parte de baixo fica atrás da frente) */}
-      <div style={{ position: "absolute", left: "15%", right: "15%", bottom: "30%", height: "50%",
+      {/* fundo da cesta (atrás dos produtos) — dá o "dentro" mesmo com a frente translúcida */}
+      <svg viewBox="0 0 120 100" style={{ position: "absolute", inset: 0, width: "100%", height: "100%", display: "block" }} xmlns="http://www.w3.org/2000/svg">
+        <path d="M20 56 L100 56 L92 95 Q90 99 84 99 L36 99 Q30 99 28 95 Z" fill="#e9c795" stroke="#a87a44" strokeWidth="2.5" strokeLinejoin="round" />
+      </svg>
+      {/* produtos DENTRO da cesta (encaixados no corpo; topos espiam acima do aro) */}
+      <div style={{ position: "absolute", left: "20%", right: "20%", bottom: "12%", height: "56%",
         display: "flex", alignItems: "flex-end", justifyContent: "center" }}>
         <AnimatePresence mode="popLayout">
           {show.map((p, i) => (
             <motion.div key={`${p.id}-${i}`} layout initial={{ y: -28, opacity: 0, scale: 0.5 }} animate={{ y: 0, opacity: 1, scale: 1 }}
               exit={{ opacity: 0, scale: 0.6 }} transition={{ type: "spring", stiffness: 420, damping: 24 }}
-              style={{ width: W, marginLeft: i ? "-8%" : 0, zIndex: i, filter: "drop-shadow(0 3px 5px rgba(80,50,20,0.4))" }}>
+              style={{ width: W, marginLeft: i ? "-7%" : 0, zIndex: i, filter: "drop-shadow(0 3px 5px rgba(80,50,20,0.35))" }}>
               {/* eslint-disable-next-line @next/next/no-img-element */}
               <img src={`/exercises/produtos/${p.id}.png`} alt="" draggable={false}
                 style={{ width: "100%", height: "auto", display: "block", userSelect: "none" }} />
@@ -269,8 +273,8 @@ function CartBasket({ items }: { items: Product[] }) {
           ))}
         </AnimatePresence>
       </div>
-      {/* cesta de vime (frente, sobre os produtos) */}
-      <svg viewBox="0 0 120 100" style={{ position: "absolute", inset: 0, width: "100%", height: "100%", display: "block" }} xmlns="http://www.w3.org/2000/svg">
+      {/* cesta de vime TRANSLÚCIDA (frente, sobre os produtos — deixa ver dentro) */}
+      <svg viewBox="0 0 120 100" style={{ position: "absolute", inset: 0, width: "100%", height: "100%", display: "block", pointerEvents: "none" }} xmlns="http://www.w3.org/2000/svg">
         <defs>
           <linearGradient id="bkBody" x1="0" y1="0" x2="0" y2="1">
             <stop offset="0" stopColor="#e7c187" /><stop offset="1" stopColor="#c5985a" />
@@ -279,13 +283,13 @@ function CartBasket({ items }: { items: Product[] }) {
         {/* alças laterais (atrás do aro) */}
         <path d="M26 52 q-10 -16 7 -20" fill="none" stroke="#b78a4e" strokeWidth="3.4" strokeLinecap="round" />
         <path d="M94 52 q10 -16 -7 -20" fill="none" stroke="#b78a4e" strokeWidth="3.4" strokeLinecap="round" />
-        {/* corpo da cesta */}
-        <path d="M20 56 L100 56 L92 95 Q90 99 84 99 L36 99 Q30 99 28 95 Z" fill="url(#bkBody)" stroke="#a87a44" strokeWidth="2.5" strokeLinejoin="round" />
+        {/* corpo da cesta — TRANSLÚCIDO p/ ver os produtos dentro */}
+        <path d="M20 56 L100 56 L92 95 Q90 99 84 99 L36 99 Q30 99 28 95 Z" fill="url(#bkBody)" fillOpacity="0.55" stroke="#a87a44" strokeWidth="2.5" strokeLinejoin="round" />
         {/* trama vertical */}
-        {[30, 42, 54, 66, 78, 90].map((x, i) => <path key={i} d={`M${x} 60 L${x - 3} 96`} stroke="#a87a44" strokeWidth="1.3" opacity="0.38" fill="none" />)}
+        {[30, 42, 54, 66, 78, 90].map((x, i) => <path key={i} d={`M${x} 60 L${x - 3} 96`} stroke="#a87a44" strokeWidth="1.3" opacity="0.5" fill="none" />)}
         {/* trama horizontal */}
-        {[67, 78, 89].map((y, i) => <path key={i} d={`M${26 + i} ${y} L${94 - i} ${y}`} stroke="#a87a44" strokeWidth="1.5" opacity="0.4" fill="none" />)}
-        {/* aro superior */}
+        {[67, 78, 89].map((y, i) => <path key={i} d={`M${26 + i} ${y} L${94 - i} ${y}`} stroke="#a87a44" strokeWidth="1.5" opacity="0.5" fill="none" />)}
+        {/* aro superior (opaco, emoldura a frente da cesta) */}
         <rect x="14" y="50" width="92" height="10" rx="5" fill="#dcae66" stroke="#a87a44" strokeWidth="2" />
       </svg>
     </div>
