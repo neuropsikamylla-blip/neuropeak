@@ -39,6 +39,27 @@ function tierForLevel(lvl: number): HistDiff {
 const DIFF_LABEL: Record<HistDiff, string> = { faceis: "fácil", media: "média", dificil: "difícil", "muito-dificil": "muito difícil" };
 const PANELS: Record<HistDiff, number> = { faceis: 4, media: 5, dificil: 6, "muito-dificil": 8 };
 
+const MAX_ATTEMPTS = 3;   // tentativas por rodada nos desafios antes de revelar a resposta
+// Dicas progressivas (textos da Kamylla). Usar dica reduz a pontuação da rodada.
+const HINTS: Record<"intruso" | "falta", string[]> = {
+  intruso: [
+    "Todas as imagens devem combinar com a mesma história.",
+    "Procure a imagem que mostra uma ação diferente das outras.",
+    "A imagem intrusa não ajuda a contar essa história.",
+  ],
+  falta: [
+    "Pense no que deveria acontecer entre as imagens.",
+    "Veja o que falta para a história fazer sentido.",
+    "Escolha a imagem que conecta melhor o antes e o depois.",
+  ],
+};
+// Pontuação: cada dica e cada tentativa extra reduzem o acerto da rodada.
+function penalize(raw: number, hints: number, tries: number): number {
+  const hintF = Math.max(0.4, 1 - 0.18 * hints);
+  const tryF = Math.max(0.3, 1 - 0.25 * (tries - 1));
+  return raw * hintF * tryF;
+}
+
 function shuffle<T>(a: T[]): T[] { const r = [...a]; for (let i = r.length - 1; i > 0; i--) { const j = Math.floor(Math.random() * (i + 1)); [r[i], r[j]] = [r[j], r[i]]; } return r; }
 function pickFrom<T extends { id: string }>(pool: T[], recent: Set<string>): T {
   const avail = pool.filter((h) => !recent.has(h.id));
@@ -175,6 +196,10 @@ export function OrdemHistoria({ difficulty, onComplete, settings }: OrdemHistori
   const [picked, setPicked] = useState<string | null>(null);
   const [trial, setTrial] = useState(0);
   const [result, setResult] = useState<{ exact: boolean } | null>(null);
+  const [hintLevel, setHintLevel] = useState(0);          // dicas reveladas nesta rodada (0-3)
+  const [attempts, setAttempts] = useState(1);            // tentativa atual nesta rodada
+  const [wrongOpts, setWrongOpts] = useState<string[]>([]); // opções já erradas (falta)
+  const [flash, setFlash] = useState("");                 // mensagem transitória ("tente outra")
   const [wide, setWide] = useState(false);   // tela larga (computador) → cards maiores
 
   useEffect(() => {
@@ -191,6 +216,8 @@ export function OrdemHistoria({ difficulty, onComplete, settings }: OrdemHistori
   const swapsRef = useRef(0);
   const intruderHitsRef = useRef(0);
   const faltaHitsRef = useRef(0);
+  const hintsUsedRef = useRef(0);   // total de dicas usadas na sessão
+  const retriesRef = useRef(0);     // total de tentativas extras (erros antes do acerto)
   const rtsRef = useRef<number[]>([]);
   const startRoundAt = useRef(0);
   const startTime = useRef(Date.now());
@@ -203,6 +230,7 @@ export function OrdemHistoria({ difficulty, onComplete, settings }: OrdemHistori
 
   const startRound = useCallback(() => {
     setRoundMode(sessionMode); setMarked(null); setPicked(null); setResult(null);
+    setHintLevel(0); setAttempts(1); setWrongOpts([]); setFlash("");
     if (sessionMode === "falta") {
       const r = buildFalta(new Set(recentRef.current));
       recentRef.current = [r.storyId, ...recentRef.current].slice(0, 6);
@@ -219,8 +247,19 @@ export function OrdemHistoria({ difficulty, onComplete, settings }: OrdemHistori
   function begin() {
     gradedRef.current = []; posCorrectRef.current = 0; posWrongRef.current = 0;
     swapsRef.current = 0; intruderHitsRef.current = 0; faltaHitsRef.current = 0;
+    hintsUsedRef.current = 0; retriesRef.current = 0;
     rtsRef.current = []; startTime.current = Date.now(); setTrial(0);
     startRound();
+  }
+
+  function useHint() {
+    if (phase !== "playing" || roundMode === "ordem") return;
+    setHintLevel((h) => {
+      const max = HINTS[roundMode].length;
+      const n = Math.min(max, h + 1);
+      if (n > h) { hintsUsedRef.current++; setFlash(""); }
+      return n;
+    });
   }
 
   function onDragEnd(e: DragEndEvent) {
@@ -263,6 +302,8 @@ export function OrdemHistoria({ difficulty, onComplete, settings }: OrdemHistori
         swaps: swapsRef.current,
         intruderHits: intruderHitsRef.current,
         faltaHits: faltaHitsRef.current,
+        hintsUsed: hintsUsedRef.current,
+        retries: retriesRef.current,
         sequencesCorrect: exactCount,
         sequencesIncorrect: TRIALS - exactCount,
         meanReactionTimeMs: meanRT,
@@ -270,41 +311,65 @@ export function OrdemHistoria({ difficulty, onComplete, settings }: OrdemHistori
     });
   }, [onComplete, difficulty, reportLevel, tier, sessionMode]);
 
+  function advance(wasExact: boolean) {
+    const nextTrial = trial + 1;
+    reportProgress(Math.round((nextTrial / TRIALS) * 100));
+    setTimeout(() => { if (nextTrial >= TRIALS) finish(); else { setTrial(nextTrial); startRound(); } }, wasExact ? 1900 : 3200);
+  }
+
+  function record(acc: number, exact: boolean) {
+    gradedRef.current.push(acc);
+    rtsRef.current.push(Date.now() - startRoundAt.current);
+    setResult({ exact });
+    setPhase("feedback");
+    advance(exact);
+  }
+
   function submit() {
     if (phase !== "playing") return;
 
-    let acc: number, exact: boolean;
+    // ── Descubra o que falta: escolha A/B/C, com tentativas ──
     if (roundMode === "falta") {
       if (!picked) return;
       const opt = options.find((o) => o.id === picked);
-      exact = !!opt?.correct;
-      acc = exact ? 1 : 0;
-      if (exact) faltaHitsRef.current++;
-    } else if (roundMode === "intruso") {
+      if (!opt) return;
+      if (!opt.correct) {
+        retriesRef.current++;
+        const nextAttempt = attempts + 1;
+        if (nextAttempt > MAX_ATTEMPTS) {
+          record(0, false);                 // acabou as tentativas → revela a certa
+        } else {
+          setWrongOpts((w) => [...w, picked]);
+          setAttempts(nextAttempt);
+          setPicked(null);
+          setFlash("Não é essa. Pense de novo e tente outra opção.");
+        }
+        return;
+      }
+      faltaHitsRef.current++;
+      record(penalize(1, hintLevel, attempts), true);
+      return;
+    }
+
+    // ── Encontre o Intruso: marca a intrusa + ordena (envio único) ──
+    if (roundMode === "intruso") {
       if (!marked) return;
       const markedCard = cards.find((c) => c.id === marked);
       const intruderRight = !!markedCard && markedCard.order === INTRUDER_ORDER;
       const seq = cards.filter((c) => c.id !== marked);
       const posCorrect = seq.filter((c, i) => c.order === i).length;
-      exact = intruderRight && posCorrect === seq.length;
-      acc = ((intruderRight ? 1 : 0) + posCorrect) / 8;
+      const exact = intruderRight && posCorrect === seq.length;
       posCorrectRef.current += posCorrect; posWrongRef.current += (seq.length - posCorrect);
       if (intruderRight) intruderHitsRef.current++;
-    } else {
-      const n = cards.length;
-      const posCorrect = cards.filter((c, i) => c.order === i).length;
-      exact = posCorrect === n;
-      acc = n ? posCorrect / n : 0;
-      posCorrectRef.current += posCorrect; posWrongRef.current += (n - posCorrect);
+      record(penalize(((intruderRight ? 1 : 0) + posCorrect) / 8, hintLevel, 1), exact);
+      return;
     }
 
-    gradedRef.current.push(acc);
-    rtsRef.current.push(Date.now() - startRoundAt.current);
-    setResult({ exact });
-    setPhase("feedback");
-    const nextTrial = trial + 1;
-    reportProgress(Math.round((nextTrial / TRIALS) * 100));
-    setTimeout(() => { if (nextTrial >= TRIALS) finish(); else { setTrial(nextTrial); startRound(); } }, exact ? 1900 : 3200);
+    // ── Ordenar a história ──
+    const n = cards.length;
+    const posCorrect = cards.filter((c, i) => c.order === i).length;
+    posCorrectRef.current += posCorrect; posWrongRef.current += (n - posCorrect);
+    record(n ? posCorrect / n : 0, posCorrect === n);
   }
 
   const pct = Math.round((trial / TRIALS) * 100);
@@ -389,9 +454,20 @@ export function OrdemHistoria({ difficulty, onComplete, settings }: OrdemHistori
         </div>
       </div>
 
-      {/* Instrução */}
+      {/* Instrução + dicas */}
       <div style={{ flexShrink: 0, textAlign: "center", padding: "2px 18px 8px" }}>
         <p style={{ fontSize: 13, fontWeight: 700, color: "#5b5470" }}>{instruction}</p>
+        {phase === "playing" && flash && (
+          <p style={{ fontSize: 12.5, fontWeight: 800, color: "#ef4444", margin: "4px 0 0" }}>{flash}</p>
+        )}
+        {(intruso || falta) && hintLevel > 0 && (
+          <div style={{ maxWidth: 460, margin: "8px auto 0", display: "flex", flexDirection: "column", gap: 4 }}>
+            {HINTS[falta ? "falta" : "intruso"].slice(0, hintLevel).map((h, i) => (
+              <div key={i} style={{ fontSize: 12, fontWeight: 600, color: "#6d4fd6", background: "rgba(124,92,240,0.1)",
+                border: "1px solid rgba(124,92,240,0.25)", borderRadius: 10, padding: "6px 10px", textAlign: "left" }}>💡 {h}</div>
+            ))}
+          </div>
+        )}
       </div>
 
       {/* Corpo */}
@@ -426,13 +502,17 @@ export function OrdemHistoria({ difficulty, onComplete, settings }: OrdemHistori
                 const letter = ["A", "B", "C"][i];
                 const fb = phase === "feedback";
                 const isPicked = picked === o.id;
-                let bd = isPicked ? VIOLET : "transparent";
+                const tried = wrongOpts.includes(o.id);          // já errada nesta rodada
+                const locked = phase !== "playing" || tried;
+                let bd = isPicked ? VIOLET : tried ? "#ef4444" : "transparent";
                 if (fb) bd = o.correct ? "#34d399" : isPicked ? "#ef4444" : "transparent";
+                const labelBg = fb && o.correct ? "#15803d" : (fb && isPicked) || (tried && !fb) ? "#b91c1c" : "#2a2440";
                 return (
-                  <button key={o.id} onClick={() => phase === "playing" && setPicked(o.id)} disabled={phase !== "playing"}
+                  <button key={o.id} onClick={() => { if (phase === "playing" && !tried) { setPicked(o.id); setFlash(""); } }} disabled={locked}
                     style={{ padding: 0, border: `4px solid ${bd}`, borderRadius: 16, overflow: "hidden", background: "#fff",
-                      cursor: phase === "playing" ? "pointer" : "default", boxShadow: "0 3px 10px rgba(80,60,140,0.14)", display: "block" }}>
-                    <div style={{ fontSize: 18, fontWeight: 900, color: "#fff", padding: "6px 0", background: fb && o.correct ? "#15803d" : fb && isPicked ? "#b91c1c" : "#2a2440" }}>{letter}</div>
+                      cursor: locked ? "default" : "pointer", boxShadow: "0 3px 10px rgba(80,60,140,0.14)", display: "block",
+                      opacity: tried && !fb ? 0.5 : 1 }}>
+                    <div style={{ fontSize: 18, fontWeight: 900, color: "#fff", padding: "6px 0", background: labelBg }}>{letter}</div>
                     <div style={{ width: "100%", aspectRatio: String(o.a), background: "#f4f1fb" }}>
                       {/* eslint-disable-next-line @next/next/no-img-element */}
                       <img src={o.src} alt={`Opção ${letter}`} draggable={false}
@@ -462,16 +542,26 @@ export function OrdemHistoria({ difficulty, onComplete, settings }: OrdemHistori
         {intruso && phase === "playing" && !marked && (
           <p style={{ textAlign: "center", fontSize: 11.5, color: "#ef4444", fontWeight: 700, margin: "0 0 6px" }}>Toque na cena que não pertence para liberar o Confirmar.</p>
         )}
-        {falta && phase === "playing" && !picked && (
+        {falta && phase === "playing" && !picked && !flash && (
           <p style={{ textAlign: "center", fontSize: 11.5, color: "#7c5cf0", fontWeight: 700, margin: "0 0 6px" }}>Toque em A, B ou C para escolher.</p>
         )}
-        <button onClick={submit} disabled={!canSubmit}
-          style={{ width: "100%", height: 52, borderRadius: 16, border: "none", color: "#fff", fontWeight: 800, fontSize: 15,
-            cursor: canSubmit ? "pointer" : "default",
-            background: canSubmit ? "linear-gradient(135deg,#7c5cf0,#6d4fd6)" : "#cfc7e6",
-            boxShadow: canSubmit ? "0 6px 18px rgba(109,79,214,0.4)" : "none", maxWidth: 460, margin: "0 auto", display: "block" }}>
-          ✓ {falta ? "Confirmar" : intruso ? "Confirmar" : "Confirmar Ordem"}
-        </button>
+        <div style={{ maxWidth: 460, margin: "0 auto", display: "flex", gap: 8 }}>
+          {(intruso || falta) && (
+            <button onClick={useHint} disabled={phase !== "playing" || hintLevel >= HINTS[falta ? "falta" : "intruso"].length}
+              style={{ flexShrink: 0, height: 52, padding: "0 16px", borderRadius: 16, border: "2px solid #b5a6f0",
+                background: "#fff", color: "#6d4fd6", fontWeight: 800, fontSize: 13.5,
+                cursor: phase === "playing" && hintLevel < 3 ? "pointer" : "default", opacity: phase === "playing" && hintLevel < 3 ? 1 : 0.5 }}>
+              💡 Dica {hintLevel}/3
+            </button>
+          )}
+          <button onClick={submit} disabled={!canSubmit}
+            style={{ flex: 1, height: 52, borderRadius: 16, border: "none", color: "#fff", fontWeight: 800, fontSize: 15,
+              cursor: canSubmit ? "pointer" : "default",
+              background: canSubmit ? "linear-gradient(135deg,#7c5cf0,#6d4fd6)" : "#cfc7e6",
+              boxShadow: canSubmit ? "0 6px 18px rgba(109,79,214,0.4)" : "none", display: "block" }}>
+            ✓ {falta || intruso ? "Confirmar" : "Confirmar Ordem"}
+          </button>
+        </div>
       </div>
     </div>
   );
