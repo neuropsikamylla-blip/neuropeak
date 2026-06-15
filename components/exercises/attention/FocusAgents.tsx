@@ -393,9 +393,33 @@ export interface FocusAgentsProps {
   onComplete: (result: ExerciseResult) => void;
   forceMode?: "visual" | "auditivo";
   exerciseId?: string;
+  // Config do terapeuta (Fase E): modo + nível inicial vêm do plano.
+  settings?: { mode?: FocusMode; startLevel?: number; freeChoice?: boolean };
 }
 
-export function FocusAgents({ difficulty, theme, onComplete, forceMode, exerciseId = "focus-agents" }: FocusAgentsProps) {
+// ── Treino terapêutico — confirmação read-only (o paciente não escolhe; D6) ──────
+function TherapeuticIntro({ mode, level, onStart }: { mode: FocusMode; level: number; onStart: () => void }) {
+  const meta = MODE_META[mode];
+  return (
+    <div className="fixed inset-0 z-50 flex flex-col items-center justify-center px-4 py-7" style={{ background: "rgba(6,14,48,0.98)" }}>
+      <h2 className="text-white font-black text-xl mb-1 text-center">🎯 Focus Agentes</h2>
+      <p className="text-white/60 text-sm mb-6 text-center">Treino de hoje</p>
+      <div className="w-full max-w-sm rounded-2xl px-5 py-5 mb-6 text-center" style={{ background: "rgba(255,255,255,0.06)", border: "1.5px solid rgba(255,255,255,0.15)" }}>
+        <div className="text-4xl mb-2">{meta.icon}</div>
+        <div className="text-white font-bold text-lg">{meta.label}</div>
+        <div className="text-white/55 text-sm mt-1">{meta.desc}</div>
+        <div className="mt-3 inline-block text-xs font-bold px-3 py-1 rounded-full bg-violet-500/30 text-violet-200">Nível {level} — {LEVEL_LABELS[level - 1]}</div>
+      </div>
+      <button onClick={onStart} className="w-full max-w-sm h-13 rounded-2xl font-bold text-white text-sm py-3.5 active:scale-95"
+        style={{ background: "linear-gradient(135deg,#7c3aed,#4f46e5)", boxShadow: "0 4px 20px rgba(124,58,237,0.5)" }}>Começar →</button>
+    </div>
+  );
+}
+
+export function FocusAgents({ difficulty, theme, onComplete, forceMode, exerciseId = "focus-agents", settings }: FocusAgentsProps) {
+  const presMode = settings?.mode;
+  const presLevel = Math.max(1, Math.min(5, Math.round(settings?.startLevel ?? 1)));
+  const prescribed = !!presMode && !settings?.freeChoice;
   const speakFn = useCallback((text: string) => {
     if (forceMode === "visual") return;
     playTTS(text);
@@ -403,8 +427,9 @@ export function FocusAgents({ difficulty, theme, onComplete, forceMode, exercise
 
   const reportProgress = useExerciseProgress();
 
-  const [showModeSelect, setShowModeSelect] = useState(true);
-  const [mode, setMode]                 = useState<FocusMode>("foco");
+  const [showModeSelect, setShowModeSelect] = useState(!prescribed);
+  const [entryDone, setEntryDone]       = useState(false);
+  const [mode, setMode]                 = useState<FocusMode>(presMode ?? "foco");
   const [showTutorial, setShowTutorial] = useState(true);
 
   const [gamePhase, setGamePhase]       = useState<"command"|"playing"|"feedback">("command");
@@ -943,6 +968,14 @@ export function FocusAgents({ difficulty, theme, onComplete, forceMode, exercise
     };
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [showTutorial]);
+
+  if (prescribed && !entryDone) return (
+    <TherapeuticIntro mode={presMode!} level={presLevel} onStart={() => {
+      setMode(presMode!); modeRef.current = presMode!;
+      levelRef.current = presLevel; setDisplayLevel(presLevel);
+      setEntryDone(true);
+    }} />
+  );
 
   if (showModeSelect) return (
     <ModeSelect onConfirm={(m, lv) => {

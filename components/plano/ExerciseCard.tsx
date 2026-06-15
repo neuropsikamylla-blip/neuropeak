@@ -33,6 +33,11 @@ export function ExerciseCard({
   const [open, setOpen] = useState(false);
   const c: SpanSettings = { ...DEFAULT_SPAN_SETTINGS, ...(spanCfg ?? {}) };
   const isOrdemHistoria = id === "ordem-historia";
+  const isFocus = id === "focus-agents" || id === "focus-agents-auditivo";
+  const FOCUS_MODES: { key: string; label: string }[] = [
+    { key: "foco", label: "🎯 Foco" }, { key: "inibicao", label: "🚫 Inibição" },
+    { key: "alternancia", label: "🔄 Alternância" }, { key: "desafio", label: "🧠 Desafio" },
+  ];
   const subLabel = EXERCISE_SUBDOMAIN[id];
   const subId = EXERCISE_SUBDOMAIN_ID[id];
 
@@ -93,7 +98,32 @@ export function ExerciseCard({
 
       {open && (
         <div className="px-3 pb-3 pt-1 border-t border-white/10">
-          {!isSpan ? (
+          {isFocus ? (
+            <div className="pt-2.5 space-y-3">
+              <div>
+                <p className="text-[11px] font-bold uppercase tracking-wide text-slate-400 mb-1.5">Modo do treino</p>
+                <div className="grid grid-cols-2 gap-1.5">
+                  {FOCUS_MODES.map((m) => (
+                    <Pill key={m.key} on={!cfg?.freeChoice && cfg?.mode === m.key} onClick={() => { onSetting?.(id, "mode", m.key); onSetting?.(id, "freeChoice", false); }}>{m.label}</Pill>
+                  ))}
+                </div>
+                <div className="mt-1.5">
+                  <Pill on={!!cfg?.freeChoice} onClick={() => onSetting?.(id, "freeChoice", true)}>👤 Paciente escolhe (treino livre)</Pill>
+                </div>
+              </div>
+              {!cfg?.freeChoice && (
+                <div>
+                  <p className="text-[11px] font-bold uppercase tracking-wide text-slate-400 mb-1.5">Nível inicial (1–5)</p>
+                  <div className="flex gap-1.5">
+                    {[1, 2, 3, 4, 5].map((lv) => (
+                      <Pill key={lv} on={(Number(cfg?.startLevel) || 1) === lv} onClick={() => onSetting?.(id, "startLevel", lv)}>{lv}</Pill>
+                    ))}
+                  </div>
+                </div>
+              )}
+              <p className="text-[11px] text-slate-400">Com um modo escolhido, o paciente entra direto no &ldquo;Treino de hoje&rdquo; (sem escolher). Em &ldquo;Paciente escolhe&rdquo;, ele seleciona modo e nível.</p>
+            </div>
+          ) : !isSpan ? (
             <div className="pt-2.5">
               <div className="flex items-center justify-between mb-1.5">
                 <span className="text-[11px] font-bold uppercase tracking-wide text-slate-400">Nível inicial</span>
