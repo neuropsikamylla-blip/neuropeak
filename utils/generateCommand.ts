@@ -641,6 +641,11 @@ const accsWithMinColors = (k: number) => ALL_ACCESSORIES.filter(a => colorsWithA
 const noAccessoryAgents = () => withoutAnyAccessory(characterAttributes, ALL_ACCESSORIES);
 const cap = (arr: CharacterAttributes[], n: number) => arr.slice(0, Math.max(0, n));
 
+type Zone = "top" | "bottom" | "left" | "right";
+const ZONES: Zone[] = ["top", "bottom", "left", "right"];
+const ZONE_PT: Record<Zone, string> = { top: "em cima", bottom: "embaixo", left: "à esquerda", right: "à direita" };
+const OPP_ZONE: Record<Zone, Zone> = { top: "bottom", bottom: "top", left: "right", right: "left" };
+
 function buildFoco(lv: number, noun: string, dN: number): BuiltRound {
   // N1 — um atributo só (cor OU acessório)
   if (lv === 1) {
@@ -657,32 +662,55 @@ function buildFoco(lv: number, noun: string, dN: number): BuiltRound {
     return mkResult(targets, distract, [], false, targets.length, "multiTarget", `Toque nos ${noun}s ${colorPl(col)}`, 0);
   }
 
-  // N4 — acessório através de várias cores (discriminação de acessório; posição entra na Fase B)
+  // N4 — POSIÇÃO por cor: toque nos {cor} que estão {zona}. Mesma cor na zona oposta = distrator.
   if (lv === 4) {
-    const acc = shuffle(accsWithMinColors(3))[0];
-    const targets = distinctByAcc(acc, Math.min(5, colorsWithAcc(acc).length));
-    const otherAcc = characterAttributes.filter(c => c.accessories.length > 0 && !c.accessories.includes(acc));
-    const noAcc = noAccessoryAgents();
-    const distract = cap([...pickDistinctAgents(otherAcc, 5), ...pickDistinctAgents(noAcc, 4)], dN - targets.length);
-    return mkResult(targets, distract, [], false, targets.length, "multiTarget", `Toque nos ${noun}s com ${ACC_PT[acc]}`, 0);
+    const zone = shuffle(ZONES)[0]; const opp = OPP_ZONE[zone];
+    const col = shuffle(ALL_UNIFORM_COLORS).find(c => distinctByColor(c, 4).length >= 4) ?? shuffle(ALL_UNIFORM_COLORS)[0];
+    const colAgents = distinctByColor(col, 6);
+    const targets = colAgents.slice(0, 3);
+    const sameColorOpp = colAgents.slice(3, 5);
+    const others = pickDistinctAgents(characterAttributes.filter(c => c.uniformColor !== col), dN - targets.length - sameColorOpp.length, new Set(colAgents.map(a => a.agentId)));
+    const zones: Record<string, Zone> = {};
+    targets.forEach(t => { zones[t.id] = zone; });
+    sameColorOpp.forEach(d => { zones[d.id] = opp; });
+    const r = mkResult(targets, [...sameColorOpp, ...others], [], false, targets.length, "multiTarget", `Toque nos ${noun}s ${colorPl(col)} que estão ${ZONE_PT[zone]}`, 0);
+    r.command.zones = zones;
+    return r;
   }
 
-  // N2 / N3 / N5 — cor + acessório (cópias) com distratores PARECIDOS
+  // N5 — POSIÇÃO + cor+acessório: idênticos na zona oposta = armadilha (só a posição discrimina).
+  if (lv === 5) {
+    const zone = shuffle(ZONES)[0]; const opp = OPP_ZONE[zone];
+    const acc = shuffle(accsWithMinColors(3))[0] ?? shuffle(ALL_ACCESSORIES)[0];
+    const col = shuffle(colorsWithAcc(acc))[0];
+    const match = agentWith(col, acc)!;
+    const targets = cloneAgents(match, 3);
+    const trapOpp = cloneAgents(match, 2);                 // idênticos, mas na zona errada
+    const sameColor = pickDistinctAgents(withoutAccessory(withUniformColor(characterAttributes, col), acc), 3);
+    const sameAcc = pickDistinctAgents(withAccessory(characterAttributes, acc).filter(c => c.uniformColor !== col), 3);
+    const zones: Record<string, Zone> = {};
+    targets.forEach(t => { zones[t.id] = zone; });
+    trapOpp.forEach(t => { zones[t.id] = opp; });
+    const distract = cap([...trapOpp, ...sameColor, ...sameAcc], dN - targets.length);
+    const r = mkResult(targets, distract, [], false, targets.length, "multiTarget", `Toque nos ${noun}s ${colorPl(col)} com ${ACC_PT[acc]} que estão ${ZONE_PT[zone]}`, 0);
+    r.command.zones = zones;
+    return r;
+  }
+
+  // N2 / N3 — cor + acessório (cópias) com distratores PARECIDOS
   const acc = shuffle(accsWithMinColors(3))[0] ?? shuffle(ALL_ACCESSORIES)[0];
   const col = shuffle(colorsWithAcc(acc))[0];
   const match = agentWith(col, acc)!;
-  const nClones = lv === 5 ? 4 : 3;
-  const targets = cloneAgents(match, nClones);
-  const sameColor = withoutAccessory(withUniformColor(characterAttributes, col), acc); // mesma cor, sem o acessório
-  const sameAcc = withAccessory(characterAttributes, acc).filter(c => c.uniformColor !== col); // mesmo acessório, outra cor
+  const targets = cloneAgents(match, 3);
+  const sameColor = withoutAccessory(withUniformColor(characterAttributes, col), acc);
+  const sameAcc = withAccessory(characterAttributes, acc).filter(c => c.uniformColor !== col);
   const unrelated = characterAttributes.filter(c => c.uniformColor !== col && !c.accessories.includes(acc));
   const nPar = lv >= 3 ? 4 : 3;
   let distract = [...pickDistinctAgents(sameColor, nPar), ...pickDistinctAgents(sameAcc, nPar)];
   const remaining = dN - targets.length - distract.length;
   if (remaining > 0) distract = [...distract, ...pickDistinctAgents(unrelated, lv >= 3 ? Math.min(remaining, 2) : remaining, new Set(distract.map(d => d.agentId)))];
   distract = cap(distract, dN - targets.length);
-  const text = `Toque ${lv === 5 ? "apenas " : ""}nos ${noun}s ${colorPl(col)} com ${ACC_PT[acc]}`;
-  return mkResult(targets, distract, [], false, targets.length, "multiTarget", text, 0);
+  return mkResult(targets, distract, [], false, targets.length, "multiTarget", `Toque nos ${noun}s ${colorPl(col)} com ${ACC_PT[acc]}`, 0);
 }
 
 function buildInibicao(lv: number, noun: string, dN: number): BuiltRound {

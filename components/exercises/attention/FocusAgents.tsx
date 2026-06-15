@@ -31,6 +31,7 @@ interface FallerData {
   speed:     number; // multiplicador individual de velocidade
   turn:      number; // rad/tick — curvatura suave da trajetória
   passCount: number; // quantas vezes o alvo escapou por uma borda
+  zone?:     "top" | "bottom" | "left" | "right"; // Fase B: quica preso nesta zona
 }
 
 type InstrMode  = "both" | "visual" | "audio";
@@ -95,6 +96,17 @@ const PALETTE_HEX: Record<string, string> = {
 
 function noop(_: string) {}
 function shuffle<T>(arr: T[]): T[] { return [...arr].sort(() => Math.random() - 0.5); }
+
+// Fase B — caixa (em px) onde um agente "preso" numa zona pode andar/quicar.
+function zoneBox(zone: "top" | "bottom" | "left" | "right", W: number, H: number) {
+  const maxX = Math.max(ARENA_MARGIN, W - CHAR_SIZE - ARENA_MARGIN);
+  const maxY = Math.max(ARENA_MARGIN, H - CHAR_H - ARENA_MARGIN);
+  const midX = (ARENA_MARGIN + maxX) / 2, midY = (ARENA_MARGIN + maxY) / 2;
+  if (zone === "top")    return { x0: ARENA_MARGIN, y0: ARENA_MARGIN, x1: maxX, y1: midY };
+  if (zone === "bottom") return { x0: ARENA_MARGIN, y0: midY,         x1: maxX, y1: maxY };
+  if (zone === "left")   return { x0: ARENA_MARGIN, y0: ARENA_MARGIN, x1: midX, y1: maxY };
+  return                        { x0: midX,         y0: ARENA_MARGIN, x1: maxX, y1: maxY };
+}
 
 // Remove emojis/quebras do comando antes de enviar ao TTS (vozes leem "✅"/"🚫").
 function cleanForSpeech(text: string): string {
@@ -559,6 +571,14 @@ export function FocusAgents({ difficulty, theme, onComplete, forceMode, exercise
       };
     }).filter(Boolean) as GameAgent[];
 
+    // Fase B — posição: id do char → uid → zona.
+    const zonesByUid: Record<string, "top" | "bottom" | "left" | "right"> = {};
+    if (built.command.zones) {
+      for (const [cid, z] of Object.entries(built.command.zones)) {
+        const u = uidMap.get(cid); if (u) zonesByUid[u] = z;
+      }
+    }
+
     const newTargetUids = built.command.targets.map(id => uidMap.get(id)!).filter(Boolean);
     const newForbidden  = built.command.forbidden.map(id => uidMap.get(id)!).filter(Boolean);
     const newSequenced  = built.command.sequenced;
@@ -610,6 +630,7 @@ export function FocusAgents({ difficulty, theme, onComplete, forceMode, exercise
       speed:     0.7 + Math.random() * 0.7,                       // 0.7–1.4
       turn:      Math.random() < 0.5 ? (Math.random() - 0.5) * 0.012 : 0,
       passCount: 0,
+      zone:      zonesByUid[ga.uid],
     }));
     fallersRef.current = newFallers;
     setFallerPositions([...newFallers]);
@@ -648,6 +669,10 @@ export function FocusAgents({ difficulty, theme, onComplete, forceMode, exercise
     const cellW = W / cols;
     const cellH = H / rows;
     const placed = list.map((f, idx) => {
+      if (f.zone) {   // Fase B — posiciona dentro da zona designada
+        const b = zoneBox(f.zone, W, H);
+        return { ...f, x: b.x0 + Math.random() * Math.max(1, b.x1 - b.x0), y: b.y0 + Math.random() * Math.max(1, b.y1 - b.y0) };
+      }
       const slot = order.indexOf(idx);
       const cx   = slot % cols;
       const cy   = Math.floor(slot / cols);
@@ -718,12 +743,12 @@ export function FocusAgents({ difficulty, theme, onComplete, forceMode, exercise
         // Arena delimitada: o agente QUICA nas paredes e nunca sai/corta na borda
         // (margem de segurança). Tira a pressão motora — a dificuldade vem da regra
         // cognitiva e dos distratores, não da velocidade de fuga dos alvos.
-        const maxX = Math.max(ARENA_MARGIN, W2 - CHAR_SIZE - ARENA_MARGIN);
-        const maxY = Math.max(ARENA_MARGIN, H2 - CHAR_H - ARENA_MARGIN);
-        if (x < ARENA_MARGIN)  { x = ARENA_MARGIN; na = Math.PI - na; }
-        else if (x > maxX)     { x = maxX;         na = Math.PI - na; }
-        if (y < ARENA_MARGIN)  { y = ARENA_MARGIN; na = -na; }
-        else if (y > maxY)     { y = maxY;         na = -na; }
+        // Fase B — preso na zona: quica dentro da caixa da zona; senão na arena toda.
+        const b = f.zone ? zoneBox(f.zone, W2, H2) : { x0: ARENA_MARGIN, y0: ARENA_MARGIN, x1: Math.max(ARENA_MARGIN, W2 - CHAR_SIZE - ARENA_MARGIN), y1: Math.max(ARENA_MARGIN, H2 - CHAR_H - ARENA_MARGIN) };
+        if (x < b.x0)      { x = b.x0; na = Math.PI - na; }
+        else if (x > b.x1) { x = b.x1; na = Math.PI - na; }
+        if (y < b.y0)      { y = b.y0; na = -na; }
+        else if (y > b.y1) { y = b.y1; na = -na; }
         return { ...f, x, y, angle: na, passCount: f.passCount };
       });
 

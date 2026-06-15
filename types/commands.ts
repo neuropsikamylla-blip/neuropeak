@@ -78,6 +78,8 @@ export interface GeneratedCommand {
   verbIndex?: number;
   /** Fases (troca de regra durante a rodada). Se presente, `targets` = 1ª fase. */
   phases?: CommandPhase[];
+  /** Posição (Fase B): id do personagem → zona onde ele fica preso. */
+  zones?: Record<string, "top" | "bottom" | "left" | "right">;
 }
 
 export interface CommandGeneratorParams {
