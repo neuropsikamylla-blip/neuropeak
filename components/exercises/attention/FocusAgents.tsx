@@ -508,6 +508,7 @@ export function FocusAgents({ difficulty, theme, onComplete, forceMode, exercise
   // Fases (modos Alternância e Desafio): troca de regra durante a rodada.
   const phasesRef               = useRef<{ text: string; uids: string[]; barColor?: string }[]>([]);
   const isConditionalRef        = useRef(false);
+  const movementDirRef          = useRef<"right" | "left" | "up" | "down" | null>(null);
   const currentPhaseRef         = useRef(0);
   const phaseLockRef            = useRef(false);
   const isPhasedRef             = useRef(false);
@@ -602,6 +603,7 @@ export function FocusAgents({ difficulty, theme, onComplete, forceMode, exercise
     phaseLockRef.current = false;
     isPhasedRef.current = builtPhases.length > 0;
     isConditionalRef.current = !!built.command.conditional;
+    movementDirRef.current = built.command.movement ?? null;
     setBarColor(phasesRef.current[0]?.barColor ?? null);
     setPhaseHint(null);
 
@@ -680,17 +682,27 @@ export function FocusAgents({ difficulty, theme, onComplete, forceMode, exercise
     const order = shuffle(list.map((_, i) => i));
     const cellW = W / cols;
     const cellH = H / rows;
+    const DIR_ANGLE = { right: 0, left: Math.PI, up: -Math.PI / 2, down: Math.PI / 2 };
     const placed = list.map((f, idx) => {
+      let x: number, y: number;
       if (f.zone) {   // Fase B — posiciona dentro da zona designada
         const b = zoneBox(f.zone, W, H);
-        return { ...f, x: b.x0 + Math.random() * Math.max(1, b.x1 - b.x0), y: b.y0 + Math.random() * Math.max(1, b.y1 - b.y0) };
+        x = b.x0 + Math.random() * Math.max(1, b.x1 - b.x0);
+        y = b.y0 + Math.random() * Math.max(1, b.y1 - b.y0);
+      } else {
+        const slot = order.indexOf(idx);
+        x = (slot % cols) * cellW + Math.random() * Math.max(1, cellW - CHAR_SIZE);
+        y = Math.floor(slot / cols) * cellH + Math.random() * Math.max(1, cellH - CHAR_H);
       }
-      const slot = order.indexOf(idx);
-      const cx   = slot % cols;
-      const cy   = Math.floor(slot / cols);
-      const x    = cx * cellW + Math.random() * Math.max(1, cellW - CHAR_SIZE);
-      const y    = cy * cellH + Math.random() * Math.max(1, cellH - CHAR_H);
-      return { ...f, x, y };
+      // Fase H — movimento: alvos vão na direção da regra; outros em outra direção.
+      let angle = f.angle, turn = f.turn;
+      if (movementDirRef.current) {
+        const dir = movementDirRef.current;
+        if (targetUidsRef.current.includes(f.uid)) angle = DIR_ANGLE[dir];
+        else { const others = (["right", "left", "up", "down"] as const).filter(d => d !== dir); angle = DIR_ANGLE[others[Math.floor(Math.random() * others.length)]]; }
+        turn = 0;
+      }
+      return { ...f, x, y, angle, turn };
     });
     fallersRef.current = placed;
     setFallerPositions([...placed]);
@@ -755,6 +767,14 @@ export function FocusAgents({ difficulty, theme, onComplete, forceMode, exercise
         // Arena delimitada: o agente QUICA nas paredes e nunca sai/corta na borda
         // (margem de segurança). Tira a pressão motora — a dificuldade vem da regra
         // cognitiva e dos distratores, não da velocidade de fuga dos alvos.
+        // Fase H — movimento: anda reto e DÁ A VOLTA (wrap), direção constante.
+        if (movementDirRef.current) {
+          if (x > W2)            x = -CHAR_SIZE;
+          else if (x < -CHAR_SIZE) x = W2;
+          if (y > H2)            y = -CHAR_H;
+          else if (y < -CHAR_H)  y = H2;
+          return { ...f, x, y, angle, passCount: f.passCount };
+        }
         // Fase B — preso na zona: quica dentro da caixa da zona; senão na arena toda.
         const b = f.zone ? zoneBox(f.zone, W2, H2) : { x0: ARENA_MARGIN, y0: ARENA_MARGIN, x1: Math.max(ARENA_MARGIN, W2 - CHAR_SIZE - ARENA_MARGIN), y1: Math.max(ARENA_MARGIN, H2 - CHAR_H - ARENA_MARGIN) };
         if (x < b.x0)      { x = b.x0; na = Math.PI - na; }

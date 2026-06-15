@@ -645,6 +645,8 @@ type Zone = "top" | "bottom" | "left" | "right";
 const ZONES: Zone[] = ["top", "bottom", "left", "right"];
 const ZONE_PT: Record<Zone, string> = { top: "em cima", bottom: "embaixo", left: "à esquerda", right: "à direita" };
 const OPP_ZONE: Record<Zone, Zone> = { top: "bottom", bottom: "top", left: "right", right: "left" };
+type MoveDir = "right" | "left" | "up" | "down";
+const DIR_PT: Record<MoveDir, string> = { right: "para a direita", left: "para a esquerda", up: "para cima", down: "para baixo" };
 
 function buildFoco(lv: number, noun: string, dN: number): BuiltRound {
   // N1 — um atributo só (cor OU acessório)
@@ -662,18 +664,25 @@ function buildFoco(lv: number, noun: string, dN: number): BuiltRound {
     return mkResult(targets, distract, [], false, targets.length, "multiTarget", `Toque nos ${noun}s ${colorPl(col)}`, 0);
   }
 
-  // N4 — POSIÇÃO por cor: toque nos {cor} que estão {zona}. Mesma cor na zona oposta = distrator.
+  // N4 — POSIÇÃO ou MOVIMENTO por cor (metade/metade). Mesma cor "no lugar errado" = distrator.
   if (lv === 4) {
-    const zone = shuffle(ZONES)[0]; const opp = OPP_ZONE[zone];
     const col = shuffle(ALL_UNIFORM_COLORS).find(c => distinctByColor(c, 4).length >= 4) ?? shuffle(ALL_UNIFORM_COLORS)[0];
     const colAgents = distinctByColor(col, 6);
     const targets = colAgents.slice(0, 3);
-    const sameColorOpp = colAgents.slice(3, 5);
-    const others = pickDistinctAgents(characterAttributes.filter(c => c.uniformColor !== col), dN - targets.length - sameColorOpp.length, new Set(colAgents.map(a => a.agentId)));
+    const sameColorTrap = colAgents.slice(3, 5);
+    const others = pickDistinctAgents(characterAttributes.filter(c => c.uniformColor !== col), dN - targets.length - sameColorTrap.length, new Set(colAgents.map(a => a.agentId)));
+    if (Math.random() < 0.5) {   // MOVIMENTO
+      const dir = shuffle<MoveDir>(["right", "left", "up", "down"])[0];
+      const r = mkResult(targets, [...sameColorTrap, ...others], [], false, targets.length, "multiTarget", `Toque nos ${noun}s ${colorPl(col)} que estão indo ${DIR_PT[dir]}`, 0);
+      r.command.movement = dir;
+      return r;
+    }
+    // POSIÇÃO
+    const zone = shuffle(ZONES)[0]; const opp = OPP_ZONE[zone];
     const zones: Record<string, Zone> = {};
     targets.forEach(t => { zones[t.id] = zone; });
-    sameColorOpp.forEach(d => { zones[d.id] = opp; });
-    const r = mkResult(targets, [...sameColorOpp, ...others], [], false, targets.length, "multiTarget", `Toque nos ${noun}s ${colorPl(col)} que estão ${ZONE_PT[zone]}`, 0);
+    sameColorTrap.forEach(d => { zones[d.id] = opp; });
+    const r = mkResult(targets, [...sameColorTrap, ...others], [], false, targets.length, "multiTarget", `Toque nos ${noun}s ${colorPl(col)} que estão ${ZONE_PT[zone]}`, 0);
     r.command.zones = zones;
     return r;
   }
@@ -877,6 +886,29 @@ function buildConditional(mode: FocusMode, theme: Theme, dN: number): BuiltRound
   return { characters: shuffle([...allTargets, ...forbidden, ...neutral]), command };
 }
 
+// SEQUÊNCIA (Fase H): toque numa ORDEM específica (fone → boné → mochila).
+function buildSequence(theme: Theme, dN: number): BuiltRound | null {
+  const noun = NOUN[theme] ?? "agente";
+  const accs = shuffle(accsWithMinColors(1)).slice(0, 3);
+  if (accs.length < 3) return null;
+  const used = new Set<string>();
+  const targets = accs.map(acc => {
+    const a = pickDistinctAgents(withAccessory(characterAttributes, acc), 1, used)[0];
+    if (a) used.add(a.agentId);
+    return a;
+  }).filter(Boolean) as CharacterAttributes[];
+  if (targets.length < 3) return null;
+  const claimAccs = new Set(accs);
+  const neutral = pickDistinctAgents(characterAttributes.filter(c => !c.accessories.some(a => claimAccs.has(a))), Math.max(0, dN - 3), used);
+  const command: GeneratedCommand = {
+    text: `Toque nesta ordem:\n${accs.map(a => ACC_PT[a]).join("  →  ")}`,
+    mode: "visual", difficulty: 0,
+    targets: targets.map(t => t.id), distractors: neutral.map(c => c.id), forbidden: [],
+    sequenced: true, requiredTargets: 3, rule: { type: "sequence" },
+  };
+  return { characters: shuffle([...targets, ...neutral]), command };
+}
+
 function buildPhased(mode: FocusMode, level: number, theme: Theme): BuiltRound | null {
   const noun = NOUN[theme] ?? "agente";
   const lv = Math.max(1, Math.min(5, level));
@@ -885,6 +917,8 @@ function buildPhased(mode: FocusMode, level: number, theme: Theme): BuiltRound |
 
   // N5 (Alternância/Desafio) — regra condicional pela cor da barra.
   if (lv === 5) { const c = buildConditional(mode, theme, dN); if (c) return c; }
+  // Desafio N3 — às vezes uma rodada de SEQUÊNCIA (toque na ordem).
+  if (isDesafio && lv === 3 && Math.random() < 0.5) { const s = buildSequence(theme, dN); if (s) return s; }
 
   const used = new Set<string>();
   const allTargets: CharacterAttributes[] = [];

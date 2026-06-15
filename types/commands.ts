@@ -84,6 +84,8 @@ export interface GeneratedCommand {
   zones?: Record<string, "top" | "bottom" | "left" | "right">;
   /** Regra condicional (Fase H): a regra ativa é indicada pela cor da barra do topo. */
   conditional?: boolean;
+  /** Movimento (Fase H): direção que os ALVOS seguem (andam reto + dão a volta). */
+  movement?: "right" | "left" | "up" | "down";
 }
 
 export interface CommandGeneratorParams {
