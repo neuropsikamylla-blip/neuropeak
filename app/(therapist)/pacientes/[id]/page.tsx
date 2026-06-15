@@ -12,6 +12,7 @@ import { DomainRadarChart } from "@/components/charts/DomainRadarChart";
 import { calculateDomainScore, calculateAdherence } from "@/lib/scoring";
 import { DistributionChart } from "@/components/plano/DistributionChart";
 import { parsePlanExercises } from "@/lib/exercise-plan";
+import { summarizeStoryTrail } from "@/lib/story-trail-report";
 import { ALL_DOMAINS, EXERCISE_DOMAIN } from "@/lib/domain-taxonomy";
 import { formatDate, formatDateTime, calculateAge, formatDuration } from "@/lib/utils";
 import { ArrowLeft, FileText, Target, Globe, Pencil } from "lucide-react";
@@ -50,6 +51,7 @@ export default async function PatientProfilePage({ params }: { params: Promise<{
   };
 
   const sessions = patient.sessions as SessionData[];
+  const trail = summarizeStoryTrail(sessionRows);   // resumo da trilha "Ordem da História"
   const typedAchievements = patient.achievements as unknown as Array<{ id: string; icon: string; title: string; unlockedAt: string }>;
   const domainScores = calculateDomainScore(sessions);
   const age = calculateAge(patient.birthDate);
@@ -185,6 +187,66 @@ export default async function PatientProfilePage({ params }: { params: Promise<{
               </CardContent>
             </Card>
           </div>
+
+          {trail && (
+            <Card>
+              <CardHeader>
+                <CardTitle className="text-base flex items-center gap-2">
+                  📖 Ordem da História — Trilha
+                  <span className={`text-xs font-bold px-2 py-0.5 rounded-full ${
+                    trail.trend === "subiu" ? "bg-green-500/15 text-green-400"
+                    : trail.trend === "regrediu" ? "bg-red-500/15 text-red-400"
+                    : "bg-slate-500/15 text-slate-300"}`}>
+                    {trail.trend === "subiu" ? "▲ avançou" : trail.trend === "regrediu" ? "▼ regrediu" : "■ manteve"}
+                  </span>
+                </CardTitle>
+              </CardHeader>
+              <CardContent className="space-y-3">
+                <div className="grid grid-cols-2 sm:grid-cols-4 gap-2">
+                  <div className="p-2.5 bg-white/5 rounded-lg">
+                    <p className="text-[11px] text-slate-400">Estágio atual</p>
+                    <p className="text-sm font-bold text-slate-100">{trail.stageLabel}</p>
+                  </div>
+                  <div className="p-2.5 bg-white/5 rounded-lg">
+                    <p className="text-[11px] text-slate-400">Acerto (recente)</p>
+                    <p className={`text-sm font-bold ${trail.recentAccuracy >= 0.8 ? "text-green-400" : trail.recentAccuracy >= 0.6 ? "text-yellow-400" : "text-red-400"}`}>
+                      {Math.round(trail.recentAccuracy * 100)}%
+                    </p>
+                  </div>
+                  <div className="p-2.5 bg-white/5 rounded-lg">
+                    <p className="text-[11px] text-slate-400">Tempo médio</p>
+                    <p className="text-sm font-bold text-slate-100">{trail.meanTimeS}s</p>
+                  </div>
+                  <div className="p-2.5 bg-white/5 rounded-lg">
+                    <p className="text-[11px] text-slate-400">Dicas / tentativas</p>
+                    <p className="text-sm font-bold text-slate-100">{trail.hintsTotal} / {trail.retriesTotal}</p>
+                  </div>
+                </div>
+
+                <div className="flex flex-wrap gap-2 text-[11px]">
+                  {(["ordem", "intruso", "falta"] as const).map((m) => trail.byMode[m].n > 0 && (
+                    <span key={m} className="px-2 py-1 rounded-md bg-white/5 text-slate-300">
+                      {m === "ordem" ? "Ordenar" : m === "intruso" ? "Intruso" : "Descubra"}: {Math.round(trail.byMode[m].acc * 100)}% ({trail.byMode[m].n})
+                    </span>
+                  ))}
+                </div>
+
+                <div className="p-2.5 rounded-lg bg-blue-500/10 border border-blue-400/20">
+                  <p className="text-[11px] font-bold text-blue-300 mb-0.5">Próximo desafio recomendado</p>
+                  <p className="text-xs text-slate-200">{trail.nextChallenge}</p>
+                </div>
+
+                <div>
+                  <p className="text-[11px] font-bold text-slate-400 mb-1">Observações automáticas</p>
+                  <ul className="space-y-1">
+                    {trail.observations.map((o, i) => (
+                      <li key={i} className="text-xs text-slate-200 flex gap-1.5"><span className="text-slate-500">•</span>{o}</li>
+                    ))}
+                  </ul>
+                </div>
+              </CardContent>
+            </Card>
+          )}
 
           {planExerciseIds.length > 0 && (
             <Card>
