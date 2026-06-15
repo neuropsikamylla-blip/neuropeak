@@ -980,13 +980,25 @@ function buildPhased(mode: FocusMode, level: number, theme: Theme): BuiltRound |
  * @param theme  Tema visual
  * @param recentVerbs Índices de verbos usados recentemente (evita repetição)
  */
+// Desbloqueios pós-N5 (níveis 6-9, independem do modo):
+// 6 = atenção com exceção · 7 = capturar na ordem (sequência) · 8 = duas regras (condicional) · 9 = ignorar distração.
+function buildUnlock(lv: number, theme: Theme): BuiltRound {
+  const noun = NOUN[theme] ?? "agente";
+  const dN = MODE_LEVEL_N[4][1];
+  if (lv === 7) { const s = buildSequence(theme, dN); if (s) return s; }
+  if (lv === 8) { const c = buildConditional("desafio", theme, dN); if (c) return c; }
+  return buildInibicao(lv === 9 ? 4 : 5, noun, dN);   // exceção/proibido (9 = piscam, aplicado no componente)
+}
+
 export function buildModeRound(
   mode: FocusMode,
   level: number,
   theme: Theme,
   recentVerbs: number[] = [],
 ): BuiltRound {
-  const lv   = Math.max(1, Math.min(5, Math.round(level)));
+  const lvRaw = Math.max(1, Math.min(9, Math.round(level)));
+  if (lvRaw >= 6) return buildUnlock(lvRaw, theme);   // desbloqueios pós-N5
+  const lv   = lvRaw;
   const diff = MODE_LEVEL_DIFF[mode][lv - 1];
   const [n, dN] = MODE_LEVEL_N[lv - 1];
 

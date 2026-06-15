@@ -404,7 +404,14 @@ export default function ExercicioPage() {
 
         // Config do terapeuta para este exercício (vinda da prescrição do plano).
         const activePlan = data.patient?.trainingPlans?.[0];
-        if (activePlan) setExerciseSettings(planExerciseSettings(activePlan.exercises, exerciseId));
+        if (activePlan) {
+          let s = planExerciseSettings(activePlan.exercises, exerciseId) as Record<string, unknown> | undefined;
+          // Focus Agentes: retoma o nível salvo POR MODO (progressão automática).
+          const isFocus = exerciseId === "focus-agents" || exerciseId === "focus-agents-auditivo";
+          const savedLevel = isFocus && s?.mode ? (data.focusLevels?.[s.mode as string] as number | undefined) : undefined;
+          if (savedLevel != null) s = { ...s, startLevel: savedLevel };
+          setExerciseSettings(s);
+        }
 
         const configs = data.patient?.exerciseConfigs ?? [];
         const config = configs.find(
@@ -544,8 +551,8 @@ export default function ExercicioPage() {
       case "mot": return <MOT {...props} />;
       case "dual-task": return <DualTask {...props} />;
       case "deductive-grid": return <DeductiveGrid {...props} />;
-      case "focus-agents": return <FocusAgents {...props} forceMode="visual" settings={exerciseSettings as { mode?: "foco"|"inibicao"|"alternancia"|"desafio"; startLevel?: number; freeChoice?: boolean; feedback?: "leve"|"normal"|"intenso" } | undefined} />;
-      case "focus-agents-auditivo": return <FocusAgents {...props} forceMode="auditivo" exerciseId="focus-agents-auditivo" settings={exerciseSettings as { mode?: "foco"|"inibicao"|"alternancia"|"desafio"; startLevel?: number; freeChoice?: boolean; feedback?: "leve"|"normal"|"intenso" } | undefined} />;
+      case "focus-agents": return <FocusAgents {...props} forceMode="visual" settings={exerciseSettings as { mode?: "foco"|"inibicao"|"alternancia"|"desafio"; startLevel?: number; freeChoice?: boolean; feedback?: "leve"|"normal"|"intenso"; autoAdvance?: boolean } | undefined} />;
+      case "focus-agents-auditivo": return <FocusAgents {...props} forceMode="auditivo" exerciseId="focus-agents-auditivo" settings={exerciseSettings as { mode?: "foco"|"inibicao"|"alternancia"|"desafio"; startLevel?: number; freeChoice?: boolean; feedback?: "leve"|"normal"|"intenso"; autoAdvance?: boolean } | undefined} />;
       case "atencao-alternada": return <AtencaoAlternada {...props} />;
       case "associacao-pares": return <AssociacaoPares {...props} />;
       default: return <div className="p-8 text-center text-gray-500">Exercício em desenvolvimento</div>;

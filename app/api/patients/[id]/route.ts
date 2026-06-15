@@ -69,7 +69,23 @@ export const GET = withApiHandler(async (
       },
     });
     if (!patient) return NextResponse.json({ error: "Not found" }, { status: 404 });
-    return NextResponse.json({ patient });
+    // Focus Agentes — nível salvo POR MODO (progressão automática): pega o nextLevel
+    // da sessão mais recente de cada modo.
+    const focusLevels: Record<string, number> = {};
+    if (includeConfig) {
+      const focusSessions = await prisma.session.findMany({
+        where: { patientId: id, exerciseId: { in: ["focus-agents", "focus-agents-auditivo"] } },
+        orderBy: { completedAt: "desc" }, take: 30, select: { metadata: true },
+      });
+      for (const s of focusSessions) {
+        try {
+          const m = JSON.parse(s.metadata || "{}") as { mode?: string; nextLevel?: number; endedLevel?: number };
+          const nl = m.nextLevel ?? m.endedLevel;
+          if (m.mode && typeof nl === "number" && focusLevels[m.mode] === undefined) focusLevels[m.mode] = nl;
+        } catch { /* metadata antigo */ }
+      }
+    }
+    return NextResponse.json({ patient, focusLevels });
   }
 
   // Terapeuta dono recebe o registro completo.

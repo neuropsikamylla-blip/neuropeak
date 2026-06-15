@@ -4,7 +4,7 @@ import { getServerSession } from "next-auth";
 import { authOptions } from "@/lib/auth";
 import prisma from "@/lib/db";
 import { z } from "zod";
-import { calculateNewDifficulty, calculateDualTaskProgression, calculateProgression, calculateStoryTrailProgression, checkAchievements } from "@/lib/adaptive";
+import { calculateNewDifficulty, calculateDualTaskProgression, calculateProgression, calculateStoryTrailProgression, calculateFocusProgression, checkAchievements } from "@/lib/adaptive";
 import type { SessionData } from "@/types";
 import { withApiHandler } from "@/lib/api-handler";
 
@@ -137,6 +137,17 @@ export const POST = withApiHandler(async (req: NextRequest) => {
     meta.consolidatedLevel = genericProg.consolidatedLevel;
     meta.progressionAction = genericProg.action;
     meta.progressionReason = genericProg.reason;
+  }
+
+  // Focus Agentes: progressão automática POR MODO — guarda o próximo nível no metadata
+  // (a fonte da verdade do nível por modo são as sessões, não o ExerciseConfig).
+  if ((data.exerciseId === "focus-agents" || data.exerciseId === "focus-agents-auditivo") && typeof meta.level === "number") {
+    const auto = meta.autoAdvance !== false;
+    const prog = calculateFocusProgression(meta.level as number, data.accuracy);
+    meta.nextLevel = auto ? prog.nextLevel : (meta.level as number);
+    meta.endedLevel = meta.nextLevel;
+    meta.progressionAction = auto ? prog.action : "maintain";
+    meta.progressionReason = auto ? prog.reason : "Avanço automático desligado.";
   }
 
   const newSession = await prisma.session.create({

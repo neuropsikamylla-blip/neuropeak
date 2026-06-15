@@ -138,8 +138,8 @@ const soundWrong   = () => beep([200, 150], 0.15, "square");
 const soundCapture = () => beep([720], 0.05, "triangle");
 function vibrate(ms: number | number[]) { try { navigator.vibrate?.(ms); } catch { /* sem vibração */ } }
 
-// Relógio por rodada (segundos) — só nos níveis altos (D5). 0 = sem relógio.
-const LEVEL_CLOCK = [0, 0, 0, 16, 12];
+// Relógio por rodada (segundos) — níveis altos + desbloqueios (6-9). 0 = sem relógio.
+const LEVEL_CLOCK = [0, 0, 0, 16, 12, 12, 11, 11, 10];
 
 // ── AgentCard ─────────────────────────────────────────────────────────────────
 
@@ -407,8 +407,12 @@ export interface FocusAgentsProps {
   forceMode?: "visual" | "auditivo";
   exerciseId?: string;
   // Config do terapeuta (Fase E): modo + nível inicial vêm do plano.
-  settings?: { mode?: FocusMode; startLevel?: number; freeChoice?: boolean; feedback?: "leve" | "normal" | "intenso" };
+  settings?: { mode?: FocusMode; startLevel?: number; freeChoice?: boolean; feedback?: "leve" | "normal" | "intenso"; autoAdvance?: boolean };
 }
+
+// Rótulo do nível (1-5) ou do desbloqueio (6-9).
+const UNLOCK_LABELS: Record<number, string> = { 6: "🔓 Exceção", 7: "🔓 Na ordem", 8: "🔓 Duas regras", 9: "🔓 Sem distração" };
+const levelLabel = (lv: number) => (lv >= 6 ? UNLOCK_LABELS[lv] ?? `Nível ${lv}` : LEVEL_LABELS[lv - 1]);
 
 // ── Treino terapêutico — confirmação read-only (o paciente não escolhe; D6) ──────
 function TherapeuticIntro({ mode, level, onStart }: { mode: FocusMode; level: number; onStart: () => void }) {
@@ -421,7 +425,7 @@ function TherapeuticIntro({ mode, level, onStart }: { mode: FocusMode; level: nu
         <div className="text-4xl mb-2">{meta.icon}</div>
         <div className="text-white font-bold text-lg">{meta.label}</div>
         <div className="text-white/55 text-sm mt-1">{meta.desc}</div>
-        <div className="mt-3 inline-block text-xs font-bold px-3 py-1 rounded-full bg-violet-500/30 text-violet-200">Nível {level} — {LEVEL_LABELS[level - 1]}</div>
+        <div className="mt-3 inline-block text-xs font-bold px-3 py-1 rounded-full bg-violet-500/30 text-violet-200">{level >= 6 ? levelLabel(level) : `Nível ${level} — ${levelLabel(level)}`}</div>
       </div>
       <button onClick={onStart} className="w-full max-w-sm h-13 rounded-2xl font-bold text-white text-sm py-3.5 active:scale-95"
         style={{ background: "linear-gradient(135deg,#7c3aed,#4f46e5)", boxShadow: "0 4px 20px rgba(124,58,237,0.5)" }}>Começar →</button>
@@ -431,7 +435,7 @@ function TherapeuticIntro({ mode, level, onStart }: { mode: FocusMode; level: nu
 
 export function FocusAgents({ difficulty, theme, onComplete, forceMode, exerciseId = "focus-agents", settings }: FocusAgentsProps) {
   const presMode = settings?.mode;
-  const presLevel = Math.max(1, Math.min(5, Math.round(settings?.startLevel ?? 1)));
+  const presLevel = Math.max(1, Math.min(9, Math.round(settings?.startLevel ?? 1)));
   const prescribed = !!presMode && !settings?.freeChoice;
   const fbLevel = settings?.feedback ?? "normal";   // intensidade do feedback (Fase G/H)
   const speakFn = useCallback((text: string) => {
@@ -612,7 +616,7 @@ export function FocusAgents({ difficulty, theme, onComplete, forceMode, exercise
     setGameAgents(newGameAgents);
     // Fase H — distratores fortes (piscam) na Inibição N4/N5: mistura alvos e não-alvos
     // para que "piscar" não seja pista; o paciente precisa inibir seguindo a regra.
-    setFlashyUids((modeRef.current === "inibicao" && levelRef.current >= 4)
+    setFlashyUids(((modeRef.current === "inibicao" && levelRef.current >= 4) || levelRef.current === 9)
       ? shuffle(newGameAgents.map(g => g.uid)).slice(0, 3) : []);
     setCommand(built.command.text);
     setTargetUids(newTargetUids);
@@ -718,7 +722,7 @@ export function FocusAgents({ difficulty, theme, onComplete, forceMode, exercise
     failReasonRef.current = null;
 
     // Relógio por rodada (só níveis altos — D5).
-    const clockSecs = LEVEL_CLOCK[Math.max(1, Math.min(5, levelRef.current)) - 1];
+    const clockSecs = LEVEL_CLOCK[Math.max(1, Math.min(9, levelRef.current)) - 1];
     if (clockIntRef.current) { clearInterval(clockIntRef.current); clockIntRef.current = null; }
     if (clockSecs > 0) {
       setClockLeft(clockSecs);
@@ -887,6 +891,7 @@ export function FocusAgents({ difficulty, theme, onComplete, forceMode, exercise
           metadata: {
             rounds: MAX_ROUNDS, correct: correctCount,
             mode: modeRef.current, level: levelRef.current, startedLevel: levelRef.current,
+            autoAdvance: settings?.autoAdvance !== false,
             channel: forceMode === "auditivo" ? "auditivo" : "visual",
             falsePositives: sum(m => m.falsePositive),
             omissions: sum(m => m.omissions),

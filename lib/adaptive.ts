@@ -126,6 +126,17 @@ export function calculateProgression(
   return { nextLevel, action, consolidatedLevel, reason };
 }
 
+// ── Focus Agentes: progressão por MODO (níveis 1-5 + desbloqueios 6-9) ──────────
+// ≥80% sobe um nível; <55% desce; senão mantém. Do 5 em diante (≥80%) abre os
+// desbloqueios (6 exceção · 7 sequência · 8 condicional · 9 ignorar distração).
+export function calculateFocusProgression(level: number, accuracy: number): { nextLevel: number; action: "increase" | "maintain" | "decrease"; reason: string } {
+  const lvl = Math.min(9, Math.max(1, Math.round(level)));
+  const pct = Math.round(accuracy * 100);
+  if (accuracy >= 0.80 && lvl < 9) return { nextLevel: lvl + 1, action: "increase", reason: `${pct}% — sobe para o nível ${lvl + 1}${lvl + 1 >= 6 ? " (desbloqueio)" : ""}.` };
+  if (accuracy < 0.55 && lvl > 1) return { nextLevel: lvl - 1, action: "decrease", reason: `${pct}% — desce para o nível ${lvl - 1}.` };
+  return { nextLevel: lvl, action: "maintain", reason: `Mantém o nível ${lvl} (${pct}%).` };
+}
+
 // ── Trilha da "Ordem da História" ────────────────────────────────────────────────
 // Estágios (em currentDifficulty): 1-10 = ordenar (fácil→muito difícil);
 // 11 = Encontre o Intruso; 12 = Descubra o que falta.

@@ -129,6 +129,15 @@ export function ExerciseCard({
                   ))}
                 </div>
               </div>
+              {!cfg?.freeChoice && (
+                <div className="flex items-center justify-between gap-2">
+                  <span className="text-xs text-slate-300">Avanço automático de nível</span>
+                  <div className="flex gap-1.5">
+                    <Pill on={cfg?.autoAdvance !== false} onClick={() => onSetting?.(id, "autoAdvance", true)}>Sim</Pill>
+                    <Pill on={cfg?.autoAdvance === false} onClick={() => onSetting?.(id, "autoAdvance", false)}>Não</Pill>
+                  </div>
+                </div>
+              )}
               <p className="text-[11px] text-slate-400">Com um modo escolhido, o paciente entra direto no &ldquo;Treino de hoje&rdquo; (sem escolher). Em &ldquo;Paciente escolhe&rdquo;, ele seleciona modo e nível.</p>
             </div>
           ) : !isSpan ? (
