@@ -63,6 +63,8 @@ export interface CommandRule {
 export interface CommandPhase {
   text: string;
   targetIds: string[];
+  /** Regra condicional (Fase H): cor da barra do topo que indica esta regra. */
+  barColor?: ColorName;
 }
 
 export interface GeneratedCommand {
@@ -80,6 +82,8 @@ export interface GeneratedCommand {
   phases?: CommandPhase[];
   /** Posição (Fase B): id do personagem → zona onde ele fica preso. */
   zones?: Record<string, "top" | "bottom" | "left" | "right">;
+  /** Regra condicional (Fase H): a regra ativa é indicada pela cor da barra do topo. */
+  conditional?: boolean;
 }
 
 export interface CommandGeneratorParams {

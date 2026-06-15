@@ -839,11 +839,52 @@ function phaseSeq(mode: FocusMode, lv: number): PhaseKind[] {
   return ["combo", "colorExceptAcc", "acc"];
 }
 
+// Regra CONDICIONAL (Fase H): a regra ativa é indicada pela cor da barra do topo.
+// Ex.: barra AZUL → toque nos com fone; barra ROXA → toque nos com boné.
+function buildConditional(mode: FocusMode, theme: Theme, dN: number): BuiltRound | null {
+  const noun = NOUN[theme] ?? "agente";
+  const isDesafio = mode === "desafio";
+  const accs = shuffle(accsWithMinColors(2)).slice(0, 2);
+  if (accs.length < 2) return null;
+  const barColors = shuffle<ColorName>(["azul", "roxo", "verde", "vermelho", "laranja", "amarelo"]).slice(0, 2);
+  const used = new Set<string>();
+  const claimAccs = new Set(accs);
+  const allTargets: CharacterAttributes[] = [];
+  const phases: { text: string; targetIds: string[]; barColor: ColorName }[] = [];
+  accs.forEach((acc, i) => {
+    const targets = pickDistinctAgents(withAccessory(characterAttributes, acc), 3, used);
+    targets.forEach(t => used.add(t.agentId));
+    allTargets.push(...targets);
+    phases.push({ text: `Barra ${COLOR_PT[barColors[i]].toUpperCase()}: toque nos ${noun}s com ${ACC_PT[acc]}`, targetIds: targets.map(t => t.id), barColor: barColors[i] });
+  });
+  let forbidden: CharacterAttributes[] = [];
+  let forbidColor: ColorName | null = null;
+  if (isDesafio) {
+    forbidColor = shuffle(ALL_UNIFORM_COLORS).find(c => !barColors.includes(c) && pickDistinctAgents(withUniformColor(characterAttributes, c), 2, used).length >= 2) ?? null;
+    if (forbidColor) { forbidden = pickDistinctAgents(withUniformColor(characterAttributes, forbidColor), 2, used); forbidden.forEach(t => used.add(t.agentId)); }
+  }
+  const neutral = pickDistinctAgents(
+    characterAttributes.filter(c => !c.accessories.some(a => claimAccs.has(a)) && c.uniformColor !== forbidColor),
+    Math.max(0, dN - allTargets.length - forbidden.length), used);
+  const mapText = accs.map((acc, i) => `${COLOR_PT[barColors[i]].toUpperCase()} → ${ACC_PT[acc]}`).join("  ·  ");
+  const command: GeneratedCommand = {
+    text: `Siga a barra do topo:\n${mapText}${forbidColor ? `\n🚫 NUNCA toque nos ${colorPl(forbidColor)}` : ""}`,
+    mode: "visual", difficulty: 0,
+    targets: phases[0].targetIds, distractors: neutral.map(c => c.id), forbidden: forbidden.map(c => c.id),
+    sequenced: false, requiredTargets: phases[0].targetIds.length, rule: { type: "sequence" },
+    phases, conditional: true,
+  };
+  return { characters: shuffle([...allTargets, ...forbidden, ...neutral]), command };
+}
+
 function buildPhased(mode: FocusMode, level: number, theme: Theme): BuiltRound | null {
   const noun = NOUN[theme] ?? "agente";
   const lv = Math.max(1, Math.min(5, level));
   const dN = MODE_LEVEL_N[lv - 1][1];
   const isDesafio = mode === "desafio";
+
+  // N5 (Alternância/Desafio) — regra condicional pela cor da barra.
+  if (lv === 5) { const c = buildConditional(mode, theme, dN); if (c) return c; }
 
   const used = new Set<string>();
   const allTargets: CharacterAttributes[] = [];

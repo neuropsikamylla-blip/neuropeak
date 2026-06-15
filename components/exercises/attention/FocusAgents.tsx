@@ -467,6 +467,7 @@ export function FocusAgents({ difficulty, theme, onComplete, forceMode, exercise
   const [lastCorrect, setLastCorrect]   = useState(false);
   const [points, setPoints]             = useState(0);   // placar (Fase G)
   const [clockLeft, setClockLeft]       = useState(0);   // relógio por rodada (níveis altos)
+  const [barColor, setBarColor]         = useState<string | null>(null);   // barra condicional (Fase H)
   const pointsRef                       = useRef(0);
   const clockIntRef                     = useRef<ReturnType<typeof setInterval> | null>(null);
 
@@ -502,7 +503,8 @@ export function FocusAgents({ difficulty, theme, onComplete, forceMode, exercise
   const modeRef                 = useRef<FocusMode>("foco");
   const levelRef                = useRef(1);
   // Fases (modos Alternância e Desafio): troca de regra durante a rodada.
-  const phasesRef               = useRef<{ text: string; uids: string[] }[]>([]);
+  const phasesRef               = useRef<{ text: string; uids: string[]; barColor?: string }[]>([]);
+  const isConditionalRef        = useRef(false);
   const currentPhaseRef         = useRef(0);
   const phaseLockRef            = useRef(false);
   const isPhasedRef             = useRef(false);
@@ -591,10 +593,13 @@ export function FocusAgents({ difficulty, theme, onComplete, forceMode, exercise
     phasesRef.current = builtPhases.map(p => ({
       text: p.text,
       uids: p.targetIds.map(id => uidMap.get(id)!).filter(Boolean),
+      barColor: p.barColor,
     }));
     currentPhaseRef.current = 0;
     phaseLockRef.current = false;
     isPhasedRef.current = builtPhases.length > 0;
+    isConditionalRef.current = !!built.command.conditional;
+    setBarColor(phasesRef.current[0]?.barColor ?? null);
     setPhaseHint(null);
 
     recentVerbsRef.current = [...recentVerbsRef.current.slice(-4), verbIdx];
@@ -877,7 +882,8 @@ export function FocusAgents({ difficulty, theme, onComplete, forceMode, exercise
     phaseLockRef.current = true;
     currentPhaseRef.current = next;
     const phase = phasesRef.current[next];
-    setPhaseHint(phase.text);
+    setPhaseHint(isConditionalRef.current ? "🎨 A barra mudou de cor!" : phase.text);
+    setBarColor(phase.barColor ?? null);
     setTimeout(() => {
       targetUidsRef.current = phase.uids;
       setTargetUids(phase.uids);
@@ -1208,6 +1214,13 @@ export function FocusAgents({ difficulty, theme, onComplete, forceMode, exercise
 
         {/* Área da arena */}
         <div ref={playAreaRef} className="relative flex-1 overflow-hidden">
+          {/* Fase H — barra condicional: a cor indica a regra ativa */}
+          {barColor && gamePhase === "playing" && (
+            <div className="absolute top-0 left-0 right-0 z-30 flex items-center justify-center gap-2 py-1.5 font-black text-white text-xs"
+              style={{ background: PALETTE_HEX[barColor] ?? "#666", textShadow: "0 1px 3px rgba(0,0,0,0.55)", boxShadow: "0 3px 12px rgba(0,0,0,0.4)" }}>
+              🎨 BARRA {barColor.toUpperCase()} — siga a regra desta cor
+            </div>
+          )}
           {(gamePhase === "playing" || gamePhase === "feedback") && fallerPositions.map(f => {
             const ga = gameAgents.find(g => g.uid === f.uid);
             if (!ga) return null;
