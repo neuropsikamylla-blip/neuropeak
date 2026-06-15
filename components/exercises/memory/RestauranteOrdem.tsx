@@ -69,7 +69,7 @@ const ITEMS: Item[] = [
 ];
 
 // versão das fotos — subir quando reprocessar imagens (força recarga / fura cache)
-const IMG_V = "?v=2";
+const IMG_V = "?v=3";
 const photo = (id: string) => `/exercises/restaurante/${id}.png${IMG_V}`;
 
 // Itens já vêm pré-montados (prato/copo/tigela próprios) — renderiza a foto direto.
@@ -645,13 +645,13 @@ export function RestauranteOrdem({ difficulty, onComplete, auditory = false }: R
                         const full = (roundRef.current && traysRef.current[active]?.length >= roundRef.current.finals[active].length) || false;
                         return (
                           <motion.button key={`${it.id}-${i}`} onClick={() => place(it)} disabled={full} whileTap={{ scale: 0.93 }}
-                            style={{ borderRadius: 16, cursor: full ? "default" : "pointer", padding: "10px 6px 8px",
-                              display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", gap: 6,
+                            style={{ borderRadius: 16, cursor: full ? "default" : "pointer", padding: "6px 5px 6px",
+                              display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", gap: 4,
                               opacity: full && !placed ? 0.5 : 1,
                               background: sel ? "#eef6f4" : "#fffdf7", border: sel ? "2px solid #2f9e8f" : "1.5px solid #ece0c8",
                               boxShadow: sel ? "0 2px 8px rgba(47,158,143,0.18)" : "0 4px 12px rgba(120,90,50,0.12)",
                               transition: "all .2s" }}>
-                            <span style={{ position: "relative", width: "100%", maxWidth: 104, aspectRatio: "1 / 1" }}>
+                            <span style={{ position: "relative", width: "100%", maxWidth: 142, aspectRatio: "1 / 1" }}>
                               {/* eslint-disable-next-line @next/next/no-img-element */}
                               <img src={photo(it.id)} alt="" draggable={false}
                                 style={{ width: "100%", height: "100%", objectFit: "contain", display: "block", userSelect: "none" }} />

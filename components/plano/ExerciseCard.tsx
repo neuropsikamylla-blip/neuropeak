@@ -104,23 +104,18 @@ export function ExerciseCard({
                 <p className="text-[11px] font-bold uppercase tracking-wide text-slate-400 mb-1.5">Modo do treino</p>
                 <div className="grid grid-cols-2 gap-1.5">
                   {FOCUS_MODES.map((m) => (
-                    <Pill key={m.key} on={!cfg?.freeChoice && cfg?.mode === m.key} onClick={() => { onSetting?.(id, "mode", m.key); onSetting?.(id, "freeChoice", false); }}>{m.label}</Pill>
+                    <Pill key={m.key} on={(cfg?.mode ?? "foco") === m.key} onClick={() => onSetting?.(id, "mode", m.key)}>{m.label}</Pill>
                   ))}
                 </div>
-                <div className="mt-1.5">
-                  <Pill on={!!cfg?.freeChoice} onClick={() => onSetting?.(id, "freeChoice", true)}>👤 Paciente escolhe (treino livre)</Pill>
+              </div>
+              <div>
+                <p className="text-[11px] font-bold uppercase tracking-wide text-slate-400 mb-1.5">Nível inicial (1–5)</p>
+                <div className="flex gap-1.5">
+                  {[1, 2, 3, 4, 5].map((lv) => (
+                    <Pill key={lv} on={(Number(cfg?.startLevel) || 1) === lv} onClick={() => onSetting?.(id, "startLevel", lv)}>{lv}</Pill>
+                  ))}
                 </div>
               </div>
-              {!cfg?.freeChoice && (
-                <div>
-                  <p className="text-[11px] font-bold uppercase tracking-wide text-slate-400 mb-1.5">Nível inicial (1–5)</p>
-                  <div className="flex gap-1.5">
-                    {[1, 2, 3, 4, 5].map((lv) => (
-                      <Pill key={lv} on={(Number(cfg?.startLevel) || 1) === lv} onClick={() => onSetting?.(id, "startLevel", lv)}>{lv}</Pill>
-                    ))}
-                  </div>
-                </div>
-              )}
               <div>
                 <p className="text-[11px] font-bold uppercase tracking-wide text-slate-400 mb-1.5">Feedback</p>
                 <div className="flex gap-1.5">
@@ -129,16 +124,14 @@ export function ExerciseCard({
                   ))}
                 </div>
               </div>
-              {!cfg?.freeChoice && (
-                <div className="flex items-center justify-between gap-2">
-                  <span className="text-xs text-slate-300">Avanço automático de nível</span>
-                  <div className="flex gap-1.5">
-                    <Pill on={cfg?.autoAdvance !== false} onClick={() => onSetting?.(id, "autoAdvance", true)}>Sim</Pill>
-                    <Pill on={cfg?.autoAdvance === false} onClick={() => onSetting?.(id, "autoAdvance", false)}>Não</Pill>
-                  </div>
+              <div className="flex items-center justify-between gap-2">
+                <span className="text-xs text-slate-300">Avanço automático de nível</span>
+                <div className="flex gap-1.5">
+                  <Pill on={cfg?.autoAdvance !== false} onClick={() => onSetting?.(id, "autoAdvance", true)}>Sim</Pill>
+                  <Pill on={cfg?.autoAdvance === false} onClick={() => onSetting?.(id, "autoAdvance", false)}>Não</Pill>
                 </div>
-              )}
-              <p className="text-[11px] text-slate-400">Com um modo escolhido, o paciente entra direto no &ldquo;Treino de hoje&rdquo; (sem escolher). Em &ldquo;Paciente escolhe&rdquo;, ele seleciona modo e nível.</p>
+              </div>
+              <p className="text-[11px] text-slate-400">O paciente entra direto no &ldquo;Treino de hoje&rdquo; com o modo e o nível que você definir aqui — sem tela de escolha.</p>
             </div>
           ) : !isSpan ? (
             <div className="pt-2.5">

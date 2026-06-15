@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect, useRef, useCallback, useMemo } from "react";
+import { useState, useEffect, useRef, useCallback, useMemo, useLayoutEffect } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { calculateExerciseScore } from "@/lib/scoring";
 import { cancelTTS } from "@/lib/tts";
@@ -298,60 +298,79 @@ function CartBasket({ items }: { items: Product[] }) {
 
 // ── Prateleira de madeira ────────────────────────────────────────────────────────
 
-const SHELF_COLS = 3;
-
+// Prateleira que SE AJUSTA À ÁREA: escolhe colunas + tamanho de célula que
+// fazem TODOS os produtos caberem sem rolar (muitos pacientes não entendem que
+// precisam descer a tela). Mede o contêiner e calcula a melhor grade.
 function WoodShelf({
   products, cartIds, onToggle, showLabels,
 }: {
   products: Product[]; cartIds: string[]; onToggle: (id: string) => void; showLabels: boolean;
 }) {
-  const rows: Product[][] = [];
-  for (let i = 0; i < products.length; i += SHELF_COLS) rows.push(products.slice(i, i + SHELF_COLS));
+  const wrapRef = useRef<HTMLDivElement>(null);
+  const [box, setBox] = useState({ w: 0, h: 0 });
+  useLayoutEffect(() => {
+    const el = wrapRef.current; if (!el) return;
+    const compute = () => setBox({ w: el.clientWidth - 16, h: el.clientHeight - 16 }); // -padding
+    compute();
+    const ro = new ResizeObserver(compute); ro.observe(el);
+    return () => ro.disconnect();
+  }, []);
+
+  const n = products.length || 1;
+  const gap = 8;
+  let cols = 3, cell = 0;
+  if (box.w > 0 && box.h > 0) {
+    for (let c = 3; c <= 6; c++) {
+      const rows = Math.ceil(n / c);
+      const cw = (box.w - gap * (c - 1)) / c;
+      const ch = (box.h - gap * (rows - 1)) / rows;
+      const sz = Math.min(cw, ch);
+      if (sz > cell) { cell = sz; cols = c; }
+    }
+  }
+  cell = Math.max(cell, 40);
+  const labelH = showLabels && cell >= 72 ? 15 : 0;
+  const imgSize = Math.max(24, Math.floor(Math.min(cell * 0.78, cell - labelH - 8)));
 
   return (
-    <div style={{
-      borderRadius: 22, padding: 13,
+    <div ref={wrapRef} style={{
+      width: "100%", height: "100%", borderRadius: 18, padding: 8, overflow: "hidden",
       background: "linear-gradient(135deg,#e9cda0 0%,#dcb27e 55%,#c89a62 100%)",
-      boxShadow: "0 18px 44px rgba(70,45,15,0.4), inset 0 2px 3px rgba(255,255,255,0.55), inset 0 -3px 6px rgba(120,80,40,0.4)",
+      boxShadow: "0 12px 30px rgba(70,45,15,0.32), inset 0 2px 3px rgba(255,255,255,0.5)",
     }}>
-      <div style={{ background: "#f4ecdc", borderRadius: 14, padding: "10px 10px 4px", boxShadow: "inset 0 2px 8px rgba(120,90,50,0.18)" }}>
-        {rows.map((row, ri) => (
-          <div key={ri}>
-            <div style={{ display: "grid", gridTemplateColumns: `repeat(${SHELF_COLS}, 1fr)`, gap: 10, marginBottom: 8 }}>
-              {row.map(p => {
-                const inCart = cartIds.includes(p.id);
-                return (
-                  <motion.button key={p.id} onClick={() => onToggle(p.id)} whileTap={{ scale: 0.9 }}
-                    style={{
-                      position: "relative", cursor: "pointer", borderRadius: 14, padding: "10px 6px 6px",
-                      display: "flex", flexDirection: "column", alignItems: "center", gap: 4,
-                      background: "#ffffff",
-                      border: inCart ? "3px solid #2f9e8f" : "1px solid #ece2cf",
-                      boxShadow: inCart ? "0 4px 14px rgba(47,158,143,0.28)" : "0 3px 9px rgba(120,90,50,0.13)",
-                      transition: "border-color .15s, box-shadow .15s",
-                    }}>
-                    <ProductImg id={p.id} size={66} />
-                    {showLabels && (
-                      <span style={{ fontSize: 11, fontWeight: 700, textAlign: "center", lineHeight: 1.15,
-                        color: inCart ? "#1d7a6e" : "#3f4a52", maxWidth: "100%",
-                        overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{p.name}</span>
-                    )}
-                    {inCart && (
-                      <motion.div initial={{ scale: 0 }} animate={{ scale: 1 }} style={{
-                        position: "absolute", top: 6, right: 6, width: 22, height: 22, borderRadius: "50%",
-                        background: "#2f9e8f", display: "flex", alignItems: "center", justifyContent: "center",
-                        fontSize: 12, fontWeight: "bold", color: "#fff", boxShadow: "0 2px 5px rgba(0,0,0,0.2)" }}>✓</motion.div>
-                    )}
-                  </motion.button>
-                );
-              })}
-            </div>
-            {/* tábua da prateleira */}
-            <div style={{ height: 10, margin: "0 -4px 10px", borderRadius: 3,
-              background: "linear-gradient(180deg,#e2bd8a,#cc9f64 60%,#b07f44)",
-              boxShadow: "0 4px 8px rgba(90,60,25,0.3)" }} />
-          </div>
-        ))}
+      <div style={{
+        width: "100%", height: "100%", background: "#f4ecdc", borderRadius: 12, padding: 8,
+        boxShadow: "inset 0 2px 8px rgba(120,90,50,0.16)", overflow: "hidden",
+        display: "grid", gridTemplateColumns: `repeat(${cols}, ${cell}px)`, gridAutoRows: `${cell}px`,
+        gap, justifyContent: "center", alignContent: "center",
+      }}>
+        {products.map(p => {
+          const inCart = cartIds.includes(p.id);
+          return (
+            <motion.button key={p.id} onClick={() => onToggle(p.id)} whileTap={{ scale: 0.9 }}
+              style={{
+                position: "relative", cursor: "pointer", borderRadius: 12, width: "100%", height: "100%", overflow: "hidden",
+                display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", gap: 1,
+                background: "#ffffff",
+                border: inCart ? "3px solid #2f9e8f" : "1px solid #ece2cf",
+                boxShadow: inCart ? "0 3px 10px rgba(47,158,143,0.26)" : "0 2px 6px rgba(120,90,50,0.12)",
+                transition: "border-color .15s, box-shadow .15s",
+              }}>
+              <ProductImg id={p.id} size={imgSize} />
+              {labelH > 0 && (
+                <span style={{ fontSize: 10.5, fontWeight: 700, textAlign: "center", lineHeight: 1.1,
+                  color: inCart ? "#1d7a6e" : "#3f4a52", maxWidth: "94%",
+                  overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{p.name}</span>
+              )}
+              {inCart && (
+                <motion.div initial={{ scale: 0 }} animate={{ scale: 1 }} style={{
+                  position: "absolute", top: 4, right: 4, width: 20, height: 20, borderRadius: "50%",
+                  background: "#2f9e8f", display: "flex", alignItems: "center", justifyContent: "center",
+                  fontSize: 11, fontWeight: "bold", color: "#fff", boxShadow: "0 2px 5px rgba(0,0,0,0.2)" }}>✓</motion.div>
+              )}
+            </motion.button>
+          );
+        })}
       </div>
     </div>
   );
@@ -767,8 +786,8 @@ export function DesafioSupermercado({ difficulty, theme, onComplete, mode = "lei
                 <span style={{ fontSize: 14.5, fontWeight: 800, color: "#3a2f1c", lineHeight: 1.25 }}>{instruction}</span>
               </div>
               <div style={{ flex: 1, display: "flex", flexDirection: "row", overflow: "hidden", gap: 12, minHeight: 0 }}>
-              {/* prateleira */}
-              <div style={{ flex: 1, minWidth: 0, overflowY: "auto", WebkitOverflowScrolling: "touch" } as React.CSSProperties}>
+              {/* prateleira — cabe tudo sem rolar */}
+              <div style={{ flex: 1, minWidth: 0, minHeight: 0, overflow: "hidden", display: "flex" }}>
                 <WoodShelf products={shelfProducts} cartIds={cartIds} onToggle={toggleProduct} showLabels={mode === "leitura"} />
               </div>
 

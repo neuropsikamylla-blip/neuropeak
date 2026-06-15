@@ -434,9 +434,11 @@ function TherapeuticIntro({ mode, level, onStart }: { mode: FocusMode; level: nu
 }
 
 export function FocusAgents({ difficulty, theme, onComplete, forceMode, exerciseId = "focus-agents", settings }: FocusAgentsProps) {
-  const presMode = settings?.mode;
+  // Focus é SEMPRE configurado pelo terapeuta — o paciente nunca escolhe modo/nível.
+  // Sem modo definido no plano, usa "foco" como padrão. (freeChoice descontinuado)
+  const presMode: FocusMode = settings?.mode ?? "foco";
   const presLevel = Math.max(1, Math.min(9, Math.round(settings?.startLevel ?? 1)));
-  const prescribed = !!presMode && !settings?.freeChoice;
+  const prescribed = true;
   const fbLevel = settings?.feedback ?? "normal";   // intensidade do feedback (Fase G/H)
   const speakFn = useCallback((text: string) => {
     if (forceMode === "visual") return;
