@@ -18,11 +18,13 @@ type Meta = {
   retries?: number;
   timeToFirstMs?: number | null;
   progressionAction?: "increase" | "maintain" | "decrease";
+  abandoned?: boolean;
 };
 
 export interface TrailModeStat { n: number; acc: number; hints: number; }
 export interface TrailSummary {
-  totalSessions: number;
+  totalSessions: number;         // sessões concluídas
+  abandoned: number;             // sessões iniciadas e não concluídas
   stage: number;                 // estágio atual (1-12)
   stageLabel: string;
   recentAccuracy: number;        // 0-1 (até as 5 últimas)
@@ -58,10 +60,12 @@ function nextChallengeOf(stage: number): string {
 }
 
 export function summarizeStoryTrail(sessions: SessLike[]): TrailSummary | null {
-  const rows = sessions
+  const all = sessions
     .filter((s) => s.exerciseId === "ordem-historia")
     .map((s) => ({ ...s, meta: parseMeta(s.metadata) }))
     .sort((a, b) => new Date(b.completedAt).getTime() - new Date(a.completedAt).getTime());
+  const abandoned = all.filter((r) => r.meta.abandoned === true).length;
+  const rows = all.filter((r) => r.meta.abandoned !== true);   // só concluídas contam nas estatísticas
   if (!rows.length) return null;
 
   const latest = rows[0];
@@ -104,11 +108,13 @@ export function summarizeStoryTrail(sessions: SessLike[]): TrailSummary | null {
     obs.push("Recomenda-se repetir este tipo de treino antes de avançar.");
   if (trend === "regrediu")
     obs.push("Teve queda de desempenho e voltou um passo na trilha.");
+  if (abandoned >= 2)
+    obs.push(`Abandonou ${abandoned} atividades antes de concluir — observar engajamento/cansaço.`);
   if (!obs.length)
     obs.push("Desempenho dentro do esperado para o estágio atual.");
 
   return {
-    totalSessions: rows.length, stage, stageLabel: stageLabelOf(stage),
+    totalSessions: rows.length, abandoned, stage, stageLabel: stageLabelOf(stage),
     recentAccuracy, meanTimeS, meanFirstMs, hintsTotal, retriesTotal, byMode, trend,
     nextChallenge: nextChallengeOf(stage), observations: obs,
   };

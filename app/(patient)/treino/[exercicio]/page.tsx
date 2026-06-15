@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useState, useRef } from "react";
 import { useParams, useRouter } from "next/navigation";
 import { useSession } from "next-auth/react";
 import dynamic from "next/dynamic";
@@ -378,6 +378,13 @@ export default function ExercicioPage() {
   const [theme, setTheme] = useState<Theme>("CLINICAL");
   const [blockedToday, setBlockedToday] = useState(false);
   const [patientAge, setPatientAge] = useState<number | undefined>();
+  const completedRef = useRef(false);     // sessão concluída (não conta como abandono)
+  const sentAbandonRef = useRef(false);
+  const mountTsRef = useRef(0);
+  const difficultyRef = useRef(1);
+  const patientIdRef = useRef<string | undefined>(undefined);
+  useEffect(() => { difficultyRef.current = difficulty; }, [difficulty]);
+  useEffect(() => { patientIdRef.current = (session?.user as { patientId?: string } | undefined)?.patientId; }, [session]);
 
   useEffect(() => {
     const user = session?.user as { patientId?: string; theme?: string } | undefined;
@@ -427,7 +434,31 @@ export default function ExercicioPage() {
 
   const exerciseDef = EXERCISE_DEFINITIONS[exerciseId as keyof typeof EXERCISE_DEFINITIONS];
 
+  // Abandono: se o paciente sair de uma atividade da trilha sem concluir (após engajar),
+  // registra como incompleta (sem mexer na progressão).
+  useEffect(() => {
+    if (exerciseId !== "ordem-historia") return;
+    if (!mountTsRef.current) mountTsRef.current = Date.now();
+    function recordAbandon() {
+      if (completedRef.current || sentAbandonRef.current) return;
+      const pid = patientIdRef.current;
+      if (!pid || !exerciseDef) return;
+      const elapsed = Math.round((Date.now() - mountTsRef.current) / 1000);
+      if (elapsed < 20) return;   // saída rápida não conta como abandono
+      sentAbandonRef.current = true;
+      const payload = JSON.stringify({
+        patientId: pid, exerciseId, domain: exerciseDef.domain,
+        score: 0, accuracy: 0, difficulty: difficultyRef.current, duration: elapsed,
+        metadata: { abandoned: true },
+      });
+      try { navigator.sendBeacon("/api/sessions", new Blob([payload], { type: "application/json" })); } catch { /* ignore */ }
+    }
+    window.addEventListener("beforeunload", recordAbandon);
+    return () => { window.removeEventListener("beforeunload", recordAbandon); recordAbandon(); };
+  }, [exerciseId, exerciseDef]);
+
   async function handleComplete(result: ExerciseResult) {
+    completedRef.current = true;   // concluiu → não é abandono
     const user = session?.user as { patientId?: string } | undefined;
     if (!user?.patientId) return;
 

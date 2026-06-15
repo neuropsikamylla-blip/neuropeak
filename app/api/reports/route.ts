@@ -13,6 +13,7 @@ import {
 } from "@react-pdf/renderer";
 import { createElement } from "react";
 import { calculateDomainScore, generateRecommendations } from "@/lib/scoring";
+import { summarizeStoryTrail } from "@/lib/story-trail-report";
 import { formatDate, calculateAge } from "@/lib/utils";
 import { DOMAIN_LABELS } from "@/types";
 import type { SessionData } from "@/types";
@@ -181,10 +182,28 @@ export const GET = withApiHandler(async (req: NextRequest) => {
   }
 
   const patient = { ...patientBase, sessions: sessionRows, achievements };
-  const sessions = patient.sessions as unknown as SessionData[];
+  const trail = summarizeStoryTrail(sessionRows);   // resumo da trilha (separa as incompletas)
+  const isAbandoned = (s: { metadata?: string | null }) => {
+    try { return (JSON.parse(s.metadata || "{}") as { abandoned?: boolean }).abandoned === true; } catch { return false; }
+  };
+  const sessions = sessionRows.filter((s) => !isAbandoned(s)) as unknown as SessionData[];
   const domainScores = calculateDomainScore(sessions);
   const age = calculateAge(patient.birthDate);
   const recommendations = generateRecommendations(domainScores);
+
+  const stagePlain = trail ? trail.stageLabel.replace(/^[^A-Za-zÀ-ÿ]+/, "") : "";
+  const trailSection = trail ? [
+    createElement(Text, { style: styles.sectionTitle, key: "ts" }, "5. Trilha — Ordem da História"),
+    createElement(View, { style: styles.row, key: "ts1" }, createElement(Text, { style: styles.label }, "Estágio atual:"), createElement(Text, { style: styles.value }, stagePlain)),
+    createElement(View, { style: styles.row, key: "ts2" }, createElement(Text, { style: styles.label }, "Acerto recente:"), createElement(Text, { style: styles.value }, `${Math.round(trail.recentAccuracy * 100)}%`)),
+    createElement(View, { style: styles.row, key: "ts3" }, createElement(Text, { style: styles.label }, "Tempo médio:"), createElement(Text, { style: styles.value }, `${trail.meanTimeS}s`)),
+    createElement(View, { style: styles.row, key: "ts4" }, createElement(Text, { style: styles.label }, "Dicas / tentativas:"), createElement(Text, { style: styles.value }, `${trail.hintsTotal} / ${trail.retriesTotal}`)),
+    createElement(View, { style: styles.row, key: "ts5" }, createElement(Text, { style: styles.label }, "Sessões:"), createElement(Text, { style: styles.value }, `${trail.totalSessions} concluídas${trail.abandoned ? ` · ${trail.abandoned} incompletas` : ""}`)),
+    createElement(View, { style: styles.row, key: "ts6" }, createElement(Text, { style: styles.label }, "Tendência:"), createElement(Text, { style: styles.value }, trail.trend === "subiu" ? "Avançou" : trail.trend === "regrediu" ? "Regrediu" : "Manteve")),
+    createElement(View, { style: styles.row, key: "ts7" }, createElement(Text, { style: styles.label }, "Próximo desafio:"), createElement(Text, { style: styles.value }, trail.nextChallenge)),
+    createElement(Text, { style: { ...styles.label, marginTop: 6 }, key: "ts8" }, "Observações automáticas:"),
+    ...trail.observations.map((o, i) => createElement(Text, { style: styles.recommendations, key: `tso${i}` }, `• ${o}`)),
+  ] : [];
 
   const doc = createElement(Document, {},
     createElement(Page, { size: "A4", style: styles.page },
@@ -239,7 +258,9 @@ export const GET = withApiHandler(async (req: NextRequest) => {
         )
       ),
 
-      createElement(Text, { style: styles.sectionTitle }, "5. Recomendações"),
+      ...trailSection,
+
+      createElement(Text, { style: styles.sectionTitle }, trail ? "6. Recomendações" : "5. Recomendações"),
       createElement(Text, { style: styles.recommendations }, recommendations),
 
       createElement(View, { style: styles.signature },

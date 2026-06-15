@@ -50,8 +50,12 @@ export default async function PatientProfilePage({ params }: { params: Promise<{
     alerts,
   };
 
-  const sessions = patient.sessions as SessionData[];
-  const trail = summarizeStoryTrail(sessionRows);   // resumo da trilha "Ordem da História"
+  // Sessões abandonadas (incompletas) não entram nas métricas globais.
+  const isAbandoned = (s: { metadata?: string | null }) => {
+    try { return (JSON.parse(s.metadata || "{}") as { abandoned?: boolean }).abandoned === true; } catch { return false; }
+  };
+  const sessions = sessionRows.filter((s) => !isAbandoned(s)) as unknown as SessionData[];
+  const trail = summarizeStoryTrail(sessionRows);   // resumo da trilha (separa as incompletas)
   const typedAchievements = patient.achievements as unknown as Array<{ id: string; icon: string; title: string; unlockedAt: string }>;
   const domainScores = calculateDomainScore(sessions);
   const age = calculateAge(patient.birthDate);
@@ -222,6 +226,9 @@ export default async function PatientProfilePage({ params }: { params: Promise<{
                     <p className="text-sm font-bold text-slate-100">{trail.hintsTotal} / {trail.retriesTotal}</p>
                   </div>
                 </div>
+                <p className="text-[11px] text-slate-400">
+                  {trail.totalSessions} sessões concluídas{trail.abandoned > 0 && <span className="text-amber-400"> · {trail.abandoned} incompletas</span>}
+                </p>
 
                 <div className="flex flex-wrap gap-2 text-[11px]">
                   {(["ordem", "intruso", "falta"] as const).map((m) => trail.byMode[m].n > 0 && (

@@ -15,7 +15,7 @@ const sessionSchema = z.object({
   score: z.number().min(0).max(100),
   accuracy: z.number().min(0).max(1),
   reactionTime: z.number().optional(),
-  difficulty: z.number().min(1).max(10),
+  difficulty: z.number().min(1).max(12),   // 11/12 = estágios de desafio da trilha (Ordem da História)
   duration: z.number(),
   metadata: z.record(z.unknown()).optional(),
 });
@@ -44,6 +44,19 @@ export const POST = withApiHandler(async (req: NextRequest) => {
       select: { id: true },
     });
     if (!owns) return NextResponse.json({ error: "Forbidden" }, { status: 403 });
+  }
+
+  // Atividade abandonada: registra como incompleta, SEM mexer na progressão,
+  // no aquecimento (lastAttemptAt) nem nas conquistas.
+  if ((data.metadata as Record<string, unknown> | undefined)?.abandoned === true) {
+    await prisma.session.create({
+      data: {
+        patientId: data.patientId, exerciseId: data.exerciseId, domain: data.domain,
+        score: 0, accuracy: 0, reactionTime: null, difficulty: data.difficulty, duration: data.duration,
+        metadata: JSON.stringify(data.metadata),
+      },
+    });
+    return NextResponse.json({ ok: true, abandoned: true });
   }
 
   // Dupla Tarefa: progressão clínica própria (exige as duas tarefas boas para subir,
