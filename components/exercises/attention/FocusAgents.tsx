@@ -36,6 +36,14 @@ interface FallerData {
 type InstrMode  = "both" | "visual" | "audio";
 type FailReason = "wrong-tap" | "timeout" | null;
 
+// Fase D — registro detalhado de cada rodada (vai no metadata; usado no relatório).
+interface RoundMetric {
+  mode: FocusMode; level: number; channel: "visual" | "auditivo";
+  phased: boolean; totalTargets: number; captured: number; correct: boolean;
+  falsePositive: number; omissions: number; timeToFirstMs: number | null;
+  rtMs: number; afterSwitch: boolean; endedBy: "correct" | "wrong" | "timeout";
+}
+
 const CHAR_SIZE = 112;             // +51% vs. 74 — personagens grandes e legíveis
 const CHAR_H    = CHAR_SIZE * 1.5; // imagens são 2:3 (512×768)
 const TICK_MS   = 50;
@@ -432,6 +440,11 @@ export function FocusAgents({ difficulty, theme, onComplete, forceMode, exercise
   // Dificuldade progressiva dentro do nível (degraus por acertos seguidos).
   const intraStepRef            = useRef(0);
   const consecCorrectRef        = useRef(0);
+  // Fase D — métricas detalhadas por rodada.
+  const metricsRef              = useRef<RoundMetric[]>([]);
+  const roundFirstTapRef        = useRef<number | null>(null);
+  const capturedTotalRef        = useRef(0);
+  const failReasonRef           = useRef<FailReason>(null);
   roundResultsRef.current = roundResults;
 
   // Pré-carrega as imagens dos personagens (durante a seleção/tutorial) para que
@@ -594,6 +607,9 @@ export function FocusAgents({ difficulty, theme, onComplete, forceMode, exercise
 
     setGamePhase("playing");
     roundStart.current = Date.now();
+    roundFirstTapRef.current = null;
+    capturedTotalRef.current = 0;
+    failReasonRef.current = null;
 
     // O movimento corre no rAF mutando `fallersRef` e aplicando o transform
     // direto no DOM (sem setState por frame). setState só em eventos discretos
@@ -656,7 +672,7 @@ export function FocusAgents({ difficulty, theme, onComplete, forceMode, exercise
         // Congela o render nas posições reais alcançadas pela física, para que
         // o feedback não "salte" os agentes de volta à base inicial.
         setFallerPositions([...fallersRef.current]);
-        setFailReason("timeout");
+        setFailReason("timeout"); failReasonRef.current = "timeout";
         stopFallAnimation();
         setTimeout(() => handleResult(false, roundRef.current), 100);
         return;
@@ -683,6 +699,21 @@ export function FocusAgents({ difficulty, theme, onComplete, forceMode, exercise
     setLastCorrect(correct);   // resultado real da jogada (usado no overlay de feedback)
     setGamePhase("feedback");
 
+    // Fase D — registra a métrica detalhada desta rodada.
+    const phased = isPhasedRef.current;
+    const totalTargets = phased
+      ? phasesRef.current.reduce((s, p) => s + p.uids.length, 0)
+      : targetUidsRef.current.length;
+    const endedBy: "correct" | "wrong" | "timeout" = correct ? "correct" : (failReasonRef.current === "timeout" ? "timeout" : "wrong");
+    metricsRef.current.push({
+      mode: modeRef.current, level: levelRef.current, channel: forceMode === "auditivo" ? "auditivo" : "visual",
+      phased, totalTargets, captured: capturedTotalRef.current, correct,
+      falsePositive: endedBy === "wrong" ? 1 : 0,
+      omissions: correct ? 0 : Math.max(0, totalTargets - capturedTotalRef.current),
+      timeToFirstMs: roundFirstTapRef.current, rtMs: rt,
+      afterSwitch: phased && currentPhaseRef.current > 0, endedBy,
+    });
+
     const nextRound = r + 1;
     reportProgress(Math.round((nextRound / MAX_ROUNDS) * 100));
 
@@ -706,12 +737,28 @@ export function FocusAgents({ difficulty, theme, onComplete, forceMode, exercise
         const correctCount = newResults.filter(x => x.correct).length;
         const accuracy     = correctCount / MAX_ROUNDS;
         const avgRt        = newResults.filter(x => x.correct).reduce((s, x) => s + x.rt, 0) / (correctCount || 1);
+        // Fase D — agregados da sessão a partir das métricas por rodada.
+        const M = metricsRef.current;
+        const sum = (f: (m: RoundMetric) => number) => M.reduce((s, m) => s + f(m), 0);
+        const firsts = M.map(m => m.timeToFirstMs).filter((x): x is number => typeof x === "number");
+        const switchRounds = M.filter(m => m.phased);
+        const afterSwitchErr = switchRounds.filter(m => !m.correct && m.afterSwitch).length;
         onComplete({
           exerciseId, domain: "attention",
           score: calculateExerciseScore("focus-agents", accuracy, Math.round(avgRt), difficulty),
           accuracy, reactionTime: Math.round(avgRt), difficulty,
           duration: Math.round((Date.now() - sessionStart.current) / 1000),
-          metadata: { rounds: MAX_ROUNDS, correct: correctCount },
+          metadata: {
+            rounds: MAX_ROUNDS, correct: correctCount,
+            mode: modeRef.current, level: levelRef.current, startedLevel: levelRef.current,
+            channel: forceMode === "auditivo" ? "auditivo" : "visual",
+            falsePositives: sum(m => m.falsePositive),
+            omissions: sum(m => m.omissions),
+            timeToFirstMs: firsts.length ? Math.round(firsts.reduce((a, b) => a + b, 0) / firsts.length) : null,
+            switchRounds: switchRounds.length,
+            errorsAfterSwitch: afterSwitchErr,
+            rounds_detail: M,
+          },
         });
       } else {
         setRound(nextRound);
@@ -742,6 +789,7 @@ export function FocusAgents({ difficulty, theme, onComplete, forceMode, exercise
 
   function handleCharTap(ga: GameAgent) {
     if (gamePhase !== "playing") return;
+    if (roundFirstTapRef.current === null) roundFirstTapRef.current = Date.now() - roundStart.current;
     if (phaseLockRef.current) return;
     if (resolvedIds.current.has(ga.uid)) return;
 
@@ -751,13 +799,13 @@ export function FocusAgents({ difficulty, theme, onComplete, forceMode, exercise
       // Proibido constante (Desafio) → erro
       if (forbiddenRef.current.includes(ga.uid)) {
         resolvedIds.current.add("timeout");
-        setWrongUid(ga.uid); setFailReason("wrong-tap");
+        setWrongUid(ga.uid); setFailReason("wrong-tap"); failReasonRef.current = "wrong-tap";
         handleResult(false, round); return;
       }
       // Alvo da regra ATUAL → captura
       if (targetUidsRef.current.includes(ga.uid)) {
         const newFound = [...foundUidsRef.current, ga.uid];
-        foundUidsRef.current = newFound; setFoundUids(newFound);
+        foundUidsRef.current = newFound; capturedTotalRef.current++; setFoundUids(newFound);
         if (newFound.length >= targetUidsRef.current.length) {
           const next = currentPhaseRef.current + 1;
           if (next < phasesRef.current.length) advancePhase(next);
@@ -767,7 +815,7 @@ export function FocusAgents({ difficulty, theme, onComplete, forceMode, exercise
       }
       // Tocou fora da regra atual (perseveração ou neutro) → erro
       resolvedIds.current.add("timeout");
-      setWrongUid(ga.uid); setFailReason("wrong-tap");
+      setWrongUid(ga.uid); setFailReason("wrong-tap"); failReasonRef.current = "wrong-tap";
       handleResult(false, round); return;
     }
 
@@ -778,7 +826,7 @@ export function FocusAgents({ difficulty, theme, onComplete, forceMode, exercise
     if (forbiddenRef.current.includes(ga.uid)) {
       resolvedIds.current.add("timeout");
       setWrongUid(ga.uid);
-      setFailReason("wrong-tap");
+      setFailReason("wrong-tap"); failReasonRef.current = "wrong-tap";
       handleResult(false, round);
       return;
     }
@@ -797,7 +845,7 @@ export function FocusAgents({ difficulty, theme, onComplete, forceMode, exercise
           sequenceStepRef.current = newStep;
           setSequenceStep(newStep);
           const newFound = [...foundUidsRef.current, ga.uid];
-          foundUidsRef.current = newFound;
+          foundUidsRef.current = newFound; capturedTotalRef.current++;
           setFoundUids(newFound);
           if (newStep >= targetUidsRef.current.length) {
             resolvedIds.current.add("timeout");
@@ -806,13 +854,13 @@ export function FocusAgents({ difficulty, theme, onComplete, forceMode, exercise
         } else {
           resolvedIds.current.add("timeout");
           setWrongUid(ga.uid);
-          setFailReason("wrong-tap");
+          setFailReason("wrong-tap"); failReasonRef.current = "wrong-tap";
           handleResult(false, round);
         }
       } else {
         if (!foundUidsRef.current.includes(ga.uid)) {
           const newFound = [...foundUidsRef.current, ga.uid];
-          foundUidsRef.current = newFound;
+          foundUidsRef.current = newFound; capturedTotalRef.current++;
           setFoundUids(newFound);
           if (newFound.length >= requiredTargetsRef.current) {
             resolvedIds.current.add("timeout");
@@ -823,7 +871,7 @@ export function FocusAgents({ difficulty, theme, onComplete, forceMode, exercise
     } else {
       resolvedIds.current.add("timeout");
       setWrongUid(ga.uid);
-      setFailReason("wrong-tap");
+      setFailReason("wrong-tap"); failReasonRef.current = "wrong-tap";
       handleResult(false, round);
     }
   }
@@ -831,6 +879,7 @@ export function FocusAgents({ difficulty, theme, onComplete, forceMode, exercise
   useEffect(() => {
     if (showTutorial) return;
     sessionStart.current = Date.now();
+    metricsRef.current = [];
     prepareRound(0);
     return () => {
       stopFallAnimation();

@@ -14,6 +14,7 @@ import {
 import { createElement } from "react";
 import { calculateDomainScore, generateRecommendations } from "@/lib/scoring";
 import { summarizeStoryTrail } from "@/lib/story-trail-report";
+import { summarizeFocusAgents, focusModeLabel } from "@/lib/focus-report";
 import { formatDate, calculateAge } from "@/lib/utils";
 import { DOMAIN_LABELS } from "@/types";
 import type { SessionData } from "@/types";
@@ -183,6 +184,7 @@ export const GET = withApiHandler(async (req: NextRequest) => {
 
   const patient = { ...patientBase, sessions: sessionRows, achievements };
   const trail = summarizeStoryTrail(sessionRows);   // resumo da trilha (separa as incompletas)
+  const focus = summarizeFocusAgents(sessionRows);  // resumo do Focus Agentes
   const isAbandoned = (s: { metadata?: string | null }) => {
     try { return (JSON.parse(s.metadata || "{}") as { abandoned?: boolean }).abandoned === true; } catch { return false; }
   };
@@ -191,9 +193,14 @@ export const GET = withApiHandler(async (req: NextRequest) => {
   const age = calculateAge(patient.birthDate);
   const recommendations = generateRecommendations(domainScores);
 
+  let _sec = 5;
+  const trailNo = trail ? _sec++ : 0;
+  const focusNo = focus ? _sec++ : 0;
+  const recNo = _sec;
+
   const stagePlain = trail ? trail.stageLabel.replace(/^[^A-Za-zÀ-ÿ]+/, "") : "";
   const trailSection = trail ? [
-    createElement(Text, { style: styles.sectionTitle, key: "ts" }, "5. Trilha — Ordem da História"),
+    createElement(Text, { style: styles.sectionTitle, key: "ts" }, `${trailNo}. Trilha — Ordem da História`),
     createElement(View, { style: styles.row, key: "ts1" }, createElement(Text, { style: styles.label }, "Estágio atual:"), createElement(Text, { style: styles.value }, stagePlain)),
     createElement(View, { style: styles.row, key: "ts2" }, createElement(Text, { style: styles.label }, "Acerto recente:"), createElement(Text, { style: styles.value }, `${Math.round(trail.recentAccuracy * 100)}%`)),
     createElement(View, { style: styles.row, key: "ts3" }, createElement(Text, { style: styles.label }, "Tempo médio:"), createElement(Text, { style: styles.value }, `${trail.meanTimeS}s`)),
@@ -203,6 +210,19 @@ export const GET = withApiHandler(async (req: NextRequest) => {
     createElement(View, { style: styles.row, key: "ts7" }, createElement(Text, { style: styles.label }, "Próximo desafio:"), createElement(Text, { style: styles.value }, trail.nextChallenge)),
     createElement(Text, { style: { ...styles.label, marginTop: 6 }, key: "ts8" }, "Observações automáticas:"),
     ...trail.observations.map((o, i) => createElement(Text, { style: styles.recommendations, key: `tso${i}` }, `• ${o}`)),
+  ] : [];
+
+  const focusSection = focus ? [
+    createElement(Text, { style: styles.sectionTitle, key: "fs" }, `${focusNo}. Focus Agentes`),
+    createElement(View, { style: styles.row, key: "fs1" }, createElement(Text, { style: styles.label }, "Modo · nível:"), createElement(Text, { style: styles.value }, `${focusModeLabel(focus.lastMode)} · nível ${focus.lastLevel}`)),
+    createElement(View, { style: styles.row, key: "fs2" }, createElement(Text, { style: styles.label }, "Acerto recente:"), createElement(Text, { style: styles.value }, `${Math.round(focus.recentAccuracy * 100)}%`)),
+    createElement(View, { style: styles.row, key: "fs3" }, createElement(Text, { style: styles.label }, "Falsos+ / omissões:"), createElement(Text, { style: styles.value }, `${focus.falsePositives} / ${focus.omissions}`)),
+    createElement(View, { style: styles.row, key: "fs4" }, createElement(Text, { style: styles.label }, "Tempo p/ 1º toque:"), createElement(Text, { style: styles.value }, focus.meanFirstMs !== null ? `${(focus.meanFirstMs / 1000).toFixed(1)}s` : "—")),
+    createElement(View, { style: styles.row, key: "fs5" }, createElement(Text, { style: styles.label }, "Erros após troca:"), createElement(Text, { style: styles.value }, `${focus.errorsAfterSwitch}${focus.switchRounds ? ` de ${focus.switchRounds}` : ""}`)),
+    createElement(View, { style: styles.row, key: "fs6" }, createElement(Text, { style: styles.label }, "Visual × auditivo:"), createElement(Text, { style: styles.value }, `${Math.round(focus.byChannel.visual.acc * 100)}% × ${Math.round(focus.byChannel.auditivo.acc * 100)}%`)),
+    createElement(View, { style: styles.row, key: "fs7" }, createElement(Text, { style: styles.label }, "Recomendação:"), createElement(Text, { style: styles.value }, focus.recommendation)),
+    createElement(Text, { style: { ...styles.label, marginTop: 6 }, key: "fs8" }, "Observações automáticas:"),
+    ...focus.observations.map((o, i) => createElement(Text, { style: styles.recommendations, key: `fso${i}` }, `• ${o}`)),
   ] : [];
 
   const doc = createElement(Document, {},
@@ -259,8 +279,9 @@ export const GET = withApiHandler(async (req: NextRequest) => {
       ),
 
       ...trailSection,
+      ...focusSection,
 
-      createElement(Text, { style: styles.sectionTitle }, trail ? "6. Recomendações" : "5. Recomendações"),
+      createElement(Text, { style: styles.sectionTitle }, `${recNo}. Recomendações`),
       createElement(Text, { style: styles.recommendations }, recommendations),
 
       createElement(View, { style: styles.signature },

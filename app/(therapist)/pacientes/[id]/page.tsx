@@ -13,6 +13,7 @@ import { calculateDomainScore, calculateAdherence } from "@/lib/scoring";
 import { DistributionChart } from "@/components/plano/DistributionChart";
 import { parsePlanExercises } from "@/lib/exercise-plan";
 import { summarizeStoryTrail } from "@/lib/story-trail-report";
+import { summarizeFocusAgents, focusModeLabel } from "@/lib/focus-report";
 import { ALL_DOMAINS, EXERCISE_DOMAIN } from "@/lib/domain-taxonomy";
 import { formatDate, formatDateTime, calculateAge, formatDuration } from "@/lib/utils";
 import { ArrowLeft, FileText, Target, Globe, Pencil } from "lucide-react";
@@ -56,6 +57,7 @@ export default async function PatientProfilePage({ params }: { params: Promise<{
   };
   const sessions = sessionRows.filter((s) => !isAbandoned(s)) as unknown as SessionData[];
   const trail = summarizeStoryTrail(sessionRows);   // resumo da trilha (separa as incompletas)
+  const focus = summarizeFocusAgents(sessionRows);  // resumo do Focus Agentes
   const typedAchievements = patient.achievements as unknown as Array<{ id: string; icon: string; title: string; unlockedAt: string }>;
   const domainScores = calculateDomainScore(sessions);
   const age = calculateAge(patient.birthDate);
@@ -247,6 +249,60 @@ export default async function PatientProfilePage({ params }: { params: Promise<{
                   <p className="text-[11px] font-bold text-slate-400 mb-1">Observações automáticas</p>
                   <ul className="space-y-1">
                     {trail.observations.map((o, i) => (
+                      <li key={i} className="text-xs text-slate-200 flex gap-1.5"><span className="text-slate-500">•</span>{o}</li>
+                    ))}
+                  </ul>
+                </div>
+              </CardContent>
+            </Card>
+          )}
+
+          {focus && (
+            <Card>
+              <CardHeader>
+                <CardTitle className="text-base flex items-center gap-2">
+                  🎯 Focus Agentes
+                  <span className="text-xs font-semibold text-slate-400">{focusModeLabel(focus.lastMode)} · nível {focus.lastLevel}</span>
+                </CardTitle>
+              </CardHeader>
+              <CardContent className="space-y-3">
+                <div className="grid grid-cols-2 sm:grid-cols-4 gap-2">
+                  <div className="p-2.5 bg-white/5 rounded-lg">
+                    <p className="text-[11px] text-slate-400">Acerto (recente)</p>
+                    <p className={`text-sm font-bold ${focus.recentAccuracy >= 0.8 ? "text-green-400" : focus.recentAccuracy >= 0.6 ? "text-yellow-400" : "text-red-400"}`}>{Math.round(focus.recentAccuracy * 100)}%</p>
+                  </div>
+                  <div className="p-2.5 bg-white/5 rounded-lg">
+                    <p className="text-[11px] text-slate-400">Falsos+ / omissões</p>
+                    <p className="text-sm font-bold text-slate-100">{focus.falsePositives} / {focus.omissions}</p>
+                  </div>
+                  <div className="p-2.5 bg-white/5 rounded-lg">
+                    <p className="text-[11px] text-slate-400">Tempo p/ 1º toque</p>
+                    <p className="text-sm font-bold text-slate-100">{focus.meanFirstMs !== null ? `${(focus.meanFirstMs / 1000).toFixed(1)}s` : "—"}</p>
+                  </div>
+                  <div className="p-2.5 bg-white/5 rounded-lg">
+                    <p className="text-[11px] text-slate-400">Erros após troca</p>
+                    <p className="text-sm font-bold text-slate-100">{focus.errorsAfterSwitch}{focus.switchRounds > 0 && <span className="text-slate-400">/{focus.switchRounds}</span>}</p>
+                  </div>
+                </div>
+
+                <div className="flex flex-wrap gap-2 text-[11px]">
+                  {(["foco", "inibicao", "alternancia", "desafio"] as const).map((m) => focus.byMode[m].n > 0 && (
+                    <span key={m} className="px-2 py-1 rounded-md bg-white/5 text-slate-300">{focusModeLabel(m)}: {Math.round(focus.byMode[m].acc * 100)}% ({focus.byMode[m].n})</span>
+                  ))}
+                  {focus.byChannel.visual.n > 0 && focus.byChannel.auditivo.n > 0 && (
+                    <span className="px-2 py-1 rounded-md bg-white/5 text-slate-300">Visual {Math.round(focus.byChannel.visual.acc * 100)}% · Auditivo {Math.round(focus.byChannel.auditivo.acc * 100)}%</span>
+                  )}
+                </div>
+
+                <div className="p-2.5 rounded-lg bg-blue-500/10 border border-blue-400/20">
+                  <p className="text-[11px] font-bold text-blue-300 mb-0.5">Recomendação</p>
+                  <p className="text-xs text-slate-200">{focus.recommendation}</p>
+                </div>
+
+                <div>
+                  <p className="text-[11px] font-bold text-slate-400 mb-1">Observações automáticas</p>
+                  <ul className="space-y-1">
+                    {focus.observations.map((o, i) => (
                       <li key={i} className="text-xs text-slate-200 flex gap-1.5"><span className="text-slate-500">•</span>{o}</li>
                     ))}
                   </ul>
