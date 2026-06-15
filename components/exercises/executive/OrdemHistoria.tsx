@@ -209,6 +209,12 @@ export function OrdemHistoria({ difficulty, onComplete, settings }: OrdemHistori
     return () => window.removeEventListener("resize", onResize);
   }, []);
 
+  // Pré-carrega a 1ª rodada já na tela de abertura (some o delay de imagem ao começar).
+  useEffect(() => {
+    if (!pendingRef.current) pendingRef.current = makeRound();
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+
   const recentRef = useRef<string[]>([]);
   const gradedRef = useRef<number[]>([]);
   const posCorrectRef = useRef(0);
@@ -266,9 +272,9 @@ export function OrdemHistoria({ difficulty, onComplete, settings }: OrdemHistori
     gradedRef.current = []; posCorrectRef.current = 0; posWrongRef.current = 0;
     swapsRef.current = 0; intruderHitsRef.current = 0; faltaHitsRef.current = 0;
     hintsUsedRef.current = 0; retriesRef.current = 0;
-    pendingRef.current = null; firstRespRef.current = []; roundFirstAt.current = null;
+    firstRespRef.current = []; roundFirstAt.current = null;
     rtsRef.current = []; startTime.current = Date.now(); setTrial(0);
-    startRound();
+    startRound();   // usa a 1ª rodada já pré-carregada na abertura (pendingRef)
   }
 
   function useHint() {
@@ -505,7 +511,7 @@ export function OrdemHistoria({ difficulty, onComplete, settings }: OrdemHistori
                   <div style={{ width: "100%", aspectRatio: String(storyA), background: "#f4f1fb" }}>
                     {/* eslint-disable-next-line @next/next/no-img-element */}
                     <img src={descubraScene(storyId, i + 1)} alt="" draggable={false}
-                      style={{ width: "100%", height: "100%", objectFit: "contain", display: "block" }} />
+                      style={{ width: "100%", height: "100%", objectFit: "cover", display: "block" }} />
                   </div>
                   <span style={{ position: "absolute", top: 4, left: 4, width: 20, height: 20, borderRadius: 10, background: VIOLET,
                     color: "#fff", fontWeight: 900, fontSize: 11, display: "flex", alignItems: "center", justifyContent: "center" }}>{i + 1}</span>

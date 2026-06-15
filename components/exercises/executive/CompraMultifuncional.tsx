@@ -8,6 +8,7 @@ import { TutorialBase } from "@/components/exercises/TutorialBase";
 import { ItemSvg } from "@/components/exercises/ItemSvg";
 import type { ExerciseResult, Theme } from "@/types";
 import { shuffleFlex, fmt, pickRandomDomain, type FlexDomain, type FlexItem, type FlexCategory } from "@/lib/item-domains";
+import { buildCtxRound, checkCtx, type CtxRound } from "@/data/compra-contextual";
 
 interface Props { difficulty: number; theme: Theme; onComplete: (result: ExerciseResult) => void; }
 
@@ -19,14 +20,23 @@ interface Rules {
   quantity: number;        // must select exactly this many items
 }
 
-interface Round {
+interface RulesRound {
   domain: FlexDomain;
   items: FlexItem[];
   rules: Rules;
   timeSecs: number;
 }
 
-function buildRound(d: number): Round {
+// Uma rodada pode ser por REGRAS (clássica) ou CONTEXTUAL (historinha, sem entregar a categoria).
+type AnyRound = ({ mode: "rules" } & RulesRound) | ({ mode: "context" } & CtxRound);
+
+// Decide o tipo da rodada: ímpares = contextual (rotação de histórias começando pela neve).
+function makeRound(d: number, i: number): AnyRound {
+  if (i % 2 === 1) return { mode: "context", ...buildCtxRound(d, Math.floor(i / 2)) };
+  return { mode: "rules", ...buildRound(d) };
+}
+
+function buildRound(d: number): RulesRound {
   const domain = pickRandomDomain();
   const count = d <= 3 ? 9 : d <= 6 ? 12 : 15;
   const items = shuffleFlex(domain.items).slice(0, count);
@@ -137,7 +147,8 @@ export function CompraMultifuncional({ difficulty, theme, onComplete }: Props) {
   const [phase, setPhase] = useState<"shopping" | "result">("shopping");
   const [lastCorrect, setLastCorrect] = useState(false);
   const [timeLeft, setTimeLeft] = useState(0);
-  const [currentRound, setCurrentRound] = useState<Round>(() => buildRound(difficulty));
+  const [currentRound, setCurrentRound] = useState<AnyRound>(() => makeRound(difficulty, 0));
+  const [storyOpen, setStoryOpen] = useState(true);   // história contextual visível (recolhe no difícil)
 
   const startTime = useRef(Date.now());
   const roundRef = useRef(0);
@@ -162,6 +173,16 @@ export function CompraMultifuncional({ difficulty, theme, onComplete }: Props) {
       });
     }, 1000);
     return () => { if (timerRef.current) clearInterval(timerRef.current); };
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [phase, round, showTutorial]);
+
+  // Difícil contextual: a história aparece por alguns segundos e depois recolhe.
+  useEffect(() => {
+    if (phase !== "shopping" || showTutorial) return;
+    if (currentRound.mode === "context" && currentRound.collapseStory) {
+      const t = setTimeout(() => setStoryOpen(false), 6000);
+      return () => clearTimeout(t);
+    }
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [phase, round, showTutorial]);
 
@@ -193,7 +214,8 @@ export function CompraMultifuncional({ difficulty, theme, onComplete }: Props) {
         roundRef.current = nextR;
         setRound(nextR);
         setSelected(new Set());
-        setCurrentRound(buildRound(difficulty));
+        setCurrentRound(makeRound(difficulty, nextR));
+        setStoryOpen(true);
         setPhase("shopping");
       }
     }, 1800);
@@ -215,8 +237,10 @@ export function CompraMultifuncional({ difficulty, theme, onComplete }: Props) {
     );
   }
 
-  const rules = currentRound.rules;
-  const { total, hasCat, qtyOk, budgetOk, allOk } = checkRules(selected, currentRound.items, rules);
+  const isCtx = currentRound.mode === "context";
+  const rulesC = currentRound.mode === "rules" ? checkRules(selected, currentRound.items, currentRound.rules) : null;
+  const ctxC = currentRound.mode === "context" ? checkCtx(selected, currentRound) : null;
+  const allOk = isCtx ? !!ctxC?.allOk : !!rulesC?.allOk;
   const timerRatio = timeLeft / currentRound.timeSecs;
   const timerColor = timerRatio > 0.5 ? "bg-green-500" : timerRatio > 0.25 ? "bg-amber-400" : "bg-red-500 animate-pulse";
 
@@ -288,31 +312,63 @@ export function CompraMultifuncional({ difficulty, theme, onComplete }: Props) {
           <AnimatePresence mode="wait">
             {phase === "shopping" && (
               <motion.div key={`shop-${round}`} initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }}>
-                {/* Rules checklist */}
-                <div className="rounded-xl p-3 border mb-3 space-y-1.5" style={isGamified ? { background: "rgba(255,255,255,0.08)", border: "1.5px solid rgba(255,255,255,0.15)" } : { background: "#f8fafc", border: "1.5px solid rgba(26,39,68,0.08)" }}>
-                  <p className={`text-[11px] font-bold uppercase tracking-wide mb-2 ${pal.sub}`}>Atenda todas as regras · {currentRound.domain.name}</p>
-                  {ruleRow(budgetOk && selected.size > 0, `Máximo ${fmt(rules.budget)} (total: ${fmt(total)})`)}
-                  {ruleRow(hasCat, `Incluir ${rules.category.emoji} ${rules.category.label}`)}
-                  {ruleRow(qtyOk, `Exatamente ${rules.quantity} item${rules.quantity !== 1 ? "s" : ""} (${selected.size} selecionado${selected.size !== 1 ? "s" : ""})`)}
-                </div>
+                {currentRound.mode === "rules" && (
+                  <>
+                    {/* Rules checklist */}
+                    <div className="rounded-xl p-3 border mb-3 space-y-1.5" style={isGamified ? { background: "rgba(255,255,255,0.08)", border: "1.5px solid rgba(255,255,255,0.15)" } : { background: "#f8fafc", border: "1.5px solid rgba(26,39,68,0.08)" }}>
+                      <p className={`text-[11px] font-bold uppercase tracking-wide mb-2 ${pal.sub}`}>Atenda todas as regras · {currentRound.domain.name}</p>
+                      {ruleRow(rulesC!.budgetOk && selected.size > 0, `Máximo ${fmt(currentRound.rules.budget)} (total: ${fmt(rulesC!.total)})`)}
+                      {ruleRow(rulesC!.hasCat, `Incluir ${currentRound.rules.category.emoji} ${currentRound.rules.category.label}`)}
+                      {ruleRow(rulesC!.qtyOk, `Exatamente ${currentRound.rules.quantity} item${currentRound.rules.quantity !== 1 ? "s" : ""} (${selected.size} selecionado${selected.size !== 1 ? "s" : ""})`)}
+                    </div>
+                    <div className="grid grid-cols-3 sm:grid-cols-4 gap-2 mb-3">
+                      {currentRound.items.map(item => (
+                        <button key={item.id} onClick={() => toggle(item.id)}
+                          className={`p-3 rounded-xl border-2 flex flex-col items-center gap-1.5 transition-all active:scale-95 ${selected.has(item.id) ? pal.itemSel : pal.item}`}>
+                          <ItemSvg id={item.id} size={48} />
+                          <span className={`text-xs text-center leading-tight font-medium ${isGamified ? "text-white/90" : "text-gray-700"}`}>{item.name}</span>
+                          <span className={`text-xs font-bold tabular-nums ${isGamified ? "text-cyan-300" : "text-emerald-600"}`}>{fmt(item.price)}</span>
+                          {selected.has(item.id) && <span className="text-xs text-green-600 font-bold">✓</span>}
+                        </button>
+                      ))}
+                    </div>
+                  </>
+                )}
 
-                <div className="grid grid-cols-3 sm:grid-cols-4 gap-2 mb-3">
-                  {currentRound.items.map(item => (
-                    <button key={item.id} onClick={() => toggle(item.id)}
-                      className={`p-3 rounded-xl border-2 flex flex-col items-center gap-1.5 transition-all active:scale-95 ${
-                        selected.has(item.id) ? pal.itemSel : pal.item
-                      }`}>
-                      <ItemSvg id={item.id} size={48} />
-                      <span className={`text-xs text-center leading-tight font-medium ${isGamified ? "text-white/90" : "text-gray-700"}`}>
-                        {item.name}
-                      </span>
-                      <span className={`text-xs font-bold tabular-nums ${isGamified ? "text-cyan-300" : "text-emerald-600"}`}>
-                        {fmt(item.price)}
-                      </span>
-                      {selected.has(item.id) && <span className="text-xs text-green-600 font-bold">✓</span>}
-                    </button>
-                  ))}
-                </div>
+                {currentRound.mode === "context" && (
+                  <>
+                    {/* Situação (história) */}
+                    <div className="rounded-xl p-3 border mb-3" style={isGamified ? { background: "rgba(255,255,255,0.08)", border: "1.5px solid rgba(255,255,255,0.15)" } : { background: "#f8fafc", border: "1.5px solid rgba(26,39,68,0.08)" }}>
+                      <div className="flex items-center justify-between mb-1">
+                        <p className={`text-[11px] font-bold uppercase tracking-wide ${pal.sub}`}>📖 Entenda a situação</p>
+                        {currentRound.collapseStory && (
+                          <button onClick={() => setStoryOpen(o => !o)} className={`text-[11px] font-semibold underline ${pal.sub}`}>{storyOpen ? "ocultar" : "👁 ver situação"}</button>
+                        )}
+                      </div>
+                      {storyOpen
+                        ? <p className={`text-sm font-medium leading-snug ${pal.title}`}>{currentRound.text}</p>
+                        : <p className={`text-xs italic ${pal.sub}`}>Toque em &ldquo;ver situação&rdquo; se precisar reler.</p>}
+                    </div>
+                    {/* Regras neutras */}
+                    <div className="rounded-xl p-3 border mb-3 space-y-1.5" style={isGamified ? { background: "rgba(255,255,255,0.08)", border: "1.5px solid rgba(255,255,255,0.15)" } : { background: "#f8fafc", border: "1.5px solid rgba(26,39,68,0.08)" }}>
+                      {ruleRow(ctxC!.qtyOk, `Escolha exatamente ${currentRound.quantity} itens (${selected.size} selecionado${selected.size !== 1 ? "s" : ""})`)}
+                      {ruleRow(ctxC!.budgetOk && selected.size > 0, currentRound.hideTotal ? `Total máximo: ${fmt(currentRound.budget)}` : `Total máximo: ${fmt(currentRound.budget)} (atual: ${fmt(ctxC!.total)})`)}
+                      <p className={`text-xs font-semibold ${pal.sub}`}>Escolha os itens mais adequados para a situação.</p>
+                    </div>
+                    {/* Itens (emoji, sem revelar a classificação) */}
+                    <div className="grid grid-cols-3 sm:grid-cols-4 gap-2 mb-3">
+                      {currentRound.items.map(item => (
+                        <button key={item.id} onClick={() => toggle(item.id)}
+                          className={`p-3 rounded-xl border-2 flex flex-col items-center gap-1.5 transition-all active:scale-95 ${selected.has(item.id) ? pal.itemSel : pal.item}`}>
+                          <span style={{ fontSize: 40, lineHeight: 1 }}>{item.emoji}</span>
+                          <span className={`text-xs text-center leading-tight font-medium ${isGamified ? "text-white/90" : "text-gray-700"}`}>{item.name}</span>
+                          <span className={`text-xs font-bold tabular-nums ${isGamified ? "text-cyan-300" : "text-emerald-600"}`}>{fmt(item.price)}</span>
+                          {selected.has(item.id) && <span className="text-xs text-green-600 font-bold">✓</span>}
+                        </button>
+                      ))}
+                    </div>
+                  </>
+                )}
 
                 <button onClick={() => finishRound(allOk)} disabled={selected.size === 0}
                   className="w-full h-11 font-bold transition-all disabled:opacity-40"
@@ -327,30 +383,34 @@ export function CompraMultifuncional({ difficulty, theme, onComplete }: Props) {
                 initial={{ opacity: 0, scale: 0.9 }} animate={{ opacity: 1, scale: 1 }}>
                 <p className="text-5xl text-center mb-3">{lastCorrect ? "✅" : "❌"}</p>
                 <p className={`font-bold text-lg text-center mb-4 ${lastCorrect ? "text-green-600" : "text-red-500"}`}>
-                  {lastCorrect ? "Todas as regras cumpridas!" : "Nem todas as regras foram atendidas"}
+                  {lastCorrect
+                    ? (isCtx ? "Escolha adequada para a situação!" : "Todas as regras cumpridas!")
+                    : (isCtx ? "Quase! Pense melhor na situação" : "Nem todas as regras foram atendidas")}
                 </p>
-                {!lastCorrect && (
+
+                {currentRound.mode === "rules" && !lastCorrect && (
                   <div className="rounded-xl p-3 border space-y-1.5" style={isGamified ? { background: "rgba(255,255,255,0.08)", border: "1.5px solid rgba(255,255,255,0.15)" } : { background: "#f8fafc", border: "1.5px solid rgba(26,39,68,0.08)" }}>
                     <p className={`text-xs font-bold mb-1 ${pal.sub}`}>O que ficou faltando:</p>
-                    {!budgetOk && (
-                      <div className="flex items-center gap-2 text-xs text-red-500 font-semibold">
-                        <span>✗</span><span>Orçamento ultrapassado — total {fmt(total)} de máx {fmt(rules.budget)}</span>
-                      </div>
-                    )}
-                    {!hasCat && (
-                      <div className="flex items-center gap-2 text-xs text-red-500 font-semibold">
-                        <span>✗</span><span>Faltou incluir {rules.category.emoji} {rules.category.label}</span>
-                      </div>
-                    )}
-                    {!qtyOk && (
-                      <div className="flex items-center gap-2 text-xs text-red-500 font-semibold">
-                        <span>✗</span><span>Quantidade errada — {selected.size} selecionado{selected.size !== 1 ? "s" : ""}, precisava de {rules.quantity}</span>
-                      </div>
-                    )}
+                    {!rulesC!.budgetOk && <div className="flex items-center gap-2 text-xs text-red-500 font-semibold"><span>✗</span><span>Orçamento ultrapassado — total {fmt(rulesC!.total)} de máx {fmt(currentRound.rules.budget)}</span></div>}
+                    {!rulesC!.hasCat && <div className="flex items-center gap-2 text-xs text-red-500 font-semibold"><span>✗</span><span>Faltou incluir {currentRound.rules.category.emoji} {currentRound.rules.category.label}</span></div>}
+                    {!rulesC!.qtyOk && <div className="flex items-center gap-2 text-xs text-red-500 font-semibold"><span>✗</span><span>Quantidade errada — {selected.size} selecionado{selected.size !== 1 ? "s" : ""}, precisava de {currentRound.rules.quantity}</span></div>}
                   </div>
                 )}
-                {lastCorrect && (
-                  <p className={`text-xs text-center ${pal.sub}`}>Total: {fmt(total)} · {selected.size} itens</p>
+                {currentRound.mode === "rules" && lastCorrect && (
+                  <p className={`text-xs text-center ${pal.sub}`}>Total: {fmt(rulesC!.total)} · {selected.size} itens</p>
+                )}
+
+                {currentRound.mode === "context" && !lastCorrect && (
+                  <div className="rounded-xl p-3 border space-y-1.5" style={isGamified ? { background: "rgba(255,255,255,0.08)", border: "1.5px solid rgba(255,255,255,0.15)" } : { background: "#f8fafc", border: "1.5px solid rgba(26,39,68,0.08)" }}>
+                    <p className={`text-xs font-bold mb-1 ${pal.sub}`}>Por que não encaixou:</p>
+                    {!ctxC!.qtyOk && <div className="flex items-center gap-2 text-xs text-red-500 font-semibold"><span>✗</span><span>Escolha exatamente {currentRound.quantity} itens — você escolheu {selected.size}.</span></div>}
+                    {!ctxC!.budgetOk && <div className="flex items-center gap-2 text-xs text-red-500 font-semibold"><span>✗</span><span>Passou do orçamento — {fmt(ctxC!.total)} de máx {fmt(currentRound.budget)}.</span></div>}
+                    {currentRound.noInappropriate && ctxC!.inapCount > 0 && <div className="flex items-center gap-2 text-xs text-red-500 font-semibold"><span>✗</span><span>Havia item que não combina com a situação.</span></div>}
+                    {ctxC!.qtyOk && ctxC!.budgetOk && !ctxC!.scoreOk && <div className="flex items-center gap-2 text-xs text-red-500 font-semibold"><span>✗</span><span>Alguns itens não eram os mais adequados para essa situação.</span></div>}
+                  </div>
+                )}
+                {currentRound.mode === "context" && lastCorrect && (
+                  <p className={`text-xs text-center ${pal.sub}`}>{ctxC!.essCount} item{ctxC!.essCount !== 1 ? "s" : ""} bem adequado{ctxC!.essCount !== 1 ? "s" : ""} · total {fmt(ctxC!.total)}</p>
                 )}
               </motion.div>
             )}
