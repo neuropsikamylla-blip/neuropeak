@@ -121,6 +121,14 @@ export function ExerciseCard({
                   </div>
                 </div>
               )}
+              <div>
+                <p className="text-[11px] font-bold uppercase tracking-wide text-slate-400 mb-1.5">Feedback</p>
+                <div className="flex gap-1.5">
+                  {[["leve", "Leve"], ["normal", "Normal"], ["intenso", "Intenso"]].map(([k, lbl]) => (
+                    <Pill key={k} on={(cfg?.feedback ?? "normal") === k} onClick={() => onSetting?.(id, "feedback", k)}>{lbl}</Pill>
+                  ))}
+                </div>
+              </div>
               <p className="text-[11px] text-slate-400">Com um modo escolhido, o paciente entra direto no &ldquo;Treino de hoje&rdquo; (sem escolher). Em &ldquo;Paciente escolhe&rdquo;, ele seleciona modo e nível.</p>
             </div>
           ) : !isSpan ? (

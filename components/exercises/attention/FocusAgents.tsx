@@ -143,9 +143,9 @@ const LEVEL_CLOCK = [0, 0, 0, 16, 12];
 
 // ── AgentCard ─────────────────────────────────────────────────────────────────
 
-function AgentCard({ gameAgent, onClick, state, size }: {
+function AgentCard({ gameAgent, onClick, state, size, flashy }: {
   gameAgent: GameAgent; onClick: () => void;
-  state: "idle" | "correct" | "wrong" | "forbidden"; size: number;
+  state: "idle" | "correct" | "wrong" | "forbidden"; size: number; flashy?: boolean;
 }) {
   const src = gameAgent.agent.images[gameAgent.variant]?.src ?? gameAgent.agent.images[0].src;
 
@@ -160,12 +160,13 @@ function AgentCard({ gameAgent, onClick, state, size }: {
   const dim   = state === "wrong" || state === "forbidden";
   const scale = state === "correct" ? 1.08 : 1;
 
+  const flash = flashy && state === "idle";
   return (
     <motion.button
       onClick={onClick}
-      animate={{ scale }}
+      animate={flash ? { scale: [1, 1.16, 1] } : { scale }}
       whileTap={{ scale: scale * 0.9 }}
-      transition={{ duration: 0.15 }}
+      transition={flash ? { duration: 0.7, repeat: Infinity, ease: "easeInOut" } : { duration: 0.15 }}
       className="relative cursor-pointer"
       style={{ touchAction: "manipulation", width: size, background: "transparent", border: "none", padding: 0 }}
     >
@@ -406,7 +407,7 @@ export interface FocusAgentsProps {
   forceMode?: "visual" | "auditivo";
   exerciseId?: string;
   // Config do terapeuta (Fase E): modo + nível inicial vêm do plano.
-  settings?: { mode?: FocusMode; startLevel?: number; freeChoice?: boolean };
+  settings?: { mode?: FocusMode; startLevel?: number; freeChoice?: boolean; feedback?: "leve" | "normal" | "intenso" };
 }
 
 // ── Treino terapêutico — confirmação read-only (o paciente não escolhe; D6) ──────
@@ -432,6 +433,7 @@ export function FocusAgents({ difficulty, theme, onComplete, forceMode, exercise
   const presMode = settings?.mode;
   const presLevel = Math.max(1, Math.min(5, Math.round(settings?.startLevel ?? 1)));
   const prescribed = !!presMode && !settings?.freeChoice;
+  const fbLevel = settings?.feedback ?? "normal";   // intensidade do feedback (Fase G/H)
   const speakFn = useCallback((text: string) => {
     if (forceMode === "visual") return;
     playTTS(text);
@@ -468,6 +470,7 @@ export function FocusAgents({ difficulty, theme, onComplete, forceMode, exercise
   const [points, setPoints]             = useState(0);   // placar (Fase G)
   const [clockLeft, setClockLeft]       = useState(0);   // relógio por rodada (níveis altos)
   const [barColor, setBarColor]         = useState<string | null>(null);   // barra condicional (Fase H)
+  const [flashyUids, setFlashyUids]     = useState<string[]>([]);          // distratores que piscam (Fase H)
   const pointsRef                       = useRef(0);
   const clockIntRef                     = useRef<ReturnType<typeof setInterval> | null>(null);
 
@@ -605,6 +608,10 @@ export function FocusAgents({ difficulty, theme, onComplete, forceMode, exercise
     recentVerbsRef.current = [...recentVerbsRef.current.slice(-4), verbIdx];
 
     setGameAgents(newGameAgents);
+    // Fase H — distratores fortes (piscam) na Inibição N4/N5: mistura alvos e não-alvos
+    // para que "piscar" não seja pista; o paciente precisa inibir seguindo a regra.
+    setFlashyUids((modeRef.current === "inibicao" && levelRef.current >= 4)
+      ? shuffle(newGameAgents.map(g => g.uid)).slice(0, 3) : []);
     setCommand(built.command.text);
     setTargetUids(newTargetUids);
     targetUidsRef.current = newTargetUids;
@@ -799,9 +806,9 @@ export function FocusAgents({ difficulty, theme, onComplete, forceMode, exercise
     if (commandFadeTimerRef.current) { clearTimeout(commandFadeTimerRef.current); commandFadeTimerRef.current = null; }
 
     const rt         = Date.now() - roundStart.current;
-    // Fase G — som, vibração e placar.
-    if (correct) { soundCorrect(); vibrate(40); pointsRef.current += 10 + (rt < 5000 ? 5 : 0); setPoints(pointsRef.current); }
-    else { soundWrong(); vibrate([50, 40, 50]); }
+    // Fase G/H — som, vibração e placar (intensidade configurável: leve/normal/intenso).
+    if (correct) { soundCorrect(); if (fbLevel !== "leve") vibrate(fbLevel === "intenso" ? [40, 25, 40] : 40); pointsRef.current += 10 + (rt < 5000 ? 5 : 0); setPoints(pointsRef.current); }
+    else { soundWrong(); if (fbLevel !== "leve") vibrate(fbLevel === "intenso" ? [80, 50, 80, 50, 80] : [50, 40, 50]); }
     const newResults = [...roundResultsRef.current, { correct, rt }];
     setRoundResults(newResults);
     roundResultsRef.current = newResults;
@@ -1258,6 +1265,7 @@ export function FocusAgents({ difficulty, theme, onComplete, forceMode, exercise
                   onClick={() => handleCharTap(ga)}
                   state={state}
                   size={CHAR_SIZE}
+                  flashy={gamePhase === "playing" && flashyUids.includes(ga.uid)}
                 />
               </div>
             );
