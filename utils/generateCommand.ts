@@ -623,48 +623,134 @@ function distinctByAcc(a: AccessoryKey, max: number): CharacterAttributes[] {
   return pickDistinctAgents(withAccessory(characterAttributes, a), max);
 }
 
+// ── Fase A: regras ricas para Foco e Inibição ──────────────────────────────────
+// Os 36 agentes são combinações ÚNICAS (cor × 1 acessório). Para "tocar em todos
+// os verdes com fone" (que tem só 1 agente), criamos CÓPIAS do agente que bate.
+let _cloneSeq = 0;
+function cloneAgents(attr: CharacterAttributes, n: number): CharacterAttributes[] {
+  return Array.from({ length: n }, () => ({ ...attr, id: `${attr.id}__k${_cloneSeq++}` }));
+}
+const COLOR_PL: Partial<Record<ColorName, string>> = {
+  azul: "azuis", verde: "verdes", roxo: "roxos", laranja: "laranja", vermelho: "vermelhos", amarelo: "amarelos",
+};
+const colorPl = (c: ColorName) => COLOR_PL[c] ?? COLOR_PT[c];
+const agentWith = (col: ColorName, acc: AccessoryKey) =>
+  characterAttributes.find(c => c.uniformColor === col && c.accessories.includes(acc));
+const colorsWithAcc = (acc: AccessoryKey) => ALL_UNIFORM_COLORS.filter(c => agentWith(c, acc));
+const accsWithMinColors = (k: number) => ALL_ACCESSORIES.filter(a => colorsWithAcc(a).length >= k);
+const noAccessoryAgents = () => withoutAnyAccessory(characterAttributes, ALL_ACCESSORIES);
+const cap = (arr: CharacterAttributes[], n: number) => arr.slice(0, Math.max(0, n));
+
+function buildFoco(lv: number, noun: string, dN: number): BuiltRound {
+  // N1 — um atributo só (cor OU acessório)
+  if (lv === 1) {
+    const useAcc = Math.random() < 0.5 && accsWithMinColors(3).length > 0;
+    if (useAcc) {
+      const acc = shuffle(accsWithMinColors(3))[0];
+      const targets = distinctByAcc(acc, 4);
+      const distract = pickDistinctAgents(withoutAccessory(characterAttributes, acc), dN - targets.length, new Set(targets.map(t => t.agentId)));
+      return mkResult(targets, distract, [], false, targets.length, "multiTarget", `Toque nos ${noun}s com ${ACC_PT[acc]}`, 0);
+    }
+    const col = shuffle(ALL_UNIFORM_COLORS).find(c => distinctByColor(c, 3).length >= 3) ?? shuffle(ALL_UNIFORM_COLORS)[0];
+    const targets = distinctByColor(col, 4);
+    const distract = pickDistinctAgents(characterAttributes.filter(c => c.uniformColor !== col), dN - targets.length, new Set(targets.map(t => t.agentId)));
+    return mkResult(targets, distract, [], false, targets.length, "multiTarget", `Toque nos ${noun}s ${colorPl(col)}`, 0);
+  }
+
+  // N4 — acessório através de várias cores (discriminação de acessório; posição entra na Fase B)
+  if (lv === 4) {
+    const acc = shuffle(accsWithMinColors(3))[0];
+    const targets = distinctByAcc(acc, Math.min(5, colorsWithAcc(acc).length));
+    const otherAcc = characterAttributes.filter(c => c.accessories.length > 0 && !c.accessories.includes(acc));
+    const noAcc = noAccessoryAgents();
+    const distract = cap([...pickDistinctAgents(otherAcc, 5), ...pickDistinctAgents(noAcc, 4)], dN - targets.length);
+    return mkResult(targets, distract, [], false, targets.length, "multiTarget", `Toque nos ${noun}s com ${ACC_PT[acc]}`, 0);
+  }
+
+  // N2 / N3 / N5 — cor + acessório (cópias) com distratores PARECIDOS
+  const acc = shuffle(accsWithMinColors(3))[0] ?? shuffle(ALL_ACCESSORIES)[0];
+  const col = shuffle(colorsWithAcc(acc))[0];
+  const match = agentWith(col, acc)!;
+  const nClones = lv === 5 ? 4 : 3;
+  const targets = cloneAgents(match, nClones);
+  const sameColor = withoutAccessory(withUniformColor(characterAttributes, col), acc); // mesma cor, sem o acessório
+  const sameAcc = withAccessory(characterAttributes, acc).filter(c => c.uniformColor !== col); // mesmo acessório, outra cor
+  const unrelated = characterAttributes.filter(c => c.uniformColor !== col && !c.accessories.includes(acc));
+  const nPar = lv >= 3 ? 4 : 3;
+  let distract = [...pickDistinctAgents(sameColor, nPar), ...pickDistinctAgents(sameAcc, nPar)];
+  const remaining = dN - targets.length - distract.length;
+  if (remaining > 0) distract = [...distract, ...pickDistinctAgents(unrelated, lv >= 3 ? Math.min(remaining, 2) : remaining, new Set(distract.map(d => d.agentId)))];
+  distract = cap(distract, dN - targets.length);
+  const text = `Toque ${lv === 5 ? "apenas " : ""}nos ${noun}s ${colorPl(col)} com ${ACC_PT[acc]}`;
+  return mkResult(targets, distract, [], false, targets.length, "multiTarget", text, 0);
+}
+
+function buildInibicao(lv: number, noun: string, dN: number): BuiltRound {
+  const fill = (targets: CharacterAttributes[], forbidden: CharacterAttributes[], avoid: (c: CharacterAttributes) => boolean) => {
+    const exclude = new Set([...targets, ...forbidden].map(c => c.agentId));
+    const neutral = pickDistinctAgents(characterAttributes.filter(c => !avoid(c)), Math.max(0, dN - targets.length - forbidden.length), exclude);
+    return mkResultWrap(targets, neutral, forbidden);
+  };
+  const mkResultWrap = (targets: CharacterAttributes[], neutral: CharacterAttributes[], forbidden: CharacterAttributes[], text?: string) =>
+    mkResult(targets, neutral, forbidden, false, targets.length, "multiTarget", text ?? "", 0);
+
+  // N1 — go/no-go por cor
+  if (lv === 1) {
+    const colors = shuffle(ALL_UNIFORM_COLORS).filter(c => distinctByColor(c, 3).length >= 2);
+    const go = colors[0], nogo = colors[1];
+    const targets = distinctByColor(go, 3), forbidden = distinctByColor(nogo, 3);
+    const r = fill(targets, forbidden, c => c.uniformColor === go || c.uniformColor === nogo);
+    r.command.text = `✅ Toque nos ${noun}s ${colorPl(go)}\n🚫 NÃO toque nos ${colorPl(nogo)}`;
+    return r;
+  }
+  // N2 — alvo por ACESSÓRIO, proibido por COR (atributos diferentes)
+  if (lv === 2) {
+    const acc = shuffle(accsWithMinColors(2))[0];
+    const nogoCol = shuffle(ALL_UNIFORM_COLORS)[0];
+    const targets = distinctByAcc(acc, 3).filter(t => t.uniformColor !== nogoCol);
+    const forbidden = distinctByColor(nogoCol, 3).filter(f => !f.accessories.includes(acc));
+    const r = fill(targets, forbidden, c => c.accessories.includes(acc) || c.uniformColor === nogoCol);
+    r.command.text = `✅ Toque nos ${noun}s com ${ACC_PT[acc]}\n🚫 NÃO toque nos ${colorPl(nogoCol)}`;
+    return r;
+  }
+  // N3 — exceção: cor, EXCETO os com acessório
+  if (lv === 3) {
+    const acc = shuffle(accsWithMinColors(2))[0];
+    const col = shuffle(colorsWithAcc(acc))[0];
+    const targets = pickDistinctAgents(withoutAccessory(withUniformColor(characterAttributes, col), acc), 4);
+    const forbidden = cloneAgents(agentWith(col, acc)!, 2);
+    const r = fill(targets, forbidden, c => c.uniformColor === col);
+    r.command.text = `✅ Toque nos ${noun}s ${colorPl(col)}\n🚫 menos os com ${ACC_PT[acc]}`;
+    return r;
+  }
+  // N4 — alvo por ACESSÓRIO, EXCETO uma cor
+  if (lv === 4) {
+    const acc = shuffle(accsWithMinColors(3))[0];
+    const excCol = shuffle(colorsWithAcc(acc))[0];
+    const targets = distinctByAcc(acc, 4).filter(t => t.uniformColor !== excCol);
+    const forbidden = cloneAgents(agentWith(excCol, acc)!, 2);
+    const r = fill(targets, forbidden, c => c.accessories.includes(acc));
+    r.command.text = `✅ Toque nos ${noun}s com ${ACC_PT[acc]}\n🚫 menos os ${colorPl(excCol)}`;
+    return r;
+  }
+  // N5 — alvo + exceção + proibido
+  const acc = shuffle(accsWithMinColors(3))[0];
+  const colorsWith = colorsWithAcc(acc);
+  const excCol = colorsWith[0];
+  const forbCol = shuffle(ALL_UNIFORM_COLORS.filter(c => c !== excCol && !colorsWith.includes(c)))[0] ?? ALL_UNIFORM_COLORS.find(c => c !== excCol)!;
+  const targets = distinctByAcc(acc, 4).filter(t => t.uniformColor !== excCol && t.uniformColor !== forbCol);
+  const forbidden = [...cloneAgents(agentWith(excCol, acc)!, 1), ...distinctByColor(forbCol, 2)];
+  const r = fill(targets, forbidden, c => c.accessories.includes(acc) || c.uniformColor === forbCol);
+  r.command.text = `✅ Toque nos ${noun}s com ${ACC_PT[acc]}\n🚫 menos os ${colorPl(excCol)} · não toque nos ${colorPl(forbCol)}`;
+  return r;
+}
+
 function buildCaptureAll(mode: FocusMode, level: number, theme: Theme): BuiltRound | null {
   const noun = NOUN[theme] ?? "agente";
   const lv = Math.max(1, Math.min(5, level));
   const dN = MODE_LEVEL_N[lv - 1][1];
-
-  if (mode === "foco") {
-    // N2 = por acessório; demais = por cor (ambos garantem vários alvos).
-    if (lv === 2) {
-      const acc = shuffle(ALL_ACCESSORIES).find(a => distinctByAcc(a, 3).length >= 2);
-      if (acc) {
-        const targets = distinctByAcc(acc, 4);
-        const exclude = new Set(targets.map(t => t.agentId));
-        const distract = pickDistinctAgents(withoutAccessory(characterAttributes, acc), dN - targets.length, exclude);
-        return mkResult(targets, distract, [], false, targets.length, "multiTarget",
-          `Capture todos os ${noun}s com ${ACC_PT[acc]}`, 0);
-      }
-    }
-    const col = shuffle(ALL_UNIFORM_COLORS).find(c => distinctByColor(c, 3).length >= 2);
-    if (!col) return null;
-    const targets = distinctByColor(col, lv >= 3 ? 5 : 4);
-    const exclude = new Set(targets.map(t => t.agentId));
-    const distract = pickDistinctAgents(
-      characterAttributes.filter(c => c.uniformColor !== col), dN - targets.length, exclude);
-    return mkResult(targets, distract, [], false, targets.length, "multiTarget",
-      `Capture todos os ${noun}s ${COLOR_PT[col]}`, 0);
-  }
-
-  if (mode === "inibicao") {
-    const colors = shuffle(ALL_UNIFORM_COLORS).filter(c => distinctByColor(c, 3).length >= 2);
-    if (colors.length < 2) return null;
-    const go = colors[0], nogo = colors[1];
-    const targets = distinctByColor(go, 3);
-    const forbidden = distinctByColor(nogo, lv >= 4 ? 3 : 2);
-    const exclude = new Set([...targets, ...forbidden].map(c => c.agentId));
-    const neutral = pickDistinctAgents(
-      characterAttributes.filter(c => c.uniformColor !== go && c.uniformColor !== nogo),
-      Math.max(0, dN - targets.length - forbidden.length), exclude);
-    // 2 linhas claras (renderizadas com whitespace-pre-line; TTS lê as duas).
-    const text = `✅ Capture os ${noun}s ${COLOR_PT[go]}\n🚫 NÃO toque nos ${COLOR_PT[nogo]}`;
-    return mkResult(targets, neutral, forbidden, false, targets.length, "multiTarget", text, 0);
-  }
-
+  if (mode === "foco") return buildFoco(lv, noun, dN);
+  if (mode === "inibicao") return buildInibicao(lv, noun, dN);
   return null;
 }
 

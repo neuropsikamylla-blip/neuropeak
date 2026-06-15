@@ -64,8 +64,8 @@ function levelSpeed(level: number, step: number): number {
 
 // Metadados dos 4 modos cognitivos (rótulo, ícone, descrição e flag de avançado).
 const MODE_META: Record<FocusMode, { label: string; icon: string; desc: string; advanced?: boolean }> = {
-  foco:        { label: "Foco",              icon: "🎯", desc: "Atenção seletiva — capture por cor e atributos" },
-  inibicao:    { label: "Inibição",          icon: "🚫", desc: "Controle inibitório — capture certos, evite os proibidos" },
+  foco:        { label: "Foco",              icon: "🎯", desc: "Atenção seletiva — toque por cor e atributos" },
+  inibicao:    { label: "Inibição",          icon: "🚫", desc: "Controle inibitório — toque nos certos, evite os proibidos" },
   alternancia: { label: "Alternância",       icon: "🔄", desc: "Flexibilidade — a regra muda durante a rodada" },
   desafio:     { label: "Desafio Executivo", icon: "🧠", desc: "Combinação dos três — o mais difícil", advanced: true },
 };
@@ -247,7 +247,7 @@ function FocusTutorial({ theme, onDone }: { theme: Theme; onDone: () => void }) 
 
       <h2 className="text-white font-black text-xl mb-1 text-center">Como jogar</h2>
       <p className="text-white/60 text-sm mb-5 text-center">
-        Capture o {noun} certo se movendo pela arena
+        Toque no {noun} certo se movendo pela arena
       </p>
 
       {/* Exemplo de comando */}
@@ -260,7 +260,7 @@ function FocusTutorial({ theme, onDone }: { theme: Theme; onDone: () => void }) 
         <div className="px-4 py-3 flex items-center gap-2">
           <div className="w-4 h-4 rounded-full flex-shrink-0 border-2 border-white/30"
             style={{ background: "#1E88E5" }} />
-          <p className="text-white font-bold text-sm">Capture o {noun} azul com fone</p>
+          <p className="text-white font-bold text-sm">Toque nos {noun}s azuis com fone</p>
         </div>
       </div>
 
