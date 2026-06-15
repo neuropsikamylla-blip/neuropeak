@@ -340,94 +340,99 @@ export function AtencaoSustentada({ difficulty, theme, onComplete }: AtencaoSust
   const progress = idx >= 0 ? ((idx + 1) / TOTAL_STIMULI) * 100 : 0;
   const prevLetter = idx > 0 ? sequence[idx - 1]?.letter : null;
 
-  const pal = {
-    bg: theme === "GAMIFIED" ? "bg-gray-950" : theme === "COLORFUL" ? "bg-gradient-to-br from-amber-50 to-orange-50" : "bg-gray-50",
-    card: theme === "GAMIFIED" ? "bg-gray-800 border border-cyan-500/30" : "bg-white shadow-lg",
-    title: theme === "GAMIFIED" ? "text-cyan-400" : theme === "COLORFUL" ? "text-amber-700" : "text-slate-800",
-    sub: theme === "GAMIFIED" ? "text-gray-400" : "text-gray-500",
-    stimBox: theme === "GAMIFIED" ? "bg-gray-700 border border-gray-600" : theme === "COLORFUL" ? "bg-white border-2 border-orange-200" : "bg-gray-100 border-2 border-gray-300",
-    letterCls: theme === "GAMIFIED" ? "text-white" : "text-gray-900",
-    hit: theme === "GAMIFIED" ? "text-green-400" : "text-green-600",
-    fa: theme === "GAMIFIED" ? "text-red-400" : "text-red-500",
-    bar: theme === "GAMIFIED" ? "bg-cyan-500" : theme === "COLORFUL" ? "bg-amber-500" : "bg-blue-500",
-  };
+  const isGamified = theme === "GAMIFIED";
+  const isColorful = theme === "COLORFUL";
+  const bgStyle: React.CSSProperties = isGamified
+    ? { background: "linear-gradient(145deg, #0a1628 0%, #0d2244 45%, #132a52 70%, #081020 100%)" }
+    : isColorful
+    ? { background: "linear-gradient(135deg, #ecfdf5 0%, #e0f2fe 60%, #f0e6ff 100%)" }
+    : { background: "linear-gradient(160deg, #eef3f8 0%, #e6edf5 60%, #dde6f0 100%)" };
+  const cardStyle: React.CSSProperties = isGamified
+    ? { background: "rgba(255,255,255,0.08)", backdropFilter: "blur(16px)", border: "1.5px solid rgba(255,255,255,0.15)", borderRadius: 20 }
+    : { background: "#ffffff", border: "1.5px solid rgba(26,39,68,0.08)", borderRadius: 20, boxShadow: "0 4px 20px rgba(26,39,68,0.08)" };
+  const titleColor = isGamified ? "#fff" : "#1a2744";
+  const subColor = isGamified ? "rgba(255,255,255,0.6)" : "#64748b";
+  const stimSurface: React.CSSProperties =
+    tapFeedback === "hit"
+      ? { background: "rgba(34,197,94,0.16)", border: "3px solid #22c55e" }
+      : tapFeedback === "fa"
+      ? { background: "rgba(239,68,68,0.16)", border: "3px solid #ef4444" }
+      : isGamified
+      ? { background: "rgba(255,255,255,0.06)", border: "2px solid rgba(255,255,255,0.14)" }
+      : { background: "#ffffff", border: "2px solid rgba(26,39,68,0.10)", boxShadow: "0 6px 26px rgba(26,39,68,0.10)" };
 
   return (
-    <div className={`min-h-screen overflow-y-auto ${pal.bg}`}>
-      <div className="max-w-sm mx-auto px-4 py-5 flex flex-col items-center gap-4">
+    <div className="min-h-screen overflow-y-auto" style={bgStyle}>
+      <div className="max-w-md mx-auto px-3 py-4 flex flex-col items-center gap-3">
 
         {/* Header */}
-        <div className={`w-full rounded-2xl p-4 ${pal.card}`}>
+        <div className="w-full p-3.5" style={cardStyle}>
           <div className="flex justify-between items-center mb-2">
-            <h2 className={`font-bold text-sm ${pal.title}`}>🔔 Atenção Sustentada</h2>
-            <span className={`text-xs ${pal.sub}`}>{Math.max(0, idx + 1)}/{TOTAL_STIMULI}</span>
+            <h2 className="font-bold text-sm" style={{ color: titleColor }}>🔔 Atenção Sustentada</h2>
+            <span className="text-xs tabular-nums" style={{ color: subColor }}>{Math.max(0, idx + 1)}/{TOTAL_STIMULI}</span>
           </div>
-          <div className={`h-1.5 rounded-full mb-3 ${theme === "GAMIFIED" ? "bg-gray-700" : "bg-gray-200"}`}>
-            <motion.div className={`h-full rounded-full ${pal.bar}`}
+          <div className="h-1.5 rounded-full mb-3" style={{ background: isGamified ? "rgba(255,255,255,0.1)" : "rgba(26,45,80,0.1)" }}>
+            <motion.div className="h-full rounded-full"
+              style={{ background: isGamified ? "#06b6d4" : "#4f46e5" }}
               animate={{ width: `${progress}%` }} transition={{ duration: 0.3 }} />
           </div>
-          <div className="flex justify-around">
-            <div className="text-center">
-              <p className={`text-lg font-black ${pal.hit}`}>{hits.current}</p>
-              <p className={`text-[10px] ${pal.sub}`}>Acertos</p>
+          <div className="flex justify-around text-center">
+            <div>
+              <p className="text-lg font-black tabular-nums" style={{ color: "#22c55e" }}>{hits.current}</p>
+              <p className="text-[10px]" style={{ color: subColor }}>Acertos</p>
             </div>
-            <div className="text-center">
-              <p className={`text-lg font-black ${pal.fa}`}>{falsePositives.current}</p>
-              <p className={`text-[10px] ${pal.sub}`}>Falsos +</p>
+            <div>
+              <p className="text-lg font-black tabular-nums" style={{ color: "#ef4444" }}>{falsePositives.current}</p>
+              <p className="text-[10px]" style={{ color: subColor }}>Toques errados</p>
             </div>
           </div>
         </div>
 
         {/* Rule reminder */}
-        <div className={`w-full flex items-center gap-3 px-4 py-3 rounded-xl ${
-          theme === "GAMIFIED" ? "bg-gray-800 border border-gray-700" : "bg-gray-50 border border-gray-200"
-        }`}>
-          <div className="flex items-center gap-1 text-lg font-black">
-            <span className="text-blue-500">A</span>
-            <span className={theme === "GAMIFIED" ? "text-gray-400" : "text-gray-400"}>→</span>
-            <span className="text-green-500">X</span>
+        <div className="w-full flex items-center gap-3 px-4 py-3"
+          style={{ background: isGamified ? "rgba(99,102,241,0.15)" : "#eef2ff", border: `1.5px solid ${isGamified ? "rgba(129,140,248,0.4)" : "#c7d2fe"}`, borderRadius: 14 }}>
+          <div className="flex items-center gap-1.5 text-2xl font-black shrink-0">
+            <span style={{ color: "#3b82f6" }}>A</span>
+            <span style={{ color: subColor }}>→</span>
+            <span style={{ color: "#22c55e" }}>X</span>
           </div>
-          <p className={`text-xs ${pal.sub}`}>Toque apenas quando X aparecer após A</p>
+          <p className="text-xs" style={{ color: isGamified ? "#a5b4fc" : "#3730a3" }}>
+            Toque <strong>só</strong> quando o <strong>X</strong> vier logo depois do <strong>A</strong>
+          </p>
         </div>
 
         {/* Previous letter hint */}
-        {prevLetter && (
-          <div className="flex items-center gap-2">
-            <span className={`text-xs ${pal.sub}`}>Anterior:</span>
-            <span className={`text-xl font-black ${
-              prevLetter === "A" ? "text-blue-500" : (theme === "GAMIFIED" ? "text-gray-500" : "text-gray-400")
-            }`}>{prevLetter}</span>
-            {prevLetter === "A" && <span className="text-xs text-blue-500 font-bold animate-pulse">← preste atenção!</span>}
-          </div>
-        )}
+        <div className="h-6 flex items-center">
+          {prevLetter && (
+            <div className="flex items-center gap-2 px-3 py-1 rounded-full"
+              style={{ background: prevLetter === "A" ? "rgba(59,130,246,0.14)" : "transparent" }}>
+              <span className="text-[11px]" style={{ color: subColor }}>Anterior:</span>
+              <span className="text-base font-black" style={{ color: prevLetter === "A" ? "#3b82f6" : subColor }}>{prevLetter}</span>
+              {prevLetter === "A" && <span className="text-[11px] font-bold" style={{ color: "#3b82f6" }}>← atenção ao próximo!</span>}
+            </div>
+          )}
+        </div>
 
-        {/* Stimulus */}
+        {/* Stimulus — quadro grande */}
         <div
-          className={`w-44 h-44 rounded-3xl flex items-center justify-center cursor-pointer select-none relative ${pal.stimBox}`}
           onClick={handleTap}
-          style={{ touchAction: "none" }}>
+          className="rounded-3xl flex items-center justify-center cursor-pointer select-none relative"
+          style={{ width: "min(76vw, 300px)", height: "min(76vw, 300px)", touchAction: "none", transition: "background 0.15s, border 0.15s", ...stimSurface }}>
           <AnimatePresence mode="wait">
             {letter && (
               <motion.span key={`${idx}-${letter}`}
                 initial={{ scale: 0.3, opacity: 0 }} animate={{ scale: 1, opacity: 1 }}
                 exit={{ scale: 0.3, opacity: 0 }} transition={{ duration: 0.09 }}
-                className={`text-8xl font-black ${pal.letterCls}`}>
+                className="font-black leading-none"
+                style={{ fontSize: "min(34vw, 150px)", color: titleColor }}>
                 {letter}
               </motion.span>
             )}
           </AnimatePresence>
-          <AnimatePresence>
-            {tapFeedback && (
-              <motion.div
-                className={`absolute inset-0 rounded-3xl ${tapFeedback === "hit" ? "bg-green-500/30" : "bg-red-500/30"}`}
-                initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}
-                transition={{ duration: 0.2 }} />
-            )}
-          </AnimatePresence>
         </div>
 
-        <p className={`text-xs text-center ${pal.sub}`}>
-          Toque na área acima apenas quando vir <strong className="text-green-500">X</strong> após <strong className="text-blue-500">A</strong>
+        <p className="text-xs text-center" style={{ color: subColor }}>
+          Toque no quadro grande só quando vir <strong style={{ color: "#22c55e" }}>X</strong> logo após <strong style={{ color: "#3b82f6" }}>A</strong>
         </p>
       </div>
     </div>
