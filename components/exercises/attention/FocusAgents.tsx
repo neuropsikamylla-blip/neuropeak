@@ -101,6 +101,34 @@ function cleanForSpeech(text: string): string {
   return text.replace(/[✅🚫]/g, "").replace(/\n+/g, ". ").trim();
 }
 
+// ── Fase G: feedback (sons gerados + vibração) ──────────────────────────────────
+let _actx: AudioContext | null = null;
+function beep(freqs: number[], dur = 0.12, type: OscillatorType = "sine") {
+  if (typeof window === "undefined") return;
+  try {
+    const Ctx = window.AudioContext || (window as unknown as { webkitAudioContext: typeof AudioContext }).webkitAudioContext;
+    _actx = _actx ?? new Ctx();
+    const ctx = _actx;
+    freqs.forEach((f, i) => {
+      const o = ctx.createOscillator(); const g = ctx.createGain();
+      o.type = type; o.frequency.value = f;
+      const t = ctx.currentTime + i * dur;
+      g.gain.setValueAtTime(0.0001, t);
+      g.gain.exponentialRampToValueAtTime(0.16, t + 0.012);
+      g.gain.exponentialRampToValueAtTime(0.0001, t + dur);
+      o.connect(g); g.connect(ctx.destination);
+      o.start(t); o.stop(t + dur);
+    });
+  } catch { /* áudio indisponível */ }
+}
+const soundCorrect = () => beep([660, 880], 0.1, "sine");
+const soundWrong   = () => beep([200, 150], 0.15, "square");
+const soundCapture = () => beep([720], 0.05, "triangle");
+function vibrate(ms: number | number[]) { try { navigator.vibrate?.(ms); } catch { /* sem vibração */ } }
+
+// Relógio por rodada (segundos) — só nos níveis altos (D5). 0 = sem relógio.
+const LEVEL_CLOCK = [0, 0, 0, 16, 12];
+
 // ── AgentCard ─────────────────────────────────────────────────────────────────
 
 function AgentCard({ gameAgent, onClick, state, size }: {
@@ -400,6 +428,10 @@ export function FocusAgents({ difficulty, theme, onComplete, forceMode, exercise
   const [roundResults, setRoundResults] = useState<{ correct:boolean; rt:number }[]>([]);
   const [displayLevel, setDisplayLevel] = useState(1);
   const [lastCorrect, setLastCorrect]   = useState(false);
+  const [points, setPoints]             = useState(0);   // placar (Fase G)
+  const [clockLeft, setClockLeft]       = useState(0);   // relógio por rodada (níveis altos)
+  const pointsRef                       = useRef(0);
+  const clockIntRef                     = useRef<ReturnType<typeof setInterval> | null>(null);
 
   const rafRef              = useRef<number|null>(null);
   const fallersRef          = useRef<FallerData[]>([]);
@@ -611,6 +643,24 @@ export function FocusAgents({ difficulty, theme, onComplete, forceMode, exercise
     capturedTotalRef.current = 0;
     failReasonRef.current = null;
 
+    // Relógio por rodada (só níveis altos — D5).
+    const clockSecs = LEVEL_CLOCK[Math.max(1, Math.min(5, levelRef.current)) - 1];
+    if (clockIntRef.current) { clearInterval(clockIntRef.current); clockIntRef.current = null; }
+    if (clockSecs > 0) {
+      setClockLeft(clockSecs);
+      clockIntRef.current = setInterval(() => {
+        setClockLeft(t => {
+          if (t <= 1) {
+            if (clockIntRef.current) { clearInterval(clockIntRef.current); clockIntRef.current = null; }
+            failReasonRef.current = "timeout"; setFailReason("timeout");
+            handleResult(false, roundRef.current);
+            return 0;
+          }
+          return t - 1;
+        });
+      }, 1000);
+    } else setClockLeft(0);
+
     // O movimento corre no rAF mutando `fallersRef` e aplicando o transform
     // direto no DOM (sem setState por frame). setState só em eventos discretos
     // (passagem do alvo, alvo perdido). A velocidade é normalizada por tempo
@@ -686,6 +736,7 @@ export function FocusAgents({ difficulty, theme, onComplete, forceMode, exercise
   function handleResult(correct: boolean, r: number) {
     if (doneRef.current) return;
     stopFallAnimation();
+    if (clockIntRef.current) { clearInterval(clockIntRef.current); clockIntRef.current = null; }
     // Congela o render nas posições reais alcançadas pela física durante o
     // play (não na base inicial), para que a transição para o feedback não
     // "salte" os agentes. Cobre os três caminhos: acerto, toque errado e timeout.
@@ -693,6 +744,9 @@ export function FocusAgents({ difficulty, theme, onComplete, forceMode, exercise
     if (commandFadeTimerRef.current) { clearTimeout(commandFadeTimerRef.current); commandFadeTimerRef.current = null; }
 
     const rt         = Date.now() - roundStart.current;
+    // Fase G — som, vibração e placar.
+    if (correct) { soundCorrect(); vibrate(40); pointsRef.current += 10 + (rt < 5000 ? 5 : 0); setPoints(pointsRef.current); }
+    else { soundWrong(); vibrate([50, 40, 50]); }
     const newResults = [...roundResultsRef.current, { correct, rt }];
     setRoundResults(newResults);
     roundResultsRef.current = newResults;
@@ -805,7 +859,7 @@ export function FocusAgents({ difficulty, theme, onComplete, forceMode, exercise
       // Alvo da regra ATUAL → captura
       if (targetUidsRef.current.includes(ga.uid)) {
         const newFound = [...foundUidsRef.current, ga.uid];
-        foundUidsRef.current = newFound; capturedTotalRef.current++; setFoundUids(newFound);
+        foundUidsRef.current = newFound; capturedTotalRef.current++; soundCapture(); setFoundUids(newFound);
         if (newFound.length >= targetUidsRef.current.length) {
           const next = currentPhaseRef.current + 1;
           if (next < phasesRef.current.length) advancePhase(next);
@@ -845,7 +899,7 @@ export function FocusAgents({ difficulty, theme, onComplete, forceMode, exercise
           sequenceStepRef.current = newStep;
           setSequenceStep(newStep);
           const newFound = [...foundUidsRef.current, ga.uid];
-          foundUidsRef.current = newFound; capturedTotalRef.current++;
+          foundUidsRef.current = newFound; capturedTotalRef.current++; soundCapture();
           setFoundUids(newFound);
           if (newStep >= targetUidsRef.current.length) {
             resolvedIds.current.add("timeout");
@@ -860,7 +914,7 @@ export function FocusAgents({ difficulty, theme, onComplete, forceMode, exercise
       } else {
         if (!foundUidsRef.current.includes(ga.uid)) {
           const newFound = [...foundUidsRef.current, ga.uid];
-          foundUidsRef.current = newFound; capturedTotalRef.current++;
+          foundUidsRef.current = newFound; capturedTotalRef.current++; soundCapture();
           setFoundUids(newFound);
           if (newFound.length >= requiredTargetsRef.current) {
             resolvedIds.current.add("timeout");
@@ -879,11 +933,12 @@ export function FocusAgents({ difficulty, theme, onComplete, forceMode, exercise
   useEffect(() => {
     if (showTutorial) return;
     sessionStart.current = Date.now();
-    metricsRef.current = [];
+    metricsRef.current = []; pointsRef.current = 0; setPoints(0);
     prepareRound(0);
     return () => {
       stopFallAnimation();
       if (commandFadeTimerRef.current) clearTimeout(commandFadeTimerRef.current);
+      if (clockIntRef.current) { clearInterval(clockIntRef.current); clockIntRef.current = null; }
       cancelTTS();
     };
   // eslint-disable-next-line react-hooks/exhaustive-deps
@@ -957,7 +1012,15 @@ export function FocusAgents({ difficulty, theme, onComplete, forceMode, exercise
           <span className="text-xs font-bold tabular-nums px-1.5 py-0.5 rounded-lg bg-black/20 whitespace-nowrap">
             Nível {displayLevel}
           </span>
-          {gamePhase === "playing" && (
+          <span className="text-xs font-bold tabular-nums px-1.5 py-0.5 rounded-lg bg-amber-400/20 whitespace-nowrap" style={{ color: "#fbbf24" }}>
+            ⭐ {points}
+          </span>
+          {gamePhase === "playing" && clockLeft > 0 && (
+            <span className={`text-xs font-black tabular-nums px-1.5 py-0.5 rounded-lg whitespace-nowrap ${clockLeft <= 4 ? "bg-red-500/40 text-red-100 animate-pulse" : "bg-black/20"}`}>
+              ⏱ {clockLeft}s
+            </span>
+          )}
+          {gamePhase === "playing" && clockLeft === 0 && (
             <span className="text-xs font-bold px-1.5 py-0.5 rounded-lg bg-black/20 whitespace-nowrap tracking-tight"
               title="Ritmo (sobe a cada 2 acertos seguidos)" style={{ color:"#fbbf24" }}>
               ⚡{"▰".repeat(intensity)}{"▱".repeat(MAX_INTRA_STEP - intensity)}
