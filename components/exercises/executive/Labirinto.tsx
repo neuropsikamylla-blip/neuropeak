@@ -615,7 +615,7 @@ export function Labirinto({ difficulty, theme, onComplete }: LabirintoProps) {
     window.addEventListener("resize", onResize);
     return () => window.removeEventListener("resize", onResize);
   }, []);
-  const containerPx = Math.min(windowWidth - 24, 480);
+  const containerPx = Math.min(windowWidth - 24, 600); // teto ampliado (era 480) — maior no tablet/desktop
 
   // ── Timer ───────────────────────────────────────────────────────────────
   useEffect(() => {
@@ -841,7 +841,7 @@ export function Labirinto({ difficulty, theme, onComplete }: LabirintoProps) {
     >
       {/* Header */}
       <div
-        className="w-full max-w-sm rounded-2xl px-4 py-3 mb-4"
+        className="w-full max-w-[600px] rounded-2xl px-4 py-3 mb-4"
         style={{
           background: pal.headerBg,
           border:

@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect, useRef, useCallback } from "react";
+import { useState, useEffect, useRef, useCallback, useLayoutEffect } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { calculateExerciseScore } from "@/lib/scoring";
 import { useExerciseProgress } from "@/components/exercises/ExerciseWrapper";
@@ -39,9 +39,9 @@ function ballSpeed(d: number): number {
 }
 
 const TOTAL_ROUNDS = 9;
-const BALL_RADIUS = 22;
-const AREA_W = 400;
-const AREA_H = 360;
+const BALL_RADIUS = 24;
+const AREA_W = 520; // arena lógica ampliada (~+30%); renderizada com escala responsiva p/ caber na tela
+const AREA_H = 460;
 
 interface Ball {
   id: number;
@@ -189,6 +189,21 @@ export function MOT({ difficulty, theme, onComplete }: MOTProps) {
   const ballsRef = useRef<Ball[]>([]);
   const ballNodes = useRef<Map<number, HTMLDivElement>>(new Map());
 
+  // Arena responsiva: o palco tem tamanho lógico fixo (AREA_W×AREA_H) e é
+  // escalado por CSS p/ caber na largura disponível (grande no tablet/desktop,
+  // ocupa a tela toda no celular sem vazar). A física e o rAF não mudam.
+  const stageWrapRef = useRef<HTMLDivElement>(null);
+  const [stageScale, setStageScale] = useState(1);
+  useLayoutEffect(() => {
+    const el = stageWrapRef.current;
+    if (!el) return;
+    const compute = () => setStageScale(Math.min(1, el.clientWidth / AREA_W));
+    compute();
+    const ro = new ResizeObserver(compute);
+    ro.observe(el);
+    return () => ro.disconnect();
+  }, []);
+
   const stopRaf = useCallback(() => {
     if (rafRef.current !== null) { cancelAnimationFrame(rafRef.current); rafRef.current = null; }
   }, []);
@@ -312,7 +327,7 @@ export function MOT({ difficulty, theme, onComplete }: MOTProps) {
 
   return (
     <div className={`min-h-screen overflow-y-auto ${pal.bg}`}>
-      <div className="max-w-sm mx-auto px-4 py-5 flex flex-col items-center gap-4">
+      <div className="max-w-[520px] mx-auto px-4 py-5 flex flex-col items-center gap-4">
 
         {/* Header */}
         <div className={`w-full rounded-2xl p-4 ${pal.card}`}>
@@ -338,9 +353,11 @@ export function MOT({ difficulty, theme, onComplete }: MOTProps) {
           </motion.div>
         </AnimatePresence>
 
-        {/* Ball area */}
+        {/* Ball area (responsiva: palco lógico escalado p/ caber) */}
+        <div ref={stageWrapRef} className="w-full flex justify-center">
         <div className={`relative rounded-2xl overflow-hidden ${pal.area}`}
-          style={{ width: AREA_W, height: AREA_H }}>
+          style={{ width: Math.round(AREA_W * stageScale), height: Math.round(AREA_H * stageScale) }}>
+        <div style={{ width: AREA_W, height: AREA_H, transform: `scale(${stageScale})`, transformOrigin: "top left", position: "relative" }}>
           {balls.map(ball => {
             const isSelected = selected.has(ball.id);
             const showGold = phase === "memorize" && ball.isTarget;
@@ -375,6 +392,8 @@ export function MOT({ difficulty, theme, onComplete }: MOTProps) {
               </div>
             );
           })}
+        </div>
+        </div>
         </div>
 
         {/* Confirm button */}
