@@ -754,54 +754,107 @@ function buildCaptureAll(mode: FocusMode, level: number, theme: Theme): BuiltRou
   return null;
 }
 
-// Alternância (troca de regra) e Desafio (troca + cor proibida constante).
-// Cada fase = capturar todos de uma cor; o Desafio acrescenta uma cor proibida
-// que vale durante toda a rodada.
+// ── Fase C: Alternância e Desafio com TROCA REAL de critério ───────────────────
+// Cada fase pode ser de um TIPO diferente (cor / acessório / cor+acessório /
+// cor-exceto-acessório), em vez de só trocar de cor. Desafio acrescenta uma cor
+// proibida constante. Os neutros nunca batem com nenhuma fase (não confundem).
+type PhaseKind = "color" | "acc" | "combo" | "colorExceptAcc";
+
+interface PhaseBuilt { text: string; targets: CharacterAttributes[]; claimColors: ColorName[]; claimAccs: AccessoryKey[]; }
+
+function buildPhaseRule(kind: PhaseKind, noun: string, used: Set<string>): PhaseBuilt | null {
+  const free = (pool: CharacterAttributes[]) => pool.filter(c => !used.has(c.agentId));
+  if (kind === "color") {
+    const col = shuffle(ALL_UNIFORM_COLORS).find(c => free(withUniformColor(characterAttributes, c)).length >= 2);
+    if (!col) return null;
+    const targets = pickDistinctAgents(withUniformColor(characterAttributes, col), 3, used);
+    targets.forEach(t => used.add(t.agentId));
+    return { text: `Toque nos ${noun}s ${colorPl(col)}`, targets, claimColors: [col], claimAccs: [] };
+  }
+  if (kind === "acc") {
+    const acc = shuffle(ALL_ACCESSORIES).find(a => free(withAccessory(characterAttributes, a)).length >= 2);
+    if (!acc) return null;
+    const targets = pickDistinctAgents(withAccessory(characterAttributes, acc), 3, used);
+    targets.forEach(t => used.add(t.agentId));
+    return { text: `Toque nos ${noun}s com ${ACC_PT[acc]}`, targets, claimColors: [], claimAccs: [acc] };
+  }
+  if (kind === "combo") {
+    const acc = shuffle(accsWithMinColors(2)).find(a => colorsWithAcc(a).some(c => !used.has(agentWith(c, a)!.agentId)));
+    if (!acc) return null;
+    const col = shuffle(colorsWithAcc(acc).filter(c => !used.has(agentWith(c, acc)!.agentId)))[0];
+    const match = agentWith(col, acc)!;
+    used.add(match.agentId);
+    return { text: `Toque nos ${noun}s ${colorPl(col)} com ${ACC_PT[acc]}`, targets: cloneAgents(match, 3), claimColors: [col], claimAccs: [acc] };
+  }
+  // colorExceptAcc — toque na cor, menos os que usam o acessório
+  const acc = shuffle(accsWithMinColors(2)).find(a => colorsWithAcc(a).some(c => free(withoutAccessory(withUniformColor(characterAttributes, c), a)).length >= 2));
+  if (!acc) return null;
+  const col = shuffle(colorsWithAcc(acc).filter(c => free(withoutAccessory(withUniformColor(characterAttributes, c), acc)).length >= 2))[0];
+  const targets = pickDistinctAgents(withoutAccessory(withUniformColor(characterAttributes, col), acc), 3, used);
+  targets.forEach(t => used.add(t.agentId));
+  return { text: `Toque nos ${noun}s ${colorPl(col)}, menos os com ${ACC_PT[acc]}`, targets, claimColors: [col], claimAccs: [acc] };
+}
+
+function phaseSeq(mode: FocusMode, lv: number): PhaseKind[] {
+  if (mode === "alternancia") {
+    if (lv === 1) return ["color", "color"];
+    if (lv === 2) return Math.random() < 0.5 ? ["color", "acc"] : ["acc", "color"];
+    if (lv === 3) return shuffle<PhaseKind>(["color", "acc", "combo"]);
+    if (lv === 4) return ["acc", "colorExceptAcc"];
+    return ["color", "acc", "colorExceptAcc"];
+  }
+  // desafio
+  if (lv === 1) return ["combo", "combo"];
+  if (lv === 2) return ["combo", "acc"];
+  if (lv === 3) return ["combo", "colorExceptAcc"];
+  if (lv === 4) return ["acc", "combo", "colorExceptAcc"];
+  return ["combo", "colorExceptAcc", "acc"];
+}
+
 function buildPhased(mode: FocusMode, level: number, theme: Theme): BuiltRound | null {
   const noun = NOUN[theme] ?? "agente";
   const lv = Math.max(1, Math.min(5, level));
   const dN = MODE_LEVEL_N[lv - 1][1];
-  const numPhases = lv <= 2 ? 2 : 3;
   const isDesafio = mode === "desafio";
 
-  const colors = shuffle(ALL_UNIFORM_COLORS).filter(c => distinctByColor(c, 2).length >= 2);
-  if (colors.length < numPhases + (isDesafio ? 1 : 0)) return null;
-
-  const phaseColors = colors.slice(0, numPhases);
-  const forbidColor = isDesafio ? colors[numPhases] : null;
-
-  const usedIds = new Set<string>();
+  const used = new Set<string>();
   const allTargets: CharacterAttributes[] = [];
   const phases: { text: string; targetIds: string[] }[] = [];
+  const claimColors = new Set<ColorName>();
+  const claimAccs = new Set<AccessoryKey>();
 
-  for (const col of phaseColors) {
-    const targets = distinctByColor(col, 3).filter(t => !usedIds.has(t.agentId));
-    if (targets.length === 0) return null;
-    targets.forEach(t => usedIds.add(t.agentId));
-    allTargets.push(...targets);
-    phases.push({ text: `Capture os ${noun}s ${COLOR_PT[col]}`, targetIds: targets.map(t => t.id) });
+  for (const kind of phaseSeq(mode, lv)) {
+    const r = buildPhaseRule(kind, noun, used) ?? buildPhaseRule("color", noun, used);
+    if (!r) return null;
+    phases.push({ text: r.text, targetIds: r.targets.map(t => t.id) });
+    allTargets.push(...r.targets);
+    r.claimColors.forEach(c => claimColors.add(c));
+    r.claimAccs.forEach(a => claimAccs.add(a));
   }
 
+  // Cor proibida constante (Desafio N>=2)
   let forbidden: CharacterAttributes[] = [];
-  if (forbidColor) {
-    forbidden = distinctByColor(forbidColor, 2).filter(t => !usedIds.has(t.agentId));
-    forbidden.forEach(t => usedIds.add(t.agentId));
+  let forbidColor: ColorName | null = null;
+  if (isDesafio && lv >= 2) {
+    forbidColor = shuffle(ALL_UNIFORM_COLORS).find(c => !claimColors.has(c) && pickDistinctAgents(withUniformColor(characterAttributes, c), 2, used).length >= 2) ?? null;
+    if (forbidColor) {
+      forbidden = pickDistinctAgents(withUniformColor(characterAttributes, forbidColor), 2, used);
+      forbidden.forEach(t => used.add(t.agentId));
+      claimColors.add(forbidColor);
+      phases[0] = { ...phases[0], text: `${phases[0].text}\n🚫 NUNCA toque nos ${colorPl(forbidColor)}` };
+    }
   }
 
+  // Neutros: NÃO batem com nenhuma fase (sem cor/acessório reivindicados).
   const neutral = pickDistinctAgents(
-    characterAttributes.filter(c => !phaseColors.includes(c.uniformColor) && c.uniformColor !== forbidColor),
+    characterAttributes.filter(c => !claimColors.has(c.uniformColor) && !c.accessories.some(a => claimAccs.has(a))),
     Math.max(0, dN - allTargets.length - forbidden.length),
-    usedIds,
+    used,
   );
 
-  const firstText = forbidColor
-    ? `${phases[0].text}\n🚫 NUNCA toque nos ${COLOR_PT[forbidColor]}`
-    : phases[0].text;
-
   const command: GeneratedCommand = {
-    text: firstText,
-    mode: "visual",
-    difficulty: 0,
+    text: phases[0].text,
+    mode: "visual", difficulty: 0,
     targets: phases[0].targetIds,
     distractors: neutral.map(c => c.id),
     forbidden: forbidden.map(c => c.id),
