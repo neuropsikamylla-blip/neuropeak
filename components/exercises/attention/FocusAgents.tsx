@@ -9,7 +9,7 @@ import { agents } from "@/data/agents";
 import type { AgentConfig } from "@/data/agents";
 import type { ExerciseResult, Theme } from "@/types";
 import type { CommandRuleType, FocusMode } from "@/types/commands";
-import { buildModeRound } from "@/utils/generateCommand";
+import { buildModeRound, roundSignature } from "@/utils/generateCommand";
 
 // ── Types ──────────────────────────────────────────────────────────────────────
 
@@ -509,6 +509,7 @@ export function FocusAgents({ difficulty, theme, onComplete, forceMode, exercise
   const targetPassRef       = useRef(0);
   const recentVerbsRef          = useRef<number[]>([]);
   const recentTargetAgentIdsRef = useRef<string[]>([]);
+  const recentSigsRef           = useRef<string[]>([]);   // regras (texto) recentes p/ não repetir na sessão
   const modeRef                 = useRef<FocusMode>("foco");
   const levelRef                = useRef(1);
   // Fases (modos Alternância e Desafio): troca de regra durante a rodada.
@@ -545,11 +546,14 @@ export function FocusAgents({ difficulty, theme, onComplete, forceMode, exercise
       intraStepRef.current = 0;
       consecCorrectRef.current = 0;
       setIntensity(0);
+      recentSigsRef.current = [];
+      recentVerbsRef.current = [];
+      recentTargetAgentIdsRef.current = [];
     }
 
     // Modo + nível são fixos na sessão (escolhidos na tela de seleção). A
     // adaptação automática entra na Fase 2 (config clínica).
-    let built = buildModeRound(modeRef.current, levelRef.current, theme, recentVerbsRef.current);
+    let built = buildModeRound(modeRef.current, levelRef.current, theme, recentVerbsRef.current, recentSigsRef.current);
 
     // Evita repetir o mesmo agente alvo nas últimas 3 rodadas
     for (let attempt = 0; attempt < 2; attempt++) {
@@ -557,7 +561,7 @@ export function FocusAgents({ difficulty, theme, onComplete, forceMode, exercise
         .map(tid => built.characters.find(c => c.id === tid)?.agentId)
         .filter(Boolean) as string[];
       if (ids.some(aid => recentTargetAgentIdsRef.current.slice(-3).includes(aid))) {
-        built = buildModeRound(modeRef.current, levelRef.current, theme, recentVerbsRef.current);
+        built = buildModeRound(modeRef.current, levelRef.current, theme, recentVerbsRef.current, recentSigsRef.current);
       } else break;
     }
 
@@ -614,6 +618,7 @@ export function FocusAgents({ difficulty, theme, onComplete, forceMode, exercise
     setPhaseHint(null);
 
     recentVerbsRef.current = [...recentVerbsRef.current.slice(-4), verbIdx];
+    recentSigsRef.current = [...recentSigsRef.current.slice(-5), roundSignature(built)];   // janela de 6 regras
 
     setGameAgents(newGameAgents);
     // Fase H — distratores fortes (piscam) na Inibição N4/N5: mistura alvos e não-alvos

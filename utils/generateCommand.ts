@@ -990,7 +990,7 @@ function buildUnlock(lv: number, theme: Theme): BuiltRound {
   return buildInibicao(lv === 9 ? 4 : 5, noun, dN);   // exceção/proibido (9 = piscam, aplicado no componente)
 }
 
-export function buildModeRound(
+function buildModeRoundOnce(
   mode: FocusMode,
   level: number,
   theme: Theme,
@@ -1041,4 +1041,32 @@ export function buildModeRound(
   }
 
   return fillToN(colorFallback(n, theme), dN);
+}
+
+// Assinatura da REGRA de uma rodada (determinística). Inclui as fases
+// (Alternância/Desafio mudam a regra durante a rodada), pra duas rodadas só
+// "iguais" se a regra inteira for igual.
+export function roundSignature(b: BuiltRound): string {
+  const phases = b.command.phases?.map(p => p.text).join(">") ?? "";
+  return `${b.command.text}¦${phases}`;
+}
+
+// Wrapper: evita REPETIR a mesma REGRA nas rodadas recentes da sessão. Tenta
+// gerar várias vezes até achar uma regra inédita (na janela recente); se o
+// repertório do nível for pequeno, usa a última gerada.
+export function buildModeRound(
+  mode: FocusMode,
+  level: number,
+  theme: Theme,
+  recentVerbs: number[] = [],
+  recentSigs: string[] = [],
+): BuiltRound {
+  const recent = new Set(recentSigs);
+  let last: BuiltRound | null = null;
+  for (let i = 0; i < 24; i++) {
+    const r = buildModeRoundOnce(mode, level, theme, recentVerbs);
+    last = r;
+    if (!recent.has(roundSignature(r))) return r;
+  }
+  return last as BuiltRound;
 }
