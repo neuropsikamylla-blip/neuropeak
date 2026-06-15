@@ -218,6 +218,9 @@ export function OrdemHistoria({ difficulty, onComplete, settings }: OrdemHistori
   const faltaHitsRef = useRef(0);
   const hintsUsedRef = useRef(0);   // total de dicas usadas na sessão
   const retriesRef = useRef(0);     // total de tentativas extras (erros antes do acerto)
+  const pendingRef = useRef<{ mode: RoundMode; storyId: string; a: number; cards: Card[]; options: Option[] } | null>(null);
+  const firstRespRef = useRef<number[]>([]);   // tempo até a 1ª resposta por rodada (ms)
+  const roundFirstAt = useRef<number | null>(null);
   const rtsRef = useRef<number[]>([]);
   const startRoundAt = useRef(0);
   const startTime = useRef(Date.now());
@@ -228,32 +231,49 @@ export function OrdemHistoria({ difficulty, onComplete, settings }: OrdemHistori
     useSensor(KeyboardSensor, { coordinateGetter: sortableKeyboardCoordinates }),
   );
 
-  const startRound = useCallback(() => {
-    setRoundMode(sessionMode); setMarked(null); setPicked(null); setResult(null);
-    setHintLevel(0); setAttempts(1); setWrongOpts([]); setFlash("");
+  // pré-carrega imagens no navegador (warming do cache) — troca de rodada sem delay.
+  function preloadUrls(urls: string[]) {
+    if (typeof window === "undefined") return;
+    for (const u of urls) { const im = new window.Image(); im.src = u; }
+  }
+  // monta a próxima rodada (dedup + pré-carrega as imagens dela).
+  function makeRound(): { mode: RoundMode; storyId: string; a: number; cards: Card[]; options: Option[] } {
     if (sessionMode === "falta") {
       const r = buildFalta(new Set(recentRef.current));
       recentRef.current = [r.storyId, ...recentRef.current].slice(0, 6);
-      setStoryId(r.storyId); setStoryA(r.a); setCards(r.cards); setOptions(r.options);
-    } else {
-      const r = buildOrdem(sessionMode === "intruso", tier, new Set(recentRef.current));
-      recentRef.current = [r.storyId, ...recentRef.current].slice(0, 6);
-      setStoryId(r.storyId); setStoryA(r.a); setCards(r.cards); setOptions([]);
+      preloadUrls([...Array.from({ length: 7 }, (_, i) => descubraScene(r.storyId, i + 1)), ...r.options.map((o) => o.src)]);
+      return { mode: "falta", storyId: r.storyId, a: r.a, cards: r.cards, options: r.options };
     }
+    const r = buildOrdem(sessionMode === "intruso", tier, new Set(recentRef.current));
+    recentRef.current = [r.storyId, ...recentRef.current].slice(0, 6);
+    preloadUrls(Array.from({ length: r.cards.length }, (_, i) => histPanelSrc(r.storyId, i + 1)));
+    return { mode: sessionMode, storyId: r.storyId, a: r.a, cards: r.cards, options: [] };
+  }
+  function markFirst() { if (roundFirstAt.current === null) roundFirstAt.current = Date.now(); }
+  function startRound() {
+    const data = pendingRef.current ?? makeRound();   // usa a rodada já pré-carregada, se houver
+    pendingRef.current = null;
+    roundFirstAt.current = null;
+    setRoundMode(data.mode); setMarked(null); setPicked(null); setResult(null);
+    setHintLevel(0); setAttempts(1); setWrongOpts([]); setFlash("");
+    setStoryId(data.storyId); setStoryA(data.a); setCards(data.cards); setOptions(data.options);
     startRoundAt.current = Date.now();
     setPhase("playing");
-  }, [tier, sessionMode]);
+    pendingRef.current = makeRound();                 // já adianta a PRÓXIMA rodada em background
+  }
 
   function begin() {
     gradedRef.current = []; posCorrectRef.current = 0; posWrongRef.current = 0;
     swapsRef.current = 0; intruderHitsRef.current = 0; faltaHitsRef.current = 0;
     hintsUsedRef.current = 0; retriesRef.current = 0;
+    pendingRef.current = null; firstRespRef.current = []; roundFirstAt.current = null;
     rtsRef.current = []; startTime.current = Date.now(); setTrial(0);
     startRound();
   }
 
   function useHint() {
     if (phase !== "playing" || roundMode === "ordem") return;
+    markFirst();
     setHintLevel((h) => {
       const max = HINTS[roundMode].length;
       const n = Math.min(max, h + 1);
@@ -273,14 +293,16 @@ export function OrdemHistoria({ difficulty, onComplete, settings }: OrdemHistori
       swapsRef.current++;
       return arrayMove(prev, from, to);
     });
+    markFirst();
   }
 
-  function toggleMark(id: string) { if (phase === "playing") setMarked((prev) => (prev === id ? null : id)); }
+  function toggleMark(id: string) { if (phase === "playing") { markFirst(); setMarked((prev) => (prev === id ? null : id)); } }
 
   const finish = useCallback(() => {
     const accTotal = gradedRef.current.length ? gradedRef.current.reduce((a, b) => a + b, 0) / gradedRef.current.length : 0;
     const exactCount = gradedRef.current.filter((g) => g >= 0.999).length;
     const meanRT = rtsRef.current.length ? Math.round(rtsRef.current.reduce((a, b) => a + b, 0) / rtsRef.current.length) : null;
+    const meanFirst = firstRespRef.current.length ? Math.round(firstRespRef.current.reduce((a, b) => a + b, 0) / firstRespRef.current.length) : null;
     const duration = Math.round((Date.now() - startTime.current) / 1000);
     onComplete({
       exerciseId: "ordem-historia",
@@ -307,6 +329,7 @@ export function OrdemHistoria({ difficulty, onComplete, settings }: OrdemHistori
         sequencesCorrect: exactCount,
         sequencesIncorrect: TRIALS - exactCount,
         meanReactionTimeMs: meanRT,
+        timeToFirstMs: meanFirst,
       },
     });
   }, [onComplete, difficulty, reportLevel, tier, sessionMode]);
@@ -320,6 +343,7 @@ export function OrdemHistoria({ difficulty, onComplete, settings }: OrdemHistori
   function record(acc: number, exact: boolean) {
     gradedRef.current.push(acc);
     rtsRef.current.push(Date.now() - startRoundAt.current);
+    firstRespRef.current.push((roundFirstAt.current ?? Date.now()) - startRoundAt.current);
     setResult({ exact });
     setPhase("feedback");
     advance(exact);
@@ -508,7 +532,7 @@ export function OrdemHistoria({ difficulty, onComplete, settings }: OrdemHistori
                 if (fb) bd = o.correct ? "#34d399" : isPicked ? "#ef4444" : "transparent";
                 const labelBg = fb && o.correct ? "#15803d" : (fb && isPicked) || (tried && !fb) ? "#b91c1c" : "#2a2440";
                 return (
-                  <button key={o.id} onClick={() => { if (phase === "playing" && !tried) { setPicked(o.id); setFlash(""); } }} disabled={locked}
+                  <button key={o.id} onClick={() => { if (phase === "playing" && !tried) { markFirst(); setPicked(o.id); setFlash(""); } }} disabled={locked}
                     style={{ padding: 0, border: `4px solid ${bd}`, borderRadius: 16, overflow: "hidden", background: "#fff",
                       cursor: locked ? "default" : "pointer", boxShadow: "0 3px 10px rgba(80,60,140,0.14)", display: "block",
                       opacity: tried && !fb ? 0.5 : 1 }}>
