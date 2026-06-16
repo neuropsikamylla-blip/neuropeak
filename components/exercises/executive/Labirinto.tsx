@@ -76,19 +76,21 @@ function generateMaze(size: number, loops: number = 0): Cell[][] {
 }
 
 function mazeLoops(difficulty: number, size: number): number {
-  // More loops = more branching dead-end corridors = harder to find the one exit
-  const base = Math.max(4, Math.floor((size * size) / 10));
-  if (difficulty <= 2) return base;
-  if (difficulty <= 4) return base * 2;
-  if (difficulty <= 6) return Math.round(base * 3.5);
+  // Mais loops = mais corredores/becos sem saída = mais difícil achar a saída certa.
+  // Reforçado (estava fácil demais): mais rotas falsas em todos os níveis.
+  const base = Math.max(5, Math.floor((size * size) / 10));
+  if (difficulty <= 2) return Math.round(base * 1.5);
+  if (difficulty <= 4) return Math.round(base * 2.5);
+  if (difficulty <= 6) return base * 4;
   if (difficulty <= 8) return base * 5;
   return base * 7;
 }
 
 function decoyCount(difficulty: number): number {
-  if (difficulty <= 3) return 3;
-  if (difficulty <= 6) return 6;
-  return 10;
+  // Saídas-isca (caminhos que parecem a saída mas não são). Reforçado.
+  if (difficulty <= 3) return 6;
+  if (difficulty <= 6) return 9;
+  return 13;
 }
 
 // BFS para encontrar o caminho mais curto; retorna o conjunto de células no caminho
@@ -184,7 +186,8 @@ const MIN_IDX = 0;
 const MAX_IDX = SIZE_STEPS.length - 1;
 
 function initialIdx(difficulty: number) {
-  return Math.min(Math.max(0, Math.floor((difficulty - 1) * MAX_IDX / 9)), MAX_IDX);
+  // Começa um passo maior (estava fácil demais): nível 1 já é 19×19, não 15×15.
+  return Math.min(Math.max(0, Math.floor((difficulty - 1) * MAX_IDX / 9) + 1), MAX_IDX);
 }
 
 function cellKey(r: number, c: number) {

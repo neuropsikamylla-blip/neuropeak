@@ -31,7 +31,7 @@ interface TrialItem {
 
 const MAX_TRIALS = 20;
 const MIN_TIME_MS = 550;
-const MAX_TIME_MS = 4000;
+const MAX_TIME_MS = 5000;
 
 const TUTORIAL_EXAMPLES: TrialItem[] = [
   { word: COLORS[0], inkColor: COLORS[1], rule: "COR" },
@@ -64,7 +64,8 @@ function generateTrial(eff: number): TrialItem {
 }
 
 function initialTimeMs(eff: number): number {
-  return Math.max(MIN_TIME_MS, Math.round(2800 - (eff - 1) * 300));
+  // Começa generoso no nível 1 (~4,5s) e acelera com a dificuldade (~0,9s no 10).
+  return Math.max(MIN_TIME_MS, Math.round(4500 - (eff - 1) * 400));
 }
 
 function correctAnswer(item: TrialItem): string {
