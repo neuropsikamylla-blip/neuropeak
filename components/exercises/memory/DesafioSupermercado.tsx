@@ -258,17 +258,18 @@ function CartBasket({ items }: { items: Product[] }) {
       <svg viewBox="0 0 120 100" style={{ position: "absolute", inset: 0, width: "100%", height: "100%", display: "block" }} xmlns="http://www.w3.org/2000/svg">
         <path d="M20 56 L100 56 L92 95 Q90 99 84 99 L36 99 Q30 99 28 95 Z" fill="#e9c795" stroke="#a87a44" strokeWidth="2.5" strokeLinejoin="round" />
       </svg>
-      {/* produtos DENTRO da cesta (encaixados no corpo; topos espiam acima do aro) */}
-      <div style={{ position: "absolute", left: "20%", right: "20%", bottom: "12%", height: "56%",
+      {/* produtos DENTRO da cesta — cada um numa caixa (objectFit contain, alinhado
+          embaixo) pra NENHUM subir acima do aro, mesmo com poucos itens. */}
+      <div style={{ position: "absolute", left: "18%", right: "18%", bottom: "6%", height: "42%",
         display: "flex", alignItems: "flex-end", justifyContent: "center" }}>
         <AnimatePresence mode="popLayout">
           {show.map((p, i) => (
-            <motion.div key={`${p.id}-${i}`} layout initial={{ y: -28, opacity: 0, scale: 0.5 }} animate={{ y: 0, opacity: 1, scale: 1 }}
+            <motion.div key={`${p.id}-${i}`} layout initial={{ y: -22, opacity: 0, scale: 0.5 }} animate={{ y: 0, opacity: 1, scale: 1 }}
               exit={{ opacity: 0, scale: 0.6 }} transition={{ type: "spring", stiffness: 420, damping: 24 }}
-              style={{ width: W, marginLeft: i ? "-7%" : 0, zIndex: i, filter: "drop-shadow(0 3px 5px rgba(80,50,20,0.35))" }}>
+              style={{ width: W, height: "100%", marginLeft: i ? "-6%" : 0, zIndex: i, filter: "drop-shadow(0 3px 5px rgba(80,50,20,0.35))" }}>
               {/* eslint-disable-next-line @next/next/no-img-element */}
               <img src={`/exercises/produtos/${p.id}.png`} alt="" draggable={false}
-                style={{ width: "100%", height: "auto", display: "block", userSelect: "none" }} />
+                style={{ width: "100%", height: "100%", objectFit: "contain", objectPosition: "bottom", display: "block", userSelect: "none" }} />
             </motion.div>
           ))}
         </AnimatePresence>
