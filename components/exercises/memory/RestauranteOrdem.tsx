@@ -2,18 +2,18 @@
 
 import { useState, useRef, useCallback, useEffect } from "react";
 import { motion } from "framer-motion";
-import { Volume2, UtensilsCrossed, ChefHat, CheckCircle2, BarChart3, Users, Package, ArrowLeftRight, Ban } from "lucide-react";
+import { Volume2, UtensilsCrossed, CheckCircle2, BarChart3, Users, Package, ArrowLeftRight, Ban } from "lucide-react";
 import { calculateExerciseScore } from "@/lib/scoring";
 import { speakText } from "@/lib/voicePrefs";
 import { VoicePicker } from "@/components/exercises/VoicePicker";
 import { useExerciseProgress } from "@/components/exercises/ExerciseWrapper";
+import { PresentationConfig, type PresMode } from "@/components/exercises/PresentationConfig";
 import type { ExerciseResult, Theme } from "@/types";
 
 interface RestauranteOrdemProps {
   difficulty: number;
   theme: Theme;
   onComplete: (result: ExerciseResult) => void;
-  auditory?: boolean;
 }
 
 interface Item { id: string; n: string; art: string; } // foto: /exercises/restaurante/<id>.png
@@ -308,7 +308,11 @@ function OrderSeqText({ items }: { items: Item[] }) {
   );
 }
 
-export function RestauranteOrdem({ difficulty, onComplete, auditory = false }: RestauranteOrdemProps) {
+export function RestauranteOrdem({ difficulty, onComplete }: RestauranteOrdemProps) {
+  // Modo de apresentação (escolhido na tela "Configurar atividade", antes de iniciar).
+  const [presMode, setPresMode] = useState<PresMode | null>(null);
+  const speakOn = presMode === "visual_audio" || presMode === "audio_only";
+  const hideText = presMode === "audio_only";
   const reportProgress = useExerciseProgress();
   const startLevel = levelOf(difficulty);
   const [sessionLevel, setSessionLevel] = useState(startLevel);
@@ -355,7 +359,7 @@ export function RestauranteOrdem({ difficulty, onComplete, auditory = false }: R
     const meanRT = rtsRef.current.length ? Math.round(rtsRef.current.reduce((a, b) => a + b, 0) / rtsRef.current.length) : null;
     const duration = Math.round((Date.now() - startTime.current) / 1000);
     onComplete({
-      exerciseId: auditory ? "restaurante-ordem-auditivo" : "restaurante-ordem",
+      exerciseId: "restaurante-ordem",
       domain: "memory",
       score: calculateExerciseScore("span-numerico", accTotal, meanRT ?? undefined, endLevel),
       accuracy: accTotal,
@@ -373,9 +377,10 @@ export function RestauranteOrdem({ difficulty, onComplete, auditory = false }: R
         sequencesCorrect: correctRef.current,
         sequencesIncorrect: TRIALS - correctRef.current,
         meanReactionTimeMs: meanRT,
+        presentationMode: presMode,
       },
     });
-  }, [onComplete, startLevel, auditory]);
+  }, [onComplete, startLevel, presMode]);
 
   const validate = useCallback(() => {
     const r = roundRef.current; if (!r) return;
@@ -429,13 +434,13 @@ export function RestauranteOrdem({ difficulty, onComplete, auditory = false }: R
     if (typeof window === "undefined") return;
     ITEMS.forEach((i) => { const im = new window.Image(); im.src = photo(i.id); });
   }, []);
-  // modo auditivo: fala o pedido (fase order) / a mudança (fase mod) ao entrar
+  // modos com áudio: fala o pedido (fase order) / a mudança (fase mod) ao entrar
   useEffect(() => {
-    if (!auditory || !round) return;
+    if (!speakOn || !round) return;
     if (phase === "order") speakText(orderSpeechText(round, round.initial.length), { rate: 0.95 });
     else if (phase === "mod") speakText(modSpeechText(round, round.initial.length), { rate: 0.95 });
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [phase, round, auditory]);
+  }, [phase, round, speakOn]);
 
   function replay() {
     if (!round) return;
@@ -454,36 +459,14 @@ export function RestauranteOrdem({ difficulty, onComplete, auditory = false }: R
   const totalPlaced = trays.reduce((s, t) => s + t.length, 0);
   const mc = modChip(spec);
 
-  // ── READY ──
-  if (phase === "ready") {
+  // ── CONFIGURAR ATIVIDADE (escolha do modo) — substitui a tela inicial ──
+  if (presMode === null) {
     return (
-      <div style={{ position: "fixed", inset: 0, display: "flex", flexDirection: "column", overflow: "hidden", background: "#3c2616" }}>
-        <RestaurantBg />
-        {showVoice && <VoicePicker onClose={() => setShowVoice(false)} />}
-        <div style={{ position: "relative", zIndex: 2, flex: 1, display: "flex", alignItems: "center", justifyContent: "center", padding: 18 }}>
-          <div style={{ width: "100%", maxWidth: 440, background: "#f6efe0", borderRadius: 26, padding: "26px 22px",
-            textAlign: "center", boxShadow: "0 22px 60px rgba(30,18,8,0.45)" }}>
-            <div style={{ margin: "0 auto 14px", width: 70, height: 70, borderRadius: "50%",
-              background: "rgba(17,81,79,0.12)", border: "1px solid rgba(17,81,79,0.25)", display: "flex", alignItems: "center", justifyContent: "center" }}>
-              {auditory ? <Volume2 size={36} color="#11514f" /> : <ChefHat size={36} color="#11514f" />}
-            </div>
-            <h2 style={{ fontSize: 20, fontWeight: 900, color: "#2a2018", marginBottom: 6 }}>Restaurante{auditory ? " — Auditivo" : ""}</h2>
-            <p style={{ fontSize: 13.5, color: "#6b6052", marginBottom: 6 }}>
-              {auditory ? <>Você vai <b>ouvir</b> o pedido (sem ler) e montar cada bandeja na ordem certa.</> : <>Leia o pedido e monte cada bandeja na ordem certa.</>} Nos níveis mais altos o cliente pode <b>trocar</b> ou <b>cancelar</b> um item.
-            </p>
-            <p style={{ fontSize: 12, color: "#9a8f7e", marginBottom: 18 }}>
-              Você começa no nível {startLevel} ({spec.clients === 1 ? "1 cliente" : "2 clientes"} · {spec.items} itens{mc ? ` · ${mc.text.toLowerCase()}` : ""}) — onde parou.
-            </p>
-            {auditory && (
-              <button onClick={() => setShowVoice(true)} style={{ width: "100%", height: 44, marginBottom: 10, borderRadius: 14, cursor: "pointer",
-                background: "#fffdf7", border: "1px solid #e2d8c2", color: "#8a7c63", fontWeight: 800, fontSize: 13.5 }}>🎚️ Escolher a voz (feminina/masculina)</button>
-            )}
-            <button onClick={begin} style={{ width: "100%", height: 52, borderRadius: 16, border: "none",
-              background: "linear-gradient(135deg,#11514f,#0d3a3c)", color: "#fff", fontWeight: 800, fontSize: 15, cursor: "pointer",
-              boxShadow: "0 6px 18px rgba(13,58,60,0.4)" }}>Começar →</button>
-          </div>
-        </div>
-      </div>
+      <PresentationConfig
+        title="Restaurante" icon="🍽️" accent="#11514f"
+        subtitle={<>Nível {startLevel} · {spec.clients === 1 ? "1 cliente" : "2 clientes"} · {spec.items} itens{mc ? ` · ${mc.text.toLowerCase()}` : ""} — onde parou.</>}
+        onChoose={(m) => { setPresMode(m); begin(); }}
+      />
     );
   }
 
@@ -528,9 +511,9 @@ export function RestauranteOrdem({ difficulty, onComplete, auditory = false }: R
                 {phase === "order" && (
                   <div style={{ display: "flex", flexDirection: "column", alignItems: "center", gap: 16, paddingBottom: 4 }}>
                     <span style={{ display: "flex", alignItems: "center", gap: 9, fontSize: 13, fontWeight: 800, color: "#1d7a6e", textTransform: "uppercase", letterSpacing: 1 }}>
-                      <span style={{ color: "#caa86a" }}>✦</span>{auditory ? "🎧 Ouça o pedido" : `📋 Pedido${spec.clients > 1 ? "s" : ""} do${spec.clients > 1 ? "s clientes" : " cliente"}`}<span style={{ color: "#caa86a" }}>✦</span>
+                      <span style={{ color: "#caa86a" }}>✦</span>{hideText ? "🎧 Ouça o pedido" : `📋 Pedido${spec.clients > 1 ? "s" : ""} do${spec.clients > 1 ? "s clientes" : " cliente"}`}<span style={{ color: "#caa86a" }}>✦</span>
                     </span>
-                    {auditory ? (
+                    {hideText ? (
                       <div style={{ display: "flex", flexDirection: "column", alignItems: "center", gap: 14, width: "100%", padding: "8px 0" }}>
                         <motion.div animate={{ scale: [1, 1.09, 1] }} transition={{ duration: 1.1, repeat: Infinity }}
                           style={{ width: 92, height: 92, borderRadius: "50%", background: "rgba(17,81,79,0.1)", border: "1px solid rgba(17,81,79,0.3)",
@@ -558,6 +541,10 @@ export function RestauranteOrdem({ difficulty, onComplete, auditory = false }: R
                         </p>
                       </div>
                     ))}
+                    {speakOn && !hideText && (
+                      <button onClick={replay} style={{ fontSize: 12.5, fontWeight: 700, padding: "8px 16px", borderRadius: 100, cursor: "pointer",
+                        background: "rgba(17,81,79,0.1)", border: "1px solid rgba(17,81,79,0.3)", color: "#11514f" }}>🔊 Ouvir de novo</button>
+                    )}
                     <button onClick={goAfterOrder} style={{ width: "100%", height: 52, borderRadius: 100, border: "none",
                       background: "linear-gradient(135deg,#11514f,#0d3a3c)", color: "#fff", fontWeight: 800, fontSize: 14.5, cursor: "pointer",
                       boxShadow: "0 6px 18px rgba(13,58,60,0.35)" }}>
@@ -572,7 +559,7 @@ export function RestauranteOrdem({ difficulty, onComplete, auditory = false }: R
                     <span style={{ display: "flex", alignItems: "center", gap: 8, fontSize: 13, fontWeight: 800, color: "#c2463a", textTransform: "uppercase", letterSpacing: 1 }}>
                       📣 Mudança no pedido!
                     </span>
-                    {auditory ? (
+                    {hideText ? (
                       <div style={{ display: "flex", flexDirection: "column", alignItems: "center", gap: 14, width: "100%", padding: "8px 0" }}>
                         <motion.div animate={{ scale: [1, 1.09, 1] }} transition={{ duration: 1.1, repeat: Infinity }}
                           style={{ width: 84, height: 84, borderRadius: "50%", background: "rgba(194,70,58,0.1)", border: "1px solid rgba(194,70,58,0.3)",
@@ -594,6 +581,10 @@ export function RestauranteOrdem({ difficulty, onComplete, auditory = false }: R
                         <p style={{ flex: 1, fontSize: 16, fontWeight: 800, color: "#2a2018" }}>{modText(spec.clients, m)}</p>
                       </div>
                     ))}
+                    {speakOn && !hideText && (
+                      <button onClick={replay} style={{ fontSize: 12.5, fontWeight: 700, padding: "8px 16px", borderRadius: 100, cursor: "pointer",
+                        background: "rgba(17,81,79,0.1)", border: "1px solid rgba(17,81,79,0.3)", color: "#11514f" }}>🔊 Ouvir de novo</button>
+                    )}
                     <button onClick={goInput} style={{ width: "100%", height: 52, borderRadius: 100, border: "none",
                       background: "linear-gradient(135deg,#11514f,#0d3a3c)", color: "#fff", fontWeight: 800, fontSize: 14.5, cursor: "pointer",
                       boxShadow: "0 6px 18px rgba(13,58,60,0.35)" }}>Montar bandeja →</button>

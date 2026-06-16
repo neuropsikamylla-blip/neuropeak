@@ -17,6 +17,9 @@ export interface NormalizedPlanExercise {
 // "compra-multifuncional" (que já cobre orçamento + categoria + quantidade + tempo).
 const EXERCISE_ALIASES: Record<string, string> = {
   "desafio-orcamento": "compra-multifuncional",
+  // Modos visual/auditivo unificados: o -auditivo virou um MODO interno (tela
+  // "Configurar atividade"). Planos antigos abrem o exercício único na leitura.
+  "restaurante-ordem-auditivo": "restaurante-ordem",
 };
 
 /** Aceita string JSON ou array já parseado; devolve a lista normalizada

@@ -544,8 +544,8 @@ export default function ExercicioPage() {
       case "padroes-rotacao": return <PadroesRotacao {...props} />;
       case "sequencia-itens": return <SequenciaItens {...props} />;
       case "lista-distracao": return <ListaDistracao {...props} />;
-      case "restaurante-ordem": return <RestauranteOrdem {...props} />;
-      case "restaurante-ordem-auditivo": return <RestauranteOrdem {...props} auditory />;
+      case "restaurante-ordem":
+      case "restaurante-ordem-auditivo": return <RestauranteOrdem {...props} />;
       case "task-switching": return <TaskSwitching {...props} />;
       case "atencao-sustentada": return <AtencaoSustentada {...props} />;
       case "mot": return <MOT {...props} />;
