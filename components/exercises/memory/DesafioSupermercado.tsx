@@ -533,7 +533,7 @@ function SupermercadoTutorial({ theme, mode, onDone }: { theme: Theme; mode: "le
     { instruction: "Por último, as variações que vão aparecer conforme você avança:",
       content: (done: () => void) => <TutVariationsStep onDone={done} /> },
   ];
-  return <TutorialBase theme={theme} title={`Desafio do Supermercado${mode === "auditivo" ? " — Auditivo" : ""}`} steps={steps} onDone={onDone} />;
+  return <TutorialBase theme={theme} title="Supermercado" steps={steps} onDone={onDone} />;
 }
 
 // ── Main component ────────────────────────────────────────────────────────────────

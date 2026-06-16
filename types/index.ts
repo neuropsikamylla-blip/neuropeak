@@ -177,7 +177,7 @@ export const EXERCISE_DEFINITIONS = {
   },
   "restaurante-ordem": {
     id: "restaurante-ordem",
-    name: "Restaurante — Ordem de Instruções",
+    name: "Restaurante",
     domain: "memory" as Domain,
     description: "Treina memória operacional funcional: ouvir ou ler pedidos e executar as ações na ordem correta (direta, inversa ou com exclusão).",
     estimatedMinutes: 7,
@@ -297,7 +297,7 @@ export const EXERCISE_DEFINITIONS = {
   },
   "desafio-supermercado": {
     id: "desafio-supermercado",
-    name: "Supermercado — Leitura",
+    name: "Supermercado",
     domain: "memory" as Domain,
     description: "Treina memória operacional visual-verbal: ler, memorizar e localizar itens da lista.",
     estimatedMinutes: 8,
