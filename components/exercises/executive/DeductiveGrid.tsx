@@ -377,10 +377,13 @@ const PUZZLES: Puzzle[] = [
 ];
 
 function getPuzzlePool(d: number): Puzzle[] {
-  if (d <= 2) return PUZZLES.filter(p => p.difficulty === 1);
-  if (d <= 4) return PUZZLES.filter(p => p.difficulty <= 2);
-  if (d <= 6) return PUZZLES.filter(p => p.difficulty === 2 || p.difficulty === 3);
-  if (d <= 8) return PUZZLES.filter(p => p.difficulty === 3);
+  // Estava fácil demais (níveis baixos só pegavam d1: 3×3 com 2 pistas, quase dado).
+  // Piso agora é d2 (cadeia de eliminação = raciocínio real) e os 4×4 (expert) chegam mais cedo.
+  if (d <= 1) return PUZZLES.filter(p => p.difficulty <= 2);                 // leve, mas já com cadeia
+  if (d <= 3) return PUZZLES.filter(p => p.difficulty === 2);
+  if (d <= 5) return PUZZLES.filter(p => p.difficulty === 2 || p.difficulty === 3);
+  if (d <= 7) return PUZZLES.filter(p => p.difficulty === 3);
+  if (d <= 9) return PUZZLES.filter(p => p.difficulty === 3 || p.difficulty === 4);
   return PUZZLES.filter(p => p.difficulty === 4);
 }
 
