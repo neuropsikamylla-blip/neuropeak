@@ -260,14 +260,16 @@ function mcOptions(q: Question): { text: string; correct: boolean }[] {
 }
 
 // ─── Componente ──────────────────────────────────────────────────────────────────────
-type AudioMode = "with_audio" | "without_audio" | null;
+// Modo de apresentação (arquitetura unificada): a terapeuta escolhe antes de iniciar.
+// visual = sem áudio · visual_audio = texto + áudio · audio_only = só áudio (esconde o texto).
+type PresMode = "visual" | "visual_audio" | "audio_only" | null;
 
 export function AntesDepois({ difficulty, onComplete }: AntesDepoisProps) {
   const reportProgress = useExerciseProgress();
   const band = bandOf(difficulty);
   const startLevel = Math.min(10, Math.max(1, Math.round(difficulty)));
 
-  const [audioMode, setAudioMode] = useState<AudioMode>(null);
+  const [mode, setMode] = useState<PresMode>(null);
   const sessionRef = useRef<Question[]>([]);
   if (sessionRef.current.length === 0) sessionRef.current = buildSession(band);
 
@@ -290,19 +292,20 @@ export function AntesDepois({ difficulty, onComplete }: AntesDepoisProps) {
   const tStart = useRef(Date.now());
   const trialAt = useRef(Date.now());
 
-  const audioOn = audioMode === "with_audio";
+  const audioAuto = mode === "visual_audio" || mode === "audio_only";   // toca/permite áudio
+  const hidePrompt = mode === "audio_only";                              // esconde o texto da pergunta
 
-  // Carrega cada questão: reseta estado + (só com áudio) fala automaticamente.
+  // Carrega cada questão: reseta estado + (se o modo tem áudio) fala automaticamente.
   useEffect(() => {
-    if (audioMode === null) return;
+    if (mode === null) return;
     trialAt.current = Date.now();
     setPicked(null); setResult(null); setOrder([]);
     const nq = sessionRef.current[idx];
     setOpts(nq.mode === "order_sequence" ? [] : mcOptions(nq));
     setOrderPool(nq.mode === "order_sequence" ? shuffle(nq.sequence ?? []) : []);
-    if (audioMode === "with_audio") speak(nq.prompt);
+    if (audioAuto) speak(nq.prompt);
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [idx, audioMode]);
+  }, [idx, mode]);
   useEffect(() => () => stopSpeak(), []);
 
   const finish = useCallback((finalHits: number) => {
@@ -317,10 +320,10 @@ export function AntesDepois({ difficulty, onComplete }: AntesDepoisProps) {
         progressionV2: true, accTotal: Number(acc.toFixed(3)), level: startLevel, band,
         trials: TOTAL, hits: finalHits, meanReactionTimeMs: meanRT,
         domains: Array.from(domains.current), modes: Array.from(modes.current),
-        audioMode, audioReplays: replays.current,
+        presentationMode: mode, audioReplays: replays.current,
       },
     });
-  }, [difficulty, onComplete, startLevel, band, audioMode]);
+  }, [difficulty, onComplete, startLevel, band, mode]);
 
   function advance(correct: boolean) {
     const newHits = hits.current + (correct ? 1 : 0);
@@ -341,7 +344,7 @@ export function AntesDepois({ difficulty, onComplete }: AntesDepoisProps) {
   function pickMC(o: { text: string; correct: boolean }) {
     if (picked || result !== null) return;
     setPicked(o.text);
-    if (audioOn) speak(o.text);
+    if (audioAuto) speak(o.text);
     recordTrial(o.correct);
   }
 
@@ -360,23 +363,30 @@ export function AntesDepois({ difficulty, onComplete }: AntesDepoisProps) {
   const showEmoji = band !== "hard";
   const BG = "linear-gradient(180deg,#eef4fb 0%,#e6edf8 60%,#eef2fa 100%)";
 
-  // ─── Tela: escolha de áudio (nunca toca som aqui) ───────────────────────────────
-  if (audioMode === null) {
+  // ─── Tela "Configurar atividade" (3 modos; nunca toca som aqui) ──────────────────
+  if (mode === null) {
+    const ModeBtn = ({ m, icon, label, sub }: { m: Exclude<PresMode, null>; icon: string; label: string; sub: string }) => (
+      <button onClick={() => setMode(m)}
+        style={{ width: "100%", padding: "14px 16px", borderRadius: 16, border: "2px solid #cdd9ea", background: "#fff", cursor: "pointer",
+          display: "flex", alignItems: "center", gap: 12, textAlign: "left" }}>
+        <span style={{ fontSize: 26 }}>{icon}</span>
+        <span><span style={{ display: "block", fontWeight: 800, fontSize: 16, color: "#1e293b" }}>{label}</span>
+          <span style={{ fontSize: 12.5, color: "#7c8794" }}>{sub}</span></span>
+      </button>
+    );
     return (
       <div style={{ position: "fixed", inset: 0, background: BG, display: "flex", alignItems: "center", justifyContent: "center", padding: 22 }}>
-        <div style={{ width: "100%", maxWidth: 440, background: "#fff", borderRadius: 26, padding: "32px 24px", textAlign: "center", boxShadow: "0 20px 56px rgba(40,60,110,0.18)" }}>
-          <div style={{ fontSize: 52, marginBottom: 8 }}>🧩</div>
-          <h1 style={{ color: "#1e293b", fontSize: 23, fontWeight: 900, marginBottom: 6 }}>Antes e Depois</h1>
-          <p style={{ color: "#5b6677", fontSize: 15, marginBottom: 24, lineHeight: 1.5 }}>Como você quer jogar?</p>
-          <div style={{ display: "flex", flexDirection: "column", gap: 12 }}>
-            <button onClick={() => setAudioMode("with_audio")}
-              style={{ width: "100%", height: 58, borderRadius: 16, border: "none", color: "#fff", fontWeight: 800, fontSize: 17, cursor: "pointer",
-                background: "linear-gradient(135deg,#0ea5a0,#0d8a86)", boxShadow: "0 6px 18px rgba(13,138,134,0.35)" }}>🔊 Com áudio</button>
-            <button onClick={() => setAudioMode("without_audio")}
-              style={{ width: "100%", height: 58, borderRadius: 16, border: "2px solid #cdd9ea", color: "#334155", fontWeight: 800, fontSize: 17, cursor: "pointer", background: "#fff" }}>🔇 Sem áudio</button>
+        <div style={{ width: "100%", maxWidth: 460, background: "#fff", borderRadius: 26, padding: "30px 22px", textAlign: "center", boxShadow: "0 20px 56px rgba(40,60,110,0.18)" }}>
+          <div style={{ fontSize: 46, marginBottom: 6 }}>🧩</div>
+          <h1 style={{ color: "#1e293b", fontSize: 22, fontWeight: 900, marginBottom: 4 }}>Antes e Depois</h1>
+          <p style={{ color: "#5b6677", fontSize: 15, marginBottom: 20, fontWeight: 700 }}>Configurar atividade</p>
+          <div style={{ display: "flex", flexDirection: "column", gap: 10 }}>
+            <ModeBtn m="visual" icon="👁️" label="Visual" sub="Só texto na tela, sem som." />
+            <ModeBtn m="visual_audio" icon="👁️🔊" label="Visual + áudio" sub="Texto na tela e a pergunta falada." />
+            <ModeBtn m="audio_only" icon="🎧" label="Somente áudio" sub="A pergunta é falada; o texto aparece só no fim." />
           </div>
-          <p style={{ color: "#94a3b8", fontSize: 12.5, marginTop: 16, lineHeight: 1.4 }}>
-            Com áudio, você pode repetir a pergunta pelo botão de som durante a atividade.
+          <p style={{ color: "#94a3b8", fontSize: 12, marginTop: 14, lineHeight: 1.4 }}>
+            Nos modos com áudio, você pode repetir a pergunta pelo botão de som.
           </p>
         </div>
       </div>
@@ -402,10 +412,12 @@ export function AntesDepois({ difficulty, onComplete }: AntesDepoisProps) {
       </div>
 
       <div style={{ flex: 1, overflowY: "auto", display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", padding: "10px 16px 18px", gap: 16 }}>
-        {/* Pergunta (estímulo principal) + áudio manual (só no modo com áudio) */}
+        {/* Pergunta (estímulo principal). No modo "Somente áudio" o texto fica oculto até responder. */}
         <div style={{ display: "flex", alignItems: "flex-start", gap: 10, maxWidth: 540 }}>
-          <p style={{ color: "#1e293b", fontSize: 19, fontWeight: 800, textAlign: "center", flex: 1, lineHeight: 1.3 }}>{q.prompt}</p>
-          {audioOn && (
+          <p style={{ color: hidePrompt && result === null ? "#64748b" : "#1e293b", fontSize: 19, fontWeight: 800, textAlign: "center", flex: 1, lineHeight: 1.3 }}>
+            {hidePrompt && result === null ? "🎧 Ouça a instrução e responda" : q.prompt}
+          </p>
+          {audioAuto && (
             <button onClick={repeatAudio} title="Ouvir de novo"
               style={{ flexShrink: 0, width: 40, height: 40, borderRadius: "50%", border: "1px solid #cdd9ea", background: "#fff", color: "#0d8a86", fontSize: 18, cursor: "pointer", boxShadow: "0 2px 6px rgba(40,60,110,0.1)" }}>🔊</button>
           )}
