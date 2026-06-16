@@ -1,7 +1,6 @@
 "use client";
 
 import { useState, useEffect, useCallback, useRef } from "react";
-import { calculateExerciseScore } from "@/lib/scoring";
 import { useExerciseProgress } from "@/components/exercises/ExerciseWrapper";
 import { TutorialBase } from "@/components/exercises/TutorialBase";
 import type { ExerciseResult, Theme } from "@/types";
@@ -169,6 +168,67 @@ function generateBorderExits(
   }
 
   return { trueExit };
+}
+
+// ── Planejamento: menor caminho, perfis e métricas ──────────────────────────
+type Tier = "facil" | "medio" | "dificil" | "avancado";
+function tierOf(d: number): Tier {
+  return d <= 2 ? "facil" : d <= 5 ? "medio" : d <= 8 ? "dificil" : "avancado";
+}
+// Limite de movimentos = menorCaminho × multiplicador do perfil.
+const MOVE_MULT: Record<Tier, number> = { facil: 2.5, medio: 1.8, dificil: 1.35, avancado: 1.15 };
+const TIER_LABEL: Record<Tier, string> = { facil: "Fácil", medio: "Médio", dificil: "Difícil", avancado: "Avançado" };
+
+// nº de MOVIMENTOS no menor caminho (células-1); -1 se inalcançável.
+function bfsMoves(maze: Cell[][], from: { r: number; c: number }, to: { r: number; c: number }): number {
+  const size = maze.length;
+  const dist = new Map<string, number>([[cellKey(from.r, from.c), 0]]);
+  const queue = [from];
+  const dirMap = [
+    { dr: -1, dc: 0, w: "N" as const }, { dr: 1, dc: 0, w: "S" as const },
+    { dr: 0, dc: 1, w: "E" as const }, { dr: 0, dc: -1, w: "W" as const },
+  ];
+  while (queue.length) {
+    const { r, c } = queue.shift()!;
+    const d = dist.get(cellKey(r, c))!;
+    if (r === to.r && c === to.c) return d;
+    for (const { dr, dc, w } of dirMap) {
+      const nr = r + dr, nc = c + dc, k = cellKey(nr, nc);
+      if (nr >= 0 && nr < size && nc >= 0 && nc < size && !dist.has(k) && !maze[r][c][w]) {
+        dist.set(k, d + 1); queue.push({ r: nr, c: nc });
+      }
+    }
+  }
+  return -1;
+}
+
+// Beco sem saída = célula com 1 só passagem aberta (3 paredes).
+function openPassages(cell: Cell): number {
+  return (cell.N ? 0 : 1) + (cell.S ? 0 : 1) + (cell.E ? 0 : 1) + (cell.W ? 0 : 1);
+}
+
+interface MazeMetrics {
+  moves: number; shortest: number; extraMoves: number; efficiency: number;
+  deadEnds: number; returns: number; repeated: number; wallHits: number;
+  overLimit: boolean; solved: boolean; seconds: number;
+}
+function effLabel(eff: number): { txt: string; color: string } {
+  if (eff >= 0.9) return { txt: "Excelente planejamento", color: "#22c55e" };
+  if (eff >= 0.7) return { txt: "Bom", color: "#84cc16" };
+  if (eff >= 0.5) return { txt: "Regular", color: "#f59e0b" };
+  return { txt: "Muita tentativa e erro", color: "#ef4444" };
+}
+function mazeScore(m: MazeMetrics): number {
+  let s = 1000;
+  s -= m.extraMoves * 3;
+  s -= m.deadEnds * 50;
+  s -= m.returns * 20;
+  s -= m.repeated * 10;
+  s -= m.wallHits * 25;
+  if (m.efficiency >= 0.9) s += 200; else if (m.efficiency >= 0.7) s += 100;
+  if (m.deadEnds === 0 && m.returns === 0 && m.solved) s += 150;  // bônus sem erro
+  if (!m.solved) s = Math.round(s * 0.4);                          // não chegou: corta forte
+  return Math.max(0, Math.round(s));
 }
 
 // ── Configuration ──────────────────────────────────────────────────────────
@@ -549,7 +609,6 @@ export function Labirinto({ difficulty, theme, onComplete }: LabirintoProps) {
   const pal = PALETTES[theme];
 
   const [sizeIdx, setSizeIdx] = useState(() => initialIdx(difficulty));
-  const [streak, setStreak] = useState(0);
   const [mazeNum, setMazeNum] = useState(0);
   const [mazeResults, setMazeResults] = useState<{ correct: boolean; size: number }[]>(
     []
@@ -558,15 +617,19 @@ export function Labirinto({ difficulty, theme, onComplete }: LabirintoProps) {
   const size = SIZE_STEPS[sizeIdx];
   const timeLimit = TIME_LIMITS[size] ?? 120;
 
+  const tier = tierOf(difficulty);
   const [mazeInitState] = useState(() => {
     const idx = initialIdx(difficulty);
     const sz = SIZE_STEPS[idx];
     const grid = generateMaze(sz, mazeLoops(difficulty, sz));
     const exits = generateBorderExits(grid, sz, decoyCount(difficulty));
-    return { maze: grid, trueExit: exits.trueExit };
+    const shortest = Math.max(1, bfsMoves(grid, { r: 0, c: 0 }, exits.trueExit));
+    return { maze: grid, trueExit: exits.trueExit, shortest, moveLimit: Math.ceil(shortest * MOVE_MULT[tier]) };
   });
   const [maze, setMaze] = useState<Cell[][]>(mazeInitState.maze);
   const [trueExit, setTrueExit] = useState<{ r: number; c: number }>(mazeInitState.trueExit);
+  const [moveLimit, setMoveLimit] = useState(mazeInitState.moveLimit);
+  const [report, setReport] = useState<MazeMetrics | null>(null);   // relatório do labirinto atual
   const [player, setPlayer] = useState({ r: 0, c: 0 });
   const [explored, setExplored] = useState<Set<string>>(
     () => new Set([cellKey(0, 0)])
@@ -589,11 +652,23 @@ export function Labirinto({ difficulty, theme, onComplete }: LabirintoProps) {
   const mazeResultsRef = useRef(mazeResults);
   const mazeNumRef = useRef(mazeNum);
   const sizeIdxRef = useRef(sizeIdx);
-  const streakRef = useRef(streak);
   const sizeRef = useRef(size);
   const elapsedRef = useRef(elapsed);
   const timeLimitRef = useRef(timeLimit);
+  // Planejamento: menor caminho, limite e métricas de tentativa-e-erro do labirinto atual.
+  const shortestRef = useRef(mazeInitState.shortest);
+  const moveLimitRef = useRef(mazeInitState.moveLimit);
+  const wallHitsRef = useRef(0);
+  const repeatedRef = useRef(0);
+  const returnsRef = useRef(0);
+  const deadEndsRef = useRef<Set<string>>(new Set());
+  const visitedRef = useRef<Set<string>>(new Set([cellKey(0, 0)]));
+  const prevCellRef = useRef<string | null>(null);
+  const movesRef = useRef(0);
+  const reportShownRef = useRef(false);               // evita gerar relatório 2x (saída + tempo)
+  const mazeMetricsRef = useRef<MazeMetrics[]>([]);   // métricas de todos os labirintos da sessão
 
+  moveLimitRef.current = moveLimit;
   mazeRef.current = maze;
   trueExitRef.current = trueExit;
   playerRef.current = player;
@@ -602,7 +677,6 @@ export function Labirinto({ difficulty, theme, onComplete }: LabirintoProps) {
   mazeResultsRef.current = mazeResults;
   mazeNumRef.current = mazeNum;
   sizeIdxRef.current = sizeIdx;
-  streakRef.current = streak;
   sizeRef.current = size;
   elapsedRef.current = elapsed;
   timeLimitRef.current = timeLimit;
@@ -629,90 +703,86 @@ export function Labirinto({ difficulty, theme, onComplete }: LabirintoProps) {
     return () => clearInterval(t);
   }, [showTutorial, done, timedOut, mazeNum]);
 
-  // ── finishMaze ──────────────────────────────────────────────────────────
+  // ── finishMaze: gera o RELATÓRIO do labirinto (não avança sozinho) ──────────
   const finishMaze = useCallback(
     (isCorrect: boolean) => {
-      if (allDoneRef.current) return;
+      if (allDoneRef.current || reportShownRef.current) return;
+      reportShownRef.current = true;
 
-      const curMazeResults = mazeResultsRef.current;
-      const curMazeNum = mazeNumRef.current;
-      const curSizeIdx = sizeIdxRef.current;
-      const curStreak = streakRef.current;
-      const curSize = sizeRef.current;
-      const curElapsed = elapsedRef.current;
-      const curTimeLimit = timeLimitRef.current;
-
-      const newResults = [...curMazeResults, { correct: isCorrect, size: curSize }];
-      setMazeResults(newResults);
-
-      const newStreak = isCorrect
-        ? Math.max(curStreak, 0) + 1
-        : Math.min(curStreak, 0) - 1;
-
-      let nextIdx = curSizeIdx;
-      let nextStreak = newStreak;
-      if (newStreak >= 2) {
-        nextIdx = Math.min(curSizeIdx + 1, MAX_IDX);
-        nextStreak = 0;
-      }
-      if (newStreak <= -2) {
-        nextIdx = Math.max(curSizeIdx - 1, MIN_IDX);
-        nextStreak = 0;
-      }
-
-      const nextMaze = curMazeNum + 1;
-      reportProgress(Math.round((nextMaze / MAX_MAZES) * 100));
-
-      if (!isCorrect && curElapsed < curTimeLimit) {
-        // timed out
-        setTimedOut(true);
-        timedOutRef.current = true;
-      }
-
-      setTimeout(() => {
-        if (nextMaze >= MAX_MAZES) {
-          allDoneRef.current = true;
-          const accuracy = newResults.filter((r) => r.correct).length / MAX_MAZES;
-          const maxSize = Math.max(...newResults.map((r) => r.size));
-          const duration = Math.round((Date.now() - startTime.current) / 1000);
-          const score = calculateExerciseScore("labirinto", accuracy, undefined, difficulty);
-          onComplete({
-            exerciseId: "labirinto",
-            domain: "executive",
-            score,
-            accuracy,
-            difficulty,
-            duration,
-            metadata: {
-              mazes: MAX_MAZES,
-              maxSize,
-              correct: newResults.filter((r) => r.correct).length,
-            },
-          });
-        } else {
-          const nextSize = SIZE_STEPS[nextIdx];
-          const nextMazeGrid = generateMaze(nextSize, mazeLoops(difficulty, nextSize));
-          const nextExits = generateBorderExits(nextMazeGrid, nextSize, decoyCount(difficulty));
-          setMazeNum(nextMaze);
-          setStreak(nextStreak);
-          setSizeIdx(nextIdx);
-          setMaze(nextMazeGrid);
-          setTrueExit(nextExits.trueExit);
-          setPlayer({ r: 0, c: 0 });
-          playerRef.current = { r: 0, c: 0 };
-          setExplored(new Set([cellKey(0, 0)]));
-          setMoves(0);
-          setElapsed(0);
-          setDone(false);
-          setTimedOut(false);
-          doneRef.current = false;
-          timedOutRef.current = false;
-          mazeStartTime.current = Date.now();
-        }
-      }, 1800);
+      const shortest = shortestRef.current;
+      const mv = movesRef.current;
+      const eff = mv > 0 ? Math.min(1, shortest / mv) : 0;
+      const m: MazeMetrics = {
+        moves: mv, shortest, extraMoves: Math.max(0, mv - shortest), efficiency: eff,
+        deadEnds: deadEndsRef.current.size, returns: returnsRef.current,
+        repeated: repeatedRef.current, wallHits: wallHitsRef.current,
+        overLimit: mv > moveLimitRef.current, solved: isCorrect, seconds: elapsedRef.current,
+      };
+      mazeMetricsRef.current = [...mazeMetricsRef.current, m];
+      setMazeResults((prev) => [...prev, { correct: isCorrect, size: sizeRef.current }]);
+      if (!isCorrect) { setTimedOut(true); timedOutRef.current = true; }
+      setReport(m);
+      reportProgress(Math.round(((mazeNumRef.current + 1) / MAX_MAZES) * 100));
     },
-    [difficulty, onComplete, reportProgress]
+    [reportProgress]
   );
+
+  // ── advanceMaze: adaptação por DESEMPENHO + próximo labirinto (ou fim) ──────
+  const advanceMaze = useCallback(() => {
+    const all = mazeMetricsRef.current;
+    const m = all[all.length - 1];
+    const curSizeIdx = sizeIdxRef.current;
+    const curMazeNum = mazeNumRef.current;
+    // Sobe se planejou bem; desce se muito erro; senão mantém (spec).
+    let nextIdx = curSizeIdx;
+    if (m && m.solved && m.efficiency >= 0.85 && m.deadEnds <= 1 && m.extraMoves <= 0.1 * m.shortest) {
+      nextIdx = Math.min(curSizeIdx + 1, MAX_IDX);
+    } else if (!m || !m.solved || m.efficiency < 0.55 || m.deadEnds >= 4) {
+      nextIdx = Math.max(curSizeIdx - 1, MIN_IDX);
+    }
+    const nextMaze = curMazeNum + 1;
+
+    if (nextMaze >= MAX_MAZES) {
+      allDoneRef.current = true;
+      const solvedCount = all.filter((x) => x.solved).length;
+      const accuracy = all.length ? solvedCount / all.length : 0;
+      const avgEff = all.length ? all.reduce((a, x) => a + x.efficiency, 0) / all.length : 0;
+      const avgScore = all.length ? Math.round(all.reduce((a, x) => a + mazeScore(x), 0) / all.length) : 0;
+      const duration = Math.round((Date.now() - startTime.current) / 1000);
+      onComplete({
+        exerciseId: "labirinto", domain: "executive",
+        score: Math.round(Math.min(100, avgScore / 10)), accuracy, difficulty, duration,
+        metadata: {
+          mazes: MAX_MAZES, solved: solvedCount, progressionV2: true,
+          accTotal: Number(accuracy.toFixed(3)), level: difficulty,
+          avgEfficiency: Number((avgEff * 100).toFixed(1)), avgScore,
+          totalDeadEnds: all.reduce((a, x) => a + x.deadEnds, 0),
+          totalReturns: all.reduce((a, x) => a + x.returns, 0),
+          totalWallHits: all.reduce((a, x) => a + x.wallHits, 0),
+          totalExtraMoves: all.reduce((a, x) => a + x.extraMoves, 0),
+        },
+      });
+      return;
+    }
+
+    const nextSize = SIZE_STEPS[nextIdx];
+    const grid = generateMaze(nextSize, mazeLoops(difficulty, nextSize));
+    const exits = generateBorderExits(grid, nextSize, decoyCount(difficulty));
+    const shortest = Math.max(1, bfsMoves(grid, { r: 0, c: 0 }, exits.trueExit));
+    const limit = Math.ceil(shortest * MOVE_MULT[tier]);
+    setMazeNum(nextMaze); setSizeIdx(nextIdx);
+    setMaze(grid); setTrueExit(exits.trueExit); setMoveLimit(limit);
+    shortestRef.current = shortest; moveLimitRef.current = limit;
+    setPlayer({ r: 0, c: 0 }); playerRef.current = { r: 0, c: 0 };
+    setExplored(new Set([cellKey(0, 0)]));
+    setMoves(0); setElapsed(0); setDone(false); setTimedOut(false);
+    doneRef.current = false; timedOutRef.current = false; reportShownRef.current = false;
+    wallHitsRef.current = 0; repeatedRef.current = 0; returnsRef.current = 0;
+    deadEndsRef.current = new Set(); visitedRef.current = new Set([cellKey(0, 0)]);
+    prevCellRef.current = null; movesRef.current = 0;
+    setReport(null);
+    mazeStartTime.current = Date.now();
+  }, [difficulty, onComplete, tier]);
 
   // ── Timeout check ───────────────────────────────────────────────────────
   useEffect(() => {
@@ -741,20 +811,33 @@ export function Labirinto({ difficulty, theme, onComplete }: LabirintoProps) {
       if (!g.length) return;
 
       if (g[r][c][dir]) {
-        // Wall — flash the target cell red
+        // Parede — pisca a célula alvo + conta colisão (tentativa-e-erro).
         const k = cellKey(targetR, targetC);
+        wallHitsRef.current++;
         setFlashCell(k);
         setTimeout(() => setFlashCell(null), 200);
         return;
       }
 
+      const curKey = cellKey(r, c);
+      const newKey = cellKey(targetR, targetC);
+      // Métricas de planejamento:
+      if (prevCellRef.current === newKey) returnsRef.current++;          // voltou de onde veio
+      if (visitedRef.current.has(newKey)) repeatedRef.current++;         // célula já visitada
+      const te = trueExitRef.current;
+      if (openPassages(g[targetR][targetC]) <= 1 && !(targetR === te.r && targetC === te.c)) {
+        deadEndsRef.current.add(newKey);                                 // entrou num beco sem saída
+      }
+      prevCellRef.current = curKey;
+      visitedRef.current.add(newKey);
+      movesRef.current++;
+
       const newPos = { r: targetR, c: targetC };
       setPlayer(newPos);
       playerRef.current = newPos;
       setMoves((m) => m + 1);
-      setExplored((prev) => new Set([...prev, cellKey(targetR, targetC)]));
+      setExplored((prev) => new Set([...prev, newKey]));
 
-      const te = trueExitRef.current;
       if (targetR === te.r && targetC === te.c) {
         setDone(true);
         doneRef.current = true;
@@ -836,6 +919,8 @@ export function Labirinto({ difficulty, theme, onComplete }: LabirintoProps) {
   const timeRatio = elapsed / timeLimit;
   const timeColor =
     timeRatio > 0.8 ? "#ef4444" : timeRatio > 0.6 ? "#f97316" : theme === "GAMIFIED" ? "#9ca3af" : "#6b7280";
+  const moveRatio = moveLimit > 0 ? moves / moveLimit : 0;
+  const moveColor = moves > moveLimit ? "#ef4444" : moveRatio >= 0.85 ? "#f97316" : "#34d399";
 
   return (
     <div
@@ -869,13 +954,14 @@ export function Labirinto({ difficulty, theme, onComplete }: LabirintoProps) {
               🌀 Labirinto
             </h2>
             <p className="text-xs" style={{ color: "#9ca3af" }}>
-              Labirinto {mazeNum + 1}/{MAX_MAZES} · {size}×{size} · {moves} mov.
+              Labirinto {mazeNum + 1}/{MAX_MAZES} · {size}×{size}
             </p>
           </div>
           <div className="text-right">
-            <p className="text-sm font-bold tabular-nums" style={{ color: timeColor }}>
-              {elapsed}s / {timeLimit}s
+            <p className="text-sm font-bold tabular-nums" style={{ color: moveColor }}>
+              {moves}/{moveLimit} mov.
             </p>
+            <p className="text-[11px] tabular-nums" style={{ color: timeColor }}>{elapsed}s / {timeLimit}s</p>
           </div>
         </div>
         <div className="flex gap-0.5">
@@ -916,25 +1002,55 @@ export function Labirinto({ difficulty, theme, onComplete }: LabirintoProps) {
           trueExit={trueExit}
         />
 
-        {/* Result overlay */}
-        {(done || timedOut) && (
-          <div
-            className="absolute inset-0 flex items-center justify-center rounded-xl"
-            style={{ background: "rgba(0,0,0,0.72)" }}
-          >
-            <div className="text-center">
-              <p
-                className="text-3xl font-black"
-                style={{ color: done ? "#4ade80" : "#f87171" }}
-              >
-                {done ? "🎉 Saída!" : "⏰ Tempo!"}
-              </p>
-              <p className="text-sm mt-1" style={{ color: "#d1d5db" }}>
-                {moves} movimentos · {elapsed}s
-              </p>
+        {/* Relatório do labirinto */}
+        {report && (() => {
+          const el = effLabel(report.efficiency);
+          const sc = mazeScore(report);
+          const rec = !report.solved ? "Tente planejar a rota antes de andar — observe o caminho inteiro."
+            : report.efficiency >= 0.85 ? "Ótimo planejamento! O próximo será mais difícil."
+            : report.deadEnds >= 3 ? "Evite os becos: trace o caminho com o olho antes de mover."
+            : report.efficiency < 0.6 ? "Muitos movimentos extras — planeje a rota mais curta."
+            : "Bom! Tente usar ainda menos movimentos.";
+          const last = mazeNum + 1 >= MAX_MAZES;
+          const Row = ({ k, v, warn }: { k: string; v: string | number; warn?: boolean }) => (
+            <div className="flex justify-between" style={{ fontSize: 12.5 }}>
+              <span style={{ color: "#9ca3af" }}>{k}</span>
+              <span className="font-bold tabular-nums" style={{ color: warn ? "#fca5a5" : "#e5e7eb" }}>{v}</span>
             </div>
-          </div>
-        )}
+          );
+          return (
+            <div className="absolute inset-0 flex items-center justify-center rounded-xl p-3" style={{ background: "rgba(8,12,24,0.92)", overflowY: "auto" }}>
+              <div className="w-full max-w-[300px] text-left">
+                <p className="text-2xl font-black text-center" style={{ color: report.solved ? "#4ade80" : "#f87171" }}>
+                  {report.solved ? "🎉 Saída!" : "⏰ Tempo!"}
+                </p>
+                <div className="text-center my-2">
+                  <div className="text-4xl font-black tabular-nums" style={{ color: el.color }}>{Math.round(report.efficiency * 100)}%</div>
+                  <div className="text-xs font-bold" style={{ color: el.color }}>{el.txt}</div>
+                </div>
+                <div className="space-y-1 rounded-xl p-3" style={{ background: "rgba(255,255,255,0.05)" }}>
+                  <Row k="Movimentos" v={`${report.moves} (mínimo ${report.shortest})`} warn={report.overLimit} />
+                  <Row k="Movimentos extras" v={report.extraMoves} warn={report.extraMoves > report.shortest} />
+                  <Row k="Becos sem saída" v={report.deadEnds} warn={report.deadEnds >= 3} />
+                  <Row k="Retornos" v={report.returns} />
+                  <Row k="Células repetidas" v={report.repeated} />
+                  <Row k="Colisões na parede" v={report.wallHits} />
+                  {report.overLimit && <Row k="⚠️ Passou do limite" v={`${moveLimit} mov.`} warn />}
+                </div>
+                <div className="flex items-center justify-between mt-2 px-1">
+                  <span className="text-xs" style={{ color: "#9ca3af" }}>Pontuação</span>
+                  <span className="text-xl font-black tabular-nums" style={{ color: "#fbbf24" }}>{sc}</span>
+                </div>
+                <p className="text-[11px] text-center mt-2 mb-3" style={{ color: "#cbd5e1", lineHeight: 1.35 }}>{rec}</p>
+                <button onClick={advanceMaze}
+                  className="w-full py-3 rounded-xl font-bold text-sm"
+                  style={{ background: "linear-gradient(135deg,#2563eb,#1d4ed8)", color: "#fff" }}>
+                  {last ? "Ver resultado →" : "Próximo labirinto →"}
+                </button>
+              </div>
+            </div>
+          );
+        })()}
       </div>
 
       {/* D-pad controls */}
