@@ -19,7 +19,13 @@ type Phase = "showing" | "recall" | "feedback";
 const MAX_TRIALS = 20;
 const MIN_SEQ = 2;
 const MAX_SEQ = 9;
-const GRID = 4; // 4×4 sempre
+// Grade cresce com a dificuldade: mais blocos pra brilhar nos níveis altos.
+// Fácil 4×4 · Médio 5×5 · Difícil 6×6.
+function gridSizeFor(d: number): number {
+  if (d <= 4) return 4;
+  if (d <= 7) return 5;
+  return 6;
+}
 
 // Dificuldade 6-10: modo inverso (clica na ordem reversa)
 const REVERSE_MODE = (difficulty: number) => difficulty >= 6;
@@ -219,12 +225,13 @@ export function MatrizEspacial({ difficulty, theme, onComplete, alwaysReverse }:
 
   const isGamified = theme === "GAMIFIED";
   const isColorful = theme === "COLORFUL";
+  const grid = gridSizeFor(difficulty);
 
   const generateSeq = useCallback((len: number) => {
     const cells = new Set<number>();
-    while (cells.size < len) cells.add(Math.floor(Math.random() * GRID * GRID));
+    while (cells.size < len) cells.add(Math.floor(Math.random() * grid * grid));
     return Array.from(cells);
-  }, []);
+  }, [grid]);
 
   const showSequence = useCallback(async (seq: number[]) => {
     setPhase("showing");
@@ -232,10 +239,11 @@ export function MatrizEspacial({ difficulty, theme, onComplete, alwaysReverse }:
     setUserSeq([]);
 
     for (const cell of seq) {
-      await new Promise<void>((r) => setTimeout(r, 350));
+      // Mais tempo entre um flash e o outro (não "pisca tudo rápido").
+      await new Promise<void>((r) => setTimeout(r, 560));
       setActiveCell(cell);
       soundLight();
-      await new Promise<void>((r) => setTimeout(r, 750));
+      await new Promise<void>((r) => setTimeout(r, 760));
       setActiveCell(null);
     }
 
@@ -295,7 +303,7 @@ export function MatrizEspacial({ difficulty, theme, onComplete, alwaysReverse }:
           accuracy,
           difficulty,
           duration,
-          metadata: { gridSize: GRID, seqLength: maxSeq, reverse, trials: MAX_TRIALS, correct: newAttempts.filter((a) => a.correct).length },
+          metadata: { gridSize: grid, seqLength: maxSeq, reverse, trials: MAX_TRIALS, correct: newAttempts.filter((a) => a.correct).length },
         });
       } else {
         setFeedbackData(null);
@@ -375,7 +383,7 @@ export function MatrizEspacial({ difficulty, theme, onComplete, alwaysReverse }:
 
   return (
     <div className="min-h-screen flex flex-col items-center p-4 pt-6" style={rootBg}>
-      <div className="w-full max-w-md p-6" style={cardStyle}>
+      <div className="w-full max-w-lg p-6" style={cardStyle}>
 
         {/* Header */}
         <div className="flex justify-between items-center gap-2 mb-4">
@@ -421,12 +429,12 @@ export function MatrizEspacial({ difficulty, theme, onComplete, alwaysReverse }:
           {phase === "feedback" && (feedbackData?.correct ? "Correto! ✅" : "Incorreto ❌")}
         </p>
 
-        {/* Grid 4×4 */}
+        {/* Grade (cresce com a dificuldade) */}
         <div
           className="grid gap-2.5 mx-auto mb-4 w-full"
-          style={{ gridTemplateColumns: `repeat(${GRID}, 1fr)`, maxWidth: "380px" }}
+          style={{ gridTemplateColumns: `repeat(${grid}, 1fr)`, maxWidth: "480px" }}
         >
-          {Array.from({ length: GRID * GRID }).map((_, idx) => (
+          {Array.from({ length: grid * grid }).map((_, idx) => (
             <motion.button
               key={idx}
               onClick={() => handleCellClick(idx)}

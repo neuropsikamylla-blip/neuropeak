@@ -175,6 +175,19 @@ export function PadroesRotacao({ difficulty, onComplete }: PadroesRotacaoProps) 
   const startLevel = levelOf(difficulty);
   const spec = LEVELS[startLevel];
   const N = spec.grid;
+  // Giro mais rápido nos níveis altos (a rotação lenta facilitava demais).
+  const rotSec = startLevel <= 3 ? 0.9 : startLevel <= 6 ? 0.7 : 0.55;
+
+  // Painel responsivo: a matriz ocupa a largura disponível (maior, sem rolar).
+  const [matrixW, setMatrixW] = useState(360);
+  const roRef = useRef<ResizeObserver | null>(null);
+  const matrixWrapRef = useCallback((el: HTMLDivElement | null) => {
+    roRef.current?.disconnect();
+    if (!el) return;
+    const compute = () => setMatrixW(el.clientWidth);
+    compute();
+    const ro = new ResizeObserver(compute); ro.observe(el); roRef.current = ro;
+  }, []);
 
   const [phase, setPhase] = useState<Phase>("tutorial");
   const [lit, setLit] = useState<Set<string>>(new Set());
@@ -199,16 +212,20 @@ export function PadroesRotacao({ difficulty, onComplete }: PadroesRotacaoProps) 
   const present = useCallback(async (origArr: string[], rotDeg: number, myRun: number) => {
     setPhase("show"); setLit(new Set());
     const onMs = startLevel <= 5 ? 600 : startLevel <= 8 ? 480 : 380;
+    // Mais tempo entre um flash e o outro (não "pisca tudo rápido" — não dá pra decorar em bloco).
+    const offMs = 420;
+    // Rotação mais rápida nos níveis altos (o giro lento ficava fácil demais).
+    const rotMs = startLevel <= 3 ? 900 : startLevel <= 6 ? 700 : 550;
     await sleep(450); if (runRef.current !== myRun) return;
     for (const cell of origArr) {
       if (runRef.current !== myRun) return;
       setLit(new Set([cell])); soundLight();
       await sleep(onMs); if (runRef.current !== myRun) return;
       setLit(new Set());
-      await sleep(170); if (runRef.current !== myRun) return;
+      await sleep(offMs); if (runRef.current !== myRun) return;
     }
     setPhase("rotating");                            // o tabuleiro inteiro gira
-    await sleep(1500); if (runRef.current !== myRun) return;
+    await sleep(rotMs + 140); if (runRef.current !== myRun) return;
     if (spec.delayMs > 0) { setPhase("delay"); await sleep(spec.delayMs); if (runRef.current !== myRun) return; }
     setPicked(new Set()); inputAt.current = Date.now(); setPhase("input");
   }, [spec, startLevel]);
@@ -298,7 +315,11 @@ export function PadroesRotacao({ difficulty, onComplete }: PadroesRotacaoProps) 
 
   if (phase === "tutorial") return <TutorialDemo onDone={begin} />;
 
-  const cellPx = N <= 3 ? 72 : N === 4 ? 60 : N === 5 ? 50 : 42;
+  // cellPx preenche a largura medida, com um teto por tamanho de grade.
+  const GAP = 6, GRID_PAD = 6, MATRIX_PAD = 12;
+  const overhead = GAP * (N - 1) + GRID_PAD * 2 + MATRIX_PAD * 2;
+  const cellCap = N <= 3 ? 104 : N === 4 ? 86 : N === 5 ? 70 : 58;
+  const cellPx = Math.max(34, Math.min(cellCap, Math.floor((matrixW - overhead) / N)));
   const edge: "top" | "right" | "bottom" | "left" =
     phase === "show" ? "top" : markerEdge(deg);
   const instruction =
@@ -310,7 +331,7 @@ export function PadroesRotacao({ difficulty, onComplete }: PadroesRotacaoProps) 
 
   return (
     <div className="min-h-screen w-full flex items-center justify-center p-4" style={{ background: "#020617" }}>
-      <div className="w-full max-w-md rounded-3xl p-6 space-y-4" style={CARD}>
+      <div className="w-full max-w-lg rounded-3xl p-6 space-y-4" style={CARD}>
         <div className="flex items-center justify-between">
           <div>
             <p className="text-sm font-bold text-white leading-tight">Matriz com Rotações</p>
@@ -335,10 +356,10 @@ export function PadroesRotacao({ difficulty, onComplete }: PadroesRotacaoProps) 
           {phase === "show" ? "👀 " : phase === "rotating" ? "🔄 " : ""}{instruction}
         </p>
 
-        <div className="flex justify-center py-1">
+        <div ref={matrixWrapRef} className="flex justify-center py-1">
           {phase === "rotating" ? (
             // tabuleiro INTEIRO girando (vazio) — o marcador torna a rotação visível
-            <motion.div key="rot" initial={{ rotate: 0 }} animate={{ rotate: deg }} transition={{ duration: 1.4, ease: [0.45, 0, 0.2, 1] }}>
+            <motion.div key="rot" initial={{ rotate: 0 }} animate={{ rotate: deg }} transition={{ duration: rotSec, ease: [0.45, 0, 0.2, 1] }}>
               <Matrix N={N} cellPx={cellPx} lit={new Set()} picked={new Set()} expected={new Set()}
                 phase="rotating" edge="top" onTap={() => {}} />
             </motion.div>

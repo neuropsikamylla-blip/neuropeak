@@ -113,14 +113,14 @@ function BrainListening({ pulsing }: { pulsing: boolean }) {
 
 function Beads({ total, filled, active }: { total: number; filled: number; active: number }) {
   return (
-    <div className="flex flex-wrap items-center justify-center gap-2.5">
+    <div className="flex flex-wrap items-center justify-center gap-3">
       {Array.from({ length: total }).map((_, i) => {
         const isFilled = i < filled;
         const isActive = i === active;
         return (
           <motion.div key={i} className="rounded-full"
             style={{
-              width: 16, height: 16,
+              width: 20, height: 20,
               background: isActive ? "#a5b4fc" : isFilled ? "#6366f1" : "rgba(148,163,184,0.22)",
               boxShadow: isActive ? "0 0 16px rgba(165,180,252,0.9)" : undefined,
             }}
@@ -170,7 +170,8 @@ export function SpanNumerico({ difficulty, onComplete, reverse = false, settings
   }, []);
 
   const playSequence = useCallback(async (seq: number[], myId: number) => {
-    const gap = seq.length >= 6 ? 600 : 800; // intervalo entre números (ms)
+    // Mais tempo entre os números — e NUNCA mais rápido nos spans longos (6,7,8 dígitos).
+    const gap = seq.length >= 6 ? 1000 : 850; // intervalo entre números (ms)
     // pequena pausa antes de começar
     await new Promise<void>(r => setTimeout(r, 500));
     for (let i = 0; i < seq.length; i++) {
@@ -273,19 +274,6 @@ export function SpanNumerico({ difficulty, onComplete, reverse = false, settings
     if (next.length >= digits) validate(next);
   }
 
-  function replayAudio() {
-    if (!cfg.allowReplay) return;
-    if (phase !== "listen" && phase !== "input") return;
-    setReplayed(true);
-    seqIdRef.current++;
-    const myId = seqIdRef.current;
-    stopAudio();
-    setEntered([]);
-    enteredRef.current = [];
-    setPhase("listen");
-    playSequence(sequence, myId);
-  }
-
   useEffect(() => () => { stopAudio(); seqIdRef.current++; }, [stopAudio]);
 
   // ── Início da sessão (a partir da tela inicial do paciente) ──────────────────
@@ -317,7 +305,7 @@ export function SpanNumerico({ difficulty, onComplete, reverse = false, settings
     <div className="min-h-screen w-full flex flex-col items-center justify-center p-4" style={{ background: "#020617" }}>
       <GlassBg />
 
-      <div className="w-full max-w-md rounded-3xl p-6 space-y-5" style={CARD_STYLE}>
+      <div className="w-full max-w-lg rounded-3xl p-6 space-y-5" style={CARD_STYLE}>
 
         {/* Header */}
         <div className="min-w-0 pr-10">
@@ -340,13 +328,6 @@ export function SpanNumerico({ difficulty, onComplete, reverse = false, settings
             <p className="text-sm font-semibold tracking-wide" style={{ color: "#a5b4fc" }}>Ouça com atenção</p>
             <BrainListening pulsing={activeBead >= 0} />
             <Beads total={digits} filled={0} active={activeBead} />
-            {cfg.allowReplay && (
-              <button onClick={replayAudio}
-                className="text-xs font-semibold px-4 py-2 rounded-xl active:scale-95"
-                style={{ background: "rgba(99,102,241,0.15)", border: "1px solid rgba(99,102,241,0.4)", color: "#c7d2fe" }}>
-                🔊 Ouvir novamente{cfg.replayPenalty ? " (−pontos)" : ""}
-              </button>
-            )}
           </div>
         )}
 
@@ -358,30 +339,22 @@ export function SpanNumerico({ difficulty, onComplete, reverse = false, settings
             </p>
             <Beads total={digits} filled={entered.length} active={-1} />
 
-            <div className="grid grid-cols-3 gap-2.5 w-full max-w-[280px] mt-1">
+            <div className="grid grid-cols-3 gap-3 w-full max-w-[360px] mt-1">
               {KEYPAD.map(n => (
                 <button key={n} onClick={() => handleKey(n)}
-                  className="h-16 rounded-2xl font-black text-2xl active:scale-95 transition-transform"
+                  className="h-20 rounded-2xl font-black text-3xl active:scale-95 transition-transform"
                   style={{ background: "rgba(255,255,255,0.05)", border: "1.5px solid rgba(99,102,241,0.3)", color: "#e0e7ff" }}>
                   {n}
                 </button>
               ))}
               <div />
               <button onClick={() => handleKey(0)}
-                className="h-16 rounded-2xl font-black text-2xl active:scale-95 transition-transform"
+                className="h-20 rounded-2xl font-black text-3xl active:scale-95 transition-transform"
                 style={{ background: "rgba(255,255,255,0.05)", border: "1.5px solid rgba(99,102,241,0.3)", color: "#e0e7ff" }}>
                 0
               </button>
               <div />
             </div>
-
-            {cfg.allowReplay && (
-              <button onClick={replayAudio}
-                className="text-xs font-semibold px-4 py-2 rounded-xl active:scale-95 mt-1"
-                style={{ background: "rgba(99,102,241,0.12)", border: "1px solid rgba(99,102,241,0.35)", color: "#a5b4fc" }}>
-                🔊 Ouvir novamente{cfg.replayPenalty ? " (−pontos)" : ""}
-              </button>
-            )}
           </div>
         )}
 
@@ -425,7 +398,7 @@ function ReadyScreen({ title, reverse, level, onStart }: {
   return (
     <div className="min-h-screen w-full flex flex-col items-center justify-center p-4" style={{ background: "#020617" }}>
       <GlassBg />
-      <div className="w-full max-w-md rounded-3xl p-6 text-center" style={CARD_STYLE}>
+      <div className="w-full max-w-lg rounded-3xl p-6 text-center" style={CARD_STYLE}>
         <div className="mx-auto mb-4"><BrainListening pulsing={false} /></div>
         <h2 className="text-lg font-bold text-white mb-1">{title}</h2>
         <p className="text-sm mb-1" style={{ color: "rgba(148,163,184,0.85)" }}>
