@@ -6,6 +6,7 @@ import { calculateExerciseScore } from "@/lib/scoring";
 import { cancelTTS } from "@/lib/tts";
 import { resolveVoice, ensureVoices } from "@/lib/voicePrefs";
 import { VoicePicker } from "@/components/exercises/VoicePicker";
+import { PresentationConfig, type PresMode } from "@/components/exercises/PresentationConfig";
 import { useExerciseProgress } from "@/components/exercises/ExerciseWrapper";
 import { TutorialBase } from "@/components/exercises/TutorialBase";
 import type { ExerciseResult, Theme } from "@/types";
@@ -16,7 +17,6 @@ export interface DesafioSupermercadoProps {
   difficulty: number;
   theme: Theme;
   onComplete: (result: ExerciseResult) => void;
-  mode?: "leitura" | "auditivo";
 }
 
 interface Product { id: string; name: string; }
@@ -540,7 +540,12 @@ function SupermercadoTutorial({ theme, mode, onDone }: { theme: Theme; mode: "le
 
 const MAX_TRIALS = 8;
 
-export function DesafioSupermercado({ difficulty, theme, onComplete, mode = "leitura" }: DesafioSupermercadoProps) {
+export function DesafioSupermercado({ difficulty, theme, onComplete }: DesafioSupermercadoProps) {
+  // Modo de apresentação (escolhido na tela "Configurar atividade", antes de iniciar).
+  const [presMode, setPresMode] = useState<PresMode | null>(null);
+  const displayMode: "leitura" | "auditivo" = presMode === "audio_only" ? "auditivo" : "leitura";
+  const mode = displayMode;                                  // controla esconder/mostrar texto
+  const speakOn = presMode === "visual_audio" || presMode === "audio_only";  // controla a fala
   const [showTutorial, setShowTutorial] = useState(true);
   const reportProgress = useExerciseProgress();
 
@@ -604,9 +609,9 @@ export function DesafioSupermercado({ difficulty, theme, onComplete, mode = "lei
 
   useEffect(() => {
     if (phase !== "memorizing" || showTutorial || memoLists.length === 0) return;
-    const total = memorizeSeconds(sessionLevel, mode);
+    const total = memorizeSeconds(sessionLevel, speakOn ? "auditivo" : "leitura");
     setCountdown(total);
-    if (mode === "auditivo") { setAudioPlaying(true); speakMemo(memoLists, labels, () => setAudioPlaying(false)); }
+    if (speakOn) { setAudioPlaying(true); speakMemo(memoLists, labels, () => setAudioPlaying(false)); }
     timerRef.current = setInterval(() => {
       if (showVoiceRef.current) return;   // pausa a contagem enquanto escolhe a voz
       setCountdown(prev => { if (prev <= 1) { clearTimer(); setPhase("shopping"); return 0; } return prev - 1; });
@@ -663,12 +668,12 @@ export function DesafioSupermercado({ difficulty, theme, onComplete, mode = "lei
         const accTotal  = gradedRef.current.reduce((a, b) => a + b, 0) / MAX_TRIALS;
         const impulsive = wrongRef.current > MAX_TRIALS;
         onComplete({
-          exerciseId: mode === "auditivo" ? "desafio-supermercado-auditivo" : "desafio-supermercado",
+          exerciseId: "desafio-supermercado",
           domain: "memory",
           score: calculateExerciseScore("desafio-supermercado", accTotal, undefined, nextLevel),
           accuracy: accTotal, difficulty: nextLevel,
           duration: Math.round((Date.now() - startTime.current) / 1000),
-          metadata: { trials: MAX_TRIALS, correct, mode, startLevel, level: nextLevel, progressionV2: true, accTotal, impulsive },
+          metadata: { trials: MAX_TRIALS, correct, presentationMode: presMode, startLevel, level: nextLevel, progressionV2: true, accTotal, impulsive },
         });
       } else {
         setTrial(nextTrial);
@@ -677,11 +682,22 @@ export function DesafioSupermercado({ difficulty, theme, onComplete, mode = "lei
     }, 1800);
   }
 
+  // ── CONFIGURAR ATIVIDADE (escolha do modo) — antes de tudo, nunca toca áudio aqui ──
+  if (presMode === null) {
+    return (
+      <PresentationConfig
+        title="Supermercado" icon="🛒" accent="#1d7a6e"
+        subtitle={<>Nível {startLevel} · memorize a lista e ache os produtos.</>}
+        onChoose={(m) => setPresMode(m)}
+      />
+    );
+  }
+
   if (showTutorial) {
     return <SupermercadoTutorial theme={theme} mode={mode} onDone={() => setShowTutorial(false)} />;
   }
 
-  const memorizeTotal = memorizeSeconds(sessionLevel, mode);
+  const memorizeTotal = memorizeSeconds(sessionLevel, speakOn ? "auditivo" : "leitura");
   const ratio = memorizeTotal > 0 ? countdown / memorizeTotal : 0;
   const isRoundCorrect = lastCorrect;
   const listCols = Math.min(currentList.length, 4);
@@ -719,7 +735,7 @@ export function DesafioSupermercado({ difficulty, theme, onComplete, mode = "lei
                       <span style={{ color: "#1d7a6e", fontSize: 14, fontWeight: 800, minWidth: 26, textAlign: "right" }}>{countdown}s</span>
                     </div>
                   </div>
-                  {mode === "auditivo" && (
+                  {speakOn && (
                     <div style={{ display: "flex", gap: 8, justifyContent: "center", marginBottom: 12, flexWrap: "wrap" }}>
                       <button onClick={() => { setAudioPlaying(true); speakMemo(memoLists, labels, () => setAudioPlaying(false)); }}
                         style={{ fontSize: 12.5, fontWeight: 700, padding: "7px 14px", borderRadius: 100, cursor: "pointer",

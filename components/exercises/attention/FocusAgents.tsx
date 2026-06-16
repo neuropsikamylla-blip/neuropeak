@@ -10,6 +10,7 @@ import type { AgentConfig } from "@/data/agents";
 import type { ExerciseResult, Theme } from "@/types";
 import type { CommandRuleType, FocusMode } from "@/types/commands";
 import { buildModeRound, roundSignature } from "@/utils/generateCommand";
+import { PresentationConfig, type PresMode } from "@/components/exercises/PresentationConfig";
 
 // ── Types ──────────────────────────────────────────────────────────────────────
 
@@ -431,7 +432,6 @@ const MAX_ROUNDS = 15;
 export interface FocusAgentsProps {
   difficulty: number; theme: Theme;
   onComplete: (result: ExerciseResult) => void;
-  forceMode?: "visual" | "auditivo";
   exerciseId?: string;
   // Config do terapeuta (Fase E): modo + nível inicial vêm do plano.
   settings?: { mode?: FocusMode; startLevel?: number; freeChoice?: boolean; feedback?: "leve" | "normal" | "intenso"; autoAdvance?: boolean };
@@ -460,17 +460,20 @@ function TherapeuticIntro({ mode, level, onStart }: { mode: FocusMode; level: nu
   );
 }
 
-export function FocusAgents({ difficulty, theme, onComplete, forceMode, exerciseId = "focus-agents", settings }: FocusAgentsProps) {
+export function FocusAgents({ difficulty, theme, onComplete, exerciseId = "focus-agents", settings }: FocusAgentsProps) {
   // Focus é SEMPRE configurado pelo terapeuta — o paciente nunca escolhe modo/nível.
   // Sem modo definido no plano, usa "foco" como padrão. (freeChoice descontinuado)
   const presMode: FocusMode = settings?.mode ?? "foco";
   const presLevel = Math.max(1, Math.min(9, Math.round(settings?.startLevel ?? 1)));
   const prescribed = true;
   const fbLevel = settings?.feedback ?? "normal";   // intensidade do feedback (Fase G/H)
+  // Modo de apresentação (Configurar atividade): visual / visual+áudio / só áudio.
+  const [presentMode, setPresentMode] = useState<PresMode | null>(null);
+  const speakOn = presentMode === "visual_audio" || presentMode === "audio_only";
   const speakFn = useCallback((text: string) => {
-    if (forceMode === "visual") return;
+    if (!speakOn) return;
     playTTS(text);
-  }, [forceMode]);
+  }, [speakOn]);
 
   const reportProgress = useExerciseProgress();
 
@@ -696,15 +699,15 @@ export function FocusAgents({ difficulty, theme, onComplete, forceMode, exercise
     resolvedIds.current = new Set();
 
     // Parte 1: o comando fica sempre visível (a opção "some após iniciar" /
-    // "botão ver comando" entra na Fase 2). Só o canal muda por forceMode.
+    // "botão ver comando" entra na Fase 2). Só o canal muda pelo modo escolhido.
     const instrMode: InstrMode =
-      forceMode === "visual"   ? "visual" :
-      forceMode === "auditivo" ? "audio"  : "both";
+      presentMode === "audio_only"   ? "audio" :
+      presentMode === "visual_audio" ? "both"  : "visual";
 
     // Fala o comando sem os emojis/quebras (que algumas vozes leem em voz alta).
     if (instrMode !== "visual") speakFn(cleanForSpeech(built.command.text));
   // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [theme, forceMode, speakFn]);
+  }, [theme, presentMode, speakFn]);
 
   function startPlaying() {
     stopFallAnimation();
@@ -884,7 +887,7 @@ export function FocusAgents({ difficulty, theme, onComplete, forceMode, exercise
       : targetUidsRef.current.length;
     const endedBy: "correct" | "wrong" | "timeout" = correct ? "correct" : (failReasonRef.current === "timeout" ? "timeout" : "wrong");
     metricsRef.current.push({
-      mode: modeRef.current, level: levelRef.current, channel: forceMode === "auditivo" ? "auditivo" : "visual",
+      mode: modeRef.current, level: levelRef.current, channel: presentMode !== "visual" ? "auditivo" : "visual",
       phased, totalTargets, captured: capturedTotalRef.current, correct,
       falsePositive: endedBy === "wrong" ? 1 : 0,
       omissions: correct ? 0 : Math.max(0, totalTargets - capturedTotalRef.current),
@@ -930,7 +933,7 @@ export function FocusAgents({ difficulty, theme, onComplete, forceMode, exercise
             rounds: MAX_ROUNDS, correct: correctCount,
             mode: modeRef.current, level: levelRef.current, startedLevel: levelRef.current,
             autoAdvance: settings?.autoAdvance !== false,
-            channel: forceMode === "auditivo" ? "auditivo" : "visual",
+            channel: presentMode !== "visual" ? "auditivo" : "visual",
             falsePositives: sum(m => m.falsePositive),
             omissions: sum(m => m.omissions),
             timeToFirstMs: firsts.length ? Math.round(firsts.reduce((a, b) => a + b, 0) / firsts.length) : null,
@@ -1070,6 +1073,15 @@ export function FocusAgents({ difficulty, theme, onComplete, forceMode, exercise
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [showTutorial]);
 
+  // Configurar atividade (modo de apresentação) — antes de tudo, nunca toca áudio aqui.
+  if (presentMode === null) return (
+    <PresentationConfig
+      title="Focus Agentes" icon="🎯" accent="#6d28d9"
+      subtitle={<>Nível {presLevel} · toque nos agentes que o comando pedir.</>}
+      onChoose={(m) => setPresentMode(m)}
+    />
+  );
+
   if (prescribed && !entryDone) return (
     <TherapeuticIntro mode={presMode!} level={presLevel} onStart={() => {
       setMode(presMode!); modeRef.current = presMode!;
@@ -1094,8 +1106,8 @@ export function FocusAgents({ difficulty, theme, onComplete, forceMode, exercise
   // ── Derived state ──────────────────────────────────────────────────────────
 
   const instrMode: InstrMode =
-    forceMode === "visual"   ? "visual" :
-    forceMode === "auditivo" ? "audio"  : "both";
+    presentMode === "audio_only"   ? "audio" :
+    presentMode === "visual_audio" ? "both"  : "visual";
 
   // Parte 2: Foco e Inibição usam "capturar todos da regra".
   const isCaptureAll  = mode === "foco" || mode === "inibicao";

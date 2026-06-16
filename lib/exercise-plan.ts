@@ -20,6 +20,8 @@ const EXERCISE_ALIASES: Record<string, string> = {
   // Modos visual/auditivo unificados: o -auditivo virou um MODO interno (tela
   // "Configurar atividade"). Planos antigos abrem o exercício único na leitura.
   "restaurante-ordem-auditivo": "restaurante-ordem",
+  "desafio-supermercado-auditivo": "desafio-supermercado",
+  "focus-agents-auditivo": "focus-agents",
 };
 
 /** Aceita string JSON ou array já parseado; devolve a lista normalizada

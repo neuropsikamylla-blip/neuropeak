@@ -14,14 +14,14 @@ export const ALL_DOMAINS: Domain[] = ["memory", "attention", "executive", "proce
 
 export const DOMAIN_SUBDOMAINS: Record<Domain, Subdomain[]> = {
   memory: [
-    { id: "operacional", label: "Memória Operacional", exercises: ["span-numerico", "span-numerico-inverso", "letras-sequencia", "sequencia-itens", "lista-distracao", "restaurante-ordem", "desafio-supermercado", "desafio-supermercado-auditivo"] },
+    { id: "operacional", label: "Memória Operacional", exercises: ["span-numerico", "span-numerico-inverso", "letras-sequencia", "sequencia-itens", "lista-distracao", "restaurante-ordem", "desafio-supermercado"] },
     { id: "visuoespacial", label: "Memória Visuoespacial", exercises: ["jogo-memoria", "matriz-espacial", "matriz-espacial-inversa", "padroes-rotacao"] },
     { id: "episodica", label: "Memória Episódica", exercises: [] },
     { id: "semantica", label: "Memória Semântica", exercises: [] },
   ],
   attention: [
     { id: "seletiva", label: "Atenção Seletiva", exercises: ["trilha-visual", "atencao-seletiva"] },
-    { id: "sustentada", label: "Atenção Sustentada", exercises: ["atencao-sustentada", "focus-agents", "focus-agents-auditivo"] },
+    { id: "sustentada", label: "Atenção Sustentada", exercises: ["atencao-sustentada", "focus-agents"] },
     { id: "alternada", label: "Atenção Alternada", exercises: [] },
     { id: "dividida", label: "Atenção Dividida", exercises: ["dual-task", "mot"] },
   ],

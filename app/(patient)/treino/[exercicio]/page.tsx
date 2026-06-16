@@ -531,8 +531,8 @@ export default function ExercicioPage() {
       case "certo-ou-errado": return <CertoOuErrado {...props} patientAge={patientAge} />;
       case "antes-depois": return <AntesDepois {...props} />;
       case "semaforo": return <Semaforo {...props} />;
-      case "desafio-supermercado": return <DesafioSupermercado {...props} mode="leitura" />;
-      case "desafio-supermercado-auditivo": return <DesafioSupermercado {...props} mode="auditivo" />;
+      case "desafio-supermercado":
+      case "desafio-supermercado-auditivo": return <DesafioSupermercado {...props} />;
       case "desafio-cidade": return <DesafioCidade {...props} />;
       case "corrida-tempo": return <CorridaContraOTempo {...props} />;
       // "desafio-orcamento" foi fundido na Compra Multifuncional (fallback p/ links antigos)
@@ -551,8 +551,8 @@ export default function ExercicioPage() {
       case "mot": return <MOT {...props} />;
       case "dual-task": return <DualTask {...props} />;
       case "deductive-grid": return <DeductiveGrid {...props} />;
-      case "focus-agents": return <FocusAgents {...props} forceMode="visual" settings={exerciseSettings as { mode?: "foco"|"inibicao"|"alternancia"|"desafio"; startLevel?: number; freeChoice?: boolean; feedback?: "leve"|"normal"|"intenso"; autoAdvance?: boolean } | undefined} />;
-      case "focus-agents-auditivo": return <FocusAgents {...props} forceMode="auditivo" exerciseId="focus-agents-auditivo" settings={exerciseSettings as { mode?: "foco"|"inibicao"|"alternancia"|"desafio"; startLevel?: number; freeChoice?: boolean; feedback?: "leve"|"normal"|"intenso"; autoAdvance?: boolean } | undefined} />;
+      case "focus-agents":
+      case "focus-agents-auditivo": return <FocusAgents {...props} settings={exerciseSettings as { mode?: "foco"|"inibicao"|"alternancia"|"desafio"; startLevel?: number; freeChoice?: boolean; feedback?: "leve"|"normal"|"intenso"; autoAdvance?: boolean } | undefined} />;
       case "atencao-alternada": return <AtencaoAlternada {...props} />;
       case "associacao-pares": return <AssociacaoPares {...props} />;
       default: return <div className="p-8 text-center text-gray-500">Exercício em desenvolvimento</div>;
