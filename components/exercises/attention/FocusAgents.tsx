@@ -139,7 +139,34 @@ const soundCapture = () => beep([720], 0.05, "triangle");
 function vibrate(ms: number | number[]) { try { navigator.vibrate?.(ms); } catch { /* sem vibração */ } }
 
 // Relógio por rodada (segundos) — níveis altos + desbloqueios (6-9). 0 = sem relógio.
-const LEVEL_CLOCK = [0, 0, 0, 16, 12, 12, 11, 11, 10];
+// ── Anti-repetição POR DIA ──────────────────────────────────────────────────
+// Regra: NUNCA repetir o mesmo comando no mesmo dia de treino. Guarda no
+// localStorage as assinaturas (texto) já usadas hoje, por modo. Vira um novo
+// ciclo só quando o repertório do nível se esgota (nº de comandos é finito).
+function focusTodayKey(): string {
+  const d = new Date();
+  return `${d.getFullYear()}-${d.getMonth() + 1}-${d.getDate()}`;
+}
+function loadFocusDaySigs(mode: string): string[] {
+  try {
+    const o = JSON.parse(localStorage.getItem("np-focus-day") || "{}");
+    if (o.date !== focusTodayKey()) return [];
+    return (o.sigs && o.sigs[mode]) || [];
+  } catch { return []; }
+}
+function saveFocusDaySigs(mode: string, sigs: string[]): void {
+  try {
+    let o = JSON.parse(localStorage.getItem("np-focus-day") || "{}");
+    if (o.date !== focusTodayKey()) o = { date: focusTodayKey(), sigs: {} };
+    if (!o.sigs) o.sigs = {};
+    o.sigs[mode] = sigs;
+    localStorage.setItem("np-focus-day", JSON.stringify(o));
+  } catch { /* localStorage indisponível */ }
+}
+
+// Tempo por rodada (s) — agora TODOS os níveis têm relógio: generoso nos fáceis,
+// apertado nos difíceis, pra exigir agilidade na busca sem frustrar.
+const LEVEL_CLOCK = [20, 18, 16, 15, 13, 12, 11, 10, 9];
 
 // ── AgentCard ─────────────────────────────────────────────────────────────────
 
@@ -546,7 +573,7 @@ export function FocusAgents({ difficulty, theme, onComplete, forceMode, exercise
       intraStepRef.current = 0;
       consecCorrectRef.current = 0;
       setIntensity(0);
-      recentSigsRef.current = [];
+      recentSigsRef.current = loadFocusDaySigs(modeRef.current); // herda os comandos já usados HOJE
       recentVerbsRef.current = [];
       recentTargetAgentIdsRef.current = [];
     }
@@ -618,7 +645,11 @@ export function FocusAgents({ difficulty, theme, onComplete, forceMode, exercise
     setPhaseHint(null);
 
     recentVerbsRef.current = [...recentVerbsRef.current.slice(-4), verbIdx];
-    recentSigsRef.current = [...recentSigsRef.current.slice(-5), roundSignature(built)];   // janela de 6 regras
+    const _sig = roundSignature(built);
+    // Esgotou o repertório do nível (não achou comando inédito) → começa novo ciclo no dia.
+    if (recentSigsRef.current.includes(_sig)) recentSigsRef.current = [];
+    recentSigsRef.current = [...recentSigsRef.current, _sig];   // NUNCA repete no dia (até esgotar)
+    saveFocusDaySigs(modeRef.current, recentSigsRef.current);
 
     setGameAgents(newGameAgents);
     // Fase H — distratores fortes (piscam) na Inibição N4/N5: mistura alvos e não-alvos
