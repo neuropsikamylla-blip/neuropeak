@@ -318,60 +318,111 @@ function WoodShelf({
   }, []);
 
   const n = products.length || 1;
-  const gap = 8;
-  let cols = 3, cell = 0;
+  const gap = 8;            // espaço horizontal entre produtos
+  const gapV = 6;           // espaço vertical entre prateleiras
+  // proporção da tábua em relação à célula (somada ao calcular o que cabe sem rolar)
+  const PLANK_R = 0.17;
+  let cols = 3, cell = 0, rows = 1;
   if (box.w > 0 && box.h > 0) {
     for (let c = 3; c <= 6; c++) {
-      const rows = Math.ceil(n / c);
+      const r = Math.ceil(n / c);
       const cw = (box.w - gap * (c - 1)) / c;
-      const ch = (box.h - gap * (rows - 1)) / rows;
+      // r bandas, cada banda = célula + tábua(≈cell*PLANK_R); descontando os gaps verticais
+      const ch = (box.h - gapV * (r - 1)) / (r * (1 + PLANK_R));
       const sz = Math.min(cw, ch);
-      if (sz > cell) { cell = sz; cols = c; }
+      if (sz > cell) { cell = sz; cols = c; rows = r; }
     }
   }
   cell = Math.max(cell, 40);
-  const labelH = showLabels && cell >= 72 ? 15 : 0;
-  const imgSize = Math.max(24, Math.floor(Math.min(cell * 0.78, cell - labelH - 8)));
+  const plankH = Math.min(Math.max(Math.round(cell * PLANK_R), 9), 18);
+  const showLbl = showLabels && cell >= 66;
+  const imgSize = Math.max(26, Math.floor(cell * (showLbl ? 0.64 : 0.8)));
+
+  // divide os produtos em linhas (uma tábua por linha)
+  const rowsArr: Product[][] = [];
+  for (let i = 0; i < products.length; i += cols) rowsArr.push(products.slice(i, i + cols));
+  while (rowsArr.length < rows) rowsArr.push([]);
 
   return (
     <div ref={wrapRef} style={{
-      width: "100%", height: "100%", borderRadius: 18, padding: 8, overflow: "hidden",
-      background: "linear-gradient(135deg,#e9cda0 0%,#dcb27e 55%,#c89a62 100%)",
-      boxShadow: "0 12px 30px rgba(70,45,15,0.32), inset 0 2px 3px rgba(255,255,255,0.5)",
+      width: "100%", height: "100%", borderRadius: 18, padding: 10, overflow: "hidden",
+      // moldura da gôndola
+      background: "linear-gradient(135deg,#cda876 0%,#bb945f 55%,#a87f4c 100%)",
+      boxShadow: "0 12px 30px rgba(70,45,15,0.32), inset 0 2px 3px rgba(255,255,255,0.45)",
     }}>
       <div style={{
-        width: "100%", height: "100%", background: "#f4ecdc", borderRadius: 12, padding: 8,
-        boxShadow: "inset 0 2px 8px rgba(120,90,50,0.16)", overflow: "hidden",
-        display: "grid", gridTemplateColumns: `repeat(${cols}, ${cell}px)`, gridAutoRows: `${cell}px`,
-        gap, justifyContent: "center", alignContent: "center",
+        width: "100%", height: "100%", borderRadius: 12, overflow: "hidden",
+        // parede do fundo (clara, levemente iluminada de cima)
+        background: "linear-gradient(180deg,#fbf3e3 0%,#f3e7cf 100%)",
+        boxShadow: "inset 0 2px 10px rgba(120,90,50,0.18)",
+        display: "flex", flexDirection: "column", justifyContent: "center", gap: gapV,
+        padding: "4px 6px",
       }}>
-        {products.map(p => {
-          const inCart = cartIds.includes(p.id);
-          return (
-            <motion.button key={p.id} onClick={() => onToggle(p.id)} whileTap={{ scale: 0.9 }}
-              style={{
-                position: "relative", cursor: "pointer", borderRadius: 12, width: "100%", height: "100%", overflow: "hidden",
-                display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", gap: 1,
-                background: "#ffffff",
-                border: inCart ? "3px solid #2f9e8f" : "1px solid #ece2cf",
-                boxShadow: inCart ? "0 3px 10px rgba(47,158,143,0.26)" : "0 2px 6px rgba(120,90,50,0.12)",
-                transition: "border-color .15s, box-shadow .15s",
-              }}>
-              <ProductImg id={p.id} size={imgSize} />
-              {labelH > 0 && (
-                <span style={{ fontSize: 10.5, fontWeight: 700, textAlign: "center", lineHeight: 1.1,
-                  color: inCart ? "#1d7a6e" : "#3f4a52", maxWidth: "94%",
-                  overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{p.name}</span>
-              )}
-              {inCart && (
-                <motion.div initial={{ scale: 0 }} animate={{ scale: 1 }} style={{
-                  position: "absolute", top: 4, right: 4, width: 20, height: 20, borderRadius: "50%",
-                  background: "#2f9e8f", display: "flex", alignItems: "center", justifyContent: "center",
-                  fontSize: 11, fontWeight: "bold", color: "#fff", boxShadow: "0 2px 5px rgba(0,0,0,0.2)" }}>✓</motion.div>
-              )}
-            </motion.button>
-          );
-        })}
+        {rowsArr.map((rowItems, ri) => (
+          <div key={ri} style={{ flexShrink: 0 }}>
+            {/* produtos em pé sobre a tábua */}
+            <div style={{
+              height: cell, display: "flex", flexDirection: "row",
+              alignItems: "flex-end", justifyContent: "center", gap,
+            }}>
+              {rowItems.map(p => {
+                const inCart = cartIds.includes(p.id);
+                return (
+                  <motion.button key={p.id} onClick={() => onToggle(p.id)} whileTap={{ scale: 0.9 }}
+                    style={{
+                      position: "relative", cursor: "pointer", background: "transparent", border: "none",
+                      padding: 0, width: cell, height: cell, flexShrink: 0,
+                      display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "flex-end",
+                      gap: 1, paddingBottom: 2,
+                    }}>
+                    {/* destaque ao selecionar */}
+                    {inCart && (
+                      <div style={{
+                        position: "absolute", left: 3, right: 3, top: 2, bottom: 2, borderRadius: 13,
+                        background: "rgba(47,158,143,0.14)", border: "2.5px solid #2f9e8f",
+                        boxShadow: "0 0 0 4px rgba(47,158,143,0.12)",
+                      }} />
+                    )}
+                    {/* sombra de contato no chão da prateleira */}
+                    <div style={{
+                      position: "absolute", bottom: 1, left: "14%", width: "72%", height: Math.max(6, cell * 0.09),
+                      borderRadius: "50%", filter: "blur(1.5px)", zIndex: 0,
+                      background: "radial-gradient(ellipse at center, rgba(70,48,18,0.30) 0%, rgba(70,48,18,0) 70%)",
+                    }} />
+                    <div style={{ position: "relative", zIndex: 1, display: "flex", flexDirection: "column",
+                      alignItems: "center", justifyContent: "flex-end", gap: 1 }}>
+                      <div style={{ filter: "drop-shadow(0 3px 3px rgba(60,40,15,0.28))" }}>
+                        <ProductImg id={p.id} size={imgSize} />
+                      </div>
+                      {showLbl && (
+                        <span style={{
+                          fontSize: 10, fontWeight: 700, textAlign: "center", lineHeight: 1.05,
+                          color: inCart ? "#1d7a6e" : "#46505a", maxWidth: cell * 0.95,
+                          background: "rgba(255,255,255,0.82)", borderRadius: 6, padding: "1px 4px",
+                          overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap",
+                        }}>{p.name}</span>
+                      )}
+                    </div>
+                    {/* selo de selecionado */}
+                    {inCart && (
+                      <motion.div initial={{ scale: 0 }} animate={{ scale: 1 }} style={{
+                        position: "absolute", top: 1, right: 4, width: 20, height: 20, borderRadius: "50%",
+                        background: "#2f9e8f", display: "flex", alignItems: "center", justifyContent: "center",
+                        fontSize: 11, fontWeight: "bold", color: "#fff", zIndex: 2,
+                        boxShadow: "0 2px 5px rgba(0,0,0,0.2)" }}>✓</motion.div>
+                    )}
+                  </motion.button>
+                );
+              })}
+            </div>
+            {/* tábua da prateleira */}
+            <div style={{
+              height: plankH, borderRadius: 3, marginTop: 1,
+              background: "linear-gradient(180deg,#f0dab1 0%,#e6c98f 44%,#cba566 46%,#b78c4d 100%)",
+              boxShadow: "0 5px 9px rgba(70,45,15,0.30), inset 0 1px 1px rgba(255,255,255,0.55)",
+            }} />
+          </div>
+        ))}
       </div>
     </div>
   );
