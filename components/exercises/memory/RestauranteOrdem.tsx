@@ -106,19 +106,27 @@ const relText = (rel: Rel | undefined, names: string[]): string => {
   return "amigos — saíram para falar de negócios";
 };
 
-// ── Progressão (níveis) ────────────────────────────────────────────────────────────
-interface RLevel { group: Group; items: number; distractors: number; memoSecs: number; order: boolean | "as_vezes"; update: boolean; mesas: number; }
-// Itens crescem com o nº de personagens: 1 pessoa → 2, 2 pessoas → 3, 3 pessoas → 4.
+// ── Progressão (10 níveis) ─────────────────────────────────────────────────────────
+// Reutiliza as cenas (A/B/C) e ESCALA por itens-por-pessoa: 2 pessoas podem pedir
+// 1 item cada (2) e depois 2 cada (4); 3 pessoas 1 cada (3) → 2 cada (6); + ordem,
+// + atualização de pedido, + 2 mesas em sequência.
+interface RLevel { group: Group; items: number; order: boolean | "as_vezes"; update: boolean; mesas: number; }
 const R_LEVELS: Record<number, RLevel> = {
-  1: { group: "A", items: 2, distractors: 3, memoSecs: 10, order: false,     update: false, mesas: 1 },
-  2: { group: "B", items: 3, distractors: 4, memoSecs: 9,  order: false,     update: false, mesas: 1 },
-  3: { group: "C", items: 4, distractors: 5, memoSecs: 9,  order: "as_vezes", update: false, mesas: 1 },
-  4: { group: "C", items: 4, distractors: 6, memoSecs: 9,  order: true,      update: false, mesas: 1 },
-  5: { group: "C", items: 4, distractors: 6, memoSecs: 9,  order: true,      update: true,  mesas: 1 },
-  6: { group: "B", items: 3, distractors: 6, memoSecs: 9,  order: true,      update: false, mesas: 2 },
+  1:  { group: "A", items: 2, order: false,      update: false, mesas: 1 }, // 1 pessoa · 2 itens
+  2:  { group: "B", items: 2, order: false,      update: false, mesas: 1 }, // 2 pessoas · 1 cada
+  3:  { group: "B", items: 3, order: "as_vezes", update: false, mesas: 1 }, // 2 pessoas · 3 itens
+  4:  { group: "C", items: 3, order: false,      update: false, mesas: 1 }, // 3 pessoas · 1 cada
+  5:  { group: "C", items: 4, order: true,       update: false, mesas: 1 }, // 3 pessoas · ordem
+  6:  { group: "B", items: 4, order: true,       update: false, mesas: 1 }, // 2 pessoas · 2 cada
+  7:  { group: "C", items: 5, order: true,       update: false, mesas: 1 }, // 3 pessoas · 5 itens
+  8:  { group: "C", items: 6, order: true,       update: false, mesas: 1 }, // 3 pessoas · 2 cada
+  9:  { group: "C", items: 4, order: true,       update: true,  mesas: 1 }, // 3 pessoas · atualização
+  10: { group: "B", items: 3, order: true,       update: false, mesas: 2 }, // 2 mesas em sequência
 };
-const MAX_LEVEL = 6;
-const levelOf = (d: number): number => Math.max(1, Math.min(MAX_LEVEL, Math.round((d / 10) * MAX_LEVEL) || 1));
+const MAX_LEVEL = 10;
+const levelOf = (d: number): number => Math.max(1, Math.min(MAX_LEVEL, Math.round(d) || 1));
+const memoSecsFor = (n: number): number => Math.max(7, Math.round(4 + n * 1.5)); // tempo escala com o pedido
+const distractorsFor = (n: number): number => Math.min(7, Math.max(3, n + 2));
 const TRIALS = 10;
 
 // ── Helpers ────────────────────────────────────────────────────────────────────────
@@ -186,7 +194,7 @@ function buildRound(level: number): Round {
   const calledFinal = mesas[called].finalOrder;
   const interference = mesas.filter((_, i) => i !== called).flatMap((mm) => mm.finalOrder);
   const inPlay = uniqById([...calledFinal, ...interference]);
-  const distract = shuffle(CLEAR.filter((x) => !inPlay.some((i) => i.id === x.id))).slice(0, sp.distractors);
+  const distract = shuffle(CLEAR.filter((x) => !inPlay.some((i) => i.id === x.id))).slice(0, distractorsFor(sp.items));
   const keys = shuffle(uniqById([...inPlay, ...distract]));
   return { mesas, called, keys, orderRequired };
 }
@@ -397,8 +405,7 @@ export function RestauranteOrdem({ difficulty, onComplete }: RestauranteOrdemPro
     roundRef.current = r; setRound(r);
     trayRef.current = []; setTray([]);
     setFeedback(null); setMemoIdx(0);
-    const sp = R_LEVELS[levelRef.current];
-    setMemoLeft(sp.memoSecs);
+    setMemoLeft(memoSecsFor(r.mesas[0].order.length));
     setPhase("salao");
   }, []);
 
@@ -475,15 +482,16 @@ export function RestauranteOrdem({ difficulty, onComplete }: RestauranteOrdemPro
   useEffect(() => {
     if (phase !== "salao") return;
     const myRun = runRef.current;
-    const sp = R_LEVELS[levelRef.current];
-    setMemoLeft(sp.memoSecs);
+    const r0 = roundRef.current;
+    const secs = memoSecsFor(r0 ? r0.mesas[memoIdx].order.length : 4);
+    setMemoLeft(secs);
     const iv = setInterval(() => setMemoLeft((s) => Math.max(0, s - 1)), 1000);
     const to = setTimeout(() => {
       if (runRef.current !== myRun) return;
       const r = roundRef.current;
       if (r && memoIdx < r.mesas.length - 1) setMemoIdx((m) => m + 1);
       else afterSalao();
-    }, Math.max(1, sp.memoSecs) * 1000);
+    }, Math.max(1, secs) * 1000);
     return () => { clearInterval(iv); clearTimeout(to); };
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [phase, memoIdx]);
@@ -520,8 +528,7 @@ export function RestauranteOrdem({ difficulty, onComplete }: RestauranteOrdemPro
   if (phase === "salao" && round) {
     const mesa = round.mesas[memoIdx];
     const n = round.mesas.length;
-    const sp = R_LEVELS[sessionLevel];
-    const pct = Math.max(0, Math.min(100, (memoLeft / Math.max(1, sp.memoSecs)) * 100));
+    const pct = Math.max(0, Math.min(100, (memoLeft / Math.max(1, memoSecsFor(mesa.order.length))) * 100));
     return (
       <div style={{ position: "fixed", inset: 0, overflow: "hidden", backgroundImage: `url(${mesa.scene.img})`, backgroundSize: "cover", backgroundPosition: "center" }}>
         <div style={{ position: "absolute", inset: 0, background: "linear-gradient(180deg, rgba(10,6,2,0.55) 0%, rgba(10,6,2,0) 22%, rgba(10,6,2,0) 68%, rgba(10,6,2,0.55) 100%)" }} />
