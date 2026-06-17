@@ -337,6 +337,7 @@ const SCENES_1P = [
   "/exercises/restaurante/cena-solo-1.jpg", "/exercises/restaurante/cena-solo-2.jpg",
   "/exercises/restaurante/cena-solo-3.jpg", "/exercises/restaurante/cena-solo-4.jpg",
   "/exercises/restaurante/cena-solo-5.jpg", "/exercises/restaurante/cena-solo-6.jpg",
+  "/exercises/restaurante/cena-solo-7.jpg", "/exercises/restaurante/cena-solo-8.jpg",
 ];
 
 // Roster com nomes (lidos do rótulo de cada imagem). Viram os nomes dos clientes nas mesas.
