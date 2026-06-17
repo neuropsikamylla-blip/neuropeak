@@ -2,7 +2,7 @@
 
 import { useState, useRef, useCallback, useEffect } from "react";
 import { motion } from "framer-motion";
-import { UtensilsCrossed, CheckCircle2, BarChart3, Users, Package, Timer, Bell, ArrowLeftRight, Volume2 } from "lucide-react";
+import { Timer, Bell, ArrowLeftRight, Volume2 } from "lucide-react";
 import { calculateExerciseScore } from "@/lib/scoring";
 import { speakText } from "@/lib/voicePrefs";
 import { VoicePicker } from "@/components/exercises/VoicePicker";
@@ -273,16 +273,6 @@ function setAmbienceMuted(muted: boolean) {
   if (ambMaster && ambCtx) { try { ambMaster.gain.linearRampToValueAtTime(muted ? 0 : AMB_LEVEL, ambCtx.currentTime + 0.3); } catch { /* */ } }
 }
 
-// ── Chip ─────────────────────────────────────────────────────────────────────────
-function Chip({ icon, text, color }: { icon: React.ReactNode; text: string; color: string }) {
-  return (
-    <span style={{ display: "inline-flex", alignItems: "center", gap: 5, padding: "4px 11px", borderRadius: 100,
-      background: `${color}1a`, border: `1px solid ${color}40`, color, fontSize: 12.5, fontWeight: 800, whiteSpace: "nowrap" }}>
-      {icon}{text}
-    </span>
-  );
-}
-
 // ── Plaquinha do pedido (dinâmica, sobre a cena) ──────────────────────────────────
 function OrderCard({ mesaNum, scene, items, numbered, hideItems }: {
   mesaNum: number; scene: Scene; items: Item[]; numbered: boolean; hideItems: boolean;
@@ -454,10 +444,14 @@ export function RestauranteOrdem({ difficulty, onComplete }: RestauranteOrdemPro
     if (streakRef.current >= 2) { levelRef.current = Math.min(levelRef.current + 1, MAX_LEVEL); streakRef.current = 0; setSessionLevel(levelRef.current); }
     else if (streakRef.current <= -2) { levelRef.current = Math.max(levelRef.current - 1, 1); streakRef.current = 0; setSessionLevel(levelRef.current); }
     setFeedback(res); setPhase("feedback");
+    reportProgress(Math.round(((trial + 1) / TRIALS) * 100));
+  }, [trial, reportProgress]);
+
+  function advance() {
     const nextTrial = trial + 1;
-    reportProgress(Math.round((nextTrial / TRIALS) * 100));
-    setTimeout(() => { if (nextTrial >= TRIALS) finish(); else { setTrial(nextTrial); startRound(); } }, res.ok ? 2400 : 3800);
-  }, [trial, reportProgress, startRound, finish]);
+    if (nextTrial >= TRIALS) finish();
+    else { setTrial(nextTrial); startRound(); }
+  }
 
   function placeItem(it: Item) {
     if (phase !== "bancada") return;
@@ -588,126 +582,144 @@ export function RestauranteOrdem({ difficulty, onComplete }: RestauranteOrdemPro
     );
   }
 
-  // ── BANCADA / FEEDBACK (painel creme) ──
   const r = round;
   const mesa = r ? r.mesas[r.called] : null;
   const cap = mesa ? mesa.finalOrder.length : 0;
-  const shake = phase === "feedback" && feedback?.ok === false;
 
-  return (
-    <div style={{ position: "fixed", inset: 0, display: "flex", flexDirection: "column", overflow: "hidden",
-      background: "linear-gradient(180deg,#2a1c10 0%,#3c2616 100%)" }}>
-      {showVoice && <VoicePicker onClose={() => setShowVoice(false)} />}
-      <div style={{ flex: 1, overflowY: "auto", display: "flex", alignItems: "center", justifyContent: "center", padding: "18px 16px" }}>
-        <motion.div animate={shake ? { x: [0, -9, 9, -7, 7, 0] } : { x: 0 }} transition={{ duration: 0.45 }}
-          style={{ position: "relative", width: "100%", maxWidth: 620, background: "#faf3e6", borderRadius: 28, padding: "20px 20px 16px", boxShadow: "0 26px 64px rgba(30,18,8,0.45)" }}>
+  // ── BANCADA DO GARÇOM (balcão de madeira + cabeçalho verde) ──
+  if (phase === "bancada" && r && mesa) {
+    const full = tray.length >= cap;
+    return (
+      <div style={{ position: "fixed", inset: 0, display: "flex", flexDirection: "column", overflow: "hidden",
+        backgroundImage: "repeating-linear-gradient(92deg, rgba(255,225,180,0.04) 0 3px, transparent 3px 16px), linear-gradient(165deg,#6b4a2a 0%,#4a3119 60%,#382410 100%)" }}>
+        {showVoice && <VoicePicker onClose={() => setShowVoice(false)} />}
 
+        {/* HEADER VERDE — Pedido pronto: Mesa X */}
+        <div style={{ flexShrink: 0, display: "flex", alignItems: "center", gap: 10, padding: "12px 16px",
+          background: "linear-gradient(180deg,#175446 0%,#0e3528 100%)", boxShadow: "0 4px 16px rgba(8,30,22,0.5)" }}>
+          <motion.div animate={{ scale: [1, 1.12, 1] }} transition={{ duration: 1.1, repeat: Infinity }}
+            style={{ width: 40, height: 40, flexShrink: 0, borderRadius: "50%", background: "rgba(255,220,150,0.14)", border: "1px solid rgba(255,220,150,0.35)", display: "flex", alignItems: "center", justifyContent: "center" }}>
+            <Bell size={20} color="#f0c94a" />
+          </motion.div>
+          <div style={{ flex: 1, textAlign: "center", lineHeight: 1.1 }}>
+            <div style={{ fontSize: 11.5, fontWeight: 800, color: "rgba(255,255,255,0.85)", textTransform: "uppercase", letterSpacing: 1.5 }}>Pedido pronto:</div>
+            <div style={{ fontSize: 22, fontWeight: 900, color: "#f0c94a", letterSpacing: 0.5 }}>MESA {r.called + 1}</div>
+          </div>
           <button onClick={toggleMusic} title={musicOn ? "Música: ligada" : "Música: muda"}
-            style={{ position: "absolute", top: 14, right: 14, width: 36, height: 36, borderRadius: "50%", zIndex: 5, border: "1px solid #e7dcc4", background: "#fffdf7", cursor: "pointer", fontSize: 15, display: "flex", alignItems: "center", justifyContent: "center" }}>
+            style={{ width: 38, height: 38, flexShrink: 0, borderRadius: "50%", border: "1px solid rgba(255,255,255,0.25)", background: "rgba(255,255,255,0.08)", cursor: "pointer", fontSize: 15, display: "flex", alignItems: "center", justifyContent: "center" }}>
             {musicOn ? "🔊" : "🔇"}
           </button>
+        </div>
 
-          {/* cabeçalho */}
-          <div style={{ display: "flex", alignItems: "center", gap: 12, marginBottom: 14 }}>
-            <div style={{ width: 48, height: 48, borderRadius: "50%", flexShrink: 0, background: "rgba(17,81,79,0.12)", border: "1px solid rgba(17,81,79,0.25)", display: "flex", alignItems: "center", justifyContent: "center" }}>
-              <UtensilsCrossed size={24} color="#11514f" />
-            </div>
-            <div style={{ flex: 1, minWidth: 0 }}>
-              <div style={{ fontSize: 20, fontWeight: 900, color: "#2a2018", marginBottom: 6 }}>Bancada do Garçom</div>
-              <div style={{ display: "flex", flexWrap: "wrap", gap: 6 }}>
-                <Chip icon={<BarChart3 size={13} />} text={`Nível ${sessionLevel}`} color="#1d7a6e" />
-                <Chip icon={<Users size={13} />} text={spec.group === "A" ? "1 pessoa" : spec.group === "B" ? "2 pessoas" : "3 pessoas"} color="#2563eb" />
-                <Chip icon={<Package size={13} />} text={`${spec.items} itens`} color="#e0892a" />
-                {r?.orderRequired && <Chip icon={<ArrowLeftRight size={13} />} text="em ordem" color="#7c3aed" />}
-              </div>
-            </div>
+        <div style={{ flex: 1, overflowY: "auto", display: "flex", flexDirection: "column", gap: 14, padding: "14px 16px", maxWidth: 680, width: "100%", margin: "0 auto" }}>
+          <p style={{ textAlign: "center", fontSize: 14, fontWeight: 700, color: "rgba(255,240,220,0.95)" }}>
+            Lembre o pedido da {joinList(mesa.scene.names)}{r.orderRequired ? ", na ordem certa," : ""} e monte a bandeja.
+          </p>
+
+          <Tray items={tray} slots={cap} numbered={r.orderRequired} />
+
+          <div style={{ fontSize: 12.5, fontWeight: 800, color: "rgba(255,235,205,0.85)", textAlign: "center", textTransform: "uppercase", letterSpacing: 0.5 }}>Itens disponíveis</div>
+          <div style={{ display: "grid", gridTemplateColumns: `repeat(${Math.min(r.keys.length, 5)}, 1fr)`, gap: 10 }}>
+            {r.keys.map((it, i) => {
+              const placed = tray.filter((x) => x.id === it.id).length;
+              const sel = placed > 0;
+              return (
+                <motion.button key={`${it.id}-${i}`} onClick={() => placeItem(it)} disabled={full && !sel} whileTap={{ scale: 0.93 }}
+                  style={{ borderRadius: 16, cursor: full && !sel ? "default" : "pointer", padding: "12px 8px 10px",
+                    display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", gap: 6, opacity: full && !sel ? 0.5 : 1,
+                    background: sel ? "#eef6f4" : "#fffdf7", border: sel ? "2px solid #2f9e8f" : "1.5px solid #ece0c8",
+                    boxShadow: sel ? "0 2px 8px rgba(47,158,143,0.22)" : "0 4px 12px rgba(0,0,0,0.25)", transition: "all .2s" }}>
+                  <span style={{ position: "relative", width: "100%", maxWidth: 110, aspectRatio: "1 / 1" }}>
+                    <ItemImg id={it.id} size={110} />
+                    {placed > 0 && <span style={{ position: "absolute", top: -2, right: -2, minWidth: 22, height: 22, padding: "0 5px", borderRadius: 11, background: "#2f9e8f", color: "#fff", fontSize: 12.5, fontWeight: 900, display: "flex", alignItems: "center", justifyContent: "center" }}>✓</span>}
+                  </span>
+                  <span style={{ fontSize: 12.5, fontWeight: 800, color: sel ? "#1d7a6e" : "#4a4234", textAlign: "center", lineHeight: 1.12 }}>{it.n}</span>
+                </motion.button>
+              );
+            })}
           </div>
+        </div>
 
-          {phase === "bancada" && r && mesa && (
-            <div style={{ display: "flex", flexDirection: "column", gap: 14 }}>
-              {/* chamada da cozinha */}
-              <div style={{ display: "flex", alignItems: "center", gap: 12, padding: "12px 16px", borderRadius: 16, background: "rgba(17,81,79,0.08)", border: "1px solid rgba(17,81,79,0.2)" }}>
-                <div style={{ width: 40, height: 40, flexShrink: 0, borderRadius: "50%", background: "rgba(17,81,79,0.14)", display: "flex", alignItems: "center", justifyContent: "center" }}>
-                  <Bell size={22} color="#11514f" />
-                </div>
-                <div>
-                  <div style={{ fontSize: 12, fontWeight: 800, color: "#1d7a6e", textTransform: "uppercase", letterSpacing: 0.5 }}>Pedido pronto</div>
-                  <div style={{ fontSize: 18, fontWeight: 900, color: "#2a2018" }}>Mesa {r.called + 1} — {joinList(mesa.scene.names)}</div>
-                </div>
-              </div>
-              <p style={{ textAlign: "center", fontSize: 13.5, fontWeight: 600, color: "#6b6052" }}>
-                Lembre o pedido {r.orderRequired ? "na ordem certa " : ""}e monte a bandeja.
-              </p>
-
-              <Tray items={tray} slots={cap} numbered={r.orderRequired} />
-
-              {tray.length > 0 && (
-                <button onClick={clearTray} style={{ alignSelf: "center", fontSize: 12.5, fontWeight: 700, padding: "6px 16px", borderRadius: 10, background: "#ece3d1", color: "#6b6052", border: "none", cursor: "pointer" }}>🗑 Limpar bandeja</button>
-              )}
-
-              {/* itens disponíveis */}
-              <div style={{ fontSize: 12.5, fontWeight: 800, color: "#8a7c63", textAlign: "center", textTransform: "uppercase", letterSpacing: 0.5 }}>Itens disponíveis</div>
-              <div style={{ display: "grid", gridTemplateColumns: `repeat(${Math.min(r.keys.length, 4)}, 1fr)`, gap: 10 }}>
-                {r.keys.map((it, i) => {
-                  const placed = tray.filter((x) => x.id === it.id).length;
-                  const sel = placed > 0;
-                  const full = tray.length >= cap;
-                  return (
-                    <motion.button key={`${it.id}-${i}`} onClick={() => placeItem(it)} disabled={full && !sel} whileTap={{ scale: 0.93 }}
-                      style={{ borderRadius: 18, cursor: full && !sel ? "default" : "pointer", padding: "14px 10px 12px",
-                        display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", gap: 7, opacity: full && !sel ? 0.5 : 1,
-                        background: sel ? "#eef6f4" : "#fffdf7", border: sel ? "2px solid #2f9e8f" : "1.5px solid #ece0c8",
-                        boxShadow: sel ? "0 2px 8px rgba(47,158,143,0.18)" : "0 4px 12px rgba(120,90,50,0.12)", transition: "all .2s" }}>
-                      <span style={{ position: "relative", width: "100%", maxWidth: 128, aspectRatio: "1 / 1" }}>
-                        <ItemImg id={it.id} size={128} />
-                        {placed > 0 && <span style={{ position: "absolute", top: -2, right: -2, minWidth: 22, height: 22, padding: "0 5px", borderRadius: 11, background: "#2f9e8f", color: "#fff", fontSize: 12.5, fontWeight: 900, display: "flex", alignItems: "center", justifyContent: "center" }}>✓</span>}
-                      </span>
-                      <span style={{ fontSize: 13, fontWeight: 800, color: sel ? "#1d7a6e" : "#4a4234", textAlign: "center", lineHeight: 1.12 }}>{it.n}</span>
-                    </motion.button>
-                  );
-                })}
-              </div>
-
-              <button onClick={submit} disabled={tray.length === 0}
-                style={{ height: 52, borderRadius: 100, border: "none", background: tray.length > 0 ? "linear-gradient(135deg,#11514f,#0d3a3c)" : "#e2dcce",
-                  color: tray.length > 0 ? "#fff" : "#a89a82", fontWeight: 800, fontSize: 15, cursor: tray.length > 0 ? "pointer" : "default",
-                  display: "flex", alignItems: "center", justifyContent: "center", gap: 10, boxShadow: tray.length > 0 ? "0 6px 18px rgba(13,58,60,0.35)" : "none" }}>
-                ✓ Entregar pedido
-              </button>
-            </div>
-          )}
-
-          {phase === "feedback" && feedback && mesa && (
-            <div style={{ display: "flex", flexDirection: "column", alignItems: "center", gap: 12, padding: "16px 0 8px" }}>
-              <motion.div initial={{ scale: 0.6, opacity: 0 }} animate={{ scale: 1, opacity: 1 }} style={{ fontSize: 54 }}>{feedback.ok ? "✅" : "❌"}</motion.div>
-              <p style={{ fontSize: 21, fontWeight: 900, color: feedback.ok ? "#1d7a6e" : "#c2463a", textAlign: "center" }}>{feedback.msg}</p>
-              {!feedback.ok && (
-                <div style={{ width: "100%", padding: "12px 10px", borderRadius: 14, background: "rgba(29,122,110,0.07)", border: "1px solid rgba(29,122,110,0.2)" }}>
-                  <p style={{ fontSize: 12.5, fontWeight: 700, color: "#9a8f7e", textAlign: "center", marginBottom: 8 }}>Pedido correto da Mesa {r ? r.called + 1 : ""}:</p>
-                  <div style={{ display: "flex", justifyContent: "center", gap: 10, flexWrap: "wrap" }}>
-                    {mesa.finalOrder.map((it, i) => (
-                      <div key={i} style={{ display: "flex", flexDirection: "column", alignItems: "center", gap: 2 }}>
-                        <span style={{ width: 52, height: 52 }}><ItemImg id={it.id} size={52} /></span>
-                        <span style={{ fontSize: 11.5, fontWeight: 700, color: "#4a4234" }}>{r?.orderRequired ? `${i + 1}. ` : ""}{it.n}</span>
-                      </div>
-                    ))}
-                  </div>
-                </div>
-              )}
-            </div>
-          )}
-
-          {/* rodapé */}
-          <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginTop: 16, paddingTop: 12, borderTop: "1px solid #e6ddca" }}>
-            <span style={{ display: "flex", alignItems: "center", gap: 6, fontSize: 12.5, fontWeight: 700, color: "#9a8f7e" }}>
-              <UtensilsCrossed size={15} color="#a89a82" /> Pedido <span style={{ color: "#e0892a", fontWeight: 900 }}>{Math.min(trial + 1, TRIALS)}/{TRIALS}</span>
-            </span>
-            <span style={{ display: "flex", alignItems: "center", gap: 6, fontSize: 12.5, fontWeight: 700, color: "#1d7a6e" }}>
-              <CheckCircle2 size={15} color="#1d7a6e" /> Acertos: {correctRef.current}
-            </span>
-          </div>
-        </motion.div>
+        {/* barra inferior: Limpar + Entregar */}
+        <div style={{ flexShrink: 0, display: "flex", gap: 10, padding: "10px 16px 14px", maxWidth: 680, width: "100%", margin: "0 auto" }}>
+          <button onClick={clearTray} disabled={tray.length === 0}
+            style={{ flex: "0 0 auto", height: 50, padding: "0 18px", borderRadius: 100, fontWeight: 800, fontSize: 13.5, cursor: tray.length > 0 ? "pointer" : "default",
+              background: "#f3ecdc", border: "1.5px solid #d8cbb0", color: tray.length > 0 ? "#6b6052" : "#b3a88f", display: "flex", alignItems: "center", justifyContent: "center", gap: 7 }}>
+            ↻ Limpar bandeja
+          </button>
+          <button onClick={submit} disabled={tray.length === 0}
+            style={{ flex: 1, height: 50, borderRadius: 100, border: "none", background: tray.length > 0 ? "linear-gradient(135deg,#1f9d5c,#147a45)" : "rgba(255,255,255,0.12)",
+              color: tray.length > 0 ? "#fff" : "rgba(255,255,255,0.4)", fontWeight: 800, fontSize: 15, cursor: tray.length > 0 ? "pointer" : "default",
+              display: "flex", alignItems: "center", justifyContent: "center", gap: 10, boxShadow: tray.length > 0 ? "0 6px 18px rgba(20,122,69,0.4)" : "none" }}>
+            ✓ Entregar pedido
+          </button>
+        </div>
+        <div style={{ flexShrink: 0, display: "flex", justifyContent: "space-between", padding: "0 18px 10px", fontSize: 11.5, fontWeight: 700, color: "rgba(255,235,205,0.6)" }}>
+          <span>Pedido {Math.min(trial + 1, TRIALS)}/{TRIALS}</span><span>Acertos: {correctRef.current}</span>
+        </div>
       </div>
-    </div>
-  );
+    );
+  }
+
+  // ── FEEDBACK (faixa + check + Continuar) ──
+  if (phase === "feedback" && feedback && mesa) {
+    const ok = feedback.ok;
+    const COLS = ["#f0b94a", "#4ade80", "#60a5fa", "#f87171", "#c084fc", "#fbbf24"];
+    return (
+      <div style={{ position: "fixed", inset: 0, overflow: "hidden", display: "flex", alignItems: "center", justifyContent: "center", padding: 20,
+        backgroundImage: `url(${mesa.scene.img})`, backgroundSize: "cover", backgroundPosition: "center" }}>
+        <div style={{ position: "absolute", inset: 0, background: ok ? "rgba(8,30,18,0.72)" : "rgba(30,12,8,0.72)", backdropFilter: "blur(3px)", WebkitBackdropFilter: "blur(3px)" }} />
+        {/* confete */}
+        {ok && Array.from({ length: 16 }).map((_, i) => (
+          <motion.div key={i} initial={{ y: -30, opacity: 0, rotate: 0 }} animate={{ y: 360, opacity: [0, 1, 1, 0], rotate: 360 }}
+            transition={{ duration: 1.8, delay: (i % 6) * 0.08, ease: "easeIn", repeat: Infinity, repeatDelay: 0.6 }}
+            style={{ position: "absolute", left: `${(i * 61) % 100}%`, top: "8%", width: 9, height: 13, borderRadius: 2, background: COLS[i % COLS.length] }} />
+        ))}
+
+        <div style={{ position: "relative", zIndex: 2, width: "100%", maxWidth: 420, display: "flex", flexDirection: "column", alignItems: "center", gap: 18 }}>
+          {/* faixa */}
+          <motion.div initial={{ scale: 0.7, opacity: 0 }} animate={{ scale: 1, opacity: 1 }} transition={{ type: "spring", stiffness: 260, damping: 18 }}
+            style={{ padding: "11px 34px", borderRadius: 10, background: ok ? "linear-gradient(180deg,#22a35e,#157a43)" : "linear-gradient(180deg,#d56a4a,#b24a32)",
+              boxShadow: "0 8px 22px rgba(0,0,0,0.4)", clipPath: "polygon(6% 0, 94% 0, 100% 50%, 94% 100%, 6% 100%, 0 50%)" }}>
+            <span style={{ fontSize: 22, fontWeight: 900, color: "#fff", letterSpacing: 0.5, textShadow: "0 1px 4px rgba(0,0,0,0.3)" }}>{ok ? "PEDIDO ENTREGUE!" : "QUASE LÁ"}</span>
+          </motion.div>
+
+          {/* círculo */}
+          <motion.div initial={{ scale: 0 }} animate={{ scale: 1 }} transition={{ type: "spring", stiffness: 220, damping: 16, delay: 0.1 }}
+            style={{ width: 116, height: 116, borderRadius: "50%", background: ok ? "radial-gradient(circle at 38% 32%,#34d27e,#147a43)" : "radial-gradient(circle at 38% 32%,#ef6b4b,#b23a26)",
+              display: "flex", alignItems: "center", justifyContent: "center", color: "#fff", fontSize: 64, fontWeight: 900,
+              boxShadow: `0 0 40px ${ok ? "rgba(52,210,126,0.6)" : "rgba(239,107,75,0.5)"}, inset 0 -6px 14px rgba(0,0,0,0.25)` }}>
+            {ok ? "✓" : "✕"}
+          </motion.div>
+
+          <p style={{ textAlign: "center", fontSize: 17, fontWeight: 800, color: "#fff", lineHeight: 1.35, textShadow: "0 1px 8px rgba(0,0,0,0.5)" }}>
+            {ok ? <>Você serviu a mesa correta.<br />Muito bem!</> : feedback.msg}
+          </p>
+
+          {!ok && (
+            <div style={{ width: "100%", padding: "12px 10px", borderRadius: 14, background: "rgba(0,0,0,0.32)", border: "1px solid rgba(255,255,255,0.14)" }}>
+              <p style={{ fontSize: 12, fontWeight: 700, color: "rgba(255,240,220,0.75)", textAlign: "center", marginBottom: 8 }}>Pedido correto da Mesa {r ? r.called + 1 : ""}:</p>
+              <div style={{ display: "flex", justifyContent: "center", gap: 12, flexWrap: "wrap" }}>
+                {mesa.finalOrder.map((it, i) => (
+                  <div key={i} style={{ display: "flex", flexDirection: "column", alignItems: "center", gap: 2 }}>
+                    <span style={{ width: 50, height: 50 }}><ItemImg id={it.id} size={50} /></span>
+                    <span style={{ fontSize: 11.5, fontWeight: 700, color: "rgba(255,255,255,0.92)" }}>{r?.orderRequired ? `${i + 1}. ` : ""}{it.n}</span>
+                  </div>
+                ))}
+              </div>
+            </div>
+          )}
+
+          <button onClick={advance}
+            style={{ width: "100%", maxWidth: 300, height: 52, borderRadius: 100, border: "none", background: "linear-gradient(135deg,#1f9d5c,#147a45)",
+              color: "#fff", fontWeight: 900, fontSize: 16, cursor: "pointer", boxShadow: "0 6px 20px rgba(20,122,69,0.5)" }}>
+            Continuar →
+          </button>
+          <div style={{ fontSize: 12, fontWeight: 700, color: "rgba(255,255,255,0.6)" }}>Pedido {Math.min(trial + 1, TRIALS)}/{TRIALS} · Acertos: {correctRef.current}</div>
+        </div>
+      </div>
+    );
+  }
+
+  return null;
 }
