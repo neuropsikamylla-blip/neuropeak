@@ -2,7 +2,7 @@
 
 import { useState, useRef, useCallback, useEffect } from "react";
 import { motion } from "framer-motion";
-import { Volume2, UtensilsCrossed, CheckCircle2, BarChart3, Users, Package, ArrowLeftRight, Ban, Ear, Timer } from "lucide-react";
+import { Volume2, UtensilsCrossed, CheckCircle2, BarChart3, Users, Package, ArrowLeftRight, Ban, Ear } from "lucide-react";
 import { calculateExerciseScore } from "@/lib/scoring";
 import { speakText } from "@/lib/voicePrefs";
 import { VoicePicker } from "@/components/exercises/VoicePicker";
@@ -178,7 +178,7 @@ function orderSpeechText(round: Round, clients: number): string {
 function modSpeechText(round: Round, clients: number): string {
   return round.mods.map((m) => modText(clients, m)).join(" ");
 }
-type Phase = "ready" | "order" | "memorize" | "mod" | "input" | "feedback";
+type Phase = "ready" | "order" | "mod" | "input" | "feedback";
 
 // ── Música ambiente sintetizada (Web Audio) — 100% sem direitos autorais ─────────
 let ambCtx: AudioContext | null = null;
@@ -334,12 +334,12 @@ const clienteImg = (trial: number, c: number) => `/exercises/restaurante/${CLIEN
 function ClientSpeak({ img, who, text, hideText, compact }: {
   img: string; who: string; text: string; hideText: boolean; compact: boolean;
 }) {
-  const portraitW = compact ? "30%" : "38%";
+  const portraitW = compact ? "34%" : "44%";
   return (
-    <div style={{ display: "flex", alignItems: "stretch", gap: 0, width: "100%" }}>
-      {/* retrato */}
+    <div style={{ display: "flex", alignItems: "center", gap: 0, width: "100%" }}>
+      {/* retrato — proporção da imagem (personagem INTEIRO, sem corte) */}
       <div style={{ flex: `0 0 ${portraitW}`, position: "relative", borderRadius: 18, overflow: "hidden",
-        alignSelf: "stretch", minHeight: compact ? 120 : 150, border: "1px solid rgba(120,90,50,0.18)",
+        aspectRatio: "364 / 478", border: "1px solid rgba(120,90,50,0.18)",
         boxShadow: "0 8px 22px rgba(40,24,10,0.22)" }}>
         {/* eslint-disable-next-line @next/next/no-img-element */}
         <img src={img} alt="" draggable={false}
@@ -366,23 +366,6 @@ function ClientSpeak({ img, who, text, hideText, compact }: {
   );
 }
 
-// ── TELA 2: card do item para memorizar (imagem + nome + número de ordem) ──────────
-function MemoCard({ id, name, num }: { id: string; name: string; num: number }) {
-  return (
-    <div style={{ position: "relative", background: "#fffdf7", borderRadius: 18, padding: "12px 10px 16px",
-      border: "1.5px solid #ece0c8", boxShadow: "0 4px 14px rgba(120,90,50,0.12)",
-      display: "flex", flexDirection: "column", alignItems: "center", gap: 6, minWidth: 0 }}>
-      <span style={{ width: "100%", maxWidth: 132, aspectRatio: "1 / 1" }}>
-        {/* eslint-disable-next-line @next/next/no-img-element */}
-        <img src={photo(id)} alt="" draggable={false} style={{ width: "100%", height: "100%", objectFit: "contain", display: "block" }} />
-      </span>
-      <span style={{ fontSize: 14, fontWeight: 800, color: "#2a2018", textAlign: "center", lineHeight: 1.1 }}>{name}</span>
-      <span style={{ position: "absolute", bottom: -11, left: "50%", transform: "translateX(-50%)",
-        minWidth: 26, height: 26, padding: "0 6px", borderRadius: 13, background: "#f3ede0", border: "1px solid #e0d3b8",
-        color: "#1d7a6e", fontSize: 13, fontWeight: 900, display: "flex", alignItems: "center", justifyContent: "center" }}>{num}</span>
-    </div>
-  );
-}
 
 export function RestauranteOrdem({ difficulty, onComplete }: RestauranteOrdemProps) {
   // Modo de apresentação (escolhido na tela "Configurar atividade", antes de iniciar).
@@ -403,7 +386,6 @@ export function RestauranteOrdem({ difficulty, onComplete }: RestauranteOrdemPro
   const [clientsOk, setClientsOk] = useState<boolean[]>([]);
   const [musicOn, setMusicOn] = useState(true);
   const [showVoice, setShowVoice] = useState(false);
-  const [memoLeft, setMemoLeft] = useState(0);   // cronômetro da TELA 2 (memorizar)
 
   const correctRef = useRef(0);
   const startTime = useRef(Date.now());
@@ -503,15 +485,7 @@ export function RestauranteOrdem({ difficulty, onComplete }: RestauranteOrdemPro
     activeRef.current = 0; setActive(0);                    // volta o foco ao 1º pedido
   }
   function selectClient(c: number) { activeRef.current = c; setActive(c); }
-  function goAfterOrder() { if (round && round.mods.length) setPhase("mod"); else goInput(); }
-  // No modo só-áudio não há imagens p/ memorizar → pula a TELA 2.
-  function goMemorize() {
-    if (typeof window !== "undefined") window.speechSynthesis?.cancel();
-    if (hideText) { goAfterOrder(); return; }
-    const total = roundRef.current ? roundRef.current.initial.reduce((s, o) => s + o.length, 0) : 2;
-    setMemoLeft(Math.max(4, Math.round(3 + total * 1.5)));   // evita flash de 00:00
-    setPhase("memorize");
-  }
+  function goAfterOrder() { if (typeof window !== "undefined") window.speechSynthesis?.cancel(); if (round && round.mods.length) setPhase("mod"); else goInput(); }
   function goInput() { if (typeof window !== "undefined") window.speechSynthesis?.cancel(); inputAt.current = Date.now(); setPhase("input"); }
 
   useEffect(() => () => { runRef.current++; if (typeof window !== "undefined") window.speechSynthesis?.cancel(); stopAmbience(); }, []);
@@ -526,19 +500,6 @@ export function RestauranteOrdem({ difficulty, onComplete }: RestauranteOrdemPro
     else if (phase === "mod") speakText(modSpeechText(round, round.initial.length), { rate: 0.95 });
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [phase, round, speakOn]);
-
-  // TELA 2 (memorizar): cronômetro que avança sozinho ao zerar.
-  useEffect(() => {
-    if (phase !== "memorize") return;
-    const total = roundRef.current ? roundRef.current.initial.reduce((s, o) => s + o.length, 0) : 2;
-    const secs = Math.max(4, Math.round(3 + total * 1.5)); // 2 itens ≈ 6s
-    setMemoLeft(secs);
-    const myRun = runRef.current;
-    const iv = setInterval(() => setMemoLeft((s) => Math.max(0, s - 1)), 1000);
-    const to = setTimeout(() => { if (runRef.current === myRun) goAfterOrder(); }, secs * 1000);
-    return () => { clearInterval(iv); clearTimeout(to); };
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [phase]);
 
   function replay() {
     if (!round) return;
@@ -621,8 +582,8 @@ export function RestauranteOrdem({ difficulty, onComplete }: RestauranteOrdemPro
                     <div style={{ display: "flex", alignItems: "center", gap: 11, justifyContent: "center", marginTop: 2 }}>
                       <Ear size={22} color="#11514f" style={{ flexShrink: 0 }} />
                       <p style={{ fontSize: 13.5, lineHeight: 1.35, color: "#6b6052" }}>
-                        <strong style={{ color: "#2a2018" }}>Ouça com atenção.</strong><br />
-                        {hideText ? "Memorize o pedido para montar na ordem certa." : "Você verá o pedido por alguns segundos."}
+                        <strong style={{ color: "#2a2018" }}>{hideText ? "Ouça com atenção." : "Memorize com atenção."}</strong><br />
+                        Guarde o pedido e monte a bandeja na ordem certa.
                       </p>
                     </div>
 
@@ -635,42 +596,11 @@ export function RestauranteOrdem({ difficulty, onComplete }: RestauranteOrdemPro
                       </div>
                     )}
 
-                    <button onClick={goMemorize} style={{ width: "100%", height: 54, borderRadius: 100, border: "none",
+                    <button onClick={goAfterOrder} style={{ width: "100%", height: 54, borderRadius: 100, border: "none",
                       background: "linear-gradient(135deg,#11514f,#0d3a3c)", color: "#fff", fontWeight: 800, fontSize: 15, cursor: "pointer",
                       boxShadow: "0 6px 18px rgba(13,58,60,0.35)" }}>
-                      Memorizar pedido →
+                      {round.mods.length ? "Continuar →" : "Montar bandeja →"}
                     </button>
-                  </div>
-                )}
-
-                {/* ── MEMORIZE (TELA 2) — só nos modos visuais ── */}
-                {phase === "memorize" && (
-                  <div style={{ display: "flex", flexDirection: "column", alignItems: "center", gap: 14, paddingBottom: 2 }}>
-                    <p style={{ fontSize: 20, fontWeight: 900, color: "#11514f", textAlign: "center" }}>Memorize o pedido!</p>
-                    {round.initial.map((o, c) => (
-                      <div key={c} style={{ width: "100%" }}>
-                        {spec.clients > 1 && (
-                          <div style={{ fontSize: 12.5, fontWeight: 900, color: "#1d7a6e", textAlign: "center", marginBottom: 8 }}>Cliente {c + 1}</div>
-                        )}
-                        <div style={{ background: "rgba(17,81,79,0.05)", border: "1px solid rgba(17,81,79,0.12)", borderRadius: 20, padding: "16px 14px 22px",
-                          display: "grid", gridTemplateColumns: `repeat(${Math.min(o.length, 4)}, 1fr)`, gap: 12, justifyItems: "center" }}>
-                          {o.map((it, i) => <MemoCard key={i} id={it.id} name={it.n} num={i + 1} />)}
-                        </div>
-                      </div>
-                    ))}
-                    <p style={{ fontSize: 14, color: "#6b6052", textAlign: "center", lineHeight: 1.4 }}>
-                      Memorize o pedido do cliente.<br />Em seguida, monte a bandeja.
-                    </p>
-                    <div style={{ display: "flex", alignItems: "center", gap: 12 }}>
-                      <Timer size={40} color="#11514f" strokeWidth={2.2} />
-                      <span style={{ fontSize: 46, fontWeight: 900, color: "#11514f", fontVariantNumeric: "tabular-nums", letterSpacing: 1 }}>
-                        00:{String(memoLeft).padStart(2, "0")}
-                      </span>
-                    </div>
-                    <div style={{ width: "100%", borderTop: "1px solid #e6ddca", paddingTop: 12, display: "flex", alignItems: "center", gap: 8, justifyContent: "center" }}>
-                      <span style={{ fontSize: 16 }}>💡</span>
-                      <span style={{ fontSize: 13, color: "#8a7c63", fontWeight: 600 }}>Dica: memorize a ordem dos itens.</span>
-                    </div>
                   </div>
                 )}
 
@@ -761,8 +691,8 @@ export function RestauranteOrdem({ difficulty, onComplete }: RestauranteOrdemPro
                         const full = (roundRef.current && traysRef.current[active]?.length >= roundRef.current.finals[active].length) || false;
                         return (
                           <motion.button key={`${it.id}-${i}`} onClick={() => place(it)} disabled={full} whileTap={{ scale: 0.93 }}
-                            style={{ borderRadius: 16, cursor: full ? "default" : "pointer", padding: "6px 5px 6px",
-                              display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", gap: 4,
+                            style={{ borderRadius: 18, cursor: full ? "default" : "pointer", padding: "16px 12px 13px",
+                              display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", gap: 7,
                               opacity: full && !placed ? 0.5 : 1,
                               background: sel ? "#eef6f4" : "#fffdf7", border: sel ? "2px solid #2f9e8f" : "1.5px solid #ece0c8",
                               boxShadow: sel ? "0 2px 8px rgba(47,158,143,0.18)" : "0 4px 12px rgba(120,90,50,0.12)",
