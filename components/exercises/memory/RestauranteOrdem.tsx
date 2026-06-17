@@ -332,6 +332,12 @@ const CLIENTES = ["cliente-f", "cliente-m", "cliente-3", "cliente-4", "cliente-5
 const clienteImg = (trial: number, c: number) => `/exercises/restaurante/${CLIENTES[(trial + c) % CLIENTES.length]}.png`;
 
 const SALAO_BG = "/exercises/restaurante/salao.jpg";
+// Cenas prontas de 1 pessoa sentada no restaurante (16:9) — a Kamylla gera; eu só desenho a plaquinha por cima.
+const SCENES_1P = [
+  "/exercises/restaurante/cena-solo-1.jpg", "/exercises/restaurante/cena-solo-2.jpg",
+  "/exercises/restaurante/cena-solo-3.jpg", "/exercises/restaurante/cena-solo-4.jpg",
+  "/exercises/restaurante/cena-solo-5.jpg", "/exercises/restaurante/cena-solo-6.jpg",
+];
 
 // Roster com nomes (lidos do rótulo de cada imagem). Viram os nomes dos clientes nas mesas.
 interface Person { id: string; name: string; }
@@ -571,6 +577,71 @@ export function RestauranteOrdem({ difficulty, onComplete }: RestauranteOrdemPro
     const totItems = mesas.reduce((s, o) => s + o.length, 0);
     const salaoTotal = Math.max(5, Math.round(2 + totItems * 1.3));
     const pct = Math.max(0, Math.min(100, (salaoLeft / salaoTotal) * 100));
+
+    // Título + cronômetro (overlay reutilizado nas duas versões)
+    const TopBar = (
+      <div style={{ display: "flex", alignItems: "flex-start", gap: 10 }}>
+        <div style={{ flex: 1 }} />
+        <div style={{ textAlign: "center", flex: "0 0 auto" }}>
+          <div style={{ fontSize: 23, fontWeight: 900, color: "#fff", letterSpacing: 0.4, textShadow: "0 2px 12px rgba(0,0,0,0.8)" }}>Salão do Restaurante</div>
+          <div style={{ fontSize: 12.5, fontWeight: 600, color: "rgba(255,238,215,0.95)", marginTop: 2, textShadow: "0 1px 8px rgba(0,0,0,0.8)" }}>✦ Memorize os pedidos das mesas ✦</div>
+        </div>
+        <div style={{ flex: 1, display: "flex", justifyContent: "flex-end" }}>
+          <div style={{ display: "flex", alignItems: "center", gap: 7, padding: "7px 13px", borderRadius: 100,
+            background: "rgba(18,10,3,0.62)", border: "1px solid rgba(255,220,170,0.4)", color: "#ffe7b0" }}>
+            <Timer size={18} /><span style={{ fontWeight: 900, fontSize: 17, fontVariantNumeric: "tabular-nums" }}>{salaoLeft}s</span>
+          </div>
+        </div>
+      </div>
+    );
+    const HintBar = (
+      <div style={{ display: "flex", alignItems: "center", gap: 12, padding: "10px 14px", borderRadius: 14,
+        background: "rgba(18,10,3,0.6)", border: "1px solid rgba(255,220,170,0.25)" }}>
+        <span style={{ fontSize: 17 }}>💡</span>
+        <span style={{ fontSize: 12.5, color: "rgba(255,240,220,0.92)", fontWeight: 600, flexShrink: 0 }}>Você verá os pedidos por alguns segundos.</span>
+        <div style={{ flex: 1, height: 8, borderRadius: 6, background: "rgba(255,255,255,0.16)", overflow: "hidden" }}>
+          <div style={{ height: "100%", borderRadius: 6, background: "linear-gradient(90deg,#f0b94a,#d98f2a)", width: `${pct}%`, transition: "width 1s linear" }} />
+        </div>
+      </div>
+    );
+
+    // ── 1 MESA: usa a CENA PRONTA (pessoa já sentada no restaurante) + plaquinha por cima ──
+    if (nMesas === 1) {
+      const scene = SCENES_1P[trial % SCENES_1P.length];
+      const order = mesas[0];
+      return (
+        <div style={{ position: "fixed", inset: 0, overflow: "hidden",
+          backgroundImage: `url(${scene})`, backgroundSize: "cover", backgroundPosition: "center" }}>
+          {/* leve escurecimento topo/baixo p/ leitura */}
+          <div style={{ position: "absolute", inset: 0, background: "linear-gradient(180deg, rgba(10,6,2,0.55) 0%, rgba(10,6,2,0) 22%, rgba(10,6,2,0) 70%, rgba(10,6,2,0.5) 100%)" }} />
+          {showVoice && <VoicePicker onClose={() => setShowVoice(false)} />}
+          <div style={{ position: "relative", zIndex: 2, height: "100%", display: "flex", flexDirection: "column", padding: "14px 16px", gap: 10 }}>
+            {TopBar}
+            <div style={{ flex: 1 }} />
+            {/* plaquinha do pedido — canto inferior esquerdo, sobre a mesa */}
+            <div style={{ display: "flex", justifyContent: "flex-start" }}>
+              <div style={{ minWidth: 200, maxWidth: 280, background: "rgba(16,20,18,0.86)", backdropFilter: "blur(6px)", WebkitBackdropFilter: "blur(6px)",
+                borderRadius: 18, padding: "12px 16px 14px", border: "1px solid rgba(255,225,180,0.25)", boxShadow: "0 16px 40px rgba(0,0,0,0.55)" }}>
+                <div style={{ fontSize: 16, fontWeight: 900, color: "#ffe7b0", textAlign: "center", borderBottom: "1px solid rgba(255,225,180,0.22)", paddingBottom: 8, marginBottom: 9 }}>Mesa 1</div>
+                <div style={{ display: "flex", flexDirection: "column", gap: 7 }}>
+                  {order.map((it, i) => (
+                    <div key={i} style={{ display: "flex", alignItems: "center", gap: 9 }}>
+                      <span style={{ width: 28, height: 28, flexShrink: 0 }}>
+                        {/* eslint-disable-next-line @next/next/no-img-element */}
+                        <img src={photo(it.id)} alt="" draggable={false} style={{ width: "100%", height: "100%", objectFit: "contain", display: "block" }} />
+                      </span>
+                      <span style={{ fontSize: 14.5, fontWeight: 700, color: "rgba(255,255,255,0.96)" }}>{it.n}</span>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            </div>
+            {HintBar}
+          </div>
+        </div>
+      );
+    }
+
     return (
       <div style={{ position: "fixed", inset: 0, overflow: "hidden",
         backgroundImage: `url(${SALAO_BG})`, backgroundSize: "cover", backgroundPosition: "center" }}>
