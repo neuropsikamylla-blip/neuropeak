@@ -258,10 +258,10 @@ function CartBasket({ items }: { items: Product[] }) {
       <svg viewBox="0 0 120 100" style={{ position: "absolute", inset: 0, width: "100%", height: "100%", display: "block" }} xmlns="http://www.w3.org/2000/svg">
         <path d="M20 56 L100 56 L92 95 Q90 99 84 99 L36 99 Q30 99 28 95 Z" fill="#e9c795" stroke="#a87a44" strokeWidth="2.5" strokeLinejoin="round" />
       </svg>
-      {/* produtos DENTRO da cesta — cada um numa caixa (objectFit contain, alinhado
-          embaixo) pra NENHUM subir acima do aro, mesmo com poucos itens. */}
-      <div style={{ position: "absolute", left: "18%", right: "18%", bottom: "6%", height: "42%",
-        display: "flex", alignItems: "flex-end", justifyContent: "center" }}>
+      {/* produtos DENTRO da cesta — faixa baixa, totalmente ABAIXO do aro (y≈64→96
+          no viewBox; aro em y50→60), alinhados embaixo: nenhum sobe acima da borda. */}
+      <div style={{ position: "absolute", left: "20%", right: "20%", bottom: "4%", height: "32%",
+        display: "flex", alignItems: "flex-end", justifyContent: "center", overflow: "hidden" }}>
         <AnimatePresence mode="popLayout">
           {show.map((p, i) => (
             <motion.div key={`${p.id}-${i}`} layout initial={{ y: -22, opacity: 0, scale: 0.5 }} animate={{ y: 0, opacity: 1, scale: 1 }}
