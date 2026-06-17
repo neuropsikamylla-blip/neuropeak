@@ -599,7 +599,7 @@ export function RestauranteOrdem({ difficulty, onComplete }: RestauranteOrdemPro
   if (phase === "bancada" && r && mesa) {
     const full = tray.length >= cap;
     return (
-      <div style={{ position: "fixed", inset: 0, display: "flex", flexDirection: "column", overflow: "hidden", paddingBottom: 80,
+      <div style={{ position: "fixed", inset: 0, display: "flex", flexDirection: "column", overflow: "hidden", paddingBottom: 40,
         backgroundImage: "repeating-linear-gradient(92deg, rgba(255,225,180,0.04) 0 3px, transparent 3px 16px), linear-gradient(165deg,#6b4a2a 0%,#4a3119 60%,#382410 100%)" }}>
         {showVoice && <VoicePicker onClose={() => setShowVoice(false)} />}
 
@@ -620,7 +620,7 @@ export function RestauranteOrdem({ difficulty, onComplete }: RestauranteOrdemPro
           </button>
         </div>
 
-        <div style={{ flex: 1, overflowY: "auto", display: "flex", flexDirection: "column", gap: 14, padding: "14px 16px", maxWidth: 680, width: "100%", margin: "0 auto" }}>
+        <div style={{ flex: 1, minHeight: 0, overflowY: "auto", display: "flex", flexDirection: "column", gap: 12, padding: "12px 16px", maxWidth: 720, width: "100%", margin: "0 auto" }}>
           <p style={{ textAlign: "center", fontSize: 14, fontWeight: 700, color: "rgba(255,240,220,0.95)" }}>
             Lembre o pedido da {joinList(mesa.scene.names)}{r.orderRequired ? ", na ordem certa," : ""} e monte a bandeja.
           </p>
@@ -634,15 +634,15 @@ export function RestauranteOrdem({ difficulty, onComplete }: RestauranteOrdemPro
               const sel = placed > 0;
               return (
                 <motion.button key={`${it.id}-${i}`} onClick={() => placeItem(it)} disabled={full && !sel} whileTap={{ scale: 0.93 }}
-                  style={{ borderRadius: 16, cursor: full && !sel ? "default" : "pointer", padding: "12px 8px 10px",
-                    display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", gap: 6, opacity: full && !sel ? 0.5 : 1,
+                  style={{ borderRadius: 14, cursor: full && !sel ? "default" : "pointer", padding: "8px 6px 7px",
+                    display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", gap: 4, opacity: full && !sel ? 0.5 : 1,
                     background: sel ? "#eef6f4" : "#fffdf7", border: sel ? "2px solid #2f9e8f" : "1.5px solid #ece0c8",
                     boxShadow: sel ? "0 2px 8px rgba(47,158,143,0.22)" : "0 4px 12px rgba(0,0,0,0.25)", transition: "all .2s" }}>
-                  <span style={{ position: "relative", width: "100%", maxWidth: 110, aspectRatio: "1 / 1" }}>
-                    <ItemImg id={it.id} size={110} />
-                    {placed > 0 && <span style={{ position: "absolute", top: -2, right: -2, minWidth: 22, height: 22, padding: "0 5px", borderRadius: 11, background: "#2f9e8f", color: "#fff", fontSize: 12.5, fontWeight: 900, display: "flex", alignItems: "center", justifyContent: "center" }}>✓</span>}
+                  <span style={{ position: "relative", width: "100%", maxWidth: 76, aspectRatio: "1 / 1" }}>
+                    <ItemImg id={it.id} size={76} />
+                    {placed > 0 && <span style={{ position: "absolute", top: -2, right: -2, minWidth: 20, height: 20, padding: "0 4px", borderRadius: 10, background: "#2f9e8f", color: "#fff", fontSize: 11.5, fontWeight: 900, display: "flex", alignItems: "center", justifyContent: "center" }}>✓</span>}
                   </span>
-                  <span style={{ fontSize: 12.5, fontWeight: 800, color: sel ? "#1d7a6e" : "#4a4234", textAlign: "center", lineHeight: 1.12 }}>{it.n}</span>
+                  <span style={{ fontSize: 11.5, fontWeight: 800, color: sel ? "#1d7a6e" : "#4a4234", textAlign: "center", lineHeight: 1.1 }}>{it.n}</span>
                 </motion.button>
               );
             })}
