@@ -44,3 +44,6 @@ prisma/*.db
 supabase/.temp
 .env*
 .claude/
+
+# matéria-prima (personagens originais do ChatGPT) — não deployar
+public/exercises/Personagem restaurante/

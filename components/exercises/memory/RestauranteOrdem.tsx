@@ -325,8 +325,9 @@ function OrderSeqText({ items }: { items: Item[] }) {
   );
 }
 
-// ── Personagens (recortados dos mockups da Kamylla) ───────────────────────────────
-const CLIENTES = ["cliente-f", "cliente-m"];
+// ── Personagens (recortados dos mockups da Kamylla) — 12 clientes variados ─────────
+const CLIENTES = ["cliente-f", "cliente-m", "cliente-3", "cliente-4", "cliente-5", "cliente-6",
+  "cliente-7", "cliente-8", "cliente-9", "cliente-10", "cliente-11", "cliente-12"];
 // alterna por rodada e por cliente → com 2 clientes saem personagens diferentes
 const clienteImg = (trial: number, c: number) => `/exercises/restaurante/${CLIENTES[(trial + c) % CLIENTES.length]}.png`;
 
