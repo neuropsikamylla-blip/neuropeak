@@ -203,7 +203,7 @@ export function Vigilancia({ difficulty, theme, onComplete }: VigilanciaProps) {
 
   return (
     <div className={`min-h-screen flex flex-col items-center justify-center p-4 ${bgClass}`}>
-      <div className={`w-full max-w-sm rounded-2xl p-8 ${theme === "GAMIFIED" ? "bg-gray-800 border border-cyan-500/30" : "bg-white shadow-lg"}`}>
+      <div className={`w-full max-w-md rounded-2xl p-8 ${theme === "GAMIFIED" ? "bg-gray-800 border border-cyan-500/30" : "bg-white shadow-lg"}`}>
         {/* Header */}
         <div className="flex justify-between text-sm mb-4">
           <span className={`font-bold ${theme === "GAMIFIED" ? "text-green-400" : "text-green-600"}`}>✓ {hits}</span>

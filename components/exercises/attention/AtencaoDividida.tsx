@@ -422,7 +422,7 @@ export function AtencaoDividida({ difficulty, theme, onComplete }: AtencaoDividi
 
   return (
     <div className="min-h-screen flex flex-col items-center justify-center p-4" style={bgStyle}>
-      <div className="w-full max-w-sm p-5" style={cardStyle}>
+      <div className="w-full max-w-md p-5" style={cardStyle}>
         {/* Header */}
         <div className="flex justify-between text-sm mb-3">
           <span className="font-bold" style={{ color: "#22c55e" }}>✓ {hits}</span>

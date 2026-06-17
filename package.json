@@ -1,6 +1,6 @@
 {
   "name": "neuropeak",
-  "version": "1.76.8",
+  "version": "1.77.0",
   "private": true,
   "scripts": {
     "dev": "next dev",

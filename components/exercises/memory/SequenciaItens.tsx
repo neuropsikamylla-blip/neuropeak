@@ -88,7 +88,7 @@ export function SequenciaItens({ difficulty, onComplete }: SequenciaItensProps) 
       else await new Promise((r) => setTimeout(r, spec.showMs));
       if (runRef.current !== myRun) return;
       setShowIdx(-1);
-      await new Promise((r) => setTimeout(r, spec.audio ? 250 : 280));
+      await new Promise((r) => setTimeout(r, spec.audio ? 360 : 480)); // mais tempo entre um item e o outro
     }
     if (runRef.current !== myRun) return;
     // teclado: itens da sequência + distratores
@@ -164,7 +164,7 @@ export function SequenciaItens({ difficulty, onComplete }: SequenciaItensProps) 
   if (phase === "ready") {
     return (
       <div className="min-h-screen w-full flex items-center justify-center p-4" style={{ background: "#020617" }}>
-        <div className="w-full max-w-md rounded-3xl p-6 text-center" style={CARD}>
+        <div className="w-full max-w-lg rounded-3xl p-6 text-center" style={CARD}>
           <div className="mx-auto mb-4 w-20 h-20 rounded-full flex items-center justify-center"
             style={{ background: "radial-gradient(circle at 38% 32%, rgba(99,102,241,0.5), rgba(30,27,75,0.9))", border: "1px solid rgba(129,140,248,0.5)" }}>
             {spec.audio ? <Headphones size={40} color="#c7d2fe" /> : <Eye size={40} color="#c7d2fe" />}
@@ -185,7 +185,7 @@ export function SequenciaItens({ difficulty, onComplete }: SequenciaItensProps) 
 
   return (
     <div className="min-h-screen w-full flex items-center justify-center p-4" style={{ background: "#020617" }}>
-      <div className="w-full max-w-md rounded-3xl p-6 space-y-4" style={CARD}>
+      <div className="w-full max-w-lg rounded-3xl p-6 space-y-4" style={CARD}>
         <div>
           <p className="text-sm font-bold text-white leading-tight">Sequência de Itens</p>
           <p className="text-xs mt-1" style={{ color: "rgba(148,163,184,0.7)" }}>

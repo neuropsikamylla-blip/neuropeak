@@ -341,7 +341,7 @@ export function TaskSwitching({ difficulty, theme, onComplete }: TaskSwitchingPr
 
   return (
     <div className={`min-h-screen overflow-y-auto ${pal.bg}`}>
-      <div className="max-w-sm mx-auto px-4 py-5 flex flex-col items-center gap-4">
+      <div className="max-w-md mx-auto px-4 py-5 flex flex-col items-center gap-4">
 
         {/* Header */}
         <div className={`w-full rounded-2xl p-4 ${pal.card}`}>

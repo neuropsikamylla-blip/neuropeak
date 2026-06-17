@@ -172,7 +172,7 @@ export function ListaDistracao({ difficulty, onComplete }: ListaDistracaoProps) 
   if (phase === "ready") {
     return (
       <div className="min-h-screen w-full flex items-center justify-center p-4" style={{ background: "#020617" }}>
-        <div className="w-full max-w-md rounded-3xl p-6 text-center" style={CARD}>
+        <div className="w-full max-w-lg rounded-3xl p-6 text-center" style={CARD}>
           <div className="mx-auto mb-4 w-20 h-20 rounded-full flex items-center justify-center"
             style={{ background: "radial-gradient(circle at 38% 32%, rgba(34,211,197,0.4), rgba(15,40,60,0.9))", border: "1px solid rgba(34,211,197,0.5)" }}>
             <ListChecks size={40} color="#5eead4" />
@@ -193,7 +193,7 @@ export function ListaDistracao({ difficulty, onComplete }: ListaDistracaoProps) 
 
   return (
     <div className="min-h-screen w-full flex items-center justify-center p-4" style={{ background: "#020617" }}>
-      <div className="w-full max-w-md rounded-3xl p-6 space-y-4" style={CARD}>
+      <div className="w-full max-w-lg rounded-3xl p-6 space-y-4" style={CARD}>
         <div>
           <p className="text-sm font-bold text-white leading-tight">Lista com Distração</p>
           <p className="text-xs mt-1" style={{ color: "rgba(148,163,184,0.7)" }}>

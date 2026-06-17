@@ -14,7 +14,13 @@ interface NBackProps {
 }
 
 const LETTERS = ["A", "B", "C", "D", "E", "F", "G", "H", "K", "L", "M", "P", "R"];
-const SHOW_MS = 3500;
+// Ritmo do estímulo: confortável no fácil, mais rápido (mais difícil) nos níveis altos.
+function showMsFor(d: number): number {
+  if (d <= 3) return 3400;
+  if (d <= 6) return 2900;
+  if (d <= 8) return 2400;
+  return 2000;
+}
 const BLANK_MS = 400;
 const TARGET_RATIO = 0.32;
 
@@ -147,6 +153,7 @@ export function NBack({ difficulty, theme, onComplete }: NBackProps) {
 
   const [nLevel, setNLevel] = useState(initialN(difficulty));
   const [streak, setStreak] = useState(0);
+  const SHOW_MS = showMsFor(difficulty);
 
   const [phase, setPhase] = useState<Phase>("priming");
   const [primingLeft, setPrimingLeft] = useState(initialN(difficulty));
@@ -336,7 +343,7 @@ export function NBack({ difficulty, theme, onComplete }: NBackProps) {
 
   return (
     <div className={`min-h-screen flex flex-col items-center justify-center p-4 ${bg}`}>
-      <div className={`w-full max-w-sm rounded-2xl p-6 ${card}`}>
+      <div className={`w-full max-w-md rounded-2xl p-6 ${card}`}>
         {/* Header */}
         <div className="flex justify-between items-center mb-3">
           <div>
