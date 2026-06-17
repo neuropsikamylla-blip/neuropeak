@@ -2,7 +2,7 @@
 
 import { useState, useRef, useCallback, useEffect } from "react";
 import { motion } from "framer-motion";
-import { Volume2, UtensilsCrossed, CheckCircle2, BarChart3, Users, Package, ArrowLeftRight, Ban } from "lucide-react";
+import { Volume2, UtensilsCrossed, CheckCircle2, BarChart3, Users, Package, ArrowLeftRight, Ban, Ear, Timer } from "lucide-react";
 import { calculateExerciseScore } from "@/lib/scoring";
 import { speakText } from "@/lib/voicePrefs";
 import { VoicePicker } from "@/components/exercises/VoicePicker";
@@ -178,7 +178,7 @@ function orderSpeechText(round: Round, clients: number): string {
 function modSpeechText(round: Round, clients: number): string {
   return round.mods.map((m) => modText(clients, m)).join(" ");
 }
-type Phase = "ready" | "order" | "mod" | "input" | "feedback";
+type Phase = "ready" | "order" | "memorize" | "mod" | "input" | "feedback";
 
 // ── Música ambiente sintetizada (Web Audio) — 100% sem direitos autorais ─────────
 let ambCtx: AudioContext | null = null;
@@ -262,12 +262,13 @@ function Chip({ icon, text, color }: { icon: React.ReactNode; text: string; colo
   );
 }
 
-// ── Bandeja de nogueira — só imagens dos alimentos (sem nomes/vagas) ───────────────
-// O tamanho dos alimentos varia pelo nº de pedidos: 1 = grande, 2 = médio, 3 = menor.
-function Tray({ items, count }: { items: Item[]; count: number }) {
-  const sz = count >= 3 ? { item: 64, gap: 10, minH: 82 }
-    : count === 2 ? { item: 86, gap: 14, minH: 102 }
-    : { item: 132, gap: 22, minH: 150 };
+// ── Bandeja de nogueira — vagas NUMERADAS que enchem ao montar (TELA 3) ────────────
+// O tamanho varia pelo nº de pedidos: 1 = grande, 2 = médio, 3 = menor.
+function Tray({ items, count, slots }: { items: Item[]; count: number; slots: number }) {
+  const sz = count >= 3 ? { item: 62, gap: 8, minH: 90 }
+    : count === 2 ? { item: 82, gap: 12, minH: 110 }
+    : { item: 116, gap: 16, minH: 150 };
+  const ord = (i: number) => `${i + 1}º`;
   const Handle = ({ side }: { side: "left" | "right" }) => (
     <div style={{ position: "absolute", top: "50%", [side]: -15, transform: "translateY(-50%)", width: 30, height: 50, zIndex: 0 }}>
       <div style={{ position: "absolute", inset: 0, borderRadius: "45%", border: "5px solid #c8a24e",
@@ -284,13 +285,29 @@ function Tray({ items, count }: { items: Item[]; count: number }) {
           backgroundImage: "repeating-linear-gradient(96deg, rgba(255,220,170,0.045) 0 2px, transparent 2px 8px), linear-gradient(160deg,#62431f,#49321a)",
           boxShadow: "inset 0 5px 16px rgba(18,10,3,0.6)",
           display: "flex", alignItems: "center", justifyContent: "center", gap: sz.gap, flexWrap: "nowrap", padding: "10px 14px" }}>
-          {items.map((it, i) => (
-            <motion.div key={i} initial={{ scale: 0.4, opacity: 0 }} animate={{ scale: 1, opacity: 1 }} transition={{ type: "spring", stiffness: 440, damping: 22 }}
-              style={{ width: sz.item, aspectRatio: "1 / 1", flexShrink: 1, minWidth: 0, filter: "drop-shadow(0 6px 10px rgba(10,6,2,0.55))" }}>
-              {/* eslint-disable-next-line @next/next/no-img-element */}
-              <img src={photo(it.id)} alt="" draggable={false} style={{ width: "100%", height: "100%", objectFit: "contain", display: "block", userSelect: "none" }} />
-            </motion.div>
-          ))}
+          {Array.from({ length: Math.max(slots, items.length) }).map((_, i) => {
+            const it = items[i];
+            return (
+              <div key={i} style={{ width: sz.item, aspectRatio: "1 / 1", flexShrink: 1, minWidth: 0, position: "relative",
+                display: "flex", alignItems: "center", justifyContent: "center" }}>
+                {it ? (
+                  <motion.div initial={{ scale: 0.4, opacity: 0 }} animate={{ scale: 1, opacity: 1 }} transition={{ type: "spring", stiffness: 440, damping: 22 }}
+                    style={{ width: "100%", height: "100%", filter: "drop-shadow(0 6px 10px rgba(10,6,2,0.55))" }}>
+                    {/* eslint-disable-next-line @next/next/no-img-element */}
+                    <img src={photo(it.id)} alt="" draggable={false} style={{ width: "100%", height: "100%", objectFit: "contain", display: "block", userSelect: "none" }} />
+                  </motion.div>
+                ) : (
+                  <div style={{ width: "100%", height: "100%", borderRadius: 14, border: "2px dashed rgba(255,228,185,0.45)",
+                    display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", gap: 2 }}>
+                    <div style={{ width: "42%", maxWidth: 40, aspectRatio: "1 / 1", borderRadius: "50%", background: "rgba(255,235,200,0.16)",
+                      color: "rgba(255,240,210,0.92)", fontWeight: 900, fontSize: Math.max(12, sz.item * 0.16),
+                      display: "flex", alignItems: "center", justifyContent: "center" }}>{ord(i)}</div>
+                    <span style={{ fontSize: 11, fontWeight: 700, color: "rgba(255,235,205,0.72)" }}>item</span>
+                  </div>
+                )}
+              </div>
+            );
+          })}
         </div>
       </div>
     </div>
@@ -305,6 +322,65 @@ function OrderSeqText({ items }: { items: Item[] }) {
         <span key={i}>{i > 0 && <span style={{ color: "#caa86a", margin: "0 4px" }}>→</span>}{it.n}</span>
       ))}
     </p>
+  );
+}
+
+// ── Personagens (recortados dos mockups da Kamylla) ───────────────────────────────
+const CLIENTES = ["cliente-f", "cliente-m"];
+// alterna por rodada e por cliente → com 2 clientes saem personagens diferentes
+const clienteImg = (trial: number, c: number) => `/exercises/restaurante/${CLIENTES[(trial + c) % CLIENTES.length]}.png`;
+
+// ── TELA 1: personagem + balão de fala ────────────────────────────────────────────
+function ClientSpeak({ img, who, text, hideText, compact }: {
+  img: string; who: string; text: string; hideText: boolean; compact: boolean;
+}) {
+  const portraitW = compact ? "30%" : "38%";
+  return (
+    <div style={{ display: "flex", alignItems: "stretch", gap: 0, width: "100%" }}>
+      {/* retrato */}
+      <div style={{ flex: `0 0 ${portraitW}`, position: "relative", borderRadius: 18, overflow: "hidden",
+        alignSelf: "stretch", minHeight: compact ? 120 : 150, border: "1px solid rgba(120,90,50,0.18)",
+        boxShadow: "0 8px 22px rgba(40,24,10,0.22)" }}>
+        {/* eslint-disable-next-line @next/next/no-img-element */}
+        <img src={img} alt="" draggable={false}
+          style={{ position: "absolute", inset: 0, width: "100%", height: "100%", objectFit: "cover", objectPosition: "top center", userSelect: "none" }} />
+      </div>
+      {/* balão (CSS — cresce com o texto) */}
+      <div style={{ flex: 1, position: "relative", marginLeft: 14, alignSelf: "center",
+        background: "#fffdf7", borderRadius: 20, padding: compact ? "14px 18px" : "20px 24px",
+        border: "1px solid #efe6d3", boxShadow: "0 6px 18px rgba(60,40,15,0.12)" }}>
+        {/* rabicho apontando para o personagem */}
+        <div style={{ position: "absolute", left: -9, top: "50%", transform: "translateY(-50%) rotate(45deg)",
+          width: 18, height: 18, background: "#fffdf7", borderLeft: "1px solid #efe6d3", borderBottom: "1px solid #efe6d3", borderRadius: 3 }} />
+        {/* aspas decorativas */}
+        <span style={{ position: "absolute", top: 4, left: 12, fontSize: 38, lineHeight: 1, color: "#e3d6bb", fontFamily: "Georgia, serif", fontWeight: 700 }}>&ldquo;</span>
+        <div style={{ position: "relative", paddingLeft: 6, textAlign: "center" }}>
+          <p style={{ fontSize: compact ? 13.5 : 15, fontWeight: 800, color: "#11514f", marginBottom: 6 }}>{who}</p>
+          {hideText
+            ? <p style={{ fontSize: compact ? 14 : 17, fontWeight: 900, color: "#caa86a", letterSpacing: 2 }}>• • •</p>
+            : <p style={{ fontSize: compact ? 17 : 22, fontWeight: 900, color: "#2a2018", lineHeight: 1.25 }}>{text}</p>}
+        </div>
+        <span style={{ position: "absolute", bottom: -10, right: 14, fontSize: 38, lineHeight: 1, color: "#e3d6bb", fontFamily: "Georgia, serif", fontWeight: 700 }}>&rdquo;</span>
+      </div>
+    </div>
+  );
+}
+
+// ── TELA 2: card do item para memorizar (imagem + nome + número de ordem) ──────────
+function MemoCard({ id, name, num }: { id: string; name: string; num: number }) {
+  return (
+    <div style={{ position: "relative", background: "#fffdf7", borderRadius: 18, padding: "12px 10px 16px",
+      border: "1.5px solid #ece0c8", boxShadow: "0 4px 14px rgba(120,90,50,0.12)",
+      display: "flex", flexDirection: "column", alignItems: "center", gap: 6, minWidth: 0 }}>
+      <span style={{ width: "100%", maxWidth: 132, aspectRatio: "1 / 1" }}>
+        {/* eslint-disable-next-line @next/next/no-img-element */}
+        <img src={photo(id)} alt="" draggable={false} style={{ width: "100%", height: "100%", objectFit: "contain", display: "block" }} />
+      </span>
+      <span style={{ fontSize: 14, fontWeight: 800, color: "#2a2018", textAlign: "center", lineHeight: 1.1 }}>{name}</span>
+      <span style={{ position: "absolute", bottom: -11, left: "50%", transform: "translateX(-50%)",
+        minWidth: 26, height: 26, padding: "0 6px", borderRadius: 13, background: "#f3ede0", border: "1px solid #e0d3b8",
+        color: "#1d7a6e", fontSize: 13, fontWeight: 900, display: "flex", alignItems: "center", justifyContent: "center" }}>{num}</span>
+    </div>
   );
 }
 
@@ -327,6 +403,7 @@ export function RestauranteOrdem({ difficulty, onComplete }: RestauranteOrdemPro
   const [clientsOk, setClientsOk] = useState<boolean[]>([]);
   const [musicOn, setMusicOn] = useState(true);
   const [showVoice, setShowVoice] = useState(false);
+  const [memoLeft, setMemoLeft] = useState(0);   // cronômetro da TELA 2 (memorizar)
 
   const correctRef = useRef(0);
   const startTime = useRef(Date.now());
@@ -427,6 +504,14 @@ export function RestauranteOrdem({ difficulty, onComplete }: RestauranteOrdemPro
   }
   function selectClient(c: number) { activeRef.current = c; setActive(c); }
   function goAfterOrder() { if (round && round.mods.length) setPhase("mod"); else goInput(); }
+  // No modo só-áudio não há imagens p/ memorizar → pula a TELA 2.
+  function goMemorize() {
+    if (typeof window !== "undefined") window.speechSynthesis?.cancel();
+    if (hideText) { goAfterOrder(); return; }
+    const total = roundRef.current ? roundRef.current.initial.reduce((s, o) => s + o.length, 0) : 2;
+    setMemoLeft(Math.max(4, Math.round(3 + total * 1.5)));   // evita flash de 00:00
+    setPhase("memorize");
+  }
   function goInput() { if (typeof window !== "undefined") window.speechSynthesis?.cancel(); inputAt.current = Date.now(); setPhase("input"); }
 
   useEffect(() => () => { runRef.current++; if (typeof window !== "undefined") window.speechSynthesis?.cancel(); stopAmbience(); }, []);
@@ -441,6 +526,19 @@ export function RestauranteOrdem({ difficulty, onComplete }: RestauranteOrdemPro
     else if (phase === "mod") speakText(modSpeechText(round, round.initial.length), { rate: 0.95 });
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [phase, round, speakOn]);
+
+  // TELA 2 (memorizar): cronômetro que avança sozinho ao zerar.
+  useEffect(() => {
+    if (phase !== "memorize") return;
+    const total = roundRef.current ? roundRef.current.initial.reduce((s, o) => s + o.length, 0) : 2;
+    const secs = Math.max(4, Math.round(3 + total * 1.5)); // 2 itens ≈ 6s
+    setMemoLeft(secs);
+    const myRun = runRef.current;
+    const iv = setInterval(() => setMemoLeft((s) => Math.max(0, s - 1)), 1000);
+    const to = setTimeout(() => { if (runRef.current === myRun) goAfterOrder(); }, secs * 1000);
+    return () => { clearInterval(iv); clearTimeout(to); };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [phase]);
 
   function replay() {
     if (!round) return;
@@ -509,47 +607,70 @@ export function RestauranteOrdem({ difficulty, onComplete }: RestauranteOrdemPro
               <>
                 {/* ── ORDER ── */}
                 {phase === "order" && (
-                  <div style={{ display: "flex", flexDirection: "column", alignItems: "center", gap: 16, paddingBottom: 4 }}>
-                    <span style={{ display: "flex", alignItems: "center", gap: 9, fontSize: 13, fontWeight: 800, color: "#1d7a6e", textTransform: "uppercase", letterSpacing: 1 }}>
-                      <span style={{ color: "#caa86a" }}>✦</span>{hideText ? "🎧 Ouça o pedido" : `📋 Pedido${spec.clients > 1 ? "s" : ""} do${spec.clients > 1 ? "s clientes" : " cliente"}`}<span style={{ color: "#caa86a" }}>✦</span>
-                    </span>
-                    {hideText ? (
-                      <div style={{ display: "flex", flexDirection: "column", alignItems: "center", gap: 14, width: "100%", padding: "8px 0" }}>
-                        <motion.div animate={{ scale: [1, 1.09, 1] }} transition={{ duration: 1.1, repeat: Infinity }}
-                          style={{ width: 92, height: 92, borderRadius: "50%", background: "rgba(17,81,79,0.1)", border: "1px solid rgba(17,81,79,0.3)",
-                            display: "flex", alignItems: "center", justifyContent: "center" }}>
-                          <Volume2 size={44} color="#11514f" />
-                        </motion.div>
-                        <p style={{ fontSize: 14, color: "#6b6052", textAlign: "center", maxWidth: 320 }}>
-                          Ouça {spec.clients > 1 ? "os pedidos dos clientes" : "o pedido do cliente"} e memorize para montar na ordem certa.
-                        </p>
-                        <div style={{ display: "flex", gap: 8, flexWrap: "wrap", justifyContent: "center" }}>
-                          <button onClick={replay} style={{ fontSize: 12.5, fontWeight: 700, padding: "9px 16px", borderRadius: 100, cursor: "pointer",
-                            background: "rgba(17,81,79,0.1)", border: "1px solid rgba(17,81,79,0.3)", color: "#11514f" }}>🔊 Ouvir de novo</button>
-                          <button onClick={() => setShowVoice(true)} style={{ fontSize: 12.5, fontWeight: 700, padding: "9px 16px", borderRadius: 100, cursor: "pointer",
-                            background: "#fffdf7", border: "1px solid #e2d8c2", color: "#8a7c63" }}>🎚️ Trocar voz</button>
-                        </div>
+                  <div style={{ display: "flex", flexDirection: "column", gap: 14, paddingBottom: 2 }}>
+                    {round.initial.map((o, c) => (
+                      <ClientSpeak key={c}
+                        img={clienteImg(trial, c)}
+                        who={spec.clients === 1 ? "Oi! Eu gostaria de:" : `Cliente ${c + 1} — eu gostaria de:`}
+                        text={`${joinList(o.map((i) => i.n))}.`}
+                        hideText={hideText}
+                        compact={spec.clients > 1} />
+                    ))}
+
+                    {/* instrução com ícone de ouvido */}
+                    <div style={{ display: "flex", alignItems: "center", gap: 11, justifyContent: "center", marginTop: 2 }}>
+                      <Ear size={22} color="#11514f" style={{ flexShrink: 0 }} />
+                      <p style={{ fontSize: 13.5, lineHeight: 1.35, color: "#6b6052" }}>
+                        <strong style={{ color: "#2a2018" }}>Ouça com atenção.</strong><br />
+                        {hideText ? "Memorize o pedido para montar na ordem certa." : "Você verá o pedido por alguns segundos."}
+                      </p>
+                    </div>
+
+                    {speakOn && (
+                      <div style={{ display: "flex", gap: 8, flexWrap: "wrap", justifyContent: "center" }}>
+                        <button onClick={replay} style={{ fontSize: 12.5, fontWeight: 700, padding: "9px 16px", borderRadius: 100, cursor: "pointer",
+                          background: "rgba(17,81,79,0.1)", border: "1px solid rgba(17,81,79,0.3)", color: "#11514f" }}>🔊 Ouvir de novo</button>
+                        <button onClick={() => setShowVoice(true)} style={{ fontSize: 12.5, fontWeight: 700, padding: "9px 16px", borderRadius: 100, cursor: "pointer",
+                          background: "#fffdf7", border: "1px solid #e2d8c2", color: "#8a7c63" }}>🎚️ Trocar voz</button>
                       </div>
-                    ) : round.initial.map((o, c) => (
-                      <div key={c} style={{ width: "100%", padding: "14px 16px", borderRadius: 16,
-                        background: "rgba(17,81,79,0.06)", border: "1px solid rgba(17,81,79,0.16)" }}>
-                        <div style={{ fontSize: 13.5, fontWeight: 900, color: "#11514f", marginBottom: 8, textAlign: "center" }}>
-                          {spec.clients === 1 ? "O cliente pediu:" : `Cliente ${c + 1} pediu:`}
+                    )}
+
+                    <button onClick={goMemorize} style={{ width: "100%", height: 54, borderRadius: 100, border: "none",
+                      background: "linear-gradient(135deg,#11514f,#0d3a3c)", color: "#fff", fontWeight: 800, fontSize: 15, cursor: "pointer",
+                      boxShadow: "0 6px 18px rgba(13,58,60,0.35)" }}>
+                      Memorizar pedido →
+                    </button>
+                  </div>
+                )}
+
+                {/* ── MEMORIZE (TELA 2) — só nos modos visuais ── */}
+                {phase === "memorize" && (
+                  <div style={{ display: "flex", flexDirection: "column", alignItems: "center", gap: 14, paddingBottom: 2 }}>
+                    <p style={{ fontSize: 20, fontWeight: 900, color: "#11514f", textAlign: "center" }}>Memorize o pedido!</p>
+                    {round.initial.map((o, c) => (
+                      <div key={c} style={{ width: "100%" }}>
+                        {spec.clients > 1 && (
+                          <div style={{ fontSize: 12.5, fontWeight: 900, color: "#1d7a6e", textAlign: "center", marginBottom: 8 }}>Cliente {c + 1}</div>
+                        )}
+                        <div style={{ background: "rgba(17,81,79,0.05)", border: "1px solid rgba(17,81,79,0.12)", borderRadius: 20, padding: "16px 14px 22px",
+                          display: "grid", gridTemplateColumns: `repeat(${Math.min(o.length, 4)}, 1fr)`, gap: 12, justifyItems: "center" }}>
+                          {o.map((it, i) => <MemoCard key={i} id={it.id} name={it.n} num={i + 1} />)}
                         </div>
-                        <p style={{ fontSize: 18, fontWeight: 800, color: "#2a2018", textAlign: "center", lineHeight: 1.4 }}>
-                          {joinList(o.map((i) => i.n))}.
-                        </p>
                       </div>
                     ))}
-                    {speakOn && !hideText && (
-                      <button onClick={replay} style={{ fontSize: 12.5, fontWeight: 700, padding: "8px 16px", borderRadius: 100, cursor: "pointer",
-                        background: "rgba(17,81,79,0.1)", border: "1px solid rgba(17,81,79,0.3)", color: "#11514f" }}>🔊 Ouvir de novo</button>
-                    )}
-                    <button onClick={goAfterOrder} style={{ width: "100%", height: 52, borderRadius: 100, border: "none",
-                      background: "linear-gradient(135deg,#11514f,#0d3a3c)", color: "#fff", fontWeight: 800, fontSize: 14.5, cursor: "pointer",
-                      boxShadow: "0 6px 18px rgba(13,58,60,0.35)" }}>
-                      {round.mods.length ? "Continuar →" : "Montar bandeja →"}
-                    </button>
+                    <p style={{ fontSize: 14, color: "#6b6052", textAlign: "center", lineHeight: 1.4 }}>
+                      Memorize o pedido do cliente.<br />Em seguida, monte a bandeja.
+                    </p>
+                    <div style={{ display: "flex", alignItems: "center", gap: 12 }}>
+                      <Timer size={40} color="#11514f" strokeWidth={2.2} />
+                      <span style={{ fontSize: 46, fontWeight: 900, color: "#11514f", fontVariantNumeric: "tabular-nums", letterSpacing: 1 }}>
+                        00:{String(memoLeft).padStart(2, "0")}
+                      </span>
+                    </div>
+                    <div style={{ width: "100%", borderTop: "1px solid #e6ddca", paddingTop: 12, display: "flex", alignItems: "center", gap: 8, justifyContent: "center" }}>
+                      <span style={{ fontSize: 16 }}>💡</span>
+                      <span style={{ fontSize: 13, color: "#8a7c63", fontWeight: 600 }}>Dica: memorize a ordem dos itens.</span>
+                    </div>
                   </div>
                 )}
 
@@ -591,13 +712,17 @@ export function RestauranteOrdem({ difficulty, onComplete }: RestauranteOrdemPro
                   </div>
                 )}
 
-                {/* ── INPUT ── */}
+                {/* ── INPUT (TELA 3) ── */}
                 {phase === "input" && (
                   <div style={{ display: "flex", flexDirection: "column", gap: 14 }}>
-                    <p style={{ textAlign: "center", fontSize: 14.5, fontWeight: 800, color: "#2a2018" }}>
-                      {spec.clients === 1 ? "Monte o pedido na ordem certa." : "Monte os pedidos na ordem certa."}
-                      {round.mods.length ? " Aplique as mudanças!" : ""}
-                    </p>
+                    <div style={{ textAlign: "center" }}>
+                      <p style={{ fontSize: 18, fontWeight: 900, color: "#11514f" }}>
+                        {spec.clients === 1 ? "Monte o pedido na bandeja" : "Monte os pedidos na bandeja"}
+                      </p>
+                      <p style={{ fontSize: 13.5, fontWeight: 600, color: "#6b6052", marginTop: 2 }}>
+                        Toque nos itens na ordem certa.{round.mods.length ? " Aplique as mudanças!" : ""}
+                      </p>
+                    </div>
 
                     {trays.map((t, c) => {
                       const multi = spec.clients > 1;
@@ -618,7 +743,7 @@ export function RestauranteOrdem({ difficulty, onComplete }: RestauranteOrdemPro
                             </div>
                           )}
                           <div style={{ flex: 1, minWidth: 0 }}>
-                            <Tray items={t} count={spec.clients} />
+                            <Tray items={t} count={spec.clients} slots={round.finals[c]?.length ?? t.length} />
                           </div>
                         </div>
                       );
