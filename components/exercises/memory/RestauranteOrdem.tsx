@@ -288,8 +288,8 @@ function OrderCard({ mesaNum, scene, items, numbered, hideItems }: {
 }) {
   const rel = relText(scene.rel, scene.names);
   return (
-    <div style={{ minWidth: 210, maxWidth: 300, background: "rgba(16,20,18,0.86)", backdropFilter: "blur(6px)", WebkitBackdropFilter: "blur(6px)",
-      borderRadius: 18, padding: "13px 16px 15px", border: "1px solid rgba(255,225,180,0.26)", boxShadow: "0 16px 40px rgba(0,0,0,0.55)" }}>
+    <div style={{ minWidth: 200, maxWidth: 290, background: "rgba(20,22,18,0.55)", backdropFilter: "blur(7px)", WebkitBackdropFilter: "blur(7px)",
+      borderRadius: 18, padding: "13px 16px 15px", border: "1.5px solid rgba(235,200,130,0.55)", boxShadow: "0 16px 40px rgba(0,0,0,0.5)" }}>
       <div style={{ textAlign: "center", borderBottom: "1px solid rgba(255,225,180,0.2)", paddingBottom: 8, marginBottom: 9 }}>
         <div style={{ fontSize: 16, fontWeight: 900, color: "#ffe7b0" }}>Mesa {mesaNum}</div>
         <div style={{ fontSize: 13.5, fontWeight: 700, color: "rgba(255,255,255,0.94)" }}>{joinList(scene.names)}</div>
@@ -533,7 +533,7 @@ export function RestauranteOrdem({ difficulty, onComplete }: RestauranteOrdemPro
       <div style={{ position: "fixed", inset: 0, overflow: "hidden", backgroundImage: `url(${mesa.scene.img})`, backgroundSize: "cover", backgroundPosition: "center" }}>
         <div style={{ position: "absolute", inset: 0, background: "linear-gradient(180deg, rgba(10,6,2,0.55) 0%, rgba(10,6,2,0) 22%, rgba(10,6,2,0) 68%, rgba(10,6,2,0.55) 100%)" }} />
         {showVoice && <VoicePicker onClose={() => setShowVoice(false)} />}
-        <div style={{ position: "relative", zIndex: 2, height: "100%", display: "flex", flexDirection: "column", padding: "14px 16px", gap: 10 }}>
+        <div style={{ position: "relative", zIndex: 2, height: "100%", display: "flex", flexDirection: "column", padding: "16px 16px 96px", gap: 10 }}>
           <div style={{ display: "flex", alignItems: "flex-start", gap: 10 }}>
             <div style={{ flex: 1 }}>
               {n > 1 && <span style={{ display: "inline-block", padding: "5px 11px", borderRadius: 100, background: "rgba(18,10,3,0.6)", border: "1px solid rgba(255,220,170,0.35)", color: "#ffe7b0", fontWeight: 800, fontSize: 12.5 }}>Mesa {memoIdx + 1} de {n}</span>}
@@ -550,14 +550,16 @@ export function RestauranteOrdem({ difficulty, onComplete }: RestauranteOrdemPro
           </div>
 
           <div style={{ flex: 1 }} />
-          <div style={{ display: "flex", justifyContent: "flex-start", alignItems: "flex-end", gap: 10 }}>
+          {/* plaquinha — translúcida, centralizada e perto da mesa */}
+          <div style={{ display: "flex", justifyContent: "center", alignItems: "flex-end", gap: 10 }}>
             <OrderCard mesaNum={memoIdx + 1} scene={mesa.scene} items={mesa.order} numbered={round.orderRequired} hideItems={hideText} />
             {speakOn && (
-              <button onClick={replay} style={{ fontSize: 12.5, fontWeight: 700, padding: "9px 14px", borderRadius: 100, cursor: "pointer", background: "rgba(18,10,3,0.6)", border: "1px solid rgba(255,220,170,0.35)", color: "#ffe7b0" }}>🔊 Ouvir</button>
+              <button onClick={replay} style={{ alignSelf: "center", fontSize: 12.5, fontWeight: 700, padding: "9px 14px", borderRadius: 100, cursor: "pointer", background: "rgba(18,10,3,0.6)", border: "1px solid rgba(255,220,170,0.35)", color: "#ffe7b0" }}>🔊 Ouvir</button>
             )}
           </div>
+          <div style={{ flex: 0.7 }} />
 
-          <div style={{ display: "flex", alignItems: "center", gap: 12, padding: "10px 14px", borderRadius: 14, background: "rgba(18,10,3,0.6)", border: "1px solid rgba(255,220,170,0.25)" }}>
+          <div style={{ display: "flex", alignItems: "center", gap: 12, padding: "10px 14px", borderRadius: 14, background: "rgba(18,10,3,0.62)", border: "1px solid rgba(255,220,170,0.25)" }}>
             <span style={{ fontSize: 17 }}>💡</span>
             <span style={{ fontSize: 12.5, color: "rgba(255,240,220,0.92)", fontWeight: 600, flexShrink: 0 }}>O pedido some em alguns segundos — guarde na memória.</span>
             <div style={{ flex: 1, height: 8, borderRadius: 6, background: "rgba(255,255,255,0.16)", overflow: "hidden" }}>
@@ -598,7 +600,7 @@ export function RestauranteOrdem({ difficulty, onComplete }: RestauranteOrdemPro
   if (phase === "bancada" && r && mesa) {
     const full = tray.length >= cap;
     return (
-      <div style={{ position: "fixed", inset: 0, display: "flex", flexDirection: "column", overflow: "hidden",
+      <div style={{ position: "fixed", inset: 0, display: "flex", flexDirection: "column", overflow: "hidden", paddingBottom: 80,
         backgroundImage: "repeating-linear-gradient(92deg, rgba(255,225,180,0.04) 0 3px, transparent 3px 16px), linear-gradient(165deg,#6b4a2a 0%,#4a3119 60%,#382410 100%)" }}>
         {showVoice && <VoicePicker onClose={() => setShowVoice(false)} />}
 
