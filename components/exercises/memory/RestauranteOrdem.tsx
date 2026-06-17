@@ -108,13 +108,14 @@ const relText = (rel: Rel | undefined, names: string[]): string => {
 
 // ── Progressão (níveis) ────────────────────────────────────────────────────────────
 interface RLevel { group: Group; items: number; distractors: number; memoSecs: number; order: boolean | "as_vezes"; update: boolean; mesas: number; }
+// Itens crescem com o nº de personagens: 1 pessoa → 2, 2 pessoas → 3, 3 pessoas → 4.
 const R_LEVELS: Record<number, RLevel> = {
   1: { group: "A", items: 2, distractors: 3, memoSecs: 10, order: false,     update: false, mesas: 1 },
-  2: { group: "B", items: 3, distractors: 4, memoSecs: 8,  order: false,     update: false, mesas: 1 },
-  3: { group: "C", items: 3, distractors: 5, memoSecs: 7,  order: "as_vezes", update: false, mesas: 1 },
-  4: { group: "C", items: 4, distractors: 6, memoSecs: 7,  order: true,      update: false, mesas: 1 },
-  5: { group: "C", items: 3, distractors: 6, memoSecs: 7,  order: true,      update: true,  mesas: 1 },
-  6: { group: "C", items: 3, distractors: 6, memoSecs: 7,  order: true,      update: false, mesas: 2 },
+  2: { group: "B", items: 3, distractors: 4, memoSecs: 9,  order: false,     update: false, mesas: 1 },
+  3: { group: "C", items: 4, distractors: 5, memoSecs: 9,  order: "as_vezes", update: false, mesas: 1 },
+  4: { group: "C", items: 4, distractors: 6, memoSecs: 9,  order: true,      update: false, mesas: 1 },
+  5: { group: "C", items: 4, distractors: 6, memoSecs: 9,  order: true,      update: true,  mesas: 1 },
+  6: { group: "B", items: 3, distractors: 6, memoSecs: 9,  order: true,      update: false, mesas: 2 },
 };
 const MAX_LEVEL = 6;
 const levelOf = (d: number): number => Math.max(1, Math.min(MAX_LEVEL, Math.round((d / 10) * MAX_LEVEL) || 1));
