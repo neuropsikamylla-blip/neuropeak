@@ -2,7 +2,7 @@
 
 import { useState, useRef, useCallback, useEffect } from "react";
 import { motion } from "framer-motion";
-import { Volume2, UtensilsCrossed, CheckCircle2, BarChart3, Users, Package, ArrowLeftRight, Ban, Ear } from "lucide-react";
+import { Volume2, UtensilsCrossed, CheckCircle2, BarChart3, Users, Package, ArrowLeftRight, Ban, Ear, Timer } from "lucide-react";
 import { calculateExerciseScore } from "@/lib/scoring";
 import { speakText } from "@/lib/voicePrefs";
 import { VoicePicker } from "@/components/exercises/VoicePicker";
@@ -178,7 +178,7 @@ function orderSpeechText(round: Round, clients: number): string {
 function modSpeechText(round: Round, clients: number): string {
   return round.mods.map((m) => modText(clients, m)).join(" ");
 }
-type Phase = "ready" | "order" | "mod" | "input" | "feedback";
+type Phase = "ready" | "salao" | "order" | "mod" | "input" | "feedback";
 
 // ── Música ambiente sintetizada (Web Audio) — 100% sem direitos autorais ─────────
 let ambCtx: AudioContext | null = null;
@@ -331,6 +331,26 @@ const CLIENTES = ["cliente-f", "cliente-m", "cliente-3", "cliente-4", "cliente-5
 // alterna por rodada e por cliente → com 2 clientes saem personagens diferentes
 const clienteImg = (trial: number, c: number) => `/exercises/restaurante/${CLIENTES[(trial + c) % CLIENTES.length]}.png`;
 
+const SALAO_BG = "/exercises/restaurante/salao.jpg";
+
+// Roster com nomes (lidos do rótulo de cada imagem). Viram os nomes dos clientes nas mesas.
+interface Person { id: string; name: string; }
+const ROSTER: Person[] = [
+  { id: "cliente-3", name: "Sthe" }, { id: "cliente-4", name: "John" }, { id: "cliente-5", name: "Jack" },
+  { id: "cliente-6", name: "Lia" }, { id: "cliente-7", name: "Liam" }, { id: "cliente-8", name: "Susan" },
+  { id: "cliente-9", name: "Pedro" }, { id: "cliente-10", name: "Ana" }, { id: "cliente-11", name: "Mateus" },
+  { id: "cliente-12", name: "Bia" }, { id: "cliente-f", name: "Sofia" }, { id: "cliente-m", name: "Caio" },
+];
+const personImg = (id: string) => `/exercises/restaurante/${id}.png`;
+// Pessoas de uma mesa: 1-2, estáveis por (rodada, mesa); reserva 2 vagas por mesa → sem repetir na rodada.
+function mesaPeople(trial: number, mesaIdx: number): Person[] {
+  const k = ((trial * 2 + mesaIdx) % 2) + 1;            // 1 ou 2 pessoas
+  const base = ((trial * 3) + mesaIdx * 2) % ROSTER.length;
+  const ppl: Person[] = [];
+  for (let i = 0; i < k; i++) ppl.push(ROSTER[(base + i) % ROSTER.length]);
+  return ppl;
+}
+
 // ── TELA 1: personagem + balão de fala ────────────────────────────────────────────
 function ClientSpeak({ img, who, text, hideText, compact }: {
   img: string; who: string; text: string; hideText: boolean; compact: boolean;
@@ -387,6 +407,7 @@ export function RestauranteOrdem({ difficulty, onComplete }: RestauranteOrdemPro
   const [clientsOk, setClientsOk] = useState<boolean[]>([]);
   const [musicOn, setMusicOn] = useState(true);
   const [showVoice, setShowVoice] = useState(false);
+  const [salaoLeft, setSalaoLeft] = useState(0);   // cronômetro da Tela do Salão
 
   const correctRef = useRef(0);
   const startTime = useRef(Date.now());
@@ -409,7 +430,9 @@ export function RestauranteOrdem({ difficulty, onComplete }: RestauranteOrdemPro
     traysRef.current = empties; setTrays(empties);
     activeRef.current = 0; setActive(0);
     setFeedback(null); setClientsOk([]);
-    setPhase("order");
+    const total = r.initial.reduce((s, o) => s + o.length, 0);
+    setSalaoLeft(Math.max(5, Math.round(2 + total * 1.3)));   // tempo p/ memorizar (≈8s p/ 6 itens)
+    setPhase("salao");
   }, []);
 
   const finish = useCallback(() => {
@@ -497,16 +520,27 @@ export function RestauranteOrdem({ difficulty, onComplete }: RestauranteOrdemPro
   // modos com áudio: fala o pedido (fase order) / a mudança (fase mod) ao entrar
   useEffect(() => {
     if (!speakOn || !round) return;
-    if (phase === "order") speakText(orderSpeechText(round, round.initial.length), { rate: 0.95 });
+    if (phase === "salao") speakText(orderSpeechText(round, round.initial.length), { rate: 0.95 });
     else if (phase === "mod") speakText(modSpeechText(round, round.initial.length), { rate: 0.95 });
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [phase, round, speakOn]);
 
   function replay() {
     if (!round) return;
-    if (phase === "order") speakText(orderSpeechText(round, round.initial.length), { rate: 0.95 });
+    if (phase === "salao") speakText(orderSpeechText(round, round.initial.length), { rate: 0.95 });
     else if (phase === "mod") speakText(modSpeechText(round, round.initial.length), { rate: 0.95 });
   }
+
+  // Tela do Salão: cronômetro que avança sozinho ao zerar (pedidos somem).
+  useEffect(() => {
+    if (phase !== "salao") return;
+    const myRun = runRef.current;
+    const iv = setInterval(() => setSalaoLeft((s) => Math.max(0, s - 1)), 1000);
+    const secs = salaoLeft;
+    const to = setTimeout(() => { if (runRef.current === myRun) goAfterOrder(); }, Math.max(1, secs) * 1000);
+    return () => { clearInterval(iv); clearTimeout(to); };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [phase]);
 
   function begin() {
     correctRef.current = 0; rtsRef.current = []; startTime.current = Date.now(); setTrial(0);
@@ -527,6 +561,88 @@ export function RestauranteOrdem({ difficulty, onComplete }: RestauranteOrdemPro
         subtitle={<>Nível {startLevel} · {spec.clients === 1 ? "1 cliente" : "2 clientes"} · {spec.items} itens{mc ? ` · ${mc.text.toLowerCase()}` : ""} — onde parou.</>}
         onChoose={(m) => { setPresMode(m); begin(); }}
       />
+    );
+  }
+
+  // ── TELA DO SALÃO (memorizar os pedidos das mesas) — cena em camadas ──
+  if (phase === "salao" && round) {
+    const mesas = round.initial;                 // cada "cliente" = uma mesa
+    const nMesas = mesas.length;
+    const totItems = mesas.reduce((s, o) => s + o.length, 0);
+    const salaoTotal = Math.max(5, Math.round(2 + totItems * 1.3));
+    const pct = Math.max(0, Math.min(100, (salaoLeft / salaoTotal) * 100));
+    return (
+      <div style={{ position: "fixed", inset: 0, overflow: "hidden",
+        backgroundImage: `url(${SALAO_BG})`, backgroundSize: "cover", backgroundPosition: "center" }}>
+        <div style={{ position: "absolute", inset: 0, background: "linear-gradient(180deg, rgba(18,10,3,0.5) 0%, rgba(18,10,3,0.25) 35%, rgba(18,10,3,0.6) 100%)" }} />
+        {showVoice && <VoicePicker onClose={() => setShowVoice(false)} />}
+        <div style={{ position: "relative", zIndex: 2, height: "100%", display: "flex", flexDirection: "column", padding: "14px 16px", gap: 10 }}>
+          {/* topo: título central + cronômetro à direita */}
+          <div style={{ display: "flex", alignItems: "flex-start", gap: 10 }}>
+            <div style={{ flex: 1 }} />
+            <div style={{ textAlign: "center", flex: "0 0 auto" }}>
+              <div style={{ fontSize: 23, fontWeight: 900, color: "#fff", letterSpacing: 0.4, textShadow: "0 2px 12px rgba(0,0,0,0.7)" }}>Salão do Restaurante</div>
+              <div style={{ fontSize: 12.5, fontWeight: 600, color: "rgba(255,238,215,0.92)", marginTop: 2, textShadow: "0 1px 8px rgba(0,0,0,0.7)" }}>✦ Memorize os pedidos das mesas ✦</div>
+            </div>
+            <div style={{ flex: 1, display: "flex", justifyContent: "flex-end" }}>
+              <div style={{ display: "flex", alignItems: "center", gap: 7, padding: "7px 13px", borderRadius: 100,
+                background: "rgba(18,10,3,0.6)", border: "1px solid rgba(255,220,170,0.4)", color: "#ffe7b0" }}>
+                <Timer size={18} /><span style={{ fontWeight: 900, fontSize: 17, fontVariantNumeric: "tabular-nums" }}>{salaoLeft}s</span>
+              </div>
+            </div>
+          </div>
+
+          {/* mesas */}
+          <div style={{ flex: 1, display: "flex", flexWrap: "wrap", alignItems: "center", justifyContent: "center", gap: 16, minHeight: 0, overflowY: "auto" }}>
+            {mesas.map((order, m) => {
+              const people = mesaPeople(trial, m);
+              return (
+                <div key={m} style={{ flex: nMesas >= 4 ? "0 1 42%" : "0 1 300px", maxWidth: 340, minWidth: 220,
+                  background: "rgba(16,20,18,0.84)", backdropFilter: "blur(6px)", WebkitBackdropFilter: "blur(6px)", borderRadius: 20,
+                  padding: "14px 16px 16px", border: "1px solid rgba(255,225,180,0.2)", boxShadow: "0 16px 40px rgba(0,0,0,0.5)" }}>
+                  {/* avatares */}
+                  <div style={{ display: "flex", justifyContent: "center", marginBottom: 8 }}>
+                    {people.map((p, i) => (
+                      <div key={i} style={{ width: 52, height: 52, borderRadius: "50%", overflow: "hidden", marginLeft: i ? -10 : 0, background: "#222",
+                        border: "2px solid rgba(255,235,200,0.85)", boxShadow: "0 3px 8px rgba(0,0,0,0.45)" }}>
+                        {/* eslint-disable-next-line @next/next/no-img-element */}
+                        <img src={personImg(p.id)} alt="" draggable={false} style={{ width: "100%", height: "100%", objectFit: "cover", objectPosition: "top center" }} />
+                      </div>
+                    ))}
+                  </div>
+                  {/* mesa + nomes */}
+                  <div style={{ textAlign: "center", borderBottom: "1px solid rgba(255,225,180,0.22)", paddingBottom: 8, marginBottom: 9 }}>
+                    <div style={{ fontSize: 16, fontWeight: 900, color: "#ffe7b0" }}>Mesa {m + 1}</div>
+                    <div style={{ fontSize: 13.5, fontWeight: 700, color: "rgba(255,255,255,0.92)" }}>{joinList(people.map((p) => p.name))}</div>
+                  </div>
+                  {/* pedido em sequência */}
+                  <div style={{ display: "flex", flexDirection: "column", gap: 7 }}>
+                    {order.map((it, i) => (
+                      <div key={i} style={{ display: "flex", alignItems: "center", gap: 9 }}>
+                        <span style={{ width: 30, height: 30, flexShrink: 0 }}>
+                          {/* eslint-disable-next-line @next/next/no-img-element */}
+                          <img src={photo(it.id)} alt="" draggable={false} style={{ width: "100%", height: "100%", objectFit: "contain", display: "block" }} />
+                        </span>
+                        <span style={{ fontSize: 14.5, fontWeight: 700, color: "rgba(255,255,255,0.95)" }}>{it.n}</span>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              );
+            })}
+          </div>
+
+          {/* rodapé: dica + barra de tempo */}
+          <div style={{ display: "flex", alignItems: "center", gap: 12, padding: "10px 14px", borderRadius: 14,
+            background: "rgba(18,10,3,0.55)", border: "1px solid rgba(255,220,170,0.22)" }}>
+            <span style={{ fontSize: 17 }}>💡</span>
+            <span style={{ fontSize: 12.5, color: "rgba(255,240,220,0.9)", fontWeight: 600, flexShrink: 0 }}>Você verá os pedidos por alguns segundos.</span>
+            <div style={{ flex: 1, height: 8, borderRadius: 6, background: "rgba(255,255,255,0.16)", overflow: "hidden" }}>
+              <div style={{ height: "100%", borderRadius: 6, background: "linear-gradient(90deg,#f0b94a,#d98f2a)", width: `${pct}%`, transition: "width 1s linear" }} />
+            </div>
+          </div>
+        </div>
+      </div>
     );
   }
 
