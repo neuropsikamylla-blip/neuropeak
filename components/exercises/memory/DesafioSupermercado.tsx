@@ -271,9 +271,9 @@ function WoodShelf({
 
   const n = products.length || 1;
   const gap = 8;            // espaço horizontal entre produtos
-  const gapV = 6;           // espaço vertical entre prateleiras
+  const gapV = 8;           // espaço vertical entre prateleiras
   // proporção da tábua em relação à célula (somada ao calcular o que cabe sem rolar)
-  const PLANK_R = 0.17;
+  const PLANK_R = 0.2;
   let cols = 3, cell = 0, rows = 1;
   if (box.w > 0 && box.h > 0) {
     for (let c = 3; c <= 6; c++) {
@@ -286,7 +286,7 @@ function WoodShelf({
     }
   }
   cell = Math.max(cell, 40);
-  const plankH = Math.min(Math.max(Math.round(cell * PLANK_R), 9), 18);
+  const plankH = Math.min(Math.max(Math.round(cell * PLANK_R), 11), 24);
   const showLbl = showLabels && cell >= 66;
   const imgSize = Math.max(26, Math.floor(cell * (showLbl ? 0.64 : 0.8)));
 
@@ -304,11 +304,11 @@ function WoodShelf({
     }}>
       <div style={{
         width: "100%", height: "100%", borderRadius: 12, overflow: "hidden",
-        // parede do fundo (clara, levemente iluminada de cima)
-        background: "linear-gradient(180deg,#fbf3e3 0%,#f3e7cf 100%)",
-        boxShadow: "inset 0 2px 10px rgba(120,90,50,0.18)",
+        // parede de loja (clara, com painéis verticais sutis + luz de cima)
+        backgroundImage: "repeating-linear-gradient(90deg, rgba(150,120,80,0.05) 0 1px, transparent 1px 46px), linear-gradient(180deg,#fcf5e6 0%,#f1e3c8 100%)",
+        boxShadow: "inset 0 3px 12px rgba(120,90,50,0.2)",
         display: "flex", flexDirection: "column", justifyContent: "center", gap: gapV,
-        padding: "4px 6px",
+        padding: "6px 8px",
       }}>
         {rowsArr.map((rowItems, ri) => (
           <div key={ri} style={{ flexShrink: 0 }}>
@@ -367,12 +367,19 @@ function WoodShelf({
                 );
               })}
             </div>
-            {/* tábua da prateleira */}
-            <div style={{
-              height: plankH, borderRadius: 3, marginTop: 1,
-              background: "linear-gradient(180deg,#f0dab1 0%,#e6c98f 44%,#cba566 46%,#b78c4d 100%)",
-              boxShadow: "0 5px 9px rgba(70,45,15,0.30), inset 0 1px 1px rgba(255,255,255,0.55)",
-            }} />
+            {/* tábua da prateleira (gôndola): madeira + trilho de preço branco */}
+            <div style={{ position: "relative", marginTop: 2 }}>
+              {/* sombra que a prateleira projeta na parede abaixo */}
+              <div style={{ position: "absolute", left: "3%", right: "3%", top: plankH - 1, height: 9, borderRadius: "50%",
+                background: "radial-gradient(ellipse at center top, rgba(70,45,15,0.22) 0%, rgba(70,45,15,0) 75%)" }} />
+              <div style={{ position: "relative", height: plankH, borderRadius: 3, overflow: "hidden",
+                background: "linear-gradient(180deg,#f1dcb4 0%,#e6c98f 38%,#caa362 57%,#a8854a 59%, #f7f9fb 59%, #e8ecf0 100%)",
+                boxShadow: "0 5px 9px rgba(60,38,12,0.32), inset 0 1px 1px rgba(255,255,255,0.6)" }}>
+                {/* trilho de preço — tracinhos tipo etiqueta */}
+                <div style={{ position: "absolute", left: 0, right: 0, bottom: 0, height: "41%",
+                  backgroundImage: "repeating-linear-gradient(90deg, rgba(120,130,140,0.22) 0 1px, transparent 1px 16px)" }} />
+              </div>
+            </div>
           </div>
         ))}
       </div>
