@@ -288,24 +288,24 @@ function OrderCard({ mesaNum, scene, items, numbered, hideItems }: {
 }) {
   const rel = relText(scene.rel, scene.names);
   return (
-    <div style={{ minWidth: 190, maxWidth: 270, background: "rgba(16,18,14,0.16)", backdropFilter: "blur(10px)", WebkitBackdropFilter: "blur(10px)",
-      borderRadius: 18, padding: "12px 15px 14px", border: "1.5px solid rgba(235,200,130,0.42)", boxShadow: "0 14px 36px rgba(0,0,0,0.38)" }}>
-      <div style={{ textAlign: "center", borderBottom: "1px solid rgba(255,225,180,0.2)", paddingBottom: 8, marginBottom: 9 }}>
-        <div style={{ fontSize: 16, fontWeight: 900, color: "#ffe7b0" }}>Mesa {mesaNum}</div>
-        <div style={{ fontSize: 13.5, fontWeight: 700, color: "rgba(255,255,255,0.94)" }}>{joinList(scene.names)}</div>
-        {rel && <div style={{ fontSize: 11, fontWeight: 600, color: "rgba(255,225,180,0.7)", marginTop: 1 }}>{rel}</div>}
+    <div style={{ minWidth: 155, maxWidth: 220, background: "rgba(12,14,10,0.22)", backdropFilter: "blur(12px)", WebkitBackdropFilter: "blur(12px)",
+      borderRadius: 14, padding: "9px 13px 11px", border: "1px solid rgba(235,200,130,0.38)", boxShadow: "0 10px 28px rgba(0,0,0,0.42)" }}>
+      <div style={{ textAlign: "center", borderBottom: "1px solid rgba(255,225,180,0.18)", paddingBottom: 6, marginBottom: 7 }}>
+        <div style={{ fontSize: 13.5, fontWeight: 900, color: "#ffe7b0" }}>Mesa {mesaNum}</div>
+        <div style={{ fontSize: 12, fontWeight: 700, color: "rgba(255,255,255,0.92)" }}>{joinList(scene.names)}</div>
+        {rel && <div style={{ fontSize: 10, fontWeight: 600, color: "rgba(255,225,180,0.65)", marginTop: 1 }}>{rel}</div>}
       </div>
       {hideItems ? (
-        <div style={{ display: "flex", alignItems: "center", justifyContent: "center", gap: 8, color: "#ffe7b0", fontWeight: 700, fontSize: 13.5, padding: "6px 0" }}>
-          <Volume2 size={18} /> Ouça o pedido
+        <div style={{ display: "flex", alignItems: "center", justifyContent: "center", gap: 7, color: "#ffe7b0", fontWeight: 700, fontSize: 12.5, padding: "5px 0" }}>
+          <Volume2 size={16} /> Ouça o pedido
         </div>
       ) : (
-        <div style={{ display: "flex", flexDirection: "column", gap: 7 }}>
+        <div style={{ display: "flex", flexDirection: "column", gap: 5.5 }}>
           {items.map((it, i) => (
-            <div key={i} style={{ display: "flex", alignItems: "center", gap: 9 }}>
-              {numbered && <span style={{ width: 18, fontSize: 13, fontWeight: 900, color: "#ffe7b0", flexShrink: 0 }}>{i + 1}.</span>}
-              <span style={{ width: 28, height: 28, flexShrink: 0 }}><ItemImg id={it.id} size={28} /></span>
-              <span style={{ fontSize: 14.5, fontWeight: 700, color: "rgba(255,255,255,0.96)" }}>{it.n}</span>
+            <div key={i} style={{ display: "flex", alignItems: "center", gap: 7 }}>
+              {numbered && <span style={{ width: 15, fontSize: 11.5, fontWeight: 900, color: "#ffe7b0", flexShrink: 0 }}>{i + 1}.</span>}
+              <span style={{ width: 22, height: 22, flexShrink: 0 }}><ItemImg id={it.id} size={22} /></span>
+              <span style={{ fontSize: 12.5, fontWeight: 700, color: "rgba(255,255,255,0.95)" }}>{it.n}</span>
             </div>
           ))}
         </div>
@@ -556,10 +556,10 @@ export function RestauranteOrdem({ difficulty, onComplete }: RestauranteOrdemPro
             </div>
           </div>
 
-          <div style={{ flex: 2.6 }} />
-          {/* plaquinha — translúcida, na lateral e mais baixa */}
-          <div style={{ display: "flex", justifyContent: "flex-start", alignItems: "flex-start", gap: 10 }}>
-            <div style={{ display: "flex", flexDirection: "column", alignItems: "flex-start", gap: 9 }}>
+          <div style={{ flex: 4 }} />
+          {/* plaquinha — centralizada, abaixo da mesa */}
+          <div style={{ display: "flex", justifyContent: "center", alignItems: "flex-end", gap: 10 }}>
+            <div style={{ display: "flex", flexDirection: "column", alignItems: "center", gap: 8 }}>
               <OrderCard mesaNum={memoIdx + 1} scene={mesa.scene} items={mesa.order} numbered={round.orderRequired} hideItems={hideText} />
               <div style={{ display: "flex", gap: 8 }}>
                 {speakOn && (
@@ -569,7 +569,7 @@ export function RestauranteOrdem({ difficulty, onComplete }: RestauranteOrdemPro
               </div>
             </div>
           </div>
-          <div style={{ flex: 0.4 }} />
+          <div style={{ flex: 0.2 }} />
 
           <div style={{ display: "flex", alignItems: "center", gap: 12, padding: "10px 14px", borderRadius: 14, background: "rgba(18,10,3,0.62)", border: "1px solid rgba(255,220,170,0.25)" }}>
             <span style={{ fontSize: 17 }}>💡</span>
