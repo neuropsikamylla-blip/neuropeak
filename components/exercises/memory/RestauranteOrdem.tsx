@@ -613,7 +613,7 @@ export function RestauranteOrdem({ difficulty, onComplete }: RestauranteOrdemPro
     const full = tray.length >= cap;
     return (
       <div style={{ position: "fixed", inset: 0, display: "flex", flexDirection: "column", overflow: "hidden", paddingBottom: 40,
-        backgroundColor: "#2D100C", backgroundImage: "radial-gradient(120% 95% at 50% 42%, rgba(74,26,18,0.80) 0%, rgba(58,20,14,0.88) 48%, rgba(45,16,12,0.94) 100%), url(/exercises/restaurante/fundo-blur.jpg)",
+        backgroundColor: "#2D100C", backgroundImage: "radial-gradient(120% 95% at 50% 42%, rgba(45,16,12,0.34) 0%, rgba(40,16,11,0.5) 55%, rgba(28,12,8,0.66) 100%), url(/exercises/restaurante/fundo-blur.jpg)",
         backgroundSize: "cover, cover", backgroundPosition: "center, center" }}>
         {showVoice && <VoicePicker onClose={() => setShowVoice(false)} />}
 
