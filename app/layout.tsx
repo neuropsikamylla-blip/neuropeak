@@ -2,6 +2,7 @@ import type { Metadata, Viewport } from "next";
 import "./globals.css";
 import { Toaster } from "@/components/ui/toaster";
 import Providers from "./providers";
+import { AutoUpdater } from "@/components/AutoUpdater";
 
 // Auto-recuperação: quando um arquivo de código (chunk) falha ao carregar —
 // internet instável OU página antiga aberta depois de um deploy novo — o app
@@ -56,6 +57,7 @@ export default function RootLayout({
       </head>
       <body className="min-h-screen bg-background antialiased">
         <Providers>
+          <AutoUpdater />
           {children}
           <Toaster />
         </Providers>
