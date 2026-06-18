@@ -320,18 +320,18 @@ function Tray({ items, slots, numbered }: { items: Item[]; slots: number; number
   const sz = n >= 4 ? { item: 64, gap: 8 } : n === 3 ? { item: 78, gap: 10 } : { item: 104, gap: 14 };
   const Handle = ({ side }: { side: "left" | "right" }) => (
     <div style={{ position: "absolute", top: "50%", [side]: -15, transform: "translateY(-50%)", width: 30, height: 50, zIndex: 0 }}>
-      <div style={{ position: "absolute", inset: 0, borderRadius: "45%", border: "5px solid #c8a24e", boxShadow: "0 2px 6px rgba(50,30,8,0.4), inset 0 1px 2px rgba(255,238,190,0.7)" }} />
+      <div style={{ position: "absolute", inset: 0, borderRadius: "45%", border: "5px solid #D4AF37", boxShadow: "0 2px 6px rgba(40,20,8,0.5), inset 0 1px 2px rgba(255,238,190,0.8)" }} />
     </div>
   );
   return (
     <div style={{ position: "relative", margin: "0 18px" }}>
       <Handle side="left" /><Handle side="right" />
       <div style={{ position: "relative", zIndex: 1, borderRadius: 22, padding: 12,
-        background: "linear-gradient(160deg,#7a5230 0%,#5c3d22 55%,#492f18 100%)",
-        boxShadow: "0 16px 36px rgba(50,30,10,0.4), inset 0 2px 3px rgba(255,228,185,0.3), inset 0 -3px 7px rgba(30,18,6,0.55)" }}>
+        background: "linear-gradient(160deg,#6a4628 0%,#4d3219 55%,#382410 100%)",
+        boxShadow: "0 16px 36px rgba(30,14,6,0.5), inset 0 2px 3px rgba(255,228,185,0.28), inset 0 -3px 7px rgba(20,10,4,0.6)" }}>
         <div style={{ borderRadius: 15, minHeight: sz.item + 24,
-          backgroundImage: "repeating-linear-gradient(96deg, rgba(255,220,170,0.045) 0 2px, transparent 2px 8px), linear-gradient(160deg,#62431f,#49321a)",
-          boxShadow: "inset 0 5px 16px rgba(18,10,3,0.6)",
+          backgroundImage: "repeating-linear-gradient(96deg, rgba(255,220,170,0.05) 0 2px, transparent 2px 9px), linear-gradient(160deg,#553819,#3a2611)",
+          boxShadow: "inset 0 5px 16px rgba(14,8,2,0.65)",
           display: "flex", alignItems: "center", justifyContent: "center", gap: sz.gap, flexWrap: "nowrap", padding: "10px 14px" }}>
           {Array.from({ length: n }).map((_, i) => {
             const it = items[i];
@@ -344,17 +344,18 @@ function Tray({ items, slots, numbered }: { items: Item[]; slots: number; number
                     <ItemImg id={it.id} size={sz.item} />
                   </motion.div>
                 ) : (
-                  <div style={{ width: "100%", height: "100%", borderRadius: 14, border: "2px dashed rgba(255,228,185,0.45)",
+                  <div style={{ width: "100%", height: "100%", borderRadius: 14, border: "2px dashed rgba(212,175,55,0.75)",
+                    boxShadow: "inset 0 0 14px rgba(212,175,55,0.22)",
                     display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", gap: 2 }}>
                     {numbered ? (
                       <>
-                        <div style={{ width: "42%", maxWidth: 40, aspectRatio: "1 / 1", borderRadius: "50%", background: "rgba(255,235,200,0.16)",
-                          color: "rgba(255,240,210,0.92)", fontWeight: 900, fontSize: Math.max(12, sz.item * 0.16),
+                        <div style={{ width: "42%", maxWidth: 40, aspectRatio: "1 / 1", borderRadius: "50%", background: "rgba(212,175,55,0.18)",
+                          color: "#E1CDA3", fontWeight: 900, fontSize: Math.max(12, sz.item * 0.16),
                           display: "flex", alignItems: "center", justifyContent: "center" }}>{i + 1}º</div>
-                        <span style={{ fontSize: 11, fontWeight: 700, color: "rgba(255,235,205,0.72)" }}>item</span>
+                        <span style={{ fontSize: 11, fontWeight: 700, color: "rgba(225,205,163,0.8)" }}>item</span>
                       </>
                     ) : (
-                      <span style={{ fontSize: 22, color: "rgba(255,235,205,0.5)" }}>＋</span>
+                      <span style={{ fontSize: 24, fontWeight: 700, color: "rgba(212,175,55,0.85)" }}>＋</span>
                     )}
                   </div>
                 )}
@@ -612,49 +613,49 @@ export function RestauranteOrdem({ difficulty, onComplete }: RestauranteOrdemPro
     const full = tray.length >= cap;
     return (
       <div style={{ position: "fixed", inset: 0, display: "flex", flexDirection: "column", overflow: "hidden", paddingBottom: 40,
-        backgroundImage: "radial-gradient(120% 80% at 50% 0%, rgba(255,255,255,0.05), transparent 55%), linear-gradient(180deg,#11463a 0%,#0d3329 52%,#091f19 100%)" }}>
+        backgroundImage: "radial-gradient(120% 95% at 50% 42%, #4A1A12 0%, #3a140e 48%, #2D100C 100%)" }}>
         {showVoice && <VoicePicker onClose={() => setShowVoice(false)} />}
 
-        {/* HEADER VERDE — Pedido pronto: Mesa X */}
+        {/* HEADER — Pedido pronto: Mesa X (tons quentes + ouro) */}
         <div style={{ flexShrink: 0, display: "flex", alignItems: "center", gap: 10, padding: "12px 16px",
-          background: "linear-gradient(180deg,#175446 0%,#0e3528 100%)", boxShadow: "0 4px 16px rgba(8,30,22,0.5)" }}>
+          background: "linear-gradient(180deg,#3a140e 0%,#2d100c 100%)", borderBottom: "1px solid rgba(212,175,55,0.3)", boxShadow: "0 4px 16px rgba(20,8,6,0.5)" }}>
           <motion.div animate={{ scale: [1, 1.12, 1] }} transition={{ duration: 1.1, repeat: Infinity }}
-            style={{ width: 40, height: 40, flexShrink: 0, borderRadius: "50%", background: "rgba(255,220,150,0.14)", border: "1px solid rgba(255,220,150,0.35)", display: "flex", alignItems: "center", justifyContent: "center" }}>
-            <Bell size={20} color="#f0c94a" />
+            style={{ width: 40, height: 40, flexShrink: 0, borderRadius: "50%", background: "rgba(225,205,163,0.12)", border: "1px solid rgba(225,205,163,0.4)", display: "flex", alignItems: "center", justifyContent: "center" }}>
+            <Bell size={20} color="#E1CDA3" />
           </motion.div>
           <div style={{ flex: 1, textAlign: "center", lineHeight: 1.1 }}>
-            <div style={{ fontSize: 11.5, fontWeight: 800, color: "rgba(255,255,255,0.85)", textTransform: "uppercase", letterSpacing: 1.5 }}>Pedido pronto:</div>
-            <div style={{ fontSize: 22, fontWeight: 900, color: "#f0c94a", letterSpacing: 0.5 }}>MESA {r.called + 1}</div>
+            <div style={{ fontSize: 11.5, fontWeight: 800, color: "#E1CDA3", textTransform: "uppercase", letterSpacing: 1.5 }}>Pedido pronto:</div>
+            <div style={{ fontSize: 22, fontWeight: 900, color: "#D4AF37", letterSpacing: 0.5 }}>MESA {r.called + 1}</div>
           </div>
           <button onClick={toggleMusic} title={musicOn ? "Música: ligada" : "Música: muda"}
-            style={{ width: 38, height: 38, flexShrink: 0, borderRadius: "50%", border: "1px solid rgba(255,255,255,0.25)", background: "rgba(255,255,255,0.08)", cursor: "pointer", fontSize: 15, display: "flex", alignItems: "center", justifyContent: "center" }}>
+            style={{ width: 38, height: 38, flexShrink: 0, borderRadius: "50%", border: "1px solid rgba(225,205,163,0.3)", background: "rgba(225,205,163,0.08)", cursor: "pointer", fontSize: 15, display: "flex", alignItems: "center", justifyContent: "center" }}>
             {musicOn ? "🔊" : "🔇"}
           </button>
         </div>
 
         <div style={{ flex: 1, minHeight: 0, overflowY: "auto", display: "flex", flexDirection: "column", gap: 12, padding: "12px 16px", maxWidth: 720, width: "100%", margin: "0 auto" }}>
-          <p style={{ textAlign: "center", fontSize: 14, fontWeight: 700, color: "rgba(255,240,220,0.95)" }}>
+          <p style={{ textAlign: "center", fontSize: 14, fontWeight: 700, color: "#E1CDA3" }}>
             Lembre o pedido da {joinList(mesa.scene.names)}{r.orderRequired ? ", na ordem certa," : ""} e monte a bandeja.
           </p>
 
           <Tray items={tray} slots={cap} numbered={r.orderRequired} />
 
-          <div style={{ fontSize: 12.5, fontWeight: 800, color: "rgba(255,235,205,0.85)", textAlign: "center", textTransform: "uppercase", letterSpacing: 0.5 }}>Itens disponíveis</div>
+          <div style={{ fontSize: 12.5, fontWeight: 800, color: "#E1CDA3", textAlign: "center", textTransform: "uppercase", letterSpacing: 1 }}>Itens disponíveis</div>
           <div style={{ display: "grid", gridTemplateColumns: `repeat(${Math.min(r.keys.length, 5)}, 1fr)`, gap: 10 }}>
             {r.keys.map((it, i) => {
               const placed = tray.filter((x) => x.id === it.id).length;
               const sel = placed > 0;
               return (
                 <motion.button key={`${it.id}-${i}`} onClick={() => placeItem(it)} disabled={full && !sel} whileTap={{ scale: 0.93 }}
-                  style={{ borderRadius: 14, cursor: full && !sel ? "default" : "pointer", padding: "8px 6px 7px",
+                  style={{ borderRadius: 16, cursor: full && !sel ? "default" : "pointer", padding: "8px 6px 7px",
                     display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", gap: 4, opacity: full && !sel ? 0.5 : 1,
-                    background: sel ? "#eef6f4" : "#fffdf7", border: sel ? "2px solid #2f9e8f" : "1.5px solid #ece0c8",
-                    boxShadow: sel ? "0 2px 8px rgba(47,158,143,0.22)" : "0 4px 12px rgba(0,0,0,0.25)", transition: "all .2s" }}>
+                    background: "#F7EEDD", border: sel ? "2px solid #D4AF37" : "1.5px solid #e6d9bf",
+                    boxShadow: sel ? "0 0 0 3px rgba(212,175,55,0.25), 0 6px 12px rgba(26,10,8,0.4)" : "0 6px 12px rgba(26,10,8,0.35)", transition: "all .2s" }}>
                   <span style={{ position: "relative", width: "100%", maxWidth: 76, aspectRatio: "1 / 1" }}>
                     <ItemImg id={it.id} size={76} />
-                    {placed > 0 && <span style={{ position: "absolute", top: -2, right: -2, minWidth: 20, height: 20, padding: "0 4px", borderRadius: 10, background: "#2f9e8f", color: "#fff", fontSize: 11.5, fontWeight: 900, display: "flex", alignItems: "center", justifyContent: "center" }}>✓</span>}
+                    {placed > 0 && <span style={{ position: "absolute", top: -2, right: -2, minWidth: 20, height: 20, padding: "0 4px", borderRadius: 10, background: "#E57218", color: "#fff", fontSize: 11.5, fontWeight: 900, display: "flex", alignItems: "center", justifyContent: "center" }}>✓</span>}
                   </span>
-                  <span style={{ fontSize: 11.5, fontWeight: 800, color: sel ? "#1d7a6e" : "#4a4234", textAlign: "center", lineHeight: 1.1 }}>{it.n}</span>
+                  <span style={{ fontSize: 11.5, fontWeight: 800, color: "#4A1A12", textAlign: "center", lineHeight: 1.1 }}>{it.n}</span>
                 </motion.button>
               );
             })}
@@ -665,17 +666,17 @@ export function RestauranteOrdem({ difficulty, onComplete }: RestauranteOrdemPro
         <div style={{ flexShrink: 0, display: "flex", gap: 10, padding: "10px 16px 14px", maxWidth: 680, width: "100%", margin: "0 auto" }}>
           <button onClick={clearTray} disabled={tray.length === 0}
             style={{ flex: "0 0 auto", height: 50, padding: "0 18px", borderRadius: 100, fontWeight: 800, fontSize: 13.5, cursor: tray.length > 0 ? "pointer" : "default",
-              background: "#f3ecdc", border: "1.5px solid #d8cbb0", color: tray.length > 0 ? "#6b6052" : "#b3a88f", display: "flex", alignItems: "center", justifyContent: "center", gap: 7 }}>
+              background: "#F7EEDD", border: "1.5px solid #e0d2b6", color: tray.length > 0 ? "#4A1A12" : "#a99a82", display: "flex", alignItems: "center", justifyContent: "center", gap: 7 }}>
             ↻ Limpar bandeja
           </button>
           <button onClick={submit} disabled={tray.length === 0}
-            style={{ flex: 1, height: 50, borderRadius: 100, border: "none", background: tray.length > 0 ? "linear-gradient(135deg,#1f9d5c,#147a45)" : "rgba(255,255,255,0.12)",
-              color: tray.length > 0 ? "#fff" : "rgba(255,255,255,0.4)", fontWeight: 800, fontSize: 15, cursor: tray.length > 0 ? "pointer" : "default",
-              display: "flex", alignItems: "center", justifyContent: "center", gap: 10, boxShadow: tray.length > 0 ? "0 6px 18px rgba(20,122,69,0.4)" : "none" }}>
+            style={{ flex: 1, height: 50, borderRadius: 100, border: "none", background: tray.length > 0 ? "linear-gradient(135deg,#F28E2B,#E57218)" : "rgba(247,238,221,0.12)",
+              color: tray.length > 0 ? "#fff" : "rgba(247,238,221,0.4)", fontWeight: 800, fontSize: 15, cursor: tray.length > 0 ? "pointer" : "default",
+              display: "flex", alignItems: "center", justifyContent: "center", gap: 10, boxShadow: tray.length > 0 ? "0 6px 18px rgba(229,114,24,0.45)" : "none" }}>
             ✓ Entregar pedido
           </button>
         </div>
-        <div style={{ flexShrink: 0, display: "flex", justifyContent: "space-between", padding: "0 18px 10px", fontSize: 11.5, fontWeight: 700, color: "rgba(255,235,205,0.6)" }}>
+        <div style={{ flexShrink: 0, display: "flex", justifyContent: "space-between", padding: "0 18px 10px", fontSize: 11.5, fontWeight: 700, color: "#E1CDA3" }}>
           <span>Pedido {Math.min(trial + 1, TRIALS)}/{TRIALS}</span><span>Acertos: {correctRef.current}</span>
         </div>
       </div>
