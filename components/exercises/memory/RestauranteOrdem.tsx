@@ -288,8 +288,8 @@ function OrderCard({ mesaNum, scene, items, numbered, hideItems }: {
 }) {
   const rel = relText(scene.rel, scene.names);
   return (
-    <div style={{ minWidth: 190, maxWidth: 270, background: "rgba(16,18,14,0.28)", backdropFilter: "blur(9px)", WebkitBackdropFilter: "blur(9px)",
-      borderRadius: 18, padding: "12px 15px 14px", border: "1.5px solid rgba(235,200,130,0.45)", boxShadow: "0 14px 36px rgba(0,0,0,0.4)" }}>
+    <div style={{ minWidth: 190, maxWidth: 270, background: "rgba(16,18,14,0.16)", backdropFilter: "blur(10px)", WebkitBackdropFilter: "blur(10px)",
+      borderRadius: 18, padding: "12px 15px 14px", border: "1.5px solid rgba(235,200,130,0.42)", boxShadow: "0 14px 36px rgba(0,0,0,0.38)" }}>
       <div style={{ textAlign: "center", borderBottom: "1px solid rgba(255,225,180,0.2)", paddingBottom: 8, marginBottom: 9 }}>
         <div style={{ fontSize: 16, fontWeight: 900, color: "#ffe7b0" }}>Mesa {mesaNum}</div>
         <div style={{ fontSize: 13.5, fontWeight: 700, color: "rgba(255,255,255,0.94)" }}>{joinList(scene.names)}</div>
@@ -556,7 +556,7 @@ export function RestauranteOrdem({ difficulty, onComplete }: RestauranteOrdemPro
             </div>
           </div>
 
-          <div style={{ flex: 1.7 }} />
+          <div style={{ flex: 2.6 }} />
           {/* plaquinha — translúcida, na lateral e mais baixa */}
           <div style={{ display: "flex", justifyContent: "flex-start", alignItems: "flex-start", gap: 10 }}>
             <div style={{ display: "flex", flexDirection: "column", alignItems: "flex-start", gap: 9 }}>
@@ -569,7 +569,7 @@ export function RestauranteOrdem({ difficulty, onComplete }: RestauranteOrdemPro
               </div>
             </div>
           </div>
-          <div style={{ flex: 0.7 }} />
+          <div style={{ flex: 0.4 }} />
 
           <div style={{ display: "flex", alignItems: "center", gap: 12, padding: "10px 14px", borderRadius: 14, background: "rgba(18,10,3,0.62)", border: "1px solid rgba(255,220,170,0.25)" }}>
             <span style={{ fontSize: 17 }}>💡</span>
@@ -613,7 +613,8 @@ export function RestauranteOrdem({ difficulty, onComplete }: RestauranteOrdemPro
     const full = tray.length >= cap;
     return (
       <div style={{ position: "fixed", inset: 0, display: "flex", flexDirection: "column", overflow: "hidden", paddingBottom: 40,
-        backgroundImage: "radial-gradient(120% 95% at 50% 42%, #4A1A12 0%, #3a140e 48%, #2D100C 100%)" }}>
+        backgroundColor: "#2D100C", backgroundImage: "radial-gradient(120% 95% at 50% 42%, rgba(74,26,18,0.80) 0%, rgba(58,20,14,0.88) 48%, rgba(45,16,12,0.94) 100%), url(/exercises/restaurante/fundo-blur.jpg)",
+        backgroundSize: "cover, cover", backgroundPosition: "center, center" }}>
         {showVoice && <VoicePicker onClose={() => setShowVoice(false)} />}
 
         {/* HEADER — Pedido pronto: Mesa X (tons quentes + ouro) */}
