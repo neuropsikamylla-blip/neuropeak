@@ -555,8 +555,8 @@ export function RestauranteOrdem({ difficulty, onComplete }: RestauranteOrdemPro
             </div>
           </div>
 
-          <div style={{ flex: 1 }} />
-          {/* plaquinha — translúcida, na lateral e mais perto da mesa */}
+          <div style={{ flex: 1.7 }} />
+          {/* plaquinha — translúcida, na lateral e mais baixa */}
           <div style={{ display: "flex", justifyContent: "flex-start", alignItems: "flex-start", gap: 10 }}>
             <div style={{ display: "flex", flexDirection: "column", alignItems: "flex-start", gap: 9 }}>
               <OrderCard mesaNum={memoIdx + 1} scene={mesa.scene} items={mesa.order} numbered={round.orderRequired} hideItems={hideText} />
@@ -568,7 +568,7 @@ export function RestauranteOrdem({ difficulty, onComplete }: RestauranteOrdemPro
               </div>
             </div>
           </div>
-          <div style={{ flex: 1.3 }} />
+          <div style={{ flex: 0.7 }} />
 
           <div style={{ display: "flex", alignItems: "center", gap: 12, padding: "10px 14px", borderRadius: 14, background: "rgba(18,10,3,0.62)", border: "1px solid rgba(255,220,170,0.25)" }}>
             <span style={{ fontSize: 17 }}>💡</span>
@@ -612,7 +612,7 @@ export function RestauranteOrdem({ difficulty, onComplete }: RestauranteOrdemPro
     const full = tray.length >= cap;
     return (
       <div style={{ position: "fixed", inset: 0, display: "flex", flexDirection: "column", overflow: "hidden", paddingBottom: 40,
-        backgroundImage: "repeating-linear-gradient(92deg, rgba(255,225,180,0.04) 0 3px, transparent 3px 16px), linear-gradient(165deg,#6b4a2a 0%,#4a3119 60%,#382410 100%)" }}>
+        backgroundImage: "radial-gradient(120% 80% at 50% 0%, rgba(255,255,255,0.05), transparent 55%), linear-gradient(180deg,#11463a 0%,#0d3329 52%,#091f19 100%)" }}>
         {showVoice && <VoicePicker onClose={() => setShowVoice(false)} />}
 
         {/* HEADER VERDE — Pedido pronto: Mesa X */}
