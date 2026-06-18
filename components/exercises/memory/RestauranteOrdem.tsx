@@ -288,8 +288,8 @@ function OrderCard({ mesaNum, scene, items, numbered, hideItems }: {
 }) {
   const rel = relText(scene.rel, scene.names);
   return (
-    <div style={{ minWidth: 195, maxWidth: 280, background: "rgba(18,20,16,0.38)", backdropFilter: "blur(8px)", WebkitBackdropFilter: "blur(8px)",
-      borderRadius: 18, padding: "13px 16px 15px", border: "1.5px solid rgba(235,200,130,0.5)", boxShadow: "0 16px 40px rgba(0,0,0,0.45)" }}>
+    <div style={{ minWidth: 190, maxWidth: 270, background: "rgba(16,18,14,0.28)", backdropFilter: "blur(9px)", WebkitBackdropFilter: "blur(9px)",
+      borderRadius: 18, padding: "12px 15px 14px", border: "1.5px solid rgba(235,200,130,0.45)", boxShadow: "0 14px 36px rgba(0,0,0,0.4)" }}>
       <div style={{ textAlign: "center", borderBottom: "1px solid rgba(255,225,180,0.2)", paddingBottom: 8, marginBottom: 9 }}>
         <div style={{ fontSize: 16, fontWeight: 900, color: "#ffe7b0" }}>Mesa {mesaNum}</div>
         <div style={{ fontSize: 13.5, fontWeight: 700, color: "rgba(255,255,255,0.94)" }}>{joinList(scene.names)}</div>
@@ -437,6 +437,12 @@ export function RestauranteOrdem({ difficulty, onComplete }: RestauranteOrdemPro
     if (r.mesas[r.called].update) { setPhase("update"); return; }
     goBancada();
   }
+  // Pular o tempo de memorização (paciente já memorizou).
+  function skipMemo() {
+    const r = roundRef.current; if (!r) return;
+    if (memoIdx < r.mesas.length - 1) setMemoIdx(memoIdx + 1);
+    else afterSalao();
+  }
   function goBancada() {
     if (typeof window !== "undefined") window.speechSynthesis?.cancel();
     inputAt.current = Date.now(); setPhase("bancada");
@@ -550,13 +556,19 @@ export function RestauranteOrdem({ difficulty, onComplete }: RestauranteOrdemPro
           </div>
 
           <div style={{ flex: 1 }} />
-          {/* plaquinha — translúcida, na lateral (canto), como a Mesa 1 do exemplo */}
-          <div style={{ display: "flex", justifyContent: "flex-start", alignItems: "flex-end", gap: 10 }}>
-            <OrderCard mesaNum={memoIdx + 1} scene={mesa.scene} items={mesa.order} numbered={round.orderRequired} hideItems={hideText} />
-            {speakOn && (
-              <button onClick={replay} style={{ alignSelf: "center", fontSize: 12.5, fontWeight: 700, padding: "9px 14px", borderRadius: 100, cursor: "pointer", background: "rgba(18,10,3,0.6)", border: "1px solid rgba(255,220,170,0.35)", color: "#ffe7b0" }}>🔊 Ouvir</button>
-            )}
+          {/* plaquinha — translúcida, na lateral e mais perto da mesa */}
+          <div style={{ display: "flex", justifyContent: "flex-start", alignItems: "flex-start", gap: 10 }}>
+            <div style={{ display: "flex", flexDirection: "column", alignItems: "flex-start", gap: 9 }}>
+              <OrderCard mesaNum={memoIdx + 1} scene={mesa.scene} items={mesa.order} numbered={round.orderRequired} hideItems={hideText} />
+              <div style={{ display: "flex", gap: 8 }}>
+                {speakOn && (
+                  <button onClick={replay} style={{ fontSize: 12.5, fontWeight: 700, padding: "9px 14px", borderRadius: 100, cursor: "pointer", background: "rgba(18,10,3,0.55)", border: "1px solid rgba(255,220,170,0.35)", color: "#ffe7b0" }}>🔊 Ouvir</button>
+                )}
+                <button onClick={skipMemo} style={{ fontSize: 13.5, fontWeight: 800, padding: "10px 22px", borderRadius: 100, cursor: "pointer", border: "none", background: "linear-gradient(135deg,#1f9d5c,#147a45)", color: "#fff", boxShadow: "0 5px 16px rgba(20,122,69,0.4)" }}>✓ Já memorizei</button>
+              </div>
+            </div>
           </div>
+          <div style={{ flex: 1.3 }} />
 
           <div style={{ display: "flex", alignItems: "center", gap: 12, padding: "10px 14px", borderRadius: 14, background: "rgba(18,10,3,0.62)", border: "1px solid rgba(255,220,170,0.25)" }}>
             <span style={{ fontSize: 17 }}>💡</span>
