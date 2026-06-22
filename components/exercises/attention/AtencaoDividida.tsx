@@ -13,8 +13,8 @@ interface AtencaoDivididaProps {
   onComplete: (result: ExerciseResult) => void;
 }
 
-// 12 number stimuli + 12 letter stimuli = 24 total
-const MAX_STIMULI = 24;
+// 24 number stimuli + 24 letter stimuli = 48 total
+const MAX_STIMULI = 48;
 const DIGITS = ["0", "1", "2", "3", "4", "5", "6", "7", "8", "9"];
 const VOWELS = ["A", "E", "I", "O", "U"];
 const CONSONANTS = ["B", "C", "D", "F", "G", "H", "J", "K", "L", "M", "N", "P", "Q", "R", "S", "T", "V", "X", "Z"];

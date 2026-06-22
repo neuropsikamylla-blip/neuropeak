@@ -15,7 +15,7 @@ interface AtencaoSustentadaProps {
 
 // ── CPT-AX Config ──────────────────────────────────────────────────────────
 
-const TOTAL_STIMULI = 55;
+const TOTAL_STIMULI = 110;
 const TARGET_PREV = "A";
 const TARGET_CUR  = "X";
 const ALL_LETTERS = "BCDEFGHIJLMNOPRSTUVZ".split("");

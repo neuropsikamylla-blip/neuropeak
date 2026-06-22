@@ -54,6 +54,7 @@ const DeductiveGrid        = dynamic(() => import("@/components/exercises/execut
 const FocusAgents          = dynamic(() => import("@/components/exercises/attention/FocusAgents").then(m => ({ default: m.FocusAgents })), { loading: ExerciseLoader, ssr: false });
 const AtencaoAlternada     = dynamic(() => import("@/components/exercises/attention/AtencaoAlternada").then(m => ({ default: m.AtencaoAlternada })), { loading: ExerciseLoader, ssr: false });
 const AssociacaoPares      = dynamic(() => import("@/components/exercises/memory/AssociacaoPares").then(m => ({ default: m.AssociacaoPares })), { loading: ExerciseLoader, ssr: false });
+const CuboCorsi            = dynamic(() => import("@/components/exercises/memory/CuboCorsi").then(m => ({ default: m.CuboCorsi })), { loading: ExerciseLoader, ssr: false });
 
 const EXERCISE_INSTRUCTIONS: Record<string, string[]> = {
   "span-numerico": [
@@ -297,6 +298,12 @@ const EXERCISE_INSTRUCTIONS: Record<string, string[]> = {
     "No topo, uma regra indica o que observar: ANIMAL vs OBJETO ou GRANDE vs PEQUENO.",
     "Toque no botão correto para a regra ativa. A regra muda automaticamente!",
     "Fique atento às mudanças de regra — é preciso trocar o foco rapidamente.",
+  ],
+  "cubo-corsi": [
+    "Um cubo 3D com 8 blocos aparecerá na tela.",
+    "Alguns blocos vão acender em sequência — observe bem a ordem!",
+    "Depois que a sequência acabar, toque os blocos na mesma ordem em que acenderam.",
+    "As sequências ficam maiores conforme você acerta. Treine sua memória espacial!",
   ],
 };
 
@@ -555,6 +562,7 @@ export default function ExercicioPage() {
       case "focus-agents-auditivo": return <FocusAgents {...props} settings={exerciseSettings as { mode?: "foco"|"inibicao"|"alternancia"|"desafio"; startLevel?: number; freeChoice?: boolean; feedback?: "leve"|"normal"|"intenso"; autoAdvance?: boolean } | undefined} />;
       case "atencao-alternada": return <AtencaoAlternada {...props} />;
       case "associacao-pares": return <AssociacaoPares {...props} />;
+      case "cubo-corsi": return <CuboCorsi {...props} />;
       default: return <div className="p-8 text-center text-gray-500">Exercício em desenvolvimento</div>;
     }
   }

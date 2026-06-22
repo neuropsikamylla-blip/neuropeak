@@ -191,6 +191,14 @@ export const EXERCISE_DEFINITIONS = {
     estimatedMinutes: 7,
     icon: "🍽️",
   },
+  "cubo-corsi": {
+    id: "cubo-corsi",
+    name: "Cubo de Corsi",
+    domain: "memory" as Domain,
+    description: "Treina memória visuoespacial 3D: memorize a sequência de blocos que acendem no cubo e reproduza a ordem correta.",
+    estimatedMinutes: 6,
+    icon: "🧊",
+  },
   "matriz-espacial-inversa": {
     id: "matriz-espacial-inversa",
     name: "Matriz Espacial Inversa",
