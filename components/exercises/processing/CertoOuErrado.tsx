@@ -24,7 +24,7 @@ interface Scenario {
   ageGroup?: "all" | "adult" | "child" | "teen";
 }
 
-const MAX_TRIALS = 20;
+const MAX_TRIALS = 60;
 const ADVANCE_DELAY_MS = 1400;
 
 // ─── Scenario bank (36 scenarios) ────────────────────────────────────────────

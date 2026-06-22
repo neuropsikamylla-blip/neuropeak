@@ -26,7 +26,7 @@ const TARGET_RATIO = 0.32;
 
 const MIN_N = 1;
 const MAX_N = 4;
-const TOTAL_TRIALS = 20;
+const TOTAL_TRIALS = 100;
 
 function initialN(difficulty: number) {
   return Math.min(Math.max(1, Math.floor(difficulty * 0.35)), 3);

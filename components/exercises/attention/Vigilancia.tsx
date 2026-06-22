@@ -19,7 +19,7 @@ const INTERVALS: Record<number, number> = {
   1: 1200, 2: 900, 3: 700, 4: 1200, 5: 900,
   6: 700, 7: 900, 8: 700, 9: 700, 10: 600,
 };
-const TOTAL_ITEMS = 60;
+const TOTAL_ITEMS = 300;
 
 function VigilanciaTutorial({ theme, target, onDone }: { theme: Theme; target: string; onDone: () => void }) {
   const steps = [

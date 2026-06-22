@@ -26,7 +26,7 @@ interface Balloon {
 const GREEN = "#16a34a";
 const DISTRACTOR_COLORS = ["#dc2626", "#2563eb", "#9333ea", "#ea580c", "#0891b2"];
 
-const MAX_TRIALS = 20;
+const MAX_TRIALS = 100;
 
 function speedMs(difficulty: number) {
   // 6500ms (diff 1) → 1400ms (diff 10) — começa confortável, mas acelera de verdade

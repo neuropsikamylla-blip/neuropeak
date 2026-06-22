@@ -381,7 +381,7 @@ function CacaTutorial({ theme, onDone }: { theme: Theme; onDone: () => void }) {
 
 // ── Main component ─────────────────────────────────────────────────────────────
 
-const MAX_ROUNDS = 10;
+const MAX_ROUNDS = 20;
 
 export function CacaItemBarato({ difficulty, theme, onComplete }: Props) {
   const [showTutorial, setShowTutorial] = useState(true);

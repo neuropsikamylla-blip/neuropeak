@@ -16,7 +16,7 @@ interface IdentificacaoSimbolosProps {
 
 const SYMBOLS = ["★", "●", "▲", "■", "♦", "⬟", "⬡", "⬢", "✦", "✿", "⊕", "⊗", "Ψ", "Ω", "Σ", "Δ", "Λ", "Π", "Φ", "Ξ"];
 
-const MAX_TRIALS = 20;
+const MAX_TRIALS = 60;
 const MIN_DISTRACTORS = 2;
 const MAX_DISTRACTORS = 18;
 

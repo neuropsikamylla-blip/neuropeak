@@ -16,7 +16,7 @@ interface MatrizEspacialProps {
 
 type Phase = "showing" | "recall" | "feedback";
 
-const MAX_TRIALS = 20;
+const MAX_TRIALS = 30;
 const MIN_SEQ = 2;
 const MAX_SEQ = 9;
 // Grade cresce com a dificuldade: mais blocos pra brilhar nos níveis altos.

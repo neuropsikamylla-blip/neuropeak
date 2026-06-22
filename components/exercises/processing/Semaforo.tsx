@@ -22,7 +22,7 @@ interface TrafficLightProps {
   isBlinking: boolean;
 }
 
-const TOTAL_TRIALS = 20;
+const TOTAL_TRIALS = 60;
 // All lights blink for this duration before the target reveals its color
 const BLINK_DURATION = 1500; // ms
 

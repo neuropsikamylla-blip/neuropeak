@@ -13,7 +13,7 @@ interface AtencaoAlternadaProps {
   onComplete: (result: ExerciseResult) => void;
 }
 
-const MAX_TRIALS = 20;
+const MAX_TRIALS = 90;
 
 type Rule = "animal-objeto" | "grande-pequeno";
 

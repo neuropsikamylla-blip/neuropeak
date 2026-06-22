@@ -29,7 +29,7 @@ interface TrialItem {
   rule: Rule;
 }
 
-const MAX_TRIALS = 20;
+const MAX_TRIALS = 100;
 const MIN_TIME_MS = 550;
 const MAX_TIME_MS = 5000;
 

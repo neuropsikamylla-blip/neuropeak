@@ -11,7 +11,7 @@ import { fmt } from "@/lib/item-domains";
 
 interface Props { difficulty: number; theme: Theme; onComplete: (result: ExerciseResult) => void; }
 
-const MAX_TRIALS = 12;
+const MAX_TRIALS = 60;
 
 type MRLevel = 1 | 2 | 3;
 

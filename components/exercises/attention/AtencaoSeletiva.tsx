@@ -95,7 +95,7 @@ const LEVELS: LevelCfg[] = [
   { cols: 7, rows: 7, colors: ["green", "red", "blue", "yellow", "orange", "purple"], shapes: ["circle", "square", "triangle", "diamond"], rule: "conjunction", targetRatio: 0.20 },
 ];
 
-const ROUNDS = 5;
+const ROUNDS = 12;
 const BOARD_CAP_MS = 75000; // tempo máximo por quadro (segurança); o quadro termina antes ao achar tudo
 
 function clampLevel(d: number): number {
