@@ -30,7 +30,7 @@ function reloadGuarded() {
 export function AutoUpdater() {
   const pathname = usePathname();
 
-  // Verificação periódica + ao voltar o foco pro app.
+  // Verificação periódica (sem visibilitychange — pode causar reload inesperado com Zoom remote control).
   useEffect(() => {
     let stop = false;
     async function check() {
@@ -45,9 +45,7 @@ export function AutoUpdater() {
     }
     check();
     const id = setInterval(check, 90 * 1000);
-    const onVis = () => { if (document.visibilityState === "visible") check(); };
-    document.addEventListener("visibilitychange", onVis);
-    return () => { stop = true; clearInterval(id); document.removeEventListener("visibilitychange", onVis); };
+    return () => { stop = true; clearInterval(id); };
   }, []);
 
   // Ao trocar de rota (ex.: o paciente sai do exercício), atualiza se houver versão nova.
