@@ -14,15 +14,19 @@ type Phase = "instructions" | "exercise" | "results";
 const ProgressContext = createContext<(pct: number) => void>(() => {});
 export const useExerciseProgress = () => useContext(ProgressContext);
 
-/** Arredonda o progresso bruto para o step mais próximo (estilo Cogmed). */
-function cogmedSnap(
+/** Calcula progresso global da sessão.
+ *  Snap de 5% aplicado no exercício; a contribuição global é proporcional ao slice. */
+function cogmedProgress(
   exercisePct: number,
   sessionCompleted: number,
   sessionTotal: number,
 ): number {
-  const step = sessionTotal === 25 ? 4 : 5;
-  const globalRaw = (sessionCompleted / sessionTotal) * 100 + exercisePct / sessionTotal;
-  return Math.min(100, Math.max(0, Math.round(globalRaw / step) * step));
+  const step = 5;
+  // Snap no nível do exercício (0-100%), depois escala para o slice global
+  const snapped = Math.round(exercisePct / step) * step;
+  const sliceSize = 100 / sessionTotal;
+  const base = sessionCompleted * sliceSize;
+  return Math.min(100, Math.round(base + (snapped / 100) * sliceSize));
 }
 
 interface ExerciseWrapperProps {
@@ -52,15 +56,19 @@ export function ExerciseWrapper({
 }: ExerciseWrapperProps) {
   const [phase, setPhase] = useState<Phase>(instructions.length === 0 ? "exercise" : "instructions");
   const [result, setResult] = useState<ExerciseResult | null>(null);
-  const [sessionProgress, setSessionProgress] = useState(0);
+  const [sessionProgress, setSessionProgress] = useState(() =>
+    sessionTotal && sessionTotal > 0
+      ? Math.round((sessionCompleted / sessionTotal) * 100)
+      : 0
+  );
   const [isFullscreen, setIsFullscreen] = useState(false);
 
-  /** Converte o progresso interno do exercício (0-100) no % global da sessão,
-   *  arredondado para incrementos de 4% ou 5% (estilo Cogmed). */
+  /** Converte o progresso interno do exercício (0-100) no % global da sessão. */
   const updateProgress = useCallback((exercisePct: number) => {
     if (sessionTotal && sessionTotal > 0) {
-      setSessionProgress(cogmedSnap(exercisePct, sessionCompleted, sessionTotal));
+      setSessionProgress(cogmedProgress(exercisePct, sessionCompleted, sessionTotal));
     } else {
+      // Sem plano: mostra o progresso do próprio exercício (0-100%)
       const step = 5;
       setSessionProgress(Math.min(100, Math.max(0, Math.round(exercisePct / step) * step)));
     }

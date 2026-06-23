@@ -474,8 +474,7 @@ export function EstacionamentoLogico({ difficulty, theme: _theme, onComplete }: 
     return (
       <div className="bg-white min-h-screen flex items-center justify-center px-6">
         <div className="w-full max-w-xs text-center">
-          <p className="text-2xl font-light text-slate-800 mb-1">Concluído</p>
-          <p className="text-xs text-slate-400 mb-10">Fase {puzzleIdx + 1} / {TOTAL_PHASES}</p>
+          <p className="text-2xl font-light text-slate-800 mb-10">Concluído</p>
           <div className="flex justify-center gap-12 mb-10">
             <div>
               <p className="text-3xl font-semibold text-slate-800">{last?.moves ?? moves}</p>
@@ -506,15 +505,7 @@ export function EstacionamentoLogico({ difficulty, theme: _theme, onComplete }: 
         className="mx-auto pt-4 px-3 pb-8"
         style={{ maxWidth: T + LANE_W + 24 }}
       >
-        {/* Minimal header */}
-        <div className="flex items-center justify-between mb-1">
-          <h1 className="text-sm font-semibold text-slate-700 tracking-tight">
-            Estacionamento Lógico
-          </h1>
-          <span className="text-xs text-slate-400 tabular-nums">
-            {puzzleIdx + 1} / {TOTAL_PHASES}
-          </span>
-        </div>
+        {/* Instrução discreta */}
         <p className="text-xs text-slate-400 mb-4">
           Libere o carro vermelho pela saída.
         </p>
