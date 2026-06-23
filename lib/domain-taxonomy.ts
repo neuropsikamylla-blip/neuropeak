@@ -14,15 +14,15 @@ export const ALL_DOMAINS: Domain[] = ["memory", "attention", "executive", "proce
 
 export const DOMAIN_SUBDOMAINS: Record<Domain, Subdomain[]> = {
   memory: [
-    { id: "operacional", label: "Memória Operacional", exercises: ["span-numerico", "span-numerico-inverso", "letras-sequencia", "sequencia-itens", "lista-distracao", "restaurante-ordem", "desafio-supermercado", "nback", "associacao-pares"] },
+    { id: "operacional", label: "Memória Operacional", exercises: ["span-numerico", "span-numerico-inverso", "letras-sequencia", "sequencia-itens", "lista-distracao", "restaurante-ordem", "desafio-supermercado", "nback"] },
     { id: "visuoespacial", label: "Memória Visuoespacial", exercises: ["jogo-memoria", "matriz-espacial", "matriz-espacial-inversa", "padroes-rotacao", "cubo-corsi"] },
     { id: "episodica", label: "Memória Episódica", exercises: [] },
     { id: "semantica", label: "Memória Semântica", exercises: [] },
   ],
   attention: [
-    { id: "seletiva", label: "Atenção Seletiva", exercises: ["trilha-visual", "atencao-seletiva"] },
-    { id: "sustentada", label: "Atenção Sustentada", exercises: ["atencao-sustentada", "focus-agents", "vigilancia"] },
-    { id: "alternada", label: "Atenção Alternada", exercises: ["atencao-alternada"] },
+    { id: "seletiva", label: "Atenção Seletiva", exercises: ["trilha-visual"] },
+    { id: "sustentada", label: "Atenção Sustentada", exercises: ["focus-agents", "vigilancia"] },
+    { id: "alternada", label: "Atenção Alternada", exercises: [] },
     { id: "dividida", label: "Atenção Dividida", exercises: ["dual-task", "mot", "atencao-dividida"] },
   ],
   executive: [
@@ -35,7 +35,7 @@ export const DOMAIN_SUBDOMAINS: Record<Domain, Subdomain[]> = {
   ],
   processing: [
     { id: "reacao", label: "Tempo de Reação", exercises: ["tempo-reacao", "semaforo"] },
-    { id: "busca-visual", label: "Busca Visual Rápida", exercises: ["identificacao-simbolos", "decisao-rapida"] },
+    { id: "busca-visual", label: "Busca Visual Rápida", exercises: ["identificacao-simbolos"] },
     { id: "resposta-rapida", label: "Resposta Rápida", exercises: ["certo-ou-errado", "corrida-tempo"] },
   ],
   functional: [

@@ -23,11 +23,9 @@ const SpanNumericoInverso = dynamic(() => import("@/components/exercises/memory/
 const MatrizEspacialInversa = dynamic(() => import("@/components/exercises/memory/MatrizEspacialInversa").then(m => ({ default: m.MatrizEspacialInversa })), { loading: ExerciseLoader, ssr: false });
 const NBack               = dynamic(() => import("@/components/exercises/memory/NBack").then(m => ({ default: m.NBack })), { loading: ExerciseLoader, ssr: false });
 const TrilhaVisual        = dynamic(() => import("@/components/exercises/attention/TrilhaVisual").then(m => ({ default: m.TrilhaVisual })), { loading: ExerciseLoader, ssr: false });
-const AtencaoSeletiva     = dynamic(() => import("@/components/exercises/attention/AtencaoSeletiva").then(m => ({ default: m.AtencaoSeletiva })), { loading: ExerciseLoader, ssr: false });
 const StroopTask          = dynamic(() => import("@/components/exercises/executive/StroopTask").then(m => ({ default: m.StroopTask })), { loading: ExerciseLoader, ssr: false });
 const Vigilancia          = dynamic(() => import("@/components/exercises/attention/Vigilancia").then(m => ({ default: m.Vigilancia })), { loading: ExerciseLoader, ssr: false });
 const TempoReacao         = dynamic(() => import("@/components/exercises/processing/TempoReacao").then(m => ({ default: m.TempoReacao })), { loading: ExerciseLoader, ssr: false });
-const DecisaoRapida       = dynamic(() => import("@/components/exercises/processing/DecisaoRapida").then(m => ({ default: m.DecisaoRapida })), { loading: ExerciseLoader, ssr: false });
 const IdentificacaoSimbolos = dynamic(() => import("@/components/exercises/processing/IdentificacaoSimbolos").then(m => ({ default: m.IdentificacaoSimbolos })), { loading: ExerciseLoader, ssr: false });
 const TorreHanoi          = dynamic(() => import("@/components/exercises/executive/TorreHanoi").then(m => ({ default: m.TorreHanoi })), { loading: ExerciseLoader, ssr: false });
 const Labirinto           = dynamic(() => import("@/components/exercises/executive/Labirinto").then(m => ({ default: m.Labirinto })), { loading: ExerciseLoader, ssr: false });
@@ -47,13 +45,10 @@ const SequenciaItens      = dynamic(() => import("@/components/exercises/memory/
 const ListaDistracao      = dynamic(() => import("@/components/exercises/memory/ListaDistracao").then(m => ({ default: m.ListaDistracao })), { loading: ExerciseLoader, ssr: false });
 const RestauranteOrdem    = dynamic(() => import("@/components/exercises/memory/RestauranteOrdem").then(m => ({ default: m.RestauranteOrdem })), { loading: ExerciseLoader, ssr: false });
 const TaskSwitching        = dynamic(() => import("@/components/exercises/executive/TaskSwitching").then(m => ({ default: m.TaskSwitching })), { loading: ExerciseLoader, ssr: false });
-const AtencaoSustentada    = dynamic(() => import("@/components/exercises/attention/AtencaoSustentada").then(m => ({ default: m.AtencaoSustentada })), { loading: ExerciseLoader, ssr: false });
 const MOT                  = dynamic(() => import("@/components/exercises/attention/MOT").then(m => ({ default: m.MOT })), { loading: ExerciseLoader, ssr: false });
 const DualTask             = dynamic(() => import("@/components/exercises/attention/DualTask").then(m => ({ default: m.DualTask })), { loading: ExerciseLoader, ssr: false });
 const DeductiveGrid        = dynamic(() => import("@/components/exercises/executive/DeductiveGrid").then(m => ({ default: m.DeductiveGrid })), { loading: ExerciseLoader, ssr: false });
 const FocusAgents          = dynamic(() => import("@/components/exercises/attention/FocusAgents").then(m => ({ default: m.FocusAgents })), { loading: ExerciseLoader, ssr: false });
-const AtencaoAlternada     = dynamic(() => import("@/components/exercises/attention/AtencaoAlternada").then(m => ({ default: m.AtencaoAlternada })), { loading: ExerciseLoader, ssr: false });
-const AssociacaoPares      = dynamic(() => import("@/components/exercises/memory/AssociacaoPares").then(m => ({ default: m.AssociacaoPares })), { loading: ExerciseLoader, ssr: false });
 const CuboCorsi            = dynamic(() => import("@/components/exercises/memory/CuboCorsi").then(m => ({ default: m.CuboCorsi })), { loading: ExerciseLoader, ssr: false });
 
 const EXERCISE_INSTRUCTIONS: Record<string, string[]> = {
@@ -68,18 +63,6 @@ const EXERCISE_INSTRUCTIONS: Record<string, string[]> = {
     "Observe com atenção a ordem em que as células acendem.",
     "Após a sequência, clique nas células na mesma ordem.",
     "Fique atento — a velocidade aumenta com a dificuldade!",
-  ],
-  "associacao-pares": [
-    "Você verá pares de palavras e imagens para memorizar.",
-    "Estude os pares durante o tempo disponível.",
-    "Em seguida, você verá uma palavra e deverá escolher a imagem correta.",
-    "Tente criar associações mentais para facilitar a memorização.",
-  ],
-  "atencao-seletiva": [
-    "Um estímulo aparece na tela por poucos instantes — forme colorida ou com formato específico.",
-    "Toque na tela APENAS quando o estímulo corresponder à regra mostrada no topo.",
-    "Se o estímulo for diferente, NÃO toque — espere o próximo.",
-    "Nas dificuldades mais altas, a regra pode mudar durante o exercício. Fique atento!",
   ],
   "trilha-visual": [
     "Números de 1 a N estão espalhados pela tela.",
@@ -104,12 +87,6 @@ const EXERCISE_INSTRUCTIONS: Record<string, string[]> = {
     "Toque APENAS nos balões VERDES — eles são o alvo certo.",
     "Balões de outras cores são distratores — ignore-os.",
     "Rapidez e precisão contam: toque certo, no momento certo!",
-  ],
-  "decisao-rapida": [
-    "Você verá imagens com nomes de animais ou objetos.",
-    "Classifique rapidamente: é um animal ou um objeto?",
-    "Toque na categoria correta o mais rápido possível.",
-    "Velocidade E precisão são avaliadas!",
   ],
   "identificacao-simbolos": [
     "Um símbolo alvo será mostrado no topo da tela.",
@@ -267,12 +244,6 @@ const EXERCISE_INSTRUCTIONS: Record<string, string[]> = {
     "Nas dificuldades maiores, a regra muda SEM aviso. Fique sempre atento!",
     "Regras possíveis: COR (Vermelho/Azul), NÚMERO (Ímpar/Par), FORMA (Círculo/Triângulo).",
   ],
-  "atencao-sustentada": [
-    "Letras aparecem na tela, uma por vez, em sequência rápida.",
-    "Toque APENAS quando aparecer X imediatamente após A. Sequência A → X = tocar.",
-    "Se a letra X aparecer após QUALQUER outra letra, ignore! Só toca no A → X.",
-    "O exercício é longo — mantenha o foco do início ao fim!",
-  ],
   "mot": [
     "Algumas bolas vão piscar — memorize quais são!",
     "Todas as bolas vão se mover. Tente acompanhar as bolas que piscaram com os olhos.",
@@ -293,12 +264,6 @@ const EXERCISE_INSTRUCTIONS: Record<string, string[]> = {
   ],
   "focus-agents": [],
   "focus-agents-auditivo": [],
-  "atencao-alternada": [
-    "Um item aparecerá no centro da tela — pode ser um animal ou objeto, grande ou pequeno.",
-    "No topo, uma regra indica o que observar: ANIMAL vs OBJETO ou GRANDE vs PEQUENO.",
-    "Toque no botão correto para a regra ativa. A regra muda automaticamente!",
-    "Fique atento às mudanças de regra — é preciso trocar o foco rapidamente.",
-  ],
   "cubo-corsi": [
     "Um cubo 3D com 8 blocos aparecerá na tela.",
     "Alguns blocos vão acender em sequência — observe bem a ordem!",
@@ -521,12 +486,10 @@ export default function ExercicioPage() {
     switch (exerciseId) {
       case "span-numerico": return <SpanNumerico {...props} settings={exerciseSettings} />;
       case "matriz-espacial": return <MatrizEspacial {...props} />;
-      case "atencao-seletiva": return <AtencaoSeletiva {...props} />;
       case "trilha-visual": return <TrilhaVisual {...props} />;
       case "stroop-task": return <StroopTask {...props} />;
       case "vigilancia": return <Vigilancia {...props} />;
       case "tempo-reacao": return <TempoReacao {...props} />;
-      case "decisao-rapida": return <DecisaoRapida {...props} />;
       case "identificacao-simbolos": return <IdentificacaoSimbolos {...props} />;
       case "torre-hanoi": return <TorreHanoi {...props} />;
       case "labirinto": return <Labirinto {...props} />;
@@ -554,14 +517,11 @@ export default function ExercicioPage() {
       case "restaurante-ordem":
       case "restaurante-ordem-auditivo": return <RestauranteOrdem {...props} />;
       case "task-switching": return <TaskSwitching {...props} />;
-      case "atencao-sustentada": return <AtencaoSustentada {...props} />;
       case "mot": return <MOT {...props} />;
       case "dual-task": return <DualTask {...props} />;
       case "deductive-grid": return <DeductiveGrid {...props} />;
       case "focus-agents":
       case "focus-agents-auditivo": return <FocusAgents {...props} settings={exerciseSettings as { mode?: "foco"|"inibicao"|"alternancia"|"desafio"; startLevel?: number; freeChoice?: boolean; feedback?: "leve"|"normal"|"intenso"; autoAdvance?: boolean } | undefined} />;
-      case "atencao-alternada": return <AtencaoAlternada {...props} />;
-      case "associacao-pares": return <AssociacaoPares {...props} />;
       case "cubo-corsi": return <CuboCorsi {...props} />;
       default: return <div className="p-8 text-center text-gray-500">Exercício em desenvolvimento</div>;
     }

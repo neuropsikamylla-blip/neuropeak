@@ -23,8 +23,6 @@ export const EXERCISE_META: Record<string, ExerciseMeta> = {
   "desafio-supermercado-auditivo": { type: "auditiva", difficulty: "medio", secondary: ["Atenção Seletiva", "Atividades de Vida Diária"] },
   // Atenção
   "trilha-visual": { type: "visual", difficulty: "facil", secondary: ["Tempo de Reação"] },
-  "atencao-seletiva": { type: "visual", difficulty: "medio", secondary: ["Busca Visual Rápida"] },
-  "atencao-sustentada": { type: "visual", difficulty: "medio", secondary: ["Controle Inibitório"] },
   "dual-task": { type: "visual", difficulty: "dificil", secondary: ["Flexibilidade Cognitiva"] },
   "mot": { type: "espacial", difficulty: "dificil", secondary: ["Atenção Seletiva"] },
   "focus-agents": { type: "visual", difficulty: "medio", secondary: ["Atenção Seletiva"] },

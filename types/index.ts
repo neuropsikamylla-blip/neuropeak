@@ -279,30 +279,6 @@ export const EXERCISE_DEFINITIONS = {
     estimatedMinutes: 7,
     icon: "📅",
   },
-  "atencao-seletiva": {
-    id: "atencao-seletiva",
-    name: "Atenção Seletiva",
-    domain: "attention" as Domain,
-    description: "Responda ao estímulo alvo e iniba respostas aos distratores",
-    estimatedMinutes: 7,
-    icon: "🎯",
-  },
-  "atencao-alternada": {
-    id: "atencao-alternada",
-    name: "Atenção Alternada",
-    domain: "attention" as Domain,
-    description: "Alterne entre duas regras de classificação",
-    estimatedMinutes: 7,
-    icon: "🔀",
-  },
-  "atencao-sustentada": {
-    id: "atencao-sustentada",
-    name: "Atenção Sustentada",
-    domain: "attention" as Domain,
-    description: "Responda apenas ao padrão X após A — resistência mental e vigilância",
-    estimatedMinutes: 8,
-    icon: "🔔",
-  },
   "desafio-supermercado": {
     id: "desafio-supermercado",
     name: "Supermercado",
@@ -423,14 +399,6 @@ export const EXERCISE_DEFINITIONS = {
     estimatedMinutes: 7,
     icon: "👁️",
   },
-  "decisao-rapida": {
-    id: "decisao-rapida",
-    name: "Decisão Rápida",
-    domain: "processing" as Domain,
-    description: "Classifique rapidamente imagens entre animais e objetos",
-    estimatedMinutes: 6,
-    icon: "⚡",
-  },
   "identificacao-simbolos": {
     id: "identificacao-simbolos",
     name: "Identificação de Símbolos",
@@ -446,14 +414,6 @@ export const EXERCISE_DEFINITIONS = {
     description: "Decida se a letra atual é igual à de N posições atrás — memória operacional",
     estimatedMinutes: 8,
     icon: "🧠",
-  },
-  "associacao-pares": {
-    id: "associacao-pares",
-    name: "Associação de Pares",
-    domain: "memory" as Domain,
-    description: "Memorize pares de palavras e imagens e recupere as associações",
-    estimatedMinutes: 7,
-    icon: "🔗",
   },
 } as const;
 
