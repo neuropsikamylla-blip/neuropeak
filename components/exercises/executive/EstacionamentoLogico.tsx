@@ -1,11 +1,19 @@
 "use client";
 
-import { useState, useEffect, useRef, useCallback } from "react";
+import { useState, useRef, useCallback } from "react";
 import { calculateExerciseScore } from "@/lib/scoring";
 import { useExerciseProgress } from "@/components/exercises/ExerciseWrapper";
 import type { ExerciseResult, Theme } from "@/types";
 
-// ── Tipos ─────────────────────────────────────────────────────────────────────
+// ── Layout constants ──────────────────────────────────────────────────────────
+const GRID = 6;
+const CELL = 50;           // px per grid cell
+const BORDER = 6;          // border/curb thickness px
+const BOARD_PX = GRID * CELL; // 300px interior
+const EXIT_ROW = 2;        // target car row (0-indexed)
+const LANE_W = 30;         // exit lane extension in SVG
+
+// ── Types ─────────────────────────────────────────────────────────────────────
 interface Car {
   id: string;
   row: number;
@@ -16,199 +24,173 @@ interface Car {
 }
 interface Level {
   id: number;
-  difficulty: "Fácil" | "Médio" | "Difícil";
-  maxMoves: number;
   idealMoves: number;
   cars: Car[];
 }
-interface PuzzleResult {
-  moves: number;
-  idealMoves: number;
-  timeSec: number;
+interface DragState {
+  carId: string;
+  axis: "horizontal" | "vertical";
+  startPx: number;
+  startPos: number;
+  currentPos: number;
 }
 
-// ── Constantes ────────────────────────────────────────────────────────────────
-const GRID = 6;
-const PUZZLES_PER_SESSION = 5;
-
-// ── Cores dos veículos (inline para evitar purge do Tailwind) ─────────────────
-const CAR_PALETTE: Record<string, { bg: string; border: string }> = {
-  red:    { bg: "#EF4444", border: "#B91C1C" },
-  teal:   { bg: "#14B8A6", border: "#0D9488" },
-  purple: { bg: "#A855F7", border: "#7C3AED" },
-  blue:   { bg: "#3B82F6", border: "#1D4ED8" },
-  yellow: { bg: "#EAB308", border: "#A16207" },
-  orange: { bg: "#F97316", border: "#C2410C" },
-  pink:   { bg: "#EC4899", border: "#BE185D" },
-  indigo: { bg: "#6366F1", border: "#4338CA" },
-  lime:   { bg: "#84CC16", border: "#4D7C0F" },
-  slate:  { bg: "#64748B", border: "#334155" },
+// ── Muted professional vehicle color palette ──────────────────────────────────
+const VEH_HEX: Record<string, string> = {
+  red:    "#C03030",
+  teal:   "#3E6D7E",
+  purple: "#5C5282",
+  blue:   "#345A7C",
+  yellow: "#6E6022",
+  orange: "#7A5530",
+  pink:   "#7A3D5C",
+  indigo: "#363A6C",
+  lime:   "#476230",
+  slate:  "#525E6C",
 };
 
-// ── Fases / Puzzles ───────────────────────────────────────────────────────────
-// Convenção: target sempre horizontal na linha 2; saída à direita (col≥GRID).
-// Validação: nenhum par de carros ocupa a mesma célula no estado inicial.
+// ── Puzzle levels (logic unchanged) ───────────────────────────────────────────
 const ALL_LEVELS: Level[] = [
   {
-    id: 1, difficulty: "Fácil", maxMoves: 6, idealMoves: 2,
+    id: 1, idealMoves: 2,
     cars: [
       { id:"target", row:2, col:3, len:2, orientation:"horizontal", color:"red" },
       { id:"A",      row:1, col:5, len:2, orientation:"vertical",   color:"teal" },
     ],
-    // A=(1,5)(2,5) bloqueia (2,5). Mover A para cima → target sai.
   },
   {
-    id: 2, difficulty: "Fácil", maxMoves: 8, idealMoves: 3,
+    id: 2, idealMoves: 3,
     cars: [
       { id:"target", row:2, col:1, len:2, orientation:"horizontal", color:"red" },
       { id:"A",      row:0, col:3, len:3, orientation:"vertical",   color:"teal" },
       { id:"B",      row:1, col:4, len:2, orientation:"vertical",   color:"purple" },
     ],
-    // A bloqueia (2,3); B bloqueia (2,4). B↑, A↓, target sai.
   },
   {
-    id: 3, difficulty: "Fácil", maxMoves: 10, idealMoves: 4,
+    id: 3, idealMoves: 4,
     cars: [
       { id:"target", row:2, col:0, len:2, orientation:"horizontal", color:"red" },
-      { id:"A",      row:0, col:2, len:3, orientation:"vertical",   color:"teal" },
-      { id:"B",      row:3, col:1, len:2, orientation:"horizontal", color:"blue" },
-      { id:"C",      row:1, col:4, len:2, orientation:"vertical",   color:"purple" },
+      { id:"A",      row:0, col:2, len:3, orientation:"vertical",   color:"blue" },
+      { id:"B",      row:3, col:1, len:2, orientation:"horizontal", color:"slate" },
+      { id:"C",      row:1, col:4, len:2, orientation:"vertical",   color:"teal" },
     ],
-    // B bloqueia A de descer; C bloqueia (2,4). B←, A↓, C↑, target sai.
   },
   {
-    id: 4, difficulty: "Médio", maxMoves: 12, idealMoves: 5,
+    id: 4, idealMoves: 5,
     cars: [
       { id:"target", row:2, col:0, len:2, orientation:"horizontal", color:"red" },
       { id:"A",      row:0, col:2, len:3, orientation:"vertical",   color:"teal" },
-      { id:"B",      row:0, col:4, len:3, orientation:"vertical",   color:"purple" },
+      { id:"B",      row:0, col:4, len:3, orientation:"vertical",   color:"blue" },
       { id:"D",      row:3, col:3, len:2, orientation:"horizontal", color:"yellow" },
-      { id:"E",      row:4, col:2, len:2, orientation:"horizontal", color:"orange" },
+      { id:"E",      row:4, col:2, len:2, orientation:"horizontal", color:"slate" },
     ],
-    // D bloqueia B (linha 3 col 3-4); E bloqueia A (linha 4 col 2).
-    // D←, E←(col 0), A↓, B↓, target sai.
   },
   {
-    id: 5, difficulty: "Médio", maxMoves: 12, idealMoves: 5,
+    id: 5, idealMoves: 5,
     cars: [
       { id:"target", row:2, col:0, len:2, orientation:"horizontal", color:"red" },
       { id:"A",      row:0, col:2, len:3, orientation:"vertical",   color:"teal" },
-      { id:"B",      row:0, col:4, len:3, orientation:"vertical",   color:"purple" },
-      { id:"C",      row:1, col:5, len:2, orientation:"vertical",   color:"blue" },
+      { id:"B",      row:0, col:4, len:3, orientation:"vertical",   color:"blue" },
+      { id:"C",      row:1, col:5, len:2, orientation:"vertical",   color:"purple" },
       { id:"D",      row:3, col:2, len:2, orientation:"horizontal", color:"yellow" },
     ],
-    // D bloqueia A de descer; C bloqueia (2,5). D←, A↓, B↓, C↑, target sai.
   },
   {
-    id: 6, difficulty: "Médio", maxMoves: 14, idealMoves: 6,
+    id: 6, idealMoves: 6,
     cars: [
       { id:"target", row:2, col:0, len:2, orientation:"horizontal", color:"red" },
       { id:"A",      row:0, col:2, len:3, orientation:"vertical",   color:"teal" },
-      { id:"B",      row:0, col:4, len:3, orientation:"vertical",   color:"purple" },
-      { id:"C",      row:1, col:5, len:2, orientation:"vertical",   color:"blue" },
+      { id:"B",      row:0, col:4, len:3, orientation:"vertical",   color:"blue" },
+      { id:"C",      row:1, col:5, len:2, orientation:"vertical",   color:"slate" },
       { id:"D",      row:3, col:1, len:2, orientation:"horizontal", color:"yellow" },
-      { id:"F",      row:1, col:3, len:2, orientation:"vertical",   color:"orange" },
+      { id:"F",      row:1, col:3, len:2, orientation:"vertical",   color:"purple" },
     ],
-    // F bloqueia (2,3); D bloqueia A. D←, A↓, F↑, B↓, C↑, target sai.
   },
   {
-    id: 7, difficulty: "Médio", maxMoves: 16, idealMoves: 7,
+    id: 7, idealMoves: 7,
     cars: [
       { id:"target", row:2, col:0, len:2, orientation:"horizontal", color:"red" },
       { id:"A",      row:0, col:2, len:3, orientation:"vertical",   color:"teal" },
-      { id:"B",      row:0, col:4, len:3, orientation:"vertical",   color:"purple" },
-      { id:"C",      row:1, col:5, len:2, orientation:"vertical",   color:"blue" },
+      { id:"B",      row:0, col:4, len:3, orientation:"vertical",   color:"blue" },
+      { id:"C",      row:1, col:5, len:2, orientation:"vertical",   color:"slate" },
       { id:"D",      row:3, col:1, len:2, orientation:"horizontal", color:"yellow" },
-      { id:"F",      row:1, col:3, len:2, orientation:"vertical",   color:"orange" },
-      { id:"H",      row:4, col:3, len:2, orientation:"horizontal", color:"pink" },
+      { id:"F",      row:1, col:3, len:2, orientation:"vertical",   color:"purple" },
+      { id:"H",      row:4, col:3, len:2, orientation:"horizontal", color:"lime" },
     ],
-    // H bloqueia F de descer para row 4. H←(col 0), D←, A↓, F↓, B↓, C↑, target sai.
   },
   {
-    id: 8, difficulty: "Difícil", maxMoves: 18, idealMoves: 7,
+    id: 8, idealMoves: 7,
     cars: [
       { id:"target", row:2, col:0, len:2, orientation:"horizontal", color:"red" },
       { id:"A",      row:0, col:2, len:3, orientation:"vertical",   color:"teal" },
-      { id:"B",      row:0, col:4, len:3, orientation:"vertical",   color:"purple" },
-      { id:"C",      row:1, col:5, len:2, orientation:"vertical",   color:"blue" },
+      { id:"B",      row:0, col:4, len:3, orientation:"vertical",   color:"blue" },
+      { id:"C",      row:1, col:5, len:2, orientation:"vertical",   color:"slate" },
       { id:"D",      row:3, col:1, len:2, orientation:"horizontal", color:"yellow" },
-      { id:"E",      row:0, col:3, len:3, orientation:"vertical",   color:"orange" },
-      { id:"F",      row:4, col:4, len:2, orientation:"horizontal", color:"pink" },
+      { id:"E",      row:0, col:3, len:3, orientation:"vertical",   color:"purple" },
+      { id:"F",      row:4, col:4, len:2, orientation:"horizontal", color:"lime" },
     ],
-    // E bloqueia (2,3); F bloqueia B de descer para row 4. D←, A↓, E↓, F←(col 0), B↓, C↑, target sai.
   },
   {
-    id: 9, difficulty: "Difícil", maxMoves: 20, idealMoves: 8,
+    id: 9, idealMoves: 8,
     cars: [
       { id:"target", row:2, col:0, len:2, orientation:"horizontal", color:"red" },
       { id:"A",      row:0, col:2, len:3, orientation:"vertical",   color:"teal" },
-      { id:"B",      row:0, col:4, len:3, orientation:"vertical",   color:"purple" },
-      { id:"C",      row:1, col:5, len:2, orientation:"vertical",   color:"blue" },
+      { id:"B",      row:0, col:4, len:3, orientation:"vertical",   color:"blue" },
+      { id:"C",      row:1, col:5, len:2, orientation:"vertical",   color:"slate" },
       { id:"D",      row:3, col:1, len:2, orientation:"horizontal", color:"yellow" },
-      { id:"E",      row:0, col:3, len:3, orientation:"vertical",   color:"orange" },
-      { id:"F",      row:4, col:4, len:2, orientation:"horizontal", color:"pink" },
+      { id:"E",      row:0, col:3, len:3, orientation:"vertical",   color:"purple" },
+      { id:"F",      row:4, col:4, len:2, orientation:"horizontal", color:"lime" },
       { id:"G",      row:5, col:1, len:2, orientation:"horizontal", color:"indigo" },
     ],
-    // G bloqueia A de descer para row 5. G→(col 3), D←, A↓, E↓, F←, B↓, C↑, target sai.
   },
   {
-    id: 10, difficulty: "Difícil", maxMoves: 22, idealMoves: 9,
+    id: 10, idealMoves: 9,
     cars: [
       { id:"target", row:2, col:0, len:2, orientation:"horizontal", color:"red" },
       { id:"A",      row:0, col:2, len:3, orientation:"vertical",   color:"teal" },
-      { id:"B",      row:0, col:4, len:3, orientation:"vertical",   color:"purple" },
-      { id:"C",      row:1, col:5, len:2, orientation:"vertical",   color:"blue" },
+      { id:"B",      row:0, col:4, len:3, orientation:"vertical",   color:"blue" },
+      { id:"C",      row:1, col:5, len:2, orientation:"vertical",   color:"slate" },
       { id:"D",      row:3, col:1, len:2, orientation:"horizontal", color:"yellow" },
-      { id:"E",      row:0, col:3, len:3, orientation:"vertical",   color:"orange" },
-      { id:"F",      row:4, col:4, len:2, orientation:"horizontal", color:"pink" },
+      { id:"E",      row:0, col:3, len:3, orientation:"vertical",   color:"purple" },
+      { id:"F",      row:4, col:4, len:2, orientation:"horizontal", color:"lime" },
       { id:"G",      row:5, col:1, len:2, orientation:"horizontal", color:"indigo" },
-      { id:"H",      row:3, col:0, len:2, orientation:"vertical",   color:"slate" },
+      { id:"H",      row:3, col:0, len:2, orientation:"vertical",   color:"orange" },
     ],
-    // H=(3,0)(4,0) bloqueia D de ir para col 0. H↓, G→, D←, A↓, E↓, F←, B↓, C↑, target sai.
   },
 ];
 
-// ── Lógica de jogo ────────────────────────────────────────────────────────────
-function occupiedCells(car: Car): [number, number][] {
-  const cells: [number, number][] = [];
-  for (let i = 0; i < car.len; i++) {
-    cells.push(car.orientation === "horizontal"
-      ? [car.row, car.col + i]
-      : [car.row + i, car.col]);
-  }
-  return cells;
-}
+const TOTAL_PHASES = ALL_LEVELS.length; // 10
 
+// ── Move validation ────────────────────────────────────────────────────────────
 function buildGrid(cars: Car[]): boolean[][] {
-  const grid: boolean[][] = Array.from({ length: GRID }, () => Array(GRID).fill(false));
-  for (const car of cars) {
-    for (const [r, c] of occupiedCells(car)) {
-      if (r >= 0 && r < GRID && c >= 0 && c < GRID) grid[r][c] = true;
+  const g: boolean[][] = Array.from({ length: GRID }, () => Array(GRID).fill(false));
+  for (const c of cars) {
+    for (let i = 0; i < c.len; i++) {
+      const r   = c.orientation === "vertical"   ? c.row + i : c.row;
+      const col = c.orientation === "horizontal" ? c.col + i : c.col;
+      if (r >= 0 && r < GRID && col >= 0 && col < GRID) g[r][col] = true;
     }
   }
-  return grid;
+  return g;
 }
 
 function canMove(cars: Car[], carId: string, newPos: number): boolean {
   const car = cars.find(c => c.id === carId)!;
-  const isTarget = car.id === "target";
-
   if (car.orientation === "horizontal") {
-    const maxC = isTarget ? GRID - car.len + 1 : GRID - car.len;
+    const maxC = car.id === "target" ? GRID - car.len + 1 : GRID - car.len;
     if (newPos < 0 || newPos > maxC) return false;
-    // Para target na posição de saída: não checar colisão (já saiu)
-    if (isTarget && newPos >= GRID - car.len + 1) return true;
-    const grid = buildGrid(cars.filter(c => c.id !== carId));
+    if (car.id === "target" && newPos >= GRID - car.len + 1) return true; // exit
+    const g = buildGrid(cars.filter(c => c.id !== carId));
     for (let i = 0; i < car.len; i++) {
-      const c = newPos + i;
-      if (c < GRID && grid[car.row][c]) return false;
+      const col = newPos + i;
+      if (col < GRID && g[car.row][col]) return false;
     }
   } else {
     if (newPos < 0 || newPos > GRID - car.len) return false;
-    const grid = buildGrid(cars.filter(c => c.id !== carId));
+    const g = buildGrid(cars.filter(c => c.id !== carId));
     for (let i = 0; i < car.len; i++) {
       const r = newPos + i;
-      if (r < GRID && grid[r][car.col]) return false;
+      if (r < GRID && g[r][car.col]) return false;
     }
   }
   return true;
@@ -219,517 +201,384 @@ function isWin(cars: Car[]): boolean {
   return !!t && t.col + t.len >= GRID;
 }
 
-// ── Componente principal ───────────────────────────────────────────────────────
+// ── SVG top-view vehicle ──────────────────────────────────────────────────────
+// Windshield: right (horizontal) / bottom (vertical). Wheels at corners.
+function VehicleSVG({
+  color, len, orientation, isTarget,
+}: {
+  color: string; len: number; orientation: "horizontal" | "vertical"; isTarget: boolean;
+}) {
+  const base = VEH_HEX[color] ?? VEH_HEX.slate;
+  const uid  = `v${color[0]}${len}${orientation[0]}`;
+
+  if (orientation === "horizontal") {
+    const VW = len * 100, VH = 100;
+    const PX = 5, PY = 8;
+    const BW = VW - PX * 2, BH = VH - PY * 2;
+    const WW = 24, WH = 13;
+    const WXR = PX + 20, WXF = VW - PX - WW - 20;
+    const WYT = PY - WH + 2, WYB = PY + BH - 2;
+    return (
+      <svg viewBox={`0 0 ${VW} ${VH}`} width="100%" height="100%" overflow="visible">
+        <defs>
+          <filter id={uid}>
+            <feDropShadow dx="0" dy="4" stdDeviation="5" floodColor="rgba(0,0,0,0.4)" />
+          </filter>
+        </defs>
+        {/* shadow */}
+        <rect x={PX+3} y={PY+7} width={BW} height={BH} rx={12} fill="rgba(0,0,0,0.2)" />
+        {/* body */}
+        <rect x={PX} y={PY} width={BW} height={BH} rx={12} fill={base} filter={`url(#${uid})`} />
+        {/* roof */}
+        <rect x={PX+50} y={PY+13} width={VW-PX*2-108} height={BH-26} rx={7} fill="rgba(255,255,255,0.1)" />
+        {/* windshield (right = front) */}
+        <rect x={VW-PX-48} y={PY+11} width={34} height={BH-22} rx={6} fill="rgba(160,215,245,0.52)" />
+        {/* rear window */}
+        <rect x={PX+14} y={PY+13} width={28} height={BH-26} rx={5} fill="rgba(160,215,245,0.34)" />
+        {/* highlight strip */}
+        <rect x={PX+12} y={PY+3} width={BW-24} height={3} rx={1} fill="rgba(255,255,255,0.22)" />
+        {/* wheels */}
+        <rect x={WXR} y={WYT} width={WW} height={WH} rx={4} fill="#18181C" />
+        <rect x={WXR} y={WYB} width={WW} height={WH} rx={4} fill="#18181C" />
+        <rect x={WXF} y={WYT} width={WW} height={WH} rx={4} fill="#18181C" />
+        <rect x={WXF} y={WYB} width={WW} height={WH} rx={4} fill="#18181C" />
+        {isTarget && (
+          <rect x={PX+1} y={PY+1} width={BW-2} height={BH-2} rx={11}
+            fill="none" stroke="rgba(255,200,180,0.4)" strokeWidth={2.5} />
+        )}
+      </svg>
+    );
+  }
+
+  // Vertical — front = bottom
+  const VW = 100, VH = len * 100;
+  const PX = 8, PY = 5;
+  const BW = VW - PX * 2, BH = VH - PY * 2;
+  const WW = 13, WH = 24;
+  const WXL = PX - WW + 2, WXR2 = PX + BW - 2;
+  const WYT = PY + 20, WYB = VH - PY - WH - 20;
+  return (
+    <svg viewBox={`0 0 ${VW} ${VH}`} width="100%" height="100%" overflow="visible">
+      <defs>
+        <filter id={uid}>
+          <feDropShadow dx="4" dy="0" stdDeviation="5" floodColor="rgba(0,0,0,0.4)" />
+        </filter>
+      </defs>
+      <rect x={PX+6} y={PY+2} width={BW} height={BH} rx={12} fill="rgba(0,0,0,0.2)" />
+      <rect x={PX} y={PY} width={BW} height={BH} rx={12} fill={base} filter={`url(#${uid})`} />
+      {/* roof */}
+      <rect x={PX+13} y={PY+50} width={BW-26} height={VH-PY*2-108} rx={7} fill="rgba(255,255,255,0.1)" />
+      {/* windshield (bottom) */}
+      <rect x={PX+11} y={VH-PY-48} width={BW-22} height={34} rx={6} fill="rgba(160,215,245,0.52)" />
+      {/* rear window (top) */}
+      <rect x={PX+13} y={PY+14} width={BW-26} height={28} rx={5} fill="rgba(160,215,245,0.34)" />
+      {/* highlight */}
+      <rect x={PX+3} y={PY+12} width={3} height={BH-24} rx={1} fill="rgba(255,255,255,0.22)" />
+      {/* wheels */}
+      <rect x={WXL} y={WYT} width={WW} height={WH} rx={4} fill="#18181C" />
+      <rect x={WXR2} y={WYT} width={WW} height={WH} rx={4} fill="#18181C" />
+      <rect x={WXL} y={WYB} width={WW} height={WH} rx={4} fill="#18181C" />
+      <rect x={WXR2} y={WYB} width={WW} height={WH} rx={4} fill="#18181C" />
+      {isTarget && (
+        <rect x={PX+1} y={PY+1} width={BW-2} height={BH-2} rx={11}
+          fill="none" stroke="rgba(255,200,180,0.4)" strokeWidth={2.5} />
+      )}
+    </svg>
+  );
+}
+
+// ── Parking lot board SVG overlay ─────────────────────────────────────────────
+function BoardOverlay() {
+  const S   = BOARD_PX;
+  const B   = BORDER;
+  const T   = S + B * 2;
+  const EY1 = B + EXIT_ROW * CELL;
+  const EY2 = B + (EXIT_ROW + 1) * CELL;
+  const EX  = T - B;
+  const AX  = EX + 8;
+
+  return (
+    <svg
+      width={T + LANE_W}
+      height={T}
+      style={{ position: "absolute", top: 0, left: 0, pointerEvents: "none", display: "block" }}
+    >
+      {/* Exit lane asphalt */}
+      <rect x={EX} y={EY1} width={B + LANE_W} height={CELL} fill="#373E4B" />
+      {/* Main asphalt */}
+      <rect x={B} y={B} width={S} height={S} fill="#373E4B" />
+
+      {/* Concrete curb */}
+      <rect x={0} y={0} width={T} height={B} rx={2} fill="#5C6470" />
+      <rect x={0} y={T-B} width={T} height={B} rx={2} fill="#5C6470" />
+      <rect x={0} y={0} width={B} height={T} rx={2} fill="#5C6470" />
+      <rect x={EX} y={0} width={B} height={EY1} rx={1} fill="#5C6470" />
+      <rect x={EX} y={EY2} width={B} height={T-EY2} rx={1} fill="#5C6470" />
+
+      {/* Parking lines */}
+      {[1,2,3,4,5].map(r => (
+        <line key={`h${r}`}
+          x1={B} y1={B + r*CELL} x2={B+S} y2={B + r*CELL}
+          stroke="rgba(255,255,255,0.18)" strokeWidth={1.5}
+        />
+      ))}
+      {[1,2,3,4,5].map(c => (
+        <line key={`v${c}`}
+          x1={B + c*CELL} y1={B} x2={B + c*CELL} y2={B+S}
+          stroke="rgba(255,255,255,0.18)" strokeWidth={1.5}
+        />
+      ))}
+
+      {/* Guide dashes in exit lane */}
+      <line
+        x1={B + 4*CELL} y1={EY1 + CELL/2}
+        x2={EX}          y2={EY1 + CELL/2}
+        stroke="rgba(255,210,0,0.25)" strokeWidth={2} strokeDasharray="8 5"
+      />
+
+      {/* Exit arrow painted on asphalt */}
+      <polygon
+        points={`${AX},${EY1+CELL/2-9} ${AX+17},${EY1+CELL/2} ${AX},${EY1+CELL/2+9}`}
+        fill="rgba(255,255,255,0.36)"
+      />
+    </svg>
+  );
+}
+
+// ── Main component ────────────────────────────────────────────────────────────
 interface Props {
   difficulty: number;
   theme: Theme;
-  onComplete: (result: ExerciseResult) => void;
+  onComplete: (r: ExerciseResult) => void;
 }
 
-export function EstacionamentoLogico({ difficulty, theme, onComplete }: Props) {
+export function EstacionamentoLogico({ difficulty, theme: _theme, onComplete }: Props) {
   const markProgress = useExerciseProgress();
 
-  // Selecionar subconjunto de níveis baseado na dificuldade
-  const startIdx = difficulty <= 3 ? 0 : difficulty <= 6 ? 2 : 5;
-  const sessionLevels = ALL_LEVELS.slice(startIdx, startIdx + PUZZLES_PER_SESSION);
+  const [puzzleIdx, setPuzzleIdx]   = useState(0);
+  const [cars, setCars]             = useState<Car[]>(() => ALL_LEVELS[0].cars.map(c => ({ ...c })));
+  const [moves, setMoves]           = useState(0);
+  const [history, setHistory]       = useState<Car[][]>([]);
+  const [won, setWon]               = useState(false);
+  const [resultsLog, setResultsLog] = useState<{ moves: number; ideal: number }[]>([]);
+  const [dragPrev, setDragPrev]     = useState<{ id: string; pos: number } | null>(null);
 
-  const [puzzleIdx, setPuzzleIdx]       = useState(0);
-  const [cars, setCars]                 = useState<Car[]>(() => sessionLevels[0].cars.map(c => ({ ...c })));
-  const [moves, setMoves]               = useState(0);
-  const [history, setHistory]           = useState<Car[][]>([]);
-  const [won, setWon]                   = useState(false);
-  const [puzzleResults, setPuzzleResults] = useState<PuzzleResult[]>([]);
-  const [exerciseDone, setExerciseDone] = useState(false);
+  const boardRef = useRef<HTMLDivElement>(null);
+  const dragRef  = useRef<DragState | null>(null);
+  const startTs  = useRef(Date.now());
+  // Ref keeps latest resultsLog for finishExercise without stale closure
+  const resultsRef = useRef<{ moves: number; ideal: number }[]>([]);
 
-  const [elapsed, setElapsed]           = useState(0);
-  const timerRef                        = useRef<ReturnType<typeof setInterval> | null>(null);
-  const startTimeRef                    = useRef(Date.now());
+  const currentLevel = ALL_LEVELS[puzzleIdx];
 
-  const [hintId, setHintId]             = useState<string | null>(null);
-
-  // Drag state
-  const gridRef     = useRef<HTMLDivElement>(null);
-  const dragRef     = useRef<{
-    carId: string;
-    axis: "horizontal" | "vertical";
-    startPx: number;
-    startPos: number;
-    currentPos: number;
-  } | null>(null);
-  const [dragPreview, setDragPreview]   = useState<{ id: string; pos: number } | null>(null);
-
-  const currentLevel = sessionLevels[puzzleIdx];
-
-  // Timer
-  useEffect(() => {
-    if (won || exerciseDone) { if (timerRef.current) clearInterval(timerRef.current); return; }
-    startTimeRef.current = Date.now() - elapsed * 1000;
-    timerRef.current = setInterval(() => setElapsed(Math.floor((Date.now() - startTimeRef.current) / 1000)), 500);
-    return () => { if (timerRef.current) clearInterval(timerRef.current); };
-  // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [puzzleIdx, won, exerciseDone]);
-
-  // Init puzzle
-  const initPuzzle = useCallback((idx: number) => {
-    const lvl = sessionLevels[idx];
-    setCars(lvl.cars.map(c => ({ ...c })));
+  // ── Puzzle init ────────────────────────────────────────────────────────────
+  const loadPuzzle = useCallback((idx: number) => {
+    setCars(ALL_LEVELS[idx].cars.map(c => ({ ...c })));
     setMoves(0);
     setHistory([]);
     setWon(false);
-    setElapsed(0);
-    setDragPreview(null);
-    setHintId(null);
-    startTimeRef.current = Date.now();
-  }, [sessionLevels]);
+    setDragPrev(null);
+    dragRef.current = null;
+  }, []);
 
-  // Checar vitória
-  const checkWin = useCallback((newCars: Car[]) => {
-    if (isWin(newCars)) {
-      setWon(true);
-      const timeSec = Math.floor((Date.now() - startTimeRef.current) / 1000);
-      const result: PuzzleResult = { moves: moves + 1, idealMoves: currentLevel.idealMoves, timeSec };
-      const allResults = [...puzzleResults, result];
-      setPuzzleResults(allResults);
-      markProgress(Math.round(((puzzleIdx + 1) / PUZZLES_PER_SESSION) * 100));
+  const restart = () => loadPuzzle(puzzleIdx);
 
-      if (puzzleIdx + 1 >= PUZZLES_PER_SESSION) {
-        setExerciseDone(true);
-      }
-    }
-  }, [moves, currentLevel.idealMoves, puzzleResults, puzzleIdx, markProgress]);
-
-  // Executar movimento
-  const applyMove = useCallback((carId: string, newPos: number) => {
-    if (!canMove(cars, carId, newPos)) return;
-    setHistory(h => [...h, cars.map(c => ({ ...c }))]);
-    const newCars = cars.map(c => c.id === carId
-      ? { ...c, [c.orientation === "horizontal" ? "col" : "row"]: newPos }
-      : c);
-    setCars(newCars);
-    setMoves(m => m + 1);
-    checkWin(newCars);
-  }, [cars, checkWin]);
-
-  // Desfazer
-  const undo = useCallback(() => {
-    if (history.length === 0) return;
-    const prev = history[history.length - 1];
-    setCars(prev);
-    setHistory(h => h.slice(0, -1));
-    setMoves(m => Math.max(0, m - 1));
-    setWon(false);
-  }, [history]);
-
-  // Reiniciar puzzle
-  const restart = useCallback(() => initPuzzle(puzzleIdx), [initPuzzle, puzzleIdx]);
-
-  // Dica: piscar carro com movimento disponível
-  const hint = useCallback(() => {
-    const movable = cars.find(car => {
-      const pos = car.orientation === "horizontal" ? car.col : car.row;
-      return canMove(cars, car.id, pos - 1) || canMove(cars, car.id, pos + 1);
+  // ── Finish exercise ────────────────────────────────────────────────────────
+  const finish = useCallback(() => {
+    const allRes = resultsRef.current;
+    const totalMoves = allRes.reduce((s, r) => s + r.moves, 0);
+    const totalIdeal = allRes.reduce((s, r) => s + r.ideal, 0);
+    const acc   = Math.min(1, totalIdeal / Math.max(1, totalMoves));
+    const dur   = Math.round((Date.now() - startTs.current) / 1000);
+    const score = calculateExerciseScore("estacionamento-logico", acc, dur * 100, difficulty);
+    onComplete({
+      exerciseId: "estacionamento-logico", domain: "executive",
+      score, accuracy: acc, reactionTime: dur * 100, difficulty, duration: dur,
+      metadata: { puzzlesSolved: allRes.length, totalMoves, totalIdeal },
     });
-    if (!movable) return;
-    setHintId(movable.id);
-    setTimeout(() => setHintId(null), 1800);
-  }, [cars]);
+  }, [difficulty, onComplete]);
 
-  // ── Drag / Pointer events ────────────────────────────────────────────────────
-  const onPointerDown = useCallback((e: React.PointerEvent, car: Car) => {
+  // ── Next puzzle / finish ───────────────────────────────────────────────────
+  const nextPuzzle = () => {
+    const ni = puzzleIdx + 1;
+    if (ni >= TOTAL_PHASES) {
+      finish();
+    } else {
+      setPuzzleIdx(ni);
+      loadPuzzle(ni);
+    }
+  };
+
+  // ── Commit a car move ──────────────────────────────────────────────────────
+  const commitMove = useCallback((carId: string, newPos: number) => {
+    setCars(prev => {
+      if (!canMove(prev, carId, newPos)) return prev;
+      const next = prev.map(c => c.id === carId
+        ? { ...c, [c.orientation === "horizontal" ? "col" : "row"]: newPos }
+        : c);
+      setHistory(h => [...h, prev]);
+      setMoves(m => {
+        const nm = m + 1;
+        if (isWin(next)) {
+          setWon(true);
+          const res = { moves: nm, ideal: ALL_LEVELS[puzzleIdx].idealMoves };
+          const newLog = [...resultsRef.current, res];
+          resultsRef.current = newLog;
+          setResultsLog(newLog);
+          markProgress(Math.round((puzzleIdx + 1) / TOTAL_PHASES * 100));
+        }
+        return nm;
+      });
+      return next;
+    });
+  }, [puzzleIdx, markProgress]);
+
+  // ── Pointer / drag ────────────────────────────────────────────────────────
+  const onPtrDown = useCallback((e: React.PointerEvent, car: Car) => {
     if (won) return;
     e.currentTarget.setPointerCapture(e.pointerId);
+    const pos = car.orientation === "horizontal" ? car.col : car.row;
     dragRef.current = {
-      carId: car.id,
-      axis: car.orientation,
+      carId: car.id, axis: car.orientation,
       startPx: car.orientation === "horizontal" ? e.clientX : e.clientY,
-      startPos: car.orientation === "horizontal" ? car.col : car.row,
-      currentPos: car.orientation === "horizontal" ? car.col : car.row,
+      startPos: pos, currentPos: pos,
     };
-    setDragPreview({ id: car.id, pos: car.orientation === "horizontal" ? car.col : car.row });
+    setDragPrev({ id: car.id, pos });
   }, [won]);
 
-  const onPointerMove = useCallback((e: React.PointerEvent, car: Car) => {
+  const onPtrMove = useCallback((e: React.PointerEvent, car: Car) => {
     const d = dragRef.current;
-    if (!d || d.carId !== car.id || !gridRef.current) return;
-    const rect = gridRef.current.getBoundingClientRect();
+    if (!d || d.carId !== car.id || !boardRef.current) return;
+    const rect = boardRef.current.getBoundingClientRect();
     const cellPx = rect.width / GRID;
     const px = d.axis === "horizontal" ? e.clientX : e.clientY;
     const delta = Math.round((px - d.startPx) / cellPx);
-    const target = d.startPos + delta;
-    const clamped = Math.max(0, Math.min(
-      car.id === "target" ? GRID - car.len + 1 : GRID - car.len,
-      target
-    ));
-    d.currentPos = clamped;
-    setDragPreview({ id: car.id, pos: clamped });
+    const maxPos = car.id === "target" ? GRID - car.len + 1 : GRID - car.len;
+    d.currentPos = Math.max(0, Math.min(maxPos, d.startPos + delta));
+    setDragPrev({ id: car.id, pos: d.currentPos });
   }, []);
 
-  const onPointerUp = useCallback((e: React.PointerEvent, car: Car) => {
+  const onPtrUp = useCallback((e: React.PointerEvent, car: Car) => {
     const d = dragRef.current;
     if (!d || d.carId !== car.id) return;
+    const orig = car.orientation === "horizontal" ? car.col : car.row;
     dragRef.current = null;
-    setDragPreview(null);
-    const origPos = car.orientation === "horizontal" ? car.col : car.row;
-    if (d.currentPos !== origPos) {
-      applyMove(car.id, d.currentPos);
-    }
-  }, [applyMove]);
+    setDragPrev(null);
+    if (d.currentPos !== orig) commitMove(car.id, d.currentPos);
+  }, [commitMove]);
 
-  // ── Avançar puzzle ───────────────────────────────────────────────────────────
-  const nextPuzzle = () => {
-    const ni = puzzleIdx + 1;
-    if (ni >= PUZZLES_PER_SESSION) {
-      finishExercise();
-    } else {
-      setPuzzleIdx(ni);
-      initPuzzle(ni);
-    }
-  };
-
-  const finishExercise = () => {
-    const allResults = puzzleResults.length > 0 ? puzzleResults : [{ moves: moves + 1, idealMoves: currentLevel.idealMoves, timeSec: elapsed }];
-    const avgEfficiency = allResults.reduce((s, r) => s + Math.min(1, r.idealMoves / Math.max(1, r.moves)), 0) / allResults.length;
-    const totalTime = allResults.reduce((s, r) => s + r.timeSec, 0);
-    const score = Math.round(avgEfficiency * 100);
-    onComplete({
-      exerciseId: "estacionamento-logico",
-      domain: "executive",
-      score,
-      accuracy: avgEfficiency,
-      reactionTime: (totalTime / allResults.length) * 1000,
-      difficulty,
-      duration: totalTime,
-      metadata: { puzzlesSolved: allResults.length, avgEfficiency: Math.round(avgEfficiency * 100) },
-    });
-  };
-
-  // ── Layout helpers ───────────────────────────────────────────────────────────
-  const fmtTime = (s: number) => `${Math.floor(s / 60)}:${String(s % 60).padStart(2, "0")}`;
-  const efficiency = Math.min(100, moves > 0 ? Math.round((currentLevel.idealMoves / moves) * 100) : 100);
-  const focusLabel = efficiency >= 80 ? "Alto" : efficiency >= 50 ? "Médio" : "Baixo";
-  const focusColor = efficiency >= 80 ? "text-green-600" : efficiency >= 50 ? "text-yellow-600" : "text-red-500";
-
-  // Cores do tema
-  const isLight = theme === "CLINICAL" || theme === "COLORFUL";
-  const pageBg  = theme === "GAMIFIED" ? "bg-gray-950" : theme === "COLORFUL" ? "bg-indigo-50" : "bg-slate-50";
-  const cardBg  = theme === "GAMIFIED" ? "bg-gray-900 border-gray-800" : "bg-white border-slate-200";
-  const textPrimary = theme === "GAMIFIED" ? "text-white" : "text-slate-800";
-  const textSub     = theme === "GAMIFIED" ? "text-gray-400" : "text-slate-500";
-  const accentCls   = theme === "GAMIFIED" ? "bg-cyan-500" : theme === "COLORFUL" ? "bg-indigo-500" : "bg-blue-600";
-  const accentTxt   = theme === "GAMIFIED" ? "text-cyan-400" : theme === "COLORFUL" ? "text-indigo-600" : "text-blue-700";
-  const gridBg      = theme === "GAMIFIED" ? "#111827" : "#F8FAFC";
-  const gridBorder  = theme === "GAMIFIED" ? "#374151" : "#CBD5E1";
-  const cellBg      = theme === "GAMIFIED" ? "#1F2937" : "#F1F5F9";
-
-  // ── Tela de conclusão do exercício ───────────────────────────────────────────
-  if (exerciseDone) {
-    const totalMoves = puzzleResults.reduce((s, r) => s + r.moves, 0);
-    const totalIdeal = puzzleResults.reduce((s, r) => s + r.idealMoves, 0);
-    const totalTime  = puzzleResults.reduce((s, r) => s + r.timeSec, 0);
-    const avg        = Math.round((totalIdeal / Math.max(1, totalMoves)) * 100);
+  // ── Result screen ─────────────────────────────────────────────────────────
+  if (won) {
+    const last   = resultsLog[resultsLog.length - 1];
+    const isLast = puzzleIdx + 1 >= TOTAL_PHASES;
     return (
-      <div className={`${pageBg} min-h-screen flex items-center justify-center p-4`}>
-        <div className={`${cardBg} border rounded-2xl p-6 max-w-sm w-full shadow-lg`}>
-          <div className="text-4xl text-center mb-2">🎯</div>
-          <h2 className={`text-xl font-bold text-center mb-1 ${textPrimary}`}>Sessão Concluída!</h2>
-          <p className={`text-sm text-center mb-5 ${textSub}`}>Estacionamento Lógico</p>
-
-          <div className="grid grid-cols-2 gap-3 mb-5">
-            <Stat label="Puzzles resolvidos" value={`${puzzleResults.length}`}     sub="de 5" />
-            <Stat label="Eficiência média"   value={`${avg}%`}                      sub="movimentos" />
-            <Stat label="Tempo total"         value={fmtTime(totalTime)}             sub="minutos" />
-            <Stat label="Movimentos"          value={`${totalMoves}`}               sub={`ideal: ${totalIdeal}`} />
+      <div className="bg-white min-h-screen flex items-center justify-center px-6">
+        <div className="w-full max-w-xs text-center">
+          <p className="text-2xl font-light text-slate-800 mb-1">Concluído</p>
+          <p className="text-xs text-slate-400 mb-10">Fase {puzzleIdx + 1} / {TOTAL_PHASES}</p>
+          <div className="flex justify-center gap-12 mb-10">
+            <div>
+              <p className="text-3xl font-semibold text-slate-800">{last?.moves ?? moves}</p>
+              <p className="text-xs text-slate-400 mt-1">Movimentos</p>
+            </div>
+            <div>
+              <p className="text-3xl font-semibold text-slate-300">{currentLevel.idealMoves}</p>
+              <p className="text-xs text-slate-400 mt-1">Melhor solução</p>
+            </div>
           </div>
-
-          <div className={`rounded-xl p-4 mb-5 ${theme === "GAMIFIED" ? "bg-gray-800" : "bg-slate-50 border border-slate-200"}`}>
-            <p className={`text-xs font-semibold mb-1 ${accentTxt}`}>Habilidade principal treinada</p>
-            <p className={`text-sm font-bold mb-2 ${textPrimary}`}>Planejamento & Funções Executivas</p>
-            <p className={`text-xs ${textSub}`}>
-              {avg >= 80
-                ? "Excelente antecipação! Você conseguiu planejar sequências de movimentos antes de executá-los."
-                : avg >= 60
-                ? "Bom trabalho! Tente antecipar 2 movimentos antes de mover o primeiro veículo."
-                : "Continue praticando! Faça uma pausa antes de mover — visualize o caminho completo primeiro."}
-            </p>
-          </div>
-
-          <button
-            onClick={finishExercise}
-            className={`w-full py-3 rounded-xl text-white font-semibold text-sm ${accentCls}`}
-          >
-            Finalizar
-          </button>
-        </div>
-      </div>
-    );
-  }
-
-  // ── Tela de puzzle resolvido (entre puzzles) ─────────────────────────────────
-  if (won && !exerciseDone) {
-    const last = puzzleResults[puzzleResults.length - 1];
-    const eff  = last ? Math.min(100, Math.round((last.idealMoves / Math.max(1, last.moves)) * 100)) : 100;
-    return (
-      <div className={`${pageBg} min-h-screen flex items-center justify-center p-4`}>
-        <div className={`${cardBg} border rounded-2xl p-6 max-w-sm w-full shadow-lg text-center`}>
-          <div className="text-5xl mb-3">✅</div>
-          <h2 className={`text-xl font-bold mb-1 ${textPrimary}`}>Caminho liberado!</h2>
-          <p className={`text-sm mb-5 ${textSub}`}>Nível {currentLevel.id} · {currentLevel.difficulty}</p>
-
-          <div className="grid grid-cols-3 gap-3 mb-5">
-            <Stat label="Movimentos"    value={`${last?.moves ?? moves}`} sub={`ideal: ${currentLevel.idealMoves}`} />
-            <Stat label="Eficiência"    value={`${eff}%`}                 sub="precisão" />
-            <Stat label="Tempo"         value={fmtTime(last?.timeSec ?? elapsed)} sub="segundos" />
-          </div>
-
-          <p className={`text-xs mb-5 ${textSub}`}>
-            {eff >= 90 ? "Planejamento impecável — mínimo de movimentos!" :
-             eff >= 70 ? "Bom planejamento! Tente antecipar o próximo passo antes de agir." :
-                         "Dica: observe todo o tabuleiro antes de começar a mover."}
-          </p>
-
           <button
             onClick={nextPuzzle}
-            className={`w-full py-3 rounded-xl text-white font-semibold text-sm ${accentCls}`}
+            className="w-full py-3 rounded-xl bg-slate-800 text-white text-sm font-medium tracking-wide"
           >
-            {puzzleIdx + 1 < PUZZLES_PER_SESSION ? "Próximo puzzle" : "Ver resultado"}
+            {isLast ? "Finalizar" : "Próxima fase"}
           </button>
         </div>
       </div>
     );
   }
 
-  // ── Tabuleiro principal ───────────────────────────────────────────────────────
-  const pct = (n: number) => `${(n / GRID) * 100}%`;
-  const GAP = 3; // px entre células
+  // ── Game screen ────────────────────────────────────────────────────────────
+  const T = BOARD_PX + BORDER * 2; // 312px
 
   return (
-    <div className={`${pageBg} min-h-screen pb-8`}>
-      <div className="max-w-sm mx-auto px-4 pt-4">
-
-        {/* Cabeçalho */}
-        <div className="mb-3">
-          <div className="flex items-center justify-between mb-0.5">
-            <div>
-              <h1 className={`text-base font-bold leading-none ${textPrimary}`}>Estacionamento Lógico</h1>
-              <p className={`text-xs ${textSub}`}>Planejamento Espacial</p>
-            </div>
-            <span className={`text-xs font-semibold px-2 py-1 rounded-full ${
-              currentLevel.difficulty === "Fácil"  ? "bg-green-100 text-green-700" :
-              currentLevel.difficulty === "Médio"  ? "bg-yellow-100 text-yellow-700" :
-                                                     "bg-red-100 text-red-600"
-            }`}>
-              Nível {currentLevel.id} · {currentLevel.difficulty}
-            </span>
-          </div>
+    <div className="bg-white min-h-screen">
+      <div
+        className="mx-auto pt-4 px-3 pb-8"
+        style={{ maxWidth: T + LANE_W + 24 }}
+      >
+        {/* Minimal header */}
+        <div className="flex items-center justify-between mb-1">
+          <h1 className="text-sm font-semibold text-slate-700 tracking-tight">
+            Estacionamento Lógico
+          </h1>
+          <span className="text-xs text-slate-400 tabular-nums">
+            {puzzleIdx + 1} / {TOTAL_PHASES}
+          </span>
         </div>
+        <p className="text-xs text-slate-400 mb-4">
+          Libere o carro vermelho pela saída.
+        </p>
 
-        {/* Objetivo + habilidades */}
-        <div className={`rounded-xl p-3 mb-3 border ${cardBg}`}>
-          <p className={`text-xs font-semibold mb-1.5 ${textPrimary}`}>
-            🎯 Libere o carro vermelho pela saída à direita
-          </p>
-          <div className="flex flex-wrap gap-1.5">
-            {["Atenção", "Planejamento", "Raciocínio lógico", "Memória operacional"].map(s => (
-              <span key={s} className={`text-[10px] px-1.5 py-0.5 rounded border ${
-                theme === "GAMIFIED" ? "border-gray-700 text-gray-400 bg-gray-800" : "border-slate-200 text-slate-500 bg-slate-50"
-              }`}>{s}</span>
-            ))}
-          </div>
-        </div>
+        {/* Board */}
+        <div style={{ position: "relative", width: T + LANE_W, height: T }}>
+          <BoardOverlay />
 
-        {/* Métricas */}
-        <div className={`grid grid-cols-4 gap-2 mb-3 rounded-xl p-3 border ${cardBg}`}>
-          <MetricCell label="Movimentos"   value={`${moves}`}           sub={`meta: ${currentLevel.idealMoves}`} theme={theme} />
-          <MetricCell label="Tempo"        value={fmtTime(elapsed)}     sub="cronômetro"                          theme={theme} />
-          <MetricCell label="Eficiência"   value={`${efficiency}%`}     sub="precisão"                            theme={theme} />
-          <div className="text-center">
-            <p className={`text-[10px] mb-0.5 ${textSub}`}>Foco</p>
-            <p className={`text-sm font-bold ${focusColor}`}>{focusLabel}</p>
-          </div>
-        </div>
-
-        {/* Tabuleiro */}
-        <div className="relative mb-3">
-          {/* Seta de saída */}
-          <div className="absolute right-0 top-1/2 -translate-y-1/2 translate-x-5 z-10 flex flex-col items-center">
-            <div className={`w-4 h-4 ${accentTxt}`} style={{ fontSize: 16 }}>→</div>
-          </div>
-
+          {/* Vehicle container (inner 300×300) */}
           <div
-            ref={gridRef}
-            className="relative rounded-xl overflow-hidden select-none"
+            ref={boardRef}
             style={{
-              width: "100%",
-              aspectRatio: "1",
-              background: gridBg,
-              border: `2px solid ${gridBorder}`,
+              position: "absolute",
+              left: BORDER, top: BORDER,
+              width: BOARD_PX, height: BOARD_PX,
             }}
           >
-            {/* Células de fundo */}
-            {Array.from({ length: GRID }, (_, r) =>
-              Array.from({ length: GRID }, (_, c) => (
-                <div key={`${r}-${c}`} style={{
-                  position: "absolute",
-                  left: `calc(${pct(c)} + ${GAP / 2}px)`,
-                  top:  `calc(${pct(r)} + ${GAP / 2}px)`,
-                  width:  `calc(${pct(1)} - ${GAP}px)`,
-                  height: `calc(${pct(1)} - ${GAP}px)`,
-                  background: cellBg,
-                  borderRadius: 4,
-                }} />
-              ))
-            )}
-
-            {/* Veículos */}
             {cars.map(car => {
-              const isTarget    = car.id === "target";
-              const isHint      = car.id === hintId;
-              const isBeingDrag = dragPreview?.id === car.id;
-              const pos         = isBeingDrag ? dragPreview!.pos
-                : (car.orientation === "horizontal" ? car.col : car.row);
-              const palette     = CAR_PALETTE[car.color] ?? CAR_PALETTE.slate;
-
-              const style: React.CSSProperties = {
-                position: "absolute",
-                borderRadius: 8,
-                cursor: won ? "default" : "grab",
-                touchAction: "none",
-                zIndex: isBeingDrag ? 20 : 10,
-                transition: isBeingDrag ? "none" : "left 0.15s, top 0.15s, box-shadow 0.15s",
-                background: isHint
-                  ? `repeating-linear-gradient(45deg, ${palette.bg}, ${palette.bg} 6px, ${palette.border} 6px, ${palette.border} 12px)`
-                  : palette.bg,
-                border: `2px solid ${palette.border}`,
-                boxShadow: isBeingDrag
-                  ? `0 8px 20px rgba(0,0,0,0.35)`
-                  : isTarget
-                  ? `0 3px 10px rgba(239,68,68,0.4), inset 0 1px 0 rgba(255,255,255,0.25)`
-                  : `0 2px 6px rgba(0,0,0,0.2), inset 0 1px 0 rgba(255,255,255,0.15)`,
-                transform: isBeingDrag ? "scale(1.04)" : "scale(1)",
-                willChange: "left, top",
-              };
-
-              if (car.orientation === "horizontal") {
-                style.left   = `calc(${pct(pos)} + ${GAP / 2}px)`;
-                style.top    = `calc(${pct(car.row)} + ${GAP / 2}px)`;
-                style.width  = `calc(${pct(car.len)} - ${GAP}px)`;
-                style.height = `calc(${pct(1)} - ${GAP}px)`;
-              } else {
-                style.left   = `calc(${pct(car.col)} + ${GAP / 2}px)`;
-                style.top    = `calc(${pct(pos)} + ${GAP / 2}px)`;
-                style.width  = `calc(${pct(1)} - ${GAP}px)`;
-                style.height = `calc(${pct(car.len)} - ${GAP}px)`;
-              }
+              const isDragging = dragPrev?.id === car.id;
+              const pos  = isDragging ? dragPrev!.pos : (car.orientation === "horizontal" ? car.col : car.row);
+              const left = car.orientation === "horizontal" ? pos * CELL : car.col * CELL;
+              const top  = car.orientation === "vertical"   ? pos * CELL : car.row * CELL;
+              const w    = car.orientation === "horizontal" ? car.len * CELL : CELL;
+              const h    = car.orientation === "vertical"   ? car.len * CELL : CELL;
 
               return (
                 <div
                   key={car.id}
-                  style={style}
-                  onPointerDown={e => onPointerDown(e, car)}
-                  onPointerMove={e => onPointerMove(e, car)}
-                  onPointerUp={e => onPointerUp(e, car)}
+                  style={{
+                    position: "absolute",
+                    left, top, width: w, height: h,
+                    cursor: "grab",
+                    touchAction: "none",
+                    zIndex: isDragging ? 20 : 10,
+                    transition: isDragging ? "none" : "left 0.1s ease, top 0.1s ease",
+                    transform: isDragging ? "scale(1.03)" : "scale(1)",
+                    willChange: "left, top",
+                  }}
+                  onPointerDown={e => onPtrDown(e, car)}
+                  onPointerMove={e => onPtrMove(e, car)}
+                  onPointerUp={e => onPtrUp(e, car)}
                 >
-                  {/* Ícone no centro */}
-                  <div style={{
-                    position: "absolute", inset: 0, display: "flex",
-                    alignItems: "center", justifyContent: "center",
-                    fontSize: isTarget ? 16 : 12, userSelect: "none",
-                  }}>
-                    {isTarget ? "🚗" : "🚙"}
-                  </div>
-                  {/* Indicador de direção */}
-                  {car.orientation === "horizontal" && (
-                    <div style={{
-                      position: "absolute", right: 4, top: "50%",
-                      transform: "translateY(-50%)", fontSize: 10,
-                      color: "rgba(255,255,255,0.6)",
-                    }}>↔</div>
-                  )}
-                  {car.orientation === "vertical" && (
-                    <div style={{
-                      position: "absolute", bottom: 2, left: "50%",
-                      transform: "translateX(-50%)", fontSize: 10,
-                      color: "rgba(255,255,255,0.6)",
-                    }}>↕</div>
-                  )}
+                  <VehicleSVG
+                    color={car.color}
+                    len={car.len}
+                    orientation={car.orientation}
+                    isTarget={car.id === "target"}
+                  />
                 </div>
               );
             })}
-
-            {/* Indicador de saída (linha direita) */}
-            <div style={{
-              position: "absolute",
-              right: -2, top: `calc(${pct(2)} + ${GAP / 2}px)`,
-              width: 4,
-              height: `calc(${pct(1)} - ${GAP}px)`,
-              background: theme === "GAMIFIED" ? "#06B6D4" : "#2563EB",
-              borderRadius: 2,
-            }} />
           </div>
         </div>
 
-        {/* Controles */}
-        <div className="flex gap-2 mb-3">
-          <button
-            onClick={undo}
-            disabled={history.length === 0}
-            className={`flex-1 py-2.5 rounded-xl text-xs font-semibold border transition-opacity
-              ${history.length === 0 ? "opacity-40 cursor-not-allowed" : ""}
-              ${cardBg} ${textPrimary}`}
-          >
-            ↩ Desfazer
-          </button>
-          <button
-            onClick={hint}
-            className={`flex-1 py-2.5 rounded-xl text-xs font-semibold border transition-opacity ${cardBg} ${textPrimary}`}
-          >
-            💡 Dica
-          </button>
+        {/* Single action button */}
+        <div className="mt-5 flex justify-center">
           <button
             onClick={restart}
-            className={`flex-1 py-2.5 rounded-xl text-xs font-semibold border transition-opacity ${cardBg} ${textPrimary}`}
+            className="text-sm text-slate-500 border border-slate-200 rounded-lg px-6 py-2"
           >
-            🔄 Reiniciar
+            Reiniciar
           </button>
         </div>
-
-        {/* Progresso dos puzzles */}
-        <div className="flex gap-1.5 justify-center">
-          {sessionLevels.map((_, i) => (
-            <div key={i} className={`w-2 h-2 rounded-full transition-colors ${
-              i < puzzleIdx
-                ? (theme === "GAMIFIED" ? "bg-cyan-400" : "bg-blue-500")
-                : i === puzzleIdx
-                ? (theme === "GAMIFIED" ? "bg-cyan-300" : "bg-blue-300")
-                : (theme === "GAMIFIED" ? "bg-gray-700" : "bg-slate-200")
-            }`} />
-          ))}
-        </div>
-
       </div>
-    </div>
-  );
-}
-
-// ── Sub-componentes utilitários ───────────────────────────────────────────────
-function Stat({ label, value, sub }: { label: string; value: string; sub?: string }) {
-  return (
-    <div className="text-center">
-      <p className="text-xs text-slate-500 dark:text-gray-400 mb-0.5">{label}</p>
-      <p className="text-lg font-bold text-slate-800 dark:text-white leading-none">{value}</p>
-      {sub && <p className="text-[10px] text-slate-400 dark:text-gray-500 mt-0.5">{sub}</p>}
-    </div>
-  );
-}
-
-function MetricCell({ label, value, sub, theme }: { label: string; value: string; sub?: string; theme: Theme }) {
-  const textSub = theme === "GAMIFIED" ? "text-gray-400" : "text-slate-500";
-  const textMain = theme === "GAMIFIED" ? "text-white" : "text-slate-800";
-  return (
-    <div className="text-center">
-      <p className={`text-[10px] mb-0.5 ${textSub}`}>{label}</p>
-      <p className={`text-sm font-bold leading-none ${textMain}`}>{value}</p>
-      {sub && <p className={`text-[10px] mt-0.5 ${textSub}`}>{sub}</p>}
     </div>
   );
 }
