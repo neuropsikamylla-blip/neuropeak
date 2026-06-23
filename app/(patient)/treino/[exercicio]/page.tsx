@@ -50,6 +50,7 @@ const DualTask             = dynamic(() => import("@/components/exercises/attent
 const DeductiveGrid        = dynamic(() => import("@/components/exercises/executive/DeductiveGrid").then(m => ({ default: m.DeductiveGrid })), { loading: ExerciseLoader, ssr: false });
 const FocusAgents          = dynamic(() => import("@/components/exercises/attention/FocusAgents").then(m => ({ default: m.FocusAgents })), { loading: ExerciseLoader, ssr: false });
 const CuboCorsi            = dynamic(() => import("@/components/exercises/memory/CuboCorsi").then(m => ({ default: m.CuboCorsi })), { loading: ExerciseLoader, ssr: false });
+const EstacionamentoLogico = dynamic(() => import("@/components/exercises/executive/EstacionamentoLogico").then(m => ({ default: m.EstacionamentoLogico })), { loading: ExerciseLoader, ssr: false });
 
 const EXERCISE_INSTRUCTIONS: Record<string, string[]> = {
   "span-numerico": [
@@ -269,6 +270,12 @@ const EXERCISE_INSTRUCTIONS: Record<string, string[]> = {
     "Alguns blocos vão acender em sequência — observe bem a ordem!",
     "Depois que a sequência acabar, toque os blocos na mesma ordem em que acenderam.",
     "As sequências ficam maiores conforme você acerta. Treine sua memória espacial!",
+  ],
+  "estacionamento-logico": [
+    "Mova os veículos na grade para abrir caminho ao carro vermelho.",
+    "Veículos horizontais movem-se para esquerda e direita; verticais, para cima e baixo.",
+    "Arraste cada veículo com o dedo — ele desliza até a posição escolhida.",
+    "Objetivo: fazer o carro vermelho chegar à saída (lado direito) com o menor número de movimentos.",
   ],
 };
 
@@ -556,6 +563,7 @@ export default function ExercicioPage() {
       case "focus-agents":
       case "focus-agents-auditivo": return <FocusAgents {...props} settings={exerciseSettings as { mode?: "foco"|"inibicao"|"alternancia"|"desafio"; startLevel?: number; freeChoice?: boolean; feedback?: "leve"|"normal"|"intenso"; autoAdvance?: boolean } | undefined} />;
       case "cubo-corsi": return <CuboCorsi {...props} />;
+      case "estacionamento-logico": return <EstacionamentoLogico {...props} />;
       default: return <div className="p-8 text-center text-gray-500">Exercício em desenvolvimento</div>;
     }
   }

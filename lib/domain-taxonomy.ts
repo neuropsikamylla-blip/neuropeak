@@ -26,7 +26,7 @@ export const DOMAIN_SUBDOMAINS: Record<Domain, Subdomain[]> = {
     { id: "dividida", label: "Atenção Dividida", exercises: ["dual-task", "mot", "atencao-dividida"] },
   ],
   executive: [
-    { id: "planejamento", label: "Planejamento", exercises: ["torre-hanoi", "labirinto"] },
+    { id: "planejamento", label: "Planejamento", exercises: ["torre-hanoi", "labirinto", "estacionamento-logico"] },
     { id: "inibitorio", label: "Controle Inibitório", exercises: ["stroop-task"] },
     { id: "flexibilidade", label: "Flexibilidade Cognitiva", exercises: ["mudanca-regras", "task-switching"] },
     { id: "decisao", label: "Tomada de Decisão", exercises: [] },

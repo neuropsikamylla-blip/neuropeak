@@ -415,6 +415,14 @@ export const EXERCISE_DEFINITIONS = {
     estimatedMinutes: 8,
     icon: "🧠",
   },
+  "estacionamento-logico": {
+    id: "estacionamento-logico",
+    name: "Estacionamento Lógico",
+    domain: "executive" as Domain,
+    description: "Mova veículos na grade para liberar o carro-alvo — planejamento espacial e funções executivas",
+    estimatedMinutes: 10,
+    icon: "🚗",
+  },
 } as const;
 
 export type ExerciseId = keyof typeof EXERCISE_DEFINITIONS;
