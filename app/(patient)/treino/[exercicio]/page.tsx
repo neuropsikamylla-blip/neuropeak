@@ -6,7 +6,7 @@ import { useSession } from "next-auth/react";
 import dynamic from "next/dynamic";
 import { ExerciseWrapper } from "@/components/exercises/ExerciseWrapper";
 import { EXERCISE_DEFINITIONS, type ExerciseResult, type Theme } from "@/types";
-import { planExerciseSettings } from "@/lib/exercise-plan";
+import { planExerciseSettings, planExerciseIds } from "@/lib/exercise-plan";
 import { useToast } from "@/components/ui/use-toast";
 import { Loader2, CheckCircle2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
@@ -350,6 +350,8 @@ export default function ExercicioPage() {
   const [theme, setTheme] = useState<Theme>("CLINICAL");
   const [blockedToday, setBlockedToday] = useState(false);
   const [patientAge, setPatientAge] = useState<number | undefined>();
+  const [sessionTotal, setSessionTotal] = useState<number | undefined>();
+  const [sessionCompleted, setSessionCompleted] = useState(0);
   const completedRef = useRef(false);     // sessão concluída (não conta como abandono)
   const sentAbandonRef = useRef(false);
   const mountTsRef = useRef(0);
@@ -383,6 +385,25 @@ export default function ExercicioPage() {
           const savedLevel = isFocus && s?.mode ? (data.focusLevels?.[s.mode as string] as number | undefined) : undefined;
           if (savedLevel != null) s = { ...s, startLevel: savedLevel };
           setExerciseSettings(s);
+
+          // Session tracking (Cogmed global progress)
+          const planIds = planExerciseIds(activePlan.exercises);
+          const total = planIds.length;
+          const today = new Date().toLocaleDateString("sv"); // YYYY-MM-DD local
+          const storageKey = `np_session_${today}`;
+          try {
+            const raw = localStorage.getItem(storageKey);
+            const saved = raw ? (JSON.parse(raw) as { total: number; completed: string[] }) : null;
+            const sessionData = saved && saved.total === total ? saved : { total, completed: [] as string[] };
+            if (!raw || !saved || saved.total !== total) {
+              localStorage.setItem(storageKey, JSON.stringify(sessionData));
+            }
+            setSessionTotal(total);
+            setSessionCompleted(sessionData.completed.filter((id: string) => id !== exerciseId).length);
+          } catch {
+            setSessionTotal(total);
+            setSessionCompleted(0);
+          }
         }
 
         const configs = data.patient?.exerciseConfigs ?? [];
@@ -454,6 +475,18 @@ export default function ExercicioPage() {
     } catch {
       toast({ title: "Erro ao salvar sessão", variant: "destructive" });
     }
+
+    // Marca exercício como concluído no tracking global da sessão
+    try {
+      const today = new Date().toLocaleDateString("sv");
+      const storageKey = `np_session_${today}`;
+      const raw = localStorage.getItem(storageKey);
+      const sessionData = raw ? (JSON.parse(raw) as { total: number; completed: string[] }) : { total: sessionTotal ?? 1, completed: [] as string[] };
+      if (!sessionData.completed.includes(exerciseId)) {
+        sessionData.completed.push(exerciseId);
+      }
+      localStorage.setItem(storageKey, JSON.stringify(sessionData));
+    } catch { /* ignore */ }
 
     router.push("/inicio");
   }
@@ -534,6 +567,8 @@ export default function ExercicioPage() {
       theme={theme}
       difficulty={difficulty}
       exerciseId={exerciseId}
+      sessionTotal={sessionTotal}
+      sessionCompleted={sessionCompleted}
       onFinish={handleComplete}
     >
       {(onComplete) => renderExercise(onComplete)}

@@ -333,7 +333,6 @@ export function MOT({ difficulty, theme, onComplete }: MOTProps) {
         <div className={`w-full rounded-2xl p-4 ${pal.card}`}>
           <div className="flex justify-between items-center mb-2">
             <h2 className={`font-bold text-sm ${pal.title}`}>👁️ Rastreamento de Objetos</h2>
-            <span className={`text-xs ${pal.sub}`}>Rodada {round + 1}/{TOTAL_ROUNDS}</span>
           </div>
           <div className={`h-1.5 rounded-full ${theme === "GAMIFIED" ? "bg-gray-700" : "bg-slate-200"}`}>
             <div className={`h-full rounded-full transition-all duration-300 ${pal.bar}`}

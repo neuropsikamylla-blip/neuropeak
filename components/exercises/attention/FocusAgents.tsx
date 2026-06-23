@@ -1149,7 +1149,6 @@ export function FocusAgents({ difficulty, theme, onComplete, exerciseId = "focus
               <div key={i} className={`h-1.5 flex-1 rounded-full transition-all ${dotColor(i)}`} />
             ))}
           </div>
-          <span className="text-xs font-bold opacity-70 whitespace-nowrap">{round+1}/{MAX_ROUNDS}</span>
           {(isMultiTarget || isSeqMode || isCaptureAll || isPhased) && gamePhase === "playing" && totalTargets > 1 && (
             <span className="text-xs font-bold px-1.5 py-0.5 rounded-lg bg-green-500/40 whitespace-nowrap">
               {foundCount}/{totalTargets} ✓

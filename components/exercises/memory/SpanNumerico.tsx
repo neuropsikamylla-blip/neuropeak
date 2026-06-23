@@ -380,8 +380,7 @@ export function SpanNumerico({ difficulty, onComplete, reverse = false, settings
         )}
 
         {/* rodapé acertos */}
-        <div className="flex justify-between text-xs pt-1" style={{ color: "rgba(148,163,184,0.5)" }}>
-          <span>Tentativa {Math.min(trial + 1, cfg.trials)}/{cfg.trials}</span>
+        <div className="flex justify-end text-xs pt-1" style={{ color: "rgba(148,163,184,0.5)" }}>
           <span>{correctCount} acertos</span>
         </div>
       </div>

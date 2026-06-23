@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect, createContext, useContext } from "react";
+import { useState, useEffect, useCallback, createContext, useContext } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { Button } from "@/components/ui/button";
 import { ScoreDisplay } from "@/components/gamification/ScoreDisplay";
@@ -14,12 +14,27 @@ type Phase = "instructions" | "exercise" | "results";
 const ProgressContext = createContext<(pct: number) => void>(() => {});
 export const useExerciseProgress = () => useContext(ProgressContext);
 
+/** Arredonda o progresso bruto para o step mais próximo (estilo Cogmed). */
+function cogmedSnap(
+  exercisePct: number,
+  sessionCompleted: number,
+  sessionTotal: number,
+): number {
+  const step = sessionTotal === 25 ? 4 : 5;
+  const globalRaw = (sessionCompleted / sessionTotal) * 100 + exercisePct / sessionTotal;
+  return Math.min(100, Math.max(0, Math.round(globalRaw / step) * step));
+}
+
 interface ExerciseWrapperProps {
   title: string;
   instructions: string[];
   theme: Theme;
   difficulty?: number;
   exerciseId?: string;
+  /** Total de exercícios do plano de hoje (para progresso global estilo Cogmed). */
+  sessionTotal?: number;
+  /** Quantos exercícios já foram concluídos antes deste (no mesmo dia). */
+  sessionCompleted?: number;
   children: (onComplete: (result: ExerciseResult) => void) => React.ReactNode;
   onFinish: (result: ExerciseResult) => void;
 }
@@ -30,6 +45,8 @@ export function ExerciseWrapper({
   theme,
   difficulty,
   exerciseId,
+  sessionTotal,
+  sessionCompleted = 0,
   children,
   onFinish,
 }: ExerciseWrapperProps) {
@@ -37,6 +54,17 @@ export function ExerciseWrapper({
   const [result, setResult] = useState<ExerciseResult | null>(null);
   const [sessionProgress, setSessionProgress] = useState(0);
   const [isFullscreen, setIsFullscreen] = useState(false);
+
+  /** Converte o progresso interno do exercício (0-100) no % global da sessão,
+   *  arredondado para incrementos de 4% ou 5% (estilo Cogmed). */
+  const updateProgress = useCallback((exercisePct: number) => {
+    if (sessionTotal && sessionTotal > 0) {
+      setSessionProgress(cogmedSnap(exercisePct, sessionCompleted, sessionTotal));
+    } else {
+      const step = 5;
+      setSessionProgress(Math.min(100, Math.max(0, Math.round(exercisePct / step) * step)));
+    }
+  }, [sessionCompleted, sessionTotal]);
 
   useEffect(() => {
     const onChange = () => setIsFullscreen(!!document.fullscreenElement);
@@ -161,7 +189,7 @@ export function ExerciseWrapper({
             animate={{ opacity: 1 }}
             exit={{ opacity: 0 }}
           >
-            <ProgressContext.Provider value={setSessionProgress}>
+            <ProgressContext.Provider value={updateProgress}>
               {children(handleComplete)}
             </ProgressContext.Provider>
 
@@ -199,8 +227,8 @@ export function ExerciseWrapper({
                 <p className={`text-xs font-bold mb-1 flex items-center justify-between gap-2 ${
                   theme === "GAMIFIED" ? "text-cyan-400" : theme === "COLORFUL" ? "text-teal-700" : "text-gray-800"
                 }`}>
-                  <span>Progresso da sessão</span>
-                  <span className="tabular-nums">{Math.round(sessionProgress)}%</span>
+                  <span>Progresso</span>
+                  <span className="tabular-nums">{sessionProgress}%</span>
                 </p>
                 <div className={`h-1.5 rounded-full ${theme === "GAMIFIED" ? "bg-gray-600" : "bg-gray-200"}`}>
                   <motion.div

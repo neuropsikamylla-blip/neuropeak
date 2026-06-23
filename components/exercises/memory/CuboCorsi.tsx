@@ -429,10 +429,7 @@ export function CuboCorsi({ difficulty, theme, onComplete }: CuboCorsiProps) {
     <div className={bg}>
       <div className="max-w-sm mx-auto px-4 pt-4 pb-8">
         {/* Header */}
-        <div className="flex items-center justify-between mb-2">
-          <span className={`text-xs font-semibold ${subColor}`}>
-            Rodada {round + 1} / {MAX_ROUNDS}
-          </span>
+        <div className="flex items-center justify-end mb-2">
           <span className={`text-xs font-semibold ${subColor}`}>
             ✓ {correct} &nbsp; ✗ {errors}
           </span>
