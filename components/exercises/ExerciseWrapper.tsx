@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect, useCallback, createContext, useContext } from "react";
+import { useState, useEffect, createContext, useContext } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { Button } from "@/components/ui/button";
 import { ScoreDisplay } from "@/components/gamification/ScoreDisplay";
@@ -14,32 +14,14 @@ type Phase = "instructions" | "exercise" | "results";
 const ProgressContext = createContext<(pct: number) => void>(() => {});
 export const useExerciseProgress = () => useContext(ProgressContext);
 
-/** Calcula progresso global da sessão em múltiplos de 5%.
- *  Snap de 5% aplicado tanto no exercício quanto no resultado final. */
-function cogmedProgress(
-  exercisePct: number,
-  sessionCompleted: number,
-  sessionTotal: number,
-): number {
-  const step = 5;
-  const snapped = Math.round(exercisePct / step) * step;
-  const sliceSize = 100 / sessionTotal;
-  const base = sessionCompleted * sliceSize;
-  const raw = base + (snapped / 100) * sliceSize;
-  // Snap final garante múltiplos de 5 no resultado global
-  return Math.min(100, Math.round(raw / step) * step);
-}
-
 interface ExerciseWrapperProps {
   title: string;
   instructions: string[];
   theme: Theme;
   difficulty?: number;
   exerciseId?: string;
-  /** Total de exercícios do plano de hoje (para progresso global estilo Cogmed). */
-  sessionTotal?: number;
-  /** Quantos exercícios já foram concluídos antes deste (no mesmo dia). */
-  sessionCompleted?: number;
+  /** Progresso global da sessão (0-100), calculado externamente pela página. */
+  sessionProgress?: number;
   /** Oculta o widget de progresso no canto (exercícios com layout próprio). */
   hideProgress?: boolean;
   children: (onComplete: (result: ExerciseResult) => void) => React.ReactNode;
@@ -52,37 +34,21 @@ export function ExerciseWrapper({
   theme,
   difficulty,
   exerciseId,
-  sessionTotal,
-  sessionCompleted = 0,
+  sessionProgress,
   hideProgress = false,
   children,
   onFinish,
 }: ExerciseWrapperProps) {
   const [phase, setPhase] = useState<Phase>(instructions.length === 0 ? "exercise" : "instructions");
   const [result, setResult] = useState<ExerciseResult | null>(null);
-  const [sessionProgress, setSessionProgress] = useState(() =>
-    sessionTotal && sessionTotal > 0
-      ? Math.round((sessionCompleted / sessionTotal) * 100)
-      : 0
-  );
   const [isFullscreen, setIsFullscreen] = useState(false);
-
-  /** Converte o progresso interno do exercício (0-100) no % global da sessão. */
-  const updateProgress = useCallback((exercisePct: number) => {
-    if (sessionTotal && sessionTotal > 0) {
-      setSessionProgress(cogmedProgress(exercisePct, sessionCompleted, sessionTotal));
-    } else {
-      // Sem plano: mostra o progresso do próprio exercício (0-100%)
-      const step = 5;
-      setSessionProgress(Math.min(100, Math.max(0, Math.round(exercisePct / step) * step)));
-    }
-  }, [sessionCompleted, sessionTotal]);
 
   useEffect(() => {
     const onChange = () => setIsFullscreen(!!document.fullscreenElement);
     document.addEventListener("fullscreenchange", onChange);
     return () => document.removeEventListener("fullscreenchange", onChange);
   }, []);
+
 
   function toggleFullscreen() {
     if (!document.fullscreenElement) {
@@ -95,7 +61,6 @@ export function ExerciseWrapper({
   const functional = exerciseId ? EXERCISE_FUNCTIONAL[exerciseId] : undefined;
 
   function handleComplete(r: ExerciseResult) {
-    setSessionProgress(100);
     setResult(r);
     setPhase("results");
   }
@@ -201,7 +166,7 @@ export function ExerciseWrapper({
             animate={{ opacity: 1 }}
             exit={{ opacity: 0 }}
           >
-            <ProgressContext.Provider value={updateProgress}>
+            <ProgressContext.Provider value={() => {}}>
               {children(handleComplete)}
             </ProgressContext.Provider>
 
@@ -228,7 +193,7 @@ export function ExerciseWrapper({
               }
             </button>
 
-            {difficulty !== undefined && !hideProgress && (
+            {difficulty !== undefined && !hideProgress && sessionProgress !== undefined && (
               <div className={`fixed bottom-6 left-4 z-50 pointer-events-none rounded-2xl px-4 py-3 min-w-[150px] shadow-lg ${
                 theme === "GAMIFIED"
                   ? "bg-gray-800/95 border border-cyan-500/40 backdrop-blur-sm"

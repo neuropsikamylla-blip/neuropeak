@@ -571,6 +571,10 @@ export default function ExercicioPage() {
   // Exercícios que gerenciam o próprio layout (sem barra de progresso no canto)
   const HIDE_PROGRESS_WIDGET = new Set(["estacionamento-logico"]);
 
+  const sessionProgress = sessionTotal && sessionTotal > 0
+    ? Math.round((sessionCompleted / sessionTotal) * 100)
+    : undefined;
+
   return (
     <ExerciseWrapper
       title={exerciseDef.name}
@@ -578,8 +582,7 @@ export default function ExercicioPage() {
       theme={theme}
       difficulty={difficulty}
       exerciseId={exerciseId}
-      sessionTotal={sessionTotal}
-      sessionCompleted={sessionCompleted}
+      sessionProgress={sessionProgress}
       hideProgress={HIDE_PROGRESS_WIDGET.has(exerciseId)}
       onFinish={handleComplete}
     >
