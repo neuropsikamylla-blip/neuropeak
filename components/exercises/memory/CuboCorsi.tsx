@@ -8,33 +8,47 @@ import type { ExerciseResult, Theme } from "@/types";
 
 // ── Geometria ─────────────────────────────────────────────────────────────────
 const MAX_ROUNDS = 12;
-const BS   = 80;        // tamanho de cada bloco (px)
+const BS   = 93;        // bloco px — ~16% maior que o original (80)
 const SP   = 8;         // espaço entre blocos
-const UNIT = BS + SP;   // 88px por célula
+const UNIT = BS + SP;   // 101px por célula
 
 // [col, row, layer]  — col 0|1 (esq/dir)  row 0|1 (baixo/cima)  layer 0|1 (frente/trás)
 const BLOCK_POS: [number, number, number][] = [
   [0,0,0],[1,0,0],[0,1,0],[1,1,0],  // face frontal
   [0,0,1],[1,0,1],[0,1,1],[1,1,1],  // face traseira
 ];
-const DRAW_ORDER = [6,7,4,5,2,3,0,1]; // painter's algorithm
 
-// ── 3 Poses fixas pré-definidas ────────────────────────────────────────────────
-// Espelham o comportamento da referência Cogmed: frontal-esq / isométrica / frontal-dir
+// ── 4 poses seguras — cada uma traz um quadrante ao primeiro plano ─────────────
+// Blocos FRONTAIS (layer=0): giro suave, face frontal encarando a câmera.
+// Blocos TRASEIROS (layer=1): cubo girado ~155° para que a face traseira do bloco
+//   vire e fique encarando a câmera — brilho visível em qualquer ângulo.
 type Pose = { rx: number; ry: number };
-const POSE_A: Pose = { rx: -22, ry: -38 }; // frontal-esquerda
-const POSE_B: Pose = { rx: -46, ry: -40 }; // isométrica / topo proeminente
-const POSE_C: Pose = { rx: -22, ry:  22 }; // frontal-direita
-const ROTATE_MS = 360;
 
-// Cada bloco tem a pose que o torna mais claro visualmente
+const POSE_FL: Pose = { rx: -14, ry: -22 }; // frontal-esquerda  (idx 0, 2)
+const POSE_FR: Pose = { rx: -14, ry:  22 }; // frontal-direita   (idx 1, 3)
+const POSE_BL: Pose = { rx: -14, ry: 155 }; // traseiro-esquerda (idx 4, 6) — cubo virado
+const POSE_BR: Pose = { rx: -14, ry:-155 }; // traseiro-direita  (idx 5, 7)
+
+// Pose padrão usada na fase de input (estável, frontal)
+const POSE_A = POSE_FL;
+const ROTATE_MS = 400;
+
+// Pose garantidamente segura por bloco
 function posePorBloco(idx: number): Pose {
   const [col, , layer] = BLOCK_POS[idx];
-  if (layer === 1) return POSE_B;         // traseiros → vista isométrica
-  return col === 0 ? POSE_A : POSE_C;    // frontais esq/dir
+  if (layer === 0) return col === 0 ? POSE_FL : POSE_FR;
+  return col === 0 ? POSE_BL : POSE_BR;
 }
 
 function poseSame(a: Pose, b: Pose) { return a.rx === b.rx && a.ry === b.ry; }
+
+// Ordem de pintura (painter's algorithm): quando |ry| > 90° o cubo está "virado",
+// então os blocos traseiros estão à frente — desenhá-los por último (= mais alto).
+function calcDrawOrder(pose: Pose): number[] {
+  return Math.abs(pose.ry) > 90
+    ? [3, 1, 2, 0, 7, 5, 6, 4]   // vista traseira: back-blocks por último
+    : [6, 7, 4, 5, 2, 3, 0, 1];  // vista frontal:  front-blocks por último
+}
 
 // ── Sequência / timing ────────────────────────────────────────────────────────
 function seqLen(d: number): number {
@@ -77,17 +91,30 @@ const sndTap     = () => beep(520, 70, 0.04);
 const sndCorrect = () => { beep(660, 120); setTimeout(() => beep(880, 200), 140); };
 const sndWrong   = () => beep(180, 300, 0.05);
 
-// ── Paleta visual — estilo referência Cogmed (sempre clara) ───────────────────
+// ── Paleta visual ─────────────────────────────────────────────────────────────
+// IMPORTANTE: `dark` (usado no verso e lados escuros) é igualado à face frontal
+// nos estados ativos (lit/correct/wrong/missed).  Isso garante que, quando o cubo
+// está girado e o verso do bloco fica visível, o bloco continue brilhando
+// claramente na cor certa — sem escurecer ou sumir.
 type BState = "idle" | "lit" | "tapped" | "correct" | "wrong" | "missed";
 
 const PAL: Record<BState, { front: string; top: string; right: string; dark: string }> = {
-  idle:    { front:"#EDF5FD", top:"#FFFFFF", right:"#CCE4F7", dark:"#9EC5E8" },
-  lit:     { front:"#4A90D9", top:"#6AAEDE", right:"#3275C1", dark:"#1E5FA8" },
-  tapped:  { front:"#B8D9F5", top:"#D6ECFB", right:"#8BBCE8", dark:"#6DA4D8" },
-  correct: { front:"#4CAF50", top:"#80CB81", right:"#388E3C", dark:"#1B5E20" },
-  wrong:   { front:"#EF5350", top:"#EF9A9A", right:"#C62828", dark:"#7F0000" },
-  missed:  { front:"#FFA726", top:"#FFD54F", right:"#EF6C00", dark:"#7F3800" },
+  idle:    { front:"#EDF5FD", top:"#FFFFFF",  right:"#CCE4F7", dark:"#9EC5E8" },
+  lit:     { front:"#4A90D9", top:"#6AAEDE",  right:"#3275C1", dark:"#4A90D9" }, // dark=front → verso azul
+  tapped:  { front:"#B8D9F5", top:"#D6ECFB",  right:"#8BBCE8", dark:"#8BBCE8" },
+  correct: { front:"#4CAF50", top:"#80CB81",  right:"#388E3C", dark:"#4CAF50" }, // dark=front
+  wrong:   { front:"#EF5350", top:"#EF9A9A",  right:"#C62828", dark:"#EF5350" }, // dark=front
+  missed:  { front:"#FFA726", top:"#FFD54F",  right:"#EF6C00", dark:"#FFA726" }, // dark=front
 };
+
+// Sombra/brilho aplicada em TODAS as faces — visível de qualquer ângulo
+function faceGlow(state: BState): string | undefined {
+  if (state === "lit")     return "0 0 28px 10px rgba(74,144,217,0.60), inset 0 1px 0 rgba(255,255,255,0.45)";
+  if (state === "correct") return "0 0 16px 5px rgba(76,175,80,0.45)";
+  if (state === "wrong")   return "0 0 16px 5px rgba(239,83,80,0.45)";
+  if (state === "missed")  return "0 0 14px 4px rgba(255,167,38,0.45)";
+  return undefined;
+}
 
 // ── Bloco 3D ──────────────────────────────────────────────────────────────────
 function Block3D({ idx, state, interactive, onClick }: {
@@ -96,12 +123,14 @@ function Block3D({ idx, state, interactive, onClick }: {
   const [col, row, layer] = BLOCK_POS[idx];
   const c = PAL[state];
   const H = BS / 2;
+  const glow = faceGlow(state);
+  const idleShadow = "inset 0 1.5px 0 rgba(255,255,255,0.85), 0 2px 8px rgba(100,140,180,0.1)";
 
   const face: React.CSSProperties = {
     position: "absolute", width: BS, height: BS,
     backfaceVisibility: "hidden",
     borderRadius: 14,
-    border: "1.5px solid rgba(90,130,170,0.16)",
+    border: "1.5px solid rgba(90,130,170,0.14)",
     transition: "background-color 0.18s ease, box-shadow 0.18s ease",
   };
 
@@ -116,26 +145,23 @@ function Block3D({ idx, state, interactive, onClick }: {
       onClick={interactive ? onClick : undefined}
     >
       {/* frente */}
-      <div style={{
-        ...face, backgroundColor: c.front,
-        transform: `translateZ(${H}px)`,
-        boxShadow: state === "lit"
-          ? "0 0 28px 10px rgba(74,144,217,0.55), inset 0 1px 0 rgba(255,255,255,0.5)"
-          : state === "correct" ? "0 0 16px 5px rgba(76,175,80,0.4)"
-          : state === "wrong"   ? "0 0 16px 5px rgba(239,83,80,0.4)"
-          : state === "missed"  ? "0 0 14px 4px rgba(255,167,38,0.4)"
-          : "inset 0 1.5px 0 rgba(255,255,255,0.85), 0 2px 8px rgba(100,140,180,0.1)",
-      }} />
+      <div style={{ ...face, backgroundColor: c.front, transform: `translateZ(${H}px)`,
+        boxShadow: glow ?? idleShadow }} />
       {/* topo */}
-      <div style={{ ...face, backgroundColor: c.top, transform: `rotateX(90deg) translateZ(${H}px)` }} />
+      <div style={{ ...face, backgroundColor: c.top,   transform: `rotateX(90deg) translateZ(${H}px)`,
+        boxShadow: glow }} />
       {/* direita */}
-      <div style={{ ...face, backgroundColor: c.right, transform: `rotateY(90deg) translateZ(${H}px)` }} />
+      <div style={{ ...face, backgroundColor: c.right, transform: `rotateY(90deg) translateZ(${H}px)`,
+        boxShadow: glow }} />
       {/* esquerda */}
-      <div style={{ ...face, backgroundColor: c.dark, transform: `rotateY(-90deg) translateZ(${H}px)` }} />
+      <div style={{ ...face, backgroundColor: c.dark,  transform: `rotateY(-90deg) translateZ(${H}px)`,
+        boxShadow: glow }} />
       {/* baixo */}
-      <div style={{ ...face, backgroundColor: c.dark, transform: `rotateX(-90deg) translateZ(${H}px)` }} />
-      {/* trás */}
-      <div style={{ ...face, backgroundColor: c.dark, transform: `rotateY(180deg) translateZ(${H}px)` }} />
+      <div style={{ ...face, backgroundColor: c.dark,  transform: `rotateX(-90deg) translateZ(${H}px)`,
+        boxShadow: glow }} />
+      {/* verso — cor=dark (=front para estados ativos) → visível e brilhante ao girar */}
+      <div style={{ ...face, backgroundColor: c.dark,  transform: `rotateY(180deg) translateZ(${H}px)`,
+        boxShadow: glow }} />
     </div>
   );
 }
@@ -144,18 +170,21 @@ function Block3D({ idx, state, interactive, onClick }: {
 function CubeScene({ states, pose, interactive, onBlock }: {
   states: BState[]; pose: Pose; interactive: boolean; onBlock: (i: number) => void;
 }) {
+  const order = calcDrawOrder(pose);
+
   return (
-    <div style={{ perspective: "1100px", perspectiveOrigin: "50% 40%" }}>
+    // Perspectiva maior (1500px) = menos distorção, leitura mais clara das faces
+    <div style={{ perspective: "1500px", perspectiveOrigin: "50% 45%" }}>
       <div style={{
         width: BS, height: BS,
         transformStyle: "preserve-3d",
         transform: `rotateX(${pose.rx}deg) rotateY(${pose.ry}deg)`,
         transition: `transform ${ROTATE_MS}ms cubic-bezier(0.42,0,0.58,1)`,
-        margin: "110px auto 80px",
+        margin: "56px auto 44px",
         position: "relative",
         translate: `${-(UNIT / 2)}px ${UNIT / 2}px`,
       }}>
-        {DRAW_ORDER.map(i => (
+        {order.map(i => (
           <Block3D key={i} idx={i} state={states[i]}
             interactive={interactive} onClick={() => onBlock(i)} />
         ))}
@@ -267,7 +296,7 @@ function CuboCorsiTutorial({ onDone }: { onDone: () => void }) {
   return (
     <TutorialBase
       theme="CLINICAL"
-      title="Cubo da Matriz"
+      title="Cubos"
       steps={[
         {
           instruction: "Blocos acendem em azul-ciano, um de cada vez. O cubo muda de ângulo para revelar cada bloco com clareza.",
@@ -338,14 +367,14 @@ export function CuboCorsi({ difficulty, theme: _theme, onComplete }: Props) {
       await sleep(600);
 
       for (const idx of seq) {
-        // 1. Transicionar para a pose do bloco (se diferente da atual)
+        // 1. Girar para a pose segura do bloco (se diferente da atual)
         const target = posePorBloco(idx);
         if (!poseSame(target, curPose)) {
           setPose(target);
           curPose = target;
-          await sleep(ROTATE_MS + 130);  // cubo chega na pose antes de acender
+          await sleep(ROTATE_MS + 130); // cubo chega antes de acender
         }
-        // 2. Acender bloco
+        // 2. Acender bloco — sempre visível na pose atual
         setBS(prev => prev.map((_, j) => j === idx ? "lit" : "idle"));
         sndFlash();
         await sleep(FLASH);
@@ -354,7 +383,7 @@ export function CuboCorsi({ difficulty, theme: _theme, onComplete }: Props) {
         await sleep(280);
       }
 
-      // 4. Voltar à pose A antes do input (referência estável)
+      // 4. Voltar à pose frontal estável para input
       if (!poseSame(curPose, POSE_A)) {
         setPose(POSE_A);
         await sleep(ROTATE_MS + 80);
@@ -364,21 +393,20 @@ export function CuboCorsi({ difficulty, theme: _theme, onComplete }: Props) {
     } catch { /* cancelado */ }
   }, [difficulty, sleep]);
 
-  // ── Avaliar sequência ao completar ────────────────────────────────────────
+  // ── Avaliar sequência ─────────────────────────────────────────────────────
   const evaluateSequence = useCallback((userInput: number[], seq: number[], r: number) => {
     const allOk = userInput.every((tap, i) => tap === seq[i]);
     const nr = r + 1;
 
-    // Construir estados visuais de resultado para cada bloco
     const rs: BState[] = Array(8).fill("idle");
     for (let i = 0; i < seq.length; i++) {
       const exp = seq[i];
       const act = userInput[i];
       if (act === exp) {
-        rs[exp] = "correct";                                    // verde
+        rs[exp] = "correct";
       } else {
-        if (rs[exp] !== "correct") rs[exp] = "missed";         // laranja — deveria ter tocado aqui
-        if (rs[act] !== "correct") rs[act] = "wrong";          // vermelho — tocou aqui por engano
+        if (rs[exp] !== "correct") rs[exp] = "missed";
+        if (rs[act] !== "correct") rs[act] = "wrong";
       }
     }
     setBS(rs);
@@ -419,7 +447,7 @@ export function CuboCorsi({ difficulty, theme: _theme, onComplete }: Props) {
     timersRef.current.push(t);
   }, [difficulty, markProgress, onComplete, startRound]);
 
-  // ── Input do usuário — sem feedback imediato ──────────────────────────────
+  // ── Input do usuário ──────────────────────────────────────────────────────
   const handleBlockTap = useCallback((idx: number) => {
     if (phase !== "input") return;
     const pos = inputSoFar.length;
@@ -427,7 +455,6 @@ export function CuboCorsi({ difficulty, theme: _theme, onComplete }: Props) {
 
     sndTap();
 
-    // Pulso neutro: confirma o toque sem revelar certo/errado
     setBS(prev => prev.map((s, j) => j === idx ? "tapped" : s));
     const t = setTimeout(() => setBS(prev => prev.map((s, j) => j === idx && s === "tapped" ? "idle" : s)), 200);
     timersRef.current.push(t);
@@ -436,7 +463,6 @@ export function CuboCorsi({ difficulty, theme: _theme, onComplete }: Props) {
     setInput(newInput);
 
     if (newInput.length === sequence.length) {
-      // Sequência completa — avaliar após breve pausa (deixar último pulso aparecer)
       const t2 = setTimeout(() => evaluateSequence(newInput, sequence, round), 280);
       timersRef.current.push(t2);
     }
@@ -475,7 +501,7 @@ export function CuboCorsi({ difficulty, theme: _theme, onComplete }: Props) {
           <span className="text-xs font-semibold text-slate-500">✓ {correct} &nbsp; ✗ {errors}</span>
         </div>
 
-        {/* Progresso da sessão */}
+        {/* Barra de progresso da sessão */}
         <div className="h-1.5 rounded-full bg-slate-200 mb-4 overflow-hidden">
           <div
             className="h-full rounded-full bg-blue-500 transition-all duration-500"
