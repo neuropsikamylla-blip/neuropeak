@@ -1,17 +1,15 @@
 "use client";
 
-import { useState, useRef, useCallback } from "react";
+import { useState, useRef, useCallback, useLayoutEffect } from "react";
 import { calculateExerciseScore } from "@/lib/scoring";
 import { useExerciseProgress } from "@/components/exercises/ExerciseWrapper";
 import type { ExerciseResult, Theme } from "@/types";
 
-// ── Layout constants ──────────────────────────────────────────────────────────
-const GRID = 6;
-const CELL = 50;           // px per grid cell
-const BORDER = 6;          // border/curb thickness px
-const BOARD_PX = GRID * CELL; // 300px interior
+// ── Constants ─────────────────────────────────────────────────────────────────
+const GRID   = 6;
+const BORDER = 5;          // concrete curb thickness px
 const EXIT_ROW = 2;        // target car row (0-indexed)
-const LANE_W = 30;         // exit lane extension in SVG
+// CELL_PX is computed dynamically — see useLayoutEffect below
 
 // ── Types ─────────────────────────────────────────────────────────────────────
 interface Car {
@@ -35,21 +33,21 @@ interface DragState {
   currentPos: number;
 }
 
-// ── Muted professional vehicle color palette ──────────────────────────────────
+// ── Muted professional vehicle colors ─────────────────────────────────────────
 const VEH_HEX: Record<string, string> = {
-  red:    "#C03030",
-  teal:   "#3E6D7E",
-  purple: "#5C5282",
-  blue:   "#345A7C",
-  yellow: "#6E6022",
-  orange: "#7A5530",
-  pink:   "#7A3D5C",
-  indigo: "#363A6C",
-  lime:   "#476230",
-  slate:  "#525E6C",
+  red:    "#BE3030",
+  teal:   "#3A6D7E",
+  purple: "#5A4F80",
+  blue:   "#304E72",
+  yellow: "#6A5C20",
+  orange: "#72502A",
+  pink:   "#723A58",
+  indigo: "#303468",
+  lime:   "#426028",
+  slate:  "#4E5A68",
 };
 
-// ── Puzzle levels (logic unchanged) ───────────────────────────────────────────
+// ── Puzzle levels ──────────────────────────────────────────────────────────────
 const ALL_LEVELS: Level[] = [
   {
     id: 1, idealMoves: 2,
@@ -159,7 +157,7 @@ const ALL_LEVELS: Level[] = [
   },
 ];
 
-const TOTAL_PHASES = ALL_LEVELS.length; // 10
+const TOTAL_PHASES = ALL_LEVELS.length;
 
 // ── Move validation ────────────────────────────────────────────────────────────
 function buildGrid(cars: Car[]): boolean[][] {
@@ -179,7 +177,7 @@ function canMove(cars: Car[], carId: string, newPos: number): boolean {
   if (car.orientation === "horizontal") {
     const maxC = car.id === "target" ? GRID - car.len + 1 : GRID - car.len;
     if (newPos < 0 || newPos > maxC) return false;
-    if (car.id === "target" && newPos >= GRID - car.len + 1) return true; // exit
+    if (car.id === "target" && newPos >= GRID - car.len + 1) return true;
     const g = buildGrid(cars.filter(c => c.id !== carId));
     for (let i = 0; i < car.len; i++) {
       const col = newPos + i;
@@ -201,8 +199,7 @@ function isWin(cars: Car[]): boolean {
   return !!t && t.col + t.len >= GRID;
 }
 
-// ── SVG top-view vehicle ──────────────────────────────────────────────────────
-// Windshield: right (horizontal) / bottom (vertical). Wheels at corners.
+// ── SVG top-view vehicle (scales to container via viewBox) ────────────────────
 function VehicleSVG({
   color, len, orientation, isTarget,
 }: {
@@ -215,137 +212,170 @@ function VehicleSVG({
     const VW = len * 100, VH = 100;
     const PX = 5, PY = 8;
     const BW = VW - PX * 2, BH = VH - PY * 2;
-    const WW = 24, WH = 13;
-    const WXR = PX + 20, WXF = VW - PX - WW - 20;
+    const WW = 24, WH = 12;
+    const WXR = PX + 18, WXF = VW - PX - WW - 18;
     const WYT = PY - WH + 2, WYB = PY + BH - 2;
     return (
       <svg viewBox={`0 0 ${VW} ${VH}`} width="100%" height="100%" overflow="visible">
         <defs>
-          <filter id={uid}>
-            <feDropShadow dx="0" dy="4" stdDeviation="5" floodColor="rgba(0,0,0,0.4)" />
+          <filter id={uid} x="-10%" y="-30%" width="125%" height="170%">
+            <feDropShadow dx="0" dy="5" stdDeviation="6" floodColor="rgba(0,0,0,0.45)" />
           </filter>
         </defs>
-        {/* shadow */}
-        <rect x={PX+3} y={PY+7} width={BW} height={BH} rx={12} fill="rgba(0,0,0,0.2)" />
         {/* body */}
-        <rect x={PX} y={PY} width={BW} height={BH} rx={12} fill={base} filter={`url(#${uid})`} />
+        <rect x={PX} y={PY} width={BW} height={BH} rx={11} fill={base} filter={`url(#${uid})`} />
+        {/* hood (front=right, slightly darker) */}
+        <rect x={VW-PX-46} y={PY} width={46} height={BH} rx={11} fill="rgba(0,0,0,0.1)" />
+        {/* trunk (left, slightly darker) */}
+        <rect x={PX} y={PY} width={38} height={BH} rx={11} fill="rgba(0,0,0,0.07)" />
         {/* roof */}
-        <rect x={PX+50} y={PY+13} width={VW-PX*2-108} height={BH-26} rx={7} fill="rgba(255,255,255,0.1)" />
-        {/* windshield (right = front) */}
-        <rect x={VW-PX-48} y={PY+11} width={34} height={BH-22} rx={6} fill="rgba(160,215,245,0.52)" />
+        <rect x={PX+44} y={PY+11} width={VW-PX*2-100} height={BH-22} rx={7} fill="rgba(255,255,255,0.1)" />
+        {/* windshield */}
+        <rect x={VW-PX-44} y={PY+10} width={30} height={BH-20} rx={5} fill="rgba(155,210,245,0.55)" />
         {/* rear window */}
-        <rect x={PX+14} y={PY+13} width={28} height={BH-26} rx={5} fill="rgba(160,215,245,0.34)" />
-        {/* highlight strip */}
-        <rect x={PX+12} y={PY+3} width={BW-24} height={3} rx={1} fill="rgba(255,255,255,0.22)" />
-        {/* wheels */}
-        <rect x={WXR} y={WYT} width={WW} height={WH} rx={4} fill="#18181C" />
-        <rect x={WXR} y={WYB} width={WW} height={WH} rx={4} fill="#18181C" />
-        <rect x={WXF} y={WYT} width={WW} height={WH} rx={4} fill="#18181C" />
-        <rect x={WXF} y={WYB} width={WW} height={WH} rx={4} fill="#18181C" />
+        <rect x={PX+12} y={PY+12} width={22} height={BH-24} rx={4} fill="rgba(155,210,245,0.38)" />
+        {/* top highlight */}
+        <rect x={PX+14} y={PY+3} width={BW-28} height={2.5} rx={1} fill="rgba(255,255,255,0.26)" />
+        {/* wheels — 4 corners */}
+        <rect x={WXR}  y={WYT} width={WW} height={WH} rx={3} fill="#141418" />
+        <rect x={WXR}  y={WYB} width={WW} height={WH} rx={3} fill="#141418" />
+        <rect x={WXF}  y={WYT} width={WW} height={WH} rx={3} fill="#141418" />
+        <rect x={WXF}  y={WYB} width={WW} height={WH} rx={3} fill="#141418" />
         {isTarget && (
-          <rect x={PX+1} y={PY+1} width={BW-2} height={BH-2} rx={11}
-            fill="none" stroke="rgba(255,200,180,0.4)" strokeWidth={2.5} />
+          <rect x={PX+1} y={PY+1} width={BW-2} height={BH-2} rx={10}
+            fill="none" stroke="rgba(255,190,160,0.45)" strokeWidth={3} />
         )}
       </svg>
     );
   }
 
-  // Vertical — front = bottom
+  // Vertical (front = bottom)
   const VW = 100, VH = len * 100;
   const PX = 8, PY = 5;
   const BW = VW - PX * 2, BH = VH - PY * 2;
-  const WW = 13, WH = 24;
+  const WW = 12, WH = 24;
   const WXL = PX - WW + 2, WXR2 = PX + BW - 2;
-  const WYT = PY + 20, WYB = VH - PY - WH - 20;
+  const WYT = PY + 18, WYB = VH - PY - WH - 18;
   return (
     <svg viewBox={`0 0 ${VW} ${VH}`} width="100%" height="100%" overflow="visible">
       <defs>
-        <filter id={uid}>
-          <feDropShadow dx="4" dy="0" stdDeviation="5" floodColor="rgba(0,0,0,0.4)" />
+        <filter id={uid} x="-30%" y="-10%" width="170%" height="125%">
+          <feDropShadow dx="5" dy="0" stdDeviation="6" floodColor="rgba(0,0,0,0.45)" />
         </filter>
       </defs>
-      <rect x={PX+6} y={PY+2} width={BW} height={BH} rx={12} fill="rgba(0,0,0,0.2)" />
-      <rect x={PX} y={PY} width={BW} height={BH} rx={12} fill={base} filter={`url(#${uid})`} />
+      <rect x={PX} y={PY} width={BW} height={BH} rx={11} fill={base} filter={`url(#${uid})`} />
+      {/* hood (bottom) */}
+      <rect x={PX} y={VH-PY-46} width={BW} height={46} rx={11} fill="rgba(0,0,0,0.1)" />
+      {/* trunk (top) */}
+      <rect x={PX} y={PY} width={BW} height={38} rx={11} fill="rgba(0,0,0,0.07)" />
       {/* roof */}
-      <rect x={PX+13} y={PY+50} width={BW-26} height={VH-PY*2-108} rx={7} fill="rgba(255,255,255,0.1)" />
+      <rect x={PX+11} y={PY+44} width={BW-22} height={VH-PY*2-100} rx={7} fill="rgba(255,255,255,0.1)" />
       {/* windshield (bottom) */}
-      <rect x={PX+11} y={VH-PY-48} width={BW-22} height={34} rx={6} fill="rgba(160,215,245,0.52)" />
+      <rect x={PX+10} y={VH-PY-44} width={BW-20} height={30} rx={5} fill="rgba(155,210,245,0.55)" />
       {/* rear window (top) */}
-      <rect x={PX+13} y={PY+14} width={BW-26} height={28} rx={5} fill="rgba(160,215,245,0.34)" />
+      <rect x={PX+12} y={PY+12} width={BW-24} height={22} rx={4} fill="rgba(155,210,245,0.38)" />
       {/* highlight */}
-      <rect x={PX+3} y={PY+12} width={3} height={BH-24} rx={1} fill="rgba(255,255,255,0.22)" />
+      <rect x={PX+3} y={PY+14} width={2.5} height={BH-28} rx={1} fill="rgba(255,255,255,0.26)" />
       {/* wheels */}
-      <rect x={WXL} y={WYT} width={WW} height={WH} rx={4} fill="#18181C" />
-      <rect x={WXR2} y={WYT} width={WW} height={WH} rx={4} fill="#18181C" />
-      <rect x={WXL} y={WYB} width={WW} height={WH} rx={4} fill="#18181C" />
-      <rect x={WXR2} y={WYB} width={WW} height={WH} rx={4} fill="#18181C" />
+      <rect x={WXL}  y={WYT} width={WW} height={WH} rx={3} fill="#141418" />
+      <rect x={WXR2} y={WYT} width={WW} height={WH} rx={3} fill="#141418" />
+      <rect x={WXL}  y={WYB} width={WW} height={WH} rx={3} fill="#141418" />
+      <rect x={WXR2} y={WYB} width={WW} height={WH} rx={3} fill="#141418" />
       {isTarget && (
-        <rect x={PX+1} y={PY+1} width={BW-2} height={BH-2} rx={11}
-          fill="none" stroke="rgba(255,200,180,0.4)" strokeWidth={2.5} />
+        <rect x={PX+1} y={PY+1} width={BW-2} height={BH-2} rx={10}
+          fill="none" stroke="rgba(255,190,160,0.45)" strokeWidth={3} />
       )}
     </svg>
   );
 }
 
-// ── Parking lot board SVG overlay ─────────────────────────────────────────────
-function BoardOverlay() {
-  const S   = BOARD_PX;
+// ── Parking lot SVG overlay ────────────────────────────────────────────────────
+// Receives cellPx so it scales correctly at any size.
+function BoardSVG({ cellPx }: { cellPx: number }) {
+  const S   = GRID * cellPx;         // interior side
   const B   = BORDER;
-  const T   = S + B * 2;
-  const EY1 = B + EXIT_ROW * CELL;
-  const EY2 = B + (EXIT_ROW + 1) * CELL;
+  const T   = S + B * 2;             // total board px
+  const EY1 = B + EXIT_ROW * cellPx;
+  const EY2 = B + (EXIT_ROW + 1) * cellPx;
   const EX  = T - B;
-  const AX  = EX + 8;
+
+  // Arrow at right side of exit row, inside the board
+  const AX = EX - 22;
+  const AY = EY1 + cellPx / 2;
 
   return (
     <svg
-      width={T + LANE_W}
-      height={T}
-      style={{ position: "absolute", top: 0, left: 0, pointerEvents: "none", display: "block" }}
+      width={T} height={T}
+      style={{ position: "absolute", inset: 0, pointerEvents: "none", display: "block" }}
     >
-      {/* Exit lane asphalt */}
-      <rect x={EX} y={EY1} width={B + LANE_W} height={CELL} fill="#373E4B" />
-      {/* Main asphalt */}
-      <rect x={B} y={B} width={S} height={S} fill="#373E4B" />
+      {/* Asphalt floor */}
+      <rect x={B} y={B} width={S} height={S} fill="#3C424F" />
 
-      {/* Concrete curb */}
-      <rect x={0} y={0} width={T} height={B} rx={2} fill="#5C6470" />
-      <rect x={0} y={T-B} width={T} height={B} rx={2} fill="#5C6470" />
-      <rect x={0} y={0} width={B} height={T} rx={2} fill="#5C6470" />
-      <rect x={EX} y={0} width={B} height={EY1} rx={1} fill="#5C6470" />
-      <rect x={EX} y={EY2} width={B} height={T-EY2} rx={1} fill="#5C6470" />
+      {/* Subtle asphalt texture (faint diagonal hatching) */}
+      <pattern id="asphalt" x="0" y="0" width="40" height="40" patternUnits="userSpaceOnUse">
+        <rect width="40" height="40" fill="transparent" />
+        <line x1="0" y1="40" x2="40" y2="0" stroke="rgba(255,255,255,0.015)" strokeWidth="2" />
+      </pattern>
+      <rect x={B} y={B} width={S} height={S} fill="url(#asphalt)" />
 
-      {/* Parking lines */}
+      {/* Exit row — very slight highlight to suggest the path */}
+      <rect x={B} y={EY1} width={S} height={cellPx} fill="rgba(255,255,255,0.025)" />
+
+      {/* Concrete curb — top */}
+      <rect x={0} y={0} width={T} height={B} fill="#5A6170" />
+      {/* Concrete curb — bottom */}
+      <rect x={0} y={T-B} width={T} height={B} fill="#5A6170" />
+      {/* Concrete curb — left */}
+      <rect x={0} y={0} width={B} height={T} fill="#5A6170" />
+      {/* Concrete curb — right (above exit) */}
+      <rect x={EX} y={0} width={B} height={EY1} fill="#5A6170" />
+      {/* Concrete curb — right (below exit) */}
+      <rect x={EX} y={EY2} width={B} height={T-EY2} fill="#5A6170" />
+
+      {/* Inner curb edge highlight (top/left) */}
+      <line x1={B} y1={B} x2={S+B} y2={B} stroke="rgba(255,255,255,0.08)" strokeWidth={1} />
+      <line x1={B} y1={B} x2={B} y2={S+B} stroke="rgba(255,255,255,0.08)" strokeWidth={1} />
+
+      {/* Parking space dividers — horizontal */}
       {[1,2,3,4,5].map(r => (
         <line key={`h${r}`}
-          x1={B} y1={B + r*CELL} x2={B+S} y2={B + r*CELL}
-          stroke="rgba(255,255,255,0.18)" strokeWidth={1.5}
+          x1={B} y1={B + r*cellPx} x2={B+S} y2={B + r*cellPx}
+          stroke="rgba(255,255,255,0.17)" strokeWidth={1.5} strokeDasharray="6 4"
         />
       ))}
+      {/* Parking space dividers — vertical */}
       {[1,2,3,4,5].map(c => (
         <line key={`v${c}`}
-          x1={B + c*CELL} y1={B} x2={B + c*CELL} y2={B+S}
-          stroke="rgba(255,255,255,0.18)" strokeWidth={1.5}
+          x1={B + c*cellPx} y1={B} x2={B + c*cellPx} y2={B+S}
+          stroke="rgba(255,255,255,0.17)" strokeWidth={1.5} strokeDasharray="6 4"
         />
       ))}
 
-      {/* Guide dashes in exit lane */}
+      {/* Exit guide dashes on row 2 */}
       <line
-        x1={B + 4*CELL} y1={EY1 + CELL/2}
-        x2={EX}          y2={EY1 + CELL/2}
-        stroke="rgba(255,210,0,0.25)" strokeWidth={2} strokeDasharray="8 5"
+        x1={B + 3*cellPx} y1={AY} x2={AX - 4} y2={AY}
+        stroke="rgba(255,205,0,0.28)" strokeWidth={2} strokeDasharray="7 5"
       />
 
-      {/* Exit arrow painted on asphalt */}
+      {/* Exit arrow (painted on asphalt, inside board) */}
       <polygon
-        points={`${AX},${EY1+CELL/2-9} ${AX+17},${EY1+CELL/2} ${AX},${EY1+CELL/2+9}`}
-        fill="rgba(255,255,255,0.36)"
+        points={`${AX-14},${AY-9} ${AX},${AY} ${AX-14},${AY+9}`}
+        fill="rgba(255,255,255,0.42)"
       />
+
+      {/* Corner marks for parking spaces */}
+      {[0,1,2,3,4,5].map(r => [0,1,2,3,4,5].map(c => (
+        <rect key={`${r}${c}`}
+          x={B + c*cellPx + 1} y={B + r*cellPx + 1}
+          width={4} height={4}
+          fill="rgba(255,255,255,0.06)"
+        />
+      )))}
     </svg>
   );
 }
 
-// ── Main component ────────────────────────────────────────────────────────────
+// ── Main component ─────────────────────────────────────────────────────────────
 interface Props {
   difficulty: number;
   theme: Theme;
@@ -355,6 +385,25 @@ interface Props {
 export function EstacionamentoLogico({ difficulty, theme: _theme, onComplete }: Props) {
   const markProgress = useExerciseProgress();
 
+  // Responsive cell size — computed once on mount from available width
+  const [cellPx, setCellPx] = useState(52);
+  const wrapRef = useRef<HTMLDivElement>(null);
+
+  useLayoutEffect(() => {
+    function compute() {
+      const w = wrapRef.current ? wrapRef.current.offsetWidth : window.innerWidth - 32;
+      const c = Math.floor((w - BORDER * 2) / GRID);
+      setCellPx(Math.min(Math.max(c, 46), 72)); // clamp 46-72px
+    }
+    compute();
+    window.addEventListener("resize", compute);
+    return () => window.removeEventListener("resize", compute);
+  }, []);
+
+  const boardInner = GRID * cellPx;            // e.g. 6*56 = 336px
+  const boardTotal = boardInner + BORDER * 2;  // + border each side
+
+  // ── State ────────────────────────────────────────────────────────────────
   const [puzzleIdx, setPuzzleIdx]   = useState(0);
   const [cars, setCars]             = useState<Car[]>(() => ALL_LEVELS[0].cars.map(c => ({ ...c })));
   const [moves, setMoves]           = useState(0);
@@ -363,15 +412,14 @@ export function EstacionamentoLogico({ difficulty, theme: _theme, onComplete }: 
   const [resultsLog, setResultsLog] = useState<{ moves: number; ideal: number }[]>([]);
   const [dragPrev, setDragPrev]     = useState<{ id: string; pos: number } | null>(null);
 
-  const boardRef = useRef<HTMLDivElement>(null);
-  const dragRef  = useRef<DragState | null>(null);
-  const startTs  = useRef(Date.now());
-  // Ref keeps latest resultsLog for finishExercise without stale closure
+  const boardRef  = useRef<HTMLDivElement>(null);
+  const dragRef   = useRef<DragState | null>(null);
+  const startTs   = useRef(Date.now());
   const resultsRef = useRef<{ moves: number; ideal: number }[]>([]);
 
   const currentLevel = ALL_LEVELS[puzzleIdx];
 
-  // ── Puzzle init ────────────────────────────────────────────────────────────
+  // ── Load puzzle ───────────────────────────────────────────────────────────
   const loadPuzzle = useCallback((idx: number) => {
     setCars(ALL_LEVELS[idx].cars.map(c => ({ ...c })));
     setMoves(0);
@@ -383,7 +431,7 @@ export function EstacionamentoLogico({ difficulty, theme: _theme, onComplete }: 
 
   const restart = () => loadPuzzle(puzzleIdx);
 
-  // ── Finish exercise ────────────────────────────────────────────────────────
+  // ── Finish ────────────────────────────────────────────────────────────────
   const finish = useCallback(() => {
     const allRes = resultsRef.current;
     const totalMoves = allRes.reduce((s, r) => s + r.moves, 0);
@@ -398,7 +446,6 @@ export function EstacionamentoLogico({ difficulty, theme: _theme, onComplete }: 
     });
   }, [difficulty, onComplete]);
 
-  // ── Next puzzle / finish ───────────────────────────────────────────────────
   const nextPuzzle = () => {
     const ni = puzzleIdx + 1;
     if (ni >= TOTAL_PHASES) {
@@ -409,7 +456,7 @@ export function EstacionamentoLogico({ difficulty, theme: _theme, onComplete }: 
     }
   };
 
-  // ── Commit a car move ──────────────────────────────────────────────────────
+  // ── Commit move ───────────────────────────────────────────────────────────
   const commitMove = useCallback((carId: string, newPos: number) => {
     setCars(prev => {
       if (!canMove(prev, carId, newPos)) return prev;
@@ -433,7 +480,7 @@ export function EstacionamentoLogico({ difficulty, theme: _theme, onComplete }: 
     });
   }, [puzzleIdx, markProgress]);
 
-  // ── Pointer / drag ────────────────────────────────────────────────────────
+  // ── Drag ──────────────────────────────────────────────────────────────────
   const onPtrDown = useCallback((e: React.PointerEvent, car: Car) => {
     if (won) return;
     e.currentTarget.setPointerCapture(e.pointerId);
@@ -450,9 +497,9 @@ export function EstacionamentoLogico({ difficulty, theme: _theme, onComplete }: 
     const d = dragRef.current;
     if (!d || d.carId !== car.id || !boardRef.current) return;
     const rect = boardRef.current.getBoundingClientRect();
-    const cellPx = rect.width / GRID;
-    const px = d.axis === "horizontal" ? e.clientX : e.clientY;
-    const delta = Math.round((px - d.startPx) / cellPx);
+    const cpx  = rect.width / GRID;
+    const px   = d.axis === "horizontal" ? e.clientX : e.clientY;
+    const delta = Math.round((px - d.startPx) / cpx);
     const maxPos = car.id === "target" ? GRID - car.len + 1 : GRID - car.len;
     d.currentPos = Math.max(0, Math.min(maxPos, d.startPos + delta));
     setDragPrev({ id: car.id, pos: d.currentPos });
@@ -467,27 +514,30 @@ export function EstacionamentoLogico({ difficulty, theme: _theme, onComplete }: 
     if (d.currentPos !== orig) commitMove(car.id, d.currentPos);
   }, [commitMove]);
 
-  // ── Result screen ─────────────────────────────────────────────────────────
+  // ── Result screen (between puzzles) ───────────────────────────────────────
   if (won) {
     const last   = resultsLog[resultsLog.length - 1];
     const isLast = puzzleIdx + 1 >= TOTAL_PHASES;
     return (
-      <div className="bg-white min-h-screen flex items-center justify-center px-6">
+      <div className="min-h-screen flex items-center justify-center px-8" style={{ background: "#F2F2EE" }}>
         <div className="w-full max-w-xs text-center">
           <p className="text-2xl font-light text-slate-800 mb-10">Concluído</p>
-          <div className="flex justify-center gap-12 mb-10">
+
+          <div className="flex justify-center gap-14 mb-10">
             <div>
-              <p className="text-3xl font-semibold text-slate-800">{last?.moves ?? moves}</p>
-              <p className="text-xs text-slate-400 mt-1">Movimentos</p>
+              <p className="text-4xl font-semibold text-slate-800 tabular-nums">{last?.moves ?? moves}</p>
+              <p className="text-xs text-slate-400 mt-1.5 tracking-wide uppercase">Movimentos</p>
             </div>
             <div>
-              <p className="text-3xl font-semibold text-slate-300">{currentLevel.idealMoves}</p>
-              <p className="text-xs text-slate-400 mt-1">Melhor solução</p>
+              <p className="text-4xl font-semibold text-slate-300 tabular-nums">{currentLevel.idealMoves}</p>
+              <p className="text-xs text-slate-400 mt-1.5 tracking-wide uppercase">Melhor solução</p>
             </div>
           </div>
+
           <button
             onClick={nextPuzzle}
-            className="w-full py-3 rounded-xl bg-slate-800 text-white text-sm font-medium tracking-wide"
+            className="w-full py-3.5 rounded-2xl text-sm font-semibold tracking-wide text-white"
+            style={{ background: "#2C3444" }}
           >
             {isLast ? "Finalizar" : "Próxima fase"}
           </button>
@@ -497,39 +547,47 @@ export function EstacionamentoLogico({ difficulty, theme: _theme, onComplete }: 
   }
 
   // ── Game screen ────────────────────────────────────────────────────────────
-  const T = BOARD_PX + BORDER * 2; // 312px
-
   return (
-    <div className="bg-white min-h-screen">
-      <div
-        className="mx-auto pt-4 px-3 pb-8"
-        style={{ maxWidth: T + LANE_W + 24 }}
-      >
-        {/* Instrução discreta */}
-        <p className="text-xs text-slate-400 mb-4">
-          Libere o carro vermelho pela saída.
-        </p>
+    <div
+      ref={wrapRef}
+      className="min-h-screen flex flex-col"
+      style={{ background: "#F2F2EE" }}
+    >
+      {/* ── Header ──────────────────────────────────────────────────────── */}
+      <div className="flex items-center justify-between px-4 pt-4 pb-0.5">
+        <h1 className="text-sm font-semibold tracking-tight" style={{ color: "#3A4050" }}>
+          Estacionamento Lógico
+        </h1>
+        <span className="text-xs tabular-nums" style={{ color: "#94A0B0" }}>
+          {puzzleIdx + 1} / {TOTAL_PHASES}
+        </span>
+      </div>
+      <p className="px-4 pt-1 pb-4 text-xs" style={{ color: "#94A0B0" }}>
+        Libere o carro vermelho pela saída.
+      </p>
 
-        {/* Board */}
-        <div style={{ position: "relative", width: T + LANE_W, height: T }}>
-          <BoardOverlay />
+      {/* ── Board — fills available width ─────────────────────────────── */}
+      <div className="flex-1 flex items-center justify-center px-3">
+        <div style={{ position: "relative", width: boardTotal, height: boardTotal, flexShrink: 0 }}>
+          {/* SVG background (asphalt + curb + lines) */}
+          <BoardSVG cellPx={cellPx} />
 
-          {/* Vehicle container (inner 300×300) */}
+          {/* Vehicle container (6×6 inner grid) */}
           <div
             ref={boardRef}
             style={{
               position: "absolute",
               left: BORDER, top: BORDER,
-              width: BOARD_PX, height: BOARD_PX,
+              width: boardInner, height: boardInner,
             }}
           >
             {cars.map(car => {
               const isDragging = dragPrev?.id === car.id;
               const pos  = isDragging ? dragPrev!.pos : (car.orientation === "horizontal" ? car.col : car.row);
-              const left = car.orientation === "horizontal" ? pos * CELL : car.col * CELL;
-              const top  = car.orientation === "vertical"   ? pos * CELL : car.row * CELL;
-              const w    = car.orientation === "horizontal" ? car.len * CELL : CELL;
-              const h    = car.orientation === "vertical"   ? car.len * CELL : CELL;
+              const left = car.orientation === "horizontal" ? pos * cellPx : car.col * cellPx;
+              const top  = car.orientation === "vertical"   ? pos * cellPx : car.row * cellPx;
+              const w    = car.orientation === "horizontal" ? car.len * cellPx : cellPx;
+              const h    = car.orientation === "vertical"   ? car.len * cellPx : cellPx;
 
               return (
                 <div
@@ -541,7 +599,7 @@ export function EstacionamentoLogico({ difficulty, theme: _theme, onComplete }: 
                     touchAction: "none",
                     zIndex: isDragging ? 20 : 10,
                     transition: isDragging ? "none" : "left 0.1s ease, top 0.1s ease",
-                    transform: isDragging ? "scale(1.03)" : "scale(1)",
+                    transform: isDragging ? "scale(1.04)" : "scale(1)",
                     willChange: "left, top",
                   }}
                   onPointerDown={e => onPtrDown(e, car)}
@@ -559,16 +617,23 @@ export function EstacionamentoLogico({ difficulty, theme: _theme, onComplete }: 
             })}
           </div>
         </div>
+      </div>
 
-        {/* Single action button */}
-        <div className="mt-5 flex justify-center">
-          <button
-            onClick={restart}
-            className="text-sm text-slate-500 border border-slate-200 rounded-lg px-6 py-2"
-          >
-            Reiniciar
-          </button>
-        </div>
+      {/* ── Restart button ────────────────────────────────────────────── */}
+      <div className="flex justify-center py-5">
+        <button
+          onClick={restart}
+          className="px-8 py-2.5 rounded-xl text-sm font-medium transition-colors"
+          style={{
+            color: "#5A6070",
+            border: "1.5px solid #CDD0D8",
+            background: "white",
+          }}
+          onPointerDown={e => { (e.currentTarget as HTMLButtonElement).style.background = "#F5F5F2"; }}
+          onPointerUp={e => { (e.currentTarget as HTMLButtonElement).style.background = "white"; }}
+        >
+          Reiniciar
+        </button>
       </div>
     </div>
   );

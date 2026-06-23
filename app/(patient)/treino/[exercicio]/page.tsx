@@ -568,6 +568,9 @@ export default function ExercicioPage() {
     }
   }
 
+  // Exercícios que gerenciam o próprio layout (sem barra de progresso no canto)
+  const HIDE_PROGRESS_WIDGET = new Set(["estacionamento-logico"]);
+
   return (
     <ExerciseWrapper
       title={exerciseDef.name}
@@ -577,6 +580,7 @@ export default function ExercicioPage() {
       exerciseId={exerciseId}
       sessionTotal={sessionTotal}
       sessionCompleted={sessionCompleted}
+      hideProgress={HIDE_PROGRESS_WIDGET.has(exerciseId)}
       onFinish={handleComplete}
     >
       {(onComplete) => renderExercise(onComplete)}

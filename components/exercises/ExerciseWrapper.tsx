@@ -39,6 +39,8 @@ interface ExerciseWrapperProps {
   sessionTotal?: number;
   /** Quantos exercícios já foram concluídos antes deste (no mesmo dia). */
   sessionCompleted?: number;
+  /** Oculta o widget de progresso no canto (exercícios com layout próprio). */
+  hideProgress?: boolean;
   children: (onComplete: (result: ExerciseResult) => void) => React.ReactNode;
   onFinish: (result: ExerciseResult) => void;
 }
@@ -51,6 +53,7 @@ export function ExerciseWrapper({
   exerciseId,
   sessionTotal,
   sessionCompleted = 0,
+  hideProgress = false,
   children,
   onFinish,
 }: ExerciseWrapperProps) {
@@ -224,7 +227,7 @@ export function ExerciseWrapper({
               }
             </button>
 
-            {difficulty !== undefined && (
+            {difficulty !== undefined && !hideProgress && (
               <div className={`fixed bottom-6 left-4 z-50 pointer-events-none rounded-2xl px-4 py-3 min-w-[150px] shadow-lg ${
                 theme === "GAMIFIED"
                   ? "bg-gray-800/95 border border-cyan-500/40 backdrop-blur-sm"
