@@ -193,7 +193,7 @@ export const EXERCISE_DEFINITIONS = {
   },
   "cubo-corsi": {
     id: "cubo-corsi",
-    name: "Cubo da Matriz",
+    name: "Cubos",
     domain: "memory" as Domain,
     description: "Treina memória visuoespacial 3D: memorize a sequência de blocos que acendem no cubo e reproduza a ordem correta.",
     estimatedMinutes: 6,

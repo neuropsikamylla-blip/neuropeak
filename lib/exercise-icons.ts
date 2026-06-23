@@ -21,11 +21,13 @@ export const EXERCISE_ICON_IDS = new Set<string>([
   "antes-depois",
   "mot",
   "dual-task",
+  "vigilancia",
   // processamento
   "tempo-reacao",
   "certo-ou-errado",
   "semaforo",
   "corrida-tempo",
+  "identificacao-simbolos",
   // executivo
   "stroop-task",
   "torre-hanoi",
@@ -35,6 +37,10 @@ export const EXERCISE_ICON_IDS = new Set<string>([
   "compra-multifuncional",
   "task-switching",
   "deductive-grid",
+  "estacionamento-logico",
+  // memória — novos
+  "nback",
+  "cubo-corsi",
   // funcional / supermercado
   "desafio-supermercado",
   "desafio-supermercado-auditivo",
