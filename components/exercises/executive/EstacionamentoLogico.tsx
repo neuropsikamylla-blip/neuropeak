@@ -553,16 +553,7 @@ export function EstacionamentoLogico({ difficulty, theme: _theme, onComplete }: 
       className="min-h-screen flex flex-col"
       style={{ background: "#F2F2EE" }}
     >
-      {/* ── Header ──────────────────────────────────────────────────────── */}
-      <div className="flex items-center justify-between px-4 pt-4 pb-0.5">
-        <h1 className="text-sm font-semibold tracking-tight" style={{ color: "#3A4050" }}>
-          Estacionamento Lógico
-        </h1>
-        <span className="text-xs tabular-nums" style={{ color: "#94A0B0" }}>
-          {puzzleIdx + 1} / {TOTAL_PHASES}
-        </span>
-      </div>
-      <p className="px-4 pt-1 pb-4 text-xs" style={{ color: "#94A0B0" }}>
+      <p className="px-4 pt-4 pb-4 text-xs" style={{ color: "#94A0B0" }}>
         Libere o carro vermelho pela saída.
       </p>
 
