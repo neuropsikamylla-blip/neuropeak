@@ -69,8 +69,8 @@ function HanoiPegsDisplay({
             style={{ width: maxW + 16, height: 10 }}
           />
           <div
-            className={`absolute rounded-full ${theme === "GAMIFIED" ? "bg-gray-500" : "bg-gray-400"}`}
-            style={{ width: 8, height: 180, bottom: 10 }}
+            className={`absolute rounded-full ${selected === pegIdx ? "bg-yellow-400" : theme === "GAMIFIED" ? "bg-gray-500" : "bg-gray-400"}`}
+            style={{ width: 22, height: 180, bottom: 10 }}
           />
           <div className="absolute bottom-3 flex flex-col-reverse items-center gap-1">
             {peg.map((disc, di) => {
@@ -335,8 +335,8 @@ export function TorreHanoi({ difficulty, theme, onComplete }: TorreHanoiProps) {
                 style={{ width: `${maxDiscWidth + 20}px`, height: "10px" }}
               />
               <div
-                className={`absolute rounded-full ${theme === "GAMIFIED" ? "bg-gray-500" : "bg-gray-400"}`}
-                style={{ width: "10px", height: "320px", bottom: "10px" }}
+                className={`absolute rounded-full ${selected === pegIdx ? "bg-yellow-400" : theme === "GAMIFIED" ? "bg-gray-500" : "bg-gray-400"}`}
+                style={{ width: "24px", height: "320px", bottom: "10px" }}
               />
               <div className="absolute bottom-3 flex flex-col-reverse items-center gap-1">
                 {peg.map((disc, discIdx) => {

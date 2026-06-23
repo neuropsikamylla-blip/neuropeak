@@ -14,19 +14,20 @@ type Phase = "instructions" | "exercise" | "results";
 const ProgressContext = createContext<(pct: number) => void>(() => {});
 export const useExerciseProgress = () => useContext(ProgressContext);
 
-/** Calcula progresso global da sessão.
- *  Snap de 5% aplicado no exercício; a contribuição global é proporcional ao slice. */
+/** Calcula progresso global da sessão em múltiplos de 5%.
+ *  Snap de 5% aplicado tanto no exercício quanto no resultado final. */
 function cogmedProgress(
   exercisePct: number,
   sessionCompleted: number,
   sessionTotal: number,
 ): number {
   const step = 5;
-  // Snap no nível do exercício (0-100%), depois escala para o slice global
   const snapped = Math.round(exercisePct / step) * step;
   const sliceSize = 100 / sessionTotal;
   const base = sessionCompleted * sliceSize;
-  return Math.min(100, Math.round(base + (snapped / 100) * sliceSize));
+  const raw = base + (snapped / 100) * sliceSize;
+  // Snap final garante múltiplos de 5 no resultado global
+  return Math.min(100, Math.round(raw / step) * step);
 }
 
 interface ExerciseWrapperProps {
