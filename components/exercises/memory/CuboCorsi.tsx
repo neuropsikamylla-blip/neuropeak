@@ -6,14 +6,14 @@ import { useExerciseProgress } from "@/components/exercises/ExerciseWrapper";
 import { TutorialBase } from "@/components/exercises/TutorialBase";
 import type { ExerciseResult, Theme } from "@/types";
 
-// ── Geometria isométrica 2D flat ───────────────────────────────────────────────
-// Cubo 2×2×2 renderizado em SVG puro — sem CSS 3D, sem rotação.
-// 12 tiles visíveis: 4 frente (F0-F3) + 4 direita (R0-R3) + 4 topo (T0-T3).
+// ── Geometria isométrica 2D ────────────────────────────────────────────────────
+// Cubo 2×2×2 em SVG — 12 tiles visíveis: topo (T), frente/esquerda (F), direita (R).
+// U aumentado para 78 (+20% em relação ao original 65), cubo exibido maior.
 
-const U = 65;          // unidade isométrica px
-const OX = 170;        // origem x (canto frontal-inferior-esquerdo)
-const OY = 155;        // origem y
-// viewBox: "0 0 340 310"  →  cubo ocupa 40-300 x, 25-285 y
+const U  = 78;    // unidade isométrica px
+const OX = 195;   // origem x
+const OY = 185;   // origem y
+// viewBox: "0 0 400 375"
 
 function iso(x: number, y: number, z: number) {
   return { x: OX + (x - z) * U, y: OY - y * U + (x + z) * U / 2 };
@@ -23,37 +23,35 @@ type Face = "front" | "right" | "top";
 interface TileDef { pts: { x: number; y: number }[]; face: Face }
 
 const TILES: TileDef[] = [
-  // FRENTE (layer z=0) — índices 0-3 (baixo-esq, baixo-dir, cima-esq, cima-dir)
+  // FRENTE (z=0) — índices 0-3
   { pts: [iso(0,0,0), iso(1,0,0), iso(1,1,0), iso(0,1,0)], face: "front" },
   { pts: [iso(1,0,0), iso(2,0,0), iso(2,1,0), iso(1,1,0)], face: "front" },
   { pts: [iso(0,1,0), iso(1,1,0), iso(1,2,0), iso(0,2,0)], face: "front" },
   { pts: [iso(1,1,0), iso(2,1,0), iso(2,2,0), iso(1,2,0)], face: "front" },
-  // DIREITA (x=2) — índices 4-7 (baixo-frente, cima-frente, baixo-trás, cima-trás)
+  // DIREITA (x=2) — índices 4-7
   { pts: [iso(2,0,0), iso(2,0,1), iso(2,1,1), iso(2,1,0)], face: "right" },
   { pts: [iso(2,1,0), iso(2,1,1), iso(2,2,1), iso(2,2,0)], face: "right" },
   { pts: [iso(2,0,1), iso(2,0,2), iso(2,1,2), iso(2,1,1)], face: "right" },
   { pts: [iso(2,1,1), iso(2,1,2), iso(2,2,2), iso(2,2,1)], face: "right" },
-  // TOPO (y=2) — índices 8-11 (frente-esq, frente-dir, trás-esq, trás-dir)
+  // TOPO (y=2) — índices 8-11
   { pts: [iso(0,2,0), iso(1,2,0), iso(1,2,1), iso(0,2,1)], face: "top" },
   { pts: [iso(1,2,0), iso(2,2,0), iso(2,2,1), iso(1,2,1)], face: "top" },
   { pts: [iso(0,2,1), iso(1,2,1), iso(1,2,2), iso(0,2,2)], face: "top" },
   { pts: [iso(1,2,1), iso(2,2,1), iso(2,2,2), iso(1,2,2)], face: "top" },
 ];
 
-// Hexágono externo (corpo escuro do cubo — aparece como grade entre tiles)
+// Hexágono externo = corpo escuro (grade entre tiles)
 const HEX = [iso(0,2,0), iso(2,2,0), iso(2,0,0), iso(2,0,2), iso(0,0,2), iso(0,2,2)]
   .map(p => `${p.x},${p.y}`).join(" ");
 
 // ── Path com cantos arredondados ──────────────────────────────────────────────
-function roundedPath(rawPts: { x: number; y: number }[], r = 12, insetFactor = 0.91): string {
-  // inset do centróide para criar gap entre tiles
+function roundedPath(rawPts: { x: number; y: number }[], r = 11, insetFactor = 0.89): string {
   const cx = rawPts.reduce((s, p) => s + p.x, 0) / rawPts.length;
   const cy = rawPts.reduce((s, p) => s + p.y, 0) / rawPts.length;
   const pts = rawPts.map(p => ({
     x: cx + (p.x - cx) * insetFactor,
     y: cy + (p.y - cy) * insetFactor,
   }));
-
   const n = pts.length;
   let d = "";
   for (let i = 0; i < n; i++) {
@@ -71,17 +69,19 @@ function roundedPath(rawPts: { x: number; y: number }[], r = 12, insetFactor = 0
   return d + "Z";
 }
 
-// ── Estados e cores ───────────────────────────────────────────────────────────
+// ── Cores — alto contraste ────────────────────────────────────────────────────
 type BState = "idle" | "lit" | "tapped" | "correct" | "wrong";
 
+// Tiles ociosos: faces claramente distintas
 const IDLE: Record<Face, string> = {
-  top:   "#EBF5FC",
-  front: "#D4E8F5",
-  right: "#BDD8EC",
+  top:   "#D9EEF9",   // quase branco-azulado — face mais iluminada
+  front: "#93C2DF",   // azul médio
+  right: "#5E9DC0",   // azul mais escuro — face lateral mais profunda
 };
+// Estado ativo: DOURADO para máximo contraste contra qualquer azul
 const ACTIVE: Record<Exclude<BState, "idle">, string> = {
-  lit:     "#4AAED9",
-  tapped:  "#A8D4ED",
+  lit:     "#FFD600",  // amarelo-ouro vibrante
+  tapped:  "#FFF59D",  // amarelo pálido (feedback de toque)
   correct: "#4CAF50",
   wrong:   "#EF5350",
 };
@@ -89,48 +89,67 @@ function tileColor(st: BState, face: Face) {
   return st === "idle" ? IDLE[face] : ACTIVE[st];
 }
 function tileStroke(st: BState): string {
-  if (st === "lit")     return "#2B90C0";
+  if (st === "lit")     return "#E65100";
   if (st === "correct") return "#2E7D32";
   if (st === "wrong")   return "#C62828";
   return "none";
 }
+function strokeW(st: BState): number {
+  return st === "idle" || st === "tapped" ? 0 : 2.5;
+}
 
-// ── Cubo isométrico SVG ───────────────────────────────────────────────────────
+// ── Cubo SVG isométrico ────────────────────────────────────────────────────────
 function IsoCube({
   states,
   interactive,
   onTile,
-  size = 280,
+  size = 370,
 }: {
   states: BState[];
   interactive: boolean;
   onTile: (i: number) => void;
   size?: number;
 }) {
-  const h = Math.round(size * 310 / 340);
+  // viewBox calibrado para U=78, OX=195, OY=185
+  // cubo span: x 39-351, y 25-342  → viewBox "0 0 400 375"
+  const vW = 400, vH = 375;
+  const h = Math.round(size * vH / vW);
   return (
     <svg
-      viewBox="0 0 340 310"
+      viewBox={`0 0 ${vW} ${vH}`}
       width={size}
       height={h}
       style={{ display: "block", margin: "0 auto", touchAction: "manipulation" }}
     >
-      {/* Corpo escuro do cubo (gap entre tiles) */}
-      <polygon points={HEX} fill="#8AA0B4" />
+      <defs>
+        {/* Glow dourado para tile aceso */}
+        <filter id="glow-gold" x="-50%" y="-50%" width="200%" height="200%">
+          <feGaussianBlur in="SourceGraphic" stdDeviation="6" result="blur" />
+          <feMerge>
+            <feMergeNode in="blur" />
+            <feMergeNode in="SourceGraphic" />
+          </feMerge>
+        </filter>
+      </defs>
+
+      {/* Corpo escuro do cubo (grade entre tiles) */}
+      <polygon points={HEX} fill="#152236" />
 
       {/* 12 tiles */}
       {TILES.map((tile, i) => {
         const st = states[i] ?? "idle";
+        const lit = st === "lit";
         return (
           <path
             key={i}
-            d={roundedPath(tile.pts, 12, 0.91)}
+            d={roundedPath(tile.pts)}
             fill={tileColor(st, tile.face)}
             stroke={tileStroke(st)}
-            strokeWidth={st === "idle" || st === "tapped" ? 0 : 2}
+            strokeWidth={strokeW(st)}
+            filter={lit ? "url(#glow-gold)" : undefined}
             style={{
               cursor: interactive ? "pointer" : "default",
-              transition: "fill 0.16s ease",
+              transition: "fill 0.15s ease",
             }}
             onPointerDown={interactive ? (e) => { e.preventDefault(); onTile(i); } : undefined}
           />
@@ -164,7 +183,7 @@ const sndWrong   = () => beep(180, 300, 0.05);
 
 // ── Sequência / timing ────────────────────────────────────────────────────────
 const MAX_ROUNDS = 12;
-const N_TILES = 12;
+const N_TILES    = 12;
 
 function seqLen(d: number): number {
   if (d <= 1) return 2; if (d <= 3) return 3; if (d <= 5) return 4;
@@ -185,8 +204,8 @@ function randSeq(len: number): number[] {
 }
 
 // ── Tutorial ──────────────────────────────────────────────────────────────────
-// Sequência demo: um tile de cada face + um da frente
-const DEMO_SEQ = [0, 5, 8, 1]; // frente-baixo-esq, direita-cima-frente, topo-frente-esq, frente-baixo-dir
+// Demo: um tile de cada face + um extra da frente
+const DEMO_SEQ = [0, 5, 9, 3]; // frente-BL, direita-AF, topo-FR, frente-DR
 
 function TutorialDemoWatch({ onDone }: { onDone: () => void }) {
   const [states, setStates] = useState<BState[]>(Array(N_TILES).fill("idle"));
@@ -206,9 +225,9 @@ function TutorialDemoWatch({ onDone }: { onDone: () => void }) {
           if (cancelRef.current) return;
           setStates(prev => prev.map((_, j) => j === idx ? "lit" : "idle"));
           sndFlash();
-          await sleep(850);
+          await sleep(900);
           setStates(Array(N_TILES).fill("idle"));
-          await sleep(260);
+          await sleep(280);
         }
         if (!cancelRef.current) onDone();
       } catch { /* cancelado */ }
@@ -219,10 +238,10 @@ function TutorialDemoWatch({ onDone }: { onDone: () => void }) {
 
   return (
     <div>
-      <p className="text-xs text-center font-semibold text-blue-500 mb-1">
-        O tile aceso em azul — memorize a ordem!
+      <p className="text-xs text-center font-semibold mb-2" style={{ color: "#1D4ED8" }}>
+        O quadrado dourado acende — memorize a ordem!
       </p>
-      <IsoCube states={states} interactive={false} onTile={() => {}} size={220} />
+      <IsoCube states={states} interactive={false} onTile={() => {}} size={270} />
     </div>
   );
 }
@@ -263,14 +282,14 @@ function TutorialDemoInput({ onDone }: { onDone: () => void }) {
 
   return (
     <div>
-      <p className="text-xs text-center mb-1" style={{ color: "#475569" }}>
+      <p className="text-xs text-center mb-2" style={{ color: "#475569" }}>
         Toque na mesma ordem &nbsp;
         <span style={{ color: "#4CAF50", fontWeight: 600 }}>verde = certo</span>
         &nbsp;/&nbsp;
         <span style={{ color: "#EF5350", fontWeight: 600 }}>vermelho = errado</span>
       </p>
-      <IsoCube states={states} interactive={!finished} onTile={handleTap} size={220} />
-      <div className="flex gap-1.5 justify-center mt-1">
+      <IsoCube states={states} interactive={!finished} onTile={handleTap} size={270} />
+      <div className="flex gap-1.5 justify-center mt-2">
         {DEMO_SEQ.map((_, i) => (
           <div key={i} style={{
             width: 10, height: 10, borderRadius: "50%",
@@ -290,11 +309,11 @@ function CuboCorsiTutorial({ onDone }: { onDone: () => void }) {
       title="Cubos"
       steps={[
         {
-          instruction: "Tiles acendem em azul, um de cada vez — no topo, na frente ou no lado. Memorize a sequência!",
+          instruction: "Um quadrado dourado acende de cada vez — no topo, na lateral esquerda ou na lateral direita do cubo. Memorize a sequência!",
           content: (next) => <TutorialDemoWatch key="w" onDone={next} />,
         },
         {
-          instruction: "Toque os tiles na mesma ordem. Verde = certo, Vermelho = errado.",
+          instruction: "Toque os quadrados na mesma ordem em que acenderam. Verde = acertou, Vermelho = errou.",
           content: (next) => <TutorialDemoInput key="i" onDone={next} />,
         },
       ]}
@@ -357,7 +376,7 @@ export function CuboCorsi({ difficulty, theme: _theme, onComplete }: Props) {
         sndFlash();
         await sleep(FLASH);
         setTS(Array(N_TILES).fill("idle"));
-        await sleep(250);
+        await sleep(260);
       }
       setPhase("input");
       inputStartRef.current = Date.now();
@@ -433,10 +452,10 @@ export function CuboCorsi({ difficulty, theme: _theme, onComplete }: Props) {
 
   const resultOk = phase === "result" && inputSoFar.every((t, i) => t === sequence[i]);
   const label = phase === "watch"  ? "Observe a sequência..."
-    : phase === "input"  ? `Toque os ${sequence.length} tiles na ordem`
-    : phase === "result" ? (resultOk ? "Correto!" : "Veja onde errou")
+    : phase === "input"  ? `Toque os ${sequence.length} quadrados na ordem`
+    : phase === "result" ? (resultOk ? "Correto! ✓" : "Veja onde errou")
     : "";
-  const labelColor = phase === "result" ? (resultOk ? "#22C55E" : "#EF4444") : "#3B82F6";
+  const labelColor = phase === "result" ? (resultOk ? "#22C55E" : "#EF4444") : "#1D4ED8";
 
   const dotColor = (i: number) => {
     if (phase === "result" && i < inputSoFar.length)
@@ -445,59 +464,68 @@ export function CuboCorsi({ difficulty, theme: _theme, onComplete }: Props) {
   };
 
   return (
-    <div className="bg-slate-50 min-h-screen">
-      <div className="max-w-sm mx-auto px-4 pt-4 pb-8">
+    <div style={{ background: "#F0F4F8", minHeight: "100vh" }}>
+      <div style={{ maxWidth: 440, margin: "0 auto", padding: "12px 16px 32px" }}>
 
-        <div className="flex justify-end mb-2">
-          <span className="text-xs font-semibold text-slate-500">✓ {correct} &nbsp; ✗ {errors}</span>
+        {/* Placar */}
+        <div style={{ display: "flex", justifyContent: "flex-end", marginBottom: 8 }}>
+          <span style={{ fontSize: 13, fontWeight: 700, color: "#475569", letterSpacing: "0.03em" }}>
+            ✓ {correct} &nbsp;&nbsp; ✗ {errors}
+          </span>
         </div>
 
-        <div className="h-1.5 rounded-full bg-slate-200 mb-4 overflow-hidden">
-          <div
-            className="h-full rounded-full bg-blue-500 transition-all duration-500"
-            style={{ width: `${(round / MAX_ROUNDS) * 100}%` }}
-          />
+        {/* Barra de rodadas */}
+        <div style={{ height: 5, borderRadius: 99, background: "#CBD5E1", marginBottom: 16, overflow: "hidden" }}>
+          <div style={{
+            height: "100%", borderRadius: 99, background: "#3B82F6",
+            width: `${(round / MAX_ROUNDS) * 100}%`,
+            transition: "width 0.5s ease",
+          }} />
         </div>
 
-        <div className="flex gap-1.5 justify-center mb-3" style={{ minHeight: 14 }}>
+        {/* Label */}
+        <p style={{
+          textAlign: "center", fontSize: 15, fontWeight: 700,
+          color: labelColor, marginBottom: 10, minHeight: 22,
+          transition: "color 0.25s",
+        }}>{label}</p>
+
+        {/* Legenda do resultado incorreto */}
+        {phase === "result" && !resultOk && (
+          <div style={{ display: "flex", gap: 16, justifyContent: "center", marginBottom: 8 }}>
+            <span style={{ fontSize: 11, color: "#64748B", display: "flex", alignItems: "center", gap: 4 }}>
+              <span style={{ display: "inline-block", width: 9, height: 9, borderRadius: 2, backgroundColor: "#4CAF50" }} />
+              certo
+            </span>
+            <span style={{ fontSize: 11, color: "#64748B", display: "flex", alignItems: "center", gap: 4 }}>
+              <span style={{ display: "inline-block", width: 9, height: 9, borderRadius: 2, backgroundColor: "#EF5350" }} />
+              errado
+            </span>
+          </div>
+        )}
+
+        {/* Cubo — 30% maior que o original */}
+        <IsoCube
+          states={tileStates}
+          interactive={phase === "input"}
+          onTile={handleTileTap}
+          size={370}
+        />
+
+        {/* Dots de sequência */}
+        <div style={{ display: "flex", gap: 7, justifyContent: "center", marginTop: 10, minHeight: 14 }}>
           {sequence.map((_, i) => (
             <div key={i} style={{
-              width: 10, height: 10, borderRadius: "50%",
+              width: 11, height: 11, borderRadius: "50%",
               backgroundColor: dotColor(i),
               transition: "background-color 0.2s",
             }} />
           ))}
         </div>
 
-        <p style={{
-          textAlign: "center", fontSize: 14, fontWeight: 700,
-          marginBottom: 8, color: labelColor,
-          minHeight: 20, transition: "color 0.25s",
-        }}>{label}</p>
-
-        {phase === "result" && !resultOk && (
-          <div className="flex gap-4 justify-center mb-2">
-            <span style={{ fontSize: 10, color: "#64748B", display: "flex", alignItems: "center", gap: 3 }}>
-              <span style={{ display: "inline-block", width: 8, height: 8, borderRadius: 2, backgroundColor: "#4CAF50" }} />
-              certo
-            </span>
-            <span style={{ fontSize: 10, color: "#64748B", display: "flex", alignItems: "center", gap: 3 }}>
-              <span style={{ display: "inline-block", width: 8, height: 8, borderRadius: 2, backgroundColor: "#EF5350" }} />
-              errado
-            </span>
-          </div>
-        )}
-
-        <IsoCube
-          states={tileStates}
-          interactive={phase === "input"}
-          onTile={handleTileTap}
-          size={280}
-        />
-
-        <p className="text-xs text-center text-slate-400 mt-2">
-          Sequência de {sequence.length || "—"} tile{sequence.length !== 1 ? "s" : ""}
-          {difficulty >= 6 ? " · avançado" : ""}
+        <p style={{ textAlign: "center", fontSize: 12, color: "#94A3B8", marginTop: 6 }}>
+          Sequência de {sequence.length || "—"} quadrado{sequence.length !== 1 ? "s" : ""}
+          {difficulty >= 6 ? " · nível avançado" : ""}
         </p>
 
       </div>
