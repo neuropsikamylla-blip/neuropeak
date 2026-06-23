@@ -251,7 +251,7 @@ function CuboCorsiTutorial({ theme, onDone }: { theme: Theme; onDone: () => void
       content: (onStepDone: () => void) => <TutorialClickStep theme={theme} onDone={onStepDone} />,
     },
   ];
-  return <TutorialBase theme={theme} title="Cubo de Corsi" steps={steps} onDone={onDone} />;
+  return <TutorialBase theme={theme} title="Cubo da Matriz" steps={steps} onDone={onDone} />;
 }
 
 // ── Main Component ────────────────────────────────────────────────────────────
