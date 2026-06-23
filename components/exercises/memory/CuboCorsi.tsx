@@ -8,53 +8,62 @@ import type { ExerciseResult, Theme } from "@/types";
 
 // ── Geometria ─────────────────────────────────────────────────────────────────
 const MAX_ROUNDS = 12;
-const BS   = 93;         // bloco px
-const SP   = 8;          // espaço entre blocos
-const UNIT = BS + SP;    // 101px por célula
+const BS   = 90;          // lado do bloco px
+const SP   = 8;           // espaço entre blocos
+const UNIT = BS + SP;     // 98px por célula
+// Container CSS que contém a face frontal 2×2:
+//   col 0: x=[0, BS-1], col 1: x=[UNIT, UNIT+BS-1]
+//   row 1 (topo): y=[0, BS-1], row 0 (base): y=[UNIT, UNIT+BS-1]
+const CUBE_W = UNIT + BS;  // 188px
+const CUBE_H = UNIT + BS;  // 188px
 
 // [col, row, layer]  col: 0=esq, 1=dir | row: 0=baixo, 1=cima | layer: 0=frente, 1=trás
 const BLOCK_POS: [number, number, number][] = [
-  [0,0,0],[1,0,0],[0,1,0],[1,1,0],  // camada frontal  — blocos 0..3
-  [0,0,1],[1,0,1],[0,1,1],[1,1,1],  // camada traseira — blocos 4..7
+  [0,0,0],[1,0,0],[0,1,0],[1,1,0],   // camada frontal  — idx 0..3
+  [0,0,1],[1,0,1],[0,1,1],[1,1,1],   // camada traseira — idx 4..7
 ];
 
-// ── 3 poses fixas previsíveis ─────────────────────────────────────────────────
-// POSE_L: câmera ligeiramente à esquerda — revela face esquerda + frente
-// POSE_R: câmera ligeiramente à direita  — revela face direita + frente
-// POSE_T: câmera inclinada para cima     — revela face superior claramente
+// ── 3 poses fixas e previsíveis ───────────────────────────────────────────────
+// POSE_L : câmera à esquerda  → revela face esquerda + frente
+// POSE_R : câmera à direita   → revela face direita + frente
+// POSE_T : inclinada p/ cima  → revela face superior claramente
 type Pose = { rx: number; ry: number };
 
-const POSE_L: Pose = { rx: -18, ry: -32 };  // lateral esquerda
-const POSE_R: Pose = { rx: -18, ry:  32 };  // lateral direita
-const POSE_T: Pose = { rx: -52, ry:   0 };  // inclinada p/ cima
+// ry negativo → cubo gira para a esquerda → col=0 fica mais perto da câmera
+// ry positivo → cubo gira para a direita  → col=1 fica mais perto
+// rx negativo → topo do cubo inclina para a câmera
+const POSE_L: Pose = { rx: -16, ry: -30 };  // coluna esquerda em destaque
+const POSE_R: Pose = { rx: -16, ry:  30 };  // coluna direita em destaque
+const POSE_T: Pose = { rx: -40, ry:   0 };  // topo em destaque
 
-const POSE_A  = POSE_L;   // pose estável de input (frente-esquerda)
+const POSE_A  = POSE_L;   // pose estável de input
 const ROTATE_MS = 380;
 
-// ── Mapeamento bloco → pose canônica ─────────────────────────────────────────
-// 12 posições válidas = 4 topo (POSE_T) + 4 esq (POSE_L) + 4 dir (POSE_R)
-// Nota: topo-frente (idx 2,3) → POSE_T; topo-trás (idx 6,7) → POSE_T
-//       baixo-esq    (idx 0,4) → POSE_L; baixo-dir  (idx 1,5) → POSE_R
+// ── Bloco → pose canônica ─────────────────────────────────────────────────────
+// top (row=1): POSE_T  |  baixo-esq (col=0): POSE_L  |  baixo-dir (col=1): POSE_R
 function posePorBloco(idx: number): Pose {
   const [col, row] = BLOCK_POS[idx];
-  if (row === 1) return POSE_T;              // bloco do topo → vista de cima
-  return col === 0 ? POSE_L : POSE_R;       // bloco baixo → vista lateral
+  if (row === 1) return POSE_T;
+  return col === 0 ? POSE_L : POSE_R;
 }
-
 function poseSame(a: Pose, b: Pose) { return a.rx === b.rx && a.ry === b.ry; }
 
-// Painter's algorithm: blocos mais próximos da câmera devem ser renderizados por último (z mais alto)
+// Painter's algorithm — ordem de renderização por profundidade (z_world maior = mais perto = DOM mais alto)
+// Cálculo com container centrado em (CUBE_W/2, CUBE_H/2):
+//   POSE_L (ry<0): col=0 (center_x=-94) fica à frente → 0,2 últimos
+//   POSE_R (ry>0): col=1 (center_x=+4)  fica à frente → 1,3 últimos
+//   POSE_T (rx<-30): row=1 (center_y=-94) fica à frente → 2,3 últimos
 function calcDrawOrder(pose: Pose): number[] {
-  if (pose.rx < -40) {
-    // POSE_T (vista de cima): topo na frente; dentro de cada row, frente (layer=0) antes de trás
-    return [4, 5, 0, 1, 6, 7, 2, 3];
+  if (pose.rx < -30) {
+    // POSE_T: topo vem pra frente
+    return [4, 5, 6, 7, 0, 1, 2, 3];
   }
-  if (pose.ry > 0) {
-    // POSE_R (câmera à direita): coluna direita (col=1) na frente
-    return [4, 6, 0, 2, 5, 7, 1, 3];
+  if (pose.ry < 0) {
+    // POSE_L (ry negativo): coluna esquerda (col=0) mais próxima
+    return [5, 7, 4, 6, 1, 3, 0, 2];
   }
-  // POSE_L (câmera à esquerda): coluna esquerda (col=0) na frente
-  return [5, 7, 1, 3, 4, 6, 0, 2];
+  // POSE_R (ry positivo): coluna direita (col=1) mais próxima
+  return [4, 6, 5, 7, 0, 2, 1, 3];
 }
 
 // ── Sequência / timing ────────────────────────────────────────────────────────
@@ -65,11 +74,15 @@ function seqLen(d: number): number {
 }
 function flashMs(d: number): number { return d <= 3 ? 950 : d <= 6 ? 700 : 520; }
 
+// Apenas os 4 blocos da face frontal (layer=0) — sempre visíveis, nunca ocultos.
+// Blocos traseiros (4-7) fazem parte da estética 3D mas NUNCA são acesos.
+const VISIBLE_BLOCKS = [0, 1, 2, 3];
+
 function randSeq(len: number): number[] {
   const arr: number[] = [];
   for (let i = 0; i < len; i++) {
     let n: number;
-    do { n = Math.floor(Math.random() * 8); }
+    do { n = VISIBLE_BLOCKS[Math.floor(Math.random() * VISIBLE_BLOCKS.length)]; }
     while (arr.length > 0 && n === arr[arr.length - 1]);
     arr.push(n);
   }
@@ -98,10 +111,8 @@ const sndTap     = () => beep(520, 70, 0.04);
 const sndCorrect = () => { beep(660, 120); setTimeout(() => beep(880, 200), 140); };
 const sndWrong   = () => beep(180, 300, 0.05);
 
-// ── Paleta visual ─────────────────────────────────────────────────────────────
-// Apenas 4 estados: idle, lit, tapped, correct, wrong.
-// "missed" foi removido — erros mostram apenas VERDE (certo) e VERMELHO (errado).
-// `dark` = igualado à face frontal em estados ativos → brilha de qualquer ângulo.
+// ── Paleta (sem "missed" / laranja) ──────────────────────────────────────────
+// dark = igualado à front em estados ativos → brilha de qualquer ângulo
 type BState = "idle" | "lit" | "tapped" | "correct" | "wrong";
 
 const PAL: Record<BState, { front: string; top: string; right: string; dark: string }> = {
@@ -120,6 +131,10 @@ function faceGlow(state: BState): string | undefined {
 }
 
 // ── Bloco 3D ──────────────────────────────────────────────────────────────────
+// POSICIONAMENTO: dentro do container CUBE_W × CUBE_H
+//   col=0 → x=0,     col=1 → x=UNIT
+//   row=1 → y=0,     row=0 → y=UNIT   (row=1 fica no TOPO = y menor)
+//   layer=0 → z=0,   layer=1 → z=-UNIT (trás)
 function Block3D({ idx, state, interactive, onClick }: {
   idx: number; state: BState; interactive: boolean; onClick: () => void;
 }) {
@@ -140,23 +155,31 @@ function Block3D({ idx, state, interactive, onClick }: {
   return (
     <div
       style={{
-        position: "absolute", width: BS, height: BS,
+        position: "absolute",
+        width: BS, height: BS,
         transformStyle: "preserve-3d",
-        transform: `translate3d(${col * UNIT}px, ${-row * UNIT}px, ${-layer * UNIT}px)`,
+        // row=1 (topo) → y=0 ; row=0 (base) → y=UNIT
+        transform: `translate3d(${col * UNIT}px, ${(1 - row) * UNIT}px, ${-layer * UNIT}px)`,
         cursor: interactive ? "pointer" : "default",
       }}
       onClick={interactive ? onClick : undefined}
     >
+      {/* frente */}
       <div style={{ ...face, backgroundColor: c.front, transform: `translateZ(${H}px)`,
         boxShadow: glow ?? idleShadow }} />
+      {/* topo */}
       <div style={{ ...face, backgroundColor: c.top,   transform: `rotateX(90deg) translateZ(${H}px)`,
         boxShadow: glow }} />
+      {/* direita */}
       <div style={{ ...face, backgroundColor: c.right, transform: `rotateY(90deg) translateZ(${H}px)`,
         boxShadow: glow }} />
+      {/* esquerda */}
       <div style={{ ...face, backgroundColor: c.dark,  transform: `rotateY(-90deg) translateZ(${H}px)`,
         boxShadow: glow }} />
+      {/* baixo */}
       <div style={{ ...face, backgroundColor: c.dark,  transform: `rotateX(-90deg) translateZ(${H}px)`,
         boxShadow: glow }} />
+      {/* verso */}
       <div style={{ ...face, backgroundColor: c.dark,  transform: `rotateY(180deg) translateZ(${H}px)`,
         boxShadow: glow }} />
     </div>
@@ -164,24 +187,32 @@ function Block3D({ idx, state, interactive, onClick }: {
 }
 
 // ── Cena do cubo ──────────────────────────────────────────────────────────────
-// compact=true reduz as margens quando usado dentro do card de tutorial
+// CubeScene: container CUBE_W × CUBE_H contém a grade 2×2 corretamente.
+// paddingTop absorve o overflow visual 3D (evita o cubo cobrir textos acima).
+// compact=true: margens menores para caber no card do tutorial.
 function CubeScene({ states, pose, interactive, onBlock, compact = false }: {
   states: BState[]; pose: Pose; interactive: boolean; onBlock: (i: number) => void; compact?: boolean;
 }) {
   const order = calcDrawOrder(pose);
-  const mt = compact ? 18 : 52;
-  const mb = compact ? 10 : 40;
+  // paddingTop reserva espaço para o overflow 3D upward (≈ sin(40°) × CUBE_H/2 ≈ 60px)
+  const pt = compact ? 22 : 58;
+  const mb = compact ? 12 : 28;
 
   return (
-    <div style={{ perspective: "1500px", perspectiveOrigin: "50% 45%" }}>
+    <div style={{
+      perspective: "1200px",
+      perspectiveOrigin: "50% 50%",
+      paddingTop: pt,
+      paddingBottom: 4,
+    }}>
       <div style={{
-        width: BS, height: BS,
+        width: CUBE_W,
+        height: CUBE_H,
         transformStyle: "preserve-3d",
         transform: `rotateX(${pose.rx}deg) rotateY(${pose.ry}deg)`,
         transition: `transform ${ROTATE_MS}ms cubic-bezier(0.42,0,0.58,1)`,
-        margin: `${mt}px auto ${mb}px`,
+        margin: `0 auto ${mb}px`,
         position: "relative",
-        translate: `${-(UNIT / 2)}px ${UNIT / 2}px`,
       }}>
         {order.map(i => (
           <Block3D key={i} idx={i} state={states[i]}
@@ -194,7 +225,8 @@ function CubeScene({ states, pose, interactive, onBlock, compact = false }: {
 
 // ── Tutorial — demo "observar" ─────────────────────────────────────────────────
 function TutorialDemoWatch({ onDone }: { onDone: () => void }) {
-  const DEMO_SEQ = [6, 1, 3, 0];   // topo-esq, baixo-dir, topo-dir, baixo-esq — usa as 3 poses
+  // Sequência usa as 3 poses: 6→POSE_T, 1→POSE_R, 2→POSE_T, 0→POSE_L
+  const DEMO_SEQ = [6, 1, 2, 0];
   const [states, setStates] = useState<BState[]>(Array(8).fill("idle"));
   const [pose, setPose] = useState<Pose>(POSE_A);
   const cancelRef = useRef(false);
@@ -242,7 +274,7 @@ function TutorialDemoWatch({ onDone }: { onDone: () => void }) {
 
 // ── Tutorial — demo "responder" ───────────────────────────────────────────────
 function TutorialDemoInput({ onDone }: { onDone: () => void }) {
-  const DEMO_SEQ = [6, 1, 3, 0];
+  const DEMO_SEQ = [6, 1, 2, 0];
   const [states, setStates] = useState<BState[]>(Array(8).fill("idle"));
   const [input, setInput] = useState<number[]>([]);
   const [finished, setFinished] = useState(false);
@@ -278,11 +310,11 @@ function TutorialDemoInput({ onDone }: { onDone: () => void }) {
 
   return (
     <div>
-      <p className="text-xs text-center font-semibold text-blue-500 mb-0.5">
-        Toque na mesma ordem&nbsp;&nbsp;
-        <span style={{ color:"#4CAF50" }}>verde = certo</span>
-        &nbsp;/&nbsp;
-        <span style={{ color:"#EF5350" }}>vermelho = errado</span>
+      <p className="text-xs text-center mb-0.5" style={{ color: "#475569" }}>
+        Toque na mesma ordem&ensp;
+        <span style={{ color:"#4CAF50", fontWeight:600 }}>verde = certo</span>
+        &ensp;/&ensp;
+        <span style={{ color:"#EF5350", fontWeight:600 }}>vermelho = errado</span>
       </p>
       <CubeScene states={states} pose={POSE_A} interactive onBlock={handleTap} compact />
       <div className="flex gap-1.5 justify-center">
@@ -305,11 +337,11 @@ function CuboCorsiTutorial({ onDone }: { onDone: () => void }) {
       title="Cubos"
       steps={[
         {
-          instruction: "Blocos acendem em azul, um de cada vez. O cubo gira para mostrar cada bloco com clareza antes de acendê-lo.",
+          instruction: "Blocos acendem em azul, um de cada vez. O cubo gira antes de acender cada bloco para que fique bem visível.",
           content: (next) => <TutorialDemoWatch key="w" onDone={next} />,
         },
         {
-          instruction: "Agora é com você! Toque os blocos na mesma ordem em que acenderam. Verde = certo, Vermelho = errado.",
+          instruction: "Agora é com você! Toque os blocos na mesma ordem. Verde = certo, Vermelho = errado.",
           content: (next) => <TutorialDemoInput key="i" onDone={next} />,
         },
       ]}
@@ -373,23 +405,19 @@ export function CuboCorsi({ difficulty, theme: _theme, onComplete }: Props) {
       await sleep(600);
 
       for (const idx of seq) {
-        // 1. Girar para a pose que revela este bloco (se diferente)
         const target = posePorBloco(idx);
         if (!poseSame(target, curPose)) {
           setPose(target);
           curPose = target;
-          await sleep(ROTATE_MS + 130); // cubo chega antes de acender
+          await sleep(ROTATE_MS + 130);
         }
-        // 2. Acender bloco
         setBS(prev => prev.map((_, j) => j === idx ? "lit" : "idle"));
         sndFlash();
         await sleep(FLASH);
-        // 3. Apagar
         setBS(Array(8).fill("idle"));
         await sleep(260);
       }
 
-      // 4. Voltar à pose de input
       if (!poseSame(curPose, POSE_A)) {
         setPose(POSE_A);
         await sleep(ROTATE_MS + 80);
@@ -411,14 +439,12 @@ export function CuboCorsi({ difficulty, theme: _theme, onComplete }: Props) {
       if (act === exp) {
         rs[exp] = "correct";
       } else {
-        // bloco esperado e bloco tocado indevidamente → ambos vermelhos
         if (rs[exp] !== "correct") rs[exp] = "wrong";
         if (rs[act] !== "correct") rs[act] = "wrong";
       }
     }
     setBS(rs);
     setPhase("result");
-
     rtsRef.current.push((Date.now() - inputStartRef.current) / seq.length);
 
     if (allOk) {
@@ -502,12 +528,10 @@ export function CuboCorsi({ difficulty, theme: _theme, onComplete }: Props) {
     <div className="bg-slate-50 min-h-screen">
       <div className="max-w-sm mx-auto px-4 pt-4 pb-8">
 
-        {/* Acertos / erros */}
         <div className="flex justify-end mb-2">
           <span className="text-xs font-semibold text-slate-500">✓ {correct} &nbsp; ✗ {errors}</span>
         </div>
 
-        {/* Barra de progresso */}
         <div className="h-1.5 rounded-full bg-slate-200 mb-4 overflow-hidden">
           <div
             className="h-full rounded-full bg-blue-500 transition-all duration-500"
@@ -515,7 +539,6 @@ export function CuboCorsi({ difficulty, theme: _theme, onComplete }: Props) {
           />
         </div>
 
-        {/* Pontos da sequência */}
         <div className="flex gap-1.5 justify-center mb-3" style={{ minHeight: 14 }}>
           {sequence.map((_, i) => (
             <div key={i} style={{
@@ -526,14 +549,12 @@ export function CuboCorsi({ difficulty, theme: _theme, onComplete }: Props) {
           ))}
         </div>
 
-        {/* Label da fase */}
         <p style={{
           textAlign: "center", fontSize: 14, fontWeight: 700,
           marginBottom: 4, color: labelColor,
           minHeight: 20, transition: "color 0.25s",
         }}>{label}</p>
 
-        {/* Legenda compacta (só no erro) */}
         {phase === "result" && !resultOk && (
           <div className="flex gap-4 justify-center mb-1">
             <span style={{ fontSize: 10, color:"#64748B", display:"flex", alignItems:"center", gap:3 }}>
@@ -547,7 +568,6 @@ export function CuboCorsi({ difficulty, theme: _theme, onComplete }: Props) {
           </div>
         )}
 
-        {/* Cubo 3D */}
         <CubeScene
           states={blockStates}
           pose={pose}
@@ -555,7 +575,6 @@ export function CuboCorsi({ difficulty, theme: _theme, onComplete }: Props) {
           onBlock={handleBlockTap}
         />
 
-        {/* Rodapé */}
         <p className="text-xs text-center text-slate-400 mt-2">
           Sequência de {sequence.length || "—"} bloco{sequence.length !== 1 ? "s" : ""}
           {difficulty >= 6 ? " · avançado" : ""}
