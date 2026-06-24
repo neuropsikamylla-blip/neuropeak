@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect, createContext, useContext } from "react";
+import { useState, useEffect, useCallback, createContext, useContext } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { Button } from "@/components/ui/button";
 import { ScoreDisplay } from "@/components/gamification/ScoreDisplay";
@@ -20,8 +20,10 @@ interface ExerciseWrapperProps {
   theme: Theme;
   difficulty?: number;
   exerciseId?: string;
-  /** Progresso global da sessão (0-100), calculado externamente pela página. */
-  sessionProgress?: number;
+  /** Quantos exercícios do plano do dia já foram concluídos (antes deste). */
+  sessionCompleted?: number;
+  /** Total de exercícios no plano do dia. */
+  sessionTotal?: number;
   /** Oculta o widget de progresso no canto (exercícios com layout próprio). */
   hideProgress?: boolean;
   children: (onComplete: (result: ExerciseResult) => void) => React.ReactNode;
@@ -34,7 +36,8 @@ export function ExerciseWrapper({
   theme,
   difficulty,
   exerciseId,
-  sessionProgress,
+  sessionCompleted = 0,
+  sessionTotal,
   hideProgress = false,
   children,
   onFinish,
@@ -42,6 +45,23 @@ export function ExerciseWrapper({
   const [phase, setPhase] = useState<Phase>(instructions.length === 0 ? "exercise" : "instructions");
   const [result, setResult] = useState<ExerciseResult | null>(null);
   const [isFullscreen, setIsFullscreen] = useState(false);
+
+  // Progresso interno do exercício atual (0-100), reportado via useExerciseProgress().
+  const [innerPct, setInnerPct] = useState(0);
+  const reportProgress = useCallback((pct: number) => {
+    setInnerPct((prev) => {
+      const next = Math.max(0, Math.min(100, pct));
+      // Monotônico: nunca recua dentro do mesmo exercício (evita "piscadas" da barra).
+      return next > prev ? next : prev;
+    });
+  }, []);
+
+  // Barra única do dia que TAMBÉM sobe aos poucos durante o exercício atual:
+  // (exercícios concluídos + fração do exercício atual) / total do plano.
+  const sessionProgress =
+    sessionTotal && sessionTotal > 0
+      ? Math.round(((sessionCompleted + innerPct / 100) / sessionTotal) * 100)
+      : Math.round(innerPct);
 
   useEffect(() => {
     const onChange = () => setIsFullscreen(!!document.fullscreenElement);
@@ -166,7 +186,7 @@ export function ExerciseWrapper({
             animate={{ opacity: 1 }}
             exit={{ opacity: 0 }}
           >
-            <ProgressContext.Provider value={() => {}}>
+            <ProgressContext.Provider value={reportProgress}>
               {children(handleComplete)}
             </ProgressContext.Provider>
 
@@ -193,7 +213,7 @@ export function ExerciseWrapper({
               }
             </button>
 
-            {difficulty !== undefined && !hideProgress && sessionProgress !== undefined && (
+            {difficulty !== undefined && !hideProgress && (
               <div className={`fixed bottom-6 left-4 z-50 pointer-events-none rounded-2xl px-4 py-3 min-w-[150px] shadow-lg ${
                 theme === "GAMIFIED"
                   ? "bg-gray-800/95 border border-cyan-500/40 backdrop-blur-sm"
