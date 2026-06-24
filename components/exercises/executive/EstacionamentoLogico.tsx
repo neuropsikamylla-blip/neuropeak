@@ -159,8 +159,8 @@ function CarImage({
     <div style={{
       position: "absolute", inset: 0, overflow: "visible",
       filter: isTarget
-        ? "drop-shadow(0 1px 2px rgba(0,0,0,0.4)) drop-shadow(0 0 8px rgba(255,70,55,0.65))"
-        : "drop-shadow(0 2px 3px rgba(0,0,0,0.4))",
+        ? "drop-shadow(0 2px 2px rgba(0,0,0,0.35)) drop-shadow(0 0 5px rgba(255,60,50,0.5))"
+        : "drop-shadow(0 2px 2px rgba(0,0,0,0.32))",
     }}>
       <img
         src={src}
@@ -201,86 +201,92 @@ function BoardSVG({ cellPx }: { cellPx: number }) {
       style={{ position: "absolute", inset: 0, pointerEvents: "none", display: "block" }}
     >
       <defs>
-        {/* Subtle asphalt grain texture */}
-        <pattern id="grain" x="0" y="0" width="6" height="6" patternUnits="userSpaceOnUse">
-          <rect width="6" height="6" fill="transparent" />
-          <rect x="0" y="0" width="1.2" height="1.2" fill="rgba(255,255,255,0.025)" />
-          <rect x="3" y="3" width="1" height="1"   fill="rgba(255,255,255,0.020)" />
-          <rect x="1" y="4" width="0.8" height="0.8" fill="rgba(0,0,0,0.03)" />
+        {/* Asfalto: leve gradiente + granulado */}
+        <linearGradient id="asphalt" x1="0" y1="0" x2="0" y2="1">
+          <stop offset="0" stopColor="#3c4252" />
+          <stop offset="1" stopColor="#2d323e" />
+        </linearGradient>
+        <radialGradient id="asphaltGlow" cx="0.5" cy="0.42" r="0.75">
+          <stop offset="0" stopColor="rgba(255,255,255,0.05)" />
+          <stop offset="1" stopColor="rgba(255,255,255,0)" />
+        </radialGradient>
+        <pattern id="grain" x="0" y="0" width="7" height="7" patternUnits="userSpaceOnUse">
+          <rect width="7" height="7" fill="transparent" />
+          <rect x="0" y="0" width="1.3" height="1.3" fill="rgba(255,255,255,0.028)" />
+          <rect x="3.5" y="3.5" width="1" height="1" fill="rgba(255,255,255,0.022)" />
+          <rect x="1.5" y="4.5" width="0.9" height="0.9" fill="rgba(0,0,0,0.05)" />
+          <rect x="5" y="1" width="0.8" height="0.8" fill="rgba(0,0,0,0.04)" />
         </pattern>
+        {/* Meio-fio com profundidade */}
+        <linearGradient id="curb" x1="0" y1="0" x2="0" y2="1">
+          <stop offset="0" stopColor="#5a6178" />
+          <stop offset="1" stopColor="#3e4458" />
+        </linearGradient>
       </defs>
 
-      {/* ── Asphalt floor ──────────────────────────────────────────────────── */}
-      <rect x={B} y={B} width={S} height={S} fill="#343848" />
+      {/* ── Piso de asfalto ────────────────────────────────────────────────── */}
+      <rect x={B} y={B} width={S} height={S} fill="url(#asphalt)" />
+      <rect x={B} y={B} width={S} height={S} fill="url(#asphaltGlow)" />
       <rect x={B} y={B} width={S} height={S} fill="url(#grain)" />
 
-      {/* Exit corridor asphalt */}
-      <rect x={T-B} y={EY1} width={CORRIDOR+B} height={cellPx} fill="#343848" />
+      {/* Corredor da saída */}
+      <rect x={T-B} y={EY1} width={CORRIDOR+B} height={cellPx} fill="url(#asphalt)" />
       <rect x={T-B} y={EY1} width={CORRIDOR+B} height={cellPx} fill="url(#grain)" />
 
-      {/* ── Exit row — very faint warmer tint on the exit path ─────────────── */}
-      <rect x={B} y={EY1} width={S} height={cellPx} fill="rgba(255,220,180,0.030)" />
+      {/* Faixa da saída — leve tom mais quente */}
+      <rect x={B} y={EY1} width={S} height={cellPx} fill="rgba(255,214,150,0.045)" />
 
-      {/* ── Parking space lines ────────────────────────────────────────────── */}
-      {/* Vertical separators (space dividers) — solid, crisp */}
+      {/* ── Linhas de vaga (grade do estacionamento) ───────────────────────── */}
       {[1,2,3,4,5].map(c => (
         <line key={`v${c}`}
-          x1={B + c*cellPx} y1={B + 1}
-          x2={B + c*cellPx} y2={T - B - 1}
-          stroke="rgba(255,255,255,0.155)" strokeWidth={1}
+          x1={B + c*cellPx} y1={B + 1} x2={B + c*cellPx} y2={T - B - 1}
+          stroke="rgba(255,255,255,0.14)" strokeWidth={1.2}
         />
       ))}
-      {/* Horizontal separators (row dividers) — slightly more subtle */}
       {[1,2,3,4,5].map(r => (
         <line key={`h${r}`}
-          x1={B + 1} y1={B + r*cellPx}
-          x2={T - B - 1} y2={B + r*cellPx}
-          stroke="rgba(255,255,255,0.10)" strokeWidth={1}
+          x1={B + 1} y1={B + r*cellPx} x2={T - B - 1} y2={B + r*cellPx}
+          stroke="rgba(255,255,255,0.11)" strokeWidth={1.2}
         />
       ))}
 
-      {/* ── Stop line at exit (painted on asphalt at right edge of row 2) ─── */}
+      {/* ── Faixa de parada na saída ───────────────────────────────────────── */}
       <line
         x1={T - B - 3} y1={EY1 + 4}
         x2={T - B - 3} y2={EY2 - 4}
-        stroke="rgba(255,255,255,0.32)" strokeWidth={2.5}
+        stroke="rgba(255,255,255,0.4)" strokeWidth={3}
       />
 
-      {/* ── Curb / perimeter ───────────────────────────────────────────────── */}
-      {/* Top */}
-      <rect x={0} y={0} width={T} height={B} fill="#4C5268" />
-      {/* Bottom */}
-      <rect x={0} y={T-B} width={T} height={B} fill="#4C5268" />
-      {/* Left */}
-      <rect x={0} y={0} width={B} height={T} fill="#4C5268" />
-      {/* Right — above exit */}
-      <rect x={T-B} y={0} width={B} height={EY1} fill="#4C5268" />
-      {/* Right — below exit */}
-      <rect x={T-B} y={EY2} width={B} height={T-EY2} fill="#4C5268" />
+      {/* ── Meio-fio / perímetro ───────────────────────────────────────────── */}
+      <rect x={0} y={0} width={T} height={B} fill="url(#curb)" />
+      <rect x={0} y={T-B} width={T} height={B} fill="url(#curb)" />
+      <rect x={0} y={0} width={B} height={T} fill="url(#curb)" />
+      <rect x={T-B} y={0} width={B} height={EY1} fill="url(#curb)" />
+      <rect x={T-B} y={EY2} width={B} height={T-EY2} fill="url(#curb)" />
+      <rect x={T-B} y={EY1-B} width={CORRIDOR+B} height={B} fill="url(#curb)" />
+      <rect x={T-B} y={EY2}   width={CORRIDOR+B} height={B} fill="url(#curb)" />
 
-      {/* Corridor top/bottom boundaries */}
-      <rect x={T-B} y={EY1-B} width={CORRIDOR+B} height={B} fill="#4C5268" />
-      <rect x={T-B} y={EY2}   width={CORRIDOR+B} height={B} fill="#4C5268" />
+      {/* Realces do meio-fio (luz no topo/esquerda, sombra na base/direita) */}
+      <line x1={B} y1={B} x2={T-B} y2={B} stroke="rgba(255,255,255,0.14)" strokeWidth={1} />
+      <line x1={B} y1={B} x2={B} y2={T-B} stroke="rgba(255,255,255,0.14)" strokeWidth={1} />
+      <line x1={0} y1={T-1} x2={T} y2={T-1} stroke="rgba(0,0,0,0.25)" strokeWidth={1} />
+      <line x1={T-1} y1={0} x2={T-1} y2={EY1} stroke="rgba(0,0,0,0.18)" strokeWidth={1} />
 
-      {/* Curb inner highlights (lighter top/left edge = ambient light) */}
-      <line x1={B} y1={B} x2={T-B} y2={B} stroke="rgba(255,255,255,0.11)" strokeWidth={1} />
-      <line x1={B} y1={B} x2={B} y2={T-B} stroke="rgba(255,255,255,0.11)" strokeWidth={1} />
-      {/* Curb outer shadow (bottom/right edge darker) */}
-      <line x1={0} y1={T-1} x2={T} y2={T-1} stroke="rgba(0,0,0,0.22)" strokeWidth={1} />
-      <line x1={T-1} y1={0} x2={T-1} y2={EY1} stroke="rgba(0,0,0,0.15)" strokeWidth={1} />
-
-      {/* ── Exit arrow (painted on corridor asphalt) ───────────────────────── */}
-      {/* Arrow line */}
+      {/* ── Zebrado + seta de saída no corredor ────────────────────────────── */}
+      {[0,1,2].map(i => (
+        <line key={`zb${i}`}
+          x1={T - B + 2 + i*4} y1={EY1 + 5}
+          x2={T - B + 2 + i*4} y2={EY2 - 5}
+          stroke="rgba(255,255,255,0.18)" strokeWidth={2}
+        />
+      ))}
       <line
-        x1={ax1} y1={AY}
-        x2={ax2 - 8} y2={AY}
-        stroke="rgba(255,255,255,0.58)" strokeWidth={2.5}
-        strokeLinecap="round"
+        x1={ax1 + 6} y1={AY} x2={ax2 - 8} y2={AY}
+        stroke="rgba(140,220,150,0.85)" strokeWidth={3} strokeLinecap="round"
       />
-      {/* Arrowhead */}
       <polygon
-        points={`${ax2-10},${AY-6} ${ax2},${AY} ${ax2-10},${AY+6}`}
-        fill="rgba(255,255,255,0.58)"
+        points={`${ax2-10},${AY-7} ${ax2+1},${AY} ${ax2-10},${AY+7}`}
+        fill="rgba(140,220,150,0.9)"
       />
     </svg>
   );
