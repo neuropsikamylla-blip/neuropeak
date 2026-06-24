@@ -145,23 +145,22 @@ function isWin(cars: Car[]): boolean {
 }
 
 // ── Top-view vehicle (PNG transparente) ──────────────────────────
-// Horizontal: imagem na largura da vaga (frente à direita). Vertical: a mesma
-// imagem girada 90° (frente para baixo). object-fit:contain preserva a proporção
-// do carro dentro da vaga (len×1). O alvo ganha um leve brilho avermelhado.
+// Largura de pista FIXA para todos os carros (mesmo "calibre", estilo Parking
+// Jam) — o comprimento sai da proporção nativa da imagem, sem distorcer. Assim
+// nenhum carro fica maior/menor que os outros na largura. Horizontal: frente à
+// direita. Vertical: a mesma imagem girada 90°. Alvo com brilho avermelhado.
+const LANE = 0.84; // largura do veículo como fração da célula
 function CarImage({
-  src, len, orientation, isTarget, cellPx,
+  src, orientation, isTarget, cellPx,
 }: {
-  src: string; len: number; orientation: "horizontal" | "vertical";
-  isTarget: boolean; cellPx: number;
+  src: string; orientation: "horizontal" | "vertical"; isTarget: boolean; cellPx: number;
 }) {
-  const longSide  = len * cellPx;
-  const shortSide = cellPx;
   return (
     <div style={{
       position: "absolute", inset: 0, overflow: "visible",
       filter: isTarget
-        ? "drop-shadow(0 1px 2px rgba(0,0,0,0.4)) drop-shadow(0 0 7px rgba(255,70,55,0.6))"
-        : "drop-shadow(0 2px 3px rgba(0,0,0,0.38))",
+        ? "drop-shadow(0 1px 2px rgba(0,0,0,0.4)) drop-shadow(0 0 8px rgba(255,70,55,0.65))"
+        : "drop-shadow(0 2px 3px rgba(0,0,0,0.4))",
     }}>
       <img
         src={src}
@@ -169,9 +168,9 @@ function CarImage({
         draggable={false}
         style={{
           position: "absolute", top: "50%", left: "50%",
-          width:  longSide * 0.97,
-          height: shortSide * 0.97,
-          objectFit: "contain",
+          height: cellPx * LANE,   // pista fixa (largura do veículo) — igual p/ todos
+          width: "auto",           // comprimento pela proporção nativa (sem distorção)
+          maxWidth: "none",
           transform: `translate(-50%, -50%) rotate(${orientation === "vertical" ? 90 : 0}deg)`,
           pointerEvents: "none",
           userSelect: "none",
@@ -503,7 +502,6 @@ export function EstacionamentoLogico({ difficulty, theme: _theme, onComplete }: 
                 >
                   <CarImage
                     src={carImages[car.id]}
-                    len={car.len}
                     orientation={car.orientation}
                     isTarget={car.id === "target"}
                     cellPx={cellPx}
