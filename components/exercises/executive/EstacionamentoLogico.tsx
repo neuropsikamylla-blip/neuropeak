@@ -1,8 +1,9 @@
 "use client";
 
-import { useState, useRef, useCallback, useLayoutEffect } from "react";
+import { useState, useRef, useCallback, useLayoutEffect, useMemo } from "react";
 import { calculateExerciseScore } from "@/lib/scoring";
 import { useExerciseProgress } from "@/components/exercises/ExerciseWrapper";
+import { assignCarImages } from "@/lib/parking-cars";
 import type { ExerciseResult, Theme } from "@/types";
 
 // ── Layout constants ──────────────────────────────────────────────────────────
@@ -21,20 +22,6 @@ interface DragState {
   carId: string; axis: "horizontal" | "vertical";
   startPx: number; startPos: number; currentPos: number;
 }
-
-// ── Professional muted palette ────────────────────────────────────────────────
-const VEH_HEX: Record<string, string> = {
-  red:    "#BE2E2E",  // target — clean professional red
-  teal:   "#3A6878",
-  blue:   "#2C4868",
-  purple: "#54497A",
-  slate:  "#475462",
-  yellow: "#5C511E",
-  lime:   "#3A5824",
-  indigo: "#2A3062",
-  orange: "#664826",
-  pink:   "#663652",
-};
 
 // ── Puzzle levels ─────────────────────────────────────────────────────────────
 const ALL_LEVELS: Level[] = [
@@ -157,166 +144,40 @@ function isWin(cars: Car[]): boolean {
   return !!t && t.col + t.len >= GRID;
 }
 
-// ── Top-view vehicle SVG — 4 types, consistent design system ─────────────────
-// Design rules:
-//   • Horizontal cars: front = right, rear = left
-//   • Vertical cars:   front = bottom, rear = top
-//   • All: body > windshield + rear-window + roof panel + 4 wheels
-//   • Windshield: larger glass, more translucent blue-white
-//   • Wheels: small, at corners, slightly outside body, dark rounded rects
-//   • Shadow: soft drop-shadow filter on the body
-function VehicleSVG({
-  color, len, orientation, isTarget,
+// ── Top-view vehicle (PNG transparente) ──────────────────────────
+// Horizontal: imagem na largura da vaga (frente à direita). Vertical: a mesma
+// imagem girada 90° (frente para baixo). object-fit:contain preserva a proporção
+// do carro dentro da vaga (len×1). O alvo ganha um leve brilho avermelhado.
+function CarImage({
+  src, len, orientation, isTarget, cellPx,
 }: {
-  color: string; len: number; orientation: "horizontal" | "vertical"; isTarget: boolean;
+  src: string; len: number; orientation: "horizontal" | "vertical";
+  isTarget: boolean; cellPx: number;
 }) {
-  const base = VEH_HEX[color] ?? VEH_HEX.slate;
-  const uid  = `car_${color}_${len}_${orientation[0]}`;
-  const shadowStrength = isTarget ? 0.55 : 0.38;
-  const shadowSpread   = isTarget ? 8 : 5;
-
-  if (orientation === "horizontal") {
-    const VW = len * 100, VH = 100;
-    // Body: 6px padding sides, 9px top/bottom
-    const bx = 5, by = 9, bw = VW - 10, bh = 82;
-    // Section widths (hood, cabin, trunk)
-    const hoodW  = 50,                 trunkW = 46;
-    const cabinX = bx + trunkW,        cabinW = bw - hoodW - trunkW;
-    const hoodX  = bx + bw - hoodW;
-    // Windshield (front=right)
-    const wsX = hoodX + 8,  wsY = by + 14, wsW = 30, wsH = 54;
-    // Rear window
-    const rwX = bx + 12,    rwY = by + 18, rwW = 24, rwH = 46;
-    // Wheels (w=20, h=12, rx=4)
-    const ww = 20, wh = 12;
-    const wx1 = bx + 12, wx2 = bx + bw - 12 - ww;
-    const wy1 = 1, wy2 = VH - 1 - wh;
-
-    return (
-      <svg viewBox={`0 0 ${VW} ${VH}`} width="100%" height="100%" overflow="visible">
-        <defs>
-          <filter id={uid} x="-18%" y="-28%" width="145%" height="165%">
-            <feDropShadow dx="0" dy={shadowSpread * 0.5} stdDeviation={shadowSpread}
-              floodColor={`rgba(0,0,0,${shadowStrength})`} />
-          </filter>
-        </defs>
-
-        {/* Wheels (drawn first = below body) */}
-        <rect x={wx1} y={wy1} width={ww} height={wh} rx={3} fill="#171820" />
-        <rect x={wx1} y={wy2} width={ww} height={wh} rx={3} fill="#171820" />
-        <rect x={wx2} y={wy1} width={ww} height={wh} rx={3} fill="#171820" />
-        <rect x={wx2} y={wy2} width={ww} height={wh} rx={3} fill="#171820" />
-
-        {/* Main body */}
-        <rect x={bx} y={by} width={bw} height={bh} rx={10} fill={base} filter={`url(#${uid})`} />
-
-        {/* Trunk section (rear=left, slightly darker) */}
-        <rect x={bx} y={by} width={trunkW} height={bh} rx={10} fill="rgba(0,0,0,0.09)" />
-        {/* Hood section (front=right, slightly darker) */}
-        <rect x={hoodX} y={by} width={hoodW} height={bh} rx={10} fill="rgba(0,0,0,0.07)" />
-
-        {/* Cabin/roof divider lines */}
-        <line x1={cabinX} y1={by+2} x2={cabinX} y2={by+bh-2}
-          stroke="rgba(0,0,0,0.13)" strokeWidth={1.5} />
-        <line x1={cabinX+cabinW} y1={by+2} x2={cabinX+cabinW} y2={by+bh-2}
-          stroke="rgba(0,0,0,0.10)" strokeWidth={1.5} />
-
-        {/* Roof / cabin panel */}
-        <rect x={cabinX+2} y={by+12} width={cabinW-4} height={bh-24} rx={7}
-          fill="rgba(255,255,255,0.07)" />
-
-        {/* Windshield (front glass) */}
-        <rect x={wsX} y={wsY} width={wsW} height={wsH} rx={5}
-          fill="rgba(185,222,248,0.58)" />
-        {/* Windshield glare */}
-        <rect x={wsX+2} y={wsY+2} width={wsW-4} height={8} rx={2}
-          fill="rgba(255,255,255,0.22)" />
-
-        {/* Rear window */}
-        <rect x={rwX} y={rwY} width={rwW} height={rwH} rx={4}
-          fill="rgba(185,222,248,0.36)" />
-
-        {/* Body highlight (top specular edge) */}
-        <rect x={bx+16} y={by+3} width={bw-32} height={3} rx={1.5}
-          fill="rgba(255,255,255,0.18)" />
-
-        {/* Target rim */}
-        {isTarget && (
-          <rect x={bx+1} y={by+1} width={bw-2} height={bh-2} rx={9}
-            fill="none" stroke="rgba(255,140,120,0.35)" strokeWidth={2.5} />
-        )}
-      </svg>
-    );
-  }
-
-  // ── Vertical car (front = bottom) ─────────────────────────────────────────
-  const VW = 100, VH = len * 100;
-  const bx = 9, by2 = 5, bw = 82, bh2 = VH - 10;
-  const hoodH  = 50, trunkH = 46;
-  const cabinY = by2 + trunkH, cabinH = bh2 - hoodH - trunkH;
-  const hoodY  = by2 + bh2 - hoodH;
-  // Windshield (front=bottom)
-  const wsX2 = bx + 14, wsY2 = hoodY + 8, wsW2 = 54, wsH2 = 30;
-  // Rear window (top)
-  const rwX2 = bx + 18, rwY2 = by2 + 12, rwW2 = 46, rwH2 = 24;
-  // Wheels (w=12, h=20, rx=3)
-  const ww2 = 12, wh2 = 20;
-  const wx1b = 1, wx2b = VW - 1 - ww2;
-  const wy1b = by2 + 12, wy2b = by2 + bh2 - 12 - wh2;
-
+  const longSide  = len * cellPx;
+  const shortSide = cellPx;
   return (
-    <svg viewBox={`0 0 ${VW} ${VH}`} width="100%" height="100%" overflow="visible">
-      <defs>
-        <filter id={uid} x="-28%" y="-18%" width="165%" height="145%">
-          <feDropShadow dx={shadowSpread * 0.5} dy={0} stdDeviation={shadowSpread}
-            floodColor={`rgba(0,0,0,${shadowStrength})`} />
-        </filter>
-      </defs>
-
-      {/* Wheels */}
-      <rect x={wx1b} y={wy1b} width={ww2} height={wh2} rx={3} fill="#171820" />
-      <rect x={wx2b} y={wy1b} width={ww2} height={wh2} rx={3} fill="#171820" />
-      <rect x={wx1b} y={wy2b} width={ww2} height={wh2} rx={3} fill="#171820" />
-      <rect x={wx2b} y={wy2b} width={ww2} height={wh2} rx={3} fill="#171820" />
-
-      {/* Main body */}
-      <rect x={bx} y={by2} width={bw} height={bh2} rx={10} fill={base} filter={`url(#${uid})`} />
-
-      {/* Trunk section (rear=top) */}
-      <rect x={bx} y={by2} width={bw} height={trunkH} rx={10} fill="rgba(0,0,0,0.09)" />
-      {/* Hood section (front=bottom) */}
-      <rect x={bx} y={hoodY} width={bw} height={hoodH} rx={10} fill="rgba(0,0,0,0.07)" />
-
-      {/* Cabin divider lines */}
-      <line x1={bx+2} y1={cabinY} x2={bx+bw-2} y2={cabinY}
-        stroke="rgba(0,0,0,0.13)" strokeWidth={1.5} />
-      <line x1={bx+2} y1={cabinY+cabinH} x2={bx+bw-2} y2={cabinY+cabinH}
-        stroke="rgba(0,0,0,0.10)" strokeWidth={1.5} />
-
-      {/* Roof panel */}
-      <rect x={bx+12} y={cabinY+2} width={bw-24} height={cabinH-4} rx={7}
-        fill="rgba(255,255,255,0.07)" />
-
-      {/* Windshield (front = bottom) */}
-      <rect x={wsX2} y={wsY2} width={wsW2} height={wsH2} rx={5}
-        fill="rgba(185,222,248,0.58)" />
-      <rect x={wsX2+2} y={wsY2+2} width={8} height={wsH2-4} rx={2}
-        fill="rgba(255,255,255,0.22)" />
-
-      {/* Rear window */}
-      <rect x={rwX2} y={rwY2} width={rwW2} height={rwH2} rx={4}
-        fill="rgba(185,222,248,0.36)" />
-
-      {/* Body highlight */}
-      <rect x={bx+3} y={by2+16} width={3} height={bh2-32} rx={1.5}
-        fill="rgba(255,255,255,0.18)" />
-
-      {/* Target rim */}
-      {isTarget && (
-        <rect x={bx+1} y={by2+1} width={bw-2} height={bh2-2} rx={9}
-          fill="none" stroke="rgba(255,140,120,0.35)" strokeWidth={2.5} />
-      )}
-    </svg>
+    <div style={{
+      position: "absolute", inset: 0, overflow: "visible",
+      filter: isTarget
+        ? "drop-shadow(0 1px 2px rgba(0,0,0,0.4)) drop-shadow(0 0 7px rgba(255,70,55,0.6))"
+        : "drop-shadow(0 2px 3px rgba(0,0,0,0.38))",
+    }}>
+      <img
+        src={src}
+        alt=""
+        draggable={false}
+        style={{
+          position: "absolute", top: "50%", left: "50%",
+          width:  longSide * 0.97,
+          height: shortSide * 0.97,
+          objectFit: "contain",
+          transform: `translate(-50%, -50%) rotate(${orientation === "vertical" ? 90 : 0}deg)`,
+          pointerEvents: "none",
+          userSelect: "none",
+        }}
+      />
+    </div>
   );
 }
 
@@ -466,6 +327,11 @@ export function EstacionamentoLogico({ difficulty, theme: _theme, onComplete }: 
   const resultsRef = useRef<{ moves: number; ideal: number }[]>([]);
 
   const currentLevel = ALL_LEVELS[puzzleIdx];
+  // Imagem (PNG) de cada carro do nível — determinístico, varia por nível.
+  const carImages = useMemo(
+    () => assignCarImages(puzzleIdx, currentLevel.cars),
+    [puzzleIdx, currentLevel],
+  );
 
   const loadPuzzle = useCallback((idx: number) => {
     setCars(ALL_LEVELS[idx].cars.map(c => ({ ...c })));
@@ -635,11 +501,12 @@ export function EstacionamentoLogico({ difficulty, theme: _theme, onComplete }: 
                   onPointerMove={e => onPtrMove(e, car)}
                   onPointerUp={e => onPtrUp(e, car)}
                 >
-                  <VehicleSVG
-                    color={car.color}
+                  <CarImage
+                    src={carImages[car.id]}
                     len={car.len}
                     orientation={car.orientation}
                     isTarget={car.id === "target"}
+                    cellPx={cellPx}
                   />
                 </div>
               );
