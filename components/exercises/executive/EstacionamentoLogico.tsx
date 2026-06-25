@@ -8,7 +8,8 @@ import type { ExerciseResult, Theme } from "@/types";
 
 // ── Layout constants ──────────────────────────────────────────────────────────
 const GRID     = 6;
-const BORDER   = 7;    // curb thickness px
+const BORDER   = 11;   // curb thickness px (meio-fio amarelo/preto)
+const ASPHALT  = "/exercises/Carros/asphalt.jpg";  // textura realista do piso
 const EXIT_ROW = 2;    // target car row (0-indexed, from bottom)
 const CORRIDOR = 26;   // exit corridor width px (outside board)
 
@@ -201,92 +202,64 @@ function BoardSVG({ cellPx }: { cellPx: number }) {
       style={{ position: "absolute", inset: 0, pointerEvents: "none", display: "block" }}
     >
       <defs>
-        {/* Asfalto: leve gradiente + granulado */}
-        <linearGradient id="asphalt" x1="0" y1="0" x2="0" y2="1">
-          <stop offset="0" stopColor="#3c4252" />
-          <stop offset="1" stopColor="#2d323e" />
-        </linearGradient>
-        <radialGradient id="asphaltGlow" cx="0.5" cy="0.42" r="0.75">
-          <stop offset="0" stopColor="rgba(255,255,255,0.05)" />
-          <stop offset="1" stopColor="rgba(255,255,255,0)" />
-        </radialGradient>
-        <pattern id="grain" x="0" y="0" width="7" height="7" patternUnits="userSpaceOnUse">
-          <rect width="7" height="7" fill="transparent" />
-          <rect x="0" y="0" width="1.3" height="1.3" fill="rgba(255,255,255,0.028)" />
-          <rect x="3.5" y="3.5" width="1" height="1" fill="rgba(255,255,255,0.022)" />
-          <rect x="1.5" y="4.5" width="0.9" height="0.9" fill="rgba(0,0,0,0.05)" />
-          <rect x="5" y="1" width="0.8" height="0.8" fill="rgba(0,0,0,0.04)" />
+        {/* Meio-fio amarelo/preto — listras (estacionamento) */}
+        <pattern id="curbH" width="26" height="26" patternUnits="userSpaceOnUse" patternTransform="rotate(0)">
+          <rect width="26" height="26" fill="#26262a" />
+          <rect width="13" height="26" fill="#E6C22A" />
         </pattern>
-        {/* Meio-fio com profundidade */}
-        <linearGradient id="curb" x1="0" y1="0" x2="0" y2="1">
-          <stop offset="0" stopColor="#5a6178" />
-          <stop offset="1" stopColor="#3e4458" />
-        </linearGradient>
+        <pattern id="curbV" width="26" height="26" patternUnits="userSpaceOnUse">
+          <rect width="26" height="26" fill="#26262a" />
+          <rect width="26" height="13" fill="#E6C22A" />
+        </pattern>
       </defs>
 
-      {/* ── Piso de asfalto ────────────────────────────────────────────────── */}
-      <rect x={B} y={B} width={S} height={S} fill="url(#asphalt)" />
-      <rect x={B} y={B} width={S} height={S} fill="url(#asphaltGlow)" />
-      <rect x={B} y={B} width={S} height={S} fill="url(#grain)" />
+      {/* ── Piso de asfalto (textura realista) ─────────────────────────────── */}
+      <image href={ASPHALT} x={B} y={B} width={S} height={S}
+        preserveAspectRatio="xMidYMid slice" />
+      {/* Corredor da saída — mesma textura */}
+      <image href={ASPHALT} x={T-B} y={EY1} width={CORRIDOR+B} height={cellPx}
+        preserveAspectRatio="xMidYMid slice" />
 
-      {/* Corredor da saída */}
-      <rect x={T-B} y={EY1} width={CORRIDOR+B} height={cellPx} fill="url(#asphalt)" />
-      <rect x={T-B} y={EY1} width={CORRIDOR+B} height={cellPx} fill="url(#grain)" />
-
-      {/* Faixa da saída — leve tom mais quente */}
-      <rect x={B} y={EY1} width={S} height={cellPx} fill="rgba(255,214,150,0.045)" />
-
-      {/* ── Linhas de vaga (grade do estacionamento) ───────────────────────── */}
-      {[1,2,3,4,5].map(c => (
+      {/* ── Linhas de vaga (pintura branca demarcando as vagas) ────────────── */}
+      {Array.from({ length: GRID + 1 }).map((_, c) => (
         <line key={`v${c}`}
-          x1={B + c*cellPx} y1={B + 1} x2={B + c*cellPx} y2={T - B - 1}
-          stroke="rgba(255,255,255,0.14)" strokeWidth={1.2}
+          x1={B + c*cellPx} y1={B} x2={B + c*cellPx} y2={T - B}
+          stroke="rgba(255,255,255,0.5)" strokeWidth={2.5}
         />
       ))}
-      {[1,2,3,4,5].map(r => (
+      {Array.from({ length: GRID + 1 }).map((_, r) => (
         <line key={`h${r}`}
-          x1={B + 1} y1={B + r*cellPx} x2={T - B - 1} y2={B + r*cellPx}
-          stroke="rgba(255,255,255,0.11)" strokeWidth={1.2}
+          x1={B} y1={B + r*cellPx} x2={T - B} y2={B + r*cellPx}
+          stroke="rgba(255,255,255,0.42)" strokeWidth={2.5}
         />
       ))}
 
-      {/* ── Faixa de parada na saída ───────────────────────────────────────── */}
-      <line
-        x1={T - B - 3} y1={EY1 + 4}
-        x2={T - B - 3} y2={EY2 - 4}
-        stroke="rgba(255,255,255,0.4)" strokeWidth={3}
-      />
+      {/* ── Meio-fio amarelo/preto / perímetro ─────────────────────────────── */}
+      <rect x={0} y={0} width={T} height={B} fill="url(#curbH)" />
+      <rect x={0} y={T-B} width={T} height={B} fill="url(#curbH)" />
+      <rect x={0} y={0} width={B} height={T} fill="url(#curbV)" />
+      <rect x={T-B} y={0} width={B} height={EY1} fill="url(#curbV)" />
+      <rect x={T-B} y={EY2} width={B} height={T-EY2} fill="url(#curbV)" />
+      <rect x={T-B} y={EY1-B} width={CORRIDOR+B} height={B} fill="url(#curbH)" />
+      <rect x={T-B} y={EY2}   width={CORRIDOR+B} height={B} fill="url(#curbH)" />
+      {/* sombra interna do meio-fio */}
+      <line x1={0} y1={T-0.5} x2={T} y2={T-0.5} stroke="rgba(0,0,0,0.3)" strokeWidth={1} />
 
-      {/* ── Meio-fio / perímetro ───────────────────────────────────────────── */}
-      <rect x={0} y={0} width={T} height={B} fill="url(#curb)" />
-      <rect x={0} y={T-B} width={T} height={B} fill="url(#curb)" />
-      <rect x={0} y={0} width={B} height={T} fill="url(#curb)" />
-      <rect x={T-B} y={0} width={B} height={EY1} fill="url(#curb)" />
-      <rect x={T-B} y={EY2} width={B} height={T-EY2} fill="url(#curb)" />
-      <rect x={T-B} y={EY1-B} width={CORRIDOR+B} height={B} fill="url(#curb)" />
-      <rect x={T-B} y={EY2}   width={CORRIDOR+B} height={B} fill="url(#curb)" />
-
-      {/* Realces do meio-fio (luz no topo/esquerda, sombra na base/direita) */}
-      <line x1={B} y1={B} x2={T-B} y2={B} stroke="rgba(255,255,255,0.14)" strokeWidth={1} />
-      <line x1={B} y1={B} x2={B} y2={T-B} stroke="rgba(255,255,255,0.14)" strokeWidth={1} />
-      <line x1={0} y1={T-1} x2={T} y2={T-1} stroke="rgba(0,0,0,0.25)" strokeWidth={1} />
-      <line x1={T-1} y1={0} x2={T-1} y2={EY1} stroke="rgba(0,0,0,0.18)" strokeWidth={1} />
-
-      {/* ── Zebrado + seta de saída no corredor ────────────────────────────── */}
+      {/* ── Zebrado + seta de saída ────────────────────────────────────────── */}
       {[0,1,2].map(i => (
         <line key={`zb${i}`}
-          x1={T - B + 2 + i*4} y1={EY1 + 5}
-          x2={T - B + 2 + i*4} y2={EY2 - 5}
-          stroke="rgba(255,255,255,0.18)" strokeWidth={2}
+          x1={T - B + 3 + i*5} y1={EY1 + 6}
+          x2={T - B + 3 + i*5} y2={EY2 - 6}
+          stroke="rgba(245,210,60,0.85)" strokeWidth={3}
         />
       ))}
       <line
-        x1={ax1 + 6} y1={AY} x2={ax2 - 8} y2={AY}
-        stroke="rgba(140,220,150,0.85)" strokeWidth={3} strokeLinecap="round"
+        x1={ax1 + 12} y1={AY} x2={ax2 - 8} y2={AY}
+        stroke="rgba(150,225,150,0.92)" strokeWidth={4} strokeLinecap="round"
       />
       <polygon
-        points={`${ax2-10},${AY-7} ${ax2+1},${AY} ${ax2-10},${AY+7}`}
-        fill="rgba(140,220,150,0.9)"
+        points={`${ax2-10},${AY-8} ${ax2+1},${AY} ${ax2-10},${AY+8}`}
+        fill="rgba(150,225,150,0.95)"
       />
     </svg>
   );
