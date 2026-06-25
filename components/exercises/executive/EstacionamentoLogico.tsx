@@ -473,6 +473,20 @@ export function EstacionamentoLogico({ difficulty, theme: _theme, onComplete }: 
         Libere o carro vermelho pela saída.
       </p>
 
+      {/* Barra de progresso das fases (avança por fase concluída) */}
+      <div style={{ width: "100%", maxWidth: 320, margin: "0 auto 12px", display: "flex", alignItems: "center", gap: 8, paddingLeft: 14, paddingRight: 14 }}>
+        <div style={{ flex: 1, height: 6, borderRadius: 99, background: "rgba(255,255,255,0.22)", overflow: "hidden" }}>
+          <div style={{
+            height: "100%", borderRadius: 99, background: "#9CF0A6",
+            width: `${Math.round((puzzleIdx / TOTAL_PHASES) * 100)}%`,
+            transition: "width 0.5s ease",
+          }} />
+        </div>
+        <span style={{ fontSize: 11, fontWeight: 700, color: "#E8ECF2", minWidth: 30, textAlign: "right" }}>
+          {Math.round((puzzleIdx / TOTAL_PHASES) * 100)}%
+        </span>
+      </div>
+
       {/* Board — fills available width */}
       <div style={{ display: "flex", justifyContent: "center", paddingLeft: 12, paddingRight: 12 }}>
         <div style={{ position: "relative", width: boardTotal + CORRIDOR, height: boardTotal, flexShrink: 0 }}>

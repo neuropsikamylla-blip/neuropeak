@@ -386,7 +386,8 @@ export function CuboCorsi({ difficulty, theme: _theme, onComplete }: Props) {
     const id = setInterval(() => {
       if (startTsRef.current === 0 || finishedRef.current) return;
       const el = Date.now() - startTsRef.current;
-      const pct = Math.min(100, Math.round((el / TARGET_MS) * 100));
+      // Saltos de 10% (não 1% a 1%) → não parece cronômetro, menos ansiedade.
+      const pct = Math.min(100, Math.round(((el / TARGET_MS) * 100) / 10) * 10);
       markProgress(pct);
       setProgressPct(pct);
     }, 400);
