@@ -569,7 +569,8 @@ export default function ExercicioPage() {
   }
 
   // Exercícios que gerenciam o próprio layout (sem barra de progresso no canto)
-  const HIDE_PROGRESS_WIDGET = new Set(["estacionamento-logico"]);
+  // cubo-corsi tem barra de progresso própria (por tempo) no layout
+  const HIDE_PROGRESS_WIDGET = new Set(["estacionamento-logico", "cubo-corsi"]);
 
   return (
     <ExerciseWrapper

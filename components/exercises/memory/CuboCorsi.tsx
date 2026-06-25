@@ -207,7 +207,10 @@ const sndCorrect = () => { beep(660, 120); setTimeout(() => beep(880, 200), 140)
 const sndWrong   = () => beep(180, 300, 0.05);
 
 // ── Sequência / timing ────────────────────────────────────────────────────────
-const MAX_ROUNDS = 12;
+// Engine padrão: a sessão dura ~7 min (faixa 6-8) e a barra avança pelo TEMPO
+// decorrido (0→100%). A dificuldade sobe +1 a cada 2 acertos SEGUIDOS.
+const TARGET_MS  = 7 * 60 * 1000;  // duração-alvo da sessão
+const MAX_ROUNDS = 80;             // trava de segurança (normalmente não atingida)
 const N_TILES    = 12;
 
 function seqLen(d: number): number {
@@ -364,12 +367,31 @@ export function CuboCorsi({ difficulty, theme: _theme, onComplete }: Props) {
   const errorsRef  = useRef(0);
   const [correct, setCorrect] = useState(0);
   const [errors,  setErrors ] = useState(0);
+  const [progressPct, setProgressPct] = useState(0);   // barra por tempo (0-100)
 
   const cancelRef     = useRef(false);
   const timersRef     = useRef<ReturnType<typeof setTimeout>[]>([]);
   const startTsRef    = useRef(0);
   const rtsRef        = useRef<number[]>([]);
   const inputStartRef = useRef(0);
+
+  // Dificuldade adaptativa intra-sessão (+1 a cada 2 acertos seguidos)
+  const curDiffRef  = useRef(difficulty);
+  const streakRef   = useRef(0);
+  const maxDiffRef  = useRef(difficulty);
+  const finishedRef = useRef(false);
+
+  // Barra de progresso pelo TEMPO decorrido (0→100% em ~7 min) — padrão e suave.
+  useEffect(() => {
+    const id = setInterval(() => {
+      if (startTsRef.current === 0 || finishedRef.current) return;
+      const el = Date.now() - startTsRef.current;
+      const pct = Math.min(100, Math.round((el / TARGET_MS) * 100));
+      markProgress(pct);
+      setProgressPct(pct);
+    }, 400);
+    return () => clearInterval(id);
+  }, [markProgress]);
 
   function clearAll() {
     cancelRef.current = true;
@@ -385,14 +407,15 @@ export function CuboCorsi({ difficulty, theme: _theme, onComplete }: Props) {
 
   const startRound = useCallback(async (r: number) => {
     cancelRef.current = false;
-    const seq = randSeq(seqLen(difficulty));
+    const d = curDiffRef.current;       // dificuldade ATUAL (sobe durante a sessão)
+    const seq = randSeq(seqLen(d));
     setSeq(seq);
     setInput([]);
     setTS(Array(N_TILES).fill("idle"));
     setRound(r);
     setPhase("watch");
 
-    const FLASH = flashMs(difficulty);
+    const FLASH = flashMs(d);
 
     try {
       await sleep(600);
@@ -406,7 +429,7 @@ export function CuboCorsi({ difficulty, theme: _theme, onComplete }: Props) {
       setPhase("input");
       inputStartRef.current = Date.now();
     } catch { /* cancelado */ }
-  }, [difficulty, sleep]);
+  }, [sleep]);
 
   const evaluateSequence = useCallback((userInput: number[], seq: number[], r: number) => {
     const allOk = userInput.every((tap, i) => tap === seq[i]);
@@ -425,23 +448,37 @@ export function CuboCorsi({ difficulty, theme: _theme, onComplete }: Props) {
     setPhase("result");
     rtsRef.current.push((Date.now() - inputStartRef.current) / seq.length);
 
-    if (allOk) { correctRef.current++; setCorrect(correctRef.current); sndCorrect(); }
-    else        { errorsRef.current++;  setErrors(errorsRef.current);   sndWrong(); }
-
-    markProgress(Math.round((nr / MAX_ROUNDS) * 100));
+    if (allOk) {
+      correctRef.current++; setCorrect(correctRef.current); sndCorrect();
+      // 2 acertos SEGUIDOS → sobe a dificuldade (sequência maior / flashes mais rápidos)
+      streakRef.current++;
+      if (streakRef.current >= 2) {
+        streakRef.current = 0;
+        curDiffRef.current = Math.min(10, curDiffRef.current + 1);
+        maxDiffRef.current = Math.max(maxDiffRef.current, curDiffRef.current);
+      }
+    } else {
+      errorsRef.current++; setErrors(errorsRef.current); sndWrong();
+      streakRef.current = 0;   // erro zera a sequência de acertos
+    }
 
     const t = setTimeout(() => {
       setTS(Array(N_TILES).fill("idle"));
-      if (nr >= MAX_ROUNDS) {
+      const elapsed = Date.now() - startTsRef.current;
+      // Termina quando atinge a duração-alvo (~7 min) — não por nº fixo de rodadas.
+      if (elapsed >= TARGET_MS || nr >= MAX_ROUNDS) {
+        finishedRef.current = true;
+        markProgress(100); setProgressPct(100);
         const avgRt = rtsRef.current.reduce((a, b) => a + b, 0) / Math.max(1, rtsRef.current.length);
         const fc = correctRef.current, fe = errorsRef.current;
         const acc = fc / Math.max(1, fc + fe);
         const dur = Math.round((Date.now() - startTsRef.current) / 1000);
-        const score = calculateExerciseScore("cubo-corsi", acc, avgRt, difficulty);
+        const reached = maxDiffRef.current;
+        const score = calculateExerciseScore("cubo-corsi", acc, avgRt, reached);
         onComplete({
           exerciseId: "cubo-corsi", domain: "memory",
-          score, accuracy: acc, reactionTime: avgRt, difficulty, duration: dur,
-          metadata: { correct: fc, errors: fe, rounds: MAX_ROUNDS },
+          score, accuracy: acc, reactionTime: avgRt, difficulty: reached, duration: dur,
+          metadata: { correct: fc, errors: fe, rounds: nr, reachedDifficulty: reached },
         });
         return;
       }
@@ -449,7 +486,7 @@ export function CuboCorsi({ difficulty, theme: _theme, onComplete }: Props) {
       timersRef.current.push(setTimeout(() => startRound(nr), 500));
     }, 1800);
     timersRef.current.push(t);
-  }, [difficulty, markProgress, onComplete, startRound]);
+  }, [markProgress, onComplete, startRound]);
 
   const handleTileTap = useCallback((idx: number) => {
     if (phase !== "input") return;
@@ -499,13 +536,18 @@ export function CuboCorsi({ difficulty, theme: _theme, onComplete }: Props) {
           </span>
         </div>
 
-        {/* Barra de rodadas */}
-        <div style={{ height: 5, borderRadius: 99, background: "#CBD5E1", marginBottom: 14, overflow: "hidden" }}>
-          <div style={{
-            height: "100%", borderRadius: 99, background: "#3B82F6",
-            width: `${(round / MAX_ROUNDS) * 100}%`,
-            transition: "width 0.5s ease",
-          }} />
+        {/* Barra de progresso (pelo tempo, ~7 min) */}
+        <div style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 14 }}>
+          <div style={{ flex: 1, height: 6, borderRadius: 99, background: "#CBD5E1", overflow: "hidden" }}>
+            <div style={{
+              height: "100%", borderRadius: 99, background: "#3B82F6",
+              width: `${progressPct}%`,
+              transition: "width 0.45s linear",
+            }} />
+          </div>
+          <span style={{ fontSize: 11, fontWeight: 700, color: "#64748B", minWidth: 30, textAlign: "right" }}>
+            {progressPct}%
+          </span>
         </div>
 
         {/* Label */}
@@ -550,7 +592,7 @@ export function CuboCorsi({ difficulty, theme: _theme, onComplete }: Props) {
 
         <p style={{ textAlign: "center", fontSize: 12, color: "#94A3B8", marginTop: 6 }}>
           Sequência de {sequence.length || "—"} quadrado{sequence.length !== 1 ? "s" : ""}
-          {difficulty >= 6 ? " · nível avançado" : ""}
+          {sequence.length >= 6 ? " · nível avançado" : ""}
         </p>
 
       </div>

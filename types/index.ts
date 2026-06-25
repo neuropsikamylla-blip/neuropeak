@@ -196,7 +196,7 @@ export const EXERCISE_DEFINITIONS = {
     name: "Cubos",
     domain: "memory" as Domain,
     description: "Treina memória visuoespacial 3D: memorize a sequência de blocos que acendem no cubo e reproduza a ordem correta.",
-    estimatedMinutes: 6,
+    estimatedMinutes: 7,
     icon: "🧊",
   },
   "matriz-espacial-inversa": {
