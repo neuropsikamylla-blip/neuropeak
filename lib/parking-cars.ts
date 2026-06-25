@@ -26,6 +26,11 @@ const NEUTRAL_SHORT = ["car-28", "car-27", "car-20", "car-24", "car-11", "car-12
 const COLORED_LONG = ["car-18"].map(url);
 const NEUTRAL_LONG = ["car-16", "car-17", "car-15"].map(url);
 
+/** Todas as imagens usáveis (para pré-carregar e evitar atraso/piscar). */
+export const ALL_CAR_IMAGES = [
+  TARGET_CAR, ...COLORED_SHORT, ...NEUTRAL_SHORT, ...COLORED_LONG, ...NEUTRAL_LONG,
+];
+
 function rotate(arr: string[], n: number): string[] {
   if (arr.length === 0) return arr;
   const k = ((n % arr.length) + arr.length) % arr.length;

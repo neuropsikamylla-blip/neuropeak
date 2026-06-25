@@ -1,15 +1,15 @@
 "use client";
 
-import { useState, useRef, useCallback, useLayoutEffect, useMemo } from "react";
+import { useState, useRef, useCallback, useLayoutEffect, useMemo, useEffect } from "react";
 import { calculateExerciseScore } from "@/lib/scoring";
 import { useExerciseProgress } from "@/components/exercises/ExerciseWrapper";
-import { assignCarImages } from "@/lib/parking-cars";
+import { assignCarImages, ALL_CAR_IMAGES } from "@/lib/parking-cars";
 import type { ExerciseResult, Theme } from "@/types";
 
 // ── Layout constants ──────────────────────────────────────────────────────────
 const GRID     = 6;
 const BORDER   = 11;   // curb thickness px (meio-fio amarelo/preto)
-const ASPHALT  = "/exercises/Carros/asphalt.jpg";  // textura realista do piso
+const PARKING_BG = "/exercises/Carros/parking-bg.jpg"; // foto do estacionamento (fundo)
 const EXIT_ROW = 2;    // target car row (0-indexed, from bottom)
 const CORRIDOR = 26;   // exit corridor width px (outside board)
 
@@ -202,65 +202,56 @@ function BoardSVG({ cellPx }: { cellPx: number }) {
       style={{ position: "absolute", inset: 0, pointerEvents: "none", display: "block" }}
     >
       <defs>
-        {/* Meio-fio amarelo/preto — listras (estacionamento) */}
-        <pattern id="curbH" width="26" height="26" patternUnits="userSpaceOnUse" patternTransform="rotate(0)">
-          <rect width="26" height="26" fill="#26262a" />
-          <rect width="13" height="26" fill="#E6C22A" />
-        </pattern>
-        <pattern id="curbV" width="26" height="26" patternUnits="userSpaceOnUse">
-          <rect width="26" height="26" fill="#26262a" />
-          <rect width="26" height="13" fill="#E6C22A" />
-        </pattern>
+        {/* Sombra de contato do painel no asfalto */}
+        <filter id="boardShadow" x="-25%" y="-25%" width="150%" height="160%">
+          <feDropShadow dx="0" dy="5" stdDeviation="9" floodColor="#05070c" floodOpacity="0.55" />
+        </filter>
+        {/* Glow suave da seta de saída */}
+        <filter id="exitGlow" x="-60%" y="-60%" width="220%" height="220%">
+          <feGaussianBlur in="SourceGraphic" stdDeviation="2.2" result="b" />
+          <feMerge><feMergeNode in="b" /><feMergeNode in="SourceGraphic" /></feMerge>
+        </filter>
       </defs>
 
-      {/* ── Piso de asfalto (textura realista) ─────────────────────────────── */}
-      <image href={ASPHALT} x={B} y={B} width={S} height={S}
-        preserveAspectRatio="xMidYMid slice" />
-      {/* Corredor da saída — mesma textura */}
-      <image href={ASPHALT} x={T-B} y={EY1} width={CORRIDOR+B} height={cellPx}
-        preserveAspectRatio="xMidYMid slice" />
+      {/* ── Corredor/rampa de saída (continua para fora, escuro) ───────────── */}
+      <rect x={T-B-4} y={EY1} width={CORRIDOR+B+4} height={cellPx} rx={5}
+        fill="#10151f" filter="url(#boardShadow)" />
+      <rect x={T-B-2} y={EY1+3} width={CORRIDOR+B} height={cellPx-6} rx={3}
+        fill="rgba(36,44,66,0.9)" />
 
-      {/* ── Linhas de vaga (pintura branca demarcando as vagas) ────────────── */}
-      {Array.from({ length: GRID + 1 }).map((_, c) => (
-        <line key={`v${c}`}
-          x1={B + c*cellPx} y1={B} x2={B + c*cellPx} y2={T - B}
-          stroke="rgba(255,255,255,0.5)" strokeWidth={2.5}
+      {/* ── Moldura fina elevada + sombra de contato ───────────────────────── */}
+      <rect x={0} y={0} width={T} height={T} rx={13}
+        fill="#10151f" filter="url(#boardShadow)" />
+
+      {/* ── Piso do tabuleiro: painel translúcido (área demarcada) ─────────── */}
+      <rect x={B} y={B} width={S} height={S} rx={7} fill="rgba(33,41,62,0.82)" />
+
+      {/* Grade do exercício — linhas bem sutis */}
+      {Array.from({ length: GRID - 1 }).map((_, i) => (
+        <line key={`v${i}`}
+          x1={B + (i+1)*cellPx} y1={B + 2} x2={B + (i+1)*cellPx} y2={T - B - 2}
+          stroke="rgba(255,255,255,0.10)" strokeWidth={1.2}
         />
       ))}
-      {Array.from({ length: GRID + 1 }).map((_, r) => (
-        <line key={`h${r}`}
-          x1={B} y1={B + r*cellPx} x2={T - B} y2={B + r*cellPx}
-          stroke="rgba(255,255,255,0.42)" strokeWidth={2.5}
+      {Array.from({ length: GRID - 1 }).map((_, i) => (
+        <line key={`h${i}`}
+          x1={B + 2} y1={B + (i+1)*cellPx} x2={T - B - 2} y2={B + (i+1)*cellPx}
+          stroke="rgba(255,255,255,0.08)" strokeWidth={1.2}
         />
       ))}
 
-      {/* ── Meio-fio amarelo/preto / perímetro ─────────────────────────────── */}
-      <rect x={0} y={0} width={T} height={B} fill="url(#curbH)" />
-      <rect x={0} y={T-B} width={T} height={B} fill="url(#curbH)" />
-      <rect x={0} y={0} width={B} height={T} fill="url(#curbV)" />
-      <rect x={T-B} y={0} width={B} height={EY1} fill="url(#curbV)" />
-      <rect x={T-B} y={EY2} width={B} height={T-EY2} fill="url(#curbV)" />
-      <rect x={T-B} y={EY1-B} width={CORRIDOR+B} height={B} fill="url(#curbH)" />
-      <rect x={T-B} y={EY2}   width={CORRIDOR+B} height={B} fill="url(#curbH)" />
-      {/* sombra interna do meio-fio */}
-      <line x1={0} y1={T-0.5} x2={T} y2={T-0.5} stroke="rgba(0,0,0,0.3)" strokeWidth={1} />
+      {/* Realce de elevação (luz no topo/esquerda) + abertura da saída */}
+      <rect x={0.75} y={0.75} width={T-1.5} height={T-1.5} rx={12.5}
+        fill="none" stroke="rgba(255,255,255,0.09)" strokeWidth={1.5} />
+      {/* "apaga" a moldura na saída → abertura real para a rampa */}
+      <rect x={T-B-1} y={EY1+3} width={B+2} height={cellPx-6} fill="rgba(36,44,66,0.9)" />
 
-      {/* ── Zebrado + seta de saída ────────────────────────────────────────── */}
-      {[0,1,2].map(i => (
-        <line key={`zb${i}`}
-          x1={T - B + 3 + i*5} y1={EY1 + 6}
-          x2={T - B + 3 + i*5} y2={EY2 - 6}
-          stroke="rgba(245,210,60,0.85)" strokeWidth={3}
-        />
-      ))}
-      <line
-        x1={ax1 + 12} y1={AY} x2={ax2 - 8} y2={AY}
-        stroke="rgba(150,225,150,0.92)" strokeWidth={4} strokeLinecap="round"
-      />
-      <polygon
-        points={`${ax2-10},${AY-8} ${ax2+1},${AY} ${ax2-10},${AY+8}`}
-        fill="rgba(150,225,150,0.95)"
-      />
+      {/* ── Seta de saída (luminosa, no chão da rampa) ─────────────────────── */}
+      <g filter="url(#exitGlow)">
+        <line x1={ax1 + 10} y1={AY} x2={ax2 - 7} y2={AY}
+          stroke="#9CF0A6" strokeWidth={4} strokeLinecap="round" />
+        <polygon points={`${ax2-9},${AY-8} ${ax2+2},${AY} ${ax2-9},${AY+8}`} fill="#9CF0A6" />
+      </g>
     </svg>
   );
 }
@@ -290,6 +281,12 @@ export function EstacionamentoLogico({ difficulty, theme: _theme, onComplete }: 
 
   const boardInner = GRID * cellPx;
   const boardTotal = boardInner + BORDER * 2;
+
+  // Pré-carrega todas as imagens dos carros no mount (evita atraso/piscar ao
+  // trocar de fase). 38 PNGs leves (~74KB) → cache do navegador.
+  useEffect(() => {
+    ALL_CAR_IMAGES.forEach((src) => { const im = new window.Image(); im.src = src; });
+  }, []);
 
   const [puzzleIdx, setPuzzleIdx]   = useState(0);
   const [cars, setCars]             = useState<Car[]>(() => ALL_LEVELS[0].cars.map(c => ({ ...c })));
@@ -429,13 +426,19 @@ export function EstacionamentoLogico({ difficulty, theme: _theme, onComplete }: 
     <div
       ref={wrapRef}
       className="min-h-screen flex flex-col items-center"
-      style={{ background: "#ECEAE4" }}
+      style={{
+        backgroundImage: `linear-gradient(rgba(8,10,16,0.28), rgba(8,10,16,0.4)), url(${PARKING_BG})`,
+        backgroundSize: "cover",
+        backgroundPosition: "center",
+        backgroundColor: "#23262e",
+      }}
     >
       {/* Instruction — centered, above the board */}
       <p style={{
         marginTop: 22, marginBottom: 12,
-        fontSize: 13, fontWeight: 500, letterSpacing: "0.01em",
-        color: "#3D4456",
+        fontSize: 14, fontWeight: 600, letterSpacing: "0.01em",
+        color: "#F1F3F8",
+        textShadow: "0 1px 4px rgba(0,0,0,0.6)",
         textAlign: "center",
       }}>
         Libere o carro vermelho pela saída.
@@ -467,13 +470,15 @@ export function EstacionamentoLogico({ difficulty, theme: _theme, onComplete }: 
                   key={car.id}
                   style={{
                     position: "absolute",
-                    left, top, width: w, height: h,
+                    left: 0, top: 0, width: w, height: h,
                     cursor: "grab",
                     touchAction: "none",
                     zIndex: isDragging ? 20 : 10,
-                    transition: isDragging ? "none" : "left 0.10s ease, top 0.10s ease",
-                    transform: isDragging ? "scale(1.04)" : "scale(1)",
-                    willChange: "left, top",
+                    transition: isDragging ? "none" : "transform 0.10s ease",
+                    // Movimento via transform (GPU/composited) → sem re-layout nem
+                    // re-raster da sombra a cada frame (corrige o "piscar" no arraste).
+                    transform: `translate3d(${left}px, ${top}px, 0)${isDragging ? " scale(1.04)" : ""}`,
+                    willChange: "transform",
                   }}
                   onPointerDown={e => onPtrDown(e, car)}
                   onPointerMove={e => onPtrMove(e, car)}
