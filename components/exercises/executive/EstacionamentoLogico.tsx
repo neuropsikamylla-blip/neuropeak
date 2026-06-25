@@ -340,10 +340,18 @@ export function EstacionamentoLogico({ difficulty, theme: _theme, onComplete }: 
     });
   }, [difficulty, onComplete]);
 
-  const nextPuzzle = () => {
-    const ni = puzzleIdx + 1;
-    if (ni >= TOTAL_PHASES) { finish(); }
-    else { setPuzzleIdx(ni); loadPuzzle(ni); }
+  // Avança de fase APENAS quando o paciente resolveu no nº ideal de movimentos.
+  // Caso contrário, repete a mesma fase (igual à Torre) — registra e adianta a barra
+  // só aqui, na passagem de fase.
+  const advance = () => {
+    const res = { moves, ideal: currentLevel.idealMoves };
+    const newLog = [...resultsRef.current, res];
+    resultsRef.current = newLog;
+    setResultsLog(newLog);
+    const done = puzzleIdx + 1;
+    markProgress(Math.round((done / TOTAL_PHASES) * 100));
+    if (done >= TOTAL_PHASES) { finish(); }
+    else { setPuzzleIdx(done); loadPuzzle(done); }
   };
 
   const commitMove = useCallback((carId: string, newPos: number) => {
@@ -355,19 +363,12 @@ export function EstacionamentoLogico({ difficulty, theme: _theme, onComplete }: 
       setHistory(h => [...h, prev]);
       setMoves(m => {
         const nm = m + 1;
-        if (isWin(next)) {
-          setWon(true);
-          const res = { moves: nm, ideal: ALL_LEVELS[puzzleIdx].idealMoves };
-          const newLog = [...resultsRef.current, res];
-          resultsRef.current = newLog;
-          setResultsLog(newLog);
-          markProgress(Math.round((puzzleIdx + 1) / TOTAL_PHASES * 100));
-        }
+        if (isWin(next)) setWon(true);
         return nm;
       });
       return next;
     });
-  }, [puzzleIdx, markProgress]);
+  }, []);
 
   const onPtrDown = useCallback((e: React.PointerEvent, car: Car) => {
     if (won) return;
@@ -403,29 +404,47 @@ export function EstacionamentoLogico({ difficulty, theme: _theme, onComplete }: 
 
   // ── Result screen ─────────────────────────────────────────────────────────
   if (won) {
-    const last   = resultsLog[resultsLog.length - 1];
-    const isLast = puzzleIdx + 1 >= TOTAL_PHASES;
+    const ideal    = currentLevel.idealMoves;
+    const optimal  = moves <= ideal;       // resolveu no nº ideal de movimentos?
+    const isLast   = puzzleIdx + 1 >= TOTAL_PHASES;
     return (
       <div className="min-h-screen flex items-center justify-center px-8" style={{ background: "#ECEAE4" }}>
         <div className="w-full max-w-xs text-center">
-          <p className="text-2xl font-light mb-10" style={{ color: "#3A4050" }}>Concluído</p>
-          <div className="flex justify-center gap-14 mb-10">
+          <p className="text-2xl font-light mb-8" style={{ color: optimal ? "#2E9E4F" : "#3A4050" }}>
+            {optimal ? "Perfeito!" : "Quase lá"}
+          </p>
+          <div className="flex justify-center gap-14 mb-8">
             <div>
-              <p className="text-4xl font-semibold tabular-nums" style={{ color: "#3A4050" }}>{last?.moves ?? moves}</p>
+              <p className="text-4xl font-semibold tabular-nums" style={{ color: optimal ? "#2E9E4F" : "#3A4050" }}>{moves}</p>
               <p className="text-xs mt-1.5 tracking-wide uppercase" style={{ color: "#94A0B0" }}>Movimentos</p>
             </div>
             <div>
-              <p className="text-4xl font-semibold tabular-nums" style={{ color: "#B0BAC8" }}>{currentLevel.idealMoves}</p>
+              <p className="text-4xl font-semibold tabular-nums" style={{ color: "#B0BAC8" }}>{ideal}</p>
               <p className="text-xs mt-1.5 tracking-wide uppercase" style={{ color: "#94A0B0" }}>Melhor solução</p>
             </div>
           </div>
-          <button
-            onClick={nextPuzzle}
-            className="w-full py-3.5 rounded-2xl text-sm font-semibold tracking-wide text-white"
-            style={{ background: "#2C3444" }}
-          >
-            {isLast ? "Finalizar" : "Próxima fase"}
-          </button>
+          {optimal ? (
+            <button
+              onClick={advance}
+              className="w-full py-3.5 rounded-2xl text-sm font-semibold tracking-wide text-white"
+              style={{ background: "#2C3444" }}
+            >
+              {isLast ? "Finalizar" : "Próxima fase"}
+            </button>
+          ) : (
+            <>
+              <p className="text-sm mb-5" style={{ color: "#6B7384" }}>
+                Dá para resolver em <strong>{ideal}</strong> movimentos. Tente outra vez!
+              </p>
+              <button
+                onClick={restart}
+                className="w-full py-3.5 rounded-2xl text-sm font-semibold tracking-wide text-white"
+                style={{ background: "#2C3444" }}
+              >
+                Tentar de novo
+              </button>
+            </>
+          )}
         </div>
       </div>
     );
