@@ -3,7 +3,7 @@
 import { useState, useEffect, useRef, useCallback } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { calculateExerciseScore } from "@/lib/scoring";
-import { useExerciseProgress } from "@/components/exercises/ExerciseWrapper";
+import { useTimedProgress } from "@/components/exercises/useExerciseEngine";
 import { TutorialBase } from "@/components/exercises/TutorialBase";
 import type { ExerciseResult, Theme } from "@/types";
 
@@ -84,7 +84,7 @@ function VigilanciaReactStep({ theme, target, onDone }: { theme: Theme; target: 
 export function Vigilancia({ difficulty, theme, onComplete }: VigilanciaProps) {
   const [showTutorial, setShowTutorial] = useState(true);
   const tutorialTarget = TARGETS[0]; // Always show "A" as tutorial target
-  const reportProgress = useExerciseProgress();
+  const { begin, isTimeUp, elapsedSec, finish, progressPct } = useTimedProgress();
   const interval = INTERVALS[difficulty] ?? 1000;
   const targetCount = difficulty >= 4 ? 2 : 1;
   const targets = TARGETS.slice(0, targetCount);
@@ -114,21 +114,14 @@ export function Vigilancia({ difficulty, theme, onComplete }: VigilanciaProps) {
   const reactionTimes = useRef<number[]>([]);
   const stimulusStart = useRef<number>(0);
 
-  // Report progress as items advance
-  useEffect(() => {
-    if (current >= 0) {
-      reportProgress(Math.round(((current + 1) / TOTAL_ITEMS) * 100));
-    }
-  // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [current]);
-
   useEffect(() => {
     if (showTutorial) return;
     let idx = 0;
     startTime.current = Date.now();
+    begin();
 
     function showNext() {
-      if (idx >= TOTAL_ITEMS) {
+      if (idx >= TOTAL_ITEMS || isTimeUp()) {
         setDone(true);
         setDisplayedStimulus(null);
         return;
@@ -162,7 +155,8 @@ export function Vigilancia({ difficulty, theme, onComplete }: VigilanciaProps) {
     const avgRT = reactionTimes.current.length > 0
       ? reactionTimes.current.reduce((a, b) => a + b, 0) / reactionTimes.current.length
       : interval;
-    const duration = Math.round((Date.now() - startTime.current) / 1000);
+    finish();
+    const duration = elapsedSec();
     const score = calculateExerciseScore("vigilancia", accuracy, avgRT, difficulty);
     onComplete({
       exerciseId: "vigilancia",
@@ -172,7 +166,7 @@ export function Vigilancia({ difficulty, theme, onComplete }: VigilanciaProps) {
       reactionTime: avgRT,
       difficulty,
       duration,
-      metadata: { hits, misses, falseAlarms, targets, total: TOTAL_ITEMS },
+      metadata: { hits, misses, falseAlarms, targets, total: current + 1 },
     });
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [done]);
@@ -199,7 +193,7 @@ export function Vigilancia({ difficulty, theme, onComplete }: VigilanciaProps) {
   }
 
   const bgClass = theme === "GAMIFIED" ? "bg-gray-950" : theme === "COLORFUL" ? "bg-gradient-to-br from-green-50 to-blue-50" : "bg-gray-50";
-  const progress = current >= 0 ? ((current + 1) / TOTAL_ITEMS) * 100 : 0;
+  const progress = progressPct;
 
   return (
     <div className={`min-h-screen flex flex-col items-center justify-center p-4 ${bgClass}`}>
