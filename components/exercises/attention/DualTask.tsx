@@ -3,7 +3,7 @@
 import { useState, useEffect, useRef, useCallback } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { calculateExerciseScore } from "@/lib/scoring";
-import { useExerciseProgress } from "@/components/exercises/ExerciseWrapper";
+import { useTimedProgress } from "@/components/exercises/useExerciseEngine";
 import { TutorialBase } from "@/components/exercises/TutorialBase";
 import type { ExerciseResult, Theme } from "@/types";
 
@@ -45,7 +45,7 @@ const LEVELS: Record<number, LevelSpec> = {
 };
 const levelOf = (d: number): LevelSpec => LEVELS[Math.min(10, Math.max(1, Math.round(d)))];
 
-const TOTAL_SHAPES = 50;
+const TOTAL_SHAPES = 320;  // longo o bastante p/ durar ~7 min em qualquer nível
 const BLOCK_SIZE = 10; // para a regra alternante (block-alt)
 const COLORS = ["green", "red", "blue", "yellow", "orange"] as const;
 type ShapeColor = (typeof COLORS)[number];
@@ -197,10 +197,10 @@ export function DualTask({ difficulty, theme, onComplete }: DualTaskProps) {
   const spec = levelOf(difficulty);
   const nback = spec.nback;
   const [showTutorial, setShowTutorial] = useState(true);
-  const reportProgress = useExerciseProgress();
+  const { begin, isTimeUp, elapsedSec, finish, progressPct } = useTimedProgress();
 
   const [shapes] = useState<ShapeTrial[]>(() => buildShapeSequence(spec, TOTAL_SHAPES));
-  const [digitSeq] = useState<number[]>(() => buildDigitSequence(200, nback));
+  const [digitSeq] = useState<number[]>(() => buildDigitSequence(900, nback));
 
   const [shapeIdx, setShapeIdx] = useState(-1);
   const [shapeFeedback, setShapeFeedback] = useState<"hit" | "fa" | "miss" | null>(null);
@@ -232,6 +232,7 @@ export function DualTask({ difficulty, theme, onComplete }: DualTaskProps) {
   const finishSession = useCallback(() => {
     if (allDoneRef.current) return;
     allDoneRef.current = true;
+    finish();
     if (shapeTimerRef.current) clearTimeout(shapeTimerRef.current);
     if (digitTimerRef.current) clearTimeout(digitTimerRef.current);
 
@@ -255,7 +256,7 @@ export function DualTask({ difficulty, theme, onComplete }: DualTaskProps) {
     const accTotal = (accTop + accBot) / 2;
     const rts = [...sRes, ...dRes].map((r) => r.rt).filter((v): v is number => v != null && v > 0);
     const meanRT = rts.length > 0 ? Math.round(rts.reduce((a, b) => a + b, 0) / rts.length) : null;
-    const duration = Math.round((Date.now() - startTime.current) / 1000);
+    const duration = elapsedSec();
     const score = calculateExerciseScore("dual-task", accTotal, meanRT ?? undefined, difficulty);
 
     onComplete({
@@ -281,7 +282,7 @@ export function DualTask({ difficulty, theme, onComplete }: DualTaskProps) {
         acc_A: Math.round(accTop * 100), acc_B: Math.round(accBot * 100),
       },
     });
-  }, [difficulty, nback, spec, onComplete]);
+  }, [difficulty, nback, spec, onComplete, finish, elapsedSec]);
 
   // Loop da tarefa visual
   useEffect(() => {
@@ -289,14 +290,13 @@ export function DualTask({ difficulty, theme, onComplete }: DualTaskProps) {
     function scheduleNextShape() {
       if (allDoneRef.current) return;
       const idx = shapeIdxRef.current;
-      if (idx >= TOTAL_SHAPES) { finishSession(); return; }
+      if (isTimeUp() || idx >= TOTAL_SHAPES) { finishSession(); return; }
       shapePhaseRef.current = "show";
       setShapeIdx(idx);
       setShapePhase("show");
       shapeRespondedRef.current = false;
       setShapeFeedback(null);
       shapeShownAt.current = Date.now();
-      reportProgress(Math.round(((idx + 1) / TOTAL_SHAPES) * 100));
 
       shapeTimerRef.current = setTimeout(() => {
         if (allDoneRef.current) return;
@@ -382,7 +382,7 @@ export function DualTask({ difficulty, theme, onComplete }: DualTaskProps) {
 
   if (showTutorial) {
     return <DualTaskTutorial theme={theme} spec={spec}
-      onDone={() => { startTime.current = Date.now(); setShowTutorial(false); }} />;
+      onDone={() => { startTime.current = Date.now(); begin(); setShowTutorial(false); }} />;
   }
 
   const currentShape = shapeIdx >= 0 && shapeIdx < TOTAL_SHAPES ? shapes[shapeIdx] : null;
@@ -414,7 +414,14 @@ export function DualTask({ difficulty, theme, onComplete }: DualTaskProps) {
         {/* Header */}
         <div className="flex justify-between items-center">
           <h2 className={`font-bold text-sm ${pal.title}`}>🧠 Dupla Tarefa</h2>
-          <div className={`text-xs ${pal.sub}`}>Nível {Math.round(difficulty)} · {Math.max(0, shapeIdx + 1)}/{TOTAL_SHAPES}</div>
+          <div className={`text-xs ${pal.sub}`}>Nível {Math.round(difficulty)}</div>
+        </div>
+        {/* Barra por tempo (~7 min) */}
+        <div className="flex items-center gap-2">
+          <div className={`flex-1 rounded-full overflow-hidden ${theme === "GAMIFIED" ? "bg-gray-700" : "bg-gray-200"}`} style={{ height: 6 }}>
+            <div style={{ height: "100%", borderRadius: 9999, width: `${progressPct}%`, background: theme === "GAMIFIED" ? "#22d3ee" : "#3b82f6", transition: "width 0.45s linear" }} />
+          </div>
+          <span className={`text-xs font-bold tabular-nums ${pal.sub}`} style={{ minWidth: 30, textAlign: "right" }}>{progressPct}%</span>
         </div>
 
         {/* Regra ativa — sempre visível */}

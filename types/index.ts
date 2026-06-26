@@ -364,7 +364,7 @@ export const EXERCISE_DEFINITIONS = {
     name: "Dupla Tarefa",
     domain: "attention" as Domain,
     description: "Faça duas tarefas ao mesmo tempo: visual e de monitoramento",
-    estimatedMinutes: 8,
+    estimatedMinutes: 7,
     icon: "🧠",
   },
   "focus-agents": {
