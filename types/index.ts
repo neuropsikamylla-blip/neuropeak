@@ -412,7 +412,7 @@ export const EXERCISE_DEFINITIONS = {
     name: "N-Back",
     domain: "memory" as Domain,
     description: "Decida se a letra atual é igual à de N posições atrás — memória operacional",
-    estimatedMinutes: 8,
+    estimatedMinutes: 7,
     icon: "🧠",
   },
   "estacionamento-logico": {

@@ -1,9 +1,8 @@
 "use client";
 
-import { useState, useEffect, useRef, useCallback } from "react";
-import { motion, AnimatePresence } from "framer-motion";
+import { useState, useRef, useEffect, useCallback } from "react";
 import { calculateExerciseScore } from "@/lib/scoring";
-import { useExerciseProgress } from "@/components/exercises/ExerciseWrapper";
+import { useTimedProgress } from "@/components/exercises/useExerciseEngine";
 import { TutorialBase } from "@/components/exercises/TutorialBase";
 import type { ExerciseResult, Theme } from "@/types";
 
@@ -13,333 +12,231 @@ interface NBackProps {
   onComplete: (result: ExerciseResult) => void;
 }
 
-const LETTERS = ["A", "B", "C", "D", "E", "F", "G", "H", "K", "L", "M", "P", "R"];
-// Ritmo do estímulo: confortável no fácil, mais rápido (mais difícil) nos níveis altos.
-function showMsFor(d: number): number {
-  if (d <= 3) return 3400;
-  if (d <= 6) return 2900;
-  if (d <= 8) return 2400;
-  return 2000;
-}
-const BLANK_MS = 400;
-const TARGET_RATIO = 0.32;
-
+// ── Parâmetros ────────────────────────────────────────────────────────────────
+const LETTERS = ["A", "B", "C", "E", "F", "H", "K", "L", "M", "P", "R", "T"];
+const BLOCK_LEN = 14;        // estímulos que pedem resposta, por bloco
+const TARGET_RATIO = 0.42;   // ~42% são "iguais" (equilíbrio anti-chute)
 const MIN_N = 1;
 const MAX_N = 4;
-const TOTAL_TRIALS = 100;
+const GOOD_ACC = 0.8;        // bloco "bom" → ≥80% de acertos
+const STIM_MS = 2200;        // janela para ver a letra e responder
+const PRIME_MS = 1100;       // exibição de cada letra de "memorização" (priming)
+const FEEDBACK_MS = 520;
+const BLANK_MS = 320;
 
 function initialN(difficulty: number) {
-  return Math.min(Math.max(1, Math.floor(difficulty * 0.35)), 3);
+  return Math.min(Math.max(MIN_N, Math.floor(difficulty * 0.3) + 1), 3);
+}
+const rand = <T,>(a: T[]) => a[Math.floor(Math.random() * a.length)];
+
+// Gera um bloco: n letras de "memorização" + BLOCK_LEN estímulos ativos.
+function genBlock(n: number) {
+  const seq: string[] = [];
+  for (let i = 0; i < n; i++) seq.push(rand(LETTERS));
+  const match: boolean[] = [];
+  for (let i = 0; i < BLOCK_LEN; i++) {
+    const nBack = seq[seq.length - n];
+    let letter: string;
+    if (Math.random() < TARGET_RATIO) {
+      letter = nBack;
+      match.push(true);
+    } else {
+      do { letter = rand(LETTERS); } while (letter === nBack);
+      match.push(false);
+    }
+    seq.push(letter);
+  }
+  return { seq, match };
 }
 
-function nextLetter(history: string[], nLevel: number, makeTarget: boolean): string {
-  if (makeTarget && history.length >= nLevel) {
-    return history[history.length - nLevel];
-  }
-  let l: string;
-  do {
-    l = LETTERS[Math.floor(Math.random() * LETTERS.length)];
-  } while (history.length >= nLevel && l === history[history.length - nLevel]);
-  return l;
-}
-
-type Phase = "priming" | "active" | "blank" | "result";
-
-function NBackTutorialStep({
-  theme,
-  prevLetter,
-  currentLetter,
-  isMatch,
-  onDone,
-}: {
-  theme: Theme;
-  prevLetter: string;
-  currentLetter: string;
-  isMatch: boolean;
-  onDone: () => void;
-}) {
-  const [clicked, setClicked] = useState(false);
-
-  const letterBox = {
-    CLINICAL: "bg-blue-50 border-4 border-blue-400 text-blue-700",
-    COLORFUL: "bg-violet-100 border-4 border-violet-400 text-violet-800",
-    GAMIFIED: "bg-gray-700 border-4 border-cyan-500 text-cyan-300",
-  }[theme];
-
-  const subClass = {
-    CLINICAL: "text-gray-500",
-    COLORFUL: "text-violet-400",
-    GAMIFIED: "text-gray-400",
-  }[theme];
-
-  const btnYes = {
-    CLINICAL: "bg-green-500 text-white",
-    COLORFUL: "bg-gradient-to-br from-green-400 to-emerald-400 text-white",
-    GAMIFIED: "bg-green-600 border border-green-500 text-white",
-  }[theme];
-
-  const btnNo = {
-    CLINICAL: "bg-red-400 text-white",
-    COLORFUL: "bg-gradient-to-br from-red-400 to-rose-400 text-white",
-    GAMIFIED: "bg-red-700 border border-red-600 text-white",
-  }[theme];
-
-  const highlightClass = isMatch ? `ring-4 ring-green-400 ${btnYes}` : `ring-4 ring-red-400 ${btnNo}`;
-
-  function handleAnswer(yes: boolean) {
-    if (clicked) return;
-    if (yes === isMatch) { setClicked(true); setTimeout(onDone, 400); }
-  }
-
-  return (
-    <div className="flex flex-col items-center gap-3">
-      <div className="flex items-center gap-4 justify-center">
-        <div className="text-center">
-          <p className={`text-xs mb-1 ${subClass}`}>anterior</p>
-          <div className={`w-20 h-20 rounded-2xl flex items-center justify-center text-4xl font-black ${letterBox} opacity-60`}>
-            {prevLetter}
-          </div>
-        </div>
-        <div className="text-center">
-          <p className={`text-xs mb-1 ${subClass}`}>atual</p>
-          <div className={`w-20 h-20 rounded-2xl flex items-center justify-center text-4xl font-black ${letterBox}`}>
-            {currentLetter}
-          </div>
-        </div>
-      </div>
-      <p className={`text-sm text-center font-medium ${isMatch ? "text-green-600" : "text-red-500"}`}>
-        São iguais? {isMatch ? "SIM!" : "NÃO!"}
-      </p>
-      <div className="grid grid-cols-2 gap-3 w-full max-w-[240px]">
-        <button
-          onClick={() => handleAnswer(false)}
-          className={`py-3 rounded-2xl font-bold text-base ${!isMatch && !clicked ? highlightClass : btnNo}`}
-        >
-          NÃO ✗
-        </button>
-        <button
-          onClick={() => handleAnswer(true)}
-          className={`py-3 rounded-2xl font-bold text-base ${isMatch && !clicked ? highlightClass : btnYes}`}
-        >
-          SIM ✓
-        </button>
-      </div>
-    </div>
-  );
+// ── Tutorial ──────────────────────────────────────────────────────────────────
+// Conteúdo estático: libera o botão "Próximo" do TutorialBase ao montar.
+function StepReady({ onReady, children }: { onReady: () => void; children: React.ReactNode }) {
+  useEffect(() => { onReady(); }, [onReady]);
+  return <>{children}</>;
 }
 
 function NBackTutorial({ theme, onDone }: { theme: Theme; onDone: () => void }) {
-  const steps = [
-    {
-      instruction: "Veja a letra atual. É igual à de 1 posição atrás?",
-      content: (onStepDone: () => void) => (
-        <NBackTutorialStep theme={theme} prevLetter="A" currentLetter="A" isMatch={true} onDone={onStepDone} />
-      ),
-    },
-    {
-      instruction: "Agora um exemplo NÃO",
-      content: (onStepDone: () => void) => (
-        <NBackTutorialStep theme={theme} prevLetter="A" currentLetter="B" isMatch={false} onDone={onStepDone} />
-      ),
-    },
-  ];
-
-  return <TutorialBase theme={theme} title="N-Back" steps={steps} onDone={onDone} />;
+  return (
+    <TutorialBase
+      theme={theme}
+      title="N-Back — Memória Operacional"
+      steps={[
+        {
+          instruction:
+            "As letras aparecem uma de cada vez. No 1-back, você compara a letra de AGORA com a IMEDIATAMENTE anterior. No 2-back, com a de 2 atrás, e assim por diante.",
+          content: (next) => (
+            <StepReady onReady={next}>
+              <div className="text-center py-2">
+                <div className="flex justify-center items-center gap-3 mb-4">
+                  <div className="w-16 h-16 rounded-2xl flex items-center justify-center text-2xl font-bold bg-slate-100 text-slate-400 border-2 border-slate-200">B</div>
+                  <span className="text-slate-400">→</span>
+                  <div className="w-16 h-16 rounded-2xl flex items-center justify-center text-2xl font-bold bg-blue-50 text-blue-700 border-4 border-blue-400">B</div>
+                </div>
+                <p className="text-sm text-slate-600">No <strong>1-back</strong>: a letra de agora (<strong>B</strong>) é igual à anterior (<strong>B</strong>) → responda <strong className="text-green-600">IGUAL</strong>.</p>
+              </div>
+            </StepReady>
+          ),
+        },
+        {
+          instruction:
+            "A CADA letra você precisa responder: IGUAL ou DIFERENTE. Se não responder a tempo, conta como erro. Acertando bem, o nível sobe (2-back, 3-back...).",
+          content: (next) => (
+            <StepReady onReady={next}>
+              <div className="text-center py-2">
+                <div className="flex justify-center gap-3 mb-4">
+                  <span className="px-5 py-2.5 rounded-xl bg-green-500 text-white text-sm font-bold">IGUAL</span>
+                  <span className="px-5 py-2.5 rounded-xl bg-rose-500 text-white text-sm font-bold">DIFERENTE</span>
+                </div>
+                <p className="text-sm text-slate-600">Responda sempre, em todas as letras. É um treino de atenção e memória de trabalho.</p>
+              </div>
+            </StepReady>
+          ),
+        },
+      ]}
+      onDone={onDone}
+    />
+  );
 }
 
+// ── Componente principal ──────────────────────────────────────────────────────
+type Phase = "tutorial" | "prime" | "stim" | "feedback" | "between";
+
 export function NBack({ difficulty, theme, onComplete }: NBackProps) {
-  const [showTutorial, setShowTutorial] = useState(true);
-  const reportProgress = useExerciseProgress();
+  const { begin, isTimeUp, elapsedSec, finish, progressPct } = useTimedProgress();
 
+  const [phase, setPhase]   = useState<Phase>("tutorial");
+  const [letter, setLetter] = useState("");
   const [nLevel, setNLevel] = useState(initialN(difficulty));
-  const [streak, setStreak] = useState(0);
-  const SHOW_MS = showMsFor(difficulty);
+  const [hits, setHits]     = useState(0);
+  const [misses, setMisses] = useState(0);
+  const [fb, setFb]         = useState<null | "ok" | "no" | "slow">(null);
+  const [blockInfo, setBlockInfo] = useState({ idx: 0, total: BLOCK_LEN });
 
-  const [phase, setPhase] = useState<Phase>("priming");
-  const [primingLeft, setPrimingLeft] = useState(initialN(difficulty));
-  const [trial, setTrial] = useState(0);
-  const [currentLetter, setCurrentLetter] = useState("");
-  const [isTarget, setIsTarget] = useState(false);
-  const isTargetRef = useRef(false);
-  const [answered, setAnswered] = useState(false);
-  const [lastCorrect, setLastCorrect] = useState<boolean | null>(null);
-  const [results, setResults] = useState<{ correct: boolean; nLevel: number }[]>([]);
+  // refs de controle assíncrono
+  const cancelRef  = useRef(false);
+  const timersRef  = useRef<ReturnType<typeof setTimeout>[]>([]);
+  const answerRef  = useRef<((a: "same" | "diff" | null) => void) | null>(null);
+  const statRef    = useRef({ hits: 0, misses: 0, fa: 0, cr: 0, omit: 0 });
+  const maxNRef     = useRef(initialN(difficulty));
 
-  const historyRef = useRef<string[]>([]);
-  const startTime = useRef(Date.now());
-  const nLevelRef = useRef(nLevel);
-  nLevelRef.current = nLevel;
+  const sleep = useCallback((ms: number) => new Promise<void>((res, rej) => {
+    if (cancelRef.current) { rej("c"); return; }
+    const t = setTimeout(() => cancelRef.current ? rej("c") : res(), ms);
+    timersRef.current.push(t);
+  }), []);
 
-  const phaseRef = useRef<Phase>("priming");
-  phaseRef.current = phase;
+  // espera a resposta do paciente (clique) ou estoura o tempo (omissão)
+  const waitAnswer = useCallback((ms: number) => new Promise<"same" | "diff" | null>((resolve) => {
+    answerRef.current = resolve;
+    const t = setTimeout(() => {
+      if (answerRef.current) { answerRef.current = null; resolve(null); }
+    }, ms);
+    timersRef.current.push(t);
+  }), []);
 
-  // Lock imperativo de reentrância: setado de forma sincrona em processAnswer
-  // (antes de qualquer setState) para que uma segunda chamada concorrente —
-  // do timer de timeout ou de duplo-clique — seja bloqueada sem depender do
-  // ciclo de render do React. NAO reatribuir a partir do state `answered`,
-  // pois isso reverteria o lock antes do flush. Mesmo padrao de StroopTask.
-  const answeredRef = useRef(false);
-
-  const trialRef = useRef(0);
-  trialRef.current = trial;
-
-  // Present one stimulus (priming or active)
-  const presentStimulus = useCallback((isPriming: boolean, targetBool: boolean, letter: string) => {
-    setCurrentLetter(letter);
-    setIsTarget(targetBool);
-    isTargetRef.current = targetBool;
-    setAnswered(false);
-    answeredRef.current = false;
-    setLastCorrect(null);
-    setPhase(isPriming ? "priming" : "active");
-    historyRef.current = [...historyRef.current, letter].slice(-MAX_N);
+  const answer = useCallback((a: "same" | "diff") => {
+    if (answerRef.current) { const r = answerRef.current; answerRef.current = null; r(a); }
   }, []);
 
-  // Bootstrap first stimulus
-  useEffect(() => {
-    if (showTutorial) return;
-    const n = initialN(difficulty);
-    const letter = LETTERS[Math.floor(Math.random() * LETTERS.length)];
-    historyRef.current = [letter];
-    presentStimulus(true, false, letter);
-  // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [showTutorial]);
+  const run = useCallback(async () => {
+    cancelRef.current = false;
+    begin();
+    let n = initialN(difficulty);
+    let goodStreak = 0;
+    const blocks: { acc: number; n: number }[] = [];
 
-  // Auto-advance after SHOW_MS
-  useEffect(() => {
-    if (phase !== "priming" && phase !== "active") return;
+    try {
+      while (!isTimeUp()) {
+        setNLevel(n);
+        maxNRef.current = Math.max(maxNRef.current, n);
+        const { seq, match } = genBlock(n);
 
-    const myTrial = trial;
-    const myPhase = phase;
-    const myPrimingLeft = primingLeft;
+        // priming: mostra as n primeiras letras só para memorizar
+        setPhase("between");
+        await sleep(500);
+        for (let i = 0; i < n; i++) {
+          setLetter(seq[i]);
+          setFb(null);
+          setPhase("prime");
+          await sleep(PRIME_MS);
+          setPhase("between");
+          await sleep(BLANK_MS);
+        }
 
-    const timer = setTimeout(() => {
-      if (phaseRef.current !== myPhase || trialRef.current !== myTrial) return;
+        // estímulos ativos: pede resposta a cada um
+        let blockCorrect = 0;
+        for (let i = 0; i < BLOCK_LEN; i++) {
+          const isMatch = match[i];
+          setBlockInfo({ idx: i + 1, total: BLOCK_LEN });
+          setLetter(seq[n + i]);
+          setFb(null);
+          setPhase("stim");
 
-      if (myPhase === "active" && !answeredRef.current) {
-        // Timeout → NÃO (missed target or correct non-target)
-        const missed = isTargetRef.current; // use ref to avoid stale closure
-        processAnswer(!missed, myTrial);
-        return;
+          const a = await waitAnswer(STIM_MS);
+          const correct = a !== null && (a === "same") === isMatch;
+          if (a === null)         { statRef.current.omit++; setFb("slow"); }
+          else if (correct)       { if (isMatch) statRef.current.hits++; else statRef.current.cr++; setFb("ok"); }
+          else                    { if (isMatch) statRef.current.misses++; else statRef.current.fa++; setFb("no"); }
+          if (correct) blockCorrect++;
+
+          // placar visível: acertos vs erros (inclui omissões)
+          setHits(statRef.current.hits + statRef.current.cr);
+          setMisses(statRef.current.misses + statRef.current.fa + statRef.current.omit);
+
+          setPhase("feedback");
+          await sleep(FEEDBACK_MS);
+          setPhase("between");
+          await sleep(BLANK_MS);
+        }
+
+        const acc = blockCorrect / BLOCK_LEN;
+        blocks.push({ acc, n });
+        if (acc >= GOOD_ACC) {
+          goodStreak++;
+          if (goodStreak >= 2) { n = Math.min(MAX_N, n + 1); goodStreak = 0; }  // 2 blocos bons → sobe
+        } else {
+          goodStreak = 0;
+          if (acc < 0.5) n = Math.max(MIN_N, n - 1);  // muito mal → alivia
+        }
       }
 
-      // Priming or answered active → go to blank
-      setPhase("blank");
-      setTimeout(() => {
-        advanceStep(myPhase === "priming" ? myPrimingLeft - 1 : 0, myTrial);
-      }, BLANK_MS);
-    }, SHOW_MS);
+      // fim por tempo
+      finish();
+      const s = statRef.current;
+      const totalAnswered = s.hits + s.misses + s.fa + s.cr + s.omit;
+      const correctTotal = s.hits + s.cr;
+      const acc = correctTotal / Math.max(1, totalAnswered);
+      // sensibilidade (detecção de "iguais") — penaliza chute e omissão
+      const hitRate = s.hits / Math.max(1, s.hits + s.misses + s.omit);
+      const faRate  = s.fa / Math.max(1, s.fa + s.cr);
+      const sensitivity = Math.max(0, hitRate - faRate);
+      const score = calculateExerciseScore("nback", Math.max(acc, sensitivity), undefined, maxNRef.current);
+      onComplete({
+        exerciseId: "nback", domain: "memory",
+        score, accuracy: acc, difficulty: maxNRef.current, duration: elapsedSec(),
+        metadata: { blocks: blocks.length, maxN: maxNRef.current, hits: s.hits, misses: s.misses, falseAlarms: s.fa, omissions: s.omit, sensitivity: Math.round(sensitivity * 100) / 100 },
+      });
+    } catch { /* cancelado */ }
+  }, [begin, isTimeUp, finish, elapsedSec, difficulty, sleep, waitAnswer, onComplete]);
 
-    return () => clearTimeout(timer);
-  // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [phase, trial]);
+  useEffect(() => () => { cancelRef.current = true; timersRef.current.forEach(clearTimeout); }, []);
 
-  function processAnswer(correct: boolean, currentTrial: number) {
-    if (answeredRef.current) return;
-    answeredRef.current = true;
-    setLastCorrect(correct);
-    setAnswered(true);
-    setPhase("result");
-
-    const newResults = [...results, { correct, nLevel: nLevelRef.current }];
-    setResults(newResults);
-
-    const newStreak = correct
-      ? Math.max(streak, 0) + 1
-      : Math.min(streak, 0) - 1;
-    let nextN = nLevelRef.current;
-    let nextStreak = newStreak;
-    if (newStreak >= 2) { nextN = Math.min(nLevelRef.current + 1, MAX_N); nextStreak = 0; }
-    if (newStreak <= -2) { nextN = Math.max(nLevelRef.current - 1, MIN_N); nextStreak = 0; }
-
-    const nextTrial = currentTrial + 1;
-    reportProgress(Math.round((nextTrial / TOTAL_TRIALS) * 100));
-
-    if (nextTrial >= TOTAL_TRIALS) {
-      const accuracy = newResults.filter((r) => r.correct).length / TOTAL_TRIALS;
-      const maxN = Math.max(...newResults.map((r) => r.nLevel));
-      const duration = Math.round((Date.now() - startTime.current) / 1000);
-      const score = calculateExerciseScore("nback", accuracy, undefined, difficulty);
-      setTimeout(() => {
-        onComplete({
-          exerciseId: "nback",
-          domain: "memory",
-          score,
-          accuracy,
-          difficulty,
-          duration,
-          metadata: { trials: TOTAL_TRIALS, maxN, correct: newResults.filter((r) => r.correct).length },
-        });
-      }, 1200);
-      return;
-    }
-
-    setTimeout(() => {
-      setStreak(nextStreak);
-      setNLevel(nextN);
-      nLevelRef.current = nextN;
-      setTrial(nextTrial);
-      trialRef.current = nextTrial;
-
-      // Priming needed if nLevel changed and history too short
-      const needsPriming = nextN > historyRef.current.length;
-      if (needsPriming) {
-        const letter = LETTERS[Math.floor(Math.random() * LETTERS.length)];
-        historyRef.current = [...historyRef.current, letter].slice(-MAX_N);
-        setPrimingLeft(nextN - historyRef.current.length + 1);
-        presentStimulus(true, false, letter);
-      } else {
-        advanceStep(0, nextTrial);
-      }
-    }, 800);
+  if (phase === "tutorial") {
+    return <NBackTutorial theme={theme} onDone={() => { setPhase("between"); run(); }} />;
   }
 
-  function advanceStep(remainingPriming: number, currentTrial: number) {
-    if (remainingPriming > 0) {
-      const letter = LETTERS[Math.floor(Math.random() * LETTERS.length)];
-      historyRef.current = [...historyRef.current, letter].slice(-MAX_N);
-      setPrimingLeft(remainingPriming - 1);
-      presentStimulus(true, false, letter);
-    } else {
-      const makeTarget = Math.random() < TARGET_RATIO && historyRef.current.length >= nLevelRef.current;
-      const letter = nextLetter(historyRef.current, nLevelRef.current, makeTarget);
-      const actualTarget = historyRef.current.length >= nLevelRef.current &&
-        letter === historyRef.current[historyRef.current.length - nLevelRef.current];
-      historyRef.current = [...historyRef.current, letter].slice(-MAX_N);
-      presentStimulus(false, actualTarget, letter);
-    }
-  }
+  // ── Estilos por tema ─────────────────────────────────────────────
+  const isG = theme === "GAMIFIED";
+  const bg   = isG ? "bg-gray-950" : theme === "COLORFUL" ? "bg-gradient-to-br from-violet-50 to-indigo-50" : "bg-[#F0F4F8]";
+  const card = isG ? "bg-gray-800 border border-cyan-500/30" : "bg-white shadow-lg";
+  const titleC = isG ? "text-cyan-400" : theme === "COLORFUL" ? "text-violet-700" : "text-slate-800";
+  const subC   = isG ? "text-gray-400" : "text-slate-500";
 
-  function handleAnswer(yes: boolean) {
-    if (phase !== "active" || answered) return;
-    const correct = yes === isTarget;
-    processAnswer(correct, trial);
-  }
-
-  if (showTutorial) {
-    return <NBackTutorial theme={theme} onDone={() => setShowTutorial(false)} />;
-  }
-
-  const bg = { CLINICAL: "bg-gray-50", COLORFUL: "bg-gradient-to-br from-violet-50 to-indigo-50", GAMIFIED: "bg-gray-950" }[theme];
-  const card = { CLINICAL: "bg-white shadow-lg", COLORFUL: "bg-white shadow-lg", GAMIFIED: "bg-gray-800 border border-cyan-500/30" }[theme];
-  const titleClass = { CLINICAL: "text-gray-900", COLORFUL: "text-violet-700", GAMIFIED: "text-cyan-400" }[theme];
-  const subClass = { CLINICAL: "text-gray-500", COLORFUL: "text-violet-400", GAMIFIED: "text-gray-400" }[theme];
-  const letterBox = {
-    CLINICAL: "bg-blue-50 border-4 border-blue-400 text-blue-700",
-    COLORFUL: "bg-violet-100 border-4 border-violet-400 text-violet-800",
-    GAMIFIED: "bg-gray-700 border-4 border-cyan-500 text-cyan-300 shadow-[0_0_30px_rgba(6,182,212,0.3)]",
-  }[theme];
-
-  const btnYes = {
-    CLINICAL: "bg-green-500 hover:bg-green-600 text-white",
-    COLORFUL: "bg-gradient-to-br from-green-400 to-emerald-400 text-white shadow-md",
-    GAMIFIED: "bg-green-600 border border-green-500 text-white",
-  }[theme];
-  const btnNo = {
-    CLINICAL: "bg-red-400 hover:bg-red-500 text-white",
-    COLORFUL: "bg-gradient-to-br from-red-400 to-rose-400 text-white shadow-md",
-    GAMIFIED: "bg-red-700 border border-red-600 text-white",
-  }[theme];
+  const fbColor = fb === "ok" ? "#46C66A" : fb === "no" ? "#F2645A" : fb === "slow" ? "#E6A23C" : null;
+  const boxBorder = fbColor ?? (isG ? "#22D3EE" : "#60A5FA");
+  const boxBg = fb === "ok" ? "#EAF8EF" : fb === "no" ? "#FDECEA" : fb === "slow" ? "#FBF1E0" : (isG ? "#1F2937" : "#EFF6FF");
+  const priming = phase === "prime";
 
   return (
     <div className={`min-h-screen flex flex-col items-center justify-center p-4 ${bg}`}>
@@ -347,112 +244,58 @@ export function NBack({ difficulty, theme, onComplete }: NBackProps) {
         {/* Header */}
         <div className="flex justify-between items-center mb-3">
           <div>
-            <h2 className={`font-bold text-base ${titleClass}`}>N-Back — {nLevel}-back</h2>
-            <p className={`text-xs ${subClass}`}>A letra de agora é igual à de {nLevel} atrás?</p>
+            <h2 className={`font-bold text-base ${titleC}`}>Memória Operacional · {nLevel}-back</h2>
+            <p className={`text-xs ${subC}`}>A letra de agora é igual à de {nLevel} atrás?</p>
           </div>
-          <span className={`text-sm font-medium ${subClass}`}>{nLevel}-back</span>
+          <span className={`text-sm font-bold tabular-nums ${subC}`}>✓ {hits} &nbsp; ✗ {misses}</span>
         </div>
 
-        {/* Progress bar */}
-        <div className="flex gap-1 mb-5">
-          {Array.from({ length: TOTAL_TRIALS }).map((_, i) => (
-            <div
-              key={i}
-              className={`h-1.5 flex-1 rounded-full transition-colors ${
-                i < results.length
-                  ? results[i].correct ? "bg-green-500" : "bg-red-400"
-                  : i === trial
-                  ? "bg-blue-400 animate-pulse"
-                  : theme === "GAMIFIED" ? "bg-gray-700" : "bg-gray-200"
-              }`}
-            />
-          ))}
-        </div>
-
-        {/* Priming indicator */}
-        {phase === "priming" && (
-          <p className={`text-xs text-center mb-3 ${subClass}`}>
-            Memorize... ({nLevel}-back)
-          </p>
-        )}
-
-        {/* Letter display */}
-        <div className="flex justify-center mb-6">
-          <AnimatePresence mode="wait">
-            {currentLetter ? (
-              <motion.div
-                key={`${trial}-${currentLetter}-${phase}`}
-                className={`w-36 h-36 rounded-3xl flex items-center justify-center text-7xl font-black ${letterBox}`}
-                initial={{ scale: 0.6, opacity: 0 }}
-                animate={{ scale: 1, opacity: 1 }}
-                exit={{ scale: 0.6, opacity: 0 }}
-                transition={{ duration: 0.15 }}
-              >
-                {currentLetter}
-              </motion.div>
-            ) : (
-              <div className={`w-36 h-36 rounded-3xl ${theme === "GAMIFIED" ? "bg-gray-700" : "bg-gray-100"}`} />
-            )}
-          </AnimatePresence>
-        </div>
-
-        {/* Buttons or result */}
-        {phase === "active" && !answered && (
-          <div className="grid grid-cols-2 gap-4">
-            <button
-              onPointerDown={(e) => { e.preventDefault(); handleAnswer(false); }}
-              className={`py-5 rounded-2xl font-bold text-lg active:scale-95 transition-transform ${btnNo}`}
-            >
-              NÃO ✗
-            </button>
-            <button
-              onPointerDown={(e) => { e.preventDefault(); handleAnswer(true); }}
-              className={`py-5 rounded-2xl font-bold text-lg active:scale-95 transition-transform ${btnYes}`}
-            >
-              SIM ✓
-            </button>
+        {/* Barra de progresso (pelo tempo, ~7 min, em saltos de 10%) */}
+        <div className="flex items-center gap-2 mb-6">
+          <div className={`flex-1 rounded-full overflow-hidden ${isG ? "bg-gray-700" : "bg-gray-200"}`} style={{ height: 6 }}>
+            <div style={{ height: "100%", borderRadius: 9999, width: `${progressPct}%`, background: isG ? "#22D3EE" : "#3B82F6", transition: "width 0.45s linear" }} />
           </div>
-        )}
+          <span className={`text-xs font-bold tabular-nums ${subC}`} style={{ minWidth: 30, textAlign: "right" }}>{progressPct}%</span>
+        </div>
 
-        {(phase === "result" || (phase === "active" && answered)) && lastCorrect !== null && (
-          <motion.div
-            className="text-center"
-            initial={{ scale: 0.8, opacity: 0 }}
-            animate={{ scale: 1, opacity: 1 }}
+        {/* Letra */}
+        <div className="flex flex-col items-center">
+          <div
+            className="flex items-center justify-center font-bold rounded-3xl mb-2"
+            style={{
+              width: 150, height: 150, fontSize: 64,
+              background: boxBg, border: `5px solid ${boxBorder}`,
+              color: isG ? "#67E8F9" : "#1D4ED8",
+              transition: "background 0.2s, border-color 0.2s",
+            }}
           >
-            <p className={`text-2xl font-bold ${lastCorrect ? "text-green-500" : "text-red-500"}`}>
-              {lastCorrect ? "Correto! ✅" : "Incorreto ❌"}
-            </p>
-            {!lastCorrect && (
-              <p className={`text-xs mt-1 ${subClass}`}>
-                {isTarget ? "Era igual — deveria ter dito SIM" : "Era diferente — deveria ter dito NÃO"}
-              </p>
-            )}
-          </motion.div>
-        )}
-
-        {phase === "priming" && (
-          <div className={`text-center py-3 text-sm font-medium ${subClass}`}>
-            Observe e memorize...
+            {letter}
           </div>
-        )}
+          <p className="text-sm font-medium mb-4" style={{ minHeight: 22, color: priming ? "#6366F1" : fbColor ?? "#94A3B8" }}>
+            {priming ? "Memorize..." :
+              fb === "ok" ? "Certo!" : fb === "no" ? "Errou" : fb === "slow" ? "Responda mais rápido!" :
+              phase === "stim" ? `Estímulo ${blockInfo.idx}/${blockInfo.total}` : ""}
+          </p>
+        </div>
 
-        {phase === "blank" && (
-          <div className="h-16" />
-        )}
-
-        {/* N-Level indicator */}
-        <div className="flex justify-center gap-1 mt-4">
-          {Array.from({ length: MAX_N }).map((_, i) => (
-            <div
-              key={i}
-              className={`w-3 h-3 rounded-full transition-colors ${
-                i < nLevel
-                  ? theme === "GAMIFIED" ? "bg-cyan-500" : theme === "COLORFUL" ? "bg-violet-500" : "bg-blue-500"
-                  : theme === "GAMIFIED" ? "bg-gray-700" : "bg-gray-200"
-              }`}
-            />
-          ))}
+        {/* Botões — só na fase de resposta */}
+        <div className="grid grid-cols-2 gap-3">
+          <button
+            onClick={() => answer("diff")}
+            disabled={phase !== "stim"}
+            className="py-4 rounded-2xl font-bold text-base text-white transition-opacity disabled:opacity-40"
+            style={{ background: "#F2645A" }}
+          >
+            DIFERENTE
+          </button>
+          <button
+            onClick={() => answer("same")}
+            disabled={phase !== "stim"}
+            className="py-4 rounded-2xl font-bold text-base text-white transition-opacity disabled:opacity-40"
+            style={{ background: "#46C66A" }}
+          >
+            IGUAL
+          </button>
         </div>
       </div>
     </div>
