@@ -148,7 +148,7 @@ export const EXERCISE_DEFINITIONS = {
     name: "Letras em Sequência",
     domain: "memory" as Domain,
     description: "Treina memória operacional verbal: memorizar e repetir sequências de letras ou sílabas, na ordem direta ou inversa.",
-    estimatedMinutes: 6,
+    estimatedMinutes: 7,
     icon: "🔤",
   },
   "padroes-rotacao": {
@@ -164,7 +164,7 @@ export const EXERCISE_DEFINITIONS = {
     name: "Sequência de Itens",
     domain: "memory" as Domain,
     description: "Treina memória operacional visual-verbal: memorizar uma sequência de figuras e reproduzi-la na ordem correta.",
-    estimatedMinutes: 6,
+    estimatedMinutes: 7,
     icon: "🐱",
   },
   "lista-distracao": {

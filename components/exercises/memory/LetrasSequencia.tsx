@@ -4,7 +4,7 @@ import { useState, useRef, useCallback, useEffect } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { Eye, Headphones } from "lucide-react";
 import { calculateExerciseScore } from "@/lib/scoring";
-import { useExerciseProgress } from "@/components/exercises/ExerciseWrapper";
+import { useTimedProgress } from "@/components/exercises/useExerciseEngine";
 import type { ExerciseResult, Theme } from "@/types";
 
 interface LetrasSequenciaProps {
@@ -31,7 +31,6 @@ const levelOf = (d: number): number => Math.min(10, Math.max(1, Math.round(d)));
 
 const LETTERS = ["B", "F", "M", "R", "T", "L", "P", "S", "C", "V", "G", "D"];
 const SYLLABLES = ["BA", "ME", "TO", "LI", "PA", "RU", "CO", "FE", "NA", "DI", "SO", "VE"];
-const TRIALS = 8;
 
 function shuffle<T>(a: T[]): T[] { const r = [...a]; for (let i = r.length - 1; i > 0; i--) { const j = Math.floor(Math.random() * (i + 1)); [r[i], r[j]] = [r[j], r[i]]; } return r; }
 function sample<T>(pool: T[], n: number): T[] { return shuffle(pool).slice(0, n); }
@@ -53,16 +52,19 @@ function speak(text: string): Promise<void> {
 type Phase = "ready" | "show" | "input" | "feedback";
 
 export function LetrasSequencia({ difficulty, onComplete }: LetrasSequenciaProps) {
-  const reportProgress = useExerciseProgress();
+  const { begin: startTimer, isTimeUp, elapsedSec, finish: finishTimer, progressPct } = useTimedProgress();
   const startLevel = levelOf(difficulty);
-  const spec = LS_LEVELS[startLevel];
+  const [level, setLevel] = useState(startLevel);
+  const spec = LS_LEVELS[level];
+  const streakRef = useRef(0);
+  const reachedRef = useRef(startLevel);
+  const totalRef = useRef(0);
 
   const [phase, setPhase] = useState<Phase>("ready");
   const [sequence, setSequence] = useState<string[]>([]);
   const [showIdx, setShowIdx] = useState(-1);
   const [keys, setKeys] = useState<string[]>([]);
   const [entered, setEntered] = useState<string[]>([]);
-  const [trial, setTrial] = useState(0);
   const [feedback, setFeedback] = useState<"correct" | "incorrect" | null>(null);
 
   const correctRef = useRef(0);
@@ -111,32 +113,33 @@ export function LetrasSequencia({ difficulty, onComplete }: LetrasSequenciaProps
   }, [spec, present]);
 
   const finish = useCallback(() => {
-    const accTotal = correctRef.current / TRIALS;
+    finishTimer();
+    const total = Math.max(1, totalRef.current);
+    const accTotal = correctRef.current / total;
     const meanRT = rtsRef.current.length ? Math.round(rtsRef.current.reduce((a, b) => a + b, 0) / rtsRef.current.length) : null;
-    const duration = Math.round((Date.now() - startTime.current) / 1000);
     onComplete({
       exerciseId: "letras-sequencia",
       domain: "memory",
-      score: calculateExerciseScore("span-numerico", accTotal, meanRT ?? undefined, difficulty),
+      score: calculateExerciseScore("span-numerico", accTotal, meanRT ?? undefined, reachedRef.current),
       accuracy: accTotal,
       reactionTime: meanRT ?? undefined,
-      difficulty: startLevel,
-      duration,
+      difficulty: reachedRef.current,
+      duration: elapsedSec(),
       metadata: {
         progressionV2: true,
         accTotal: Number(accTotal.toFixed(3)),
-        level: startLevel,
+        level: reachedRef.current,
         startedLevel: startLevel,
         items: spec.count,
         stimulus: spec.syllable ? "silaba" : "letra",
         modality: spec.reverse ? "inversa" : "direta",
         presentation: spec.audio ? "auditiva" : "visual",
         sequencesCorrect: correctRef.current,
-        sequencesIncorrect: TRIALS - correctRef.current,
+        sequencesIncorrect: total - correctRef.current,
         meanReactionTimeMs: meanRT,
       },
     });
-  }, [onComplete, difficulty, startLevel, spec]);
+  }, [onComplete, startLevel, spec, finishTimer, elapsedSec]);
 
   const validate = useCallback((entry: string[]) => {
     const correct = entry.join("·") === expected.join("·");
@@ -144,13 +147,17 @@ export function LetrasSequencia({ difficulty, onComplete }: LetrasSequenciaProps
     rtsRef.current.push(Date.now() - inputShownAt.current);
     setFeedback(correct ? "correct" : "incorrect");
     setPhase("feedback");
-    const nextTrial = trial + 1;
-    reportProgress(Math.round((nextTrial / TRIALS) * 100));
+    totalRef.current++;
+    // "Musculação": 2 acertos seguidos → sobe o nível; 2 erros seguidos → desce.
+    streakRef.current = correct ? Math.max(0, streakRef.current) + 1 : Math.min(0, streakRef.current) - 1;
+    if (streakRef.current >= 2) { streakRef.current = 0; setLevel((l) => { const nl = Math.min(10, l + 1); reachedRef.current = Math.max(reachedRef.current, nl); return nl; }); }
+    else if (streakRef.current <= -2) { streakRef.current = 0; setLevel((l) => Math.max(1, l - 1)); }
+    const timeUp = isTimeUp();
     setTimeout(() => {
-      if (nextTrial >= TRIALS) { finish(); }
-      else { setTrial(nextTrial); startRound(); }
+      if (timeUp) { finish(); }
+      else { startRound(); }
     }, correct ? 1300 : 2400);
-  }, [expected, trial, reportProgress, startRound, finish]);
+  }, [expected, startRound, finish, isTimeUp]);
 
   function handleKey(k: string) {
     if (phase !== "input" || enteredRef.current.length >= spec.count) return;
@@ -164,9 +171,10 @@ export function LetrasSequencia({ difficulty, onComplete }: LetrasSequenciaProps
 
   function begin() {
     correctRef.current = 0;
+    totalRef.current = 0;
     rtsRef.current = [];
     startTime.current = Date.now();
-    setTrial(0);
+    startTimer();
     startRound();
   }
 
@@ -208,7 +216,7 @@ export function LetrasSequencia({ difficulty, onComplete }: LetrasSequenciaProps
 
         <div className="relative h-1 rounded-full overflow-hidden" style={{ background: "rgba(255,255,255,0.07)" }}>
           <motion.div className="absolute inset-y-0 left-0 rounded-full" style={{ background: "linear-gradient(90deg,#6366f1,#818cf8)" }}
-            animate={{ width: `${(trial / TRIALS) * 100}%` }} transition={{ duration: 0.4 }} />
+            animate={{ width: `${progressPct}%` }} transition={{ duration: 0.4 }} />
         </div>
 
         {/* Apresentação */}
