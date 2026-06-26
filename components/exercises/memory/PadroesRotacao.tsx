@@ -4,7 +4,7 @@ import { useState, useRef, useCallback, useEffect } from "react";
 import { motion } from "framer-motion";
 import { RotateCw } from "lucide-react";
 import { calculateExerciseScore } from "@/lib/scoring";
-import { useExerciseProgress } from "@/components/exercises/ExerciseWrapper";
+import { useTimedProgress } from "@/components/exercises/useExerciseEngine";
 import type { ExerciseResult, Theme } from "@/types";
 
 interface PadroesRotacaoProps {
@@ -28,7 +28,6 @@ const LEVELS: Record<number, MLevel> = {
   10: { grid: 6, kMin: 6, kMax: 7, rots: [90, 180, 270],showMs: 1500, delayMs: 900 },
 };
 const levelOf = (d: number): number => Math.min(10, Math.max(1, Math.round(d)));
-const TRIALS = 6;
 
 // Rotação horária de (linha, coluna) numa matriz N×N — índice 0.
 function rotatePos(r: number, c: number, N: number, deg: number): [number, number] {
@@ -171,12 +170,16 @@ function TutorialDemo({ onDone }: { onDone: () => void }) {
 }
 
 export function PadroesRotacao({ difficulty, onComplete }: PadroesRotacaoProps) {
-  const reportProgress = useExerciseProgress();
+  const { begin: startTimer, isTimeUp, elapsedSec, finish: finishTimer, progressPct } = useTimedProgress();
   const startLevel = levelOf(difficulty);
-  const spec = LEVELS[startLevel];
+  const [level, setLevel] = useState(startLevel);
+  const spec = LEVELS[level];
   const N = spec.grid;
+  const streakRef = useRef(0);
+  const reachedRef = useRef(startLevel);
+  const totalRef = useRef(0);
   // Giro mais rápido nos níveis altos (a rotação lenta facilitava demais).
-  const rotSec = startLevel <= 3 ? 0.9 : startLevel <= 6 ? 0.7 : 0.55;
+  const rotSec = level <= 3 ? 0.9 : level <= 6 ? 0.7 : 0.55;
 
   // Painel responsivo: a matriz ocupa a largura disponível (maior, sem rolar).
   const [matrixW, setMatrixW] = useState(360);
@@ -193,7 +196,6 @@ export function PadroesRotacao({ difficulty, onComplete }: PadroesRotacaoProps) 
   const [lit, setLit] = useState<Set<string>>(new Set());
   const [picked, setPicked] = useState<Set<string>>(new Set());
   const [deg, setDeg] = useState<number>(90);
-  const [trial, setTrial] = useState(0);
   const [feedback, setFeedback] = useState<"correct" | "incorrect" | null>(null);
 
   const expectedRef = useRef<Set<string>>(new Set());
@@ -248,22 +250,22 @@ export function PadroesRotacao({ difficulty, onComplete }: PadroesRotacaoProps) 
   }, [N, spec, present]);
 
   const finish = useCallback(() => {
+    finishTimer();
     const accTotal = expTotalRef.current ? hitRef.current / expTotalRef.current : 0;
     const meanRT = rtsRef.current.length ? Math.round(rtsRef.current.reduce((a, b) => a + b, 0) / rtsRef.current.length) : null;
-    const duration = Math.round((Date.now() - startTime.current) / 1000);
     onComplete({
       exerciseId: "padroes-rotacao",
       domain: "memory",
-      score: calculateExerciseScore("matriz-espacial", accTotal, meanRT ?? undefined, difficulty),
+      score: calculateExerciseScore("matriz-espacial", accTotal, meanRT ?? undefined, reachedRef.current),
       accuracy: accTotal,
       reactionTime: meanRT ?? undefined,
-      difficulty: startLevel,
-      duration,
+      difficulty: reachedRef.current,
+      duration: elapsedSec(),
       metadata: {
         progressionV2: true,
         accTotal: Number(accTotal.toFixed(3)),
-        impulsive: wrongRef.current > TRIALS,
-        level: startLevel,
+        impulsive: wrongRef.current > totalRef.current,
+        level: reachedRef.current,
         startedLevel: startLevel,
         gridSize: N,
         positions: spec.kMax,
@@ -274,11 +276,11 @@ export function PadroesRotacao({ difficulty, onComplete }: PadroesRotacaoProps) 
         positionsWrong: wrongRef.current,
         omissions: omRef.current,
         sequencesCorrect: correctRef.current,
-        sequencesIncorrect: TRIALS - correctRef.current,
+        sequencesIncorrect: Math.max(0, totalRef.current - correctRef.current),
         meanReactionTimeMs: meanRT,
       },
     });
-  }, [onComplete, difficulty, startLevel, spec, N]);
+  }, [onComplete, startLevel, spec, N, finishTimer, elapsedSec]);
 
   const submit = useCallback((picks: Set<string>) => {
     const expected = expectedRef.current;
@@ -292,10 +294,14 @@ export function PadroesRotacao({ difficulty, onComplete }: PadroesRotacaoProps) 
     if (exact) soundCorrect(); else soundWrong();
     setFeedback(exact ? "correct" : "incorrect");
     setPhase("feedback");
-    const nextTrial = trial + 1;
-    reportProgress(Math.round((nextTrial / TRIALS) * 100));
-    setTimeout(() => { if (nextTrial >= TRIALS) finish(); else { setTrial(nextTrial); startRound(); } }, exact ? 1300 : 2300);
-  }, [trial, reportProgress, startRound, finish]);
+    totalRef.current++;
+    // "Musculação": 2 acertos seguidos → sobe o nível; 2 erros seguidos → desce.
+    streakRef.current = exact ? Math.max(0, streakRef.current) + 1 : Math.min(0, streakRef.current) - 1;
+    if (streakRef.current >= 2) { streakRef.current = 0; setLevel((l) => { const nl = Math.min(10, l + 1); reachedRef.current = Math.max(reachedRef.current, nl); return nl; }); }
+    else if (streakRef.current <= -2) { streakRef.current = 0; setLevel((l) => Math.max(1, l - 1)); }
+    const timeUp = isTimeUp();
+    setTimeout(() => { if (timeUp) finish(); else startRound(); }, exact ? 1300 : 2300);
+  }, [startRound, finish, isTimeUp]);
 
   function toggle(r: number, c: number) {
     if (phase !== "input") return;
@@ -309,8 +315,8 @@ export function PadroesRotacao({ difficulty, onComplete }: PadroesRotacaoProps) 
   useEffect(() => () => { runRef.current++; }, []);
 
   function begin() {
-    correctRef.current = 0; hitRef.current = 0; wrongRef.current = 0; omRef.current = 0; expTotalRef.current = 0;
-    rtsRef.current = []; startTime.current = Date.now(); setTrial(0); startRound();
+    correctRef.current = 0; hitRef.current = 0; wrongRef.current = 0; omRef.current = 0; expTotalRef.current = 0; totalRef.current = 0;
+    rtsRef.current = []; startTime.current = Date.now(); startTimer(); startRound();
   }
 
   if (phase === "tutorial") return <TutorialDemo onDone={begin} />;
@@ -349,7 +355,7 @@ export function PadroesRotacao({ difficulty, onComplete }: PadroesRotacaoProps) 
 
         <div className="relative h-1 rounded-full overflow-hidden" style={{ background: "rgba(255,255,255,0.07)" }}>
           <motion.div className="absolute inset-y-0 left-0 rounded-full" style={{ background: "linear-gradient(90deg,#14b8a6,#22d3c5)" }}
-            animate={{ width: `${(trial / TRIALS) * 100}%` }} transition={{ duration: 0.4 }} />
+            animate={{ width: `${progressPct}%` }} transition={{ duration: 0.4 }} />
         </div>
 
         <p className="text-sm font-semibold text-center" style={{ color: TEAL, minHeight: 22 }}>
