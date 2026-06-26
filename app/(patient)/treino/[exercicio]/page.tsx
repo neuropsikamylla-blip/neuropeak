@@ -571,7 +571,7 @@ export default function ExercicioPage() {
   // Exercícios que gerenciam o próprio layout (sem barra de progresso no canto)
   // Exercícios com barra de progresso própria (por tempo) no layout
   const HIDE_PROGRESS_WIDGET = new Set([
-    "estacionamento-logico", "cubo-corsi", "matriz-espacial", "matriz-espacial-inversa", "nback", "jogo-memoria", "sequencia-itens", "lista-distracao", "letras-sequencia", "padroes-rotacao", "torre-hanoi", "tempo-reacao", "semaforo", "certo-ou-errado", "stroop-task", "identificacao-simbolos", "trilha-visual", "caca-item-barato", "corrida-tempo", "mudanca-regras", "labirinto", "vigilancia", "atencao-dividida", "focus-agents", "mot", "dual-task", "desafio-orcamento", "compra-multifuncional", "ordem-historia", "desafio-cidade", "antes-depois", "restaurante-ordem", "desafio-supermercado", "task-switching", "deductive-grid",
+    "estacionamento-logico", "cubo-corsi", "matriz-espacial", "matriz-espacial-inversa", "nback", "jogo-memoria", "sequencia-itens", "lista-distracao", "letras-sequencia", "padroes-rotacao", "torre-hanoi", "tempo-reacao", "semaforo", "certo-ou-errado", "stroop-task", "identificacao-simbolos", "trilha-visual", "caca-item-barato", "corrida-tempo", "mudanca-regras", "labirinto", "vigilancia", "atencao-dividida", "focus-agents", "mot", "dual-task", "desafio-orcamento", "compra-multifuncional", "ordem-historia", "desafio-cidade", "antes-depois", "restaurante-ordem", "desafio-supermercado", "task-switching", "deductive-grid", "span-numerico", "span-numerico-inverso",
   ]);
 
   return (

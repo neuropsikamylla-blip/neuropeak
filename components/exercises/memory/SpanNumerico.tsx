@@ -4,7 +4,7 @@ import { useState, useEffect, useCallback, useRef } from "react";
 import { motion } from "framer-motion";
 import { Headphones } from "lucide-react";
 import { calculateExerciseScore } from "@/lib/scoring";
-import { useExerciseProgress } from "@/components/exercises/ExerciseWrapper";
+import { useTimedProgress } from "@/components/exercises/useExerciseEngine";
 import type { ExerciseResult, Theme } from "@/types";
 
 // ── Tipos ───────────────────────────────────────────────────────────────────────
@@ -137,7 +137,7 @@ function Beads({ total, filled, active }: { total: number; filled: number; activ
 export function SpanNumerico({ difficulty, onComplete, reverse = false, settings }: SpanNumericoProps) {
   const exerciseId = reverse ? "span-numerico-inverso" : "span-numerico";
   const title = reverse ? "Span Numérico Auditivo Inverso" : "Span Numérico Auditivo Direto";
-  const reportProgress = useExerciseProgress();
+  const { begin, isTimeUp, elapsedSec, finish, progressPct } = useTimedProgress();
 
   // Config do TERAPEUTA (prescrição) — fixa para o paciente. Ausente = padrões.
   const cfg: SpanSettings = normalizeSettings(settings);
@@ -234,14 +234,16 @@ export function SpanNumerico({ difficulty, onComplete, reverse = false, settings
     maxLevelRef.current = Math.max(maxLevelRef.current, nextLevel);
 
     const nextTrial = trial + 1;
-    reportProgress(Math.round((nextTrial / cfg.trials) * 100));
+    const timeUp = isTimeUp();
 
     setTimeout(() => {
-      if (nextTrial >= cfg.trials) {
+      if (timeUp) {
+        finish();
+        const total = Math.max(1, newAttempts.length);
         const correctCount = newAttempts.filter(a => a.correct).length;
-        const accuracy = correctCount / cfg.trials;
+        const accuracy = correctCount / total;
         const maxDigits = Math.max(...newAttempts.map(a => a.digits));
-        const duration = Math.round((Date.now() - startTime.current) / 1000);
+        const duration = elapsedSec();
         // Reporta a dificuldade (1–10) correspondente ao nível alcançado, para o
         // sistema salvar o progresso e o paciente retomar nesse ponto.
         const reachedDifficulty = clampLevel(maxLevelRef.current) * 10 / MAX_LEVEL;
@@ -252,7 +254,7 @@ export function SpanNumerico({ difficulty, onComplete, reverse = false, settings
           accuracy,
           difficulty: Math.round(reachedDifficulty),
           duration,
-          metadata: { spanLength: maxDigits, reverse, trials: cfg.trials, correct: correctCount },
+          metadata: { spanLength: maxDigits, reverse, trials: total, correct: correctCount },
         });
       } else {
         levelRef.current = nextLevel;
@@ -262,7 +264,7 @@ export function SpanNumerico({ difficulty, onComplete, reverse = false, settings
       }
     }, cfg.showAnswerOnError && !correct ? 2600 : 1400);
   // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [sequence, attempts, digits, trial, cfg, replayed, reverse, exerciseId, difficulty]);
+  }, [sequence, attempts, digits, trial, cfg, replayed, reverse, exerciseId, difficulty, isTimeUp, elapsedSec, finish]);
 
   // ── Toque no teclado ────────────────────────────────────────────────────────
   function handleKey(n: number) {
@@ -282,6 +284,7 @@ export function SpanNumerico({ difficulty, onComplete, reverse = false, settings
     maxLevelRef.current = initialLevel;
     streakRef.current = 0;
     startTime.current = Date.now();
+    begin();
     setLevel(initialLevel);
     setTrial(0);
     setAttempts([]);
@@ -319,7 +322,7 @@ export function SpanNumerico({ difficulty, onComplete, reverse = false, settings
         <div className="relative h-1 rounded-full overflow-hidden" style={{ background: "rgba(255,255,255,0.07)" }}>
           <motion.div className="absolute inset-y-0 left-0 rounded-full"
             style={{ background: "linear-gradient(90deg,#6366f1,#818cf8)" }}
-            animate={{ width: `${(trial / cfg.trials) * 100}%` }} transition={{ duration: 0.4 }} />
+            animate={{ width: `${progressPct}%` }} transition={{ duration: 0.4 }} />
         </div>
 
         {/* ── FASE: ouvir ───────────────────────────────────────────────── */}
