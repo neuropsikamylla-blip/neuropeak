@@ -420,7 +420,7 @@ export const EXERCISE_DEFINITIONS = {
     name: "Estacionamento Lógico",
     domain: "executive" as Domain,
     description: "Mova veículos na grade para liberar o carro-alvo — planejamento espacial e funções executivas",
-    estimatedMinutes: 10,
+    estimatedMinutes: 7,
     icon: "🚗",
   },
 } as const;

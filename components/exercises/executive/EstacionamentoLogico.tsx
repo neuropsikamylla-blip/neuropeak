@@ -2,9 +2,24 @@
 
 import { useState, useRef, useCallback, useLayoutEffect, useMemo, useEffect } from "react";
 import { calculateExerciseScore } from "@/lib/scoring";
-import { useExerciseProgress } from "@/components/exercises/ExerciseWrapper";
+import { useTimedProgress } from "@/components/exercises/useExerciseEngine";
 import { assignCarImages, ALL_CAR_IMAGES } from "@/lib/parking-cars";
+import { LEVELS_BY_DIFFICULTY, DIFFICULTIES } from "@/lib/parking-levels";
+import type { Level } from "@/types/parking";
 import type { ExerciseResult, Theme } from "@/types";
+
+// Sorteia uma fase da dificuldade disponível mais próxima do alvo (idealMoves).
+function pickLevel(targetDiff: number): { level: Level; diff: number } {
+  const diff = DIFFICULTIES.reduce((best, d) =>
+    Math.abs(d - targetDiff) < Math.abs(best - targetDiff) ? d : best, DIFFICULTIES[0]);
+  const arr = LEVELS_BY_DIFFICULTY[diff];
+  return { level: arr[Math.floor(Math.random() * arr.length)], diff };
+}
+function stepDiff(cur: number, dir: 1 | -1): number {
+  const i = DIFFICULTIES.indexOf(cur);
+  const ni = Math.max(0, Math.min(DIFFICULTIES.length - 1, (i < 0 ? 0 : i) + dir));
+  return DIFFICULTIES[ni];
+}
 
 // ── Layout constants ──────────────────────────────────────────────────────────
 const GRID     = 6;
@@ -18,102 +33,11 @@ interface Car {
   id: string; row: number; col: number; len: number;
   orientation: "horizontal" | "vertical"; color?: string;
 }
-interface Level { id: number; idealMoves: number; cars: Car[] }
 interface DragState {
   carId: string; axis: "horizontal" | "vertical";
   startPx: number; startPos: number; currentPos: number;
 }
 
-// ── Puzzle levels ─────────────────────────────────────────────────────────────
-const ALL_LEVELS: Level[] = [
-  { id:1,  idealMoves:2, cars:[
-    { id:"target", row:2, col:3, len:2, orientation:"horizontal" },
-    { id:"A", row:1, col:5, len:2, orientation:"vertical" },
-  ]},
-  { id:2,  idealMoves:3, cars:[
-    { id:"target", row:2, col:1, len:2, orientation:"horizontal" },
-    { id:"A", row:0, col:3, len:3, orientation:"vertical" },
-    { id:"B", row:1, col:4, len:2, orientation:"vertical" },
-  ]},
-  { id:3,  idealMoves:4, cars:[
-    { id:"target", row:2, col:0, len:2, orientation:"horizontal" },
-    { id:"A", row:0, col:2, len:3, orientation:"vertical" },
-    { id:"B", row:3, col:1, len:2, orientation:"horizontal" },
-    { id:"C", row:1, col:4, len:2, orientation:"vertical" },
-  ]},
-  { id:4, idealMoves:6, cars:[
-    { id:"target", row:2, col:0, len:2, orientation:"horizontal" },
-    { id:"A", row:5, col:1, len:3, orientation:"horizontal" },
-    { id:"B", row:4, col:0, len:3, orientation:"horizontal" },
-    { id:"C", row:1, col:1, len:2, orientation:"horizontal" },
-    { id:"D", row:3, col:2, len:2, orientation:"horizontal" },
-    { id:"E", row:0, col:1, len:2, orientation:"horizontal" },
-    { id:"F", row:1, col:4, len:2, orientation:"vertical" },
-    { id:"G", row:0, col:3, len:3, orientation:"vertical" },
-    { id:"H", row:1, col:5, len:2, orientation:"vertical" },
-  ]},
-  { id:5, idealMoves:7, cars:[
-    { id:"target", row:2, col:1, len:2, orientation:"horizontal" },
-    { id:"A", row:3, col:1, len:2, orientation:"horizontal" },
-    { id:"B", row:1, col:4, len:3, orientation:"vertical" },
-    { id:"C", row:1, col:1, len:3, orientation:"horizontal" },
-    { id:"D", row:3, col:3, len:3, orientation:"vertical" },
-    { id:"E", row:1, col:5, len:2, orientation:"vertical" },
-    { id:"F", row:4, col:4, len:2, orientation:"horizontal" },
-    { id:"G", row:0, col:2, len:3, orientation:"horizontal" },
-    { id:"H", row:5, col:0, len:2, orientation:"horizontal" },
-  ]},
-  { id:6, idealMoves:8, cars:[
-    { id:"target", row:2, col:2, len:2, orientation:"horizontal" },
-    { id:"A", row:0, col:1, len:2, orientation:"vertical" },
-    { id:"B", row:0, col:3, len:2, orientation:"vertical" },
-    { id:"C", row:5, col:3, len:3, orientation:"horizontal" },
-    { id:"D", row:4, col:2, len:2, orientation:"vertical" },
-    { id:"E", row:3, col:1, len:3, orientation:"horizontal" },
-    { id:"F", row:3, col:0, len:3, orientation:"vertical" },
-    { id:"G", row:1, col:5, len:3, orientation:"vertical" },
-    { id:"H", row:4, col:3, len:2, orientation:"horizontal" },
-  ]},
-  { id:7, idealMoves:9, cars:[
-    { id:"target", row:2, col:0, len:2, orientation:"horizontal" },
-    { id:"A", row:3, col:1, len:3, orientation:"horizontal" },
-    { id:"B", row:3, col:0, len:3, orientation:"vertical" },
-    { id:"C", row:1, col:4, len:3, orientation:"vertical" },
-    { id:"D", row:5, col:4, len:2, orientation:"horizontal" },
-    { id:"E", row:1, col:5, len:2, orientation:"vertical" },
-    { id:"F", row:4, col:1, len:2, orientation:"horizontal" },
-    { id:"G", row:1, col:2, len:2, orientation:"vertical" },
-    { id:"H", row:4, col:3, len:2, orientation:"horizontal" },
-  ]},
-  { id:8, idealMoves:10, cars:[
-    { id:"target", row:2, col:0, len:2, orientation:"horizontal" },
-    { id:"A", row:1, col:3, len:3, orientation:"vertical" },
-    { id:"B", row:0, col:5, len:3, orientation:"vertical" },
-    { id:"C", row:3, col:1, len:2, orientation:"vertical" },
-    { id:"D", row:0, col:1, len:2, orientation:"horizontal" },
-    { id:"E", row:4, col:4, len:2, orientation:"horizontal" },
-  ]},
-  { id:9, idealMoves:13, cars:[
-    { id:"target", row:2, col:0, len:2, orientation:"horizontal" },
-    { id:"A", row:2, col:2, len:3, orientation:"vertical" },
-    { id:"B", row:0, col:3, len:3, orientation:"vertical" },
-    { id:"C", row:0, col:5, len:2, orientation:"vertical" },
-    { id:"D", row:4, col:1, len:2, orientation:"vertical" },
-    { id:"E", row:4, col:3, len:2, orientation:"horizontal" },
-    { id:"F", row:1, col:4, len:3, orientation:"vertical" },
-  ]},
-  { id:10, idealMoves:14, cars:[
-    { id:"target", row:2, col:1, len:2, orientation:"horizontal" },
-    { id:"A", row:0, col:5, len:2, orientation:"vertical" },
-    { id:"B", row:3, col:0, len:3, orientation:"vertical" },
-    { id:"C", row:2, col:3, len:3, orientation:"vertical" },
-    { id:"D", row:3, col:2, len:2, orientation:"vertical" },
-    { id:"E", row:1, col:0, len:3, orientation:"horizontal" },
-    { id:"F", row:2, col:5, len:2, orientation:"vertical" },
-    { id:"G", row:4, col:4, len:2, orientation:"horizontal" },
-  ]},
-];
-const TOTAL_PHASES = ALL_LEVELS.length;
 
 // ── Move validation ───────────────────────────────────────────────────────────
 function buildGrid(cars: Car[]): boolean[][] {
@@ -272,7 +196,7 @@ interface Props {
 }
 
 export function EstacionamentoLogico({ difficulty, theme: _theme, onComplete }: Props) {
-  const markProgress = useExerciseProgress();
+  const { begin, isTimeUp, elapsedSec, finish: finishTimer, progressPct } = useTimedProgress();
 
   const [cellPx, setCellPx] = useState(52);
   const wrapRef = useRef<HTMLDivElement>(null);
@@ -298,61 +222,68 @@ export function EstacionamentoLogico({ difficulty, theme: _theme, onComplete }: 
     ALL_CAR_IMAGES.forEach((src) => { const im = new window.Image(); im.src = src; });
   }, []);
 
-  const [puzzleIdx, setPuzzleIdx]   = useState(0);
-  const [cars, setCars]             = useState<Car[]>(() => ALL_LEVELS[0].cars.map(c => ({ ...c })));
-  const [moves, setMoves]           = useState(0);
-  const [history, setHistory]       = useState<Car[][]>([]);
-  const [won, setWon]               = useState(false);
-  const [resultsLog, setResultsLog] = useState<{ moves: number; ideal: number }[]>([]);
-  const [dragPrev, setDragPrev]     = useState<{ id: string; pos: number } | null>(null);
+  // Dificuldade adaptativa: começa perto do nível do paciente e sobe/desce na sessão.
+  const initRef = useRef<{ level: Level; diff: number } | null>(null);
+  if (!initRef.current) initRef.current = pickLevel(Math.round(difficulty) + 1);
+  const curDiffRef  = useRef(initRef.current.diff);
+  const streakRef   = useRef(0);
+  const reachedRef  = useRef(initRef.current.diff);
+  const statsRef    = useRef({ solved: 0, optimal: 0 });
+  const levelSeqRef = useRef(0);
 
-  const boardRef   = useRef<HTMLDivElement>(null);
-  const dragRef    = useRef<DragState | null>(null);
-  const startTs    = useRef(Date.now());
-  const resultsRef = useRef<{ moves: number; ideal: number }[]>([]);
+  const [currentLevel, setCurrentLevel] = useState<Level>(initRef.current.level);
+  const [cars, setCars]         = useState<Car[]>(() => initRef.current!.level.cars.map(c => ({ ...c })));
+  const [moves, setMoves]       = useState(0);
+  const [history, setHistory]   = useState<Car[][]>([]);
+  const [won, setWon]           = useState(false);
+  const [dragPrev, setDragPrev] = useState<{ id: string; pos: number } | null>(null);
 
-  const currentLevel = ALL_LEVELS[puzzleIdx];
-  // Imagem (PNG) de cada carro do nível — determinístico, varia por nível.
+  const boardRef = useRef<HTMLDivElement>(null);
+  const dragRef  = useRef<DragState | null>(null);
+  const startedRef = useRef(false);
+
+  useEffect(() => { if (!startedRef.current) { startedRef.current = true; begin(); } }, [begin]);
+
   const carImages = useMemo(
-    () => assignCarImages(puzzleIdx, currentLevel.cars),
-    [puzzleIdx, currentLevel],
+    () => assignCarImages(levelSeqRef.current, currentLevel.cars),
+    [currentLevel],
   );
 
-  const loadPuzzle = useCallback((idx: number) => {
-    setCars(ALL_LEVELS[idx].cars.map(c => ({ ...c })));
+  const loadLevel = useCallback((level: Level) => {
+    levelSeqRef.current++;
+    setCurrentLevel(level);
+    setCars(level.cars.map(c => ({ ...c })));
     setMoves(0); setHistory([]); setWon(false);
     setDragPrev(null); dragRef.current = null;
   }, []);
 
-  const restart = () => loadPuzzle(puzzleIdx);
-
-  const finish = useCallback(() => {
-    const allRes = resultsRef.current;
-    const totalMoves = allRes.reduce((s, r) => s + r.moves, 0);
-    const totalIdeal = allRes.reduce((s, r) => s + r.ideal, 0);
-    const acc = Math.min(1, totalIdeal / Math.max(1, totalMoves));
-    const dur = Math.round((Date.now() - startTs.current) / 1000);
-    const score = calculateExerciseScore("estacionamento-logico", acc, dur * 100, difficulty);
+  const completeSession = useCallback(() => {
+    finishTimer();
+    const s = statsRef.current;
+    const acc = s.solved > 0 ? s.optimal / s.solved : 0;
+    const score = calculateExerciseScore("estacionamento-logico", acc, undefined, reachedRef.current);
     onComplete({
       exerciseId: "estacionamento-logico", domain: "executive",
-      score, accuracy: acc, reactionTime: dur * 100, difficulty, duration: dur,
-      metadata: { puzzlesSolved: allRes.length, totalMoves, totalIdeal },
+      score, accuracy: acc, difficulty: reachedRef.current, duration: elapsedSec(),
+      metadata: { solved: s.solved, optimal: s.optimal, reachedDifficulty: reachedRef.current },
     });
-  }, [difficulty, onComplete]);
+  }, [finishTimer, elapsedSec, onComplete]);
 
-  // Avança de fase APENAS quando o paciente resolveu no nº ideal de movimentos.
-  // Caso contrário, repete a mesma fase (igual à Torre) — registra e adianta a barra
-  // só aqui, na passagem de fase.
-  const advance = () => {
-    const res = { moves, ideal: currentLevel.idealMoves };
-    const newLog = [...resultsRef.current, res];
-    resultsRef.current = newLog;
-    setResultsLog(newLog);
-    const done = puzzleIdx + 1;
-    markProgress(Math.round((done / TOTAL_PHASES) * 100));
-    if (done >= TOTAL_PHASES) { finish(); }
-    else { setPuzzleIdx(done); loadPuzzle(done); }
-  };
+  // Resolveu a fase. optimal = no nº ideal de movimentos. "Musculação": 2 ótimas
+  // seguidas → sobe a dificuldade; 2 não-ótimas → desce. Roda até ~7 min.
+  const nextLevel = useCallback((optimal: boolean) => {
+    statsRef.current.solved++;
+    if (optimal) {
+      statsRef.current.optimal++;
+      streakRef.current = Math.max(0, streakRef.current) + 1;
+      if (streakRef.current >= 2) { streakRef.current = 0; curDiffRef.current = stepDiff(curDiffRef.current, 1); reachedRef.current = Math.max(reachedRef.current, curDiffRef.current); }
+    } else {
+      streakRef.current = Math.min(0, streakRef.current) - 1;
+      if (streakRef.current <= -2) { streakRef.current = 0; curDiffRef.current = stepDiff(curDiffRef.current, -1); }
+    }
+    if (isTimeUp()) { completeSession(); return; }
+    loadLevel(pickLevel(curDiffRef.current).level);
+  }, [isTimeUp, completeSession, loadLevel]);
 
   const commitMove = useCallback((carId: string, newPos: number) => {
     setCars(prev => {
@@ -406,7 +337,6 @@ export function EstacionamentoLogico({ difficulty, theme: _theme, onComplete }: 
   if (won) {
     const ideal    = currentLevel.idealMoves;
     const optimal  = moves <= ideal;       // resolveu no nº ideal de movimentos?
-    const isLast   = puzzleIdx + 1 >= TOTAL_PHASES;
     return (
       <div className="min-h-screen flex items-center justify-center px-8" style={{ background: "#ECEAE4" }}>
         <div className="w-full max-w-xs text-center">
@@ -425,24 +355,33 @@ export function EstacionamentoLogico({ difficulty, theme: _theme, onComplete }: 
           </div>
           {optimal ? (
             <button
-              onClick={advance}
+              onClick={() => nextLevel(true)}
               className="w-full py-3.5 rounded-2xl text-sm font-semibold tracking-wide text-white"
               style={{ background: "#2C3444" }}
             >
-              {isLast ? "Finalizar" : "Próxima fase"}
+              Próxima fase
             </button>
           ) : (
             <>
               <p className="text-sm mb-5" style={{ color: "#6B7384" }}>
-                Dá para resolver em <strong>{ideal}</strong> movimentos. Tente outra vez!
+                Dá para resolver em <strong>{ideal}</strong> movimentos.
               </p>
-              <button
-                onClick={restart}
-                className="w-full py-3.5 rounded-2xl text-sm font-semibold tracking-wide text-white"
-                style={{ background: "#2C3444" }}
-              >
-                Tentar de novo
-              </button>
+              <div className="flex flex-col gap-2.5">
+                <button
+                  onClick={() => loadLevel(currentLevel)}
+                  className="w-full py-3.5 rounded-2xl text-sm font-semibold tracking-wide text-white"
+                  style={{ background: "#2C3444" }}
+                >
+                  Tentar de novo
+                </button>
+                <button
+                  onClick={() => nextLevel(false)}
+                  className="w-full py-2.5 rounded-2xl text-sm font-medium tracking-wide"
+                  style={{ background: "transparent", color: "#6B7384", border: "1.5px solid #C8CDD8" }}
+                >
+                  Avançar mesmo assim
+                </button>
+              </div>
             </>
           )}
         </div>
@@ -473,17 +412,17 @@ export function EstacionamentoLogico({ difficulty, theme: _theme, onComplete }: 
         Libere o carro vermelho pela saída.
       </p>
 
-      {/* Barra de progresso das fases (avança por fase concluída) */}
+      {/* Barra de progresso (pelo tempo, ~7 min, em saltos de 10%) */}
       <div style={{ width: "100%", maxWidth: 320, margin: "0 auto 12px", display: "flex", alignItems: "center", gap: 8, paddingLeft: 14, paddingRight: 14 }}>
         <div style={{ flex: 1, height: 6, borderRadius: 99, background: "rgba(255,255,255,0.22)", overflow: "hidden" }}>
           <div style={{
             height: "100%", borderRadius: 99, background: "#9CF0A6",
-            width: `${Math.round((puzzleIdx / TOTAL_PHASES) * 100)}%`,
-            transition: "width 0.5s ease",
+            width: `${progressPct}%`,
+            transition: "width 0.45s linear",
           }} />
         </div>
         <span style={{ fontSize: 11, fontWeight: 700, color: "#E8ECF2", minWidth: 30, textAlign: "right" }}>
-          {Math.round((puzzleIdx / TOTAL_PHASES) * 100)}%
+          {progressPct}%
         </span>
       </div>
 
@@ -538,28 +477,6 @@ export function EstacionamentoLogico({ difficulty, theme: _theme, onComplete }: 
             })}
           </div>
         </div>
-      </div>
-
-      {/* Restart button — close to board, discrete */}
-      <div style={{ marginTop: 14 }}>
-        <button
-          onClick={restart}
-          style={{
-            padding: "8px 28px",
-            borderRadius: 10,
-            border: "1.5px solid #C8CDD8",
-            background: "white",
-            color: "#5A6270",
-            fontSize: 13,
-            fontWeight: 500,
-            cursor: "pointer",
-            transition: "background 0.15s",
-          }}
-          onPointerEnter={e => { (e.currentTarget as HTMLButtonElement).style.background = "#F4F4F0"; }}
-          onPointerLeave={e => { (e.currentTarget as HTMLButtonElement).style.background = "white"; }}
-        >
-          Reiniciar
-        </button>
       </div>
     </div>
   );
