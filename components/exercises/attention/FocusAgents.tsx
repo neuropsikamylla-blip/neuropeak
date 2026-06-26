@@ -4,7 +4,7 @@ import { useState, useRef, useCallback, useEffect } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { calculateExerciseScore } from "@/lib/scoring";
 import { playTTS, cancelTTS } from "@/lib/tts";
-import { useExerciseProgress } from "@/components/exercises/ExerciseWrapper";
+import { useTimedProgress } from "@/components/exercises/useExerciseEngine";
 import { agents } from "@/data/agents";
 import type { AgentConfig } from "@/data/agents";
 import type { ExerciseResult, Theme } from "@/types";
@@ -475,7 +475,7 @@ export function FocusAgents({ difficulty, theme, onComplete, exerciseId = "focus
     playTTS(text);
   }, [speakOn]);
 
-  const reportProgress = useExerciseProgress();
+  const { begin, isTimeUp, elapsedSec, finish, progressPct } = useTimedProgress();
 
   const [showModeSelect, setShowModeSelect] = useState(!prescribed);
   const [entryDone, setEntryDone]       = useState(false);
@@ -896,7 +896,6 @@ export function FocusAgents({ difficulty, theme, onComplete, exerciseId = "focus
     });
 
     const nextRound = r + 1;
-    reportProgress(Math.round((nextRound / MAX_ROUNDS) * 100));
 
     // Dificuldade progressiva DENTRO do nível (o nível em si fica fixo): a cada
     // HITS_PER_STEP acertos seguidos sobe um degrau de intensidade; errar desce um.
@@ -913,10 +912,11 @@ export function FocusAgents({ difficulty, theme, onComplete, exerciseId = "focus
     setIntensity(intraStepRef.current);
 
     setTimeout(() => {
-      if (nextRound >= MAX_ROUNDS) {
+      if (isTimeUp()) {
         doneRef.current = true;
+        finish();
         const correctCount = newResults.filter(x => x.correct).length;
-        const accuracy     = correctCount / MAX_ROUNDS;
+        const accuracy     = correctCount / Math.max(1, newResults.length);
         const avgRt        = newResults.filter(x => x.correct).reduce((s, x) => s + x.rt, 0) / (correctCount || 1);
         // Fase D — agregados da sessão a partir das métricas por rodada.
         const M = metricsRef.current;
@@ -928,9 +928,9 @@ export function FocusAgents({ difficulty, theme, onComplete, exerciseId = "focus
           exerciseId, domain: "attention",
           score: calculateExerciseScore("focus-agents", accuracy, Math.round(avgRt), difficulty),
           accuracy, reactionTime: Math.round(avgRt), difficulty,
-          duration: Math.round((Date.now() - sessionStart.current) / 1000),
+          duration: elapsedSec(),
           metadata: {
-            rounds: MAX_ROUNDS, correct: correctCount,
+            rounds: newResults.length, correct: correctCount,
             mode: modeRef.current, level: levelRef.current, startedLevel: levelRef.current,
             autoAdvance: settings?.autoAdvance !== false,
             channel: presentMode !== "visual" ? "auditivo" : "visual",
@@ -1062,6 +1062,7 @@ export function FocusAgents({ difficulty, theme, onComplete, exerciseId = "focus
   useEffect(() => {
     if (showTutorial) return;
     sessionStart.current = Date.now();
+    begin();
     metricsRef.current = []; pointsRef.current = 0; setPoints(0);
     prepareRound(0);
     return () => {
@@ -1144,10 +1145,11 @@ export function FocusAgents({ difficulty, theme, onComplete, exerciseId = "focus
           style={{ background:"rgba(255,255,255,0.08)", backdropFilter:"blur(12px)",
             border:"1.5px solid rgba(255,255,255,0.15)", boxShadow:"0 4px 20px rgba(0,0,0,0.4)" }}>
           <span className="text-xs font-bold opacity-70 whitespace-nowrap">{gameTitle}</span>
-          <div className="flex gap-0.5 flex-1">
-            {Array.from({ length: MAX_ROUNDS }).map((_, i) => (
-              <div key={i} className={`h-1.5 flex-1 rounded-full transition-all ${dotColor(i)}`} />
-            ))}
+          <div className="flex items-center gap-2 flex-1">
+            <div className="flex-1 rounded-full overflow-hidden" style={{ height: 6, background: "rgba(255,255,255,0.15)" }}>
+              <div style={{ height: "100%", borderRadius: 9999, width: `${progressPct}%`, background: "#a78bfa", transition: "width 0.45s linear" }} />
+            </div>
+            <span className="text-xs font-bold tabular-nums opacity-70">{progressPct}%</span>
           </div>
           {(isMultiTarget || isSeqMode || isCaptureAll || isPhased) && gamePhase === "playing" && totalTargets > 1 && (
             <span className="text-xs font-bold px-1.5 py-0.5 rounded-lg bg-green-500/40 whitespace-nowrap">

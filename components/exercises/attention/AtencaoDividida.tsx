@@ -3,7 +3,7 @@
 import { useState, useEffect, useRef, useCallback } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { calculateExerciseScore } from "@/lib/scoring";
-import { useExerciseProgress } from "@/components/exercises/ExerciseWrapper";
+import { useTimedProgress } from "@/components/exercises/useExerciseEngine";
 import { TutorialBase } from "@/components/exercises/TutorialBase";
 import type { ExerciseResult, Theme } from "@/types";
 
@@ -225,7 +225,7 @@ type FeedbackType = "hit" | "false" | null;
 
 export function AtencaoDividida({ difficulty, theme, onComplete }: AtencaoDivididaProps) {
   const [showTutorial, setShowTutorial] = useState(true);
-  const reportProgress = useExerciseProgress();
+  const { begin, isTimeUp, elapsedSec, finish, progressPct } = useTimedProgress();
   const stimulusInterval = getStimulusInterval(difficulty);
 
   const [sequence] = useState(() => buildStimulusSequence());
@@ -252,27 +252,21 @@ export function AtencaoDividida({ difficulty, theme, onComplete }: AtencaoDividi
   const currentStimRef = useRef<Stimulus | null>(null);
 
   useEffect(() => {
-    if (currentStimulusIndex >= 0) {
-      reportProgress(Math.round(((currentStimulusIndex + 1) / MAX_STIMULI) * 100));
-    }
-  // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [currentStimulusIndex]);
-
-  useEffect(() => {
     if (showTutorial) return;
 
     startTime.current = Date.now();
+    begin();
     let idx = 0;
 
     function showNextStimulus() {
-      if (idx >= MAX_STIMULI) {
+      if (isTimeUp()) {
         setLeftDisplay(null);
         setRightDisplay(null);
         setDone(true);
         return;
       }
 
-      const stim = sequence[idx];
+      const stim = sequence[idx % sequence.length];
       currentStimRef.current = stim;
       setCurrentStimulusIndex(idx);
 
@@ -316,7 +310,8 @@ export function AtencaoDividida({ difficulty, theme, onComplete }: AtencaoDividi
     if (!done) return;
     const totalResponses = hits + misses + falseAlarms;
     const accuracy = totalResponses > 0 ? hits / (hits + misses + falseAlarms) : 0;
-    const duration = Math.round((Date.now() - startTime.current) / 1000);
+    finish();
+    const duration = elapsedSec();
     const score = calculateExerciseScore("atencao-dividida", accuracy, undefined, difficulty);
     onComplete({
       exerciseId: "atencao-dividida",
@@ -378,7 +373,7 @@ export function AtencaoDividida({ difficulty, theme, onComplete }: AtencaoDividi
     return <AtencaoDivididaTutorial theme={theme} onDone={() => setShowTutorial(false)} />;
   }
 
-  const progress = currentStimulusIndex >= 0 ? ((currentStimulusIndex + 1) / MAX_STIMULI) * 100 : 0;
+  const progress = progressPct;
   const totalErrors = misses + falseAlarms;
   const isGamified = theme === "GAMIFIED";
   const isColorful = theme === "COLORFUL";

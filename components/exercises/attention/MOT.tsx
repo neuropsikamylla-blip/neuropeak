@@ -3,7 +3,7 @@
 import { useState, useEffect, useRef, useCallback, useLayoutEffect } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { calculateExerciseScore } from "@/lib/scoring";
-import { useExerciseProgress } from "@/components/exercises/ExerciseWrapper";
+import { useTimedProgress } from "@/components/exercises/useExerciseEngine";
 import { TutorialBase } from "@/components/exercises/TutorialBase";
 import type { ExerciseResult, Theme } from "@/types";
 
@@ -167,7 +167,7 @@ function MOTTutorial({ theme, onDone }: { theme: Theme; onDone: () => void }) {
 
 export function MOT({ difficulty, theme, onComplete }: MOTProps) {
   const [showTutorial, setShowTutorial] = useState(true);
-  const reportProgress = useExerciseProgress();
+  const { begin, isTimeUp, elapsedSec, finish, progressPct } = useTimedProgress();
 
   const [round, setRound] = useState(0);
   const [phase, setPhase] = useState<Phase>("memorize");
@@ -282,11 +282,11 @@ export function MOT({ difficulty, theme, onComplete }: MOTProps) {
     setTotalTargets(tt => tt + k);
 
     const nextRound = round + 1;
-    reportProgress(Math.round((nextRound / TOTAL_ROUNDS) * 100));
 
-    if (nextRound >= TOTAL_ROUNDS) {
+    if (isTimeUp()) {
+      finish();
       const accuracy = (totalCorrect + correct) / Math.max(1, totalTargets + k);
-      const duration = Math.round((Date.now() - startTime.current) / 1000);
+      const duration = elapsedSec();
       const sc = calculateExerciseScore("mot", accuracy, undefined, difficulty);
       onComplete({
         exerciseId: "mot",
@@ -295,7 +295,7 @@ export function MOT({ difficulty, theme, onComplete }: MOTProps) {
         accuracy,
         difficulty,
         duration,
-        metadata: { totalCorrect: totalCorrect + correct, totalTargets: totalTargets + k, rounds: TOTAL_ROUNDS },
+        metadata: { totalCorrect: totalCorrect + correct, totalTargets: totalTargets + k, rounds: nextRound },
       });
       return;
     }
@@ -307,7 +307,7 @@ export function MOT({ difficulty, theme, onComplete }: MOTProps) {
   }
 
   if (showTutorial) {
-    return <MOTTutorial theme={theme} onDone={() => { startTime.current = Date.now(); setShowTutorial(false); }} />;
+    return <MOTTutorial theme={theme} onDone={() => { startTime.current = Date.now(); begin(); setShowTutorial(false); }} />;
   }
 
   const pal = {
@@ -336,7 +336,7 @@ export function MOT({ difficulty, theme, onComplete }: MOTProps) {
           </div>
           <div className={`h-1.5 rounded-full ${theme === "GAMIFIED" ? "bg-gray-700" : "bg-slate-200"}`}>
             <div className={`h-full rounded-full transition-all duration-300 ${pal.bar}`}
-              style={{ width: `${(round / TOTAL_ROUNDS) * 100}%` }} />
+              style={{ width: `${progressPct}%` }} />
           </div>
         </div>
 

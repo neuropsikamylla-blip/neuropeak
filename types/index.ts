@@ -356,7 +356,7 @@ export const EXERCISE_DEFINITIONS = {
     name: "Rastreamento de Objetos",
     domain: "attention" as Domain,
     description: "Acompanhe os objetos-alvo enquanto todos se movem",
-    estimatedMinutes: 8,
+    estimatedMinutes: 7,
     icon: "👁️",
   },
   "dual-task": {
@@ -372,7 +372,7 @@ export const EXERCISE_DEFINITIONS = {
     name: "Focus Agentes",
     domain: "attention" as Domain,
     description: "Identifique o personagem correto entre distratores — leia o comando e clique rápido",
-    estimatedMinutes: 8,
+    estimatedMinutes: 7,
     icon: "🎯",
   },
   "focus-agents-auditivo": {
