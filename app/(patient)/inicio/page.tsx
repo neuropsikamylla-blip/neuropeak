@@ -227,11 +227,10 @@ export default async function InicioPage() {
                         >
                           {DOMAIN_LABELS[ex.domain as Domain]}
                         </span>
-                        <span className="text-xs text-slate-400">~{ex.estimatedMinutes} min</span>
                       </div>
                     ) : (
                       <p className={`text-xs mt-0.5 ${s.accent}`}>
-                        {DOMAIN_LABELS[ex.domain as Domain]} · ~{ex.estimatedMinutes}min
+                        {DOMAIN_LABELS[ex.domain as Domain]}
                       </p>
                     )}
                   </div>
