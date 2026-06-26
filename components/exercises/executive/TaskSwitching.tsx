@@ -3,7 +3,7 @@
 import { useState, useEffect, useRef, useCallback } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { calculateExerciseScore } from "@/lib/scoring";
-import { useExerciseProgress } from "@/components/exercises/ExerciseWrapper";
+import { useTimedProgress } from "@/components/exercises/useExerciseEngine";
 import { TutorialBase } from "@/components/exercises/TutorialBase";
 import type { ExerciseResult, Theme } from "@/types";
 
@@ -217,7 +217,7 @@ function TaskSwitchingTutorial({ theme, onDone }: { theme: Theme; onDone: () => 
 
 export function TaskSwitching({ difficulty, theme, onComplete }: TaskSwitchingProps) {
   const [showTutorial, setShowTutorial] = useState(true);
-  const reportProgress = useExerciseProgress();
+  const { begin, isTimeUp, elapsedSec, finish, progressPct } = useTimedProgress();
 
   const [trials] = useState<Trial[]>(() => buildTrials(difficulty));
   const [trialIdx, setTrialIdx] = useState(0);
@@ -238,7 +238,9 @@ export function TaskSwitching({ difficulty, theme, onComplete }: TaskSwitchingPr
     if (allDoneRef.current) return;
     allDoneRef.current = true;
     const hits = finalResults.filter(r => r.correct).length;
-    const accuracy = TOTAL > 0 ? hits / TOTAL : 0;
+    finish();
+    const tot = finalResults.length;
+    const accuracy = tot > 0 ? hits / tot : 0;
     const rts = finalResults.map(r => r.rt);
     const avgRT = rts.length > 0 ? rts.reduce((a, b) => a + b, 0) / rts.length : 1000;
 
@@ -249,7 +251,7 @@ export function TaskSwitching({ difficulty, theme, onComplete }: TaskSwitchingPr
     const accNonSwitch = nonSwitchTrials.length > 0 ? nonSwitchTrials.filter(r => r.correct).length / nonSwitchTrials.length : accuracy;
     const switchCost = Math.round((accNonSwitch - accSwitch) * 100);
 
-    const duration = Math.round((Date.now() - startTime.current) / 1000);
+    const duration = elapsedSec();
     const score = calculateExerciseScore("task-switching", accuracy, avgRT, difficulty);
     onComplete({
       exerciseId: "task-switching",
@@ -259,18 +261,17 @@ export function TaskSwitching({ difficulty, theme, onComplete }: TaskSwitchingPr
       reactionTime: avgRT,
       difficulty,
       duration,
-      metadata: { hits, errors: TOTAL - hits, switchCost, total: TOTAL },
+      metadata: { hits, errors: tot - hits, switchCost, total: tot },
     });
-  }, [difficulty, onComplete, TOTAL]);
+  }, [difficulty, onComplete, finish, elapsedSec]);
 
   const advance = useCallback((res: TrialResult[]) => {
     const next = trialIdx + 1;
-    reportProgress(Math.round((next / TOTAL) * 100));
-    if (next >= TOTAL) {
+    if (isTimeUp()) {
       finishSession(res);
       return;
     }
-    const nextTrial = trials[next];
+    const nextTrial = trials[next % TOTAL];
     if (nextTrial.isFirstAfterSwitch && announced) {
       setShowSwitch(true);
       setPhase("switchBanner");
@@ -285,13 +286,13 @@ export function TaskSwitching({ difficulty, theme, onComplete }: TaskSwitchingPr
       setPhase("stimulus");
       stimulusStart.current = Date.now();
     }
-  }, [trialIdx, TOTAL, trials, announced, reportProgress, finishSession]);
+  }, [trialIdx, TOTAL, trials, announced, isTimeUp, finishSession]);
 
   function handleAnswer(side: "left" | "right") {
     if (phase !== "stimulus" || allDoneRef.current) return;
     if (timerRef.current) clearTimeout(timerRef.current);
     const rt = Date.now() - stimulusStart.current;
-    const trial = trials[trialIdx];
+    const trial = trials[trialIdx % TOTAL];
     const correct = side === trial.correctSide;
     setLastCorrect(correct);
     const res: TrialResult = { correct, rt, isFirstAfterSwitch: trial.isFirstAfterSwitch };
@@ -314,10 +315,10 @@ export function TaskSwitching({ difficulty, theme, onComplete }: TaskSwitchingPr
 
   if (showTutorial) {
     return <TaskSwitchingTutorial theme={theme}
-      onDone={() => { startTime.current = Date.now(); setShowTutorial(false); }} />;
+      onDone={() => { startTime.current = Date.now(); begin(); setShowTutorial(false); }} />;
   }
 
-  const trial = trials[trialIdx];
+  const trial = trials[trialIdx % TOTAL];
   const [leftLabel, rightLabel] = getLabels(trial.rule);
   const hits = results.filter(r => r.correct).length;
   const errors = results.filter(r => !r.correct).length;
@@ -347,12 +348,12 @@ export function TaskSwitching({ difficulty, theme, onComplete }: TaskSwitchingPr
         <div className={`w-full rounded-2xl p-4 ${pal.card}`}>
           <div className="flex justify-between items-center mb-2">
             <h2 className={`font-bold text-sm ${pal.title}`}>🔄 Task Switching</h2>
-            <span className={`text-xs ${pal.sub}`}>{Math.min(trialIdx + 1, TOTAL)}/{TOTAL}</span>
+            <span className={`text-xs font-bold tabular-nums ${pal.sub}`}>{progressPct}%</span>
           </div>
           <div className={`h-1.5 rounded-full mb-3 ${theme === "GAMIFIED" ? "bg-gray-700" : "bg-slate-200"}`}>
             <div className={`h-full rounded-full transition-all duration-300 ${
               theme === "GAMIFIED" ? "bg-cyan-500" : theme === "COLORFUL" ? "bg-teal-500" : "bg-teal-500"
-            }`} style={{ width: `${(trialIdx / TOTAL) * 100}%` }} />
+            }`} style={{ width: `${progressPct}%` }} />
           </div>
           <div className="flex justify-around text-center">
             <div><p className={`text-lg font-black ${pal.hit}`}>{hits}</p><p className={`text-[10px] ${pal.sub}`}>Acertos</p></div>

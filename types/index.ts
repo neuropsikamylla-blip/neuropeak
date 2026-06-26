@@ -348,7 +348,7 @@ export const EXERCISE_DEFINITIONS = {
     name: "Task Switching",
     domain: "executive" as Domain,
     description: "Classifique cartões conforme a regra que muda — cor, número ou forma",
-    estimatedMinutes: 8,
+    estimatedMinutes: 7,
     icon: "🔄",
   },
   "mot": {
@@ -388,7 +388,7 @@ export const EXERCISE_DEFINITIONS = {
     name: "Grade Dedutiva",
     domain: "executive" as Domain,
     description: "Deduza quem faz o quê usando pistas lógicas — raciocínio por eliminação",
-    estimatedMinutes: 10,
+    estimatedMinutes: 7,
     icon: "🔍",
   },
   "vigilancia": {

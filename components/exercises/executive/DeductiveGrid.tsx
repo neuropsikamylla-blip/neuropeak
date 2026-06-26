@@ -3,7 +3,7 @@
 import React, { useState, useRef, useCallback } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { calculateExerciseScore } from "@/lib/scoring";
-import { useExerciseProgress } from "@/components/exercises/ExerciseWrapper";
+import { useTimedProgress } from "@/components/exercises/useExerciseEngine";
 import { TutorialBase } from "@/components/exercises/TutorialBase";
 import type { ExerciseResult, Theme } from "@/types";
 
@@ -462,7 +462,7 @@ function DeductiveGridTutorial({ theme, onDone }: { theme: Theme; onDone: () => 
 
 export function DeductiveGrid({ difficulty, theme, onComplete }: DeductiveGridProps) {
   const [showTutorial, setShowTutorial] = useState(true);
-  const reportProgress = useExerciseProgress();
+  const { begin, isTimeUp, elapsedSec, finish, progressPct } = useTimedProgress();
 
   const pool = useRef<Puzzle[]>(getPuzzlePool(difficulty).sort(() => Math.random() - 0.5));
   const [puzzleIdx, setPuzzleIdx] = useState(0);
@@ -553,12 +553,12 @@ export function DeductiveGrid({ difficulty, theme, onComplete }: DeductiveGridPr
     setShowSuccess(true);
     const nextTotal = totalPuzzles + 1;
     setTotalPuzzles(nextTotal);
-    reportProgress(Math.round((nextTotal / PUZZLES_TO_SOLVE) * 100));
 
-    if (nextTotal >= PUZZLES_TO_SOLVE) {
+    if (isTimeUp()) {
+      finish();
       setTimeout(() => {
         const accuracy = Math.max(0, 1 - (totalErrors + errorsThisPuzzle.current) / (nextTotal * 2));
-        const duration = Math.round((Date.now() - startTime.current) / 1000);
+        const duration = elapsedSec();
         const score = calculateExerciseScore("deductive-grid", accuracy, undefined, difficulty);
         onComplete({
           exerciseId: "deductive-grid",
@@ -581,7 +581,7 @@ export function DeductiveGrid({ difficulty, theme, onComplete }: DeductiveGridPr
 
   if (showTutorial) {
     return <DeductiveGridTutorial theme={theme}
-      onDone={() => { setShowTutorial(false); initGrid(currentPuzzle); startTime.current = Date.now(); }} />;
+      onDone={() => { begin(); setShowTutorial(false); initGrid(currentPuzzle); startTime.current = Date.now(); }} />;
   }
 
   const isGamified = theme === "GAMIFIED";
@@ -632,12 +632,12 @@ export function DeductiveGrid({ difficulty, theme, onComplete }: DeductiveGridPr
         <div className="p-4" style={cardStyle}>
           <div className="flex justify-between items-center mb-1">
             <h2 className={`font-bold text-sm ${pal.title}`}>🔍 {currentPuzzle.title}</h2>
-            <span className={`text-xs ${pal.sub}`}>{totalPuzzles + 1}/{PUZZLES_TO_SOLVE}</span>
+            <span className={`text-xs font-bold tabular-nums ${pal.sub}`}>{progressPct}%</span>
           </div>
           <div className={`h-1.5 rounded-full ${isGamified ? "bg-white/10" : "bg-slate-200"}`}>
             <div className={`h-full rounded-full transition-all ${
               isGamified ? "bg-cyan-400" : "bg-emerald-500"
-            }`} style={{ width: `${(totalPuzzles / PUZZLES_TO_SOLVE) * 100}%` }} />
+            }`} style={{ width: `${progressPct}%` }} />
           </div>
         </div>
 
