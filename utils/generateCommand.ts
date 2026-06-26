@@ -54,14 +54,27 @@ function dualVb(idx: number, noun: string): string {
   return DUAL_PREFIX_FNS[idx % DUAL_PREFIX_FNS.length](noun);
 }
 
+// Memória das 2 últimas escolhas → evita repetir o mesmo comando em rodadas
+// seguidas (a Kamylla notou "clique no azul" 3x / "da raquete" 2x — cansativo).
+let recentColors: ColorName[] = [];
+let recentAccs: AccessoryKey[] = [];
+
 function randomAcc(pool: CharacterAttributes[]): AccessoryKey | null {
   const available = ALL_ACCESSORIES.filter(a => withAccessory(pool, a).length > 0);
-  return available.length ? shuffle(available)[0] : null;
+  if (!available.length) return null;
+  const fresh = available.filter(a => !recentAccs.includes(a));
+  const pick = shuffle(fresh.length ? fresh : available)[0];
+  recentAccs = [pick, ...recentAccs].slice(0, 2);
+  return pick;
 }
 
 function randomColor(pool: CharacterAttributes[]): ColorName | null {
   const available = ALL_UNIFORM_COLORS.filter(c => pool.some(ch => ch.uniformColor === c));
-  return available.length ? shuffle(available)[0] : null;
+  if (!available.length) return null;
+  const fresh = available.filter(c => !recentColors.includes(c));
+  const pick = shuffle(fresh.length ? fresh : available)[0];
+  recentColors = [pick, ...recentColors].slice(0, 2);
+  return pick;
 }
 
 function numChars(difficulty: number): number {
