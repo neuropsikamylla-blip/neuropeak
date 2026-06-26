@@ -6,180 +6,122 @@ import { useExerciseProgress } from "@/components/exercises/ExerciseWrapper";
 import { TutorialBase } from "@/components/exercises/TutorialBase";
 import type { ExerciseResult, Theme } from "@/types";
 
-// ── Geometria isométrica 2D ────────────────────────────────────────────────────
-// Cubo 2×2×2 desenhado como SVG isométrico clássico. SOMENTE as 3 faces visíveis
-// são renderizadas: TOPO + lateral ESQUERDA + lateral DIREITA (12 tiles no total).
-// Não existem tiles de baixo, de trás ou escondidos — logo é impossível acender
-// uma peça que o paciente não consiga ver ou clicar.
-
-const S  = 70;                       // unidade do cubo (px no viewBox)
-const OX = 160;                      // origem x (vértice frontal superior)
-const OY = 150;                      // origem y
-const HX = S * Math.sqrt(3) / 2;     // meia-largura isométrica horizontal
-const HY = S / 2;                    // meia-altura isométrica vertical
-// viewBox: "0 0 320 300"
-
-// Projeções das três faces. Cada uma recebe coordenadas locais 0..2 × 0..2.
-const top   = (u: number, v: number) => ({ x: OX + HX * (v - u), y: OY - HY * (u + v) });
-const left  = (d: number, h: number) => ({ x: OX - HX * d,        y: OY - HY * d + S * h });
-const right = (d: number, h: number) => ({ x: OX + HX * d,        y: OY - HY * d + S * h });
+// ── Cubo 2×2×2 em CSS 3D real ──────────────────────────────
+// 3 faces ativas (TOPO, ESQUERDA, DIREITA) com 4 células cada = 12 células
+// visíveis e clicáveis. Quando uma peça acende, o cubo GIRA de forma fluida para
+// trazer aquela face de frente. Na reprodução fica na vista isométrica estável.
 
 type Face = "top" | "left" | "right";
-interface TileDef { pts: { x: number; y: number }[]; face: Face }
-
-// Gera as 4 células 2×2 de uma face a partir da sua função de projeção.
-function faceTiles(proj: (a: number, b: number) => { x: number; y: number }, face: Face): TileDef[] {
-  const out: TileDef[] = [];
-  for (let b = 0; b < 2; b++) {
-    for (let a = 0; a < 2; a++) {
-      out.push({
-        face,
-        pts: [proj(a, b), proj(a + 1, b), proj(a + 1, b + 1), proj(a, b + 1)],
-      });
-    }
-  }
-  return out;
-}
-
-// Índices: TOPO 0-3 · ESQUERDA 4-7 · DIREITA 8-11
-const TILES: TileDef[] = [
-  ...faceTiles(top,   "top"),
-  ...faceTiles(left,  "left"),
-  ...faceTiles(right, "right"),
-];
-
-// Silhueta hexagonal (corpo do cubo, atrás dos tiles → vira a grade clara)
-const HEX = [top(2, 2), right(2, 0), right(2, 2), right(0, 2), left(2, 2), left(2, 0)]
-  .map(p => `${p.x},${p.y}`).join(" ");
-
-// ── Path com cantos arredondados + inset (cria a grade entre tiles) ─────────────
-function roundedPath(rawPts: { x: number; y: number }[], r = 13, insetFactor = 0.92): string {
-  const cx = rawPts.reduce((s, p) => s + p.x, 0) / rawPts.length;
-  const cy = rawPts.reduce((s, p) => s + p.y, 0) / rawPts.length;
-  const pts = rawPts.map(p => ({
-    x: cx + (p.x - cx) * insetFactor,
-    y: cy + (p.y - cy) * insetFactor,
-  }));
-  const n = pts.length;
-  let d = "";
-  for (let i = 0; i < n; i++) {
-    const c = pts[i];
-    const prev = pts[(i - 1 + n) % n];
-    const next = pts[(i + 1) % n];
-    const lp = Math.hypot(prev.x - c.x, prev.y - c.y);
-    const ln = Math.hypot(next.x - c.x, next.y - c.y);
-    const cap = Math.min(r, lp / 2.1, ln / 2.1);
-    const sp = { x: c.x + (prev.x - c.x) / lp * cap, y: c.y + (prev.y - c.y) / lp * cap };
-    const sn = { x: c.x + (next.x - c.x) / ln * cap, y: c.y + (next.y - c.y) / ln * cap };
-    d += i === 0 ? `M${sp.x},${sp.y} ` : `L${sp.x},${sp.y} `;
-    d += `Q${c.x},${c.y} ${sn.x},${sn.y} `;
-  }
-  return d + "Z";
-}
-
-// ── Cores — cubo CLARO, sem lateral escura pesada ───────────────────────────────
 type BState = "idle" | "lit" | "tapped" | "correct" | "wrong";
 
-// Faces ociosas: quase brancas (modelo). Sombreamento mínimo só para dar volume;
-// a profundidade 3D vem das sombras suaves (drop-shadow) sob cada tile.
+// Índices 0-11 → face do jogo (TOPO 0-3 · ESQUERDA 4-7 · DIREITA 8-11)
+const FACE_OF: Face[] = ["top","top","top","top","left","left","left","left","right","right","right","right"];
+
 const IDLE: Record<Face, string> = {
   top:   "#FDFEFF",   // topo — branco
-  left:  "#E8F2FA",   // lateral esquerda — branco-azulado bem claro
-  right: "#DAE9F5",   // lateral direita — levemente mais sombreada
+  left:  "#E8F2FA",   // esquerda — branco-azulado bem claro
+  right: "#DAE9F5",   // direita — levemente mais sombreada
 };
-// Estado ativo: AZUL CIANO vibrante (igual ao modelo)
 const ACTIVE: Record<Exclude<BState, "idle">, string> = {
-  lit:     "#46BEEA",  // azul ciano vibrante
-  tapped:  "#B7E4F5",  // ciano claro (feedback de toque)
+  lit:     "#46BEEA",
+  tapped:  "#B7E4F5",
   correct: "#46C66A",
   wrong:   "#F26257",
 };
-function tileColor(st: BState, face: Face) {
-  return st === "idle" ? IDLE[face] : ACTIVE[st];
-}
-function tileStroke(st: BState): string {
+function cellColor(st: BState, face: Face) { return st === "idle" ? IDLE[face] : ACTIVE[st]; }
+function cellStroke(st: BState): string {
   if (st === "lit")     return "#1F97C9";
   if (st === "correct") return "#2E9E4F";
   if (st === "wrong")   return "#C73B30";
-  return "#CBDBEA";          // contorno bem sutil entre tiles ociosos
-}
-function strokeW(st: BState): number {
-  if (st === "lit" || st === "correct" || st === "wrong") return 2.5;
-  return 0.8;                // linha fina de grade nos tiles ociosos
+  return "#CBDBEA";
 }
 
-// Inclinação que FAVORECE a peça ativa: o cubo se vira de leve para apresentar a
-// face que está acesa. Aplicada só na apresentação (um tile "lit" por vez);
-// na reprodução fica neutro/estável para o paciente clicar com precisão.
-// (a perspectiva vem do wrapper; aqui só as rotações)
-function tiltFor(face: Face | null): string {
-  if (face === "top")   return "rotateX(-10deg)";   // apresenta o topo
-  if (face === "left")  return "rotateY(13deg)";    // destaca a esquerda
-  if (face === "right") return "rotateY(-13deg)";   // destaca a direita
-  return "none";
+// Pose do cubo: traz a face acesa de frente (ISO base quando nada aceso).
+function cubePose(face: Face | null): string {
+  switch (face) {
+    case "top":   return "rotateX(-66deg) rotateY(-12deg)";
+    case "left":  return "rotateX(-14deg) rotateY(34deg)";
+    case "right": return "rotateX(-14deg) rotateY(-74deg)";
+    default:      return "rotateX(-26deg) rotateY(-38deg)";
+  }
+}
+// Posição 3D de cada face do cubo (lado S). 'front' = ESQUERDA do jogo.
+function faceCss(name: string, h: number): string {
+  switch (name) {
+    case "top":    return `rotateX(90deg) translateZ(${h}px)`;
+    case "front":  return `translateZ(${h}px)`;
+    case "right":  return `rotateY(90deg) translateZ(${h}px)`;
+    case "leftbk": return `rotateY(-90deg) translateZ(${h}px)`;
+    case "bottom": return `rotateX(-90deg) translateZ(${h}px)`;
+    case "back":   return `rotateY(180deg) translateZ(${h}px)`;
+  }
+  return "";
 }
 
-// ── Cubo SVG isométrico ────────────────────────────────────────────────────────
+const FACE_BASE: Record<string, number | null> = { top: 0, front: 4, right: 8, leftbk: null, bottom: null, back: null };
+const FACE_COLOR: Record<string, Face> = { top: "top", front: "left", right: "right" };
+
 function IsoCube({
-  states,
-  interactive,
-  onTile,
-  size = 500,
+  states, interactive, onTile, size = 360, poseFace,
 }: {
-  states: BState[];
-  interactive: boolean;
-  onTile: (i: number) => void;
-  size?: number;
+  states: BState[]; interactive: boolean; onTile: (i: number) => void; size?: number;
+  poseFace?: Face | null;
 }) {
-  const vW = 320, vH = 300;
   const litIdx = states.findIndex(s => s === "lit");
-  const tiltFace: Face | null = litIdx >= 0 ? TILES[litIdx].face : null;
+  const derivedFace: Face | null = litIdx >= 0 ? FACE_OF[litIdx] : null;
+  const litFace: Face | null = poseFace !== undefined ? poseFace : derivedFace;
+  const S = Math.round(size * 0.46);
+  const gap = Math.max(4, Math.round(S * 0.05));
+  const r = Math.round(S * 0.08);
+
+  const renderFace = (name: string) => {
+    const base = FACE_BASE[name];
+    const active = base !== null;
+    return (
+      <div key={name} style={{
+        position: "absolute", width: S, height: S, transform: faceCss(name, S / 2),
+        display: "grid", gridTemplateColumns: "1fr 1fr", gridTemplateRows: "1fr 1fr",
+        gap, padding: gap, boxSizing: "border-box", borderRadius: Math.round(S * 0.1),
+        background: "#AEC6DC", backfaceVisibility: "hidden",
+      }}>
+        {[0,1,2,3].map(i => {
+          if (!active) return <div key={i} style={{ borderRadius: r, background: "#C5D6E6" }} />;
+          const idx = (base as number) + i;
+          const st = states[idx] ?? "idle";
+          const fc = FACE_COLOR[name];
+          return (
+            <div key={i}
+              onPointerDown={interactive ? (e) => { e.preventDefault(); onTile(idx); } : undefined}
+              style={{
+                borderRadius: r,
+                background: cellColor(st, fc),
+                border: `1.5px solid ${cellStroke(st)}`,
+                boxShadow: st === "lit"
+                  ? "0 0 14px rgba(70,190,234,0.8)"
+                  : "inset 0 1px 2px rgba(255,255,255,0.55)",
+                cursor: interactive ? "pointer" : "default",
+                transition: "background 0.15s ease, box-shadow 0.2s ease",
+              }}
+            />
+          );
+        })}
+      </div>
+    );
+  };
 
   return (
-    <div style={{ perspective: 1100, width: size, maxWidth: "100%", margin: "0 auto" }}>
-      <svg
-        viewBox={`0 0 ${vW} ${vH}`}
-        width="100%"
-        style={{
-          display: "block",
-          touchAction: "manipulation",
-          transform: tiltFor(tiltFace),
-          transformOrigin: "50% 52%",
-          transition: "transform 0.45s cubic-bezier(.22,.61,.36,1)",
-        }}
-      >
-        <defs>
-          {/* Sombra suave sob cada tile → efeito de peças flutuantes (modelo) */}
-          <filter id="tile-shadow" x="-30%" y="-30%" width="160%" height="160%">
-            <feDropShadow dx="1.5" dy="3" stdDeviation="3" floodColor="#2A4A70" floodOpacity="0.22" />
-          </filter>
-        </defs>
-
-        {/* Corpo do cubo (grade clara nas junções entre tiles) */}
-        <polygon points={HEX} fill="#D2E0EE" stroke="#B6C8DC" strokeWidth={1.5} strokeLinejoin="round" />
-
-        {/* 12 tiles — todos em faces visíveis; sombra no grupo dá profundidade */}
-        <g filter="url(#tile-shadow)">
-          {TILES.map((tile, i) => {
-            const st = states[i] ?? "idle";
-            return (
-              <path
-                key={i}
-                d={roundedPath(tile.pts)}
-                fill={tileColor(st, tile.face)}
-                stroke={tileStroke(st)}
-                strokeWidth={strokeW(st)}
-                strokeLinejoin="round"
-                style={{
-                  cursor: interactive ? "pointer" : "default",
-                  transition: "fill 0.15s ease",
-                }}
-                onPointerDown={interactive ? (e) => { e.preventDefault(); onTile(i); } : undefined}
-              />
-            );
-          })}
-        </g>
-      </svg>
+    <div style={{
+      width: size, height: size, maxWidth: "100%", margin: "0 auto",
+      display: "flex", alignItems: "center", justifyContent: "center",
+      perspective: size * 1.9, touchAction: "manipulation",
+    }}>
+      <div style={{
+        width: S, height: S, position: "relative", transformStyle: "preserve-3d",
+        transform: cubePose(litFace),
+        transition: "transform 0.45s cubic-bezier(.34,.07,.2,1)",
+      }}>
+        {["back","bottom","leftbk","right","front","top"].map(renderFace)}
+      </div>
     </div>
   );
 }
@@ -368,6 +310,7 @@ export function CuboCorsi({ difficulty, theme: _theme, onComplete }: Props) {
   const [correct, setCorrect] = useState(0);
   const [errors,  setErrors ] = useState(0);
   const [progressPct, setProgressPct] = useState(0);   // barra por tempo (0-100)
+  const [poseFace, setPoseFace] = useState<Face | null>(null);  // face que o cubo apresenta
 
   const cancelRef     = useRef(false);
   const timersRef     = useRef<ReturnType<typeof setTimeout>[]>([]);
@@ -413,20 +356,30 @@ export function CuboCorsi({ difficulty, theme: _theme, onComplete }: Props) {
     setSeq(seq);
     setInput([]);
     setTS(Array(N_TILES).fill("idle"));
+    setPoseFace(null);                  // começa na vista isométrica
     setRound(r);
     setPhase("watch");
 
     const FLASH = flashMs(d);
+    let curFace: Face | null = null;
 
     try {
       await sleep(600);
       for (const idx of seq) {
+        const face = FACE_OF[idx];
+        if (face !== curFace) {         // muda de face → gira o cubo (fluido) e espera
+          setPoseFace(face);
+          curFace = face;
+          await sleep(480);
+        }
         setTS(prev => prev.map((_, j) => j === idx ? "lit" : "idle"));
         sndFlash();
         await sleep(FLASH);
         setTS(Array(N_TILES).fill("idle"));
-        await sleep(300);   // pausa entre flashes (cubo volta ao neutro)
+        await sleep(320);   // pausa entre flashes (cubo permanece na pose)
       }
+      setPoseFace(null);                // volta à vista isométrica para reproduzir
+      await sleep(400);
       setPhase("input");
       inputStartRef.current = Date.now();
     } catch { /* cancelado */ }
@@ -572,12 +525,13 @@ export function CuboCorsi({ difficulty, theme: _theme, onComplete }: Props) {
           </div>
         )}
 
-        {/* Cubo — claro, maior e com inclinação que favorece a peça ativa */}
+        {/* Cubo 3D — gira para apresentar de frente a face da peça que acende */}
         <IsoCube
           states={tileStates}
           interactive={phase === "input"}
           onTile={handleTileTap}
-          size={500}
+          poseFace={poseFace}
+          size={360}
         />
 
         {/* Dots de sequência */}
