@@ -252,7 +252,7 @@ export const EXERCISE_DEFINITIONS = {
     name: "Ordem da História",
     domain: "executive" as Domain,
     description: "Coloque os painéis de uma história cotidiana na ordem correta",
-    estimatedMinutes: 8,
+    estimatedMinutes: 7,
     icon: "📖",
   },
   "certo-ou-errado": {
@@ -300,7 +300,7 @@ export const EXERCISE_DEFINITIONS = {
     name: "Desafio da Cidade",
     domain: "executive" as Domain,
     description: "Resolva missões em ambientes da cidade: mercado, cinema e mais",
-    estimatedMinutes: 10,
+    estimatedMinutes: 7,
     icon: "🏙️",
   },
   "corrida-tempo": {

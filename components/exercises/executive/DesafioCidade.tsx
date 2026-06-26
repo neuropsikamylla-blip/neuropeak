@@ -3,7 +3,7 @@
 import React, { useState, useEffect, useRef } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { calculateExerciseScore } from "@/lib/scoring";
-import { useExerciseProgress } from "@/components/exercises/ExerciseWrapper";
+import { useTimedProgress } from "@/components/exercises/useExerciseEngine";
 import type { ExerciseResult, Theme } from "@/types";
 
 // ─── Tipos ────────────────────────────────────────────────────────────────────
@@ -960,7 +960,7 @@ function MissionBriefing({ envId, level, theme, missionNum, totalMissions, onSta
         <span className="text-4xl">{cfg.emoji}</span>
         <div>
           <p className={`text-xs font-semibold uppercase tracking-wide ${p.muted}`}>
-            {cfg.name} · Missão {missionNum}/{totalMissions}
+            {cfg.name} · Missão {missionNum}
           </p>
           <p className={`font-bold text-xl ${p.title}`}>{b.title}</p>
         </div>
@@ -1029,10 +1029,11 @@ function buildMissionQueue(count: number): EnvId[] {
 export function DesafioCidade({ difficulty, theme, onComplete }: {
   difficulty: number; theme: Theme; onComplete: (result: ExerciseResult) => void;
 }) {
-  const reportProgress = useExerciseProgress();
+  const { begin, isTimeUp, elapsedSec, finish, progressPct } = useTimedProgress();
   const startTime = useRef(Date.now());
   const results = useRef<boolean[]>([]);
-  const missionQueue = useRef<EnvId[]>(buildMissionQueue(MAX_MISSIONS));
+  const missionQueue = useRef<EnvId[]>(buildMissionQueue(80));
+  useEffect(() => { begin(); }, [begin]);
 
   const [phase, setPhase] = useState<Phase>("briefing");
   const [currentEnv, setCurrentEnv] = useState<EnvId>(missionQueue.current[0]);
@@ -1071,22 +1072,23 @@ export function DesafioCidade({ difficulty, theme, onComplete }: {
     const next = done + 1;
     results.current = [...results.current, correct];
     setDone(next);
-    reportProgress(Math.round((next / MAX_MISSIONS) * 100));
     setPhase("result");
 
     if (resultTimerRef.current) clearTimeout(resultTimerRef.current);
+    const timeUp = isTimeUp();
     resultTimerRef.current = setTimeout(() => {
-      if (next >= MAX_MISSIONS) {
+      if (timeUp) {
+        finish();
         const correctCount = results.current.filter(Boolean).length;
-        const accuracy = correctCount / MAX_MISSIONS;
+        const accuracy = correctCount / Math.max(1, next);
         onComplete({
           exerciseId: "desafio-cidade",
           domain: "executive",
           score: calculateExerciseScore("desafio-cidade", accuracy, undefined, difficulty),
           accuracy,
           difficulty,
-          duration: Math.round((Date.now() - startTime.current) / 1000),
-          metadata: { missions: MAX_MISSIONS, correct: correctCount },
+          duration: elapsedSec(),
+          metadata: { missions: next, correct: correctCount },
         });
       } else {
         setCurrentEnv(missionQueue.current[next]);
@@ -1097,14 +1099,11 @@ export function DesafioCidade({ difficulty, theme, onComplete }: {
   }
 
   const ProgressBar = () => (
-    <div className="flex gap-0.5 mb-4">
-      {Array.from({ length: MAX_MISSIONS }).map((_, i) => (
-        <div key={i} className={`h-1.5 flex-1 rounded-full transition-colors ${
-          i < results.current.length
-            ? results.current[i] ? "bg-green-500" : "bg-red-400"
-            : i === done ? "bg-blue-400 animate-pulse" : p.bar
-        }`} />
-      ))}
+    <div className="flex items-center gap-2 mb-4">
+      <div className="flex-1 rounded-full overflow-hidden" style={{ height: 6, background: "rgba(127,127,127,0.25)" }}>
+        <div style={{ height: "100%", borderRadius: 9999, width: `${progressPct}%`, background: "#3b82f6", transition: "width 0.45s linear" }} />
+      </div>
+      <span className="text-xs font-bold tabular-nums" style={{ opacity: 0.7, minWidth: 30, textAlign: "right" }}>{progressPct}%</span>
     </div>
   );
 
@@ -1132,7 +1131,7 @@ export function DesafioCidade({ difficulty, theme, onComplete }: {
               <div className="flex items-center gap-2 mb-4">
                 <span className="text-xl">{ENV_CFG[currentEnv].emoji}</span>
                 <p className={`text-xs font-semibold uppercase tracking-wide ${p.muted}`}>
-                  {ENV_CFG[currentEnv].name} · Nível {levels[currentEnv]} · {done + 1}/{MAX_MISSIONS}
+                  {ENV_CFG[currentEnv].name} · Nível {levels[currentEnv]}
                 </p>
               </div>
               {currentEnv === "cinema"      && <CinemaMission     level={levels.cinema}      theme={theme} onFinish={finishMission} />}

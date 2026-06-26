@@ -11,7 +11,7 @@ import {
 } from "@dnd-kit/sortable";
 import { CSS } from "@dnd-kit/utilities";
 import { calculateExerciseScore } from "@/lib/scoring";
-import { useExerciseProgress } from "@/components/exercises/ExerciseWrapper";
+import { useTimedProgress } from "@/components/exercises/useExerciseEngine";
 import { HISTORIAS, HISTORIAS_INTRUSO, HISTORIAS_DESCUBRA, histPanelSrc, descubraScene, descubraOption, type HistDiff } from "@/data/historias";
 import type { ExerciseResult, Theme } from "@/types";
 
@@ -171,7 +171,7 @@ function SortableScene({
 }
 
 export function OrdemHistoria({ difficulty, onComplete, settings }: OrdemHistoriaProps) {
-  const reportProgress = useExerciseProgress();
+  const { begin: startTimer, isTimeUp, elapsedSec, finish: finishTimer, progressPct } = useTimedProgress();
   // Trilha (estágio salvo em currentDifficulty): 1-10 = ordenar; 11 = Encontre o Intruso; 12 = Descubra o que falta.
   const stage = Math.min(12, Math.max(1, Math.round(difficulty)));
   // Atalho do terapeuta: ligar um desafio sobe o estágio efetivo da sessão.
@@ -273,7 +273,7 @@ export function OrdemHistoria({ difficulty, onComplete, settings }: OrdemHistori
     swapsRef.current = 0; intruderHitsRef.current = 0; faltaHitsRef.current = 0;
     hintsUsedRef.current = 0; retriesRef.current = 0;
     firstRespRef.current = []; roundFirstAt.current = null;
-    rtsRef.current = []; startTime.current = Date.now(); setTrial(0);
+    rtsRef.current = []; startTime.current = Date.now(); startTimer(); setTrial(0);
     startRound();   // usa a 1ª rodada já pré-carregada na abertura (pendingRef)
   }
 
@@ -309,7 +309,8 @@ export function OrdemHistoria({ difficulty, onComplete, settings }: OrdemHistori
     const exactCount = gradedRef.current.filter((g) => g >= 0.999).length;
     const meanRT = rtsRef.current.length ? Math.round(rtsRef.current.reduce((a, b) => a + b, 0) / rtsRef.current.length) : null;
     const meanFirst = firstRespRef.current.length ? Math.round(firstRespRef.current.reduce((a, b) => a + b, 0) / firstRespRef.current.length) : null;
-    const duration = Math.round((Date.now() - startTime.current) / 1000);
+    finishTimer();
+    const duration = elapsedSec();
     onComplete({
       exerciseId: "ordem-historia",
       domain: "executive",
@@ -333,17 +334,16 @@ export function OrdemHistoria({ difficulty, onComplete, settings }: OrdemHistori
         hintsUsed: hintsUsedRef.current,
         retries: retriesRef.current,
         sequencesCorrect: exactCount,
-        sequencesIncorrect: TRIALS - exactCount,
+        sequencesIncorrect: Math.max(0, gradedRef.current.length - exactCount),
         meanReactionTimeMs: meanRT,
         timeToFirstMs: meanFirst,
       },
     });
-  }, [onComplete, difficulty, reportLevel, tier, sessionMode]);
+  }, [onComplete, difficulty, reportLevel, tier, sessionMode, finishTimer, elapsedSec]);
 
   function advance(wasExact: boolean) {
-    const nextTrial = trial + 1;
-    reportProgress(Math.round((nextTrial / TRIALS) * 100));
-    setTimeout(() => { if (nextTrial >= TRIALS) finish(); else { setTrial(nextTrial); startRound(); } }, wasExact ? 1900 : 3200);
+    const timeUp = isTimeUp();
+    setTimeout(() => { if (timeUp) finish(); else { setTrial((t) => t + 1); startRound(); } }, wasExact ? 1900 : 3200);
   }
 
   function record(acc: number, exact: boolean) {
@@ -402,7 +402,7 @@ export function OrdemHistoria({ difficulty, onComplete, settings }: OrdemHistori
     record(n ? posCorrect / n : 0, posCorrect === n);
   }
 
-  const pct = Math.round((trial / TRIALS) * 100);
+  const pct = progressPct;
   const intruso = roundMode === "intruso";
   const falta = roundMode === "falta";
 
