@@ -6,7 +6,7 @@ import { Timer, Bell, ArrowLeftRight, Volume2 } from "lucide-react";
 import { calculateExerciseScore } from "@/lib/scoring";
 import { speakText } from "@/lib/voicePrefs";
 import { VoicePicker } from "@/components/exercises/VoicePicker";
-import { useExerciseProgress } from "@/components/exercises/ExerciseWrapper";
+import { useTimedProgress } from "@/components/exercises/useExerciseEngine";
 import { PresentationConfig, type PresMode } from "@/components/exercises/PresentationConfig";
 import type { ExerciseResult, Theme } from "@/types";
 
@@ -375,7 +375,7 @@ export function RestauranteOrdem({ difficulty, onComplete }: RestauranteOrdemPro
   const [presMode, setPresMode] = useState<PresMode | null>(null);
   const speakOn = presMode === "visual_audio" || presMode === "audio_only";
   const hideText = presMode === "audio_only";
-  const reportProgress = useExerciseProgress();
+  const { begin: startTimer, isTimeUp, elapsedSec, finish: finishTimer, progressPct } = useTimedProgress();
   const startLevel = levelOf(difficulty);
   const [sessionLevel, setSessionLevel] = useState(startLevel);
   const spec = R_LEVELS[sessionLevel];
@@ -391,6 +391,7 @@ export function RestauranteOrdem({ difficulty, onComplete }: RestauranteOrdemPro
   const [showVoice, setShowVoice] = useState(false);
 
   const correctRef = useRef(0);
+  const totalRef = useRef(0);
   const startTime = useRef(Date.now());
   const inputAt = useRef(0);
   const rtsRef = useRef<number[]>([]);
@@ -412,9 +413,11 @@ export function RestauranteOrdem({ difficulty, onComplete }: RestauranteOrdemPro
 
   const finish = useCallback(() => {
     const endLevel = levelRef.current;
-    const accTotal = correctRef.current / TRIALS;
+    finishTimer();
+    const total = Math.max(1, totalRef.current);
+    const accTotal = correctRef.current / total;
     const meanRT = rtsRef.current.length ? Math.round(rtsRef.current.reduce((a, b) => a + b, 0) / rtsRef.current.length) : null;
-    const duration = Math.round((Date.now() - startTime.current) / 1000);
+    const duration = elapsedSec();
     onComplete({
       exerciseId: "restaurante-ordem",
       domain: "memory",
@@ -425,11 +428,11 @@ export function RestauranteOrdem({ difficulty, onComplete }: RestauranteOrdemPro
       duration,
       metadata: {
         progressionV2: true, accTotal: Number(accTotal.toFixed(3)), level: endLevel, startedLevel: startLevel,
-        sequencesCorrect: correctRef.current, sequencesIncorrect: TRIALS - correctRef.current,
+        sequencesCorrect: correctRef.current, sequencesIncorrect: total - correctRef.current,
         meanReactionTimeMs: meanRT, presentationMode: presMode,
       },
     });
-  }, [onComplete, startLevel, presMode]);
+  }, [onComplete, startLevel, presMode, finishTimer, elapsedSec]);
 
   // Avança após a fase do Salão (memorização de todas as mesas).
   function afterSalao() {
@@ -458,13 +461,13 @@ export function RestauranteOrdem({ difficulty, onComplete }: RestauranteOrdemPro
     streakRef.current = res.ok ? Math.max(streakRef.current, 0) + 1 : Math.min(streakRef.current, 0) - 1;
     if (streakRef.current >= 2) { levelRef.current = Math.min(levelRef.current + 1, MAX_LEVEL); streakRef.current = 0; setSessionLevel(levelRef.current); }
     else if (streakRef.current <= -2) { levelRef.current = Math.max(levelRef.current - 1, 1); streakRef.current = 0; setSessionLevel(levelRef.current); }
+    totalRef.current = trial + 1;
     setFeedback(res); setPhase("feedback");
-    reportProgress(Math.round(((trial + 1) / TRIALS) * 100));
-  }, [trial, reportProgress]);
+  }, [trial]);
 
   function advance() {
     const nextTrial = trial + 1;
-    if (nextTrial >= TRIALS) finish();
+    if (isTimeUp()) finish();
     else { setTrial(nextTrial); startRound(); }
   }
 
@@ -513,7 +516,7 @@ export function RestauranteOrdem({ difficulty, onComplete }: RestauranteOrdemPro
   }
 
   function begin() {
-    correctRef.current = 0; rtsRef.current = []; startTime.current = Date.now(); setTrial(0);
+    correctRef.current = 0; totalRef.current = 0; rtsRef.current = []; startTime.current = Date.now(); startTimer(); setTrial(0);
     levelRef.current = startLevel; streakRef.current = 0; setSessionLevel(startLevel);
     startAmbience(); setAmbienceMuted(!musicOn); startRound();
   }
@@ -678,7 +681,7 @@ export function RestauranteOrdem({ difficulty, onComplete }: RestauranteOrdemPro
           </button>
         </div>
         <div style={{ flexShrink: 0, display: "flex", justifyContent: "space-between", padding: "0 18px 10px", fontSize: 11.5, fontWeight: 700, color: "#E1CDA3" }}>
-          <span>Pedido {Math.min(trial + 1, TRIALS)}/{TRIALS}</span><span>Acertos: {correctRef.current}</span>
+          <span>{progressPct}%</span><span>Acertos: {correctRef.current}</span>
         </div>
       </div>
     );
@@ -738,7 +741,7 @@ export function RestauranteOrdem({ difficulty, onComplete }: RestauranteOrdemPro
               color: "#fff", fontWeight: 900, fontSize: 16, cursor: "pointer", boxShadow: "0 6px 20px rgba(20,122,69,0.5)" }}>
             Continuar →
           </button>
-          <div style={{ fontSize: 12, fontWeight: 700, color: "rgba(255,255,255,0.6)" }}>Pedido {Math.min(trial + 1, TRIALS)}/{TRIALS} · Acertos: {correctRef.current}</div>
+          <div style={{ fontSize: 12, fontWeight: 700, color: "rgba(255,255,255,0.6)" }}>{progressPct}% · Acertos: {correctRef.current}</div>
         </div>
       </div>
     );

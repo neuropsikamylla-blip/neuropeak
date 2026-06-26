@@ -7,7 +7,7 @@ import { cancelTTS } from "@/lib/tts";
 import { resolveVoice, ensureVoices } from "@/lib/voicePrefs";
 import { VoicePicker } from "@/components/exercises/VoicePicker";
 import { PresentationConfig, type PresMode } from "@/components/exercises/PresentationConfig";
-import { useExerciseProgress } from "@/components/exercises/ExerciseWrapper";
+import { useTimedProgress } from "@/components/exercises/useExerciseEngine";
 import { TutorialBase } from "@/components/exercises/TutorialBase";
 import type { ExerciseResult, Theme } from "@/types";
 
@@ -389,8 +389,8 @@ function WoodShelf({
 
 // ── HUD (barra azul-marinho) ─────────────────────────────────────────────────────
 
-function Hud({ level, trial, trialResults, mode }: {
-  level: number; trial: number; trialResults: boolean[]; mode: "leitura" | "auditivo";
+function Hud({ level, mode, progressPct }: {
+  level: number; mode: "leitura" | "auditivo"; progressPct: number;
 }) {
   return (
     <div style={{
@@ -409,15 +409,12 @@ function Hud({ level, trial, trialResults, mode }: {
         </div>
       </div>
 
-      {/* centro: progresso em segmentos */}
-      <div style={{ flex: 1, display: "flex", gap: 5, justifyContent: "center", minWidth: 0 }}>
-        {Array.from({ length: MAX_TRIALS }).map((_, i) => (
-          <div key={i} style={{ height: 7, flex: "0 1 34px", maxWidth: 34, borderRadius: 4,
-            background: i < trialResults.length ? (trialResults[i] ? "#f3bf57" : "#e2796f")
-              : i === trial ? "#f3bf57" : "rgba(150,175,215,0.22)",
-            boxShadow: (i < trialResults.length || i === trial) ? "0 0 6px rgba(243,191,87,0.5)" : "none",
-            transition: "background .3s" }} />
-        ))}
+      {/* centro: progresso pelo tempo (~7 min) */}
+      <div style={{ flex: 1, display: "flex", alignItems: "center", gap: 8, justifyContent: "center", minWidth: 0 }}>
+        <div style={{ flex: 1, maxWidth: 260, height: 7, borderRadius: 4, background: "rgba(150,175,215,0.22)", overflow: "hidden" }}>
+          <div style={{ height: "100%", borderRadius: 4, width: `${progressPct}%`, background: "#f3bf57", boxShadow: "0 0 6px rgba(243,191,87,0.5)", transition: "width 0.45s linear" }} />
+        </div>
+        <span style={{ fontSize: 11, fontWeight: 800, color: "#f3bf57", minWidth: 30, textAlign: "right" }}>{progressPct}%</span>
       </div>
 
       {/* direita: Treino de Memória */}
@@ -558,7 +555,7 @@ export function DesafioSupermercado({ difficulty, theme, onComplete }: DesafioSu
   const mode = displayMode;                                  // controla esconder/mostrar texto
   const speakOn = presMode === "visual_audio" || presMode === "audio_only";  // controla a fala
   const [showTutorial, setShowTutorial] = useState(true);
-  const reportProgress = useExerciseProgress();
+  const { begin, isTimeUp, elapsedSec, finish, progressPct } = useTimedProgress();
 
   const startLevel = useMemo(() => clampLevel(difficulty), [difficulty]);
   const [sessionLevel, setSessionLevel] = useState(startLevel);
@@ -614,7 +611,7 @@ export function DesafioSupermercado({ difficulty, theme, onComplete }: DesafioSu
   useEffect(() => { setSessionLevel(startLevel); histRef.current = []; }, [startLevel]);
 
   useEffect(() => {
-    if (!showTutorial) initTrial(startLevel);
+    if (!showTutorial) { begin(); initTrial(startLevel); }
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [showTutorial]);
 
@@ -671,20 +668,22 @@ export function DesafioSupermercado({ difficulty, theme, onComplete }: DesafioSu
     setTrialResults(newResults);
     setPhase("result");
     const nextTrial = trial + 1;
-    reportProgress(Math.round((nextTrial / MAX_TRIALS) * 100));
+    const timeUp = isTimeUp();
 
     setTimeout(() => {
-      if (nextTrial >= MAX_TRIALS) {
+      if (timeUp) {
+        finish();
+        const total = Math.max(1, gradedRef.current.length);
         const correct   = newResults.filter(Boolean).length;
-        const accTotal  = gradedRef.current.reduce((a, b) => a + b, 0) / MAX_TRIALS;
-        const impulsive = wrongRef.current > MAX_TRIALS;
+        const accTotal  = gradedRef.current.reduce((a, b) => a + b, 0) / total;
+        const impulsive = wrongRef.current > total;
         onComplete({
           exerciseId: "desafio-supermercado",
           domain: "memory",
           score: calculateExerciseScore("desafio-supermercado", accTotal, undefined, nextLevel),
           accuracy: accTotal, difficulty: nextLevel,
-          duration: Math.round((Date.now() - startTime.current) / 1000),
-          metadata: { trials: MAX_TRIALS, correct, presentationMode: presMode, startLevel, level: nextLevel, progressionV2: true, accTotal, impulsive },
+          duration: elapsedSec(),
+          metadata: { trials: total, correct, presentationMode: presMode, startLevel, level: nextLevel, progressionV2: true, accTotal, impulsive },
         });
       } else {
         setTrial(nextTrial);
@@ -722,7 +721,7 @@ export function DesafioSupermercado({ difficulty, theme, onComplete }: DesafioSu
       {showVoice && <VoicePicker onClose={() => setShowVoice(false)} />}
 
       <div style={{ position: "relative", zIndex: 2, display: "flex", flexDirection: "column", height: "100%" }}>
-        <Hud level={sessionLevel} trial={trial} trialResults={trialResults} mode={mode} />
+        <Hud level={sessionLevel} mode={mode} progressPct={progressPct} />
 
         <AnimatePresence mode="wait">
 

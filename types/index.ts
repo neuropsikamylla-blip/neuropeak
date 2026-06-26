@@ -284,7 +284,7 @@ export const EXERCISE_DEFINITIONS = {
     name: "Supermercado",
     domain: "memory" as Domain,
     description: "Treina memória operacional visual-verbal: ler, memorizar e localizar itens da lista.",
-    estimatedMinutes: 8,
+    estimatedMinutes: 7,
     icon: "🛒",
   },
   "desafio-supermercado-auditivo": {
