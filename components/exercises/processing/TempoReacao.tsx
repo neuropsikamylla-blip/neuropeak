@@ -3,7 +3,7 @@
 import { useState, useRef, useCallback, useEffect } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { calculateExerciseScore } from "@/lib/scoring";
-import { useExerciseProgress } from "@/components/exercises/ExerciseWrapper";
+import { useTimedProgress } from "@/components/exercises/useExerciseEngine";
 import { TutorialBase } from "@/components/exercises/TutorialBase";
 import type { ExerciseResult, Theme } from "@/types";
 
@@ -26,7 +26,6 @@ interface Balloon {
 const GREEN = "#16a34a";
 const DISTRACTOR_COLORS = ["#dc2626", "#2563eb", "#9333ea", "#ea580c", "#0891b2"];
 
-const MAX_TRIALS = 100;
 
 function speedMs(difficulty: number) {
   // 6500ms (diff 1) → 1400ms (diff 10) — começa confortável, mas acelera de verdade
@@ -169,7 +168,7 @@ function TempoReacaoTapStep({ theme, onDone }: { theme: Theme; onDone: () => voi
 
 export function TempoReacao({ difficulty, theme, onComplete }: TempoReacaoProps) {
   const [showTutorial, setShowTutorial] = useState(true);
-  const reportProgress = useExerciseProgress();
+  const { begin, isTimeUp, elapsedSec, finish, progressPct } = useTimedProgress();
 
   const [started, setStarted] = useState(false);
   const [balloons, setBalloons] = useState<Balloon[]>([]);
@@ -195,16 +194,16 @@ export function TempoReacao({ difficulty, theme, onComplete }: TempoReacaoProps)
     const newResults = [...resultsRef.current, { correct, rt }];
     resultsRef.current = newResults;
     setResults(newResults);
-    reportProgress(Math.round((newResults.length / MAX_TRIALS) * 100));
 
-    if (newResults.length >= MAX_TRIALS) {
+    if (isTimeUp()) {
       doneRef.current = true;
+      finish();
       if (nextSpawnTimer.current) clearTimeout(nextSpawnTimer.current);
 
       const hits = newResults.filter((r) => r.correct && r.rt !== null);
       const avgRT = hits.length > 0 ? hits.reduce((s, r) => s + (r.rt ?? 0), 0) / hits.length : 1000;
-      const accuracy = newResults.filter((r) => r.correct).length / MAX_TRIALS;
-      const dur = Math.round((Date.now() - startTime.current) / 1000);
+      const accuracy = newResults.filter((r) => r.correct).length / Math.max(1, newResults.length);
+      const dur = elapsedSec();
       const score = calculateExerciseScore("tempo-reacao", accuracy, avgRT, difficulty);
 
       setTimeout(() => {
@@ -216,15 +215,15 @@ export function TempoReacao({ difficulty, theme, onComplete }: TempoReacaoProps)
           reactionTime: avgRT,
           difficulty,
           duration: dur,
-          metadata: { trials: MAX_TRIALS, avgRT, correct: hits.length },
+          metadata: { trials: newResults.length, avgRT, correct: hits.length },
         });
       }, 1500);
     }
-  }, [difficulty, onComplete, reportProgress]);
+  }, [difficulty, onComplete, isTimeUp, elapsedSec, finish]);
 
   const spawnBatch = useCallback(() => {
     if (doneRef.current) return;
-    if (resultsRef.current.length >= MAX_TRIALS) return;
+    if (isTimeUp()) return;
 
     // Progressive: after every 4 correct hits, add 1 extra target (max 3) and 1 extra distractor (max +3)
     const bonus = Math.min(Math.floor(correctCountRef.current / 4), 2);
@@ -237,12 +236,13 @@ export function TempoReacao({ difficulty, theme, onComplete }: TempoReacaoProps)
     ];
     pendingTargetsRef.current = numTargets;
     setBalloons(batch);
-  }, [ms, nd]);
+  }, [ms, nd, isTimeUp]);
 
   function start() {
     setStarted(true);
     startedRef.current = true;
     startTime.current = Date.now();
+    begin();
     spawnBatch();
   }
 
@@ -253,7 +253,7 @@ export function TempoReacao({ difficulty, theme, onComplete }: TempoReacaoProps)
   function handleBalloonClick(balloon: Balloon) {
     if (!startedRef.current || doneRef.current) return;
     if (resolvedIds.current.has(balloon.id)) return;
-    if (resultsRef.current.length >= MAX_TRIALS) return;
+    if (isTimeUp()) return;
 
     resolvedIds.current.add(balloon.id);
     setBalloons((prev) => prev.filter((b) => b.id !== balloon.id));
@@ -320,18 +320,11 @@ export function TempoReacao({ difficulty, theme, onComplete }: TempoReacaoProps)
             <p className={`text-xs ${subClass}`}>Toque apenas nos balões <span className="font-bold text-green-600">VERDES</span></p>
           </div>
         </div>
-        <div className="flex gap-0.5">
-          {Array.from({ length: MAX_TRIALS }).map((_, i) => (
-            <div
-              key={i}
-              className={`h-1.5 flex-1 rounded-full transition-colors ${
-                i < results.length
-                  ? results[i].correct ? "bg-green-500" : "bg-red-400"
-                  : i === results.length ? "bg-blue-400 animate-pulse"
-                  : theme === "GAMIFIED" ? "bg-gray-700" : "bg-gray-200"
-              }`}
-            />
-          ))}
+        <div className="flex items-center gap-2">
+          <div className={`flex-1 rounded-full overflow-hidden ${theme === "GAMIFIED" ? "bg-gray-700" : "bg-gray-200"}`} style={{ height: 6 }}>
+            <div style={{ height: "100%", borderRadius: 9999, width: `${progressPct}%`, background: theme === "GAMIFIED" ? "#22d3ee" : "#3b82f6", transition: "width 0.45s linear" }} />
+          </div>
+          <span className={`text-xs font-bold tabular-nums ${subClass}`} style={{ minWidth: 30, textAlign: "right" }}>{progressPct}%</span>
         </div>
       </div>
 

@@ -3,7 +3,7 @@
 import { useState, useRef, useCallback, useEffect } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { calculateExerciseScore } from "@/lib/scoring";
-import { useExerciseProgress } from "@/components/exercises/ExerciseWrapper";
+import { useTimedProgress } from "@/components/exercises/useExerciseEngine";
 import { TutorialBase } from "@/components/exercises/TutorialBase";
 import type { ExerciseResult, Theme } from "@/types";
 
@@ -22,7 +22,6 @@ interface TrafficLightProps {
   isBlinking: boolean;
 }
 
-const TOTAL_TRIALS = 60;
 // All lights blink for this duration before the target reveals its color
 const BLINK_DURATION = 1500; // ms
 
@@ -227,7 +226,7 @@ interface RoundState {
 
 export function Semaforo({ difficulty, theme, onComplete }: SemaforoProps) {
   const [showTutorial, setShowTutorial] = useState(true);
-  const reportProgress = useExerciseProgress();
+  const { begin, isTimeUp, elapsedSec, finish: finishProgress, progressPct } = useTimedProgress();
 
   const [started, setStarted] = useState(false);
   const [phase, setPhase] = useState<Phase>("idle");
@@ -260,14 +259,15 @@ export function Semaforo({ difficulty, theme, onComplete }: SemaforoProps) {
     (finalResults: { correct: boolean; rt: number | null }[]) => {
       if (doneRef.current) return;
       doneRef.current = true;
+      finishProgress();
 
       const hits = finalResults.filter((r) => r.correct && r.rt !== null);
       const avgRT =
         hits.length > 0
           ? hits.reduce((s, r) => s + (r.rt ?? 0), 0) / hits.length
           : 1500;
-      const accuracy = finalResults.filter((r) => r.correct).length / TOTAL_TRIALS;
-      const dur = Math.round((Date.now() - startTime.current) / 1000);
+      const accuracy = finalResults.filter((r) => r.correct).length / Math.max(1, finalResults.length);
+      const dur = elapsedSec();
       const score = calculateExerciseScore("semaforo", accuracy, avgRT, difficulty);
 
       finishTimer.current = setTimeout(() => {
@@ -279,11 +279,11 @@ export function Semaforo({ difficulty, theme, onComplete }: SemaforoProps) {
           reactionTime: avgRT,
           difficulty,
           duration: dur,
-          metadata: { trials: TOTAL_TRIALS, avgRT, correct: hits.length },
+          metadata: { trials: finalResults.length, avgRT, correct: hits.length },
         });
       }, 1200);
     },
-    [difficulty, onComplete]
+    [difficulty, onComplete, elapsedSec, finishProgress]
   );
 
   // ─── Start a new round ────────────────────────────────────────────────────
@@ -328,7 +328,6 @@ export function Semaforo({ difficulty, theme, onComplete }: SemaforoProps) {
       const newResults = [...resultsRef.current, { correct, rt: correct ? rt : null }];
       resultsRef.current = newResults;
       setResults(newResults);
-      reportProgress(Math.round((newResults.length / TOTAL_TRIALS) * 100));
 
       setFeedback(correct ? "correct" : "wrong");
       setPhase("feedback");
@@ -336,14 +335,14 @@ export function Semaforo({ difficulty, theme, onComplete }: SemaforoProps) {
       if (feedbackTimer.current) clearTimeout(feedbackTimer.current);
       feedbackTimer.current = setTimeout(() => {
         setFeedback(null);
-        if (newResults.length >= TOTAL_TRIALS) {
+        if (isTimeUp()) {
           finishGame(newResults);
         } else {
           startRound();
         }
       }, 500);
     },
-    [finishGame, reportProgress, startRound]
+    [finishGame, startRound, isTimeUp]
   );
 
   function onPressAdvance() {
@@ -361,6 +360,7 @@ export function Semaforo({ difficulty, theme, onComplete }: SemaforoProps) {
   function start() {
     setStarted(true);
     startTime.current = Date.now();
+    begin();
     startRound();
   }
 
@@ -419,26 +419,13 @@ export function Semaforo({ difficulty, theme, onComplete }: SemaforoProps) {
               <span className="font-bold text-red-400">PARAR</span>
             </p>
           </div>
-          <p className="text-xs text-gray-500">
-            {results.length}/{TOTAL_TRIALS}
-          </p>
         </div>
-        {/* Progress bar */}
-        <div className="flex gap-0.5">
-          {Array.from({ length: TOTAL_TRIALS }).map((_, i) => (
-            <div
-              key={i}
-              className={`h-1.5 flex-1 rounded-full transition-colors ${
-                i < results.length
-                  ? results[i].correct
-                    ? "bg-green-500"
-                    : "bg-red-500"
-                  : i === results.length
-                  ? "bg-yellow-400 animate-pulse"
-                  : "bg-gray-700"
-              }`}
-            />
-          ))}
+        {/* Progress bar (pelo tempo, ~7 min) */}
+        <div className="flex items-center gap-2">
+          <div className="flex-1 rounded-full overflow-hidden bg-gray-700" style={{ height: 6 }}>
+            <div style={{ height: "100%", borderRadius: 9999, width: `${progressPct}%`, background: "#22d3ee", transition: "width 0.45s linear" }} />
+          </div>
+          <span className="text-xs font-bold tabular-nums text-gray-400" style={{ minWidth: 30, textAlign: "right" }}>{progressPct}%</span>
         </div>
       </div>
 

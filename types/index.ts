@@ -228,7 +228,7 @@ export const EXERCISE_DEFINITIONS = {
     name: "Tempo de Reação",
     domain: "processing" as Domain,
     description: "Reaja o mais rápido possível ao estímulo",
-    estimatedMinutes: 5,
+    estimatedMinutes: 7,
     icon: "⚡",
   },
   "torre-hanoi": {
@@ -268,7 +268,7 @@ export const EXERCISE_DEFINITIONS = {
     name: "Semáforo",
     domain: "processing" as Domain,
     description: "Reaja ao sinal certo: avance no verde, pare no vermelho",
-    estimatedMinutes: 6,
+    estimatedMinutes: 7,
     icon: "🚦",
   },
   "antes-depois": {

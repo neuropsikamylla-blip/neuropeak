@@ -3,7 +3,7 @@
 import { useState, useRef, useCallback, useMemo, useEffect } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { calculateExerciseScore } from "@/lib/scoring";
-import { useExerciseProgress } from "@/components/exercises/ExerciseWrapper";
+import { useTimedProgress } from "@/components/exercises/useExerciseEngine";
 import { TutorialBase } from "@/components/exercises/TutorialBase";
 import type { ExerciseResult, Theme } from "@/types";
 
@@ -24,7 +24,6 @@ interface Scenario {
   ageGroup?: "all" | "adult" | "child" | "teen";
 }
 
-const MAX_TRIALS = 60;
 const ADVANCE_DELAY_MS = 1400;
 
 // ─── Scenario bank (36 scenarios) ────────────────────────────────────────────
@@ -670,7 +669,7 @@ export function CertoOuErrado({
   patientAge,
 }: CertoOuErradoProps) {
   const [showTutorial, setShowTutorial] = useState(true);
-  const reportProgress = useExerciseProgress();
+  const { begin, isTimeUp, elapsedSec, finish, progressPct } = useTimedProgress();
 
   const SCENARIO_POOL = useMemo(() => getScenarioPool(patientAge), [patientAge]);
 
@@ -718,16 +717,16 @@ export function CertoOuErrado({
       const newResults = [...resultsRef.current, { correct, rt }];
       resultsRef.current = newResults;
       setResults(newResults);
-      reportProgress(Math.round((newResults.length / MAX_TRIALS) * 100));
 
-      if (newResults.length >= MAX_TRIALS) {
+      if (isTimeUp()) {
         doneRef.current = true;
+        finish();
 
         const correctCount = newResults.filter((r) => r.correct).length;
-        const accuracy = correctCount / MAX_TRIALS;
+        const accuracy = correctCount / Math.max(1, newResults.length);
         const avgRT =
           newResults.reduce((s, r) => s + r.rt, 0) / newResults.length;
-        const dur = Math.round((Date.now() - startTime.current) / 1000);
+        const dur = elapsedSec();
         const score = calculateExerciseScore(
           "certo-ou-errado",
           accuracy,
@@ -745,7 +744,7 @@ export function CertoOuErrado({
             difficulty,
             duration: dur,
             metadata: {
-              trials: MAX_TRIALS,
+              trials: newResults.length,
               correctCount,
               avgRT,
             },
@@ -753,7 +752,7 @@ export function CertoOuErrado({
         }, 1600);
       }
     },
-    [difficulty, onComplete, reportProgress]
+    [difficulty, onComplete, isTimeUp, elapsedSec, finish]
   );
 
   // ── Handle patient's answer ─────────────────────────────────────────────────
@@ -776,6 +775,7 @@ export function CertoOuErrado({
   function handleStart() {
     setStarted(true);
     startTime.current = Date.now();
+    begin();
     pickNextScenario();
   }
 
@@ -862,35 +862,14 @@ export function CertoOuErrado({
               Julgue cada situação do dia a dia
             </p>
           </div>
-          <span
-            className={`text-xs font-bold tabular-nums px-2 py-1 rounded-lg ${
-              theme === "GAMIFIED"
-                ? "bg-gray-700 text-cyan-400"
-                : "bg-gray-100 text-gray-600"
-            }`}
-          >
-            {results.length}/{MAX_TRIALS}
-          </span>
         </div>
 
-        {/* Progress bar dots */}
-        <div className="flex gap-0.5">
-          {Array.from({ length: MAX_TRIALS }).map((_, i) => (
-            <div
-              key={i}
-              className={`h-1.5 flex-1 rounded-full transition-colors ${
-                i < results.length
-                  ? results[i].correct
-                    ? "bg-green-500"
-                    : "bg-red-400"
-                  : i === results.length
-                  ? "bg-blue-400 animate-pulse"
-                  : theme === "GAMIFIED"
-                  ? "bg-gray-700"
-                  : "bg-gray-200"
-              }`}
-            />
-          ))}
+        {/* Progress bar (pelo tempo, ~7 min) */}
+        <div className="flex items-center gap-2">
+          <div className={`flex-1 rounded-full overflow-hidden ${theme === "GAMIFIED" ? "bg-gray-700" : "bg-gray-200"}`} style={{ height: 6 }}>
+            <div style={{ height: "100%", borderRadius: 9999, width: `${progressPct}%`, background: theme === "GAMIFIED" ? "#22d3ee" : "#3b82f6", transition: "width 0.45s linear" }} />
+          </div>
+          <span className={`text-xs font-bold tabular-nums ${subClass}`} style={{ minWidth: 30, textAlign: "right" }}>{progressPct}%</span>
         </div>
       </div>
 
