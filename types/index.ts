@@ -220,7 +220,7 @@ export const EXERCISE_DEFINITIONS = {
     name: "Cores e Palavras",
     domain: "executive" as Domain,
     description: "Siga a regra COR ou PALAVRA para identificar a resposta correta",
-    estimatedMinutes: 8,
+    estimatedMinutes: 7,
     icon: "🎨",
   },
   "tempo-reacao": {
@@ -404,7 +404,7 @@ export const EXERCISE_DEFINITIONS = {
     name: "Identificação de Símbolos",
     domain: "processing" as Domain,
     description: "Encontre o símbolo-alvo o mais rápido possível entre distratores",
-    estimatedMinutes: 6,
+    estimatedMinutes: 7,
     icon: "🔎",
   },
   "nback": {

@@ -3,7 +3,7 @@
 import { useState, useEffect, useRef } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { calculateExerciseScore } from "@/lib/scoring";
-import { useExerciseProgress } from "@/components/exercises/ExerciseWrapper";
+import { useTimedProgress } from "@/components/exercises/useExerciseEngine";
 import type { ExerciseResult, Theme } from "@/types";
 
 interface StroopTaskProps {
@@ -29,7 +29,6 @@ interface TrialItem {
   rule: Rule;
 }
 
-const MAX_TRIALS = 100;
 const MIN_TIME_MS = 550;
 const MAX_TIME_MS = 5000;
 
@@ -427,7 +426,7 @@ function TutorialStep({
 // ── Main exercise ─────────────────────────────────────────────────────────────
 
 export function StroopTask({ difficulty, theme, onComplete }: StroopTaskProps) {
-  const reportProgress = useExerciseProgress();
+  const { begin, isTimeUp, elapsedSec, finish, progressPct } = useTimedProgress();
 
   const [phase, setPhase] = useState<Phase>("tutorial");
   const [tutorialStep, setTutorialStep] = useState(0);
@@ -454,6 +453,7 @@ export function StroopTask({ difficulty, theme, onComplete }: StroopTaskProps) {
       setTutorialStep((s) => s + 1);
     } else {
       sessionStartRef.current = Date.now();
+      begin();
       setPhase("active");
     }
   }
@@ -482,19 +482,19 @@ export function StroopTask({ difficulty, theme, onComplete }: StroopTaskProps) {
     setIntraStep(intraStepRef.current);
 
     const nextTrial = trialRef.current + 1;
-    reportProgress(Math.round((nextTrial / MAX_TRIALS) * 100));
 
-    if (nextTrial >= MAX_TRIALS) {
+    if (isTimeUp()) {
       doneRef.current = true;
       setDone(true);
-      const accuracy = newResults.filter((r) => r.correct).length / MAX_TRIALS;
-      const avgRT = newResults.reduce((s, r) => s + r.rt, 0) / MAX_TRIALS;
-      const duration = Math.round((Date.now() - sessionStartRef.current) / 1000);
+      finish();
+      const accuracy = newResults.filter((r) => r.correct).length / Math.max(1, newResults.length);
+      const avgRT = newResults.reduce((s, r) => s + r.rt, 0) / Math.max(1, newResults.length);
+      const duration = elapsedSec();
       const score = calculateExerciseScore("stroop-task", accuracy, avgRT, difficulty);
       onComplete({
         exerciseId: "stroop-task", domain: "executive", score, accuracy,
         reactionTime: avgRT, difficulty, duration,
-        metadata: { total: MAX_TRIALS, correct: newResults.filter((r) => r.correct).length, finalTimeMs: nextTime },
+        metadata: { total: newResults.length, correct: newResults.filter((r) => r.correct).length, finalTimeMs: nextTime },
       });
     } else {
       setTimeMs(nextTime);
@@ -569,34 +569,14 @@ export function StroopTask({ difficulty, theme, onComplete }: StroopTaskProps) {
           >
             ⚡{"▰".repeat(intraStep)}{"▱".repeat(MAX_INTRA_STEP - intraStep)}
           </span>
-          <span
-            className="text-sm font-bold tracking-wide whitespace-nowrap"
-            style={{ color: "#4ade80" }}
-          >
-            ✓ {correctCount} / {MAX_TRIALS}
-          </span>
         </div>
 
-        {/* Progress dots */}
-        <div className="flex gap-[3px]">
-          {Array.from({ length: MAX_TRIALS }).map((_, i) => (
-            <div
-              key={i}
-              className="h-1.5 flex-1 rounded-full transition-colors duration-200"
-              style={{
-                background:
-                  i < results.length
-                    ? results[i].correct
-                      ? "#22c55e"
-                      : "#f43f5e"
-                    : i === trial
-                    ? "#818cf8"
-                    : "rgba(255,255,255,0.08)",
-                boxShadow:
-                  i === trial ? "0 0 6px #818cf8" : undefined,
-              }}
-            />
-          ))}
+        {/* Barra de progresso (pelo tempo, ~7 min) */}
+        <div className="flex items-center gap-2">
+          <div className="flex-1 rounded-full overflow-hidden" style={{ height: 6, background: "rgba(255,255,255,0.08)" }}>
+            <div style={{ height: "100%", borderRadius: 9999, width: `${progressPct}%`, background: "#818cf8", transition: "width 0.45s linear" }} />
+          </div>
+          <span className="text-xs font-bold tabular-nums" style={{ color: "rgba(255,255,255,0.6)", minWidth: 30, textAlign: "right" }}>{progressPct}%</span>
         </div>
 
         {/* Timer bar */}

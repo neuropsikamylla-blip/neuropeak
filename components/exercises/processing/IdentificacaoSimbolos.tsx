@@ -4,7 +4,7 @@ import { useState, useRef } from "react";
 import { motion } from "framer-motion";
 import { calculateExerciseScore } from "@/lib/scoring";
 import { shuffle } from "@/lib/utils";
-import { useExerciseProgress } from "@/components/exercises/ExerciseWrapper";
+import { useTimedProgress } from "@/components/exercises/useExerciseEngine";
 import { TutorialBase } from "@/components/exercises/TutorialBase";
 import type { ExerciseResult, Theme } from "@/types";
 
@@ -16,7 +16,6 @@ interface IdentificacaoSimbolosProps {
 
 const SYMBOLS = ["★", "●", "▲", "■", "♦", "⬟", "⬡", "⬢", "✦", "✿", "⊕", "⊗", "Ψ", "Ω", "Σ", "Δ", "Λ", "Π", "Φ", "Ξ"];
 
-const MAX_TRIALS = 60;
 const MIN_DISTRACTORS = 2;
 const MAX_DISTRACTORS = 18;
 
@@ -96,7 +95,7 @@ function IdentificacaoStep({ theme, onDone }: { theme: Theme; onDone: () => void
 
 export function IdentificacaoSimbolos({ difficulty, theme, onComplete }: IdentificacaoSimbolosProps) {
   const [showTutorial, setShowTutorial] = useState(true);
-  const reportProgress = useExerciseProgress();
+  const { begin, isTimeUp, elapsedSec, finish, progressPct } = useTimedProgress();
 
   const [distractorCount, setDistractorCount] = useState(initialDistractors(difficulty));
   const [streak, setStreak] = useState(0);
@@ -136,14 +135,15 @@ export function IdentificacaoSimbolos({ difficulty, theme, onComplete }: Identif
     if (newStreak <= -2) { nextDistr = Math.max(distractorCount - 2, MIN_DISTRACTORS); nextStreak = 0; }
 
     const nextTrialNum = trial + 1;
-    reportProgress(Math.round((nextTrialNum / MAX_TRIALS) * 100));
+    const timeUp = isTimeUp();
 
     setTimeout(() => {
-      if (nextTrialNum >= MAX_TRIALS) {
-        const accuracy = newResults.filter((r) => r.correct).length / MAX_TRIALS;
-        const avgRT = newResults.reduce((s, r) => s + r.rt, 0) / MAX_TRIALS;
+      if (timeUp) {
+        finish();
+        const accuracy = newResults.filter((r) => r.correct).length / Math.max(1, newResults.length);
+        const avgRT = newResults.reduce((s, r) => s + r.rt, 0) / Math.max(1, newResults.length);
         const maxDistr = Math.max(...newResults.map((r) => r.distractors));
-        const duration = Math.round((Date.now() - startTime.current) / 1000);
+        const duration = elapsedSec();
         const score = calculateExerciseScore("identificacao-simbolos", accuracy, avgRT, difficulty);
         onComplete({
           exerciseId: "identificacao-simbolos",
@@ -153,7 +153,7 @@ export function IdentificacaoSimbolos({ difficulty, theme, onComplete }: Identif
           reactionTime: avgRT,
           difficulty,
           duration,
-          metadata: { trials: MAX_TRIALS, maxDistractors: maxDistr, correct: newResults.filter((r) => r.correct).length },
+          metadata: { trials: newResults.length, maxDistractors: maxDistr, correct: newResults.filter((r) => r.correct).length },
         });
       } else {
         setStreak(nextStreak);
@@ -166,7 +166,7 @@ export function IdentificacaoSimbolos({ difficulty, theme, onComplete }: Identif
   }
 
   if (showTutorial) {
-    return <IdentificacaoTutorial theme={theme} onDone={() => setShowTutorial(false)} />;
+    return <IdentificacaoTutorial theme={theme} onDone={() => { begin(); setShowTutorial(false); }} />;
   }
 
   const bgClass = theme === "GAMIFIED" ? "bg-gray-950" : theme === "COLORFUL" ? "bg-gradient-to-br from-indigo-50 to-violet-50" : "bg-gray-50";
@@ -186,20 +186,12 @@ export function IdentificacaoSimbolos({ difficulty, theme, onComplete }: Identif
           </div>
         </div>
 
-        {/* Barra de progresso */}
-        <div className="flex gap-1 mb-4">
-          {Array.from({ length: MAX_TRIALS }).map((_, i) => (
-            <div
-              key={i}
-              className={`h-1.5 flex-1 rounded-full transition-colors ${
-                i < results.length
-                  ? results[i].correct ? "bg-green-500" : "bg-red-400"
-                  : i === trial
-                  ? "bg-blue-400 animate-pulse"
-                  : theme === "GAMIFIED" ? "bg-gray-700" : "bg-gray-200"
-              }`}
-            />
-          ))}
+        {/* Barra de progresso (pelo tempo, ~7 min) */}
+        <div className="flex items-center gap-2 mb-4">
+          <div className={`flex-1 rounded-full overflow-hidden ${theme === "GAMIFIED" ? "bg-gray-700" : "bg-gray-200"}`} style={{ height: 6 }}>
+            <div style={{ height: "100%", borderRadius: 9999, width: `${progressPct}%`, background: theme === "GAMIFIED" ? "#22d3ee" : "#3b82f6", transition: "width 0.45s linear" }} />
+          </div>
+          <span className={`text-xs font-bold tabular-nums ${theme === "GAMIFIED" ? "text-gray-400" : "text-gray-500"}`} style={{ minWidth: 30, textAlign: "right" }}>{progressPct}%</span>
         </div>
 
         {/* Target */}
