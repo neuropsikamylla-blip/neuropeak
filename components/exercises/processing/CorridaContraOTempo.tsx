@@ -3,7 +3,7 @@
 import { useState, useEffect, useRef } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { calculateExerciseScore } from "@/lib/scoring";
-import { useExerciseProgress } from "@/components/exercises/ExerciseWrapper";
+import { useTimedProgress } from "@/components/exercises/useExerciseEngine";
 import { TutorialBase } from "@/components/exercises/TutorialBase";
 import { ItemSvg } from "@/components/exercises/ItemSvg";
 import type { ExerciseResult, Theme } from "@/types";
@@ -16,7 +16,6 @@ interface Props { difficulty: number; theme: Theme; onComplete: (result: Exercis
 
 interface GridItem extends FlexItem { isTarget: boolean; collected: boolean; }
 
-const MAX_ROUNDS = 8;
 
 function gridCount(d: number) { return d <= 4 ? 12 : 16; }
 function targetCount(d: number) { return d <= 3 ? 4 : d <= 6 ? 5 : 6; }
@@ -94,7 +93,7 @@ type Phase = "ready" | "playing" | "feedback";
 
 export function CorridaContraOTempo({ difficulty, theme, onComplete }: Props) {
   const [showTutorial, setShowTutorial] = useState(true);
-  const reportProgress = useExerciseProgress();
+  const { begin, isTimeUp, elapsedSec, finish, progressPct } = useTimedProgress();
 
   const domainRef = useRef<FlexDomain>(pickRandomDomain());
   const [round, setRound] = useState(0);
@@ -113,6 +112,9 @@ export function CorridaContraOTempo({ difficulty, theme, onComplete }: Props) {
   const lastCatRef = useRef<string | null>(null);
   const resultsRef = useRef<{ correct: boolean; hits: number; total: number }[]>([]);
   const startTime = useRef(Date.now());
+  const curLevelRef = useRef(difficulty);
+  const streakRef = useRef(0);
+  const reachedRef = useRef(difficulty);
 
   useEffect(() => () => { if (timerRef.current) clearInterval(timerRef.current); }, []);
 
@@ -127,20 +129,25 @@ export function CorridaContraOTempo({ difficulty, theme, onComplete }: Props) {
     resultsRef.current = newResults;
     setRoundResults(newResults);
 
+    // "Musculação": 2 rodadas certas seguidas → sobe o nível; 2 erradas → desce.
+    streakRef.current = isCorrect ? Math.max(0, streakRef.current) + 1 : Math.min(0, streakRef.current) - 1;
+    if (streakRef.current >= 2) { streakRef.current = 0; curLevelRef.current = Math.min(10, curLevelRef.current + 1); reachedRef.current = Math.max(reachedRef.current, curLevelRef.current); }
+    else if (streakRef.current <= -2) { streakRef.current = 0; curLevelRef.current = Math.max(1, curLevelRef.current - 1); }
     const nextRound = roundRef.current + 1;
-    reportProgress(Math.round((nextRound / MAX_ROUNDS) * 100));
+    const timeUp = isTimeUp();
     setPhase("feedback");
 
     setTimeout(() => {
-      if (nextRound >= MAX_ROUNDS) {
-        const accuracy = newResults.filter(r => r.correct).length / MAX_ROUNDS;
+      if (timeUp) {
+        finish();
+        const accuracy = newResults.filter(r => r.correct).length / Math.max(1, newResults.length);
         onComplete({
           exerciseId: "corrida-tempo",
           domain: "processing",
-          score: calculateExerciseScore("corrida-tempo", accuracy, undefined, difficulty),
-          accuracy, difficulty,
-          duration: Math.round((Date.now() - startTime.current) / 1000),
-          metadata: { rounds: MAX_ROUNDS, correct: newResults.filter(r => r.correct).length },
+          score: calculateExerciseScore("corrida-tempo", accuracy, undefined, reachedRef.current),
+          accuracy, difficulty: reachedRef.current,
+          duration: elapsedSec(),
+          metadata: { rounds: newResults.length, correct: newResults.filter(r => r.correct).length },
         });
       } else {
         roundRef.current = nextRound;
@@ -151,6 +158,7 @@ export function CorridaContraOTempo({ difficulty, theme, onComplete }: Props) {
   }
 
   function startRound() {
+    begin();
     if (roundRef.current % 3 === 0 && roundRef.current > 0) {
       domainRef.current = pickRandomDomain();
     }
@@ -160,13 +168,13 @@ export function CorridaContraOTempo({ difficulty, theme, onComplete }: Props) {
     const pool = cats.length > 1 ? cats.filter(c => c.id !== lastCatRef.current) : cats;
     const cat = pool[Math.floor(Math.random() * pool.length)];
     lastCatRef.current = cat.id;
-    const newItems = buildGrid(domain, cat, difficulty);
+    const newItems = buildGrid(domain, cat, curLevelRef.current);
     roundEndedRef.current = false;
     hitsRef.current = 0;
     totalRef.current = newItems.filter(i => i.isTarget).length;
     setTargetCat(cat);
     setItems(newItems);
-    setTimeLeft(timeSecs(difficulty));
+    setTimeLeft(timeSecs(curLevelRef.current));
     setPhase("playing");
   }
 
@@ -208,7 +216,7 @@ export function CorridaContraOTempo({ difficulty, theme, onComplete }: Props) {
   const card = theme === "GAMIFIED" ? "bg-gray-800 border border-cyan-500/30" : "bg-white shadow-lg";
   const titleClass = theme === "GAMIFIED" ? "text-cyan-400" : theme === "COLORFUL" ? "text-red-700" : "text-gray-900";
   const subClass = theme === "GAMIFIED" ? "text-gray-400" : "text-gray-500";
-  const tl = timeSecs(difficulty);
+  const tl = timeSecs(curLevelRef.current);
   const timerRatio = timeLeft / tl;
   const timerColor = timerRatio > 0.5 ? "bg-green-500" : timerRatio > 0.25 ? "bg-amber-400" : "bg-red-500 animate-pulse";
   const domain = domainRef.current;
@@ -236,15 +244,11 @@ export function CorridaContraOTempo({ difficulty, theme, onComplete }: Props) {
           </div>
         </div>
 
-        <div className="flex gap-0.5 mb-3">
-          {Array.from({ length: MAX_ROUNDS }).map((_, i) => (
-            <div key={i} className={`h-1.5 flex-1 rounded-full transition-colors ${
-              i < roundResults.length
-                ? roundResults[i].correct ? "bg-green-500" : "bg-red-400"
-                : i === round ? "bg-blue-400 animate-pulse"
-                : theme === "GAMIFIED" ? "bg-gray-700" : "bg-gray-200"
-            }`} />
-          ))}
+        <div className="flex items-center gap-2 mb-3">
+          <div className={`flex-1 rounded-full overflow-hidden ${theme === "GAMIFIED" ? "bg-gray-700" : "bg-gray-200"}`} style={{ height: 6 }}>
+            <div style={{ height: "100%", borderRadius: 9999, width: `${progressPct}%`, background: theme === "GAMIFIED" ? "#22d3ee" : "#3b82f6", transition: "width 0.45s linear" }} />
+          </div>
+          <span className={`text-xs font-bold tabular-nums ${subClass}`} style={{ minWidth: 30, textAlign: "right" }}>{progressPct}%</span>
         </div>
 
         <AnimatePresence mode="wait">

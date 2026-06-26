@@ -308,7 +308,7 @@ export const EXERCISE_DEFINITIONS = {
     name: "Corrida contra o Tempo",
     domain: "processing" as Domain,
     description: "Colete todos os itens da categoria antes que o tempo acabe",
-    estimatedMinutes: 6,
+    estimatedMinutes: 7,
     icon: "⏱️",
   },
   "desafio-orcamento": {
