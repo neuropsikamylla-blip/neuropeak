@@ -55,26 +55,31 @@ export function useTimedProgress(targetMs: number = DEFAULT_TARGET_MS) {
 }
 
 /**
- * Dificuldade adaptativa intra-sessão: +1 a cada 2 acertos SEGUIDOS (erro zera).
- * Guarda o nível máximo alcançado (para registrar/alimentar a adaptação entre sessões).
+ * Dificuldade adaptativa "de musculação": +1 a cada 2 acertos SEGUIDOS, e −1 a
+ * cada 2 erros seguidos (assim o treino fica sempre no ponto — nem fácil demais,
+ * nem impossível). Guarda o nível máximo alcançado (para a adaptação entre sessões).
  */
 export function useAdaptiveLevel(initial: number, max = 10, min = 1) {
   const curRef = useRef(Math.max(min, initial));
-  const streakRef = useRef(0);
+  const streakRef = useRef(0);   // >0 acertos seguidos, <0 erros seguidos
   const reachedRef = useRef(Math.max(min, initial));
 
   const onResult = useCallback((correct: boolean) => {
     if (correct) {
-      streakRef.current += 1;
+      streakRef.current = Math.max(0, streakRef.current) + 1;
       if (streakRef.current >= 2) {
         streakRef.current = 0;
         curRef.current = Math.min(max, curRef.current + 1);
         reachedRef.current = Math.max(reachedRef.current, curRef.current);
       }
     } else {
-      streakRef.current = 0;
+      streakRef.current = Math.min(0, streakRef.current) - 1;
+      if (streakRef.current <= -2) {
+        streakRef.current = 0;
+        curRef.current = Math.max(min, curRef.current - 1);
+      }
     }
-  }, [max]);
+  }, [max, min]);
 
   return {
     level: useCallback(() => curRef.current, []),

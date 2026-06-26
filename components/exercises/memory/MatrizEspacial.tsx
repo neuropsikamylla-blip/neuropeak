@@ -277,11 +277,12 @@ export function MatrizEspacial({ difficulty, theme, onComplete, alwaysReverse }:
     const newAttempts = [...attempts, { correct, seqLen: seqLength }];
     setAttempts(newAttempts);
 
-    // Dificuldade: +1 a cada 2 ACERTOS SEGUIDOS (erro zera a sequência de acertos)
-    const newStreak = correct ? streak + 1 : 0;
+    // "Musculação": +1 a cada 2 acertos seguidos, −1 a cada 2 erros seguidos.
+    const newStreak = correct ? Math.max(0, streak) + 1 : Math.min(0, streak) - 1;
     let nextSeqLen = seqLength;
     let nextStreak = newStreak;
     if (newStreak >= 2) { nextSeqLen = Math.min(seqLength + 1, MAX_SEQ); nextStreak = 0; }
+    if (newStreak <= -2) { nextSeqLen = Math.max(seqLength - 1, MIN_SEQ); nextStreak = 0; }
 
     const nextTrial = trial + 1;
     const timeUp = isTimeUp();

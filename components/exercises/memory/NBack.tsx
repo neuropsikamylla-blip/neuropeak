@@ -108,15 +108,13 @@ export function NBack({ difficulty, theme, onComplete }: NBackProps) {
   const [phase, setPhase]   = useState<Phase>("tutorial");
   const [letter, setLetter] = useState("");
   const [nLevel, setNLevel] = useState(initialN(difficulty));
-  const [hits, setHits]     = useState(0);
-  const [misses, setMisses] = useState(0);
   const [fb, setFb]         = useState<null | "ok" | "no" | "slow">(null);
-  const [blockInfo, setBlockInfo] = useState({ idx: 0, total: BLOCK_LEN });
 
   // refs de controle assíncrono
   const cancelRef  = useRef(false);
   const timersRef  = useRef<ReturnType<typeof setTimeout>[]>([]);
   const answerRef  = useRef<((a: "same" | "diff" | null) => void) | null>(null);
+  const answerTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const statRef    = useRef({ hits: 0, misses: 0, fa: 0, cr: 0, omit: 0 });
   const maxNRef     = useRef(initialN(difficulty));
 
@@ -126,17 +124,22 @@ export function NBack({ difficulty, theme, onComplete }: NBackProps) {
     timersRef.current.push(t);
   }), []);
 
-  // espera a resposta do paciente (clique) ou estoura o tempo (omissão)
+  // espera a resposta do paciente (clique) ou estoura o tempo (omissão).
+  // IMPORTANTE: guardar o timer e cancelá-lo ao responder — senão o timeout deste
+  // estímulo dispara depois e resolve o PRÓXIMO com null (bug "só o primeiro").
   const waitAnswer = useCallback((ms: number) => new Promise<"same" | "diff" | null>((resolve) => {
     answerRef.current = resolve;
-    const t = setTimeout(() => {
+    answerTimerRef.current = setTimeout(() => {
+      answerTimerRef.current = null;
       if (answerRef.current) { answerRef.current = null; resolve(null); }
     }, ms);
-    timersRef.current.push(t);
   }), []);
 
   const answer = useCallback((a: "same" | "diff") => {
-    if (answerRef.current) { const r = answerRef.current; answerRef.current = null; r(a); }
+    if (answerRef.current) {
+      if (answerTimerRef.current) { clearTimeout(answerTimerRef.current); answerTimerRef.current = null; }
+      const r = answerRef.current; answerRef.current = null; r(a);
+    }
   }, []);
 
   const run = useCallback(async () => {
@@ -168,7 +171,6 @@ export function NBack({ difficulty, theme, onComplete }: NBackProps) {
         let blockCorrect = 0;
         for (let i = 0; i < BLOCK_LEN; i++) {
           const isMatch = match[i];
-          setBlockInfo({ idx: i + 1, total: BLOCK_LEN });
           setLetter(seq[n + i]);
           setFb(null);
           setPhase("stim");
@@ -179,10 +181,6 @@ export function NBack({ difficulty, theme, onComplete }: NBackProps) {
           else if (correct)       { if (isMatch) statRef.current.hits++; else statRef.current.cr++; setFb("ok"); }
           else                    { if (isMatch) statRef.current.misses++; else statRef.current.fa++; setFb("no"); }
           if (correct) blockCorrect++;
-
-          // placar visível: acertos vs erros (inclui omissões)
-          setHits(statRef.current.hits + statRef.current.cr);
-          setMisses(statRef.current.misses + statRef.current.fa + statRef.current.omit);
 
           setPhase("feedback");
           await sleep(FEEDBACK_MS);
@@ -241,17 +239,8 @@ export function NBack({ difficulty, theme, onComplete }: NBackProps) {
   return (
     <div className={`min-h-screen flex flex-col items-center justify-center p-4 ${bg}`}>
       <div className={`w-full max-w-md rounded-2xl p-6 ${card}`}>
-        {/* Header */}
-        <div className="flex justify-between items-center mb-3">
-          <div>
-            <h2 className={`font-bold text-base ${titleC}`}>Memória Operacional · {nLevel}-back</h2>
-            <p className={`text-xs ${subC}`}>A letra de agora é igual à de {nLevel} atrás?</p>
-          </div>
-          <span className={`text-sm font-bold tabular-nums ${subC}`}>✓ {hits} &nbsp; ✗ {misses}</span>
-        </div>
-
         {/* Barra de progresso (pelo tempo, ~7 min, em saltos de 10%) */}
-        <div className="flex items-center gap-2 mb-6">
+        <div className="flex items-center gap-2 mb-6" style={{ marginTop: 4 }}>
           <div className={`flex-1 rounded-full overflow-hidden ${isG ? "bg-gray-700" : "bg-gray-200"}`} style={{ height: 6 }}>
             <div style={{ height: "100%", borderRadius: 9999, width: `${progressPct}%`, background: isG ? "#22D3EE" : "#3B82F6", transition: "width 0.45s linear" }} />
           </div>
@@ -271,10 +260,10 @@ export function NBack({ difficulty, theme, onComplete }: NBackProps) {
           >
             {letter}
           </div>
-          <p className="text-sm font-medium mb-4" style={{ minHeight: 22, color: priming ? "#6366F1" : fbColor ?? "#94A3B8" }}>
+          <p className="text-sm font-medium mb-4" style={{ minHeight: 22, color: priming ? "#6366F1" : fbColor ?? (isG ? "#94A3B8" : "#64748B") }}>
             {priming ? "Memorize..." :
               fb === "ok" ? "Certo!" : fb === "no" ? "Errou" : fb === "slow" ? "Responda mais rápido!" :
-              phase === "stim" ? `Estímulo ${blockInfo.idx}/${blockInfo.total}` : ""}
+              phase === "stim" ? `É igual à de ${nLevel} atrás?` : ""}
           </p>
         </div>
 

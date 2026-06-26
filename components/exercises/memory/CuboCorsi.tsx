@@ -118,7 +118,7 @@ function IsoCube({
       <div style={{
         width: S, height: S, position: "relative", transformStyle: "preserve-3d",
         transform: cubePose(litFace),
-        transition: "transform 0.45s cubic-bezier(.34,.07,.2,1)",
+        transition: "transform 0.85s cubic-bezier(.45,.05,.2,1)",
       }}>
         {["back","bottom","leftbk","right","front","top"].map(renderFace)}
       </div>
@@ -160,7 +160,7 @@ function seqLen(d: number): number {
   if (d <= 6) return 5; if (d <= 7) return 6; if (d <= 8) return 7;
   if (d <= 9) return 8; return 9;
 }
-function flashMs(d: number): number { return d <= 3 ? 900 : d <= 6 ? 680 : 500; }
+function flashMs(d: number): number { return d <= 3 ? 1000 : d <= 6 ? 850 : 700; }
 
 function randSeq(len: number): number[] {
   const arr: number[] = [];
@@ -307,8 +307,6 @@ export function CuboCorsi({ difficulty, theme: _theme, onComplete }: Props) {
 
   const correctRef = useRef(0);
   const errorsRef  = useRef(0);
-  const [correct, setCorrect] = useState(0);
-  const [errors,  setErrors ] = useState(0);
   const [progressPct, setProgressPct] = useState(0);   // barra por tempo (0-100)
   const [poseFace, setPoseFace] = useState<Face | null>(null);  // face que o cubo apresenta
 
@@ -367,10 +365,10 @@ export function CuboCorsi({ difficulty, theme: _theme, onComplete }: Props) {
       await sleep(600);
       for (const idx of seq) {
         const face = FACE_OF[idx];
-        if (face !== curFace) {         // muda de face → gira o cubo (fluido) e espera
+        if (face !== curFace) {         // muda de face → gira o cubo (lento/fluido) e espera
           setPoseFace(face);
           curFace = face;
-          await sleep(480);
+          await sleep(900);             // tempo da virada completar antes de acender
         }
         setTS(prev => prev.map((_, j) => j === idx ? "lit" : "idle"));
         sndFlash();
@@ -402,18 +400,22 @@ export function CuboCorsi({ difficulty, theme: _theme, onComplete }: Props) {
     setPhase("result");
     rtsRef.current.push((Date.now() - inputStartRef.current) / seq.length);
 
+    // "Musculação": 2 acertos seguidos → sobe; 2 erros seguidos → desce um pouco.
     if (allOk) {
-      correctRef.current++; setCorrect(correctRef.current); sndCorrect();
-      // 2 acertos SEGUIDOS → sobe a dificuldade (sequência maior / flashes mais rápidos)
-      streakRef.current++;
+      correctRef.current++; sndCorrect();
+      streakRef.current = Math.max(0, streakRef.current) + 1;
       if (streakRef.current >= 2) {
         streakRef.current = 0;
         curDiffRef.current = Math.min(10, curDiffRef.current + 1);
         maxDiffRef.current = Math.max(maxDiffRef.current, curDiffRef.current);
       }
     } else {
-      errorsRef.current++; setErrors(errorsRef.current); sndWrong();
-      streakRef.current = 0;   // erro zera a sequência de acertos
+      errorsRef.current++; sndWrong();
+      streakRef.current = Math.min(0, streakRef.current) - 1;
+      if (streakRef.current <= -2) {
+        streakRef.current = 0;
+        curDiffRef.current = Math.max(1, curDiffRef.current - 1);
+      }
     }
 
     const t = setTimeout(() => {
@@ -481,14 +483,7 @@ export function CuboCorsi({ difficulty, theme: _theme, onComplete }: Props) {
 
   return (
     <div style={{ background: "#F0F4F8", minHeight: "100vh" }}>
-      <div style={{ maxWidth: 500, margin: "0 auto", padding: "12px 14px 32px" }}>
-
-        {/* Placar */}
-        <div style={{ display: "flex", justifyContent: "flex-end", marginBottom: 8 }}>
-          <span style={{ fontSize: 13, fontWeight: 700, color: "#475569", letterSpacing: "0.03em" }}>
-            ✓ {correct} &nbsp;&nbsp; ✗ {errors}
-          </span>
-        </div>
+      <div style={{ maxWidth: 500, margin: "0 auto", padding: "18px 14px 32px" }}>
 
         {/* Barra de progresso (pelo tempo, ~7 min) */}
         <div style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 14 }}>
