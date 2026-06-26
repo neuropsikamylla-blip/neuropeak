@@ -236,7 +236,7 @@ export const EXERCISE_DEFINITIONS = {
     name: "Jogo das Torres",
     domain: "executive" as Domain,
     description: "Mova os discos usando o menor número de movimentos",
-    estimatedMinutes: 10,
+    estimatedMinutes: 7,
     icon: "🪅",
   },
   "labirinto": {

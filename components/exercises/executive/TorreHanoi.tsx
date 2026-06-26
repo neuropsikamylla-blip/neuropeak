@@ -3,7 +3,7 @@
 import { useState, useEffect, useRef, useCallback } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { calculateExerciseScore } from "@/lib/scoring";
-import { useExerciseProgress } from "@/components/exercises/ExerciseWrapper";
+import { useTimedProgress } from "@/components/exercises/useExerciseEngine";
 import { TutorialBase } from "@/components/exercises/TutorialBase";
 import type { ExerciseResult, Theme } from "@/types";
 
@@ -15,7 +15,6 @@ interface TorreHanoiProps {
 
 const MIN_DISCS = 3;
 const MAX_DISCS = 6;
-const MAX_PUZZLES = 10;
 
 function initialDiscs(difficulty: number) {
   return Math.min(Math.max(MIN_DISCS, Math.floor(difficulty * 0.4) + 2), MAX_DISCS);
@@ -182,7 +181,7 @@ function HanoiRuleStep({ theme, onDone }: { theme: Theme; onDone: () => void }) 
 
 export function TorreHanoi({ difficulty, theme, onComplete }: TorreHanoiProps) {
   const [showTutorial, setShowTutorial] = useState(true);
-  const reportProgress = useExerciseProgress();
+  const { begin, isTimeUp, elapsedSec, finish, progressPct } = useTimedProgress();
 
   const [discCount, setDiscCount] = useState(initialDiscs(difficulty));
   const [puzzle, setPuzzle] = useState(0);
@@ -250,22 +249,23 @@ export function TorreHanoi({ difficulty, theme, onComplete }: TorreHanoiProps) {
         const nextDiscs = isOptimal ? Math.min(discCount + 1, MAX_DISCS) : discCount;
 
         const nextPuzzle = puzzle + 1;
-        reportProgress(Math.round((nextPuzzle / MAX_PUZZLES) * 100));
+        const timeUp = isTimeUp();
 
         setTimeout(() => {
-          if (nextPuzzle >= MAX_PUZZLES) {
-            const accuracy = newPuzzleResults.filter((r) => r.correct).length / MAX_PUZZLES;
+          if (timeUp) {
+            finish();
+            const correctCount = newPuzzleResults.filter((r) => r.correct).length;
+            const accuracy = correctCount / Math.max(1, newPuzzleResults.length);
             const maxDiscs = Math.max(...newPuzzleResults.map((r) => r.discs));
-            const duration = Math.round((Date.now() - startTime.current) / 1000);
-            const score = calculateExerciseScore("torre-hanoi", accuracy, undefined, difficulty);
+            const score = calculateExerciseScore("torre-hanoi", accuracy, undefined, maxDiscs);
             onComplete({
               exerciseId: "torre-hanoi",
               domain: "executive",
               score,
               accuracy,
-              difficulty,
-              duration,
-              metadata: { puzzles: MAX_PUZZLES, maxDiscs, correct: newPuzzleResults.filter((r) => r.correct).length },
+              difficulty: maxDiscs,
+              duration: elapsedSec(),
+              metadata: { puzzles: newPuzzleResults.length, maxDiscs, correct: correctCount },
             });
           } else {
             setPuzzle(nextPuzzle);
@@ -278,7 +278,7 @@ export function TorreHanoi({ difficulty, theme, onComplete }: TorreHanoiProps) {
   }
 
   if (showTutorial) {
-    return <TorreHanoiTutorial theme={theme} onDone={() => setShowTutorial(false)} />;
+    return <TorreHanoiTutorial theme={theme} onDone={() => { begin(); setShowTutorial(false); }} />;
   }
 
   const bgClass = theme === "GAMIFIED" ? "bg-gray-950" : theme === "COLORFUL" ? "bg-gradient-to-br from-yellow-50 to-orange-50" : "bg-gray-50";
@@ -299,20 +299,12 @@ export function TorreHanoi({ difficulty, theme, onComplete }: TorreHanoiProps) {
           </div>
         </div>
 
-        {/* Barra de progresso */}
-        <div className="flex gap-1 mb-5">
-          {Array.from({ length: MAX_PUZZLES }).map((_, i) => (
-            <div
-              key={i}
-              className={`h-1.5 flex-1 rounded-full transition-colors ${
-                i < puzzleResults.length
-                  ? puzzleResults[i].correct ? "bg-green-500" : "bg-red-400"
-                  : i === puzzle
-                  ? "bg-blue-400 animate-pulse"
-                  : theme === "GAMIFIED" ? "bg-gray-700" : "bg-gray-200"
-              }`}
-            />
-          ))}
+        {/* Barra de progresso (pelo tempo, ~7 min) */}
+        <div className="flex items-center gap-2 mb-5">
+          <div className={`flex-1 rounded-full overflow-hidden ${theme === "GAMIFIED" ? "bg-gray-700" : "bg-gray-200"}`} style={{ height: 6 }}>
+            <div style={{ height: "100%", borderRadius: 9999, width: `${progressPct}%`, background: theme === "GAMIFIED" ? "#22d3ee" : "#3b82f6", transition: "width 0.45s linear" }} />
+          </div>
+          <span className={`text-xs font-bold tabular-nums ${theme === "GAMIFIED" ? "text-gray-400" : "text-gray-500"}`} style={{ minWidth: 30, textAlign: "right" }}>{progressPct}%</span>
         </div>
 
         {/* Instructions */}
