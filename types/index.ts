@@ -324,7 +324,7 @@ export const EXERCISE_DEFINITIONS = {
     name: "Caça Informação",
     domain: "attention" as Domain,
     description: "Encontre e interprete informações em etiquetas de produtos — preço, peso, quantidade e validade",
-    estimatedMinutes: 8,
+    estimatedMinutes: 7,
     icon: "🔍",
   },
   "mudanca-regras": {

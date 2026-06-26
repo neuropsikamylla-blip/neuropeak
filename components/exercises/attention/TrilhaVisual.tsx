@@ -4,7 +4,7 @@ import { useState, useRef, useCallback } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { calculateExerciseScore } from "@/lib/scoring";
 import { shuffle } from "@/lib/utils";
-import { useExerciseProgress } from "@/components/exercises/ExerciseWrapper";
+import { useTimedProgress } from "@/components/exercises/useExerciseEngine";
 import { TutorialBase } from "@/components/exercises/TutorialBase";
 import type { ExerciseResult, Theme } from "@/types";
 
@@ -21,7 +21,6 @@ interface Cell {
   y: number; // % in play area
 }
 
-const MAX_ROUNDS = 20;
 const MIN_COUNT = 5;
 const MAX_COUNT = 25;
 
@@ -163,7 +162,7 @@ function TrilhaVisualTutorial({ theme, onDone }: { theme: Theme; onDone: () => v
 
 export function TrilhaVisual({ difficulty, theme, onComplete }: TrilhaVisualProps) {
   const [showTutorial, setShowTutorial] = useState(true);
-  const reportProgress = useExerciseProgress();
+  const { begin, isTimeUp, elapsedSec, finish, progressPct } = useTimedProgress();
 
   const [count, setCount] = useState(initialCount(difficulty));
   const [streak, setStreak] = useState(0);
@@ -213,19 +212,20 @@ export function TrilhaVisual({ difficulty, theme, onComplete }: TrilhaVisualProp
         if (newStreak <= -2) { nextCount = Math.max(count - 2, MIN_COUNT); nextStreak = 0; }
 
         const nextRound = round + 1;
-        reportProgress(Math.round((nextRound / MAX_ROUNDS) * 100));
+        const timeUp = isTimeUp();
 
         setTimeout(() => {
-          if (nextRound >= MAX_ROUNDS) {
-            const accuracy = newRoundResults.filter((r) => r.correct).length / MAX_ROUNDS;
+          if (timeUp) {
+            finish();
+            const accuracy = newRoundResults.filter((r) => r.correct).length / Math.max(1, newRoundResults.length);
             const maxCount = Math.max(...newRoundResults.map((r) => r.count));
-            const duration = Math.round((Date.now() - startTime.current) / 1000);
+            const duration = elapsedSec();
             const score = calculateExerciseScore("trilha-visual", accuracy, undefined, difficulty);
             onComplete({
               exerciseId: "trilha-visual",
               domain: "attention",
               score, accuracy, difficulty, duration,
-              metadata: { rounds: MAX_ROUNDS, maxCount, correct: newRoundResults.filter((r) => r.correct).length },
+              metadata: { rounds: newRoundResults.length, maxCount, correct: newRoundResults.filter((r) => r.correct).length },
             });
           } else {
             setRound(nextRound);
@@ -240,10 +240,10 @@ export function TrilhaVisual({ difficulty, theme, onComplete }: TrilhaVisualProp
     } else {
       setErrors((e) => e + 1);
     }
-  }, [roundPhase, nextExpected, count, errors, streak, round, roundResults, difficulty, cells, onComplete, reportProgress, startNewRound]);
+  }, [roundPhase, nextExpected, count, errors, streak, round, roundResults, difficulty, cells, onComplete, isTimeUp, elapsedSec, finish, startNewRound]);
 
   if (showTutorial) {
-    return <TrilhaVisualTutorial theme={theme} onDone={() => setShowTutorial(false)} />;
+    return <TrilhaVisualTutorial theme={theme} onDone={() => { begin(); setShowTutorial(false); }} />;
   }
 
   // ── Theme styles ──────────────────────────────────────────────────
@@ -313,16 +313,12 @@ export function TrilhaVisual({ difficulty, theme, onComplete }: TrilhaVisualProp
           )}
         </div>
 
-        {/* Progress bar */}
-        <div className="flex gap-0.5 px-5 py-2">
-          {Array.from({ length: MAX_ROUNDS }).map((_, i) => (
-            <div key={i} className={`h-1.5 flex-1 rounded-full transition-colors ${
-              i < roundResults.length
-                ? roundResults[i].correct ? "bg-green-500" : "bg-red-400"
-                : i === round ? "bg-blue-400 animate-pulse"
-                : theme === "GAMIFIED" ? "bg-gray-800" : "bg-gray-200"
-            }`} />
-          ))}
+        {/* Progress bar (pelo tempo, ~7 min) */}
+        <div className="flex items-center gap-2 px-5 py-2">
+          <div className={`flex-1 rounded-full overflow-hidden ${theme === "GAMIFIED" ? "bg-gray-800" : "bg-gray-200"}`} style={{ height: 6 }}>
+            <div style={{ height: "100%", borderRadius: 9999, width: `${progressPct}%`, background: theme === "GAMIFIED" ? "#22d3ee" : "#3b82f6", transition: "width 0.45s linear" }} />
+          </div>
+          <span className={`text-xs font-bold tabular-nums ${theme === "GAMIFIED" ? "text-gray-400" : "text-gray-500"}`} style={{ minWidth: 30, textAlign: "right" }}>{progressPct}%</span>
         </div>
 
         {/* Instruction */}

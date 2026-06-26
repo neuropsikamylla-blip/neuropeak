@@ -3,7 +3,7 @@
 import { useState, useRef, useCallback } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { calculateExerciseScore } from "@/lib/scoring";
-import { useExerciseProgress } from "@/components/exercises/ExerciseWrapper";
+import { useTimedProgress } from "@/components/exercises/useExerciseEngine";
 import { TutorialBase } from "@/components/exercises/TutorialBase";
 import type { ExerciseResult, Theme } from "@/types";
 
@@ -381,11 +381,10 @@ function CacaTutorial({ theme, onDone }: { theme: Theme; onDone: () => void }) {
 
 // ── Main component ─────────────────────────────────────────────────────────────
 
-const MAX_ROUNDS = 20;
 
 export function CacaItemBarato({ difficulty, theme, onComplete }: Props) {
   const [showTutorial, setShowTutorial] = useState(true);
-  const reportProgress = useExerciseProgress();
+  const { begin, isTimeUp, elapsedSec, finish, progressPct } = useTimedProgress();
 
   const [round, setRound] = useState(0);
   const [roundResults, setRoundResults] = useState<boolean[]>([]);
@@ -395,27 +394,35 @@ export function CacaItemBarato({ difficulty, theme, onComplete }: Props) {
   const [phase, setPhase] = useState<"question" | "result">("question");
 
   const startTime = useRef(Date.now());
+  const curLevelRef = useRef(difficulty);
+  const streakRef = useRef(0);
+  const reachedRef = useRef(difficulty);
 
   const nextRound = useCallback((results: boolean[]) => {
-    const nr = results.length;
-    if (nr >= MAX_ROUNDS) {
-      const accuracy = results.filter(Boolean).length / MAX_ROUNDS;
+    if (isTimeUp()) {
+      finish();
+      const accuracy = results.filter(Boolean).length / Math.max(1, results.length);
       onComplete({
         exerciseId: "caca-item-barato",
         domain: "attention",
-        score: calculateExerciseScore("caca-item-barato", accuracy, undefined, difficulty),
-        accuracy, difficulty,
-        duration: Math.round((Date.now() - startTime.current) / 1000),
-        metadata: { rounds: MAX_ROUNDS, correct: results.filter(Boolean).length },
+        score: calculateExerciseScore("caca-item-barato", accuracy, undefined, reachedRef.current),
+        accuracy, difficulty: reachedRef.current,
+        duration: elapsedSec(),
+        metadata: { rounds: results.length, correct: results.filter(Boolean).length },
       });
     } else {
-      setCurrentRound(buildRound(difficulty));
+      // "Musculação": 2 acertos seguidos → sobe o nível; 2 erros seguidos → desce.
+      const lastCorrect = results[results.length - 1];
+      streakRef.current = lastCorrect ? Math.max(0, streakRef.current) + 1 : Math.min(0, streakRef.current) - 1;
+      if (streakRef.current >= 2) { streakRef.current = 0; curLevelRef.current = Math.min(10, curLevelRef.current + 1); reachedRef.current = Math.max(reachedRef.current, curLevelRef.current); }
+      else if (streakRef.current <= -2) { streakRef.current = 0; curLevelRef.current = Math.max(1, curLevelRef.current - 1); }
+      setCurrentRound(buildRound(curLevelRef.current));
       setPicked(null);
       setPickedOption(null);
-      setRound(nr);
+      setRound(results.length);
       setPhase("question");
     }
-  }, [difficulty, onComplete]);
+  }, [isTimeUp, finish, elapsedSec, onComplete]);
 
   function handleProductTap(id: string) {
     if (phase !== "question" || picked !== null) return;
@@ -424,7 +431,6 @@ export function CacaItemBarato({ difficulty, theme, onComplete }: Props) {
     setPhase("result");
     const newResults = [...roundResults, correct];
     setRoundResults(newResults);
-    reportProgress(Math.round((newResults.length / MAX_ROUNDS) * 100));
     setTimeout(() => nextRound(newResults), 1500);
   }
 
@@ -435,11 +441,10 @@ export function CacaItemBarato({ difficulty, theme, onComplete }: Props) {
     setPhase("result");
     const newResults = [...roundResults, correct];
     setRoundResults(newResults);
-    reportProgress(Math.round((newResults.length / MAX_ROUNDS) * 100));
     setTimeout(() => nextRound(newResults), 1500);
   }
 
-  if (showTutorial) return <CacaTutorial theme={theme} onDone={() => setShowTutorial(false)} />;
+  if (showTutorial) return <CacaTutorial theme={theme} onDone={() => { begin(); setShowTutorial(false); }} />;
 
   const pal = {
     bg: theme === "GAMIFIED" ? "bg-slate-950" : theme === "COLORFUL" ? "bg-gradient-to-br from-blue-50 to-indigo-50" : "bg-gradient-to-br from-slate-50 via-white to-blue-50/30",
@@ -468,14 +473,14 @@ export function CacaItemBarato({ difficulty, theme, onComplete }: Props) {
         {/* Header */}
         <div className="flex justify-between items-center mb-1">
           <h2 className={`font-bold text-sm ${pal.title}`}>🔍 Caça Informação</h2>
-          <span className={`text-xs ${pal.sub}`}>{round + 1}/{MAX_ROUNDS}</span>
+          <span className={`text-xs font-bold tabular-nums ${pal.sub}`}>{progressPct}%</span>
         </div>
 
-        {/* Progress */}
-        <div className="flex gap-0.5 mb-4">
-          {Array.from({ length: MAX_ROUNDS }).map((_, i) => (
-            <div key={i} className={`h-1.5 flex-1 rounded-full transition-all ${pal.dot(i)}`} />
-          ))}
+        {/* Progress (pelo tempo, ~7 min) */}
+        <div className="flex items-center gap-2 mb-4">
+          <div className={`flex-1 rounded-full overflow-hidden ${theme === "GAMIFIED" ? "bg-slate-700" : "bg-slate-200"}`} style={{ height: 6 }}>
+            <div style={{ height: "100%", borderRadius: 9999, width: `${progressPct}%`, background: theme === "GAMIFIED" ? "#22d3ee" : "#3b82f6", transition: "width 0.45s linear" }} />
+          </div>
         </div>
 
         {/* Question */}
