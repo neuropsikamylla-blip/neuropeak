@@ -423,10 +423,20 @@ function TutorialStep({
   );
 }
 
+// ── Duração por nível do paciente (CASO ESPECIAL do Cores e Palavras) ──────────
+// A duração da sessão cresce conforme o paciente evolui entre sessões (o difficulty
+// reflete esse progresso). beginner 4 → standard 5 → intermediate 6 → advanced 7 min.
+function stroopDurationMin(difficulty: number): number {
+  if (difficulty <= 2) return 4;  // beginner
+  if (difficulty <= 5) return 5;  // standard
+  if (difficulty <= 8) return 6;  // intermediate
+  return 7;                       // advanced
+}
+
 // ── Main exercise ─────────────────────────────────────────────────────────────
 
 export function StroopTask({ difficulty, theme, onComplete }: StroopTaskProps) {
-  const { begin, isTimeUp, elapsedSec, finish, progressPct } = useTimedProgress();
+  const { begin, isTimeUp, elapsedSec, finish, progressPct } = useTimedProgress(stroopDurationMin(difficulty) * 60 * 1000);
 
   const [phase, setPhase] = useState<Phase>("tutorial");
   const [tutorialStep, setTutorialStep] = useState(0);
