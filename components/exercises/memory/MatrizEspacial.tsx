@@ -1,7 +1,8 @@
 "use client";
 
 import { useState, useEffect, useCallback, useRef } from "react";
-import { motion, AnimatePresence } from "framer-motion";
+import { motion } from "framer-motion";
+import { Brain, LayoutGrid, Pointer, User } from "lucide-react";
 import { calculateExerciseScore } from "@/lib/scoring";
 import { useTimedProgress } from "@/components/exercises/useExerciseEngine";
 import { TutorialBase } from "@/components/exercises/TutorialBase";
@@ -316,23 +317,31 @@ export function MatrizEspacial({ difficulty, theme, onComplete, alwaysReverse }:
     return <MatrizEspacialTutorial theme={theme} reverse={reverse} onDone={() => { begin(); setShowTutorial(false); }} />;
   }
 
-  // ─── Design system styles ────────────────────────────────────────────
+  // ─── Design system (visual premium clean — mockup da Kamylla) ─────────
+  const accent = isGamified ? "#22d3ee" : isColorful ? "#14b8a6" : "#3b82f6";
+  const accentSoft = isGamified ? "rgba(34,211,238,0.16)" : isColorful ? "rgba(20,184,166,0.12)" : "rgba(59,130,246,0.10)";
+
   const rootBg: React.CSSProperties = isGamified
     ? { background: "linear-gradient(145deg, #0a1628 0%, #0d2244 45%, #132a52 70%, #081020 100%)" }
     : isColorful
     ? { background: "linear-gradient(135deg, #e6fffb 0%, #d7f7f4 55%, #e0f7ff 100%)" }
-    : { background: "linear-gradient(160deg, #ede8df 0%, #e4ddd0 55%, #dbd4c5 100%)" };
+    : { background: "linear-gradient(160deg, #fbfcff 0%, #eef4ff 48%, #f3effe 100%)" };  // branco · azul gelo · lavanda
 
   const cardStyle: React.CSSProperties = isGamified
-    ? { background: "rgba(255,255,255,0.08)", backdropFilter: "blur(16px)", border: "1.5px solid rgba(255,255,255,0.15)", borderRadius: 20, boxShadow: "0 8px 40px rgba(0,0,0,0.5)" }
-    : { background: "#ffffff", border: "1.5px solid rgba(26,39,68,0.08)", borderRadius: 20, boxShadow: "0 4px 20px rgba(26,39,68,0.08)" };
+    ? { background: "rgba(255,255,255,0.08)", backdropFilter: "blur(16px)", border: "1.5px solid rgba(255,255,255,0.15)", borderRadius: 24, boxShadow: "0 8px 40px rgba(0,0,0,0.5)" }
+    : { background: "#ffffff", border: "1px solid rgba(148,163,184,0.28)", borderRadius: 24, boxShadow: "0 10px 44px rgba(99,118,160,0.13)" };
 
-  const titleColor = isGamified ? "#ffffff" : "#1a2744";
-  const labelColor = isGamified ? "rgba(255,255,255,0.7)" : "#5a4a3a";
-  const progressEmptyColor = isGamified ? "rgba(255,255,255,0.12)" : "rgba(26,39,68,0.12)";
+  const titleColor = isGamified ? "#ffffff" : isColorful ? "#0f766e" : "#1e293b";
+  const subColor = isGamified ? "rgba(255,255,255,0.55)" : "#94a3b8";
+  const labelColor = isGamified ? "rgba(255,255,255,0.7)" : "#64748b";
+  const progressEmptyColor = isGamified ? "rgba(255,255,255,0.12)" : "rgba(148,163,184,0.22)";
+  const innerPanel = isGamified ? "rgba(255,255,255,0.04)" : isColorful ? "rgba(20,184,166,0.05)" : "rgba(59,130,246,0.045)";
+  const innerBorder = isGamified ? "rgba(255,255,255,0.08)" : isColorful ? "rgba(20,184,166,0.14)" : "rgba(59,130,246,0.12)";
+  const stripBg = isGamified ? "rgba(34,211,238,0.10)" : isColorful ? "rgba(20,184,166,0.08)" : "rgba(59,130,246,0.07)";
+  const stripText = isGamified ? "rgba(255,255,255,0.82)" : isColorful ? "#0f766e" : "#475569";
 
-  const activeIndicatorColor = isGamified ? "#22d3ee" : isColorful ? "#14b8a6" : "#3b82f6";
-  const inactiveIndicatorColor = isGamified ? "rgba(255,255,255,0.12)" : "rgba(26,39,68,0.12)";
+  const activeIndicatorColor = accent;
+  const inactiveIndicatorColor = isGamified ? "rgba(255,255,255,0.12)" : "rgba(148,163,184,0.3)";
 
   function cellStyleFor(idx: number): React.CSSProperties {
     const R = 16;
@@ -373,100 +382,107 @@ export function MatrizEspacial({ difficulty, theme, onComplete, alwaysReverse }:
       boxShadow: "inset 0 1px 0 rgba(255,255,255,0.85), 0 2px 7px rgba(20,184,166,0.13)",
     };
     return {
-      background: "linear-gradient(150deg, #ffffff, #f1ece1)",
-      border: "1.5px solid rgba(26,39,68,0.12)", borderRadius: R,
-      boxShadow: "inset 0 1px 0 rgba(255,255,255,0.9), 0 2px 7px rgba(26,39,68,0.1)",
+      background: "#ffffff",
+      border: "1.5px solid rgba(148,163,184,0.32)", borderRadius: R,
+      boxShadow: "inset 0 1px 0 rgba(255,255,255,0.95), 0 2px 8px rgba(99,118,160,0.10)",
     };
   }
 
+  const instruction =
+    phase === "showing" ? (reverse ? "Observe a sequência — depois toque ao contrário" : "Observe a sequência...")
+    : phase === "recall" ? (reverse ? `Toque as ${seqLength} células em ORDEM INVERSA` : `Toque as ${seqLength} células na mesma ordem`)
+    : (feedbackData?.correct ? "Correto!" : "Quase lá — observe de novo");
+
   return (
-    <div className="min-h-screen flex flex-col items-center p-4 pt-6" style={rootBg}>
+    <div className="min-h-screen flex flex-col items-center p-4 pt-5" style={rootBg}>
+
+      {/* Header do app */}
+      <div className="w-full max-w-lg flex items-center justify-between mb-4 px-1">
+        <div className="flex items-center gap-2.5">
+          <div style={{ width: 38, height: 38, borderRadius: 12, background: accentSoft, display: "flex", alignItems: "center", justifyContent: "center" }}>
+            <Brain size={21} color={accent} strokeWidth={2.2} />
+          </div>
+          <div>
+            <div style={{ fontSize: 14.5, fontWeight: 700, color: titleColor, lineHeight: 1.15 }}>Treino Cognitivo</div>
+            <div style={{ fontSize: 11.5, color: subColor, lineHeight: 1.2 }}>Estimule sua mente todos os dias</div>
+          </div>
+        </div>
+        <div style={{ width: 36, height: 36, borderRadius: 999, background: accentSoft, display: "flex", alignItems: "center", justifyContent: "center" }}>
+          <User size={18} color={accent} strokeWidth={2.2} />
+        </div>
+      </div>
+
+      {/* Card do exercício */}
       <div className="w-full max-w-lg p-6" style={cardStyle}>
 
-        {/* Header */}
-        <div className="flex justify-between items-center gap-2 mb-4">
-          <h2 style={{ fontWeight: 800, fontSize: 17, letterSpacing: "-0.01em", color: titleColor }}>
-            Matriz Espacial{reverse ? " Inversa" : ""}
-          </h2>
+        {/* Topo: ícone de grade + título + badge */}
+        <div className="flex items-center justify-between gap-2 mb-3.5">
+          <div className="flex items-center gap-2.5 min-w-0">
+            <div style={{ width: 36, height: 36, borderRadius: 11, background: accentSoft, flexShrink: 0, display: "flex", alignItems: "center", justifyContent: "center" }}>
+              <LayoutGrid size={19} color={accent} strokeWidth={2.2} />
+            </div>
+            <h2 style={{ fontWeight: 800, fontSize: 21, letterSpacing: "-0.02em", color: titleColor, whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis" }}>
+              Matriz Espacial{reverse ? " Inversa" : ""}
+            </h2>
+          </div>
           <span style={{
-            fontSize: 12, fontWeight: 700, whiteSpace: "nowrap",
-            color: activeIndicatorColor,
-            background: isGamified ? "rgba(34,211,238,0.12)" : isColorful ? "rgba(20,184,166,0.1)" : "rgba(59,130,246,0.08)",
-            border: `1px solid ${activeIndicatorColor}33`,
-            padding: "4px 11px", borderRadius: 999,
+            fontSize: 12, fontWeight: 700, whiteSpace: "nowrap", color: accent,
+            background: accentSoft, border: `1px solid ${accent}33`,
+            padding: "5px 12px", borderRadius: 999, flexShrink: 0,
           }}>
             {seqLength} {seqLength > 1 ? "células" : "célula"}
           </span>
         </div>
 
         {/* Barra de progresso (pelo tempo, ~7 min, em saltos de 10%) */}
-        <div className="flex items-center gap-2 mb-5">
+        <div className="flex items-center gap-2 mb-4">
           <div className="flex-1 rounded-full overflow-hidden" style={{ height: 6, background: progressEmptyColor }}>
-            <div style={{ height: "100%", borderRadius: 9999, width: `${progressPct}%`, background: activeIndicatorColor, transition: "width 0.45s linear" }} />
+            <div style={{ height: "100%", borderRadius: 9999, width: `${progressPct}%`, background: accent, transition: "width 0.45s linear" }} />
           </div>
           <span className="text-xs font-bold tabular-nums" style={{ color: labelColor, minWidth: 30, textAlign: "right" }}>{progressPct}%</span>
         </div>
 
-        {/* Instrução */}
-        <p style={{ fontSize: 13, textAlign: "center", marginBottom: 16, minHeight: 20, color: labelColor }}>
-          {phase === "showing" && (reverse ? "Observe a sequência... clique ao contrário!" : "Observe a sequência...")}
-          {phase === "recall" && (reverse
-            ? `Toque as ${seqLength} células em ORDEM INVERSA (última → primeira)`
-            : `Toque as ${seqLength} células na mesma ordem`)}
-          {phase === "feedback" && (feedbackData?.correct ? "Correto! ✅" : "Incorreto ❌")}
-        </p>
-
-        {/* Grade (cresce com a dificuldade) */}
-        <div
-          className="grid gap-2.5 mx-auto mb-4 w-full"
-          style={{ gridTemplateColumns: `repeat(${grid}, 1fr)`, maxWidth: "480px" }}
-        >
-          {Array.from({ length: grid * grid }).map((_, idx) => (
-            <motion.button
-              key={idx}
-              onClick={() => handleCellClick(idx)}
-              disabled={phase !== "recall" || userSeq.includes(idx)}
-              className="aspect-square transition-colors"
-              style={cellStyleFor(idx)}
-              whileTap={phase === "recall" ? { scale: 0.9 } : {}}
-              animate={activeCell === idx ? { scale: [1, 1.22, 1] } : {}}
-              transition={{ duration: 0.28, ease: "easeOut" }}
-            />
-          ))}
+        {/* Faixa de instrução */}
+        <div style={{ display: "flex", alignItems: "center", justifyContent: "center", gap: 8, background: stripBg, borderRadius: 12, padding: "10px 14px", marginBottom: 16 }}>
+          <Pointer size={15} color={accent} strokeWidth={2.3} style={{ flexShrink: 0 }} />
+          <span style={{ fontSize: 13, fontWeight: 600, color: stripText, textAlign: "center" }}>{instruction}</span>
         </div>
 
-        {/* Indicador de posição durante recall */}
+        {/* Painel interno + grade (cresce com a dificuldade) */}
+        <div style={{ background: innerPanel, border: `1px solid ${innerBorder}`, borderRadius: 18, padding: 16 }}>
+          <div
+            className="grid gap-2.5 mx-auto w-full"
+            style={{ gridTemplateColumns: `repeat(${grid}, 1fr)`, maxWidth: 400 }}
+          >
+            {Array.from({ length: grid * grid }).map((_, idx) => (
+              <motion.button
+                key={idx}
+                onClick={() => handleCellClick(idx)}
+                disabled={phase !== "recall" || userSeq.includes(idx)}
+                className="aspect-square transition-colors"
+                style={cellStyleFor(idx)}
+                whileTap={phase === "recall" ? { scale: 0.9 } : {}}
+                animate={activeCell === idx ? { scale: [1, 1.22, 1] } : {}}
+                transition={{ duration: 0.28, ease: "easeOut" }}
+              />
+            ))}
+          </div>
+        </div>
+
+        {/* Indicador discreto de quantas células já foram tocadas (durante a recuperação) */}
         {phase === "recall" && (
-          <div className="flex justify-center gap-2">
+          <div className="flex justify-center gap-2 mt-4">
             {Array.from({ length: seqLength }).map((_, i) => (
               <div
                 key={i}
                 style={{
-                  width: 12,
-                  height: 12,
-                  borderRadius: 9999,
-                  transition: "background 0.2s",
-                  background: i < userSeq.length ? activeIndicatorColor : inactiveIndicatorColor,
+                  width: 9, height: 9, borderRadius: 9999, transition: "background 0.2s",
+                  background: i < userSeq.length ? accent : inactiveIndicatorColor,
                 }}
               />
             ))}
           </div>
         )}
-
-        {/* Feedback */}
-        <AnimatePresence>
-          {phase === "feedback" && feedbackData && (
-            <motion.div
-              className="text-center mt-3"
-              initial={{ opacity: 0, y: 8 }}
-              animate={{ opacity: 1, y: 0 }}
-            >
-              <p style={{ fontSize: 14, fontWeight: 600, color: feedbackData.correct ? "#16a34a" : "#ef4444" }}>
-                {feedbackData.correct ? "Correto! ✅" : "Incorreto ❌"}
-              </p>
-            </motion.div>
-          )}
-        </AnimatePresence>
 
       </div>
     </div>
