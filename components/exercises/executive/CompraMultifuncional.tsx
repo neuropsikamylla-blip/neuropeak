@@ -3,7 +3,7 @@
 import React, { useState, useEffect, useRef } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { calculateExerciseScore } from "@/lib/scoring";
-import { useExerciseProgress } from "@/components/exercises/ExerciseWrapper";
+import { useTimedProgress } from "@/components/exercises/useExerciseEngine";
 import { TutorialBase } from "@/components/exercises/TutorialBase";
 import { ItemSvg } from "@/components/exercises/ItemSvg";
 import type { ExerciseResult, Theme } from "@/types";
@@ -12,7 +12,6 @@ import { buildCtxRound, checkCtx, type CtxRound } from "@/data/compra-contextual
 
 interface Props { difficulty: number; theme: Theme; onComplete: (result: ExerciseResult) => void; }
 
-const MAX_ROUNDS = 8;
 
 interface Rules {
   budget: number;          // must not exceed this total
@@ -139,7 +138,7 @@ function TutStep({ theme, onDone }: { theme: Theme; onDone: () => void }) {
 
 export function CompraMultifuncional({ difficulty, theme, onComplete }: Props) {
   const [showTutorial, setShowTutorial] = useState(true);
-  const reportProgress = useExerciseProgress();
+  const { begin, isTimeUp, elapsedSec, finish, progressPct } = useTimedProgress();
 
   const [round, setRound] = useState(0);
   const [roundResults, setRoundResults] = useState<boolean[]>([]);
@@ -152,6 +151,9 @@ export function CompraMultifuncional({ difficulty, theme, onComplete }: Props) {
 
   const startTime = useRef(Date.now());
   const roundRef = useRef(0);
+  const curLevelRef = useRef(difficulty);
+  const streakRef = useRef(0);
+  const reachedRef = useRef(difficulty);
   const resultsRef = useRef<boolean[]>([]);
   const timerRef = useRef<ReturnType<typeof setInterval> | null>(null);
   const confirmedRef = useRef(false);
@@ -196,25 +198,29 @@ export function CompraMultifuncional({ difficulty, theme, onComplete }: Props) {
     setLastCorrect(isCorrect);
     setPhase("result");
 
+    streakRef.current = isCorrect ? Math.max(0, streakRef.current) + 1 : Math.min(0, streakRef.current) - 1;
+    if (streakRef.current >= 2) { streakRef.current = 0; curLevelRef.current = Math.min(10, curLevelRef.current + 1); reachedRef.current = Math.max(reachedRef.current, curLevelRef.current); }
+    else if (streakRef.current <= -2) { streakRef.current = 0; curLevelRef.current = Math.max(1, curLevelRef.current - 1); }
     const nextR = roundRef.current + 1;
-    reportProgress(Math.round((nextR / MAX_ROUNDS) * 100));
+    const timeUp = isTimeUp();
 
     setTimeout(() => {
-      if (nextR >= MAX_ROUNDS) {
-        const accuracy = newResults.filter(Boolean).length / MAX_ROUNDS;
+      if (timeUp) {
+        finish();
+        const accuracy = newResults.filter(Boolean).length / Math.max(1, newResults.length);
         onComplete({
           exerciseId: "compra-multifuncional",
           domain: "executive",
-          score: calculateExerciseScore("compra-multifuncional", accuracy, undefined, difficulty),
-          accuracy, difficulty,
-          duration: Math.round((Date.now() - startTime.current) / 1000),
-          metadata: { rounds: MAX_ROUNDS, correct: newResults.filter(Boolean).length },
+          score: calculateExerciseScore("compra-multifuncional", accuracy, undefined, reachedRef.current),
+          accuracy, difficulty: reachedRef.current,
+          duration: elapsedSec(),
+          metadata: { rounds: newResults.length, correct: newResults.filter(Boolean).length },
         });
       } else {
         roundRef.current = nextR;
         setRound(nextR);
         setSelected(new Set());
-        setCurrentRound(makeRound(difficulty, nextR));
+        setCurrentRound(makeRound(curLevelRef.current, nextR));
         setStoryOpen(true);
         setPhase("shopping");
       }
@@ -233,7 +239,7 @@ export function CompraMultifuncional({ difficulty, theme, onComplete }: Props) {
           instruction: "Selecione itens respeitando TODAS as 3 regras ao mesmo tempo: orçamento, categoria obrigatória e quantidade exata. O painel mostra quais regras já foram cumpridas!",
           content: (done) => <TutStep theme={theme} onDone={done} />,
         }]}
-        onDone={() => setShowTutorial(false)} />
+        onDone={() => { begin(); setShowTutorial(false); }} />
     );
   }
 
@@ -294,14 +300,11 @@ export function CompraMultifuncional({ difficulty, theme, onComplete }: Props) {
             </div>
           </div>
 
-          <div className="flex gap-0.5 mb-2">
-            {Array.from({ length: MAX_ROUNDS }).map((_, i) => (
-              <div key={i} className={`h-1.5 flex-1 rounded-full transition-colors ${
-                i < roundResults.length ? (roundResults[i] ? "bg-green-500" : "bg-red-400")
-                : i === round ? "bg-blue-400 animate-pulse"
-                : isGamified ? "bg-white/10" : "bg-gray-200"
-              }`} />
-            ))}
+          <div className="flex items-center gap-2 mb-2">
+            <div className={`flex-1 rounded-full overflow-hidden ${isGamified ? "bg-white/10" : "bg-gray-200"}`} style={{ height: 6 }}>
+              <div style={{ height: "100%", borderRadius: 9999, width: `${progressPct}%`, background: isGamified ? "#22d3ee" : "#10b981", transition: "width 0.45s linear" }} />
+            </div>
+            <span className={`text-xs font-bold tabular-nums ${pal.sub}`} style={{ minWidth: 30, textAlign: "right" }}>{progressPct}%</span>
           </div>
 
           {/* Timer bar */}

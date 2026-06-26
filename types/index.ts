@@ -316,7 +316,7 @@ export const EXERCISE_DEFINITIONS = {
     name: "Desafio do Orçamento",
     domain: "executive" as Domain,
     description: "Monte uma cesta de compras respeitando o orçamento e a meta",
-    estimatedMinutes: 8,
+    estimatedMinutes: 7,
     icon: "💰",
   },
   "caca-item-barato": {
@@ -340,7 +340,7 @@ export const EXERCISE_DEFINITIONS = {
     name: "Compra Multifuncional",
     domain: "executive" as Domain,
     description: "Respeite orçamento, categoria e quantidade ao mesmo tempo dentro do limite de tempo",
-    estimatedMinutes: 9,
+    estimatedMinutes: 7,
     icon: "🛒",
   },
   "task-switching": {

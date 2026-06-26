@@ -3,7 +3,7 @@
 import { useState, useRef } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { calculateExerciseScore } from "@/lib/scoring";
-import { useExerciseProgress } from "@/components/exercises/ExerciseWrapper";
+import { useTimedProgress } from "@/components/exercises/useExerciseEngine";
 import { TutorialBase } from "@/components/exercises/TutorialBase";
 import { ItemSvg } from "@/components/exercises/ItemSvg";
 import type { ExerciseResult, Theme } from "@/types";
@@ -11,7 +11,6 @@ import { shuffleFlex, fmt, pickRandomDomain, type FlexDomain, type FlexItem } fr
 
 interface Props { difficulty: number; theme: Theme; onComplete: (result: ExerciseResult) => void; }
 
-const MAX_ROUNDS = 8;
 
 type GoalType = "max" | "range" | "min";
 
@@ -201,7 +200,7 @@ function TutStep({ theme, onDone }: { theme: Theme; onDone: () => void }) {
 
 export function DesafioOrcamento({ difficulty, theme, onComplete }: Props) {
   const [showTutorial, setShowTutorial] = useState(true);
-  const reportProgress = useExerciseProgress();
+  const { begin, isTimeUp, elapsedSec, finish, progressPct } = useTimedProgress();
 
   const [round, setRound] = useState(0);
   const [roundResults, setRoundResults] = useState<boolean[]>([]);
@@ -212,6 +211,9 @@ export function DesafioOrcamento({ difficulty, theme, onComplete }: Props) {
 
   const startTime = useRef(Date.now());
   const roundRef = useRef(0);
+  const curLevelRef = useRef(difficulty);
+  const streakRef = useRef(0);
+  const reachedRef = useRef(difficulty);
   const resultsRef = useRef<boolean[]>([]);
 
   function toggle(id: string) {
@@ -232,25 +234,30 @@ export function DesafioOrcamento({ difficulty, theme, onComplete }: Props) {
     setLastCorrect(isCorrect);
     setPhase("result");
 
+    // "Musculação": 2 rodadas certas seguidas → sobe o nível; 2 erradas → desce.
+    streakRef.current = isCorrect ? Math.max(0, streakRef.current) + 1 : Math.min(0, streakRef.current) - 1;
+    if (streakRef.current >= 2) { streakRef.current = 0; curLevelRef.current = Math.min(10, curLevelRef.current + 1); reachedRef.current = Math.max(reachedRef.current, curLevelRef.current); }
+    else if (streakRef.current <= -2) { streakRef.current = 0; curLevelRef.current = Math.max(1, curLevelRef.current - 1); }
     const nextR = roundRef.current + 1;
-    reportProgress(Math.round((nextR / MAX_ROUNDS) * 100));
+    const timeUp = isTimeUp();
 
     setTimeout(() => {
-      if (nextR >= MAX_ROUNDS) {
-        const accuracy = newResults.filter(Boolean).length / MAX_ROUNDS;
+      if (timeUp) {
+        finish();
+        const accuracy = newResults.filter(Boolean).length / Math.max(1, newResults.length);
         onComplete({
           exerciseId: "desafio-orcamento",
           domain: "executive",
-          score: calculateExerciseScore("desafio-orcamento", accuracy, undefined, difficulty),
-          accuracy, difficulty,
-          duration: Math.round((Date.now() - startTime.current) / 1000),
-          metadata: { rounds: MAX_ROUNDS, correct: newResults.filter(Boolean).length },
+          score: calculateExerciseScore("desafio-orcamento", accuracy, undefined, reachedRef.current),
+          accuracy, difficulty: reachedRef.current,
+          duration: elapsedSec(),
+          metadata: { rounds: newResults.length, correct: newResults.filter(Boolean).length },
         });
       } else {
         roundRef.current = nextR;
         setRound(nextR);
         setSelected(new Set());
-        setCurrentRound(buildRound(difficulty, nextR));
+        setCurrentRound(buildRound(curLevelRef.current, nextR));
         setPhase("shopping");
       }
     }, 1800);
@@ -263,7 +270,7 @@ export function DesafioOrcamento({ difficulty, theme, onComplete }: Props) {
           instruction: "Você terá uma situação do dia a dia e um orçamento para respeitar. Escolha os itens, faça as contas de cabeça e confirme a compra!",
           content: (done) => <TutStep theme={theme} onDone={done} />,
         }]}
-        onDone={() => setShowTutorial(false)} />
+        onDone={() => { begin(); setShowTutorial(false); }} />
     );
   }
 
@@ -289,17 +296,14 @@ export function DesafioOrcamento({ difficulty, theme, onComplete }: Props) {
 
           <div className="flex justify-between items-center mb-2">
             <h2 className={`font-bold text-base ${pal.title}`}>💰 Desafio do Orçamento</h2>
-            <span className={`text-xs ${pal.sub}`}>{round + 1}/{MAX_ROUNDS} · {currentRound.domain.name}</span>
+            <span className={`text-xs ${pal.sub}`}>{currentRound.domain.name}</span>
           </div>
 
-          <div className="flex gap-0.5 mb-3">
-            {Array.from({ length: MAX_ROUNDS }).map((_, i) => (
-              <div key={i} className={`h-1.5 flex-1 rounded-full transition-colors ${
-                i < roundResults.length ? (roundResults[i] ? "bg-green-500" : "bg-red-400")
-                : i === round ? "bg-blue-400 animate-pulse"
-                : theme === "GAMIFIED" ? "bg-gray-700" : "bg-gray-200"
-              }`} />
-            ))}
+          <div className="flex items-center gap-2 mb-3">
+            <div className={`flex-1 rounded-full overflow-hidden ${theme === "GAMIFIED" ? "bg-gray-700" : "bg-gray-200"}`} style={{ height: 6 }}>
+              <div style={{ height: "100%", borderRadius: 9999, width: `${progressPct}%`, background: theme === "GAMIFIED" ? "#22d3ee" : "#10b981", transition: "width 0.45s linear" }} />
+            </div>
+            <span className={`text-xs font-bold tabular-nums ${pal.sub}`} style={{ minWidth: 30, textAlign: "right" }}>{progressPct}%</span>
           </div>
 
           <AnimatePresence mode="wait">
