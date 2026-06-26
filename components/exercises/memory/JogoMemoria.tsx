@@ -3,7 +3,7 @@
 import { useState, useRef, useCallback, useEffect } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { calculateExerciseScore } from "@/lib/scoring";
-import { useExerciseProgress } from "@/components/exercises/ExerciseWrapper";
+import { useTimedProgress } from "@/components/exercises/useExerciseEngine";
 import { TutorialBase } from "@/components/exercises/TutorialBase";
 import type { ExerciseResult, Theme } from "@/types";
 import { MEMORY_ITEMS, MemorySymbol } from "./MemorySymbol";
@@ -174,7 +174,7 @@ function JogoMemoriaPlayStep({ theme, cardBackStyle, cardFrontStyle, onDone }: {
 
 export function JogoMemoria({ difficulty, theme, onComplete }: JogoMemoriaProps) {
   const [showTutorial, setShowTutorial] = useState(true);
-  const reportProgress = useExerciseProgress();
+  const { begin, isTimeUp, elapsedSec, finish, progressPct } = useTimedProgress();
 
   const isGamified = theme === "GAMIFIED";
   const isColorful = theme === "COLORFUL";
@@ -227,14 +227,15 @@ export function JogoMemoria({ difficulty, theme, onComplete }: JogoMemoriaProps)
     if (newStreak <= -2) { nextPairs = Math.max(currentPairCount - 2, MIN_PAIRS); nextStreak = 0; }
 
     const nextRound = round + 1;
-    reportProgress(Math.round((nextRound / MAX_ROUNDS) * 100));
+    const timeUp = isTimeUp();
 
     setTimeout(() => {
-      if (nextRound >= MAX_ROUNDS) {
+      if (timeUp) {
         doneRef.current = true;
-        const accuracy = newRoundResults.filter((r) => r.correct).length / MAX_ROUNDS;
+        finish();
+        const correctCount = newRoundResults.filter((r) => r.correct).length;
+        const accuracy = correctCount / Math.max(1, newRoundResults.length);
         const maxPairs = Math.max(...newRoundResults.map((r) => r.pairs));
-        const duration = Math.round((Date.now() - startTime.current) / 1000);
         const score = calculateExerciseScore("jogo-memoria", accuracy, undefined, difficulty);
         onComplete({
           exerciseId: "jogo-memoria",
@@ -242,8 +243,8 @@ export function JogoMemoria({ difficulty, theme, onComplete }: JogoMemoriaProps)
           score,
           accuracy,
           difficulty,
-          duration,
-          metadata: { rounds: MAX_ROUNDS, maxPairs, correct: newRoundResults.filter((r) => r.correct).length },
+          duration: elapsedSec(),
+          metadata: { rounds: newRoundResults.length, maxPairs, correct: correctCount },
         });
       } else {
         setRound(nextRound);
@@ -303,7 +304,7 @@ export function JogoMemoria({ difficulty, theme, onComplete }: JogoMemoriaProps)
   }, [gamePhase, locked, cards, flipped, matchedCount, errors, pairCount]);
 
   if (showTutorial) {
-    return <JogoMemoriaTutorial theme={theme} onDone={() => setShowTutorial(false)} />;
+    return <JogoMemoriaTutorial theme={theme} onDone={() => { begin(); setShowTutorial(false); }} />;
   }
 
   // ─── Design system styles ────────────────────────────────────────────
@@ -363,23 +364,12 @@ export function JogoMemoria({ difficulty, theme, onComplete }: JogoMemoriaProps)
           )}
         </div>
 
-        {/* Barra de progresso */}
-        <div className="flex gap-1 mb-4">
-          {Array.from({ length: MAX_ROUNDS }).map((_, i) => (
-            <div
-              key={i}
-              style={{
-                height: 6,
-                flex: 1,
-                borderRadius: 9999,
-                transition: "background 0.2s",
-                background: i < roundResults.length
-                  ? roundResults[i].correct ? "#16a34a" : "#ef4444"
-                  : i === round ? "#60a5fa"
-                  : progressEmptyColor,
-              }}
-            />
-          ))}
+        {/* Barra de progresso (pelo tempo, ~7 min, em saltos de 10%) */}
+        <div className="flex items-center gap-2 mb-4">
+          <div className="flex-1 rounded-full overflow-hidden" style={{ height: 6, background: progressEmptyColor }}>
+            <div style={{ height: "100%", borderRadius: 9999, width: `${progressPct}%`, background: isGamified ? "#22d3ee" : isColorful ? "#14b8a6" : "#3b82f6", transition: "width 0.45s linear" }} />
+          </div>
+          <span style={{ fontSize: 11, fontWeight: 700, color: labelColor, minWidth: 30, textAlign: "right" }}>{progressPct}%</span>
         </div>
 
         {/* Instrução */}
