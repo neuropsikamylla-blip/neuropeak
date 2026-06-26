@@ -77,6 +77,33 @@ function randomColor(pool: CharacterAttributes[]): ColorName | null {
   return pick;
 }
 
+// Escolhe cor/acessório de uma lista de candidatos, evitando os 2 mais recentes
+// (mesma memória de randomColor/randomAcc) — usado pelos modos (buildFoco etc.),
+// que antes sorteavam com shuffle direto e por isso repetiam o comando.
+function pickColorFrom(candidates: ColorName[]): ColorName {
+  const base = candidates.length ? candidates : [...ALL_UNIFORM_COLORS];
+  const fresh = base.filter(c => !recentColors.includes(c));
+  const pick = shuffle(fresh.length ? fresh : base)[0];
+  recentColors = [pick, ...recentColors].slice(0, 2);
+  return pick;
+}
+function pickAccFrom(candidates: AccessoryKey[]): AccessoryKey {
+  const base = candidates.length ? candidates : [...ALL_ACCESSORIES];
+  const fresh = base.filter(a => !recentAccs.includes(a));
+  const pick = shuffle(fresh.length ? fresh : base)[0];
+  recentAccs = [pick, ...recentAccs].slice(0, 2);
+  return pick;
+}
+// Alterna o TIPO de comando do Foco N1 (cor ↔ acessório) p/ não repetir o formato.
+let lastFocoKind: "color" | "acc" | null = null;
+function nextFocoKind(canAcc: boolean): "color" | "acc" {
+  if (!canAcc) { lastFocoKind = "color"; return "color"; }
+  const kind: "color" | "acc" =
+    lastFocoKind === "color" ? "acc" : lastFocoKind === "acc" ? "color" : (Math.random() < 0.5 ? "color" : "acc");
+  lastFocoKind = kind;
+  return kind;
+}
+
 function numChars(difficulty: number): number {
   if (difficulty <= 1) return 4;
   if (difficulty <= 3) return 5;
@@ -662,16 +689,16 @@ type MoveDir = "right" | "left" | "up" | "down";
 const DIR_PT: Record<MoveDir, string> = { right: "para a direita", left: "para a esquerda", up: "para cima", down: "para baixo" };
 
 function buildFoco(lv: number, noun: string, dN: number): BuiltRound {
-  // N1 — um atributo só (cor OU acessório)
+  // N1 — um atributo só (cor OU acessório), alternando o tipo e sem repetir o valor
   if (lv === 1) {
-    const useAcc = Math.random() < 0.5 && accsWithMinColors(3).length > 0;
+    const useAcc = nextFocoKind(accsWithMinColors(3).length > 0) === "acc";
     if (useAcc) {
-      const acc = shuffle(accsWithMinColors(3))[0];
+      const acc = pickAccFrom(accsWithMinColors(3));
       const targets = distinctByAcc(acc, 4);
       const distract = pickDistinctAgents(withoutAccessory(characterAttributes, acc), dN - targets.length, new Set(targets.map(t => t.agentId)));
       return mkResult(targets, distract, [], false, targets.length, "multiTarget", `Toque nos ${noun}s com ${ACC_PT[acc]}`, 0);
     }
-    const col = shuffle(ALL_UNIFORM_COLORS).find(c => distinctByColor(c, 3).length >= 3) ?? shuffle(ALL_UNIFORM_COLORS)[0];
+    const col = pickColorFrom(ALL_UNIFORM_COLORS.filter(c => distinctByColor(c, 3).length >= 3));
     const targets = distinctByColor(col, 4);
     const distract = pickDistinctAgents(characterAttributes.filter(c => c.uniformColor !== col), dN - targets.length, new Set(targets.map(t => t.agentId)));
     return mkResult(targets, distract, [], false, targets.length, "multiTarget", `Toque nos ${noun}s ${colorPl(col)}`, 0);
@@ -679,7 +706,7 @@ function buildFoco(lv: number, noun: string, dN: number): BuiltRound {
 
   // N4 — POSIÇÃO ou MOVIMENTO por cor (metade/metade). Mesma cor "no lugar errado" = distrator.
   if (lv === 4) {
-    const col = shuffle(ALL_UNIFORM_COLORS).find(c => distinctByColor(c, 4).length >= 4) ?? shuffle(ALL_UNIFORM_COLORS)[0];
+    const col = pickColorFrom(ALL_UNIFORM_COLORS.filter(c => distinctByColor(c, 4).length >= 4));
     const colAgents = distinctByColor(col, 6);
     const targets = colAgents.slice(0, 3);
     const sameColorTrap = colAgents.slice(3, 5);
@@ -703,8 +730,8 @@ function buildFoco(lv: number, noun: string, dN: number): BuiltRound {
   // N5 — POSIÇÃO + cor+acessório: idênticos na zona oposta = armadilha (só a posição discrimina).
   if (lv === 5) {
     const zone = shuffle(ZONES)[0]; const opp = OPP_ZONE[zone];
-    const acc = shuffle(accsWithMinColors(3))[0] ?? shuffle(ALL_ACCESSORIES)[0];
-    const col = shuffle(colorsWithAcc(acc))[0];
+    const acc = pickAccFrom(accsWithMinColors(3));
+    const col = pickColorFrom(colorsWithAcc(acc));
     const match = agentWith(col, acc)!;
     const targets = cloneAgents(match, 3);
     const trapOpp = cloneAgents(match, 2);                 // idênticos, mas na zona errada
@@ -720,8 +747,8 @@ function buildFoco(lv: number, noun: string, dN: number): BuiltRound {
   }
 
   // N2 / N3 — cor + acessório (cópias) com distratores PARECIDOS
-  const acc = shuffle(accsWithMinColors(3))[0] ?? shuffle(ALL_ACCESSORIES)[0];
-  const col = shuffle(colorsWithAcc(acc))[0];
+  const acc = pickAccFrom(accsWithMinColors(3));
+  const col = pickColorFrom(colorsWithAcc(acc));
   const match = agentWith(col, acc)!;
   const targets = cloneAgents(match, 3);
   const sameColor = withoutAccessory(withUniformColor(characterAttributes, col), acc);
@@ -746,8 +773,9 @@ function buildInibicao(lv: number, noun: string, dN: number): BuiltRound {
 
   // N1 — go/no-go por cor
   if (lv === 1) {
-    const colors = shuffle(ALL_UNIFORM_COLORS).filter(c => distinctByColor(c, 3).length >= 2);
-    const go = colors[0], nogo = colors[1];
+    const valid = shuffle(ALL_UNIFORM_COLORS).filter(c => distinctByColor(c, 3).length >= 2);
+    const go = pickColorFrom(valid);
+    const nogo = shuffle(valid.filter(c => c !== go))[0] ?? valid.find(c => c !== go) ?? valid[0];
     const targets = distinctByColor(go, 3), forbidden = distinctByColor(nogo, 3);
     const r = fill(targets, forbidden, c => c.uniformColor === go || c.uniformColor === nogo);
     r.command.text = `✅ Toque nos ${noun}s ${colorPl(go)}\n🚫 NÃO toque nos ${colorPl(nogo)}`;
@@ -755,7 +783,7 @@ function buildInibicao(lv: number, noun: string, dN: number): BuiltRound {
   }
   // N2 — alvo por ACESSÓRIO, proibido por COR (atributos diferentes)
   if (lv === 2) {
-    const acc = shuffle(accsWithMinColors(2))[0];
+    const acc = pickAccFrom(accsWithMinColors(2));
     const nogoCol = shuffle(ALL_UNIFORM_COLORS)[0];
     const targets = distinctByAcc(acc, 3).filter(t => t.uniformColor !== nogoCol);
     const forbidden = distinctByColor(nogoCol, 3).filter(f => !f.accessories.includes(acc));
@@ -765,8 +793,8 @@ function buildInibicao(lv: number, noun: string, dN: number): BuiltRound {
   }
   // N3 — exceção: cor, EXCETO os com acessório
   if (lv === 3) {
-    const acc = shuffle(accsWithMinColors(2))[0];
-    const col = shuffle(colorsWithAcc(acc))[0];
+    const acc = pickAccFrom(accsWithMinColors(2));
+    const col = pickColorFrom(colorsWithAcc(acc));
     const targets = pickDistinctAgents(withoutAccessory(withUniformColor(characterAttributes, col), acc), 4);
     const forbidden = cloneAgents(agentWith(col, acc)!, 2);
     const r = fill(targets, forbidden, c => c.uniformColor === col);

@@ -504,10 +504,14 @@ export function FocusAgents({ difficulty, theme, onComplete, exerciseId = "focus
   const [displayLevel, setDisplayLevel] = useState(1);
   const [lastCorrect, setLastCorrect]   = useState(false);
   const [points, setPoints]             = useState(0);   // placar (Fase G)
+  const [combo, setCombo]               = useState(0);   // rodadas certas em sequência (micro-recompensa)
+  const [blitz, setBlitz]               = useState(false); // rodada relâmpago (ritmo)
   const [clockLeft, setClockLeft]       = useState(0);   // relógio por rodada (níveis altos)
   const [barColor, setBarColor]         = useState<string | null>(null);   // barra condicional (Fase H)
   const [flashyUids, setFlashyUids]     = useState<string[]>([]);          // distratores que piscam (Fase H)
   const pointsRef                       = useRef(0);
+  const comboRef                        = useRef(0);
+  const blitzRef                        = useRef(false);
   const clockIntRef                     = useRef<ReturnType<typeof setInterval> | null>(null);
 
   const rafRef              = useRef<number|null>(null);
@@ -572,6 +576,10 @@ export function FocusAgents({ difficulty, theme, onComplete, exerciseId = "focus
 
   const prepareRound = useCallback((_r: number) => {
     roundRef.current = _r;
+    // Rodada relâmpago: a cada 5 rodadas (nível ≥ 2) a arena acelera — quebra a
+    // cadência e vale pontos extras. Quebra a monotonia do ritmo.
+    blitzRef.current = _r > 0 && _r % 5 === 0 && levelRef.current >= 2;
+    setBlitz(blitzRef.current);
     if (_r === 0) {
       intraStepRef.current = 0;
       consecCorrectRef.current = 0;
@@ -795,7 +803,7 @@ export function FocusAgents({ difficulty, theme, onComplete, exerciseId = "focus
       prevTs      = ts;
       const ticks = dt / TICK_MS;
 
-      const lvSpeed = levelSpeed(levelRef.current, intraStepRef.current);
+      const lvSpeed = levelSpeed(levelRef.current, intraStepRef.current) * (blitzRef.current ? 1.5 : 1);
       const mult = BASE_ARENA_SPEED * lvSpeed * ticks;
       const W2   = playAreaWRef.current;
       const H2   = playAreaHRef.current;
@@ -872,8 +880,18 @@ export function FocusAgents({ difficulty, theme, onComplete, exerciseId = "focus
 
     const rt         = Date.now() - roundStart.current;
     // Fase G/H — som, vibração e placar (intensidade configurável: leve/normal/intenso).
-    if (correct) { soundCorrect(); if (fbLevel !== "leve") vibrate(fbLevel === "intenso" ? [40, 25, 40] : 40); pointsRef.current += 10 + (rt < 5000 ? 5 : 0); setPoints(pointsRef.current); }
-    else { soundWrong(); if (fbLevel !== "leve") vibrate(fbLevel === "intenso" ? [80, 50, 80, 50, 80] : [50, 40, 50]); }
+    // + combo (rodadas certas em sequência) e bônus da rodada relâmpago.
+    if (correct) {
+      soundCorrect(); if (fbLevel !== "leve") vibrate(fbLevel === "intenso" ? [40, 25, 40] : 40);
+      comboRef.current++;
+      const comboBonus = comboRef.current >= 2 ? (comboRef.current - 1) * 5 : 0;   // +5, +10, +15…
+      const blitzBonus = blitzRef.current ? 10 : 0;                                 // relâmpago vale mais
+      pointsRef.current += 10 + (rt < 5000 ? 5 : 0) + comboBonus + blitzBonus;
+      setPoints(pointsRef.current); setCombo(comboRef.current);
+    } else {
+      soundWrong(); if (fbLevel !== "leve") vibrate(fbLevel === "intenso" ? [80, 50, 80, 50, 80] : [50, 40, 50]);
+      comboRef.current = 0; setCombo(0);
+    }
     const newResults = [...roundResultsRef.current, { correct, rt }];
     setRoundResults(newResults);
     roundResultsRef.current = newResults;
@@ -1064,6 +1082,7 @@ export function FocusAgents({ difficulty, theme, onComplete, exerciseId = "focus
     sessionStart.current = Date.now();
     begin();
     metricsRef.current = []; pointsRef.current = 0; setPoints(0);
+    comboRef.current = 0; setCombo(0); blitzRef.current = false; setBlitz(false);
     prepareRound(0);
     return () => {
       stopFallAnimation();
@@ -1162,6 +1181,16 @@ export function FocusAgents({ difficulty, theme, onComplete, exerciseId = "focus
           <span className="text-xs font-bold tabular-nums px-1.5 py-0.5 rounded-lg bg-amber-400/20 whitespace-nowrap" style={{ color: "#fbbf24" }}>
             ⭐ {points}
           </span>
+          {combo >= 2 && (
+            <span className="text-xs font-black tabular-nums px-1.5 py-0.5 rounded-lg bg-orange-500/30 whitespace-nowrap animate-pulse" style={{ color: "#fb923c" }}>
+              🔥 {combo}
+            </span>
+          )}
+          {gamePhase === "playing" && blitz && (
+            <span className="text-xs font-black px-1.5 py-0.5 rounded-lg bg-cyan-400/30 whitespace-nowrap animate-pulse" style={{ color: "#22d3ee" }}>
+              ⚡ Relâmpago
+            </span>
+          )}
           {gamePhase === "playing" && clockLeft > 0 && (
             <span className={`text-xs font-black tabular-nums px-1.5 py-0.5 rounded-lg whitespace-nowrap ${clockLeft <= 4 ? "bg-red-500/40 text-red-100 animate-pulse" : "bg-black/20"}`}>
               ⏱ {clockLeft}s
