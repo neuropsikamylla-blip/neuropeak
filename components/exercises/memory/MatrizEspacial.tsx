@@ -3,7 +3,7 @@
 import { useState, useEffect, useCallback, useRef } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { calculateExerciseScore } from "@/lib/scoring";
-import { useExerciseProgress } from "@/components/exercises/ExerciseWrapper";
+import { useTimedProgress } from "@/components/exercises/useExerciseEngine";
 import { TutorialBase } from "@/components/exercises/TutorialBase";
 import type { ExerciseResult, Theme } from "@/types";
 
@@ -220,8 +220,7 @@ export function MatrizEspacial({ difficulty, theme, onComplete, alwaysReverse }:
   const [trial, setTrial] = useState(0);
   const [attempts, setAttempts] = useState<{ correct: boolean; seqLen: number }[]>([]);
   const [feedbackData, setFeedbackData] = useState<{ correct: boolean; userSeq: number[] } | null>(null);
-  const startTime = useRef<number>(Date.now());
-  const reportProgress = useExerciseProgress();
+  const { begin, isTimeUp, elapsedSec, finish, progressPct } = useTimedProgress();
 
   const isGamified = theme === "GAMIFIED";
   const isColorful = theme === "COLORFUL";
@@ -278,23 +277,21 @@ export function MatrizEspacial({ difficulty, theme, onComplete, alwaysReverse }:
     const newAttempts = [...attempts, { correct, seqLen: seqLength }];
     setAttempts(newAttempts);
 
-    const newStreak = correct
-      ? Math.max(streak, 0) + 1
-      : Math.min(streak, 0) - 1;
-
+    // Dificuldade: +1 a cada 2 ACERTOS SEGUIDOS (erro zera a sequência de acertos)
+    const newStreak = correct ? streak + 1 : 0;
     let nextSeqLen = seqLength;
     let nextStreak = newStreak;
     if (newStreak >= 2) { nextSeqLen = Math.min(seqLength + 1, MAX_SEQ); nextStreak = 0; }
-    if (newStreak <= -2) { nextSeqLen = Math.max(seqLength - 1, MIN_SEQ); nextStreak = 0; }
 
     const nextTrial = trial + 1;
-    reportProgress(Math.round((nextTrial / MAX_TRIALS) * 100));
+    const timeUp = isTimeUp();
 
     setTimeout(() => {
-      if (nextTrial >= MAX_TRIALS) {
-        const accuracy = newAttempts.filter((a) => a.correct).length / MAX_TRIALS;
+      if (timeUp) {
+        finish();
+        const correctCount = newAttempts.filter((a) => a.correct).length;
+        const accuracy = correctCount / Math.max(1, newAttempts.length);
         const maxSeq = Math.max(...newAttempts.map((a) => a.seqLen));
-        const duration = Math.round((Date.now() - startTime.current) / 1000);
         const score = calculateExerciseScore("matriz-espacial", accuracy, undefined, difficulty);
         onComplete({
           exerciseId: "matriz-espacial",
@@ -302,8 +299,8 @@ export function MatrizEspacial({ difficulty, theme, onComplete, alwaysReverse }:
           score,
           accuracy,
           difficulty,
-          duration,
-          metadata: { gridSize: grid, seqLength: maxSeq, reverse, trials: MAX_TRIALS, correct: newAttempts.filter((a) => a.correct).length },
+          duration: elapsedSec(),
+          metadata: { gridSize: grid, seqLength: maxSeq, reverse, trials: newAttempts.length, correct: correctCount },
         });
       } else {
         setFeedbackData(null);
@@ -315,7 +312,7 @@ export function MatrizEspacial({ difficulty, theme, onComplete, alwaysReverse }:
   }
 
   if (showTutorial) {
-    return <MatrizEspacialTutorial theme={theme} reverse={reverse} onDone={() => setShowTutorial(false)} />;
+    return <MatrizEspacialTutorial theme={theme} reverse={reverse} onDone={() => { begin(); setShowTutorial(false); }} />;
   }
 
   // ─── Design system styles ────────────────────────────────────────────
@@ -401,23 +398,12 @@ export function MatrizEspacial({ difficulty, theme, onComplete, alwaysReverse }:
           </span>
         </div>
 
-        {/* Barra de progresso */}
-        <div className="flex gap-1 mb-5">
-          {Array.from({ length: MAX_TRIALS }).map((_, i) => (
-            <div
-              key={i}
-              style={{
-                height: 6,
-                flex: 1,
-                borderRadius: 9999,
-                transition: "background 0.2s",
-                background: i < attempts.length
-                  ? attempts[i].correct ? "#16a34a" : "#ef4444"
-                  : i === trial ? "#60a5fa"
-                  : progressEmptyColor,
-              }}
-            />
-          ))}
+        {/* Barra de progresso (pelo tempo, ~7 min, em saltos de 10%) */}
+        <div className="flex items-center gap-2 mb-5">
+          <div className="flex-1 rounded-full overflow-hidden" style={{ height: 6, background: progressEmptyColor }}>
+            <div style={{ height: "100%", borderRadius: 9999, width: `${progressPct}%`, background: activeIndicatorColor, transition: "width 0.45s linear" }} />
+          </div>
+          <span className="text-xs font-bold tabular-nums" style={{ color: labelColor, minWidth: 30, textAlign: "right" }}>{progressPct}%</span>
         </div>
 
         {/* Instrução */}
