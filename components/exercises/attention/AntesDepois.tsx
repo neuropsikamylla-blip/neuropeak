@@ -3,7 +3,7 @@
 import { useState, useRef, useEffect, useCallback } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { calculateExerciseScore } from "@/lib/scoring";
-import { useExerciseProgress } from "@/components/exercises/ExerciseWrapper";
+import { useTimedProgress } from "@/components/exercises/useExerciseEngine";
 import type { ExerciseResult, Theme } from "@/types";
 
 interface AntesDepoisProps {
@@ -265,7 +265,7 @@ function mcOptions(q: Question): { text: string; correct: boolean }[] {
 type PresMode = "visual" | "visual_audio" | "audio_only" | null;
 
 export function AntesDepois({ difficulty, onComplete }: AntesDepoisProps) {
-  const reportProgress = useExerciseProgress();
+  const { begin, isTimeUp, elapsedSec, finish: finishTimer, progressPct } = useTimedProgress();
   const band = bandOf(difficulty);
   const startLevel = Math.min(10, Math.max(1, Math.round(difficulty)));
 
@@ -274,7 +274,7 @@ export function AntesDepois({ difficulty, onComplete }: AntesDepoisProps) {
   if (sessionRef.current.length === 0) sessionRef.current = buildSession(band);
 
   const [idx, setIdx] = useState(0);
-  const q = sessionRef.current[Math.min(idx, sessionRef.current.length - 1)];
+  const q = sessionRef.current[idx % sessionRef.current.length];
 
   // MC
   const [opts, setOpts] = useState<{ text: string; correct: boolean }[]>(() => mcOptions(q));
@@ -285,6 +285,7 @@ export function AntesDepois({ difficulty, onComplete }: AntesDepoisProps) {
   const [result, setResult] = useState<null | boolean>(null);
 
   const hits = useRef(0);
+  const totalRef = useRef(0);
   const rts = useRef<number[]>([]);
   const domains = useRef<Set<string>>(new Set());
   const modes = useRef<Set<string>>(new Set());
@@ -298,9 +299,10 @@ export function AntesDepois({ difficulty, onComplete }: AntesDepoisProps) {
   // Carrega cada questão: reseta estado + (se o modo tem áudio) fala automaticamente.
   useEffect(() => {
     if (mode === null) return;
+    begin();
     trialAt.current = Date.now();
     setPicked(null); setResult(null); setOrder([]);
-    const nq = sessionRef.current[idx];
+    const nq = sessionRef.current[idx % sessionRef.current.length];
     setOpts(nq.mode === "order_sequence" ? [] : mcOptions(nq));
     setOrderPool(nq.mode === "order_sequence" ? shuffle(nq.sequence ?? []) : []);
     if (audioAuto) speak(nq.prompt);
@@ -309,29 +311,32 @@ export function AntesDepois({ difficulty, onComplete }: AntesDepoisProps) {
   useEffect(() => () => stopSpeak(), []);
 
   const finish = useCallback((finalHits: number) => {
-    const acc = finalHits / TOTAL;
+    finishTimer();
+    const total = Math.max(1, totalRef.current);
+    const acc = finalHits / total;
     const meanRT = rts.current.length ? Math.round(rts.current.reduce((a, b) => a + b, 0) / rts.current.length) : null;
     onComplete({
       exerciseId: "antes-depois", domain: "attention",
       score: calculateExerciseScore("antes-depois", acc, meanRT ?? undefined, difficulty),
       accuracy: acc, reactionTime: meanRT ?? undefined, difficulty: startLevel,
-      duration: Math.round((Date.now() - tStart.current) / 1000),
+      duration: elapsedSec(),
       metadata: {
         progressionV2: true, accTotal: Number(acc.toFixed(3)), level: startLevel, band,
-        trials: TOTAL, hits: finalHits, meanReactionTimeMs: meanRT,
+        trials: total, hits: finalHits, meanReactionTimeMs: meanRT,
         domains: Array.from(domains.current), modes: Array.from(modes.current),
         presentationMode: mode, audioReplays: replays.current,
       },
     });
-  }, [difficulty, onComplete, startLevel, band, mode]);
+  }, [difficulty, onComplete, startLevel, band, mode, finishTimer, elapsedSec]);
 
   function advance(correct: boolean) {
     const newHits = hits.current + (correct ? 1 : 0);
     hits.current = newHits;
     const n = idx + 1;
-    reportProgress(Math.round((n / TOTAL) * 100));
+    totalRef.current = n;
+    const timeUp = isTimeUp();
     const delay = correct ? 1700 : 2700;   // erro: tempo p/ ler a explicação
-    setTimeout(() => { if (n >= TOTAL) finish(newHits); else setIdx(n); }, delay);
+    setTimeout(() => { if (timeUp) finish(newHits); else setIdx(n); }, delay);
   }
 
   function recordTrial(correct: boolean) {
@@ -393,7 +398,7 @@ export function AntesDepois({ difficulty, onComplete }: AntesDepoisProps) {
     );
   }
 
-  const pct = Math.round((idx / TOTAL) * 100);
+  const pct = progressPct;
 
   return (
     <div style={{ position: "fixed", inset: 0, background: BG, display: "flex", flexDirection: "column", overflow: "hidden" }}>
