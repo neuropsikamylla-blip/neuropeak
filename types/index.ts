@@ -244,7 +244,7 @@ export const EXERCISE_DEFINITIONS = {
     name: "Labirinto",
     domain: "executive" as Domain,
     description: "Navegue pelo labirinto até a saída",
-    estimatedMinutes: 8,
+    estimatedMinutes: 7,
     icon: "🌀",
   },
   "ordem-historia": {

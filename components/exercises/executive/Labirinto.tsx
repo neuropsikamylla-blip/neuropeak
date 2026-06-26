@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useEffect, useCallback, useRef } from "react";
-import { useExerciseProgress } from "@/components/exercises/ExerciseWrapper";
+import { useTimedProgress } from "@/components/exercises/useExerciseEngine";
 import { TutorialBase } from "@/components/exercises/TutorialBase";
 import type { ExerciseResult, Theme } from "@/types";
 
@@ -241,7 +241,6 @@ const TIME_LIMITS: Record<number, number> = {
   31: 420,
   35: 520,
 };
-const MAX_MAZES = 10;
 const MIN_IDX = 0;
 const MAX_IDX = SIZE_STEPS.length - 1;
 
@@ -605,7 +604,7 @@ function LabirintoTutorial({ theme, onDone }: { theme: Theme; onDone: () => void
 // ── Main component ─────────────────────────────────────────────────────────
 export function Labirinto({ difficulty, theme, onComplete }: LabirintoProps) {
   const [showTutorial, setShowTutorial] = useState(true);
-  const reportProgress = useExerciseProgress();
+  const { begin, isTimeUp, elapsedSec, finish, progressPct } = useTimedProgress();
   const pal = PALETTES[theme];
 
   const [sizeIdx, setSizeIdx] = useState(() => initialIdx(difficulty));
@@ -722,9 +721,8 @@ export function Labirinto({ difficulty, theme, onComplete }: LabirintoProps) {
       setMazeResults((prev) => [...prev, { correct: isCorrect, size: sizeRef.current }]);
       if (!isCorrect) { setTimedOut(true); timedOutRef.current = true; }
       setReport(m);
-      reportProgress(Math.round(((mazeNumRef.current + 1) / MAX_MAZES) * 100));
     },
-    [reportProgress]
+    []
   );
 
   // ── advanceMaze: adaptação por DESEMPENHO + próximo labirinto (ou fim) ──────
@@ -742,18 +740,19 @@ export function Labirinto({ difficulty, theme, onComplete }: LabirintoProps) {
     }
     const nextMaze = curMazeNum + 1;
 
-    if (nextMaze >= MAX_MAZES) {
+    if (isTimeUp()) {
       allDoneRef.current = true;
+      finish();
       const solvedCount = all.filter((x) => x.solved).length;
       const accuracy = all.length ? solvedCount / all.length : 0;
       const avgEff = all.length ? all.reduce((a, x) => a + x.efficiency, 0) / all.length : 0;
       const avgScore = all.length ? Math.round(all.reduce((a, x) => a + mazeScore(x), 0) / all.length) : 0;
-      const duration = Math.round((Date.now() - startTime.current) / 1000);
+      const duration = elapsedSec();
       onComplete({
         exerciseId: "labirinto", domain: "executive",
         score: Math.round(Math.min(100, avgScore / 10)), accuracy, difficulty, duration,
         metadata: {
-          mazes: MAX_MAZES, solved: solvedCount, progressionV2: true,
+          mazes: all.length, solved: solvedCount, progressionV2: true,
           accTotal: Number(accuracy.toFixed(3)), level: difficulty,
           avgEfficiency: Number((avgEff * 100).toFixed(1)), avgScore,
           totalDeadEnds: all.reduce((a, x) => a + x.deadEnds, 0),
@@ -913,7 +912,7 @@ export function Labirinto({ difficulty, theme, onComplete }: LabirintoProps) {
 
   // ── Render ──────────────────────────────────────────────────────────────
   if (showTutorial) {
-    return <LabirintoTutorial theme={theme} onDone={() => setShowTutorial(false)} />;
+    return <LabirintoTutorial theme={theme} onDone={() => { begin(); setShowTutorial(false); }} />;
   }
 
   const timeRatio = elapsed / timeLimit;
@@ -954,7 +953,7 @@ export function Labirinto({ difficulty, theme, onComplete }: LabirintoProps) {
               🌀 Labirinto
             </h2>
             <p className="text-xs" style={{ color: "#9ca3af" }}>
-              Labirinto {mazeNum + 1}/{MAX_MAZES} · {size}×{size}
+              Labirinto · {size}×{size}
             </p>
           </div>
           <div className="text-right">
@@ -964,23 +963,11 @@ export function Labirinto({ difficulty, theme, onComplete }: LabirintoProps) {
             <p className="text-[11px] tabular-nums" style={{ color: timeColor }}>{elapsed}s / {timeLimit}s</p>
           </div>
         </div>
-        <div className="flex gap-0.5">
-          {Array.from({ length: MAX_MAZES }).map((_, i) => (
-            <div
-              key={i}
-              className="h-1.5 flex-1 rounded-full transition-colors"
-              style={{
-                background:
-                  i < mazeResults.length
-                    ? mazeResults[i].correct
-                      ? "#22c55e"
-                      : "#f87171"
-                    : i === mazeNum
-                    ? "#60a5fa"
-                    : "rgba(255,255,255,0.1)",
-              }}
-            />
-          ))}
+        <div className="flex items-center gap-2">
+          <div className="flex-1 rounded-full overflow-hidden" style={{ height: 6, background: "rgba(255,255,255,0.1)" }}>
+            <div style={{ height: "100%", borderRadius: 9999, width: `${progressPct}%`, background: "#60a5fa", transition: "width 0.45s linear" }} />
+          </div>
+          <span className="text-xs font-bold tabular-nums" style={{ color: "#9ca3af", minWidth: 30, textAlign: "right" }}>{progressPct}%</span>
         </div>
       </div>
 
@@ -1011,7 +998,7 @@ export function Labirinto({ difficulty, theme, onComplete }: LabirintoProps) {
             : report.deadEnds >= 3 ? "Evite os becos: trace o caminho com o olho antes de mover."
             : report.efficiency < 0.6 ? "Muitos movimentos extras — planeje a rota mais curta."
             : "Bom! Tente usar ainda menos movimentos.";
-          const last = mazeNum + 1 >= MAX_MAZES;
+          const last = isTimeUp();
           const Row = ({ k, v, warn }: { k: string; v: string | number; warn?: boolean }) => (
             <div className="flex justify-between" style={{ fontSize: 12.5 }}>
               <span style={{ color: "#9ca3af" }}>{k}</span>
