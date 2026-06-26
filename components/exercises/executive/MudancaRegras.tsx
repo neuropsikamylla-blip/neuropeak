@@ -3,7 +3,7 @@
 import { useState, useRef, useCallback } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { calculateExerciseScore } from "@/lib/scoring";
-import { useExerciseProgress } from "@/components/exercises/ExerciseWrapper";
+import { useTimedProgress } from "@/components/exercises/useExerciseEngine";
 import { TutorialBase } from "@/components/exercises/TutorialBase";
 import { ItemSvg } from "@/components/exercises/ItemSvg";
 import type { ExerciseResult, Theme } from "@/types";
@@ -11,7 +11,6 @@ import { fmt } from "@/lib/item-domains";
 
 interface Props { difficulty: number; theme: Theme; onComplete: (result: ExerciseResult) => void; }
 
-const MAX_TRIALS = 60;
 
 type MRLevel = 1 | 2 | 3;
 
@@ -563,7 +562,7 @@ function TutStep({ theme, onDone }: { theme: Theme; onDone: () => void }) {
 
 export function MudancaRegras({ difficulty, theme, onComplete }: Props) {
   const [showTutorial, setShowTutorial] = useState(true);
-  const reportProgress = useExerciseProgress();
+  const { begin, isTimeUp, elapsedSec, finish, progressPct } = useTimedProgress();
 
   const [level, setLevel] = useState<MRLevel>(() => getLevel(difficulty));
   const [streak, setStreak] = useState(0);
@@ -613,18 +612,19 @@ export function MudancaRegras({ difficulty, theme, onComplete }: Props) {
     setLevel(nextLevel);
 
     const nextTrial = trialRef.current + 1;
-    reportProgress(Math.round((nextTrial / MAX_TRIALS) * 100));
+    const timeUp = isTimeUp();
 
     setTimeout(() => {
-      if (nextTrial >= MAX_TRIALS) {
-        const accuracy = newResults.filter(Boolean).length / MAX_TRIALS;
+      if (timeUp) {
+        finish();
+        const accuracy = newResults.filter(Boolean).length / Math.max(1, newResults.length);
         onComplete({
           exerciseId: "mudanca-regras",
           domain: "executive",
           score: calculateExerciseScore("mudanca-regras", accuracy, undefined, difficulty),
           accuracy, difficulty,
-          duration: Math.round((Date.now() - startTime.current) / 1000),
-          metadata: { trials: MAX_TRIALS, correct: newResults.filter(Boolean).length, level: nextLevel },
+          duration: elapsedSec(),
+          metadata: { trials: newResults.length, correct: newResults.filter(Boolean).length, level: nextLevel },
         });
       } else {
         trialRef.current = nextTrial;
@@ -641,7 +641,7 @@ export function MudancaRegras({ difficulty, theme, onComplete }: Props) {
           instruction: "A cada rodada você verá uma PERGUNTA e 3 ou 4 produtos. Toque no produto que melhor responde à pergunta.",
           content: (done) => <TutStep theme={theme} onDone={done} />,
         }]}
-        onDone={() => setShowTutorial(false)}
+        onDone={() => { begin(); setShowTutorial(false); }}
       />
     );
   }
@@ -685,15 +685,15 @@ export function MudancaRegras({ difficulty, theme, onComplete }: Props) {
           <div className="flex items-center gap-2">
             {streak >= 2 && <span className="text-xs font-bold text-orange-500">🔥 {streak}</span>}
             {streak <= -2 && <span className="text-xs font-bold text-blue-400">↓ {Math.abs(streak)}</span>}
-            <span className={`text-xs ${pal.sub}`}>{trial + 1}/{MAX_TRIALS}</span>
           </div>
         </div>
 
-        {/* Progress */}
-        <div className="flex gap-0.5">
-          {Array.from({ length: MAX_TRIALS }).map((_, i) => (
-            <div key={i} className={`h-1.5 flex-1 rounded-full transition-colors ${pal.dot(i)}`} />
-          ))}
+        {/* Progress (pelo tempo, ~7 min) */}
+        <div className="flex items-center gap-2">
+          <div className={`flex-1 rounded-full overflow-hidden ${theme === "GAMIFIED" ? "bg-gray-700" : "bg-gray-200"}`} style={{ height: 6 }}>
+            <div style={{ height: "100%", borderRadius: 9999, width: `${progressPct}%`, background: theme === "GAMIFIED" ? "#22d3ee" : "#8b5cf6", transition: "width 0.45s linear" }} />
+          </div>
+          <span className={`text-xs font-bold tabular-nums ${pal.sub}`} style={{ minWidth: 30, textAlign: "right" }}>{progressPct}%</span>
         </div>
 
         {/* Question banner */}

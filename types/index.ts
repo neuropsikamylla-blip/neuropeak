@@ -332,7 +332,7 @@ export const EXERCISE_DEFINITIONS = {
     name: "Mudança de Regras",
     domain: "executive" as Domain,
     description: "Selecione produtos seguindo a regra atual — ela pode mudar a qualquer momento",
-    estimatedMinutes: 8,
+    estimatedMinutes: 7,
     icon: "🔀",
   },
   "compra-multifuncional": {
