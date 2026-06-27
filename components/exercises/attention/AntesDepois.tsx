@@ -2,6 +2,7 @@
 
 import { useState, useRef, useEffect, useCallback } from "react";
 import { motion, AnimatePresence } from "framer-motion";
+import { GitBranch, Lightbulb, Check, RotateCcw, Volume2 } from "lucide-react";
 import { calculateExerciseScore } from "@/lib/scoring";
 import { useTimedProgress } from "@/components/exercises/useExerciseEngine";
 import type { ExerciseResult, Theme } from "@/types";
@@ -55,13 +56,6 @@ interface Question {
   sequence?: string[];  // ordem correta (mode = order_sequence)
   explanation: string;
 }
-
-const MODE_TAG: Record<QMode, string> = {
-  before_after: "Pense na ordem dos acontecimentos",
-  missing_step: "Qual etapa está faltando?",
-  order_sequence: "Coloque na ordem certa",
-  find_error: "O que está errado na ordem?",
-};
 
 // Emoji por ação (pistas visuais p/ quem não lê — usado no fácil/médio, não no difícil)
 const EMOJI: Record<string, string> = {
@@ -365,8 +359,8 @@ export function AntesDepois({ difficulty, onComplete }: AntesDepoisProps) {
   function undoOrder() { if (result === null) setOrder((o) => o.slice(0, -1)); }
   function repeatAudio() { replays.current++; speak(q.prompt); }
 
-  const showEmoji = band !== "hard";
-  const BG = "linear-gradient(180deg,#eef4fb 0%,#e6edf8 60%,#eef2fa 100%)";
+  const showEmoji = false;   // visual adulto/clínico — sem emojis nas opções
+  const BG = "linear-gradient(160deg,#fbfcff 0%,#eef4ff 48%,#f3effe 100%)";   // branco · azul gelo · lavanda
 
   // ─── Tela "Configurar atividade" (3 modos; nunca toca som aqui) ──────────────────
   if (mode === null) {
@@ -382,9 +376,11 @@ export function AntesDepois({ difficulty, onComplete }: AntesDepoisProps) {
     return (
       <div style={{ position: "fixed", inset: 0, background: BG, display: "flex", alignItems: "center", justifyContent: "center", padding: 22 }}>
         <div style={{ width: "100%", maxWidth: 460, background: "#fff", borderRadius: 26, padding: "30px 22px", textAlign: "center", boxShadow: "0 20px 56px rgba(40,60,110,0.18)" }}>
-          <div style={{ fontSize: 46, marginBottom: 6 }}>🧩</div>
-          <h1 style={{ color: "#1e293b", fontSize: 22, fontWeight: 900, marginBottom: 4 }}>Antes e Depois</h1>
-          <p style={{ color: "#5b6677", fontSize: 15, marginBottom: 20, fontWeight: 700 }}>Configurar atividade</p>
+          <div style={{ width: 56, height: 56, borderRadius: 16, background: "rgba(59,130,246,0.10)", display: "flex", alignItems: "center", justifyContent: "center", margin: "0 auto 12px" }}>
+            <GitBranch size={28} color="#3b82f6" strokeWidth={2.2} />
+          </div>
+          <h1 style={{ color: "#1e293b", fontSize: 22, fontWeight: 900, marginBottom: 4 }}>Sequência Temporal</h1>
+          <p style={{ color: "#5b6677", fontSize: 14, marginBottom: 20, fontWeight: 600 }}>Identifique relações de ordem, causa e consequência</p>
           <div style={{ display: "flex", flexDirection: "column", gap: 10 }}>
             <ModeBtn m="visual" icon="👁️" label="Visual" sub="Só texto na tela, sem som." />
             <ModeBtn m="visual_audio" icon="👁️🔊" label="Visual + áudio" sub="Texto na tela e a pergunta falada." />
@@ -404,15 +400,25 @@ export function AntesDepois({ difficulty, onComplete }: AntesDepoisProps) {
     <div style={{ position: "fixed", inset: 0, background: BG, display: "flex", flexDirection: "column", overflow: "hidden" }}>
       {/* Header */}
       <div style={{ flexShrink: 0, padding: "14px 18px 6px" }}>
-        <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 8 }}>
-          <div>
-            <div style={{ fontSize: 15, fontWeight: 900, color: "#1e293b" }}>Antes e Depois</div>
-            <div style={{ fontSize: 11.5, color: "#94a3b8" }}>{MODE_TAG[q.mode]}</div>
+        <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", gap: 10, marginBottom: 9 }}>
+          <div style={{ display: "flex", alignItems: "center", gap: 10, minWidth: 0 }}>
+            <div style={{ width: 34, height: 34, borderRadius: 10, background: "rgba(59,130,246,0.10)", flexShrink: 0, display: "flex", alignItems: "center", justifyContent: "center" }}>
+              <GitBranch size={18} color="#3b82f6" strokeWidth={2.2} />
+            </div>
+            <div style={{ minWidth: 0 }}>
+              <div style={{ fontSize: 16, fontWeight: 900, color: "#1e293b", lineHeight: 1.1 }}>Sequência Temporal</div>
+              <div style={{ fontSize: 11.5, color: "#94a3b8", lineHeight: 1.25, whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis" }}>Identifique relações de ordem, causa e consequência</div>
+            </div>
           </div>
-          <div style={{ fontSize: 12, fontWeight: 800, color: "#2563eb" }}>{Math.min(idx + 1, TOTAL)}/{TOTAL}</div>
+          <span style={{ flexShrink: 0, fontSize: 11, fontWeight: 700, color: "#3b82f6", background: "rgba(59,130,246,0.10)", border: "1px solid rgba(59,130,246,0.22)", padding: "4px 10px", borderRadius: 999, whiteSpace: "nowrap" }}>
+            Raciocínio sequencial
+          </span>
         </div>
-        <div style={{ height: 7, borderRadius: 4, background: "#dbe4f0", overflow: "hidden" }}>
-          <div style={{ height: "100%", width: `${pct}%`, background: "linear-gradient(90deg,#2563eb,#60a5fa)", borderRadius: 4, transition: "width .4s" }} />
+        <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
+          <div style={{ flex: 1, height: 6, borderRadius: 4, background: "#dbe4f0", overflow: "hidden" }}>
+            <div style={{ height: "100%", width: `${pct}%`, background: "#3b82f6", borderRadius: 4, transition: "width .4s" }} />
+          </div>
+          <span style={{ fontSize: 11, fontWeight: 700, color: "#64748b", minWidth: 30, textAlign: "right" }}>{pct}%</span>
         </div>
       </div>
 
@@ -420,21 +426,31 @@ export function AntesDepois({ difficulty, onComplete }: AntesDepoisProps) {
         {/* Pergunta (estímulo principal). No modo "Somente áudio" o texto fica oculto até responder. */}
         <div style={{ display: "flex", alignItems: "flex-start", gap: 10, maxWidth: 540 }}>
           <p style={{ color: hidePrompt && result === null ? "#64748b" : "#1e293b", fontSize: 19, fontWeight: 800, textAlign: "center", flex: 1, lineHeight: 1.3 }}>
-            {hidePrompt && result === null ? "🎧 Ouça a instrução e responda" : q.prompt}
+            {hidePrompt && result === null ? "Ouça a instrução e responda" : q.prompt}
           </p>
           {audioAuto && (
             <button onClick={repeatAudio} title="Ouvir de novo"
-              style={{ flexShrink: 0, width: 40, height: 40, borderRadius: "50%", border: "1px solid #cdd9ea", background: "#fff", color: "#0d8a86", fontSize: 18, cursor: "pointer", boxShadow: "0 2px 6px rgba(40,60,110,0.1)" }}>🔊</button>
+              style={{ flexShrink: 0, width: 40, height: 40, borderRadius: "50%", border: "1px solid #cdd9ea", background: "#fff", display: "flex", alignItems: "center", justifyContent: "center", cursor: "pointer", boxShadow: "0 2px 6px rgba(40,60,110,0.1)" }}>
+              <Volume2 size={18} color="#3b82f6" strokeWidth={2.2} />
+            </button>
           )}
         </div>
+        {/* Instrução discreta */}
+        {result === null && (
+          <p style={{ fontSize: 12.5, color: "#94a3b8", textAlign: "center", marginTop: -8, maxWidth: 460 }}>
+            {q.mode === "order_sequence" ? "Toque nos eventos na ordem em que acontecem." : "Escolha a alternativa que melhor completa a sequência."}
+          </p>
+        )}
 
-        {/* Feedback (estrela/repetir + explicação curta) */}
+        {/* Feedback (ícone + explicação curta) */}
         <div style={{ minHeight: 54, display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", gap: 4 }}>
           <AnimatePresence mode="wait">
             {result !== null && (
               <motion.div key={`fb-${idx}`} initial={{ scale: 0.7, opacity: 0 }} animate={{ scale: 1, opacity: 1 }} exit={{ opacity: 0 }}
                 style={{ textAlign: "center" }}>
-                <div style={{ fontSize: 30, lineHeight: 1 }}>{result ? "⭐" : "🔁"}</div>
+                <div style={{ display: "flex", justifyContent: "center", marginBottom: 2 }}>
+                  {result ? <Check size={26} color="#16a34a" strokeWidth={3} /> : <RotateCcw size={24} color="#d97706" strokeWidth={2.6} />}
+                </div>
                 <div style={{ fontSize: 13.5, fontWeight: 700, color: result ? "#15803d" : "#b45309", maxWidth: 480, lineHeight: 1.3, marginTop: 2 }}>
                   {result ? "Correto. " : "Não foi dessa vez. "}{q.explanation}
                 </div>
@@ -484,9 +500,9 @@ export function AntesDepois({ difficulty, onComplete }: AntesDepoisProps) {
               return (
                 <motion.button key={o.text} onClick={() => pickMC(o)} disabled={picked !== null || result !== null}
                   whileTap={{ scale: 0.96 }} animate={revealCorrect && !isPicked ? { scale: [1, 1.04, 1] } : {}} transition={{ duration: 0.5 }}
-                  style={{ background: bg, border: `3px solid ${border}`, borderRadius: 18, padding: "16px 12px", minHeight: 78,
+                  style={{ background: bg, border: `2px solid ${border}`, borderRadius: 18, padding: "16px 12px", minHeight: 78,
                     display: "flex", alignItems: "center", justifyContent: "center", gap: 8, textAlign: "center",
-                    cursor: picked !== null || result !== null ? "default" : "pointer", boxShadow: "0 4px 12px rgba(40,60,110,0.08)" }}>
+                    cursor: picked !== null || result !== null ? "default" : "pointer", boxShadow: "0 4px 14px rgba(99,118,160,0.10)" }}>
                   {showEmoji && emo(o.text) && <span style={{ fontSize: 26, lineHeight: 1 }}>{emo(o.text)}</span>}
                   <span style={{ fontSize: 16, fontWeight: 800, color: "#26324a", lineHeight: 1.2 }}>{o.text}</span>
                 </motion.button>
@@ -494,6 +510,14 @@ export function AntesDepois({ difficulty, onComplete }: AntesDepoisProps) {
             })}
           </div>
         )}
+
+        {/* Dica discreta (rodapé) */}
+        <div style={{ display: "flex", alignItems: "center", gap: 7, maxWidth: 500, marginTop: 2, padding: "9px 14px", borderRadius: 12, background: "rgba(59,130,246,0.06)" }}>
+          <Lightbulb size={14} color="#3b82f6" strokeWidth={2.2} style={{ flexShrink: 0 }} />
+          <span style={{ fontSize: 12, color: "#64748b", lineHeight: 1.35, textAlign: "center" }}>
+            Pense na sequência natural dos acontecimentos, não apenas em ações relacionadas.
+          </span>
+        </div>
       </div>
     </div>
   );

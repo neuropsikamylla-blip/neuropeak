@@ -32,6 +32,7 @@ export const DOMAIN_SUBDOMAINS: Record<Domain, Subdomain[]> = {
     { id: "decisao", label: "Tomada de Decisão", exercises: [] },
     { id: "problemas", label: "Resolução de Problemas", exercises: [] },
     { id: "logico", label: "Raciocínio Lógico", exercises: ["deductive-grid", "ordem-historia"] },
+    { id: "temporal", label: "Raciocínio Temporal e Causal", exercises: ["antes-depois"] },
   ],
   processing: [
     { id: "reacao", label: "Tempo de Reação", exercises: ["tempo-reacao", "semaforo"] },
@@ -40,7 +41,7 @@ export const DOMAIN_SUBDOMAINS: Record<Domain, Subdomain[]> = {
   ],
   functional: [
     { id: "rotina", label: "Rotina", exercises: [] },
-    { id: "sequenciamento", label: "Sequenciamento Temporal", exercises: ["antes-depois"] },
+    { id: "sequenciamento", label: "Sequenciamento Temporal", exercises: [] },
     { id: "avd", label: "Atividades de Vida Diária", exercises: ["caca-item-barato"] },
     { id: "autonomia", label: "Autonomia", exercises: ["compra-multifuncional"] },
   ],

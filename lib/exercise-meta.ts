@@ -44,7 +44,7 @@ export const EXERCISE_META: Record<string, ExerciseMeta> = {
   "caca-item-barato": { type: "visual", difficulty: "facil", secondary: ["Atenção Seletiva"] },
   "compra-multifuncional": { type: "visual", difficulty: "dificil", secondary: ["Tomada de Decisão", "Memória Operacional"] },
   "desafio-orcamento": { type: "verbal", difficulty: "medio", secondary: ["Raciocínio Lógico"] },
-  "antes-depois": { type: "verbal", difficulty: "facil", secondary: ["Memória Episódica"] },
+  "antes-depois": { type: "verbal", difficulty: "facil", secondary: ["Raciocínio Temporal", "Ordem Causal"] },
 };
 
 export const DEFAULT_META: ExerciseMeta = { type: "visual", difficulty: "medio", secondary: [] };

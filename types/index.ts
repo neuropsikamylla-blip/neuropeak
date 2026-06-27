@@ -273,9 +273,9 @@ export const EXERCISE_DEFINITIONS = {
   },
   "antes-depois": {
     id: "antes-depois",
-    name: "Antes e Depois",
-    domain: "attention" as Domain,
-    description: "O que vem antes ou depois: dias, meses, números e rotinas",
+    name: "Sequência Temporal",
+    domain: "executive" as Domain,
+    description: "Identifique relações de ordem, causa e consequência",
     estimatedMinutes: 7,
     icon: "📅",
   },
