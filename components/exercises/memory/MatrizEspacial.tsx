@@ -2,7 +2,7 @@
 
 import { useState, useEffect, useCallback, useRef } from "react";
 import { motion } from "framer-motion";
-import { Brain, LayoutGrid, Pointer, User } from "lucide-react";
+import { LayoutGrid, Pointer } from "lucide-react";
 import { calculateExerciseScore } from "@/lib/scoring";
 import { useTimedProgress } from "@/components/exercises/useExerciseEngine";
 import { TutorialBase } from "@/components/exercises/TutorialBase";
@@ -332,7 +332,6 @@ export function MatrizEspacial({ difficulty, theme, onComplete, alwaysReverse }:
     : { background: "#ffffff", border: "1px solid rgba(148,163,184,0.28)", borderRadius: 24, boxShadow: "0 10px 44px rgba(99,118,160,0.13)" };
 
   const titleColor = isGamified ? "#ffffff" : isColorful ? "#0f766e" : "#1e293b";
-  const subColor = isGamified ? "rgba(255,255,255,0.55)" : "#94a3b8";
   const labelColor = isGamified ? "rgba(255,255,255,0.7)" : "#64748b";
   const progressEmptyColor = isGamified ? "rgba(255,255,255,0.12)" : "rgba(148,163,184,0.22)";
   const innerPanel = isGamified ? "rgba(255,255,255,0.04)" : isColorful ? "rgba(20,184,166,0.05)" : "rgba(59,130,246,0.045)";
@@ -394,23 +393,7 @@ export function MatrizEspacial({ difficulty, theme, onComplete, alwaysReverse }:
     : (feedbackData?.correct ? "Correto!" : "Quase lá — observe de novo");
 
   return (
-    <div className="min-h-screen flex flex-col items-center p-4 pt-5" style={rootBg}>
-
-      {/* Header do app */}
-      <div className="w-full max-w-lg flex items-center justify-between mb-4 px-1">
-        <div className="flex items-center gap-2.5">
-          <div style={{ width: 38, height: 38, borderRadius: 12, background: accentSoft, display: "flex", alignItems: "center", justifyContent: "center" }}>
-            <Brain size={21} color={accent} strokeWidth={2.2} />
-          </div>
-          <div>
-            <div style={{ fontSize: 14.5, fontWeight: 700, color: titleColor, lineHeight: 1.15 }}>Treino Cognitivo</div>
-            <div style={{ fontSize: 11.5, color: subColor, lineHeight: 1.2 }}>Estimule sua mente todos os dias</div>
-          </div>
-        </div>
-        <div style={{ width: 36, height: 36, borderRadius: 999, background: accentSoft, display: "flex", alignItems: "center", justifyContent: "center" }}>
-          <User size={18} color={accent} strokeWidth={2.2} />
-        </div>
-      </div>
+    <div className="min-h-screen flex flex-col items-center p-4 pt-6" style={rootBg}>
 
       {/* Card do exercício */}
       <div className="w-full max-w-lg p-6" style={cardStyle}>
