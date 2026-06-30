@@ -4,6 +4,7 @@ import { useState, useRef, useCallback } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { calculateExerciseScore } from "@/lib/scoring";
 import { useTimedProgress } from "@/components/exercises/useExerciseEngine";
+import { ExerciseProgressBar } from "@/components/exercises/ExerciseProgressBar";
 import { TutorialBase } from "@/components/exercises/TutorialBase";
 import { ItemSvg } from "@/components/exercises/ItemSvg";
 import type { ExerciseResult, Theme } from "@/types";
@@ -688,13 +689,7 @@ export function MudancaRegras({ difficulty, theme, onComplete }: Props) {
           </div>
         </div>
 
-        {/* Progress (pelo tempo, ~7 min) */}
-        <div className="flex items-center gap-2">
-          <div className={`flex-1 rounded-full overflow-hidden ${theme === "GAMIFIED" ? "bg-gray-700" : "bg-gray-200"}`} style={{ height: 6 }}>
-            <div style={{ height: "100%", borderRadius: 9999, width: `${progressPct}%`, background: theme === "GAMIFIED" ? "#22d3ee" : "#8b5cf6", transition: "width 0.45s linear" }} />
-          </div>
-          <span className={`text-xs font-bold tabular-nums ${pal.sub}`} style={{ minWidth: 30, textAlign: "right" }}>{progressPct}%</span>
-        </div>
+        <ExerciseProgressBar progressPct={progressPct} theme={theme} />
 
         {/* Question banner */}
         <AnimatePresence mode="wait">

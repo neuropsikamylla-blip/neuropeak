@@ -3,6 +3,7 @@
 import { useState, useRef, useEffect, useCallback } from "react";
 import { calculateExerciseScore } from "@/lib/scoring";
 import { useTimedProgress } from "@/components/exercises/useExerciseEngine";
+import { ExerciseProgressBar } from "@/components/exercises/ExerciseProgressBar";
 import { TutorialBase } from "@/components/exercises/TutorialBase";
 import type { ExerciseResult, Theme } from "@/types";
 
@@ -239,13 +240,7 @@ export function NBack({ difficulty, theme, onComplete }: NBackProps) {
   return (
     <div className={`min-h-screen flex flex-col items-center justify-center p-4 ${bg}`}>
       <div className={`w-full max-w-md rounded-2xl p-6 ${card}`}>
-        {/* Barra de progresso (pelo tempo, ~7 min, em saltos de 10%) */}
-        <div className="flex items-center gap-2 mb-6" style={{ marginTop: 4 }}>
-          <div className={`flex-1 rounded-full overflow-hidden ${isG ? "bg-gray-700" : "bg-gray-200"}`} style={{ height: 6 }}>
-            <div style={{ height: "100%", borderRadius: 9999, width: `${progressPct}%`, background: isG ? "#22D3EE" : "#3B82F6", transition: "width 0.45s linear" }} />
-          </div>
-          <span className={`text-xs font-bold tabular-nums ${subC}`} style={{ minWidth: 30, textAlign: "right" }}>{progressPct}%</span>
-        </div>
+        <ExerciseProgressBar progressPct={progressPct} theme={theme} />
 
         {/* Letra */}
         <div className="flex flex-col items-center">

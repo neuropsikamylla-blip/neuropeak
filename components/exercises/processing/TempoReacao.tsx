@@ -4,6 +4,7 @@ import { useState, useRef, useCallback, useEffect } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { calculateExerciseScore } from "@/lib/scoring";
 import { useTimedProgress } from "@/components/exercises/useExerciseEngine";
+import { ExerciseProgressBar } from "@/components/exercises/ExerciseProgressBar";
 import { TutorialBase } from "@/components/exercises/TutorialBase";
 import type { ExerciseResult, Theme } from "@/types";
 
@@ -320,12 +321,7 @@ export function TempoReacao({ difficulty, theme, onComplete }: TempoReacaoProps)
             <p className={`text-xs ${subClass}`}>Toque apenas nos balões <span className="font-bold text-green-600">VERDES</span></p>
           </div>
         </div>
-        <div className="flex items-center gap-2">
-          <div className={`flex-1 rounded-full overflow-hidden ${theme === "GAMIFIED" ? "bg-gray-700" : "bg-gray-200"}`} style={{ height: 6 }}>
-            <div style={{ height: "100%", borderRadius: 9999, width: `${progressPct}%`, background: theme === "GAMIFIED" ? "#22d3ee" : "#3b82f6", transition: "width 0.45s linear" }} />
-          </div>
-          <span className={`text-xs font-bold tabular-nums ${subClass}`} style={{ minWidth: 30, textAlign: "right" }}>{progressPct}%</span>
-        </div>
+        <ExerciseProgressBar progressPct={progressPct} theme={theme} />
       </div>
 
       {/* Play area */}

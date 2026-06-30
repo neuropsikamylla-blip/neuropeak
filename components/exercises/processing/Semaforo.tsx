@@ -4,6 +4,7 @@ import { useState, useRef, useCallback, useEffect } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { calculateExerciseScore } from "@/lib/scoring";
 import { useTimedProgress } from "@/components/exercises/useExerciseEngine";
+import { ExerciseProgressBar } from "@/components/exercises/ExerciseProgressBar";
 import { TutorialBase } from "@/components/exercises/TutorialBase";
 import type { ExerciseResult, Theme } from "@/types";
 
@@ -420,13 +421,7 @@ export function Semaforo({ difficulty, theme, onComplete }: SemaforoProps) {
             </p>
           </div>
         </div>
-        {/* Progress bar (pelo tempo, ~7 min) */}
-        <div className="flex items-center gap-2">
-          <div className="flex-1 rounded-full overflow-hidden bg-gray-700" style={{ height: 6 }}>
-            <div style={{ height: "100%", borderRadius: 9999, width: `${progressPct}%`, background: "#22d3ee", transition: "width 0.45s linear" }} />
-          </div>
-          <span className="text-xs font-bold tabular-nums text-gray-400" style={{ minWidth: 30, textAlign: "right" }}>{progressPct}%</span>
-        </div>
+        <ExerciseProgressBar progressPct={progressPct} theme={theme} />
       </div>
 
       {/* Play area */}

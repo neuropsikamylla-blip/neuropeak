@@ -5,6 +5,7 @@ import { motion } from "framer-motion";
 import { calculateExerciseScore } from "@/lib/scoring";
 import { shuffle } from "@/lib/utils";
 import { useTimedProgress } from "@/components/exercises/useExerciseEngine";
+import { ExerciseProgressBar } from "@/components/exercises/ExerciseProgressBar";
 import { TutorialBase } from "@/components/exercises/TutorialBase";
 import type { ExerciseResult, Theme } from "@/types";
 
@@ -186,13 +187,7 @@ export function IdentificacaoSimbolos({ difficulty, theme, onComplete }: Identif
           </div>
         </div>
 
-        {/* Barra de progresso (pelo tempo, ~7 min) */}
-        <div className="flex items-center gap-2 mb-4">
-          <div className={`flex-1 rounded-full overflow-hidden ${theme === "GAMIFIED" ? "bg-gray-700" : "bg-gray-200"}`} style={{ height: 6 }}>
-            <div style={{ height: "100%", borderRadius: 9999, width: `${progressPct}%`, background: theme === "GAMIFIED" ? "#22d3ee" : "#3b82f6", transition: "width 0.45s linear" }} />
-          </div>
-          <span className={`text-xs font-bold tabular-nums ${theme === "GAMIFIED" ? "text-gray-400" : "text-gray-500"}`} style={{ minWidth: 30, textAlign: "right" }}>{progressPct}%</span>
-        </div>
+        <ExerciseProgressBar progressPct={progressPct} theme={theme} />
 
         {/* Target */}
         <div className={`text-center p-4 rounded-xl mb-4 ${theme === "GAMIFIED" ? "bg-gray-700" : "bg-gray-50"}`}>

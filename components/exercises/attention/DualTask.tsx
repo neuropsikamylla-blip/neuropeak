@@ -4,6 +4,7 @@ import { useState, useEffect, useRef, useCallback } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { calculateExerciseScore } from "@/lib/scoring";
 import { useTimedProgress } from "@/components/exercises/useExerciseEngine";
+import { ExerciseProgressBar } from "@/components/exercises/ExerciseProgressBar";
 import { TutorialBase } from "@/components/exercises/TutorialBase";
 import type { ExerciseResult, Theme } from "@/types";
 
@@ -416,13 +417,7 @@ export function DualTask({ difficulty, theme, onComplete }: DualTaskProps) {
           <h2 className={`font-bold text-sm ${pal.title}`}>🧠 Dupla Tarefa</h2>
           <div className={`text-xs ${pal.sub}`}>Nível {Math.round(difficulty)}</div>
         </div>
-        {/* Barra por tempo (~7 min) */}
-        <div className="flex items-center gap-2">
-          <div className={`flex-1 rounded-full overflow-hidden ${theme === "GAMIFIED" ? "bg-gray-700" : "bg-gray-200"}`} style={{ height: 6 }}>
-            <div style={{ height: "100%", borderRadius: 9999, width: `${progressPct}%`, background: theme === "GAMIFIED" ? "#22d3ee" : "#3b82f6", transition: "width 0.45s linear" }} />
-          </div>
-          <span className={`text-xs font-bold tabular-nums ${pal.sub}`} style={{ minWidth: 30, textAlign: "right" }}>{progressPct}%</span>
-        </div>
+        <ExerciseProgressBar progressPct={progressPct} theme={theme} />
 
         {/* Regra ativa — sempre visível */}
         <div className={`rounded-xl px-3 py-2 text-[11px] leading-snug ${pal.rule}`}>

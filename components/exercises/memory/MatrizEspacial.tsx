@@ -5,6 +5,7 @@ import { motion } from "framer-motion";
 import { LayoutGrid, Pointer } from "lucide-react";
 import { calculateExerciseScore } from "@/lib/scoring";
 import { useTimedProgress } from "@/components/exercises/useExerciseEngine";
+import { ExerciseProgressBar } from "@/components/exercises/ExerciseProgressBar";
 import { TutorialBase } from "@/components/exercises/TutorialBase";
 import type { ExerciseResult, Theme } from "@/types";
 
@@ -417,13 +418,7 @@ export function MatrizEspacial({ difficulty, theme, onComplete, alwaysReverse }:
           </span>
         </div>
 
-        {/* Barra de progresso (pelo tempo, ~7 min, em saltos de 10%) */}
-        <div className="flex items-center gap-2 mb-4">
-          <div className="flex-1 rounded-full overflow-hidden" style={{ height: 6, background: progressEmptyColor }}>
-            <div style={{ height: "100%", borderRadius: 9999, width: `${progressPct}%`, background: accent, transition: "width 0.45s linear" }} />
-          </div>
-          <span className="text-xs font-bold tabular-nums" style={{ color: labelColor, minWidth: 30, textAlign: "right" }}>{progressPct}%</span>
-        </div>
+        <ExerciseProgressBar progressPct={progressPct} theme={theme} />
 
         {/* Faixa de instrução */}
         <div style={{ display: "flex", alignItems: "center", justifyContent: "center", gap: 8, background: stripBg, borderRadius: 12, padding: "10px 14px", marginBottom: 16 }}>

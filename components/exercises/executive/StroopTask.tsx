@@ -4,6 +4,7 @@ import { useState, useEffect, useRef } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { calculateExerciseScore } from "@/lib/scoring";
 import { useTimedProgress } from "@/components/exercises/useExerciseEngine";
+import { ExerciseProgressBar } from "@/components/exercises/ExerciseProgressBar";
 import type { ExerciseResult, Theme } from "@/types";
 
 interface StroopTaskProps {
@@ -581,13 +582,7 @@ export function StroopTask({ difficulty, theme, onComplete }: StroopTaskProps) {
           </span>
         </div>
 
-        {/* Barra de progresso (pelo tempo, ~7 min) */}
-        <div className="flex items-center gap-2">
-          <div className="flex-1 rounded-full overflow-hidden" style={{ height: 6, background: "rgba(255,255,255,0.08)" }}>
-            <div style={{ height: "100%", borderRadius: 9999, width: `${progressPct}%`, background: "#818cf8", transition: "width 0.45s linear" }} />
-          </div>
-          <span className="text-xs font-bold tabular-nums" style={{ color: "rgba(255,255,255,0.6)", minWidth: 30, textAlign: "right" }}>{progressPct}%</span>
-        </div>
+        <ExerciseProgressBar progressPct={progressPct} theme={theme} />
 
         {/* Timer bar */}
         <div

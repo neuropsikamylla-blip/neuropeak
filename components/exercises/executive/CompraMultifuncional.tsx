@@ -4,6 +4,7 @@ import React, { useState, useEffect, useRef } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { calculateExerciseScore } from "@/lib/scoring";
 import { useTimedProgress } from "@/components/exercises/useExerciseEngine";
+import { ExerciseProgressBar } from "@/components/exercises/ExerciseProgressBar";
 import { TutorialBase } from "@/components/exercises/TutorialBase";
 import { ItemSvg } from "@/components/exercises/ItemSvg";
 import type { ExerciseResult, Theme } from "@/types";
@@ -300,12 +301,7 @@ export function CompraMultifuncional({ difficulty, theme, onComplete }: Props) {
             </div>
           </div>
 
-          <div className="flex items-center gap-2 mb-2">
-            <div className={`flex-1 rounded-full overflow-hidden ${isGamified ? "bg-white/10" : "bg-gray-200"}`} style={{ height: 6 }}>
-              <div style={{ height: "100%", borderRadius: 9999, width: `${progressPct}%`, background: isGamified ? "#22d3ee" : "#10b981", transition: "width 0.45s linear" }} />
-            </div>
-            <span className={`text-xs font-bold tabular-nums ${pal.sub}`} style={{ minWidth: 30, textAlign: "right" }}>{progressPct}%</span>
-          </div>
+          <ExerciseProgressBar progressPct={progressPct} theme={theme} />
 
           {/* Timer bar */}
           <div className={`h-1.5 rounded-full mb-3 ${isGamified ? "bg-white/10" : "bg-gray-200"}`}>

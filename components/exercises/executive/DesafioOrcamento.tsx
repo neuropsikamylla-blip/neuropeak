@@ -4,6 +4,7 @@ import { useState, useRef } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { calculateExerciseScore } from "@/lib/scoring";
 import { useTimedProgress } from "@/components/exercises/useExerciseEngine";
+import { ExerciseProgressBar } from "@/components/exercises/ExerciseProgressBar";
 import { TutorialBase } from "@/components/exercises/TutorialBase";
 import { ItemSvg } from "@/components/exercises/ItemSvg";
 import type { ExerciseResult, Theme } from "@/types";
@@ -299,12 +300,7 @@ export function DesafioOrcamento({ difficulty, theme, onComplete }: Props) {
             <span className={`text-xs ${pal.sub}`}>{currentRound.domain.name}</span>
           </div>
 
-          <div className="flex items-center gap-2 mb-3">
-            <div className={`flex-1 rounded-full overflow-hidden ${theme === "GAMIFIED" ? "bg-gray-700" : "bg-gray-200"}`} style={{ height: 6 }}>
-              <div style={{ height: "100%", borderRadius: 9999, width: `${progressPct}%`, background: theme === "GAMIFIED" ? "#22d3ee" : "#10b981", transition: "width 0.45s linear" }} />
-            </div>
-            <span className={`text-xs font-bold tabular-nums ${pal.sub}`} style={{ minWidth: 30, textAlign: "right" }}>{progressPct}%</span>
-          </div>
+          <ExerciseProgressBar progressPct={progressPct} theme={theme} />
 
           <AnimatePresence mode="wait">
             {phase === "shopping" && (

@@ -6,6 +6,7 @@ import { Hash, Pointer } from "lucide-react";
 import { calculateExerciseScore } from "@/lib/scoring";
 import { shuffle } from "@/lib/utils";
 import { useTimedProgress } from "@/components/exercises/useExerciseEngine";
+import { ExerciseProgressBar } from "@/components/exercises/ExerciseProgressBar";
 import { TutorialBase } from "@/components/exercises/TutorialBase";
 import type { ExerciseResult, Theme } from "@/types";
 
@@ -312,13 +313,7 @@ export function TrilhaVisual({ difficulty, theme, onComplete }: TrilhaVisualProp
           </span>
         </div>
 
-        {/* Barra de progresso (pelo tempo, ~7 min) */}
-        <div className="flex items-center gap-2 mb-4">
-          <div className="flex-1 rounded-full overflow-hidden" style={{ height: 6, background: isG ? "rgba(255,255,255,0.12)" : "rgba(148,163,184,0.22)" }}>
-            <div style={{ height: "100%", borderRadius: 9999, width: `${progressPct}%`, background: accent, transition: "width 0.45s linear" }} />
-          </div>
-          <span className="text-xs font-bold tabular-nums" style={{ color: labelColor, minWidth: 30, textAlign: "right" }}>{progressPct}%</span>
-        </div>
+        <ExerciseProgressBar progressPct={progressPct} theme={theme} />
 
         {/* Faixa de instrução */}
         <div style={{ display: "flex", alignItems: "center", justifyContent: "center", gap: 8, background: stripBg, borderRadius: 12, padding: "10px 14px", marginBottom: 14 }}>

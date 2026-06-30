@@ -4,6 +4,7 @@ import { useState, useRef, useCallback, useEffect } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { calculateExerciseScore } from "@/lib/scoring";
 import { useTimedProgress } from "@/components/exercises/useExerciseEngine";
+import { ExerciseProgressBar } from "@/components/exercises/ExerciseProgressBar";
 import { TutorialBase } from "@/components/exercises/TutorialBase";
 import type { ExerciseResult, Theme } from "@/types";
 import { MEMORY_ITEMS, MemorySymbol } from "./MemorySymbol";
@@ -364,13 +365,7 @@ export function JogoMemoria({ difficulty, theme, onComplete }: JogoMemoriaProps)
           )}
         </div>
 
-        {/* Barra de progresso (pelo tempo, ~7 min, em saltos de 10%) */}
-        <div className="flex items-center gap-2 mb-4">
-          <div className="flex-1 rounded-full overflow-hidden" style={{ height: 6, background: progressEmptyColor }}>
-            <div style={{ height: "100%", borderRadius: 9999, width: `${progressPct}%`, background: isGamified ? "#22d3ee" : isColorful ? "#14b8a6" : "#3b82f6", transition: "width 0.45s linear" }} />
-          </div>
-          <span style={{ fontSize: 11, fontWeight: 700, color: labelColor, minWidth: 30, textAlign: "right" }}>{progressPct}%</span>
-        </div>
+        <ExerciseProgressBar progressPct={progressPct} theme={theme} />
 
         {/* Instrução */}
         <p style={{ fontSize: 13, textAlign: "center", marginBottom: 12, color: labelColor }}>

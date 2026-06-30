@@ -2,6 +2,7 @@
 
 import { useState, useEffect, useCallback, useRef } from "react";
 import { useTimedProgress } from "@/components/exercises/useExerciseEngine";
+import { ExerciseProgressBar } from "@/components/exercises/ExerciseProgressBar";
 import { TutorialBase } from "@/components/exercises/TutorialBase";
 import type { ExerciseResult, Theme } from "@/types";
 
@@ -963,12 +964,7 @@ export function Labirinto({ difficulty, theme, onComplete }: LabirintoProps) {
             <p className="text-[11px] tabular-nums" style={{ color: timeColor }}>{elapsed}s / {timeLimit}s</p>
           </div>
         </div>
-        <div className="flex items-center gap-2">
-          <div className="flex-1 rounded-full overflow-hidden" style={{ height: 6, background: "rgba(255,255,255,0.1)" }}>
-            <div style={{ height: "100%", borderRadius: 9999, width: `${progressPct}%`, background: "#60a5fa", transition: "width 0.45s linear" }} />
-          </div>
-          <span className="text-xs font-bold tabular-nums" style={{ color: "#9ca3af", minWidth: 30, textAlign: "right" }}>{progressPct}%</span>
-        </div>
+        <ExerciseProgressBar progressPct={progressPct} theme={theme} />
       </div>
 
       {/* Maze */}

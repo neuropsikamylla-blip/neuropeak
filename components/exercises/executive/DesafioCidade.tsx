@@ -4,6 +4,7 @@ import React, { useState, useEffect, useRef } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { calculateExerciseScore } from "@/lib/scoring";
 import { useTimedProgress } from "@/components/exercises/useExerciseEngine";
+import { ExerciseProgressBar } from "@/components/exercises/ExerciseProgressBar";
 import type { ExerciseResult, Theme } from "@/types";
 
 // ─── Tipos ────────────────────────────────────────────────────────────────────
@@ -1099,12 +1100,7 @@ export function DesafioCidade({ difficulty, theme, onComplete }: {
   }
 
   const ProgressBar = () => (
-    <div className="flex items-center gap-2 mb-4">
-      <div className="flex-1 rounded-full overflow-hidden" style={{ height: 6, background: "rgba(127,127,127,0.25)" }}>
-        <div style={{ height: "100%", borderRadius: 9999, width: `${progressPct}%`, background: "#3b82f6", transition: "width 0.45s linear" }} />
-      </div>
-      <span className="text-xs font-bold tabular-nums" style={{ opacity: 0.7, minWidth: 30, textAlign: "right" }}>{progressPct}%</span>
-    </div>
+    <ExerciseProgressBar progressPct={progressPct} theme={theme} />
   );
 
   return (

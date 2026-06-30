@@ -8,6 +8,7 @@ import { resolveVoice, ensureVoices } from "@/lib/voicePrefs";
 import { VoicePicker } from "@/components/exercises/VoicePicker";
 import { PresentationConfig, type PresMode } from "@/components/exercises/PresentationConfig";
 import { useTimedProgress } from "@/components/exercises/useExerciseEngine";
+import { ExerciseProgressBar } from "@/components/exercises/ExerciseProgressBar";
 import { TutorialBase } from "@/components/exercises/TutorialBase";
 import type { ExerciseResult, Theme } from "@/types";
 
@@ -409,13 +410,7 @@ function Hud({ level, mode, progressPct }: {
         </div>
       </div>
 
-      {/* centro: progresso pelo tempo (~7 min) */}
-      <div style={{ flex: 1, display: "flex", alignItems: "center", gap: 8, justifyContent: "center", minWidth: 0 }}>
-        <div style={{ flex: 1, maxWidth: 260, height: 7, borderRadius: 4, background: "rgba(150,175,215,0.22)", overflow: "hidden" }}>
-          <div style={{ height: "100%", borderRadius: 4, width: `${progressPct}%`, background: "#f3bf57", boxShadow: "0 0 6px rgba(243,191,87,0.5)", transition: "width 0.45s linear" }} />
-        </div>
-        <span style={{ fontSize: 11, fontWeight: 800, color: "#f3bf57", minWidth: 30, textAlign: "right" }}>{progressPct}%</span>
-      </div>
+      <ExerciseProgressBar progressPct={progressPct} theme="GAMIFIED" />
 
       {/* direita: Treino de Memória */}
       <div style={{ display: "flex", alignItems: "center", gap: 9, flexShrink: 0 }} className="np-hud-right">

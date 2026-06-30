@@ -5,6 +5,7 @@ import { motion, AnimatePresence } from "framer-motion";
 import { calculateExerciseScore } from "@/lib/scoring";
 import { playTTS, cancelTTS } from "@/lib/tts";
 import { useTimedProgress } from "@/components/exercises/useExerciseEngine";
+import { ExerciseProgressBar } from "@/components/exercises/ExerciseProgressBar";
 import { agents } from "@/data/agents";
 import type { AgentConfig } from "@/data/agents";
 import type { ExerciseResult, Theme } from "@/types";
@@ -1164,12 +1165,7 @@ export function FocusAgents({ difficulty, theme, onComplete, exerciseId = "focus
           style={{ background:"rgba(255,255,255,0.08)", backdropFilter:"blur(12px)",
             border:"1.5px solid rgba(255,255,255,0.15)", boxShadow:"0 4px 20px rgba(0,0,0,0.4)" }}>
           <span className="text-xs font-bold opacity-70 whitespace-nowrap">{gameTitle}</span>
-          <div className="flex items-center gap-2 flex-1">
-            <div className="flex-1 rounded-full overflow-hidden" style={{ height: 6, background: "rgba(255,255,255,0.15)" }}>
-              <div style={{ height: "100%", borderRadius: 9999, width: `${progressPct}%`, background: "#a78bfa", transition: "width 0.45s linear" }} />
-            </div>
-            <span className="text-xs font-bold tabular-nums opacity-70">{progressPct}%</span>
-          </div>
+          <ExerciseProgressBar progressPct={progressPct} theme={theme} />
           {(isMultiTarget || isSeqMode || isCaptureAll || isPhased) && gamePhase === "playing" && totalTargets > 1 && (
             <span className="text-xs font-bold px-1.5 py-0.5 rounded-lg bg-green-500/40 whitespace-nowrap">
               {foundCount}/{totalTargets} ✓
