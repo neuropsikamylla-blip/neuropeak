@@ -178,7 +178,6 @@ function tierOf(d: number): Tier {
 }
 // Limite de movimentos = menorCaminho × multiplicador do perfil.
 const MOVE_MULT: Record<Tier, number> = { facil: 2.5, medio: 1.8, dificil: 1.35, avancado: 1.15 };
-const TIER_LABEL: Record<Tier, string> = { facil: "Fácil", medio: "Médio", dificil: "Difícil", avancado: "Avançado" };
 
 // nº de MOVIMENTOS no menor caminho (células-1); -1 se inalcançável.
 function bfsMoves(maze: Cell[][], from: { r: number; c: number }, to: { r: number; c: number }): number {
@@ -640,7 +639,6 @@ export function Labirinto({ difficulty, theme, onComplete }: LabirintoProps) {
   const [done, setDone] = useState(false);
   const [timedOut, setTimedOut] = useState(false);
 
-  const startTime = useRef(Date.now());
   const mazeStartTime = useRef(Date.now());
   const allDoneRef = useRef(false);
   const playerRef = useRef({ r: 0, c: 0 });

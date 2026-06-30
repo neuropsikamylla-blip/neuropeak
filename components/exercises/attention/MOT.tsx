@@ -39,7 +39,6 @@ function ballSpeed(d: number): number {
   return 0.8 + d * 0.25; // px/frame roughly
 }
 
-const TOTAL_ROUNDS = 18;
 const BALL_RADIUS = 24;
 const AREA_W = 520; // arena lógica ampliada (~+30%); renderizada com escala responsiva p/ caber na tela
 const AREA_H = 460;
@@ -277,7 +276,6 @@ export function MOT({ difficulty, theme, onComplete }: MOTProps) {
     if (phase !== "identify") return;
     const targets = balls.filter(b => b.isTarget).map(b => b.id);
     const correct = [...selected].filter(id => targets.includes(id)).length;
-    const score = correct / k;
     setRoundScore(correct);
     setTotalCorrect(tc => tc + correct);
     setTotalTargets(tt => tt + k);

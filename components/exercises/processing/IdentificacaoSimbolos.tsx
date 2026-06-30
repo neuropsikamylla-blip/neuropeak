@@ -109,7 +109,6 @@ export function IdentificacaoSimbolos({ difficulty, theme, onComplete }: Identif
   const [results, setResults] = useState<{ correct: boolean; rt: number; distractors: number }[]>([]);
   const [feedback, setFeedback] = useState<"correct" | "incorrect" | null>(null);
   const trialStart = useRef<number>(Date.now());
-  const startTime = useRef<number>(Date.now());
 
   function advanceTrial(newTarget: string, dCount: number) {
     setTarget(newTarget);

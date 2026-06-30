@@ -18,7 +18,6 @@ interface MatrizEspacialProps {
 
 type Phase = "showing" | "recall" | "feedback";
 
-const MAX_TRIALS = 30;
 const MIN_SEQ = 2;
 const MAX_SEQ = 9;
 // Grade cresce com a dificuldade: mais blocos pra brilhar nos níveis altos.
@@ -333,14 +332,11 @@ export function MatrizEspacial({ difficulty, theme, onComplete, alwaysReverse }:
     : { background: "#ffffff", border: "1px solid rgba(148,163,184,0.28)", borderRadius: 24, boxShadow: "0 10px 44px rgba(99,118,160,0.13)" };
 
   const titleColor = isGamified ? "#ffffff" : isColorful ? "#0f766e" : "#1e293b";
-  const labelColor = isGamified ? "rgba(255,255,255,0.7)" : "#64748b";
-  const progressEmptyColor = isGamified ? "rgba(255,255,255,0.12)" : "rgba(148,163,184,0.22)";
   const innerPanel = isGamified ? "rgba(255,255,255,0.04)" : isColorful ? "rgba(20,184,166,0.05)" : "rgba(59,130,246,0.045)";
   const innerBorder = isGamified ? "rgba(255,255,255,0.08)" : isColorful ? "rgba(20,184,166,0.14)" : "rgba(59,130,246,0.12)";
   const stripBg = isGamified ? "rgba(34,211,238,0.10)" : isColorful ? "rgba(20,184,166,0.08)" : "rgba(59,130,246,0.07)";
   const stripText = isGamified ? "rgba(255,255,255,0.82)" : isColorful ? "#0f766e" : "#475569";
 
-  const activeIndicatorColor = accent;
   const inactiveIndicatorColor = isGamified ? "rgba(255,255,255,0.12)" : "rgba(148,163,184,0.3)";
 
   function cellStyleFor(idx: number): React.CSSProperties {

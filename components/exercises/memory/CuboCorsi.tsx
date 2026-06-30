@@ -470,9 +470,7 @@ export function CuboCorsi({ difficulty, theme: _theme, onComplete }: Props) {
       <div style={{ maxWidth: 500, margin: "0 auto", padding: "18px 14px 32px" }}>
 
         {/* Barra de progresso (tempo ativo) */}
-        <div style={{ marginBottom: 14 }}>
-          <ExerciseProgressBar progressPct={progressPct} />
-        </div>
+        <ExerciseProgressBar progressPct={progressPct} />
 
         {/* Label */}
         <p style={{

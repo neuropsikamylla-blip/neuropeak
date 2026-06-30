@@ -31,7 +31,6 @@ interface TrialItem {
 }
 
 const MIN_TIME_MS = 550;
-const MAX_TIME_MS = 5000;
 
 const TUTORIAL_EXAMPLES: TrialItem[] = [
   { word: COLORS[0], inkColor: COLORS[1], rule: "COR" },
@@ -556,7 +555,6 @@ export function StroopTask({ difficulty, theme, onComplete }: StroopTaskProps) {
   }
 
   const timerIsLow = itemProgress < 25;
-  const timerColor = timerIsLow ? "#F43F5E" : "#6366f1";
   const correctCount = results.filter((r) => r.correct).length;
 
   return (

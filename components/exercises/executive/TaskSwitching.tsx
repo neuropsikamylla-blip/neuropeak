@@ -350,7 +350,7 @@ export function TaskSwitching({ difficulty, theme, onComplete }: TaskSwitchingPr
           <div className="flex justify-between items-center mb-2">
             <h2 className={`font-bold text-sm ${pal.title}`}>🔄 Task Switching</h2>
           </div>
-          <div className="mb-3"><ExerciseProgressBar progressPct={progressPct} theme={theme} /></div>
+          <ExerciseProgressBar progressPct={progressPct} theme={theme} />
           <div className="flex justify-around text-center">
             <div><p className={`text-lg font-black ${pal.hit}`}>{hits}</p><p className={`text-[10px] ${pal.sub}`}>Acertos</p></div>
             <div><p className={`text-lg font-black ${pal.err}`}>{errors}</p><p className={`text-[10px] ${pal.sub}`}>Erros</p></div>

@@ -573,7 +573,6 @@ export function MudancaRegras({ difficulty, theme, onComplete }: Props) {
   const [phase, setPhase] = useState<"choosing" | "feedback">("choosing");
 
   const usedRef = useRef(new Set<number>());
-  const startTime = useRef(Date.now());
   const resultsRef = useRef<boolean[]>([]);
   const trialRef = useRef(0);
 

@@ -128,7 +128,6 @@ const MAX_LEVEL = 10;
 const levelOf = (d: number): number => Math.max(1, Math.min(MAX_LEVEL, Math.round(d) || 1));
 const memoSecsFor = (n: number): number => Math.max(7, Math.round(4 + n * 1.5)); // tempo escala com o pedido
 const distractorsFor = (n: number): number => Math.min(7, Math.max(3, n + 2));
-const TRIALS = 10;
 
 // ── Helpers ────────────────────────────────────────────────────────────────────────
 function shuffle<T>(a: T[]): T[] { const r = [...a]; for (let i = r.length - 1; i > 0; i--) { const j = Math.floor(Math.random() * (i + 1)); [r[i], r[j]] = [r[j], r[i]]; } return r; }
@@ -743,7 +742,7 @@ export function RestauranteOrdem({ difficulty, onComplete }: RestauranteOrdemPro
               color: "#fff", fontWeight: 900, fontSize: 16, cursor: "pointer", boxShadow: "0 6px 20px rgba(20,122,69,0.5)" }}>
             Continuar →
           </button>
-          <div style={{ width: "100%", maxWidth: 280, marginBottom: 6 }}><ExerciseProgressBar progressPct={progressPct} theme="GAMIFIED" /></div>
+          <div style={{ width: "100%", maxWidth: 280 }}><ExerciseProgressBar progressPct={progressPct} theme="GAMIFIED" /></div>
           <div style={{ fontSize: 12, fontWeight: 700, color: "rgba(255,255,255,0.6)" }}>Acertos: {correctRef.current}</div>
         </div>
       </div>

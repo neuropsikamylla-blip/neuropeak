@@ -210,7 +210,6 @@ export function DesafioOrcamento({ difficulty, theme, onComplete }: Props) {
   const [lastCorrect, setLastCorrect] = useState(false);
   const [currentRound, setCurrentRound] = useState<Round>(() => buildRound(difficulty, 0));
 
-  const startTime = useRef(Date.now());
   const roundRef = useRef(0);
   const curLevelRef = useRef(difficulty);
   const streakRef = useRef(0);

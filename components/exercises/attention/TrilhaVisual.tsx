@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useRef, useCallback } from "react";
-import { motion, AnimatePresence } from "framer-motion";
+import { motion } from "framer-motion";
 import { Hash, Pointer } from "lucide-react";
 import { calculateExerciseScore } from "@/lib/scoring";
 import { shuffle } from "@/lib/utils";
@@ -179,7 +179,6 @@ export function TrilhaVisual({ difficulty, theme, onComplete }: TrilhaVisualProp
   const [roundCorrect, setRoundCorrect] = useState(false);
   const [path, setPath] = useState<{ x: number; y: number }[]>([]);
 
-  const startTime = useRef<number>(Date.now());
   const firstClick = useRef(false);
 
   const startNewRound = useCallback((nextCount: number) => {
@@ -263,7 +262,6 @@ export function TrilhaVisual({ difficulty, theme, onComplete }: TrilhaVisualProp
     ? { background: "rgba(255,255,255,0.05)", backdropFilter: "blur(16px)", border: "1.5px solid rgba(255,255,255,0.12)", borderRadius: 24, boxShadow: "0 8px 40px rgba(0,0,0,0.5)" }
     : { background: "#ffffff", border: "1px solid rgba(148,163,184,0.28)", borderRadius: 24, boxShadow: "0 10px 44px rgba(99,118,160,0.13)" };
   const titleColor = isG ? "#ffffff" : isC ? "#4338ca" : "#1e293b";
-  const labelColor = isG ? "rgba(255,255,255,0.7)" : "#64748b";
   const innerPanelBg = isG ? "rgba(255,255,255,0.03)" : isC ? "rgba(99,102,241,0.05)" : "rgba(59,130,246,0.045)";
   const innerBorder = isG ? "rgba(255,255,255,0.08)" : isC ? "rgba(99,102,241,0.13)" : "rgba(59,130,246,0.12)";
   const stripBg = isG ? "rgba(34,211,238,0.10)" : isC ? "rgba(99,102,241,0.08)" : "rgba(59,130,246,0.07)";

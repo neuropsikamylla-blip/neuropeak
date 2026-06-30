@@ -143,7 +143,6 @@ const CATS = ["ar", "fe", "ca", "le", "ol", "sh", "de", "su", "bi", "fa"];
 
 function buildRound(d: number): Round {
   const sameCat = PRODUCTS.filter(p => p.id.slice(0, 2) === CATS[Math.floor(Math.random() * CATS.length)]);
-  const allProd = PRODUCTS;
 
   if (d <= 3) {
     // L1: Find specific info on 1 product
@@ -394,7 +393,6 @@ export function CacaItemBarato({ difficulty, theme, onComplete }: Props) {
   const [pickedOption, setPickedOption] = useState<string | null>(null);
   const [phase, setPhase] = useState<"question" | "result">("question");
 
-  const startTime = useRef(Date.now());
   const curLevelRef = useRef(difficulty);
   const streakRef = useRef(0);
   const reachedRef = useRef(difficulty);
@@ -477,7 +475,7 @@ export function CacaItemBarato({ difficulty, theme, onComplete }: Props) {
         </div>
 
         {/* Progress (pelo tempo, ~7 min) */}
-        <div className="mb-4"><ExerciseProgressBar progressPct={progressPct} theme={theme} /></div>
+        <ExerciseProgressBar progressPct={progressPct} theme={theme} />
 
         {/* Question */}
         <AnimatePresence mode="wait">

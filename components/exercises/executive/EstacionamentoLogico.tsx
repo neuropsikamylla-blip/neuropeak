@@ -414,7 +414,7 @@ export function EstacionamentoLogico({ difficulty, theme: _theme, onComplete }: 
       </p>
 
       {/* Barra de progresso (pelo tempo, ~7 min, em saltos de 10%) */}
-      <div style={{ width: "100%", maxWidth: 320, margin: "0 auto 12px", display: "flex", alignItems: "center", gap: 8, paddingLeft: 14, paddingRight: 14 }}>
+      <div style={{ width: "100%", maxWidth: 320, margin: "0 auto", display: "flex", alignItems: "center", gap: 8, paddingLeft: 14, paddingRight: 14 }}>
         <ExerciseProgressBar progressPct={progressPct} theme="GAMIFIED" />
       </div>
 

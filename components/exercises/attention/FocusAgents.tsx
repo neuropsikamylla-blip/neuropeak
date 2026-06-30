@@ -428,7 +428,6 @@ function SceneBg({ theme }: { theme: Theme }) {
 
 // ── Main component ─────────────────────────────────────────────────────────────
 
-const MAX_ROUNDS = 15;
 
 export interface FocusAgentsProps {
   difficulty: number; theme: Theme;

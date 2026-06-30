@@ -541,7 +541,6 @@ function SupermercadoTutorial({ theme, mode, onDone }: { theme: Theme; mode: "le
 
 // ── Main component ────────────────────────────────────────────────────────────────
 
-const MAX_TRIALS = 8;
 
 export function DesafioSupermercado({ difficulty, theme, onComplete }: DesafioSupermercadoProps) {
   // Modo de apresentação (escolhido na tela "Configurar atividade", antes de iniciar).
@@ -576,7 +575,6 @@ export function DesafioSupermercado({ difficulty, theme, onComplete }: DesafioSu
   const recentRef  = useRef<string[]>([]);
   const gradedRef  = useRef<number[]>([]);
   const wrongRef   = useRef(0);
-  const startTime  = useRef(Date.now());
   const timerRef   = useRef<ReturnType<typeof setInterval> | null>(null);
   const histRef    = useRef<boolean[]>([]);   // histórico p/ desbloqueio (3 seguidas ou 3 de 5)
 

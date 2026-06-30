@@ -20,7 +20,6 @@ interface Card {
   symbol: string;
   matched: boolean;
 }
-const MAX_ROUNDS = 10;
 const MIN_PAIRS = 4;
 const MAX_PAIRS = 9;
 const MEMORIZE_SECS = 5;
@@ -194,7 +193,6 @@ export function JogoMemoria({ difficulty, theme, onComplete }: JogoMemoriaProps)
   const [locked, setLocked] = useState(false);
   const [roundCorrect, setRoundCorrect] = useState(false);
 
-  const startTime = useRef(Date.now());
   const doneRef = useRef(false);
 
   // Countdown during memorize phase
@@ -321,7 +319,6 @@ export function JogoMemoria({ difficulty, theme, onComplete }: JogoMemoriaProps)
 
   const titleColor = isGamified ? "#ffffff" : "#1a2744";
   const labelColor = isGamified ? "rgba(255,255,255,0.7)" : "#5a4a3a";
-  const progressEmptyColor = isGamified ? "rgba(255,255,255,0.12)" : "rgba(26,39,68,0.12)";
 
   const cardBackStyle: React.CSSProperties = isGamified
     ? { background: "linear-gradient(135deg, #1a2d50, #2a4a8a)", border: "2px solid rgba(255,255,255,0.2)", borderRadius: 14 }

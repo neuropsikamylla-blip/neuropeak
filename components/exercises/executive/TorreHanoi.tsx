@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect, useRef, useCallback } from "react";
+import { useState, useEffect, useRef } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { calculateExerciseScore } from "@/lib/scoring";
 import { useTimedProgress } from "@/components/exercises/useExerciseEngine";
@@ -195,7 +195,6 @@ export function TorreHanoi({ difficulty, theme, onComplete }: TorreHanoiProps) {
   const [moves, setMoves] = useState(0);
   const [won, setWon] = useState(false);
 
-  const startTime = useRef<number>(Date.now());
   const puzzleStart = useRef<number>(Date.now());
 
   const optimal = optimalMoves(discCount);

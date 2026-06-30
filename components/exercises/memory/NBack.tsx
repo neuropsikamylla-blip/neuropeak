@@ -229,8 +229,6 @@ export function NBack({ difficulty, theme, onComplete }: NBackProps) {
   const isG = theme === "GAMIFIED";
   const bg   = isG ? "bg-gray-950" : theme === "COLORFUL" ? "bg-gradient-to-br from-violet-50 to-indigo-50" : "bg-[#F0F4F8]";
   const card = isG ? "bg-gray-800 border border-cyan-500/30" : "bg-white shadow-lg";
-  const titleC = isG ? "text-cyan-400" : theme === "COLORFUL" ? "text-violet-700" : "text-slate-800";
-  const subC   = isG ? "text-gray-400" : "text-slate-500";
 
   const fbColor = fb === "ok" ? "#46C66A" : fb === "no" ? "#F2645A" : fb === "slow" ? "#E6A23C" : null;
   const boxBorder = fbColor ?? (isG ? "#22D3EE" : "#60A5FA");

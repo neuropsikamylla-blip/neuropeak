@@ -477,7 +477,6 @@ export function DeductiveGrid({ difficulty, theme, onComplete }: DeductiveGridPr
   const puzzleStartTime = useRef(Date.now());
   const errorsThisPuzzle = useRef(0);
   // Mais puzzles em níveis mais altos para treino progressivo
-  const PUZZLES_TO_SOLVE = difficulty <= 2 ? 3 : difficulty <= 6 ? 4 : 5;
 
   const currentPuzzle = pool.current[puzzleIdx % pool.current.length];
 

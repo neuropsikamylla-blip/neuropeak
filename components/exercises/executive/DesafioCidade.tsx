@@ -452,7 +452,6 @@ const CINEMA_L4_STORIES = [
 function CinemaL4({ theme, onFinish }: { theme: Theme; onFinish: (ok: boolean) => void }) {
   const p = pal(theme);
   const filmes = useRef([...FILMES].sort(() => Math.random() - 0.5).slice(0, 3));
-  const budget = useRef(28 + Math.floor(Math.random() * 14));
   const cancellationStory = useRef(CINEMA_L4_STORIES[Math.floor(Math.random() * CINEMA_L4_STORIES.length)]);
   const [step, setStep] = useState<"choose" | "alert" | "adapt">("choose");
   const [first, setFirst] = useState<string | null>(null);
@@ -1031,7 +1030,6 @@ export function DesafioCidade({ difficulty, theme, onComplete }: {
   difficulty: number; theme: Theme; onComplete: (result: ExerciseResult) => void;
 }) {
   const { begin, isTimeUp, elapsedSec, finish, progressPct } = useTimedProgress();
-  const startTime = useRef(Date.now());
   const results = useRef<boolean[]>([]);
   const missionQueue = useRef<EnvId[]>(buildMissionQueue(80));
   useEffect(() => { begin(); }, [begin]);

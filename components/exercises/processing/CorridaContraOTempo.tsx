@@ -112,7 +112,6 @@ export function CorridaContraOTempo({ difficulty, theme, onComplete }: Props) {
   const roundRef = useRef(0);
   const lastCatRef = useRef<string | null>(null);
   const resultsRef = useRef<{ correct: boolean; hits: number; total: number }[]>([]);
-  const startTime = useRef(Date.now());
   const curLevelRef = useRef(difficulty);
   const streakRef = useRef(0);
   const reachedRef = useRef(difficulty);

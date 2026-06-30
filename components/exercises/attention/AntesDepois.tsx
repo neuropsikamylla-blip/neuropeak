@@ -284,7 +284,6 @@ export function AntesDepois({ difficulty, onComplete }: AntesDepoisProps) {
   const domains = useRef<Set<string>>(new Set());
   const modes = useRef<Set<string>>(new Set());
   const replays = useRef(0);
-  const tStart = useRef(Date.now());
   const trialAt = useRef(Date.now());
 
   const audioAuto = mode === "visual_audio" || mode === "audio_only";   // toca/permite áudio

@@ -150,7 +150,6 @@ export function CompraMultifuncional({ difficulty, theme, onComplete }: Props) {
   const [currentRound, setCurrentRound] = useState<AnyRound>(() => makeRound(difficulty, 0));
   const [storyOpen, setStoryOpen] = useState(true);   // história contextual visível (recolhe no difícil)
 
-  const startTime = useRef(Date.now());
   const roundRef = useRef(0);
   const curLevelRef = useRef(difficulty);
   const streakRef = useRef(0);
