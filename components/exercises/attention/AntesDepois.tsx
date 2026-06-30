@@ -5,6 +5,7 @@ import { motion, AnimatePresence } from "framer-motion";
 import { GitBranch, Lightbulb, Check, RotateCcw, Volume2 } from "lucide-react";
 import { calculateExerciseScore } from "@/lib/scoring";
 import { useTimedProgress } from "@/components/exercises/useExerciseEngine";
+import { ExerciseProgressBar } from "@/components/exercises/ExerciseProgressBar";
 import type { ExerciseResult, Theme } from "@/types";
 
 interface AntesDepoisProps {
@@ -393,7 +394,6 @@ export function AntesDepois({ difficulty, onComplete }: AntesDepoisProps) {
     );
   }
 
-  const pct = progressPct;
 
   return (
     <div style={{ position: "fixed", inset: 0, background: BG, display: "flex", flexDirection: "column", overflow: "hidden" }}>
@@ -413,12 +413,7 @@ export function AntesDepois({ difficulty, onComplete }: AntesDepoisProps) {
             Raciocínio sequencial
           </span>
         </div>
-        <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
-          <div style={{ flex: 1, height: 6, borderRadius: 4, background: "#dbe4f0", overflow: "hidden" }}>
-            <div style={{ height: "100%", width: `${pct}%`, background: "#3b82f6", borderRadius: 4, transition: "width .4s" }} />
-          </div>
-          <span style={{ fontSize: 11, fontWeight: 700, color: "#64748b", minWidth: 30, textAlign: "right" }}>{pct}%</span>
-        </div>
+        <ExerciseProgressBar progressPct={progressPct} />
       </div>
 
       <div style={{ flex: 1, overflowY: "auto", display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", padding: "10px 16px 18px", gap: 16 }}>

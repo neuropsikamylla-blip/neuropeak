@@ -12,6 +12,7 @@ import {
 import { CSS } from "@dnd-kit/utilities";
 import { calculateExerciseScore } from "@/lib/scoring";
 import { useTimedProgress } from "@/components/exercises/useExerciseEngine";
+import { ExerciseProgressBar } from "@/components/exercises/ExerciseProgressBar";
 import { HISTORIAS, HISTORIAS_INTRUSO, HISTORIAS_DESCUBRA, histPanelSrc, descubraScene, descubraOption, type HistDiff } from "@/data/historias";
 import type { ExerciseResult, Theme } from "@/types";
 
@@ -402,7 +403,6 @@ export function OrdemHistoria({ difficulty, onComplete, settings }: OrdemHistori
     record(n ? posCorrect / n : 0, posCorrect === n);
   }
 
-  const pct = progressPct;
   const intruso = roundMode === "intruso";
   const falta = roundMode === "falta";
 
@@ -477,11 +477,8 @@ export function OrdemHistoria({ difficulty, onComplete, settings }: OrdemHistori
             <div style={{ fontSize: 15, fontWeight: 900, color: "#2a2440" }}>{headerTitle}</div>
             <div style={{ fontSize: 11.5, color: "#9a93b0" }}>{headerSub}</div>
           </div>
-          <div style={{ fontSize: 12, fontWeight: 800, color: VIOLET }}>{Math.min(trial + 1, TRIALS)}/{TRIALS}</div>
         </div>
-        <div style={{ height: 7, borderRadius: 4, background: "#e2dcf3", overflow: "hidden" }}>
-          <div style={{ height: "100%", width: `${pct}%`, background: "linear-gradient(90deg,#7c5cf0,#a78bfa)", borderRadius: 4, transition: "width .4s" }} />
-        </div>
+        <ExerciseProgressBar progressPct={progressPct} theme="COLORFUL" />
       </div>
 
       {/* Instrução + dicas */}
