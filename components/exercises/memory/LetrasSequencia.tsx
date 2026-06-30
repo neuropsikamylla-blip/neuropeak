@@ -5,6 +5,7 @@ import { motion, AnimatePresence } from "framer-motion";
 import { Eye, Headphones } from "lucide-react";
 import { calculateExerciseScore } from "@/lib/scoring";
 import { useTimedProgress } from "@/components/exercises/useExerciseEngine";
+import { ExerciseProgressBar } from "@/components/exercises/ExerciseProgressBar";
 import type { ExerciseResult, Theme } from "@/types";
 
 interface LetrasSequenciaProps {
@@ -214,10 +215,7 @@ export function LetrasSequencia({ difficulty, onComplete }: LetrasSequenciaProps
           </p>
         </div>
 
-        <div className="relative h-1 rounded-full overflow-hidden" style={{ background: "rgba(255,255,255,0.07)" }}>
-          <motion.div className="absolute inset-y-0 left-0 rounded-full" style={{ background: "linear-gradient(90deg,#6366f1,#818cf8)" }}
-            animate={{ width: `${progressPct}%` }} transition={{ duration: 0.4 }} />
-        </div>
+        <ExerciseProgressBar progressPct={progressPct} theme="GAMIFIED" />
 
         {/* Apresentação */}
         {phase === "show" && (

@@ -3,6 +3,7 @@
 import { useState, useRef, useCallback, useEffect } from "react";
 import { calculateExerciseScore } from "@/lib/scoring";
 import { useTimedProgress } from "@/components/exercises/useExerciseEngine";
+import { ExerciseProgressBar } from "@/components/exercises/ExerciseProgressBar";
 import { TutorialBase } from "@/components/exercises/TutorialBase";
 import type { ExerciseResult, Theme } from "@/types";
 
@@ -468,18 +469,9 @@ export function CuboCorsi({ difficulty, theme: _theme, onComplete }: Props) {
     <div style={{ background: "#F0F4F8", minHeight: "100vh" }}>
       <div style={{ maxWidth: 500, margin: "0 auto", padding: "18px 14px 32px" }}>
 
-        {/* Barra de progresso (pelo tempo, ~7 min) */}
-        <div style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 14 }}>
-          <div style={{ flex: 1, height: 6, borderRadius: 99, background: "#CBD5E1", overflow: "hidden" }}>
-            <div style={{
-              height: "100%", borderRadius: 99, background: "#3B82F6",
-              width: `${progressPct}%`,
-              transition: "width 0.45s linear",
-            }} />
-          </div>
-          <span style={{ fontSize: 11, fontWeight: 700, color: "#64748B", minWidth: 30, textAlign: "right" }}>
-            {progressPct}%
-          </span>
+        {/* Barra de progresso (tempo ativo) */}
+        <div style={{ marginBottom: 14 }}>
+          <ExerciseProgressBar progressPct={progressPct} />
         </div>
 
         {/* Label */}

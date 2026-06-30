@@ -3,6 +3,7 @@
 import { useState, useRef, useCallback, useLayoutEffect, useMemo, useEffect } from "react";
 import { calculateExerciseScore } from "@/lib/scoring";
 import { useTimedProgress } from "@/components/exercises/useExerciseEngine";
+import { ExerciseProgressBar } from "@/components/exercises/ExerciseProgressBar";
 import { assignCarImages, ALL_CAR_IMAGES } from "@/lib/parking-cars";
 import { LEVELS_BY_DIFFICULTY, DIFFICULTIES } from "@/lib/parking-levels";
 import type { Level } from "@/types/parking";
@@ -414,16 +415,7 @@ export function EstacionamentoLogico({ difficulty, theme: _theme, onComplete }: 
 
       {/* Barra de progresso (pelo tempo, ~7 min, em saltos de 10%) */}
       <div style={{ width: "100%", maxWidth: 320, margin: "0 auto 12px", display: "flex", alignItems: "center", gap: 8, paddingLeft: 14, paddingRight: 14 }}>
-        <div style={{ flex: 1, height: 6, borderRadius: 99, background: "rgba(255,255,255,0.22)", overflow: "hidden" }}>
-          <div style={{
-            height: "100%", borderRadius: 99, background: "#9CF0A6",
-            width: `${progressPct}%`,
-            transition: "width 0.45s linear",
-          }} />
-        </div>
-        <span style={{ fontSize: 11, fontWeight: 700, color: "#E8ECF2", minWidth: 30, textAlign: "right" }}>
-          {progressPct}%
-        </span>
+        <ExerciseProgressBar progressPct={progressPct} theme="GAMIFIED" />
       </div>
 
       {/* Board — fills available width */}

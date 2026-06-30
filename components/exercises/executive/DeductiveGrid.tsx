@@ -4,6 +4,7 @@ import React, { useState, useRef, useCallback } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { calculateExerciseScore } from "@/lib/scoring";
 import { useTimedProgress } from "@/components/exercises/useExerciseEngine";
+import { ExerciseProgressBar } from "@/components/exercises/ExerciseProgressBar";
 import { TutorialBase } from "@/components/exercises/TutorialBase";
 import type { ExerciseResult, Theme } from "@/types";
 
@@ -632,13 +633,8 @@ export function DeductiveGrid({ difficulty, theme, onComplete }: DeductiveGridPr
         <div className="p-4" style={cardStyle}>
           <div className="flex justify-between items-center mb-1">
             <h2 className={`font-bold text-sm ${pal.title}`}>🔍 {currentPuzzle.title}</h2>
-            <span className={`text-xs font-bold tabular-nums ${pal.sub}`}>{progressPct}%</span>
           </div>
-          <div className={`h-1.5 rounded-full ${isGamified ? "bg-white/10" : "bg-slate-200"}`}>
-            <div className={`h-full rounded-full transition-all ${
-              isGamified ? "bg-cyan-400" : "bg-emerald-500"
-            }`} style={{ width: `${progressPct}%` }} />
-          </div>
+          <ExerciseProgressBar progressPct={progressPct} theme={theme} />
         </div>
 
         {/* Clues */}

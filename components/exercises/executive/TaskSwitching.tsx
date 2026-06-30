@@ -4,6 +4,7 @@ import { useState, useEffect, useRef, useCallback } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { calculateExerciseScore } from "@/lib/scoring";
 import { useTimedProgress } from "@/components/exercises/useExerciseEngine";
+import { ExerciseProgressBar } from "@/components/exercises/ExerciseProgressBar";
 import { TutorialBase } from "@/components/exercises/TutorialBase";
 import type { ExerciseResult, Theme } from "@/types";
 
@@ -348,13 +349,8 @@ export function TaskSwitching({ difficulty, theme, onComplete }: TaskSwitchingPr
         <div className={`w-full rounded-2xl p-4 ${pal.card}`}>
           <div className="flex justify-between items-center mb-2">
             <h2 className={`font-bold text-sm ${pal.title}`}>🔄 Task Switching</h2>
-            <span className={`text-xs font-bold tabular-nums ${pal.sub}`}>{progressPct}%</span>
           </div>
-          <div className={`h-1.5 rounded-full mb-3 ${theme === "GAMIFIED" ? "bg-gray-700" : "bg-slate-200"}`}>
-            <div className={`h-full rounded-full transition-all duration-300 ${
-              theme === "GAMIFIED" ? "bg-cyan-500" : theme === "COLORFUL" ? "bg-teal-500" : "bg-teal-500"
-            }`} style={{ width: `${progressPct}%` }} />
-          </div>
+          <div className="mb-3"><ExerciseProgressBar progressPct={progressPct} theme={theme} /></div>
           <div className="flex justify-around text-center">
             <div><p className={`text-lg font-black ${pal.hit}`}>{hits}</p><p className={`text-[10px] ${pal.sub}`}>Acertos</p></div>
             <div><p className={`text-lg font-black ${pal.err}`}>{errors}</p><p className={`text-[10px] ${pal.sub}`}>Erros</p></div>

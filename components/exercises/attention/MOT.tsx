@@ -4,6 +4,7 @@ import { useState, useEffect, useRef, useCallback, useLayoutEffect } from "react
 import { motion, AnimatePresence } from "framer-motion";
 import { calculateExerciseScore } from "@/lib/scoring";
 import { useTimedProgress } from "@/components/exercises/useExerciseEngine";
+import { ExerciseProgressBar } from "@/components/exercises/ExerciseProgressBar";
 import { TutorialBase } from "@/components/exercises/TutorialBase";
 import type { ExerciseResult, Theme } from "@/types";
 
@@ -334,10 +335,7 @@ export function MOT({ difficulty, theme, onComplete }: MOTProps) {
           <div className="flex justify-between items-center mb-2">
             <h2 className={`font-bold text-sm ${pal.title}`}>👁️ Rastreamento de Objetos</h2>
           </div>
-          <div className={`h-1.5 rounded-full ${theme === "GAMIFIED" ? "bg-gray-700" : "bg-slate-200"}`}>
-            <div className={`h-full rounded-full transition-all duration-300 ${pal.bar}`}
-              style={{ width: `${progressPct}%` }} />
-          </div>
+          <ExerciseProgressBar progressPct={progressPct} theme={theme} />
         </div>
 
         {/* Phase label */}
