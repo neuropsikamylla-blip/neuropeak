@@ -2,7 +2,7 @@
 
 import { useState, useRef, useCallback, useEffect } from "react";
 import { calculateExerciseScore } from "@/lib/scoring";
-import { useExerciseProgress } from "@/components/exercises/ExerciseWrapper";
+import { useTimedProgress } from "@/components/exercises/useExerciseEngine";
 import { TutorialBase } from "@/components/exercises/TutorialBase";
 import type { ExerciseResult, Theme } from "@/types";
 
@@ -297,7 +297,8 @@ interface Props { difficulty: number; theme: Theme; onComplete: (r: ExerciseResu
 type Phase = "tutorial" | "watch" | "input" | "result" | "between";
 
 export function CuboCorsi({ difficulty, theme: _theme, onComplete }: Props) {
-  const markProgress = useExerciseProgress();
+  // Barra por TEMPO ATIVO (pausa quando o paciente não interage) — hook padrão.
+  const { begin, isTimeUp, elapsedSec, finish, progressPct } = useTimedProgress(TARGET_MS);
 
   const [phase, setPhase]      = useState<Phase>("tutorial");
   const [round, setRound]      = useState(0);
@@ -307,12 +308,10 @@ export function CuboCorsi({ difficulty, theme: _theme, onComplete }: Props) {
 
   const correctRef = useRef(0);
   const errorsRef  = useRef(0);
-  const [progressPct, setProgressPct] = useState(0);   // barra por tempo (0-100)
   const [poseFace, setPoseFace] = useState<Face | null>(null);  // face que o cubo apresenta
 
   const cancelRef     = useRef(false);
   const timersRef     = useRef<ReturnType<typeof setTimeout>[]>([]);
-  const startTsRef    = useRef(0);
   const rtsRef        = useRef<number[]>([]);
   const inputStartRef = useRef(0);
 
@@ -320,20 +319,6 @@ export function CuboCorsi({ difficulty, theme: _theme, onComplete }: Props) {
   const curDiffRef  = useRef(difficulty);
   const streakRef   = useRef(0);
   const maxDiffRef  = useRef(difficulty);
-  const finishedRef = useRef(false);
-
-  // Barra de progresso pelo TEMPO decorrido (0→100% em ~7 min) — padrão e suave.
-  useEffect(() => {
-    const id = setInterval(() => {
-      if (startTsRef.current === 0 || finishedRef.current) return;
-      const el = Date.now() - startTsRef.current;
-      // Saltos de 10% (não 1% a 1%) → não parece cronômetro, menos ansiedade.
-      const pct = Math.min(100, Math.round(((el / TARGET_MS) * 100) / 10) * 10);
-      markProgress(pct);
-      setProgressPct(pct);
-    }, 400);
-    return () => clearInterval(id);
-  }, [markProgress]);
 
   function clearAll() {
     cancelRef.current = true;
@@ -420,15 +405,13 @@ export function CuboCorsi({ difficulty, theme: _theme, onComplete }: Props) {
 
     const t = setTimeout(() => {
       setTS(Array(N_TILES).fill("idle"));
-      const elapsed = Date.now() - startTsRef.current;
-      // Termina quando atinge a duração-alvo (~7 min) — não por nº fixo de rodadas.
-      if (elapsed >= TARGET_MS || nr >= MAX_ROUNDS) {
-        finishedRef.current = true;
-        markProgress(100); setProgressPct(100);
+      // Termina quando atinge a duração-alvo de TEMPO ATIVO (~7 min) — não por nº fixo de rodadas.
+      if (isTimeUp() || nr >= MAX_ROUNDS) {
+        finish();
         const avgRt = rtsRef.current.reduce((a, b) => a + b, 0) / Math.max(1, rtsRef.current.length);
         const fc = correctRef.current, fe = errorsRef.current;
         const acc = fc / Math.max(1, fc + fe);
-        const dur = Math.round((Date.now() - startTsRef.current) / 1000);
+        const dur = elapsedSec();
         const reached = maxDiffRef.current;
         const score = calculateExerciseScore("cubo-corsi", acc, avgRt, reached);
         onComplete({
@@ -442,7 +425,7 @@ export function CuboCorsi({ difficulty, theme: _theme, onComplete }: Props) {
       timersRef.current.push(setTimeout(() => startRound(nr), 500));
     }, 1800);
     timersRef.current.push(t);
-  }, [markProgress, onComplete, startRound]);
+  }, [isTimeUp, finish, elapsedSec, onComplete, startRound]);
 
   const handleTileTap = useCallback((idx: number) => {
     if (phase !== "input") return;
@@ -465,7 +448,7 @@ export function CuboCorsi({ difficulty, theme: _theme, onComplete }: Props) {
   useEffect(() => () => clearAll(), []);
 
   if (phase === "tutorial") {
-    return <CuboCorsiTutorial onDone={() => { startTsRef.current = Date.now(); startRound(0); }} />;
+    return <CuboCorsiTutorial onDone={() => { begin(); startRound(0); }} />;
   }
 
   const resultOk = phase === "result" && inputSoFar.every((t, i) => t === sequence[i]);
