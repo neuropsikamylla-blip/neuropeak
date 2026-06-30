@@ -1,6 +1,6 @@
 "use client";
 
-import type { PetKind } from "@/lib/pet";
+import type { PetKind, AccessoryId } from "@/lib/pet";
 
 // Arte vetorial do bichinho. Desenhada em SVG (viewBox 120×120) para ficar nítida
 // em qualquer tamanho e combinar com os temas. Fase 0 = ovo; 1..3 = filhote/jovem/adulto.
@@ -32,15 +32,46 @@ function Cheeks({ color }: { color: string }) {
   );
 }
 
-function Crown() {
-  return (
-    <g>
-      <path d="M47 30 L52 20 L60 27 L68 20 L73 30 Z" fill="#fbbf24" stroke="#f59e0b" strokeWidth={1.5} strokeLinejoin="round" />
-      <circle cx={52} cy={20} r={2.4} fill="#fde68a" />
-      <circle cx={68} cy={20} r={2.4} fill="#fde68a" />
-      <circle cx={60} cy={26.5} r={2.4} fill="#fde68a" />
-    </g>
-  );
+function Accessory({ id }: { id: AccessoryId }) {
+  switch (id) {
+    case "chapeu": // chapéu de festa
+      return (
+        <g>
+          <path d="M60 4 L48 30 L72 30 Z" fill="#f472b6" stroke="#db2777" strokeWidth={1.5} strokeLinejoin="round" />
+          <path d="M50 26 L70 26" stroke="#fbcfe8" strokeWidth={3} strokeLinecap="round" />
+          <path d="M52 20 L68 20" stroke="#fbcfe8" strokeWidth={2.5} strokeLinecap="round" />
+          <circle cx={60} cy={5} r={4} fill="#fde68a" stroke="#f59e0b" strokeWidth={1} />
+        </g>
+      );
+    case "laco": // laço no topo
+      return (
+        <g>
+          <path d="M60 24 L44 15 L44 33 Z" fill="#fb7185" stroke="#e11d48" strokeWidth={1.2} strokeLinejoin="round" />
+          <path d="M60 24 L76 15 L76 33 Z" fill="#fb7185" stroke="#e11d48" strokeWidth={1.2} strokeLinejoin="round" />
+          <circle cx={60} cy={24} r={4.5} fill="#f43f5e" stroke="#e11d48" strokeWidth={1} />
+        </g>
+      );
+    case "oculos": // óculos redondos sobre os olhos
+      return (
+        <g fill="none" stroke="#1f2937" strokeWidth={2.6}>
+          <circle cx={49} cy={60} r={13} />
+          <circle cx={71} cy={60} r={13} />
+          <path d="M62 60 L58 60" strokeLinecap="round" />
+          <path d="M36 58 L30 55" strokeLinecap="round" />
+          <path d="M84 58 L90 55" strokeLinecap="round" />
+        </g>
+      );
+    case "coroa":
+    default:
+      return (
+        <g>
+          <path d="M47 30 L52 20 L60 27 L68 20 L73 30 Z" fill="#fbbf24" stroke="#f59e0b" strokeWidth={1.5} strokeLinejoin="round" />
+          <circle cx={52} cy={20} r={2.4} fill="#fde68a" />
+          <circle cx={68} cy={20} r={2.4} fill="#fde68a" />
+          <circle cx={60} cy={26.5} r={2.4} fill="#fde68a" />
+        </g>
+      );
+  }
 }
 
 function Sparkles({ color }: { color: string }) {
@@ -79,7 +110,7 @@ function Egg({ p }: { p: typeof PAL[PetKind] }) {
   );
 }
 
-function Dragon({ p, adult }: { p: typeof PAL[PetKind]; adult: boolean }) {
+function Dragon({ p }: { p: typeof PAL[PetKind] }) {
   return (
     <g>
       {/* asas atrás */}
@@ -99,12 +130,11 @@ function Dragon({ p, adult }: { p: typeof PAL[PetKind]; adult: boolean }) {
       <Cheeks color={p.cheek} />
       <Eyes />
       <path d="M53 74 Q60 81 67 74" fill="none" stroke="#1f2937" strokeWidth={2.4} strokeLinecap="round" />
-      {adult && <Crown />}
     </g>
   );
 }
 
-function Monster({ p, adult }: { p: typeof PAL[PetKind]; adult: boolean }) {
+function Monster({ p }: { p: typeof PAL[PetKind] }) {
   return (
     <g>
       {/* antenas */}
@@ -126,12 +156,13 @@ function Monster({ p, adult }: { p: typeof PAL[PetKind]; adult: boolean }) {
       {/* sorrisão com um dentinho */}
       <path d="M50 74 Q60 84 70 74" fill="none" stroke="#1f2937" strokeWidth={2.6} strokeLinecap="round" />
       <rect x={55} y={75} width={5} height={5} rx={1} fill="#fff" stroke="#1f2937" strokeWidth={1} />
-      {adult && <Crown />}
     </g>
   );
 }
 
-export function PetCreature({ kind, stage, size = 140 }: { kind: PetKind; stage: number; size?: number }) {
+export function PetCreature({ kind, stage, size = 140, accessory }: {
+  kind: PetKind; stage: number; size?: number; accessory?: AccessoryId;
+}) {
   const p = PAL[kind];
   const common = { width: size, height: size, viewBox: "0 0 120 120", style: { display: "block" } as const };
 
@@ -145,7 +176,8 @@ export function PetCreature({ kind, stage, size = 140 }: { kind: PetKind; stage:
     <svg {...common} aria-hidden>
       {adult && <Sparkles color={p.horn} />}
       <g transform={`translate(60 66) scale(${scale}) translate(-60 -66)`}>
-        {kind === "dragao" ? <Dragon p={p} adult={adult} /> : <Monster p={p} adult={adult} />}
+        {kind === "dragao" ? <Dragon p={p} /> : <Monster p={p} />}
+        {adult && <Accessory id={accessory ?? "coroa"} />}
       </g>
     </svg>
   );

@@ -11,7 +11,7 @@ import { useToast } from "@/components/ui/use-toast";
 import { Loader2, CheckCircle2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import Link from "next/link";
-import { loadPet, savePet, feedPet, type PetKind } from "@/lib/pet";
+import { loadPet, savePet, feedPet, type PetKind, type AccessoryId } from "@/lib/pet";
 import { PetCelebration } from "@/components/patient/PetCelebration";
 
 function ExerciseLoader() {
@@ -361,7 +361,7 @@ export default function ExercicioPage() {
   const [patientAge, setPatientAge] = useState<number | undefined>();
   const [sessionTotal, setSessionTotal] = useState<number | undefined>();
   const [sessionCompleted, setSessionCompleted] = useState(0);
-  const [petCele, setPetCele] = useState<{ kind: PetKind; before: number; after: number } | null>(null);
+  const [petCele, setPetCele] = useState<{ kind: PetKind; before: number; after: number; name?: string; accessory?: AccessoryId } | null>(null);
   const completedRef = useRef(false);     // sessão concluída (não conta como abandono)
   const sentAbandonRef = useRef(false);
   const mountTsRef = useRef(0);
@@ -506,7 +506,7 @@ export default function ExercicioPage() {
       savePet(user.patientId, after);
       if (before.kind) {
         // tem bichinho escolhido → mostra a comemoração antes de voltar
-        setPetCele({ kind: before.kind, before: before.care, after: after.care });
+        setPetCele({ kind: before.kind, before: before.care, after: after.care, name: before.name, accessory: before.accessory });
         return;
       }
     }
@@ -520,6 +520,8 @@ export default function ExercicioPage() {
         kind={petCele.kind}
         careBefore={petCele.before}
         careAfter={petCele.after}
+        name={petCele.name}
+        accessory={petCele.accessory}
         theme={theme}
         onContinue={() => router.push("/inicio")}
       />

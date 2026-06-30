@@ -5,16 +5,37 @@
 // ovo → filhote → jovem → adulto. Estado guardado no localStorage por paciente.
 
 export type PetKind = "dragao" | "monstrinho";
+export type AccessoryId = "coroa" | "chapeu" | "laco" | "oculos";
 
 export interface PetState {
-  kind: PetKind | null; // null = ainda não escolhido
-  care: number;         // total de pontos de carinho (treinos que alimentaram o bichinho)
+  kind: PetKind | null;       // null = ainda não escolhido
+  care: number;               // total de pontos de carinho (treinos que alimentaram o bichinho)
+  name?: string;              // nome dado pela criança
+  accessory?: AccessoryId;    // acessório escolhido (só vale quando adulto)
 }
 
 export const SESSIONS_PER_STAGE = 3;            // treinos por evolução
 export const MAX_STAGE = 3;                     // 0 ovo · 1 filhote · 2 jovem · 3 adulto
 export const STAGE_LABELS = ["Ovo", "Filhote", "Jovem", "Adulto"] as const;
 export const PET_NAMES: Record<PetKind, string> = { dragao: "Dragão", monstrinho: "Monstrinho" };
+
+export const ACCESSORIES: { id: AccessoryId; label: string; emoji: string }[] = [
+  { id: "coroa", label: "Coroa", emoji: "👑" },
+  { id: "chapeu", label: "Chapéu", emoji: "🎉" },
+  { id: "laco", label: "Laço", emoji: "🎀" },
+  { id: "oculos", label: "Óculos", emoji: "🤓" },
+];
+
+export const SUGGESTED_NAMES: Record<PetKind, string[]> = {
+  dragao: ["Faísca", "Flama", "Pipoca", "Brasa"],
+  monstrinho: ["Pelúcia", "Fofo", "Roxinho", "Tonton"],
+};
+
+/** Nome a exibir: o que a criança deu, ou o nome padrão do tipo. */
+export function petDisplayName(s: PetState): string {
+  const n = s.name?.trim();
+  return n || (s.kind ? PET_NAMES[s.kind] : "");
+}
 
 /** Fase atual (0..MAX_STAGE) a partir do total de carinho. */
 export function petStage(care: number): number {
@@ -45,7 +66,12 @@ export function loadPet(patientId: string): PetState {
     const raw = localStorage.getItem(storageKey(patientId));
     if (raw) {
       const p = JSON.parse(raw) as Partial<PetState>;
-      return { kind: p.kind ?? null, care: typeof p.care === "number" ? p.care : 0 };
+      return {
+        kind: p.kind ?? null,
+        care: typeof p.care === "number" ? p.care : 0,
+        name: p.name,
+        accessory: p.accessory,
+      };
     }
   } catch { /* ignore */ }
   return { kind: null, care: 0 };

@@ -3,7 +3,7 @@
 import { useEffect, useState } from "react";
 import { motion } from "framer-motion";
 import type { Theme } from "@/types";
-import { petStage, careProgress, STAGE_LABELS, PET_NAMES, type PetKind } from "@/lib/pet";
+import { petStage, careProgress, STAGE_LABELS, PET_NAMES, type PetKind, type AccessoryId } from "@/lib/pet";
 import { PetCreature } from "./PetCreature";
 
 const AURA: Record<PetKind, string> = {
@@ -12,14 +12,16 @@ const AURA: Record<PetKind, string> = {
 };
 
 export function PetCelebration({
-  kind, careBefore, careAfter, theme, onContinue,
+  kind, careBefore, careAfter, theme, onContinue, name, accessory,
 }: {
   kind: PetKind; careBefore: number; careAfter: number; theme: Theme; onContinue: () => void;
+  name?: string; accessory?: AccessoryId;
 }) {
   const isG = theme === "GAMIFIED";
   const stageBefore = petStage(careBefore);
   const stageAfter = petStage(careAfter);
   const evolved = stageAfter > stageBefore;
+  const petName = name?.trim() || PET_NAMES[kind];
 
   // anima a barra de carinho do valor anterior para o novo
   const [pct, setPct] = useState(Math.round(careProgress(careBefore) * 100));
@@ -70,16 +72,16 @@ export function PetCelebration({
           animate={{ scale: 1, rotate: 0 }}
           transition={{ type: "spring", stiffness: 220, damping: 14, delay: evolved ? 0.25 : 0 }}
         >
-          <PetCreature kind={kind} stage={stageAfter} size={150} />
+          <PetCreature kind={kind} stage={stageAfter} size={150} accessory={accessory} />
         </motion.div>
 
         <h2 className={`text-xl font-black mt-3 mb-1 ${titleC}`}>
-          {evolved ? `Seu ${PET_NAMES[kind].toLowerCase()} evoluiu! 🎊` : `+1 carinho ❤️`}
+          {evolved ? `${petName} evoluiu! 🎊` : `+1 carinho ❤️`}
         </h2>
         <p className={`text-sm mb-5 ${subC}`}>
           {evolved
-            ? `Agora ele é ${STAGE_LABELS[stageAfter]}! Você cuidou muito bem dele.`
-            : "Você deixou seu bichinho mais feliz. Continue assim!"}
+            ? `Agora ${petName} é ${STAGE_LABELS[stageAfter]}! Você cuidou muito bem dele.`
+            : `Você deixou ${petName} mais feliz. Continue assim!`}
         </p>
 
         {/* barra de carinho */}
