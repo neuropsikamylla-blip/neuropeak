@@ -247,12 +247,12 @@ export function OrdemHistoria({ difficulty, onComplete, settings }: OrdemHistori
   function makeRound(): { mode: RoundMode; storyId: string; a: number; cards: Card[]; options: Option[] } {
     if (sessionMode === "falta") {
       const r = buildFalta(new Set(recentRef.current));
-      recentRef.current = [r.storyId, ...recentRef.current].slice(0, 6);
+      recentRef.current = [r.storyId, ...recentRef.current].slice(0, 60);
       preloadUrls([...Array.from({ length: 7 }, (_, i) => descubraScene(r.storyId, i + 1)), ...r.options.map((o) => o.src)]);
       return { mode: "falta", storyId: r.storyId, a: r.a, cards: r.cards, options: r.options };
     }
     const r = buildOrdem(sessionMode === "intruso", tier, new Set(recentRef.current));
-    recentRef.current = [r.storyId, ...recentRef.current].slice(0, 6);
+    recentRef.current = [r.storyId, ...recentRef.current].slice(0, 60);
     preloadUrls(Array.from({ length: r.cards.length }, (_, i) => histPanelSrc(r.storyId, i + 1)));
     return { mode: sessionMode, storyId: r.storyId, a: r.a, cards: r.cards, options: [] };
   }

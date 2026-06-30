@@ -5,6 +5,7 @@ import { motion, AnimatePresence } from "framer-motion";
 import { calculateExerciseScore } from "@/lib/scoring";
 import { useTimedProgress } from "@/components/exercises/useExerciseEngine";
 import { TutorialBase } from "@/components/exercises/TutorialBase";
+import { ExerciseProgressBar } from "@/components/exercises/ExerciseProgressBar";
 import type { ExerciseResult, Theme } from "@/types";
 
 interface AtencaoDivididaProps {
@@ -373,8 +374,6 @@ export function AtencaoDividida({ difficulty, theme, onComplete }: AtencaoDividi
     return <AtencaoDivididaTutorial theme={theme} onDone={() => setShowTutorial(false)} />;
   }
 
-  const progress = progressPct;
-  const totalErrors = misses + falseAlarms;
   const isGamified = theme === "GAMIFIED";
   const isColorful = theme === "COLORFUL";
 
@@ -418,24 +417,8 @@ export function AtencaoDividida({ difficulty, theme, onComplete }: AtencaoDividi
   return (
     <div className="min-h-screen flex flex-col items-center justify-center p-4" style={bgStyle}>
       <div className="w-full max-w-md p-5" style={cardStyle}>
-        {/* Header */}
-        <div className="flex justify-between text-sm mb-3">
-          <span className="font-bold" style={{ color: "#22c55e" }}>✓ {hits}</span>
-          <span style={{ color: isGamified ? "rgba(255,255,255,0.6)" : "#8a7a6a" }}>
-            {Math.max(0, currentStimulusIndex + 1)}/{MAX_STIMULI}
-          </span>
-          <span className="font-bold" style={{ color: "#ef4444" }}>✗ {totalErrors}</span>
-        </div>
-
-        {/* Progress bar */}
-        <div className="h-2 rounded-full mb-4" style={{ background: isGamified ? "rgba(255,255,255,0.1)" : "rgba(26,45,80,0.1)" }}>
-          <motion.div
-            className="h-full rounded-full"
-            style={{ background: isGamified ? "#06b6d4" : "#6366f1" }}
-            animate={{ width: `${progress}%` }}
-            transition={{ duration: 0.3 }}
-          />
-        </div>
+        {/* Barra de progresso padrão */}
+        <ExerciseProgressBar progressPct={progressPct} theme={theme} />
 
         {/* Dual panels */}
         <div className="flex gap-3 mb-5">

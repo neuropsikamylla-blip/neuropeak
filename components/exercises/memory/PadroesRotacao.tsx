@@ -382,9 +382,6 @@ export function PadroesRotacao({ difficulty, onComplete }: PadroesRotacaoProps) 
           </button>
         )}
 
-        <div className="flex justify-end text-xs pt-1" style={{ color: "rgba(148,163,184,0.5)" }}>
-          <span>{correctRef.current} acertos</span>
-        </div>
       </div>
     </div>
   );

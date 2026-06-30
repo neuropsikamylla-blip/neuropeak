@@ -680,9 +680,8 @@ export function RestauranteOrdem({ difficulty, onComplete }: RestauranteOrdemPro
             ✓ Entregar pedido
           </button>
         </div>
-        <div style={{ flexShrink: 0, display: "flex", alignItems: "center", gap: 12, padding: "0 18px 10px", fontSize: 11.5, fontWeight: 700, color: "#E1CDA3" }}>
-          <div style={{ flex: 1 }}><ExerciseProgressBar progressPct={progressPct} theme="GAMIFIED" /></div>
-          <span style={{ flexShrink: 0 }}>Acertos: {correctRef.current}</span>
+        <div style={{ flexShrink: 0, padding: "0 18px 10px" }}>
+          <ExerciseProgressBar progressPct={progressPct} theme="GAMIFIED" />
         </div>
       </div>
     );
@@ -743,7 +742,6 @@ export function RestauranteOrdem({ difficulty, onComplete }: RestauranteOrdemPro
             Continuar →
           </button>
           <div style={{ width: "100%", maxWidth: 280 }}><ExerciseProgressBar progressPct={progressPct} theme="GAMIFIED" /></div>
-          <div style={{ fontSize: 12, fontWeight: 700, color: "rgba(255,255,255,0.6)" }}>Acertos: {correctRef.current}</div>
         </div>
       </div>
     );

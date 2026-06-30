@@ -10,11 +10,13 @@ import type { Level } from "@/types/parking";
 import type { ExerciseResult, Theme } from "@/types";
 
 // Sorteia uma fase da dificuldade disponível mais próxima do alvo (idealMoves).
-function pickLevel(targetDiff: number): { level: Level; diff: number } {
+// `avoid` evita repetir a fase atual (não cair de novo na mesma ao avançar).
+function pickLevel(targetDiff: number, avoid?: Level | null): { level: Level; diff: number } {
   const diff = DIFFICULTIES.reduce((best, d) =>
     Math.abs(d - targetDiff) < Math.abs(best - targetDiff) ? d : best, DIFFICULTIES[0]);
   const arr = LEVELS_BY_DIFFICULTY[diff];
-  return { level: arr[Math.floor(Math.random() * arr.length)], diff };
+  const pool = avoid && arr.length > 1 ? arr.filter(l => l !== avoid) : arr;
+  return { level: pool[Math.floor(Math.random() * pool.length)], diff };
 }
 function stepDiff(cur: number, dir: 1 | -1): number {
   const i = DIFFICULTIES.indexOf(cur);
@@ -283,8 +285,8 @@ export function EstacionamentoLogico({ difficulty, theme: _theme, onComplete }: 
       if (streakRef.current <= -2) { streakRef.current = 0; curDiffRef.current = stepDiff(curDiffRef.current, -1); }
     }
     if (isTimeUp()) { completeSession(); return; }
-    loadLevel(pickLevel(curDiffRef.current).level);
-  }, [isTimeUp, completeSession, loadLevel]);
+    loadLevel(pickLevel(curDiffRef.current, currentLevel).level);   // nunca repete a fase atual
+  }, [isTimeUp, completeSession, loadLevel, currentLevel]);
 
   const commitMove = useCallback((carId: string, newPos: number) => {
     setCars(prev => {

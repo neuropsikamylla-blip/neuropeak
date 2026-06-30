@@ -231,9 +231,9 @@ export function TaskSwitching({ difficulty, theme, onComplete }: TaskSwitchingPr
   const startTime = useRef(Date.now());
   const allDoneRef = useRef(false);
   const timerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const switchAnnouncedRef = useRef(0); // só anunciamos a troca nas 3 primeiras vezes
 
   const TOTAL = trials.length;
-  const announced = difficulty <= 5; // announce rule change at lower difficulties
 
   const finishSession = useCallback((finalResults: TrialResult[]) => {
     if (allDoneRef.current) return;
@@ -273,7 +273,8 @@ export function TaskSwitching({ difficulty, theme, onComplete }: TaskSwitchingPr
       return;
     }
     const nextTrial = trials[next % TOTAL];
-    if (nextTrial.isFirstAfterSwitch && announced) {
+    if (nextTrial.isFirstAfterSwitch && switchAnnouncedRef.current < 3) {
+      switchAnnouncedRef.current++;
       setShowSwitch(true);
       setPhase("switchBanner");
       timerRef.current = setTimeout(() => {
@@ -287,7 +288,7 @@ export function TaskSwitching({ difficulty, theme, onComplete }: TaskSwitchingPr
       setPhase("stimulus");
       stimulusStart.current = Date.now();
     }
-  }, [trialIdx, TOTAL, trials, announced, isTimeUp, finishSession]);
+  }, [trialIdx, TOTAL, trials, isTimeUp, finishSession]);
 
   function handleAnswer(side: "left" | "right") {
     if (phase !== "stimulus" || allDoneRef.current) return;
@@ -351,10 +352,6 @@ export function TaskSwitching({ difficulty, theme, onComplete }: TaskSwitchingPr
             <h2 className={`font-bold text-sm ${pal.title}`}>🔄 Task Switching</h2>
           </div>
           <ExerciseProgressBar progressPct={progressPct} theme={theme} />
-          <div className="flex justify-around text-center">
-            <div><p className={`text-lg font-black ${pal.hit}`}>{hits}</p><p className={`text-[10px] ${pal.sub}`}>Acertos</p></div>
-            <div><p className={`text-lg font-black ${pal.err}`}>{errors}</p><p className={`text-[10px] ${pal.sub}`}>Erros</p></div>
-          </div>
         </div>
 
         {/* Rule banner */}
@@ -375,9 +372,6 @@ export function TaskSwitching({ difficulty, theme, onComplete }: TaskSwitchingPr
                 </p>
                 <p className={`text-[10px] ${pal.sub}`}>{leftLabel} → Esq &nbsp;|&nbsp; {rightLabel} → Dir</p>
               </div>
-              {trial.isFirstAfterSwitch && !announced && (
-                <span className="ml-auto text-xs font-bold text-orange-500">NOVA REGRA</span>
-              )}
             </motion.div>
           )}
         </AnimatePresence>

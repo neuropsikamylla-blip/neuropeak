@@ -355,10 +355,13 @@ export function JogoMemoria({ difficulty, theme, onComplete }: JogoMemoriaProps)
         <div className="flex justify-between items-center mb-3">
           <div>
             <h2 style={{ fontWeight: 700, fontSize: 15, color: titleColor }}>🃏 Jogo da Memória</h2>
-            <p style={{ fontSize: 12, color: labelColor }}>{pairCount} pares · {budget} erro{budget !== 1 ? "s" : ""} permitido{budget !== 1 ? "s" : ""}</p>
+            <p style={{ fontSize: 12, color: labelColor }}>{pairCount} pares</p>
           </div>
-          {gamePhase === "playing" && errors > 0 && (
-            <span style={{ color: "#ef4444", fontWeight: 500, fontSize: 13 }}>{errors}/{budget} erros</span>
+          {gamePhase === "playing" && (
+            <span style={{ fontSize: 16, letterSpacing: 2 }} aria-label="vidas">
+              <span style={{ color: "#ef4444" }}>{"♥".repeat(Math.max(0, budget - errors))}</span>
+              <span style={{ color: isGamified ? "rgba(255,255,255,0.25)" : "rgba(148,163,184,0.4)" }}>{"♡".repeat(Math.min(budget, errors))}</span>
+            </span>
           )}
         </div>
 

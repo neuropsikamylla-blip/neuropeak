@@ -379,10 +379,6 @@ export function SpanNumerico({ difficulty, onComplete, reverse = false, settings
           </div>
         )}
 
-        {/* rodapé acertos */}
-        <div className="flex justify-end text-xs pt-1" style={{ color: "rgba(148,163,184,0.5)" }}>
-          <span>{correctCount} acertos</span>
-        </div>
       </div>
     </div>
   );

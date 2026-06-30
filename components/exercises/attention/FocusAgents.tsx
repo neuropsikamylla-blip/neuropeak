@@ -201,6 +201,7 @@ function AgentCard({ gameAgent, onClick, state, size, flashy }: {
     >
       {/* eslint-disable-next-line @next/next/no-img-element */}
       <img src={src + AGENT_V} alt={gameAgent.agent.name}
+        decoding="async" loading="eager"
         style={{
           width: "100%", height: "auto", display: "block", userSelect: "none",
           opacity: dim ? 0.5 : 1,
@@ -350,7 +351,7 @@ function FocusTutorial({ theme, onDone }: { theme: Theme; onDone: () => void }) 
             transition={{ duration: da.wave.dur, repeat: Infinity, ease: "easeInOut", delay: da.wave.delay }}
             className="relative flex items-center justify-center">
             {/* eslint-disable-next-line @next/next/no-img-element */}
-            <img src={da.src + AGENT_V} alt="" draggable={false}
+            <img src={da.src + AGENT_V} alt="" draggable={false} decoding="async" loading="eager"
               style={{ width: 86, height: "auto", display: "block", userSelect: "none",
                 filter: da.isTarget
                   ? "drop-shadow(0 3px 6px rgba(0,0,0,0.6)) drop-shadow(0 0 10px rgba(74,222,128,0.95)) drop-shadow(0 0 20px rgba(74,222,128,0.7))"
@@ -563,11 +564,21 @@ export function FocusAgents({ difficulty, theme, onComplete, exerciseId = "focus
   const failReasonRef           = useRef<FailReason>(null);
   roundResultsRef.current = roundResults;
 
-  // Pré-carrega as imagens dos personagens (durante a seleção/tutorial) para que
-  // apareçam todas juntas ao iniciar o jogo, sem o efeito de "surgir 1s depois".
+  // Pré-carrega E decodifica as imagens dos personagens (durante a seleção/tutorial)
+  // para que apareçam todas juntas ao iniciar o jogo, sem o efeito de "surgir 1s depois".
+  // Mantém as referências vivas em um ref para o navegador não descartar o cache.
+  const preloadWarmRef = useRef<HTMLImageElement[]>([]);
   useEffect(() => {
     if (typeof window === "undefined") return;
-    agents.forEach(a => a.images.forEach(img => { const im = new window.Image(); im.src = img.src + AGENT_V; }));
+    const warm: HTMLImageElement[] = [];
+    agents.forEach(a => a.images.forEach(img => {
+      const im = new window.Image();
+      im.decoding = "async";
+      im.src = img.src + AGENT_V;
+      im.decode?.().catch(() => {});   // decodifica adiantado (ignora falhas)
+      warm.push(im);
+    }));
+    preloadWarmRef.current = warm;
   }, []);
 
   const stopFallAnimation = () => {

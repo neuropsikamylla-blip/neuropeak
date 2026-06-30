@@ -406,8 +406,9 @@ export function DualTask({ difficulty, theme, onComplete }: DualTaskProps) {
     eqBtn: theme === "GAMIFIED" ? "bg-blue-700 text-white active:bg-blue-600" : "bg-blue-500 text-white active:bg-blue-600",
   };
 
-  const shapeHits = shapeResults.current.filter((r) => r.isTarget && r.tapped).length;
-  const digitHits = digitResults.current.filter((r) => r.isMatch && r.tapped).length;
+  // Nos níveis fáceis mostramos o dígito de referência (apoio); a partir do
+  // moderado o paciente precisa memorizar o anterior (n-back de verdade).
+  const showRef = difficulty <= 3;
 
   return (
     <div className={`min-h-screen overflow-y-auto ${pal.bg}`}>
@@ -429,10 +430,6 @@ export function DualTask({ difficulty, theme, onComplete }: DualTaskProps) {
         <div className={`rounded-2xl p-4 ${pal.panelA}`} style={{ minHeight: 250 }}>
           <div className="flex justify-between items-center mb-2">
             <p className={`text-xs font-bold ${pal.title}`}>SUPERIOR</p>
-            <div className="flex gap-3 text-xs">
-              <span className={pal.hit}>✓ {shapeHits}</span>
-              <span className={pal.fa}>✗ {shapeResults.current.filter((r) => !r.isTarget && r.tapped).length}</span>
-            </div>
           </div>
           <div
             className={`w-full flex items-center justify-center rounded-2xl border-2 cursor-pointer transition-all ${
@@ -461,15 +458,16 @@ export function DualTask({ difficulty, theme, onComplete }: DualTaskProps) {
         <div className={`rounded-2xl p-4 ${pal.panelB}`}>
           <div className="flex justify-between items-center mb-3">
             <p className={`text-xs font-bold ${pal.title}`}>INFERIOR — N-back {nback} (Igual?)</p>
-            <span className={`text-xs ${pal.hit}`}>✓ {digitHits}</span>
           </div>
           <div className="flex items-center gap-4">
-            <div className="flex flex-col items-center gap-1">
-              <p className={`text-[10px] ${pal.sub}`}>{nback === 1 ? "Anterior" : "2 atrás"}</p>
-              <div className={`w-14 h-14 rounded-xl flex items-center justify-center font-black text-3xl ${pal.digitBox}`}>
-                <span className={pal.sub}>{refDigit ?? "—"}</span>
+            {showRef && (
+              <div className="flex flex-col items-center gap-1">
+                <p className={`text-[10px] ${pal.sub}`}>{nback === 1 ? "Anterior" : "2 atrás"}</p>
+                <div className={`w-14 h-14 rounded-xl flex items-center justify-center font-black text-3xl ${pal.digitBox}`}>
+                  <span className={pal.sub}>{refDigit ?? "—"}</span>
+                </div>
               </div>
-            </div>
+            )}
             <div className="flex flex-col items-center gap-1 flex-1">
               <p className={`text-[10px] ${pal.sub}`}>Atual</p>
               <AnimatePresence mode="wait">

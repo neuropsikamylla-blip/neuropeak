@@ -268,10 +268,10 @@ export function TrilhaVisual({ difficulty, theme, onComplete }: TrilhaVisualProp
   const stripText = isG ? "rgba(255,255,255,0.82)" : isC ? "#4338ca" : "#475569";
   const lineColor = accent;
 
-  // Estilo de cada número. O PRÓXIMO da sequência ganha borda azul + leve brilho.
+  // Estilo de cada número. Tocados ficam preenchidos; os demais ficam IGUAIS
+  // (o próximo não é destacado, p/ não entregar a resposta).
   function cellStyleObj(cell: Cell): React.CSSProperties {
     const isCompleted = cell.id < nextExpected;
-    const isNext = cell.id === nextExpected && roundPhase === "playing";
     const common: React.CSSProperties = {
       position: "absolute", left: `${cell.x}%`, top: `${cell.y}%`, transform: "translate(-50%,-50%)",
       width: 54, height: 54, borderRadius: 16, display: "flex", alignItems: "center", justifyContent: "center",
@@ -280,12 +280,8 @@ export function TrilhaVisual({ difficulty, theme, onComplete }: TrilhaVisualProp
     if (isCompleted) {
       return { ...common, background: accent, border: `2px solid ${accent}`, color: "#ffffff", opacity: 0.5 };
     }
-    if (isNext) {
-      return {
-        ...common, background: isG ? "#0f1729" : "#ffffff", border: `2.5px solid ${accent}`,
-        color: isG ? "#67e8f9" : "#1e3a8a", boxShadow: `0 0 0 4px ${accentSoft}, 0 6px 18px ${accent}44`,
-      };
-    }
+    // O PRÓXIMO número NÃO é destacado — senão entregaria a resposta (o paciente
+    // tem que procurar o número certo). Todos os não-tocados ficam iguais.
     return {
       ...common, background: isG ? "rgba(255,255,255,0.06)" : "#ffffff",
       border: isG ? "1.5px solid rgba(255,255,255,0.16)" : "1.5px solid rgba(148,163,184,0.36)",
