@@ -11,6 +11,8 @@ import { useToast } from "@/components/ui/use-toast";
 import { Loader2, CheckCircle2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import Link from "next/link";
+import { loadPet, savePet, feedPet, type PetKind } from "@/lib/pet";
+import { PetCelebration } from "@/components/patient/PetCelebration";
 
 function ExerciseLoader() {
   return <div className="min-h-screen flex items-center justify-center"><Loader2 className="w-8 h-8 animate-spin text-blue-500" /></div>;
@@ -359,6 +361,7 @@ export default function ExercicioPage() {
   const [patientAge, setPatientAge] = useState<number | undefined>();
   const [sessionTotal, setSessionTotal] = useState<number | undefined>();
   const [sessionCompleted, setSessionCompleted] = useState(0);
+  const [petCele, setPetCele] = useState<{ kind: PetKind; before: number; after: number } | null>(null);
   const completedRef = useRef(false);     // sessão concluída (não conta como abandono)
   const sentAbandonRef = useRef(false);
   const mountTsRef = useRef(0);
@@ -495,7 +498,32 @@ export default function ExercicioPage() {
       localStorage.setItem(storageKey, JSON.stringify(sessionData));
     } catch { /* ignore */ }
 
+    // Bichinho que cresce (temas infantis): cada treino dá +1 de carinho.
+    const infantil = theme === "COLORFUL" || theme === "GAMIFIED";
+    if (infantil && user.patientId) {
+      const before = loadPet(user.patientId);
+      const after = feedPet(before);
+      savePet(user.patientId, after);
+      if (before.kind) {
+        // tem bichinho escolhido → mostra a comemoração antes de voltar
+        setPetCele({ kind: before.kind, before: before.care, after: after.care });
+        return;
+      }
+    }
+
     router.push("/inicio");
+  }
+
+  if (petCele) {
+    return (
+      <PetCelebration
+        kind={petCele.kind}
+        careBefore={petCele.before}
+        careAfter={petCele.after}
+        theme={theme}
+        onContinue={() => router.push("/inicio")}
+      />
+    );
   }
 
   if (loading) {

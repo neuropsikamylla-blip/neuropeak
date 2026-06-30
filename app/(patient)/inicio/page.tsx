@@ -8,6 +8,7 @@ import { EXERCISE_DEFINITIONS, DOMAIN_LABELS, DOMAIN_COLORS, type Domain, type T
 import { planExerciseIds } from "@/lib/exercise-plan";
 import { Trophy, Flame, Star } from "lucide-react";
 import { ExerciseIcon } from "@/components/ExerciseIcon";
+import { PetCompanion } from "@/components/patient/PetCompanion";
 
 export default async function InicioPage() {
   const session = await getServerSession(authOptions);
@@ -133,6 +134,11 @@ export default async function InicioPage() {
             : "Treino cognitivo personalizado para você"}
         </p>
       </div>
+
+      {/* Bichinho que cresce — só nos temas infantis */}
+      {(theme === "COLORFUL" || theme === "GAMIFIED") && (
+        <PetCompanion patientId={patient.id} theme={theme} />
+      )}
 
       {/* Stats */}
       <div className="grid grid-cols-3 gap-3">
