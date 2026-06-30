@@ -15,6 +15,25 @@ const AURA: Record<PetKind, string> = {
   monstrinho: "rgba(167,139,250,0.30)",
 };
 
+// Fala curta e contextual do bichinho. Determinística (varia conforme o carinho,
+// sem aleatoriedade) para não trocar a cada re-render.
+function petSpeech(pet: PetState): string {
+  const stage = petStage(pet.care);
+  const faltam = sessionsToNextStage(pet.care);
+  const name = petDisplayName(pet);
+  let pool: string[];
+  if (pet.care === 0) {
+    pool = [`Oi! Eu sou ${name}. Bora treinar? 🎮`, `Que bom te ver! Vamos começar? ✨`];
+  } else if (stage >= 3) {
+    pool = [`Cresci graças a você! 💖`, `Curtiu meu acessório? 😎`, `Bora treinar mais um pouquinho!`];
+  } else if (faltam === 1) {
+    pool = [`Tô quase crescendo! Só mais 1 treino! 🌟`, `Falta pouquinho pra eu evoluir! 💪`];
+  } else {
+    pool = [`Bora fazer um treino hoje? 💪`, `Tô com vontade de crescer! 🌱`, `Eu confio em você! Vamos lá! ⭐`];
+  }
+  return pool[pet.care % pool.length];
+}
+
 export function PetCompanion({ patientId, theme }: { patientId: string; theme: Theme }) {
   const isG = theme === "GAMIFIED";
   const [pet, setPet] = useState<PetState | null>(null);
@@ -127,6 +146,9 @@ export function PetCompanion({ patientId, theme }: { patientId: string; theme: T
   const faltam = sessionsToNextStage(pet.care);
   const isAdult = stage >= 3;
   const accessory: AccessoryId = pet.accessory ?? "coroa";
+  const speech = petSpeech(pet);
+  const bubbleBg = isG ? "#0f172a" : "#ccfbf1";
+  const bubbleTx = isG ? "#a5f3fc" : "#0f766e";
 
   return (
     <div className={`rounded-2xl p-4 ${card}`}>
@@ -135,6 +157,21 @@ export function PetCompanion({ patientId, theme }: { patientId: string; theme: T
         <span className={`text-xs font-bold px-2 py-0.5 rounded-full ${isG ? "bg-cyan-500/15 text-cyan-300" : "bg-teal-100 text-teal-700"}`}>
           {STAGE_LABELS[stage]}
         </span>
+      </div>
+
+      {/* Balão de fala do bichinho */}
+      <div className="relative mb-2 ml-1 w-fit max-w-full">
+        <motion.div
+          key={speech}
+          initial={{ opacity: 0, y: 4 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.3 }}
+          className="rounded-2xl px-3 py-1.5 text-xs font-semibold"
+          style={{ background: bubbleBg, color: bubbleTx }}
+        >
+          {speech}
+        </motion.div>
+        <div className="absolute -bottom-1 left-5 w-3 h-3 rotate-45" style={{ background: bubbleBg }} />
       </div>
 
       <div className="flex items-center gap-4">
