@@ -11,8 +11,9 @@ import { useToast } from "@/components/ui/use-toast";
 import { Loader2, CheckCircle2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import Link from "next/link";
-import { loadPet, savePet, feedPet, type PetKind, type AccessoryId } from "@/lib/pet";
+import { loadPet, savePet, feedPet, petStage, petDisplayName, type PetKind, type AccessoryId, type PetState } from "@/lib/pet";
 import { PetCelebration } from "@/components/patient/PetCelebration";
+import { PetCreature } from "@/components/patient/PetCreature";
 
 function ExerciseLoader() {
   return <div className="min-h-screen flex items-center justify-center"><Loader2 className="w-8 h-8 animate-spin text-blue-500" /></div>;
@@ -289,7 +290,13 @@ function isSameLocalDay(a: Date, b: Date) {
   );
 }
 
-function BlockedScreen({ theme, exerciseName }: { theme: Theme; exerciseName: string }) {
+function BlockedScreen({ theme, exerciseName, patientId }: { theme: Theme; exerciseName: string; patientId?: string }) {
+  const [pet, setPet] = useState<PetState | null>(null);
+  useEffect(() => { if (patientId) setPet(loadPet(patientId)); }, [patientId]);
+  const infantil = theme === "COLORFUL" || theme === "GAMIFIED";
+  const showPet = infantil && !!pet?.kind;
+  const petName = pet ? petDisplayName(pet) : "";
+
   const styles = {
     CLINICAL: {
       bg: "bg-gray-50 min-h-screen flex items-center justify-center p-4",
@@ -321,16 +328,26 @@ function BlockedScreen({ theme, exerciseName }: { theme: Theme; exerciseName: st
   return (
     <div className={s.bg}>
       <div className={s.card}>
-        <CheckCircle2 className={`w-16 h-16 mx-auto ${s.icon}`} />
+        {showPet && pet?.kind ? (
+          <div className="mx-auto w-fit">
+            <PetCreature kind={pet.kind} stage={petStage(pet.care)} size={120} accessory={pet.accessory ?? "coroa"} />
+          </div>
+        ) : (
+          <CheckCircle2 className={`w-16 h-16 mx-auto ${s.icon}`} />
+        )}
         <h2 className={s.title}>
-          {theme === "GAMIFIED"
+          {showPet
+            ? `${petName} está orgulhoso! 🎉`
+            : theme === "GAMIFIED"
             ? "Missão Concluída!"
             : theme === "COLORFUL"
             ? "Exercício concluído hoje! 🎉"
             : "Exercício concluído hoje"}
         </h2>
         <p className={s.msg}>
-          {theme === "GAMIFIED"
+          {showPet
+            ? `Você já treinou ${exerciseName} hoje. ${petName} vai te esperar amanhã para crescer mais! 💤`
+            : theme === "GAMIFIED"
             ? `${exerciseName} já foi completado hoje. Volte amanhã para continuar subindo de nível!`
             : theme === "COLORFUL"
             ? `Você já treinou ${exerciseName} hoje! Volte amanhã para mais desafios. 💪`
@@ -545,7 +562,7 @@ export default function ExercicioPage() {
   }
 
   if (blockedToday) {
-    return <BlockedScreen theme={theme} exerciseName={exerciseDef.name} />;
+    return <BlockedScreen theme={theme} exerciseName={exerciseDef.name} patientId={(session?.user as { patientId?: string })?.patientId} />;
   }
 
   const instructions = EXERCISE_INSTRUCTIONS[exerciseId] ?? ["Siga as instruções do exercício."];
