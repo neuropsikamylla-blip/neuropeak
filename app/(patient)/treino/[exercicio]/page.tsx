@@ -12,8 +12,10 @@ import { Loader2, CheckCircle2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import Link from "next/link";
 import { loadPet, savePet, feedPet, petStage, petDisplayName, type PetKind, type AccessoryId, type PetState } from "@/lib/pet";
+import { loadXp, saveXp, levelInfo } from "@/lib/skilltree";
 import { PetCelebration } from "@/components/patient/PetCelebration";
 import { PetCreature } from "@/components/patient/PetCreature";
+import { XpFlash, type XpFlashData } from "@/components/patient/skilltree/XpFlash";
 
 function ExerciseLoader() {
   return <div className="min-h-screen flex items-center justify-center"><Loader2 className="w-8 h-8 animate-spin text-blue-500" /></div>;
@@ -378,7 +380,8 @@ export default function ExercicioPage() {
   const [patientAge, setPatientAge] = useState<number | undefined>();
   const [sessionTotal, setSessionTotal] = useState<number | undefined>();
   const [sessionCompleted, setSessionCompleted] = useState(0);
-  const [petCele, setPetCele] = useState<{ kind: PetKind; before: number; after: number; name?: string; accessory?: AccessoryId } | null>(null);
+  const [petCele, setPetCele] = useState<{ kind: PetKind; before: number; after: number; name?: string; accessory?: AccessoryId; xpGained?: number } | null>(null);
+  const [xpFlash, setXpFlash] = useState<XpFlashData | null>(null);
   const completedRef = useRef(false);     // sessão concluída (não conta como abandono)
   const sentAbandonRef = useRef(false);
   const mountTsRef = useRef(0);
@@ -515,6 +518,18 @@ export default function ExercicioPage() {
       localStorage.setItem(storageKey, JSON.stringify(sessionData));
     } catch { /* ignore */ }
 
+    // XP da Jornada: cada treino soma XP (= pontuação). Cache otimista no cliente;
+    // a página /jornada reconcilia com o total real do servidor ao carregar.
+    const gained = Math.max(0, Math.round(result.score));
+    let flash: XpFlashData | null = null;
+    if (user.patientId) {
+      const beforeXp = loadXp(user.patientId);
+      const afterXp = beforeXp + gained;
+      saveXp(user.patientId, afterXp);
+      const lb = levelInfo(beforeXp), la = levelInfo(afterXp);
+      flash = { gained, level: la.level, pct: la.pct, leveledUp: la.level > lb.level, domain: result.domain };
+    }
+
     // Bichinho que cresce (temas infantis): cada treino dá +1 de carinho.
     const infantil = theme === "COLORFUL" || theme === "GAMIFIED";
     if (infantil && user.patientId) {
@@ -522,12 +537,14 @@ export default function ExercicioPage() {
       const after = feedPet(before);
       savePet(user.patientId, after);
       if (before.kind) {
-        // tem bichinho escolhido → mostra a comemoração antes de voltar
-        setPetCele({ kind: before.kind, before: before.care, after: after.care, name: before.name, accessory: before.accessory });
+        // tem bichinho escolhido → mostra a comemoração (com o XP ganho) antes de voltar
+        setPetCele({ kind: before.kind, before: before.care, after: after.care, name: before.name, accessory: before.accessory, xpGained: gained });
         return;
       }
     }
 
+    // Demais temas → flash de XP da Jornada
+    if (flash) { setXpFlash(flash); return; }
     router.push("/inicio");
   }
 
@@ -539,10 +556,15 @@ export default function ExercicioPage() {
         careAfter={petCele.after}
         name={petCele.name}
         accessory={petCele.accessory}
+        xpGained={petCele.xpGained}
         theme={theme}
         onContinue={() => router.push("/inicio")}
       />
     );
+  }
+
+  if (xpFlash) {
+    return <XpFlash data={xpFlash} playerName={(session?.user as { name?: string })?.name ?? ""} />;
   }
 
   if (loading) {

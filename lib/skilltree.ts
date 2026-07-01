@@ -112,6 +112,29 @@ export function saveSkills(patientId: string, s: SkillLevels): void {
   try { localStorage.setItem(storageKey(patientId), JSON.stringify(s)); } catch { /* ignore */ }
 }
 
+// XP em cache no cliente (otimista). A página /jornada reconcilia com o valor
+// real do servidor ao carregar (chama saveXp com a soma das sessões). Serve para
+// o "flash de XP" no fim do treino saber o total sem buscar no servidor.
+const xpKey = (patientId: string) => `np_xp_${patientId}`;
+export function loadXp(patientId: string): number {
+  if (typeof window === "undefined") return 0;
+  try { const r = localStorage.getItem(xpKey(patientId)); if (r) return parseInt(r, 10) || 0; } catch { /* ignore */ }
+  return 0;
+}
+export function saveXp(patientId: string, xp: number): void {
+  if (typeof window === "undefined") return;
+  try { localStorage.setItem(xpKey(patientId), String(Math.max(0, Math.round(xp)))); } catch { /* ignore */ }
+}
+
+// Cada domínio cognitivo desenvolve uma competência da Jornada (usado no flash de XP).
+export const DOMAIN_SKILL: Record<string, { skill: string; icon: string; branch: Branch }> = {
+  attention:  { skill: "Foco", icon: "🎯", branch: "purple" },
+  processing: { skill: "Foco", icon: "🎯", branch: "purple" },
+  memory:     { skill: "Organização", icon: "🗂️", branch: "blue" },
+  executive:  { skill: "Organização", icon: "🗂️", branch: "blue" },
+  functional: { skill: "Criatividade", icon: "💡", branch: "gold" },
+};
+
 export function skillLevel(s: SkillLevels, id: SkillId): number { return s[id] ?? 0; }
 export function spentPoints(s: SkillLevels): number {
   return SKILLS.reduce((sum, def) => sum + skillLevel(s, def.id), 0);

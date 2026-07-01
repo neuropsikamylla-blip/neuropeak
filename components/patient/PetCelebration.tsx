@@ -12,10 +12,10 @@ const AURA: Record<PetKind, string> = {
 };
 
 export function PetCelebration({
-  kind, careBefore, careAfter, theme, onContinue, name, accessory,
+  kind, careBefore, careAfter, theme, onContinue, name, accessory, xpGained,
 }: {
   kind: PetKind; careBefore: number; careAfter: number; theme: Theme; onContinue: () => void;
-  name?: string; accessory?: AccessoryId;
+  name?: string; accessory?: AccessoryId; xpGained?: number;
 }) {
   const isG = theme === "GAMIFIED";
   const stageBefore = petStage(careBefore);
@@ -64,6 +64,13 @@ export function PetCelebration({
         )}
 
         <p className={`text-xs font-bold mb-2 ${subC}`}>Treino concluído!</p>
+
+        {!!xpGained && (
+          <div className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-black mb-1"
+            style={{ color: "#7c4a03", background: "linear-gradient(150deg,#fcd34d,#f59e0b)", boxShadow: "0 6px 16px rgba(245,158,11,.4)" }}>
+            +{xpGained} XP ✦
+          </div>
+        )}
 
         <motion.div
           className="mx-auto rounded-full"

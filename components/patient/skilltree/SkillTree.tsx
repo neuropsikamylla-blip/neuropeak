@@ -4,7 +4,7 @@ import { useEffect, useMemo, useState } from "react";
 import Link from "next/link";
 import {
   SKILLS, SKILL_BY_ID, MAX_SKILL_LEVEL, levelInfo, skillPointsEarned, spentPoints,
-  skillLevel, isUnlocked, canEvolve, loadSkills, saveSkills,
+  skillLevel, isUnlocked, canEvolve, loadSkills, saveSkills, saveXp,
   type SkillLevels, type SkillId,
 } from "@/lib/skilltree";
 import { mentorFor } from "@/lib/skilltree-mentor";
@@ -45,13 +45,14 @@ export function SkillTree({ patientId, playerName, totalXp, sessionsToday, xpTod
 
   useEffect(() => {
     setSkills(loadSkills(patientId));
+    saveXp(patientId, totalXp); // reconcilia o XP em cache com o valor real do servidor
     try { setEvolvedToday(localStorage.getItem(`np_skills_evo_${patientId}`) === today()); } catch { /* ignore */ }
     const cols = ["rgba(96,165,250,.7)", "rgba(167,139,250,.7)", "rgba(252,211,77,.65)"];
     setParticles(Array.from({ length: 26 }, (_, i) => ({
       x: Math.random() * 100, y: Math.random() * 100, s: 2 + Math.random() * 5,
       c: cols[i % 3], d: Math.random() * 9, dur: 7 + Math.random() * 7,
     })));
-  }, [patientId]);
+  }, [patientId, totalXp]);
 
   const lvl = useMemo(() => levelInfo(totalXp), [totalXp]);
   const earned = skillPointsEarned(lvl.level);
