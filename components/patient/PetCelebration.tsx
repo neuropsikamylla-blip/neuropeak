@@ -3,19 +3,14 @@
 import { useEffect, useState } from "react";
 import { motion } from "framer-motion";
 import type { Theme } from "@/types";
-import { petStage, careProgress, STAGE_LABELS, PET_NAMES, type PetKind, type AccessoryId } from "@/lib/pet";
+import { petStage, careProgress, STAGE_LABELS, PET_NAMES, paletteById, DEFAULT_COLOR, type PetKind, type AccessoryId, type PetColorId } from "@/lib/pet";
 import { PetCreature } from "./PetCreature";
 
-const AURA: Record<PetKind, string> = {
-  dragao: "rgba(52,211,153,0.30)",
-  monstrinho: "rgba(167,139,250,0.32)",
-};
-
 export function PetCelebration({
-  kind, careBefore, careAfter, theme, onContinue, name, accessory, xpGained,
+  kind, careBefore, careAfter, theme, onContinue, name, accessory, xpGained, color,
 }: {
   kind: PetKind; careBefore: number; careAfter: number; theme: Theme; onContinue: () => void;
-  name?: string; accessory?: AccessoryId; xpGained?: number;
+  name?: string; accessory?: AccessoryId; xpGained?: number; color?: PetColorId;
 }) {
   const isG = theme === "GAMIFIED";
   const stageBefore = petStage(careBefore);
@@ -74,12 +69,12 @@ export function PetCelebration({
 
         <motion.div
           className="mx-auto rounded-full"
-          style={{ width: 150, background: `radial-gradient(circle at 50% 45%, ${AURA[kind]}, transparent 70%)` }}
+          style={{ width: 150, background: `radial-gradient(circle at 50% 45%, ${paletteById(color ?? DEFAULT_COLOR[kind]).body}44, transparent 70%)` }}
           initial={evolved ? { scale: 0.5, rotate: -8 } : { scale: 0.9 }}
           animate={{ scale: 1, rotate: 0 }}
           transition={{ type: "spring", stiffness: 220, damping: 14, delay: evolved ? 0.25 : 0 }}
         >
-          <PetCreature kind={kind} stage={stageAfter} size={150} accessory={accessory} />
+          <PetCreature kind={kind} stage={stageAfter} size={150} accessory={accessory} color={color} />
         </motion.div>
 
         <h2 className={`text-xl font-black mt-3 mb-1 ${titleC}`}>

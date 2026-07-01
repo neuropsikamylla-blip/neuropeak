@@ -3,17 +3,15 @@
 import { useEffect, useState } from "react";
 import { motion } from "framer-motion";
 import type { Theme } from "@/types";
+import Link from "next/link";
 import {
   loadPet, savePet, petStage, careProgress, sessionsToNextStage, petDisplayName,
-  STAGE_LABELS, PET_NAMES, ACCESSORIES, SUGGESTED_NAMES,
-  type PetKind, type PetState, type AccessoryId,
+  STAGE_LABELS, PET_NAMES, ACCESSORIES, SUGGESTED_NAMES, PET_COLORS, DEFAULT_COLOR, paletteById, petPalette,
+  type PetKind, type PetState, type AccessoryId, type PetColorId,
 } from "@/lib/pet";
 import { PetCreature } from "./PetCreature";
 
-const AURA: Record<PetKind, string> = {
-  dragao: "rgba(52,211,153,0.28)",
-  monstrinho: "rgba(167,139,250,0.30)",
-};
+const auraBg = (hex: string) => `radial-gradient(circle at 50% 45%, ${hex}44, transparent 70%)`;
 
 // Fala curta e contextual do bichinho. Determinística (varia conforme o carinho,
 // sem aleatoriedade) para não trocar a cada re-render.
@@ -38,6 +36,7 @@ export function PetCompanion({ patientId, theme }: { patientId: string; theme: T
   const isG = theme === "GAMIFIED";
   const [pet, setPet] = useState<PetState | null>(null);
   const [pendingKind, setPendingKind] = useState<PetKind | null>(null);
+  const [pendingColor, setPendingColor] = useState<PetColorId>("turquesa");
   const [nameInput, setNameInput] = useState("");
 
   useEffect(() => { setPet(loadPet(patientId)); }, [patientId]);
@@ -55,7 +54,7 @@ export function PetCompanion({ patientId, theme }: { patientId: string; theme: T
   function confirmName() {
     if (!pendingKind) return;
     const name = nameInput.trim();
-    persist({ ...(pet as PetState), kind: pendingKind, name: name || PET_NAMES[pendingKind] });
+    persist({ ...(pet as PetState), kind: pendingKind, name: name || PET_NAMES[pendingKind], color: pendingColor });
     setPendingKind(null);
     setNameInput("");
   }
@@ -64,36 +63,35 @@ export function PetCompanion({ patientId, theme }: { patientId: string; theme: T
   if (!pet.kind && pendingKind) {
     return (
       <div className={`rounded-2xl p-4 ${card}`}>
-        <p className={`font-bold mb-3 ${titleC}`}>Como seu {PET_NAMES[pendingKind].toLowerCase()} vai se chamar?</p>
+        <p className={`font-bold mb-3 ${titleC}`}>Dê um nome e escolha a cor 🎨</p>
         <div className="flex items-center gap-3 mb-3">
-          <div className="rounded-full flex-shrink-0" style={{ background: `radial-gradient(circle at 50% 45%, ${AURA[pendingKind]}, transparent 70%)` }}>
-            <PetCreature kind={pendingKind} stage={2} size={84} />
+          <div className="rounded-full flex-shrink-0" style={{ background: auraBg(paletteById(pendingColor).body) }}>
+            <PetCreature kind={pendingKind} stage={2} size={92} color={pendingColor} />
           </div>
           <div className="flex-1">
             <input
               value={nameInput}
               onChange={(e) => setNameInput(e.target.value.slice(0, 14))}
               placeholder={PET_NAMES[pendingKind]}
-              className={`w-full rounded-xl px-3 py-2 text-sm font-semibold outline-none ${
-                isG ? "bg-gray-900 border border-gray-700 text-gray-100 placeholder-gray-500 focus:border-cyan-400"
-                    : "bg-teal-50 border-2 border-teal-100 text-gray-800 placeholder-teal-300 focus:border-teal-400"
-              }`}
+              className="w-full rounded-xl px-3 py-2 text-sm font-semibold outline-none bg-teal-50 border-2 border-teal-100 text-gray-800 placeholder-teal-300 focus:border-teal-400"
             />
             <div className="flex flex-wrap gap-1.5 mt-2">
               {SUGGESTED_NAMES[pendingKind].map((n) => (
-                <button
-                  key={n}
-                  onClick={() => setNameInput(n)}
-                  className={`text-xs px-2 py-1 rounded-full font-medium ${
-                    isG ? "bg-gray-900/70 border border-gray-700 text-gray-300"
-                        : "bg-teal-50 border border-teal-200 text-teal-600"
-                  }`}
-                >
+                <button key={n} onClick={() => setNameInput(n)}
+                  className="text-xs px-2 py-1 rounded-full font-medium bg-teal-50 border border-teal-200 text-teal-600">
                   {n}
                 </button>
               ))}
             </div>
           </div>
+        </div>
+        {/* Cores */}
+        <div className="flex gap-2 justify-center mb-3">
+          {PET_COLORS.map((c) => (
+            <button key={c.id} onClick={() => setPendingColor(c.id)} aria-label={c.label}
+              className="w-8 h-8 rounded-full transition-transform active:scale-90"
+              style={{ background: c.body, border: pendingColor === c.id ? "3px solid #0f766e" : "3px solid #fff", boxShadow: "0 2px 6px rgba(0,0,0,.15)" }} />
+          ))}
         </div>
         <div className="flex gap-2">
           <button
@@ -123,16 +121,13 @@ export function PetCompanion({ patientId, theme }: { patientId: string; theme: T
           {(["dragao", "monstrinho"] as PetKind[]).map((k) => (
             <button
               key={k}
-              onClick={() => setPendingKind(k)}
-              className={`rounded-2xl p-2 flex flex-col items-center gap-1 transition-all active:scale-95 ${
-                isG ? "bg-gray-900/60 border border-gray-700 hover:border-cyan-400"
-                    : "bg-teal-50/60 border-2 border-teal-100 hover:border-teal-400"
-              }`}
+              onClick={() => { setPendingColor(DEFAULT_COLOR[k]); setPendingKind(k); }}
+              className="rounded-2xl p-2 flex flex-col items-center gap-1 transition-all active:scale-95 bg-teal-50/60 border-2 border-teal-100 hover:border-teal-400"
             >
-              <div className="rounded-full" style={{ background: `radial-gradient(circle at 50% 45%, ${AURA[k]}, transparent 70%)` }}>
-                <PetCreature kind={k} stage={2} size={96} />
+              <div className="rounded-full" style={{ background: auraBg(paletteById(DEFAULT_COLOR[k]).body) }}>
+                <PetCreature kind={k} stage={2} size={100} color={DEFAULT_COLOR[k]} />
               </div>
-              <span className={`text-sm font-bold ${isG ? "text-gray-200" : "text-gray-700"}`}>{PET_NAMES[k]}</span>
+              <span className="text-sm font-bold text-gray-700">{PET_NAMES[k]}</span>
             </button>
           ))}
         </div>
@@ -175,9 +170,9 @@ export function PetCompanion({ patientId, theme }: { patientId: string; theme: T
       </div>
 
       <div className="flex items-center gap-4">
-        <div className="rounded-full flex-shrink-0" style={{ background: `radial-gradient(circle at 50% 45%, ${AURA[pet.kind]}, transparent 70%)` }}>
+        <div className="rounded-full flex-shrink-0" style={{ background: auraBg(petPalette(pet).body) }}>
           <motion.div animate={{ y: [0, -5, 0] }} transition={{ duration: 2.6, repeat: Infinity, ease: "easeInOut" }}>
-            <PetCreature kind={pet.kind} stage={stage} size={104} accessory={accessory} />
+            <PetCreature kind={pet.kind} stage={stage} size={110} accessory={accessory} color={pet.color} />
           </motion.div>
         </div>
 
@@ -225,6 +220,11 @@ export function PetCompanion({ patientId, theme }: { patientId: string; theme: T
           })}
         </div>
       )}
+
+      <Link href="/bichinho"
+        className="mt-3 flex items-center justify-center gap-2 h-10 rounded-full text-sm font-bold text-white bg-gradient-to-r from-teal-500 to-cyan-500 active:scale-95 transition-transform">
+        Cuidar do {petDisplayName(pet)} 🏡
+      </Link>
     </div>
   );
 }

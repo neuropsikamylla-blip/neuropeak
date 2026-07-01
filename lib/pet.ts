@@ -6,12 +6,33 @@
 
 export type PetKind = "dragao" | "monstrinho";
 export type AccessoryId = "coroa" | "chapeu" | "laco" | "oculos";
+export type PetColorId = "turquesa" | "azul" | "verde" | "laranja" | "rosa" | "roxo";
 
 export interface PetState {
   kind: PetKind | null;       // null = ainda não escolhido
   care: number;               // total de pontos de carinho (treinos que alimentaram o bichinho)
   name?: string;              // nome dado pela criança
   accessory?: AccessoryId;    // acessório escolhido (só vale quando adulto)
+  color?: PetColorId;         // cor escolhida pela criança
+}
+
+// Paletas vibrantes e alegres — servem para meninas e meninos (a criança escolhe).
+export interface PetPalette { id: PetColorId; label: string; body: string; dark: string; belly: string; horn: string; cheek: string; }
+export const PET_COLORS: PetPalette[] = [
+  { id: "turquesa", label: "Turquesa", body: "#22d3ee", dark: "#0891b2", belly: "#cffafe", horn: "#fbbf24", cheek: "#fb7185" },
+  { id: "azul",     label: "Azul",     body: "#38bdf8", dark: "#0284c7", belly: "#e0f2fe", horn: "#fbbf24", cheek: "#fb7185" },
+  { id: "verde",    label: "Verde",    body: "#4ade80", dark: "#16a34a", belly: "#dcfce7", horn: "#fbbf24", cheek: "#fb7185" },
+  { id: "laranja",  label: "Laranja",  body: "#fb923c", dark: "#ea580c", belly: "#ffedd5", horn: "#facc15", cheek: "#f472b6" },
+  { id: "rosa",     label: "Rosa",     body: "#f472b6", dark: "#db2777", belly: "#fce7f3", horn: "#fbbf24", cheek: "#fb7185" },
+  { id: "roxo",     label: "Roxo",     body: "#a78bfa", dark: "#7c3aed", belly: "#ede9fe", horn: "#fbbf24", cheek: "#fda4af" },
+];
+export const DEFAULT_COLOR: Record<PetKind, PetColorId> = { dragao: "verde", monstrinho: "roxo" };
+export function petPalette(s: PetState): PetPalette {
+  const id = s.color ?? (s.kind ? DEFAULT_COLOR[s.kind] : "turquesa");
+  return PET_COLORS.find((c) => c.id === id) ?? PET_COLORS[0];
+}
+export function paletteById(id: PetColorId): PetPalette {
+  return PET_COLORS.find((c) => c.id === id) ?? PET_COLORS[0];
 }
 
 export const SESSIONS_PER_STAGE = 3;            // treinos por evolução
@@ -71,6 +92,7 @@ export function loadPet(patientId: string): PetState {
         care: typeof p.care === "number" ? p.care : 0,
         name: p.name,
         accessory: p.accessory,
+        color: p.color,
       };
     }
   } catch { /* ignore */ }
@@ -85,4 +107,41 @@ export function savePet(patientId: string, state: PetState): void {
 /** Dá +1 de carinho. Retorna o novo estado (não persiste — quem chama persiste). */
 export function feedPet(state: PetState): PetState {
   return { ...state, care: state.care + 1 };
+}
+
+// ── Interações estilo Tamagotchi (alimentar, brincar, dormir) ────────────────
+// Cada treino concluído no dia libera INTERACTIONS_PER_SESSION interações. Assim
+// o cuidado com o bichinho é RECOMPENSA por treinar, sem tirar o foco da terapia.
+export const INTERACTIONS_PER_SESSION = 2;
+
+export type PetAction = "alimentar" | "brincar" | "dormir";
+export const PET_ACTIONS: { id: PetAction; label: string; emoji: string }[] = [
+  { id: "alimentar", label: "Alimentar", emoji: "🍎" },
+  { id: "brincar", label: "Brincar", emoji: "🎾" },
+  { id: "dormir", label: "Dormir", emoji: "😴" },
+];
+
+const tokKey = (patientId: string) => `np_pet_tok_${patientId}`;
+const todayStr = () => new Date().toLocaleDateString("sv");
+
+/** Interações já usadas hoje (reseta a cada dia). */
+export function usedInteractionsToday(patientId: string): number {
+  if (typeof window === "undefined") return 0;
+  try {
+    const raw = localStorage.getItem(tokKey(patientId));
+    if (raw) { const d = JSON.parse(raw) as { date: string; used: number }; if (d.date === todayStr()) return d.used ?? 0; }
+  } catch { /* ignore */ }
+  return 0;
+}
+
+/** Registra o uso de uma interação hoje. */
+export function spendInteraction(patientId: string): void {
+  if (typeof window === "undefined") return;
+  const used = usedInteractionsToday(patientId) + 1;
+  try { localStorage.setItem(tokKey(patientId), JSON.stringify({ date: todayStr(), used })); } catch { /* ignore */ }
+}
+
+/** Interações disponíveis hoje = (treinos de hoje × por sessão) − usadas. */
+export function interactionsAvailable(patientId: string, sessionsToday: number): number {
+  return Math.max(0, sessionsToday * INTERACTIONS_PER_SESSION - usedInteractionsToday(patientId));
 }

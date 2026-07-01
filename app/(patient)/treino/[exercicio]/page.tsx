@@ -11,7 +11,7 @@ import { useToast } from "@/components/ui/use-toast";
 import { Loader2, CheckCircle2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import Link from "next/link";
-import { loadPet, savePet, feedPet, petStage, petDisplayName, type PetKind, type AccessoryId, type PetState } from "@/lib/pet";
+import { loadPet, savePet, feedPet, petStage, petDisplayName, type PetKind, type AccessoryId, type PetState, type PetColorId } from "@/lib/pet";
 import { loadXp, saveXp, levelInfo } from "@/lib/skilltree";
 import { PetCelebration } from "@/components/patient/PetCelebration";
 import { PetCreature } from "@/components/patient/PetCreature";
@@ -332,7 +332,7 @@ function BlockedScreen({ theme, exerciseName, patientId }: { theme: Theme; exerc
       <div className={s.card}>
         {showPet && pet?.kind ? (
           <div className="mx-auto w-fit">
-            <PetCreature kind={pet.kind} stage={petStage(pet.care)} size={120} accessory={pet.accessory ?? "coroa"} />
+            <PetCreature kind={pet.kind} stage={petStage(pet.care)} size={120} accessory={pet.accessory ?? "coroa"} color={pet.color} />
           </div>
         ) : (
           <CheckCircle2 className={`w-16 h-16 mx-auto ${s.icon}`} />
@@ -380,7 +380,7 @@ export default function ExercicioPage() {
   const [patientAge, setPatientAge] = useState<number | undefined>();
   const [sessionTotal, setSessionTotal] = useState<number | undefined>();
   const [sessionCompleted, setSessionCompleted] = useState(0);
-  const [petCele, setPetCele] = useState<{ kind: PetKind; before: number; after: number; name?: string; accessory?: AccessoryId; xpGained?: number } | null>(null);
+  const [petCele, setPetCele] = useState<{ kind: PetKind; before: number; after: number; name?: string; accessory?: AccessoryId; xpGained?: number; color?: PetColorId } | null>(null);
   const [xpFlash, setXpFlash] = useState<XpFlashData | null>(null);
   const completedRef = useRef(false);     // sessão concluída (não conta como abandono)
   const sentAbandonRef = useRef(false);
@@ -536,7 +536,7 @@ export default function ExercicioPage() {
       const after = feedPet(before);
       savePet(user.patientId, after);
       if (before.kind) {
-        setPetCele({ kind: before.kind, before: before.care, after: after.care, name: before.name, accessory: before.accessory });
+        setPetCele({ kind: before.kind, before: before.care, after: after.care, name: before.name, accessory: before.accessory, color: before.color });
         return;
       }
     }
@@ -553,6 +553,7 @@ export default function ExercicioPage() {
         careAfter={petCele.after}
         name={petCele.name}
         accessory={petCele.accessory}
+        color={petCele.color}
         xpGained={petCele.xpGained}
         theme={theme}
         onContinue={() => router.push("/inicio")}

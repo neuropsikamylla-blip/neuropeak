@@ -4,23 +4,27 @@ import { signOut, useSession } from "next-auth/react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import Image from "next/image";
-import { Home, TrendingUp, LogOut, Swords } from "lucide-react";
+import { Home, TrendingUp, LogOut, Swords, Heart } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { AppUpdateButton } from "@/components/AppUpdateButton";
 
-// A aba "Jornada" (RPG) só aparece no tema Game On (gamificado).
+// Abas extras por tema: "Habilidades" (RPG) só no Game On; "Bichinho" (Tamagotchi)
+// só no Kids.
 const baseNav = [
   { href: "/inicio", label: "Início", icon: Home },
   { href: "/progresso", label: "Progresso", icon: TrendingUp },
 ];
 const jornadaItem = { href: "/jornada", label: "Habilidades", icon: Swords };
+const bichinhoItem = { href: "/bichinho", label: "Bichinho", icon: Heart };
 
 export default function PatientLayout({ children }: { children: React.ReactNode }) {
   const { data: session } = useSession();
   const pathname = usePathname();
   const user = session?.user as { name?: string; theme?: string } | undefined;
   const theme = (user?.theme ?? "CLINICAL") as "CLINICAL" | "COLORFUL" | "GAMIFIED";
-  const navItems = theme === "GAMIFIED" ? [baseNav[0], jornadaItem, baseNav[1]] : baseNav;
+  const navItems = theme === "GAMIFIED" ? [baseNav[0], jornadaItem, baseNav[1]]
+    : theme === "COLORFUL" ? [baseNav[0], bichinhoItem, baseNav[1]]
+    : baseNav;
 
   const bgStyles = {
     CLINICAL: "np-app-bg",
