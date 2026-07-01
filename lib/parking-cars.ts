@@ -22,9 +22,11 @@ const url = (n: string) => `${BASE}/${n}.png`;
 // Sedans (comprimento 2): coloridos (amarelo/azul) primeiro, depois neutros.
 const COLORED_SHORT = ["car-31", "car-35", "car-37", "car-25", "car-29", "car-33", "car-13", "car-04", "car-23"].map(url);
 const NEUTRAL_SHORT = ["car-28", "car-27", "car-20", "car-24", "car-11", "car-12", "car-21", "car-03", "car-02", "car-10", "car-26", "car-32", "car-36", "car-01"].map(url);
-// Vans/SUVs (comprimento 3): só um colorido disponível; resto neutro.
-const COLORED_LONG = ["car-18"].map(url);
-const NEUTRAL_LONG = ["car-16", "car-17", "car-15"].map(url);
+// Vans/SUVs (comprimento 3): só usar as de bom contraste. As vans BRANCAS
+// (car-15, car-16) e a ambulância (car-07) viravam blocos pálidos no tabuleiro
+// escuro — removidas. Vermelhas ficam de fora (o vermelho é só o alvo).
+const COLORED_LONG = ["car-18"].map(url);   // van azul
+const NEUTRAL_LONG = ["car-17"].map(url);   // van escura
 
 /** Todas as imagens usáveis (para pré-carregar e evitar atraso/piscar). */
 export const ALL_CAR_IMAGES = [

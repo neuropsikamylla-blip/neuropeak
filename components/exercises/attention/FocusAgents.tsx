@@ -64,8 +64,10 @@ const LEVEL_SPEED = [0.7, 0.88, 1.05, 1.22, 1.4];
 // desce um degrau. Vai até um teto um pouco acima do próximo nível — preparando o
 // paciente para o nível seguinte sem mudar o nível em si.
 const INTRA_STEP_PCT = 0.2;       // +20% de velocidade por degrau
-const HITS_PER_STEP  = 2;         // acertos seguidos para subir um degrau
+const HITS_PER_STEP  = 2;         // acertos seguidos para subir um degrau de velocidade
 const MAX_INTRA_STEP = 5;
+const LEVEL_UP_HITS   = 3;        // acertos seguidos para SUBIR de nível (comandos mais difíceis)
+const LEVEL_DOWN_ERRS = 2;        // erros seguidos para DESCER de nível (nunca abaixo do inicial)
 function levelSpeed(level: number, step: number): number {
   const lv      = Math.max(1, Math.min(5, level));
   const base    = LEVEL_SPEED[lv - 1];
@@ -465,7 +467,11 @@ export function FocusAgents({ difficulty, theme, onComplete, exerciseId = "focus
   // Focus é SEMPRE configurado pelo terapeuta — o paciente nunca escolhe modo/nível.
   // Sem modo definido no plano, usa "foco" como padrão. (freeChoice descontinuado)
   const presMode: FocusMode = settings?.mode ?? "foco";
-  const presLevel = Math.max(1, Math.min(9, Math.round(settings?.startLevel ?? 1)));
+  // Nível inicial: se o terapeuta definiu startLevel, respeita (inclusive 1);
+  // senão, deriva da DIFICULDADE do paciente com piso 2 (nível 1 nunca é o padrão).
+  const presLevel = settings?.startLevel != null
+    ? Math.max(1, Math.min(9, Math.round(settings.startLevel)))
+    : Math.max(2, Math.min(9, Math.round(difficulty)));
   const prescribed = true;
   const fbLevel = settings?.feedback ?? "normal";   // intensidade do feedback (Fase G/H)
   // Modo de apresentação (Configurar atividade): visual / visual+áudio / só áudio.
@@ -554,9 +560,12 @@ export function FocusAgents({ difficulty, theme, onComplete, exerciseId = "focus
   const currentPhaseRef         = useRef(0);
   const phaseLockRef            = useRef(false);
   const isPhasedRef             = useRef(false);
-  // Dificuldade progressiva dentro do nível (degraus por acertos seguidos).
+  // Dificuldade progressiva: velocidade (intraStep) + NÍVEL (por acertos/erros seguidos).
   const intraStepRef            = useRef(0);
   const consecCorrectRef        = useRef(0);
+  const consecErrorRef          = useRef(0);
+  const startLevelRef           = useRef(presLevel);   // piso — não desce abaixo do inicial
+  const reachedLevelRef         = useRef(presLevel);   // maior nível alcançado (vai no onComplete)
   // Fase D — métricas detalhadas por rodada.
   const metricsRef              = useRef<RoundMetric[]>([]);
   const roundFirstTapRef        = useRef<number | null>(null);
@@ -926,17 +935,33 @@ export function FocusAgents({ difficulty, theme, onComplete, exerciseId = "focus
 
     const nextRound = r + 1;
 
-    // Dificuldade progressiva DENTRO do nível (o nível em si fica fixo): a cada
-    // HITS_PER_STEP acertos seguidos sobe um degrau de intensidade; errar desce um.
+    // Progressão ligada ao desempenho:
+    //  • micro-ramp de velocidade a cada HITS_PER_STEP acertos;
+    //  • SOBE de NÍVEL a cada LEVEL_UP_HITS acertos seguidos (comandos/agentes mais difíceis);
+    //  • DESCE de NÍVEL a cada LEVEL_DOWN_ERRS erros seguidos (nunca abaixo do inicial).
     if (correct) {
+      consecErrorRef.current = 0;
       consecCorrectRef.current++;
-      if (consecCorrectRef.current >= HITS_PER_STEP) {
-        consecCorrectRef.current = 0;
+      if (consecCorrectRef.current % HITS_PER_STEP === 0) {
         intraStepRef.current = Math.min(MAX_INTRA_STEP, intraStepRef.current + 1);
+      }
+      if (consecCorrectRef.current >= LEVEL_UP_HITS && levelRef.current < 9) {
+        levelRef.current++;
+        consecCorrectRef.current = 0;
+        intraStepRef.current = 0;
+        reachedLevelRef.current = Math.max(reachedLevelRef.current, levelRef.current);
+        setDisplayLevel(levelRef.current);
       }
     } else {
       consecCorrectRef.current = 0;
       intraStepRef.current = Math.max(0, intraStepRef.current - 1);
+      consecErrorRef.current++;
+      if (consecErrorRef.current >= LEVEL_DOWN_ERRS && levelRef.current > startLevelRef.current) {
+        levelRef.current--;
+        consecErrorRef.current = 0;
+        intraStepRef.current = MAX_INTRA_STEP;
+        setDisplayLevel(levelRef.current);
+      }
     }
     setIntensity(intraStepRef.current);
 
@@ -955,12 +980,12 @@ export function FocusAgents({ difficulty, theme, onComplete, exerciseId = "focus
         const afterSwitchErr = switchRounds.filter(m => !m.correct && m.afterSwitch).length;
         onComplete({
           exerciseId, domain: "attention",
-          score: calculateExerciseScore("focus-agents", accuracy, Math.round(avgRt), difficulty),
-          accuracy, reactionTime: Math.round(avgRt), difficulty,
+          score: calculateExerciseScore("focus-agents", accuracy, Math.round(avgRt), reachedLevelRef.current),
+          accuracy, reactionTime: Math.round(avgRt), difficulty: reachedLevelRef.current,
           duration: elapsedSec(),
           metadata: {
             rounds: newResults.length, correct: correctCount,
-            mode: modeRef.current, level: levelRef.current, startedLevel: levelRef.current,
+            mode: modeRef.current, level: reachedLevelRef.current, startedLevel: startLevelRef.current,
             autoAdvance: settings?.autoAdvance !== false,
             channel: presentMode !== "visual" ? "auditivo" : "visual",
             falsePositives: sum(m => m.falsePositive),
@@ -1116,7 +1141,8 @@ export function FocusAgents({ difficulty, theme, onComplete, exerciseId = "focus
   if (prescribed && !entryDone) return (
     <TherapeuticIntro mode={presMode!} level={presLevel} onStart={() => {
       setMode(presMode!); modeRef.current = presMode!;
-      levelRef.current = presLevel; setDisplayLevel(presLevel);
+      levelRef.current = presLevel; startLevelRef.current = presLevel; reachedLevelRef.current = presLevel;
+      setDisplayLevel(presLevel);
       setEntryDone(true);
     }} />
   );
@@ -1124,7 +1150,7 @@ export function FocusAgents({ difficulty, theme, onComplete, exerciseId = "focus
   if (showModeSelect) return (
     <ModeSelect onConfirm={(m, lv) => {
       setMode(m);  modeRef.current  = m;
-      levelRef.current = lv;
+      levelRef.current = lv; startLevelRef.current = lv; reachedLevelRef.current = lv;
       setDisplayLevel(lv);
       setShowModeSelect(false);
     }} />
