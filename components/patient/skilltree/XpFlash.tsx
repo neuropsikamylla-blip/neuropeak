@@ -49,7 +49,7 @@ export function XpFlash({ data, playerName }: { data: XpFlashData; playerName: s
 
         <div className="xf-btns">
           <button className="xf-ghost" onClick={() => router.push("/inicio")}>Continuar</button>
-          <button className="xf-go" onClick={() => router.push("/jornada")}>Ver Jornada ⚔️</button>
+          <button className="xf-go" onClick={() => router.push("/jornada")}>Ver Habilidades ⚔️</button>
         </div>
         <p className="xf-hi">Bom treino, {first}!</p>
       </div>

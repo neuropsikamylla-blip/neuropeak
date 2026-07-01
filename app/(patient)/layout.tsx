@@ -13,7 +13,7 @@ const baseNav = [
   { href: "/inicio", label: "Início", icon: Home },
   { href: "/progresso", label: "Progresso", icon: TrendingUp },
 ];
-const jornadaItem = { href: "/jornada", label: "Jornada", icon: Swords };
+const jornadaItem = { href: "/jornada", label: "Habilidades", icon: Swords };
 
 export default function PatientLayout({ children }: { children: React.ReactNode }) {
   const { data: session } = useSession();
