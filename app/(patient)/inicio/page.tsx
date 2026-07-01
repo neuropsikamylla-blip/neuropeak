@@ -136,7 +136,7 @@ export default async function InicioPage() {
       </div>
 
       {/* Bichinho que cresce — só nos temas infantis */}
-      {(theme === "COLORFUL" || theme === "GAMIFIED") && (
+      {theme === "COLORFUL" && (
         <PetCompanion patientId={patient.id} theme={theme} />
       )}
 

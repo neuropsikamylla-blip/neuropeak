@@ -295,7 +295,7 @@ function isSameLocalDay(a: Date, b: Date) {
 function BlockedScreen({ theme, exerciseName, patientId }: { theme: Theme; exerciseName: string; patientId?: string }) {
   const [pet, setPet] = useState<PetState | null>(null);
   useEffect(() => { if (patientId) setPet(loadPet(patientId)); }, [patientId]);
-  const infantil = theme === "COLORFUL" || theme === "GAMIFIED";
+  const infantil = theme === "COLORFUL";
   const showPet = infantil && !!pet?.kind;
   const petName = pet ? petDisplayName(pet) : "";
 
@@ -531,7 +531,7 @@ export default function ExercicioPage() {
     }
 
     // Bichinho que cresce (temas infantis): cada treino dá +1 de carinho.
-    const infantil = theme === "COLORFUL" || theme === "GAMIFIED";
+    const infantil = theme === "COLORFUL";
     if (infantil && user.patientId) {
       const before = loadPet(user.patientId);
       const after = feedPet(before);
