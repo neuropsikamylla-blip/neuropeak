@@ -181,8 +181,8 @@ export default function EditarPacientePage() {
               </SelectTrigger>
               <SelectContent className="dark">
                 <SelectItem value="CLINICAL">Clínico — interface limpa e profissional</SelectItem>
-                <SelectItem value="COLORFUL">Colorido — vibrante, indicado para crianças</SelectItem>
-                <SelectItem value="GAMIFIED">Gamificado — escuro e dinâmico, para adolescentes</SelectItem>
+                <SelectItem value="COLORFUL">Kids — colorido e divertido, com bichinho (crianças)</SelectItem>
+                <SelectItem value="GAMIFIED">Game On — RPG com Árvore de Habilidades (adolescentes e jovens)</SelectItem>
               </SelectContent>
             </Select>
           </CardContent>

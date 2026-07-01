@@ -518,11 +518,11 @@ export default function ExercicioPage() {
       localStorage.setItem(storageKey, JSON.stringify(sessionData));
     } catch { /* ignore */ }
 
-    // XP da Jornada: cada treino soma XP (= pontuação). Cache otimista no cliente;
-    // a página /jornada reconcilia com o total real do servidor ao carregar.
-    const gained = Math.max(0, Math.round(result.score));
+    // Game On (gamificado): cada treino soma XP da Jornada. Cache otimista no
+    // cliente; a página /jornada reconcilia com o total real do servidor.
     let flash: XpFlashData | null = null;
-    if (user.patientId) {
+    if (theme === "GAMIFIED" && user.patientId) {
+      const gained = Math.max(0, Math.round(result.score));
       const beforeXp = loadXp(user.patientId);
       const afterXp = beforeXp + gained;
       saveXp(user.patientId, afterXp);
@@ -530,20 +530,17 @@ export default function ExercicioPage() {
       flash = { gained, level: la.level, pct: la.pct, leveledUp: la.level > lb.level, domain: result.domain };
     }
 
-    // Bichinho que cresce (temas infantis): cada treino dá +1 de carinho.
-    const infantil = theme === "COLORFUL";
-    if (infantil && user.patientId) {
+    // Kids (colorido): bichinho estilo Tamagotchi ganha carinho.
+    if (theme === "COLORFUL" && user.patientId) {
       const before = loadPet(user.patientId);
       const after = feedPet(before);
       savePet(user.patientId, after);
       if (before.kind) {
-        // tem bichinho escolhido → mostra a comemoração (com o XP ganho) antes de voltar
-        setPetCele({ kind: before.kind, before: before.care, after: after.care, name: before.name, accessory: before.accessory, xpGained: gained });
+        setPetCele({ kind: before.kind, before: before.care, after: after.care, name: before.name, accessory: before.accessory });
         return;
       }
     }
 
-    // Demais temas → flash de XP da Jornada
     if (flash) { setXpFlash(flash); return; }
     router.push("/inicio");
   }

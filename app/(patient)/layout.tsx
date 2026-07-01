@@ -8,17 +8,19 @@ import { Home, TrendingUp, LogOut, Swords } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { AppUpdateButton } from "@/components/AppUpdateButton";
 
-const NAV_ITEMS = [
+// A aba "Jornada" (RPG) só aparece no tema Game On (gamificado).
+const baseNav = [
   { href: "/inicio", label: "Início", icon: Home },
-  { href: "/jornada", label: "Jornada", icon: Swords },
   { href: "/progresso", label: "Progresso", icon: TrendingUp },
 ];
+const jornadaItem = { href: "/jornada", label: "Jornada", icon: Swords };
 
 export default function PatientLayout({ children }: { children: React.ReactNode }) {
   const { data: session } = useSession();
   const pathname = usePathname();
   const user = session?.user as { name?: string; theme?: string } | undefined;
   const theme = (user?.theme ?? "CLINICAL") as "CLINICAL" | "COLORFUL" | "GAMIFIED";
+  const navItems = theme === "GAMIFIED" ? [baseNav[0], jornadaItem, baseNav[1]] : baseNav;
 
   const bgStyles = {
     CLINICAL: "np-app-bg",
@@ -82,7 +84,7 @@ export default function PatientLayout({ children }: { children: React.ReactNode 
       {/* Bottom nav */}
       {showNav && (
         <nav className={`fixed bottom-0 left-0 right-0 ${navStyles[theme]} flex`}>
-          {NAV_ITEMS.map((item) => {
+          {navItems.map((item) => {
             const active = pathname === item.href;
             return (
               <Link

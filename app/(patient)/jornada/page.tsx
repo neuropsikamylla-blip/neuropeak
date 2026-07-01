@@ -16,6 +16,8 @@ export default async function JornadaPage() {
 
   const patient = await prisma.patient.findUnique({ where: { id: patientId } });
   if (!patient) redirect("/login");
+  // A Jornada (RPG) é exclusiva do tema Game On (gamificado).
+  if (patient.theme !== "GAMIFIED") redirect("/inicio");
 
   const [sessions, achievementsCount] = await Promise.all([
     prisma.session.findMany({ where: { patientId }, orderBy: { completedAt: "desc" }, take: 500 }),
