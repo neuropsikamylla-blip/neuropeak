@@ -29,7 +29,8 @@ export default withAuth(
     else if (
       path.startsWith("/inicio") ||
       path.startsWith("/treino") ||
-      path.startsWith("/progresso")
+      path.startsWith("/progresso") ||
+      path.startsWith("/jornada")
     ) {
       if (token?.role !== "PATIENT") {
         return NextResponse.redirect(new URL("/login", req.url));
@@ -57,5 +58,6 @@ export const config = {
     "/inicio/:path*",
     "/treino/:path*",
     "/progresso/:path*",
+    "/jornada/:path*",
   ],
 };

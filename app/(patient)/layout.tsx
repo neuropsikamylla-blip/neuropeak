@@ -4,12 +4,13 @@ import { signOut, useSession } from "next-auth/react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import Image from "next/image";
-import { Home, TrendingUp, LogOut } from "lucide-react";
+import { Home, TrendingUp, LogOut, Swords } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { AppUpdateButton } from "@/components/AppUpdateButton";
 
 const NAV_ITEMS = [
   { href: "/inicio", label: "Início", icon: Home },
+  { href: "/jornada", label: "Jornada", icon: Swords },
   { href: "/progresso", label: "Progresso", icon: TrendingUp },
 ];
 
