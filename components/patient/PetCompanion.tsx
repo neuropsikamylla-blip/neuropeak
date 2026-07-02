@@ -6,8 +6,8 @@ import type { Theme } from "@/types";
 import Link from "next/link";
 import {
   loadPet, savePet, petStage, careProgress, sessionsToNextStage, petDisplayName,
-  STAGE_LABELS, PET_NAMES, ACCESSORIES, SUGGESTED_NAMES, PET_COLORS, DEFAULT_COLOR, paletteById, petPalette,
-  type PetKind, type PetState, type AccessoryId, type PetColorId,
+  STAGE_LABELS, PET_NAMES, SUGGESTED_NAMES, DEFAULT_COLOR, paletteById, petPalette, colorsFor,
+  type PetKind, type PetState, type PetColorId,
 } from "@/lib/pet";
 import { PetCreature } from "./PetCreature";
 
@@ -85,11 +85,11 @@ export function PetCompanion({ patientId, theme }: { patientId: string; theme: T
             </div>
           </div>
         </div>
-        {/* Cores */}
-        <div className="flex gap-2 justify-center mb-3">
-          {PET_COLORS.map((c) => (
+        {/* Cores (opções do bichinho escolhido) */}
+        <div className="flex gap-3 justify-center mb-3">
+          {colorsFor(pendingKind).map(paletteById).map((c) => (
             <button key={c.id} onClick={() => setPendingColor(c.id)} aria-label={c.label}
-              className="w-8 h-8 rounded-full transition-transform active:scale-90"
+              className="w-9 h-9 rounded-full transition-transform active:scale-90"
               style={{ background: c.body, border: pendingColor === c.id ? "3px solid #0f766e" : "3px solid #fff", boxShadow: "0 2px 6px rgba(0,0,0,.15)" }} />
           ))}
         </div>
@@ -140,7 +140,6 @@ export function PetCompanion({ patientId, theme }: { patientId: string; theme: T
   const pct = Math.round(careProgress(pet.care) * 100);
   const faltam = sessionsToNextStage(pet.care);
   const isAdult = stage >= 3;
-  const accessory: AccessoryId = pet.accessory ?? "coroa";
   const speech = petSpeech(pet);
   const bubbleBg = isG ? "#0f172a" : "#ccfbf1";
   const bubbleTx = isG ? "#a5f3fc" : "#0f766e";
@@ -172,7 +171,7 @@ export function PetCompanion({ patientId, theme }: { patientId: string; theme: T
       <div className="flex items-center gap-4">
         <div className="rounded-full flex-shrink-0" style={{ background: auraBg(petPalette(pet).body) }}>
           <motion.div animate={{ y: [0, -5, 0] }} transition={{ duration: 2.6, repeat: Infinity, ease: "easeInOut" }}>
-            <PetCreature kind={pet.kind} stage={stage} size={110} accessory={accessory} color={pet.color} />
+            <PetCreature kind={pet.kind} stage={stage} size={110} color={pet.color} />
           </motion.div>
         </div>
 
@@ -188,34 +187,11 @@ export function PetCompanion({ patientId, theme }: { patientId: string; theme: T
           </div>
           <p className={`text-xs mt-2 ${subC}`}>
             {isAdult
-              ? "Cresceu até o máximo! 🎉 Escolha um acessório:"
+              ? "Cresceu até o máximo! 🎉"
               : `Faltam ${faltam} ${faltam === 1 ? "treino" : "treinos"} para evoluir 🌟`}
           </p>
         </div>
       </div>
-
-      {/* Acessórios — desbloqueiam quando vira adulto */}
-      {isAdult && (
-        <div className="flex gap-2 mt-3">
-          {ACCESSORIES.map((a) => {
-            const sel = accessory === a.id;
-            return (
-              <button
-                key={a.id}
-                onClick={() => persist({ ...pet, accessory: a.id })}
-                className={`flex-1 flex flex-col items-center gap-0.5 py-1.5 rounded-xl transition-all active:scale-95 border ${
-                  sel
-                    ? (isG ? "bg-cyan-500/15 border-cyan-400" : "bg-teal-100 border-teal-400")
-                    : (isG ? "bg-gray-900/50 border-gray-700" : "bg-teal-50/60 border-teal-100")
-                }`}
-              >
-                <span className="text-lg leading-none">{a.emoji}</span>
-                <span className={`text-[10px] font-semibold ${isG ? "text-gray-300" : "text-teal-700"}`}>{a.label}</span>
-              </button>
-            );
-          })}
-        </div>
-      )}
 
       <Link href="/bichinho"
         className="mt-3 flex items-center justify-center gap-2 h-10 rounded-full text-sm font-bold text-white bg-gradient-to-r from-teal-500 to-cyan-500 active:scale-95 transition-transform">

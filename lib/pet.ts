@@ -6,7 +6,7 @@
 
 export type PetKind = "dragao" | "monstrinho";
 export type AccessoryId = "coroa" | "chapeu" | "laco" | "oculos";
-export type PetColorId = "turquesa" | "azul" | "verde" | "laranja" | "rosa" | "roxo";
+export type PetColorId = "turquesa" | "azul" | "verde" | "laranja" | "rosa" | "roxo" | "vinho";
 
 export interface PetState {
   kind: PetKind | null;       // null = ainda não escolhido
@@ -25,15 +25,21 @@ export const PET_COLORS: PetPalette[] = [
   { id: "laranja",  label: "Laranja",  body: "#fb923c", dark: "#ea580c", belly: "#ffedd5", horn: "#facc15", cheek: "#f472b6" },
   { id: "rosa",     label: "Rosa",     body: "#f472b6", dark: "#db2777", belly: "#fce7f3", horn: "#fbbf24", cheek: "#fb7185" },
   { id: "roxo",     label: "Roxo",     body: "#a78bfa", dark: "#7c3aed", belly: "#ede9fe", horn: "#fbbf24", cheek: "#fda4af" },
+  { id: "vinho",    label: "Vinho",    body: "#9f1239", dark: "#6b1230", belly: "#f5e6c8", horn: "#fbbf24", cheek: "#fb7185" },
 ];
 export const DEFAULT_COLOR: Record<PetKind, PetColorId> = { dragao: "verde", monstrinho: "roxo" };
 
 // O dragão usa ARTE EM IMAGEM (poses) para poder "se mexer" (Tamagotchi).
-// Poses em public/pet/dragao-<pose>.png. A cor escolhida recolore por hue-rotate.
+// Cada cor tem seu conjunto: public/pet/dragao-<cor>-<pose>.png.
 export type DragonPose = "idle" | "piscar" | "comer" | "dormir" | "brincar";
-export const DRAGON_HUE: Record<PetColorId, number> = {
-  verde: 0, turquesa: 35, azul: 80, roxo: 130, rosa: 180, laranja: 300,
-};
+
+// Opções de cor por bichinho. Dragão: verde/vinho (arte pronta). Monstrinho:
+// paleta vetorial (até virar imagem também).
+export const DRAGON_COLORS: PetColorId[] = ["verde", "vinho"];
+export const MONSTER_COLORS: PetColorId[] = ["turquesa", "azul", "verde", "laranja", "rosa", "roxo"];
+export function colorsFor(kind: PetKind): PetColorId[] {
+  return kind === "dragao" ? DRAGON_COLORS : MONSTER_COLORS;
+}
 export function petPalette(s: PetState): PetPalette {
   const id = s.color ?? (s.kind ? DEFAULT_COLOR[s.kind] : "turquesa");
   return PET_COLORS.find((c) => c.id === id) ?? PET_COLORS[0];

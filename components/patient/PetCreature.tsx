@@ -1,6 +1,6 @@
 "use client";
 
-import { paletteById, DEFAULT_COLOR, DRAGON_HUE, type PetKind, type AccessoryId, type PetColorId, type PetPalette, type DragonPose } from "@/lib/pet";
+import { paletteById, DEFAULT_COLOR, type PetKind, type AccessoryId, type PetColorId, type PetPalette, type DragonPose } from "@/lib/pet";
 
 // Arte vetorial do bichinho (SVG, viewBox 120×120). Fase 0 = ovo; 1..3 =
 // filhote/jovem/adulto. A cor vem da escolha da criança. Fofos e com personalidade:
@@ -71,48 +71,6 @@ function Feet({ color }: { color: string }) {
   );
 }
 
-function Accessory({ id }: { id: AccessoryId }) {
-  switch (id) {
-    case "chapeu":
-      return (
-        <g>
-          <path d="M60 4 L48 30 L72 30 Z" fill="#f472b6" stroke="#db2777" strokeWidth={1.5} strokeLinejoin="round" />
-          <path d="M50 26 L70 26" stroke="#fbcfe8" strokeWidth={3} strokeLinecap="round" />
-          <path d="M52 20 L68 20" stroke="#fbcfe8" strokeWidth={2.5} strokeLinecap="round" />
-          <circle cx={60} cy={5} r={4} fill="#fde68a" stroke="#f59e0b" strokeWidth={1} />
-        </g>
-      );
-    case "laco":
-      return (
-        <g>
-          <path d="M60 24 L44 15 L44 33 Z" fill="#fb7185" stroke="#e11d48" strokeWidth={1.2} strokeLinejoin="round" />
-          <path d="M60 24 L76 15 L76 33 Z" fill="#fb7185" stroke="#e11d48" strokeWidth={1.2} strokeLinejoin="round" />
-          <circle cx={60} cy={24} r={4.5} fill="#f43f5e" stroke="#e11d48" strokeWidth={1} />
-        </g>
-      );
-    case "oculos":
-      return (
-        <g fill="none" stroke="#1f2937" strokeWidth={2.6}>
-          <circle cx={48} cy={61} r={14} />
-          <circle cx={72} cy={61} r={14} />
-          <path d="M62 61 L58 61" strokeLinecap="round" />
-          <path d="M34 59 L28 56" strokeLinecap="round" />
-          <path d="M86 59 L92 56" strokeLinecap="round" />
-        </g>
-      );
-    case "coroa":
-    default:
-      return (
-        <g>
-          <path d="M47 30 L52 20 L60 27 L68 20 L73 30 Z" fill="#fbbf24" stroke="#f59e0b" strokeWidth={1.5} strokeLinejoin="round" />
-          <circle cx={52} cy={20} r={2.4} fill="#fde68a" />
-          <circle cx={68} cy={20} r={2.4} fill="#fde68a" />
-          <circle cx={60} cy={26.5} r={2.4} fill="#fde68a" />
-        </g>
-      );
-  }
-}
-
 function Sparkles({ color }: { color: string }) {
   const star = (x: number, y: number, s: number) =>
     `M${x} ${y - s} L${x + s * 0.3} ${y - s * 0.3} L${x + s} ${y} L${x + s * 0.3} ${y + s * 0.3} L${x} ${y + s} L${x - s * 0.3} ${y + s * 0.3} L${x - s} ${y} L${x - s * 0.3} ${y - s * 0.3} Z`;
@@ -169,26 +127,26 @@ function Monster({ p, mood }: { p: PetPalette; mood: Mood }) {
   );
 }
 
-export function PetCreature({ kind, stage, size = 140, accessory, color, mood = "idle", pose = "idle" }: {
+export function PetCreature({ kind, stage, size = 140, color, mood = "idle", pose = "idle" }: {
   kind: PetKind; stage: number; size?: number; accessory?: AccessoryId; color?: PetColorId; mood?: Mood; pose?: DragonPose;
 }) {
   // Dragão = arte em IMAGEM com poses (permite "movimentos" no Tamagotchi).
-  // A cor escolhida recolore por hue-rotate; o tamanho cresce com a fase.
+  // Cada cor (verde/vinho) tem seu conjunto de imagens; cresce com a fase.
   if (kind === "dragao") {
-    const hue = DRAGON_HUE[color ?? "verde"] ?? 0;
+    const dcolor = color === "vinho" ? "vinho" : "verde";
     const file = stage <= 0 ? "ovo" : mood === "sleep" ? "dormir" : pose;
     const sc = stage <= 0 ? 0.92 : stage === 1 ? 0.84 : stage === 2 ? 1.0 : 1.12;
     return (
       <div style={{ width: size, height: size, position: "relative" }} aria-hidden>
         {/* eslint-disable-next-line @next/next/no-img-element */}
         <img
-          src={`/pet/dragao-${file}.png`}
+          src={`/pet/dragao-${dcolor}-${file}.png`}
           alt=""
           draggable={false}
           style={{
             width: "100%", height: "100%", objectFit: "contain", display: "block",
             transform: `scale(${sc})`,
-            filter: `hue-rotate(${hue}deg) drop-shadow(0 5px 7px rgba(0,0,0,0.2))`,
+            filter: "drop-shadow(0 5px 7px rgba(0,0,0,0.2))",
           }}
         />
       </div>
@@ -210,7 +168,6 @@ export function PetCreature({ kind, stage, size = 140, accessory, color, mood = 
       {adult && <Sparkles color={p.horn} />}
       <g transform={`translate(60 68) scale(${scale}) translate(-60 -68)`}>
         <Monster p={p} mood={mood} />
-        {adult && <Accessory id={accessory ?? "coroa"} />}
       </g>
     </svg>
   );
