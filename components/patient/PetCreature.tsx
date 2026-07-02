@@ -21,12 +21,26 @@ function Eyes({ mood }: { mood: Mood }) {
     <g>
       <circle cx={48} cy={61} r={12} fill="#fff" />
       <circle cx={72} cy={61} r={12} fill="#fff" />
-      <circle cx={50} cy={63} r={6.2} fill="#1f2937" />
-      <circle cx={74} cy={63} r={6.2} fill="#1f2937" />
-      <circle cx={47} cy={59} r={2.6} fill="#fff" />
-      <circle cx={71} cy={59} r={2.6} fill="#fff" />
+      {/* sombreado sutil no topo do olho — dá profundidade */}
+      <path d="M37 55 A12 12 0 0 1 59 55 Z" fill="#0f172a" opacity={0.06} />
+      <path d="M61 55 A12 12 0 0 1 83 55 Z" fill="#0f172a" opacity={0.06} />
+      <circle cx={50} cy={63} r={6.4} fill="#1f2937" />
+      <circle cx={74} cy={63} r={6.4} fill="#1f2937" />
+      {/* brilho principal + catchlight (olhos molhados) */}
+      <circle cx={47.5} cy={59.5} r={2.9} fill="#fff" />
+      <circle cx={71.5} cy={59.5} r={2.9} fill="#fff" />
+      <circle cx={52.5} cy={65} r={1.4} fill="#fff" opacity={0.85} />
+      <circle cx={76.5} cy={65} r={1.4} fill="#fff" opacity={0.85} />
     </g>
   );
+}
+
+// Realce (brilho) e sombra para dar volume "3D" ao corpo/barriga.
+function Sheen({ cx, cy, rx, ry }: { cx: number; cy: number; rx: number; ry: number }) {
+  return <ellipse cx={cx} cy={cy} rx={rx} ry={ry} fill="#fff" opacity={0.28} />;
+}
+function Shade({ cx, cy, rx, ry, color }: { cx: number; cy: number; rx: number; ry: number; color: string }) {
+  return <ellipse cx={cx} cy={cy} rx={rx} ry={ry} fill={color} opacity={0.16} />;
 }
 
 function Cheeks({ color }: { color: string }) {
@@ -138,9 +152,12 @@ function Dragon({ p, mood }: { p: PetPalette; mood: Mood }) {
       <path d="M65 39 L71 22 L75 38 Z" fill={p.horn} />
       {/* corpo */}
       <ellipse cx={60} cy={66} rx={36} ry={34} fill={p.body} />
+      <Shade cx={60} cy={92} rx={30} ry={13} color={p.dark} />
+      <Sheen cx={49} cy={49} rx={19} ry={12} />
       <path d="M60 32 L65 40 L55 40 Z" fill={p.dark} opacity={0.6} />
       {/* barriga */}
       <ellipse cx={60} cy={76} rx={23} ry={21} fill={p.belly} />
+      <Sheen cx={54} cy={66} rx={11} ry={6} />
       <BellySpots color={p.dark} />
       <Cheeks color={p.cheek} />
       <Eyes mood={mood} />
@@ -162,11 +179,14 @@ function Monster({ p, mood }: { p: PetPalette; mood: Mood }) {
       <path d="M30 50 q7 -17 14 -2 q7 -17 14 0 q7 -17 14 2 q5 7 -2 11 L32 62 Z" fill={p.body} />
       {/* corpo */}
       <ellipse cx={60} cy={68} rx={36} ry={34} fill={p.body} />
+      <Shade cx={60} cy={94} rx={30} ry={13} color={p.dark} />
+      <Sheen cx={49} cy={51} rx={19} ry={12} />
       {/* bracinhos */}
       <ellipse cx={26} cy={78} rx={8} ry={12} fill={p.body} />
       <ellipse cx={94} cy={78} rx={8} ry={12} fill={p.body} />
       {/* barriga */}
       <ellipse cx={60} cy={78} rx={22} ry={20} fill={p.belly} />
+      <Sheen cx={54} cy={68} rx={11} ry={6} />
       <BellySpots color={p.dark} />
       <Cheeks color={p.cheek} />
       <Eyes mood={mood} />
@@ -181,7 +201,7 @@ export function PetCreature({ kind, stage, size = 140, accessory, color, mood = 
   kind: PetKind; stage: number; size?: number; accessory?: AccessoryId; color?: PetColorId; mood?: Mood;
 }) {
   const p = paletteById(color ?? DEFAULT_COLOR[kind]);
-  const common = { width: size, height: size, viewBox: "0 0 120 120", style: { display: "block" } as const };
+  const common = { width: size, height: size, viewBox: "0 0 120 120", style: { display: "block", filter: "drop-shadow(0 5px 6px rgba(0,0,0,0.16))" } as const };
 
   if (stage <= 0) {
     return <svg {...common} aria-hidden>{<Egg p={p} />}</svg>;
