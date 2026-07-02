@@ -5,8 +5,8 @@
 // Acesse em /preview/bichinho. Serve para acompanhar como está ficando no app.
 
 import { useState } from "react";
-import { motion } from "framer-motion";
 import { PetCreature } from "@/components/patient/PetCreature";
+import { LivePet } from "@/components/patient/LivePet";
 import { STAGE_LABELS, DEFAULT_COLOR, colorsFor, paletteById, type PetKind, type PetColorId, type DragonPose } from "@/lib/pet";
 
 const POSES: { id: DragonPose; label: string }[] = [
@@ -25,15 +25,12 @@ export default function PreviewBichinho() {
     setDemo(a);
     window.setTimeout(() => setDemo(null), a === "dormir" ? 2600 : 1700);
   }
-  const demoPose: DragonPose = demo === "comer" ? "comer" : demo === "brincar" ? "brincar" : "idle";
-  const demoMood = demo === "dormir" ? "sleep" : "idle";
-
   const card: React.CSSProperties = {
     background: "#fff", borderRadius: 20, padding: 12, display: "flex", flexDirection: "column",
     alignItems: "center", gap: 4, boxShadow: "0 8px 22px rgba(30,60,120,.12)",
   };
   const label: React.CSSProperties = { fontSize: 12, fontWeight: 800, color: "#0f766e" };
-  const scene = "radial-gradient(circle at 50% 40%, #cffafe, transparent 70%)";
+  const scene = "radial-gradient(circle at 50% 45%, #ffffff, #eef3fb 78%)";
 
   return (
     <div style={{
@@ -75,19 +72,14 @@ export default function PreviewBichinho() {
         </div>
 
         {/* Em movimento */}
-        <h2 style={{ fontSize: 15, fontWeight: 800, color: "#334155", margin: "0 0 12px" }}>Em movimento (toque nos botões) 🎬</h2>
+        <h2 style={{ fontSize: 15, fontWeight: 800, color: "#334155", margin: "0 0 12px" }}>Em movimento (anima sozinho) 🎬</h2>
         <div style={{ maxWidth: 360, margin: "0 auto 28px", borderRadius: 24, overflow: "hidden", boxShadow: "0 14px 36px rgba(30,60,120,.16)", border: "3px solid #fff" }}>
           <div style={{ position: "relative", height: 300, display: "flex", alignItems: "flex-end", justifyContent: "center",
-            background: demo === "dormir"
-              ? "linear-gradient(180deg,#3b3170 56%,#4a6b3a 56%)"
-              : "linear-gradient(180deg,#7dd3fc 56%,#c9edb0 56%)", transition: "background .5s" }}>
-            <div style={{ position: "absolute", top: 16, right: 20, width: 44, height: 44, borderRadius: "50%",
-              background: demo === "dormir" ? "radial-gradient(circle at 40% 35%,#e5e7eb,#cbd5e1)" : "radial-gradient(circle at 40% 35%,#fef08a,#fbbf24)", transition: "all .5s" }} />
-            <motion.div style={{ marginBottom: 8 }}
-              animate={demo === "brincar" ? { y: [0, -26, 0, -14, 0] } : demo === "dormir" ? { rotate: [0, -3, 0] } : { y: [0, -8, 0] }}
-              transition={{ duration: demo ? 1.4 : 2.4, repeat: demo ? 0 : Infinity, ease: "easeInOut" }}>
-              <PetCreature kind={kind} stage={2} color={color} pose={demoPose} mood={demoMood} size={200} />
-            </motion.div>
+            background: "linear-gradient(180deg,#eef6ff 0%,#ffffff 62%)" }}>
+            <div style={{ position: "relative", marginBottom: 14 }}>
+              <div style={{ width: 150, height: 14, background: "rgba(30,60,120,.12)", borderRadius: "50%", position: "absolute", bottom: 4, left: "50%", transform: "translateX(-50%)", filter: "blur(3px)" }} />
+              <LivePet kind={kind} stage={2} color={color} size={210} action={demo} />
+            </div>
           </div>
           <div style={{ display: "flex", gap: 10, padding: 12, background: "#fff" }}>
             {([["comer", "🍎", "Alimentar"], ["brincar", "🎾", "Brincar"], ["dormir", "😴", "Dormir"]] as const).map(([a, e, l]) => (

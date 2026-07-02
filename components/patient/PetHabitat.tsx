@@ -2,14 +2,13 @@
 
 import { useEffect, useState } from "react";
 import Link from "next/link";
-import { motion, AnimatePresence } from "framer-motion";
 import {
   loadPet, petStage, careProgress, sessionsToNextStage, petDisplayName,
   usedInteractionsToday, spendInteraction,
-  INTERACTIONS_PER_SESSION, STAGE_LABELS, PET_ACTIONS, petPalette,
+  INTERACTIONS_PER_SESSION, STAGE_LABELS, PET_ACTIONS,
   type PetState, type PetAction,
 } from "@/lib/pet";
-import { PetCreature } from "./PetCreature";
+import { LivePet } from "./LivePet";
 
 // Habitat estilo Tamagotchi (tema Kids). O bichinho vive numa cena e a criança
 // pode alimentar, brincar e colocar pra dormir. As interações são LIBERADAS por
@@ -18,7 +17,6 @@ export function PetHabitat({ patientId, playerName, sessionsToday }: { patientId
   const [pet, setPet] = useState<PetState | null>(null);
   const [used, setUsed] = useState(0);
   const [anim, setAnim] = useState<PetAction | null>(null);
-  const [heart, setHeart] = useState(0);
 
   useEffect(() => {
     setPet(loadPet(patientId));
@@ -34,7 +32,6 @@ export function PetHabitat({ patientId, playerName, sessionsToday }: { patientId
     spendInteraction(patientId);
     setUsed((u) => u + 1);
     setAnim(a);
-    setHeart((h) => h + 1);
     window.setTimeout(() => setAnim(null), a === "dormir" ? 2600 : 1700);
   }
 
@@ -57,31 +54,17 @@ export function PetHabitat({ patientId, playerName, sessionsToday }: { patientId
   const faltam = sessionsToNextStage(pet.care);
   const isAdult = stage >= 3;
   const name = petDisplayName(pet);
-  const pal = petPalette(pet);
-  const mood = anim === "dormir" ? "sleep" : "idle";
-  const pose = anim === "alimentar" ? "comer" : anim === "brincar" ? "brincar" : "idle";
+  const action = anim === "alimentar" ? "comer" : anim === "brincar" ? "brincar" : anim === "dormir" ? "dormir" : null;
 
   return (
     <div style={{ padding: 14, minHeight: "calc(100vh - 130px)" }}>
       {/* CENA */}
       <div style={{ position: "relative", borderRadius: 26, overflow: "hidden", boxShadow: "0 18px 44px rgba(30,60,120,.18)", border: "3px solid #fff" }}>
-        {/* céu + sol + nuvens (escurece ao dormir) */}
-        <div style={{
-          position: "relative", height: 340,
-          background: anim === "dormir"
-            ? "linear-gradient(180deg,#3b3170 0%,#5b4a9e 52%,#4a6b3a 52%,#3f5a30 100%)"
-            : "linear-gradient(180deg,#7dd3fc 0%,#bae6fd 52%,#c9edb0 52%,#b7e39a 100%)",
-          transition: "background 0.6s ease",
-        }}>
-          <div style={{ position: "absolute", top: 18, right: 22, width: 46, height: 46, borderRadius: "50%",
-            background: anim === "dormir" ? "radial-gradient(circle at 40% 35%,#e5e7eb,#cbd5e1)" : "radial-gradient(circle at 40% 35%,#fef08a,#fbbf24)",
-            boxShadow: anim === "dormir" ? "0 0 18px rgba(203,213,225,.6)" : "0 0 24px rgba(251,191,36,.7)", transition: "all 0.6s ease" }} />
-          <div style={{ position: "absolute", top: 40, left: 28, width: 58, height: 20, borderRadius: 999, background: "rgba(255,255,255,.9)" }} />
-          <div style={{ position: "absolute", top: 70, left: 90, width: 42, height: 16, borderRadius: 999, background: "rgba(255,255,255,.85)" }} />
-
-          {/* cabeçalho: nome + fase + carinho */}
-          <div style={{ position: "absolute", top: 12, left: 14, right: 14, display: "flex", alignItems: "flex-start", justifyContent: "space-between", gap: 10 }}>
-            <div style={{ background: "rgba(255,255,255,.9)", borderRadius: 14, padding: "8px 12px", minWidth: 150 }}>
+        {/* quartinho claro (fundo branco evita a "borda branca" do recorte) */}
+        <div style={{ position: "relative", height: 360, background: "linear-gradient(180deg,#eef6ff 0%,#ffffff 62%)" }}>
+          {/* cabeçalho: nome + fase + progresso */}
+          <div style={{ position: "absolute", top: 12, left: 14, right: 14, display: "flex" }}>
+            <div style={{ background: "#fff", borderRadius: 14, padding: "8px 12px", minWidth: 150, boxShadow: "0 4px 14px rgba(30,60,120,.1)" }}>
               <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", gap: 8 }}>
                 <span style={{ fontWeight: 800, color: "#0f766e", fontSize: 14 }}>{name}</span>
                 <span style={{ fontSize: 10.5, fontWeight: 800, color: "#0d9488", background: "#ccfbf1", padding: "1px 7px", borderRadius: 999 }}>{STAGE_LABELS[stage]}</span>
@@ -95,34 +78,12 @@ export function PetHabitat({ patientId, playerName, sessionsToday }: { patientId
             </div>
           </div>
 
-          {/* comidinha / bola durante a interação */}
-          <AnimatePresence>
-            {anim === "alimentar" && (
-              <motion.div key="food" initial={{ y: 40, x: 0, opacity: 0, scale: 1 }} animate={{ y: 150, opacity: [0, 1, 1, 0], scale: [1, 1, 0.4] }} exit={{ opacity: 0 }}
-                transition={{ duration: 1.4 }} style={{ position: "absolute", left: "50%", top: 60, fontSize: 34, translateX: "-50%" }}>🍎</motion.div>
-            )}
-            {anim === "brincar" && (
-              <motion.div key="ball" initial={{ x: -80, y: 210 }} animate={{ x: [-80, 60, -40, 40, 0], y: [210, 150, 210, 170, 210] }}
-                transition={{ duration: 1.5 }} style={{ position: "absolute", left: "50%", fontSize: 30 }}>🎾</motion.div>
-            )}
-            {anim === "dormir" && (
-              <motion.div key="zzz" initial={{ opacity: 0, y: 0 }} animate={{ opacity: [0, 1, 1, 0], y: -40 }} transition={{ duration: 2.4 }}
-                style={{ position: "absolute", left: "58%", top: 120, fontSize: 30, color: "#fff" }}>💤</motion.div>
-            )}
-            {(anim === "alimentar" || anim === "brincar") && (
-              <motion.div key={`heart-${heart}`} initial={{ opacity: 0, y: 150, scale: 0.6 }} animate={{ opacity: [0, 1, 0], y: 80, scale: 1.1 }} transition={{ duration: 1.4, delay: 0.5 }}
-                style={{ position: "absolute", left: "50%", fontSize: 26, translateX: "-50%" }}>❤️</motion.div>
-            )}
-          </AnimatePresence>
-
-          {/* bichinho no chão */}
-          <div style={{ position: "absolute", left: "50%", bottom: 6, transform: "translateX(-50%)" }}>
-            <motion.div
-              animate={anim === "alimentar" || anim === "brincar" ? { y: [0, -18, 0, -10, 0] } : anim === "dormir" ? { rotate: [0, -4, 0] } : { y: [0, -6, 0] }}
-              transition={{ duration: anim ? 1.4 : 2.6, repeat: anim ? 0 : Infinity, ease: "easeInOut" }}>
-              <div style={{ width: 200, height: 12, background: "rgba(0,0,0,.14)", borderRadius: "50%", position: "absolute", bottom: 4, left: "50%", transform: "translateX(-50%)", filter: "blur(2px)" }} />
-              <PetCreature kind={pet.kind} stage={stage} size={190} accessory={pet.accessory ?? "coroa"} color={pet.color} mood={mood} pose={pose} />
-            </motion.div>
+          {/* bichinho VIVO — anima sozinho e fica 100% visível */}
+          <div style={{ position: "absolute", left: 0, right: 0, bottom: 18, display: "flex", justifyContent: "center" }}>
+            <div style={{ position: "relative" }}>
+              <div style={{ width: 150, height: 14, background: "rgba(30,60,120,.12)", borderRadius: "50%", position: "absolute", bottom: 8, left: "50%", transform: "translateX(-50%)", filter: "blur(3px)" }} />
+              <LivePet kind={pet.kind} stage={stage} size={220} color={pet.color} action={action} />
+            </div>
           </div>
         </div>
 

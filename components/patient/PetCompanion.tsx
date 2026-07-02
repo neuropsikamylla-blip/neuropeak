@@ -6,12 +6,14 @@ import type { Theme } from "@/types";
 import Link from "next/link";
 import {
   loadPet, savePet, petStage, careProgress, sessionsToNextStage, petDisplayName,
-  STAGE_LABELS, PET_NAMES, SUGGESTED_NAMES, DEFAULT_COLOR, paletteById, petPalette, colorsFor,
+  STAGE_LABELS, PET_NAMES, SUGGESTED_NAMES, DEFAULT_COLOR, paletteById, colorsFor,
   type PetKind, type PetState, type PetColorId,
 } from "@/lib/pet";
 import { PetCreature } from "./PetCreature";
+import { LivePet } from "./LivePet";
 
-const auraBg = (hex: string) => `radial-gradient(circle at 50% 45%, ${hex}44, transparent 70%)`;
+// Fundo claro atrás do bichinho — evita a "borda branca" do recorte aparecer.
+const lightBg = "radial-gradient(circle at 50% 45%, #ffffff, #eef3fb 78%)";
 
 // Fala curta e contextual do bichinho. Determinística (varia conforme o carinho,
 // sem aleatoriedade) para não trocar a cada re-render.
@@ -65,7 +67,7 @@ export function PetCompanion({ patientId, theme }: { patientId: string; theme: T
       <div className={`rounded-2xl p-4 ${card}`}>
         <p className={`font-bold mb-3 ${titleC}`}>Dê um nome e escolha a cor 🎨</p>
         <div className="flex items-center gap-3 mb-3">
-          <div className="rounded-full flex-shrink-0" style={{ background: auraBg(paletteById(pendingColor).body) }}>
+          <div className="rounded-full flex-shrink-0" style={{ background: lightBg }}>
             <PetCreature kind={pendingKind} stage={2} size={92} color={pendingColor} />
           </div>
           <div className="flex-1">
@@ -124,7 +126,7 @@ export function PetCompanion({ patientId, theme }: { patientId: string; theme: T
               onClick={() => { setPendingColor(DEFAULT_COLOR[k]); setPendingKind(k); }}
               className="rounded-2xl p-2 flex flex-col items-center gap-1 transition-all active:scale-95 bg-teal-50/60 border-2 border-teal-100 hover:border-teal-400"
             >
-              <div className="rounded-full" style={{ background: auraBg(paletteById(DEFAULT_COLOR[k]).body) }}>
+              <div className="rounded-full" style={{ background: lightBg }}>
                 <PetCreature kind={k} stage={2} size={100} color={DEFAULT_COLOR[k]} />
               </div>
               <span className="text-sm font-bold text-gray-700">{PET_NAMES[k]}</span>
@@ -169,10 +171,8 @@ export function PetCompanion({ patientId, theme }: { patientId: string; theme: T
       </div>
 
       <div className="flex items-center gap-4">
-        <div className="rounded-full flex-shrink-0" style={{ background: auraBg(petPalette(pet).body) }}>
-          <motion.div animate={{ y: [0, -5, 0] }} transition={{ duration: 2.6, repeat: Infinity, ease: "easeInOut" }}>
-            <PetCreature kind={pet.kind} stage={stage} size={110} color={pet.color} />
-          </motion.div>
+        <div className="rounded-full flex-shrink-0" style={{ background: lightBg }}>
+          <LivePet kind={pet.kind} stage={stage} size={110} color={pet.color} />
         </div>
 
         <div className="flex-1 min-w-0">

@@ -135,17 +135,19 @@ export function PetCreature({ kind, stage, size = 140, color, mood = "idle", pos
   if (kind === "dragao") {
     const dcolor = color === "vinho" ? "vinho" : "verde";
     const file = stage <= 0 ? "ovo" : mood === "sleep" ? "dormir" : pose;
-    const sc = stage <= 0 ? 0.92 : stage === 1 ? 0.84 : stage === 2 ? 1.0 : 1.12;
+    // Cresce com a fase, mas SEM estourar a caixa — a imagem fica sempre 100%
+    // visível (nunca cortada), pois é menor ou igual ao contêiner e centralizada.
+    const sc = stage <= 0 ? 0.9 : stage === 1 ? 0.8 : stage === 2 ? 0.9 : 1.0;
+    const px = Math.round(size * sc);
     return (
-      <div style={{ width: size, height: size, position: "relative" }} aria-hidden>
+      <div style={{ width: size, height: size, display: "flex", alignItems: "center", justifyContent: "center" }} aria-hidden>
         {/* eslint-disable-next-line @next/next/no-img-element */}
         <img
           src={`/pet/dragao-${dcolor}-${file}.png`}
           alt=""
           draggable={false}
           style={{
-            width: "100%", height: "100%", objectFit: "contain", display: "block",
-            transform: `scale(${sc})`,
+            width: px, height: px, objectFit: "contain", display: "block",
             filter: "drop-shadow(0 5px 7px rgba(0,0,0,0.2))",
           }}
         />
