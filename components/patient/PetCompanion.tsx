@@ -6,7 +6,7 @@ import type { Theme } from "@/types";
 import Link from "next/link";
 import {
   loadPet, savePet, petStage, careProgress, sessionsToNextStage, petDisplayName,
-  STAGE_LABELS, PET_NAMES, SUGGESTED_NAMES,
+  STAGE_LABELS, PET_NAMES, SUGGESTED_NAMES, paletteById, colorsFor,
   type PetKind, type PetState, type PetColorId,
 } from "@/lib/pet";
 import { PetCreature } from "./PetCreature";
@@ -86,6 +86,14 @@ export function PetCompanion({ patientId, theme }: { patientId: string; theme: T
               ))}
             </div>
           </div>
+        </div>
+        {/* Cor do dragão: verde ou vinho */}
+        <div className="flex gap-3 justify-center mb-3">
+          {colorsFor(pendingKind).map(paletteById).map((c) => (
+            <button key={c.id} onClick={() => setPendingColor(c.id)} aria-label={c.label}
+              className="w-9 h-9 rounded-full transition-transform active:scale-90"
+              style={{ background: c.body, border: pendingColor === c.id ? "3px solid #0f766e" : "3px solid #fff", boxShadow: "0 2px 6px rgba(0,0,0,.15)" }} />
+          ))}
         </div>
         <div className="flex gap-2">
           <button
