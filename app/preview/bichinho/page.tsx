@@ -7,6 +7,7 @@
 import { useState } from "react";
 import { PetCreature } from "@/components/patient/PetCreature";
 import { LivePet } from "@/components/patient/LivePet";
+import { PetCompanion } from "@/components/patient/PetCompanion";
 import { STAGE_LABELS, DEFAULT_COLOR, colorsFor, paletteById, type PetKind, type PetColorId, type DragonPose } from "@/lib/pet";
 
 const POSES: { id: DragonPose; label: string }[] = [
@@ -91,6 +92,12 @@ export default function PreviewBichinho() {
               </button>
             ))}
           </div>
+        </div>
+
+        {/* Componente REAL do Início (PetCompanion) */}
+        <h2 style={{ fontSize: 15, fontWeight: 800, color: "#334155", margin: "0 0 12px" }}>Componente real do Início (PetCompanion)</h2>
+        <div style={{ maxWidth: 340, margin: "0 auto 28px" }}>
+          <PetCompanion patientId="preview-demo" theme="COLORFUL" />
         </div>
 
         {/* Card de escolha (como aparece no Início) */}
