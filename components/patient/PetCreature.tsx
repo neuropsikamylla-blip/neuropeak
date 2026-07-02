@@ -142,26 +142,43 @@ function Dragon({ p, mood }: { p: PetPalette; mood: Mood }) {
   return (
     <g>
       <Feet color={p.dark} />
-      {/* asas atrás */}
-      <path d="M34 60 Q6 48 10 78 Q24 68 38 74 Z" fill={p.dark} opacity={0.9} />
-      <path d="M86 60 Q114 48 110 78 Q96 68 82 74 Z" fill={p.dark} opacity={0.9} />
-      {/* rabo */}
-      <path d="M84 92 Q100 96 95 78 Q90 86 80 84 Z" fill={p.body} />
-      {/* chifres */}
-      <path d="M45 38 L49 22 L55 39 Z" fill={p.horn} />
-      <path d="M65 39 L71 22 L75 38 Z" fill={p.horn} />
+      {/* cauda com leque na ponta */}
+      <path d="M82 90 Q112 94 112 68 Q112 56 102 60 Q109 69 94 80 Q87 85 82 90 Z" fill={p.body} />
+      <path d="M104 60 L119 54 L109 66 Z" fill={p.dark} />
+      <path d="M102 57 L112 45 L108 60 Z" fill={p.dark} />
+      {/* asas de morcego (membrana recortada) + nervuras */}
+      <path d="M40 54 Q6 36 3 58 Q13 55 17 62 Q10 60 15 71 Q22 64 28 68 Q28 58 40 60 Z" fill={p.dark} />
+      <path d="M80 54 Q114 36 117 58 Q107 55 103 62 Q110 60 105 71 Q98 64 92 68 Q92 58 80 60 Z" fill={p.dark} />
+      <g stroke="#000" strokeOpacity={0.18} strokeWidth={1.3} fill="none">
+        <path d="M36 58 L8 55" /><path d="M36 61 L15 66" /><path d="M84 58 L112 55" /><path d="M84 61 L105 66" />
+      </g>
+      {/* chifres varridos pra trás */}
+      <path d="M45 40 Q36 26 43 17 Q48 24 51 40 Z" fill={p.horn} />
+      <path d="M75 40 Q84 26 77 17 Q72 24 69 40 Z" fill={p.horn} />
+      {/* crista de espinhos */}
+      <path d="M53 35 L55 27 L58 35 Z" fill={p.dark} />
+      <path d="M58 34 L61 24 L64 34 Z" fill={p.dark} />
+      <path d="M64 35 L67 27 L69 35 Z" fill={p.dark} />
       {/* corpo */}
       <ellipse cx={60} cy={66} rx={36} ry={34} fill={p.body} />
       <Shade cx={60} cy={92} rx={30} ry={13} color={p.dark} />
       <Sheen cx={49} cy={49} rx={19} ry={12} />
-      <path d="M60 32 L65 40 L55 40 Z" fill={p.dark} opacity={0.6} />
-      {/* barriga */}
-      <ellipse cx={60} cy={76} rx={23} ry={21} fill={p.belly} />
-      <Sheen cx={54} cy={66} rx={11} ry={6} />
-      <BellySpots color={p.dark} />
+      {/* peito/barriga clara com placas */}
+      <ellipse cx={60} cy={80} rx={19} ry={17} fill={p.belly} />
+      <g stroke={p.dark} strokeWidth={1.4} fill="none" opacity={0.28}>
+        <path d="M49 84 Q60 88 71 84" /><path d="M51 91 Q60 94 69 91" /><path d="M54 96 Q60 98 66 96" />
+      </g>
+      {/* focinho + narinas */}
+      <ellipse cx={60} cy={72} rx={14} ry={9.5} fill={p.body} />
+      <Sheen cx={55} cy={69} rx={6} ry={3} />
+      <ellipse cx={55} cy={71} rx={1.6} ry={2.2} fill={p.dark} />
+      <ellipse cx={65} cy={71} rx={1.6} ry={2.2} fill={p.dark} />
+      {/* boca + dentinhos */}
+      <path d="M53 78 Q60 85 67 78" fill="none" stroke="#1f2937" strokeWidth={2.4} strokeLinecap="round" />
+      <path d="M56 79 L57.5 82.5 L54.5 80 Z" fill="#fff" stroke="#1f2937" strokeWidth={0.5} />
+      <path d="M64 79 L65.5 82.5 L62.5 80 Z" fill="#fff" stroke="#1f2937" strokeWidth={0.5} />
       <Cheeks color={p.cheek} />
       <Eyes mood={mood} />
-      <path d="M52 76 Q60 84 68 76" fill="none" stroke="#1f2937" strokeWidth={2.6} strokeLinecap="round" />
     </g>
   );
 }

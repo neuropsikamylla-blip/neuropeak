@@ -177,10 +177,6 @@ export function PetCompanion({ patientId, theme }: { patientId: string; theme: T
         </div>
 
         <div className="flex-1 min-w-0">
-          <div className="flex items-center justify-between mb-1">
-            <span className={`text-xs font-semibold ${subC}`}>Carinho ❤️</span>
-            <span className={`text-xs font-bold ${isG ? "text-cyan-300" : "text-teal-600"}`}>{isAdult ? "MÁX" : `${pct}%`}</span>
-          </div>
           <div className={`h-2.5 rounded-full overflow-hidden ${isG ? "bg-gray-700" : "bg-teal-100"}`}>
             <motion.div
               className="h-full rounded-full"

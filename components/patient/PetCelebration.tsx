@@ -86,12 +86,8 @@ export function PetCelebration({
             : `Você deixou ${petName} mais feliz. Continue assim!`}
         </p>
 
-        {/* barra de carinho */}
+        {/* barra de progresso do crescimento */}
         <div className="px-1 mb-6">
-          <div className="flex items-center justify-between mb-1">
-            <span className={`text-xs font-semibold ${subC}`}>Carinho</span>
-            <span className={`text-xs font-bold ${titleC}`}>{stageAfter >= 3 ? "MÁX" : `${pct}%`}</span>
-          </div>
           <div className={`h-3 rounded-full overflow-hidden ${isG ? "bg-gray-700" : "bg-purple-100"}`}>
             <motion.div
               className="h-full rounded-full"
