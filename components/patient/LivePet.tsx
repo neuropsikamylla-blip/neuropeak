@@ -13,23 +13,27 @@ import type { PetKind, PetColorId, DragonPose } from "@/lib/pet";
 type MotionKind = "bob" | "run" | "float" | "jump" | "sway" | "still";
 interface Activity { pose: DragonPose; motion: MotionKind; dur: number; mood?: "idle" | "sleep" }
 
-// Poses que o dragão faz por conta própria (todas "em pé"/ativas + descanso).
+// Poses que o dragão faz por conta própria — usa TODAS as imagens disponíveis.
 const ROAM: Activity[] = [
   { pose: "idle", motion: "bob", dur: 3000 },
   { pose: "respirando", motion: "bob", dur: 2600 },
   { pose: "piscar", motion: "bob", dur: 1400 },
-  { pose: "correndo", motion: "run", dur: 2600 },
+  { pose: "feliz", motion: "bob", dur: 2400 },
+  { pose: "curioso", motion: "bob", dur: 2400 },
+  { pose: "bocejando", motion: "bob", dur: 2200 },
+  { pose: "rindo", motion: "bob", dur: 2200 },
+  { pose: "gargalhando", motion: "bob", dur: 2200 },
+  { pose: "fumaca", motion: "bob", dur: 2600 },
+  { pose: "acenando", motion: "bob", dur: 2200 },
   { pose: "voando", motion: "float", dur: 3200 },
   { pose: "planando", motion: "float", dur: 2800 },
   { pose: "batendoasas", motion: "float", dur: 2200 },
-  { pose: "pulando", motion: "jump", dur: 2200 },
   { pose: "dancando", motion: "sway", dur: 3000 },
-  { pose: "acenando", motion: "bob", dur: 2200 },
-  { pose: "rindo", motion: "bob", dur: 2200 },
-  { pose: "curioso", motion: "bob", dur: 2400 },
-  { pose: "coracao", motion: "bob", dur: 2400 },
-  { pose: "espreguicando", motion: "bob", dur: 2400 },
-  { pose: "bocejando", motion: "bob", dur: 2200 },
+  { pose: "cantando", motion: "sway", dur: 2600 },
+  { pose: "notas", motion: "sway", dur: 2600 },
+  { pose: "comfome", motion: "bob", dur: 2200 },
+  { pose: "pensando", motion: "bob", dur: 2600 },
+  { pose: "fogo", motion: "bob", dur: 2400 },
 ];
 
 const ACTION_ACT: Record<string, Activity> = {

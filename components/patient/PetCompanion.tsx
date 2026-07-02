@@ -6,7 +6,7 @@ import type { Theme } from "@/types";
 import Link from "next/link";
 import {
   loadPet, savePet, petStage, careProgress, sessionsToNextStage, petDisplayName,
-  STAGE_LABELS, PET_NAMES, SUGGESTED_NAMES, DEFAULT_COLOR, paletteById, colorsFor,
+  STAGE_LABELS, PET_NAMES, SUGGESTED_NAMES,
   type PetKind, type PetState, type PetColorId,
 } from "@/lib/pet";
 import { PetCreature } from "./PetCreature";
@@ -87,14 +87,6 @@ export function PetCompanion({ patientId, theme }: { patientId: string; theme: T
             </div>
           </div>
         </div>
-        {/* Cores (opções do bichinho escolhido) */}
-        <div className="flex gap-3 justify-center mb-3">
-          {colorsFor(pendingKind).map(paletteById).map((c) => (
-            <button key={c.id} onClick={() => setPendingColor(c.id)} aria-label={c.label}
-              className="w-9 h-9 rounded-full transition-transform active:scale-90"
-              style={{ background: c.body, border: pendingColor === c.id ? "3px solid #0f766e" : "3px solid #fff", boxShadow: "0 2px 6px rgba(0,0,0,.15)" }} />
-          ))}
-        </div>
         <div className="flex gap-2">
           <button
             onClick={() => { setPendingKind(null); setNameInput(""); }}
@@ -113,26 +105,22 @@ export function PetCompanion({ patientId, theme }: { patientId: string; theme: T
     );
   }
 
-  // ── Passo 1: escolher o bichinho ────────────────────────────────────────
+  // ── Passo 1: conhecer o bichinho (só o dragão verde) ────────────────────
   if (!pet.kind) {
     return (
       <div className={`rounded-2xl p-4 ${card}`}>
-        <p className={`font-bold mb-1 ${titleC}`}>Escolha seu bichinho 🥚</p>
+        <p className={`font-bold mb-1 ${titleC}`}>Conheça seu bichinho 🥚</p>
         <p className={`text-xs mb-3 ${subC}`}>Ele cresce a cada treino que você faz!</p>
-        <div className="grid grid-cols-2 gap-3">
-          {(["dragao", "monstrinho"] as PetKind[]).map((k) => (
-            <button
-              key={k}
-              onClick={() => { setPendingColor(DEFAULT_COLOR[k]); setPendingKind(k); }}
-              className="rounded-2xl p-2 flex flex-col items-center gap-1 transition-all active:scale-95 bg-teal-50/60 border-2 border-teal-100 hover:border-teal-400"
-            >
-              <div className="rounded-full" style={{ background: lightBg }}>
-                <PetCreature kind={k} stage={2} size={100} color={DEFAULT_COLOR[k]} />
-              </div>
-              <span className="text-sm font-bold text-gray-700">{PET_NAMES[k]}</span>
-            </button>
-          ))}
-        </div>
+        <button
+          onClick={() => { setPendingColor("verde"); setPendingKind("dragao"); }}
+          className="w-full rounded-2xl p-3 flex flex-col items-center gap-1 transition-all active:scale-95 bg-teal-50/60 border-2 border-teal-100 hover:border-teal-400"
+        >
+          <div className="rounded-full" style={{ background: lightBg }}>
+            <LivePet kind="dragao" stage={2} size={130} color="verde" />
+          </div>
+          <span className="text-sm font-bold text-gray-700">{PET_NAMES.dragao}</span>
+          <span className="text-xs font-semibold text-teal-600">Toque para começar →</span>
+        </button>
       </div>
     );
   }

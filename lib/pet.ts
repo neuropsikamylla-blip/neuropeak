@@ -33,13 +33,13 @@ export const DEFAULT_COLOR: Record<PetKind, PetColorId> = { dragao: "verde", mon
 // Cada cor tem seu conjunto: public/pet/dragao-<cor>-<pose>.png.
 export type DragonPose =
   | "idle" | "piscar" | "comer" | "dormir" | "brincar" | "respirando" | "curioso"
-  | "apaixonado" | "bocejando" | "espreguicando" | "correndo" | "pulando" | "voando"
-  | "planando" | "batendoasas" | "fogo" | "dancando" | "rindo" | "acenando"
-  | "travesseiro" | "coracao";
+  | "bocejando" | "voando" | "planando" | "batendoasas" | "fogo" | "dancando"
+  | "rindo" | "acenando" | "travesseiro" | "feliz" | "fumaca" | "gargalhando"
+  | "cantando" | "comfome" | "pensando" | "notas";
 
 // Opções de cor por bichinho. Dragão: verde/vinho (arte pronta). Monstrinho:
 // paleta vetorial (até virar imagem também).
-export const DRAGON_COLORS: PetColorId[] = ["verde", "vinho"];
+export const DRAGON_COLORS: PetColorId[] = ["verde"];
 export const MONSTER_COLORS: PetColorId[] = ["turquesa", "azul", "verde", "laranja", "rosa", "roxo"];
 export function colorsFor(kind: PetKind): PetColorId[] {
   return kind === "dragao" ? DRAGON_COLORS : MONSTER_COLORS;
