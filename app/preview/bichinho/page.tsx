@@ -93,6 +93,19 @@ export default function PreviewBichinho() {
           </div>
         </div>
 
+        {/* Card de escolha (como aparece no Início) */}
+        <h2 style={{ fontSize: 15, fontWeight: 800, color: "#334155", margin: "0 0 12px" }}>Card de escolha (Início)</h2>
+        <div style={{ display: "flex", gap: 12, maxWidth: 340, margin: "0 auto 28px" }}>
+          {(["dragao", "monstrinho"] as PetKind[]).map((k) => (
+            <div key={k} style={{ flex: 1, borderRadius: 16, padding: 8, display: "flex", flexDirection: "column", alignItems: "center", gap: 4, background: "rgba(240,253,250,.6)", border: "2px solid #ccfbf1" }}>
+              <div style={{ borderRadius: "50%", background: "radial-gradient(circle at 50% 45%, #ffffff, #eef3fb 78%)" }}>
+                <PetCreature kind={k} stage={2} size={100} color={k === "dragao" ? "verde" : "roxo"} />
+              </div>
+              <span style={{ fontSize: 14, fontWeight: 800, color: "#374151" }}>{k === "dragao" ? "Dragão" : "Monstrinho"}</span>
+            </div>
+          ))}
+        </div>
+
         {/* Fases */}
         <h2 style={{ fontSize: 15, fontWeight: 800, color: "#334155", margin: "0 0 12px" }}>Fases (crescimento)</h2>
         <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(150px, 1fr))", gap: 12, marginBottom: 28 }}>
