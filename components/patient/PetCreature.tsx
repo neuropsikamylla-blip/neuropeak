@@ -135,20 +135,21 @@ export function PetCreature({ kind, stage, size = 140, color, mood = "idle", pos
   if (kind === "dragao") {
     const dcolor = color === "vinho" ? "vinho" : "verde";
     const file = stage <= 0 ? "ovo" : mood === "sleep" ? "dormir" : pose;
-    // Cresce com a fase, mas SEM estourar a caixa — a imagem fica sempre 100%
-    // visível (nunca cortada), pois é menor ou igual ao contêiner e centralizada.
-    const sc = stage <= 0 ? 0.9 : stage === 1 ? 0.8 : stage === 2 ? 0.9 : 1.0;
+    // Cresce com a fase. As imagens em /petimg já têm MARGEM generosa (o dragão
+    // ocupa ~60% do quadrado), e o render é NATURAL (height:auto) dentro de uma
+    // caixa size×size — então o dragão fica sempre 100% visível, impossível cortar.
+    const sc = stage <= 0 ? 0.9 : stage === 1 ? 0.82 : stage === 2 ? 0.92 : 1.0;
     const px = Math.round(size * sc);
     return (
-      <div style={{ width: size, height: size, display: "flex", alignItems: "center", justifyContent: "center" }} aria-hidden>
+      <div style={{ width: size, height: size, display: "flex", alignItems: "center", justifyContent: "center", overflow: "visible" }} aria-hidden>
         {/* eslint-disable-next-line @next/next/no-img-element */}
         <img
-          src={`/pet/dragao-${dcolor}-${file}.png`}
+          src={`/petimg/dragao-${dcolor}-${file}.png`}
           alt=""
           draggable={false}
           style={{
-            width: px, height: px, objectFit: "contain", display: "block",
-            filter: "drop-shadow(0 5px 7px rgba(0,0,0,0.2))",
+            display: "block", width: px, height: "auto", maxHeight: size, margin: "0 auto",
+            filter: "drop-shadow(0 4px 6px rgba(0,0,0,0.16))",
           }}
         />
       </div>
