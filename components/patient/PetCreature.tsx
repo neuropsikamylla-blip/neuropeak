@@ -1,6 +1,6 @@
 "use client";
 
-import { paletteById, DEFAULT_COLOR, type PetKind, type AccessoryId, type PetColorId, type PetPalette } from "@/lib/pet";
+import { paletteById, DEFAULT_COLOR, DRAGON_HUE, type PetKind, type AccessoryId, type PetColorId, type PetPalette, type DragonPose } from "@/lib/pet";
 
 // Arte vetorial do bichinho (SVG, viewBox 120×120). Fase 0 = ovo; 1..3 =
 // filhote/jovem/adulto. A cor vem da escolha da criança. Fofos e com personalidade:
@@ -138,51 +138,6 @@ function Egg({ p }: { p: PetPalette }) {
   );
 }
 
-function Dragon({ p, mood }: { p: PetPalette; mood: Mood }) {
-  return (
-    <g>
-      <Feet color={p.dark} />
-      {/* cauda com leque na ponta */}
-      <path d="M82 90 Q112 94 112 68 Q112 56 102 60 Q109 69 94 80 Q87 85 82 90 Z" fill={p.body} />
-      <path d="M104 60 L119 54 L109 66 Z" fill={p.dark} />
-      <path d="M102 57 L112 45 L108 60 Z" fill={p.dark} />
-      {/* asas de morcego (membrana recortada) + nervuras */}
-      <path d="M40 54 Q6 36 3 58 Q13 55 17 62 Q10 60 15 71 Q22 64 28 68 Q28 58 40 60 Z" fill={p.dark} />
-      <path d="M80 54 Q114 36 117 58 Q107 55 103 62 Q110 60 105 71 Q98 64 92 68 Q92 58 80 60 Z" fill={p.dark} />
-      <g stroke="#000" strokeOpacity={0.18} strokeWidth={1.3} fill="none">
-        <path d="M36 58 L8 55" /><path d="M36 61 L15 66" /><path d="M84 58 L112 55" /><path d="M84 61 L105 66" />
-      </g>
-      {/* chifres varridos pra trás */}
-      <path d="M45 40 Q36 26 43 17 Q48 24 51 40 Z" fill={p.horn} />
-      <path d="M75 40 Q84 26 77 17 Q72 24 69 40 Z" fill={p.horn} />
-      {/* crista de espinhos */}
-      <path d="M53 35 L55 27 L58 35 Z" fill={p.dark} />
-      <path d="M58 34 L61 24 L64 34 Z" fill={p.dark} />
-      <path d="M64 35 L67 27 L69 35 Z" fill={p.dark} />
-      {/* corpo */}
-      <ellipse cx={60} cy={66} rx={36} ry={34} fill={p.body} />
-      <Shade cx={60} cy={92} rx={30} ry={13} color={p.dark} />
-      <Sheen cx={49} cy={49} rx={19} ry={12} />
-      {/* peito/barriga clara com placas */}
-      <ellipse cx={60} cy={80} rx={19} ry={17} fill={p.belly} />
-      <g stroke={p.dark} strokeWidth={1.4} fill="none" opacity={0.28}>
-        <path d="M49 84 Q60 88 71 84" /><path d="M51 91 Q60 94 69 91" /><path d="M54 96 Q60 98 66 96" />
-      </g>
-      {/* focinho + narinas */}
-      <ellipse cx={60} cy={72} rx={14} ry={9.5} fill={p.body} />
-      <Sheen cx={55} cy={69} rx={6} ry={3} />
-      <ellipse cx={55} cy={71} rx={1.6} ry={2.2} fill={p.dark} />
-      <ellipse cx={65} cy={71} rx={1.6} ry={2.2} fill={p.dark} />
-      {/* boca + dentinhos */}
-      <path d="M53 78 Q60 85 67 78" fill="none" stroke="#1f2937" strokeWidth={2.4} strokeLinecap="round" />
-      <path d="M56 79 L57.5 82.5 L54.5 80 Z" fill="#fff" stroke="#1f2937" strokeWidth={0.5} />
-      <path d="M64 79 L65.5 82.5 L62.5 80 Z" fill="#fff" stroke="#1f2937" strokeWidth={0.5} />
-      <Cheeks color={p.cheek} />
-      <Eyes mood={mood} />
-    </g>
-  );
-}
-
 function Monster({ p, mood }: { p: PetPalette; mood: Mood }) {
   return (
     <g>
@@ -214,10 +169,34 @@ function Monster({ p, mood }: { p: PetPalette; mood: Mood }) {
   );
 }
 
-export function PetCreature({ kind, stage, size = 140, accessory, color, mood = "idle" }: {
-  kind: PetKind; stage: number; size?: number; accessory?: AccessoryId; color?: PetColorId; mood?: Mood;
+export function PetCreature({ kind, stage, size = 140, accessory, color, mood = "idle", pose = "idle" }: {
+  kind: PetKind; stage: number; size?: number; accessory?: AccessoryId; color?: PetColorId; mood?: Mood; pose?: DragonPose;
 }) {
-  const p = paletteById(color ?? DEFAULT_COLOR[kind]);
+  // Dragão = arte em IMAGEM com poses (permite "movimentos" no Tamagotchi).
+  // A cor escolhida recolore por hue-rotate; o tamanho cresce com a fase.
+  if (kind === "dragao") {
+    const hue = DRAGON_HUE[color ?? "verde"] ?? 0;
+    const file = stage <= 0 ? "ovo" : mood === "sleep" ? "dormir" : pose;
+    const sc = stage <= 0 ? 0.92 : stage === 1 ? 0.84 : stage === 2 ? 1.0 : 1.12;
+    return (
+      <div style={{ width: size, height: size, position: "relative" }} aria-hidden>
+        {/* eslint-disable-next-line @next/next/no-img-element */}
+        <img
+          src={`/pet/dragao-${file}.png`}
+          alt=""
+          draggable={false}
+          style={{
+            width: "100%", height: "100%", objectFit: "contain", display: "block",
+            transform: `scale(${sc})`,
+            filter: `hue-rotate(${hue}deg) drop-shadow(0 5px 7px rgba(0,0,0,0.2))`,
+          }}
+        />
+      </div>
+    );
+  }
+
+  // Monstrinho = SVG (com a cor escolhida).
+  const p = paletteById(color ?? DEFAULT_COLOR.monstrinho);
   const common = { width: size, height: size, viewBox: "0 0 120 120", style: { display: "block", filter: "drop-shadow(0 5px 6px rgba(0,0,0,0.16))" } as const };
 
   if (stage <= 0) {
@@ -230,7 +209,7 @@ export function PetCreature({ kind, stage, size = 140, accessory, color, mood = 
     <svg {...common} aria-hidden>
       {adult && <Sparkles color={p.horn} />}
       <g transform={`translate(60 68) scale(${scale}) translate(-60 -68)`}>
-        {kind === "dragao" ? <Dragon p={p} mood={mood} /> : <Monster p={p} mood={mood} />}
+        <Monster p={p} mood={mood} />
         {adult && <Accessory id={accessory ?? "coroa"} />}
       </g>
     </svg>

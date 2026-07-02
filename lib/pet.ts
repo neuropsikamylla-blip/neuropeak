@@ -27,6 +27,13 @@ export const PET_COLORS: PetPalette[] = [
   { id: "roxo",     label: "Roxo",     body: "#a78bfa", dark: "#7c3aed", belly: "#ede9fe", horn: "#fbbf24", cheek: "#fda4af" },
 ];
 export const DEFAULT_COLOR: Record<PetKind, PetColorId> = { dragao: "verde", monstrinho: "roxo" };
+
+// O dragão usa ARTE EM IMAGEM (poses) para poder "se mexer" (Tamagotchi).
+// Poses em public/pet/dragao-<pose>.png. A cor escolhida recolore por hue-rotate.
+export type DragonPose = "idle" | "piscar" | "comer" | "dormir" | "brincar";
+export const DRAGON_HUE: Record<PetColorId, number> = {
+  verde: 0, turquesa: 35, azul: 80, roxo: 130, rosa: 180, laranja: 300,
+};
 export function petPalette(s: PetState): PetPalette {
   const id = s.color ?? (s.kind ? DEFAULT_COLOR[s.kind] : "turquesa");
   return PET_COLORS.find((c) => c.id === id) ?? PET_COLORS[0];

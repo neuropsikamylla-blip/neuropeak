@@ -59,6 +59,7 @@ export function PetHabitat({ patientId, playerName, sessionsToday }: { patientId
   const name = petDisplayName(pet);
   const pal = petPalette(pet);
   const mood = anim === "dormir" ? "sleep" : "idle";
+  const pose = anim === "alimentar" ? "comer" : anim === "brincar" ? "brincar" : "idle";
 
   return (
     <div style={{ padding: 14, minHeight: "calc(100vh - 130px)" }}>
@@ -120,7 +121,7 @@ export function PetHabitat({ patientId, playerName, sessionsToday }: { patientId
               animate={anim === "alimentar" || anim === "brincar" ? { y: [0, -18, 0, -10, 0] } : anim === "dormir" ? { rotate: [0, -4, 0] } : { y: [0, -6, 0] }}
               transition={{ duration: anim ? 1.4 : 2.6, repeat: anim ? 0 : Infinity, ease: "easeInOut" }}>
               <div style={{ width: 200, height: 12, background: "rgba(0,0,0,.14)", borderRadius: "50%", position: "absolute", bottom: 4, left: "50%", transform: "translateX(-50%)", filter: "blur(2px)" }} />
-              <PetCreature kind={pet.kind} stage={stage} size={190} accessory={pet.accessory ?? "coroa"} color={pet.color} mood={mood} />
+              <PetCreature kind={pet.kind} stage={stage} size={190} accessory={pet.accessory ?? "coroa"} color={pet.color} mood={mood} pose={pose} />
             </motion.div>
           </div>
         </div>
