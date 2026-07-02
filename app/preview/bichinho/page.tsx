@@ -21,10 +21,10 @@ const POSES: { id: DragonPose; label: string }[] = [
 export default function PreviewBichinho() {
   const [kind, setKind] = useState<PetKind>("dragao");
   const [color, setColor] = useState<PetColorId>("verde");
-  const [demo, setDemo] = useState<null | "comer" | "brincar" | "dormir">(null);
-  function play(a: "comer" | "brincar" | "dormir") {
+  const [demo, setDemo] = useState<null | "comer" | "brincar" | "dormir" | "cocegas" | "show">(null);
+  function play(a: "comer" | "brincar" | "dormir" | "cocegas" | "show") {
     setDemo(a);
-    window.setTimeout(() => setDemo(null), a === "dormir" ? 2600 : 1700);
+    window.setTimeout(() => setDemo(null), a === "show" ? 3800 : a === "dormir" ? 2600 : 1600);
   }
   const card: React.CSSProperties = {
     background: "#fff", borderRadius: 20, padding: 12, display: "flex", flexDirection: "column",
@@ -83,7 +83,7 @@ export default function PreviewBichinho() {
             </div>
           </div>
           <div style={{ display: "flex", gap: 10, padding: 12, background: "#fff" }}>
-            {([["comer", "🍎", "Alimentar"], ["brincar", "🎾", "Brincar"], ["dormir", "😴", "Dormir"]] as const).map(([a, e, l]) => (
+            {([["comer", "🍎", "Comer"], ["brincar", "🎾", "Brincar"], ["dormir", "😴", "Dormir"], ["cocegas", "😄", "Cócegas"], ["show", "✨", "Show"]] as const).map(([a, e, l]) => (
               <button key={a} onClick={() => play(a)} disabled={!!demo}
                 style={{ flex: 1, border: "2px solid #a5f3fc", background: "#ecfeff", borderRadius: 16, padding: "10px 4px",
                   cursor: demo ? "default" : "pointer", opacity: demo ? 0.6 : 1, display: "flex", flexDirection: "column", alignItems: "center", gap: 3 }}>

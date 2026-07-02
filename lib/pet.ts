@@ -131,11 +131,18 @@ export function feedPet(state: PetState): PetState {
 // o cuidado com o bichinho é RECOMPENSA por treinar, sem tirar o foco da terapia.
 export const INTERACTIONS_PER_SESSION = 2;
 
-export type PetAction = "alimentar" | "brincar" | "dormir";
+export type PetAction = "alimentar" | "brincar" | "dormir" | "cocegas" | "show";
+// Ações que GASTAM interação (recompensa por treino).
 export const PET_ACTIONS: { id: PetAction; label: string; emoji: string }[] = [
   { id: "alimentar", label: "Alimentar", emoji: "🍎" },
   { id: "brincar", label: "Brincar", emoji: "🎾" },
   { id: "dormir", label: "Dormir", emoji: "😴" },
+];
+// Agrados extras que NÃO gastam interação. Cócegas sempre; Show libera em fase
+// mais alta (conquista — o dragão voa, solta fogo e dança).
+export const FREE_ACTIONS: { id: PetAction; label: string; emoji: string; minStage: number }[] = [
+  { id: "cocegas", label: "Cócegas", emoji: "😄", minStage: 1 },
+  { id: "show", label: "Show", emoji: "✨", minStage: 2 },
 ];
 
 const tokKey = (patientId: string) => `np_pet_tok_${patientId}`;

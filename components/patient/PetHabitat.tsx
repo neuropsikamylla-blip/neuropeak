@@ -5,7 +5,7 @@ import Link from "next/link";
 import {
   loadPet, petStage, careProgress, sessionsToNextStage, petDisplayName,
   usedInteractionsToday, spendInteraction,
-  INTERACTIONS_PER_SESSION, STAGE_LABELS, PET_ACTIONS,
+  INTERACTIONS_PER_SESSION, STAGE_LABELS, PET_ACTIONS, FREE_ACTIONS,
   type PetState, type PetAction,
 } from "@/lib/pet";
 import { LivePet } from "./LivePet";
@@ -35,6 +35,13 @@ export function PetHabitat({ patientId, playerName, sessionsToday }: { patientId
     window.setTimeout(() => setAnim(null), a === "dormir" ? 2600 : 1700);
   }
 
+  // Agrados grátis (não gastam interação): cócegas e show.
+  function doFree(a: PetAction) {
+    if (anim) return;
+    setAnim(a);
+    window.setTimeout(() => setAnim(null), a === "show" ? 3800 : 1500);
+  }
+
   // Sem bichinho ainda → manda criar no Início.
   if (!pet.kind) {
     return (
@@ -54,7 +61,8 @@ export function PetHabitat({ patientId, playerName, sessionsToday }: { patientId
   const faltam = sessionsToNextStage(pet.care);
   const isAdult = stage >= 3;
   const name = petDisplayName(pet);
-  const action = anim === "alimentar" ? "comer" : anim === "brincar" ? "brincar" : anim === "dormir" ? "dormir" : null;
+  const action = anim === "alimentar" ? "comer" : anim === "brincar" ? "brincar"
+    : anim === "dormir" ? "dormir" : anim === "cocegas" ? "cocegas" : anim === "show" ? "show" : null;
 
   return (
     <div style={{ padding: 14, minHeight: "calc(100vh - 130px)" }}>
@@ -102,6 +110,26 @@ export function PetHabitat({ patientId, playerName, sessionsToday }: { patientId
                   }}>
                   <span style={{ fontSize: 26 }}>{locked ? "🔒" : a.emoji}</span>
                   <span style={{ fontSize: 11.5, fontWeight: 800, color: locked ? "#94a3b8" : "#0f766e" }}>{locked ? "amanhã" : a.label}</span>
+                </button>
+              );
+            })}
+          </div>
+          {/* Agrados grátis (não gastam interação): cócegas sempre; show em fase alta */}
+          <div style={{ display: "flex", gap: 10, marginTop: 10 }}>
+            {FREE_ACTIONS.map((a) => {
+              const locked = stage < a.minStage;
+              return (
+                <button key={a.id} onClick={() => doFree(a.id)} disabled={locked || !!anim}
+                  style={{
+                    flex: 1, border: "2px solid", borderColor: locked ? "#e2e8f0" : "#f5d0fe",
+                    background: locked ? "#f8fafc" : "#fdf4ff", borderRadius: 16, padding: "9px 4px",
+                    cursor: locked || anim ? "default" : "pointer", opacity: anim ? 0.6 : 1,
+                    display: "flex", flexDirection: "column", alignItems: "center", gap: 3, transition: "transform .1s",
+                  }}>
+                  <span style={{ fontSize: 24 }}>{locked ? "🔒" : a.emoji}</span>
+                  <span style={{ fontSize: 11.5, fontWeight: 800, color: locked ? "#94a3b8" : "#a21caf" }}>
+                    {locked ? STAGE_LABELS[a.minStage] : a.label}
+                  </span>
                 </button>
               );
             })}
