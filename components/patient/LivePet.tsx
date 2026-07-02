@@ -21,9 +21,8 @@ interface Activity {
   mood?: "idle" | "sleep";
 }
 
-// Clips quadro-a-quadro (pares já alinhados entre si):
+// Clip quadro-a-quadro do piscar (idle ↔ piscar mudam SÓ o olho → fica natural).
 const BLINK: Activity = { frames: [{ pose: "idle", ms: 2800 }, { pose: "piscar", ms: 140 }], motion: "bob", dur: 5600 };
-const FLAP: Activity = { frames: [{ pose: "voando", ms: 190 }, { pose: "batendoasas", ms: 190 }], motion: "float", dur: 3400 };
 
 // Poses que o dragão faz por conta própria — usa TODAS as imagens disponíveis.
 const ROAM: Activity[] = [
@@ -36,7 +35,8 @@ const ROAM: Activity[] = [
   { pose: "gargalhando", motion: "bob", dur: 2000 },
   { pose: "fumaca", motion: "bob", dur: 2600 },
   { pose: "acenando", motion: "bob", dur: 2200 },
-  FLAP,
+  { pose: "voando", motion: "float", dur: 3000 },
+  { pose: "batendoasas", motion: "float", dur: 2400 },
   { pose: "planando", motion: "float", dur: 2600 },
   { pose: "dancando", motion: "sway", dur: 2800 },
   { pose: "cantando", motion: "sway", dur: 2400 },
@@ -55,7 +55,7 @@ const ACTION_ACT: Record<string, Activity> = {
 
 // Show/Truque: sequência voar → soltar fogo → dançar (conquista de fase alta).
 const SHOW_SEQ: Activity[] = [
-  FLAP,
+  { pose: "voando", motion: "float", dur: 1200 },
   { pose: "fogo", motion: "bob", dur: 1200 },
   { pose: "dancando", motion: "sway", dur: 1300 },
 ];

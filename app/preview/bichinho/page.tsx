@@ -110,21 +110,14 @@ export default function PreviewBichinho() {
         {/* Animações quadro-a-quadro (isoladas) */}
         {isDragon && (
           <>
-            <h2 style={h2}>2. Animações quadro-a-quadro (o que você pediu) ✨</h2>
+            <h2 style={h2}>2. Piscar (animação quadro-a-quadro) 👀</h2>
             <div style={{ display: "flex", gap: 16, flexWrap: "wrap", marginBottom: 28 }}>
-              <div style={{ ...card, flex: 1, minWidth: 200 }}>
+              <div style={{ ...card, flex: 1, minWidth: 200, maxWidth: 260 }}>
                 <div style={{ background: scene, borderRadius: 16, padding: 6 }}>
                   <Flip size={150} srcs={[`/petimg/dragao-${color}-idle.png`, `/petimg/dragao-${color}-piscar.png`]} ms={[1800, 150]} />
                 </div>
                 <span style={{ fontSize: 13, fontWeight: 800, color: "#0f766e" }}>👀 Piscando</span>
                 <span style={{ fontSize: 11, color: "#64748b" }}>olho abre e fecha rapidinho</span>
-              </div>
-              <div style={{ ...card, flex: 1, minWidth: 200 }}>
-                <div style={{ background: scene, borderRadius: 16, padding: 6 }}>
-                  <Flip size={150} srcs={[`/petimg/dragao-${color}-voando.png`, `/petimg/dragao-${color}-batendoasas.png`]} ms={[190, 190]} />
-                </div>
-                <span style={{ fontSize: 13, fontWeight: 800, color: "#0f766e" }}>🦋 Batendo asas</span>
-                <span style={{ fontSize: 11, color: "#64748b" }}>as asas sobem e descem</span>
               </div>
             </div>
           </>
