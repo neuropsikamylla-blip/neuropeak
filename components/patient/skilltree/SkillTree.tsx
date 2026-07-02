@@ -142,15 +142,14 @@ export function SkillTree({ patientId, playerName, totalXp, sessionsToday, xpTod
                 const l = skillLevel(skills, s.id);
                 const open = isUnlocked(skills, s);
                 const dominada = open && l >= MAX_SKILL_LEVEL;
-                const pct = Math.round((l / MAX_SKILL_LEVEL) * 100);
                 const sel = selected === s.id;
                 const cls = ["node", s.master ? "master" : "", !open ? "locked" : `br-${s.branch}`, dominada ? "dominada" : "", sel ? "sel" : ""].filter(Boolean).join(" ");
                 return (
-                  <button key={s.id} className={cls} style={{ left: s.x - 46, top: s.y - 46 }} onClick={() => setSelected(s.id)} aria-label={s.name}>
-                    <div className="oring" />
-                    <div className="top" />
-                    {open && !s.master && <div className="ring" style={{ "--p": `${pct}%` } as React.CSSProperties} />}
-                    <div className="core">{open ? s.icon : "🔒"}</div>
+                  <button key={s.id} className={cls} style={{ left: s.x - 52, top: s.y - 52 }} onClick={() => setSelected(s.id)} aria-label={s.name}>
+                    <div className="glow" />
+                    {/* eslint-disable-next-line @next/next/no-img-element */}
+                    <img className="crest" src={`/skilltree/${s.id}.png`} alt="" draggable={false} />
+                    {!open && <div className="lockb">🔒</div>}
                     {!s.master && <div className="lvl">{l}/{MAX_SKILL_LEVEL}</div>}
                     <div className="name">{s.name}</div>
                   </button>
@@ -162,7 +161,13 @@ export function SkillTree({ patientId, playerName, totalXp, sessionsToday, xpTod
           {/* PANEL */}
           <aside className="glass frame panel">
             <div className="phead">
-              <div className="pl"><div className={`picon ${def.branch}`}>{selUnlocked ? def.icon : "🔒"}</div><h3>{def.name}</h3></div>
+              <div className="pl">
+                <div className="picon">
+                  {/* eslint-disable-next-line @next/next/no-img-element */}
+                  <img src={`/skilltree/${def.id}.png`} alt="" style={{ width: "100%", height: "100%", objectFit: "contain", filter: selUnlocked ? "drop-shadow(0 3px 5px rgba(0,0,0,.5))" : "grayscale(0.85) brightness(0.55)" }} />
+                </div>
+                <h3>{def.name}</h3>
+              </div>
               <div className="pr"><div className="k">NÍVEL</div><div className="v">{def.master ? (selUnlocked ? "MÁX" : "—") : `${selLvl} / ${MAX_SKILL_LEVEL}`}</div></div>
             </div>
             <p className="pdesc">{def.desc}</p>
@@ -224,7 +229,10 @@ export function SkillTree({ patientId, playerName, totalXp, sessionsToday, xpTod
           <div className="glass frame mentor" onClick={(e) => e.stopPropagation()}>
             <span className="ai">✦ Mentor</span><span className="evo">Habilidade evoluída</span>
             <div className="mh">
-              <div className={`ic ${mDef.branch}`}>{mDef.icon}</div>
+              <div className="ic">
+                {/* eslint-disable-next-line @next/next/no-img-element */}
+                <img src={`/skilltree/${mDef.id}.png`} alt="" style={{ width: "100%", height: "100%", objectFit: "contain" }} />
+              </div>
               <div><h2>{mDef.name}</h2><div className="nl">Nível {mentor.level} desbloqueado</div></div>
             </div>
             <p className="grats">Parabéns, {playerName.split(" ")[0]}! Você evoluiu <b>{mDef.name}</b>. Cada nível aqui também é um passo no seu dia real 👇</p>
@@ -278,13 +286,22 @@ const CSS = `
 .st-root .l-dim{stroke:#2a2550;stroke-width:2;stroke-dasharray:4 7}
 .st-root .dia{position:absolute;width:9px;height:9px;transform:translate(-50%,-50%) rotate(45deg);background:#e0b352;box-shadow:0 0 8px rgba(224,179,82,.8);z-index:1}
 .st-root .dia.dim{background:#3a3466;box-shadow:none}
-.st-root .node{position:absolute;width:92px;height:92px;cursor:pointer;background:none;border:none;padding:0}
+.st-root .node{position:absolute;width:104px;height:104px;cursor:pointer;background:none;border:none;padding:0}
+.st-root .node .glow{position:absolute;inset:12px;border-radius:50%;filter:blur(7px);opacity:.7;z-index:0}
+.st-root .br-blue .glow{background:radial-gradient(circle,rgba(59,130,246,.55),transparent 70%)}
+.st-root .br-purple .glow{background:radial-gradient(circle,rgba(139,92,246,.62),transparent 70%)}
+.st-root .br-gold .glow{background:radial-gradient(circle,rgba(244,196,80,.55),transparent 70%)}
+.st-root .node.dominada .glow{background:radial-gradient(circle,rgba(252,211,77,.8),transparent 72%);opacity:.95}
+.st-root .node.locked .glow{background:radial-gradient(circle,rgba(120,120,160,.22),transparent 70%);opacity:.5}
+.st-root .node .crest{position:absolute;inset:0;width:100%;height:100%;object-fit:contain;z-index:1;filter:drop-shadow(0 4px 6px rgba(0,0,0,.55))}
+.st-root .node.locked .crest{filter:grayscale(.9) brightness(.5) drop-shadow(0 4px 6px rgba(0,0,0,.5))}
+.st-root .lockb{position:absolute;top:46%;left:50%;transform:translate(-50%,-50%);font-size:22px;z-index:2;opacity:.92;filter:drop-shadow(0 1px 2px #000)}
 .st-root .node .oring{position:absolute;inset:-7px;border-radius:50%;border:1.5px solid rgba(244,196,80,.4)}
 .st-root .node .top{position:absolute;top:-11px;left:50%;transform:translateX(-50%) rotate(45deg);width:8px;height:8px;background:#e0b352;box-shadow:0 0 6px rgba(224,179,82,.9)}
 .st-root .node .ring{position:absolute;inset:0;border-radius:50%;-webkit-mask:radial-gradient(circle,transparent 44px,#000 45px);mask:radial-gradient(circle,transparent 44px,#000 45px)}
 .st-root .node .core{position:absolute;inset:6px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:34px;background:radial-gradient(circle at 40% 32%,#241d47,#120e28);border:1px solid rgba(255,255,255,.08);box-shadow:inset 0 2px 12px rgba(0,0,0,.6)}
-.st-root .node .lvl{position:absolute;bottom:2px;left:50%;transform:translateX(-50%);font-size:12px;font-weight:800;color:#eaf1ff;text-shadow:0 1px 3px #000}
-.st-root .node .name{position:absolute;left:50%;top:98px;transform:translateX(-50%);width:172px;text-align:center;font-size:12px;font-weight:800;letter-spacing:1px;text-transform:uppercase;line-height:1.2}
+.st-root .node .lvl{position:absolute;bottom:0;left:50%;transform:translateX(-50%);font-size:11px;font-weight:800;color:#fff;background:rgba(10,8,26,.82);border:1px solid rgba(244,196,80,.45);padding:0 7px;border-radius:999px;z-index:2}
+.st-root .node .name{position:absolute;left:50%;top:108px;transform:translateX(-50%);width:172px;text-align:center;font-size:12px;font-weight:800;letter-spacing:1px;text-transform:uppercase;line-height:1.2}
 .st-root .br-blue .ring{background:conic-gradient(var(--blue-l) var(--p,0),rgba(255,255,255,.06) 0)}
 .st-root .br-purple .ring{background:conic-gradient(var(--purple-l) var(--p,0),rgba(255,255,255,.06) 0)}
 .st-root .br-gold .ring{background:conic-gradient(var(--gold-l) var(--p,0),rgba(255,255,255,.06) 0)}
@@ -296,7 +313,8 @@ const CSS = `
 .st-root .br-gold .name{color:#f0cd7e}
 .st-root .node.dominada .oring{border-color:rgba(252,211,77,.95);box-shadow:0 0 24px rgba(244,196,80,.75)}
 .st-root .node.dominada .ring{background:conic-gradient(var(--gold-l) var(--p,0),rgba(255,255,255,.06) 0)}
-.st-root .node.sel{transform:scale(1.06)}
+.st-root .node.sel{transform:scale(1.12);z-index:5}
+.st-root .node.sel .glow{opacity:1;filter:blur(11px)}
 .st-root .node.sel .core{box-shadow:inset 0 2px 12px rgba(0,0,0,.6),0 0 34px rgba(139,92,246,.95),0 0 0 2px rgba(182,156,255,.6)}
 .st-root .node.master .core{font-size:40px;background:radial-gradient(circle at 40% 32%,#4a3a12,#241a06);box-shadow:inset 0 2px 12px rgba(0,0,0,.6),0 0 30px rgba(244,196,80,.75)}
 .st-root .node.master .oring{border-color:rgba(252,211,77,.8);box-shadow:0 0 26px rgba(244,196,80,.6)}
@@ -310,9 +328,7 @@ const CSS = `
 .st-root .panel{padding:20px}
 .st-root .phead{display:flex;align-items:flex-start;justify-content:space-between}
 .st-root .pl{display:flex;gap:14px;align-items:center}
-.st-root .picon{width:62px;height:62px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:28px;background:radial-gradient(circle at 40% 32%,#2a2150,#140f30);border:1.5px solid rgba(244,196,80,.4);box-shadow:0 0 26px rgba(139,92,246,.6)}
-.st-root .picon.blue{box-shadow:0 0 24px rgba(59,130,246,.55)}
-.st-root .picon.gold{box-shadow:0 0 24px rgba(244,196,80,.55)}
+.st-root .picon{width:66px;height:66px;display:flex;align-items:center;justify-content:center;flex:0 0 auto}
 .st-root .pl h3{font-family:Georgia,serif;font-size:23px;letter-spacing:1px;color:#c9b6ff}
 .st-root .pr{text-align:right}.st-root .pr .k{font-size:10px;letter-spacing:2px;color:var(--sub)}.st-root .pr .v{font-size:19px;font-weight:900;color:#fcd34d}
 .st-root .pdesc{font-size:13px;line-height:1.6;color:#cdd6f2;margin:14px 0 4px}
@@ -361,10 +377,7 @@ const CSS = `
 .st-root .mentor .ai{display:inline-flex;align-items:center;gap:7px;font-size:11px;font-weight:800;letter-spacing:1.2px;text-transform:uppercase;color:#241a06;background:linear-gradient(150deg,var(--gold-l),var(--gold-d));padding:4px 11px;border-radius:999px}
 .st-root .mentor .evo{font-size:11px;color:var(--purple-l);font-weight:800;letter-spacing:1.4px;text-transform:uppercase;float:right;margin-top:5px}
 .st-root .mentor .mh{display:flex;align-items:center;gap:15px;margin:16px 0 6px}
-.st-root .mentor .mh .ic{width:60px;height:60px;border-radius:16px;display:flex;align-items:center;justify-content:center;font-size:30px;border:1.5px solid rgba(244,196,80,.4)}
-.st-root .mentor .mh .ic.blue{background:radial-gradient(circle at 38% 30%,#2a2150,#140f30);box-shadow:0 0 24px rgba(59,130,246,.55)}
-.st-root .mentor .mh .ic.purple{background:radial-gradient(circle at 38% 30%,#2a2150,#140f30);box-shadow:0 0 26px rgba(139,92,246,.7)}
-.st-root .mentor .mh .ic.gold{background:radial-gradient(circle at 38% 30%,#2a2150,#140f30);box-shadow:0 0 24px rgba(244,196,80,.6)}
+.st-root .mentor .mh .ic{width:66px;height:66px;display:flex;align-items:center;justify-content:center;flex:0 0 auto}
 .st-root .mentor .mh h2{font-family:Georgia,serif;font-size:22px;color:#c9b6ff}
 .st-root .mentor .mh .nl{font-size:13px;color:#fcd34d;font-weight:800;margin-top:2px}
 .st-root .mentor .grats{font-size:14px;color:#d7e0f5;margin:12px 0 18px;line-height:1.5}
