@@ -1,9 +1,10 @@
 "use client";
 
 // Bichinho "vivo": anima SOZINHO (sem cliques), trocando de atividade ao longo
-// do tempo — parado, correndo, voando, dançando, acenando… Cada troca tem uma
-// transição suave (crossfade) e um movimento próprio. Uma ação (alimentar/
-// brincar/dormir) sobrepõe o roam temporariamente.
+// do tempo — parado, voando, dançando, acenando… Entre atividades há uma
+// transição suave (crossfade). DENTRO de uma atividade pode haver animação
+// quadro-a-quadro (flipbook): troca instantânea de 2 imagens bem rápido pra dar
+// vida real — ex.: piscar (olho aberto ↔ fechado) e bater asas (asa ↕).
 
 import { useEffect, useRef, useState } from "react";
 import { motion, AnimatePresence, type TargetAndTransition } from "framer-motion";
@@ -11,26 +12,35 @@ import { PetCreature } from "./PetCreature";
 import type { PetKind, PetColorId, DragonPose } from "@/lib/pet";
 
 type MotionKind = "bob" | "run" | "float" | "jump" | "sway" | "still" | "shake";
-interface Activity { pose: DragonPose; motion: MotionKind; dur: number; mood?: "idle" | "sleep" }
+interface Frame { pose: DragonPose; ms: number }
+interface Activity {
+  pose?: DragonPose;      // pose única (estática)
+  frames?: Frame[];       // OU animação quadro-a-quadro (flipbook)
+  motion: MotionKind;
+  dur: number;            // tempo até trocar de atividade
+  mood?: "idle" | "sleep";
+}
+
+// Clips quadro-a-quadro (pares já alinhados entre si):
+const BLINK: Activity = { frames: [{ pose: "idle", ms: 2800 }, { pose: "piscar", ms: 140 }], motion: "bob", dur: 5600 };
+const FLAP: Activity = { frames: [{ pose: "voando", ms: 190 }, { pose: "batendoasas", ms: 190 }], motion: "float", dur: 3400 };
 
 // Poses que o dragão faz por conta própria — usa TODAS as imagens disponíveis.
 const ROAM: Activity[] = [
-  { pose: "idle", motion: "bob", dur: 3000 },
+  BLINK,
   { pose: "respirando", motion: "bob", dur: 2600 },
-  { pose: "piscar", motion: "bob", dur: 1400 },
   { pose: "feliz", motion: "bob", dur: 2400 },
   { pose: "curioso", motion: "bob", dur: 2400 },
   { pose: "bocejando", motion: "bob", dur: 2200 },
   { pose: "rindo", motion: "bob", dur: 2200 },
-  { pose: "gargalhando", motion: "bob", dur: 2200 },
+  { pose: "gargalhando", motion: "bob", dur: 2000 },
   { pose: "fumaca", motion: "bob", dur: 2600 },
   { pose: "acenando", motion: "bob", dur: 2200 },
-  { pose: "voando", motion: "float", dur: 3200 },
-  { pose: "planando", motion: "float", dur: 2800 },
-  { pose: "batendoasas", motion: "float", dur: 2200 },
-  { pose: "dancando", motion: "sway", dur: 3000 },
-  { pose: "cantando", motion: "sway", dur: 2600 },
-  { pose: "notas", motion: "sway", dur: 2600 },
+  FLAP,
+  { pose: "planando", motion: "float", dur: 2600 },
+  { pose: "dancando", motion: "sway", dur: 2800 },
+  { pose: "cantando", motion: "sway", dur: 2400 },
+  { pose: "notas", motion: "sway", dur: 2400 },
   { pose: "comfome", motion: "bob", dur: 2200 },
   { pose: "pensando", motion: "bob", dur: 2600 },
   { pose: "fogo", motion: "bob", dur: 2400 },
@@ -45,7 +55,7 @@ const ACTION_ACT: Record<string, Activity> = {
 
 // Show/Truque: sequência voar → soltar fogo → dançar (conquista de fase alta).
 const SHOW_SEQ: Activity[] = [
-  { pose: "voando", motion: "float", dur: 1200 },
+  FLAP,
   { pose: "fogo", motion: "bob", dur: 1200 },
   { pose: "dancando", motion: "sway", dur: 1300 },
 ];
@@ -60,6 +70,31 @@ const MOTION: Record<MotionKind, TargetAndTransition> = {
   shake: { x: [0, -4, 4, -4, 4, 0], rotate: [0, -2, 2, -2, 0] },
 };
 const MOTION_DUR: Record<MotionKind, number> = { bob: 2.4, run: 0.7, float: 2.2, jump: 0.9, sway: 1.2, still: 3.2, shake: 0.5 };
+
+// Renderiza a pose atual; se a atividade for um clip, alterna os quadros com
+// troca INSTANTÂNEA (sem fade) pra parecer animação de verdade.
+function FrameView({ activity, kind, stage, color, size }: {
+  activity: Activity; kind: PetKind; stage: number; color?: PetColorId; size: number;
+}) {
+  const [fi, setFi] = useState(0);
+  const frames = activity.frames;
+  useEffect(() => {
+    setFi(0);
+    if (!frames) return;
+    let i = 0, alive = true;
+    let t: ReturnType<typeof setTimeout>;
+    const step = () => {
+      if (!alive) return;
+      i = (i + 1) % frames.length;
+      setFi(i);
+      t = setTimeout(step, frames[i].ms);
+    };
+    t = setTimeout(step, frames[0].ms);
+    return () => { alive = false; clearTimeout(t); };
+  }, [frames]);
+  const pose = frames ? frames[fi].pose : activity.pose;
+  return <PetCreature kind={kind} stage={stage} color={color} pose={pose} mood={activity.mood ?? "idle"} size={size} />;
+}
 
 export function LivePet({ kind, stage, color, size, action }: {
   kind: PetKind; stage: number; color?: PetColorId; size: number;
@@ -81,7 +116,7 @@ export function LivePet({ kind, stage, color, size, action }: {
       setIdx(n);
       timerRef.current = setTimeout(next, ROAM[n].dur);
     }
-    timerRef.current = setTimeout(next, 1800);
+    timerRef.current = setTimeout(next, ROAM[0].dur);
     return () => { alive = false; if (timerRef.current) clearTimeout(timerRef.current); };
   }, [canRoam]);
 
@@ -89,7 +124,7 @@ export function LivePet({ kind, stage, color, size, action }: {
   useEffect(() => {
     if (action !== "show") { setShowIdx(0); return; }
     let k = 0; setShowIdx(0);
-    const id = setInterval(() => { k = (k + 1) % SHOW_SEQ.length; setShowIdx(k); }, 1200);
+    const id = setInterval(() => { k = (k + 1) % SHOW_SEQ.length; setShowIdx(k); }, 1400);
     return () => clearInterval(id);
   }, [action]);
 
@@ -97,6 +132,10 @@ export function LivePet({ kind, stage, color, size, action }: {
     : action ? ACTION_ACT[action]
     : (canRoam ? ROAM[idx] : ROAM[0]);
   const m = MOTION[act.motion];
+
+  const actKey = action === "show" ? `show-${showIdx}`
+    : action ? `action-${action}`
+    : (canRoam ? `roam-${idx}` : "idle0");
 
   return (
     <motion.div
@@ -106,14 +145,14 @@ export function LivePet({ kind, stage, color, size, action }: {
     >
       <AnimatePresence initial={false}>
         <motion.div
-          key={`${act.pose}-${idx}`}
-          initial={{ opacity: 0, scale: 0.92 }}
+          key={actKey}
+          initial={{ opacity: 0, scale: 0.94 }}
           animate={{ opacity: 1, scale: 1 }}
-          exit={{ opacity: 0, scale: 0.92 }}
-          transition={{ duration: 0.35, ease: "easeInOut" }}
+          exit={{ opacity: 0, scale: 0.94 }}
+          transition={{ duration: 0.3, ease: "easeInOut" }}
           style={{ position: "absolute", inset: 0 }}
         >
-          <PetCreature kind={kind} stage={stage} color={color} pose={act.pose} mood={act.mood ?? "idle"} size={size} />
+          <FrameView activity={act} kind={kind} stage={stage} color={color} size={size} />
         </motion.div>
       </AnimatePresence>
     </motion.div>
