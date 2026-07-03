@@ -9,9 +9,9 @@ import { useEffect, useState } from "react";
 import { PetCreature } from "@/components/patient/PetCreature";
 import { LivePet } from "@/components/patient/LivePet";
 import { PetCompanion } from "@/components/patient/PetCompanion";
-import { STAGE_LABELS, DEFAULT_COLOR, colorsFor, paletteById, type PetKind, type PetColorId, type PetPose } from "@/lib/pet";
+import { STAGE_LABELS, DEFAULT_COLOR, colorsFor, paletteById, type PetKind, type PetColorId } from "@/lib/pet";
 
-const ALL_POSES: { id: PetPose; label: string }[] = [
+const ALL_POSES: { id: string; label: string }[] = [
   { id: "idle", label: "Parado" }, { id: "piscar", label: "Piscando" }, { id: "sonolento", label: "Sonolento" },
   { id: "feliz", label: "Feliz" }, { id: "rindo", label: "Rindo" }, { id: "bocejando", label: "Bocejando" },
   { id: "pensando", label: "Pensando" }, { id: "pensando2", label: "Pensando 2" }, { id: "fumaca", label: "Fumacinha" },
@@ -22,7 +22,7 @@ const ALL_POSES: { id: PetPose; label: string }[] = [
   { id: "brincar", label: "Brincando" }, { id: "comfome", label: "Com fome" }, { id: "delicia", label: "Delícia" },
   { id: "dormir", label: "Dormindo" }, { id: "travesseiro", label: "Travesseiro" }, { id: "nascendo", label: "Saindo do ovo" },
 ];
-const MONSTER_POSES: { id: PetPose; label: string }[] = [
+const MONSTER_POSES: { id: string; label: string }[] = [
   { id: "idle", label: "Parado" }, { id: "feliz", label: "Feliz" }, { id: "bocejando", label: "Bocejando" },
   { id: "fumaca", label: "Bolha" }, { id: "coracao", label: "Coração" }, { id: "dormir", label: "Dormindo" },
   { id: "nascendo", label: "Saindo do ovo" }, { id: "comer1", label: "Comendo" },
