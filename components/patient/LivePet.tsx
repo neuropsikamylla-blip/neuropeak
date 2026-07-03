@@ -22,6 +22,7 @@ const COMER_D: Activity = { frames: [{ pose: "comer1", ms: 420 }, { pose: "comer
 const FOGO_D: Activity = { frames: [{ pose: "fogo1", ms: 300 }, { pose: "fogo2", ms: 900 }, { pose: "fogo3", ms: 300 }], motion: "bob", dur: 2000 };
 const ASAS_D: Activity = { frames: [{ pose: "asas1", ms: 190 }, { pose: "asas2", ms: 190 }, { pose: "asas3", ms: 190 }], motion: "float", dur: 3200 };
 const DANCAR_D: Activity = { frames: [{ pose: "dancar1", ms: 360 }, { pose: "dancar2", ms: 360 }], motion: "sway", dur: 2600 };
+const PLANAR_D: Activity = { frames: [{ pose: "planar1", ms: 260 }, { pose: "planar2", ms: 260 }], motion: "float", dur: 2800 };
 const ROAM_D: Activity[] = [
   BLINK_D,
   { pose: "sonolento", motion: "bob", dur: 2600 },
@@ -39,7 +40,7 @@ const ROAM_D: Activity[] = [
   { pose: "correndo", motion: "run", dur: 2400 },
   { pose: "pulando", motion: "jump", dur: 2200 },
   ASAS_D,
-  { pose: "planando", motion: "float", dur: 2600 },
+  PLANAR_D,
   FOGO_D,
   COMER_D,
   DANCAR_D,
