@@ -25,9 +25,9 @@ const DANCAR_D: Activity = { frames: [{ pose: "dancar1", ms: 360 }, { pose: "dan
 const ROAM_D: Activity[] = [
   BLINK_D,
   { pose: "sonolento", motion: "bob", dur: 2600 },
-  { pose: "respirando", motion: "bob", dur: 2600 },
   { pose: "feliz", motion: "bob", dur: 2400 },
   { pose: "rindo", motion: "bob", dur: 2200 },
+  { pose: "gargalhando", motion: "bob", dur: 2200 },
   { pose: "curioso", motion: "bob", dur: 2400 },
   { pose: "pensando", motion: "bob", dur: 2400 },
   { pose: "pensando2", motion: "bob", dur: 2400 },
