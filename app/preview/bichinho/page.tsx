@@ -12,14 +12,15 @@ import { PetCompanion } from "@/components/patient/PetCompanion";
 import { STAGE_LABELS, DEFAULT_COLOR, colorsFor, paletteById, type PetKind, type PetColorId, type PetPose } from "@/lib/pet";
 
 const ALL_POSES: { id: PetPose; label: string }[] = [
-  { id: "idle", label: "Parado" }, { id: "piscar", label: "Piscando" }, { id: "feliz", label: "Feliz" },
-  { id: "respirando", label: "Respirando" }, { id: "curioso", label: "Curioso" }, { id: "bocejando", label: "Bocejando" },
-  { id: "rindo", label: "Rindo" }, { id: "gargalhando", label: "Gargalhando" }, { id: "fumaca", label: "Fumacinha" },
-  { id: "acenando", label: "Acenando" }, { id: "voando", label: "Voando" }, { id: "planando", label: "Planando" },
-  { id: "batendoasas", label: "Batendo asas" }, { id: "dancando", label: "Dançando" }, { id: "cantando", label: "Cantando" },
-  { id: "notas", label: "Notas" }, { id: "comfome", label: "Com fome" }, { id: "pensando", label: "Pensando" },
-  { id: "fogo", label: "Soltando fogo" }, { id: "comer", label: "Comendo" }, { id: "brincar", label: "Brincando" },
-  { id: "dormir", label: "Dormindo" }, { id: "travesseiro", label: "Travesseiro" },
+  { id: "idle", label: "Parado" }, { id: "piscar", label: "Piscando" }, { id: "sonolento", label: "Sonolento" },
+  { id: "feliz", label: "Feliz" }, { id: "rindo", label: "Rindo" }, { id: "bocejando", label: "Bocejando" },
+  { id: "pensando", label: "Pensando" }, { id: "pensando2", label: "Pensando 2" }, { id: "fumaca", label: "Fumacinha" },
+  { id: "bufando", label: "Bufando" }, { id: "acenando", label: "Acenando" }, { id: "coracao", label: "Coração" },
+  { id: "espreguicando", label: "Espreguiçando" }, { id: "meditando", label: "Meditando" }, { id: "correndo", label: "Correndo" },
+  { id: "pulando", label: "Pulando" }, { id: "asas1", label: "Voando" }, { id: "planando", label: "Planando" },
+  { id: "fogo2", label: "Soltando fogo" }, { id: "comer1", label: "Comendo" }, { id: "dancar1", label: "Dançando" },
+  { id: "brincar", label: "Brincando" }, { id: "comfome", label: "Com fome" }, { id: "delicia", label: "Delícia" },
+  { id: "dormir", label: "Dormindo" }, { id: "travesseiro", label: "Travesseiro" }, { id: "nascendo", label: "Saindo do ovo" },
 ];
 const MONSTER_POSES: { id: PetPose; label: string }[] = [
   { id: "idle", label: "Parado" }, { id: "feliz", label: "Feliz" }, { id: "bocejando", label: "Bocejando" },

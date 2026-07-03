@@ -41,6 +41,7 @@ const ROAM_D: Activity[] = [
   ASAS_D,
   { pose: "planando", motion: "float", dur: 2600 },
   FOGO_D,
+  COMER_D,
   DANCAR_D,
   { pose: "cantando", motion: "sway", dur: 2400 },
   { pose: "bufando", motion: "bob", dur: 2200 },
