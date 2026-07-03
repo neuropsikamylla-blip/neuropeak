@@ -20,7 +20,7 @@ interface Activity {
 const BLINK_D: Activity = { frames: [{ pose: "piscar1", ms: 2800 }, { pose: "piscar2", ms: 140 }], motion: "bob", dur: 5600 };
 const COMER_D: Activity = { frames: [{ pose: "comer1", ms: 420 }, { pose: "comer2", ms: 420 }, { pose: "comer3", ms: 420 }], motion: "bob", dur: 1900 };
 const FOGO_D: Activity = { frames: [{ pose: "fogo1", ms: 300 }, { pose: "fogo2", ms: 900 }, { pose: "fogo3", ms: 300 }], motion: "bob", dur: 2000 };
-const ASAS_D: Activity = { frames: [{ pose: "asas1", ms: 200 }, { pose: "asas2", ms: 200 }], motion: "float", dur: 3000 };
+const ASAS_D: Activity = { frames: [{ pose: "asas1", ms: 190 }, { pose: "asas2", ms: 190 }, { pose: "asas3", ms: 190 }], motion: "float", dur: 3200 };
 const DANCAR_D: Activity = { frames: [{ pose: "dancar1", ms: 360 }, { pose: "dancar2", ms: 360 }], motion: "sway", dur: 2600 };
 const ROAM_D: Activity[] = [
   BLINK_D,
