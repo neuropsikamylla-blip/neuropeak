@@ -17,36 +17,42 @@ interface Activity {
 }
 
 // ───────── DRAGÃO ─────────
-const BLINK_D: Activity = { frames: [{ pose: "idle", ms: 2800 }, { pose: "piscar", ms: 140 }], motion: "bob", dur: 5600 };
+const BLINK_D: Activity = { frames: [{ pose: "piscar1", ms: 2800 }, { pose: "piscar2", ms: 140 }], motion: "bob", dur: 5600 };
 const COMER_D: Activity = { frames: [{ pose: "comer1", ms: 420 }, { pose: "comer2", ms: 420 }, { pose: "comer3", ms: 420 }], motion: "bob", dur: 1900 };
 const FOGO_D: Activity = { frames: [{ pose: "fogo1", ms: 300 }, { pose: "fogo2", ms: 900 }, { pose: "fogo3", ms: 300 }], motion: "bob", dur: 2000 };
 const ASAS_D: Activity = { frames: [{ pose: "asas1", ms: 200 }, { pose: "asas2", ms: 200 }], motion: "float", dur: 3000 };
+const DANCAR_D: Activity = { frames: [{ pose: "dancar1", ms: 360 }, { pose: "dancar2", ms: 360 }], motion: "sway", dur: 2600 };
 const ROAM_D: Activity[] = [
   BLINK_D,
+  { pose: "sonolento", motion: "bob", dur: 2600 },
   { pose: "respirando", motion: "bob", dur: 2600 },
   { pose: "feliz", motion: "bob", dur: 2400 },
-  { pose: "curioso", motion: "bob", dur: 2400 },
-  { pose: "bocejando", motion: "bob", dur: 2200 },
   { pose: "rindo", motion: "bob", dur: 2200 },
+  { pose: "curioso", motion: "bob", dur: 2400 },
+  { pose: "pensando", motion: "bob", dur: 2400 },
+  { pose: "pensando2", motion: "bob", dur: 2400 },
+  { pose: "bocejando", motion: "bob", dur: 2200 },
   { pose: "acenando", motion: "bob", dur: 2200 },
   { pose: "coracao", motion: "bob", dur: 2400 },
+  { pose: "espreguicando", motion: "bob", dur: 2400 },
+  { pose: "meditando", motion: "bob", dur: 2800 },
+  { pose: "correndo", motion: "run", dur: 2400 },
+  { pose: "pulando", motion: "jump", dur: 2200 },
   ASAS_D,
-  { pose: "voando", motion: "float", dur: 2800 },
+  { pose: "planando", motion: "float", dur: 2600 },
+  { pose: "voando", motion: "float", dur: 2600 },
   FOGO_D,
-  { pose: "dancando", motion: "sway", dur: 2600 },
+  DANCAR_D,
   { pose: "cantando", motion: "sway", dur: 2400 },
-  { pose: "pensando", motion: "bob", dur: 2400 },
+  { pose: "bufando", motion: "bob", dur: 2200 },
+  { pose: "delicia", motion: "bob", dur: 2200 },
 ];
-const SHOW_SEQ: Activity[] = [
-  ASAS_D,
-  FOGO_D,
-  { pose: "dancando", motion: "sway", dur: 1300 },
-];
+const SHOW_SEQ: Activity[] = [ ASAS_D, FOGO_D, DANCAR_D ];
 const ACTION_D: Record<string, Activity> = {
   comer: COMER_D,
   brincar: { pose: "brincar", motion: "jump", dur: 1800 },
   dormir: { pose: "dormir", motion: "still", dur: 2800, mood: "sleep" },
-  cocegas: { pose: "gargalhando", motion: "shake", dur: 1500 },
+  cocegas: { pose: "rindo", motion: "shake", dur: 1500 },
 };
 
 // ───────── MONSTRINHO (sem asas/fogo; pisca, pula, come em quadros) ─────────
