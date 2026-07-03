@@ -9,9 +9,9 @@ import { useEffect, useState } from "react";
 import { PetCreature } from "@/components/patient/PetCreature";
 import { LivePet } from "@/components/patient/LivePet";
 import { PetCompanion } from "@/components/patient/PetCompanion";
-import { STAGE_LABELS, DEFAULT_COLOR, colorsFor, paletteById, type PetKind, type PetColorId, type DragonPose } from "@/lib/pet";
+import { STAGE_LABELS, DEFAULT_COLOR, colorsFor, paletteById, type PetKind, type PetColorId, type PetPose } from "@/lib/pet";
 
-const ALL_POSES: { id: DragonPose; label: string }[] = [
+const ALL_POSES: { id: PetPose; label: string }[] = [
   { id: "idle", label: "Parado" }, { id: "piscar", label: "Piscando" }, { id: "feliz", label: "Feliz" },
   { id: "respirando", label: "Respirando" }, { id: "curioso", label: "Curioso" }, { id: "bocejando", label: "Bocejando" },
   { id: "rindo", label: "Rindo" }, { id: "gargalhando", label: "Gargalhando" }, { id: "fumaca", label: "Fumacinha" },
@@ -20,6 +20,12 @@ const ALL_POSES: { id: DragonPose; label: string }[] = [
   { id: "notas", label: "Notas" }, { id: "comfome", label: "Com fome" }, { id: "pensando", label: "Pensando" },
   { id: "fogo", label: "Soltando fogo" }, { id: "comer", label: "Comendo" }, { id: "brincar", label: "Brincando" },
   { id: "dormir", label: "Dormindo" }, { id: "travesseiro", label: "Travesseiro" },
+];
+const MONSTER_POSES: { id: PetPose; label: string }[] = [
+  { id: "idle", label: "Parado" }, { id: "feliz", label: "Feliz" }, { id: "bocejando", label: "Bocejando" },
+  { id: "fumaca", label: "Bolha" }, { id: "coracao", label: "Coração" }, { id: "dormir", label: "Dormindo" },
+  { id: "nascendo", label: "Saindo do ovo" }, { id: "comer1", label: "Comendo" },
+  { id: "piscar1", label: "Piscar" }, { id: "pular2", label: "Pulando" },
 ];
 
 // Flipbook: alterna imagens rapidinho (mesma técnica do app) pra mostrar o

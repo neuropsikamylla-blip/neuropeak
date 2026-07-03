@@ -6,7 +6,7 @@ import type { Theme } from "@/types";
 import Link from "next/link";
 import {
   loadPet, savePet, petStage, careProgress, sessionsToNextStage, petDisplayName,
-  STAGE_LABELS, PET_NAMES, SUGGESTED_NAMES, paletteById, colorsFor,
+  STAGE_LABELS, PET_NAMES, SUGGESTED_NAMES, DEFAULT_COLOR, paletteById, colorsFor,
   type PetKind, type PetState, type PetColorId,
 } from "@/lib/pet";
 import { PetCreature } from "./PetCreature";
@@ -113,22 +113,26 @@ export function PetCompanion({ patientId, theme }: { patientId: string; theme: T
     );
   }
 
-  // ── Passo 1: conhecer o bichinho (só o dragão verde) ────────────────────
+  // ── Passo 1: escolher o bichinho (dragão ou monstrinho) ─────────────────
   if (!pet.kind) {
     return (
       <div className={`rounded-2xl p-4 ${card}`}>
-        <p className={`font-bold mb-1 ${titleC}`}>Conheça seu bichinho 🥚</p>
+        <p className={`font-bold mb-1 ${titleC}`}>Escolha seu bichinho 🥚</p>
         <p className={`text-xs mb-3 ${subC}`}>Ele cresce a cada treino que você faz!</p>
-        <button
-          onClick={() => { setPendingColor("verde"); setPendingKind("dragao"); }}
-          className="w-full rounded-2xl p-3 flex flex-col items-center gap-1 transition-all active:scale-95 bg-teal-50/60 border-2 border-teal-100 hover:border-teal-400"
-        >
-          <div className="rounded-full" style={{ background: lightBg }}>
-            <LivePet kind="dragao" stage={2} size={130} color="verde" />
-          </div>
-          <span className="text-sm font-bold text-gray-700">{PET_NAMES.dragao}</span>
-          <span className="text-xs font-semibold text-teal-600">Toque para começar →</span>
-        </button>
+        <div className="grid grid-cols-2 gap-3">
+          {(["dragao", "monstrinho"] as PetKind[]).map((k) => (
+            <button
+              key={k}
+              onClick={() => { setPendingColor(DEFAULT_COLOR[k]); setPendingKind(k); }}
+              className="rounded-2xl p-2 flex flex-col items-center gap-1 transition-all active:scale-95 bg-teal-50/60 border-2 border-teal-100 hover:border-teal-400"
+            >
+              <div className="rounded-full" style={{ background: lightBg }}>
+                <PetCreature kind={k} stage={2} size={100} color={DEFAULT_COLOR[k]} />
+              </div>
+              <span className="text-sm font-bold text-gray-700">{PET_NAMES[k]}</span>
+            </button>
+          ))}
+        </div>
       </div>
     );
   }

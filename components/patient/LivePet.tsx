@@ -1,64 +1,73 @@
 "use client";
 
 // Bichinho "vivo": anima SOZINHO (sem cliques), trocando de atividade ao longo
-// do tempo — parado, voando, dançando, acenando… Entre atividades há uma
-// transição suave (crossfade). DENTRO de uma atividade pode haver animação
-// quadro-a-quadro (flipbook): troca instantânea de 2 imagens bem rápido pra dar
-// vida real — ex.: piscar (olho aberto ↔ fechado) e bater asas (asa ↕).
+// do tempo. Entre atividades há transição suave (crossfade). DENTRO de uma
+// atividade pode haver animação quadro-a-quadro (flipbook): troca instantânea
+// de 2-3 imagens pra dar vida real — ex.: piscar, e (no monstrinho) pular/comer.
 
 import { useEffect, useRef, useState } from "react";
 import { motion, AnimatePresence, type TargetAndTransition } from "framer-motion";
 import { PetCreature } from "./PetCreature";
-import type { PetKind, PetColorId, DragonPose } from "@/lib/pet";
+import type { PetKind, PetColorId } from "@/lib/pet";
 
 type MotionKind = "bob" | "run" | "float" | "jump" | "sway" | "still" | "shake";
-interface Frame { pose: DragonPose; ms: number }
+interface Frame { pose: string; ms: number }
 interface Activity {
-  pose?: DragonPose;      // pose única (estática)
-  frames?: Frame[];       // OU animação quadro-a-quadro (flipbook)
-  motion: MotionKind;
-  dur: number;            // tempo até trocar de atividade
-  mood?: "idle" | "sleep";
+  pose?: string; frames?: Frame[]; motion: MotionKind; dur: number; mood?: "idle" | "sleep";
 }
 
-// Clip quadro-a-quadro do piscar (idle ↔ piscar mudam SÓ o olho → fica natural).
-const BLINK: Activity = { frames: [{ pose: "idle", ms: 2800 }, { pose: "piscar", ms: 140 }], motion: "bob", dur: 5600 };
-
-// Poses que o dragão faz por conta própria — usa TODAS as imagens disponíveis.
-const ROAM: Activity[] = [
-  BLINK,
+// ───────── DRAGÃO ─────────
+const BLINK_D: Activity = { frames: [{ pose: "idle", ms: 2800 }, { pose: "piscar", ms: 140 }], motion: "bob", dur: 5600 };
+const COMER_D: Activity = { frames: [{ pose: "comer1", ms: 420 }, { pose: "comer2", ms: 420 }, { pose: "comer3", ms: 420 }], motion: "bob", dur: 1900 };
+const FOGO_D: Activity = { frames: [{ pose: "fogo1", ms: 300 }, { pose: "fogo2", ms: 900 }, { pose: "fogo3", ms: 300 }], motion: "bob", dur: 2000 };
+const ASAS_D: Activity = { frames: [{ pose: "asas1", ms: 200 }, { pose: "asas2", ms: 200 }], motion: "float", dur: 3000 };
+const ROAM_D: Activity[] = [
+  BLINK_D,
   { pose: "respirando", motion: "bob", dur: 2600 },
   { pose: "feliz", motion: "bob", dur: 2400 },
   { pose: "curioso", motion: "bob", dur: 2400 },
   { pose: "bocejando", motion: "bob", dur: 2200 },
   { pose: "rindo", motion: "bob", dur: 2200 },
-  { pose: "gargalhando", motion: "bob", dur: 2000 },
-  { pose: "fumaca", motion: "bob", dur: 2600 },
   { pose: "acenando", motion: "bob", dur: 2200 },
-  { pose: "voando", motion: "float", dur: 3000 },
-  { pose: "batendoasas", motion: "float", dur: 2400 },
-  { pose: "planando", motion: "float", dur: 2600 },
-  { pose: "dancando", motion: "sway", dur: 2800 },
+  { pose: "coracao", motion: "bob", dur: 2400 },
+  ASAS_D,
+  { pose: "voando", motion: "float", dur: 2800 },
+  FOGO_D,
+  { pose: "dancando", motion: "sway", dur: 2600 },
   { pose: "cantando", motion: "sway", dur: 2400 },
-  { pose: "notas", motion: "sway", dur: 2400 },
-  { pose: "comfome", motion: "bob", dur: 2200 },
-  { pose: "pensando", motion: "bob", dur: 2600 },
-  { pose: "fogo", motion: "bob", dur: 2400 },
+  { pose: "pensando", motion: "bob", dur: 2400 },
 ];
-
-const ACTION_ACT: Record<string, Activity> = {
-  comer: { pose: "comer", motion: "bob", dur: 1800 },
+const SHOW_SEQ: Activity[] = [
+  ASAS_D,
+  FOGO_D,
+  { pose: "dancando", motion: "sway", dur: 1300 },
+];
+const ACTION_D: Record<string, Activity> = {
+  comer: COMER_D,
   brincar: { pose: "brincar", motion: "jump", dur: 1800 },
   dormir: { pose: "dormir", motion: "still", dur: 2800, mood: "sleep" },
   cocegas: { pose: "gargalhando", motion: "shake", dur: 1500 },
 };
 
-// Show/Truque: sequência voar → soltar fogo → dançar (conquista de fase alta).
-const SHOW_SEQ: Activity[] = [
-  { pose: "voando", motion: "float", dur: 1200 },
-  { pose: "fogo", motion: "bob", dur: 1200 },
-  { pose: "dancando", motion: "sway", dur: 1300 },
+// ───────── MONSTRINHO (sem asas/fogo; pisca, pula, come em quadros) ─────────
+const BLINK_M: Activity = { frames: [{ pose: "piscar1", ms: 2600 }, { pose: "piscar2", ms: 150 }], motion: "bob", dur: 5200 };
+const PULAR_M: Activity = { frames: [{ pose: "pular1", ms: 220 }, { pose: "pular2", ms: 240 }, { pose: "pular3", ms: 220 }], motion: "jump", dur: 2400 };
+const COMER_M: Activity = { frames: [{ pose: "comer1", ms: 420 }, { pose: "comer2", ms: 420 }, { pose: "comer3", ms: 420 }], motion: "bob", dur: 1900 };
+const ROAM_M: Activity[] = [
+  BLINK_M,
+  { pose: "idle", motion: "bob", dur: 3000 },
+  { pose: "feliz", motion: "bob", dur: 2400 },
+  { pose: "bocejando", motion: "bob", dur: 2200 },
+  { pose: "fumaca", motion: "bob", dur: 2600 },
+  { pose: "coracao", motion: "bob", dur: 2400 },
+  PULAR_M,
 ];
+const ACTION_M: Record<string, Activity> = {
+  comer: COMER_M,
+  brincar: PULAR_M,
+  dormir: { pose: "dormir", motion: "still", dur: 2800, mood: "sleep" },
+  cocegas: { pose: "feliz", motion: "shake", dur: 1500 },
+};
 
 const MOTION: Record<MotionKind, TargetAndTransition> = {
   bob: { y: [0, -7, 0] },
@@ -83,12 +92,7 @@ function FrameView({ activity, kind, stage, color, size }: {
     if (!frames) return;
     let i = 0, alive = true;
     let t: ReturnType<typeof setTimeout>;
-    const step = () => {
-      if (!alive) return;
-      i = (i + 1) % frames.length;
-      setFi(i);
-      t = setTimeout(step, frames[i].ms);
-    };
+    const step = () => { if (!alive) return; i = (i + 1) % frames.length; setFi(i); t = setTimeout(step, frames[i].ms); };
     t = setTimeout(step, frames[0].ms);
     return () => { alive = false; clearTimeout(t); };
   }, [frames]);
@@ -104,8 +108,10 @@ export function LivePet({ kind, stage, color, size, action }: {
   const [showIdx, setShowIdx] = useState(0);
   const timerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
-  // Só o dragão a partir do filhote "vagueia"; ovo e monstrinho ficam parados.
-  const canRoam = kind === "dragao" && stage >= 1 && !action;
+  const isMonster = kind === "monstrinho";
+  const ROAM = isMonster ? ROAM_M : ROAM_D;
+  const ACTMAP = isMonster ? ACTION_M : ACTION_D;
+  const canRoam = stage >= 1 && !action;
 
   useEffect(() => {
     if (!canRoam) { setIdx(0); return; }
@@ -118,9 +124,9 @@ export function LivePet({ kind, stage, color, size, action }: {
     }
     timerRef.current = setTimeout(next, ROAM[0].dur);
     return () => { alive = false; if (timerRef.current) clearTimeout(timerRef.current); };
-  }, [canRoam]);
+  }, [canRoam, isMonster]); // eslint-disable-line react-hooks/exhaustive-deps
 
-  // Show: cicla voar → soltar fogo → dançar enquanto durar.
+  // Show do dragão: cicla voar → fogo → dançar.
   useEffect(() => {
     if (action !== "show") { setShowIdx(0); return; }
     let k = 0; setShowIdx(0);
@@ -128,14 +134,16 @@ export function LivePet({ kind, stage, color, size, action }: {
     return () => clearInterval(id);
   }, [action]);
 
-  const act: Activity = action === "show" ? SHOW_SEQ[showIdx]
-    : action ? ACTION_ACT[action]
-    : (canRoam ? ROAM[idx] : ROAM[0]);
+  const safeIdx = idx < ROAM.length ? idx : 0;
+  const act: Activity = action === "show"
+    ? (isMonster ? PULAR_M : SHOW_SEQ[showIdx])
+    : action ? ACTMAP[action]
+    : (canRoam ? ROAM[safeIdx] : ROAM[0]);
   const m = MOTION[act.motion];
 
-  const actKey = action === "show" ? `show-${showIdx}`
+  const actKey = action === "show" ? `show-${isMonster ? 0 : showIdx}`
     : action ? `action-${action}`
-    : (canRoam ? `roam-${idx}` : "idle0");
+    : (canRoam ? `roam-${safeIdx}` : "idle0");
 
   return (
     <motion.div
@@ -145,7 +153,7 @@ export function LivePet({ kind, stage, color, size, action }: {
     >
       <AnimatePresence initial={false}>
         <motion.div
-          key={actKey}
+          key={`${kind}-${actKey}`}
           initial={{ opacity: 0, scale: 0.94 }}
           animate={{ opacity: 1, scale: 1 }}
           exit={{ opacity: 0, scale: 0.94 }}

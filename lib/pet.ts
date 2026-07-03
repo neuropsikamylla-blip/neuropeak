@@ -37,10 +37,19 @@ export type DragonPose =
   | "rindo" | "acenando" | "travesseiro" | "feliz" | "fumaca" | "gargalhando"
   | "cantando" | "comfome" | "pensando" | "notas";
 
+// Poses do monstrinho (arte em imagem, sem asas/fogo). Inclui quadros de
+// animação: comer1..3, piscar1..2, pular1..3.
+export type MonsterPose =
+  | "idle" | "feliz" | "bocejando" | "fumaca" | "coracao" | "dormir" | "nascendo"
+  | "comer1" | "comer2" | "comer3" | "piscar1" | "piscar2" | "pular1" | "pular2" | "pular3";
+
+// Qualquer pose (dragão ou monstro) — usada pelo PetCreature.
+export type PetPose = DragonPose | MonsterPose;
+
 // Opções de cor por bichinho. Dragão: verde/vinho (arte pronta). Monstrinho:
 // paleta vetorial (até virar imagem também).
 export const DRAGON_COLORS: PetColorId[] = ["verde", "vinho"];
-export const MONSTER_COLORS: PetColorId[] = ["turquesa", "azul", "verde", "laranja", "rosa", "roxo"];
+export const MONSTER_COLORS: PetColorId[] = ["roxo", "azul"];
 export function colorsFor(kind: PetKind): PetColorId[] {
   return kind === "dragao" ? DRAGON_COLORS : MONSTER_COLORS;
 }
