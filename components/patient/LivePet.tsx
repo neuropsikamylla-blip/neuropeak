@@ -86,17 +86,34 @@ const ROAM_M: Activity[] = [
   BLINK_M,
   { pose: "idle", motion: "bob", dur: 3000 },
   { pose: "feliz", motion: "bob", dur: 2400 },
-  { pose: "bocejando", motion: "bob", dur: 2200 },
-  { pose: "fumaca", motion: "bob", dur: 2600 },
   { pose: "coracao", motion: "bob", dur: 2400 },
+  { pose: "fumaca", motion: "bob", dur: 2600 },   // fazendo bolha
+  { pose: "sonolento", motion: "bob", dur: 2400 },
+  { pose: "bocejando", motion: "bob", dur: 2200 },
   PULAR_M,
+  COMER_M,
 ];
 const ACTION_M: Record<string, Activity> = {
   comer: COMER_M,
   brincar: PULAR_M,
+  voar: PULAR_M,                                   // monstro "voa" pulando
+  fogo: { pose: "coracao", motion: "bob", dur: 1800 }, // sem fogo -> manda um coração
+  piscar: { frames: [{ pose: "piscar1", ms: 260 }, { pose: "piscar2", ms: 150 }], motion: "bob", dur: 1500 },
   dormir: { pose: "dormir", motion: "still", dur: 2800, mood: "sleep" },
   cocegas: { pose: "feliz", motion: "shake", dur: 1500 },
 };
+// Ciclo do dia do monstrinho (sem travesseiro): cansa → dorme; acorda bocejando.
+const DESCANSAR_M: SeqStep[] = [
+  { pose: "sonolento", motion: "bob", ms: 1600 },
+  { pose: "bocejando", motion: "bob", ms: 1400 },
+  { pose: "dormir", motion: "still", ms: 999999, mood: "sleep" },
+];
+const ACORDAR_M: SeqStep[] = [
+  { pose: "bocejando", motion: "bob", ms: 1500 },
+  { pose: "sonolento", motion: "bob", ms: 1200 },
+  { pose: "feliz", motion: "bob", ms: 999999 },
+];
+const SEQ_M: Record<string, SeqStep[]> = { descansar: DESCANSAR_M, acordar: ACORDAR_M };
 
 const MOTION: Record<MotionKind, TargetAndTransition> = {
   bob: { y: [0, -7, 0] },
@@ -142,7 +159,8 @@ export function LivePet({ kind, stage, color, size, action }: {
   const isMonster = kind === "monstrinho";
   const ROAM = isMonster ? ROAM_M : ROAM_D;
   const ACTMAP = isMonster ? ACTION_M : ACTION_D;
-  const seq = !isMonster && action && SEQ_D[action] ? SEQ_D[action] : null;
+  const SEQMAP = isMonster ? SEQ_M : SEQ_D;
+  const seq = action && SEQMAP[action] ? SEQMAP[action] : null;
   const canRoam = stage >= 1 && !action;
 
   // Toca a sequência da jornada (descansar / acordar) passo a passo e segura no fim.

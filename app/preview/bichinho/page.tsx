@@ -29,10 +29,10 @@ const ALL_POSES: { id: string; label: string }[] = [
   { id: "dormir", label: "Dormindo" }, { id: "nascendo", label: "Saindo do ovo" },
 ];
 const MONSTER_POSES: { id: string; label: string }[] = [
-  { id: "idle", label: "Parado" }, { id: "feliz", label: "Feliz" }, { id: "bocejando", label: "Bocejando" },
-  { id: "fumaca", label: "Bolha" }, { id: "coracao", label: "Coração" }, { id: "dormir", label: "Dormindo" },
-  { id: "nascendo", label: "Saindo do ovo" }, { id: "comer1", label: "Comendo" },
-  { id: "piscar1", label: "Piscar" }, { id: "pular2", label: "Pulando" },
+  { id: "idle", label: "Parado (adulto)" }, { id: "piscar2", label: "Piscando" }, { id: "feliz", label: "Feliz" },
+  { id: "coracao", label: "Coração" }, { id: "fumaca", label: "Fazendo bolha" }, { id: "sonolento", label: "Cansado" },
+  { id: "bocejando", label: "Bocejando" }, { id: "comer1", label: "Comendo" }, { id: "pular2", label: "Pulando" },
+  { id: "dormir", label: "Dormindo" }, { id: "nascendo", label: "Saindo do ovo" },
 ];
 
 // Flipbook: alterna imagens rapidinho (mesma técnica do app) pra mostrar o
@@ -153,7 +153,7 @@ export default function PreviewBichinho() {
           <div style={{ display: "flex", gap: 8, padding: 12, background: "#fff", flexWrap: "wrap" }}>
             {(isDragon
               ? [["comer", "🍎", "Comer"], ["fogo", "🔥", "Fogo"], ["voar", "🦋", "Voar"], ["piscar", "😉", "Piscar"], ["dancar", "💃", "Dançar"], ["show", "✨", "Show"]] as const
-              : [["comer", "🍎", "Comer"], ["piscar", "😉", "Piscar"], ["show", "✨", "Pular"]] as const
+              : [["comer", "🍪", "Comer"], ["piscar", "😉", "Piscar"], ["show", "🤸", "Pular"], ["fogo", "❤️", "Coração"]] as const
             ).map(([a, e, l]) => (
               <button key={a} onClick={() => play(a)} disabled={!!demo}
                 style={{ flex: "1 0 30%", border: "2px solid #a5f3fc", background: "#ecfeff", borderRadius: 14, padding: "8px 4px",
@@ -167,27 +167,30 @@ export default function PreviewBichinho() {
         <p style={cap}>De vez em quando ele <b>pisca</b> e muda de pose sozinho. 👆 Toque nos botões pra ele obedecer.</p>
 
         {/* 3. QUADRO-A-QUADRO */}
-        {isDragon && (
-          <>
-            <h2 style={h2}>3. Cenas de movimento (animação quadro-a-quadro) 🎞️</h2>
-            <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(150px, 1fr))", gap: 12 }}>
-              {[
+        <h2 style={h2}>3. Cenas de movimento (animação quadro-a-quadro) 🎞️</h2>
+        <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(150px, 1fr))", gap: 12 }}>
+          {(isDragon
+            ? [
                 { l: "💃 Dançando", srcs: ["dancar1", "dancar2"], ms: [360, 360] },
                 { l: "🍎 Comendo", srcs: ["comer1", "comer2", "comer3"], ms: [420, 420, 420] },
                 { l: "👀 Piscando", srcs: ["piscar1", "piscar2"], ms: [1800, 150] },
                 { l: "🔥 Soltando fogo", srcs: ["fogo1", "fogo2", "fogo3"], ms: [300, 900, 300] },
                 { l: "🦋 Batendo asas", srcs: ["asas1", "asas2", "asas3"], ms: [190, 190, 190] },
-              ].map((it) => (
-                <div key={it.l} style={card}>
-                  <div style={{ background: scene, borderRadius: 16, padding: 4 }}>
-                    <Flip size={132} ms={it.ms} srcs={it.srcs.map((p) => `/petimg/dragao-${color}-${p}.png`)} />
-                  </div>
-                  <span style={{ fontSize: 12.5, fontWeight: 800, color: "#0f766e" }}>{it.l}</span>
-                </div>
-              ))}
+              ]
+            : [
+                { l: "🤸 Pulando", srcs: ["pular1", "pular2", "pular3"], ms: [220, 240, 220] },
+                { l: "🍪 Comendo", srcs: ["comer1", "comer2", "comer3"], ms: [420, 420, 420] },
+                { l: "👀 Piscando", srcs: ["piscar1", "piscar2"], ms: [1800, 150] },
+              ]
+          ).map((it) => (
+            <div key={it.l} style={card}>
+              <div style={{ background: scene, borderRadius: 16, padding: 4 }}>
+                <Flip size={132} ms={it.ms} srcs={it.srcs.map((p) => `/petimg/${isDragon ? "dragao" : "monstro"}-${color}-${p}.png`)} />
+              </div>
+              <span style={{ fontSize: 12.5, fontWeight: 800, color: "#0f766e" }}>{it.l}</span>
             </div>
-          </>
-        )}
+          ))}
+        </div>
 
         {/* 4. CICLO DO DIA */}
         <h2 style={h2}>4. O ciclo do dia — descansar no fim, acordar na volta 🌙→🌅</h2>
