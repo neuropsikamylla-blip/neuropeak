@@ -174,7 +174,7 @@ export default function PreviewBichinho() {
               {[
                 { l: "💃 Dançando", srcs: ["dancar1", "dancar2"], ms: [360, 360] },
                 { l: "🍎 Comendo", srcs: ["comer1", "comer2", "comer3"], ms: [420, 420, 420] },
-                { l: "👀 Piscando", srcs: ["idle", "piscar2"], ms: [1800, 150] },
+                { l: "👀 Piscando", srcs: ["piscar1", "piscar2"], ms: [1800, 150] },
                 { l: "🔥 Soltando fogo", srcs: ["fogo1", "fogo2", "fogo3"], ms: [300, 900, 300] },
                 { l: "🦋 Batendo asas", srcs: ["asas1", "asas2", "asas3"], ms: [190, 190, 190] },
               ].map((it) => (
