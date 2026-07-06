@@ -140,19 +140,40 @@ export function feedPet(state: PetState): PetState {
 // o cuidado com o bichinho é RECOMPENSA por treinar, sem tirar o foco da terapia.
 export const INTERACTIONS_PER_SESSION = 2;
 
-export type PetAction = "alimentar" | "brincar" | "dormir" | "cocegas" | "show";
-// Ações que GASTAM interação (recompensa por treino).
+export type PetAction = "fogo" | "voar" | "comer" | "piscar" | "dormir" | "alimentar" | "brincar" | "cocegas" | "show";
+// Interações da jornada — o paciente clica e o dragão faz a animação.
+// Liberadas por treino (recompensa). "Dormir" é tratado à parte (bota pra dormir
+// até o próximo treino).
 export const PET_ACTIONS: { id: PetAction; label: string; emoji: string }[] = [
-  { id: "alimentar", label: "Alimentar", emoji: "🍎" },
-  { id: "brincar", label: "Brincar", emoji: "🎾" },
-  { id: "dormir", label: "Dormir", emoji: "😴" },
+  { id: "fogo", label: "Soltar fogo", emoji: "🔥" },
+  { id: "voar", label: "Voar", emoji: "🦋" },
+  { id: "comer", label: "Comer", emoji: "🍎" },
+  { id: "piscar", label: "Piscar", emoji: "😉" },
 ];
-// Agrados extras que NÃO gastam interação. Cócegas sempre; Show libera em fase
-// mais alta (conquista — o dragão voa, solta fogo e dança).
-export const FREE_ACTIONS: { id: PetAction; label: string; emoji: string; minStage: number }[] = [
-  { id: "cocegas", label: "Cócegas", emoji: "😄", minStage: 1 },
-  { id: "show", label: "Show", emoji: "✨", minStage: 2 },
-];
+export const FREE_ACTIONS: { id: PetAction; label: string; emoji: string; minStage: number }[] = [];
+
+// ── Sono: o dragão dorme até o próximo treino ────────────────────────────────
+const sleepKey = (patientId: string) => `np_pet_sleep_${patientId}`;
+export type SleepState = "awake" | "sleeping" | "waking";
+/** Estado de sono: dormindo, acordando (treinou de novo) ou acordado. */
+export function petSleepState(patientId: string, care: number): SleepState {
+  if (typeof window === "undefined") return "awake";
+  try {
+    const raw = localStorage.getItem(sleepKey(patientId));
+    if (!raw) return "awake";
+    const d = JSON.parse(raw) as { sleeping?: boolean; atCare?: number };
+    if (!d.sleeping) return "awake";
+    return care > (d.atCare ?? care) ? "waking" : "sleeping";
+  } catch { return "awake"; }
+}
+export function putPetToSleep(patientId: string, care: number): void {
+  if (typeof window === "undefined") return;
+  try { localStorage.setItem(sleepKey(patientId), JSON.stringify({ sleeping: true, atCare: care })); } catch { /* */ }
+}
+export function clearPetSleep(patientId: string): void {
+  if (typeof window === "undefined") return;
+  try { localStorage.removeItem(sleepKey(patientId)); } catch { /* */ }
+}
 
 const tokKey = (patientId: string) => `np_pet_tok_${patientId}`;
 const todayStr = () => new Date().toLocaleDateString("sv");
