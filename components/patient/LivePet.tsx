@@ -53,12 +53,30 @@ const ACTION_D: Record<string, Activity> = {
   comer: COMER_D,
   fogo: FOGO_D,
   voar: ASAS_D,
+  dancar: DANCAR_D,
   piscar: { frames: [{ pose: "piscar1", ms: 260 }, { pose: "piscar2", ms: 150 }], motion: "bob", dur: 1500 },
   brincar: { pose: "brincar", motion: "jump", dur: 1800 },
   dormir: { pose: "dormir", motion: "still", dur: 2800, mood: "sleep" },
   acordando: { pose: "acordando", motion: "bob", dur: 2600 },
   cocegas: { pose: "rindo", motion: "shake", dur: 1500 },
 };
+
+// ── Sequências da jornada (poses encadeadas, uma vez, com transição suave) ─────
+// DESCANSAR (fim do treino): espreguiça → fica sonolento → dorme (segura no sono).
+// ACORDAR (volta ao treino): abraça o travesseiro → boceja → fica pensando num
+// comando (com fome), pra a criança querer interagir.
+interface SeqStep { pose: string; motion: MotionKind; ms: number; mood?: "idle" | "sleep" }
+const DESCANSAR_D: SeqStep[] = [
+  { pose: "espreguicando", motion: "bob", ms: 1600 },
+  { pose: "sonolento", motion: "bob", ms: 1500 },
+  { pose: "dormir", motion: "still", ms: 999999, mood: "sleep" },
+];
+const ACORDAR_D: SeqStep[] = [
+  { pose: "travesseiro", motion: "bob", ms: 1500 },
+  { pose: "bocejando", motion: "bob", ms: 1400 },
+  { pose: "comfome", motion: "bob", ms: 999999 },
+];
+const SEQ_D: Record<string, SeqStep[]> = { descansar: DESCANSAR_D, acordar: ACORDAR_D };
 
 // ───────── MONSTRINHO (sem asas/fogo; pisca, pula, come em quadros) ─────────
 const BLINK_M: Activity = { frames: [{ pose: "piscar1", ms: 2600 }, { pose: "piscar2", ms: 150 }], motion: "bob", dur: 5200 };
@@ -113,16 +131,32 @@ function FrameView({ activity, kind, stage, color, size }: {
 
 export function LivePet({ kind, stage, color, size, action }: {
   kind: PetKind; stage: number; color?: PetColorId; size: number;
-  action?: "comer" | "brincar" | "dormir" | "cocegas" | "show" | "fogo" | "voar" | "piscar" | "acordando" | null;
+  action?: "comer" | "brincar" | "dormir" | "cocegas" | "show" | "fogo" | "voar"
+    | "piscar" | "dancar" | "acordando" | "descansar" | "acordar" | null;
 }) {
   const [idx, setIdx] = useState(0);
   const [showIdx, setShowIdx] = useState(0);
+  const [seqIdx, setSeqIdx] = useState(0);
   const timerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
   const isMonster = kind === "monstrinho";
   const ROAM = isMonster ? ROAM_M : ROAM_D;
   const ACTMAP = isMonster ? ACTION_M : ACTION_D;
+  const seq = !isMonster && action && SEQ_D[action] ? SEQ_D[action] : null;
   const canRoam = stage >= 1 && !action;
+
+  // Toca a sequência da jornada (descansar / acordar) passo a passo e segura no fim.
+  useEffect(() => {
+    if (!seq) { setSeqIdx(0); return; }
+    let i = 0, alive = true; setSeqIdx(0);
+    let t: ReturnType<typeof setTimeout>;
+    const advance = () => {
+      if (!alive || i >= seq.length - 1) return;
+      t = setTimeout(() => { i++; setSeqIdx(i); advance(); }, seq[i].ms);
+    };
+    advance();
+    return () => { alive = false; clearTimeout(t); };
+  }, [action]); // eslint-disable-line react-hooks/exhaustive-deps
 
   useEffect(() => {
     if (!canRoam) { setIdx(0); return; }
@@ -146,13 +180,17 @@ export function LivePet({ kind, stage, color, size, action }: {
   }, [action]);
 
   const safeIdx = idx < ROAM.length ? idx : 0;
-  const act: Activity = action === "show"
+  const sStep = seq ? seq[Math.min(seqIdx, seq.length - 1)] : null;
+  const act: Activity = sStep
+    ? { pose: sStep.pose, motion: sStep.motion, dur: sStep.ms, mood: sStep.mood }
+    : action === "show"
     ? (isMonster ? PULAR_M : SHOW_SEQ[showIdx])
-    : action ? ACTMAP[action]
+    : action ? (ACTMAP[action] ?? ROAM[0]) // fallback seguro (ex.: monstro sem essa ação)
     : (canRoam ? ROAM[safeIdx] : ROAM[0]);
   const m = MOTION[act.motion];
 
-  const actKey = action === "show" ? `show-${isMonster ? 0 : showIdx}`
+  const actKey = seq ? `seq-${action}-${Math.min(seqIdx, seq.length - 1)}`
+    : action === "show" ? `show-${isMonster ? 0 : showIdx}`
     : action ? `action-${action}`
     : (canRoam ? `roam-${safeIdx}` : "idle0");
 

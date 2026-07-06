@@ -18,6 +18,7 @@ export function PetHabitat({ patientId, sessionsToday }: { patientId: string; pl
   const [used, setUsed] = useState(0);
   const [anim, setAnim] = useState<PetAction | null>(null);
   const [sleep, setSleep] = useState<SleepState>("awake");
+  const [dayAnim, setDayAnim] = useState<"descansar" | null>(null); // sequência de dormir tocando
 
   useEffect(() => {
     const p = loadPet(patientId);
@@ -26,10 +27,11 @@ export function PetHabitat({ patientId, sessionsToday }: { patientId: string; pl
     setSleep(petSleepState(patientId, p.care));
   }, [patientId]);
 
-  // Se está "acordando" (treinou de novo), mostra a animação e depois volta ao normal.
+  // Se está "acordando" (treinou de novo), toca a sequência (travesseiro→boceja→
+  // pensando) e depois volta ao normal.
   useEffect(() => {
     if (sleep !== "waking") return;
-    const t = window.setTimeout(() => { clearPetSleep(patientId); setSleep("awake"); }, 3200);
+    const t = window.setTimeout(() => { clearPetSleep(patientId); setSleep("awake"); }, 4600);
     return () => window.clearTimeout(t);
   }, [sleep, patientId]);
 
@@ -55,22 +57,24 @@ export function PetHabitat({ patientId, sessionsToday }: { patientId: string; pl
   const available = interactionsAvailable(patientId, sessionsToday);
 
   // O que o bichinho está fazendo agora.
-  const action: "comer" | "fogo" | "voar" | "piscar" | "dormir" | "acordando" | null =
-    sleep === "sleeping" ? "dormir"
-    : sleep === "waking" ? "acordando"
+  const action: "comer" | "fogo" | "voar" | "piscar" | "dormir" | "descansar" | "acordar" | null =
+    dayAnim ? "descansar"
+    : sleep === "sleeping" ? "dormir"
+    : sleep === "waking" ? "acordar"
     : (anim as "comer" | "fogo" | "voar" | "piscar" | null) ?? null;
 
   function doAction(a: PetAction) {
-    if (available < 1 || anim || sleep !== "awake") return;
+    if (available < 1 || anim || sleep !== "awake" || dayAnim) return;
     spendInteraction(patientId);
     setUsed((u) => u + 1);
     setAnim(a);
     window.setTimeout(() => setAnim(null), 2000);
   }
   function goSleep() {
-    if (anim || sleep !== "awake") return;
+    if (anim || sleep !== "awake" || dayAnim) return;
     putPetToSleep(patientId, pet!.care);
-    setSleep("sleeping");
+    setDayAnim("descansar");                                   // espreguiça → sonolento → dorme
+    window.setTimeout(() => { setDayAnim(null); setSleep("sleeping"); }, 3400);
   }
 
   const scene = "linear-gradient(180deg,#eef6ff 0%,#ffffff 62%)";
@@ -80,7 +84,7 @@ export function PetHabitat({ patientId, sessionsToday }: { patientId: string; pl
     <div style={{ padding: 14, minHeight: "calc(100vh - 130px)" }}>
       <div style={{ position: "relative", borderRadius: 26, overflow: "hidden", boxShadow: "0 18px 44px rgba(30,60,120,.18)", border: "3px solid #fff" }}>
         {/* CENA */}
-        <div style={{ position: "relative", height: 360, background: sleep === "sleeping" ? sceneNight : scene }}>
+        <div style={{ position: "relative", height: 360, background: sleep === "sleeping" || dayAnim ? sceneNight : scene, transition: "background .8s" }}>
           {/* nome */}
           <div style={{ position: "absolute", top: 12, left: 14, right: 14, display: "flex" }}>
             <div style={{ background: "#fff", borderRadius: 14, padding: "8px 14px", boxShadow: "0 4px 14px rgba(30,60,120,.1)" }}>
@@ -110,6 +114,11 @@ export function PetHabitat({ patientId, sessionsToday }: { patientId: string; pl
               <p style={{ fontWeight: 800, color: "#0f766e", fontSize: 15, margin: "0 0 4px" }}>Seu ovo está quase chocando! 🥚</p>
               <p style={{ fontSize: 13, color: "#64748b" }}>Faça <b>1 treino</b> para {name} nascer 🐣</p>
               <Link href="/inicio" style={{ display: "inline-block", marginTop: 12, background: "linear-gradient(135deg,#14b8a6,#06b6d4)", color: "#fff", fontWeight: 800, padding: "11px 22px", borderRadius: 999, textDecoration: "none", fontSize: 14 }}>Fazer um treino →</Link>
+            </div>
+          ) : dayAnim ? (
+            // ── Se ajeitando pra dormir (espreguiça → sonolento → dorme) ──
+            <div style={{ textAlign: "center", padding: "16px 8px" }}>
+              <p style={{ fontWeight: 800, color: "#6d28d9", fontSize: 15 }}>Boa noite… {name} está se ajeitando 🥱</p>
             </div>
           ) : sleep === "sleeping" ? (
             // ── Dormindo ─────────────────────────────────────────────
