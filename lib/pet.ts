@@ -64,7 +64,9 @@ export function paletteById(id: PetColorId): PetPalette {
 export const SESSIONS_PER_STAGE = 3;            // treinos por evolução
 export const MAX_STAGE = 3;                     // 0 ovo · 1 filhote · 2 jovem · 3 adulto
 export const STAGE_LABELS = ["Ovo", "Filhote", "Jovem", "Adulto"] as const;
-export const PET_NAMES: Record<PetKind, string> = { dragao: "Dragão", monstrinho: "Monstrinho" };
+export const PET_NAMES: Record<PetKind, string> = { dragao: "Flama", monstrinho: "Bolinho" };
+// Quantos treinos o ovo precisa para chocar (configurável — 1, 2, 3, 5...).
+export const HATCH_TARGET = 3;
 
 export const ACCESSORIES: { id: AccessoryId; label: string; emoji: string }[] = [
   { id: "coroa", label: "Coroa", emoji: "👑" },
@@ -74,8 +76,8 @@ export const ACCESSORIES: { id: AccessoryId; label: string; emoji: string }[] = 
 ];
 
 export const SUGGESTED_NAMES: Record<PetKind, string[]> = {
-  dragao: ["Faísca", "Flama", "Pipoca", "Brasa"],
-  monstrinho: ["Pelúcia", "Fofo", "Roxinho", "Tonton"],
+  dragao: ["Flama", "Faísca", "Pipoca", "Brasa"],
+  monstrinho: ["Bolinho", "Fofo", "Roxinho", "Tonton"],
 };
 
 /** Nome a exibir: o que a criança deu, ou o nome padrão do tipo. */
@@ -173,6 +175,14 @@ export function putPetToSleep(patientId: string, care: number): void {
 export function clearPetSleep(patientId: string): void {
   if (typeof window === "undefined") return;
   try { localStorage.removeItem(sleepKey(patientId)); } catch { /* */ }
+}
+/** Está dormindo? (independente de treinos — acordar é manual, por botão). */
+export function isPetSleeping(patientId: string): boolean {
+  if (typeof window === "undefined") return false;
+  try {
+    const raw = localStorage.getItem(sleepKey(patientId));
+    return raw ? !!(JSON.parse(raw) as { sleeping?: boolean }).sleeping : false;
+  } catch { return false; }
 }
 
 const tokKey = (patientId: string) => `np_pet_tok_${patientId}`;

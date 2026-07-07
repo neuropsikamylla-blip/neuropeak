@@ -53,9 +53,13 @@ const ACTION_D: Record<string, Activity> = {
   comer: COMER_D,
   fogo: FOGO_D,
   voar: ASAS_D,
+  baterasas: ASAS_D,
   dancar: DANCAR_D,
   piscar: { frames: [{ pose: "piscar1", ms: 260 }, { pose: "piscar2", ms: 150 }], motion: "bob", dur: 1500 },
   brincar: { pose: "brincar", motion: "jump", dur: 1800 },
+  pular: { pose: "pulando", motion: "jump", dur: 1600 },
+  carinho: { pose: "coracao", motion: "bob", dur: 1800 },
+  acenar: { pose: "acenando", motion: "bob", dur: 1800 },
   dormir: { pose: "dormir", motion: "still", dur: 2800, mood: "sleep" },
   acordando: { pose: "acordando", motion: "bob", dur: 2600 },
   cocegas: { pose: "rindo", motion: "shake", dur: 1500 },
@@ -97,8 +101,12 @@ const ROAM_M: Activity[] = [
 const ACTION_M: Record<string, Activity> = {
   comer: COMER_M,
   brincar: BRINCAR_M,                              // brinca de bola
+  pular: PULAR_M,
+  dancar: PULAR_M,                                 // sem arte de dança -> pula animado
   voar: PULAR_M,                                   // monstro "voa" pulando
   fogo: { pose: "coracao", motion: "bob", dur: 1800 }, // sem fogo -> manda um coração
+  carinho: { pose: "coracao", motion: "bob", dur: 1800 },
+  acenar: { pose: "feliz", motion: "bob", dur: 1600 },   // sem arte de aceno -> feliz
   piscar: { frames: [{ pose: "piscar1", ms: 260 }, { pose: "piscar2", ms: 150 }], motion: "bob", dur: 1500 },
   dormir: { pose: "dormir", motion: "still", dur: 2800, mood: "sleep" },
   cocegas: { pose: "feliz", motion: "shake", dur: 1500 },
@@ -151,7 +159,8 @@ function FrameView({ activity, kind, stage, color, size }: {
 export function LivePet({ kind, stage, color, size, action }: {
   kind: PetKind; stage: number; color?: PetColorId; size: number;
   action?: "comer" | "brincar" | "dormir" | "cocegas" | "show" | "fogo" | "voar"
-    | "piscar" | "dancar" | "acordando" | "descansar" | "acordar" | null;
+    | "piscar" | "dancar" | "acordando" | "descansar" | "acordar"
+    | "carinho" | "pular" | "acenar" | "baterasas" | null;
 }) {
   const [idx, setIdx] = useState(0);
   const [showIdx, setShowIdx] = useState(0);

@@ -1,50 +1,107 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import Link from "next/link";
-import { Flame, Feather, Apple, Eye, Lock, Moon, Egg, ArrowRight, Gift, type LucideIcon } from "lucide-react";
 import {
-  loadPet, petDisplayName, usedInteractionsToday, spendInteraction, interactionsAvailable,
-  petSleepState, putPetToSleep, clearPetSleep, PET_ACTIONS,
-  type PetState, type PetAction, type SleepState,
+  Apple, Gamepad2, Eye, Heart, Flame, Feather, Music2, Wind, ArrowUp, Hand,
+  Moon, Sun, Egg, ArrowRight, ChevronDown, Sparkles, type LucideIcon,
+} from "lucide-react";
+import {
+  loadPet, petDisplayName, putPetToSleep, clearPetSleep, isPetSleeping, HATCH_TARGET,
+  type PetKind, type PetState,
 } from "@/lib/pet";
 import { PetCreature } from "./PetCreature";
 import { LivePet } from "./LivePet";
 
-// Paleta infantil premium (azul/marinho/dourado — neutra, sem verde/rosa/roxo).
+// ── Paleta infantil premium (azul/marinho/dourado, neutra) ───────────────────
 const INK = "#14213D", SUB = "#667085", NAVY = "#173B78", BLUE = "#1D4ED8";
-const BORDER = "#E2E8F0", LIGHT = "#DBEAFE", LAV = "#EEF2FF", GOLD = "#E8B547";
+const BORDER = "#E2E8F0", GOLD = "#E8B547", POS_BG = "#DDF7EF", POS_TX = "#047857";
 
-// Ícones (figuras, não emoji) para cada interação.
-const ACTION_ICON: Record<string, LucideIcon> = { fogo: Flame, voar: Feather, comer: Apple, piscar: Eye };
+// ── Ações: id → rótulo, ícone e a animação correspondente no LivePet ─────────
+type ActionId =
+  | "comer" | "brincar" | "piscar" | "carinho"
+  | "fogo" | "voar" | "dancar" | "baterasas"
+  | "pular" | "fazerCoracao" | "acenar";
+const ACTIONS: Record<ActionId, { label: string; Icon: LucideIcon; live: string }> = {
+  comer:       { label: "Comer",        Icon: Apple,   live: "comer" },
+  brincar:     { label: "Brincar",      Icon: Gamepad2, live: "brincar" },
+  piscar:      { label: "Piscar",       Icon: Eye,     live: "piscar" },
+  carinho:     { label: "Carinho",      Icon: Heart,   live: "carinho" },
+  fogo:        { label: "Soltar fogo",  Icon: Flame,   live: "fogo" },
+  voar:        { label: "Voar",         Icon: Feather, live: "voar" },
+  dancar:      { label: "Dançar",       Icon: Music2,  live: "dancar" },
+  baterasas:   { label: "Bater asas",   Icon: Wind,    live: "baterasas" },
+  pular:       { label: "Pular",        Icon: ArrowUp, live: "pular" },
+  fazerCoracao:{ label: "Fazer coração",Icon: Heart,   live: "carinho" },
+  acenar:      { label: "Acenar",       Icon: Hand,    live: "acenar" },
+};
 
-// Jornada do bichinho (tema Kids):
-//  OVO  →  (1º treino)  →  NASCE  →  interações (fogo/voar/comer/piscar)
-//  liberadas por treino  →  dormir até o próximo treino  →  acorda.
+// ── Configuração por personagem (Flama = dragão, Bolinho = monstrinho) ───────
+interface PetConfig {
+  tipo: string;
+  quick: ActionId[];
+  mais: ActionId[];
+  textos: Record<string, string>; // {n} = nome do pet
+}
+const PETS: Record<PetKind, PetConfig> = {
+  dragao: {
+    tipo: "Dragão bebê",
+    quick: ["comer", "brincar", "piscar", "carinho"],
+    mais: ["fogo", "voar", "dancar", "baterasas"],
+    textos: {
+      idle: "{n} está animado para treinar.",
+      dormindo: "{n} está descansando.",
+      comer: "{n} adorou o lanche!",
+      brincar: "{n} quer brincar um pouco.",
+      piscar: "{n} te deu uma piscadinha.",
+      carinho: "{n} gostou do carinho.",
+      fogo: "{n} soltou uma chama!",
+      voar: "{n} está voando!",
+      dancar: "{n} está dançando!",
+      baterasas: "{n} abriu as asas!",
+    },
+  },
+  monstrinho: {
+    tipo: "Bichinho fofo",
+    quick: ["comer", "brincar", "piscar", "carinho"],
+    mais: ["pular", "fazerCoracao", "dancar", "acenar"],
+    textos: {
+      idle: "{n} está feliz em te ver.",
+      dormindo: "{n} está descansando.",
+      comer: "{n} adorou o lanche!",
+      brincar: "{n} quer brincar.",
+      piscar: "{n} te deu uma piscadinha.",
+      carinho: "{n} gostou do carinho.",
+      pular: "{n} pulou de alegria!",
+      fazerCoracao: "{n} mandou um coração.",
+      dancar: "{n} está dançando!",
+      acenar: "{n} está te acenando!",
+    },
+  },
+};
+
+// Nuvem decorativa (fica FORA do palco branco).
+function Cloud({ style }: { style: React.CSSProperties }) {
+  return <div style={{ position: "absolute", background: "rgba(255,255,255,0.75)", borderRadius: 999, filter: "blur(1px)", ...style }} />;
+}
+
 export function PetHabitat({ patientId, sessionsToday }: { patientId: string; playerName?: string; sessionsToday: number }) {
   const [pet, setPet] = useState<PetState | null>(null);
-  const [, setUsed] = useState(0);
-  const [anim, setAnim] = useState<PetAction | null>(null);
-  const [sleep, setSleep] = useState<SleepState>("awake");
-  const [dayAnim, setDayAnim] = useState<"descansar" | null>(null); // sequência de dormir tocando
+  const [sleeping, setSleeping] = useState(false);
+  const [acting, setActing] = useState<ActionId | null>(null);
+  const [transition, setTransition] = useState<"descansar" | "acordar" | null>(null);
+  const [showMore, setShowMore] = useState(false);
+  const timers = useRef<ReturnType<typeof setTimeout>[]>([]);
 
   useEffect(() => {
-    const p = loadPet(patientId);
-    setPet(p);
-    setUsed(usedInteractionsToday(patientId));
-    setSleep(petSleepState(patientId, p.care));
+    setPet(loadPet(patientId));
+    setSleeping(isPetSleeping(patientId));
   }, [patientId]);
-
-  // Se está "acordando" (treinou de novo), toca a sequência e depois volta ao normal.
-  useEffect(() => {
-    if (sleep !== "waking") return;
-    const t = window.setTimeout(() => { clearPetSleep(patientId); setSleep("awake"); }, 4600);
-    return () => window.clearTimeout(t);
-  }, [sleep, patientId]);
+  useEffect(() => () => { timers.current.forEach(clearTimeout); }, []);
 
   if (!pet) return null;
 
-  // Sem bichinho ainda → manda criar no Início.
+  // Sem bichinho escolhido → manda pro Início.
   if (!pet.kind) {
     return (
       <div style={{ minHeight: "calc(100vh - 130px)", display: "flex", alignItems: "center", justifyContent: "center", padding: 24 }}>
@@ -58,126 +115,196 @@ export function PetHabitat({ patientId, sessionsToday }: { patientId: string; pl
     );
   }
 
-  const name = petDisplayName(pet);
-  const born = pet.care >= 1;            // nasceu após o 1º treino
-  const displayStage = born ? 2 : 0;     // 0 = ovo; 2 = bichinho (tamanho fixo)
-  const available = interactionsAvailable(patientId, sessionsToday);
+  const kind = pet.kind;
+  const cfg = PETS[kind];
+  const nome = petDisplayName(pet);
+  const t = (k: string) => (cfg.textos[k] ?? cfg.textos.idle).replace("{n}", nome);
 
-  // O que o bichinho está fazendo agora.
-  const action: "comer" | "fogo" | "voar" | "piscar" | "dormir" | "descansar" | "acordar" | null =
-    dayAnim ? "descansar"
-    : sleep === "sleeping" ? "dormir"
-    : sleep === "waking" ? "acordar"
-    : (anim as "comer" | "fogo" | "voar" | "piscar" | null) ?? null;
+  // Incubação (configurável).
+  const feitos = pet.care;
+  const faltam = Math.max(HATCH_TARGET - feitos, 0);
+  const chocou = feitos >= HATCH_TARGET;
+  const quaseChocando = !chocou && faltam === 1;
+  const justHatched = chocou && feitos === HATCH_TARGET;
 
-  function doAction(a: PetAction) {
-    if (available < 1 || anim || sleep !== "awake" || dayAnim) return;
-    spendInteraction(patientId);
-    setUsed((u) => u + 1);
-    setAnim(a);
-    window.setTimeout(() => setAnim(null), 2000);
+  const busy = !!acting || !!transition;
+
+  // Animação atual do LivePet.
+  const liveAction = transition ? transition
+    : sleeping ? "dormir"
+    : acting ? (ACTIONS[acting].live as "comer")
+    : null;
+
+  // ── Handlers ────────────────────────────────────────────────────────────
+  function play(id: ActionId) {
+    if (sleeping || busy) return;
+    setActing(id);
+    timers.current.push(setTimeout(() => setActing(null), 2200));
   }
-  function goSleep() {
-    if (anim || sleep !== "awake" || dayAnim) return;
-    putPetToSleep(patientId, pet!.care);
-    setDayAnim("descansar");                                   // espreguiça → sonolento → dorme
-    window.setTimeout(() => { setDayAnim(null); setSleep("sleeping"); }, 3400);
+  function rest() {
+    if (busy) return;
+    setShowMore(false);
+    setTransition("descansar");                                  // se ajeita → dorme
+    timers.current.push(setTimeout(() => {
+      putPetToSleep(patientId, pet!.care); setSleeping(true); setTransition(null);
+    }, 3400));
+  }
+  function wake() {
+    if (busy) return;
+    setTransition("acordar");                                    // travesseiro → espreguiça
+    timers.current.push(setTimeout(() => {
+      clearPetSleep(patientId); setSleeping(false); setTransition(null);
+    }, 3000));
   }
 
-  // Área do bichinho: fundo BRANCO/claro (a arte já é sobre branco). Noite = azul suave.
-  const scene = "linear-gradient(180deg,#EEF2FF 0%,#FFFFFF 58%)";
-  const sceneNight = "linear-gradient(180deg,#C7D2FE 0%,#EEF2FF 62%)";
-  const night = sleep === "sleeping" || dayAnim;
+  // ── Status curto + mensagem contextual ──────────────────────────────────
+  const status =
+    !chocou ? (quaseChocando ? "Quase chocando" : "Incubando")
+    : transition === "descansar" ? "Com sono"
+    : transition === "acordar" ? "Acordando"
+    : sleeping ? "Descansando"
+    : acting ? "Animado"
+    : "Pronto para brincar";
+  const statusPositive = sleeping || status === "Pronto para brincar";
+
+  const mensagem =
+    !chocou ? (quaseChocando ? "Seu ovo está quase chocando!" : `Faltam ${faltam} treinos para ${nome} nascer`)
+    : transition === "descansar" ? `${nome} está ficando com sono...`
+    : transition === "acordar" ? `Bom dia! ${nome} está acordando.`
+    : sleeping ? t("dormindo")
+    : justHatched ? `${nome} nasceu!`
+    : acting ? t(acting)
+    : t("idle");
+
+  // ── Cena externa (lúdica) + palco interno branco ────────────────────────
+  const scene = "linear-gradient(180deg,#EAF3FF 0%,#DCEBFF 100%)";
+  const sceneNight = "linear-gradient(180deg,#C7D2FE 0%,#E4E9FF 100%)";
+  const night = sleeping || transition === "descansar";
 
   return (
     <div style={{ padding: 14, minHeight: "calc(100vh - 130px)" }}>
-      <div style={{ position: "relative", borderRadius: 26, overflow: "hidden", border: `1px solid ${BORDER}`, boxShadow: "0 14px 36px rgba(20,33,61,.10)" }}>
-        {/* CENA */}
-        <div style={{ position: "relative", height: 360, background: night ? sceneNight : scene, transition: "background .8s" }}>
-          {/* nome */}
-          <div style={{ position: "absolute", top: 12, left: 14, right: 14, display: "flex" }}>
-            <div style={{ background: "#fff", borderRadius: 14, padding: "8px 14px", border: `1px solid ${BORDER}`, boxShadow: "0 4px 14px rgba(20,33,61,.06)", display: "flex", alignItems: "center", gap: 8 }}>
-              <span style={{ fontWeight: 800, color: NAVY, fontSize: 15 }}>{name}</span>
-              {sleep === "sleeping" && <span style={{ display: "inline-flex", alignItems: "center", gap: 4, fontSize: 12, color: SUB }}><Moon size={12} /> dormindo</span>}
+      <div style={{ maxWidth: 460, margin: "0 auto", borderRadius: 28, overflow: "hidden", border: `1px solid ${BORDER}`, boxShadow: "0 16px 40px rgba(20,33,61,.10)" }}>
+
+        {/* ── CENA EXTERNA (céu, nuvens, estrelas) ─────────────────────── */}
+        <div style={{ position: "relative", background: night ? sceneNight : scene, transition: "background .8s", padding: "16px 16px 18px" }}>
+          {/* enfeites (fora do palco) */}
+          <Cloud style={{ top: 60, left: -12, width: 70, height: 22 }} />
+          <Cloud style={{ top: 96, right: -6, width: 54, height: 18 }} />
+          {night
+            ? <>
+                <Sparkles size={16} color="#FFFFFF" style={{ position: "absolute", top: 14, right: 20, opacity: .9 }} />
+                <Sparkles size={11} color="#FFFFFF" style={{ position: "absolute", top: 40, right: 54, opacity: .7 }} />
+              </>
+            : <Sparkles size={14} color={GOLD} style={{ position: "absolute", top: 16, right: 22, opacity: .9 }} />}
+
+          {/* Cabeçalho do pet: nome + tipo/fase + status */}
+          <div style={{ position: "relative", display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 12 }}>
+            <div>
+              <p style={{ fontWeight: 900, color: INK, fontSize: 20, lineHeight: 1 }}>{nome}</p>
+              <p style={{ fontSize: 12, color: NAVY, fontWeight: 700, marginTop: 3 }}>{cfg.tipo}</p>
             </div>
+            <span style={{
+              fontSize: 12, fontWeight: 800, padding: "5px 12px", borderRadius: 999,
+              background: statusPositive ? POS_BG : "#FFFFFF",
+              color: statusPositive ? POS_TX : NAVY,
+              border: `1px solid ${statusPositive ? "transparent" : BORDER}`,
+            }}>{status}</span>
           </div>
 
-          {/* bichinho / ovo */}
-          <div style={{ position: "absolute", left: 0, right: 0, bottom: 18, display: "flex", justifyContent: "center" }}>
-            <div style={{ position: "relative" }}>
-              <div style={{ width: 150, height: 14, background: "rgba(20,33,61,.10)", borderRadius: "50%", position: "absolute", bottom: 8, left: "50%", transform: "translateX(-50%)", filter: "blur(3px)" }} />
-              {born ? (
-                <LivePet kind={pet.kind} stage={displayStage} size={220} color={pet.color} action={action} />
+          {/* PALCO INTERNO BRANCO (personagem sempre sobre branco) */}
+          <div style={{
+            position: "relative", background: "#FFFFFF", borderRadius: 22, height: 300,
+            border: `1px solid ${BORDER}`, boxShadow: "inset 0 2px 14px rgba(20,33,61,.05)",
+            display: "flex", alignItems: "flex-end", justifyContent: "center", overflow: "hidden",
+          }}>
+            {/* brilho do ovo quase chocando (discreto, dentro do palco branco) */}
+            {quaseChocando && (
+              <div style={{ position: "absolute", top: "42%", left: "50%", transform: "translate(-50%,-50%)", width: 190, height: 190, borderRadius: "50%", background: `radial-gradient(circle, ${GOLD}33, transparent 70%)` }} />
+            )}
+            {/* sombra de contato */}
+            <div style={{ position: "absolute", bottom: 30, left: "50%", transform: "translateX(-50%)", width: 160, height: 16, background: "rgba(20,33,61,.10)", borderRadius: "50%", filter: "blur(4px)" }} />
+            <div style={{ position: "relative", marginBottom: 14 }}>
+              {chocou ? (
+                <LivePet kind={kind} stage={2} size={220} color={pet.color} action={liveAction} />
               ) : (
-                <PetCreature kind={pet.kind} stage={0} size={210} color={pet.color} />
+                <PetCreature kind={kind} stage={0} size={210} color={pet.color} />
               )}
             </div>
+            {/* badge discreto de treinos de hoje */}
+            {chocou && sessionsToday > 0 && (
+              <span style={{ position: "absolute", top: 12, left: 12, display: "inline-flex", alignItems: "center", gap: 5, fontSize: 11, fontWeight: 800, color: POS_TX, background: POS_BG, borderRadius: 999, padding: "4px 10px" }}>
+                Treinos hoje: {sessionsToday}
+              </span>
+            )}
+            {quaseChocando && (
+              <span style={{ position: "absolute", top: 12, right: 12, fontSize: 11, fontWeight: 800, color: "#8A6410", background: "#FBF3DC", borderRadius: 999, padding: "4px 10px", border: `1px solid ${GOLD}55` }}>
+                Quase chocando
+              </span>
+            )}
           </div>
         </div>
 
-        {/* PAINEL DE BAIXO */}
-        <div style={{ background: "#fff", padding: "14px 12px 14px" }}>
-          {!born ? (
-            // ── Fase OVO ──────────────────────────────────────────────
-            <div style={{ textAlign: "center", padding: "6px 8px" }}>
-              <p style={{ fontWeight: 800, color: NAVY, fontSize: 15, margin: "0 0 4px" }}>Seu ovo está quase chocando!</p>
-              <p style={{ fontSize: 13, color: SUB }}>Faça <b>1 treino</b> para {name} nascer.</p>
-              <Link href="/inicio" style={{ display: "inline-flex", alignItems: "center", gap: 6, marginTop: 12, background: `linear-gradient(135deg,${NAVY},${BLUE})`, color: "#fff", fontWeight: 800, padding: "11px 22px", borderRadius: 999, textDecoration: "none", fontSize: 14 }}>Fazer um treino <ArrowRight size={16} /></Link>
-            </div>
-          ) : dayAnim ? (
-            // ── Se ajeitando pra dormir (espreguiça → sonolento → dorme) ──
-            <div style={{ textAlign: "center", padding: "16px 8px" }}>
-              <p style={{ fontWeight: 800, color: NAVY, fontSize: 15 }}>Boa noite… {name} está se ajeitando</p>
-            </div>
-          ) : sleep === "sleeping" ? (
-            // ── Dormindo ─────────────────────────────────────────────
-            <div style={{ textAlign: "center", padding: "10px 8px" }}>
-              <p style={{ fontWeight: 800, color: NAVY, fontSize: 15, margin: "0 0 4px" }}>Shhh... {name} está dormindo</p>
-              <p style={{ fontSize: 13, color: SUB }}>Ele acorda quando você fizer o <b>próximo treino</b>.</p>
-              <Link href="/inicio" style={{ display: "inline-flex", alignItems: "center", gap: 6, marginTop: 12, background: `linear-gradient(135deg,${NAVY},${BLUE})`, color: "#fff", fontWeight: 800, padding: "11px 22px", borderRadius: 999, textDecoration: "none", fontSize: 14 }}>Treinar para acordar <ArrowRight size={16} /></Link>
-            </div>
-          ) : sleep === "waking" ? (
-            // ── Acordando ────────────────────────────────────────────
-            <div style={{ textAlign: "center", padding: "16px 8px" }}>
-              <p style={{ fontWeight: 800, color: NAVY, fontSize: 16 }}>Bom dia! {name} acordou!</p>
-            </div>
-          ) : (
-            // ── Acordado: interações ─────────────────────────────────
+        {/* ── PAINEL INFERIOR (mensagem + botões) ──────────────────────── */}
+        <div style={{ background: "#fff", padding: "14px 14px 18px" }}>
+          {/* Mensagem contextual */}
+          <p style={{ textAlign: "center", fontWeight: 800, color: INK, fontSize: 15, margin: "2px 0 2px" }}>{mensagem}</p>
+          {justHatched && (
+            <p style={{ textAlign: "center", fontSize: 12.5, color: SUB, marginBottom: 4 }}>Seu bichinho está pronto para crescer e evoluir com você.</p>
+          )}
+
+          {/* Botão principal dinâmico */}
+          <div style={{ marginTop: 12 }}>
+            {!chocou ? (
+              <Link href="/inicio" style={{ display: "flex", alignItems: "center", justifyContent: "center", gap: 8, height: 48, borderRadius: 16, background: `linear-gradient(135deg,${NAVY},${BLUE})`, color: "#fff", fontWeight: 800, fontSize: 15, textDecoration: "none" }}>
+                {quaseChocando ? `Ajudar ${nome} a nascer` : "Fazer um treino"} <ArrowRight size={18} />
+              </Link>
+            ) : sleeping ? (
+              <button onClick={wake} disabled={busy} className="w-full h-12 rounded-2xl text-white font-extrabold text-[15px] flex items-center justify-center gap-2 cursor-pointer transition hover:brightness-105 active:scale-[0.98] disabled:opacity-60" style={{ background: `linear-gradient(135deg,${NAVY},${BLUE})` }}>
+                <Sun size={18} /> Acordar {nome}
+              </button>
+            ) : (
+              <button onClick={rest} disabled={busy} className="w-full h-12 rounded-2xl text-white font-extrabold text-[15px] flex items-center justify-center gap-2 cursor-pointer transition hover:brightness-105 active:scale-[0.98] disabled:opacity-60" style={{ background: `linear-gradient(135deg,${NAVY},${BLUE})` }}>
+                <Moon size={18} /> Colocar para descansar
+              </button>
+            )}
+          </div>
+
+          {/* Ações rápidas + Mais ações (só quando nasceu e acordado) */}
+          {chocou && !sleeping && (
             <>
-              <div style={{ display: "flex", gap: 8 }}>
-                {PET_ACTIONS.map((a) => {
-                  const locked = available < 1;
-                  const Ic = ACTION_ICON[a.id] ?? Gift;
+              <div style={{ display: "flex", gap: 8, marginTop: 12 }}>
+                {cfg.quick.map((id) => {
+                  const { label, Icon } = ACTIONS[id];
                   return (
-                    <button key={a.id} onClick={() => doAction(a.id)} disabled={locked || !!anim}
-                      style={{
-                        flex: 1, border: "1px solid", borderColor: locked ? BORDER : LIGHT,
-                        background: locked ? "#F6F8FC" : LAV, borderRadius: 16, padding: "10px 2px",
-                        cursor: locked || anim ? "default" : "pointer", opacity: anim && !locked ? 0.6 : 1,
-                        display: "flex", flexDirection: "column", alignItems: "center", gap: 4, transition: "transform .1s",
-                      }}>
-                      {locked ? <Lock size={20} color="#94A3B8" /> : <Ic size={20} color={BLUE} />}
-                      <span style={{ fontSize: 11, fontWeight: 800, color: locked ? "#94A3B8" : NAVY }}>{a.label}</span>
+                    <button key={id} onClick={() => play(id)} disabled={busy}
+                      className="flex flex-col items-center gap-1 rounded-2xl border py-2.5 cursor-pointer transition active:scale-95 bg-[#EEF6FF] hover:bg-[#DCEBFF] border-[#E2E8F0] disabled:cursor-default"
+                      style={{ flex: 1, opacity: busy && acting !== id ? 0.5 : 1 }}>
+                      <Icon size={20} color={BLUE} />
+                      <span style={{ fontSize: 11, fontWeight: 800, color: NAVY }}>{label}</span>
                     </button>
                   );
                 })}
               </div>
-              {/* Dormir */}
-              <button onClick={goSleep} disabled={!!anim}
-                style={{ width: "100%", marginTop: 10, border: `1px solid ${BORDER}`, background: "#F6F8FC", borderRadius: 16, padding: "9px 4px",
-                  cursor: anim ? "default" : "pointer", display: "flex", alignItems: "center", justifyContent: "center", gap: 6, opacity: anim ? 0.6 : 1 }}>
-                <Moon size={17} color={NAVY} />
-                <span style={{ fontSize: 12.5, fontWeight: 800, color: NAVY }}>Colocar para dormir</span>
+
+              <button onClick={() => setShowMore((v) => !v)} className="w-full flex items-center justify-center gap-1.5 rounded-[14px] border py-2.5 cursor-pointer transition bg-[#F6F8FC] hover:bg-[#EEF6FF] border-[#E2E8F0]" style={{ marginTop: 10 }}>
+                <span style={{ fontSize: 12.5, fontWeight: 800, color: NAVY }}>Mais ações</span>
+                <ChevronDown size={16} color={NAVY} style={{ transform: showMore ? "rotate(180deg)" : "none", transition: "transform .2s" }} />
               </button>
-              <div style={{ textAlign: "center", marginTop: 12 }}>
-                {available > 0 ? (
-                  <span style={{ display: "inline-flex", alignItems: "center", gap: 6, fontSize: 12.5, fontWeight: 800, color: "#8A6410", background: "#FBF3DC", border: `1px solid ${GOLD}55`, borderRadius: 999, padding: "5px 14px" }}>
-                    <Gift size={14} color={GOLD} /> {available} {available === 1 ? "interação liberada" : "interações liberadas"} hoje
-                  </span>
-                ) : (
-                  <span style={{ fontSize: 12.5, color: SUB }}>Faça um treino para brincar com {name}!</span>
-                )}
-              </div>
+
+              {showMore && (
+                <div style={{ display: "grid", gridTemplateColumns: "repeat(4, 1fr)", gap: 8, marginTop: 8 }}>
+                  {cfg.mais.map((id) => {
+                    const { label, Icon } = ACTIONS[id];
+                    return (
+                      <button key={id} onClick={() => play(id)} disabled={busy}
+                        className="flex flex-col items-center gap-1 rounded-2xl border py-2.5 cursor-pointer transition active:scale-95 bg-[#EEF6FF] hover:bg-[#DCEBFF] border-[#E2E8F0] disabled:cursor-default" style={{ opacity: busy && acting !== id ? 0.5 : 1 }}>
+                        <Icon size={19} color={BLUE} />
+                        <span style={{ fontSize: 10.5, fontWeight: 800, color: NAVY, textAlign: "center", lineHeight: 1.1 }}>{label}</span>
+                      </button>
+                    );
+                  })}
+                </div>
+              )}
             </>
           )}
         </div>
