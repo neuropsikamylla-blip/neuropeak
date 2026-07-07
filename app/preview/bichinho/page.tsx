@@ -30,8 +30,9 @@ const ALL_POSES: { id: string; label: string }[] = [
 ];
 const MONSTER_POSES: { id: string; label: string }[] = [
   { id: "idle", label: "Parado (adulto)" }, { id: "piscar2", label: "Piscando" }, { id: "feliz", label: "Feliz" },
-  { id: "coracao", label: "Coração" }, { id: "fumaca", label: "Fazendo bolha" }, { id: "sonolento", label: "Cansado" },
-  { id: "bocejando", label: "Bocejando" }, { id: "comer1", label: "Comendo" }, { id: "pular2", label: "Pulando" },
+  { id: "coracao", label: "Coração" }, { id: "fumaca", label: "Fazendo bolha" }, { id: "brincar1", label: "Brincando" },
+  { id: "sonolento", label: "Cansado" }, { id: "bocejando", label: "Bocejando" }, { id: "travesseiro", label: "Travesseiro" },
+  { id: "espreguicando", label: "Espreguiçando" }, { id: "comer1", label: "Comendo" }, { id: "pular2", label: "Pulando" },
   { id: "dormir", label: "Dormindo" }, { id: "nascendo", label: "Saindo do ovo" },
 ];
 
@@ -53,11 +54,11 @@ function Flip({ srcs, ms, size }: { srcs: string[]; ms: number[]; size: number }
 export default function PreviewBichinho() {
   const [kind, setKind] = useState<PetKind>("dragao");
   const [color, setColor] = useState<PetColorId>("verde");
-  const [demo, setDemo] = useState<null | "comer" | "fogo" | "voar" | "piscar" | "dancar" | "show">(null);
+  const [demo, setDemo] = useState<null | "comer" | "fogo" | "voar" | "piscar" | "dancar" | "show" | "brincar">(null);
   // Ciclo do dia: acordado → descansar (dorme) → acordar (volta) → acordado…
   const [day, setDay] = useState<"acordado" | "descansar" | "dormindo" | "acordar">("acordado");
 
-  function play(a: "comer" | "fogo" | "voar" | "piscar" | "dancar" | "show") {
+  function play(a: "comer" | "fogo" | "voar" | "piscar" | "dancar" | "show" | "brincar") {
     setDemo(a);
     window.setTimeout(() => setDemo(null), a === "show" ? 3800 : 1900);
   }
@@ -153,7 +154,7 @@ export default function PreviewBichinho() {
           <div style={{ display: "flex", gap: 8, padding: 12, background: "#fff", flexWrap: "wrap" }}>
             {(isDragon
               ? [["comer", "🍎", "Comer"], ["fogo", "🔥", "Fogo"], ["voar", "🦋", "Voar"], ["piscar", "😉", "Piscar"], ["dancar", "💃", "Dançar"], ["show", "✨", "Show"]] as const
-              : [["comer", "🍪", "Comer"], ["piscar", "😉", "Piscar"], ["show", "🤸", "Pular"], ["fogo", "❤️", "Coração"]] as const
+              : [["comer", "🍪", "Comer"], ["brincar", "⚽", "Brincar"], ["piscar", "😉", "Piscar"], ["show", "🤸", "Pular"], ["fogo", "❤️", "Coração"]] as const
             ).map(([a, e, l]) => (
               <button key={a} onClick={() => play(a)} disabled={!!demo}
                 style={{ flex: "1 0 30%", border: "2px solid #a5f3fc", background: "#ecfeff", borderRadius: 14, padding: "8px 4px",
@@ -178,6 +179,7 @@ export default function PreviewBichinho() {
                 { l: "🦋 Batendo asas", srcs: ["asas1", "asas2", "asas3"], ms: [190, 190, 190] },
               ]
             : [
+                { l: "⚽ Brincando", srcs: ["brincar1", "brincar2", "brincar3"], ms: [420, 420, 460] },
                 { l: "🤸 Pulando", srcs: ["pular1", "pular2", "pular3"], ms: [220, 240, 220] },
                 { l: "🍪 Comendo", srcs: ["comer1", "comer2", "comer3"], ms: [420, 420, 420] },
                 { l: "👀 Piscando", srcs: ["piscar1", "piscar2"], ms: [1800, 150] },

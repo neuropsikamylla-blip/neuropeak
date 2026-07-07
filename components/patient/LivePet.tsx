@@ -82,6 +82,7 @@ const SEQ_D: Record<string, SeqStep[]> = { descansar: DESCANSAR_D, acordar: ACOR
 const BLINK_M: Activity = { frames: [{ pose: "piscar1", ms: 2600 }, { pose: "piscar2", ms: 150 }], motion: "bob", dur: 5200 };
 const PULAR_M: Activity = { frames: [{ pose: "pular1", ms: 220 }, { pose: "pular2", ms: 240 }, { pose: "pular3", ms: 220 }], motion: "jump", dur: 2400 };
 const COMER_M: Activity = { frames: [{ pose: "comer1", ms: 420 }, { pose: "comer2", ms: 420 }, { pose: "comer3", ms: 420 }], motion: "bob", dur: 1900 };
+const BRINCAR_M: Activity = { frames: [{ pose: "brincar1", ms: 420 }, { pose: "brincar2", ms: 420 }, { pose: "brincar3", ms: 460 }], motion: "bob", dur: 2600 }; // brinca de bola
 const ROAM_M: Activity[] = [
   BLINK_M,
   { pose: "idle", motion: "bob", dur: 3000 },
@@ -89,28 +90,29 @@ const ROAM_M: Activity[] = [
   { pose: "coracao", motion: "bob", dur: 2400 },
   { pose: "fumaca", motion: "bob", dur: 2600 },   // fazendo bolha
   { pose: "sonolento", motion: "bob", dur: 2400 },
-  { pose: "bocejando", motion: "bob", dur: 2200 },
+  BRINCAR_M,
   PULAR_M,
   COMER_M,
 ];
 const ACTION_M: Record<string, Activity> = {
   comer: COMER_M,
-  brincar: PULAR_M,
+  brincar: BRINCAR_M,                              // brinca de bola
   voar: PULAR_M,                                   // monstro "voa" pulando
   fogo: { pose: "coracao", motion: "bob", dur: 1800 }, // sem fogo -> manda um coração
   piscar: { frames: [{ pose: "piscar1", ms: 260 }, { pose: "piscar2", ms: 150 }], motion: "bob", dur: 1500 },
   dormir: { pose: "dormir", motion: "still", dur: 2800, mood: "sleep" },
   cocegas: { pose: "feliz", motion: "shake", dur: 1500 },
 };
-// Ciclo do dia do monstrinho (sem travesseiro): cansa → dorme; acorda bocejando.
+// Ciclo do dia do monstrinho: cansa → boceja → dorme; acorda abraçando o
+// travesseiro → se espreguiça → feliz.
 const DESCANSAR_M: SeqStep[] = [
   { pose: "sonolento", motion: "bob", ms: 1600 },
   { pose: "bocejando", motion: "bob", ms: 1400 },
   { pose: "dormir", motion: "still", ms: 999999, mood: "sleep" },
 ];
 const ACORDAR_M: SeqStep[] = [
-  { pose: "bocejando", motion: "bob", ms: 1500 },
-  { pose: "sonolento", motion: "bob", ms: 1200 },
+  { pose: "travesseiro", motion: "bob", ms: 1500 },
+  { pose: "espreguicando", motion: "bob", ms: 1400 },
   { pose: "feliz", motion: "bob", ms: 999999 },
 ];
 const SEQ_M: Record<string, SeqStep[]> = { descansar: DESCANSAR_M, acordar: ACORDAR_M };
