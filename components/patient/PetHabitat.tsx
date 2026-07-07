@@ -167,13 +167,15 @@ export function PetHabitat({ patientId, sessionsToday }: { patientId: string; pl
     : "Pronto para brincar";
   const statusPositive = sleeping || status === "Pronto para brincar";
 
+  const faltamTxt = faltam === 1 ? `Falta 1 treino para ${nome} nascer` : `Faltam ${faltam} treinos para ${nome} nascer`;
   const mensagem =
-    !chocou ? (quaseChocando ? "Seu ovo está quase chocando!" : `Faltam ${faltam} treinos para ${nome} nascer`)
+    !chocou ? (quaseChocando ? "Seu ovo está quase chocando!" : faltamTxt)
     : transition === "descansar" ? `${nome} está ficando com sono...`
     : transition === "acordar" ? `Bom dia! ${nome} está acordando.`
     : sleeping ? t("dormindo")
     : justHatched ? `${nome} nasceu!`
     : acting ? t(acting)
+    : sessionsToday > 0 ? "Você concluiu os treinos de hoje."
     : t("idle");
 
   // ── Cena externa (lúdica) + palco interno branco ────────────────────────
@@ -264,10 +266,16 @@ export function PetHabitat({ patientId, sessionsToday }: { patientId: string; pl
               <button onClick={wake} disabled={busy} className="w-full h-12 rounded-2xl text-white font-extrabold text-[15px] flex items-center justify-center gap-2 cursor-pointer transition hover:brightness-105 active:scale-[0.98] disabled:opacity-60" style={{ background: `linear-gradient(135deg,${NAVY},${BLUE})` }}>
                 <Sun size={18} /> Acordar {nome}
               </button>
-            ) : (
+            ) : sessionsToday > 0 ? (
+              // Descansar só é liberado depois de treinar hoje.
               <button onClick={rest} disabled={busy} className="w-full h-12 rounded-2xl text-white font-extrabold text-[15px] flex items-center justify-center gap-2 cursor-pointer transition hover:brightness-105 active:scale-[0.98] disabled:opacity-60" style={{ background: `linear-gradient(135deg,${NAVY},${BLUE})` }}>
                 <Moon size={18} /> Colocar para descansar
               </button>
+            ) : (
+              // Ainda não treinou hoje → incentiva o treino.
+              <Link href="/inicio" style={{ display: "flex", alignItems: "center", justifyContent: "center", gap: 8, height: 48, borderRadius: 16, background: `linear-gradient(135deg,${NAVY},${BLUE})`, color: "#fff", fontWeight: 800, fontSize: 15, textDecoration: "none" }}>
+                Fazer um treino <ArrowRight size={18} />
+              </Link>
             )}
           </div>
 
