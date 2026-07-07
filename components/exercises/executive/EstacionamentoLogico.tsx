@@ -440,6 +440,10 @@ export function EstacionamentoLogico({ difficulty, theme: _theme, onComplete }: 
         backgroundSize: "cover",
         backgroundPosition: "center",
         backgroundColor: "#23262e",
+        // Sem seleção de texto/realce ao arrastar (evita o tabuleiro "ficar azul").
+        userSelect: "none",
+        WebkitUserSelect: "none",
+        WebkitTapHighlightColor: "transparent",
       }}
     >
       {/* Instruction — centered, above the board */}
