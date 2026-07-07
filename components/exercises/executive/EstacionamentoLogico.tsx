@@ -9,14 +9,21 @@ import { LEVELS_BY_DIFFICULTY, DIFFICULTIES } from "@/lib/parking-levels";
 import type { Level } from "@/types/parking";
 import type { ExerciseResult, Theme } from "@/types";
 
-// Sorteia uma fase da dificuldade disponível mais próxima do alvo (idealMoves).
-// `avoid` evita repetir a fase atual (não cair de novo na mesma ao avançar).
-function pickLevel(targetDiff: number, avoid?: Level | null): { level: Level; diff: number } {
-  const diff = DIFFICULTIES.reduce((best, d) =>
-    Math.abs(d - targetDiff) < Math.abs(best - targetDiff) ? d : best, DIFFICULTIES[0]);
-  const arr = LEVELS_BY_DIFFICULTY[diff];
-  const pool = avoid && arr.length > 1 ? arr.filter(l => l !== avoid) : arr;
-  return { level: pool[Math.floor(Math.random() * pool.length)], diff };
+// Dificuldades ordenadas por proximidade do alvo (empate → menor primeiro).
+function orderedDiffs(target: number): number[] {
+  return [...DIFFICULTIES].sort((a, b) => Math.abs(a - target) - Math.abs(b - target) || a - b);
+}
+// Sorteia uma fase perto do alvo, NUNCA repetindo as fases recentes (`recent`).
+// Se a dificuldade-alvo só tem fases já vistas, sobe/desce pra dificuldade
+// vizinha com fase inédita — garante variedade mesmo nas dificuldades de 1 fase.
+function pickLevel(targetDiff: number, recent: Level[] = []): { level: Level; diff: number } {
+  for (const d of orderedDiffs(targetDiff)) {
+    const pool = LEVELS_BY_DIFFICULTY[d].filter(l => !recent.includes(l));
+    if (pool.length) return { level: pool[Math.floor(Math.random() * pool.length)], diff: d };
+  }
+  const d = orderedDiffs(targetDiff)[0];
+  const arr = LEVELS_BY_DIFFICULTY[d];
+  return { level: arr[Math.floor(Math.random() * arr.length)], diff: d };
 }
 function stepDiff(cur: number, dir: 1 | -1): number {
   const i = DIFFICULTIES.indexOf(cur);
@@ -39,6 +46,7 @@ interface Car {
 interface DragState {
   carId: string; axis: "horizontal" | "vertical";
   startPx: number; startPos: number; currentPos: number;
+  min: number; max: number;   // até onde pode deslizar sem bater (trava como parede)
 }
 
 
@@ -80,6 +88,28 @@ function canMove(cars: Car[], carId: string, newPos: number): boolean {
 function isWin(cars: Car[]): boolean {
   const t = cars.find(c => c.id === "target");
   return !!t && t.col + t.len >= GRID;
+}
+
+// Intervalo contíguo [min,max] de posições que o carro alcança deslizando na
+// sua pista SEM sobrepor outro carro. É o que faz o carro "bater na parede":
+// ele para exatamente antes do próximo carro, dos dois lados.
+function reachRange(cars: Car[], carId: string): { min: number; max: number } {
+  const car = cars.find(c => c.id === carId)!;
+  const g = buildGrid(cars.filter(c => c.id !== carId));
+  if (car.orientation === "horizontal") {
+    const r = car.row;
+    let min = 0, max = GRID - car.len;
+    for (let col = car.col - 1; col >= 0; col--) { if (g[r][col]) { min = col + 1; break; } }
+    for (let col = car.col + car.len; col < GRID; col++) { if (g[r][col]) { max = col - car.len; break; } }
+    // Carro-alvo: se a pista está livre até a borda, deixa deslizar pra fora (saída).
+    if (car.id === "target" && max === GRID - car.len) max = GRID - car.len + 1;
+    return { min, max };
+  }
+  const c = car.col;
+  let min = 0, max = GRID - car.len;
+  for (let row = car.row - 1; row >= 0; row--) { if (g[row][c]) { min = row + 1; break; } }
+  for (let row = car.row + car.len; row < GRID; row++) { if (g[row][c]) { max = row - car.len; break; } }
+  return { min, max };
 }
 
 // ── Top-view vehicle (PNG transparente) ──────────────────────────
@@ -233,9 +263,11 @@ export function EstacionamentoLogico({ difficulty, theme: _theme, onComplete }: 
   const reachedRef  = useRef(initRef.current.diff);
   const statsRef    = useRef({ solved: 0, optimal: 0 });
   const levelSeqRef = useRef(0);
+  const recentRef   = useRef<Level[]>([initRef.current.level]); // fases recentes (não repetir)
 
   const [currentLevel, setCurrentLevel] = useState<Level>(initRef.current.level);
   const [cars, setCars]         = useState<Car[]>(() => initRef.current!.level.cars.map(c => ({ ...c })));
+  const carsRef = useRef(cars); carsRef.current = cars;         // estado atual p/ colisão no arraste
   const [moves, setMoves]       = useState(0);
   const [history, setHistory]   = useState<Car[][]>([]);
   const [won, setWon]           = useState(false);
@@ -254,6 +286,7 @@ export function EstacionamentoLogico({ difficulty, theme: _theme, onComplete }: 
 
   const loadLevel = useCallback((level: Level) => {
     levelSeqRef.current++;
+    recentRef.current = [level, ...recentRef.current.filter(l => l !== level)].slice(0, 6);
     setCurrentLevel(level);
     setCars(level.cars.map(c => ({ ...c })));
     setMoves(0); setHistory([]); setWon(false);
@@ -272,21 +305,25 @@ export function EstacionamentoLogico({ difficulty, theme: _theme, onComplete }: 
     });
   }, [finishTimer, elapsedSec, onComplete]);
 
-  // Resolveu a fase. optimal = no nº ideal de movimentos. "Musculação": 2 ótimas
-  // seguidas → sobe a dificuldade; 2 não-ótimas → desce. Roda até ~7 min.
+  // Resolveu a fase. optimal = no nº ideal de movimentos. Progressão clara:
+  // cada acerto ÓTIMO sobe 1 dificuldade; 2 não-ótimas seguidas descem 1. Sempre
+  // carrega uma fase INÉDITA (nunca uma das recentes). Roda até ~7 min.
   const nextLevel = useCallback((optimal: boolean) => {
     statsRef.current.solved++;
     if (optimal) {
       statsRef.current.optimal++;
-      streakRef.current = Math.max(0, streakRef.current) + 1;
-      if (streakRef.current >= 2) { streakRef.current = 0; curDiffRef.current = stepDiff(curDiffRef.current, 1); reachedRef.current = Math.max(reachedRef.current, curDiffRef.current); }
+      streakRef.current = 0;
+      curDiffRef.current = stepDiff(curDiffRef.current, 1);
     } else {
-      streakRef.current = Math.min(0, streakRef.current) - 1;
+      streakRef.current -= 1;
       if (streakRef.current <= -2) { streakRef.current = 0; curDiffRef.current = stepDiff(curDiffRef.current, -1); }
     }
     if (isTimeUp()) { completeSession(); return; }
-    loadLevel(pickLevel(curDiffRef.current, currentLevel).level);   // nunca repete a fase atual
-  }, [isTimeUp, completeSession, loadLevel, currentLevel]);
+    const picked = pickLevel(curDiffRef.current, recentRef.current);
+    curDiffRef.current = picked.diff;
+    reachedRef.current = Math.max(reachedRef.current, picked.diff);
+    loadLevel(picked.level);
+  }, [isTimeUp, completeSession, loadLevel]);
 
   const commitMove = useCallback((carId: string, newPos: number) => {
     setCars(prev => {
@@ -308,23 +345,25 @@ export function EstacionamentoLogico({ difficulty, theme: _theme, onComplete }: 
     if (won) return;
     e.currentTarget.setPointerCapture(e.pointerId);
     const pos = car.orientation === "horizontal" ? car.col : car.row;
+    const { min, max } = reachRange(carsRef.current, car.id);   // trava nos carros vizinhos
     dragRef.current = {
       carId: car.id, axis: car.orientation,
       startPx: car.orientation === "horizontal" ? e.clientX : e.clientY,
-      startPos: pos, currentPos: pos,
+      startPos: pos, currentPos: pos, min, max,
     };
     setDragPrev({ id: car.id, pos });
   }, [won]);
 
+  // Arraste CONTÍNUO: o carro segue o dedo (posição fracionária, sem pulos) e
+  // trava exatamente antes do próximo carro (min/max) — bate como parede, dos
+  // dois lados. Vai pra frente e pra trás livremente dentro do espaço livre.
   const onPtrMove = useCallback((e: React.PointerEvent, car: Car) => {
     const d = dragRef.current;
     if (!d || d.carId !== car.id || !boardRef.current) return;
-    const rect = boardRef.current.getBoundingClientRect();
-    const cpx  = rect.width / GRID;
-    const px   = d.axis === "horizontal" ? e.clientX : e.clientY;
-    const delta = Math.round((px - d.startPx) / cpx);
-    const maxPos = car.id === "target" ? GRID - car.len + 1 : GRID - car.len;
-    d.currentPos = Math.max(0, Math.min(maxPos, d.startPos + delta));
+    const cpx = boardRef.current.getBoundingClientRect().width / GRID;
+    const px  = d.axis === "horizontal" ? e.clientX : e.clientY;
+    const raw = d.startPos + (px - d.startPx) / cpx;
+    d.currentPos = Math.max(d.min, Math.min(d.max, raw));
     setDragPrev({ id: car.id, pos: d.currentPos });
   }, []);
 
@@ -332,8 +371,9 @@ export function EstacionamentoLogico({ difficulty, theme: _theme, onComplete }: 
     const d = dragRef.current;
     if (!d || d.carId !== car.id) return;
     const orig = car.orientation === "horizontal" ? car.col : car.row;
+    const snapped = Math.max(d.min, Math.min(d.max, Math.round(d.currentPos)));
     dragRef.current = null; setDragPrev(null);
-    if (d.currentPos !== orig) commitMove(car.id, d.currentPos);
+    if (snapped !== orig) commitMove(car.id, snapped);       // encaixa na vaga mais próxima
   }, [commitMove]);
 
   // ── Result screen ─────────────────────────────────────────────────────────
@@ -447,18 +487,22 @@ export function EstacionamentoLogico({ difficulty, theme: _theme, onComplete }: 
                   style={{
                     position: "absolute",
                     left: 0, top: 0, width: w, height: h,
-                    cursor: "grab",
+                    cursor: isDragging ? "grabbing" : "grab",
                     touchAction: "none",
-                    zIndex: isDragging ? 20 : 10,
-                    transition: isDragging ? "none" : "transform 0.10s ease",
-                    // Movimento via transform (GPU/composited) → sem re-layout nem
-                    // re-raster da sombra a cada frame (corrige o "piscar" no arraste).
-                    transform: `translate3d(${left}px, ${top}px, 0)${isDragging ? " scale(1.04)" : ""}`,
+                    zIndex: isDragging ? 30 : 10,
+                    // Sem transição durante o arraste (segue o dedo); ao soltar,
+                    // encaixa suave na vaga. Movimento via transform (GPU) → sem
+                    // re-layout nem re-raster da sombra a cada frame.
+                    transition: isDragging ? "none" : "transform 0.14s cubic-bezier(.2,.8,.3,1)",
+                    transform: `translate3d(${left}px, ${top}px, 0)${isDragging ? " scale(1.06)" : ""}`,
+                    // "Levanta" o carro selecionado — deixa claro que está pego.
+                    filter: isDragging ? "drop-shadow(0 9px 9px rgba(0,0,0,0.45)) brightness(1.05)" : "none",
                     willChange: "transform",
                   }}
                   onPointerDown={e => onPtrDown(e, car)}
                   onPointerMove={e => onPtrMove(e, car)}
                   onPointerUp={e => onPtrUp(e, car)}
+                  onPointerCancel={e => onPtrUp(e, car)}
                 >
                   <CarImage
                     src={carImages[car.id]}
