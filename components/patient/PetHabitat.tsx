@@ -203,12 +203,14 @@ export function PetHabitat({ patientId, sessionsToday }: { patientId: string; pl
               <p style={{ fontWeight: 900, color: INK, fontSize: 20, lineHeight: 1 }}>{nome}</p>
               <p style={{ fontSize: 12, color: NAVY, fontWeight: 700, marginTop: 3 }}>{cfg.tipo}</p>
             </div>
-            <span style={{
-              fontSize: 12, fontWeight: 800, padding: "5px 12px", borderRadius: 999,
-              background: statusPositive ? POS_BG : "#FFFFFF",
-              color: statusPositive ? POS_TX : NAVY,
-              border: `1px solid ${statusPositive ? "transparent" : BORDER}`,
-            }}>{status}</span>
+            {chocou && (
+              <span style={{
+                fontSize: 12, fontWeight: 800, padding: "5px 12px", borderRadius: 999,
+                background: statusPositive ? POS_BG : "#FFFFFF",
+                color: statusPositive ? POS_TX : NAVY,
+                border: `1px solid ${statusPositive ? "transparent" : BORDER}`,
+              }}>{status}</span>
+            )}
           </div>
 
           {/* PALCO INTERNO BRANCO (personagem sempre sobre branco) */}
