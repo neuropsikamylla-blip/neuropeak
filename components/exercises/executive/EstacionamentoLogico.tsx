@@ -414,24 +414,15 @@ export function EstacionamentoLogico({ difficulty, theme: _theme, onComplete }: 
           ) : (
             <>
               <p className="text-sm mb-5" style={{ color: "#6B7384" }}>
-                Dá para resolver em <strong>{ideal}</strong> movimentos.
+                Dá para resolver em <strong>{ideal}</strong> movimentos. Tente de novo!
               </p>
-              <div className="flex flex-col gap-2.5">
-                <button
-                  onClick={() => loadLevel(currentLevel)}
-                  className="w-full py-3.5 rounded-2xl text-sm font-semibold tracking-wide text-white"
-                  style={{ background: "#2C3444" }}
-                >
-                  Tentar de novo
-                </button>
-                <button
-                  onClick={() => nextLevel(false)}
-                  className="w-full py-2.5 rounded-2xl text-sm font-medium tracking-wide"
-                  style={{ background: "transparent", color: "#6B7384", border: "1.5px solid #C8CDD8" }}
-                >
-                  Avançar mesmo assim
-                </button>
-              </div>
+              <button
+                onClick={() => loadLevel(currentLevel)}
+                className="w-full py-3.5 rounded-2xl text-sm font-semibold tracking-wide text-white"
+                style={{ background: "#2C3444" }}
+              >
+                Tentar de novo
+              </button>
             </>
           )}
         </div>
