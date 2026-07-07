@@ -12,8 +12,9 @@ import {
 import { PetCreature } from "./PetCreature";
 import { LivePet } from "./LivePet";
 
-// Fundo claro atrás do bichinho — evita a "borda branca" do recorte aparecer.
-const lightBg = "radial-gradient(circle at 50% 45%, #ffffff, #eef3fb 78%)";
+// Fundo BRANCO atrás do bichinho (a arte do bichinho já tem fundo branco, então
+// combina sem mostrar borda de recorte).
+const lightBg = "#ffffff";
 
 // Fala curta e contextual do bichinho. Determinística (varia conforme o carinho,
 // sem aleatoriedade) para não trocar a cada re-render.
@@ -23,13 +24,13 @@ function petSpeech(pet: PetState): string {
   const name = petDisplayName(pet);
   let pool: string[];
   if (pet.care === 0) {
-    pool = [`Oi! Eu sou ${name}. Bora treinar? 🎮`, `Que bom te ver! Vamos começar? ✨`];
+    pool = [`Oi! Eu sou ${name}. Bora treinar?`, `Que bom te ver! Vamos começar?`];
   } else if (stage >= 3) {
-    pool = [`Cresci graças a você! 💖`, `Curtiu meu acessório? 😎`, `Bora treinar mais um pouquinho!`];
+    pool = [`Cresci graças a você!`, `Bora treinar mais um pouquinho!`];
   } else if (faltam === 1) {
-    pool = [`Tô quase crescendo! Só mais 1 treino! 🌟`, `Falta pouquinho pra eu evoluir! 💪`];
+    pool = [`Tô quase crescendo! Só mais 1 treino!`, `Falta pouquinho pra eu evoluir!`];
   } else {
-    pool = [`Bora fazer um treino hoje? 💪`, `Tô com vontade de crescer! 🌱`, `Eu confio em você! Vamos lá! ⭐`];
+    pool = [`Bora fazer um treino hoje?`, `Tô com vontade de crescer!`, `Eu confio em você! Vamos lá!`];
   }
   return pool[pet.care % pool.length];
 }
@@ -47,9 +48,9 @@ export function PetCompanion({ patientId, theme }: { patientId: string; theme: T
 
   const card = isG
     ? "bg-gray-800 border border-cyan-500/20"
-    : "bg-white border-2 border-teal-100 shadow-lg";
-  const titleC = isG ? "text-cyan-300" : "text-teal-700";
-  const subC = isG ? "text-gray-400" : "text-teal-500";
+    : "bg-white border border-[#E2E8F0] shadow-sm";
+  const titleC = isG ? "text-cyan-300" : "text-[#173B78]";
+  const subC = isG ? "text-gray-400" : "text-[#667085]";
 
   function persist(next: PetState) { savePet(patientId, next); setPet(next); }
 
@@ -65,9 +66,9 @@ export function PetCompanion({ patientId, theme }: { patientId: string; theme: T
   if (!pet.kind && pendingKind) {
     return (
       <div className={`rounded-2xl p-4 ${card}`}>
-        <p className={`font-bold mb-3 ${titleC}`}>Dê um nome e escolha a cor 🎨</p>
+        <p className={`font-bold mb-3 ${titleC}`}>Dê um nome e escolha a cor</p>
         <div className="flex items-center gap-3 mb-3">
-          <div className="rounded-full flex-shrink-0" style={{ background: lightBg }}>
+          <div className="rounded-2xl flex-shrink-0" style={{ background: lightBg }}>
             <PetCreature kind={pendingKind} stage={2} size={92} color={pendingColor} />
           </div>
           <div className="flex-1">
@@ -75,12 +76,12 @@ export function PetCompanion({ patientId, theme }: { patientId: string; theme: T
               value={nameInput}
               onChange={(e) => setNameInput(e.target.value.slice(0, 14))}
               placeholder={PET_NAMES[pendingKind]}
-              className="w-full rounded-xl px-3 py-2 text-sm font-semibold outline-none bg-teal-50 border-2 border-teal-100 text-gray-800 placeholder-teal-300 focus:border-teal-400"
+              className="w-full rounded-xl px-3 py-2 text-sm font-semibold outline-none bg-[#F6F8FC] border border-[#E2E8F0] text-[#14213D] placeholder-[#94A3B8] focus:border-[#1D4ED8]"
             />
             <div className="flex flex-wrap gap-1.5 mt-2">
               {SUGGESTED_NAMES[pendingKind].map((n) => (
                 <button key={n} onClick={() => setNameInput(n)}
-                  className="text-xs px-2 py-1 rounded-full font-medium bg-teal-50 border border-teal-200 text-teal-600">
+                  className="text-xs px-2 py-1 rounded-full font-medium bg-[#EEF2FF] border border-[#DBEAFE] text-[#1D4ED8]">
                   {n}
                 </button>
               ))}
@@ -92,21 +93,21 @@ export function PetCompanion({ patientId, theme }: { patientId: string; theme: T
           {colorsFor(pendingKind).map(paletteById).map((c) => (
             <button key={c.id} onClick={() => setPendingColor(c.id)} aria-label={c.label}
               className="w-9 h-9 rounded-full transition-transform active:scale-90"
-              style={{ background: c.body, border: pendingColor === c.id ? "3px solid #0f766e" : "3px solid #fff", boxShadow: "0 2px 6px rgba(0,0,0,.15)" }} />
+              style={{ background: c.body, border: pendingColor === c.id ? "3px solid #173B78" : "3px solid #fff", boxShadow: "0 2px 6px rgba(0,0,0,.15)" }} />
           ))}
         </div>
         <div className="flex gap-2">
           <button
             onClick={() => { setPendingKind(null); setNameInput(""); }}
-            className={`px-3 h-10 rounded-full text-sm font-semibold ${isG ? "text-gray-400" : "text-teal-500"}`}
+            className={`px-3 h-10 rounded-full text-sm font-semibold ${isG ? "text-gray-400" : "text-[#667085]"}`}
           >
             Voltar
           </button>
           <button
             onClick={confirmName}
-            className={`flex-1 h-10 rounded-full text-sm font-bold text-white ${isG ? "bg-gradient-to-r from-cyan-500 to-blue-600" : "bg-gradient-to-r from-teal-500 to-cyan-500"}`}
+            className={`flex-1 h-10 rounded-full text-sm font-bold text-white ${isG ? "bg-gradient-to-r from-cyan-500 to-blue-600" : "bg-gradient-to-r from-[#173B78] to-[#1D4ED8]"}`}
           >
-            Pronto! 🎉
+            Pronto!
           </button>
         </div>
       </div>
@@ -117,19 +118,19 @@ export function PetCompanion({ patientId, theme }: { patientId: string; theme: T
   if (!pet.kind) {
     return (
       <div className={`rounded-2xl p-4 ${card}`}>
-        <p className={`font-bold mb-1 ${titleC}`}>Escolha seu bichinho 🥚</p>
+        <p className={`font-bold mb-1 ${titleC}`}>Escolha seu bichinho</p>
         <p className={`text-xs mb-3 ${subC}`}>Ele cresce a cada treino que você faz!</p>
         <div className="grid grid-cols-2 gap-3">
           {(["dragao", "monstrinho"] as PetKind[]).map((k) => (
             <button
               key={k}
               onClick={() => { setPendingColor(DEFAULT_COLOR[k]); setPendingKind(k); }}
-              className="rounded-2xl p-2 flex flex-col items-center gap-1 transition-all active:scale-95 bg-teal-50/60 border-2 border-teal-100 hover:border-teal-400"
+              className="rounded-2xl p-2 flex flex-col items-center gap-1 transition-all active:scale-95 bg-white border border-[#E2E8F0] hover:border-[#1D4ED8]"
             >
-              <div className="rounded-full" style={{ background: lightBg }}>
+              <div className="rounded-2xl" style={{ background: lightBg }}>
                 <PetCreature kind={k} stage={2} size={100} color={DEFAULT_COLOR[k]} />
               </div>
-              <span className="text-sm font-bold text-gray-700">{PET_NAMES[k]}</span>
+              <span className="text-sm font-bold text-[#14213D]">{PET_NAMES[k]}</span>
             </button>
           ))}
         </div>
@@ -143,14 +144,14 @@ export function PetCompanion({ patientId, theme }: { patientId: string; theme: T
   const faltam = sessionsToNextStage(pet.care);
   const isAdult = stage >= 3;
   const speech = petSpeech(pet);
-  const bubbleBg = isG ? "#0f172a" : "#ccfbf1";
-  const bubbleTx = isG ? "#a5f3fc" : "#0f766e";
+  const bubbleBg = isG ? "#0f172a" : "#EEF2FF";
+  const bubbleTx = isG ? "#a5f3fc" : "#173B78";
 
   return (
     <div className={`rounded-2xl p-4 ${card}`}>
       <div className="flex items-center justify-between mb-1">
         <p className={`font-bold ${titleC}`}>{petDisplayName(pet)}</p>
-        <span className={`text-xs font-bold px-2 py-0.5 rounded-full ${isG ? "bg-cyan-500/15 text-cyan-300" : "bg-teal-100 text-teal-700"}`}>
+        <span className={`text-xs font-bold px-2 py-0.5 rounded-full ${isG ? "bg-cyan-500/15 text-cyan-300" : "bg-[#DBEAFE] text-[#173B78]"}`}>
           {STAGE_LABELS[stage]}
         </span>
       </div>
@@ -176,10 +177,10 @@ export function PetCompanion({ patientId, theme }: { patientId: string; theme: T
         </div>
 
         <div className="flex-1 min-w-0">
-          <div className={`h-2.5 rounded-full overflow-hidden ${isG ? "bg-gray-700" : "bg-teal-100"}`}>
+          <div className={`h-2.5 rounded-full overflow-hidden ${isG ? "bg-gray-700" : "bg-[#EEF2F7]"}`}>
             <motion.div
               className="h-full rounded-full"
-              style={{ background: isG ? "#22d3ee" : "#14b8a6" }}
+              style={{ background: isG ? "#22d3ee" : "#1D4ED8" }}
               initial={{ width: 0 }}
               animate={{ width: `${pct}%` }}
               transition={{ duration: 0.6 }}
@@ -187,15 +188,15 @@ export function PetCompanion({ patientId, theme }: { patientId: string; theme: T
           </div>
           <p className={`text-xs mt-2 ${subC}`}>
             {isAdult
-              ? "Cresceu até o máximo! 🎉"
-              : `Faltam ${faltam} ${faltam === 1 ? "treino" : "treinos"} para evoluir 🌟`}
+              ? "Cresceu até o máximo!"
+              : `Faltam ${faltam} ${faltam === 1 ? "treino" : "treinos"} para evoluir`}
           </p>
         </div>
       </div>
 
       <Link href="/bichinho"
-        className="mt-3 flex items-center justify-center gap-2 h-10 rounded-full text-sm font-bold text-white bg-gradient-to-r from-teal-500 to-cyan-500 active:scale-95 transition-transform">
-        Cuidar do {petDisplayName(pet)} 🏡
+        className="mt-3 flex items-center justify-center gap-2 h-10 rounded-full text-sm font-bold text-white bg-gradient-to-r from-[#173B78] to-[#1D4ED8] active:scale-95 transition-transform">
+        Cuidar do {petDisplayName(pet)}
       </Link>
     </div>
   );

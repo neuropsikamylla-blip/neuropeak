@@ -6,6 +6,7 @@ import { calculateDomainScore } from "@/lib/scoring";
 import { formatDate, formatDuration } from "@/lib/utils";
 import { DOMAIN_LABELS, type Domain, type Theme, type SessionData } from "@/types";
 import { format, subDays } from "date-fns";
+import { Award } from "lucide-react";
 
 export default async function ProgressoPage() {
   const session = await getServerSession(authOptions);
@@ -47,12 +48,12 @@ export default async function ProgressoPage() {
       scoreBg: "bg-white/5",
     },
     COLORFUL: {
-      bg: "bg-gradient-to-br from-purple-50 to-pink-50",
-      card: "bg-white rounded-2xl border-2 border-purple-100 shadow-lg",
-      title: "text-purple-700 font-bold text-2xl",
-      sub: "text-purple-400 text-sm",
-      accent: "text-pink-500 font-bold",
-      scoreBg: "bg-gradient-to-br from-purple-50 to-pink-50",
+      bg: "bg-[#F6F8FC]",
+      card: "bg-white rounded-2xl border border-[#E2E8F0] shadow-sm",
+      title: "text-[#173B78] font-bold text-2xl",
+      sub: "text-[#667085] text-sm",
+      accent: "text-[#1D4ED8] font-bold",
+      scoreBg: "bg-[#F6F8FC]",
     },
     GAMIFIED: {
       bg: "bg-gray-950",
@@ -67,11 +68,14 @@ export default async function ProgressoPage() {
   const s = styles[theme];
   // Clínico e Gamificado têm fundo escuro → textos claros; só Colorido é claro.
   const isDark = theme === "GAMIFIED" || theme === "CLINICAL";
+  const divider = isDark ? "border-white/10" : "border-[#E2E8F0]";
+  const dividerY = isDark ? "divide-white/10" : "divide-[#E2E8F0]";
+  const heading = isDark ? "text-gray-200" : "text-[#14213D]";
 
   return (
     <div className={`min-h-screen ${s.bg} p-4 space-y-4`}>
       <h1 className={s.title}>
-        {theme === "GAMIFIED" ? "MEUS STATS" : theme === "COLORFUL" ? "Meu Progresso 📈" : "Meu Progresso"}
+        {theme === "GAMIFIED" ? "MEUS STATS" : "Meu Progresso"}
       </h1>
 
       {/* Total stats */}
@@ -88,9 +92,9 @@ export default async function ProgressoPage() {
 
       {/* Domain scores */}
       <div className={s.card}>
-        <div className="p-4 border-b border-white/10">
-          <h2 className={`font-semibold ${isDark ? "text-gray-200" : "text-gray-800"}`}>
-            {theme === "COLORFUL" ? "Seus superpoderes 🧠" : "Desempenho por domínio"}
+        <div className={`p-4 border-b ${divider}`}>
+          <h2 className={`font-semibold ${heading}`}>
+            {theme === "COLORFUL" ? "Seus superpoderes" : "Desempenho por domínio"}
           </h2>
         </div>
         <div className="p-4 space-y-4">
@@ -121,17 +125,19 @@ export default async function ProgressoPage() {
       {/* Achievements */}
       {achievements.length > 0 && (
         <div className={s.card}>
-          <div className="p-4 border-b border-white/10">
-            <h2 className={`font-semibold ${isDark ? "text-gray-200" : "text-gray-800"}`}>
-              {theme === "COLORFUL" ? "Minhas conquistas 🏆" : "Conquistas"}
+          <div className={`p-4 border-b ${divider}`}>
+            <h2 className={`font-semibold ${heading}`}>
+              {theme === "COLORFUL" ? "Minhas conquistas" : "Conquistas"}
             </h2>
           </div>
           <div className="p-4 grid grid-cols-2 gap-3">
             {achievements.map((a) => (
               <div key={a.id} className={`flex items-center gap-3 p-3 rounded-xl ${s.scoreBg}`}>
-                <span className="text-2xl">{a.icon}</span>
+                {theme === "COLORFUL"
+                  ? <Award className="w-6 h-6 flex-shrink-0" style={{ color: "#E8B547" }} />
+                  : <span className="text-2xl">{a.icon}</span>}
                 <div>
-                  <p className={`text-sm font-semibold ${isDark ? "text-gray-200" : "text-gray-800"}`}>{a.title}</p>
+                  <p className={`text-sm font-semibold ${heading}`}>{a.title}</p>
                   <p className={`text-xs ${s.sub}`}>{formatDate(a.unlockedAt)}</p>
                 </div>
               </div>
@@ -142,12 +148,12 @@ export default async function ProgressoPage() {
 
       {/* Recent sessions */}
       <div className={s.card}>
-        <div className="p-4 border-b border-white/10">
-          <h2 className={`font-semibold ${isDark ? "text-gray-200" : "text-gray-800"}`}>
-            {theme === "COLORFUL" ? "Sessões recentes 📋" : "Sessões recentes"}
+        <div className={`p-4 border-b ${divider}`}>
+          <h2 className={`font-semibold ${heading}`}>
+            Sessões recentes
           </h2>
         </div>
-        <div className="divide-y divide-white/10">
+        <div className={`divide-y ${dividerY}`}>
           {sessions.slice(0, 10).map((s2, i) => (
             <div key={i} className="px-4 py-3 flex items-center justify-between">
               <div>

@@ -6,7 +6,7 @@ import Link from "next/link";
 import { calculateAge } from "@/lib/utils";
 import { EXERCISE_DEFINITIONS, DOMAIN_LABELS, DOMAIN_COLORS, type Domain, type Theme, type SessionData } from "@/types";
 import { planExerciseIds } from "@/lib/exercise-plan";
-import { Trophy, Flame, Star } from "lucide-react";
+import { Trophy, Flame, Star, Check, ChevronRight, Award } from "lucide-react";
 import { ExerciseIcon } from "@/components/ExerciseIcon";
 import { PetCompanion } from "@/components/patient/PetCompanion";
 
@@ -87,17 +87,17 @@ export default async function InicioPage() {
       progressBar: "bg-gradient-to-r from-blue-500 to-indigo-400",
     },
     COLORFUL: {
-      bg: "bg-gradient-to-br from-teal-50 via-cyan-50 to-yellow-50",
-      header: "bg-white/80 backdrop-blur rounded-2xl mb-4 shadow",
-      card: "bg-white rounded-2xl shadow-lg border-2 border-teal-100",
-      title: "text-teal-700 text-3xl font-bold",
-      sub: "text-teal-400",
-      accent: "text-cyan-500",
-      exCard: "bg-white rounded-2xl border-2 border-teal-100 hover:border-teal-400 hover:shadow-lg transition-all",
-      exDone: "bg-teal-50 rounded-2xl border-2 border-teal-100 opacity-60",
-      stat: "bg-gradient-to-br from-teal-100 to-cyan-100 rounded-2xl",
-      progress: "bg-teal-200",
-      progressBar: "bg-teal-500",
+      bg: "bg-[#F6F8FC]",
+      header: "bg-white rounded-2xl mb-4 shadow-sm border border-[#E2E8F0]",
+      card: "bg-white rounded-2xl shadow-sm border border-[#E2E8F0]",
+      title: "text-[#173B78] text-3xl font-bold",
+      sub: "text-[#667085]",
+      accent: "text-[#1D4ED8]",
+      exCard: "bg-white rounded-2xl border border-[#E2E8F0] hover:border-[#1D4ED8] hover:shadow-md transition-all",
+      exDone: "bg-[#F6F8FC] rounded-2xl border border-[#E2E8F0] opacity-70",
+      stat: "bg-white rounded-2xl border border-[#E2E8F0]",
+      progress: "bg-[#EEF2F7]",
+      progressBar: "bg-[#1D4ED8]",
     },
     GAMIFIED: {
       bg: "bg-gray-950",
@@ -124,13 +124,13 @@ export default async function InicioPage() {
       {/* Welcome card */}
       <div className={`p-5 ${s.header}`}>
         <h1 className={s.title}>
-          {theme === "COLORFUL" ? `Olá, ${firstName}! 👋` : theme === "GAMIFIED" ? `MISSÃO ATIVA — ${firstName.toUpperCase()}` : `Bom treino, ${firstName}`}
+          {theme === "COLORFUL" ? `Olá, ${firstName}!` : theme === "GAMIFIED" ? `MISSÃO ATIVA — ${firstName.toUpperCase()}` : `Bom treino, ${firstName}`}
         </h1>
         <p className={`text-sm mt-1 ${s.sub}`}>
           {theme === "GAMIFIED"
             ? "Complete seus exercícios para ganhar XP!"
             : theme === "COLORFUL"
-            ? "Hora de treinar o cérebro! 🧠✨"
+            ? "Hora de treinar o cérebro!"
             : "Treino cognitivo personalizado para você"}
         </p>
       </div>
@@ -143,19 +143,19 @@ export default async function InicioPage() {
       {/* Stats */}
       <div className="grid grid-cols-3 gap-3">
         <div className={`p-3 text-center ${s.stat}`}>
-          <Flame className={`w-5 h-5 mx-auto mb-1 ${uniqueDays.size > 0 ? "text-orange-500" : "text-gray-400"}`} />
-          <p className={`text-xl font-bold ${isDark ? "text-white" : "text-gray-900"}`}>{uniqueDays.size}</p>
-          <p className={`text-xs ${s.sub}`}>{theme === "COLORFUL" ? "Dias ativos 🔥" : "Dias"}</p>
+          <Flame className={`w-5 h-5 mx-auto mb-1 ${uniqueDays.size > 0 ? (theme === "COLORFUL" ? "text-[#E8B547]" : "text-orange-500") : "text-gray-400"}`} />
+          <p className={`text-xl font-bold ${isDark ? "text-white" : "text-[#14213D]"}`}>{uniqueDays.size}</p>
+          <p className={`text-xs ${s.sub}`}>{theme === "COLORFUL" ? "Dias ativos" : "Dias"}</p>
         </div>
         <div className={`p-3 text-center ${s.stat}`}>
-          <Trophy className={`w-5 h-5 mx-auto mb-1 ${theme === "GAMIFIED" ? "text-cyan-400" : "text-yellow-500"}`} />
-          <p className={`text-xl font-bold ${isDark ? "text-white" : "text-gray-900"}`}>{totalPoints}</p>
-          <p className={`text-xs ${s.sub}`}>{theme === "COLORFUL" ? "Pontos ⭐" : "Pontos"}</p>
+          <Trophy className={`w-5 h-5 mx-auto mb-1 ${theme === "GAMIFIED" ? "text-cyan-400" : theme === "COLORFUL" ? "text-[#E8B547]" : "text-yellow-500"}`} />
+          <p className={`text-xl font-bold ${isDark ? "text-white" : "text-[#14213D]"}`}>{totalPoints}</p>
+          <p className={`text-xs ${s.sub}`}>{theme === "COLORFUL" ? "Pontos" : "Pontos"}</p>
         </div>
         <div className={`p-3 text-center ${s.stat}`}>
-          <Star className={`w-5 h-5 mx-auto mb-1 ${theme === "GAMIFIED" ? "text-yellow-400" : "text-teal-500"}`} />
-          <p className={`text-xl font-bold ${isDark ? "text-white" : "text-gray-900"}`}>{typedAchievements.length}</p>
-          <p className={`text-xs ${s.sub}`}>{theme === "COLORFUL" ? "Conquistas 🏅" : "Conquistas"}</p>
+          <Star className={`w-5 h-5 mx-auto mb-1 ${theme === "GAMIFIED" ? "text-yellow-400" : theme === "COLORFUL" ? "text-[#E8B547]" : "text-teal-500"}`} />
+          <p className={`text-xl font-bold ${isDark ? "text-white" : "text-[#14213D]"}`}>{typedAchievements.length}</p>
+          <p className={`text-xs ${s.sub}`}>{theme === "COLORFUL" ? "Conquistas" : "Conquistas"}</p>
         </div>
       </div>
 
@@ -163,8 +163,8 @@ export default async function InicioPage() {
       {activePlan && cycleTarget > 0 && (
         <div className={`p-4 ${s.card}`}>
           <div className="flex justify-between items-center mb-2">
-            <span className={`text-sm font-medium ${isDark ? "text-gray-300" : "text-gray-700"}`}>
-              {theme === "GAMIFIED" ? "PROGRESSO DO CICLO" : theme === "COLORFUL" ? "Progresso do ciclo 📈" : "Progresso do ciclo"}
+            <span className={`text-sm font-medium ${isDark ? "text-gray-300" : "text-[#14213D]"}`}>
+              {theme === "GAMIFIED" ? "PROGRESSO DO CICLO" : "Progresso do ciclo"}
             </span>
             <span className={`text-sm font-bold ${s.accent}`}>
               {Math.min(cycleSessionsCount, cycleTarget)}/{cycleTarget}
@@ -177,8 +177,8 @@ export default async function InicioPage() {
             />
           </div>
           {cycleComplete ? (
-            <p className="text-xs text-green-500 mt-2 font-medium text-center">
-              {theme === "GAMIFIED" ? "✓ CICLO COMPLETO — Aguarde nova missão do terapeuta" : theme === "COLORFUL" ? "🎊 Ciclo concluído! Aguarde seu terapeuta configurar o próximo." : "Ciclo concluído. Aguarde seu terapeuta configurar o próximo."}
+            <p className={`text-xs mt-2 font-medium text-center ${theme === "COLORFUL" ? "" : "text-green-500"}`} style={theme === "COLORFUL" ? { color: "#0EA46E" } : undefined}>
+              {theme === "GAMIFIED" ? "CICLO COMPLETO — Aguarde nova missão do terapeuta" : "Ciclo concluído. Aguarde seu terapeuta configurar o próximo."}
             </p>
           ) : (
             <p className={`text-xs mt-2 ${s.sub}`}>
@@ -190,8 +190,8 @@ export default async function InicioPage() {
 
       {/* Today's plan */}
       <div>
-        <h2 className={`font-bold mb-3 ${theme === "GAMIFIED" ? "text-gray-200" : theme === "COLORFUL" ? "text-teal-700 text-lg" : "text-slate-200"}`}>
-          {theme === "GAMIFIED" ? "EXERCÍCIOS DE HOJE" : theme === "COLORFUL" ? "Seu treino de hoje 🎯" : "Treino de hoje"}
+        <h2 className={`font-bold mb-3 ${theme === "GAMIFIED" ? "text-gray-200" : theme === "COLORFUL" ? "text-[#173B78] text-lg" : "text-slate-200"}`}>
+          {theme === "GAMIFIED" ? "EXERCÍCIOS DE HOJE" : theme === "COLORFUL" ? "Seu treino de hoje" : "Treino de hoje"}
         </h2>
 
         {exercises.length === 0 ? (
@@ -219,8 +219,11 @@ export default async function InicioPage() {
                         {ex.name}
                       </p>
                       {doneToday && (
-                        <span className="text-xs bg-green-100 text-green-700 px-2 py-0.5 rounded-full font-medium">
-                          ✓ {theme === "GAMIFIED" ? "COMPLETO" : "Concluído"}
+                        <span
+                          className={`text-xs px-2 py-0.5 rounded-full font-medium inline-flex items-center gap-1 ${theme === "COLORFUL" ? "text-[#0EA46E]" : "bg-green-100 text-green-700"}`}
+                          style={theme === "COLORFUL" ? { background: "#DDF7EF" } : undefined}
+                        >
+                          <Check className="w-3 h-3" strokeWidth={3} /> {theme === "GAMIFIED" ? "COMPLETO" : "Concluído"}
                         </span>
                       )}
                     </div>
@@ -241,7 +244,7 @@ export default async function InicioPage() {
                     )}
                   </div>
                   {!doneToday && (
-                    <span className={`text-xl flex-shrink-0 ${theme === "GAMIFIED" ? "text-cyan-400" : theme === "CLINICAL" ? "text-indigo-400" : "text-blue-500"}`}>›</span>
+                    <ChevronRight className={`w-5 h-5 flex-shrink-0 ${theme === "GAMIFIED" ? "text-cyan-400" : theme === "CLINICAL" ? "text-indigo-400" : "text-[#1D4ED8]"}`} />
                   )}
                 </div>
               );
@@ -259,14 +262,16 @@ export default async function InicioPage() {
       {/* Recent achievements */}
       {typedAchievements.length > 0 && (
         <div>
-          <h2 className={`font-bold mb-3 ${theme === "GAMIFIED" ? "text-gray-200" : theme === "COLORFUL" ? "text-teal-700 text-lg" : "text-slate-200"}`}>
-            {theme === "COLORFUL" ? "Suas conquistas 🏆" : "Conquistas"}
+          <h2 className={`font-bold mb-3 ${theme === "GAMIFIED" ? "text-gray-200" : theme === "COLORFUL" ? "text-[#173B78] text-lg" : "text-slate-200"}`}>
+            {theme === "COLORFUL" ? "Suas conquistas" : "Conquistas"}
           </h2>
           <div className="flex gap-3 overflow-x-auto pb-2">
             {typedAchievements.slice(0, 5).map((a) => (
-              <div key={a.id} className={`flex-shrink-0 p-3 text-center rounded-2xl border ${theme === "COLORFUL" ? "bg-yellow-50 border-yellow-200" : theme === "GAMIFIED" ? "bg-gray-800 border-yellow-500/30" : "bg-[#0D2547] border-yellow-500/30"}`}>
-                <span className="text-3xl">{a.icon}</span>
-                <p className={`text-xs font-medium mt-1 ${theme === "COLORFUL" ? "text-gray-700" : "text-gray-300"}`}>{a.title}</p>
+              <div key={a.id} className={`flex-shrink-0 p-3 text-center rounded-2xl border ${theme === "COLORFUL" ? "bg-white border-[#E2E8F0]" : theme === "GAMIFIED" ? "bg-gray-800 border-yellow-500/30" : "bg-[#0D2547] border-yellow-500/30"}`}>
+                {theme === "COLORFUL"
+                  ? <Award className="w-8 h-8 mx-auto" style={{ color: "#E8B547" }} />
+                  : <span className="text-3xl">{a.icon}</span>}
+                <p className={`text-xs font-medium mt-1 ${theme === "COLORFUL" ? "text-[#14213D]" : "text-gray-300"}`}>{a.title}</p>
               </div>
             ))}
           </div>
