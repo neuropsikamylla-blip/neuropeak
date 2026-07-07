@@ -9,9 +9,14 @@ import { LEVELS_BY_DIFFICULTY, DIFFICULTIES } from "@/lib/parking-levels";
 import type { Level } from "@/types/parking";
 import type { ExerciseResult, Theme } from "@/types";
 
+// Só usamos fases com tabuleiro CHEIO (>= 5 movimentos ideais = 4+ carros). As
+// fases de 2-3 carros ficavam com cara de "vazio/joguinho" — foram removidas do
+// jogo (continuam no arquivo, mas nunca são sorteadas).
+const PLAY_DIFFS = DIFFICULTIES.filter((d) => d >= 5);
+
 // Dificuldades ordenadas por proximidade do alvo (empate → menor primeiro).
 function orderedDiffs(target: number): number[] {
-  return [...DIFFICULTIES].sort((a, b) => Math.abs(a - target) - Math.abs(b - target) || a - b);
+  return [...PLAY_DIFFS].sort((a, b) => Math.abs(a - target) - Math.abs(b - target) || a - b);
 }
 // Sorteia uma fase perto do alvo, NUNCA repetindo as fases recentes (`recent`).
 // Se a dificuldade-alvo só tem fases já vistas, sobe/desce pra dificuldade
@@ -26,9 +31,9 @@ function pickLevel(targetDiff: number, recent: Level[] = []): { level: Level; di
   return { level: arr[Math.floor(Math.random() * arr.length)], diff: d };
 }
 function stepDiff(cur: number, dir: 1 | -1): number {
-  const i = DIFFICULTIES.indexOf(cur);
-  const ni = Math.max(0, Math.min(DIFFICULTIES.length - 1, (i < 0 ? 0 : i) + dir));
-  return DIFFICULTIES[ni];
+  const i = PLAY_DIFFS.indexOf(cur);
+  const ni = Math.max(0, Math.min(PLAY_DIFFS.length - 1, (i < 0 ? 0 : i) + dir));
+  return PLAY_DIFFS[ni];
 }
 
 // ── Layout constants ──────────────────────────────────────────────────────────
@@ -257,7 +262,9 @@ export function EstacionamentoLogico({ difficulty, theme: _theme, onComplete }: 
 
   // Dificuldade adaptativa: começa perto do nível do paciente e sobe/desce na sessão.
   const initRef = useRef<{ level: Level; diff: number } | null>(null);
-  if (!initRef.current) initRef.current = pickLevel(Math.round(difficulty) + 1);
+  // Começa já com tabuleiro cheio (mín. dificuldade 6 ≈ 5 carros) — nada de
+  // tabuleiro quase vazio. Sobe conforme o desempenho.
+  if (!initRef.current) initRef.current = pickLevel(Math.max(6, Math.round(difficulty) + 3));
   const curDiffRef  = useRef(initRef.current.diff);
   const streakRef   = useRef(0);
   const reachedRef  = useRef(initRef.current.diff);
@@ -489,14 +496,17 @@ export function EstacionamentoLogico({ difficulty, theme: _theme, onComplete }: 
                     left: 0, top: 0, width: w, height: h,
                     cursor: isDragging ? "grabbing" : "grab",
                     touchAction: "none",
+                    // Sem NENHUM destaque de seleção (nem o quadro do tap-highlight
+                    // do navegador, nem realce): o carro só desliza com o dedo.
+                    WebkitTapHighlightColor: "transparent",
+                    WebkitUserSelect: "none",
+                    userSelect: "none",
+                    WebkitTouchCallout: "none",
                     zIndex: isDragging ? 30 : 10,
                     // Sem transição durante o arraste (segue o dedo); ao soltar,
-                    // encaixa suave na vaga. Movimento via transform (GPU) → sem
-                    // re-layout nem re-raster da sombra a cada frame.
+                    // encaixa suave na vaga. Movimento via transform (GPU).
                     transition: isDragging ? "none" : "transform 0.14s cubic-bezier(.2,.8,.3,1)",
-                    transform: `translate3d(${left}px, ${top}px, 0)${isDragging ? " scale(1.06)" : ""}`,
-                    // "Levanta" o carro selecionado — deixa claro que está pego.
-                    filter: isDragging ? "drop-shadow(0 9px 9px rgba(0,0,0,0.45)) brightness(1.05)" : "none",
+                    transform: `translate3d(${left}px, ${top}px, 0)`,
                     willChange: "transform",
                   }}
                   onPointerDown={e => onPtrDown(e, car)}
