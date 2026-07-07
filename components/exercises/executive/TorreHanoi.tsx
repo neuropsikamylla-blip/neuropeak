@@ -2,9 +2,9 @@
 
 import { useState, useEffect, useRef } from "react";
 import { motion, AnimatePresence } from "framer-motion";
+import { Trophy, Check, X } from "lucide-react";
 import { calculateExerciseScore } from "@/lib/scoring";
 import { useTimedProgress } from "@/components/exercises/useExerciseEngine";
-import { ExerciseProgressBar } from "@/components/exercises/ExerciseProgressBar";
 import { TutorialBase } from "@/components/exercises/TutorialBase";
 import type { ExerciseResult, Theme } from "@/types";
 
@@ -15,15 +15,28 @@ interface TorreHanoiProps {
 }
 
 const MIN_DISCS = 3;
-const MAX_DISCS = 6;
+const MAX_DISCS = 8;
 
 function initialDiscs(difficulty: number) {
   return Math.min(Math.max(MIN_DISCS, Math.floor(difficulty * 0.4) + 2), MAX_DISCS);
 }
 
+// 8 cores (disco 1 no topo → 8 na base). Cada disco usa um gradiente leve
+// (clara → base) montado a partir destas cores.
 const DISC_COLORS = [
-  "#EF4444", "#F97316", "#EAB308", "#22C55E",
-  "#3B82F6", "#8B5CF6", "#EC4899",
+  "#F43F5E", // 1 rosa/vermelho
+  "#FB923C", // 2 laranja
+  "#FACC15", // 3 amarelo
+  "#34D399", // 4 verde
+  "#22D3EE", // 5 turquesa
+  "#3B82F6", // 6 azul
+  "#6366F1", // 7 índigo
+  "#A855F7", // 8 violeta
+];
+// Tom mais claro para o topo do gradiente do disco.
+const DISC_COLORS_LIGHT = [
+  "#FB7185", "#FDBA74", "#FDE047", "#6EE7B7",
+  "#67E8F9", "#93C5FD", "#A5B4FC", "#D8B4FE",
 ];
 
 type Peg = number[];
@@ -159,11 +172,11 @@ function HanoiRuleStep({ theme, onDone }: { theme: Theme; onDone: () => void }) 
     <div className="space-y-3">
       <div className="grid grid-cols-2 gap-3">
         <div className={`rounded-xl p-3 border-2 border-green-400 ${theme === "GAMIFIED" ? "bg-gray-700/50" : "bg-green-50"}`}>
-          <p className="text-xs text-green-600 font-bold mb-2 text-center">✅ Válido</p>
+          <p className="text-xs text-green-600 font-bold mb-2 flex items-center justify-center gap-1"><Check size={13} strokeWidth={3} /> Válido</p>
           <HanoiPegsDisplay pegs={validPegs} theme={theme} selected={null} discCount={2} />
         </div>
         <div className={`rounded-xl p-3 border-2 border-red-400 ${theme === "GAMIFIED" ? "bg-gray-700/50" : "bg-red-50"}`}>
-          <p className="text-xs text-red-500 font-bold mb-2 text-center">❌ Inválido</p>
+          <p className="text-xs text-red-500 font-bold mb-2 flex items-center justify-center gap-1"><X size={13} strokeWidth={3} /> Inválido</p>
           <HanoiPegsDisplay pegs={invalidPegs} theme={theme} selected={null} discCount={2} />
         </div>
       </div>
@@ -182,7 +195,7 @@ function HanoiRuleStep({ theme, onDone }: { theme: Theme; onDone: () => void }) 
 
 export function TorreHanoi({ difficulty, theme, onComplete }: TorreHanoiProps) {
   const [showTutorial, setShowTutorial] = useState(true);
-  const { begin, isTimeUp, elapsedSec, finish, progressPct } = useTimedProgress();
+  const { begin, isTimeUp, elapsedSec, finish } = useTimedProgress();
 
   const [discCount, setDiscCount] = useState(initialDiscs(difficulty));
   const [puzzle, setPuzzle] = useState(0);
@@ -196,6 +209,16 @@ export function TorreHanoi({ difficulty, theme, onComplete }: TorreHanoiProps) {
   const [won, setWon] = useState(false);
 
   const puzzleStart = useRef<number>(Date.now());
+
+  // Largura de cada torre (medida) → discos escalam pra caber em qualquer tela.
+  const rowRef = useRef<HTMLDivElement>(null);
+  const [slotW, setSlotW] = useState(180);
+  useEffect(() => {
+    const measure = () => { const w = rowRef.current?.offsetWidth; if (w) setSlotW((w - 16) / 3); };
+    measure();
+    window.addEventListener("resize", measure);
+    return () => window.removeEventListener("resize", measure);
+  }, [showTutorial]);
 
   const optimal = optimalMoves(discCount);
 
@@ -281,105 +304,113 @@ export function TorreHanoi({ difficulty, theme, onComplete }: TorreHanoiProps) {
     return <TorreHanoiTutorial theme={theme} onDone={() => { begin(); setShowTutorial(false); }} />;
   }
 
-  const bgClass = theme === "GAMIFIED" ? "bg-gray-950" : theme === "COLORFUL" ? "bg-gradient-to-br from-yellow-50 to-orange-50" : "bg-gray-50";
-  const maxDiscWidth = 180;
+  // Progresso VISUAL do jogo: quantos discos já chegaram ao destino.
+  const gameProgress = Math.round((pegs[2].length / discCount) * 100);
+
+  // Larguras progressivas (disco 1 mais estreito, disco N mais largo), escaladas
+  // pela largura da torre pra caber em qualquer tela sem cortar.
+  const MAXW = Math.min(168, slotW * 0.88);
+  const MINW = Math.max(30, Math.min(46, slotW * 0.30));
+  const DISC_H = 26;
+  const discWidth = (disc: number) =>
+    discCount <= 1 ? MAXW : MINW + ((disc - 1) / (discCount - 1)) * (MAXW - MINW);
+  const towerH = MAX_DISCS * (DISC_H + 4) + 26;   // espaço seguro p/ até 8 discos
+  const LABELS = ["Origem", "Auxiliar", "Destino"];
 
   return (
-    <div className={`min-h-screen flex flex-col items-center p-4 pt-5 ${bgClass}`}>
-      <div className={`w-full max-w-2xl rounded-2xl p-6 ${theme === "GAMIFIED" ? "bg-gray-800 border border-cyan-500/30" : "bg-white shadow-lg"}`}>
-        {/* Header */}
-        <div className="flex justify-between items-center mb-3">
+    <div className="min-h-screen flex flex-col items-center p-4 pt-6" style={{ background: "#F3F4F6" }}>
+      <div className="w-full max-w-2xl rounded-3xl bg-white p-6 sm:p-7"
+        style={{ boxShadow: "0 12px 40px rgba(15,23,42,.10)", border: "1px solid #EEF0F4" }}>
+
+        {/* Título + nível + indicadores */}
+        <div className="flex items-start justify-between gap-3 flex-wrap">
           <div>
-            <h2 className={`font-bold ${theme === "GAMIFIED" ? "text-cyan-400" : "text-gray-900"}`}>
-              Jogo das Torres ({discCount} discos)
-            </h2>
-            <p className={`text-xs ${theme === "GAMIFIED" ? "text-gray-400" : "text-gray-500"}`}>
-              Movimentos: {moves} · Ótimo: {optimal}
-            </p>
+            <h2 className="font-bold tracking-tight" style={{ color: "#0F172A", fontSize: 22, lineHeight: 1.1 }}>Jogo das Torres</h2>
+            <p className="mt-1 text-sm font-medium" style={{ color: "#64748B" }}>Nível: {discCount} discos</p>
+          </div>
+          <div className="flex gap-2.5">
+            <Indicator label="Movimentos" value={moves} />
+            <Indicator label="Mínimo" value={optimal} />
           </div>
         </div>
 
-        <ExerciseProgressBar progressPct={progressPct} theme={theme} />
-
-        {/* Instructions */}
-        <p className={`text-xs mb-4 text-center ${theme === "GAMIFIED" ? "text-gray-400" : "text-gray-500"}`}>
-          Mova todos os discos para o pino da direita. Clique para selecionar e mover.
-          {selected !== null && <strong className="ml-1 text-blue-500"> Pino {selected + 1} selecionado</strong>}
-        </p>
-
-        {/* Pegs area */}
-        <div className="flex justify-around items-end mb-4" style={{ height: "340px" }}>
-          {pegs.map((peg, pegIdx) => (
-            <div
-              key={pegIdx}
-              className="flex flex-col items-center cursor-pointer relative select-none"
-              style={{ width: `${maxDiscWidth + 20}px`, touchAction: "manipulation" }}
-              onPointerDown={(e) => { e.preventDefault(); handlePegClick(pegIdx); }}
-            >
-              <div
-                className={`absolute bottom-0 rounded-lg ${selected === pegIdx ? "bg-yellow-400" : theme === "GAMIFIED" ? "bg-gray-600" : "bg-gray-400"}`}
-                style={{ width: `${maxDiscWidth + 20}px`, height: "10px" }}
-              />
-              <div
-                className={`absolute rounded-full ${selected === pegIdx ? "bg-yellow-400" : theme === "GAMIFIED" ? "bg-gray-500" : "bg-gray-400"}`}
-                style={{ width: "24px", height: "320px", bottom: "10px" }}
-              />
-              <div className="absolute bottom-3 flex flex-col-reverse items-center gap-1">
-                {peg.map((disc, discIdx) => {
-                  const width = (disc / discCount) * maxDiscWidth + 20;
-                  const isTop = discIdx === peg.length - 1;
-                  return (
-                    <motion.div
-                      key={disc}
-                      className="rounded-lg flex items-center justify-center text-white text-sm font-bold"
-                      style={{
-                        width: `${width}px`,
-                        height: "42px",
-                        backgroundColor: DISC_COLORS[disc - 1] ?? "#666",
-                        opacity: selected === pegIdx && isTop ? 0.6 : 1,
-                        boxShadow: isTop && selected === pegIdx ? "0 0 12px rgba(250,204,21,0.8)" : undefined,
-                        touchAction: "manipulation",
-                      }}
-                      layoutId={`disc-${disc}-${puzzle}`}
-                      transition={{ type: "spring", stiffness: 300, damping: 25 }}
-                      onPointerDown={(e) => { e.stopPropagation(); e.preventDefault(); handlePegClick(pegIdx); }}
-                    >
-                      {disc}
-                    </motion.div>
-                  );
-                })}
-              </div>
-              <div
-                className={`mt-2 text-xs ${theme === "GAMIFIED" ? "text-gray-400" : "text-gray-500"} absolute -bottom-6 pointer-events-none`}
-              >
-                {pegIdx === 0 ? "Origem" : pegIdx === 1 ? "Auxiliar" : "Destino"}
-              </div>
-            </div>
-          ))}
+        {/* Barra de progresso (visual do jogo) */}
+        <div className="mt-4 h-2 rounded-full overflow-hidden" style={{ background: "#EEF2F7" }}>
+          <div className="h-full rounded-full" style={{ width: `${gameProgress}%`, background: "#1D4ED8", transition: "width .35s ease" }} />
         </div>
 
-        <div className="mt-8" />
+        {/* Instrução */}
+        <p className="mt-4 text-center text-sm" style={{ color: "#64748B" }}>
+          Mova todos os discos para o pino da direita. Clique para selecionar e mover.
+        </p>
+
+        {/* Torres */}
+        <div ref={rowRef} className="mt-7 flex justify-between items-end gap-2" style={{ paddingBottom: 28 }}>
+          {pegs.map((peg, pegIdx) => {
+            const isSel = selected === pegIdx;
+            return (
+              <button key={pegIdx} onClick={() => handlePegClick(pegIdx)} aria-label={LABELS[pegIdx]}
+                className="relative flex-1 flex items-end justify-center border-0 bg-transparent cursor-pointer"
+                style={{ height: towerH, WebkitTapHighlightColor: "transparent", touchAction: "manipulation" }}>
+                {/* haste fina */}
+                <div className="absolute rounded-full" style={{ width: 8, height: towerH - 16, bottom: 14, background: isSel ? "#1D4ED8" : "#94A3B8", boxShadow: "0 1px 2px rgba(15,23,42,.12)", transition: "background .15s" }} />
+                {/* pilha de discos */}
+                <div className="absolute flex flex-col-reverse items-center" style={{ bottom: 18, gap: 4 }}>
+                  {peg.map((disc, di) => {
+                    const lifted = isSel && di === peg.length - 1;
+                    const c = DISC_COLORS[disc - 1] ?? "#666";
+                    const cl = DISC_COLORS_LIGHT[disc - 1] ?? "#999";
+                    return (
+                      <motion.div key={disc}
+                        layoutId={`disc-${disc}-${puzzle}`}
+                        transition={{ type: "spring", stiffness: 320, damping: 26 }}
+                        className="flex items-center justify-center font-bold text-white"
+                        style={{
+                          width: discWidth(disc), height: DISC_H, borderRadius: 8, fontSize: 12,
+                          background: `linear-gradient(180deg, ${cl}, ${c})`,
+                          boxShadow: lifted
+                            ? `0 7px 16px ${c}66, 0 0 0 2px #1D4ED8`
+                            : "0 2px 5px rgba(15,23,42,.16)",
+                          transform: lifted ? "translateY(-6px)" : "none",
+                          transition: "transform .12s, box-shadow .12s",
+                        }}>
+                        {disc}
+                      </motion.div>
+                    );
+                  })}
+                </div>
+                {/* base arredondada */}
+                <div className="absolute rounded-full" style={{ bottom: 0, width: "88%", height: 14, background: isSel ? "#1D4ED8" : "#64748B", boxShadow: "0 3px 8px rgba(15,23,42,.18)", transition: "background .15s" }} />
+                {/* rótulo */}
+                <span className="absolute text-xs font-semibold" style={{ bottom: -24, color: isSel ? "#1D4ED8" : "#94A3B8" }}>{LABELS[pegIdx]}</span>
+              </button>
+            );
+          })}
+        </div>
 
         <AnimatePresence>
           {won && (
             <motion.div
-              className={`text-center p-4 rounded-xl mt-4 ${
-                lastWasOptimal
-                  ? "bg-green-50 border-2 border-green-500"
-                  : "bg-orange-50 border-2 border-orange-400"
-              }`}
-              initial={{ scale: 0.8, opacity: 0 }}
+              className="text-center mt-6 rounded-2xl p-4"
+              style={{
+                background: lastWasOptimal ? "#ECFDF5" : "#FFFBEB",
+                border: `1px solid ${lastWasOptimal ? "#A7F3D0" : "#FDE68A"}`,
+              }}
+              initial={{ scale: 0.94, opacity: 0 }}
               animate={{ scale: 1, opacity: 1 }}
             >
-              <div className="text-4xl mb-2">{lastWasOptimal ? "🏆" : "✅"}</div>
-              <p className={`font-bold text-lg ${lastWasOptimal ? "text-green-700" : "text-orange-700"}`}>
+              <div className="mx-auto mb-2 flex items-center justify-center rounded-full"
+                style={{ width: 44, height: 44, background: lastWasOptimal ? "#DDF7EF" : "#FEF3C7" }}>
+                {lastWasOptimal ? <Trophy size={22} color="#047857" /> : <Check size={22} color="#B45309" strokeWidth={3} />}
+              </div>
+              <p className="font-bold text-lg" style={{ color: lastWasOptimal ? "#047857" : "#B45309" }}>
                 {lastWasOptimal ? "Movimentos mínimos!" : "Resolvido!"}
               </p>
-              <p className={`text-sm ${lastWasOptimal ? "text-green-600" : "text-orange-600"}`}>
+              <p className="text-sm" style={{ color: lastWasOptimal ? "#059669" : "#D97706" }}>
                 {moves} movimento{moves !== 1 ? "s" : ""} · mínimo: {optimal}
               </p>
               {!lastWasOptimal && (
-                <p className="text-xs text-orange-500 mt-1">
+                <p className="text-xs mt-1" style={{ color: "#D97706" }}>
                   Você pode fazer em {optimal} movimentos — tente de novo!
                 </p>
               )}
@@ -387,6 +418,16 @@ export function TorreHanoi({ difficulty, theme, onComplete }: TorreHanoiProps) {
           )}
         </AnimatePresence>
       </div>
+    </div>
+  );
+}
+
+// Indicador discreto (Movimentos / Mínimo).
+function Indicator({ label, value }: { label: string; value: number }) {
+  return (
+    <div className="text-center rounded-2xl px-4 py-2" style={{ background: "#F8FAFC", border: "1px solid #EEF0F4", minWidth: 84 }}>
+      <div className="font-bold tabular-nums" style={{ color: "#0F172A", fontSize: 19, lineHeight: 1 }}>{value}</div>
+      <div className="uppercase" style={{ color: "#94A3B8", fontSize: 10, fontWeight: 700, letterSpacing: ".04em", marginTop: 3 }}>{label}</div>
     </div>
   );
 }
