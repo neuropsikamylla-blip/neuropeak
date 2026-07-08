@@ -92,7 +92,7 @@ const CATEGORIES: Record<string, Product[]> = {
   limpeza: [
     { id: "sabao-liquido", name: "Sabão líquido" }, { id: "alcool", name: "Álcool" },
     { id: "detergente", name: "Detergente" }, { id: "pano", name: "Pano de limpeza" },
-    { id: "luva", name: "Luva" }, { id: "papel-toalha", name: "Papel toalha" },
+    { id: "papel-toalha", name: "Papel toalha" },
   ],
   higiene: [
     { id: "sabonete", name: "Sabonete" }, { id: "cotonete", name: "Cotonete" },
@@ -371,9 +371,9 @@ function WoodShelf({
                       </div>
                       {showLbl && (
                         <span style={{
-                          fontSize: 10, fontWeight: 700, textAlign: "center", lineHeight: 1.05,
-                          color: inCart ? "#1d7a6e" : "#46505a", maxWidth: cell * 0.95,
-                          background: "rgba(255,255,255,0.82)", borderRadius: 6, padding: "1px 4px",
+                          fontSize: 11, fontWeight: 800, textAlign: "center", lineHeight: 1.05,
+                          color: inCart ? "#116b60" : "#4a3d24", maxWidth: cell * 0.98,
+                          textShadow: "0 1px 2px rgba(255,255,255,0.6)",
                           overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap",
                         }}>{p.name}</span>
                       )}
