@@ -3,19 +3,24 @@
 import { useState, useEffect, useRef } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { Timer, Target, Ban, Check, Zap, Crosshair, MousePointerClick, Eye } from "lucide-react";
+import Image from "next/image";
 import { calculateExerciseScore } from "@/lib/scoring";
 import { useTimedProgress } from "@/components/exercises/useExerciseEngine";
 import { TutorialBase } from "@/components/exercises/TutorialBase";
-import { ItemSvg } from "@/components/exercises/ItemSvg";
 import type { ExerciseResult, Theme } from "@/types";
 import {
-  shuffleFlex, itemsByFlexCat, pickRandomDomain, ALL_DOMAINS,
-  type FlexDomain, type FlexItem, type FlexCategory,
-} from "@/lib/item-domains";
+  BUSCA_CATS, BUSCA_ITEMS, NEAR, itemsByCat, shuffle,
+  type BuscaItem, type BuscaCat,
+} from "@/lib/busca-items";
 
 interface Props { difficulty: number; theme: Theme; onComplete: (result: ExerciseResult) => void; }
-interface GridItem extends FlexItem { isTarget: boolean; collected: boolean; }
+interface GridItem extends BuscaItem { isTarget: boolean; collected: boolean; }
 type Mode = "direct" | "exclusion";
+
+// Item renderizado por imagem (3D consistente).
+function ItemImg({ id, size }: { id: string; size: number }) {
+  return <Image src={`/exercises/busca/${id}.png`} alt="" width={size} height={size} unoptimized style={{ objectFit: "contain", display: "block" }} />;
+}
 
 // ── Progressão de dificuldade (5 níveis) ─────────────────────────────────────
 // Mais itens, mais alvos, menos tempo e distratores mais próximos conforme sobe.
@@ -35,39 +40,44 @@ function modeFor(lvl: number, round: number): Mode {
   return lvl >= 5 && round % 2 === 1 ? "exclusion" : "direct";
 }
 
-function buildGrid(domain: FlexDomain, cat: FlexCategory, lvl: number, mode: Mode): GridItem[] {
+function buildGrid(cat: BuscaCat, lvl: number, mode: Mode): GridItem[] {
   const spec = levelSpec(lvl);
   const size = spec.items;
-  const mk = (x: FlexItem, isTarget: boolean): GridItem => ({ ...x, isTarget, collected: false });
+  const mk = (x: BuscaItem, isTarget: boolean): GridItem => ({ ...x, isTarget, collected: false });
 
   if (mode === "exclusion") {
     // Evitar a categoria saliente; tocar em todo o resto.
-    const nAvoid = Math.min(3 + (spec.tier >= 4 ? 1 : 0), itemsByFlexCat(domain, cat.id).length);
-    const avoid = shuffleFlex(itemsByFlexCat(domain, cat.id)).slice(0, nAvoid);
-    const rest = shuffleFlex(domain.items.filter(i => i.cat !== cat.id)).slice(0, size - avoid.length);
-    return shuffleFlex([...avoid.map(x => mk(x, false)), ...rest.map(x => mk(x, true))]);
+    const nAvoid = Math.min(spec.tier >= 4 ? 4 : 3, itemsByCat(cat.id).length);
+    const avoid = shuffle(itemsByCat(cat.id)).slice(0, nAvoid);
+    const rest = shuffle(BUSCA_ITEMS.filter(i => i.cat !== cat.id)).slice(0, size - avoid.length);
+    return shuffle([...avoid.map(x => mk(x, false)), ...rest.map(x => mk(x, true))]);
   }
 
-  // Direto: alvos da categoria + distratores (próximos = mesmo cenário; fáceis = outro cenário).
-  const targets = shuffleFlex(itemsByFlexCat(domain, cat.id)).slice(0, spec.targets);
+  // Direto: alvos + distratores próximos (categorias vizinhas = difícil) e fáceis (distantes).
+  const targets = shuffle(itemsByCat(cat.id)).slice(0, spec.targets);
   const nDist = size - targets.length;
   const nClose = Math.round(nDist * spec.close);
-  const closePool = shuffleFlex(domain.items.filter(i => i.cat !== cat.id));
-  const farPool = shuffleFlex(ALL_DOMAINS.filter(d => d.id !== domain.id).flatMap(d => d.items));
-  const close = closePool.slice(0, nClose);
-  const far = farPool.slice(0, nDist - close.length);
-  return shuffleFlex([...targets.map(x => mk(x, true)), ...close.map(x => mk(x, false)), ...far.map(x => mk(x, false))]);
+  const nearCats = NEAR[cat.id] ?? [];
+  const closePool = shuffle(BUSCA_ITEMS.filter(i => nearCats.includes(i.cat)));
+  const farPool = shuffle(BUSCA_ITEMS.filter(i => i.cat !== cat.id && !nearCats.includes(i.cat)));
+  let dist = [...closePool.slice(0, nClose), ...farPool.slice(0, Math.max(0, nDist - Math.min(nClose, closePool.length)))];
+  if (dist.length < nDist) {
+    const used = new Set([...targets, ...dist].map(i => i.id));
+    dist = dist.concat(shuffle(BUSCA_ITEMS.filter(i => i.cat !== cat.id && !used.has(i.id))).slice(0, nDist - dist.length));
+  }
+  dist = dist.slice(0, nDist);
+  return shuffle([...targets.map(x => mk(x, true)), ...dist.map(x => mk(x, false))]);
 }
 
 // ── Tutorial ─────────────────────────────────────────────────────────────────
 function TutStep({ onDone }: { theme: Theme; onDone: () => void }) {
-  const ITEMS: GridItem[] = [
-    { id: "banana",  name: "Banana",  cat: "hortifruti", price: 3.9, isTarget: true,  collected: false },
-    { id: "sabao",   name: "Sabão",   cat: "higiene",    price: 18.9, isTarget: false, collected: false },
-    { id: "maca",    name: "Maçã",    cat: "hortifruti", price: 6.9, isTarget: true,  collected: false },
-    { id: "refri",   name: "Refri",   cat: "bebidas",    price: 8.9, isTarget: false, collected: false },
-    { id: "cenoura", name: "Cenoura", cat: "hortifruti", price: 4.9, isTarget: true,  collected: false },
-    { id: "cafe",    name: "Café",    cat: "mercearia",  price: 11.9, isTarget: false, collected: false },
+  const ITEMS = [
+    { id: "banana",  name: "Banana",  isTarget: true },
+    { id: "sabonete", name: "Sabonete", isTarget: false },
+    { id: "maca",    name: "Maçã",    isTarget: true },
+    { id: "cafe",    name: "Café",    isTarget: false },
+    { id: "cenoura", name: "Cenoura", isTarget: true },
+    { id: "pasta-dente", name: "Pasta", isTarget: false },
   ];
   const [col, setCol] = useState(new Set<string>());
   const doneRef = useRef(false);
@@ -87,7 +97,7 @@ function TutStep({ onDone }: { theme: Theme; onDone: () => void }) {
           <button key={item.id} onClick={() => tap(item.id, item.isTarget)} disabled={col.has(item.id)}
             className={`p-2 rounded-2xl border flex flex-col items-center gap-1 transition active:scale-95 ${
               col.has(item.id) ? "border-green-500 bg-green-50" : "border-[#E2E8F0] bg-white"}`}>
-            <ItemSvg id={item.id} size={34} />
+            <ItemImg id={item.id} size={40} />
             <span className="text-xs text-center leading-none text-[#334155]">{item.name}</span>
           </button>
         ))}
@@ -112,11 +122,10 @@ export function CorridaContraOTempo({ difficulty, theme, onComplete }: Props) {
   const [showTutorial, setShowTutorial] = useState(true);
   const { begin, isTimeUp, elapsedSec, finish } = useTimedProgress();
 
-  const domainRef = useRef<FlexDomain>(pickRandomDomain());
   const [round, setRound] = useState(0);
   const [phase, setPhase] = useState<Phase>("ready");
   const [mode, setMode] = useState<Mode>("direct");
-  const [targetCat, setTargetCat] = useState<FlexCategory>(domainRef.current.categories[0]);
+  const [targetCat, setTargetCat] = useState<BuscaCat>(BUSCA_CATS[0]);
   const [items, setItems] = useState<GridItem[]>([]);
   const [timeLeft, setTimeLeft] = useState(20);
   const [flash, setFlash] = useState<{ id: string; ok: boolean } | null>(null);
@@ -143,15 +152,12 @@ export function CorridaContraOTempo({ difficulty, theme, onComplete }: Props) {
 
   function startRound() {
     begin();
-    if (roundRef.current % 3 === 0 && roundRef.current > 0) domainRef.current = pickRandomDomain();
-    const domain = domainRef.current;
     const lvl = curLevelRef.current;
     const m = modeFor(lvl, roundRef.current);
-    const cats = domain.categories;
-    const pool = cats.length > 1 ? cats.filter(c => c.id !== lastCatRef.current) : cats;
+    const pool = BUSCA_CATS.filter(c => c.id !== lastCatRef.current);
     const cat = pool[Math.floor(Math.random() * pool.length)];
     lastCatRef.current = cat.id;
-    const newItems = buildGrid(domain, cat, lvl, m);
+    const newItems = buildGrid(cat, lvl, m);
     endedRef.current = false;
     hitsRef.current = 0; errRef.current = 0;
     totalRef.current = newItems.filter(i => i.isTarget).length;
@@ -309,12 +315,13 @@ export function CorridaContraOTempo({ difficulty, theme, onComplete }: Props) {
                   const bgc = item.collected ? "#F0FDF4" : isFlash && !flash!.ok ? "#FEF2F2" : "#fff";
                   return (
                     <motion.button key={item.id} onPointerDown={() => handleTap(item)} disabled={item.collected || endedRef.current}
-                      className="rounded-2xl flex flex-col items-center gap-1.5 p-2.5"
-                      style={{ border: `2px solid ${border}`, background: bgc, opacity: item.collected ? 0.55 : 1, cursor: "pointer" }}
-                      animate={isFlash && !flash!.ok ? { x: [-3, 3, -3, 3, 0] } : item.collected ? { scale: [1, 1.1, 1] } : {}}
+                      className="rounded-2xl overflow-hidden"
+                      style={{ border: `2px solid ${border}`, background: bgc, opacity: item.collected ? 0.6 : 1, cursor: "pointer", aspectRatio: "1 / 1", padding: 0, WebkitTapHighlightColor: "transparent" }}
+                      animate={isFlash && !flash!.ok ? { x: [-3, 3, -3, 3, 0] } : item.collected ? { scale: [1, 1.06, 1] } : {}}
                       transition={{ duration: 0.25 }}>
-                      <ItemSvg id={item.id} size={46} />
-                      <span className="text-xs text-center leading-tight font-semibold" style={{ color: "#334155" }}>{item.name}</span>
+                      {/* eslint-disable-next-line @next/next/no-img-element */}
+                      <img src={`/exercises/busca/${item.id}.png`} alt={item.name} draggable={false}
+                        style={{ width: "100%", height: "100%", objectFit: "contain", display: "block", pointerEvents: "none" }} />
                     </motion.button>
                   );
                 })}
