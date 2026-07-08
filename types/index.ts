@@ -305,9 +305,9 @@ export const EXERCISE_DEFINITIONS = {
   },
   "corrida-tempo": {
     id: "corrida-tempo",
-    name: "Corrida contra o Tempo",
+    name: "Busca Rápida",
     domain: "processing" as Domain,
-    description: "Colete todos os itens da categoria antes que o tempo acabe",
+    description: "Encontre rapidamente os itens que seguem a regra da rodada. Treina velocidade de processamento, atenção seletiva e controle de impulsos.",
     estimatedMinutes: 7,
     icon: "⏱️",
   },
