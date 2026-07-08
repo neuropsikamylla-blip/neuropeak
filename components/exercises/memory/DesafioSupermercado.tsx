@@ -32,6 +32,7 @@ const CATEGORIES: Record<string, Product[]> = {
     { id: "laranja", name: "Laranja" }, { id: "morango", name: "Morango" },
     { id: "uva", name: "Uva" }, { id: "pera", name: "Pera" },
     { id: "manga", name: "Manga" }, { id: "abacaxi", name: "Abacaxi" },
+    { id: "melancia", name: "Melancia" }, { id: "limao", name: "Limão" },
     { id: "tomate", name: "Tomate" }, { id: "cebola", name: "Cebola" },
     { id: "batata", name: "Batata" }, { id: "cenoura", name: "Cenoura" },
     { id: "alface", name: "Alface" }, { id: "brocolis", name: "Brócolis" },
