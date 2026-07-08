@@ -91,14 +91,18 @@ const CATEGORIES: Record<string, Product[]> = {
   ],
   limpeza: [
     { id: "sabao-liquido", name: "Sabão líquido" }, { id: "alcool", name: "Álcool" },
-    { id: "detergente", name: "Detergente" }, { id: "pano", name: "Pano de limpeza" },
-    { id: "papel-toalha", name: "Papel toalha" },
+    { id: "alcool-gel", name: "Álcool em gel" }, { id: "detergente", name: "Detergente" },
+    { id: "pano", name: "Pano de limpeza" }, { id: "papel-toalha", name: "Papel toalha" },
   ],
   higiene: [
-    { id: "sabonete", name: "Sabonete" }, { id: "cotonete", name: "Cotonete" },
-    { id: "fralda", name: "Fralda" }, { id: "escova", name: "Escova de dente" },
-    { id: "pasta-dente", name: "Pasta de dente" },
+    { id: "sabonete", name: "Sabonete" }, { id: "sabonete-liquido", name: "Sabonete líquido" },
+    { id: "cotonete", name: "Cotonete" }, { id: "fralda", name: "Fralda" },
+    { id: "escova", name: "Escova de dente" }, { id: "pasta-dente", name: "Pasta de dente" },
     { id: "fio-dental", name: "Fio dental" }, { id: "shampoo", name: "Shampoo" },
+    { id: "condicionador", name: "Condicionador" }, { id: "enxaguante", name: "Enxaguante bucal" },
+    { id: "desodorante", name: "Desodorante" }, { id: "lencos-umedecidos", name: "Lenços umedecidos" },
+    { id: "protetor-solar", name: "Protetor solar" }, { id: "hidratante-corporal", name: "Hidratante corporal" },
+    { id: "creme-maos", name: "Creme para as mãos" },
   ],
 };
 
