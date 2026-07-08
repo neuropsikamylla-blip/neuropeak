@@ -33,23 +33,43 @@ const CATEGORIES: Record<string, Product[]> = {
     { id: "limao", name: "Limão" }, { id: "cebola", name: "Cebola" },
     { id: "brocolis", name: "Brócolis" }, { id: "pepino", name: "Pepino" },
   ],
+  graos: [
+    { id: "arroz", name: "Arroz" }, { id: "feijao", name: "Feijão" },
+    { id: "lentilha", name: "Lentilha" },
+  ],
+  massas: [
+    { id: "espaguete", name: "Espaguete" }, { id: "parafuso", name: "Macarrão parafuso" },
+  ],
+  farinhas: [
+    { id: "farinha-trigo", name: "Farinha de trigo" }, { id: "fuba", name: "Fubá" },
+    { id: "farinha-mandioca", name: "Farinha de mandioca" }, { id: "amido", name: "Amido de milho" },
+  ],
+  oleos: [
+    { id: "oleo", name: "Óleo" }, { id: "azeite", name: "Azeite" }, { id: "vinagre", name: "Vinagre" },
+  ],
   mercearia: [
     { id: "aveia", name: "Aveia" }, { id: "granola", name: "Granola" },
-    { id: "cereal", name: "Cereal" }, { id: "amido", name: "Amido de milho" },
-    { id: "fermento", name: "Fermento em pó" }, { id: "batata-frita", name: "Batata frita" },
-    { id: "biscoito", name: "Biscoito recheado" }, { id: "achocolatado", name: "Achocolatado" },
+    { id: "cereal", name: "Cereal" }, { id: "fermento", name: "Fermento em pó" },
+    { id: "batata-frita", name: "Batata frita" }, { id: "biscoito", name: "Biscoito recheado" },
+    { id: "achocolatado", name: "Achocolatado" }, { id: "acucar", name: "Açúcar" },
+    { id: "sal", name: "Sal" }, { id: "cafe", name: "Café" },
+    { id: "pipoca", name: "Pipoca de micro-ondas" }, { id: "mel", name: "Mel" },
+    { id: "geleia-morango", name: "Geleia de morango" }, { id: "leite-po", name: "Leite em pó" },
   ],
   enlatados: [
     { id: "milho", name: "Milho em lata" }, { id: "ervilha", name: "Ervilha em lata" },
+    { id: "atum", name: "Atum" }, { id: "sardinha", name: "Sardinha" },
   ],
   molhos: [
     { id: "extrato", name: "Extrato de tomate" }, { id: "maionese", name: "Maionese" },
     { id: "ketchup", name: "Ketchup" }, { id: "mostarda", name: "Mostarda" },
+    { id: "shoyu", name: "Molho shoyu" },
   ],
   frios: [
     { id: "presunto", name: "Presunto" }, { id: "requeijao", name: "Requeijão" },
     { id: "creme-leite", name: "Creme de leite" }, { id: "leite-condensado", name: "Leite condensado" },
-    { id: "leite", name: "Leite" },
+    { id: "leite", name: "Leite" }, { id: "queijo", name: "Queijo" },
+    { id: "iogurte", name: "Iogurte" }, { id: "manteiga", name: "Manteiga" },
   ],
   carnes: [
     { id: "peixe", name: "Peixe" }, { id: "linguica", name: "Linguiça" },
@@ -66,11 +86,13 @@ const CATEGORIES: Record<string, Product[]> = {
   ],
   bebidas: [
     { id: "energetico", name: "Energético" }, { id: "agua-coco", name: "Água de coco" },
+    { id: "suco-laranja", name: "Suco de laranja" }, { id: "suco-uva", name: "Suco de uva" },
+    { id: "cha", name: "Chá" }, { id: "agua-mineral", name: "Água mineral" },
   ],
   limpeza: [
     { id: "sabao-liquido", name: "Sabão líquido" }, { id: "alcool", name: "Álcool" },
     { id: "detergente", name: "Detergente" }, { id: "pano", name: "Pano de limpeza" },
-    { id: "luva", name: "Luva" },
+    { id: "luva", name: "Luva" }, { id: "papel-toalha", name: "Papel toalha" },
   ],
   higiene: [
     { id: "sabonete", name: "Sabonete" }, { id: "cotonete", name: "Cotonete" },
