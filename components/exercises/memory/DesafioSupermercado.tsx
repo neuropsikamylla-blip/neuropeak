@@ -97,6 +97,7 @@ const CATEGORIES: Record<string, Product[]> = {
   higiene: [
     { id: "sabonete", name: "Sabonete" }, { id: "cotonete", name: "Cotonete" },
     { id: "fralda", name: "Fralda" }, { id: "escova", name: "Escova de dente" },
+    { id: "pasta-dente", name: "Pasta de dente" },
     { id: "fio-dental", name: "Fio dental" }, { id: "shampoo", name: "Shampoo" },
   ],
 };
