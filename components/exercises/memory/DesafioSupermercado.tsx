@@ -28,10 +28,14 @@ interface Product { id: string; name: string; }
 
 const CATEGORIES: Record<string, Product[]> = {
   hortifruti: [
-    { id: "abacaxi", name: "Abacaxi" }, { id: "manga", name: "Manga" },
-    { id: "melancia", name: "Melancia" }, { id: "morango", name: "Morango" },
-    { id: "limao", name: "Limão" }, { id: "cebola", name: "Cebola" },
-    { id: "brocolis", name: "Brócolis" }, { id: "pepino", name: "Pepino" },
+    { id: "banana", name: "Banana" }, { id: "maca", name: "Maçã" },
+    { id: "laranja", name: "Laranja" }, { id: "morango", name: "Morango" },
+    { id: "uva", name: "Uva" }, { id: "pera", name: "Pera" },
+    { id: "manga", name: "Manga" }, { id: "abacaxi", name: "Abacaxi" },
+    { id: "tomate", name: "Tomate" }, { id: "cebola", name: "Cebola" },
+    { id: "batata", name: "Batata" }, { id: "cenoura", name: "Cenoura" },
+    { id: "alface", name: "Alface" }, { id: "brocolis", name: "Brócolis" },
+    { id: "abobrinha", name: "Abobrinha" }, { id: "pepino", name: "Pepino" },
   ],
   graos: [
     { id: "arroz", name: "Arroz" }, { id: "feijao", name: "Feijão" },
@@ -90,19 +94,28 @@ const CATEGORIES: Record<string, Product[]> = {
     { id: "cha", name: "Chá" }, { id: "agua-mineral", name: "Água mineral" },
   ],
   limpeza: [
-    { id: "sabao-liquido", name: "Sabão líquido" }, { id: "alcool", name: "Álcool" },
-    { id: "alcool-gel", name: "Álcool em gel" }, { id: "detergente", name: "Detergente" },
-    { id: "pano", name: "Pano de limpeza" }, { id: "papel-toalha", name: "Papel toalha" },
+    { id: "detergente", name: "Detergente" }, { id: "detergente-limao", name: "Detergente limão" },
+    { id: "limpador-multiuso", name: "Limpador multiuso" }, { id: "limpa-vidros", name: "Limpa-vidros" },
+    { id: "desengordurante", name: "Desengordurante" }, { id: "limpador-sanitario", name: "Limpador sanitário" },
+    { id: "desinfetante", name: "Desinfetante" }, { id: "agua-sanitaria", name: "Água sanitária" },
+    { id: "alcool", name: "Álcool" }, { id: "alcool-gel", name: "Álcool em gel" },
+    { id: "sabao-liquido", name: "Sabão líquido" }, { id: "esponja", name: "Esponja" },
+    { id: "saco-lixo", name: "Saco de lixo" }, { id: "pano", name: "Pano de limpeza" },
+    { id: "papel-toalha", name: "Papel toalha" },
+  ],
+  lavanderia: [
+    { id: "sabao-po", name: "Sabão em pó" }, { id: "detergente-po", name: "Detergente em pó" },
+    { id: "sabao-barra", name: "Sabão em barra" }, { id: "amaciante", name: "Amaciante" },
   ],
   higiene: [
-    { id: "sabonete", name: "Sabonete" }, { id: "sabonete-liquido", name: "Sabonete líquido" },
+    { id: "sabonete", name: "Sabonete" }, { id: "sabonete-laranja", name: "Sabonete laranja" },
+    { id: "sabonete-liquido", name: "Sabonete líquido" }, { id: "escova", name: "Escova de dente" },
+    { id: "pasta-dente", name: "Pasta de dente" }, { id: "creme-dental", name: "Creme dental" },
+    { id: "fio-dental", name: "Fio dental" }, { id: "enxaguante", name: "Enxaguante bucal" },
+    { id: "shampoo", name: "Shampoo" }, { id: "condicionador", name: "Condicionador" },
+    { id: "desodorante", name: "Desodorante" }, { id: "protetor-solar", name: "Protetor solar" },
+    { id: "creme-maos", name: "Creme para as mãos" }, { id: "lencos-umedecidos", name: "Lenços umedecidos" },
     { id: "cotonete", name: "Cotonete" }, { id: "fralda", name: "Fralda" },
-    { id: "escova", name: "Escova de dente" }, { id: "pasta-dente", name: "Pasta de dente" },
-    { id: "fio-dental", name: "Fio dental" }, { id: "shampoo", name: "Shampoo" },
-    { id: "condicionador", name: "Condicionador" }, { id: "enxaguante", name: "Enxaguante bucal" },
-    { id: "desodorante", name: "Desodorante" }, { id: "lencos-umedecidos", name: "Lenços umedecidos" },
-    { id: "protetor-solar", name: "Protetor solar" }, { id: "hidratante-corporal", name: "Hidratante corporal" },
-    { id: "creme-maos", name: "Creme para as mãos" },
   ],
 };
 
