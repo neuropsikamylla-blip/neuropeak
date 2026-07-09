@@ -46,7 +46,8 @@ export interface Round {
 
 export interface RuleStatus {
   state: "ok" | "pending" | "violated";
-  label: string;             // texto com progresso ao vivo, ex "Hortifruti: 2/2"
+  label: string;             // descrição estática, ex "Total no máximo R$ 30,00"
+  value: string;             // valor ao vivo, ex "0/2" ou "R$ 24,80" ("" se não houver)
 }
 
 // ── Utilidades ────────────────────────────────────────────────────────────────
@@ -106,46 +107,49 @@ export function ruleStatus(rule: Rule, sel: Item[], cats: Category[]): RuleStatu
   const total = Math.round(sel.reduce((s, i) => s + i.price, 0) * 100) / 100;
   const catN = (c: string) => sel.filter(i => i.cat === c).length;
   const ok = ruleSatisfied(rule, sel);
-  const mk = (state: RuleStatus["state"], label: string): RuleStatus => ({ state, label });
+  const mk = (state: RuleStatus["state"], label: string, value: string): RuleStatus => ({ state, label, value });
   switch (rule.kind) {
     case "count":
       return mk(ok ? "ok" : sel.length > rule.n ? "violated" : "pending",
-        `Escolha exatamente ${rule.n} ${rule.n === 1 ? "item" : "itens"} (${sel.length}/${rule.n})`);
+        `Escolha exatamente ${rule.n} ${rule.n === 1 ? "item" : "itens"}`, `${sel.length}/${rule.n}`);
     case "budgetMax":
       return mk(total > rule.max ? "violated" : ok ? "ok" : "pending",
-        `Total no máximo ${fmt(rule.max)} (${fmt(total)})`);
+        `Total no máximo ${fmt(rule.max)}`, fmt(total));
     case "budgetMin":
-      return mk(ok ? "ok" : "pending", `Total no mínimo ${fmt(rule.min)} (${fmt(total)})`);
+      return mk(ok ? "ok" : "pending", `Total no mínimo ${fmt(rule.min)}`, fmt(total));
     case "budgetRange":
       return mk(total > rule.max ? "violated" : ok ? "ok" : "pending",
-        `Total entre ${fmt(rule.min)} e ${fmt(rule.max)} (${fmt(total)})`);
+        `Total entre ${fmt(rule.min)} e ${fmt(rule.max)}`, fmt(total));
     case "catAtLeast": {
       const c = catLabel(cats, rule.cat);
-      return mk(ok ? "ok" : "pending", `Inclua pelo menos ${rule.n} ${c.emoji} ${c.label} (${catN(rule.cat)}/${rule.n})`);
+      return mk(ok ? "ok" : "pending", `Inclua pelo menos ${rule.n} ${c.emoji} ${c.label}`, `${catN(rule.cat)}/${rule.n}`);
     }
     case "catAtMost": {
       const c = catLabel(cats, rule.cat);
-      return mk(ok ? "ok" : "violated", `No máximo ${rule.n} ${c.emoji} ${c.label} (${catN(rule.cat)}/${rule.n})`);
+      return mk(ok ? "ok" : "violated", `No máximo ${rule.n} ${c.emoji} ${c.label}`, `${catN(rule.cat)}/${rule.n}`);
     }
     case "catExactly": {
       const c = catLabel(cats, rule.cat);
       return mk(catN(rule.cat) > rule.n ? "violated" : ok ? "ok" : "pending",
-        `Inclua exatamente ${rule.n} ${c.emoji} ${c.label} (${catN(rule.cat)}/${rule.n})`);
+        `Inclua exatamente ${rule.n} ${c.emoji} ${c.label}`, `${catN(rule.cat)}/${rule.n}`);
     }
     case "catForbidden": {
       const c = catLabel(cats, rule.cat);
-      return mk(ok ? "ok" : "violated", `Não inclua ${c.emoji} ${c.label} (${catN(rule.cat)} selecionado${catN(rule.cat) !== 1 ? "s" : ""})`);
+      const n = catN(rule.cat);
+      return mk(ok ? "ok" : "violated", `Não inclua ${c.emoji} ${c.label}`, n === 0 ? "0" : `${n} selecionado${n !== 1 ? "s" : ""}`);
     }
     case "cheapAtLeast": {
       const have = sel.filter(i => i.price < rule.under).length;
-      return mk(ok ? "ok" : "pending", `Pelo menos ${rule.n} item abaixo de ${fmt(rule.under)} (${have}/${rule.n})`);
+      return mk(ok ? "ok" : "pending", `Pelo menos ${rule.n} ${rule.n === 1 ? "item" : "itens"} abaixo de ${fmt(rule.under)}`, `${have}/${rule.n}`);
     }
-    case "priceCeil":
-      return mk(ok ? "ok" : "violated", `Nenhum item acima de ${fmt(rule.max)}`);
+    case "priceCeil": {
+      const over = sel.filter(i => i.price > rule.max).length;
+      return mk(ok ? "ok" : "violated", `Nenhum item acima de ${fmt(rule.max)}`, over > 0 ? `${over} acima` : "");
+    }
     case "noRepeatSub":
-      return mk(ok ? "ok" : "violated", `Não repita a mesma subcategoria`);
+      return mk(ok ? "ok" : "violated", `Não repita a mesma subcategoria`, "");
     case "noRepeatCat":
-      return mk(ok ? "ok" : "violated", `Não repita a mesma categoria`);
+      return mk(ok ? "ok" : "violated", `Não repita a mesma categoria`, "");
   }
 }
 
