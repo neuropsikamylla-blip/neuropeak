@@ -226,14 +226,14 @@ function AgentCard({ gameAgent, onClick, state, size, flashy }: {
 // cache-bust: força o navegador a buscar as imagens novas (transparentes),
 // mesmo que tenha a versão antiga (com fundo) guardada em cache. Subir este
 // número sempre que reprocessar as imagens dos agentes.
-const AGENT_V = "?v=5";
+const AGENT_V = "?v=6";
 const DEMO_AGENTS = [
-  { id: "d-1", src: "/exercises/agentes-personagens/01_agente_azul_com_fone.png",       isTarget: true,  wave: { amp: 10, dur: 3.0, delay: 0.0 } },
-  { id: "d-2", src: "/exercises/agentes-personagens/05_agente_vermelho_com_bone.png",   isTarget: false, wave: { amp:  8, dur: 2.5, delay: 0.6 } },
-  { id: "d-3", src: "/exercises/agentes-personagens/07_agente_verde_com_oculos.png",    isTarget: false, wave: { amp: 12, dur: 3.5, delay: 1.1 } },
-  { id: "d-4", src: "/exercises/agentes-personagens/09_agente_roxo_com_raquete.png",    isTarget: false, wave: { amp:  9, dur: 2.8, delay: 0.4 } },
-  { id: "d-5", src: "/exercises/agentes-personagens/03_agente_laranja_com_skate.png",   isTarget: false, wave: { amp: 11, dur: 3.2, delay: 1.7 } },
-  { id: "d-6", src: "/exercises/agentes-personagens/11_agente_amarelo_com_mochila.png", isTarget: false, wave: { amp:  7, dur: 2.6, delay: 0.9 } },
+  { id: "d-1", src: "/exercises/agentes-personagens/azul_fone.png",         isTarget: true,  wave: { amp: 10, dur: 3.0, delay: 0.0 } },
+  { id: "d-2", src: "/exercises/agentes-personagens/vermelho_base.png",     isTarget: false, wave: { amp:  8, dur: 2.5, delay: 0.6 } },
+  { id: "d-3", src: "/exercises/agentes-personagens/verde_oculos.png",      isTarget: false, wave: { amp: 12, dur: 3.5, delay: 1.1 } },
+  { id: "d-4", src: "/exercises/agentes-personagens/roxo_bone.png",         isTarget: false, wave: { amp:  9, dur: 2.8, delay: 0.4 } },
+  { id: "d-5", src: "/exercises/agentes-personagens/laranja_fone_bone.png", isTarget: false, wave: { amp: 11, dur: 3.2, delay: 1.7 } },
+  { id: "d-6", src: "/exercises/agentes-personagens/amarelo_oculos.png",    isTarget: false, wave: { amp:  7, dur: 2.6, delay: 0.9 } },
 ];
 
 // ── Tela de seleção de modo + nível ─────────────────────────────────────────────
