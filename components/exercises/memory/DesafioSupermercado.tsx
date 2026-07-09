@@ -37,6 +37,11 @@ const CATEGORIES: Record<string, Product[]> = {
     { id: "batata", name: "Batata" }, { id: "cenoura", name: "Cenoura" },
     { id: "alface", name: "Alface" }, { id: "brocolis", name: "Brócolis" },
     { id: "abobrinha", name: "Abobrinha" }, { id: "pepino", name: "Pepino" },
+    { id: "alho", name: "Alho" }, { id: "couve", name: "Couve" },
+    { id: "pimentao", name: "Pimentão" }, { id: "mandioca", name: "Mandioca" },
+    { id: "batata-doce", name: "Batata-doce" }, { id: "kiwi", name: "Kiwi" },
+    { id: "abacate", name: "Abacate" }, { id: "beterraba", name: "Beterraba" },
+    { id: "mamao", name: "Mamão" }, { id: "melao", name: "Melão" },
   ],
   graos: [
     { id: "arroz", name: "Arroz" }, { id: "feijao", name: "Feijão" },
@@ -44,6 +49,7 @@ const CATEGORIES: Record<string, Product[]> = {
   ],
   massas: [
     { id: "espaguete", name: "Espaguete" }, { id: "parafuso", name: "Macarrão parafuso" },
+    { id: "miojo", name: "Macarrão instantâneo" },
   ],
   farinhas: [
     { id: "farinha-trigo", name: "Farinha de trigo" }, { id: "fuba", name: "Fubá" },
@@ -60,6 +66,9 @@ const CATEGORIES: Record<string, Product[]> = {
     { id: "sal", name: "Sal" }, { id: "cafe", name: "Café" },
     { id: "pipoca", name: "Pipoca de micro-ondas" }, { id: "mel", name: "Mel" },
     { id: "geleia-morango", name: "Geleia de morango" }, { id: "leite-po", name: "Leite em pó" },
+    { id: "cream-cracker", name: "Biscoito água e sal" }, { id: "caldo-carne", name: "Caldo de carne" },
+    { id: "pirulito", name: "Pirulito" }, { id: "amendoim", name: "Amendoim" },
+    { id: "batata-chips", name: "Batata chips" }, { id: "chocolate", name: "Chocolate" },
   ],
   enlatados: [
     { id: "milho", name: "Milho em lata" }, { id: "ervilha", name: "Ervilha em lata" },
@@ -75,24 +84,33 @@ const CATEGORIES: Record<string, Product[]> = {
     { id: "creme-leite", name: "Creme de leite" }, { id: "leite-condensado", name: "Leite condensado" },
     { id: "leite", name: "Leite" }, { id: "queijo", name: "Queijo" },
     { id: "iogurte", name: "Iogurte" }, { id: "manteiga", name: "Manteiga" },
+    { id: "peito-peru", name: "Peito de peru" }, { id: "margarina", name: "Margarina" },
+    { id: "mussarela", name: "Mussarela fatiada" }, { id: "ovos", name: "Ovos" },
   ],
   carnes: [
     { id: "peixe", name: "Peixe" }, { id: "linguica", name: "Linguiça" },
     { id: "salsicha", name: "Salsicha" }, { id: "hamburguer", name: "Hambúrguer" },
+    { id: "frango-assado", name: "Frango assado" },
   ],
   congelados: [
     { id: "nuggets", name: "Nuggets" }, { id: "pizza", name: "Pizza congelada" },
-    { id: "sorvete", name: "Sorvete" },
+    { id: "sorvete", name: "Sorvete" }, { id: "acai", name: "Açaí" },
+    { id: "pao-queijo", name: "Pão de queijo" }, { id: "ervilha-congelada", name: "Ervilha congelada" },
+    { id: "lasanha", name: "Lasanha congelada" },
   ],
   padaria: [
     { id: "bolo", name: "Bolo" }, { id: "cookies", name: "Cookies" },
     { id: "pao", name: "Pão" }, { id: "croissant", name: "Croissant" },
-    { id: "donut", name: "Donut" },
+    { id: "donut", name: "Donut" }, { id: "baguete", name: "Baguete" },
+    { id: "rosquinha", name: "Rosquinha" }, { id: "pao-forma", name: "Pão de forma" },
+    { id: "torta-morango", name: "Torta de morango" },
   ],
   bebidas: [
     { id: "energetico", name: "Energético" }, { id: "agua-coco", name: "Água de coco" },
     { id: "suco-laranja", name: "Suco de laranja" }, { id: "suco-uva", name: "Suco de uva" },
     { id: "cha", name: "Chá" }, { id: "agua-mineral", name: "Água mineral" },
+    { id: "refrigerante-cola", name: "Refrigerante" }, { id: "isotonico", name: "Isotônico" },
+    { id: "suco-caixinha", name: "Suco de caixinha" }, { id: "guarana", name: "Guaraná" },
   ],
   limpeza: [
     { id: "detergente", name: "Detergente" }, { id: "detergente-limao", name: "Detergente limão" },
