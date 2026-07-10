@@ -3,13 +3,12 @@
 import { useState, useEffect, useRef } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { Timer, Target, Ban, Check, Zap, Crosshair, MousePointerClick, Eye } from "lucide-react";
-import Image from "next/image";
 import { calculateExerciseScore } from "@/lib/scoring";
 import { useTimedProgress } from "@/components/exercises/useExerciseEngine";
 import { TutorialBase } from "@/components/exercises/TutorialBase";
 import type { ExerciseResult, Theme } from "@/types";
 import {
-  BUSCA_CATS, BUSCA_ITEMS, NEAR, itemsByCat, shuffle,
+  BUSCA_CATS, BUSCA_ITEMS, NEAR, itemsByCat, shuffle, pickValid, buscaImgUrl,
   type BuscaItem, type BuscaCat,
 } from "@/lib/busca-items";
 
@@ -17,9 +16,17 @@ interface Props { difficulty: number; theme: Theme; onComplete: (result: Exercis
 interface GridItem extends BuscaItem { isTarget: boolean; collected: boolean; }
 type Mode = "direct" | "exclusion";
 
-// Item renderizado por imagem (3D consistente).
-function ItemImg({ id, size }: { id: string; size: number }) {
-  return <Image src={`/exercises/busca/${id}.png`} alt="" width={size} height={size} unoptimized style={{ objectFit: "contain", display: "block" }} />;
+// Imagem do item dentro do card: centralizada, contida e com respiro — o objeto
+// (já normalizado a ~80% do quadro) ocupa ~65-70% do card e NUNCA encosta na borda.
+// Preenche o card por posição absoluta; o pai deve ter position:relative.
+function ItemImage({ id, alt }: { id: string; alt?: string }) {
+  return (
+    <span style={{ position: "absolute", inset: 0, display: "flex", alignItems: "center", justifyContent: "center", padding: "8%" }}>
+      {/* eslint-disable-next-line @next/next/no-img-element */}
+      <img src={buscaImgUrl(id)} alt={alt ?? ""} draggable={false}
+        style={{ maxWidth: "100%", maxHeight: "100%", width: "auto", height: "auto", objectFit: "contain", display: "block", pointerEvents: "none" }} />
+    </span>
+  );
 }
 
 // ── Progressão de dificuldade (5 níveis) ─────────────────────────────────────
@@ -40,52 +47,71 @@ function modeFor(lvl: number, round: number): Mode {
   return lvl >= 5 && round % 2 === 1 ? "exclusion" : "direct";
 }
 
-function buildGrid(cat: BuscaCat, lvl: number, mode: Mode): GridItem[] {
+// Monta a grade JÁ VALIDANDO cada item: `pickValid` só devolve itens cuja imagem
+// carrega. Nenhum item sem imagem entra na rodada — a troca acontece ANTES de
+// renderizar, não depois que a interface tenta carregar. Por isso é async.
+async function buildGrid(cat: BuscaCat, lvl: number, mode: Mode): Promise<GridItem[]> {
   const spec = levelSpec(lvl);
   const size = spec.items;
   const mk = (x: BuscaItem, isTarget: boolean): GridItem => ({ ...x, isTarget, collected: false });
+  const used = new Set<string>();
 
   if (mode === "exclusion") {
     // Evitar a categoria saliente; tocar em todo o resto.
     const nAvoid = Math.min(spec.tier >= 4 ? 4 : 3, itemsByCat(cat.id).length);
-    const avoid = shuffle(itemsByCat(cat.id)).slice(0, nAvoid);
-    const rest = shuffle(BUSCA_ITEMS.filter(i => i.cat !== cat.id)).slice(0, size - avoid.length);
+    const avoid = await pickValid(itemsByCat(cat.id), nAvoid, used);
+    const rest = await pickValid(BUSCA_ITEMS.filter(i => i.cat !== cat.id), size - avoid.length, used);
     return shuffle([...avoid.map(x => mk(x, false)), ...rest.map(x => mk(x, true))]);
   }
 
   // Direto: alvos + distratores próximos (categorias vizinhas = difícil) e fáceis (distantes).
-  const targets = shuffle(itemsByCat(cat.id)).slice(0, spec.targets);
+  const targets = await pickValid(itemsByCat(cat.id), spec.targets, used);
   const nDist = size - targets.length;
   const nClose = Math.round(nDist * spec.close);
   const nearCats = NEAR[cat.id] ?? [];
-  const closePool = shuffle(BUSCA_ITEMS.filter(i => nearCats.includes(i.cat)));
-  const farPool = shuffle(BUSCA_ITEMS.filter(i => i.cat !== cat.id && !nearCats.includes(i.cat)));
-  let dist = [...closePool.slice(0, nClose), ...farPool.slice(0, Math.max(0, nDist - Math.min(nClose, closePool.length)))];
+  const close = await pickValid(BUSCA_ITEMS.filter(i => nearCats.includes(i.cat)), nClose, used);
+  const far = await pickValid(BUSCA_ITEMS.filter(i => i.cat !== cat.id && !nearCats.includes(i.cat)), nDist - close.length, used);
+  let dist = [...close, ...far];
   if (dist.length < nDist) {
-    const used = new Set([...targets, ...dist].map(i => i.id));
-    dist = dist.concat(shuffle(BUSCA_ITEMS.filter(i => i.cat !== cat.id && !used.has(i.id))).slice(0, nDist - dist.length));
+    // completa com quaisquer válidos de outras categorias
+    const more = await pickValid(BUSCA_ITEMS.filter(i => i.cat !== cat.id), nDist - dist.length, used);
+    dist = dist.concat(more);
   }
-  dist = dist.slice(0, nDist);
   return shuffle([...targets.map(x => mk(x, true)), ...dist.map(x => mk(x, false))]);
 }
 
 // ── Tutorial ─────────────────────────────────────────────────────────────────
+interface TutItem { id: string; name: string; isTarget: boolean; }
 function TutStep({ onDone }: { theme: Theme; onDone: () => void }) {
-  const ITEMS = [
-    { id: "banana",  name: "Banana",  isTarget: true },
-    { id: "sabonete", name: "Sabonete", isTarget: false },
-    { id: "maca",    name: "Maçã",    isTarget: true },
-    { id: "cafe",    name: "Café",    isTarget: false },
-    { id: "cenoura", name: "Cenoura", isTarget: true },
-    { id: "pasta-dente", name: "Pasta", isTarget: false },
-  ];
+  // Exemplos montados só com itens de imagem válida (mesma validação da rodada):
+  // nada de placeholder ou imagem quebrada no tutorial.
+  const [items, setItems] = useState<TutItem[] | null>(null);
   const [col, setCol] = useState(new Set<string>());
   const doneRef = useRef(false);
+
+  useEffect(() => {
+    let alive = true;
+    (async () => {
+      const used = new Set<string>();
+      const targets = await pickValid(itemsByCat("hortifruti"), 3, used);
+      const distractors = await pickValid(BUSCA_ITEMS.filter(i => i.cat !== "hortifruti"), 3, used);
+      const built = shuffle([
+        ...targets.map(i => ({ id: i.id, name: i.name, isTarget: true })),
+        ...distractors.map(i => ({ id: i.id, name: i.name, isTarget: false })),
+      ]);
+      if (alive) setItems(built);
+    })();
+    return () => { alive = false; };
+  }, []);
+
   function tap(id: string, isTarget: boolean) {
-    if (!isTarget || col.has(id) || doneRef.current) return;
+    if (!items || !isTarget || col.has(id) || doneRef.current) return;
     const n = new Set([...col, id]); setCol(n);
-    if (n.size === ITEMS.filter(i => i.isTarget).length) { doneRef.current = true; setTimeout(onDone, 500); }
+    if (n.size === items.filter(i => i.isTarget).length) { doneRef.current = true; setTimeout(onDone, 500); }
   }
+
+  if (!items) return <div className="py-10 text-center text-sm text-[#94A3B8]">Preparando exemplos…</div>;
+
   return (
     <div>
       <div className="flex items-center gap-2 justify-center mb-1 text-[11px] font-bold uppercase tracking-wide text-[#94A3B8]">
@@ -93,11 +119,13 @@ function TutStep({ onDone }: { theme: Theme; onDone: () => void }) {
       </div>
       <p className="text-center font-black text-lg text-[#0F172A] mb-3">Frutas e verduras</p>
       <div className="grid grid-cols-3 gap-2">
-        {ITEMS.map(item => (
+        {items.map(item => (
           <button key={item.id} onClick={() => tap(item.id, item.isTarget)} disabled={col.has(item.id)}
             className={`p-2 rounded-2xl border flex flex-col items-center gap-1 transition active:scale-95 ${
               col.has(item.id) ? "border-green-500 bg-green-50" : "border-[#E2E8F0] bg-white"}`}>
-            <ItemImg id={item.id} size={40} />
+            <div style={{ position: "relative", width: "100%", aspectRatio: "1 / 1" }}>
+              <ItemImage id={item.id} alt={item.name} />
+            </div>
             <span className="text-xs text-center leading-none text-[#334155]">{item.name}</span>
           </button>
         ))}
@@ -116,7 +144,7 @@ function profileOf(avgCorrect: number, precision: number) {
   return { label: "Lento e impreciso", tip: "Leia a regra com calma e processe a categoria antes de começar a busca." };
 }
 
-type Phase = "ready" | "playing" | "roundfb" | "summary";
+type Phase = "ready" | "loading" | "playing" | "roundfb" | "summary";
 
 export function CorridaContraOTempo({ difficulty, theme, onComplete }: Props) {
   const [showTutorial, setShowTutorial] = useState(true);
@@ -150,14 +178,23 @@ export function CorridaContraOTempo({ difficulty, theme, onComplete }: Props) {
 
   useEffect(() => () => { if (timerRef.current) clearInterval(timerRef.current); }, []);
 
-  function startRound() {
-    begin();
+  async function startRound() {
     const lvl = curLevelRef.current;
     const m = modeFor(lvl, roundRef.current);
+    setPhase("loading"); // valida as imagens ANTES de mostrar a grade
+    // Escolhe categoria (evita repetir a anterior).
     const pool = BUSCA_CATS.filter(c => c.id !== lastCatRef.current);
-    const cat = pool[Math.floor(Math.random() * pool.length)];
+    let cat = pool[Math.floor(Math.random() * pool.length)];
+    let newItems = await buildGrid(cat, lvl, m);
+    // Segurança: se a categoria não rendeu nenhum alvo com imagem válida, tenta outra.
+    let tries = 0;
+    while (newItems.filter(i => i.isTarget).length === 0 && tries < pool.length) {
+      cat = pool[(pool.indexOf(cat) + 1) % pool.length];
+      newItems = await buildGrid(cat, lvl, m);
+      tries++;
+    }
     lastCatRef.current = cat.id;
-    const newItems = buildGrid(cat, lvl, m);
+    begin();
     endedRef.current = false;
     hitsRef.current = 0; errRef.current = 0;
     totalRef.current = newItems.filter(i => i.isTarget).length;
@@ -292,6 +329,13 @@ export function CorridaContraOTempo({ difficulty, theme, onComplete }: Props) {
             </motion.div>
           )}
 
+          {phase === "loading" && (
+            <motion.div key="loading" initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="text-center py-16">
+              <div className="mx-auto mb-3 rounded-full animate-spin" style={{ width: 30, height: 30, border: "3px solid #DBEAFE", borderTopColor: "#1D4ED8" }} />
+              <p className="text-sm" style={{ color: "#64748B" }}>Preparando rodada…</p>
+            </motion.div>
+          )}
+
           {phase === "playing" && (
             <motion.div key={`play-${round}`} initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="mt-3">
               {/* Regra dominante */}
@@ -316,12 +360,10 @@ export function CorridaContraOTempo({ difficulty, theme, onComplete }: Props) {
                   return (
                     <motion.button key={item.id} onPointerDown={() => handleTap(item)} disabled={item.collected || endedRef.current}
                       className="rounded-2xl overflow-hidden"
-                      style={{ border: `2px solid ${border}`, background: bgc, opacity: item.collected ? 0.6 : 1, cursor: "pointer", aspectRatio: "1 / 1", padding: 0, WebkitTapHighlightColor: "transparent" }}
+                      style={{ position: "relative", border: `2px solid ${border}`, background: bgc, opacity: item.collected ? 0.6 : 1, cursor: "pointer", aspectRatio: "1 / 1", padding: 0, WebkitTapHighlightColor: "transparent" }}
                       animate={isFlash && !flash!.ok ? { x: [-3, 3, -3, 3, 0] } : item.collected ? { scale: [1, 1.06, 1] } : {}}
                       transition={{ duration: 0.25 }}>
-                      {/* eslint-disable-next-line @next/next/no-img-element */}
-                      <img src={`/exercises/busca/${item.id}.png`} alt={item.name} draggable={false}
-                        style={{ width: "100%", height: "100%", objectFit: "contain", display: "block", pointerEvents: "none" }} />
+                      <ItemImage id={item.id} alt={item.name} />
                     </motion.button>
                   );
                 })}

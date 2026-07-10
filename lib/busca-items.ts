@@ -296,3 +296,50 @@ export function shuffle<T>(arr: T[]): T[] {
   for (let i = a.length - 1; i > 0; i--) { const j = Math.floor(Math.random() * (i + 1)); [a[i], a[j]] = [a[j], a[i]]; }
   return a;
 }
+
+// ── Validação de imagem (client-side) ────────────────────────────────────────
+// O exercício depende de reconhecimento visual: NUNCA exibir item com imagem
+// quebrada, placeholder ou "?". Antes de entrar numa rodada/tutorial, cada item
+// tem a imagem carregada e verificada; item que falha é descartado do pool.
+export const BUSCA_IMG_BASE = "/exercises/busca";
+export const buscaImgUrl = (id: string) => `${BUSCA_IMG_BASE}/${id}.png`;
+
+// Cache de validação por id (uma tentativa de carregamento por imagem, reusada).
+const _imgOk = new Map<string, Promise<boolean>>();
+
+/** Carrega a imagem do item e resolve true só se ela carregar com dimensões válidas. */
+export function validateBuscaImage(id: string): Promise<boolean> {
+  if (typeof window === "undefined") return Promise.resolve(true); // SSR: não bloqueia
+  let p = _imgOk.get(id);
+  if (!p) {
+    p = new Promise<boolean>((resolve) => {
+      const img = new window.Image();
+      img.onload = () => resolve(img.naturalWidth > 0 && img.naturalHeight > 0);
+      img.onerror = () => resolve(false);
+      img.src = buscaImgUrl(id);
+    });
+    _imgOk.set(id, p);
+  }
+  return p;
+}
+
+/** Item bem-formado: tem id, nome e categoria. */
+export function isWellFormed(i: BuscaItem | undefined | null): i is BuscaItem {
+  return !!(i && i.id && i.name && i.cat);
+}
+
+/**
+ * Percorre `pool` (embaralhado) e devolve os primeiros `n` itens que estão
+ * bem-formados E cuja imagem carrega. Ignora ids já usados (evita repetição).
+ * Valida só o necessário — imagens já verificadas são cache hit instantâneo.
+ */
+export async function pickValid(pool: BuscaItem[], n: number, used?: Set<string>): Promise<BuscaItem[]> {
+  const seen = used ?? new Set<string>();
+  const out: BuscaItem[] = [];
+  for (const it of shuffle(pool)) {
+    if (out.length >= n) break;
+    if (!isWellFormed(it) || seen.has(it.id)) continue;
+    if (await validateBuscaImage(it.id)) { out.push(it); seen.add(it.id); }
+  }
+  return out;
+}
