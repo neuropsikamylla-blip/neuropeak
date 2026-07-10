@@ -52,6 +52,13 @@ const CHAR_H    = CHAR_SIZE * 1.5; // imagens são 2:3 (512×768)
 const TICK_MS   = 50;
 const ARENA_MARGIN = 8;            // margem de segurança: agentes nunca cortam na borda
 
+// Área CLICÁVEL de cada agente = só o corpo visível (o boneco ocupa ~31%–68% da
+// largura e ~2%–95% da altura do PNG; o resto é transparente). Sem isto, o
+// retângulo transparente de um agente sobreposto "rouba" o toque destinado a
+// outro — a pessoa clica no certo e conta errado.
+const HIT_L = 0.24, HIT_R = 0.76;  // faixa horizontal do corpo (+ folga p/ toque)
+const HIT_T = 0.00, HIT_B = 0.96;  // faixa vertical do corpo
+
 // Velocidade-base da arena (px/tick). A velocidade efetiva = base × fator do nível.
 const BASE_ARENA_SPEED = 2.4;
 
@@ -193,13 +200,12 @@ function AgentCard({ gameAgent, onClick, state, size, flashy }: {
 
   const flash = flashy && state === "idle";
   return (
-    <motion.button
-      onClick={onClick}
+    <motion.div
       animate={flash ? { scale: [1, 1.16, 1] } : { scale }}
       whileTap={{ scale: scale * 0.9 }}
       transition={flash ? { duration: 0.7, repeat: Infinity, ease: "easeInOut" } : { duration: 0.15 }}
-      className="relative cursor-pointer"
-      style={{ touchAction: "manipulation", width: size, background: "transparent", border: "none", padding: 0 }}
+      className="relative"
+      style={{ width: size, pointerEvents: "none" }}
     >
       {/* eslint-disable-next-line @next/next/no-img-element */}
       <img src={src + AGENT_V} alt={gameAgent.agent.name}
@@ -209,15 +215,29 @@ function AgentCard({ gameAgent, onClick, state, size, flashy }: {
           opacity: dim ? 0.5 : 1,
           filter: baseShadow + glow,
           transition: "filter 150ms, opacity 150ms",
+          pointerEvents: "none",
         }}
         draggable={false} />
+      {/* Botão = só a silhueta do corpo. Assim, a margem transparente de um agente
+          que passa por cima não intercepta o toque destinado ao agente de baixo. */}
+      <button
+        onClick={onClick}
+        aria-label={gameAgent.agent.name}
+        className="absolute cursor-pointer"
+        style={{
+          left: `${HIT_L * 100}%`, width: `${(HIT_R - HIT_L) * 100}%`,
+          top:  `${HIT_T * 100}%`, height: `${(HIT_B - HIT_T) * 100}%`,
+          background: "transparent", border: "none", padding: 0,
+          pointerEvents: "auto", touchAction: "manipulation",
+        }}
+      />
       {state === "correct" && (
-        <div className="absolute -top-1 -right-1 w-7 h-7 rounded-full bg-green-500 flex items-center justify-center text-white text-sm font-black shadow-lg">✓</div>
+        <div className="absolute -top-1 -right-1 w-7 h-7 rounded-full bg-green-500 flex items-center justify-center text-white text-sm font-black shadow-lg pointer-events-none">✓</div>
       )}
       {state === "wrong" && (
-        <div className="absolute -top-1 -right-1 w-7 h-7 rounded-full bg-red-500 flex items-center justify-center text-white text-sm font-black shadow-lg">✕</div>
+        <div className="absolute -top-1 -right-1 w-7 h-7 rounded-full bg-red-500 flex items-center justify-center text-white text-sm font-black shadow-lg pointer-events-none">✕</div>
       )}
-    </motion.button>
+    </motion.div>
   );
 }
 
@@ -857,12 +877,48 @@ export function FocusAgents({ difficulty, theme, onComplete, exerciseId = "focus
         return { ...f, x, y, angle: na, passCount: f.passCount };
       });
 
+      // Separação suave: impede o EMPILHAMENTO total (vários no mesmo ponto), que
+      // é o que faz parecer "tudo amontoado num lugar só". Mantém a sobreposição
+      // PARCIAL — passar à frente/atrás continua sendo o desafio. Não roda no modo
+      // direcional (Fase H), onde o movimento em faixas paralelas já organiza.
+      if (!movementDirRef.current) {
+        const arr = fallersRef.current;
+        const SEP = CHAR_SIZE * 0.5;          // distância mínima entre centros (~56px)
+        for (let i = 0; i < arr.length; i++) {
+          for (let j = i + 1; j < arr.length; j++) {
+            let dx = arr[j].x - arr[i].x;
+            let dy = arr[j].y - arr[i].y;
+            let d  = Math.sqrt(dx * dx + dy * dy);
+            if (d < SEP) {
+              if (d < 0.5) { dx = (i - j) || 1; dy = 1; d = Math.sqrt(dx * dx + dy * dy); }
+              const m  = (SEP - d) * 0.25;     // metade do overlap p/ cada, amortecido
+              const ux = dx / d, uy = dy / d;
+              arr[i].x -= ux * m; arr[i].y -= uy * m;
+              arr[j].x += ux * m; arr[j].y += uy * m;
+            }
+          }
+        }
+        // Reclampa dentro da caixa (zona ou arena) após empurrar.
+        for (const f of arr) {
+          const b = f.zone ? zoneBox(f.zone, W2, H2)
+            : { x0: ARENA_MARGIN, y0: ARENA_MARGIN,
+                x1: Math.max(ARENA_MARGIN, W2 - CHAR_SIZE - ARENA_MARGIN),
+                y1: Math.max(ARENA_MARGIN, H2 - CHAR_H - ARENA_MARGIN) };
+          if (f.x < b.x0) f.x = b.x0; else if (f.x > b.x1) f.x = b.x1;
+          if (f.y < b.y0) f.y = b.y0; else if (f.y > b.y1) f.y = b.y1;
+        }
+      }
+
       // Aplica o movimento direto no DOM via transform (delta sobre a base).
+      // O z-index segue o Y (quem está mais embaixo fica À FRENTE): a sobreposição
+      // vira profundidade real e o toque cai em quem a pessoa vê na frente. Mantido
+      // abaixo de z-30 para não cobrir os overlays de comando/feedback.
       for (const f of fallersRef.current) {
         const node = fallerNodesRef.current.get(f.uid);
         const base = fallerBaseRef.current.get(f.uid);
         if (node && base) {
           node.style.transform = `translate(${f.x - base.x}px, ${f.y - base.y}px)`;
+          node.style.zIndex = String(3 + Math.round((f.y / Math.max(H2, 1)) * 22));
         }
       }
 
@@ -1390,6 +1446,11 @@ export function FocusAgents({ difficulty, theme, onComplete, exerciseId = "focus
                   top: f.y,
                   left: f.x,
                   width: CHAR_SIZE,
+                  zIndex: 3 + Math.round(((f.y || 0) / (playAreaHRef.current || 600)) * 22),
+                  // Só o corpo (botão interno, pointer-events:auto) recebe o toque; a
+                  // margem transparente do wrapper deixa o clique atravessar p/ quem
+                  // está atrás. Essencial p/ a correção da sobreposição.
+                  pointerEvents: "none",
                   willChange: "transform",
                   // Durante "playing" o transform é controlado pelo rAF (omitido
                   // aqui para o React não sobrescrever o valor imperativo). No
