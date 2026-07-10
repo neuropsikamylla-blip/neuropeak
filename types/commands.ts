@@ -39,6 +39,12 @@ export type ColorName =
   | "amarelo"
   | "rosa";
 
+/** Emblema no peito do agente — dimensão de discriminação fina (atenção/inibição). */
+export type SymbolKey = "none" | "estrela" | "circulo" | "triangulo" | "raio";
+
+/** Objeto que o agente carrega — dimensão de discriminação por item. */
+export type ObjectKey = "none" | "bola" | "skate" | "basquete";
+
 export interface CharacterAttributes {
   id: string;
   agentId: string;
@@ -50,6 +56,10 @@ export interface CharacterAttributes {
   isRobot?: boolean;
   accessories: AccessoryKey[];
   accessoryColors?: Partial<Record<AccessoryKey, ColorName>>;
+  /** Emblema no peito (símbolo). Ausente/"none" = sem símbolo. */
+  symbol?: SymbolKey;
+  /** Objeto carregado. Ausente/"none" = sem objeto. */
+  object?: ObjectKey;
 }
 
 export interface CommandRule {
