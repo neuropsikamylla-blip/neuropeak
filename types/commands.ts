@@ -96,6 +96,10 @@ export interface GeneratedCommand {
   conditional?: boolean;
   /** Movimento (Fase H): direção que os ALVOS seguem (andam reto + dão a volta). */
   movement?: "right" | "left" | "up" | "down";
+  /** Ladder do Foco: dificuldade interna 1–7 que gerou a rodada (métricas/feedback). */
+  ladder?: number;
+  /** Memória curta (Foco D7): comando some após alguns segundos (botão "ver comando"). */
+  memory?: boolean;
 }
 
 export interface CommandGeneratorParams {

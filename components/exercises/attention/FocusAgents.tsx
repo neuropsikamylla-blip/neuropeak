@@ -6,8 +6,11 @@ import { calculateExerciseScore } from "@/lib/scoring";
 import { playTTS, cancelTTS } from "@/lib/tts";
 import { useTimedProgress } from "@/components/exercises/useExerciseEngine";
 import { ExerciseProgressBar } from "@/components/exercises/ExerciseProgressBar";
-import { agents } from "@/data/agents";
+import { agents, allAgents } from "@/data/agents";
 import type { AgentConfig } from "@/data/agents";
+
+// Lookup O(1) de qualquer AgentConfig (42 base + símbolo + objeto = 225) por id.
+const AGENT_BY_ID = new Map(allAgents.map(a => [a.id, a]));
 import type { ExerciseResult, Theme } from "@/types";
 import type { CommandRuleType, FocusMode } from "@/types/commands";
 import { buildModeRound, roundSignature } from "@/utils/generateCommand";
@@ -45,6 +48,9 @@ interface RoundMetric {
   phased: boolean; totalTargets: number; captured: number; correct: boolean;
   falsePositive: number; omissions: number; timeToFirstMs: number | null;
   rtMs: number; afterSwitch: boolean; endedBy: "correct" | "wrong" | "timeout";
+  // Tipo do erro (Foco): detalhe (tocou num QUASE-certo) · impulsividade (muito
+  // diferente do alvo) · omissao (não capturou a tempo). null quando acertou.
+  errorType?: "detalhe" | "impulsividade" | "omissao" | null;
 }
 
 const CHAR_SIZE = 112;             // +51% vs. 74 — personagens grandes e legíveis
@@ -62,9 +68,10 @@ const HIT_T = 0.00, HIT_B = 0.96;  // faixa vertical do corpo
 // Velocidade-base da arena (px/tick). A velocidade efetiva = base × fator do nível.
 const BASE_ARENA_SPEED = 2.4;
 
-// Multiplicador de velocidade por nível do modo (1–5): lento → rápido.
+// Multiplicador de velocidade por nível: lento → rápido. 5 degraus para os modos
+// clássicos (1–5); o Foco usa o ladder 1–7 e aproveita os 2 degraus extras.
 // Calibrado para os níveis altos continuarem desafiadores sem ficarem frenéticos.
-const LEVEL_SPEED = [0.7, 0.88, 1.05, 1.22, 1.4];
+const LEVEL_SPEED = [0.7, 0.88, 1.05, 1.22, 1.4, 1.55, 1.7];
 
 // Dificuldade progressiva DENTRO do nível, ligada aos ACERTOS do paciente: a cada
 // 2 acertos seguidos sobe um "degrau" de intensidade (mais velocidade); errar
@@ -75,10 +82,10 @@ const HITS_PER_STEP  = 2;         // acertos seguidos para subir um degrau de ve
 const MAX_INTRA_STEP = 5;
 const LEVEL_UP_HITS   = 3;        // acertos seguidos para SUBIR de nível (comandos mais difíceis)
 const LEVEL_DOWN_ERRS = 2;        // erros seguidos para DESCER de nível (nunca abaixo do inicial)
-function levelSpeed(level: number, step: number): number {
-  const lv      = Math.max(1, Math.min(5, level));
+function levelSpeed(level: number, step: number, maxTier = 5): number {
+  const lv      = Math.max(1, Math.min(maxTier, level));
   const base    = LEVEL_SPEED[lv - 1];
-  const ceiling = lv < 5 ? LEVEL_SPEED[lv] * 1.15 : base * 1.3;
+  const ceiling = lv < maxTier ? LEVEL_SPEED[lv] * 1.15 : base * 1.3;
   return Math.min(base * (1 + step * INTRA_STEP_PCT), ceiling);
 }
 
@@ -530,6 +537,10 @@ export function FocusAgents({ difficulty, theme, onComplete, exerciseId = "focus
   const [roundResults, setRoundResults] = useState<{ correct:boolean; rt:number }[]>([]);
   const [displayLevel, setDisplayLevel] = useState(1);
   const [lastCorrect, setLastCorrect]   = useState(false);
+  const [memoryRound, setMemoryRound]   = useState(false); // Foco D7 — comando some durante o jogo
+  const [nextDir, setNextDir]           = useState<"harder"|"same"|"easier">("same"); // rumo da próxima rodada (feedback)
+  const [lastRt, setLastRt]             = useState(0);   // tempo da última rodada (ms)
+  const wrongAgentRef                   = useRef<AgentConfig | null>(null);            // agente tocado por engano (tipo de erro)
   const [points, setPoints]             = useState(0);   // placar (Fase G)
   const [combo, setCombo]               = useState(0);   // rodadas certas em sequência (micro-recompensa)
   const [blitz, setBlitz]               = useState(false); // rodada relâmpago (ritmo)
@@ -653,7 +664,7 @@ export function FocusAgents({ difficulty, theme, onComplete, exerciseId = "focus
     // Mapeia CharacterAttributes → GameAgent
     const uidMap = new Map<string, string>();
     const newGameAgents: GameAgent[] = displayChars.map(attr => {
-      const agent = agents.find(a => a.id === attr.agentId);
+      const agent = AGENT_BY_ID.get(attr.agentId);
       if (!agent) return null;
       const uid = `${attr.id}-${Date.now()}-${Math.random()}`;
       uidMap.set(attr.id, uid);
@@ -708,6 +719,7 @@ export function FocusAgents({ difficulty, theme, onComplete, exerciseId = "focus
     setFlashyUids(((modeRef.current === "inibicao" && levelRef.current >= 4) || levelRef.current === 9)
       ? shuffle(newGameAgents.map(g => g.uid)).slice(0, 3) : []);
     setCommand(built.command.text);
+    setMemoryRound(built.command.memory ?? false);   // Foco D7 — comando some no jogo
     setTargetUids(newTargetUids);
     targetUidsRef.current = newTargetUids;
     setForbidden(newForbidden);
@@ -843,7 +855,7 @@ export function FocusAgents({ difficulty, theme, onComplete, exerciseId = "focus
       prevTs      = ts;
       const ticks = dt / TICK_MS;
 
-      const lvSpeed = levelSpeed(levelRef.current, intraStepRef.current) * (blitzRef.current ? 1.5 : 1);
+      const lvSpeed = levelSpeed(levelRef.current, intraStepRef.current, modeRef.current === "foco" ? 7 : 5) * (blitzRef.current ? 1.5 : 1);
       const mult = BASE_ARENA_SPEED * lvSpeed * ticks;
       const W2   = playAreaWRef.current;
       const H2   = playAreaHRef.current;
@@ -980,16 +992,35 @@ export function FocusAgents({ difficulty, theme, onComplete, exerciseId = "focus
       ? phasesRef.current.reduce((s, p) => s + p.uids.length, 0)
       : targetUidsRef.current.length;
     const endedBy: "correct" | "wrong" | "timeout" = correct ? "correct" : (failReasonRef.current === "timeout" ? "timeout" : "wrong");
+    setLastRt(rt);
+
+    // Tipo de erro (para relatório): omissão (timeout), detalhe (tocou num QUASE-certo
+    // — compartilha cor OU acessório com o alvo) ou impulsividade (muito diferente).
+    let errorType: "detalhe" | "impulsividade" | "omissao" | null = null;
+    if (!correct) {
+      if (endedBy === "timeout") errorType = "omissao";
+      else {
+        const wa = wrongAgentRef.current;
+        const tAg = gameAgents.find(g => g.isTarget)?.agent;
+        if (wa && tAg) {
+          const wt = new Set(wa.images[0]?.tags ?? []);
+          const sharesAcc = (tAg.images[0]?.tags ?? []).some(x => wt.has(x));
+          errorType = (wa.color === tAg.color || sharesAcc) ? "detalhe" : "impulsividade";
+        } else errorType = "impulsividade";
+      }
+    }
+
     metricsRef.current.push({
       mode: modeRef.current, level: levelRef.current, channel: presentMode !== "visual" ? "auditivo" : "visual",
       phased, totalTargets, captured: capturedTotalRef.current, correct,
       falsePositive: endedBy === "wrong" ? 1 : 0,
       omissions: correct ? 0 : Math.max(0, totalTargets - capturedTotalRef.current),
       timeToFirstMs: roundFirstTapRef.current, rtMs: rt,
-      afterSwitch: phased && currentPhaseRef.current > 0, endedBy,
+      afterSwitch: phased && currentPhaseRef.current > 0, endedBy, errorType,
     });
 
     const nextRound = r + 1;
+    const lvBefore = levelRef.current;
 
     // Progressão ligada ao desempenho:
     //  • micro-ramp de velocidade a cada HITS_PER_STEP acertos;
@@ -1001,7 +1032,8 @@ export function FocusAgents({ difficulty, theme, onComplete, exerciseId = "focus
       if (consecCorrectRef.current % HITS_PER_STEP === 0) {
         intraStepRef.current = Math.min(MAX_INTRA_STEP, intraStepRef.current + 1);
       }
-      if (consecCorrectRef.current >= LEVEL_UP_HITS && levelRef.current < 9) {
+      const maxLv = modeRef.current === "foco" ? 7 : 9;   // Foco = ladder 1–7
+      if (consecCorrectRef.current >= LEVEL_UP_HITS && levelRef.current < maxLv) {
         levelRef.current++;
         consecCorrectRef.current = 0;
         intraStepRef.current = 0;
@@ -1020,6 +1052,8 @@ export function FocusAgents({ difficulty, theme, onComplete, exerciseId = "focus
       }
     }
     setIntensity(intraStepRef.current);
+    // Rumo da PRÓXIMA rodada (mensagem simples no feedback — sem contador de sequência).
+    setNextDir(levelRef.current > lvBefore ? "harder" : levelRef.current < lvBefore ? "easier" : "same");
 
     setTimeout(() => {
       if (isTimeUp()) {
@@ -1092,7 +1126,7 @@ export function FocusAgents({ difficulty, theme, onComplete, exerciseId = "focus
       // Proibido constante (Desafio) → erro
       if (forbiddenRef.current.includes(ga.uid)) {
         resolvedIds.current.add("timeout");
-        setWrongUid(ga.uid); setFailReason("wrong-tap"); failReasonRef.current = "wrong-tap";
+        setWrongUid(ga.uid); wrongAgentRef.current = ga.agent; setFailReason("wrong-tap"); failReasonRef.current = "wrong-tap";
         handleResult(false, round); return;
       }
       // Alvo da regra ATUAL → captura
@@ -1108,7 +1142,7 @@ export function FocusAgents({ difficulty, theme, onComplete, exerciseId = "focus
       }
       // Tocou fora da regra atual (perseveração ou neutro) → erro
       resolvedIds.current.add("timeout");
-      setWrongUid(ga.uid); setFailReason("wrong-tap"); failReasonRef.current = "wrong-tap";
+      setWrongUid(ga.uid); wrongAgentRef.current = ga.agent; setFailReason("wrong-tap"); failReasonRef.current = "wrong-tap";
       handleResult(false, round); return;
     }
 
@@ -1118,7 +1152,7 @@ export function FocusAgents({ difficulty, theme, onComplete, exerciseId = "focus
 
     if (forbiddenRef.current.includes(ga.uid)) {
       resolvedIds.current.add("timeout");
-      setWrongUid(ga.uid);
+      setWrongUid(ga.uid); wrongAgentRef.current = ga.agent;
       setFailReason("wrong-tap"); failReasonRef.current = "wrong-tap";
       handleResult(false, round);
       return;
@@ -1146,7 +1180,7 @@ export function FocusAgents({ difficulty, theme, onComplete, exerciseId = "focus
           }
         } else {
           resolvedIds.current.add("timeout");
-          setWrongUid(ga.uid);
+          setWrongUid(ga.uid); wrongAgentRef.current = ga.agent;
           setFailReason("wrong-tap"); failReasonRef.current = "wrong-tap";
           handleResult(false, round);
         }
@@ -1163,7 +1197,7 @@ export function FocusAgents({ difficulty, theme, onComplete, exerciseId = "focus
       }
     } else {
       resolvedIds.current.add("timeout");
-      setWrongUid(ga.uid);
+      setWrongUid(ga.uid); wrongAgentRef.current = ga.agent;
       setFailReason("wrong-tap"); failReasonRef.current = "wrong-tap";
       handleResult(false, round);
     }
@@ -1197,8 +1231,9 @@ export function FocusAgents({ difficulty, theme, onComplete, exerciseId = "focus
   if (prescribed && !entryDone) return (
     <TherapeuticIntro mode={presMode!} level={presLevel} onStart={() => {
       setMode(presMode!); modeRef.current = presMode!;
-      levelRef.current = presLevel; startLevelRef.current = presLevel; reachedLevelRef.current = presLevel;
-      setDisplayLevel(presLevel);
+      const lv0 = presMode === "foco" ? Math.min(7, presLevel) : presLevel;   // Foco = ladder 1–7
+      levelRef.current = lv0; startLevelRef.current = lv0; reachedLevelRef.current = lv0;
+      setDisplayLevel(lv0);
       setEntryDone(true);
     }} />
   );
@@ -1206,8 +1241,9 @@ export function FocusAgents({ difficulty, theme, onComplete, exerciseId = "focus
   if (showModeSelect) return (
     <ModeSelect onConfirm={(m, lv) => {
       setMode(m);  modeRef.current  = m;
-      levelRef.current = lv; startLevelRef.current = lv; reachedLevelRef.current = lv;
-      setDisplayLevel(lv);
+      const lv0 = m === "foco" ? Math.min(7, lv) : lv;   // Foco = ladder 1–7
+      levelRef.current = lv0; startLevelRef.current = lv0; reachedLevelRef.current = lv0;
+      setDisplayLevel(lv0);
       setShowModeSelect(false);
     }} />
   );
@@ -1258,7 +1294,9 @@ export function FocusAgents({ difficulty, theme, onComplete, exerciseId = "focus
             border:"1.5px solid rgba(255,255,255,0.15)", boxShadow:"0 4px 20px rgba(0,0,0,0.4)" }}>
           <span className="text-xs font-bold opacity-70 whitespace-nowrap">{gameTitle}</span>
           <ExerciseProgressBar progressPct={progressPct} theme={theme} />
-          {(isMultiTarget || isSeqMode || isCaptureAll || isPhased) && gamePhase === "playing" && totalTargets > 1 && (
+          {/* Contador "X/Y capturados" — escondido no Foco (spec: tela limpa, sem
+              "2/3 acertos"). Mantido nos outros modos, onde orienta a captura. */}
+          {mode !== "foco" && (isMultiTarget || isSeqMode || isCaptureAll || isPhased) && gamePhase === "playing" && totalTargets > 1 && (
             <span className="text-xs font-bold px-1.5 py-0.5 rounded-lg bg-green-500/40 whitespace-nowrap">
               {foundCount}/{totalTargets} ✓
             </span>
@@ -1269,7 +1307,8 @@ export function FocusAgents({ difficulty, theme, onComplete, exerciseId = "focus
           <span className="text-xs font-bold tabular-nums px-1.5 py-0.5 rounded-lg bg-amber-400/20 whitespace-nowrap" style={{ color: "#fbbf24" }}>
             ⭐ {points}
           </span>
-          {combo >= 2 && (
+          {/* 🔥 sequência de acertos — escondido no Foco (spec: sem contador de sequência). */}
+          {mode !== "foco" && combo >= 2 && (
             <span className="text-xs font-black tabular-nums px-1.5 py-0.5 rounded-lg bg-orange-500/30 whitespace-nowrap animate-pulse" style={{ color: "#fb923c" }}>
               🔥 {combo}
             </span>
@@ -1412,6 +1451,17 @@ export function FocusAgents({ difficulty, theme, onComplete, exerciseId = "focus
           </div>
         )}
 
+        {/* Foco — comando SEMPRE VISÍVEL durante o jogo (spec), exceto no D7 (memória
+            curta), onde some para exigir memória operacional leve. */}
+        {mode === "foco" && gamePhase === "playing" && !memoryRound && (
+          <div className="flex-shrink-0 px-3 py-1.5">
+            <div className="rounded-2xl px-3 py-2 text-center"
+              style={{ background:"rgba(124,58,237,0.2)", border:"1px solid rgba(167,139,250,0.4)" }}>
+              <p className="text-white text-sm font-bold leading-tight" style={{ whiteSpace:"pre-line" }}>{command}</p>
+            </div>
+          </div>
+        )}
+
         {/* Área da arena */}
         <div ref={playAreaRef} className="relative flex-1 overflow-hidden">
           {/* Fase H — barra condicional: a cor indica a regra ativa */}
@@ -1532,9 +1582,33 @@ export function FocusAgents({ difficulty, theme, onComplete, exerciseId = "focus
               {isNegMode && failReason === "wrong-tap" && (
                 <p className="text-sm opacity-80 mt-1">Tocou no personagem proibido!</p>
               )}
-              {(isMultiTarget || isSeqMode || isCaptureAll) && !isCorrect && foundCount > 0 && (
+              {mode !== "foco" && (isMultiTarget || isSeqMode || isCaptureAll) && !isCorrect && foundCount > 0 && (
                 <p className="text-sm opacity-80 mt-1">{foundCount} de {totalTargets} capturado{foundCount>1?"s":""}</p>
               )}
+
+              {/* Foco — painel de desempenho da rodada (cara de ferramenta cognitiva). */}
+              {mode === "foco" && (() => {
+                const erros = failReason === "wrong-tap" ? 1 : 0;
+                const omiss = isCorrect ? 0 : Math.max(0, totalTargets - foundCount);
+                return (
+                  <div className="mt-3 pt-3 space-y-1.5" style={{ borderTop: "1px solid rgba(255,255,255,0.28)" }}>
+                    <div className="flex justify-center gap-5 text-sm tabular-nums">
+                      <span><b>{foundCount}</b> acerto{foundCount !== 1 ? "s" : ""}</span>
+                      <span><b>{erros}</b> erro{erros !== 1 ? "s" : ""}</span>
+                      <span><b>{omiss}</b> omiss{omiss !== 1 ? "ões" : "ão"}</span>
+                    </div>
+                    <div className="flex justify-center gap-5 text-xs opacity-90 tabular-nums">
+                      <span>Tempo {(lastRt / 1000).toFixed(1).replace(".", ",")}s</span>
+                      <span>Dificuldade {displayLevel}</span>
+                    </div>
+                    <p className="text-xs opacity-95 pt-1">
+                      {nextDir === "harder" ? "A próxima rodada será um pouco mais difícil."
+                        : nextDir === "easier" ? "A próxima rodada será um pouco mais simples."
+                        : "Dificuldade mantida na próxima rodada."}
+                    </p>
+                  </div>
+                );
+              })()}
             </div>
           </motion.div>
         )}

@@ -3,12 +3,14 @@ import type {
   CharacterAttributes,
   AccessoryKey,
   ColorName,
+  SymbolKey,
+  ObjectKey,
   GeneratedCommand,
   BuiltRound,
   CommandRuleType,
   FocusMode,
 } from "@/types/commands";
-import { characterAttributes } from "@/data/agentAttributes";
+import { characterAttributes, allCharacterAttributes } from "@/data/agentAttributes";
 import {
   COMMAND_TEMPLATES,
   VERB_PREFIX_FNS,
@@ -1031,6 +1033,182 @@ function buildUnlock(lv: number, theme: Theme): BuiltRound {
   return buildInibicao(lv === 9 ? 4 : 5, noun, dN);   // exceção/proibido (9 = piscam, aplicado no componente)
 }
 
+// ── FOCO: ladder cognitivo 1–7 (redesign) ──────────────────────────────────────
+// Modelo "capturar TODOS os que batem a regra" (go/no-go): a cena é montada aqui,
+// então todo agente que bate a regra É alvo — nunca há ambiguidade. A dificuldade
+// vem de: nº de critérios, semelhança dos distratores (near-miss), quantidade,
+// velocidade, EXCLUSÃO (D5) e DOIS grupos-alvo (D6). NÃO usa regra espacial.
+// Objetos entram a partir de D2; símbolos só a partir de D4.
+type FCritKind = "color" | "acc" | "object" | "symbol";
+interface FCrit { k: FCritKind; v: string }
+const FOBJ_PT: Record<string, string> = { bola: "bola de futebol", skate: "skate", basquete: "bola de basquete" };
+const FSYM_PT: Record<string, string> = { estrela: "estrela", circulo: "círculo", triangulo: "triângulo", raio: "raio" };
+const F_OBJECTS = ["bola", "skate", "basquete"];
+const F_SYMBOLS = ["estrela", "circulo", "triangulo", "raio"];
+
+function fMatch(a: CharacterAttributes, c: FCrit): boolean {
+  if (c.k === "color")  return a.uniformColor === (c.v as ColorName);
+  if (c.k === "acc")    return a.accessories.includes(c.v as AccessoryKey);
+  if (c.k === "object") return (a.object ?? "none") === (c.v as ObjectKey);
+  return (a.symbol ?? "none") === (c.v as SymbolKey);
+}
+const fMatchAll   = (a: CharacterAttributes, cs: FCrit[]) => cs.every(c => fMatch(a, c));
+const fMatchCount = (a: CharacterAttributes, cs: FCrit[]) => cs.reduce((n, c) => n + (fMatch(a, c) ? 1 : 0), 0);
+const fRint = (lo: number, hi: number) => lo + Math.floor(Math.random() * (hi - lo + 1));
+const fPick = <T,>(arr: T[]): T => arr[Math.floor(Math.random() * arr.length)];
+
+function fCritNoun(c: FCrit): string {
+  if (c.k === "acc")    return ACC_PT[c.v as AccessoryKey];
+  if (c.k === "object") return FOBJ_PT[c.v];
+  return FSYM_PT[c.v];
+}
+function fRulePhrase(noun: string, crits: FCrit[], withNoun: boolean): string {
+  const color = crits.find(c => c.k === "color");
+  const others = crits.filter(c => c.k !== "color");
+  let s = withNoun ? `${noun}s` : "";
+  if (color) s += `${s ? " " : ""}${colorPl(color.v as ColorName)}`;
+  if (others.length) s += `${s ? " " : ""}com ${others.map(fCritNoun).join(" e ")}`;
+  return s.trim();
+}
+function fExcludeShort(c: FCrit): string {
+  if (c.k === "color")  return colorPl(c.v as ColorName);
+  return `com ${fCritNoun(c)}`;
+}
+
+interface FocoCfg { chars: [number, number]; targets: [number, number]; near: number }
+const FOCO_CFG: Record<number, FocoCfg> = {
+  1: { chars: [6, 8],   targets: [2, 3], near: 0.20 },
+  2: { chars: [8, 10],  targets: [2, 4], near: 0.45 },
+  3: { chars: [10, 12], targets: [3, 4], near: 0.65 },
+  4: { chars: [12, 14], targets: [3, 5], near: 0.75 },
+  5: { chars: [12, 16], targets: [3, 5], near: 0.80 },
+  6: { chars: [14, 18], targets: [3, 6], near: 0.70 },
+  7: { chars: [14, 18], targets: [3, 6], near: 0.75 },
+};
+
+// Tira `n` agentes distintos (por agentId) do pool; clona se faltar. IDs únicos.
+function fTake(pool: CharacterAttributes[], n: number, used: Set<string>): CharacterAttributes[] {
+  const picked: CharacterAttributes[] = [];
+  for (const c of shuffle(pool)) {
+    if (picked.length >= n) break;
+    if (used.has(c.agentId)) continue;
+    used.add(c.agentId); picked.push(c);
+  }
+  const baseLen = picked.length;
+  let i = 0;
+  while (picked.length < n && baseLen > 0) { picked.push(picked[i % baseLen]); i++; }
+  return picked.slice(0, n).map(c => ({ ...c, id: `${c.id}__k${_cloneSeq++}` }));
+}
+
+interface FocoRule { crits: FCrit[]; exclude?: FCrit; groupB?: FCrit[] }
+
+function fChooseRule(dd: number): FocoRule {
+  const R = allCharacterAttributes;
+  const poolFor = (cs: FCrit[]) => R.filter(a => fMatchAll(a, cs));
+  const color = (): FCrit => ({ k: "color",  v: fPick([...ALL_UNIFORM_COLORS]) });
+  const acc   = (): FCrit => ({ k: "acc",    v: fPick([...ALL_ACCESSORIES]) });
+  const obj   = (): FCrit => ({ k: "object", v: fPick(F_OBJECTS) });
+  const sym   = (): FCrit => ({ k: "symbol", v: fPick(F_SYMBOLS) });
+  const trySat = (mk: () => FCrit[], tries = 40): FCrit[] | null => {
+    for (let i = 0; i < tries; i++) { const cs = mk(); if (poolFor(cs).length >= 1) return cs; }
+    return null;
+  };
+
+  if (dd === 1) return { crits: Math.random() < 0.5 ? [color()] : [acc()] };
+  if (dd === 2 || dd === 3)
+    return { crits: trySat(() => [color(), Math.random() < 0.5 ? acc() : obj()]) ?? [color(), acc()] };
+  if (dd === 4) {
+    const cs = Math.random() < 0.5
+      ? trySat(() => [color(), acc(), sym()])
+      : trySat(() => [color(), { k: "acc", v: "bone" }, obj()]);
+    return { crits: cs ?? trySat(() => [color(), acc(), sym()]) ?? [color(), acc()] };
+  }
+  if (dd === 5) {
+    for (let i = 0; i < 50; i++) {
+      const base: FCrit[] = Math.random() < 0.5 ? [acc()] : [color()];
+      if (Math.random() < 0.3) base.push(sym());
+      const excl: FCrit = Math.random() < 0.5 ? color() : acc();
+      if (base.some(b => b.k === excl.k && b.v === excl.v)) continue;
+      const bp = poolFor(base);
+      if (bp.some(a => !fMatch(a, excl)) && bp.some(a => fMatch(a, excl))) return { crits: base, exclude: excl };
+    }
+    return { crits: [{ k: "acc", v: "bone" }], exclude: color() };
+  }
+  // dd === 6 — dois grupos distintos
+  for (let i = 0; i < 50; i++) {
+    const A = trySat(() => [color(), Math.random() < 0.5 ? acc() : obj()]);
+    const B = trySat(() => [color(), Math.random() < 0.5 ? acc() : obj()]);
+    if (A && B && fRulePhrase("x", A, false) !== fRulePhrase("x", B, false)) return { crits: A, groupB: B };
+  }
+  return { crits: [color()], groupB: [color()] };
+}
+
+function buildFocoLadder(difficulty: number, theme: Theme): BuiltRound {
+  const noun = NOUN[theme] ?? "agente";
+  const d = Math.max(1, Math.min(7, Math.round(difficulty)));
+  const cfg = FOCO_CFG[d];
+  const R = allCharacterAttributes;
+  const poolFor = (cs: FCrit[]) => R.filter(a => fMatchAll(a, cs));
+
+  const memory = d === 7;
+  const rule = fChooseRule(d === 7 ? fPick([5, 6]) : d);
+  const used = new Set<string>();
+  const charCount = fRint(cfg.chars[0], cfg.chars[1]);
+  const targetCount = fRint(cfg.targets[0], cfg.targets[1]);
+  const excl = rule.exclude;
+
+  // Alvos (grupo A, e B se houver)
+  const aPool = poolFor(rule.crits).filter(a => !excl || !fMatch(a, excl));
+  const aCount = rule.groupB ? Math.ceil(targetCount / 2) : targetCount;
+  const targetsA = fTake(aPool, Math.max(1, aCount), used);
+  let targetsB: CharacterAttributes[] = [];
+  if (rule.groupB) targetsB = fTake(poolFor(rule.groupB), Math.max(1, Math.floor(targetCount / 2)), used);
+  const targets = [...targetsA, ...targetsB];
+
+  // Proibidos (exclusão) — ~30% da cena de interferência (os "quase certos" que
+  // batem a base mas caem na exceção). É o que treina o controle inibitório.
+  let forbidden: CharacterAttributes[] = [];
+  if (excl) {
+    const fbWant = Math.min(Math.max(2, Math.round(charCount * 0.3)), Math.max(2, charCount - targets.length - 2));
+    forbidden = fTake(poolFor(rule.crits).filter(a => fMatch(a, excl)), fbWant, used);
+  }
+
+  // Distratores: NÃO batem a regra (nem A nem B) e não são proibidos; near-miss priorizado
+  const groups = rule.groupB ? [rule.crits, rule.groupB] : [rule.crits];
+  const isTargetLike = (a: CharacterAttributes) => groups.some(cs => fMatchAll(a, cs) && (!excl || !fMatch(a, excl)));
+  const isForbidLike = (a: CharacterAttributes) => !!excl && fMatchAll(a, rule.crits) && fMatch(a, excl);
+  const nonMatch = R.filter(a => !isTargetLike(a) && !isForbidLike(a));
+  const isNear = (a: CharacterAttributes) => groups.some(cs => fMatchCount(a, cs) >= cs.length - 1);
+  const nearPool = nonMatch.filter(isNear);
+  const farPool  = nonMatch.filter(a => !isNear(a));
+  const slots = Math.max(0, charCount - targets.length - forbidden.length);
+  const nNear = Math.min(slots, Math.round(slots * cfg.near));
+  const nFar  = slots - nNear;
+  let distractors = [
+    ...fTake(nearPool.length ? nearPool : farPool, nNear, used),
+    ...fTake(farPool.length ? farPool : nearPool, nFar, used),
+  ];
+  if (distractors.length < slots) distractors = [...distractors, ...fTake(nonMatch, slots - distractors.length, used)];
+  distractors = distractors.slice(0, slots);
+
+  // Texto do comando
+  let text: string;
+  if (excl) text = `Toque nos ${fRulePhrase(noun, rule.crits, true)}, exceto os ${fExcludeShort(excl)}`;
+  else if (rule.groupB) text = `Toque nos ${fRulePhrase(noun, rule.crits, true)} e nos ${fRulePhrase(noun, rule.groupB, false)}`;
+  else text = `Toque nos ${fRulePhrase(noun, rule.crits, true)}`;
+
+  const characters = shuffle([...targets, ...forbidden, ...distractors]);
+  const command: GeneratedCommand = {
+    text, mode: "visual", difficulty: d, ladder: d, memory,
+    targets: targets.map(t => t.id),
+    distractors: distractors.map(t => t.id),
+    forbidden: forbidden.map(t => t.id),
+    sequenced: false, requiredTargets: targets.length,
+    rule: { type: "multiTarget" }, verbIndex: 0,
+  };
+  return { characters, command };
+}
+
 function buildModeRoundOnce(
   mode: FocusMode,
   level: number,
@@ -1038,14 +1216,16 @@ function buildModeRoundOnce(
   recentVerbs: number[] = [],
 ): BuiltRound {
   const lvRaw = Math.max(1, Math.min(9, Math.round(level)));
+  // Foco usa o ladder cognitivo 1–7 (não os desbloqueios/templates antigos).
+  if (mode === "foco") return buildFocoLadder(lvRaw, theme);
   if (lvRaw >= 6) return buildUnlock(lvRaw, theme);   // desbloqueios pós-N5
   const lv   = lvRaw;
   const diff = MODE_LEVEL_DIFF[mode][lv - 1];
   const [n, dN] = MODE_LEVEL_N[lv - 1];
 
-  // Parte 2: Foco e Inibição usam "capturar todos da regra" (go/no-go).
-  // A cena já vem completa (figuras distintas) — sem fillToN para não repetir.
-  if (mode === "foco" || mode === "inibicao") {
+  // Inibição usa "capturar todos da regra" (go/no-go). (Foco já retornou acima
+  // pelo ladder cognitivo.) A cena já vem completa — sem fillToN para não repetir.
+  if (mode === "inibicao") {
     const all = buildCaptureAll(mode, lv, theme);
     if (all) return all;
   }

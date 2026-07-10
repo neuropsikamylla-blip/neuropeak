@@ -223,21 +223,21 @@ export const symbolAgents: CharacterAttributes[] = [
 ];
 
 export const objectAgents: CharacterAttributes[] = [
-  { id: "amarelo_basquete_v0", agentId: "amarelo_basquete", variantIndex: 0, name: "Amarelo com bola de basquete", imageSrc: "/exercises/agentes-personagens/amarelo_basquete.png", uniformColor: "amarelo", accessories: [], symbol: "none", object: "basquete" },
-  { id: "amarelo_bola_v0", agentId: "amarelo_bola", variantIndex: 0, name: "Amarelo com bola", imageSrc: "/exercises/agentes-personagens/amarelo_bola.png", uniformColor: "amarelo", accessories: [], symbol: "none", object: "bola" },
-  { id: "amarelo_skate_v0", agentId: "amarelo_skate", variantIndex: 0, name: "Amarelo com skate", imageSrc: "/exercises/agentes-personagens/amarelo_skate.png", uniformColor: "amarelo", accessories: [], symbol: "none", object: "skate" },
-  { id: "azul_bola_v0", agentId: "azul_bola", variantIndex: 0, name: "Azul com bola", imageSrc: "/exercises/agentes-personagens/azul_bola.png", uniformColor: "azul", accessories: [], symbol: "none", object: "bola" },
-  { id: "azul_skate_v0", agentId: "azul_skate", variantIndex: 0, name: "Azul com skate", imageSrc: "/exercises/agentes-personagens/azul_skate.png", uniformColor: "azul", accessories: [], symbol: "none", object: "skate" },
+  { id: "amarelo_basquete_v0", agentId: "amarelo_basquete", variantIndex: 0, name: "Amarelo com bola de basquete", imageSrc: "/exercises/agentes-personagens/amarelo_basquete.png", uniformColor: "amarelo", accessories: ["bone"], symbol: "none", object: "basquete" },
+  { id: "amarelo_bola_v0", agentId: "amarelo_bola", variantIndex: 0, name: "Amarelo com bola", imageSrc: "/exercises/agentes-personagens/amarelo_bola.png", uniformColor: "amarelo", accessories: ["bone"], symbol: "none", object: "bola" },
+  { id: "amarelo_skate_v0", agentId: "amarelo_skate", variantIndex: 0, name: "Amarelo com skate", imageSrc: "/exercises/agentes-personagens/amarelo_skate.png", uniformColor: "amarelo", accessories: ["bone"], symbol: "none", object: "skate" },
+  { id: "azul_bola_v0", agentId: "azul_bola", variantIndex: 0, name: "Azul com bola", imageSrc: "/exercises/agentes-personagens/azul_bola.png", uniformColor: "azul", accessories: ["bone"], symbol: "none", object: "bola" },
+  { id: "azul_skate_v0", agentId: "azul_skate", variantIndex: 0, name: "Azul com skate", imageSrc: "/exercises/agentes-personagens/azul_skate.png", uniformColor: "azul", accessories: ["bone"], symbol: "none", object: "skate" },
   { id: "laranja_bola_v0", agentId: "laranja_bola", variantIndex: 0, name: "Laranja com bola", imageSrc: "/exercises/agentes-personagens/laranja_bola.png", uniformColor: "laranja", accessories: [], symbol: "none", object: "bola" },
-  { id: "laranja_skate_v0", agentId: "laranja_skate", variantIndex: 0, name: "Laranja com skate", imageSrc: "/exercises/agentes-personagens/laranja_skate.png", uniformColor: "laranja", accessories: [], symbol: "none", object: "skate" },
-  { id: "roxo_bola_v0", agentId: "roxo_bola", variantIndex: 0, name: "Roxo com bola", imageSrc: "/exercises/agentes-personagens/roxo_bola.png", uniformColor: "roxo", accessories: [], symbol: "none", object: "bola" },
-  { id: "roxo_skate_v0", agentId: "roxo_skate", variantIndex: 0, name: "Roxo com skate", imageSrc: "/exercises/agentes-personagens/roxo_skate.png", uniformColor: "roxo", accessories: [], symbol: "none", object: "skate" },
-  { id: "verde_basquete_v0", agentId: "verde_basquete", variantIndex: 0, name: "Verde com bola de basquete", imageSrc: "/exercises/agentes-personagens/verde_basquete.png", uniformColor: "verde", accessories: [], symbol: "none", object: "basquete" },
-  { id: "verde_bola_v0", agentId: "verde_bola", variantIndex: 0, name: "Verde com bola", imageSrc: "/exercises/agentes-personagens/verde_bola.png", uniformColor: "verde", accessories: [], symbol: "none", object: "bola" },
-  { id: "verde_skate_v0", agentId: "verde_skate", variantIndex: 0, name: "Verde com skate", imageSrc: "/exercises/agentes-personagens/verde_skate.png", uniformColor: "verde", accessories: [], symbol: "none", object: "skate" },
-  { id: "vermelho_basquete_v0", agentId: "vermelho_basquete", variantIndex: 0, name: "Vermelho com bola de basquete", imageSrc: "/exercises/agentes-personagens/vermelho_basquete.png", uniformColor: "vermelho", accessories: [], symbol: "none", object: "basquete" },
-  { id: "vermelho_bola_v0", agentId: "vermelho_bola", variantIndex: 0, name: "Vermelho com bola", imageSrc: "/exercises/agentes-personagens/vermelho_bola.png", uniformColor: "vermelho", accessories: [], symbol: "none", object: "bola" },
-  { id: "vermelho_skate_v0", agentId: "vermelho_skate", variantIndex: 0, name: "Vermelho com skate", imageSrc: "/exercises/agentes-personagens/vermelho_skate.png", uniformColor: "vermelho", accessories: [], symbol: "none", object: "skate" },
+  { id: "laranja_skate_v0", agentId: "laranja_skate", variantIndex: 0, name: "Laranja com skate", imageSrc: "/exercises/agentes-personagens/laranja_skate.png", uniformColor: "laranja", accessories: ["bone"], symbol: "none", object: "skate" },
+  { id: "roxo_bola_v0", agentId: "roxo_bola", variantIndex: 0, name: "Roxo com bola", imageSrc: "/exercises/agentes-personagens/roxo_bola.png", uniformColor: "roxo", accessories: ["bone"], symbol: "none", object: "bola" },
+  { id: "roxo_skate_v0", agentId: "roxo_skate", variantIndex: 0, name: "Roxo com skate", imageSrc: "/exercises/agentes-personagens/roxo_skate.png", uniformColor: "roxo", accessories: ["bone"], symbol: "none", object: "skate" },
+  { id: "verde_basquete_v0", agentId: "verde_basquete", variantIndex: 0, name: "Verde com bola de basquete", imageSrc: "/exercises/agentes-personagens/verde_basquete.png", uniformColor: "verde", accessories: ["bone"], symbol: "none", object: "basquete" },
+  { id: "verde_bola_v0", agentId: "verde_bola", variantIndex: 0, name: "Verde com bola", imageSrc: "/exercises/agentes-personagens/verde_bola.png", uniformColor: "verde", accessories: ["bone"], symbol: "none", object: "bola" },
+  { id: "verde_skate_v0", agentId: "verde_skate", variantIndex: 0, name: "Verde com skate", imageSrc: "/exercises/agentes-personagens/verde_skate.png", uniformColor: "verde", accessories: ["bone"], symbol: "none", object: "skate" },
+  { id: "vermelho_basquete_v0", agentId: "vermelho_basquete", variantIndex: 0, name: "Vermelho com bola de basquete", imageSrc: "/exercises/agentes-personagens/vermelho_basquete.png", uniformColor: "vermelho", accessories: ["bone"], symbol: "none", object: "basquete" },
+  { id: "vermelho_bola_v0", agentId: "vermelho_bola", variantIndex: 0, name: "Vermelho com bola", imageSrc: "/exercises/agentes-personagens/vermelho_bola.png", uniformColor: "vermelho", accessories: ["bone"], symbol: "none", object: "bola" },
+  { id: "vermelho_skate_v0", agentId: "vermelho_skate", variantIndex: 0, name: "Vermelho com skate", imageSrc: "/exercises/agentes-personagens/vermelho_skate.png", uniformColor: "vermelho", accessories: ["bone"], symbol: "none", object: "skate" },
 ];
 
 /** Catálogo completo de atributos: 42 base + 168 símbolo + 15 objeto = 225. */
