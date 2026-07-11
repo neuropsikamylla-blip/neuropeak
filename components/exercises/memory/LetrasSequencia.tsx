@@ -57,6 +57,9 @@ export function LetrasSequencia({ difficulty, onComplete }: LetrasSequenciaProps
   const startLevel = levelOf(difficulty);
   const [level, setLevel] = useState(startLevel);
   const spec = LS_LEVELS[level];
+  // Espelho do nível: a próxima rodada é agendada por setTimeout e o closure
+  // capturaria o nível ANTERIOR à subida. O ref garante a spec do nível atual.
+  const levelRef = useRef(startLevel);
   const streakRef = useRef(0);
   const reachedRef = useRef(startLevel);
   const totalRef = useRef(0);
@@ -77,20 +80,22 @@ export function LetrasSequencia({ difficulty, onComplete }: LetrasSequenciaProps
 
   const expected = spec.reverse ? [...sequence].reverse() : sequence;
 
-  const present = useCallback(async (seq: string[], myRun: number) => {
-    const pool = spec.syllable ? SYLLABLES : LETTERS;
+  useEffect(() => { levelRef.current = level; }, [level]);
+
+  const present = useCallback(async (seq: string[], myRun: number, s: typeof spec) => {
+    const pool = s.syllable ? SYLLABLES : LETTERS;
     await new Promise((r) => setTimeout(r, 400));
     for (let i = 0; i < seq.length; i++) {
       if (seqRunRef.current !== myRun) return;
       setShowIdx(i);
-      if (spec.audio) {
+      if (s.audio) {
         await speak(seq[i]);
       } else {
-        await new Promise((r) => setTimeout(r, spec.showMs));
+        await new Promise((r) => setTimeout(r, s.showMs));
       }
       if (seqRunRef.current !== myRun) return;
       setShowIdx(-1);
-      await new Promise((r) => setTimeout(r, spec.audio ? 360 : 480)); // mais tempo entre um item e o outro
+      await new Promise((r) => setTimeout(r, s.audio ? 360 : 480)); // mais tempo entre um item e o outro
     }
     if (seqRunRef.current !== myRun) return;
     // monta o teclado: itens da sequência + distratores
@@ -100,18 +105,19 @@ export function LetrasSequencia({ difficulty, onComplete }: LetrasSequenciaProps
     enteredRef.current = [];
     inputShownAt.current = Date.now();
     setPhase("input");
-  }, [spec]);
+  }, []);
 
   const startRound = useCallback(() => {
-    const pool = spec.syllable ? SYLLABLES : LETTERS;
-    const seq = sample(pool, spec.count);
+    const s = LS_LEVELS[levelRef.current]; // nível atual, não o do closure
+    const pool = s.syllable ? SYLLABLES : LETTERS;
+    const seq = sample(pool, s.count);
     seqRunRef.current++;
     setSequence(seq);
     setFeedback(null);
     setShowIdx(-1);
     setPhase("show");
-    present(seq, seqRunRef.current);
-  }, [spec, present]);
+    present(seq, seqRunRef.current, s);
+  }, [present]);
 
   const finish = useCallback(() => {
     finishTimer();

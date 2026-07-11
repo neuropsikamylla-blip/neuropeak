@@ -124,6 +124,8 @@ export const POST = withApiHandler(async (req: NextRequest) => {
       const pm = lastSess?.metadata ? JSON.parse(lastSess.metadata) : null;
       if (pm && typeof pm.consolidatedLevel === "number") prevConsolidated = pm.consolidatedLevel;
     } catch { /* metadata antigo */ }
+    // O Desafio Supermercado usa até o nível 12; os demais, até 10.
+    const maxLevel = data.exerciseId === "desafio-supermercado" ? 12 : 10;
     genericProg = calculateProgression(
       data.difficulty,
       {
@@ -132,6 +134,7 @@ export const POST = withApiHandler(async (req: NextRequest) => {
         impulsive: meta.impulsive === true,
       },
       prevConsolidated,
+      maxLevel,
     );
     meta.endedLevel = genericProg.nextLevel;
     meta.consolidatedLevel = genericProg.consolidatedLevel;

@@ -176,6 +176,7 @@ export function PadroesRotacao({ difficulty, onComplete }: PadroesRotacaoProps) 
   const [level, setLevel] = useState(startLevel);
   const spec = LEVELS[level];
   const N = spec.grid;
+  const levelRef = useRef(startLevel); // nível atual p/ a próxima rodada (evita closure antigo)
   const streakRef = useRef(0);
   const reachedRef = useRef(startLevel);
   const totalRef = useRef(0);
@@ -211,8 +212,10 @@ export function PadroesRotacao({ difficulty, onComplete }: PadroesRotacaoProps) 
   const startTime = useRef(Date.now());
   const runRef = useRef(0);
 
+  useEffect(() => { levelRef.current = level; }, [level]);
+
   // Apresentação: pisca UMA célula por vez (com bipe), igual à Matriz Espacial.
-  const present = useCallback(async (origArr: string[], rotDeg: number, myRun: number) => {
+  const present = useCallback(async (origArr: string[], rotDeg: number, myRun: number, s: typeof spec) => {
     setPhase("show"); setLit(new Set());
     const onMs = startLevel <= 5 ? 600 : startLevel <= 8 ? 480 : 380;
     // Mais tempo entre um flash e o outro (não "pisca tudo rápido" — não dá pra decorar em bloco).
@@ -229,26 +232,28 @@ export function PadroesRotacao({ difficulty, onComplete }: PadroesRotacaoProps) 
     }
     setPhase("rotating");                            // o tabuleiro inteiro gira
     await sleep(rotMs + 140); if (runRef.current !== myRun) return;
-    if (spec.delayMs > 0) { setPhase("delay"); await sleep(spec.delayMs); if (runRef.current !== myRun) return; }
+    if (s.delayMs > 0) { setPhase("delay"); await sleep(s.delayMs); if (runRef.current !== myRun) return; }
     setPicked(new Set()); inputAt.current = Date.now(); setPhase("input");
-  }, [spec, startLevel]);
+  }, [startLevel]);
 
   const startRound = useCallback(() => {
-    const k = spec.kMin + Math.floor(Math.random() * (spec.kMax - spec.kMin + 1));
+    const s = LEVELS[levelRef.current]; // nível atual, não o do closure
+    const n = s.grid;
+    const k = s.kMin + Math.floor(Math.random() * (s.kMax - s.kMin + 1));
     kRef.current = k;
     const all: string[] = [];
-    for (let r = 0; r < N; r++) for (let c = 0; c < N; c++) all.push(cellKey(r, c));
+    for (let r = 0; r < n; r++) for (let c = 0; c < n; c++) all.push(cellKey(r, c));
     for (let i = all.length - 1; i > 0; i--) { const j = Math.floor(Math.random() * (i + 1)); [all[i], all[j]] = [all[j], all[i]]; }
     const origArr = all.slice(0, k);
     const orig = new Set(origArr);
-    const rotDeg = spec.rots[Math.floor(Math.random() * spec.rots.length)];
+    const rotDeg = s.rots[Math.floor(Math.random() * s.rots.length)];
     const expected = new Set<string>();
-    orig.forEach((key) => { const [r, c] = key.split(",").map(Number); const [nr, nc] = rotatePos(r, c, N, rotDeg); expected.add(cellKey(nr, nc)); });
+    orig.forEach((key) => { const [r, c] = key.split(",").map(Number); const [nr, nc] = rotatePos(r, c, n, rotDeg); expected.add(cellKey(nr, nc)); });
     expectedRef.current = expected;
     runRef.current++;
     setDeg(rotDeg); setFeedback(null);
-    present(origArr, rotDeg, runRef.current);
-  }, [N, spec, present]);
+    present(origArr, rotDeg, runRef.current, s);
+  }, [present]);
 
   const finish = useCallback(() => {
     finishTimer();

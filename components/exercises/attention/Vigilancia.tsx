@@ -177,12 +177,14 @@ export function Vigilancia({ difficulty, theme, onComplete }: VigilanciaProps) {
     const stimulus = sequence[current];
     const isTarget = targets.includes(stimulus);
 
-    if (isTarget && !responded.current) {
+    if (responded.current) return; // no máx. 1 resposta por estímulo
+    if (isTarget) {
       responded.current = true;
       reactionTimes.current.push(rt);
       setHits((h) => h + 1);
       setFeedback("hit");
-    } else if (!isTarget) {
+    } else {
+      responded.current = true;
       setFalseAlarms((f) => f + 1);
       setFeedback("false");
     }

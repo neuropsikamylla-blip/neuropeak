@@ -64,6 +64,7 @@ export function SequenciaItens({ difficulty, onComplete }: SequenciaItensProps) 
   const startLevel = levelOf(difficulty);
   const [level, setLevel] = useState(startLevel);
   const spec = SI_LEVELS[level];
+  const levelRef = useRef(startLevel); // nível atual p/ a próxima rodada (evita closure antigo)
   const streakRef = useRef(0);
   const reachedRef = useRef(startLevel);
   const totalRef = useRef(0);
@@ -82,38 +83,41 @@ export function SequenciaItens({ difficulty, onComplete }: SequenciaItensProps) 
   const startTime = useRef(Date.now());
   const runRef = useRef(0);
 
-  const present = useCallback(async (seq: Item[], myRun: number) => {
+  useEffect(() => { levelRef.current = level; }, [level]);
+
+  const present = useCallback(async (seq: Item[], myRun: number, s: typeof spec) => {
     await new Promise((r) => setTimeout(r, 400));
     for (let i = 0; i < seq.length; i++) {
       if (runRef.current !== myRun) return;
       setShowIdx(i);
-      if (spec.audio) await speak(seq[i].n);
-      else await new Promise((r) => setTimeout(r, spec.showMs));
+      if (s.audio) await speak(seq[i].n);
+      else await new Promise((r) => setTimeout(r, s.showMs));
       if (runRef.current !== myRun) return;
       setShowIdx(-1);
-      await new Promise((r) => setTimeout(r, spec.audio ? 360 : 480)); // mais tempo entre um item e o outro
+      await new Promise((r) => setTimeout(r, s.audio ? 360 : 480)); // mais tempo entre um item e o outro
     }
     if (runRef.current !== myRun) return;
     // teclado: itens da sequência + distratores
-    const used = new Set(seq.map((s) => s.e));
+    const used = new Set(seq.map((sq) => sq.e));
     let pool = ITEMS.filter((x) => !used.has(x.e));
-    if (spec.similar && seq[0]) pool = [...pool.filter((x) => x.g === seq[0].g), ...pool].filter((x, i, arr) => arr.findIndex((y) => y.e === x.e) === i);
-    const distractors = shuffle(pool).slice(0, spec.distractors);
+    if (s.similar && seq[0]) pool = [...pool.filter((x) => x.g === seq[0].g), ...pool].filter((x, i, arr) => arr.findIndex((y) => y.e === x.e) === i);
+    const distractors = shuffle(pool).slice(0, s.distractors);
     setKeys(shuffle([...seq, ...distractors]));
     setEntered([]); enteredRef.current = [];
     inputAt.current = Date.now();
     setPhase("input");
-  }, [spec]);
+  }, []);
 
   const startRound = useCallback(() => {
+    const s = SI_LEVELS[levelRef.current]; // nível atual, não o do closure
     let pool = ITEMS;
-    if (spec.similar) { const g = Math.random() < 0.5 ? "animal" : "objeto"; pool = ITEMS.filter((x) => x.g === g); }
-    const seq = shuffle(pool).slice(0, spec.count);
+    if (s.similar) { const g = Math.random() < 0.5 ? "animal" : "objeto"; pool = ITEMS.filter((x) => x.g === g); }
+    const seq = shuffle(pool).slice(0, s.count);
     runRef.current++;
     setSequence(seq); setFeedback(null); setShowIdx(-1);
     setPhase("show");
-    present(seq, runRef.current);
-  }, [spec, present]);
+    present(seq, runRef.current, s);
+  }, [present]);
 
   const finish = useCallback(() => {
     finishTimer();

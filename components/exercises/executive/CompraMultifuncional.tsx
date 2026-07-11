@@ -57,11 +57,16 @@ export function CompraMultifuncional({ difficulty, theme, onComplete }: Props) {
   const roundConcludedRef = useRef(false);
   const timerRef = useRef<ReturnType<typeof setInterval> | null>(null);
   const memTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  // Espelho sempre atual da seleção — usado quando o TEMPO acaba (o closure do
+  // cronômetro captura a seleção do início da rodada e leria um conjunto vazio).
+  const selectedRef = useRef<Set<string>>(new Set());
 
   useEffect(() => () => {
     if (timerRef.current) clearInterval(timerRef.current);
     if (memTimerRef.current) clearTimeout(memTimerRef.current);
   }, []);
+
+  useEffect(() => { selectedRef.current = selected; }, [selected]);
 
   // Cronômetro por rodada
   useEffect(() => {
@@ -99,6 +104,7 @@ export function CompraMultifuncional({ difficulty, theme, onComplete }: Props) {
     const r = buildRound(atLevel);
     setRound(r);
     setSelected(new Set());
+    selectedRef.current = new Set();
     setTimeLeft(r.timeSecs);
     setHintText(null);
     setRulesVisible(true);
@@ -181,7 +187,7 @@ export function CompraMultifuncional({ difficulty, theme, onComplete }: Props) {
 
   function concludeRound(correct: boolean, timeUp: boolean) {
     if (timerRef.current) clearInterval(timerRef.current);
-    const sel = selItems(selected);
+    const sel = selItems(selectedRef.current);
     const { perRule } = checkRound(sel, round);
     const { passed, failed } = splitRules(perRule);
     const seconds = Math.round((Date.now() - startTsRef.current) / 1000);

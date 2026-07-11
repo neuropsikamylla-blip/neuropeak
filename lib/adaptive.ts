@@ -90,8 +90,9 @@ export function calculateProgression(
   currentLevel: number,
   m: ProgressionInput,
   prevConsolidated: number,
+  maxLevel: number = 10,
 ): ProgressionResult {
-  const lvl = Math.min(10, Math.max(1, Math.round(currentLevel)));
+  const lvl = Math.min(maxLevel, Math.max(1, Math.round(currentLevel)));
   const pct = (v: number) => Math.round(v * 100);
   const dimsOk = !m.dims || m.dims.every((d) => d >= 0.80);
 
@@ -111,8 +112,8 @@ export function calculateProgression(
     nextLevel = Math.max(1, lvl - 1);
     action = "decrease";
     reason = `Total abaixo de 65% (${pct(m.accTotal)}%). Reduz 1 nível.`;
-  } else if (m.accTotal >= 0.85 && dimsOk && !m.impulsive && lvl < 10) {
-    nextLevel = Math.min(10, lvl + 1);
+  } else if (m.accTotal >= 0.85 && dimsOk && !m.impulsive && lvl < maxLevel) {
+    nextLevel = Math.min(maxLevel, lvl + 1);
     action = "increase";
     reason = `Desempenho ≥85% e tudo consolidado. Sobe 1 nível.`;
   } else {

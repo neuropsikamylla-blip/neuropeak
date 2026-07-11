@@ -68,6 +68,7 @@ export function ListaDistracao({ difficulty, onComplete }: ListaDistracaoProps) 
   const startLevel = levelOf(difficulty);
   const [level, setLevel] = useState(startLevel);
   const spec = LD_LEVELS[level];
+  const levelRef = useRef(startLevel); // nível atual p/ a próxima rodada (evita closure antigo)
   const streakRef = useRef(0);
   const reachedRef = useRef(startLevel);
   const totalRef = useRef(0);
@@ -88,32 +89,33 @@ export function ListaDistracao({ difficulty, onComplete }: ListaDistracaoProps) 
   const runRef = useRef(0);
   const memTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
 
-  const goRecall = useCallback((l: string[], myRun: number) => {
+  const goRecall = useCallback((l: string[], myRun: number, s: typeof spec) => {
     if (runRef.current !== myRun) return;
     const pool = WORDS.filter((w) => !l.includes(w));
-    const distractors = shuffle(pool).slice(0, spec.distractors);
+    const distractors = shuffle(pool).slice(0, s.distractors);
     setKeys(shuffle([...l, ...distractors]));
     setPicked([]); pickedRef.current = [];
     recallAt.current = Date.now();
     setPhase("recall");
-  }, [spec]);
+  }, []);
 
-  const runDistract = useCallback((l: string[], idx: number, myRun: number) => {
+  const runDistract = useCallback((l: string[], idx: number, myRun: number, s: typeof spec) => {
     if (runRef.current !== myRun) return;
-    if (idx >= spec.tasks) { goRecall(l, myRun); return; }
+    if (idx >= s.tasks) { goRecall(l, myRun, s); return; }
     setTaskNo(idx);
     setDistract(makeDistract());
     setPhase("distract");
-  }, [spec, goRecall]);
+  }, [goRecall]);
 
   const startRound = useCallback(() => {
-    const l = shuffle(WORDS).slice(0, spec.count);
+    const s = LD_LEVELS[levelRef.current]; // nível atual, não o do closure
+    const l = shuffle(WORDS).slice(0, s.count);
     runRef.current++;
     const myRun = runRef.current;
     setList(l); setFeedback(null);
     setPhase("memorize");
-    memTimer.current = setTimeout(() => runDistract(l, 0, myRun), spec.memMs);
-  }, [spec, runDistract]);
+    memTimer.current = setTimeout(() => runDistract(l, 0, myRun, s), s.memMs);
+  }, [runDistract]);
 
   const finish = useCallback(() => {
     finishTimer();
@@ -168,11 +170,13 @@ export function ListaDistracao({ difficulty, onComplete }: ListaDistracaoProps) 
   }
 
   function answerDistract() {
-    // qualquer resposta avança (a distração serve para interferir, não para pontuar)
+    // qualquer resposta avança (a distração serve para interferir, não para pontuar).
+    // Dentro da rodada o nível não muda, então a spec do nível atual é a da rodada.
     const myRun = runRef.current;
-    runDistract(list, taskNo + 1, myRun);
+    runDistract(list, taskNo + 1, myRun, LD_LEVELS[levelRef.current]);
   }
 
+  useEffect(() => { levelRef.current = level; }, [level]);
   useEffect(() => () => { runRef.current++; if (memTimer.current) clearTimeout(memTimer.current); }, []);
 
   function begin() { correctRef.current = 0; totalRef.current = 0; rtsRef.current = []; startTime.current = Date.now(); startTimer(); startRound(); }

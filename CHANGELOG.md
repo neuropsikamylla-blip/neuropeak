@@ -12,7 +12,24 @@ histórico completo anterior está no log do Git (452 commits no total, a partir
 - Auditoria completa do código (5 dimensões + verificação adversarial) documentada em
   `docs/auditoria/AUDITORIA-2026-07-10.md`; dívida técnica em `docs/DIVIDA-TECNICA.md`.
   Documentação (CLAUDE.md, README.md, ARCHITECTURE.md, ADRs) reescrita a partir do
-  código real. **Nenhuma correção de código aplicada** — findings aguardam decisão.
+  código real.
+
+## [2.11.3] — 2026-07-10
+
+- **Fidelidade das pontuações (correções da auditoria):**
+  - Vigilância: falso-alarme passa a contar no máximo 1 por estímulo (CORR-009).
+  - Caça Informação: empates aceitam qualquer item correto; "mais conteúdo" compara só a
+    mesma família de unidade, normalizando kg/L (CORR-014, CORR-015).
+  - Compra Multifuncional: fim de tempo avalia a seleção real, não um conjunto vazio (CORR-008).
+  - Grade Lógica (DeductiveGrid): erros deixam de ser contados em dobro na acurácia (CORR-013).
+  - Desafio Supermercado: níveis 11–12 não são mais rebaixados para 10 (CORR-001).
+  - Memória (Letras/Sílabas, Sequência de Itens, Lista com Distração, Padrões com Rotação):
+    a subida de nível passa a valer já na rodada seguinte (CORR-011).
+
+## [2.11.2] — 2026-07-10
+
+- **Segurança:** rate limiting no login (terapeuta e paciente) contra força-bruta de PIN,
+  por identificador e por IP, com bloqueio temporário (SEC-001).
 
 ## [2.11.1] — 2026-07-10
 

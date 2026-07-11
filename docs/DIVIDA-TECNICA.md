@@ -3,8 +3,14 @@
 > Espelho dos achados da auditoria de 2026-07-10. Cada item referencia o ID
 > estável do relatório completo em [`auditoria/AUDITORIA-2026-07-10.md`](./auditoria/AUDITORIA-2026-07-10.md),
 > onde estão a evidência `arquivo:linha`, o cenário e a verificação adversarial.
-> Severidades já refletem o ajuste da verificação (Fase 2). **Nada foi corrigido** —
-> esta é a lista de trabalho proposta, priorizada por severidade.
+> Severidades já refletem o ajuste da verificação (Fase 2).
+>
+> **Progresso das correções:**
+> - **SEC-001** — ✅ resolvido em v2.11.2 (rate limiting no login).
+> - **Fidelidade de pontuação (Etapa 2)** — ✅ resolvidos em v2.11.3: CORR-001, CORR-008,
+>   CORR-009, CORR-013, CORR-014, CORR-015 e CORR-011 (LetrasSequencia, SequenciaItens,
+>   ListaDistracao, PadroesRotacao).
+> - Demais itens: pendentes (lista abaixo).
 
 ## Panorama
 

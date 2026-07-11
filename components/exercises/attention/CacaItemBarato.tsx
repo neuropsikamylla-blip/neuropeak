@@ -95,9 +95,32 @@ interface Round {
   tip: string;
   products: Product[];
   correctId: string;
+  acceptIds?: string[];      // todos os itens corretos (empates); inclui correctId
   options?: string[];        // for find-price / find-weight
   correctOption?: string;
   showPerUnit: boolean;
+}
+
+// Quantidade normalizada para a unidade-base (g ou ml): 1 kg = 1000 g, 1 L = 1000 ml.
+function baseAmount(p: Product): number {
+  if (p.unit === "kg" || p.unit === "L") return p.weight * 1000;
+  return p.weight;
+}
+// Família da unidade — nunca comparar "mais conteúdo" entre massa e volume.
+function unitFamily(p: Product): "massa" | "volume" | "un" {
+  if (p.unit === "g" || p.unit === "kg") return "massa";
+  if (p.unit === "ml" || p.unit === "L") return "volume";
+  return "un";
+}
+// Custo por unidade-base (menor = melhor custo-benefício).
+function perBase(p: Product): number {
+  return p.priceCents / baseAmount(p);
+}
+// Ids de todos os produtos empatados no menor valor de `metric` (tolerância p/ float).
+function tiedBest(products: Product[], metric: (p: Product) => number, pickMax = false): string[] {
+  const vals = products.map(metric);
+  const best = pickMax ? Math.max(...vals) : Math.min(...vals);
+  return products.filter((p) => Math.abs(metric(p) - best) < 1e-9).map((p) => p.id);
 }
 
 function pickTwo(arr: Product[], cat1?: string, cat2?: string): [Product, Product] {
@@ -188,24 +211,37 @@ function buildRound(d: number): Round {
       : (shuffle(PRODUCTS).slice(0, 2) as [Product, Product]);
 
     if (Math.random() < 0.5) {
-      const cheaper = two[0].priceCents <= two[1].priceCents ? two[0] : two[1];
+      // Mais barato: qualquer item empatado no menor preço é aceito.
+      const accept = tiedBest(two, (p) => p.priceCents);
       return {
         qtype: "cheapest",
         question: "Qual produto é mais barato?",
         tip: "Compare os preços e toque no mais barato",
         products: two,
-        correctId: cheaper.id,
+        correctId: accept[0],
+        acceptIds: accept,
         showPerUnit: false,
       };
     } else {
-      // Most content — pick same product different sizes
-      const heavier = two[0].weight >= two[1].weight ? two[0] : two[1];
+      // Mais conteúdo: só compara produtos da MESMA família de unidade (massa vs
+      // volume nunca se comparam). Se os dois divergem, garante um par comparável.
+      let pair = two;
+      if (unitFamily(two[0]) !== unitFamily(two[1])) {
+        const sameFamily = (catProducts.length >= 2 ? catProducts : PRODUCTS)
+          .filter((p) => unitFamily(p) === unitFamily(two[0]) && p.id !== two[0].id);
+        pair = sameFamily.length > 0
+          ? [two[0], shuffle(sameFamily)[0]] as [Product, Product]
+          : two;
+      }
+      // Compara pela quantidade normalizada (1 kg = 1000 g); aceita empates.
+      const accept = tiedBest(pair, baseAmount, true);
       return {
         qtype: "most-content",
         question: "Qual produto tem mais conteúdo?",
         tip: "Compare o peso ou volume dos produtos",
-        products: two,
-        correctId: heavier.id,
+        products: pair,
+        correctId: accept[0],
+        acceptIds: accept,
         showPerUnit: false,
       };
     }
@@ -219,41 +255,28 @@ function buildRound(d: number): Round {
       ? (shuffle(catP).slice(0, 2) as [Product, Product])
       : (shuffle(PRODUCTS).slice(0, 2) as [Product, Product]);
 
-    function perUnit(p: Product): number {
-      let base = p.weight;
-      if (p.unit === "kg") base = p.weight * 1000;
-      if (p.unit === "L") base = p.weight * 1000;
-      return p.priceCents / base;
-    }
-
-    const best = perUnit(two[0]) <= perUnit(two[1]) ? two[0] : two[1];
+    const accept = tiedBest(two, perBase);
     return {
       qtype: "best-value",
       question: "Qual produto oferece o melhor custo-benefício?",
       tip: "",
       products: two,
-      correctId: best.id,
+      correctId: accept[0],
+      acceptIds: accept,
       showPerUnit: false,
     };
   }
 
   // L4: 3 products, find best value
   const three = shuffle(PRODUCTS).slice(0, 3) as [Product, Product, Product];
-
-  function perU(p: Product): number {
-    let base = p.weight;
-    if (p.unit === "kg") base = p.weight * 1000;
-    if (p.unit === "L") base = p.weight * 1000;
-    return p.priceCents / base;
-  }
-
-  const best = three.reduce((a, b) => perU(a) <= perU(b) ? a : b);
+  const accept = tiedBest(three, perBase);
   return {
     qtype: "best-value",
     question: "Qual produto vale mais a pena comprar?",
     tip: "",
     products: three,
-    correctId: best.id,
+    correctId: accept[0],
+    acceptIds: accept,
     showPerUnit: true,
   };
 }
@@ -425,7 +448,8 @@ export function CacaItemBarato({ difficulty, theme, onComplete }: Props) {
 
   function handleProductTap(id: string) {
     if (phase !== "question" || picked !== null) return;
-    const correct = id === currentRound.correctId;
+    const accept = currentRound.acceptIds ?? [currentRound.correctId];
+    const correct = accept.includes(id);
     setPicked(id);
     setPhase("result");
     const newResults = [...roundResults, correct];
@@ -491,7 +515,7 @@ export function CacaItemBarato({ difficulty, theme, onComplete }: Props) {
             <div className={`grid ${cols} gap-3`}>
               {currentRound.products.map(p => {
                 const isTapped = picked === p.id;
-                const isCorrect = p.id === currentRound.correctId;
+                const isCorrect = (currentRound.acceptIds ?? [currentRound.correctId]).includes(p.id);
                 const showGreen = phase === "result" && isCorrect;
                 const showRed = phase === "result" && isTapped && !isCorrect;
                 return (

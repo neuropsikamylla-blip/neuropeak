@@ -1,5 +1,5 @@
 import { describe, it, expect } from "vitest";
-import { calculateNewDifficulty, checkAchievements } from "@/lib/adaptive";
+import { calculateNewDifficulty, checkAchievements, calculateProgression } from "@/lib/adaptive";
 import type { SessionData } from "@/types";
 
 function mkSession(over: Partial<SessionData> = {}): SessionData {
@@ -46,6 +46,25 @@ describe("calculateNewDifficulty", () => {
       mkSession({ exerciseId: "outro", accuracy: 0.95 }),
     ];
     expect(calculateNewDifficulty(5, s, "e1").action).toBe("maintain");
+  });
+});
+
+describe("calculateProgression — teto de nível (CORR-001)", () => {
+  const good = { accTotal: 0.9 }; // desempenho que sobe de nível
+
+  it("por padrão limita em 10 (não passa de 10)", () => {
+    expect(calculateProgression(10, good, 1).nextLevel).toBe(10);
+    expect(calculateProgression(9, good, 1).nextLevel).toBe(10);
+  });
+
+  it("com maxLevel 12 (Supermercado) não rebaixa quem está em 11/12", () => {
+    // Antes do fix, 12 virava 10 (rebaixava o paciente de elite).
+    expect(calculateProgression(11, good, 1, 12).nextLevel).toBe(12);
+    expect(calculateProgression(12, good, 1, 12).nextLevel).toBe(12);
+  });
+
+  it("com maxLevel 12, nível 10 ainda pode subir para 11", () => {
+    expect(calculateProgression(10, good, 1, 12).nextLevel).toBe(11);
   });
 });
 

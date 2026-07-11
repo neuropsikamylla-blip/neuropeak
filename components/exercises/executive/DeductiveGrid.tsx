@@ -557,7 +557,8 @@ export function DeductiveGrid({ difficulty, theme, onComplete }: DeductiveGridPr
     if (isTimeUp()) {
       finish();
       setTimeout(() => {
-        const accuracy = Math.max(0, 1 - (totalErrors + errorsThisPuzzle.current) / (nextTotal * 2));
+        // totalErrors já soma TODOS os erros (inclui os deste puzzle); não somar errorsThisPuzzle de novo.
+        const accuracy = Math.max(0, 1 - totalErrors / (nextTotal * 2));
         const duration = elapsedSec();
         const score = calculateExerciseScore("deductive-grid", accuracy, undefined, difficulty);
         onComplete({
@@ -567,7 +568,7 @@ export function DeductiveGrid({ difficulty, theme, onComplete }: DeductiveGridPr
           accuracy,
           difficulty,
           duration,
-          metadata: { puzzlesSolved: nextTotal, totalErrors: totalErrors + errorsThisPuzzle.current },
+          metadata: { puzzlesSolved: nextTotal, totalErrors },
         });
       }, 1200);
     } else {
