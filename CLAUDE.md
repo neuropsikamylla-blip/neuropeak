@@ -5,10 +5,12 @@
 
 ## O que é
 
-Plataforma web de treino cognitivo clínico para neuropsicólogos em prática solo:
+Plataforma web de **treino** cognitivo clínico para neuropsicólogos em prática solo:
 o terapeuta cadastra pacientes, prescreve planos de treino e acompanha a evolução;
-o paciente executa os exercícios em casa por uma interface gamificada. Instrumento
-de avaliação — a fidelidade das métricas (score/acurácia/progressão) tem peso clínico.
+o paciente executa os exercícios em casa por uma interface gamificada. É uma ferramenta
+de **treino** (não de avaliação/diagnóstico). Ainda assim, a fidelidade das métricas
+(score/acurácia/progressão) importa: a **dificuldade adaptativa** decide o próximo nível a
+partir da acurácia, e o terapeuta acompanha a evolução do paciente por elas.
 
 - **Versão:** 2.11.1 (`package.json:3` — incrementar a cada atualização; exposta em `/api/version`)
 - **Stack medida:** Next.js 15.5.18 (instalado; `package.json` declara `^15.3.9`), React 18,

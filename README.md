@@ -4,9 +4,10 @@ Plataforma web de treino cognitivo clínico para neuropsicólogos em prática so
 O terapeuta cadastra pacientes, prescreve planos de treino e acompanha a evolução;
 o paciente executa exercícios cognitivos em casa por uma interface gamificada.
 
-> **Nota:** o NeuroPeak é um instrumento de avaliação. As métricas produzidas
-> (score, acurácia, dificuldade adaptativa) têm uso clínico — mudanças na engine
-> de scoring/progressão exigem cautela e teste.
+> **Nota:** o NeuroPeak é uma ferramenta de **treino** cognitivo (não de avaliação nem
+> diagnóstico). Mesmo assim, as métricas (score, acurácia, dificuldade adaptativa)
+> importam — a dificuldade adaptativa depende delas e o terapeuta acompanha a evolução
+> por elas; por isso, mudanças na engine de scoring/progressão exigem cautela e teste.
 
 ## Stack
 
