@@ -14,6 +14,14 @@ histórico completo anterior está no log do Git (452 commits no total, a partir
   Documentação (CLAUDE.md, README.md, ARCHITECTURE.md, ADRs) reescrita a partir do
   código real.
 
+## [2.16.0] — 2026-07-11
+
+- **Estacionamento Lógico — tutorial prático:** o exercício (que caía direto no jogo) agora
+  começa com uma **fase-tutorial guiada de 2 carros**, usando o arraste real. A instrução
+  guia passo a passo (tirar o carro que bloqueia; depois deslizar o vermelho até a saída) e,
+  ao resolver, mostra "Muito bem!" e um botão para começar o jogo de verdade. O tutorial não
+  conta nas estatísticas/dificuldade.
+
 ## [2.15.2] — 2026-07-11
 
 - **Jogo das Torres:** o disco desliza de forma suave ao trocar de torre — a animação

@@ -233,6 +233,16 @@ interface Props {
   difficulty: number; theme: Theme; onComplete: (r: ExerciseResult) => void;
 }
 
+// Fase-tutorial: só 2 carros. O carro "A" (vertical, à direita) bloqueia a saída do
+// vermelho; o paciente aprende movendo A para cima e deslizando o vermelho para fora.
+const TUTORIAL_LEVEL: Level = {
+  idealMoves: 2,
+  cars: [
+    { id: "target", row: 2, col: 3, len: 2, orientation: "horizontal" },
+    { id: "A", row: 1, col: 5, len: 2, orientation: "vertical" },
+  ],
+};
+
 export function EstacionamentoLogico({ difficulty, theme: _theme, onComplete }: Props) {
   const { begin, isTimeUp, elapsedSec, finish: finishTimer, progressPct } = useTimedProgress();
 
@@ -264,7 +274,7 @@ export function EstacionamentoLogico({ difficulty, theme: _theme, onComplete }: 
   const initRef = useRef<{ level: Level; diff: number } | null>(null);
   // Começa já com tabuleiro cheio (mín. dificuldade 6 ≈ 5 carros) — nada de
   // tabuleiro quase vazio. Sobe conforme o desempenho.
-  if (!initRef.current) initRef.current = pickLevel(Math.max(6, Math.round(difficulty) + 3));
+  if (!initRef.current) initRef.current = { level: TUTORIAL_LEVEL, diff: 2 }; // começa no tutorial
   const curDiffRef  = useRef(initRef.current.diff);
   const streakRef   = useRef(0);
   const reachedRef  = useRef(initRef.current.diff);
@@ -278,6 +288,7 @@ export function EstacionamentoLogico({ difficulty, theme: _theme, onComplete }: 
   const [moves, setMoves]       = useState(0);
   const [history, setHistory]   = useState<Car[][]>([]);
   const [won, setWon]           = useState(false);
+  const [tutorial, setTutorial] = useState(true); // 1ª fase é o tutorial guiado
   const [dragPrev, setDragPrev] = useState<{ id: string; pos: number } | null>(null);
 
   const boardRef = useRef<HTMLDivElement>(null);
@@ -332,6 +343,16 @@ export function EstacionamentoLogico({ difficulty, theme: _theme, onComplete }: 
     loadLevel(picked.level);
   }, [isTimeUp, completeSession, loadLevel]);
 
+  // Fim do tutorial → começa o jogo de verdade (não conta nas estatísticas).
+  const startRealGame = useCallback(() => {
+    setTutorial(false);
+    const picked = pickLevel(Math.max(6, Math.round(difficulty) + 3));
+    curDiffRef.current = picked.diff;
+    reachedRef.current = picked.diff;
+    recentRef.current = [picked.level];
+    loadLevel(picked.level);
+  }, [difficulty, loadLevel]);
+
   const commitMove = useCallback((carId: string, newPos: number) => {
     setCars(prev => {
       if (!canMove(prev, carId, newPos)) return prev;
@@ -383,6 +404,27 @@ export function EstacionamentoLogico({ difficulty, theme: _theme, onComplete }: 
     if (snapped !== orig) commitMove(car.id, snapped);       // encaixa na vaga mais próxima
   }, [commitMove]);
 
+  // ── Tutorial concluído ────────────────────────────────────────────────────
+  if (won && tutorial) {
+    return (
+      <div className="min-h-screen flex items-center justify-center px-8" style={{ background: "#ECEAE4" }}>
+        <div className="w-full max-w-xs text-center">
+          <p className="text-2xl font-light mb-3" style={{ color: "#2E9E4F" }}>Muito bem! 🎉</p>
+          <p className="text-sm mb-8" style={{ color: "#6B7384" }}>
+            Você liberou o carro vermelho! É sempre assim: mova os outros carros para abrir o caminho e leve o vermelho até a saída.
+          </p>
+          <button
+            onClick={startRealGame}
+            className="w-full py-3.5 rounded-2xl text-sm font-semibold tracking-wide text-white"
+            style={{ background: "#2C3444" }}
+          >
+            Começar
+          </button>
+        </div>
+      </div>
+    );
+  }
+
   // ── Result screen ─────────────────────────────────────────────────────────
   if (won) {
     const ideal    = currentLevel.idealMoves;
@@ -430,6 +472,13 @@ export function EstacionamentoLogico({ difficulty, theme: _theme, onComplete }: 
     );
   }
 
+  // Dica guiada do tutorial: enquanto o carro "A" bloqueia a saída (linha 2), pede para
+  // tirá-lo do caminho; depois, pede para deslizar o vermelho até a saída.
+  const aRow = cars.find((c) => c.id === "A")?.row ?? 1;
+  const tutorialHint = (aRow === 0 || aRow >= 3)
+    ? "Agora arraste o carro VERMELHO para a direita, até a saída! →"
+    : "Passo 1: arraste o carro à direita (que bloqueia a saída) para CIMA.";
+
   // ── Game screen ───────────────────────────────────────────────────────────
   return (
     <div
@@ -450,11 +499,11 @@ export function EstacionamentoLogico({ difficulty, theme: _theme, onComplete }: 
       <p style={{
         marginTop: 22, marginBottom: 12,
         fontSize: 14, fontWeight: 600, letterSpacing: "0.01em",
-        color: "#F1F3F8",
         textShadow: "0 1px 4px rgba(0,0,0,0.6)",
         textAlign: "center",
+        color: tutorial ? "#FCD34D" : "#F1F3F8",
       }}>
-        Libere o carro vermelho pela saída.
+        {tutorial ? tutorialHint : "Libere o carro vermelho pela saída."}
       </p>
 
       {/* Barra de progresso (pelo tempo, ~7 min, em saltos de 10%) */}
