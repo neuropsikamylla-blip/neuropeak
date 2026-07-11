@@ -14,6 +14,14 @@ histórico completo anterior está no log do Git (452 commits no total, a partir
   Documentação (CLAUDE.md, README.md, ARCHITECTURE.md, ADRs) reescrita a partir do
   código real.
 
+## [2.23.3] — 2026-07-11
+
+- **Focus Agents — força atualização das imagens (cache):** carimbo `?v=6`→`?v=7` nas
+  imagens dos agentes (FocusRain + FocusAgents). Resolve versões ANTIGAS presas no cache
+  do navegador — ex.: o skate aparecia "deitado" (versão velha) mesmo com a nova "em pé"
+  no projeto, e o clique caía como erro por não bater com o personagem deslocado. Roster
+  confirmado 100% sincronizado com a pasta (144 imagens = 144 agentes, 0 órfãos).
+
 ## [2.23.2] — 2026-07-11
 
 - **Chuva do Foco — espalhamento reforçado:** os agentes ainda caíam meio alinhados;

@@ -30,7 +30,7 @@ import type { ExerciseResult, Theme } from "@/types";
 import type { FocusMode } from "@/types/commands";
 import type { PresMode } from "@/components/exercises/PresentationConfig";
 
-const AGENT_V = "?v=6";   // cache-bust (imagens transparentes) — igual ao FocusAgents
+const AGENT_V = "?v=7";   // cache-bust (imagens transparentes) — igual ao FocusAgents
 
 // ── Tamanho / hitbox (idênticos ao Foco da arena) ───────────────────────────────
 const CHAR_SIZE = 80;              // recalibração de elite — menores, clique preciso
