@@ -14,6 +14,12 @@ histórico completo anterior está no log do Git (452 commits no total, a partir
   Documentação (CLAUDE.md, README.md, ARCHITECTURE.md, ADRs) reescrita a partir do
   código real.
 
+## [2.21.1] — 2026-07-11
+
+- **Focus Agents / Chuva do Foco — mais agentes na tela:** a queda começava com só 2
+  simultâneos; agora começa com **4** e cresce até **8** conforme o nível (spawn mais
+  rápido pra encher a tela). Vira busca visual + velocidade de verdade, não "de 2 em 2".
+
 ## [2.21.0] — 2026-07-11
 
 - **Focus Agents — elenco novo (102 personagens) + comandos ricos:** integração de 102

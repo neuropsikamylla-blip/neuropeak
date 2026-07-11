@@ -79,17 +79,18 @@ function cleanForSpeech(text: string): string {
 // TODOS os números abaixo são CALIBRÁVEIS após teste clínico.
 //  • fallMs        — tempo-base p/ o agente cair do topo até embaixo (↓ = mais rápido).
 //  • spawnMs       — intervalo entre spawns (↓ = mais caindo).
-//  • maxConcurrent — máximo simultâneo na tela (a neuro pediu "pouca quantidade").
+//  • maxConcurrent — máximo simultâneo na tela (vários caindo juntos, incluindo o alvo;
+//    começa em 4 e CRESCE até 8 conforme o nível — busca visual + velocidade).
 //  • secondChance  — multiplicador de velocidade da 2ª queda de um alvo que escapou.
 interface RainCfg { fallMs: number; spawnMs: number; maxConcurrent: number; secondChance: number }
 const RAIN_CFG: Record<number, RainCfg> = {
-  1: { fallMs: 6200, spawnMs: 1600, maxConcurrent: 2, secondChance: 1.4 },
-  2: { fallMs: 5600, spawnMs: 1450, maxConcurrent: 2, secondChance: 1.45 },
-  3: { fallMs: 5000, spawnMs: 1300, maxConcurrent: 3, secondChance: 1.5 },
-  4: { fallMs: 4500, spawnMs: 1150, maxConcurrent: 3, secondChance: 1.55 },
-  5: { fallMs: 4000, spawnMs: 1000, maxConcurrent: 3, secondChance: 1.6 },
-  6: { fallMs: 3600, spawnMs:  900, maxConcurrent: 4, secondChance: 1.65 },
-  7: { fallMs: 3200, spawnMs:  800, maxConcurrent: 4, secondChance: 1.7 },
+  1: { fallMs: 6200, spawnMs: 1000, maxConcurrent: 4, secondChance: 1.4 },
+  2: { fallMs: 5600, spawnMs:  920, maxConcurrent: 4, secondChance: 1.45 },
+  3: { fallMs: 5000, spawnMs:  850, maxConcurrent: 5, secondChance: 1.5 },
+  4: { fallMs: 4500, spawnMs:  780, maxConcurrent: 6, secondChance: 1.55 },
+  5: { fallMs: 4000, spawnMs:  710, maxConcurrent: 6, secondChance: 1.6 },
+  6: { fallMs: 3600, spawnMs:  640, maxConcurrent: 7, secondChance: 1.65 },
+  7: { fallMs: 3200, spawnMs:  560, maxConcurrent: 8, secondChance: 1.7 },
 };
 
 // Progressão adaptativa (mantém o ladder e o "errou = mesmo nível" do Foco):
