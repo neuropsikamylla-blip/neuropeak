@@ -14,6 +14,17 @@ histórico completo anterior está no log do Git (452 commits no total, a partir
   Documentação (CLAUDE.md, README.md, ARCHITECTURE.md, ADRs) reescrita a partir do
   código real.
 
+## [2.17.3] — 2026-07-11
+
+- **Restaurante — ajustes pós-feedback:**
+  - Plaquinha do pedido agora com vidro de verdade (transparência 0.20 + blur 20px; a
+    versão anterior somava com o gradiente escuro da cena e parecia opaca) — sombras de
+    texto preservam a legibilidade. Painel "Mudança no pedido" também mais vítreo.
+  - Correção de prioridade de carregamento: a cena da 1ª mesa baixa com prioridade máxima;
+    o preload das ~55 fotos de pratos foi adiado (2 s) e passa a rodar em lotes de 8 —
+    antes ele congestionava a fila e o fundo ficava esperando atrás. Com cache quente, a
+    cena entra sem nem mostrar o spinner.
+
 ## [2.17.2] — 2026-07-11
 
 - **Higiene do repositório:** remoção de ~486 MB de matéria-prima (imagens brutas nunca

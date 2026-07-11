@@ -288,24 +288,24 @@ function OrderCard({ mesaNum, scene, items, numbered, hideItems }: {
 }) {
   const rel = relText(scene.rel, scene.names);
   return (
-    <div style={{ minWidth: 155, maxWidth: 220, background: "rgba(20,14,8,0.42)", backdropFilter: "blur(16px) saturate(1.15)", WebkitBackdropFilter: "blur(16px) saturate(1.15)",
-      borderRadius: 14, padding: "9px 13px 11px", border: "1px solid rgba(235,200,130,0.45)", boxShadow: "0 10px 28px rgba(0,0,0,0.42), inset 0 1px 0 rgba(255,255,255,0.08)" }}>
+    <div style={{ minWidth: 155, maxWidth: 220, background: "rgba(28,20,12,0.20)", backdropFilter: "blur(20px) saturate(1.2)", WebkitBackdropFilter: "blur(20px) saturate(1.2)",
+      borderRadius: 14, padding: "9px 13px 11px", border: "1px solid rgba(235,200,130,0.5)", boxShadow: "0 10px 28px rgba(0,0,0,0.42), inset 0 1px 0 rgba(255,255,255,0.10)" }}>
       <div style={{ textAlign: "center", borderBottom: "1px solid rgba(255,225,180,0.18)", paddingBottom: 6, marginBottom: 7 }}>
-        <div style={{ fontSize: 13.5, fontWeight: 900, color: "#ffe7b0" }}>Mesa {mesaNum}</div>
-        <div style={{ fontSize: 12, fontWeight: 700, color: "rgba(255,255,255,0.92)" }}>{joinList(scene.names)}</div>
-        {rel && <div style={{ fontSize: 10, fontWeight: 600, color: "rgba(255,225,180,0.65)", marginTop: 1 }}>{rel}</div>}
+        <div style={{ fontSize: 13.5, fontWeight: 900, color: "#ffe7b0", textShadow: "0 1px 4px rgba(0,0,0,0.6)" }}>Mesa {mesaNum}</div>
+        <div style={{ fontSize: 12, fontWeight: 700, color: "rgba(255,255,255,0.92)", textShadow: "0 1px 4px rgba(0,0,0,0.6)" }}>{joinList(scene.names)}</div>
+        {rel && <div style={{ fontSize: 10, fontWeight: 600, color: "rgba(255,225,180,0.65)", marginTop: 1, textShadow: "0 1px 4px rgba(0,0,0,0.6)" }}>{rel}</div>}
       </div>
       {hideItems ? (
-        <div style={{ display: "flex", alignItems: "center", justifyContent: "center", gap: 7, color: "#ffe7b0", fontWeight: 700, fontSize: 12.5, padding: "5px 0" }}>
+        <div style={{ display: "flex", alignItems: "center", justifyContent: "center", gap: 7, color: "#ffe7b0", fontWeight: 700, fontSize: 12.5, padding: "5px 0", textShadow: "0 1px 4px rgba(0,0,0,0.6)" }}>
           <Volume2 size={16} /> Ouça o pedido
         </div>
       ) : (
         <div style={{ display: "flex", flexDirection: "column", gap: 5.5 }}>
           {items.map((it, i) => (
             <div key={i} style={{ display: "flex", alignItems: "center", gap: 7 }}>
-              {numbered && <span style={{ width: 15, fontSize: 11.5, fontWeight: 900, color: "#ffe7b0", flexShrink: 0 }}>{i + 1}.</span>}
+              {numbered && <span style={{ width: 15, fontSize: 11.5, fontWeight: 900, color: "#ffe7b0", flexShrink: 0, textShadow: "0 1px 4px rgba(0,0,0,0.6)" }}>{i + 1}.</span>}
               <span style={{ width: 22, height: 22, flexShrink: 0 }}><ItemImg id={it.id} size={22} /></span>
-              <span style={{ fontSize: 12.5, fontWeight: 700, color: "rgba(255,255,255,0.95)" }}>{it.n}</span>
+              <span style={{ fontSize: 12.5, fontWeight: 700, color: "rgba(255,255,255,0.95)", textShadow: "0 1px 4px rgba(0,0,0,0.6)" }}>{it.n}</span>
             </div>
           ))}
         </div>
@@ -411,9 +411,11 @@ export function RestauranteOrdem({ difficulty, onComplete }: RestauranteOrdemPro
     setFeedback(null); setMemoIdx(0);
     setMemoLeft(memoSecsFor(r.mesas[0].order.length));
 
-    // Pré-carrega TODAS as imagens da rodada (cenas das mesas, fotos dos pratos
+    // Pré-carrega TODAS as imagens da rodada (outras cenas, fotos dos pratos
     // dos pedidos/opções e o fundo da bancada). Só carregamento — não muda regra.
-    if (typeof window !== "undefined") {
+    // Roda SÓ DEPOIS que a 1ª cena aparece, para não competir com ela.
+    const preloadRest = () => {
+      if (typeof window === "undefined") return;
       const urls = new Set<string>();
       r.mesas.forEach((m) => {
         urls.add(m.scene.img);
@@ -425,7 +427,7 @@ export function RestauranteOrdem({ difficulty, onComplete }: RestauranteOrdemPro
       r.keys.forEach((it) => urls.add(photo(it.id)));
       urls.add("/exercises/restaurante/fundo-blur.jpg");
       urls.forEach((u) => { const im = new window.Image(); im.src = u; });
-    }
+    };
 
     // Antes de exibir o salão, espera a CENA da 1ª mesa decodificar (com timeout
     // de segurança de 2500 ms — no timeout, segue mesmo assim).
@@ -433,9 +435,17 @@ export function RestauranteOrdem({ difficulty, onComplete }: RestauranteOrdemPro
     setPhase("salao");
     if (typeof window === "undefined") { setSalaoReady(true); return; }
     let done = false;
-    const reveal = () => { if (done) return; done = true; if (runRef.current === myRun) setSalaoReady(true); };
-    const img = new window.Image();
+    const reveal = () => {
+      if (done) return; done = true;
+      if (runRef.current === myRun) setSalaoReady(true);
+      // Só agora — depois do reveal da 1ª cena — dispara o preload em massa.
+      window.setTimeout(preloadRest, 0);
+    };
+    const img = new window.Image() as HTMLImageElement & { fetchPriority?: string };
+    img.fetchPriority = "high"; // prioridade máxima para a cena da 1ª mesa
     img.src = r.mesas[0].scene.img;
+    // FAST-PATH: se já está no cache (decodificado), revela sem flash do spinner.
+    if (img.complete && img.naturalWidth > 0) { reveal(); return; }
     const dec = img.decode ? img.decode() : Promise.reject();
     Promise.resolve(dec).then(reveal).catch(reveal);
     window.setTimeout(reveal, 2500);
@@ -537,7 +547,25 @@ export function RestauranteOrdem({ difficulty, onComplete }: RestauranteOrdemPro
   }, [phase, memoIdx, salaoReady]);
 
   useEffect(() => () => { runRef.current++; if (typeof window !== "undefined") window.speechSynthesis?.cancel(); stopAmbience(); }, []);
-  useEffect(() => { if (typeof window === "undefined") return; ITEMS.forEach((i) => { const im = new window.Image(); im.src = photo(i.id); }); }, []);
+  // Preload dos ~55 pratos: NÃO pode competir com a cena do fundo. Adia 2000 ms
+  // após o mount e carrega em lotes de 8 a cada 400 ms (fila leve).
+  useEffect(() => {
+    if (typeof window === "undefined") return;
+    const timers: ReturnType<typeof setTimeout>[] = [];
+    const kick = setTimeout(() => {
+      const ids = ITEMS.map((i) => i.id);
+      let idx = 0;
+      const loadBatch = () => {
+        for (let k = 0; k < 8 && idx < ids.length; k++, idx++) {
+          const im = new window.Image(); im.src = photo(ids[idx]);
+        }
+        if (idx < ids.length) timers.push(setTimeout(loadBatch, 400));
+      };
+      loadBatch();
+    }, 2000);
+    timers.push(kick);
+    return () => { timers.forEach((t) => clearTimeout(t)); };
+  }, []);
 
   function replay() {
     const r = roundRef.current; if (!r) return;
@@ -634,7 +662,7 @@ export function RestauranteOrdem({ difficulty, onComplete }: RestauranteOrdemPro
       <div style={{ position: "fixed", inset: 0, overflow: "hidden", backgroundImage: `url(${mesa.scene.img})`, backgroundSize: "cover", backgroundPosition: "center" }}>
         <div style={{ position: "absolute", inset: 0, background: "rgba(10,6,2,0.55)" }} />
         <div style={{ position: "relative", zIndex: 2, height: "100%", display: "flex", alignItems: "center", justifyContent: "center", padding: 20 }}>
-          <div style={{ width: "100%", maxWidth: 460, background: "rgba(18,14,10,0.55)", backdropFilter: "blur(14px) saturate(1.1)", WebkitBackdropFilter: "blur(14px) saturate(1.1)", borderRadius: 24, padding: "26px 24px", border: "1px solid rgba(255,225,180,0.3)", textAlign: "center" }}>
+          <div style={{ width: "100%", maxWidth: 460, background: "rgba(18,14,10,0.42)", backdropFilter: "blur(14px) saturate(1.1)", WebkitBackdropFilter: "blur(14px) saturate(1.1)", borderRadius: 24, padding: "26px 24px", border: "1px solid rgba(255,225,180,0.3)", textAlign: "center" }}>
             <div style={{ display: "inline-flex", alignItems: "center", gap: 8, color: "#f0b94a", fontWeight: 900, fontSize: 14, textTransform: "uppercase", letterSpacing: 1, marginBottom: 14 }}>
               <ArrowLeftRight size={18} /> Mudança no pedido — Mesa {round.called + 1}
             </div>
