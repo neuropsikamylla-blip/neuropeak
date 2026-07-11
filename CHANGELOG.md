@@ -14,6 +14,16 @@ histórico completo anterior está no log do Git (452 commits no total, a partir
   Documentação (CLAUDE.md, README.md, ARCHITECTURE.md, ADRs) reescrita a partir do
   código real.
 
+## [2.17.0] — 2026-07-11
+
+- **Estacionamento Lógico — contagem por quadradinho + regra rígida de treino:**
+  - Cada **casa (quadradinho)** que um carro anda passa a contar como 1 movimento (antes, uma
+    "puxada" inteira contava como 1). O "Melhor solução" agora é o mínimo de quadradinhos,
+    calculado por um solver BFS; o movimento de saída do carro vermelho conta só até a casa
+    de saída (não penaliza o empurrão extra).
+  - Ao concluir: **exato** → "Perfeito!" e avança; **1 a mais** → avisa e deixa o paciente
+    escolher seguir ou refazer; **2 ou mais a mais** → precisa refazer a fase (é treino).
+
 ## [2.16.0] — 2026-07-11
 
 - **Estacionamento Lógico — tutorial prático:** o exercício (que caía direto no jogo) agora

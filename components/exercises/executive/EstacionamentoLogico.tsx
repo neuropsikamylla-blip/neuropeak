@@ -117,6 +117,38 @@ function reachRange(cars: Car[], carId: string): { min: number; max: number } {
   return { min, max };
 }
 
+// Mínimo de QUADRADINHOS (casas) para resolver a fase: BFS onde cada aresta é
+// deslizar um carro UMA casa. Como o jogo passou a contar cada quadradinho como um
+// movimento, este é o "melhor" a exibir/comparar. Tabuleiro 6×6 → rápido.
+function solveMinCells(cars: Car[]): number {
+  const posKey = (cs: Car[]) => cs.map((c) => (c.orientation === "horizontal" ? c.col : c.row)).join(",");
+  const start = cars.map((c) => ({ ...c }));
+  if (isWin(start)) return 0;
+  const seen = new Set<string>([posKey(start)]);
+  let frontier: Car[][] = [start];
+  for (let dist = 1; dist <= 120 && frontier.length; dist++) {
+    const next: Car[][] = [];
+    for (const state of frontier) {
+      for (let i = 0; i < state.length; i++) {
+        const car = state[i];
+        const pos = car.orientation === "horizontal" ? car.col : car.row;
+        for (const np of [pos - 1, pos + 1]) {
+          if (!canMove(state, car.id, np)) continue;
+          const ns = state.map((c, j) =>
+            j !== i ? c : (c.orientation === "horizontal" ? { ...c, col: np } : { ...c, row: np })
+          );
+          if (isWin(ns)) return dist;
+          const k = posKey(ns);
+          if (!seen.has(k)) { seen.add(k); next.push(ns); }
+        }
+      }
+      if (seen.size > 300000) return dist; // segurança (fases reais nunca chegam perto)
+    }
+    frontier = next;
+  }
+  return 99;
+}
+
 // ── Top-view vehicle (PNG transparente) ──────────────────────────
 // Largura de pista FIXA para todos os carros (mesmo "calibre", estilo Parking
 // Jam) — o comprimento sai da proporção nativa da imagem, sem distorcer. Assim
@@ -302,6 +334,9 @@ export function EstacionamentoLogico({ difficulty, theme: _theme, onComplete }: 
     [currentLevel],
   );
 
+  // Mínimo de quadradinhos para resolver a fase atual (para o "Melhor solução").
+  const minCells = useMemo(() => solveMinCells(currentLevel.cars), [currentLevel]);
+
   const loadLevel = useCallback((level: Level) => {
     levelSeqRef.current++;
     recentRef.current = [level, ...recentRef.current.filter(l => l !== level)].slice(0, 6);
@@ -356,15 +391,19 @@ export function EstacionamentoLogico({ difficulty, theme: _theme, onComplete }: 
   const commitMove = useCallback((carId: string, newPos: number) => {
     setCars(prev => {
       if (!canMove(prev, carId, newPos)) return prev;
+      const car = prev.find(c => c.id === carId)!;
+      const oldPos = car.orientation === "horizontal" ? car.col : car.row;
       const next = prev.map(c =>
-        c.id === carId ? { ...c, [c.orientation === "horizontal" ? "col" : "row"]: newPos } : c
+        c.id === carId ? (c.orientation === "horizontal" ? { ...c, col: newPos } : { ...c, row: newPos }) : c
       );
+      const winning = isWin(next);
+      // Conta CADA QUADRADINHO andado. No movimento vitorioso do alvo, conta só até a
+      // casa de saída (não penaliza o "empurrão" extra para fora do tabuleiro).
+      let delta = Math.abs(newPos - oldPos);
+      if (carId === "target" && winning) delta = Math.abs((GRID - car.len) - oldPos);
       setHistory(h => [...h, prev]);
-      setMoves(m => {
-        const nm = m + 1;
-        if (isWin(next)) setWon(true);
-        return nm;
-      });
+      setMoves(m => m + delta);
+      if (winning) setWon(true);
       return next;
     });
   }, []);
@@ -427,17 +466,21 @@ export function EstacionamentoLogico({ difficulty, theme: _theme, onComplete }: 
 
   // ── Result screen ─────────────────────────────────────────────────────────
   if (won) {
-    const ideal    = currentLevel.idealMoves;
-    const optimal  = moves <= ideal;       // resolveu no nº ideal de movimentos?
+    const ideal   = minCells;              // melhor solução em QUADRADINHOS
+    const extra   = moves - ideal;         // quadradinhos a mais que o mínimo
+    const perfect = extra <= 0;            // resolveu no mínimo
+    const oneOver = extra === 1;           // 1 a mais → pode seguir ou refazer
+    // 2+ a mais → treino rígido: tem que refazer.
+    const headColor = perfect ? "#2E9E4F" : oneOver ? "#B45309" : "#3A4050";
     return (
       <div className="min-h-screen flex items-center justify-center px-8" style={{ background: "#ECEAE4" }}>
         <div className="w-full max-w-xs text-center">
-          <p className="text-2xl font-light mb-8" style={{ color: optimal ? "#2E9E4F" : "#3A4050" }}>
-            {optimal ? "Perfeito!" : "Quase lá"}
+          <p className="text-2xl font-light mb-8" style={{ color: headColor }}>
+            {perfect ? "Perfeito!" : oneOver ? "Quase perfeito!" : "Quase lá"}
           </p>
           <div className="flex justify-center gap-14 mb-8">
             <div>
-              <p className="text-4xl font-semibold tabular-nums" style={{ color: optimal ? "#2E9E4F" : "#3A4050" }}>{moves}</p>
+              <p className="text-4xl font-semibold tabular-nums" style={{ color: headColor }}>{moves}</p>
               <p className="text-xs mt-1.5 tracking-wide uppercase" style={{ color: "#94A0B0" }}>Movimentos</p>
             </div>
             <div>
@@ -445,7 +488,7 @@ export function EstacionamentoLogico({ difficulty, theme: _theme, onComplete }: 
               <p className="text-xs mt-1.5 tracking-wide uppercase" style={{ color: "#94A0B0" }}>Melhor solução</p>
             </div>
           </div>
-          {optimal ? (
+          {perfect ? (
             <button
               onClick={() => nextLevel(true)}
               className="w-full py-3.5 rounded-2xl text-sm font-semibold tracking-wide text-white"
@@ -453,10 +496,30 @@ export function EstacionamentoLogico({ difficulty, theme: _theme, onComplete }: 
             >
               Próxima fase
             </button>
+          ) : oneOver ? (
+            <>
+              <p className="text-sm mb-5" style={{ color: "#6B7384" }}>
+                Você fez <strong>1 movimento a mais</strong> que o mínimo. Pode seguir ou tentar de novo.
+              </p>
+              <button
+                onClick={() => nextLevel(false)}
+                className="w-full py-3.5 rounded-2xl text-sm font-semibold tracking-wide text-white"
+                style={{ background: "#2C3444" }}
+              >
+                Seguir assim mesmo
+              </button>
+              <button
+                onClick={() => loadLevel(currentLevel)}
+                className="w-full mt-3 py-3 rounded-2xl text-sm font-semibold"
+                style={{ background: "transparent", color: "#6B7384", border: "1px solid #C9CDD6" }}
+              >
+                Tentar de novo
+              </button>
+            </>
           ) : (
             <>
               <p className="text-sm mb-5" style={{ color: "#6B7384" }}>
-                Dá para resolver em <strong>{ideal}</strong> movimentos. Tente de novo!
+                Você fez <strong>{extra} movimentos a mais</strong>. Dá para resolver em <strong>{ideal}</strong> — tente de novo!
               </p>
               <button
                 onClick={() => loadLevel(currentLevel)}
