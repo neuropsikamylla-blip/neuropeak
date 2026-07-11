@@ -60,12 +60,14 @@ function HanoiPegsDisplay({
   selected,
   discCount,
   onPegClick,
+  hint,
 }: {
   pegs: [number[], number[], number[]];
   theme: Theme;
   selected: number | null;
   discCount: number;
   onPegClick?: (i: number) => void;
+  hint?: number | null; // pino que o tutorial destaca (onde tocar agora)
 }) {
   const maxW = 140;
   return (
@@ -77,13 +79,19 @@ function HanoiPegsDisplay({
           style={{ width: maxW + 16 }}
           onClick={() => onPegClick?.(pegIdx)}
         >
+          {/* Dica: destaque pulsante no pino onde o paciente deve tocar */}
+          {hint === pegIdx && (
+            <div className="absolute rounded-2xl animate-pulse" style={{ inset: "-8px 4px 6px", border: "3px solid #f59e0b", pointerEvents: "none" }} />
+          )}
+          {/* base de madeira */}
           <div
-            className={`absolute bottom-0 rounded-lg ${selected === pegIdx ? "bg-yellow-400" : theme === "GAMIFIED" ? "bg-gray-600" : "bg-gray-400"}`}
-            style={{ width: maxW + 16, height: 10 }}
+            className="absolute bottom-0 rounded-lg"
+            style={{ width: maxW + 16, height: 10, background: selected === pegIdx ? "linear-gradient(180deg,#d19a3a,#9c6b1e)" : "linear-gradient(180deg,#9c6b3f,#6b4423)" }}
           />
+          {/* haste de madeira */}
           <div
-            className={`absolute rounded-full ${selected === pegIdx ? "bg-yellow-400" : theme === "GAMIFIED" ? "bg-gray-500" : "bg-gray-400"}`}
-            style={{ width: 22, height: 180, bottom: 10 }}
+            className="absolute rounded-full"
+            style={{ width: 22, height: 180, bottom: 10, background: selected === pegIdx ? "linear-gradient(90deg,#e6ac33,#b57a1e,#e6ac33)" : "linear-gradient(90deg,#c39b6d,#8a5a2e,#c39b6d)" }}
           />
           <div className="absolute bottom-3 flex flex-col-reverse items-center gap-1">
             {peg.map((disc, di) => {
@@ -116,70 +124,64 @@ function HanoiPegsDisplay({
 function TorreHanoiTutorial({ theme, onDone }: { theme: Theme; onDone: () => void }) {
   const steps = [
     {
-      instruction: "Objetivo: leve TODOS os discos para o pino da DIREITA (Destino).",
-      content: (onStepDone: () => void) => <HanoiMoveStep theme={theme} onDone={onStepDone} />,
-    },
-    {
-      instruction: "O pino do MEIO é só um APOIO — não é obrigatório passar por ele! Sempre que der, mova o disco DIRETO para o Destino.",
-      content: (onStepDone: () => void) => <HanoiAuxStep theme={theme} onDone={onStepDone} />,
-    },
-    {
-      instruction: "Regra: um disco MAIOR nunca pode ficar sobre um disco MENOR.",
+      instruction: "Objetivo: leve TODOS os discos para o pino da DIREITA (Destino). Regra: um disco MAIOR nunca pode ficar sobre um MENOR.",
       content: (onStepDone: () => void) => <HanoiRuleStep theme={theme} onDone={onStepDone} />,
+    },
+    {
+      instruction: "Vamos praticar com 2 discos! Siga a torre destacada em cada passo.",
+      content: (onStepDone: () => void) => <HanoiTeachStep theme={theme} onDone={onStepDone} />,
     },
   ];
 
   return <TutorialBase theme={theme} title="Jogo das Torres" steps={steps} onDone={onDone} />;
 }
 
-function HanoiMoveStep({ theme, onDone }: { theme: Theme; onDone: () => void }) {
-  const [pegs, setPegs] = useState<[number[], number[], number[]]>([[1], [], []]);
-  const [animating, setAnimating] = useState(false);
+// Tutorial INTERATIVO: o paciente resolve um quebra-cabeça de 2 discos, guiado passo a
+// passo (só aceita o toque certo, destacando o pino). No 2º passo o disco GRANDE vai
+// direto ao Destino — ensinando na prática que o pino do meio é só um apoio.
+function HanoiTeachStep({ theme, onDone }: { theme: Theme; onDone: () => void }) {
+  const SOLUTION: [number, number][] = [[0, 1], [0, 2], [1, 2]]; // de → para (0=Origem,1=Aux,2=Destino)
+  const HINTS = [
+    "Passo 1 de 3 — tire o disco pequeno da frente: toque na Origem e depois no pino do meio.",
+    "Passo 2 de 3 — leve o disco grande DIRETO ao Destino: toque na Origem e depois no Destino.",
+    "Passo 3 de 3 — coloque o pequeno por cima: toque no pino do meio e depois no Destino.",
+  ];
+  const [pegs, setPegs] = useState<[number[], number[], number[]]>([[2, 1], [], []]);
+  const [selected, setSelected] = useState<number | null>(null);
+  const [step, setStep] = useState(0);
+  const [done, setDone] = useState(false);
 
-  useEffect(() => {
-    const t = setTimeout(() => {
-      setAnimating(true);
-      setTimeout(() => {
-        setPegs([[], [], [1]]);
-        setTimeout(onDone, 500);
-      }, 600);
-    }, 800);
-    return () => clearTimeout(t);
-  // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, []);
+  const expected = SOLUTION[Math.min(step, SOLUTION.length - 1)];
+  const hintPeg = done ? null : selected === null ? expected[0] : expected[1];
 
-  return (
-    <div className="flex flex-col items-center gap-2 mt-4">
-      <HanoiPegsDisplay pegs={pegs} theme={theme} selected={null} discCount={1} />
-      <p className={`text-xs mt-6 ${theme === "GAMIFIED" ? "text-gray-400" : "text-gray-500"}`}>
-        {animating ? "→ direto para o Destino (sem passar pelo meio)!" : "Observe o movimento..."}
-      </p>
-    </div>
-  );
-}
+  function tap(i: number) {
+    if (done) return;
+    if (selected === null) {
+      if (i === expected[0] && pegs[i].length > 0) setSelected(i); // só o pino certo pega
+      return;
+    }
+    if (i === selected) { setSelected(null); return; } // toca de novo = cancela
+    if (i !== expected[1]) return; // só aceita soltar no pino certo
+    const from = selected;
+    const disc = pegs[from][pegs[from].length - 1];
+    const np: [number[], number[], number[]] = [[...pegs[0]], [...pegs[1]], [...pegs[2]]];
+    np[from] = np[from].slice(0, -1);
+    np[i] = [...np[i], disc];
+    setPegs(np);
+    setSelected(null);
+    if (step + 1 >= SOLUTION.length) { setDone(true); setTimeout(onDone, 1600); }
+    else setStep(step + 1);
+  }
 
-// Reforça que dá para ir DIRETO da Origem ao Destino — o pino do meio é opcional.
-function HanoiAuxStep({ theme, onDone }: { theme: Theme; onDone: () => void }) {
-  const [pegs, setPegs] = useState<[number[], number[], number[]]>([[1], [], []]);
-  const [ready, setReady] = useState(false);
-  useEffect(() => {
-    const t1 = setTimeout(() => setPegs([[], [], [1]]), 900);
-    const t2 = setTimeout(() => setReady(true), 1800);
-    return () => { clearTimeout(t1); clearTimeout(t2); };
-  // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, []);
   const subClass = theme === "GAMIFIED" ? "text-gray-400" : "text-gray-500";
   return (
     <div className="flex flex-col items-center gap-2 mt-2">
-      <HanoiPegsDisplay pegs={pegs} theme={theme} selected={null} discCount={1} />
-      <p className={`text-xs mt-6 text-center ${subClass}`}>
-        O disco foi <b>direto</b> da Origem para o Destino — sem parar no pino do meio.
+      <HanoiPegsDisplay pegs={pegs} theme={theme} selected={selected} hint={hintPeg} discCount={2} onPegClick={tap} />
+      <p className={`text-sm mt-8 text-center font-medium ${done ? "text-green-600" : subClass}`} style={{ minHeight: 40 }}>
+        {done
+          ? "🎉 Você conseguiu! Viu como o disco grande foi DIRETO ao Destino? O pino do meio é só um apoio."
+          : HINTS[step]}
       </p>
-      {ready && (
-        <button onClick={onDone} className={`w-full py-2 rounded-xl font-bold text-sm ${theme === "GAMIFIED" ? "bg-cyan-600 text-white" : "bg-blue-600 text-white"}`}>
-          Entendi!
-        </button>
-      )}
     </div>
   );
 }
@@ -369,13 +371,6 @@ export function TorreHanoi({ difficulty, theme, onComplete }: TorreHanoiProps) {
           <div className="h-full rounded-full" style={{ width: `${gameProgress}%`, background: "#1D4ED8", transition: "width .35s ease" }} />
         </div>
 
-        {/* Instrução */}
-        <p className="mt-4 text-center text-sm" style={{ color: "#64748B" }}>
-          Leve todos os discos para o <b>Destino</b> (direita). Toque numa torre para pegar o disco e noutra para soltar.
-        </p>
-        <p className="mt-1 text-center text-xs" style={{ color: "#B45309" }}>
-          Dica: o pino do meio é só um apoio — vá <b>direto</b> ao Destino sempre que puder.
-        </p>
 
         {/* Torres */}
         <div ref={rowRef} className="mt-7 flex justify-between items-end gap-2" style={{ paddingBottom: 28 }}>

@@ -14,6 +14,15 @@ histórico completo anterior está no log do Git (452 commits no total, a partir
   Documentação (CLAUDE.md, README.md, ARCHITECTURE.md, ADRs) reescrita a partir do
   código real.
 
+## [2.15.1] — 2026-07-11
+
+- **Jogo das Torres — tutorial que ensina de verdade:** o tutorial agora é interativo — o
+  paciente resolve um quebra-cabeça de **2 discos** guiado passo a passo (a torre certa fica
+  destacada e só o toque correto é aceito). No 2º passo o disco grande vai **direto ao
+  Destino**, ensinando na prática que o pino do meio é só um apoio. As torres do tutorial
+  também ganharam o tom de madeira. O texto de instrução foi removido da tela de jogo
+  (fica mais limpo; o tutorial explica).
+
 ## [2.15.0] — 2026-07-11
 
 - **Jogo das Torres (Torre de Hanói):**
