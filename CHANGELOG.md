@@ -14,6 +14,17 @@ histórico completo anterior está no log do Git (452 commits no total, a partir
   Documentação (CLAUDE.md, README.md, ARCHITECTURE.md, ADRs) reescrita a partir do
   código real.
 
+## [2.19.0] — 2026-07-11
+
+- **Focus Agents — modo Foco endurecido (piloto de treino):** reforma do modo Foco para
+  treinar de fato velocidade de processamento + atenção seletiva (os outros 3 modos
+  seguem iguais). (1) Relógio apertado desde o nível 1, escalando com o nº de alvos
+  (~8-9 s por rodada, antes 20 s). (2) Agora captura vários alvos (2→5 conforme o nível)
+  e os distratores são "parecidos" — compartilham um atributo com a regra (mesma cor sem
+  o acessório, ou o acessório em outra cor; ≥55% dos não-alvos), forçando conferir todos
+  os atributos. (3) Rigor: errar ou estourar o tempo repete o mesmo nível (novo arranjo)
+  em vez de facilitar, com feedback instrutivo do erro. Constantes calibráveis após teste.
+
 ## [2.18.2] — 2026-07-11
 
 - **Restaurante:** volume do som ambiente reduzido mais um pouco (ganho 0.26 → 0.20),

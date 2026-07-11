@@ -184,7 +184,21 @@ function saveFocusDaySigs(mode: string, sigs: string[]): void {
 
 // Tempo por rodada (s) — agora TODOS os níveis têm relógio: generoso nos fáceis,
 // apertado nos difíceis, pra exigir agilidade na busca sem frustrar.
+// Usado pelos modos Inibição/Alternância/Desafio.
 const LEVEL_CLOCK = [20, 18, 16, 15, 13, 12, 11, 10, 9];
+
+// PILOTO Foco — relógio APERTADO que escala com o nº de alvos exigidos, para
+// treinar VELOCIDADE DE PROCESSAMENTO (pressão de tempo real). Orçamento =
+// reserva fixa do nível + segundos por alvo × nº de alvos. Só se aplica ao
+// modo Foco; os demais modos seguem no LEVEL_CLOCK acima.
+// Ex.: N1 · 2 alvos ≈ 9s · N5 · 4 alvos ≈ 9s · N7 · 5 alvos ≈ 8,5s.
+// reserve/perTarget são CALIBRÁVEIS após teste clínico (índices = nível 1..7).
+const FOCO_CLOCK_RESERVE   = [4,   4,   3.5, 3,   3,   2.5, 2.5];
+const FOCO_CLOCK_PER_TARGET = [2.4, 2.2, 2.0, 1.8, 1.6, 1.4, 1.2];
+function focoClockSecs(level: number, nTargets: number): number {
+  const lv = Math.max(1, Math.min(7, level)) - 1;
+  return Math.max(4, Math.round(FOCO_CLOCK_RESERVE[lv] + FOCO_CLOCK_PER_TARGET[lv] * nTargets));
+}
 
 // ── AgentCard ─────────────────────────────────────────────────────────────────
 
@@ -822,8 +836,12 @@ export function FocusAgents({ difficulty, theme, onComplete, exerciseId = "focus
     capturedTotalRef.current = 0;
     failReasonRef.current = null;
 
-    // Relógio por rodada (só níveis altos — D5).
-    const clockSecs = LEVEL_CLOCK[Math.max(1, Math.min(9, levelRef.current)) - 1];
+    // Relógio por rodada. Foco (PILOTO): orçamento apertado que escala com o nº
+    // de alvos do round (pressão de tempo → velocidade de processamento). Demais
+    // modos: tabela LEVEL_CLOCK por nível.
+    const clockSecs = modeRef.current === "foco"
+      ? focoClockSecs(levelRef.current, requiredTargetsRef.current)
+      : LEVEL_CLOCK[Math.max(1, Math.min(9, levelRef.current)) - 1];
     if (clockIntRef.current) { clearInterval(clockIntRef.current); clockIntRef.current = null; }
     if (clockSecs > 0) {
       setClockLeft(clockSecs);
@@ -1040,6 +1058,14 @@ export function FocusAgents({ difficulty, theme, onComplete, exerciseId = "focus
         reachedLevelRef.current = Math.max(reachedLevelRef.current, levelRef.current);
         setDisplayLevel(levelRef.current);
       }
+    } else if (modeRef.current === "foco") {
+      // PILOTO Foco — RIGOR DE TREINO: errar (toque impulsivo) ou estourar o tempo
+      // (omissão) NÃO desce de nível — REPETE o MESMO nível na próxima rodada, com
+      // novo arranjo (mesma dificuldade, sem virar memorização de posição). Só zera
+      // a sequência de acertos e recua um degrau de velocidade (intra-step).
+      consecCorrectRef.current = 0;
+      intraStepRef.current = Math.max(0, intraStepRef.current - 1);
+      consecErrorRef.current = 0;   // sem contagem de erros p/ descida — nível fixo
     } else {
       consecCorrectRef.current = 0;
       intraStepRef.current = Math.max(0, intraStepRef.current - 1);
@@ -1590,6 +1616,21 @@ export function FocusAgents({ difficulty, theme, onComplete, exerciseId = "focus
               {mode === "foco" && (() => {
                 const erros = failReason === "wrong-tap" ? 1 : 0;
                 const omiss = isCorrect ? 0 : Math.max(0, totalTargets - foundCount);
+                // PILOTO Foco — feedback de ERRO explícito e instrutivo (rigor de
+                // treino). Toque impulsivo: diz por que errou (se foi num confusável,
+                // que compartilha SÓ um atributo com a regra). Timeout: quantos
+                // faltaram. Em ambos: repete o MESMO nível (não facilita).
+                const wa = wrongAgentRef.current;
+                const wasConfusable = !!wa && !!firstTargetAg &&
+                  (wa.color === firstTargetAg.color ||
+                   (wa.images[0]?.tags ?? []).some(t => (firstTargetAg.images[0]?.tags ?? []).includes(t)));
+                const errorMsg =
+                  isCorrect ? null
+                  : failReason === "timeout"
+                    ? `Faltou capturar ${omiss} — vamos repetir.`
+                    : wasConfusable
+                      ? "Esse parecia, mas não batia com a regra. Confira todos os atributos."
+                      : "Esse não batia com a regra.";
                 return (
                   <div className="mt-3 pt-3 space-y-1.5" style={{ borderTop: "1px solid rgba(255,255,255,0.28)" }}>
                     <div className="flex justify-center gap-5 text-sm tabular-nums">
@@ -1601,10 +1642,14 @@ export function FocusAgents({ difficulty, theme, onComplete, exerciseId = "focus
                       <span>Tempo {(lastRt / 1000).toFixed(1).replace(".", ",")}s</span>
                       <span>Dificuldade {displayLevel}</span>
                     </div>
+                    {errorMsg && (
+                      <p className="text-sm font-semibold opacity-95 pt-1">{errorMsg}</p>
+                    )}
                     <p className="text-xs opacity-95 pt-1">
-                      {nextDir === "harder" ? "A próxima rodada será um pouco mais difícil."
-                        : nextDir === "easier" ? "A próxima rodada será um pouco mais simples."
-                        : "Dificuldade mantida na próxima rodada."}
+                      {isCorrect
+                        ? (nextDir === "harder" ? "A próxima rodada será um pouco mais difícil."
+                          : "Dificuldade mantida na próxima rodada.")
+                        : "Mesmo nível na próxima — novo arranjo."}
                     </p>
                   </div>
                 );

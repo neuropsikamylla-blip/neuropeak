@@ -1075,15 +1075,35 @@ function fExcludeShort(c: FCrit): string {
   return `com ${fCritNoun(c)}`;
 }
 
+// PILOTO Foco (endurecimento — velocidade de processamento + atenção seletiva):
+// ── `targets`: nº EXATO de alvos verdadeiros por nível — sobe com o nível para
+//    forçar varredura de vários itens (2→2→3→3→4→4→5). Nunca 1 só alvo.
+// ── `near`: fração dos NÃO-alvos que são "confusáveis" (compartilham exatamente
+//    UM atributo com a regra — mesma cor sem o acessório, ou o acessório em outra
+//    cor). ≥0,50 a partir do N2 para exigir checar TODOS os atributos, não só um.
+// ── `chars`: tamanho da multidão (mantido cheio, faixa ~12–26, alinhado ao
+//    displayN 16–28 dos outros modos) — só a COMPOSIÇÃO muda, não o volume.
+// Todos os números abaixo são CALIBRÁVEIS após teste clínico.
 interface FocoCfg { chars: [number, number]; targets: [number, number]; near: number }
 const FOCO_CFG: Record<number, FocoCfg> = {
-  1: { chars: [6, 8],   targets: [2, 3], near: 0.20 },
-  2: { chars: [8, 10],  targets: [2, 4], near: 0.45 },
-  3: { chars: [10, 12], targets: [3, 4], near: 0.65 },
-  4: { chars: [12, 14], targets: [3, 5], near: 0.75 },
-  5: { chars: [12, 16], targets: [3, 5], near: 0.80 },
-  6: { chars: [14, 18], targets: [3, 6], near: 0.70 },
-  7: { chars: [14, 18], targets: [3, 6], near: 0.75 },
+  1: { chars: [12, 14], targets: [2, 2], near: 0.55 },
+  2: { chars: [14, 16], targets: [2, 2], near: 0.55 },
+  3: { chars: [16, 18], targets: [3, 3], near: 0.60 },
+  4: { chars: [18, 20], targets: [3, 3], near: 0.60 },
+  5: { chars: [20, 22], targets: [4, 4], near: 0.65 },
+  6: { chars: [22, 24], targets: [4, 4], near: 0.60 },
+  7: { chars: [24, 26], targets: [5, 5], near: 0.65 },
+};
+
+// Cores VIZINHAS/parecidas (para o N1, de 1 atributo, os distratores de cor não
+// serem triviais — obrigam discriminação fina). Calibrável após teste clínico.
+const FOCO_NEAR_COLORS: Partial<Record<ColorName, ColorName[]>> = {
+  azul:     ["roxo", "verde"],
+  verde:    ["azul", "amarelo"],
+  roxo:     ["azul", "vermelho"],
+  laranja:  ["vermelho", "amarelo"],
+  vermelho: ["laranja", "roxo"],
+  amarelo:  ["laranja", "verde"],
 };
 
 // Tira `n` agentes distintos (por agentId) do pool; clona se faltar. IDs únicos.
@@ -1178,7 +1198,23 @@ function buildFocoLadder(difficulty: number, theme: Theme): BuiltRound {
   const isTargetLike = (a: CharacterAttributes) => groups.some(cs => fMatchAll(a, cs) && (!excl || !fMatch(a, excl)));
   const isForbidLike = (a: CharacterAttributes) => !!excl && fMatchAll(a, rule.crits) && fMatch(a, excl);
   const nonMatch = R.filter(a => !isTargetLike(a) && !isForbidLike(a));
-  const isNear = (a: CharacterAttributes) => groups.some(cs => fMatchCount(a, cs) >= cs.length - 1);
+  // "Confusável": compartilha EXATAMENTE UM atributo com um grupo-alvo (força
+  // checar TODOS os atributos, não só um). Para regra de 1 atributo:
+  //  · cor  → distrator de cor VIZINHA (discriminação de cor não-trivial);
+  //  · acc/objeto/símbolo → distrator que tem a MESMA cor de algum alvo (o
+  //    outro eixo bate, o atributo pedido não) — evita o "1 alvo óbvio".
+  const targetColors = new Set(targets.map(t => t.uniformColor));
+  const isNear = (a: CharacterAttributes) =>
+    groups.some(cs => {
+      if (cs.length >= 2) return fMatchCount(a, cs) === cs.length - 1;   // multi-crit: bate todos menos um
+      const c = cs[0];
+      if (c.k === "color") {
+        const neighbors = FOCO_NEAR_COLORS[c.v as ColorName] ?? [];
+        return neighbors.includes(a.uniformColor);
+      }
+      // crit único não-cor: mesma cor de um alvo, mas sem o atributo pedido
+      return targetColors.has(a.uniformColor);
+    });
   const nearPool = nonMatch.filter(isNear);
   const farPool  = nonMatch.filter(a => !isNear(a));
   const slots = Math.max(0, charCount - targets.length - forbidden.length);
@@ -1197,6 +1233,15 @@ function buildFocoLadder(difficulty: number, theme: Theme): BuiltRound {
   else if (rule.groupB) text = `Toque nos ${fRulePhrase(noun, rule.crits, true)} e nos ${fRulePhrase(noun, rule.groupB, false)}`;
   else text = `Toque nos ${fRulePhrase(noun, rule.crits, true)}`;
 
+  // Codifica a regra REAL em requiredAttributes ("kind:value") para métricas e
+  // inspeção (probe). groupB entra com prefixo "b:"; a exclusão vai em excludedAttributes.
+  const critStr = (c: FCrit) => `${c.k}:${c.v}`;
+  const requiredAttributes = [
+    ...rule.crits.map(critStr),
+    ...(rule.groupB ? rule.groupB.map(c => `b:${critStr(c)}`) : []),
+  ];
+  const excludedAttributes = excl ? [critStr(excl)] : undefined;
+
   const characters = shuffle([...targets, ...forbidden, ...distractors]);
   const command: GeneratedCommand = {
     text, mode: "visual", difficulty: d, ladder: d, memory,
@@ -1204,7 +1249,7 @@ function buildFocoLadder(difficulty: number, theme: Theme): BuiltRound {
     distractors: distractors.map(t => t.id),
     forbidden: forbidden.map(t => t.id),
     sequenced: false, requiredTargets: targets.length,
-    rule: { type: "multiTarget" }, verbIndex: 0,
+    rule: { type: "multiTarget", requiredAttributes, excludedAttributes }, verbIndex: 0,
   };
   return { characters, command };
 }
