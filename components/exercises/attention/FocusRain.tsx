@@ -70,21 +70,27 @@ function cleanForSpeech(text: string): string {
 
 // ── Configuração de dificuldade por NÍVEL (ladder 1–7) — CALIBRÁVEL ─────────────
 //  • fallMs        — tempo-base p/ o agente cair do topo até embaixo (↓ = mais rápido).
-//  • spawnMs       — intervalo entre spawns (↓ = mais caindo).
-//  • maxConcurrent — máximo simultâneo (4 → 8 conforme o nível).
 //  • secondChance  — multiplicador de velocidade da 2ª queda de um alvo que escapou.
 //  • nearFrac      — fração dos DISTRATORES tirados da família confusável (o resto
 //    vira variedade). Sobe com o nível (mais parecidos = mais difícil).
-interface RainCfg { fallMs: number; spawnMs: number; maxConcurrent: number; secondChance: number; nearFrac: number }
+//  • areaPerAgent  — px² de tela por agente (↓ = mais denso). A quantidade na tela
+//    ADAPTA ao tamanho do monitor: enche telas grandes, equilibra no celular.
+interface RainCfg { fallMs: number; secondChance: number; nearFrac: number; areaPerAgent: number }
 const RAIN_CFG: Record<number, RainCfg> = {
-  1: { fallMs: 6200, spawnMs: 820, maxConcurrent: 6,  secondChance: 1.4,  nearFrac: 0.75 },
-  2: { fallMs: 5600, spawnMs: 700, maxConcurrent: 7,  secondChance: 1.45, nearFrac: 0.78 },
-  3: { fallMs: 5000, spawnMs: 600, maxConcurrent: 8,  secondChance: 1.5,  nearFrac: 0.82 },
-  4: { fallMs: 4500, spawnMs: 500, maxConcurrent: 9,  secondChance: 1.55, nearFrac: 0.86 },
-  5: { fallMs: 4000, spawnMs: 420, maxConcurrent: 10, secondChance: 1.6,  nearFrac: 0.90 },
-  6: { fallMs: 3600, spawnMs: 350, maxConcurrent: 11, secondChance: 1.65, nearFrac: 0.93 },
-  7: { fallMs: 3200, spawnMs: 290, maxConcurrent: 12, secondChance: 1.7,  nearFrac: 0.95 },
+  1: { fallMs: 6200, secondChance: 1.4,  nearFrac: 0.75, areaPerAgent: 55000 },
+  2: { fallMs: 5600, secondChance: 1.45, nearFrac: 0.78, areaPerAgent: 49000 },
+  3: { fallMs: 5000, secondChance: 1.5,  nearFrac: 0.82, areaPerAgent: 44000 },
+  4: { fallMs: 4500, secondChance: 1.55, nearFrac: 0.86, areaPerAgent: 39000 },
+  5: { fallMs: 4000, secondChance: 1.6,  nearFrac: 0.90, areaPerAgent: 35000 },
+  6: { fallMs: 3600, secondChance: 1.65, nearFrac: 0.93, areaPerAgent: 31000 },
+  7: { fallMs: 3200, secondChance: 1.7,  nearFrac: 0.95, areaPerAgent: 28000 },
 };
+const SPAWN_TICK = 150;    // tick rápido; a densidade real é limitada por targetConcurrent().
+const MAX_ON_SCREEN = 30;  // teto de segurança (performance).
+// Quantos agentes simultâneos p/ a ÁREA atual — enche a tela, adapta ao monitor.
+function targetConcurrent(level: number, W: number, H: number): number {
+  return Math.max(5, Math.min(MAX_ON_SCREEN, Math.round((W * H) / RAIN_CFG[level].areaPerAgent)));
+}
 
 // Progressão: sobe +1 nível a cada LEVEL_UP_HITS comandos resolvidos seguidos;
 // erro impulsivo OU omissão zera a sequência e MANTÉM o nível (não desce).
@@ -318,7 +324,8 @@ export function FocusRain({ level, theme, presentMode, fbLevel, exerciseId, sett
     if (doneRef.current) return;
     const cfg = RAIN_CFG[levelRef.current];
     const alive = agentsRef.current.filter(a => a.state === "falling").length;
-    if (alive >= cfg.maxConcurrent) return;
+    const maxC = targetConcurrent(levelRef.current, playWRef.current || 360, playHRef.current || 600);
+    if (alive >= maxC) return;
     const rule = ruleRef.current;
     if (!rule) return;
 
@@ -516,7 +523,7 @@ export function FocusRain({ level, theme, presentMode, fbLevel, exerciseId, sett
   // (Re)cria o intervalo de spawn quando o nível muda (mais denso nos altos).
   useEffect(() => {
     if (spawnTimerRef.current) clearInterval(spawnTimerRef.current);
-    spawnTimerRef.current = setInterval(() => spawnOne(), RAIN_CFG[levelRef.current].spawnMs);
+    spawnTimerRef.current = setInterval(() => spawnOne(), SPAWN_TICK);
     return () => { if (spawnTimerRef.current) clearInterval(spawnTimerRef.current); };
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [displayLevel]);

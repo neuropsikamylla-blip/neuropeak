@@ -14,6 +14,13 @@ histórico completo anterior está no log do Git (452 commits no total, a partir
   Documentação (CLAUDE.md, README.md, ARCHITECTURE.md, ADRs) reescrita a partir do
   código real.
 
+## [2.22.2] — 2026-07-11
+
+- **Chuva do Foco — densidade adaptativa à tela:** a quantidade de agentes na tela era
+  fixa (6→12) e ficava vazia em monitores grandes. Agora ADAPTA à área da tela (px² por
+  agente): enche telas largas (~20-30) e mantém equilíbrio no celular (~5-8), ficando mais
+  denso nos níveis altos. Spawn em tick rápido pra encher; teto de 30 por performance.
+
 ## [2.22.1] — 2026-07-11
 
 - **Chuva do Foco — mais distratores (mais difícil):** densidade na tela subiu de 4→8
