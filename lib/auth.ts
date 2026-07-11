@@ -2,6 +2,22 @@ import { NextAuthOptions } from "next-auth";
 import CredentialsProvider from "next-auth/providers/credentials";
 import bcrypt from "bcryptjs";
 import prisma from "@/lib/db";
+import {
+  isAllowed, registerFailure, clearFailures, clientIp,
+  IDENTIFIER_RULE, IP_RULE,
+} from "@/lib/rate-limit";
+
+// Bloqueia a tentativa se o identificador OU o IP estourou o limite de falhas.
+function loginBlocked(idKey: string, ip: string | null): boolean {
+  if (!isAllowed(idKey)) return true;
+  if (ip && !isAllowed(`ip:${ip}`)) return true;
+  return false;
+}
+// Conta uma falha de login para o identificador e (se conhecido) o IP.
+function loginFailure(idKey: string, ip: string | null): void {
+  registerFailure(idKey, IDENTIFIER_RULE);
+  if (ip) registerFailure(`ip:${ip}`, IP_RULE);
+}
 
 export const authOptions: NextAuthOptions = {
   session: {
@@ -20,18 +36,24 @@ export const authOptions: NextAuthOptions = {
         email: { label: "Email", type: "email" },
         password: { label: "Senha", type: "password" },
       },
-      async authorize(credentials) {
+      async authorize(credentials, req) {
         if (!credentials?.email || !credentials?.password) return null;
+
+        const ip = clientIp(req);
+        const idKey = `therapist:${credentials.email.trim().toLowerCase()}`;
+        if (loginBlocked(idKey, ip)) return null; // muitas tentativas — recusa
 
         const user = await prisma.user.findUnique({
           where: { email: credentials.email },
         });
 
-        if (!user) return null;
+        const valid = user ? await bcrypt.compare(credentials.password, user.password) : false;
+        if (!user || !valid) {
+          loginFailure(idKey, ip);
+          return null;
+        }
 
-        const valid = await bcrypt.compare(credentials.password, user.password);
-        if (!valid) return null;
-
+        clearFailures(idKey); // sucesso zera o contador do identificador
         return {
           id: user.id,
           email: user.email,
@@ -49,20 +71,26 @@ export const authOptions: NextAuthOptions = {
         patientId: { label: "Código do Paciente", type: "text" },
         pin: { label: "PIN", type: "password" },
       },
-      async authorize(credentials) {
+      async authorize(credentials, req) {
         if (!credentials?.patientId || !credentials?.pin) return null;
 
         const input = credentials.patientId.trim().toUpperCase();
-        const isCode = /^COG\d{4,6}$/.test(input);
+        const ip = clientIp(req);
+        const idKey = `pin:${input}`;
+        if (loginBlocked(idKey, ip)) return null; // muitas tentativas — recusa
 
+        const isCode = /^COG\d{4,6}$/.test(input);
         const patient = isCode
           ? await prisma.patient.findFirst({ where: { patientCode: input } })
           : await prisma.patient.findUnique({ where: { id: credentials.patientId } });
 
-        if (!patient) return null;
-        const pinValid = await bcrypt.compare(credentials.pin, patient.pin);
-        if (!pinValid) return null;
+        const pinValid = patient ? await bcrypt.compare(credentials.pin, patient.pin) : false;
+        if (!patient || !pinValid) {
+          loginFailure(idKey, ip);
+          return null;
+        }
 
+        clearFailures(idKey); // sucesso zera o contador do identificador
         return {
           id: patient.id,
           email: `patient_${patient.id}@neuropeak.local`,
