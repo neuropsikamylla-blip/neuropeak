@@ -14,6 +14,11 @@ histórico completo anterior está no log do Git (452 commits no total, a partir
   Documentação (CLAUDE.md, README.md, ARCHITECTURE.md, ADRs) reescrita a partir do
   código real.
 
+## [2.18.2] — 2026-07-11
+
+- **Restaurante:** volume do som ambiente reduzido mais um pouco (ganho 0.26 → 0.20),
+  a pedido — fundo ainda mais discreto.
+
 ## [2.18.1] — 2026-07-11
 
 - **Restaurante — som ambiente trocado por gravação real:** o burburinho sintetizado

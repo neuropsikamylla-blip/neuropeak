@@ -231,7 +231,7 @@ let ambCtx: AudioContext | null = null;
 let ambMaster: GainNode | null = null;
 let ambSource: AudioBufferSourceNode | null = null;
 let ambBuffer: AudioBuffer | null = null;
-const AMB_LEVEL = 0.26; // ganho baixo sobre a gravação (RMS ~0.08) → fundo discreto
+const AMB_LEVEL = 0.20; // ganho baixo sobre a gravação (RMS ~0.08) → fundo bem discreto
 const AMB_URL = "/exercises/audio/ambience-restaurante-real.m4a";
 async function startAmbience() {
   if (typeof window === "undefined") return;
