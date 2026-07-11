@@ -58,8 +58,11 @@ export function AlertsPanel({ alerts: initial }: AlertsPanelProps) {
   async function markRead(alertId: string) {
     setLoading(alertId);
     try {
-      await fetch(`/api/alerts/${alertId}`, { method: "PATCH" });
-      setAlerts((prev) => prev.map((a) => (a.id === alertId ? { ...a, isRead: true } : a)));
+      const res = await fetch(`/api/alerts/${alertId}`, { method: "PATCH" });
+      // Só some da lista se o servidor confirmou — senão a UI divergiria do banco.
+      if (res.ok) {
+        setAlerts((prev) => prev.map((a) => (a.id === alertId ? { ...a, isRead: true } : a)));
+      }
     } finally {
       setLoading(null);
     }
@@ -68,9 +71,20 @@ export function AlertsPanel({ alerts: initial }: AlertsPanelProps) {
   async function markAllRead() {
     const unreadIds = alerts.filter((a) => !a.isRead).map((a) => a.id);
     setLoading("all");
-    await Promise.all(unreadIds.map((id) => fetch(`/api/alerts/${id}`, { method: "PATCH" })));
-    setAlerts((prev) => prev.map((a) => ({ ...a, isRead: true })));
-    setLoading(null);
+    try {
+      const oks = await Promise.all(
+        unreadIds.map((id) =>
+          fetch(`/api/alerts/${id}`, { method: "PATCH" }).then((r) => r.ok).catch(() => false)
+        )
+      );
+      // Marca como lido apenas os que confirmaram no servidor.
+      const okIds = new Set(unreadIds.filter((_, i) => oks[i]));
+      if (okIds.size > 0) {
+        setAlerts((prev) => prev.map((a) => (okIds.has(a.id) ? { ...a, isRead: true } : a)));
+      }
+    } finally {
+      setLoading(null);
+    }
   }
 
   return (

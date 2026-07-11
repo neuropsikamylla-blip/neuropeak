@@ -22,6 +22,14 @@
 > - **Pet/Jornada persistidos (Etapa 4)** — ✅ resolvido em v2.12.0: ARQ-002 (pet e árvore
 >   de habilidades salvos no servidor, não só em localStorage; API `/api/gamification` +
 >   migração aditiva aplicada e verificada em produção).
+> - **Organização interna (Etapa 5)** — ✅ resolvidos em v2.12.1: ARQ-001 (badges do catálogo
+>   + teste), ARQ-004 (ghost removido), ARQ-005 e ARQ-009 (código morto + pastas vazias +
+>   `useAdaptiveLevel`), PERF-001 (lista de pacientes com janela de 30), GER-008 (AlertsPanel).
+>   **Adiados de propósito:** ARQ-007/ARQ-006 (quebrar arquivos grandes / switch central —
+>   refactor de alto risco e ganho funcional zero); ARQ-008/DUP-01 (unificar tokens de tema —
+>   mudança de design); ARQ-003 (`desafio-cidade` órfão — precisa decisão de produto:
+>   aposentar ou reativar); PERF-002 (round-trips do POST /sessions — sem impacto no volume
+>   real). Itens P3 avulsos de correção/segurança seguem pendentes na lista abaixo.
 > - Demais itens: pendentes (lista abaixo).
 
 ## Panorama

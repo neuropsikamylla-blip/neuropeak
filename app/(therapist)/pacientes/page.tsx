@@ -1,4 +1,5 @@
 import { getServerSession } from "next-auth";
+import { Prisma } from "@prisma/client";
 import { authOptions } from "@/lib/auth";
 import prisma from "@/lib/db";
 import { redirect } from "next/navigation";
@@ -24,9 +25,21 @@ export default async function PacientesPage() {
 
   const patientIds = patientList.map((p) => p.id);
 
+  // Só as 30 sessões mais recentes POR PACIENTE (window function), em vez de trazer
+  // o histórico inteiro para depois cortar em memória — evita crescimento sem limite
+  // do payload conforme o paciente treina (finding PERF-001). Espelha o dashboard.
   const [allSessions, allAlerts, allTrainingPlans] = await Promise.all([
     patientIds.length > 0
-      ? prisma.session.findMany({ where: { patientId: { in: patientIds } }, orderBy: { completedAt: "desc" } })
+      ? prisma.$queryRaw<(SessionData & { patientId: string })[]>`
+          SELECT id, "patientId", "exerciseId", domain, score, accuracy, "reactionTime", difficulty, duration, "completedAt", metadata
+          FROM (
+            SELECT s.*, ROW_NUMBER() OVER (PARTITION BY s."patientId" ORDER BY s."completedAt" DESC) AS rn
+            FROM "Session" s
+            WHERE s."patientId" IN (${Prisma.join(patientIds)})
+          ) ranked
+          WHERE rn <= 30
+          ORDER BY "patientId", "completedAt" DESC
+        `
       : [],
     patientIds.length > 0
       ? prisma.alert.findMany({ where: { patientId: { in: patientIds }, isRead: false } })

@@ -14,6 +14,21 @@ histórico completo anterior está no log do Git (452 commits no total, a partir
   Documentação (CLAUDE.md, README.md, ARCHITECTURE.md, ADRs) reescrita a partir do
   código real.
 
+## [2.12.1] — 2026-07-10
+
+- **Organização interna (correções da auditoria):**
+  - Catálogo: 11 exercícios que apareciam com badge de tipo/dificuldade errado (caíam no
+    padrão "Visual/Médio") passam a ter classificação própria; novo teste garante que todo
+    exercício do catálogo tenha definição e badge (ARQ-001).
+  - Removido o exercício-fantasma `atencao-dividida` da taxonomia (ARQ-004).
+  - Código morto removido: `utils/validateCommand.ts`, `components/characters/AgentGrid.tsx`,
+    `FallingAgentsDemo.tsx`, `components/exercises/attention/AtencaoDividida.tsx`, o hook
+    `useAdaptiveLevel` sem uso e as pastas vazias `components/reports/` e `app/auth/` (ARQ-005/009).
+  - Lista de pacientes: passa a trazer só as 30 sessões mais recentes por paciente (window
+    function), em vez do histórico inteiro — evita crescimento sem limite do payload (PERF-001).
+  - Painel de alertas: "marcar como lido" só atualiza a tela se o servidor confirmar; "marcar
+    todos" não trava mais o botão em caso de falha (GER-008).
+
 ## [2.12.0] — 2026-07-10
 
 - **Pet e Jornada salvos no servidor (ARQ-002):** o progresso do bichinho (tipo, carinho,
