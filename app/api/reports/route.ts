@@ -303,7 +303,7 @@ export const GET = withApiHandler(async (req: NextRequest) => {
   return new NextResponse(pdfBuffer as unknown as BodyInit, {
     headers: {
       "Content-Type": "application/pdf",
-      "Content-Disposition": `attachment; filename="relatorio_${patient.name.replace(/\s+/g, "_")}_${format(new Date(), "yyyyMMdd")}.pdf"`,
+      "Content-Disposition": `attachment; filename="relatorio_${patient.name.replace(/[^A-Za-z0-9]+/g, "_").replace(/^_+|_+$/g, "") || "paciente"}_${format(new Date(), "yyyyMMdd")}.pdf"`,
     },
   });
 });

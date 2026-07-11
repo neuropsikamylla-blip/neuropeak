@@ -14,6 +14,16 @@ histórico completo anterior está no log do Git (452 commits no total, a partir
   Documentação (CLAUDE.md, README.md, ARCHITECTURE.md, ADRs) reescrita a partir do
   código real.
 
+## [2.14.1] — 2026-07-11
+
+- **Itens menores da auditoria (P3):**
+  - Exercícios de memória (Lista com Distração, Sequência de Itens, Letras/Sílabas,
+    Padrões com Rotação): o cabeçalho durante o jogo passa a mostrar o **nível atual**, não
+    o nível inicial fixo (CORR-017).
+  - Login: comparação de senha/PIN roda em **tempo constante** mesmo quando a conta não
+    existe, para não dar pra descobrir contas medindo a latência (SEC-005).
+  - Relatório: nome do arquivo PDF sanitizado (remove aspas/acentos/caracteres especiais) (SEC-007).
+
 ## [2.14.0] — 2026-07-11
 
 - **PIN do paciente visível para o terapeuta.** Antes o PIN só ficava com hash (login) e

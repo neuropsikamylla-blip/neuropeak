@@ -201,7 +201,7 @@ export function SequenciaItens({ difficulty, onComplete }: SequenciaItensProps) 
         <div>
           <p className="text-sm font-bold text-white leading-tight">Sequência de Itens</p>
           <p className="text-xs mt-1" style={{ color: "rgba(148,163,184,0.7)" }}>
-            Nível {startLevel} · {spec.count} itens · {spec.audio ? "áudio" : "visual"}{spec.similar ? " · semelhantes" : ""}
+            Nível {level} · {spec.count} itens · {spec.audio ? "áudio" : "visual"}{spec.similar ? " · semelhantes" : ""}
           </p>
         </div>
         <ExerciseProgressBar progressPct={progressPct} theme="GAMIFIED" />

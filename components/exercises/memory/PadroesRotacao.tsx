@@ -348,7 +348,7 @@ export function PadroesRotacao({ difficulty, onComplete }: PadroesRotacaoProps) 
           <div>
             <p className="text-sm font-bold text-white leading-tight">Matriz com Rotações</p>
             <p className="text-xs mt-1" style={{ color: "rgba(148,163,184,0.7)" }}>
-              Nível {startLevel} · {N}×{N} · {kRef.current} posições · {spec.rots.length > 1 ? "rotação variável" : `${spec.rots[0]}°`}
+              Nível {level} · {N}×{N} · {kRef.current} posições · {spec.rots.length > 1 ? "rotação variável" : `${spec.rots[0]}°`}
             </p>
           </div>
           {(phase === "rotating" || phase === "delay" || phase === "input") && (

@@ -217,7 +217,7 @@ export function LetrasSequencia({ difficulty, onComplete }: LetrasSequenciaProps
         <div>
           <p className="text-sm font-bold text-white leading-tight">Letras em Sequência</p>
           <p className="text-xs mt-1" style={{ color: "rgba(148,163,184,0.7)" }}>
-            Nível {startLevel} · {spec.count} {spec.syllable ? "sílabas" : "letras"} · {spec.reverse ? "inversa" : "direta"} · {spec.audio ? "áudio" : "visual"}
+            Nível {level} · {spec.count} {spec.syllable ? "sílabas" : "letras"} · {spec.reverse ? "inversa" : "direta"} · {spec.audio ? "áudio" : "visual"}
           </p>
         </div>
 

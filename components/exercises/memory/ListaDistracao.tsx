@@ -209,7 +209,7 @@ export function ListaDistracao({ difficulty, onComplete }: ListaDistracaoProps) 
         <div>
           <p className="text-sm font-bold text-white leading-tight">Lista com Distração</p>
           <p className="text-xs mt-1" style={{ color: "rgba(148,163,184,0.7)" }}>
-            Nível {startLevel} · {spec.count} itens · {spec.order ? "em ordem" : "reconhecer"}
+            Nível {level} · {spec.count} itens · {spec.order ? "em ordem" : "reconhecer"}
           </p>
         </div>
         <ExerciseProgressBar progressPct={progressPct} theme="GAMIFIED" />

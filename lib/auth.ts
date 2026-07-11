@@ -19,6 +19,11 @@ function loginFailure(idKey: string, ip: string | null): void {
   if (ip) registerFailure(`ip:${ip}`, IP_RULE);
 }
 
+// Hash "boba" (custo 10) para comparar quando o usuário/paciente NÃO existe, de modo
+// que o tempo de resposta seja parecido com quando existe — evita enumerar contas
+// medindo latência (finding SEC-005).
+const DUMMY_HASH = "$2a$10$SVyxsBzf/kDKMWx2I/0LF.KIHLxxhCQAd/7TjV570xQWiUGPekymG";
+
 export const authOptions: NextAuthOptions = {
   session: {
     strategy: "jwt",
@@ -47,7 +52,8 @@ export const authOptions: NextAuthOptions = {
           where: { email: credentials.email },
         });
 
-        const valid = user ? await bcrypt.compare(credentials.password, user.password) : false;
+        // Sempre roda o bcrypt (contra hash dummy se o usuário não existe) — tempo constante.
+        const valid = await bcrypt.compare(credentials.password, user?.password ?? DUMMY_HASH);
         if (!user || !valid) {
           loginFailure(idKey, ip);
           return null;
@@ -84,7 +90,8 @@ export const authOptions: NextAuthOptions = {
           ? await prisma.patient.findFirst({ where: { patientCode: input } })
           : await prisma.patient.findUnique({ where: { id: credentials.patientId } });
 
-        const pinValid = patient ? await bcrypt.compare(credentials.pin, patient.pin) : false;
+        // Sempre roda o bcrypt (contra hash dummy se o paciente não existe) — tempo constante.
+        const pinValid = await bcrypt.compare(credentials.pin, patient?.pin ?? DUMMY_HASH);
         if (!patient || !pinValid) {
           loginFailure(idKey, ip);
           return null;
