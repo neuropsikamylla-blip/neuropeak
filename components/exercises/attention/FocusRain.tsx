@@ -80,16 +80,16 @@ function cleanForSpeech(text: string): string {
 //  • areaPerAgent MAIOR (menos denso, sem sobreposição).
 interface RainCfg { fallMs: number; secondChance: number; nearFrac: number; areaPerAgent: number }
 const RAIN_CFG: Record<number, RainCfg> = {
-  1: { fallMs: 9500, secondChance: 1.4,  nearFrac: 0.75, areaPerAgent: 150000 },
-  2: { fallMs: 8600, secondChance: 1.45, nearFrac: 0.78, areaPerAgent: 135000 },
-  3: { fallMs: 7800, secondChance: 1.5,  nearFrac: 0.82, areaPerAgent: 120000 },
-  4: { fallMs: 7000, secondChance: 1.55, nearFrac: 0.86, areaPerAgent: 105000 },
-  5: { fallMs: 6300, secondChance: 1.6,  nearFrac: 0.90, areaPerAgent:  92000 },
-  6: { fallMs: 5700, secondChance: 1.65, nearFrac: 0.93, areaPerAgent:  82000 },
-  7: { fallMs: 5200, secondChance: 1.7,  nearFrac: 0.95, areaPerAgent:  72000 },
+  1: { fallMs: 7200, secondChance: 1.4,  nearFrac: 0.90, areaPerAgent: 105000 },
+  2: { fallMs: 6500, secondChance: 1.45, nearFrac: 0.92, areaPerAgent:  96000 },
+  3: { fallMs: 5900, secondChance: 1.5,  nearFrac: 0.94, areaPerAgent:  88000 },
+  4: { fallMs: 5300, secondChance: 1.55, nearFrac: 0.96, areaPerAgent:  80000 },
+  5: { fallMs: 4800, secondChance: 1.6,  nearFrac: 0.98, areaPerAgent:  73000 },
+  6: { fallMs: 4300, secondChance: 1.65, nearFrac: 0.99, areaPerAgent:  66000 },
+  7: { fallMs: 3900, secondChance: 1.7,  nearFrac: 1.00, areaPerAgent:  60000 },
 };
 const SPAWN_TICK = 150;    // tick rápido; a densidade real é limitada por targetConcurrent().
-const MAX_ON_SCREEN = 14;  // teto (menos agentes; sem amontoar). Desktop ~13-14, celular ~5.
+const MAX_ON_SCREEN = 20;  // teto (mais distratores p/ busca). Desktop ~18-20, celular ~5.
 // Antes de o ALVO poder cair: pelo menos estes distratores + tempo (o alvo NUNCA é o 1º).
 const MIN_DISTRACTORS_BEFORE_TARGET = 3;
 const MIN_MS_BEFORE_TARGET = 900;
@@ -100,7 +100,7 @@ function targetConcurrent(level: number, W: number, H: number): number {
 
 // Progressão: sobe +1 nível a cada LEVEL_UP_HITS comandos resolvidos seguidos;
 // erro impulsivo OU omissão zera a sequência e MANTÉM o nível (não desce).
-const LEVEL_UP_HITS = 4;
+const LEVEL_UP_HITS = 3;
 const MAX_LEVEL     = 7;
 
 const fallSpeed = (playH: number, fallMs: number) => (playH + CHAR_H) / fallMs;
@@ -231,13 +231,13 @@ export function buildAllRules(): Rule[] {
 // O LADO da bola (sutil) e o skate-bermuda entram a partir de N2/N3.
 export function ruleAllowed(r: Rule, level: number): boolean {
   // Sub-features finas só a partir de certo nível (em regra simples OU combinada).
-  if (r.key.includes("ball:") && level < 3) return false;         // lado da bola = fino
+  if (r.key.includes("ball:") && level < 2) return false;         // lado da bola = fino
   if (r.key.includes("held:skate_bermuda") && level < 2) return false;
 
-  if (r.combined) return level >= 3;                              // combinados só N3+
-  // Regras SIMPLES:
-  if (r.key.startsWith("color:")) return level <= 4;              // só-cor: fácil, até N4
-  return level <= 4;                                              // feature-simples: até N4
+  if (r.combined) return true;                                    // combinados desde N1 (dominam por quantidade)
+  // Regras SIMPLES: só nos níveis baixos (N1-2); do N3+ é só conjunção (2 pistas).
+  if (r.key.startsWith("color:")) return level <= 2;              // só-cor: fácil, só N1-2
+  return level <= 2;                                              // feature-simples: só N1-2
 }
 
 type RainStateT = "falling" | "captured" | "wrong" | "missed";

@@ -14,6 +14,14 @@ histórico completo anterior está no log do Git (452 commits no total, a partir
   Documentação (CLAUDE.md, README.md, ARCHITECTURE.md, ADRs) reescrita a partir do
   código real.
 
+## [2.23.4] — 2026-07-11
+
+- **Chuva do Foco — bem mais difícil (a pedido, nas 4 frentes):** (1) distratores quase
+  idênticos ao alvo (nearFrac 0,90→1,0 — discriminação fina, não dá pra bater o olho);
+  (2) queda mais rápida (fallMs 7200→3900, mantendo legível); (3) mais agentes na tela
+  (teto 14→20); (4) comandos combinados (2 pistas: "azul de gorro") desde o nível 1 e
+  únicos do nível 3+ (antes só do 3). Sobe de nível a cada 3 acertos (era 4).
+
 ## [2.23.3] — 2026-07-11
 
 - **Focus Agents — força atualização das imagens (cache):** carimbo `?v=6`→`?v=7` nas
