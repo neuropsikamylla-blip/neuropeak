@@ -21,7 +21,7 @@ export const MEMORY_ITEMS: Array<{ id: string; label: string }> = [
   { id: "chapeu",       label: "Chapéu" },
 ];
 
-export function MemorySymbol({ id, size = 36 }: { id: string; size?: number }): JSX.Element {
+export function MemorySymbol({ id, size = 36 }: { id: string; size?: number }) {
   const b = {
     width: size,
     height: size,

@@ -14,6 +14,17 @@ histórico completo anterior está no log do Git (452 commits no total, a partir
   Documentação (CLAUDE.md, README.md, ARCHITECTURE.md, ADRs) reescrita a partir do
   código real.
 
+## [2.13.0] — 2026-07-10
+
+- **Correção: geração de relatório PDF (erro "Erro ao gerar relatório").** O
+  `@react-pdf/renderer` falhava em produção com "Minified React error #31" — duas
+  instâncias de React no ambiente do Next 15.5 (que usa React 19) enquanto o projeto
+  estava em React 18. Correção: alinhamento para **React 19** (react/react-dom 19,
+  suportado por todas as bibliotecas do projeto) + **@react-pdf/renderer v4**. Bug
+  pré-existente (não introduzido pelas mudanças anteriores desta série). Diagnóstico
+  reproduzido e validado no build de produção local.
+- Ajuste de tipos para React 19: `MemorySymbol` deixa de anotar o namespace global `JSX`.
+
 ## [2.12.1] — 2026-07-10
 
 - **Organização interna (correções da auditoria):**
