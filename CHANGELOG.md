@@ -14,6 +14,15 @@ histórico completo anterior está no log do Git (452 commits no total, a partir
   Documentação (CLAUDE.md, README.md, ARCHITECTURE.md, ADRs) reescrita a partir do
   código real.
 
+## [2.11.5] — 2026-07-10
+
+- **Robustez (correções da auditoria):**
+  - Mundo Interior: o polling de 8s não sobrescreve mais uma resposta em gravação, evitando
+    reverter/perder progresso em conexão instável (CORR-002).
+  - `db:seed` corrigido: usa `tsx` (o script apontava para `ts-node`, ausente do projeto) (GER-001).
+  - Remoção de dependências sem uso: `@auth/prisma-adapter`, `date-fns-tz`, `pg`, `@types/pg`;
+    `@types/nodemailer` movido para devDependencies (GER-002).
+
 ## [2.11.4] — 2026-07-10
 
 - **Alertas e regras do dia a dia (correções da auditoria):**

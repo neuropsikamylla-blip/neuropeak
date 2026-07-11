@@ -16,6 +16,10 @@
 >   rebaixa terapeuta ilimitado). **GER-006 adiado** (validação server-side do "1x por
 >   dia"): mudança de maior risco e baixo benefício prático — o cliente já bloqueia e o
 >   fuso agora está consistente; fica para avaliação futura.
+> - **Robustez (Etapa 4, parcial)** — ✅ resolvidos em v2.11.5: CORR-002 (Mundo Interior
+>   não reverte resposta em gravação), GER-001 (`db:seed` usa `tsx`), GER-002 (remoção de
+>   dependências sem uso). **ARQ-002 pendente** (pet/skill tree só em localStorage): exige
+>   mudança no banco de dados (decisão do produto) — ver plano abaixo.
 > - Demais itens: pendentes (lista abaixo).
 
 ## Panorama

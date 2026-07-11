@@ -586,10 +586,17 @@ export function MundoInterior({ sessionId }: { sessionId: string }) {
   const [session, setSession] = useState<TherapeuticSession | null>(null);
   const [loading, setLoading] = useState(true);
   const pollRef = useRef<ReturnType<typeof setInterval> | null>(null);
+  // Nº de gravações em voo. O polling de 8s NÃO aplica o estado do servidor
+  // enquanto há uma escrita pendente — senão reverteria a resposta otimista
+  // (e podia perder progresso em conexão instável). Finding CORR-002.
+  const writeInFlightRef = useRef(0);
 
   const loadSession = useCallback(async () => {
     const res = await fetch(`/api/therapeutic-sessions/${sessionId}`);
-    if (res.ok) { const data = await res.json(); setSession(data); }
+    if (res.ok) {
+      const data = await res.json();
+      if (writeInFlightRef.current === 0) setSession(data);
+    }
     setLoading(false);
   }, [sessionId]);
 
@@ -602,7 +609,12 @@ export function MundoInterior({ sessionId }: { sessionId: string }) {
   async function updateSession(update: Partial<TherapeuticSession>) {
     const optimistic = { ...session!, ...update };
     setSession(optimistic);
-    await patchSession(sessionId, update);
+    writeInFlightRef.current += 1;
+    try {
+      await patchSession(sessionId, update);
+    } finally {
+      writeInFlightRef.current -= 1;
+    }
   }
 
   async function handleCharacterDone(char: CharacterData) {
