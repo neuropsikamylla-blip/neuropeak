@@ -14,6 +14,16 @@ histórico completo anterior está no log do Git (452 commits no total, a partir
   Documentação (CLAUDE.md, README.md, ARCHITECTURE.md, ADRs) reescrita a partir do
   código real.
 
+## [2.22.0] — 2026-07-11
+
+- **Focus Agents / Chuva do Foco — mecânica corrigida ("acha 1, regra troca"):** agora
+  cada comando tem UM alvo ("Ache o de chapéu") no meio de vários parecidos caindo (mesma
+  família: chapéu/coroa/gorro/boné/sem; ou futebol-esq/dir e basquete; ou alegre/triste/
+  raiva). Tocar no alvo → **novo comando na hora** (a regra muda a cada acerto — treina
+  flexibilidade cognitiva). Tocar num parecido = erro (comando continua). Alvo que escapa
+  = 2ª chance → omissão troca o comando. Regras vêm do roster real (23 comandos, todos com
+  imagens válidas). Antes a regra ficava fixa e "capturava todos" — não era o desejado.
+
 ## [2.21.1] — 2026-07-11
 
 - **Focus Agents / Chuva do Foco — mais agentes na tela:** a queda começava com só 2
