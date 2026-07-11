@@ -1,7 +1,9 @@
 // ── Árvore de Habilidades (Jornada) ─────────────────────────────────────────
 // Gamificação estilo RPG para adolescentes/jovens adultos. O XP vem das sessões
 // reais do paciente; ao subir de nível ele ganha Skill Points para investir na
-// árvore. Cada habilidade tem 5 níveis. Estado da árvore no localStorage.
+// árvore. Cada habilidade tem 5 níveis. Estado no localStorage (cache) + servidor (ARQ-002).
+
+import { pushGamification } from "@/lib/gamification-sync";
 
 export type Branch = "blue" | "purple" | "gold";
 export type SkillId =
@@ -110,6 +112,7 @@ export function loadSkills(patientId: string): SkillLevels {
 export function saveSkills(patientId: string, s: SkillLevels): void {
   if (typeof window === "undefined") return;
   try { localStorage.setItem(storageKey(patientId), JSON.stringify(s)); } catch { /* ignore */ }
+  pushGamification({ skillState: s }); // persiste também no servidor (ARQ-002)
 }
 
 // XP em cache no cliente (otimista). A página /jornada reconcilia com o valor

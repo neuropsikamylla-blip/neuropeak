@@ -42,6 +42,10 @@ model Patient {
   pin                 String
   patientCode         String?              @unique
   theme               String               @default("CLINICAL")
+  // Gamificação persistida no servidor (antes só em localStorage — finding ARQ-002):
+  // estado do bichinho (tipo/carinho/nome/cor/acessório) e da árvore de habilidades.
+  petState            Json?
+  skillState          Json?
   therapistId         String
   therapist           User                 @relation(fields: [therapistId], references: [id], onDelete: Restrict)
   createdAt           DateTime             @default(now())

@@ -14,6 +14,15 @@ histórico completo anterior está no log do Git (452 commits no total, a partir
   Documentação (CLAUDE.md, README.md, ARCHITECTURE.md, ADRs) reescrita a partir do
   código real.
 
+## [2.12.0] — 2026-07-10
+
+- **Pet e Jornada salvos no servidor (ARQ-002):** o progresso do bichinho (tipo, carinho,
+  nome, cor, acessório) e da árvore de habilidades passa a ser persistido no banco, além do
+  cache local — não se perde ao trocar de aparelho ou limpar o navegador. Novo endpoint
+  `/api/gamification` (paciente lê/salva o próprio estado); reconciliação com merge
+  "nunca-perde-progresso" ao abrir as telas de pet/jornada. Requer a migração aditiva em
+  `prisma/migrations-manual/2026-07-10-gamification.sql`.
+
 ## [2.11.5] — 2026-07-10
 
 - **Robustez (correções da auditoria):**

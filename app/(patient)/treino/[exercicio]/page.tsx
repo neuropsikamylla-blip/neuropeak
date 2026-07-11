@@ -13,6 +13,7 @@ import { Button } from "@/components/ui/button";
 import Link from "next/link";
 import { loadPet, savePet, feedPet, petStage, petDisplayName, type PetKind, type AccessoryId, type PetState, type PetColorId } from "@/lib/pet";
 import { loadXp, saveXp, levelInfo } from "@/lib/skilltree";
+import { pullGamification, mergePet } from "@/lib/gamification-sync";
 import { PetCelebration } from "@/components/patient/PetCelebration";
 import { PetCreature } from "@/components/patient/PetCreature";
 import { XpFlash, type XpFlashData } from "@/components/patient/skilltree/XpFlash";
@@ -534,7 +535,10 @@ export default function ExercicioPage() {
 
     // Kids (colorido): bichinho estilo Tamagotchi ganha carinho.
     if (theme === "COLORFUL" && user.patientId) {
-      const before = loadPet(user.patientId);
+      // Reconcilia com o servidor antes de alimentar — num aparelho novo o pet local
+      // (vazio) não deve sobrescrever um progresso maior já salvo no servidor (ARQ-002).
+      const g = await pullGamification();
+      const before = mergePet(loadPet(user.patientId), g?.petState ?? null);
       const after = feedPet(before);
       savePet(user.patientId, after);
       if (before.kind) {

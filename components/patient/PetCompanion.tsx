@@ -9,6 +9,7 @@ import {
   STAGE_LABELS, PET_NAMES, SUGGESTED_NAMES, DEFAULT_COLOR, paletteById, colorsFor,
   type PetKind, type PetState, type PetColorId,
 } from "@/lib/pet";
+import { reconcilePet } from "@/lib/gamification";
 import { PetCreature } from "./PetCreature";
 import { LivePet } from "./LivePet";
 
@@ -42,7 +43,10 @@ export function PetCompanion({ patientId, theme }: { patientId: string; theme: T
   const [pendingColor, setPendingColor] = useState<PetColorId>("turquesa");
   const [nameInput, setNameInput] = useState("");
 
-  useEffect(() => { setPet(loadPet(patientId)); }, [patientId]);
+  useEffect(() => {
+    setPet(loadPet(patientId));
+    reconcilePet(patientId, setPet).catch(() => {}); // restaura do servidor (ARQ-002)
+  }, [patientId]);
 
   if (!pet) return null; // evita mismatch de hidratação até ler o localStorage
 

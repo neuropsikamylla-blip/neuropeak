@@ -2,7 +2,9 @@
 // Prêmio de fim de sessão para os temas infantis (Colorido/Gamificado).
 // A criança escolhe um dragão ou um monstrinho; cada treino concluído dá um
 // ponto de "carinho" e, a cada SESSIONS_PER_STAGE treinos, o bichinho evolui:
-// ovo → filhote → jovem → adulto. Estado guardado no localStorage por paciente.
+// ovo → filhote → jovem → adulto. Estado no localStorage (cache) + servidor (ARQ-002).
+
+import { pushGamification } from "@/lib/gamification-sync";
 
 export type PetKind = "dragao" | "monstrinho";
 export type AccessoryId = "coroa" | "chapeu" | "laco" | "oculos";
@@ -130,6 +132,7 @@ export function loadPet(patientId: string): PetState {
 export function savePet(patientId: string, state: PetState): void {
   if (typeof window === "undefined") return;
   try { localStorage.setItem(storageKey(patientId), JSON.stringify(state)); } catch { /* ignore */ }
+  pushGamification({ petState: state }); // persiste também no servidor (ARQ-002)
 }
 
 /** Dá +1 de carinho. Retorna o novo estado (não persiste — quem chama persiste). */

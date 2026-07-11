@@ -7,6 +7,7 @@ import {
   type SkillLevels, type SkillId,
 } from "@/lib/skilltree";
 import { mentorFor } from "@/lib/skilltree-mentor";
+import { reconcileSkills } from "@/lib/gamification";
 
 interface Props {
   patientId: string;
@@ -51,6 +52,7 @@ export function SkillTree({ patientId, playerName, totalXp, sessionsToday, xpTod
   useEffect(() => {
     setSkills(loadSkills(patientId));
     saveXp(patientId, totalXp);
+    reconcileSkills(patientId, setSkills).catch(() => {}); // restaura do servidor (ARQ-002)
     try { setEvolvedToday(localStorage.getItem(`np_skills_evo_${patientId}`) === today()); } catch { /* ignore */ }
   }, [patientId, totalXp]);
 

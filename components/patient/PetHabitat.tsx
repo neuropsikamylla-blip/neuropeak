@@ -10,6 +10,7 @@ import {
   loadPet, petDisplayName, putPetToSleep, clearPetSleep, isPetSleeping, HATCH_TARGET,
   petStage, STAGE_LABELS, type PetKind, type PetState,
 } from "@/lib/pet";
+import { reconcilePet } from "@/lib/gamification";
 import { PetCreature } from "./PetCreature";
 import { LivePet } from "./LivePet";
 
@@ -86,7 +87,10 @@ export function PetHabitat({ patientId, sessionsToday }: { patientId: string; pl
   const [showMore, setShowMore] = useState(false);
   const timers = useRef<ReturnType<typeof setTimeout>[]>([]);
 
-  useEffect(() => { setPet(loadPet(patientId)); setSleeping(isPetSleeping(patientId)); }, [patientId]);
+  useEffect(() => {
+    setPet(loadPet(patientId)); setSleeping(isPetSleeping(patientId));
+    reconcilePet(patientId, setPet).catch(() => {}); // restaura do servidor (ARQ-002)
+  }, [patientId]);
   useEffect(() => () => { timers.current.forEach(clearTimeout); }, []);
 
   if (!pet) return null;
