@@ -39,8 +39,17 @@ export type ColorName =
   | "amarelo"
   | "rosa";
 
-/** Objeto que o agente carrega — dimensão de discriminação por item. */
-export type ObjectKey = "none" | "bola" | "skate" | "basquete";
+// ── Features do roster de 102 novos agentes (cor × 1 feature) ──────────────────
+/** Item segurado pelo agente (bola/skate/objeto). Ausente = não segura nada. */
+export type HeldKind = "futebol" | "basquete" | "skate" | "balao" | "pipa" | "guarda_chuva";
+/** Lado em que a bola aparece (só para futebol/basquete). */
+export type HeldSide = "esq" | "dir";
+/** Item na cabeça. */
+export type HeadItem = "chapeu" | "coroa" | "gorro";
+/** Expressão facial nova (distinta do AgentExpression legado). */
+export type FaceExpr = "alegria" | "tristeza" | "raiva" | "neutro";
+/** Feature especial. */
+export type SpecialKind = "luva" | "oculos_escuro";
 
 export interface CharacterAttributes {
   id: string;
@@ -53,8 +62,19 @@ export interface CharacterAttributes {
   isRobot?: boolean;
   accessories: AccessoryKey[];
   accessoryColors?: Partial<Record<AccessoryKey, ColorName>>;
-  /** Objeto carregado. Ausente/"none" = sem objeto. */
-  object?: ObjectKey;
+  // ── Features (novos agentes). Ausentes nos 42 base+acessório (default null). ──
+  /** Item segurado (bola/skate/balão/pipa/guarda-chuva). */
+  held?: HeldKind;
+  /** Lado da bola (esq/dir) — só para futebol/basquete. */
+  heldSide?: HeldSide;
+  /** Skate com bermuda (sub-distinção do skate). */
+  bermuda?: boolean;
+  /** Item na cabeça (chapéu/coroa/gorro). */
+  headItem?: HeadItem;
+  /** Expressão facial (alegria/tristeza/raiva). */
+  faceExpr?: FaceExpr;
+  /** Feature especial (luva/óculos escuro). */
+  special?: SpecialKind;
 }
 
 export interface CommandRule {

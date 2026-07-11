@@ -3,7 +3,11 @@ import type {
   CharacterAttributes,
   AccessoryKey,
   ColorName,
-  ObjectKey,
+  HeldKind,
+  HeldSide,
+  HeadItem,
+  FaceExpr,
+  SpecialKind,
   GeneratedCommand,
   BuiltRound,
   CommandRuleType,
@@ -1037,37 +1041,98 @@ function buildUnlock(lv: number, theme: Theme): BuiltRound {
 // então todo agente que bate a regra É alvo — nunca há ambiguidade. A dificuldade
 // vem de: nº de critérios, semelhança dos distratores (near-miss), quantidade,
 // velocidade, EXCLUSÃO (D5) e DOIS grupos-alvo (D6). NÃO usa regra espacial.
-// Dimensões: COR + ACESSÓRIO + OBJETO (símbolos removidos do roster em 2026-07).
-type FCritKind = "color" | "acc" | "object";
+// Dimensões da regra (roster de 144 = 42 base/acessório + 102 features):
+//   color · acc · held (bola/skate/objeto) · side (lado da bola) · bermuda ·
+//   head (chapéu/coroa/gorro) · expr (alegria/tristeza/raiva) · special (luva/óculos).
+type FCritKind = "color" | "acc" | "held" | "side" | "bermuda" | "head" | "expr" | "special";
 interface FCrit { k: FCritKind; v: string }
-const FOBJ_PT: Record<string, string> = { bola: "bola de futebol", skate: "skate", basquete: "bola de basquete" };
-const F_OBJECTS = ["bola", "skate", "basquete"];
+
+// Valores por dimensão (para sorteio das regras).
+const F_HELD:    HeldKind[]    = ["futebol", "basquete", "skate", "balao", "pipa", "guarda_chuva"];
+const F_BALLS:   HeldKind[]    = ["futebol", "basquete"];
+const F_SIDES:   HeldSide[]    = ["esq", "dir"];
+const F_HEADS:   HeadItem[]    = ["chapeu", "coroa", "gorro"];
+const F_EXPRS:   FaceExpr[]    = ["alegria", "tristeza", "raiva"];
+const F_SPECIAL: SpecialKind[] = ["luva", "oculos_escuro"];
 
 function fMatch(a: CharacterAttributes, c: FCrit): boolean {
-  if (c.k === "color")  return a.uniformColor === (c.v as ColorName);
-  if (c.k === "acc")    return a.accessories.includes(c.v as AccessoryKey);
-  return (a.object ?? "none") === (c.v as ObjectKey);
+  switch (c.k) {
+    case "color":   return a.uniformColor === (c.v as ColorName);
+    case "acc":     return a.accessories.includes(c.v as AccessoryKey);
+    case "held":    return (a.held ?? null) === (c.v as HeldKind);
+    case "side":    return (a.heldSide ?? null) === (c.v as HeldSide);
+    case "bermuda": return a.held === "skate" && a.bermuda === true;
+    case "head":    return (a.headItem ?? null) === (c.v as HeadItem);
+    case "expr":    return (a.faceExpr ?? null) === (c.v as FaceExpr);
+    case "special": return (a.special ?? null) === (c.v as SpecialKind);
+  }
 }
 const fMatchAll   = (a: CharacterAttributes, cs: FCrit[]) => cs.every(c => fMatch(a, c));
 const fMatchCount = (a: CharacterAttributes, cs: FCrit[]) => cs.reduce((n, c) => n + (fMatch(a, c) ? 1 : 0), 0);
 const fRint = (lo: number, hi: number) => lo + Math.floor(Math.random() * (hi - lo + 1));
 const fPick = <T,>(arr: T[]): T => arr[Math.floor(Math.random() * arr.length)];
 
-function fCritNoun(c: FCrit): string {
-  if (c.k === "acc") return ACC_PT[c.v as AccessoryKey];
-  return FOBJ_PT[c.v];
-}
+// Rótulos pt-BR das features (para o texto do comando).
+const F_HELD_PT: Record<string, string> = {
+  futebol: "bola de futebol", basquete: "bola de basquete", skate: "skate",
+  balao: "balão", pipa: "pipa", guarda_chuva: "guarda-chuva",
+};
+const F_SIDE_PT:    Record<string, string> = { esq: "à esquerda", dir: "à direita" };
+const F_HEAD_PT:    Record<string, string> = { chapeu: "chapéu", coroa: "coroa", gorro: "gorro" };
+const F_EXPR_ADJ:   Record<string, string> = { alegria: "alegres", tristeza: "tristes", raiva: "com raiva" };
+const F_SPECIAL_PT: Record<string, string> = { luva: "luva", oculos_escuro: "óculos escuro" };
+
+// ── Frase da regra ("Toque nos …") a partir do conjunto de critérios ────────────
+// Monta um trecho natural em pt-BR: cor vira adjetivo ("azuis"); features viram
+// complementos ("de chapéu", "que seguram balão", "à direita", "alegres"). O lado
+// (side) e a bermuda se anexam ao held quando presentes.
 function fRulePhrase(noun: string, crits: FCrit[], withNoun: boolean): string {
-  const color = crits.find(c => c.k === "color");
-  const others = crits.filter(c => c.k !== "color");
+  const by = (k: FCritKind) => crits.find(c => c.k === k);
+  const color = by("color"), acc = by("acc"), held = by("held"), side = by("side");
+  const bermuda = by("bermuda"), head = by("head"), expr = by("expr"), special = by("special");
+
   let s = withNoun ? `${noun}s` : "";
-  if (color) s += `${s ? " " : ""}${colorPl(color.v as ColorName)}`;
-  if (others.length) s += `${s ? " " : ""}com ${others.map(fCritNoun).join(" e ")}`;
+  const add = (frag: string) => { s += (s ? " " : "") + frag; };
+
+  if (color) add(colorPl(color.v as ColorName));
+  if (expr)  add(F_EXPR_ADJ[expr.v]);
+
+  // "com" agrupa acessórios (fone/óculos/boné).
+  if (acc) add(`com ${ACC_PT[acc.v as AccessoryKey]}`);
+
+  // held: bolas → "com bola de X"; skate → "de skate" (+ bermuda); demais → "que seguram X".
+  if (held) {
+    if (F_BALLS.includes(held.v as HeldKind)) {
+      add(`com ${F_HELD_PT[held.v]}`);
+      if (side) add(F_SIDE_PT[side.v]);
+    } else if (held.v === "skate") {
+      add(bermuda ? "de skate de bermuda" : "de skate");
+    } else {
+      add(`que seguram ${F_HELD_PT[held.v]}`);
+    }
+  } else if (side) {
+    // lado sem held explícito = qualquer bola daquele lado.
+    add(`com a bola ${F_SIDE_PT[side.v]}`);
+  } else if (bermuda) {
+    add("de skate de bermuda");
+  }
+
+  if (head)    add(`de ${F_HEAD_PT[head.v]}`);
+  if (special) add(`de ${F_SPECIAL_PT[special.v]}`);
   return s.trim();
 }
+// Trecho curto para a exclusão ("exceto os …").
 function fExcludeShort(c: FCrit): string {
-  if (c.k === "color")  return colorPl(c.v as ColorName);
-  return `com ${fCritNoun(c)}`;
+  switch (c.k) {
+    case "color":   return colorPl(c.v as ColorName);
+    case "acc":     return `com ${ACC_PT[c.v as AccessoryKey]}`;
+    case "held":    return F_BALLS.includes(c.v as HeldKind) ? `com ${F_HELD_PT[c.v]}` : c.v === "skate" ? "de skate" : `que seguram ${F_HELD_PT[c.v]}`;
+    case "side":    return `com a bola ${F_SIDE_PT[c.v]}`;
+    case "bermuda": return "de skate de bermuda";
+    case "head":    return `de ${F_HEAD_PT[c.v]}`;
+    case "expr":    return F_EXPR_ADJ[c.v];
+    case "special": return `de ${F_SPECIAL_PT[c.v]}`;
+  }
 }
 
 // PILOTO Foco (endurecimento — velocidade de processamento + atenção seletiva):
@@ -1103,6 +1168,31 @@ const FOCO_NEAR_COLORS: Partial<Record<ColorName, ColorName[]>> = {
   amarelo:  ["laranja", "verde"],
 };
 
+// Confusável FORTE por FEATURE: para uma regra de 1 feature, o distrator mais
+// enganoso é o "quase igual" — mesma bola do LADO oposto, futebol↔basquete, uma
+// expressão por outra, chapéu/coroa/gorro entre si, skate com/sem bermuda. Isto
+// obriga a checar o detalhe, não só a categoria grossa. Calibrável.
+function fFeatureNear(a: CharacterAttributes, c: FCrit): boolean {
+  switch (c.k) {
+    case "held": {
+      const v = c.v as HeldKind;
+      if (F_BALLS.includes(v)) {
+        // outra bola (qualquer lado) OU a mesma bola no lado oposto → tudo confusável
+        return (a.held === "futebol" || a.held === "basquete");
+      }
+      if (v === "skate") return a.held === "skate";   // (deveria bater na regra; segurança)
+      // objeto segurado → outros objetos segurados
+      return a.held === "balao" || a.held === "pipa" || a.held === "guarda_chuva";
+    }
+    case "side":    return a.held === "futebol" || a.held === "basquete";   // bola do outro lado
+    case "bermuda": return a.held === "skate";                              // skate sem bermuda
+    case "head":    return a.headItem != null;                             // outro item de cabeça
+    case "expr":    return a.faceExpr != null && a.faceExpr !== "neutro";  // outra expressão
+    case "special": return a.special != null;                             // outro especial
+    default:        return false;
+  }
+}
+
 // Tira `n` agentes distintos (por agentId) do pool; clona se faltar. IDs únicos.
 function fTake(pool: CharacterAttributes[], n: number, used: Set<string>): CharacterAttributes[] {
   const picked: CharacterAttributes[] = [];
@@ -1119,42 +1209,72 @@ function fTake(pool: CharacterAttributes[], n: number, used: Set<string>): Chara
 
 interface FocoRule { crits: FCrit[]; exclude?: FCrit; groupB?: FCrit[] }
 
-// Dimensões da regra: COR + ACESSÓRIO + OBJETO (símbolos removidos do roster).
+// Um agente tem OU acessório (42 base) OU 1 feature (102 novos) — nunca os dois.
+// Portanto uma regra combina cor com UMA família só: acessório OU feature. Misturar
+// acc+feature daria pool vazio; o trySat (pool ≥ 1) já rejeitaria, mas escolhemos
+// por família de propósito, para variar e manter o texto natural.
 function fChooseRule(dd: number): FocoRule {
   const R = allCharacterAttributes;
   const poolFor = (cs: FCrit[]) => R.filter(a => fMatchAll(a, cs));
-  const color = (): FCrit => ({ k: "color",  v: fPick([...ALL_UNIFORM_COLORS]) });
-  const acc   = (): FCrit => ({ k: "acc",    v: fPick([...ALL_ACCESSORIES]) });
-  const obj   = (): FCrit => ({ k: "object", v: fPick(F_OBJECTS) });
-  const trySat = (mk: () => FCrit[], tries = 40): FCrit[] | null => {
+  const color = (): FCrit => ({ k: "color", v: fPick([...ALL_UNIFORM_COLORS]) });
+  const acc   = (): FCrit => ({ k: "acc",   v: fPick([...ALL_ACCESSORIES]) });
+
+  // Um critério de FEATURE (1 dimensão nova). Bola pode vir com lado (heldSide).
+  const featureCrit = (withSide = false): FCrit[] => {
+    const kind = fPick(["held", "head", "expr", "special"] as const);
+    if (kind === "held") {
+      const h = fPick(F_HELD);
+      const crits: FCrit[] = [{ k: "held", v: h }];
+      if (withSide && F_BALLS.includes(h)) crits.push({ k: "side", v: fPick(F_SIDES) });
+      if (h === "skate" && !withSide && Math.random() < 0.5) crits.push({ k: "bermuda", v: "1" });
+      return crits;
+    }
+    if (kind === "head")    return [{ k: "head",    v: fPick(F_HEADS) }];
+    if (kind === "expr")    return [{ k: "expr",    v: fPick(F_EXPRS) }];
+    return [{ k: "special", v: fPick(F_SPECIAL) }];
+  };
+  // Um critério "simples" (acessório OU feature), com peso maior nas features novas.
+  const oneAttr = (withSide = false): FCrit[] => (Math.random() < 0.7 ? featureCrit(withSide) : [acc()]);
+
+  const trySat = (mk: () => FCrit[], tries = 60): FCrit[] | null => {
     for (let i = 0; i < tries; i++) { const cs = mk(); if (poolFor(cs).length >= 1) return cs; }
     return null;
   };
 
-  if (dd === 1) return { crits: Math.random() < 0.5 ? [color()] : [acc()] };
-  if (dd === 2 || dd === 3)
-    return { crits: trySat(() => [color(), Math.random() < 0.5 ? acc() : obj()]) ?? [color(), acc()] };
-  if (dd === 4) {
-    // 3º atributo = OBJETO (antes era símbolo/objeto; símbolos não existem mais).
-    const cs = Math.random() < 0.5
-      ? trySat(() => [color(), acc(), obj()])
-      : trySat(() => [color(), { k: "acc", v: "bone" }, obj()]);
-    return { crits: cs ?? trySat(() => [color(), acc(), obj()]) ?? [color(), acc()] };
+  // D1 — um atributo só: cor OU 1 feature/acessório.
+  if (dd === 1) return { crits: Math.random() < 0.45 ? [color()] : (oneAttr()) };
+  // D2/D3 — cor + 1 feature/acessório; ou bola + lado.
+  if (dd === 2 || dd === 3) {
+    if (Math.random() < 0.35) {
+      const cs = trySat(() => { const h = fPick(F_BALLS); return [{ k: "held", v: h }, { k: "side", v: fPick(F_SIDES) }]; });
+      if (cs) return { crits: cs };
+    }
+    return { crits: trySat(() => [color(), ...oneAttr()]) ?? [color(), acc()] };
   }
+  // D4 — combo mais rico: cor + feature (+ lado se bola), ou cor + acessório + …
+  if (dd === 4) {
+    const cs = trySat(() => [color(), ...featureCrit(true)])
+      ?? trySat(() => [color(), ...featureCrit(false)]);
+    return { crits: cs ?? [color(), acc()] };
+  }
+  // D5 — base + EXCLUSÃO (exceto …). Ambos da mesma família p/ ter "quase certos".
   if (dd === 5) {
-    for (let i = 0; i < 50; i++) {
-      const base: FCrit[] = Math.random() < 0.5 ? [acc()] : [color()];
-      const excl: FCrit = Math.random() < 0.5 ? color() : acc();
+    for (let i = 0; i < 60; i++) {
+      const base: FCrit[] = Math.random() < 0.5 ? [color()] : oneAttr();
+      // Exclusão: cor (se a base não é cor) ou outra feature/acessório.
+      const excl: FCrit = base.some(b => b.k === "color")
+        ? oneAttr()[0]
+        : (Math.random() < 0.5 ? color() : oneAttr()[0]);
       if (base.some(b => b.k === excl.k && b.v === excl.v)) continue;
       const bp = poolFor(base);
       if (bp.some(a => !fMatch(a, excl)) && bp.some(a => fMatch(a, excl))) return { crits: base, exclude: excl };
     }
-    return { crits: [{ k: "acc", v: "bone" }], exclude: color() };
+    return { crits: [color()], exclude: { k: "head", v: "chapeu" } };
   }
-  // dd === 6 — dois grupos distintos
-  for (let i = 0; i < 50; i++) {
-    const A = trySat(() => [color(), Math.random() < 0.5 ? acc() : obj()]);
-    const B = trySat(() => [color(), Math.random() < 0.5 ? acc() : obj()]);
+  // D6 — dois grupos distintos (cor + feature cada).
+  for (let i = 0; i < 60; i++) {
+    const A = trySat(() => [color(), ...oneAttr()]);
+    const B = trySat(() => [color(), ...oneAttr()]);
     if (A && B && fRulePhrase("x", A, false) !== fRulePhrase("x", B, false)) return { crits: A, groupB: B };
   }
   return { crits: [color()], groupB: [color()] };
@@ -1204,14 +1324,26 @@ function buildFocoLadder(difficulty: number, theme: Theme): BuiltRound {
   const targetColors = new Set(targets.map(t => t.uniformColor));
   const isNear = (a: CharacterAttributes) =>
     groups.some(cs => {
-      if (cs.length >= 2) return fMatchCount(a, cs) === cs.length - 1;   // multi-crit: bate todos menos um
+      if (cs.length >= 2) {
+        // multi-crit: bate todos menos um (compartilha quase tudo com a regra).
+        if (fMatchCount(a, cs) === cs.length - 1) return true;
+        // reforço p/ combos com feature: quem tem a MESMA feature-família mas erra
+        // um detalhe (ex.: cor certa + bola do lado oposto) também é confusável.
+        const featC = cs.find(x => x.k !== "color" && x.k !== "acc");
+        if (featC && fFeatureNear(a, featC) && cs.some(x => x.k === "color" && fMatch(a, x))) return true;
+        return false;
+      }
       const c = cs[0];
       if (c.k === "color") {
         const neighbors = FOCO_NEAR_COLORS[c.v as ColorName] ?? [];
         return neighbors.includes(a.uniformColor);
       }
-      // crit único não-cor: mesma cor de um alvo, mas sem o atributo pedido
-      return targetColors.has(a.uniformColor);
+      if (c.k === "acc") {
+        // acessório: mesma cor de um alvo, sem o acessório pedido.
+        return targetColors.has(a.uniformColor);
+      }
+      // FEATURE de 1 atributo: prioriza os "quase iguais" da mesma família.
+      return fFeatureNear(a, c);
     });
   const nearPool = nonMatch.filter(isNear);
   const farPool  = nonMatch.filter(a => !isNear(a));

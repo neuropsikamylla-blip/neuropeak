@@ -14,6 +14,21 @@ histórico completo anterior está no log do Git (452 commits no total, a partir
   Documentação (CLAUDE.md, README.md, ARCHITECTURE.md, ADRs) reescrita a partir do
   código real.
 
+## [2.21.0] — 2026-07-11
+
+- **Focus Agents — elenco novo (102 personagens) + comandos ricos:** integração de 102
+  imagens novas (17 tipos × 6 cores, transparentes, otimizadas 95 MB→2,5 MB): bolas de
+  futebol e basquete **com lado** (esquerda/direita), skate e skate de bermuda, óculos
+  escuro, balão/pipa/guarda-chuva, chapéu/coroa/gorro, e expressões alegria/tristeza/raiva
+  + luva. Objetos antigos (bola/skate/basquete sem lado) removidos.
+  - **Comandos novos no modo Foco:** "com bola de futebol à direita/esquerda", "de
+    basquete à …", "de skate (de bermuda)", "que seguram balão/pipa/guarda-chuva", "de
+    chapéu/coroa/gorro", "os alegres/tristes/com raiva", "de luva", "de óculos escuro",
+    além de combos por cor. Distratores "parecidos" priorizam pares quase idênticos
+    (futebol-esquerda vs futebol-direita, expressões entre si) — atenção seletiva fina.
+  - Verificado: 23.145 personagens gerados nos 4 modos, 0 imagem faltando, 0 símbolo/cinza.
+    Originais no backup externo.
+
 ## [2.20.1] — 2026-07-11
 
 - **Focus Agents — símbolos e cor cinza removidos:** os crachás/símbolos (estrela, círculo,
