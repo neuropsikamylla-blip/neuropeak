@@ -225,13 +225,14 @@ function validate(placed: Item[], mesa: Mesa, orderRequired: boolean): { ok: boo
   return { ok: true, msg: "Pedido entregue!" };
 }
 
-// ── Áudio ambiente (Web Audio, sem direitos) ─────────────────────────────────────
+// ── Áudio ambiente (burburinho de restaurante sintetizado — sem direitos) ─────────
 let ambCtx: AudioContext | null = null;
 let ambMaster: GainNode | null = null;
-let ambTimer: ReturnType<typeof setTimeout> | null = null;
-let ambStopPad: (() => void) | null = null;
-const AMB_LEVEL = 0.17;
-function startAmbience() {
+let ambSource: AudioBufferSourceNode | null = null;
+let ambBuffer: AudioBuffer | null = null;
+const AMB_LEVEL = 0.09;
+const AMB_URL = "/exercises/audio/ambience-restaurante.m4a";
+async function startAmbience() {
   if (typeof window === "undefined") return;
   try {
     const Ctx = window.AudioContext || (window as unknown as { webkitAudioContext: typeof AudioContext }).webkitAudioContext;
@@ -242,38 +243,21 @@ function startAmbience() {
     const master = ctx.createGain(); master.gain.value = 0; master.connect(ctx.destination);
     master.gain.linearRampToValueAtTime(AMB_LEVEL, ctx.currentTime + 1.5);
     ambMaster = master;
-    const warm = ctx.createBiquadFilter(); warm.type = "lowpass"; warm.frequency.value = 2000; warm.connect(master);
-    const CHORDS = [
-      { bass: 130.81, notes: [261.63, 329.63, 392.00, 493.88] },
-      { bass: 110.00, notes: [261.63, 329.63, 392.00, 440.00] },
-      { bass: 146.83, notes: [293.66, 349.23, 440.00, 523.25] },
-      { bass: 196.00, notes: [293.66, 349.23, 392.00, 493.88] },
-    ];
-    const note = (freq: number, dur: number, peak: number, type: OscillatorType) => {
-      const o = ctx.createOscillator(); o.type = type; o.frequency.value = freq;
-      const g = ctx.createGain(); g.gain.value = 0;
-      o.connect(g); g.connect(warm);
-      const t = ctx.currentTime;
-      g.gain.setValueAtTime(0, t); g.gain.linearRampToValueAtTime(peak, t + 0.02);
-      g.gain.exponentialRampToValueAtTime(0.0001, t + dur);
-      o.start(t); o.stop(t + dur + 0.05);
-    };
-    let stopped = false, ci = 0, beat = 0;
-    const tick = () => {
-      if (stopped || !ambMaster) return;
-      const ch = CHORDS[ci];
-      if (beat === 0) note(ch.bass, 1.8, 0.46, "triangle");
-      note(ch.notes[beat % ch.notes.length], 1.3, 0.30, "sine");
-      if (Math.random() < 0.3) note(ch.notes[(beat + 2) % ch.notes.length] * 2, 1.0, 0.12, "sine");
-      beat++; if (beat >= 4) { beat = 0; ci = (ci + 1) % CHORDS.length; }
-      ambTimer = setTimeout(tick, 400 + (Math.random() * 40 - 20));
-    };
-    tick(); ambStopPad = () => { stopped = true; };
+    if (!ambBuffer) {
+      const res = await fetch(AMB_URL);
+      const arr = await res.arrayBuffer();
+      ambBuffer = await ctx.decodeAudioData(arr);
+    }
+    if (!ambMaster) return; // parado enquanto decodificava
+    const src = ctx.createBufferSource();
+    src.buffer = ambBuffer; src.loop = true; src.connect(master);
+    src.start();
+    ambSource = src;
   } catch { /* sem áudio */ }
 }
 function stopAmbience() {
-  if (ambTimer) { clearTimeout(ambTimer); ambTimer = null; }
-  if (ambStopPad) { ambStopPad(); ambStopPad = null; }
+  const s = ambSource; ambSource = null;
+  if (s) { try { s.stop(); } catch { /* */ } try { s.disconnect(); } catch { /* */ } }
   const m = ambMaster; ambMaster = null;
   if (m && ambCtx) { try { m.gain.linearRampToValueAtTime(0, ambCtx.currentTime + 0.4); } catch { /* */ } }
   setTimeout(() => { if (m) { try { m.disconnect(); } catch { /* */ } } }, 600);

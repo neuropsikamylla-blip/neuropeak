@@ -14,6 +14,13 @@ histórico completo anterior está no log do Git (452 commits no total, a partir
   Documentação (CLAUDE.md, README.md, ARCHITECTURE.md, ADRs) reescrita a partir do
   código real.
 
+## [2.18.0] — 2026-07-11
+
+- **Restaurante — som ambiente de verdade:** a musiquinha sintetizada deu lugar a um
+  burburinho de restaurante (murmúrio de conversas ao longe + talheres discretos), em
+  volume bem baixo (0.09), tocando em loop contínuo de 60 s. Som 100% sintetizado em
+  casa (sem direitos autorais), 706 KB, com botão 🔊/🔇 mantido.
+
 ## [2.17.3] — 2026-07-11
 
 - **Restaurante — ajustes pós-feedback:**
