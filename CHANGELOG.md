@@ -14,6 +14,15 @@ histórico completo anterior está no log do Git (452 commits no total, a partir
   Documentação (CLAUDE.md, README.md, ARCHITECTURE.md, ADRs) reescrita a partir do
   código real.
 
+## [2.15.0] — 2026-07-11
+
+- **Jogo das Torres (Torre de Hanói):**
+  - Tutorial mais claro: novo passo explica que o pino do meio é só um apoio e que dá para
+    mover o disco **direto para o Destino** (antes muitos achavam que era obrigatório passar
+    pelo pino auxiliar); textos revisados.
+  - Torre (haste) mais grossa e em **tom de madeira**, e a coluna inteira ganhou uma zona
+    tocável visível — mais fácil de acertar o clique/toque.
+
 ## [2.14.2] — 2026-07-11
 
 - **Progresso do paciente:** a lista "Sessões recentes" passa a mostrar o **nome amigável**

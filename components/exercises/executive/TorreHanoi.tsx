@@ -116,11 +116,15 @@ function HanoiPegsDisplay({
 function TorreHanoiTutorial({ theme, onDone }: { theme: Theme; onDone: () => void }) {
   const steps = [
     {
-      instruction: "Mova todos os discos do pino esquerdo para o direito!",
+      instruction: "Objetivo: leve TODOS os discos para o pino da DIREITA (Destino).",
       content: (onStepDone: () => void) => <HanoiMoveStep theme={theme} onDone={onStepDone} />,
     },
     {
-      instruction: "Regra: disco MAIOR nunca pode ficar sobre disco MENOR.",
+      instruction: "O pino do MEIO é só um APOIO — não é obrigatório passar por ele! Sempre que der, mova o disco DIRETO para o Destino.",
+      content: (onStepDone: () => void) => <HanoiAuxStep theme={theme} onDone={onStepDone} />,
+    },
+    {
+      instruction: "Regra: um disco MAIOR nunca pode ficar sobre um disco MENOR.",
       content: (onStepDone: () => void) => <HanoiRuleStep theme={theme} onDone={onStepDone} />,
     },
   ];
@@ -148,8 +152,34 @@ function HanoiMoveStep({ theme, onDone }: { theme: Theme; onDone: () => void }) 
     <div className="flex flex-col items-center gap-2 mt-4">
       <HanoiPegsDisplay pegs={pegs} theme={theme} selected={null} discCount={1} />
       <p className={`text-xs mt-6 ${theme === "GAMIFIED" ? "text-gray-400" : "text-gray-500"}`}>
-        {animating ? "→ movendo disco para o destino..." : "Observe o movimento..."}
+        {animating ? "→ direto para o Destino (sem passar pelo meio)!" : "Observe o movimento..."}
       </p>
+    </div>
+  );
+}
+
+// Reforça que dá para ir DIRETO da Origem ao Destino — o pino do meio é opcional.
+function HanoiAuxStep({ theme, onDone }: { theme: Theme; onDone: () => void }) {
+  const [pegs, setPegs] = useState<[number[], number[], number[]]>([[1], [], []]);
+  const [ready, setReady] = useState(false);
+  useEffect(() => {
+    const t1 = setTimeout(() => setPegs([[], [], [1]]), 900);
+    const t2 = setTimeout(() => setReady(true), 1800);
+    return () => { clearTimeout(t1); clearTimeout(t2); };
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+  const subClass = theme === "GAMIFIED" ? "text-gray-400" : "text-gray-500";
+  return (
+    <div className="flex flex-col items-center gap-2 mt-2">
+      <HanoiPegsDisplay pegs={pegs} theme={theme} selected={null} discCount={1} />
+      <p className={`text-xs mt-6 text-center ${subClass}`}>
+        O disco foi <b>direto</b> da Origem para o Destino — sem parar no pino do meio.
+      </p>
+      {ready && (
+        <button onClick={onDone} className={`w-full py-2 rounded-xl font-bold text-sm ${theme === "GAMIFIED" ? "bg-cyan-600 text-white" : "bg-blue-600 text-white"}`}>
+          Entendi!
+        </button>
+      )}
     </div>
   );
 }
@@ -341,7 +371,10 @@ export function TorreHanoi({ difficulty, theme, onComplete }: TorreHanoiProps) {
 
         {/* Instrução */}
         <p className="mt-4 text-center text-sm" style={{ color: "#64748B" }}>
-          Mova todos os discos para o pino da direita. Clique para selecionar e mover.
+          Leve todos os discos para o <b>Destino</b> (direita). Toque numa torre para pegar o disco e noutra para soltar.
+        </p>
+        <p className="mt-1 text-center text-xs" style={{ color: "#B45309" }}>
+          Dica: o pino do meio é só um apoio — vá <b>direto</b> ao Destino sempre que puder.
         </p>
 
         {/* Torres */}
@@ -352,8 +385,10 @@ export function TorreHanoi({ difficulty, theme, onComplete }: TorreHanoiProps) {
               <button key={pegIdx} onClick={() => handlePegClick(pegIdx)} aria-label={LABELS[pegIdx]}
                 className="relative flex-1 flex items-end justify-center border-0 bg-transparent cursor-pointer"
                 style={{ height: towerH, WebkitTapHighlightColor: "transparent", touchAction: "manipulation" }}>
-                {/* haste fina */}
-                <div className="absolute rounded-full" style={{ width: 8, height: towerH - 16, bottom: 14, background: isSel ? "#1D4ED8" : "#94A3B8", boxShadow: "0 1px 2px rgba(15,23,42,.12)", transition: "background .15s" }} />
+                {/* zona tocável: a coluna INTEIRA é clicável — deixa isso visível */}
+                <div className="absolute rounded-2xl" style={{ inset: "6px 2px 20px", background: isSel ? "rgba(217,148,32,.15)" : "rgba(148,163,184,.06)", border: `1px solid ${isSel ? "rgba(180,120,20,.55)" : "rgba(148,163,184,.18)"}`, transition: "background .15s, border-color .15s" }} />
+                {/* haste de madeira (grossa, fácil de mirar) */}
+                <div className="absolute rounded-full" style={{ width: 16, height: towerH - 16, bottom: 14, background: isSel ? "linear-gradient(90deg,#e6ac33,#b57a1e,#e6ac33)" : "linear-gradient(90deg,#c39b6d,#8a5a2e,#c39b6d)", boxShadow: "0 1px 3px rgba(15,23,42,.22)", transition: "background .15s" }} />
                 {/* pilha de discos */}
                 <div className="absolute flex flex-col-reverse items-center" style={{ bottom: 18, gap: 4 }}>
                   {peg.map((disc, di) => {
@@ -369,7 +404,7 @@ export function TorreHanoi({ difficulty, theme, onComplete }: TorreHanoiProps) {
                           width: discWidth(disc), height: DISC_H, borderRadius: 8, fontSize: 12,
                           background: `linear-gradient(180deg, ${cl}, ${c})`,
                           boxShadow: lifted
-                            ? `0 7px 16px ${c}66, 0 0 0 2px #1D4ED8`
+                            ? `0 7px 16px ${c}66, 0 0 0 2px #B45309`
                             : "0 2px 5px rgba(15,23,42,.16)",
                           transform: lifted ? "translateY(-6px)" : "none",
                           transition: "transform .12s, box-shadow .12s",
@@ -379,10 +414,10 @@ export function TorreHanoi({ difficulty, theme, onComplete }: TorreHanoiProps) {
                     );
                   })}
                 </div>
-                {/* base arredondada */}
-                <div className="absolute rounded-full" style={{ bottom: 0, width: "88%", height: 14, background: isSel ? "#1D4ED8" : "#64748B", boxShadow: "0 3px 8px rgba(15,23,42,.18)", transition: "background .15s" }} />
+                {/* base de madeira */}
+                <div className="absolute rounded-full" style={{ bottom: 0, width: "92%", height: 16, background: isSel ? "linear-gradient(180deg,#d19a3a,#9c6b1e)" : "linear-gradient(180deg,#9c6b3f,#6b4423)", boxShadow: "0 3px 8px rgba(15,23,42,.22)", transition: "background .15s" }} />
                 {/* rótulo */}
-                <span className="absolute text-xs font-semibold" style={{ bottom: -24, color: isSel ? "#1D4ED8" : "#94A3B8" }}>{LABELS[pegIdx]}</span>
+                <span className="absolute text-xs font-semibold" style={{ bottom: -24, color: isSel ? "#B45309" : "#94A3B8" }}>{LABELS[pegIdx]}</span>
               </button>
             );
           })}
