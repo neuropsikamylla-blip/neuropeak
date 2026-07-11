@@ -14,6 +14,19 @@ histórico completo anterior está no log do Git (452 commits no total, a partir
   Documentação (CLAUDE.md, README.md, ARCHITECTURE.md, ADRs) reescrita a partir do
   código real.
 
+## [2.11.4] — 2026-07-10
+
+- **Alertas e regras do dia a dia (correções da auditoria):**
+  - Alerta "faltou treinar" (MISSED_SESSION) agora é removido quando o paciente volta a
+    treinar — antes nunca era limpo automaticamente (CORR-003).
+  - Alerta de "queda de desempenho" (PERFORMANCE_DROP) deixa de se repetir a cada sessão:
+    só cria um novo se não houver um não lido recente; a mensagem não atribui mais a queda
+    a um exercício específico, pois a média cruza exercícios (CORR-004/GER-003).
+  - Bloqueio "1x por dia" passa a usar o fuso de Brasília, consistente com a sequência de
+    dias — antes usava o fuso do aparelho (GER-005).
+  - Resgate de código de licença não rebaixa mais um terapeuta com acesso ilimitado para um
+    número finito; o código é preservado com uma mensagem clara (GER-007).
+
 ## [2.11.3] — 2026-07-10
 
 - **Fidelidade das pontuações (correções da auditoria):**

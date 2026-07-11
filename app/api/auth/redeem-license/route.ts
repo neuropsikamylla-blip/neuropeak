@@ -38,6 +38,20 @@ export async function POST(req: NextRequest) {
     return NextResponse.json({ error: "Este código já foi utilizado" }, { status: 409 });
   }
 
+  // Se o terapeuta já tem acesso ILIMITADO (-1), resgatar um código o rebaixaria para
+  // um número finito. Rejeita antes de consumir o código — assim ele mantém o ilimitado
+  // e o código continua disponível.
+  const me = await prisma.user.findUnique({
+    where: { id: therapistId },
+    select: { patientLicenses: true },
+  });
+  if ((me?.patientLicenses ?? -1) === -1) {
+    return NextResponse.json(
+      { error: "Você já tem acesso ilimitado a pacientes. O código não foi utilizado." },
+      { status: 400 },
+    );
+  }
+
   try {
     // Transação atômica: marca o código como usado (claim condicional anti duplo-resgate)
     // e credita as licenças juntos. Se um falhar, o outro reverte — sem licença paga perdida.
@@ -55,7 +69,8 @@ export async function POST(req: NextRequest) {
       if (!user) throw new Error("USER_NOT_FOUND");
 
       const current = user.patientLicenses ?? -1;
-      const next = current === -1 ? license.licenses : current + license.licenses;
+      // Defesa extra: se por algum motivo ainda estiver ilimitado, preserva o -1.
+      const next = current === -1 ? -1 : current + license.licenses;
       await tx.user.update({ where: { id: therapistId }, data: { patientLicenses: next } });
       return next;
     });

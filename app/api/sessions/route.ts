@@ -222,14 +222,12 @@ export const POST = withApiHandler(async (req: NextRequest) => {
     });
   }
 
-  const lastWeek = new Date(Date.now() - 7 * 24 * 60 * 60 * 1000);
-  const recentCount = recentSessions.filter((s) => new Date(s.completedAt) >= lastWeek).length;
-
-  if (recentCount === 0) {
-    await prisma.alert.deleteMany({
-      where: { patientId: data.patientId, type: "MISSED_SESSION", isRead: false },
-    });
-  }
+  // O paciente acabou de treinar → não está mais "sem sessão": limpa o alerta
+  // MISSED_SESSION não lido (antes a condição nunca era satisfeita — a sessão
+  // recém-criada mantinha a contagem ≥ 1, então o alerta nunca era removido).
+  await prisma.alert.deleteMany({
+    where: { patientId: data.patientId, type: "MISSED_SESSION", isRead: false },
+  });
 
   if (recentSessions.length >= 5) {
     const last5 = recentSessions.slice(0, 5);
@@ -238,13 +236,22 @@ export const POST = withApiHandler(async (req: NextRequest) => {
       const avgLast = last5.reduce((s, r) => s + r.score, 0) / 5;
       const avgPrev = prev5.reduce((s, r) => s + r.score, 0) / 5;
       if (avgPrev - avgLast > 15) {
-        await prisma.alert.create({
-          data: {
-            patientId: data.patientId,
-            type: "PERFORMANCE_DROP",
-            message: `Queda de desempenho detectada no exercício ${data.exerciseId} (−${Math.round(avgPrev - avgLast)} pontos)`,
-          },
+        // Dedup: não repetir o alerta enquanto houver um não lido recente (evita
+        // inundar o painel do terapeuta a cada sessão durante a mesma queda).
+        const dropSince = new Date(Date.now() - 7 * 24 * 60 * 60 * 1000);
+        const existingDrop = await prisma.alert.findFirst({
+          where: { patientId: data.patientId, type: "PERFORMANCE_DROP", isRead: false, createdAt: { gte: dropSince } },
         });
+        if (!existingDrop) {
+          await prisma.alert.create({
+            data: {
+              patientId: data.patientId,
+              type: "PERFORMANCE_DROP",
+              // A média cruza exercícios diferentes — não atribui a um exercício específico.
+              message: `Queda de desempenho nas últimas sessões (−${Math.round(avgPrev - avgLast)} pontos na média).`,
+            },
+          });
+        }
       }
     }
   }

@@ -10,6 +10,12 @@
 > - **Fidelidade de pontuação (Etapa 2)** — ✅ resolvidos em v2.11.3: CORR-001, CORR-008,
 >   CORR-009, CORR-013, CORR-014, CORR-015 e CORR-011 (LetrasSequencia, SequenciaItens,
 >   ListaDistracao, PadroesRotacao).
+> - **Alertas e regras do dia a dia (Etapa 3)** — ✅ resolvidos em v2.11.4: CORR-003
+>   (MISSED_SESSION limpo ao treinar), CORR-004+GER-003 (dedup de PERFORMANCE_DROP),
+>   GER-005 (fuso de Brasília no bloqueio diário), GER-007 (resgate de licença não
+>   rebaixa terapeuta ilimitado). **GER-006 adiado** (validação server-side do "1x por
+>   dia"): mudança de maior risco e baixo benefício prático — o cliente já bloqueia e o
+>   fuso agora está consistente; fica para avaliação futura.
 > - Demais itens: pendentes (lista abaixo).
 
 ## Panorama

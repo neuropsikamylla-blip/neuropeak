@@ -284,12 +284,14 @@ const EXERCISE_INSTRUCTIONS: Record<string, string[]> = {
   ],
 };
 
+// "Dia" no fuso de Brasília (America/Sao_Paulo), consistente com a sequência de dias
+// da engine (lib/adaptive.ts). Antes usava o fuso do aparelho, divergindo do streak
+// na virada do dia (finding GER-005).
+function saoPauloDay(d: Date): string {
+  return d.toLocaleDateString("en-CA", { timeZone: "America/Sao_Paulo" }); // YYYY-MM-DD
+}
 function isSameLocalDay(a: Date, b: Date) {
-  return (
-    a.getFullYear() === b.getFullYear() &&
-    a.getMonth() === b.getMonth() &&
-    a.getDate() === b.getDate()
-  );
+  return saoPauloDay(a) === saoPauloDay(b);
 }
 
 function BlockedScreen({ theme, exerciseName, patientId }: { theme: Theme; exerciseName: string; patientId?: string }) {
