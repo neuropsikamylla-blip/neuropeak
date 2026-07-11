@@ -14,6 +14,12 @@ histórico completo anterior está no log do Git (452 commits no total, a partir
   Documentação (CLAUDE.md, README.md, ARCHITECTURE.md, ADRs) reescrita a partir do
   código real.
 
+## [2.22.1] — 2026-07-11
+
+- **Chuva do Foco — mais distratores (mais difícil):** densidade na tela subiu de 4→8
+  para **6→12** agentes simultâneos (spawn mais rápido pra encher), e a fração de
+  distratores "parecidos" subiu (0,75→0,95). Achar o alvo exige busca visual de verdade.
+
 ## [2.22.0] — 2026-07-11
 
 - **Focus Agents / Chuva do Foco — mecânica corrigida ("acha 1, regra troca"):** agora

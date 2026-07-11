@@ -77,13 +77,13 @@ function cleanForSpeech(text: string): string {
 //    vira variedade). Sobe com o nível (mais parecidos = mais difícil).
 interface RainCfg { fallMs: number; spawnMs: number; maxConcurrent: number; secondChance: number; nearFrac: number }
 const RAIN_CFG: Record<number, RainCfg> = {
-  1: { fallMs: 6200, spawnMs: 1000, maxConcurrent: 4, secondChance: 1.4,  nearFrac: 0.65 },
-  2: { fallMs: 5600, spawnMs:  920, maxConcurrent: 4, secondChance: 1.45, nearFrac: 0.70 },
-  3: { fallMs: 5000, spawnMs:  850, maxConcurrent: 5, secondChance: 1.5,  nearFrac: 0.75 },
-  4: { fallMs: 4500, spawnMs:  780, maxConcurrent: 6, secondChance: 1.55, nearFrac: 0.80 },
-  5: { fallMs: 4000, spawnMs:  710, maxConcurrent: 6, secondChance: 1.6,  nearFrac: 0.85 },
-  6: { fallMs: 3600, spawnMs:  640, maxConcurrent: 7, secondChance: 1.65, nearFrac: 0.88 },
-  7: { fallMs: 3200, spawnMs:  560, maxConcurrent: 8, secondChance: 1.7,  nearFrac: 0.92 },
+  1: { fallMs: 6200, spawnMs: 820, maxConcurrent: 6,  secondChance: 1.4,  nearFrac: 0.75 },
+  2: { fallMs: 5600, spawnMs: 700, maxConcurrent: 7,  secondChance: 1.45, nearFrac: 0.78 },
+  3: { fallMs: 5000, spawnMs: 600, maxConcurrent: 8,  secondChance: 1.5,  nearFrac: 0.82 },
+  4: { fallMs: 4500, spawnMs: 500, maxConcurrent: 9,  secondChance: 1.55, nearFrac: 0.86 },
+  5: { fallMs: 4000, spawnMs: 420, maxConcurrent: 10, secondChance: 1.6,  nearFrac: 0.90 },
+  6: { fallMs: 3600, spawnMs: 350, maxConcurrent: 11, secondChance: 1.65, nearFrac: 0.93 },
+  7: { fallMs: 3200, spawnMs: 290, maxConcurrent: 12, secondChance: 1.7,  nearFrac: 0.95 },
 };
 
 // Progressão: sobe +1 nível a cada LEVEL_UP_HITS comandos resolvidos seguidos;
