@@ -14,6 +14,19 @@ histórico completo anterior está no log do Git (452 commits no total, a partir
   Documentação (CLAUDE.md, README.md, ARCHITECTURE.md, ADRs) reescrita a partir do
   código real.
 
+## [2.23.0] — 2026-07-11
+
+- **Chuva do Foco — fluxo com card + "Começar", e atributos combinados:**
+  - **Card por comando:** cada comando abre um card central ("Ache o azul de gorro") com
+    botão **Começar**; a chuva só cai depois de apertar (dá tempo de ler). Ao achar e tocar
+    o alvo → próximo card. Erro não troca o comando; omissão vai pro próximo.
+  - **Alvo nunca é o primeiro a cair:** caem ≥3 distratores (e ≥0,9 s) antes do alvo aparecer.
+  - **Menos denso e mais lento** (a pedido): teto de 14 na tela + espalhamento que evita
+    sobreposição; queda mais lenta (dá tempo de procurar).
+  - **Atributos combinados** (níveis 3+): "Ache o azul de gorro", "o vermelho com a bola de
+    futebol à direita" — busca por conjunção (2 pistas), com distratores que compartilham
+    exatamente 1 atributo. 125 comandos no total.
+
 ## [2.22.2] — 2026-07-11
 
 - **Chuva do Foco — densidade adaptativa à tela:** a quantidade de agentes na tela era

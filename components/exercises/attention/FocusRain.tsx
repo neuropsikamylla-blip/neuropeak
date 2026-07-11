@@ -75,21 +75,27 @@ function cleanForSpeech(text: string): string {
 //    vira variedade). Sobe com o nível (mais parecidos = mais difícil).
 //  • areaPerAgent  — px² de tela por agente (↓ = mais denso). A quantidade na tela
 //    ADAPTA ao tamanho do monitor: enche telas grandes, equilibra no celular.
+// CALIBRÁVEL após teste clínico. Ajuste pós-feedback da neuro:
+//  • fallMs MAIOR (queda mais LENTA) — antes 6200→3200, ficou frenético.
+//  • areaPerAgent MAIOR (menos denso, sem sobreposição).
 interface RainCfg { fallMs: number; secondChance: number; nearFrac: number; areaPerAgent: number }
 const RAIN_CFG: Record<number, RainCfg> = {
-  1: { fallMs: 6200, secondChance: 1.4,  nearFrac: 0.75, areaPerAgent: 55000 },
-  2: { fallMs: 5600, secondChance: 1.45, nearFrac: 0.78, areaPerAgent: 49000 },
-  3: { fallMs: 5000, secondChance: 1.5,  nearFrac: 0.82, areaPerAgent: 44000 },
-  4: { fallMs: 4500, secondChance: 1.55, nearFrac: 0.86, areaPerAgent: 39000 },
-  5: { fallMs: 4000, secondChance: 1.6,  nearFrac: 0.90, areaPerAgent: 35000 },
-  6: { fallMs: 3600, secondChance: 1.65, nearFrac: 0.93, areaPerAgent: 31000 },
-  7: { fallMs: 3200, secondChance: 1.7,  nearFrac: 0.95, areaPerAgent: 28000 },
+  1: { fallMs: 9500, secondChance: 1.4,  nearFrac: 0.75, areaPerAgent: 150000 },
+  2: { fallMs: 8600, secondChance: 1.45, nearFrac: 0.78, areaPerAgent: 135000 },
+  3: { fallMs: 7800, secondChance: 1.5,  nearFrac: 0.82, areaPerAgent: 120000 },
+  4: { fallMs: 7000, secondChance: 1.55, nearFrac: 0.86, areaPerAgent: 105000 },
+  5: { fallMs: 6300, secondChance: 1.6,  nearFrac: 0.90, areaPerAgent:  92000 },
+  6: { fallMs: 5700, secondChance: 1.65, nearFrac: 0.93, areaPerAgent:  82000 },
+  7: { fallMs: 5200, secondChance: 1.7,  nearFrac: 0.95, areaPerAgent:  72000 },
 };
 const SPAWN_TICK = 150;    // tick rápido; a densidade real é limitada por targetConcurrent().
-const MAX_ON_SCREEN = 30;  // teto de segurança (performance).
-// Quantos agentes simultâneos p/ a ÁREA atual — enche a tela, adapta ao monitor.
+const MAX_ON_SCREEN = 14;  // teto (menos agentes; sem amontoar). Desktop ~13-14, celular ~5.
+// Antes de o ALVO poder cair: pelo menos estes distratores + tempo (o alvo NUNCA é o 1º).
+const MIN_DISTRACTORS_BEFORE_TARGET = 3;
+const MIN_MS_BEFORE_TARGET = 900;
+// Quantos agentes simultâneos p/ a ÁREA atual — adapta ao monitor (menos denso).
 function targetConcurrent(level: number, W: number, H: number): number {
-  return Math.max(5, Math.min(MAX_ON_SCREEN, Math.round((W * H) / RAIN_CFG[level].areaPerAgent)));
+  return Math.max(4, Math.min(MAX_ON_SCREEN, Math.round((W * H) / RAIN_CFG[level].areaPerAgent)));
 }
 
 // Progressão: sobe +1 nível a cada LEVEL_UP_HITS comandos resolvidos seguidos;
@@ -101,15 +107,16 @@ const fallSpeed = (playH: number, fallMs: number) => (playH + CHAR_H) / fallMs;
 const pick = <T,>(arr: T[]): T => arr[Math.floor(Math.random() * arr.length)];
 function shuffle<T>(arr: T[]): T[] { const a = [...arr]; for (let i = a.length - 1; i > 0; i--) { const j = Math.floor(Math.random() * (i + 1)); [a[i], a[j]] = [a[j], a[i]]; } return a; }
 
-// ── SISTEMA DE REGRAS (1 feature por comando) ───────────────────────────────────
+// ── SISTEMA DE REGRAS (1 feature, OU cor+feature combinadas) ────────────────────
 // Cada regra é montada do ROSTER real (allAgents). matches(a) diz se `a` é o ALVO;
 // family = pool de distratores CONFUSÁVEIS (parecidos, mas NÃO batem a regra).
 export interface Rule {
   key: string;                 // identidade da regra (evita repetir a mesma seguidas)
-  text: string;                // "Ache o de chapéu"
+  text: string;                // "Ache o de chapéu" / "Ache o azul de chapéu"
   matches: (a: AgentConfig) => boolean;
   targetPool: AgentConfig[];   // agentes que batem a regra (o alvo é 1 deles)
   family: AgentConfig[];       // distratores confusáveis (mesma família, não batem)
+  combined: boolean;           // true = conjunção cor+feature (busca por 2 atributos)
 }
 
 const COLOR_LABEL: Record<string, string> = {
@@ -136,68 +143,101 @@ const skatePlain  = ROSTER.filter(a => a.held === "skate" && !a.bermuda);
 const skateBerm   = ROSTER.filter(a => a.held === "skate" && a.bermuda);
 const withColor   = (c: string) => ROSTER.filter(a => a.color === c);
 
-// Constrói a lista de TODAS as regras possíveis (uma por valor de feature + cores).
-export function buildAllRules(): Rule[] {
-  const rules: Rule[] = [];
+// Uma FEATURE (dimensão além da cor). `frag` é o trecho que vem DEPOIS do artigo
+// ("de chapéu", "alegre", "com a bola de futebol à direita") — usado tanto na
+// regra simples ("Ache o {frag}") quanto na combinada ("Ache o {cor} {frag}").
+interface FeatureDef {
+  key: string;                          // ex.: "head:chapeu", "ball:futebol/dir"
+  frag: string;                         // trecho pós-artigo
+  match: (a: AgentConfig) => boolean;   // bate a feature (ignorando cor)
+  pool: AgentConfig[];                  // agentes com essa feature
+}
+
+// Todas as features do roster (mesmos textos/pools da versão de 1 atributo).
+const FEATURE_DEFS: FeatureDef[] = (() => {
   const HEAD_PT: Record<string, string> = { chapeu: "chapéu", coroa: "coroa", gorro: "gorro" };
   const SPEC_PT: Record<string, string> = { luva: "luva", oculos_escuro: "óculos escuro" };
   const EXPR_PT: Record<string, string> = { alegria: "alegre", tristeza: "triste", raiva: "com raiva" };
   const HELDOBJ_PT: Record<string, string> = { balao: "balão", pipa: "pipa", guarda_chuva: "guarda-chuva" };
   const SIDE_PT: Record<string, string> = { esq: "à esquerda", dir: "à direita" };
   const BALL_PT: Record<string, string> = { futebol: "de futebol", basquete: "de basquete" };
-
-  // CABEÇA — chapéu/coroa/gorro. Família: outros itens de cabeça + boné + base sem cabeça.
-  for (const v of ["chapeu", "coroa", "gorro"]) {
-    const fam = [...anyHead.filter(a => a.headItem !== v), ...withCap, ...plainBase];
-    rules.push({ key: `head:${v}`, text: `Ache o de ${HEAD_PT[v]}`, matches: a => a.headItem === v, targetPool: withHead(v), family: fam });
-  }
-  // ESPECIAL — luva/óculos escuro. Família: o outro especial + base.
-  for (const v of ["luva", "oculos_escuro"]) {
-    const fam = [...anySpecial.filter(a => a.special !== v), ...plainBase];
-    rules.push({ key: `special:${v}`, text: `Ache o de ${SPEC_PT[v]}`, matches: a => a.special === v, targetPool: withSpecial(v), family: fam });
-  }
-  // EXPRESSÃO — alegre/triste/raiva. Família: as outras expressões.
-  for (const v of ["alegria", "tristeza", "raiva"]) {
-    const fam = anyExpr.filter(a => a.faceExpr !== v);
-    rules.push({ key: `expr:${v}`, text: `Ache o ${EXPR_PT[v]}`, matches: a => a.faceExpr === v, targetPool: withExpr(v), family: fam });
-  }
-  // BOLA + LADO — futebol/basquete × esq/dir. Família: TODAS as outras bolas
-  // (mesma bola lado oposto, outra bola ambos os lados) — o LADO discrimina.
+  const defs: FeatureDef[] = [];
+  for (const v of ["chapeu", "coroa", "gorro"])
+    defs.push({ key: `head:${v}`, frag: `de ${HEAD_PT[v]}`, match: a => a.headItem === v, pool: withHead(v) });
+  for (const v of ["luva", "oculos_escuro"])
+    defs.push({ key: `special:${v}`, frag: `de ${SPEC_PT[v]}`, match: a => a.special === v, pool: withSpecial(v) });
+  for (const v of ["alegria", "tristeza", "raiva"])
+    defs.push({ key: `expr:${v}`, frag: EXPR_PT[v], match: a => a.faceExpr === v, pool: withExpr(v) });
   for (const held of ["futebol", "basquete"] as const)
-    for (const side of ["esq", "dir"] as const) {
-      const fam = ballAgents.filter(a => !(a.held === held && a.heldSide === side));
-      rules.push({
-        key: `ball:${held}/${side}`,
-        text: `Ache o com a bola ${BALL_PT[held]} ${SIDE_PT[side]}`,
-        matches: a => a.held === held && a.heldSide === side,
-        targetPool: ROSTER.filter(a => a.held === held && a.heldSide === side),
-        family: fam,
-      });
-    }
-  // SKATE — com/sem bermuda. Família: a outra variante de skate + objetos segurados.
-  rules.push({ key: "held:skate", text: "Ache o de skate", matches: a => a.held === "skate" && !a.bermuda, targetPool: skatePlain, family: [...skateBerm, ...heldObjects] });
-  rules.push({ key: "held:skate_bermuda", text: "Ache o de skate de bermuda", matches: a => a.held === "skate" && a.bermuda === true, targetPool: skateBerm, family: [...skatePlain, ...heldObjects] });
-  // OBJETO SEGURADO — balão/pipa/guarda-chuva. Família: os outros objetos segurados.
-  for (const v of ["balao", "pipa", "guarda_chuva"]) {
-    const fam = heldObjects.filter(a => a.held !== v);
-    rules.push({ key: `held:${v}`, text: `Ache o que segura ${HELDOBJ_PT[v]}`, matches: a => a.held === v, targetPool: ROSTER.filter(a => a.held === v), family: fam });
+    for (const side of ["esq", "dir"] as const)
+      defs.push({ key: `ball:${held}/${side}`, frag: `com a bola ${BALL_PT[held]} ${SIDE_PT[side]}`,
+        match: a => a.held === held && a.heldSide === side, pool: ROSTER.filter(a => a.held === held && a.heldSide === side) });
+  defs.push({ key: "held:skate", frag: "de skate", match: a => a.held === "skate" && !a.bermuda, pool: skatePlain });
+  defs.push({ key: "held:skate_bermuda", frag: "de skate de bermuda", match: a => a.held === "skate" && a.bermuda === true, pool: skateBerm });
+  for (const v of ["balao", "pipa", "guarda_chuva"])
+    defs.push({ key: `held:${v}`, frag: `que segura ${HELDOBJ_PT[v]}`, match: a => a.held === v, pool: ROSTER.filter(a => a.held === v) });
+  return defs;
+})();
+
+// Família confusável de uma feature ISOLADA (mesma da versão de 1 atributo).
+function featureFamily(f: FeatureDef): AgentConfig[] {
+  if (f.key.startsWith("head:"))  return [...anyHead.filter(a => !f.match(a)), ...withCap, ...plainBase];
+  if (f.key.startsWith("special:")) return [...anySpecial.filter(a => !f.match(a)), ...plainBase];
+  if (f.key.startsWith("expr:"))  return anyExpr.filter(a => !f.match(a));
+  if (f.key.startsWith("ball:"))  return ballAgents.filter(a => !f.match(a));
+  if (f.key === "held:skate")     return [...skateBerm, ...heldObjects];
+  if (f.key === "held:skate_bermuda") return [...skatePlain, ...heldObjects];
+  return heldObjects.filter(a => !f.match(a));   // objeto segurado
+}
+
+// Constrói TODAS as regras: simples (cor, ou 1 feature) + COMBINADAS (cor+feature).
+export function buildAllRules(): Rule[] {
+  const rules: Rule[] = [];
+
+  // ── SIMPLES: 1 feature ──
+  for (const f of FEATURE_DEFS) {
+    rules.push({ key: f.key, text: `Ache o ${f.frag}`, matches: f.match, targetPool: f.pool,
+      family: featureFamily(f), combined: false });
   }
-  // COR — família: cores vizinhas (discriminação de cor não trivial).
+  // ── SIMPLES: cor (família = cores vizinhas) ──
   for (const c of Object.keys(COLOR_LABEL)) {
     const fam = COLOR_NEIGHBORS[c].flatMap(nc => withColor(nc));
-    rules.push({ key: `color:${c}`, text: `Ache o ${COLOR_LABEL[c]}`, matches: a => a.color === c, targetPool: withColor(c), family: fam });
+    rules.push({ key: `color:${c}`, text: `Ache o ${COLOR_LABEL[c]}`, matches: a => a.color === c,
+      targetPool: withColor(c), family: fam, combined: false });
   }
-  // Só mantém regras com pool de alvo e de família suficientes.
+  // ── COMBINADAS: cor + feature (busca por conjunção) ──
+  // Distratores confusáveis = compartilham EXATAMENTE UM dos dois atributos:
+  //   (a) MESMA COR, feature diferente; (b) MESMA FEATURE, cor diferente.
+  for (const c of Object.keys(COLOR_LABEL))
+    for (const f of FEATURE_DEFS) {
+      const matches = (a: AgentConfig) => a.color === c && f.match(a);
+      const targetPool = ROSTER.filter(matches);
+      if (targetPool.length < 1) continue;
+      const sameColorOtherFeature = ROSTER.filter(a => a.color === c && !f.match(a));   // (a)
+      const sameFeatureOtherColor = f.pool.filter(a => a.color !== c);                  // (b)
+      const family = [...sameColorOtherFeature, ...sameFeatureOtherColor].filter(a => !matches(a));
+      rules.push({ key: `combo:${c}+${f.key}`, text: `Ache o ${COLOR_LABEL[c]} ${f.frag}`,
+        matches, targetPool, family, combined: true });
+    }
+
+  // Só mantém regras com alvo e família suficientes (invariante do jogo).
   return rules.filter(r => r.targetPool.length >= 1 && r.family.length >= 3);
 }
 
-// Peso das regras por nível: nos níveis baixos, regras "grossas" (cor, cabeça,
-// especial, objeto, skate); o LADO da bola (sutil) entra mais nos níveis altos.
+// Peso das regras por nível:
+//  N1-2 → só 1 atributo (cor OU feature simples).
+//  N3-4 → mistura 1 atributo + combinados (cor+feature).
+//  N5-7 → predominância de combinados (não gera mais só-cor; feature-simples raro).
+// O LADO da bola (sutil) e o skate-bermuda entram a partir de N2/N3.
 export function ruleAllowed(r: Rule, level: number): boolean {
-  if (r.key.startsWith("ball:")) return level >= 3;   // lado da bola = fino, só N3+
-  if (r.key.startsWith("held:skate_bermuda")) return level >= 2;
-  if (r.key.startsWith("color:")) return level <= 4;  // cor é fácil; evita nos altos
-  return true;
+  // Sub-features finas só a partir de certo nível (em regra simples OU combinada).
+  if (r.key.includes("ball:") && level < 3) return false;         // lado da bola = fino
+  if (r.key.includes("held:skate_bermuda") && level < 2) return false;
+
+  if (r.combined) return level >= 3;                              // combinados só N3+
+  // Regras SIMPLES:
+  if (r.key.startsWith("color:")) return level <= 4;              // só-cor: fácil, até N4
+  return level <= 4;                                              // feature-simples: até N4
 }
 
 type RainStateT = "falling" | "captured" | "wrong" | "missed";
@@ -234,6 +274,9 @@ export function FocusRain({ level, theme, presentMode, fbLevel, exerciseId, sett
   const [displayLevel, setDisplayLevel] = useState(Math.max(1, Math.min(MAX_LEVEL, Math.round(level))));
   const [flash, setFlash]       = useState<null | { msg: string }>(null);
   const [renderAgents, setRenderAgents] = useState<RainAgent[]>([]);
+  // GATE DE COMANDO: "card" = card central + botão Começar (chuva PAUSADA);
+  // "playing" = agentes caindo. Todo comando começa em "card".
+  const [phase, setPhase]       = useState<"card" | "playing">("card");
 
   // ── Refs de jogo ──
   const playRef      = useRef<HTMLDivElement>(null);
@@ -249,13 +292,14 @@ export function FocusRain({ level, theme, presentMode, fbLevel, exerciseId, sett
   const reachedRef   = useRef(levelRef.current);
   const uidSeq       = useRef(0);
   const doneRef      = useRef(false);
-  const lastSpawnXRef = useRef(-1);
 
   // Regra atual + controle de "há alvo vivo para esta regra".
   const rulesRef      = useRef<Rule[]>(buildAllRules());
   const ruleRef       = useRef<Rule | null>(null);
   const targetAliveRef = useRef(false);   // já existe um alvo (não resolvido) da regra atual?
-  const cmdStartRef   = useRef(0);        // ts em que o comando atual apareceu (RT)
+  const cmdStartRef   = useRef(0);        // ts em que a CHUVA do comando começou (RT)
+  const phaseRef      = useRef<"card" | "playing">("card");   // espelho de `phase` p/ o loop/timers
+  const distractorsThisCmdRef = useRef(0);   // quantos distratores já caíram NESTE comando (alvo nunca 1º)
 
   // Métricas.
   const capturesRef   = useRef(0);
@@ -270,58 +314,69 @@ export function FocusRain({ level, theme, presentMode, fbLevel, exerciseId, sett
 
   const commitRender = useCallback(() => { setRenderAgents(agentsRef.current.map(a => ({ ...a }))); }, []);
 
-  // Escolhe uma NOVA regra: aleatória, permitida no nível, diferente da anterior e
-  // que NÃO seja satisfeita por NENHUM agente já em queda (garante 1 alvo só — o
-  // que vamos spawnar). Fallback: qualquer regra permitida.
-  const pickNewRule = useCallback(() => {
+  // Abre o CARD do PRÓXIMO comando: escolhe a regra e mostra o card central com o
+  // texto + botão "Começar". A chuva fica PAUSADA (phase="card") — nada spawna até
+  // o "Começar". A arena já está limpa aqui (a transição de card esvazia os agentes).
+  const openCommandCard = useCallback(() => {
     const lv = levelRef.current;
-    const falling = agentsRef.current.filter(a => a.state === "falling").map(a => a.agent);
     const allowed = rulesRef.current.filter(r => ruleAllowed(r, lv));
     const prevKey = ruleRef.current?.key;
-    const safe = shuffle(allowed).filter(r =>
-      r.key !== prevKey && !falling.some(a => r.matches(a)),
-    );
-    const chosen = safe[0]
-      ?? shuffle(allowed).find(r => !falling.some(a => r.matches(a)))   // aceita repetir chave se preciso
-      ?? pick(allowed);
+    const falling = agentsRef.current.filter(a => a.state === "falling").map(a => a.agent);
+    // Regra ≠ anterior e não satisfeita por nenhum agente que ainda esteja na tela.
+    const safe = shuffle(allowed).filter(r => r.key !== prevKey && !falling.some(a => r.matches(a)));
+    const chosen = safe[0] ?? shuffle(allowed).find(r => !falling.some(a => r.matches(a))) ?? pick(allowed);
     ruleRef.current = chosen;
-    cmdStartRef.current = Date.now();
-    // Invariante "1 alvo por comando": se algum agente JÁ em queda casa com a nova
-    // regra (só no fallback raro), promove UM deles a alvo e desmarca os demais —
-    // assim nunca há 2 alvos, e o spawn não cria outro (targetAlive=true).
-    const matchers = agentsRef.current.filter(a => a.state === "falling" && chosen.matches(a.agent));
-    if (matchers.length > 0) {
-      matchers.forEach((a, i) => { a.isTarget = i === 0; });
-      targetAliveRef.current = true;
-      commitRender();
-    } else {
-      targetAliveRef.current = false;   // o próximo spawn cria o alvo
-    }
+    targetAliveRef.current = false;
+    distractorsThisCmdRef.current = 0;
     setCommand(chosen.text);
-    if (presentMode !== "visual") speak(cleanForSpeech(chosen.text));
-  }, [presentMode, speak, commitRender]);
+    phaseRef.current = "card";
+    setPhase("card");
+  }, []);
 
-  // Cria um RainAgent (posiciona no topo, x espalhado).
+  // "Começar": fecha o card e a chuva do comando começa a cair. RT começa AQUI
+  // (busca real). Alvo só entra depois dos distratores (item 4). Fala se áudio.
+  const startPlaying = useCallback(() => {
+    if (phaseRef.current !== "card" || doneRef.current) return;
+    cmdStartRef.current = Date.now();
+    distractorsThisCmdRef.current = 0;
+    targetAliveRef.current = false;
+    phaseRef.current = "playing";
+    setPhase("playing");
+    if (presentMode !== "visual" && ruleRef.current) speak(cleanForSpeech(ruleRef.current.text));
+  }, [presentMode, speak]);
+
+  // Cria um RainAgent. ESPALHAMENTO anti-sobreposição: gera ~8 candidatos de X e
+  // escolhe o que MAXIMIZA a menor distância aos X dos agentes VIVOS que ainda
+  // estão no topo (os "recém-caídos", y < 1.5×CHAR_H) — evita "um em cima do outro".
   const makeFaller = useCallback((agent: AgentConfig, isTarget: boolean): RainAgent => {
     const W = playWRef.current || 360;
     const H = playHRef.current || 600;
     const maxX = Math.max(4, W - CHAR_SIZE - 4);
-    let x = 4 + Math.random() * maxX;
-    if (lastSpawnXRef.current >= 0 && Math.abs(x - lastSpawnXRef.current) < CHAR_SIZE) {
-      x = (lastSpawnXRef.current + W / 2) % maxX;
+    // Só considera quem ainda está perto do topo (onde a colisão de spawn ocorre).
+    const nearTop = agentsRef.current
+      .filter(a => a.state === "falling" && a.y < CHAR_H * 1.5)
+      .map(a => a.x);
+    let bestX = 4 + Math.random() * maxX;
+    let bestGap = -1;
+    for (let i = 0; i < 8; i++) {
+      const cand = 4 + Math.random() * maxX;
+      const gap = nearTop.length ? Math.min(...nearTop.map(px => Math.abs(px - cand))) : Infinity;
+      if (gap > bestGap) { bestGap = gap; bestX = cand; }
     }
-    lastSpawnXRef.current = x;
     return {
       uid: `r${uidSeq.current++}`, agent, isTarget,
-      x, y: -CHAR_H, vy: fallSpeed(H, RAIN_CFG[levelRef.current].fallMs),
+      x: bestX, y: -CHAR_H, vy: fallSpeed(H, RAIN_CFG[levelRef.current].fallMs),
       passCount: 0, spawnAt: Date.now(), state: "falling",
     };
   }, []);
 
-  // Spawn: se NÃO há alvo vivo da regra atual → spawna o ALVO; senão spawna um
-  // DISTRATOR confusável (com alguma variedade). NUNCA 2 alvos da mesma regra.
+  // Spawn de UM agente. Só corre em phase="playing" (o card pausa a chuva).
+  //  • O ALVO só pode aparecer depois de ≥MIN_DISTRACTORS_BEFORE_TARGET distratores
+  //    E ≥MIN_MS_BEFORE_TARGET desde o "Começar" (o alvo NUNCA é o primeiro a cair).
+  //  • Enquanto o alvo não pode/não está vivo → spawna DISTRATOR confusável.
+  //  • Nunca há 2 alvos (targetAliveRef controla).
   const spawnOne = useCallback(() => {
-    if (doneRef.current) return;
+    if (doneRef.current || phaseRef.current !== "playing") return;
     const cfg = RAIN_CFG[levelRef.current];
     const alive = agentsRef.current.filter(a => a.state === "falling").length;
     const maxC = targetConcurrent(levelRef.current, playWRef.current || 360, playHRef.current || 600);
@@ -329,11 +384,14 @@ export function FocusRain({ level, theme, presentMode, fbLevel, exerciseId, sett
     const rule = ruleRef.current;
     if (!rule) return;
 
+    const targetUnlocked =
+      distractorsThisCmdRef.current >= MIN_DISTRACTORS_BEFORE_TARGET &&
+      Date.now() - cmdStartRef.current >= MIN_MS_BEFORE_TARGET;
+
     let ra: RainAgent;
-    if (!targetAliveRef.current) {
-      // spawna o ÚNICO alvo do comando atual.
-      const agent = pick(rule.targetPool);
-      ra = makeFaller(agent, true);
+    if (!targetAliveRef.current && targetUnlocked) {
+      // spawna o ÚNICO alvo do comando atual (liberado após os distratores).
+      ra = makeFaller(pick(rule.targetPool), true);
       targetAliveRef.current = true;
     } else {
       // distrator: da família (confusável) na maioria; senão variedade do roster.
@@ -342,6 +400,7 @@ export function FocusRain({ level, theme, presentMode, fbLevel, exerciseId, sett
       const poolFar  = ROSTER.filter(a => !rule.matches(a));
       const pool = (near && poolNear.length ? poolNear : poolFar);
       ra = makeFaller(pick(pool), false);
+      distractorsThisCmdRef.current++;
     }
     agentsRef.current = [...agentsRef.current, ra];
     commitRender();
@@ -365,11 +424,23 @@ export function FocusRain({ level, theme, presentMode, fbLevel, exerciseId, sett
     flashTimerRef.current = setTimeout(() => setFlash(null), 900);
   }, []);
 
-  // Resolve o alvo (acerto por toque OU omissão por escape) → troca de comando.
+  // Resolve o alvo (ACERTO por toque OU OMISSÃO por escape) → transição para o
+  // CARD do próximo comando: pausa a chuva, faz FADE dos agentes restantes, limpa
+  // a arena e abre o card. Mantém o fluxo contínuo (só que com um gate por comando).
   const resolveTargetAndSwitch = useCallback(() => {
+    phaseRef.current = "card";     // pausa spawns imediatamente
     targetAliveRef.current = false;
-    pickNewRule();
-  }, [pickNewRule]);
+    // Fade dos que ainda estão caindo (não pontuam; era pra deixar cair mesmo).
+    for (const a of agentsRef.current) if (a.state === "falling") a.state = "captured";
+    commitRender();
+    setTimeout(() => {
+      if (doneRef.current) return;
+      agentsRef.current = [];
+      nodesRef.current.clear();
+      commitRender();
+      openCommandCard();           // mostra o card do próximo comando + Começar
+    }, 260);
+  }, [commitRender, openCommandCard]);
 
   // ── Toque num agente ──
   const handleTap = useCallback((uid: string) => {
@@ -450,14 +521,21 @@ export function FocusRain({ level, theme, presentMode, fbLevel, exerciseId, sett
     measure();
     window.addEventListener("resize", measure);
 
-    // Primeiro comando + primeiro spawn (o alvo). O intervalo é criado no effect
-    // [displayLevel] (também dispara na montagem) → um só intervalo.
-    pickNewRule();
-    spawnOne();
+    // 1º comando também abre com CARD + "Começar" (o "início" pedido). Nada cai
+    // até apertar Começar. O intervalo de spawn é criado no effect [displayLevel].
+    openCommandCard();
 
     let prev: number | null = null;
     const tick = (ts: number) => {
       if (doneRef.current) return;
+      // Durante o card a física fica PAUSADA (nada se move), mas o loop segue vivo
+      // p/ checar o fim da sessão. dt é descartado enquanto pausado.
+      if (phaseRef.current !== "playing") {
+        if (isTimeUp()) { endSession(); return; }
+        prev = ts;
+        rafRef.current = requestAnimationFrame(tick);
+        return;
+      }
       const dt = prev === null ? 16 : Math.min(ts - prev, 100);
       prev = ts;
       const H = playHRef.current;
@@ -499,8 +577,7 @@ export function FocusRain({ level, theme, presentMode, fbLevel, exerciseId, sett
         for (const uid of nodesRef.current.keys()) {
           if (!agentsRef.current.some(a => a.uid === uid)) nodesRef.current.delete(uid);
         }
-        // A omissão troca a regra DEPOIS de remover o alvo escapado (para o
-        // pickNewRule não "ver" o próprio alvo entre os que estão caindo).
+        // OMISSÃO: abre o card do próximo comando (transição limpa a arena).
         if (targetOmitted) resolveTargetAndSwitch();
         commitRender();
       }
@@ -556,7 +633,8 @@ export function FocusRain({ level, theme, presentMode, fbLevel, exerciseId, sett
           const glow =
             a.state === "captured" && a.isTarget ? " drop-shadow(0 0 10px rgba(74,222,128,0.95)) drop-shadow(0 0 20px rgba(74,222,128,0.7))" :
             a.state === "wrong"    ? " drop-shadow(0 0 10px rgba(248,113,113,0.95))" : "";
-          const dim = a.state === "wrong";
+          // Distratores "capturados" na transição de card fazem FADE (some).
+          const opacity = a.state === "wrong" ? 0.5 : (a.state === "captured" && !a.isTarget ? 0 : 1);
           return (
             <div key={a.uid}
               ref={node => {
@@ -570,9 +648,9 @@ export function FocusRain({ level, theme, presentMode, fbLevel, exerciseId, sett
               {/* eslint-disable-next-line @next/next/no-img-element */}
               <img src={src + AGENT_V} alt={a.agent.name} decoding="async" loading="eager" draggable={false}
                 style={{ width: "100%", height: "auto", display: "block", userSelect: "none",
-                  opacity: dim ? 0.5 : 1,
+                  opacity,
                   filter: "drop-shadow(0 3px 6px rgba(0,0,0,0.6))" + glow,
-                  transition: "filter 150ms, opacity 150ms", pointerEvents: "none" }} />
+                  transition: "filter 200ms, opacity 200ms", pointerEvents: "none" }} />
               <button onClick={() => handleTap(a.uid)} aria-label={a.agent.name}
                 className="absolute cursor-pointer"
                 style={{ left: `${HIT_L * 100}%`, width: `${(HIT_R - HIT_L) * 100}%`,
@@ -602,6 +680,28 @@ export function FocusRain({ level, theme, presentMode, fbLevel, exerciseId, sett
           )}
         </AnimatePresence>
       </div>
+
+      {/* GATE DE COMANDO — card central + botão "Começar". Abre antes de CADA
+          comando (inclusive o 1º). Enquanto aberto, a chuva está pausada. */}
+      <AnimatePresence>
+        {phase === "card" && (
+          <motion.div className="absolute inset-0 z-40 flex items-center justify-center px-6"
+            style={{ background: "rgba(4, 10, 30, 0.72)", backdropFilter: "blur(3px)" }}
+            initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} transition={{ duration: 0.18 }}>
+            <motion.div className="w-full max-w-sm rounded-3xl px-6 py-7 text-center"
+              style={{ background: "rgba(124,58,237,0.22)", border: "1.5px solid rgba(167,139,250,0.55)", boxShadow: "0 12px 48px rgba(0,0,0,0.55)" }}
+              initial={{ scale: 0.9, y: 10 }} animate={{ scale: 1, y: 0 }} exit={{ scale: 0.95 }}>
+              <p className="text-violet-200/80 text-xs font-bold uppercase tracking-widest mb-2">Comando</p>
+              <p className="text-white text-2xl font-black leading-snug mb-6">{command}</p>
+              <button onClick={startPlaying}
+                className="w-full h-14 rounded-2xl text-white text-lg font-black active:scale-95"
+                style={{ background: "linear-gradient(90deg, #7c3aed, #a855f7)", boxShadow: "0 6px 24px rgba(124,58,237,0.5)" }}>
+                Começar
+              </button>
+            </motion.div>
+          </motion.div>
+        )}
+      </AnimatePresence>
     </div>
   );
 }
