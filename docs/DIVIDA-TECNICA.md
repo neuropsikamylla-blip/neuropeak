@@ -18,8 +18,10 @@
 >   fuso agora está consistente; fica para avaliação futura.
 > - **Robustez (Etapa 4, parcial)** — ✅ resolvidos em v2.11.5: CORR-002 (Mundo Interior
 >   não reverte resposta em gravação), GER-001 (`db:seed` usa `tsx`), GER-002 (remoção de
->   dependências sem uso). **ARQ-002 pendente** (pet/skill tree só em localStorage): exige
->   mudança no banco de dados (decisão do produto) — ver plano abaixo.
+>   dependências sem uso).
+> - **Pet/Jornada persistidos (Etapa 4)** — ✅ resolvido em v2.12.0: ARQ-002 (pet e árvore
+>   de habilidades salvos no servidor, não só em localStorage; API `/api/gamification` +
+>   migração aditiva aplicada e verificada em produção).
 > - Demais itens: pendentes (lista abaixo).
 
 ## Panorama
