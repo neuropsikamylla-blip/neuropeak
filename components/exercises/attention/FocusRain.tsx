@@ -172,7 +172,9 @@ const FEATURE_DEFS: FeatureDef[] = (() => {
     for (const side of ["esq", "dir"] as const)
       defs.push({ key: `ball:${held}/${side}`, frag: `com a bola ${BALL_PT[held]} ${SIDE_PT[side]}`,
         match: a => a.held === held && a.heldSide === side, pool: ROSTER.filter(a => a.held === held && a.heldSide === side) });
-  defs.push({ key: "held:skate", frag: "de skate", match: a => a.held === "skate" && !a.bermuda, pool: skatePlain });
+  // "de skate" = QUALQUER skate (calça OU bermuda) — senão vira ambíguo (os dois têm skate).
+  // A distinção fina (bermuda) fica só no comando explícito "de skate de bermuda".
+  defs.push({ key: "held:skate", frag: "de skate", match: a => a.held === "skate", pool: [...skatePlain, ...skateBerm] });
   defs.push({ key: "held:skate_bermuda", frag: "de skate de bermuda", match: a => a.held === "skate" && a.bermuda === true, pool: skateBerm });
   for (const v of ["balao", "pipa", "guarda_chuva"])
     defs.push({ key: `held:${v}`, frag: `que segura ${HELDOBJ_PT[v]}`, match: a => a.held === v, pool: ROSTER.filter(a => a.held === v) });
@@ -185,8 +187,8 @@ function featureFamily(f: FeatureDef): AgentConfig[] {
   if (f.key.startsWith("special:")) return [...anySpecial.filter(a => !f.match(a)), ...plainBase];
   if (f.key.startsWith("expr:"))  return anyExpr.filter(a => !f.match(a));
   if (f.key.startsWith("ball:"))  return ballAgents.filter(a => !f.match(a));
-  if (f.key === "held:skate")     return [...skateBerm, ...heldObjects];
-  if (f.key === "held:skate_bermuda") return [...skatePlain, ...heldObjects];
+  if (f.key === "held:skate")     return [...heldObjects, ...plainBase];   // "de skate"=qualquer skate → distrator = outros objetos/base
+  if (f.key === "held:skate_bermuda") return [...skatePlain, ...heldObjects]; // bermuda vs calça = discriminação fina (comando explícito)
   return heldObjects.filter(a => !f.match(a));   // objeto segurado
 }
 

@@ -14,6 +14,14 @@ histórico completo anterior está no log do Git (452 commits no total, a partir
   Documentação (CLAUDE.md, README.md, ARCHITECTURE.md, ADRs) reescrita a partir do
   código real.
 
+## [2.23.6] — 2026-07-11
+
+- **Chuva do Foco — corrige "de skate" ambíguo:** o comando "de skate" só aceitava o skate
+  de calça, e o de bermuda entrava como distrator — mas os dois têm skate, então clicar no
+  de bermuda dava "errado" injustamente. Agora "de skate" aceita QUALQUER skate (calça ou
+  bermuda); a distinção fina fica só no comando explícito "de skate de bermuda". Verificado:
+  0 distratores que batem a regra.
+
 ## [2.23.5] — 2026-07-11
 
 - **Chuva do Foco — comando some na busca (memória de trabalho):** o comando aparece só
