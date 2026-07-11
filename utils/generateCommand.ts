@@ -1085,14 +1085,16 @@ function fExcludeShort(c: FCrit): string {
 //    displayN 16–28 dos outros modos) — só a COMPOSIÇÃO muda, não o volume.
 // Todos os números abaixo são CALIBRÁVEIS após teste clínico.
 interface FocoCfg { chars: [number, number]; targets: [number, number]; near: number }
+// Recalibração de elite: multidão mais densa, mais alvos (com variabilidade real
+// nos ranges), distratores ainda mais parecidos (near ≥0,65 já no N1).
 const FOCO_CFG: Record<number, FocoCfg> = {
-  1: { chars: [12, 14], targets: [2, 2], near: 0.55 },
-  2: { chars: [14, 16], targets: [2, 2], near: 0.55 },
-  3: { chars: [16, 18], targets: [3, 3], near: 0.60 },
-  4: { chars: [18, 20], targets: [3, 3], near: 0.60 },
-  5: { chars: [20, 22], targets: [4, 4], near: 0.65 },
-  6: { chars: [22, 24], targets: [4, 4], near: 0.60 },
-  7: { chars: [24, 26], targets: [5, 5], near: 0.65 },
+  1: { chars: [14, 16], targets: [2, 3], near: 0.65 },
+  2: { chars: [16, 18], targets: [3, 3], near: 0.70 },
+  3: { chars: [18, 21], targets: [3, 4], near: 0.75 },
+  4: { chars: [21, 24], targets: [4, 4], near: 0.78 },
+  5: { chars: [24, 27], targets: [4, 5], near: 0.80 },
+  6: { chars: [26, 29], targets: [5, 5], near: 0.82 },
+  7: { chars: [28, 31], targets: [5, 6], near: 0.85 },
 };
 
 // Cores VIZINHAS/parecidas (para o N1, de 1 atributo, os distratores de cor não

@@ -53,8 +53,18 @@ interface RoundMetric {
   errorType?: "detalhe" | "impulsividade" | "omissao" | null;
 }
 
-const CHAR_SIZE = 112;             // +51% vs. 74 — personagens grandes e legíveis
-const CHAR_H    = CHAR_SIZE * 1.5; // imagens são 2:3 (512×768)
+// Tamanho do personagem. Mutável e definido pelo MODO no início da sessão:
+// os 3 modos clássicos mantêm 112 (grandes/legíveis); o Foco (recalibração de
+// elite) usa 80 — arena mais densa e clique mais preciso. Só um FocusAgents roda
+// por vez (tela cheia), então esta configuração por sessão é segura.
+const CHAR_SIZE_DEFAULT = 112;     // 3 modos clássicos — personagens grandes e legíveis
+const CHAR_SIZE_FOCO    = 80;      // Foco — menores → mais densa, clique mais preciso
+let CHAR_SIZE = CHAR_SIZE_DEFAULT;
+let CHAR_H    = CHAR_SIZE * 1.5;   // imagens são 2:3 (512×768)
+function applyCharSizeForMode(mode: FocusMode) {
+  CHAR_SIZE = mode === "foco" ? CHAR_SIZE_FOCO : CHAR_SIZE_DEFAULT;
+  CHAR_H    = CHAR_SIZE * 1.5;
+}
 const TICK_MS   = 50;
 const ARENA_MARGIN = 8;            // margem de segurança: agentes nunca cortam na borda
 
@@ -72,6 +82,9 @@ const BASE_ARENA_SPEED = 2.4;
 // clássicos (1–5); o Foco usa o ladder 1–7 e aproveita os 2 degraus extras.
 // Calibrado para os níveis altos continuarem desafiadores sem ficarem frenéticos.
 const LEVEL_SPEED = [0.7, 0.88, 1.05, 1.22, 1.4, 1.55, 1.7];
+// PILOTO Foco (recalibração de elite): movimento BEM mais rápido, teto de elite.
+// Só o modo Foco usa esta tabela; os 3 clássicos seguem no LEVEL_SPEED acima.
+const LEVEL_SPEED_FOCO = [1.0, 1.25, 1.5, 1.8, 2.1, 2.4, 2.7];
 
 // Dificuldade progressiva DENTRO do nível, ligada aos ACERTOS do paciente: a cada
 // 2 acertos seguidos sobe um "degrau" de intensidade (mais velocidade); errar
@@ -80,12 +93,15 @@ const LEVEL_SPEED = [0.7, 0.88, 1.05, 1.22, 1.4, 1.55, 1.7];
 const INTRA_STEP_PCT = 0.2;       // +20% de velocidade por degrau
 const HITS_PER_STEP  = 2;         // acertos seguidos para subir um degrau de velocidade
 const MAX_INTRA_STEP = 5;
-const LEVEL_UP_HITS   = 3;        // acertos seguidos para SUBIR de nível (comandos mais difíceis)
+const LEVEL_UP_HITS   = 3;        // acertos seguidos para SUBIR de nível (3 modos clássicos)
+const LEVEL_UP_HITS_FOCO = 2;    // Foco (recalibração de elite): sobe mais rápido — chega logo no difícil
 const LEVEL_DOWN_ERRS = 2;        // erros seguidos para DESCER de nível (nunca abaixo do inicial)
+// maxTier === 7 ⇒ modo Foco: usa a tabela de velocidade de elite (LEVEL_SPEED_FOCO).
 function levelSpeed(level: number, step: number, maxTier = 5): number {
+  const table   = maxTier === 7 ? LEVEL_SPEED_FOCO : LEVEL_SPEED;
   const lv      = Math.max(1, Math.min(maxTier, level));
-  const base    = LEVEL_SPEED[lv - 1];
-  const ceiling = lv < maxTier ? LEVEL_SPEED[lv] * 1.15 : base * 1.3;
+  const base    = table[lv - 1];
+  const ceiling = lv < maxTier ? table[lv] * 1.15 : base * 1.3;
   return Math.min(base * (1 + step * INTRA_STEP_PCT), ceiling);
 }
 
@@ -191,10 +207,10 @@ const LEVEL_CLOCK = [20, 18, 16, 15, 13, 12, 11, 10, 9];
 // treinar VELOCIDADE DE PROCESSAMENTO (pressão de tempo real). Orçamento =
 // reserva fixa do nível + segundos por alvo × nº de alvos. Só se aplica ao
 // modo Foco; os demais modos seguem no LEVEL_CLOCK acima.
-// Ex.: N1 · 2 alvos ≈ 9s · N5 · 4 alvos ≈ 9s · N7 · 5 alvos ≈ 8,5s.
+// Recalibração de elite: ~6s/rodada em vez de 9 (bem mais apertado).
 // reserve/perTarget são CALIBRÁVEIS após teste clínico (índices = nível 1..7).
-const FOCO_CLOCK_RESERVE   = [4,   4,   3.5, 3,   3,   2.5, 2.5];
-const FOCO_CLOCK_PER_TARGET = [2.4, 2.2, 2.0, 1.8, 1.6, 1.4, 1.2];
+const FOCO_CLOCK_RESERVE   = [3,   2.5, 2.5, 2,   2,   1.5, 1.5];
+const FOCO_CLOCK_PER_TARGET = [1.7, 1.5, 1.4, 1.2, 1.1, 1.0, 0.9];
 function focoClockSecs(level: number, nTargets: number): number {
   const lv = Math.max(1, Math.min(7, level)) - 1;
   return Math.max(4, Math.round(FOCO_CLOCK_RESERVE[lv] + FOCO_CLOCK_PER_TARGET[lv] * nTargets));
@@ -1051,7 +1067,8 @@ export function FocusAgents({ difficulty, theme, onComplete, exerciseId = "focus
         intraStepRef.current = Math.min(MAX_INTRA_STEP, intraStepRef.current + 1);
       }
       const maxLv = modeRef.current === "foco" ? 7 : 9;   // Foco = ladder 1–7
-      if (consecCorrectRef.current >= LEVEL_UP_HITS && levelRef.current < maxLv) {
+      const upHits = modeRef.current === "foco" ? LEVEL_UP_HITS_FOCO : LEVEL_UP_HITS;
+      if (consecCorrectRef.current >= upHits && levelRef.current < maxLv) {
         levelRef.current++;
         consecCorrectRef.current = 0;
         intraStepRef.current = 0;
@@ -1257,6 +1274,7 @@ export function FocusAgents({ difficulty, theme, onComplete, exerciseId = "focus
   if (prescribed && !entryDone) return (
     <TherapeuticIntro mode={presMode!} level={presLevel} onStart={() => {
       setMode(presMode!); modeRef.current = presMode!;
+      applyCharSizeForMode(presMode!);   // Foco = 80px; clássicos = 112px
       const lv0 = presMode === "foco" ? Math.min(7, presLevel) : presLevel;   // Foco = ladder 1–7
       levelRef.current = lv0; startLevelRef.current = lv0; reachedLevelRef.current = lv0;
       setDisplayLevel(lv0);
@@ -1267,6 +1285,7 @@ export function FocusAgents({ difficulty, theme, onComplete, exerciseId = "focus
   if (showModeSelect) return (
     <ModeSelect onConfirm={(m, lv) => {
       setMode(m);  modeRef.current  = m;
+      applyCharSizeForMode(m);   // Foco = 80px; clássicos = 112px
       const lv0 = m === "foco" ? Math.min(7, lv) : lv;   // Foco = ladder 1–7
       levelRef.current = lv0; startLevelRef.current = lv0; reachedLevelRef.current = lv0;
       setDisplayLevel(lv0);

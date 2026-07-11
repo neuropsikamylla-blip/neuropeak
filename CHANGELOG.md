@@ -14,6 +14,15 @@ histórico completo anterior está no log do Git (452 commits no total, a partir
   Documentação (CLAUDE.md, README.md, ARCHITECTURE.md, ADRs) reescrita a partir do
   código real.
 
+## [2.19.1] — 2026-07-11
+
+- **Focus Agents / modo Foco — recalibração "de elite"** (após teste): agentes menores
+  (112→80 px, só no Foco → arena mais densa, clique preciso), movimento bem mais rápido
+  (curva 1.0×→2.7×), sobe de nível a cada 2 acertos (era 3), relógio mais apertado
+  (~6-7 s/rodada, era ~9 s), multidão maior (14→31 agentes), mais alvos com variação
+  (2→6) e distratores mais parecidos (65→89%). Os outros 3 modos seguem intactos
+  (mode-scoping das constantes). Tudo calibrável.
+
 ## [2.19.0] — 2026-07-11
 
 - **Focus Agents — modo Foco endurecido (piloto de treino):** reforma do modo Foco para
