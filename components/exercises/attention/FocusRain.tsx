@@ -196,13 +196,13 @@ export function buildAllRules(): Rule[] {
 
   // ── SIMPLES: 1 feature ──
   for (const f of FEATURE_DEFS) {
-    rules.push({ key: f.key, text: `Ache o ${f.frag}`, matches: f.match, targetPool: f.pool,
+    rules.push({ key: f.key, text: `Ache o agente ${f.frag}`, matches: f.match, targetPool: f.pool,
       family: featureFamily(f), combined: false });
   }
   // ── SIMPLES: cor (família = cores vizinhas) ──
   for (const c of Object.keys(COLOR_LABEL)) {
     const fam = COLOR_NEIGHBORS[c].flatMap(nc => withColor(nc));
-    rules.push({ key: `color:${c}`, text: `Ache o ${COLOR_LABEL[c]}`, matches: a => a.color === c,
+    rules.push({ key: `color:${c}`, text: `Ache o agente ${COLOR_LABEL[c]}`, matches: a => a.color === c,
       targetPool: withColor(c), family: fam, combined: false });
   }
   // ── COMBINADAS: cor + feature (busca por conjunção) ──
@@ -216,7 +216,7 @@ export function buildAllRules(): Rule[] {
       const sameColorOtherFeature = ROSTER.filter(a => a.color === c && !f.match(a));   // (a)
       const sameFeatureOtherColor = f.pool.filter(a => a.color !== c);                  // (b)
       const family = [...sameColorOtherFeature, ...sameFeatureOtherColor].filter(a => !matches(a));
-      rules.push({ key: `combo:${c}+${f.key}`, text: `Ache o ${COLOR_LABEL[c]} ${f.frag}`,
+      rules.push({ key: `combo:${c}+${f.key}`, text: `Ache o agente ${COLOR_LABEL[c]} ${f.frag}`,
         matches, targetPool, family, combined: true });
     }
 
@@ -246,9 +246,13 @@ interface RainAgent {
   uid: string;
   agent: AgentConfig;
   isTarget: boolean;   // é o alvo do comando ATUAL (marcado no spawn)
-  x: number;
+  x: number;           // posição horizontal ATUAL (baseX + balanço)
+  baseX: number;       // âncora horizontal (o balanço oscila ao redor dela)
   y: number;
   vy: number;
+  swayAmp: number;     // amplitude do balanço horizontal (px)
+  swayPhase: number;   // fase do balanço (avança com o tempo)
+  swayFreq: number;    // rad por ms
   passCount: number;
   spawnAt: number;
   state: RainStateT;
@@ -365,7 +369,12 @@ export function FocusRain({ level, theme, presentMode, fbLevel, exerciseId, sett
     }
     return {
       uid: `r${uidSeq.current++}`, agent, isTarget,
-      x: bestX, y: -CHAR_H, vy: fallSpeed(H, RAIN_CFG[levelRef.current].fallMs),
+      x: bestX, baseX: bestX,
+      y: -CHAR_H - Math.random() * CHAR_H,                                        // entrada escalonada (uns mais alto)
+      vy: fallSpeed(H, RAIN_CFG[levelRef.current].fallMs) * (0.78 + Math.random() * 0.44), // 0.78–1.22x → mistura vertical
+      swayAmp: 14 + Math.random() * 26,          // 14–40px de balanço horizontal
+      swayPhase: Math.random() * Math.PI * 2,
+      swayFreq: 0.0010 + Math.random() * 0.0011, // rad/ms
       passCount: 0, spawnAt: Date.now(), state: "falling",
     };
   }, []);
@@ -546,15 +555,18 @@ export function FocusRain({ level, theme, presentMode, fbLevel, exerciseId, sett
       for (const a of agentsRef.current) {
         if (a.state !== "falling") continue;
         a.y += a.vy * dt;
+        a.swayPhase += a.swayFreq * dt;
+        const swayX = a.swayAmp * Math.sin(a.swayPhase);
+        a.x = a.baseX + swayX;                       // posição horizontal viva (balanço)
         const node = nodesRef.current.get(a.uid);
-        if (node) node.style.transform = `translate(0px, ${a.y}px)`;
+        if (node) node.style.transform = `translate(${swayX}px, ${a.y}px)`;
         if (a.y >= bottom) {
           if (a.isTarget && a.passCount === 0) {
             // 2ª CHANCE.
             a.passCount = 1;
             a.y = -CHAR_H;
             a.vy = fallSpeed(H, RAIN_CFG[levelRef.current].fallMs) * RAIN_CFG[levelRef.current].secondChance;
-            if (node) node.style.transform = `translate(0px, ${a.y}px)`;
+            if (node) node.style.transform = `translate(${swayX}px, ${a.y}px)`;
           } else if (a.isTarget) {
             // OMISSÃO (alvo escapou 2×) → troca de comando (mantém o fluxo).
             a.state = "missed";
@@ -641,10 +653,10 @@ export function FocusRain({ level, theme, presentMode, fbLevel, exerciseId, sett
                 if (node) {
                   nodesRef.current.set(a.uid, node);
                   const cur = agentsRef.current.find(x => x.uid === a.uid);
-                  if (cur) node.style.transform = `translate(0px, ${cur.y}px)`;
+                  if (cur) node.style.transform = `translate(${cur.x - cur.baseX}px, ${cur.y}px)`;
                 } else { nodesRef.current.delete(a.uid); }
               }}
-              style={{ position: "absolute", left: a.x, top: 0, width: CHAR_SIZE, willChange: "transform", pointerEvents: "none", zIndex: 3 }}>
+              style={{ position: "absolute", left: a.baseX, top: 0, width: CHAR_SIZE, willChange: "transform", pointerEvents: "none", zIndex: 3 }}>
               {/* eslint-disable-next-line @next/next/no-img-element */}
               <img src={src + AGENT_V} alt={a.agent.name} decoding="async" loading="eager" draggable={false}
                 style={{ width: "100%", height: "auto", display: "block", userSelect: "none",

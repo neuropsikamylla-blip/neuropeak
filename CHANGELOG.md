@@ -14,6 +14,13 @@ histórico completo anterior está no log do Git (452 commits no total, a partir
   Documentação (CLAUDE.md, README.md, ARCHITECTURE.md, ADRs) reescrita a partir do
   código real.
 
+## [2.23.1] — 2026-07-11
+
+- **Chuva do Foco — texto e movimento:** comandos agora dizem "Ache o **agente** …"
+  (ex.: "Ache o agente com raiva"). E os agentes deixaram de cair em fileira: velocidades
+  de queda variadas (misturam na vertical — uns mais altos, outros mais baixos), entrada
+  escalonada e um **balanço horizontal** suave (parecem se movimentar, não caem em linha reta).
+
 ## [2.23.0] — 2026-07-11
 
 - **Chuva do Foco — fluxo com card + "Começar", e atributos combinados:**
