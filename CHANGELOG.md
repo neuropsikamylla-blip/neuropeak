@@ -14,6 +14,11 @@ histórico completo anterior está no log do Git (452 commits no total, a partir
   Documentação (CLAUDE.md, README.md, ARCHITECTURE.md, ADRs) reescrita a partir do
   código real.
 
+## [2.15.2] — 2026-07-11
+
+- **Jogo das Torres:** o disco desliza de forma suave ao trocar de torre — a animação
+  deixou de "quicar" no fim (mola trocada por movimento com aceleração/desaceleração natural).
+
 ## [2.15.1] — 2026-07-11
 
 - **Jogo das Torres — tutorial que ensina de verdade:** o tutorial agora é interativo — o

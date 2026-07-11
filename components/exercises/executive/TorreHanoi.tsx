@@ -393,7 +393,7 @@ export function TorreHanoi({ difficulty, theme, onComplete }: TorreHanoiProps) {
                     return (
                       <motion.div key={disc}
                         layoutId={`disc-${disc}-${puzzle}`}
-                        transition={{ type: "spring", stiffness: 320, damping: 26 }}
+                        transition={{ type: "tween", duration: 0.32, ease: [0.4, 0, 0.2, 1] }}
                         className="flex items-center justify-center font-bold text-white"
                         style={{
                           width: discWidth(disc), height: DISC_H, borderRadius: 8, fontSize: 12,
