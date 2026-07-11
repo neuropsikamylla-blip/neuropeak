@@ -45,11 +45,26 @@ const nextConfig = {
     ],
   },
   async headers() {
+    // Cache longo para os assets estáticos de treino (imagens dos exercícios,
+    // bichinho/pet e skill tree). Sem isto o navegador re-baixa tudo a cada
+    // visita (public/ sai com max-age=0, must-revalidate) e os jogos ficam
+    // lentos. 7 dias + stale-while-revalidate equilibra velocidade × troca de
+    // imagem que reusa o mesmo nome (o SWR serve a antiga enquanto revalida).
+    const assetCache = [
+      {
+        key: "Cache-Control",
+        value: "public, max-age=604800, stale-while-revalidate=86400",
+      },
+    ];
     return [
       {
         source: "/:path*",
         headers: securityHeaders,
       },
+      { source: "/exercises/:path*", headers: assetCache },
+      { source: "/pet/:path*", headers: assetCache },
+      { source: "/petimg/:path*", headers: assetCache },
+      { source: "/skilltree/:path*", headers: assetCache },
     ];
   },
   webpack: (config) => {

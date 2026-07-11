@@ -288,8 +288,8 @@ function OrderCard({ mesaNum, scene, items, numbered, hideItems }: {
 }) {
   const rel = relText(scene.rel, scene.names);
   return (
-    <div style={{ minWidth: 155, maxWidth: 220, background: "rgba(12,14,10,0.22)", backdropFilter: "blur(12px)", WebkitBackdropFilter: "blur(12px)",
-      borderRadius: 14, padding: "9px 13px 11px", border: "1px solid rgba(235,200,130,0.38)", boxShadow: "0 10px 28px rgba(0,0,0,0.42)" }}>
+    <div style={{ minWidth: 155, maxWidth: 220, background: "rgba(20,14,8,0.42)", backdropFilter: "blur(16px) saturate(1.15)", WebkitBackdropFilter: "blur(16px) saturate(1.15)",
+      borderRadius: 14, padding: "9px 13px 11px", border: "1px solid rgba(235,200,130,0.45)", boxShadow: "0 10px 28px rgba(0,0,0,0.42), inset 0 1px 0 rgba(255,255,255,0.08)" }}>
       <div style={{ textAlign: "center", borderBottom: "1px solid rgba(255,225,180,0.18)", paddingBottom: 6, marginBottom: 7 }}>
         <div style={{ fontSize: 13.5, fontWeight: 900, color: "#ffe7b0" }}>Mesa {mesaNum}</div>
         <div style={{ fontSize: 12, fontWeight: 700, color: "rgba(255,255,255,0.92)" }}>{joinList(scene.names)}</div>
@@ -382,6 +382,7 @@ export function RestauranteOrdem({ difficulty, onComplete }: RestauranteOrdemPro
 
   const [phase, setPhase] = useState<Phase>("ready");
   const [round, setRound] = useState<Round | null>(null);
+  const [salaoReady, setSalaoReady] = useState(false);
   const [memoIdx, setMemoIdx] = useState(0);
   const [memoLeft, setMemoLeft] = useState(0);
   const [tray, setTray] = useState<Item[]>([]);
@@ -403,12 +404,41 @@ export function RestauranteOrdem({ difficulty, onComplete }: RestauranteOrdemPro
 
   const startRound = useCallback(() => {
     runRef.current++;
+    const myRun = runRef.current;
     const r = buildRound(levelRef.current);
     roundRef.current = r; setRound(r);
     trayRef.current = []; setTray([]);
     setFeedback(null); setMemoIdx(0);
     setMemoLeft(memoSecsFor(r.mesas[0].order.length));
+
+    // Pré-carrega TODAS as imagens da rodada (cenas das mesas, fotos dos pratos
+    // dos pedidos/opções e o fundo da bancada). Só carregamento — não muda regra.
+    if (typeof window !== "undefined") {
+      const urls = new Set<string>();
+      r.mesas.forEach((m) => {
+        urls.add(m.scene.img);
+        m.order.forEach((it) => urls.add(photo(it.id)));
+        m.finalOrder.forEach((it) => urls.add(photo(it.id)));
+        m.update?.oldItem && urls.add(photo(m.update.oldItem.id));
+        m.update?.newItem && urls.add(photo(m.update.newItem.id));
+      });
+      r.keys.forEach((it) => urls.add(photo(it.id)));
+      urls.add("/exercises/restaurante/fundo-blur.jpg");
+      urls.forEach((u) => { const im = new window.Image(); im.src = u; });
+    }
+
+    // Antes de exibir o salão, espera a CENA da 1ª mesa decodificar (com timeout
+    // de segurança de 2500 ms — no timeout, segue mesmo assim).
+    setSalaoReady(false);
     setPhase("salao");
+    if (typeof window === "undefined") { setSalaoReady(true); return; }
+    let done = false;
+    const reveal = () => { if (done) return; done = true; if (runRef.current === myRun) setSalaoReady(true); };
+    const img = new window.Image();
+    img.src = r.mesas[0].scene.img;
+    const dec = img.decode ? img.decode() : Promise.reject();
+    Promise.resolve(dec).then(reveal).catch(reveal);
+    window.setTimeout(reveal, 2500);
   }, []);
 
   const finish = useCallback(() => {
@@ -483,14 +513,14 @@ export function RestauranteOrdem({ difficulty, onComplete }: RestauranteOrdemPro
   // ── Áudio: narra o pedido (salão) / a atualização ──
   useEffect(() => {
     if (!speakOn || !round) return;
-    if (phase === "salao") speakText(orderSpeech(round.mesas[memoIdx], memoIdx + 1), { rate: 0.95 });
+    if (phase === "salao" && salaoReady) speakText(orderSpeech(round.mesas[memoIdx], memoIdx + 1), { rate: 0.95 });
     else if (phase === "update") speakText(updText(round.mesas[round.called]), { rate: 0.95 });
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [phase, memoIdx, round, speakOn]);
+  }, [phase, memoIdx, round, speakOn, salaoReady]);
 
   // ── Cronômetro do Salão (memoriza cada mesa; avança sozinho) ──
   useEffect(() => {
-    if (phase !== "salao") return;
+    if (phase !== "salao" || !salaoReady) return;
     const myRun = runRef.current;
     const r0 = roundRef.current;
     const secs = memoSecsFor(r0 ? r0.mesas[memoIdx].order.length : 4);
@@ -504,7 +534,7 @@ export function RestauranteOrdem({ difficulty, onComplete }: RestauranteOrdemPro
     }, Math.max(1, secs) * 1000);
     return () => { clearInterval(iv); clearTimeout(to); };
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [phase, memoIdx]);
+  }, [phase, memoIdx, salaoReady]);
 
   useEffect(() => () => { runRef.current++; if (typeof window !== "undefined") window.speechSynthesis?.cancel(); stopAmbience(); }, []);
   useEffect(() => { if (typeof window === "undefined") return; ITEMS.forEach((i) => { const im = new window.Image(); im.src = photo(i.id); }); }, []);
@@ -531,6 +561,17 @@ export function RestauranteOrdem({ difficulty, onComplete }: RestauranteOrdemPro
         subtitle={<>Nível {startLevel} · {lbl} · {spec.items} itens — onde parou.</>}
         onChoose={(m) => { setPresMode(m); begin(); }}
       />
+    );
+  }
+
+  // ── PREPARANDO O SALÃO — enquanto a cena da 1ª mesa decodifica (máx 2500 ms) ──
+  if (phase === "salao" && round && !salaoReady) {
+    return (
+      <div style={{ position: "fixed", inset: 0, display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", gap: 18, backgroundColor: "#2D100C" }}>
+        <motion.div animate={{ rotate: 360 }} transition={{ duration: 0.9, repeat: Infinity, ease: "linear" }}
+          style={{ width: 42, height: 42, borderRadius: "50%", border: "3px solid rgba(225,205,163,0.2)", borderTopColor: "#E1CDA3" }} />
+        <div style={{ fontSize: 14, fontWeight: 700, color: "rgba(255,240,220,0.9)", letterSpacing: 0.5 }}>Preparando o salão…</div>
+      </div>
     );
   }
 
@@ -593,12 +634,12 @@ export function RestauranteOrdem({ difficulty, onComplete }: RestauranteOrdemPro
       <div style={{ position: "fixed", inset: 0, overflow: "hidden", backgroundImage: `url(${mesa.scene.img})`, backgroundSize: "cover", backgroundPosition: "center" }}>
         <div style={{ position: "absolute", inset: 0, background: "rgba(10,6,2,0.55)" }} />
         <div style={{ position: "relative", zIndex: 2, height: "100%", display: "flex", alignItems: "center", justifyContent: "center", padding: 20 }}>
-          <div style={{ width: "100%", maxWidth: 460, background: "rgba(16,20,18,0.92)", borderRadius: 24, padding: "26px 24px", border: "1px solid rgba(255,225,180,0.3)", textAlign: "center" }}>
+          <div style={{ width: "100%", maxWidth: 460, background: "rgba(18,14,10,0.55)", backdropFilter: "blur(14px) saturate(1.1)", WebkitBackdropFilter: "blur(14px) saturate(1.1)", borderRadius: 24, padding: "26px 24px", border: "1px solid rgba(255,225,180,0.3)", textAlign: "center" }}>
             <div style={{ display: "inline-flex", alignItems: "center", gap: 8, color: "#f0b94a", fontWeight: 900, fontSize: 14, textTransform: "uppercase", letterSpacing: 1, marginBottom: 14 }}>
               <ArrowLeftRight size={18} /> Mudança no pedido — Mesa {round.called + 1}
             </div>
-            <p style={{ fontSize: 20, fontWeight: 800, color: "#fff", lineHeight: 1.35, marginBottom: 8 }}>{updText(mesa)}</p>
-            <p style={{ fontSize: 13.5, color: "rgba(255,240,220,0.75)", marginBottom: 20 }}>Lembre da versão <strong style={{ color: "#ffe7b0" }}>final</strong> do pedido na hora de montar.</p>
+            <p style={{ fontSize: 20, fontWeight: 800, color: "#fff", lineHeight: 1.35, marginBottom: 8, textShadow: "0 1px 6px rgba(0,0,0,0.55)" }}>{updText(mesa)}</p>
+            <p style={{ fontSize: 13.5, color: "rgba(255,240,220,0.85)", marginBottom: 20, textShadow: "0 1px 5px rgba(0,0,0,0.5)" }}>Lembre da versão <strong style={{ color: "#ffe7b0" }}>final</strong> do pedido na hora de montar.</p>
             {speakOn && <button onClick={replay} style={{ fontSize: 12.5, fontWeight: 700, padding: "9px 16px", borderRadius: 100, cursor: "pointer", marginRight: 8, background: "rgba(255,255,255,0.08)", border: "1px solid rgba(255,220,170,0.3)", color: "#ffe7b0" }}>🔊 Ouvir</button>}
             <button onClick={goBancada} style={{ height: 50, padding: "0 26px", borderRadius: 100, border: "none", background: "linear-gradient(135deg,#11514f,#0d3a3c)", color: "#fff", fontWeight: 800, fontSize: 15, cursor: "pointer", boxShadow: "0 6px 18px rgba(13,58,60,0.4)" }}>Entendi, montar →</button>
           </div>

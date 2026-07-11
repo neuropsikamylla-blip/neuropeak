@@ -14,6 +14,21 @@ histórico completo anterior está no log do Git (452 commits no total, a partir
   Documentação (CLAUDE.md, README.md, ARCHITECTURE.md, ADRs) reescrita a partir do
   código real.
 
+## [2.17.1] — 2026-07-11
+
+- **Imagens muito mais rápidas em todos os jogos:**
+  - Otimização das imagens usadas pelo app: 421 MB → 110 MB (−74%; histórias 193→51 MB,
+    pet 136→7 MB, descubra 33→15 MB, restaurante 19→9 MB, ícones 12→4 MB…). 1.530 PNGs
+    verificados um a um contra o original: transparência 100% preservada, 0 corrompidos.
+    Originais em backup fora do repositório (~/neuropeak-asset-backups/2026-07-11).
+  - Cache de 7 dias para as imagens (`/exercises`, `/pet`, `/petimg`, `/skilltree`): as
+    visitas seguintes carregam instantaneamente (antes o navegador re-baixava tudo a cada
+    visita — `max-age=0`).
+- **Restaurante:** pré-carrega as imagens da rodada (cenas, pratos e fundo da bancada) e
+  só mostra o salão com a cena pronta ("Preparando o salão…" discreto, máx. 2,5 s) — o
+  cronômetro de memorização e a narração só começam com a cena visível. Plaquinha do pedido
+  e painel "Mudança no pedido" agora em vidro translúcido elegante (blur + tom quente).
+
 ## [2.17.0] — 2026-07-11
 
 - **Estacionamento Lógico — contagem por quadradinho + regra rígida de treino:**
