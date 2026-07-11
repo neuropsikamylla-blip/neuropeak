@@ -631,12 +631,15 @@ export function FocusRain({ level, theme, presentMode, fbLevel, exerciseId, sett
         </div>
       </div>
 
-      {/* Comando — sempre visível no topo (troca a cada acerto/omissão) */}
-      <div className="relative z-20 flex-shrink-0 px-3 pb-1">
-        <div className="rounded-2xl px-3 py-2 text-center" style={{ background: "rgba(124,58,237,0.2)", border: "1px solid rgba(167,139,250,0.4)" }}>
-          <p className="text-white text-base font-bold leading-tight">{command}</p>
+      {/* Comando — aparece só no CARD (antes de "Começar"). Durante a busca ele SOME:
+          o paciente já leu e deve procurar de memória (carga de memória de trabalho). */}
+      {phase === "card" && (
+        <div className="relative z-20 flex-shrink-0 px-3 pb-1">
+          <div className="rounded-2xl px-3 py-2 text-center" style={{ background: "rgba(124,58,237,0.2)", border: "1px solid rgba(167,139,250,0.4)" }}>
+            <p className="text-white text-base font-bold leading-tight">{command}</p>
+          </div>
         </div>
-      </div>
+      )}
 
       {/* Arena de queda */}
       <div ref={playRef} className="relative z-10 flex-1 overflow-hidden">

@@ -14,6 +14,12 @@ histórico completo anterior está no log do Git (452 commits no total, a partir
   Documentação (CLAUDE.md, README.md, ARCHITECTURE.md, ADRs) reescrita a partir do
   código real.
 
+## [2.23.5] — 2026-07-11
+
+- **Chuva do Foco — comando some na busca (memória de trabalho):** o comando aparece só
+  no card (antes do "Começar"); durante a busca ele SOME da tela — o paciente procura de
+  memória. Adiciona carga de memória de trabalho ao treino.
+
 ## [2.23.4] — 2026-07-11
 
 - **Chuva do Foco — bem mais difícil (a pedido, nas 4 frentes):** (1) distratores quase
