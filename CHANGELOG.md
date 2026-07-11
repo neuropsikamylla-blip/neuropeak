@@ -14,6 +14,16 @@ histórico completo anterior está no log do Git (452 commits no total, a partir
   Documentação (CLAUDE.md, README.md, ARCHITECTURE.md, ADRs) reescrita a partir do
   código real.
 
+## [2.17.2] — 2026-07-11
+
+- **Higiene do repositório:** remoção de ~486 MB de matéria-prima (imagens brutas nunca
+  referenciadas pelo app) do versionamento: `historias-novas`, `Restaurante-bistro`,
+  `icones novos`, `itens-novos` — seguindo o padrão já existente do `.gitignore`
+  ("Personagem restaurante"). Certeza verificada em dupla checagem (análise de 8 vetores +
+  agente adversarial com 12 vetores + histórico git completo: nenhuma referência, nunca).
+  Arquivos preservados no disco local e em backup (`~/neuropeak-asset-backups/2026-07-11-materia-prima`,
+  306 arquivos/612 MB, integridade conferida); o histórico do git também os retém.
+
 ## [2.17.1] — 2026-07-11
 
 - **Imagens muito mais rápidas em todos os jogos:**

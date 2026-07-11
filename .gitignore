@@ -45,5 +45,9 @@ supabase/.temp
 .env*
 .claude/
 
-# matéria-prima (personagens originais do ChatGPT) — não deployar
+# matéria-prima (originais do ChatGPT) — não deployar; backup em ~/neuropeak-asset-backups/
 public/exercises/Personagem restaurante/
+public/exercises/historias-novas/
+public/exercises/Restaurante-bistro/
+public/exercises/icones novos/
+public/exercises/itens-novos/
