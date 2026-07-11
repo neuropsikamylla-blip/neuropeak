@@ -1,49 +1,107 @@
 # BACKLOG — NeuroPeak
 
-> **Fonte única de pendências.** Atualizado: 2026-05-30.
-> 👉 Visão geral / handoff: **`ESTADO-DO-PROJETO.md`** (leia primeiro). Histórico/detalhes: `AUDITORIA-2026-05-30.md` (achados) · `PROGRESSO.md` (checkpoints).
+> **Fonte única de pendências.** Atualizado: 2026-07-10 (após auditoria completa v2).
+> 👉 Achados detalhados: `docs/auditoria/AUDITORIA-2026-07-10.md` · dívida linkada por ID:
+> `docs/DIVIDA-TECNICA.md` · checkpoints: `PROGRESSO.md`.
 
 ## Onde estamos
-A auditoria completa achou ~40 problemas. **Tudo o que é código está resolvido e no ar**, o **SCHEMA-01 foi aplicado no banco** (2 FKs + 3 CHECK, verificadas) e o **SEC-08 foi executado** (Production com `NEXTAUTH_SECRET` forte; redeploy `dpl_8zMx8EV4…` no ar em 2026-05-30). **Não resta nenhuma pendência de segurança, operacional nem de performance.** O que sobra: 1 smoke test visual (você) e 2 itens deferidos por decisão de design/escopo (ARCH-02, DUP-01).
+
+A auditoria de 2026-07-10 revisou o código, que cresceu bastante desde a auditoria de
+maio (v1.9.5 → v2.11.1), e levantou **54 itens: 0 P0 · 1 P1 · 27 P2 · 26 P3**. A base está
+saudável (tsc 0, 24 testes, build ok, isolamento multi-inquilino consistente, baseline de
+segurança de 2026-05-30 intacto). **Nada foi corrigido nesta sessão** — a auditoria propõe;
+as correções aguardam decisão. Prioridade sugerida: SEC-001 → bloco de fidelidade clínica
+dos exercícios → SEC-002/003 → dívida arquitetural.
 
 ---
 
-## 1. ⚡ VOCÊ — fazer agora (rápido)
+## 1. 🔴 P1 — tratar primeiro
 
-| Item | O que fazer | Por quê |
-|------|-------------|---------|
-| **Smoke test** | Abrir **MOT** e **FocusAgents** no app e conferir: bolas/agentes se movem na velocidade certa e o clique acerta. | PERF-01/03 trocaram o motor de animação. `build` não detecta regressão visual — só o olho. |
-
----
-
-## 2. 🔧 Operacional — ✅ tudo executado (2026-05-30)
-
-**SEC-08** (rotação do `NEXTAUTH_SECRET`) e **SCHEMA-01** (FK + CHECK no banco) foram aplicados em produção via CLI. Sem pendências operacionais.
-
-> ⚠️ **Nota — Preview sem `NEXTAUTH_SECRET`:** ao rotacionar, o ambiente **Preview** ficou sem a variável (o `vercel env add` não-interativo não cria env de preview "all branches" nesta versão do CLI). **Não é risco de segurança** — o secret fraco foi eliminado de todos os ambientes; só previews quebrariam o login se fossem criados (não fazem parte do fluxo atual: push direto na `main` → produção). Resolver no painel web (Settings → Environment Variables → `NEXTAUTH_SECRET` → Preview / all branches) **se/quando previews passarem a ser usados**.
+| Item | O que é | Ação sugerida |
+|------|---------|---------------|
+| **SEC-001** | Login por PIN sem rate limiting — credencial clínica força-brutável (`lib/auth.ts:52-64`) | Rate limit por IP+identificador + lockout progressivo nos dois providers; PIN mais longo. |
 
 ---
 
-## 3. ⏸️ DEFERIDO — decidi NÃO fazer agora (e por quê)
+## 2. 🟠 P2 — fila principal
 
-| Item | O que era | Por que ficou de fora |
-|------|-----------|------------------------|
-| **DUP-01** | Unificar os "temas" visuais em ~30 exercícios | **Não é correção, é redesenho.** Os exercícios hoje divergem no visual; unificar mudaria a aparência de vários → precisa decisão de design + smoke test dedicado. Risco alto, valor cosmético. |
-| **ARCH-02** | Quebrar arquivos de ~1150 linhas em módulos | **Alto risco / zero ganho funcional** em produção. Manutenibilidade pura. |
+### Fidelidade da métrica clínica (exercícios)
+| Item | O que é |
+|------|---------|
+| **CORR-001** | Progressão capa em 10 e rebaixa quem chega a 11-12 no Supermercado. |
+| **CORR-004** | Alertas PERFORMANCE_DROP sem deduplicação, cruzando exercícios (consolida GER-003). |
+| **CORR-005** | Dupla progressão: cliente sobe o nível e o servidor sobe de novo. |
+| **CORR-008** | Compra Multifuncional: timeout avalia seleção vazia (stale closure) — distorce feedback. |
+| **CORR-009** | Vigilância: falso-alarme conta várias vezes no mesmo estímulo. |
+| **CORR-011** | Progressão defasada 1 rodada (stale spec) em 4 exercícios v2. |
+| **CORR-012** | Semáforo: par recursivo startRound↔handleResponse com deps parciais. |
+| **CORR-013** | DeductiveGrid: erros do puzzle final contados em dobro na acurácia. |
+| **CORR-014** | Caça Informação: empates marcam resposta correta como errada. |
+| **CORR-015** | Caça Informação: "mais conteúdo" compara unidades diferentes (g vs L). |
+| **CORR-016** | LetrasSequencia: nº de distratores travado em 2 (ignora nível). |
+| **CORR-017** | Cabeçalho mostra startLevel fixo, não o nível atual (vários exercícios). |
+| **CORR-002/003** | Mundo Interior: poll de 8s reverte update otimista · MISSED_SESSION nunca é limpo ao treinar. |
 
-> ✅ **PERF-02 foi resolvido em 2026-05-30** (saiu daqui): o dashboard agora traz só o top-20 sessões por paciente via window function (`$queryRaw`), em vez do histórico inteiro. Equivalência verificada no banco real (`ok = true`). Ganho atual ~zero (base = 1 paciente/6 sessões), mas o volume deixa de crescer sem limite.
+### Segurança / acesso
+| Item | O que é |
+|------|---------|
+| **SEC-002** | Paciente grava `therapistNotes`/`status` via PATCH da sessão terapêutica. |
+| **SEC-003** | Hash do PIN devolvido ao cliente (leituras de Patient sem `select`). |
+
+### Lógica de negócio / plataforma
+| Item | O que é |
+|------|---------|
+| **GER-001** | `db:seed` quebrado — `ts-node` ausente do lockfile. |
+| **GER-002** | Dependências declaradas e não usadas (@auth/prisma-adapter, pg, date-fns-tz). |
+| **GER-004** | Engines de progressão novas (dual/story/focus/genérica) sem teste. |
+| **GER-005** | Timezone divergente: bloqueio diário usa TZ do device; streak usa America/Sao_Paulo. |
+| **GER-006** | Bloqueio "1x por dia" só client-side; servidor não valida. |
+| **GER-007** | Resgate de licença rebaixa terapeuta ilimitado (-1) para número finito. |
+
+### Arquitetura / performance
+| Item | O que é |
+|------|---------|
+| **ARQ-001** | Metadados de exercício triplicados e divergentes (3 fontes de verdade). |
+| **ARQ-002** | Estado de pet e skill tree só em localStorage — perde ao trocar de aparelho. |
+| **ARQ-003** | `desafio-cidade` (1.146 l) órfão: renderiza mas é filtrado do catálogo. |
+| **ARQ-004** | `atencao-dividida` fantasma: na taxonomia, sem definição nem rota. |
+| **PERF-001** | Lista de pacientes carrega todo o histórico de sessões (sem `take`) — metade do PERF-02 antigo. |
+| **PERF-002** | POST /api/sessions faz ~8-11 round-trips sequenciais no caminho quente. |
 
 ---
 
-## 4. 🟢 MENOR / monitorar
+## 3. 🟡 P3 — menor (ver `docs/DIVIDA-TECNICA.md` para a lista completa)
+
+Destaques: SEC-004 (fail-fast se `NEXTAUTH_SECRET` ausente), SEC-005 (enumeração por
+timing), SEC-006 (CSP unsafe-inline/eval), SEC-007 (filename do PDF sem sanitizar),
+SEC-008 (`/preview/bichinho` público), ARQ-005 (dead code: validateCommand, AgentGrid,
+AtencaoDividida), ARQ-006/ARQ-009 (god file do switch central; pastas vazias), GER-008
+(AlertsPanel sem checar resposta), GER-009 (datas do relatório misturam UTC/local),
+GER-011 (5 warnings de ESLint), GER-012 (seed com credenciais fracas), CORR-010/018/019/020
+e vários PERF de preload de imagens. **26 itens P3 no total.**
+
+---
+
+## 4. ⏸️ DEFERIDOS de auditorias anteriores (seguem válidos)
+
+| Item | O que era | Por que ficou de fora | Estado atual |
+|------|-----------|------------------------|--------------|
+| **DUP-01** (→ ARQ-008) | Unificar tokens de tema em ~30 exercícios | Redesenho, não correção; risco de regressão visual | Segue aberto |
+| **ARCH-02** (→ ARQ-007) | Quebrar god files >900 linhas | Alto risco / zero ganho funcional | Segue aberto e crescendo |
+
+---
+
+## 5. 🟢 Monitorar
 
 | Item | Situação |
 |------|----------|
-| **SUP-02** | CVE moderate do `nodemailer` — **sem fix upstream**. Monitorar; não há ação possível hoje. |
-| **DUP-02 (parcial)** | A locução do `SpanNumerico` ainda usa `speak()` local (precisa aguardar o fim da fala); o resto do TTS já foi centralizado. Cosmético. |
+| **nodemailer** | CVE moderate sem fix upstream à época — monitorar (não verificável nesta sessão, sem rede). |
+| **Preview sem `NEXTAUTH_SECRET`** | Resolver no painel Vercel se/quando previews passarem a ser usados (fluxo atual: push direto na `main`). |
 
 ---
 
-## ✅ Resolvido e no ar (referência rápida)
-**Segurança:** C1, C2, SEC-01–09 (inclui SEC-08 — `NEXTAUTH_SECRET` rotacionado e redeployado em 2026-05-30) · **Bugs:** A1–A4, BUG-01–04, BUG-06, M6 · **Confiabilidade:** REL-01–05 · **Performance:** PERF-01, PERF-02 (window function top-20/paciente no dashboard), PERF-03, SUP-01 (Next 15.5.18) · **Qualidade:** QUAL-01–05, LINT-01, TEST-01 (24 testes), A11Y-01, DUP-03/04, ARCH-01, DEAD-01 · **Banco:** SCHEMA-01 (2 FKs em `TherapeuticSession` + 3 CHECK em `Session`, aplicadas e verificadas no Supabase de produção em 2026-05-30; 3 `TherapeuticSession` órfãs removidas; FK no `schema.prisma` em `641bff5`).
-*(BUG-05 foi avaliado e descartado — era calibração, não bug.)*
+## Referência — resolvido na auditoria de 2026-05-30
+
+Segurança C1/C2/SEC-01–09; bugs A1–A4/BUG-01–04/06; confiabilidade REL-01–05; performance
+PERF-01–03 + SUP-01 (Next 15.5.18, confirmado nesta auditoria); qualidade QUAL-01–05, LINT-01,
+TEST-01 (24 testes), A11Y-01; banco SCHEMA-01 (FKs + CHECK aplicadas e verificadas no Supabase).
