@@ -14,6 +14,18 @@ histórico completo anterior está no log do Git (452 commits no total, a partir
   Documentação (CLAUDE.md, README.md, ARCHITECTURE.md, ADRs) reescrita a partir do
   código real.
 
+## [2.20.0] — 2026-07-11
+
+- **Focus Agents / modo Foco — nova mecânica "Chuva de Agentes":** o Foco deixou de ser
+  busca numa arena flutuante e virou uma **queda vertical** — os agentes caem do topo e o
+  paciente toca só os que batem com a regra (ex.: "os azuis"), deixando os outros caírem.
+  A própria queda é o cronômetro (pressão de tempo perceptual). Alvo que escapa por baixo
+  **volta 1× caindo mais rápido** (2ª chance); se escapar de novo, conta como omissão.
+  Tocar num distrator = erro impulsivo (treina inibição). Poucos caindo por vez (2→4),
+  acelerando com o nível. Componente isolado `FocusRain.tsx` — os outros 3 modos seguem
+  100% na arena. Símbolos (crachás) excluídos do Foco (não leem bem em queda). Constantes
+  de queda/spawn/2ª chance calibráveis.
+
 ## [2.19.1] — 2026-07-11
 
 - **Focus Agents / modo Foco — recalibração "de elite"** (após teste): agentes menores

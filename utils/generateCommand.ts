@@ -1124,13 +1124,20 @@ function fTake(pool: CharacterAttributes[], n: number, used: Set<string>): Chara
 
 interface FocoRule { crits: FCrit[]; exclude?: FCrit; groupB?: FCrit[] }
 
-function fChooseRule(dd: number): FocoRule {
-  const R = allCharacterAttributes;
+// noSymbols=true (usado pela CHUVA de agentes do Foco): NUNCA gera critério de
+// símbolo (estrela/círculo/…) — os emblemas não leem bem em agentes pequenos e em
+// queda. Restringe as dimensões a COR + ACESSÓRIO + OBJETO. Também restringe o
+// pool de satisfação aos agentes SEM símbolo, para casar com o pool da cena.
+function fChooseRule(dd: number, noSymbols = false): FocoRule {
+  const R = noSymbols
+    ? allCharacterAttributes.filter(a => (a.symbol ?? "none") === "none")
+    : allCharacterAttributes;
   const poolFor = (cs: FCrit[]) => R.filter(a => fMatchAll(a, cs));
   const color = (): FCrit => ({ k: "color",  v: fPick([...ALL_UNIFORM_COLORS]) });
   const acc   = (): FCrit => ({ k: "acc",    v: fPick([...ALL_ACCESSORIES]) });
   const obj   = (): FCrit => ({ k: "object", v: fPick(F_OBJECTS) });
-  const sym   = (): FCrit => ({ k: "symbol", v: fPick(F_SYMBOLS) });
+  // Terceiro atributo (D4): símbolo no modo arena; objeto na chuva (sem símbolo).
+  const third = (): FCrit => (noSymbols ? obj() : ({ k: "symbol", v: fPick(F_SYMBOLS) }));
   const trySat = (mk: () => FCrit[], tries = 40): FCrit[] | null => {
     for (let i = 0; i < tries; i++) { const cs = mk(); if (poolFor(cs).length >= 1) return cs; }
     return null;
@@ -1141,14 +1148,14 @@ function fChooseRule(dd: number): FocoRule {
     return { crits: trySat(() => [color(), Math.random() < 0.5 ? acc() : obj()]) ?? [color(), acc()] };
   if (dd === 4) {
     const cs = Math.random() < 0.5
-      ? trySat(() => [color(), acc(), sym()])
+      ? trySat(() => [color(), acc(), third()])
       : trySat(() => [color(), { k: "acc", v: "bone" }, obj()]);
-    return { crits: cs ?? trySat(() => [color(), acc(), sym()]) ?? [color(), acc()] };
+    return { crits: cs ?? trySat(() => [color(), acc(), third()]) ?? [color(), acc()] };
   }
   if (dd === 5) {
     for (let i = 0; i < 50; i++) {
       const base: FCrit[] = Math.random() < 0.5 ? [acc()] : [color()];
-      if (Math.random() < 0.3) base.push(sym());
+      if (!noSymbols && Math.random() < 0.3) base.push(third());
       const excl: FCrit = Math.random() < 0.5 ? color() : acc();
       if (base.some(b => b.k === excl.k && b.v === excl.v)) continue;
       const bp = poolFor(base);
@@ -1165,15 +1172,19 @@ function fChooseRule(dd: number): FocoRule {
   return { crits: [color()], groupB: [color()] };
 }
 
-function buildFocoLadder(difficulty: number, theme: Theme): BuiltRound {
+// noSymbols=true ⇒ CHUVA de agentes do Foco: cena e regra só com COR+ACESSÓRIO+
+// OBJETO (sem emblemas de símbolo, ilegíveis pequenos/em queda).
+function buildFocoLadder(difficulty: number, theme: Theme, noSymbols = false): BuiltRound {
   const noun = NOUN[theme] ?? "agente";
   const d = Math.max(1, Math.min(7, Math.round(difficulty)));
   const cfg = FOCO_CFG[d];
-  const R = allCharacterAttributes;
+  const R = noSymbols
+    ? allCharacterAttributes.filter(a => (a.symbol ?? "none") === "none")
+    : allCharacterAttributes;
   const poolFor = (cs: FCrit[]) => R.filter(a => fMatchAll(a, cs));
 
   const memory = d === 7;
-  const rule = fChooseRule(d === 7 ? fPick([5, 6]) : d);
+  const rule = fChooseRule(d === 7 ? fPick([5, 6]) : d, noSymbols);
   const used = new Set<string>();
   const charCount = fRint(cfg.chars[0], cfg.chars[1]);
   const targetCount = fRint(cfg.targets[0], cfg.targets[1]);
@@ -1261,10 +1272,11 @@ function buildModeRoundOnce(
   level: number,
   theme: Theme,
   recentVerbs: number[] = [],
+  noSymbols = false,
 ): BuiltRound {
   const lvRaw = Math.max(1, Math.min(9, Math.round(level)));
   // Foco usa o ladder cognitivo 1–7 (não os desbloqueios/templates antigos).
-  if (mode === "foco") return buildFocoLadder(lvRaw, theme);
+  if (mode === "foco") return buildFocoLadder(lvRaw, theme, noSymbols);
   if (lvRaw >= 6) return buildUnlock(lvRaw, theme);   // desbloqueios pós-N5
   const lv   = lvRaw;
   const diff = MODE_LEVEL_DIFF[mode][lv - 1];
@@ -1328,11 +1340,12 @@ export function buildModeRound(
   theme: Theme,
   recentVerbs: number[] = [],
   recentSigs: string[] = [],
+  noSymbols = false,
 ): BuiltRound {
   const recent = new Set(recentSigs);
   let last: BuiltRound | null = null;
   for (let i = 0; i < 24; i++) {
-    const r = buildModeRoundOnce(mode, level, theme, recentVerbs);
+    const r = buildModeRoundOnce(mode, level, theme, recentVerbs, noSymbols);
     last = r;
     if (!recent.has(roundSignature(r))) return r;
   }

@@ -15,6 +15,7 @@ import type { ExerciseResult, Theme } from "@/types";
 import type { CommandRuleType, FocusMode } from "@/types/commands";
 import { buildModeRound, roundSignature } from "@/utils/generateCommand";
 import { PresentationConfig, type PresMode } from "@/components/exercises/PresentationConfig";
+import { FocusRain } from "@/components/exercises/attention/FocusRain";
 
 // ── Types ──────────────────────────────────────────────────────────────────────
 
@@ -1248,6 +1249,9 @@ export function FocusAgents({ difficulty, theme, onComplete, exerciseId = "focus
 
   useEffect(() => {
     if (showTutorial) return;
+    // Foco usa o motor de CHUVA (FocusRain, componente próprio) — não inicia o
+    // motor da arena aqui. Só os 3 modos clássicos preparam a rodada da arena.
+    if (modeRef.current === "foco") return;
     sessionStart.current = Date.now();
     begin();
     metricsRef.current = []; pointsRef.current = 0; setPoints(0);
@@ -1295,6 +1299,23 @@ export function FocusAgents({ difficulty, theme, onComplete, exerciseId = "focus
 
   if (showTutorial) return (
     <FocusTutorial theme={theme} onDone={() => setShowTutorial(false)} />
+  );
+
+  // ── RAMIFICAÇÃO FOCO-ONLY: mecânica de CHUVA DE AGENTES (queda vertical) ──────
+  // Só o modo Foco usa o motor de queda. Inibição/Alternância/Desafio seguem no
+  // motor de "arena flutuante" abaixo (este guard `mode === "foco"` os isola por
+  // completo — eles nunca chegam ao FocusRain). presentMode já é não-nulo aqui
+  // (passou pelo gate de PresentationConfig).
+  if (mode === "foco" && presentMode) return (
+    <FocusRain
+      level={levelRef.current}
+      theme={theme}
+      presentMode={presentMode}
+      fbLevel={fbLevel}
+      exerciseId={exerciseId}
+      settings={{ autoAdvance: settings?.autoAdvance }}
+      onComplete={onComplete}
+    />
   );
 
   // ── Derived state ──────────────────────────────────────────────────────────
