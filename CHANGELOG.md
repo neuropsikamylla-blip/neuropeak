@@ -14,6 +14,11 @@ histórico completo anterior está no log do Git (452 commits no total, a partir
   Documentação (CLAUDE.md, README.md, ARCHITECTURE.md, ADRs) reescrita a partir do
   código real.
 
+## [2.14.2] — 2026-07-11
+
+- **Progresso do paciente:** a lista "Sessões recentes" passa a mostrar o **nome amigável**
+  do exercício (ex.: "Busca Rápida") em vez do código técnico (ex.: "corrida-tempo").
+
 ## [2.14.1] — 2026-07-11
 
 - **Itens menores da auditoria (P3):**

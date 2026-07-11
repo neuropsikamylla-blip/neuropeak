@@ -4,7 +4,7 @@ import prisma from "@/lib/db";
 import { redirect } from "next/navigation";
 import { calculateDomainScore } from "@/lib/scoring";
 import { formatDate, formatDuration } from "@/lib/utils";
-import { DOMAIN_LABELS, type Domain, type Theme, type SessionData } from "@/types";
+import { DOMAIN_LABELS, EXERCISE_DEFINITIONS, type Domain, type Theme, type SessionData } from "@/types";
 import { format, subDays } from "date-fns";
 import { Award } from "lucide-react";
 
@@ -157,7 +157,7 @@ export default async function ProgressoPage() {
           {sessions.slice(0, 10).map((s2, i) => (
             <div key={i} className="px-4 py-3 flex items-center justify-between">
               <div>
-                <p className={`text-sm font-medium ${isDark ? "text-gray-200" : "text-gray-800"}`}>{s2.exerciseId}</p>
+                <p className={`text-sm font-medium ${isDark ? "text-gray-200" : "text-gray-800"}`}>{(EXERCISE_DEFINITIONS as Record<string, { name: string }>)[s2.exerciseId]?.name ?? s2.exerciseId}</p>
                 <p className={s.sub}>{format(new Date(s2.completedAt), "dd/MM/yyyy HH:mm")}</p>
               </div>
               <div className="text-right">
