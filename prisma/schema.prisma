@@ -40,6 +40,10 @@ model Patient {
   cid                 String?
   diagnosis           String?
   pin                 String
+  // PIN em texto legível, para o terapeuta dono conseguir consultar depois (o `pin`
+  // acima é o hash bcrypt, usado no login e irreversível). Só é exposto na página do
+  // paciente do próprio terapeuta; nunca ao paciente. Null = PIN legado (só hash).
+  pinPlain            String?
   patientCode         String?              @unique
   theme               String               @default("CLINICAL")
   // Gamificação persistida no servidor (antes só em localStorage — finding ARQ-002):

@@ -88,6 +88,7 @@ export const POST = withApiHandler(async (req: NextRequest) => {
           birthDate: new Date(birthDate),
           theme,
           pin,
+          pinPlain: plainPin,
           therapistId,
           patientCode,
           ...Object.fromEntries(Object.entries(rest).filter(([, v]) => v !== undefined)),

@@ -150,7 +150,7 @@ export default async function PatientProfilePage({ params }: { params: Promise<{
           <p className="text-xs text-slate-400">Adesão</p>
           <p className={`font-semibold ${adherence >= 70 ? "text-green-400" : "text-orange-300"}`}>{adherence}%</p>
         </CardContent></Card>
-        <PatientCredentials patientId={patient.id} patientCode={patient.patientCode} />
+        <PatientCredentials patientId={patient.id} patientCode={patient.patientCode} pinPlain={patient.pinPlain} />
       </div>
 
       <Tabs defaultValue="overview">

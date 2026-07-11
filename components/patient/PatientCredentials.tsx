@@ -8,13 +8,15 @@ import { RefreshCw, Copy, Check, Eye, EyeOff } from "lucide-react";
 interface PatientCredentialsProps {
   patientId: string;
   patientCode?: string | null;
+  pinPlain?: string | null; // PIN legível já salvo (null = PIN legado, só hash)
 }
 
 export function PatientCredentials({
   patientId,
   patientCode: initialCode,
+  pinPlain,
 }: PatientCredentialsProps) {
-  const [pin, setPin] = useState<string | null>(null);
+  const [pin, setPin] = useState<string | null>(pinPlain ?? null);
   const [code, setCode] = useState<string | null>(initialCode ?? null);
   const [loading, setLoading] = useState(false);
   const [copied, setCopied] = useState<"code" | "pin" | null>(null);

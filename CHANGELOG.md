@@ -14,6 +14,15 @@ histórico completo anterior está no log do Git (452 commits no total, a partir
   Documentação (CLAUDE.md, README.md, ARCHITECTURE.md, ADRs) reescrita a partir do
   código real.
 
+## [2.14.0] — 2026-07-11
+
+- **PIN do paciente visível para o terapeuta.** Antes o PIN só ficava com hash (login) e
+  não podia ser consultado depois — era preciso gerar um novo toda vez. Agora o PIN é
+  guardado também em forma legível (`Patient.pinPlain`) e mostrado na página do paciente
+  (oculto por padrão, com botão de revelar/copiar), só para o terapeuta dono. PINs
+  antigos (legado) continuam só com hash até gerar um novo uma vez. Requer a migração
+  `prisma/migrations-manual/2026-07-11-pin-plain.sql` (aditiva, aplicada em produção).
+
 ## [2.13.0] — 2026-07-10
 
 - **Correção: geração de relatório PDF (erro "Erro ao gerar relatório").** O
