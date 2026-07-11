@@ -14,6 +14,13 @@ histórico completo anterior está no log do Git (452 commits no total, a partir
   Documentação (CLAUDE.md, README.md, ARCHITECTURE.md, ADRs) reescrita a partir do
   código real.
 
+## [2.23.2] — 2026-07-11
+
+- **Chuva do Foco — espalhamento reforçado:** os agentes ainda caíam meio alinhados;
+  agora as velocidades de queda variam bem mais (0,55–1,45×), a entrada é bem escalonada
+  (alturas variadas) e o balanço horizontal é mais amplo — caem espalhados/misturados,
+  sem fileira.
+
 ## [2.23.1] — 2026-07-11
 
 - **Chuva do Foco — texto e movimento:** comandos agora dizem "Ache o **agente** …"

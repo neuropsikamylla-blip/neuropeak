@@ -370,11 +370,11 @@ export function FocusRain({ level, theme, presentMode, fbLevel, exerciseId, sett
     return {
       uid: `r${uidSeq.current++}`, agent, isTarget,
       x: bestX, baseX: bestX,
-      y: -CHAR_H - Math.random() * CHAR_H,                                        // entrada escalonada (uns mais alto)
-      vy: fallSpeed(H, RAIN_CFG[levelRef.current].fallMs) * (0.78 + Math.random() * 0.44), // 0.78–1.22x → mistura vertical
-      swayAmp: 14 + Math.random() * 26,          // 14–40px de balanço horizontal
+      y: -CHAR_H - Math.random() * CHAR_H * 2.5,                                   // entrada BEM escalonada (alturas variadas)
+      vy: fallSpeed(H, RAIN_CFG[levelRef.current].fallMs) * (0.55 + Math.random() * 0.90), // 0.55–1.45x → alturas bem diferentes (sem fileira)
+      swayAmp: 22 + Math.random() * 34,          // 22–56px de balanço horizontal
       swayPhase: Math.random() * Math.PI * 2,
-      swayFreq: 0.0010 + Math.random() * 0.0011, // rad/ms
+      swayFreq: 0.0012 + Math.random() * 0.0014, // rad/ms (balanço um pouco mais vivo)
       passCount: 0, spawnAt: Date.now(), state: "falling",
     };
   }, []);
