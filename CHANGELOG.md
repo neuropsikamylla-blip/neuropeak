@@ -14,6 +14,15 @@ histórico completo anterior está no log do Git (452 commits no total, a partir
   Documentação (CLAUDE.md, README.md, ARCHITECTURE.md, ADRs) reescrita a partir do
   código real.
 
+## [2.18.1] — 2026-07-11
+
+- **Restaurante — som ambiente trocado por gravação real:** o burburinho sintetizado
+  (que soava como "vento") deu lugar a uma gravação real de restaurante (conversas +
+  talheres de verdade, domínio público). Processada em loop sem emenda de 74 s (crossfade
+  equal-power) e normalizada; toca bem baixo (ganho 0.26 sobre RMS ~0.08) como distrator
+  sutil de fundo, sem competir com a narração do pedido. Botão 🔊/🔇 mantido. Arquivos de
+  áudio antigos (sintetizados) removidos.
+
 ## [2.18.0] — 2026-07-11
 
 - **Restaurante — som ambiente de verdade:** a musiquinha sintetizada deu lugar a um

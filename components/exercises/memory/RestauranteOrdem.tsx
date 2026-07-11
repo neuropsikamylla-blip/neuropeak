@@ -225,13 +225,14 @@ function validate(placed: Item[], mesa: Mesa, orderRequired: boolean): { ok: boo
   return { ok: true, msg: "Pedido entregue!" };
 }
 
-// ── Áudio ambiente (burburinho de restaurante sintetizado — sem direitos) ─────────
+// ── Áudio ambiente (gravação real de restaurante, domínio público) ────────────────
+// Toca BEM baixo, de fundo — distrator sutil que não compete com a narração do pedido.
 let ambCtx: AudioContext | null = null;
 let ambMaster: GainNode | null = null;
 let ambSource: AudioBufferSourceNode | null = null;
 let ambBuffer: AudioBuffer | null = null;
-const AMB_LEVEL = 0.09;
-const AMB_URL = "/exercises/audio/ambience-restaurante.m4a";
+const AMB_LEVEL = 0.26; // ganho baixo sobre a gravação (RMS ~0.08) → fundo discreto
+const AMB_URL = "/exercises/audio/ambience-restaurante-real.m4a";
 async function startAmbience() {
   if (typeof window === "undefined") return;
   try {
