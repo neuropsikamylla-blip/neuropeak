@@ -18,11 +18,11 @@ interface AgentCharacterProps {
 
 const PALETTE: Record<AgentColor, string> = {
   blue: "#1E88E5", green: "#43A047", purple: "#8E24AA",
-  orange: "#FB8C00", red: "#E53935", gray: "#78909C", yellow: "#FDD835",
+  orange: "#FB8C00", red: "#E53935", yellow: "#FDD835",
 };
 const DARK: Record<AgentColor, string> = {
   blue: "#1565C0", green: "#2E7D32", purple: "#6A1B9A",
-  orange: "#E65100", red: "#B71C1C", gray: "#37474F", yellow: "#F57F17",
+  orange: "#E65100", red: "#B71C1C", yellow: "#F57F17",
 };
 
 const SKIN = "#FDDCB0";

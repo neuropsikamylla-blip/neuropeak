@@ -14,6 +14,15 @@ histórico completo anterior está no log do Git (452 commits no total, a partir
   Documentação (CLAUDE.md, README.md, ARCHITECTURE.md, ADRs) reescrita a partir do
   código real.
 
+## [2.20.1] — 2026-07-11
+
+- **Focus Agents — símbolos e cor cinza removidos:** os crachás/símbolos (estrela, círculo,
+  triângulo, raio) saíram do roster dos 4 modos (não leem bem em agentes pequenos) e o
+  "cinza" fantasma (sem imagens) foi tirado da paleta. Removidas 168 imagens, limpeza da
+  lógica de símbolo no gerador e nos dados; objetos (bola/skate/basquete) preservados.
+  Verificado: 23.159 personagens gerados nos 4 modos, 0 símbolo, 0 cinza, 0 imagem 404.
+  Backup das imagens fora do repositório.
+
 ## [2.20.0] — 2026-07-11
 
 - **Focus Agents / modo Foco — nova mecânica "Chuva de Agentes":** o Foco deixou de ser

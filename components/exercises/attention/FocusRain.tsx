@@ -179,8 +179,8 @@ export function FocusRain({ level, theme, presentMode, fbLevel, exerciseId, sett
   // fila esvazia, gera outra onda no nível atual (rule/complexidade acompanham o nível).
   const enqueueWave = useCallback(() => {
     const lv = levelRef.current;
-    // noSymbols=true ⇒ só cor/acessório/objeto (símbolos ilegíveis em queda).
-    const round = buildModeRound("foco", lv, theme, [], recentSigsRef.current, true);
+    // Regras só com cor/acessório/objeto (símbolos removidos do roster em 2026-07).
+    const round = buildModeRound("foco", lv, theme, [], recentSigsRef.current);
     recentSigsRef.current = [...recentSigsRef.current, round.command.text].slice(-6);
     const targetIds = new Set(round.command.targets);
     // Mostra a regra no topo (sempre visível). Fala se áudio ligado.
