@@ -3,6 +3,50 @@
 > Checkpoint de contexto para continuidade entre sessões. Atualizado automaticamente.
 > 👉 Visão geral e handoff para o próximo Claude: **`ESTADO-DO-PROJETO.md`** (leia primeiro).
 
+## Checkpoint (2026-07-12) — Sessão de reformas: Focus Chuva · Cubo Corsi · Span Auditivo · Perf de imagens (v2.17.1 → v2.27.1)
+
+**Modelo de operação vigente (definido pela Kamylla):** Fable orquestra, agentes Opus executam, Fable verifica TUDO com evidência própria (probes, geometria, build, produção) antes de aceitar; loop de devolução até passar. Registrado na memória (`modelo-operacao-fable-orquestra`).
+
+### 1. Performance de imagens (v2.17.1-2.17.3) ✅
+- Todas as pastas de imagem usadas otimizadas: 421→110 MB (historias 193→51, pet 136→7…); 1530 PNGs verificados vs backup (0 perda de alfa). Backups em `~/neuropeak-asset-backups/`.
+- Cache 7 dias p/ `/exercises|/pet|/petimg|/skilltree` (next.config.js) — ⚠️ trocar imagem mantendo nome = usar cache-bust (`AGENT_V` etc.).
+- Restaurante: preload da cena com prioridade, plaquinha vidro translúcido; repo: ~486 MB de matéria-prima removida do versionamento (backup + .gitignore).
+
+### 2. Restaurante — som ambiente (v2.18.x) ✅
+- Gravação REAL de restaurante (domínio público/Wikimedia) em loop sem emenda 74s, ganho 0.20 (bem baixo, distrator de fundo), botão 🔊/🔇. Arquivo: `audio/ambience-restaurante-real.m4a`.
+
+### 3. FOCUS AGENTS — épico "Chuva de Agentes" (v2.19-2.27) ✅ APROVADO ("agora ficou muito bom")
+- **Modo Foco = FocusRain.tsx** (queda vertical); Inibição/Alternância/Desafio seguem na arena (intocados, guard `mode==="foco"`).
+- **Ciclo da tarefa (modelo da Kamylla):** card com comando + botão Começar → chuva cai (distratores 1º; alvo NUNCA antes de ≥7 distratores e ≥2,6 s) → 1 toque decide: acertou→próximo card · errou→tarefa ACABA na hora→próximo card (nota "Não foi dessa vez") · alvo escapa 2×→omissão. **3 acertos seguidos = SOBE nível · 2 falhas seguidas = DESCE nível (piso 1)** — nível/velocidade novos valem só a partir do comando seguinte.
+- **Comandos:** SÓ combinados (cor+feature, 102 regras; "Ache o agente amarelo com skate", 1 linha no card); multi-alvo N5-6=2, N7=3 ("…e o vermelho de bermuda"); comando SOME durante a busca (memória de trabalho).
+- **Física:** velocidade UNIFORME calculada por quadro (ninguém ultrapassa; exceção = 2ª chance do alvo, mais rápida); chuva CONTÍNUA (fallers ficam entre comandos, congelam atrás do card; `ruleOk`+cull garantem 0 conflito com o novo comando); entrada ritmada (fallMs/maxC) + distância mínima no nascimento (0.8×CHAR_SIZE, banda 1.2×CHAR_H).
+- **Calibração FINAL (decisão dela):** tamanho (CHAR_SIZE=100) e densidade (areaPerAgent=42000) PADRÃO em todos os níveis; progressão = só velocidade (fallMs 7200→3900) + comandos mais complexos (nearFrac 0.90→1.0 + multi-alvo).
+- **Elenco:** 144 imagens (42 base + 102 features da Kamylla: futebol/basquete±lado, skate/bermuda, óculos-escuro, balão/pipa/guarda-chuva, chapéu/coroa/gorro, alegria/tristeza/raiva, luva). Símbolos e cinza REMOVIDOS. Imagens NORMALIZADAS PELO BONECO (360px fixos em canvas 360×540, âncora rosto→pés) — boneco na tela = CHAR_SIZE. Cache `?v=9`.
+- **Pendente (único degrau):** comando com correção ("à esquerda… não, à direita").
+
+### 4. CUBO CORSI — redesign completo (v2.24.4-2.25.2) ✅
+- **Ciclo:** cubo VIRA primeiro (1,1 s, ease-in-out sem overshoot) → face ~80% de frente (desvio 9-13°, provado por geometria) → peça PISCA de frente (0,85 s) → volta suave ao canto. TODA peça faz o ciclo (mesma face repetida também). Tutorial usa o MESMO ciclo (pose controlada — antes truncava).
+- **Visual (paleta da Kamylla, estilo Cogmed):** estrutura #9EBEDD, bordas #82A9CF (finas, 1px, gap 3,2%), placas #F7FBFF, luz #4F8FEA, fundo #F4F7FB, sombra = ELIPSE separada no chão (⚠️ NUNCA `filter` no elemento 3D — achata o preserve-3d; já quebrou 1×).
+- Cubo maior: S=0.52×size, size 540 (jogo) / 380-420 (tutorial).
+
+### 5. SPAN NUMÉRICO AUDITIVO (Direto+Inverso) — redesign (v2.27.0-2.27.1) ✅
+- Painel 3×3 (1-9, SEM 0) estilo referência, paleta azul-clara (luz #4F8FEA); sequência sorteia 1-9 SEM repetição (shuffle+slice).
+- Apresentação: tecla do número falado PISCA em sincronia com o áudio (ambos os modos); bolinhas preenchem na fala.
+- INVERSO: bolinhas VIRAM 1× ao fim da fala (rotate 180, anel marca o início→vai pro outro lado) — dica sutil sem números; fileira do input nasce já virada (fix do giro duplo).
+- Resposta clicando no painel, sem dica de texto. Tema claro em tudo (Ready/feedback).
+
+### Lições/regras de trabalho (memória `licao-regressoes-visuais`)
+- NUNCA `filter/drop-shadow` em elemento 3D. Mudança em coisa APROVADA = verificação visual/geométrica ANTES de publicar. Normalizar personagens pelo BONECO, não pelo bbox. `tsc` via pipe esconde o exit code (usar `npx tsc --noEmit; echo $?`).
+
+### Pendências para a próxima sessão
+1. Focus: degrau "comando com correção" ("…não, à direita").
+2. Focus: replicar a chuva (ou decidir) p/ Inibição/Alternância/Desafio — hoje seguem na arena antiga.
+3. Compra Multifuncional: redesign cognitivo pendente (spec em COMPRA-MULTIFUNCIONAL-REDESIGN.md).
+4. Skate azul: Kamylla mencionou versão corrigida fora da pasta do projeto — se reaparecer, lembrar que o jogo lê `public/exercises/agentes-personagens/` (e subir AGENT_V).
+5. Dívida técnica: docs/DIVIDA-TECNICA.md e BACKLOG.md.
+
+---
+
 ## Checkpoint (2026-07-10) — Auditoria completa v2 + documentação · Fases 0-2 concluídas
 
 **Sessão de auditoria + documentação. Regra: código-fonte intocável; escritas restritas a relatório de auditoria, docs, PROGRESSO.md e BACKLOG.md. Sem commit/push sem ordem explícita.**
