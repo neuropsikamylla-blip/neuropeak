@@ -37,8 +37,8 @@ function cellStroke(st: BState): string {
   return "#CBDBEA";
 }
 
-// Duração da virada — fluida e acompanhável (nem brusca, nem lentificada). CALIBRÁVEL.
-const TURN_MS = 1600;
+// Duração da virada — rápida e fluida (sem truncar). CALIBRÁVEL.
+const TURN_MS = 1100;
 
 // Pose do cubo: traz a face acesa INTEIRAMENTE de frente para a tela (0° — o paciente
 // vê a face acesa "chapada", de cara). ISO quando nada aceso.
@@ -200,19 +200,17 @@ function TutorialDemoWatch({ onDone }: { onDone: () => void }) {
       });
       try {
         await sleep(400);
-        // Mesmo ciclo do jogo (pose CONTROLADA — sem truncar a virada no meio):
-        // acende → vira de frente → segura → apaga → volta ao canto.
+        // Mesmo ciclo do jogo: VIRA primeiro → peça PISCA de frente → volta.
         for (const idx of DEMO_SEQ) {
           if (cancelRef.current) return;
+          setPose(FACE_OF[idx]);
+          await sleep(TURN_MS + 120);
           setStates(prev => prev.map((_, j) => j === idx ? "lit" : "idle"));
           sndFlash();
-          await sleep(500);
-          setPose(FACE_OF[idx]);
-          await sleep(TURN_MS);
-          await sleep(700);
+          await sleep(850);
           setStates(Array(N_TILES).fill("idle"));
           setPose(null);
-          await sleep(TURN_MS + 250);
+          await sleep(TURN_MS + 200);
         }
         if (!cancelRef.current) onDone();
       } catch { /* cancelado */ }
@@ -363,17 +361,17 @@ export function CuboCorsi({ difficulty, theme: _theme, onComplete }: Props) {
       // TODA peça acesa faz a virada COMPLETA (mesmo que repita a face):
       // acende na vista de canto → 1s → vira p/ frente (2,75s, luz acesa a
       // trajetória toda) → 1s de frente → apaga → volta suave à vista de canto.
+      // Ordem correta: VIRA primeiro → com a face de frente, a peça PISCA → volta.
       for (const idx of seq) {
         const face = FACE_OF[idx];
+        setPoseFace(face);              // vira p/ a face (TURN_MS, fluida, sem corte)
+        await sleep(TURN_MS + 120);     // espera a virada completar
         setTS(prev => prev.map((_, j) => j === idx ? "lit" : "idle"));
-        sndFlash();
-        await sleep(500);               // respiro antes do movimento
-        setPoseFace(face);              // virada fluida (TURN_MS, ease-in-out — ver IsoCube)
-        await sleep(TURN_MS);           // espera a virada completar (sem corte)
-        await sleep(700);               // segura de frente, ainda acesa
+        sndFlash();                     // pisca DE FRENTE p/ o paciente
+        await sleep(850);
         setTS(Array(N_TILES).fill("idle"));
         setPoseFace(null);              // volta suave à vista de canto
-        await sleep(TURN_MS + 250);     // espera a volta completar + respiro
+        await sleep(TURN_MS + 200);     // espera a volta + respiro
       }
       setPhase("input");
       inputStartRef.current = Date.now();

@@ -14,6 +14,12 @@ histórico completo anterior está no log do Git (452 commits no total, a partir
   Documentação (CLAUDE.md, README.md, ARCHITECTURE.md, ADRs) reescrita a partir do
   código real.
 
+## [2.24.9] — 2026-07-12
+
+- **Cubo Corsi — ordem certa e virada mais rápida:** agora o cubo **VIRA primeiro** e a
+  peça **pisca de frente** para o paciente (antes acendia e depois virava). Virada
+  1,6 s → **1,1 s** (rápida e fluida, sem truncar). Jogo e tutorial no mesmo ciclo.
+
 ## [2.24.8] — 2026-07-12
 
 - **Chuva do Foco — fluxo contínuo (sem "vácuo"):** os agentes entravam em rajada até o
