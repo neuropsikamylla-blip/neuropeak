@@ -14,6 +14,19 @@ histórico completo anterior está no log do Git (452 commits no total, a partir
   Documentação (CLAUDE.md, README.md, ARCHITECTURE.md, ADRs) reescrita a partir do
   código real.
 
+## [2.28.0] — 2026-07-12
+
+- **Conecta Números (trilha-visual) — bug do clique + tutorial:**
+  - **Bug corrigido:** ao tocar num número ele "pulava" do lugar e o toque não registrava
+    (precisava clicar 2×). Causa: o whileTap do framer-motion sobrescrevia o transform de
+    posicionamento. Agora o posicionamento fica num wrapper estático e a animação de
+    toque no botão interno — 1 toque, 1 registro.
+  - **Tutorial em UMA etapa** (eram 2 quase iguais) e agora é **réplica exata do jogo**:
+    mesmo painel, mesmas células (54 px), mesmas cores e linhas.
+- **Chuva do Foco — alvo imprevisível** (a pedido): o alvo agora entra em posição
+  ALEATÓRIA (um canto, o meio, outro canto — não mais no "maior vão", que era previsível)
+  e em momento variável (nem sempre logo após o desbloqueio).
+
 ## [2.27.2] — 2026-07-12
 
 - **Chuva do Foco — corrige os "acelerados":** com a chuva contínua, o ALVO do comando

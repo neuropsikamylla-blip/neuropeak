@@ -81,85 +81,107 @@ const TUTORIAL_CELLS = [
   { id: 4, x: 25, y: 70 },
 ];
 
-function TrilhaTutorialStep({
-  theme,
-  startFrom,
-  onDone,
-}: {
-  theme: Theme;
-  startFrom: number; // first cell id the user should click
-  onDone: () => void;
+// ── Célula de número (COMPARTILHADA: jogo e tutorial — réplica exata) ────────────
+// FIX do "anda pra frente": o posicionamento (translate -50%) fica num WRAPPER
+// estático; o whileTap (scale) fica no botão interno. Antes, o framer-motion
+// SOBRESCREVIA o transform de posicionamento ao pressionar → o número pulava do
+// lugar e o clique não registrava (tinha que clicar 2x).
+function TrilhaCell({ x, y, label, completed, disabled, accent, isG, onTap }: {
+  x: number; y: number; label: string | number; completed: boolean; disabled: boolean;
+  accent: string; isG: boolean; onTap: () => void;
 }) {
-  const [nextExpected, setNextExpected] = useState(startFrom);
-  const [path, setPath] = useState<{ x: number; y: number }[]>(() =>
-    startFrom === 1 ? [] : TUTORIAL_CELLS.filter((c) => c.id < startFrom).map((c) => ({ x: c.x, y: c.y }))
+  const inner: React.CSSProperties = completed
+    ? { background: accent, border: `2px solid ${accent}`, color: "#ffffff", opacity: 0.5 }
+    : {
+        background: isG ? "rgba(255,255,255,0.06)" : "#ffffff",
+        border: isG ? "1.5px solid rgba(255,255,255,0.16)" : "1.5px solid rgba(148,163,184,0.36)",
+        color: isG ? "#e2e8f0" : "#1e3a8a",
+        boxShadow: isG ? "0 2px 6px rgba(0,0,0,0.35)" : "0 2px 10px rgba(99,118,160,0.12)",
+      };
+  return (
+    <div style={{ position: "absolute", left: `${x}%`, top: `${y}%`, transform: "translate(-50%,-50%)", width: 54, height: 54 }}>
+      <motion.button
+        onClick={onTap}
+        disabled={disabled}
+        whileTap={{ scale: 0.85 }}
+        transition={{ duration: 0.15 }}
+        style={{
+          width: "100%", height: "100%", borderRadius: 16,
+          display: "flex", alignItems: "center", justifyContent: "center",
+          fontWeight: 900, fontSize: 20, userSelect: "none",
+          transition: "background .15s, border-color .15s, box-shadow .15s",
+          ...inner,
+        }}>
+        {label}
+      </motion.button>
+    </div>
   );
+}
+
+function TrilhaTutorialStep({ theme, onDone }: { theme: Theme; onDone: () => void }) {
+  const [nextExpected, setNextExpected] = useState(1);
+  const [path, setPath] = useState<{ x: number; y: number }[]>([]);
   const done = useRef(false);
 
-  const lineColor = theme === "GAMIFIED" ? "#22d3ee" : theme === "COLORFUL" ? "#818cf8" : "#93c5fd";
+  // MESMO design system do jogo (réplica exata — pedido da Kamylla).
+  const isG = theme === "GAMIFIED";
+  const isC = theme === "COLORFUL";
+  const accent = isG ? "#22d3ee" : isC ? "#6366f1" : "#3b82f6";
+  const innerPanelBg = isG ? "rgba(255,255,255,0.03)" : isC ? "rgba(99,102,241,0.05)" : "rgba(59,130,246,0.045)";
+  const innerBorder = isG ? "rgba(255,255,255,0.08)" : isC ? "rgba(99,102,241,0.13)" : "rgba(59,130,246,0.12)";
 
-  function cellStyle(cell: { id: number }) {
-    const isCompleted = cell.id < nextExpected;
-    const base = "absolute flex items-center justify-center font-black border-2 transform -translate-x-1/2 -translate-y-1/2 w-11 h-11 rounded-xl text-sm select-none transition-all";
-    if (isCompleted) return `${base} ${theme === "GAMIFIED" ? "bg-cyan-800/70 border-cyan-600/50 text-cyan-300 scale-90" : theme === "COLORFUL" ? "bg-indigo-400 border-indigo-500 text-white scale-90" : "bg-blue-300 border-blue-400 text-white scale-90"}`;
-    return `${base} ${theme === "GAMIFIED" ? "bg-gray-800 border-gray-600 text-gray-100 hover:bg-gray-700 shadow-md active:scale-90" : theme === "COLORFUL" ? "bg-white border-indigo-300 text-indigo-800 hover:bg-indigo-50 shadow-sm active:scale-90" : "bg-white border-gray-300 text-gray-700 hover:border-blue-400 shadow-sm active:scale-90"}`;
-  }
-
-  function handleClick(cell: { id: number; x: number; y: number }) {
+  function handleTap(cell: { id: number; x: number; y: number }) {
     if (done.current || cell.id !== nextExpected) return;
-    const newPath = [...path, { x: cell.x, y: cell.y }];
-    setPath(newPath);
+    setPath((p) => [...p, { x: cell.x, y: cell.y }]);
     const newNext = nextExpected + 1;
     setNextExpected(newNext);
-    if (newNext > 4) { done.current = true; setTimeout(onDone, 300); }
+    if (newNext > TUTORIAL_CELLS.length) { done.current = true; setTimeout(onDone, 400); }
   }
 
   return (
-    <div className={`relative rounded-xl overflow-hidden ${theme === "GAMIFIED" ? "bg-gray-950" : theme === "COLORFUL" ? "bg-indigo-50/60" : "bg-gray-50"}`} style={{ paddingBottom: "60%", minHeight: 160 }}>
-      <svg className="absolute inset-0 w-full h-full pointer-events-none" style={{ overflow: "visible" }}>
-        {path.length > 1 && path.slice(1).map((pt, i) => (
-          <motion.line
-            key={`l${i}`}
-            x1={`${path[i].x}%`} y1={`${path[i].y}%`}
-            x2={`${pt.x}%`} y2={`${pt.y}%`}
-            stroke={lineColor} strokeWidth={2.5} strokeLinecap="round"
-            initial={{ pathLength: 0, opacity: 0 }}
-            animate={{ pathLength: 1, opacity: 0.7 }}
-            transition={{ duration: 0.2 }}
+    <div style={{ background: innerPanelBg, border: `1px solid ${innerBorder}`, borderRadius: 18, overflow: "hidden" }}>
+      <div className="relative w-full" style={{ paddingBottom: "62%", minHeight: 180 }}>
+        <svg className="absolute inset-0 w-full h-full pointer-events-none" style={{ overflow: "visible" }}>
+          {path.length > 1 && path.slice(1).map((pt, i) => (
+            <motion.line
+              key={`l${i}`}
+              x1={`${path[i].x}%`} y1={`${path[i].y}%`}
+              x2={`${pt.x}%`} y2={`${pt.y}%`}
+              stroke={accent} strokeWidth={2.5} strokeLinecap="round"
+              initial={{ pathLength: 0, opacity: 0 }}
+              animate={{ pathLength: 1, opacity: 0.7 }}
+              transition={{ duration: 0.25, ease: "easeOut" }}
+            />
+          ))}
+          {path.length > 0 && (
+            <circle cx={`${path[0].x}%`} cy={`${path[0].y}%`} r={4} fill={accent} opacity={0.6} />
+          )}
+        </svg>
+        {TUTORIAL_CELLS.map((cell) => (
+          <TrilhaCell
+            key={cell.id}
+            x={cell.x} y={cell.y} label={cell.id}
+            completed={cell.id < nextExpected}
+            disabled={done.current || cell.id < nextExpected}
+            accent={accent} isG={isG}
+            onTap={() => handleTap(cell)}
           />
         ))}
-      </svg>
-      {TUTORIAL_CELLS.map((cell) => (
-        <button
-          key={cell.id}
-          onClick={() => handleClick(cell)}
-          disabled={done.current}
-          className={cellStyle(cell)}
-          style={{ left: `${cell.x}%`, top: `${cell.y}%` }}
-        >
-          {cell.id}
-        </button>
-      ))}
+      </div>
     </div>
   );
 }
 
 function TrilhaVisualTutorial({ theme, onDone }: { theme: Theme; onDone: () => void }) {
+  // UMA etapa só (antes eram 2 quase iguais — a Kamylla fazia o tutorial "2x").
   const steps = [
     {
-      instruction: "Números estão espalhados na tela. Toque em ordem crescente!",
+      instruction: "Toque nos números em ordem crescente: 1 → 2 → 3 → 4.",
       content: (onStepDone: () => void) => (
-        <TrilhaTutorialStep theme={theme} startFrom={1} onDone={onStepDone} />
-      ),
-    },
-    {
-      instruction: "Continue! Agora clique 2, 3, 4 para completar a trilha.",
-      content: (onStepDone: () => void) => (
-        <TrilhaTutorialStep theme={theme} startFrom={2} onDone={onStepDone} />
+        <TrilhaTutorialStep theme={theme} onDone={onStepDone} />
       ),
     },
   ];
-
   return <TutorialBase theme={theme} title="Conecta Números" steps={steps} onDone={onDone} />;
 }
 
@@ -268,27 +290,6 @@ export function TrilhaVisual({ difficulty, theme, onComplete }: TrilhaVisualProp
   const stripText = isG ? "rgba(255,255,255,0.82)" : isC ? "#4338ca" : "#475569";
   const lineColor = accent;
 
-  // Estilo de cada número. Tocados ficam preenchidos; os demais ficam IGUAIS
-  // (o próximo não é destacado, p/ não entregar a resposta).
-  function cellStyleObj(cell: Cell): React.CSSProperties {
-    const isCompleted = cell.id < nextExpected;
-    const common: React.CSSProperties = {
-      position: "absolute", left: `${cell.x}%`, top: `${cell.y}%`, transform: "translate(-50%,-50%)",
-      width: 54, height: 54, borderRadius: 16, display: "flex", alignItems: "center", justifyContent: "center",
-      fontWeight: 900, fontSize: 20, userSelect: "none", transition: "background .15s, border-color .15s, box-shadow .15s",
-    };
-    if (isCompleted) {
-      return { ...common, background: accent, border: `2px solid ${accent}`, color: "#ffffff", opacity: 0.5 };
-    }
-    // O PRÓXIMO número NÃO é destacado — senão entregaria a resposta (o paciente
-    // tem que procurar o número certo). Todos os não-tocados ficam iguais.
-    return {
-      ...common, background: isG ? "rgba(255,255,255,0.06)" : "#ffffff",
-      border: isG ? "1.5px solid rgba(255,255,255,0.16)" : "1.5px solid rgba(148,163,184,0.36)",
-      color: isG ? "#e2e8f0" : "#1e3a8a",
-      boxShadow: isG ? "0 2px 6px rgba(0,0,0,0.35)" : "0 2px 10px rgba(99,118,160,0.12)",
-    };
-  }
 
   return (
     <div className="min-h-screen flex flex-col items-center p-4 pt-6" style={rootStyle}>
@@ -353,22 +354,18 @@ export function TrilhaVisual({ difficulty, theme, onComplete }: TrilhaVisualProp
             )}
           </svg>
 
-          {/* Números */}
-          {cells.map((cell) => {
-            const isCompleted = cell.id < nextExpected;
-            return (
-              <motion.button
-                key={cell.id}
-                onClick={() => handleCellClick(cell.id)}
-                disabled={roundPhase !== "playing" || isCompleted}
-                style={cellStyleObj(cell)}
-                whileTap={{ scale: 0.85 }}
-                transition={{ duration: 0.18 }}
-              >
-                {cell.label}
-              </motion.button>
-            );
-          })}
+          {/* Números — TrilhaCell compartilhada (o próximo NÃO é destacado, p/ não
+              entregar a resposta; tocados ficam preenchidos) */}
+          {cells.map((cell) => (
+            <TrilhaCell
+              key={cell.id}
+              x={cell.x} y={cell.y} label={cell.label}
+              completed={cell.id < nextExpected}
+              disabled={roundPhase !== "playing" || cell.id < nextExpected}
+              accent={accent} isG={isG}
+              onTap={() => handleCellClick(cell.id)}
+            />
+          ))}
           </div>
         </div>
       </div>

@@ -443,7 +443,7 @@ export function FocusRain({ level, theme, presentMode, fbLevel, exerciseId, sett
   // Cria um RainAgent. ESPALHAMENTO anti-sobreposição: gera ~8 candidatos de X e
   // escolhe o que MAXIMIZA a menor distância aos X dos agentes VIVOS que ainda
   // estão no topo (os "recém-caídos", y < 1.5×CHAR_H) — evita "um em cima do outro".
-  const makeFaller = useCallback((agent: AgentConfig, isTarget: boolean, subIndex: number): RainAgent | null => {
+  const makeFaller = useCallback((agent: AgentConfig, isTarget: boolean, subIndex: number, randomX = false): RainAgent | null => {
     const W = playWRef.current || 360;
     const H = playHRef.current || 600;
     const maxX = Math.max(4, W - CHAR_SIZE - 4);
@@ -456,10 +456,22 @@ export function FocusRain({ level, theme, presentMode, fbLevel, exerciseId, sett
       .map(a => a.x);
     let bestX = 4 + Math.random() * maxX;
     let bestGap = -1;
-    for (let i = 0; i < 24; i++) {
-      const cand = 4 + Math.random() * maxX;
-      const gap = nearTop.length ? Math.min(...nearTop.map(px => Math.abs(px - cand))) : Infinity;
-      if (gap > bestGap) { bestGap = gap; bestX = cand; }
+    if (randomX) {
+      // ALVO: posição IMPREVISÍVEL — sorteia candidatos e usa o PRIMEIRO válido
+      // (um canto, o meio, outro canto… nunca o padrão "no maior vão").
+      bestGap = -1;
+      for (let i = 0; i < 24; i++) {
+        const cand = 4 + Math.random() * maxX;
+        const gap = nearTop.length ? Math.min(...nearTop.map(px => Math.abs(px - cand))) : Infinity;
+        if (gap >= CHAR_SIZE * 0.8) { bestX = cand; bestGap = gap; break; }
+        if (gap > bestGap) { bestGap = gap; bestX = cand; }
+      }
+    } else {
+      for (let i = 0; i < 24; i++) {
+        const cand = 4 + Math.random() * maxX;
+        const gap = nearTop.length ? Math.min(...nearTop.map(px => Math.abs(px - cand))) : Infinity;
+        if (gap > bestGap) { bestGap = gap; bestX = cand; }
+      }
     }
     // DISTÂNCIA MÍNIMA dura no nascimento: sem vaga a ≥0.8×CHAR_SIZE → adia 150ms.
     if (bestGap < CHAR_SIZE * 0.8) return null;
@@ -518,12 +530,15 @@ export function FocusRain({ level, theme, presentMode, fbLevel, exerciseId, sett
 
     let ra: RainAgent | null;
     let targetSub = -1;
-    if (targetUnlocked && needTarget.length > 0) {
-      // spawna 1 alvo de UMA sub-regra pendente (1 alvo vivo por sub-regra).
+    // Momento do alvo VARIÁVEL: mesmo desbloqueado, só entra em ~60% dos ticks
+    // elegíveis (senão cai um distrator) — a entrada nunca é previsível.
+    if (targetUnlocked && needTarget.length > 0 && Math.random() < 0.6) {
+      // spawna 1 alvo de UMA sub-regra pendente (1 alvo vivo por sub-regra),
+      // em posição ALEATÓRIA (randomX) — um canto, o meio, outro canto…
       const i = pick(needTarget);
       const r = cmd.subRules[i];
       const agent = cmd.targetAgents[i];   // alvo canônico da sub-regra (bate só ela)
-      ra = makeFaller(agent && r.matches(agent) ? agent : pick(r.targetPool), true, i);
+      ra = makeFaller(agent && r.matches(agent) ? agent : pick(r.targetPool), true, i, true);
       targetSub = i;
     } else {
       ra = spawnDistractor();
