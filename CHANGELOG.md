@@ -14,6 +14,14 @@ histórico completo anterior está no log do Git (452 commits no total, a partir
   Documentação (CLAUDE.md, README.md, ARCHITECTURE.md, ADRs) reescrita a partir do
   código real.
 
+## [2.24.7] — 2026-07-12
+
+- **Cubo Corsi — TODA peça acesa faz a virada completa:** antes, peças seguidas na mesma
+  face não giravam nada (parecia "truncado, virando pouco"). Agora todo item da sequência
+  faz o ciclo inteiro: acende na vista de canto → 1 s → vira de frente (2,75 s, luz acesa
+  na trajetória toda) → 1 s de frente → apaga → volta suave à vista de canto → próxima
+  peça. Movimento sempre visível e fluido, como especificado.
+
 ## [2.24.6] — 2026-07-12
 
 - **Cubo Corsi — face acesa vira INTEIRA para a tela:** removido o resíduo de 12°;

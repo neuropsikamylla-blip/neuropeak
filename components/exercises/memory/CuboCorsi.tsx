@@ -166,7 +166,6 @@ function seqLen(d: number): number {
   if (d <= 6) return 5; if (d <= 7) return 6; if (d <= 8) return 7;
   if (d <= 9) return 8; return 9;
 }
-function flashMs(d: number): number { return d <= 3 ? 1000 : d <= 6 ? 850 : 700; }
 
 function randSeq(len: number): number[] {
   const arr: number[] = [];
@@ -349,36 +348,23 @@ export function CuboCorsi({ difficulty, theme: _theme, onComplete }: Props) {
     setRound(r);
     setPhase("watch");
 
-    const FLASH = flashMs(d);
-    let curFace: Face | null = null;
-
     try {
       await sleep(600);
+      // TODA peça acesa faz a virada COMPLETA (mesmo que repita a face):
+      // acende na vista de canto → 1s → vira p/ frente (2,75s, luz acesa a
+      // trajetória toda) → 1s de frente → apaga → volta suave à vista de canto.
       for (const idx of seq) {
         const face = FACE_OF[idx];
-        if (face !== curFace) {
-          // Muda de face → a peça ACENDE ANTES e fica acesa durante TODA a virada,
-          // para o paciente acompanhar visualmente a trajetória do cubo.
-          setTS(prev => prev.map((_, j) => j === idx ? "lit" : "idle"));
-          sndFlash();
-          await sleep(1000);            // pausa de 1s ANTES de iniciar o movimento
-          setPoseFace(face);            // virada lenta (~2,75s, ease-in-out — ver IsoCube)
-          curFace = face;
-          await sleep(2750);            // espera a virada completar (sem corte)
-          await sleep(1000);            // pausa de 1s APÓS terminar, ainda acesa
-          setTS(Array(N_TILES).fill("idle"));
-          await sleep(320);
-        } else {
-          // Mesma face → flash normal (sem girar).
-          setTS(prev => prev.map((_, j) => j === idx ? "lit" : "idle"));
-          sndFlash();
-          await sleep(FLASH);
-          setTS(Array(N_TILES).fill("idle"));
-          await sleep(320);   // pausa entre flashes (cubo permanece na pose)
-        }
+        setTS(prev => prev.map((_, j) => j === idx ? "lit" : "idle"));
+        sndFlash();
+        await sleep(1000);              // pausa de 1s ANTES de iniciar o movimento
+        setPoseFace(face);              // virada lenta (~2,75s, ease-in-out — ver IsoCube)
+        await sleep(2750);              // espera a virada completar (sem corte)
+        await sleep(1000);              // pausa de 1s APÓS terminar, ainda acesa de frente
+        setTS(Array(N_TILES).fill("idle"));
+        setPoseFace(null);              // volta suave à vista de canto (mesmos 2,75s)
+        await sleep(2750 + 350);        // espera a volta completar + respiro
       }
-      setPoseFace(null);                // volta à vista isométrica para reproduzir
-      await sleep(400);
       setPhase("input");
       inputStartRef.current = Date.now();
     } catch { /* cancelado */ }
