@@ -14,6 +14,19 @@ histórico completo anterior está no log do Git (452 commits no total, a partir
   Documentação (CLAUDE.md, README.md, ARCHITECTURE.md, ADRs) reescrita a partir do
   código real.
 
+## [2.27.0] — 2026-07-12
+
+- **Span Numérico Auditivo (Direto e Inverso) — painel novo estilo referência:** teclado
+  3×3 (1-9, sem o 0; sequências não sorteiam mais 0) em paleta azul-clara do app (teclas
+  brancas, fundo claro, luz ativa #4F8FEA). Na APRESENTAÇÃO, a tecla do número falado
+  PISCA no painel em sincronia com a voz (nos dois exercícios); as bolinhas preenchem
+  conforme a fala. No INVERSO, ao fim da fala as bolinhas fazem a animação de VIRAR —
+  dica sutil da ordem inversa, sem mostrar números (o anel que marca o início passa para
+  o outro lado). Resposta clicando no próprio painel, sem dica de texto.
+- **Chuva do Foco — tamanho e densidade padrão em todos os níveis** (decisão da
+  terapeuta): a progressão agora é só velocidade + comandos mais complexos (parecidos ↑,
+  multi-alvo nos níveis altos).
+
 ## [2.26.0] — 2026-07-12
 
 - **Chuva do Foco — ciclo de tarefa completo (modelo da terapeuta):** cada comando é UMA

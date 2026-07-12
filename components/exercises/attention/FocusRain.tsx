@@ -78,15 +78,18 @@ function cleanForSpeech(text: string): string {
 // CALIBRÁVEL após teste clínico. Ajuste pós-feedback da neuro:
 //  • fallMs MAIOR (queda mais LENTA) — antes 6200→3200, ficou frenético.
 //  • areaPerAgent MAIOR (menos denso, sem sobreposição).
+// DECISÃO da terapeuta (12/jul): tamanho E densidade PADRÃO em todos os níveis;
+// a progressão é só VELOCIDADE (fallMs ↓) + COMANDOS mais complexos (nearFrac ↑,
+// multi-alvo nos níveis altos).
 interface RainCfg { fallMs: number; secondChance: number; nearFrac: number; areaPerAgent: number }
 const RAIN_CFG: Record<number, RainCfg> = {
-  1: { fallMs: 7200, secondChance: 1.4,  nearFrac: 0.90, areaPerAgent: 46000 },
+  1: { fallMs: 7200, secondChance: 1.4,  nearFrac: 0.90, areaPerAgent: 42000 },
   2: { fallMs: 6500, secondChance: 1.45, nearFrac: 0.92, areaPerAgent: 42000 },
-  3: { fallMs: 5900, secondChance: 1.5,  nearFrac: 0.94, areaPerAgent: 38000 },
-  4: { fallMs: 5300, secondChance: 1.55, nearFrac: 0.96, areaPerAgent: 35000 },
-  5: { fallMs: 4800, secondChance: 1.6,  nearFrac: 0.98, areaPerAgent: 32000 },
-  6: { fallMs: 4300, secondChance: 1.65, nearFrac: 0.99, areaPerAgent: 29000 },
-  7: { fallMs: 3900, secondChance: 1.7,  nearFrac: 1.00, areaPerAgent: 27000 },
+  3: { fallMs: 5900, secondChance: 1.5,  nearFrac: 0.94, areaPerAgent: 42000 },
+  4: { fallMs: 5300, secondChance: 1.55, nearFrac: 0.96, areaPerAgent: 42000 },
+  5: { fallMs: 4800, secondChance: 1.6,  nearFrac: 0.98, areaPerAgent: 42000 },
+  6: { fallMs: 4300, secondChance: 1.65, nearFrac: 0.99, areaPerAgent: 42000 },
+  7: { fallMs: 3900, secondChance: 1.7,  nearFrac: 1.00, areaPerAgent: 42000 },
 };
 const SPAWN_TICK = 150;    // tick rápido; a densidade real é limitada por targetConcurrent().
 const MAX_ON_SCREEN = 24;  // teto. Desktop ~16 (N1) a ~24 (N7); celular ~5. Fluxo ritmado evita rajada.
