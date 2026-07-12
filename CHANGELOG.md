@@ -14,6 +14,12 @@ histórico completo anterior está no log do Git (452 commits no total, a partir
   Documentação (CLAUDE.md, README.md, ARCHITECTURE.md, ADRs) reescrita a partir do
   código real.
 
+## [2.24.10] — 2026-07-12
+
+- **Chuva do Foco — mais estímulos na tela** (a pedido, com exemplo): densidade sobe para
+  ~16 agentes no nível 1 até ~24 no nível 7 (desktop), mantendo o fluxo ritmado (sem
+  rajada/vácuo) e o espalhamento.
+
 ## [2.24.9] — 2026-07-12
 
 - **Cubo Corsi — ordem certa e virada mais rápida:** agora o cubo **VIRA primeiro** e a

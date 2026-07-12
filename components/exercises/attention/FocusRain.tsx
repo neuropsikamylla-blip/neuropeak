@@ -80,16 +80,16 @@ function cleanForSpeech(text: string): string {
 //  • areaPerAgent MAIOR (menos denso, sem sobreposição).
 interface RainCfg { fallMs: number; secondChance: number; nearFrac: number; areaPerAgent: number }
 const RAIN_CFG: Record<number, RainCfg> = {
-  1: { fallMs: 7200, secondChance: 1.4,  nearFrac: 0.90, areaPerAgent: 140000 },
-  2: { fallMs: 6500, secondChance: 1.45, nearFrac: 0.92, areaPerAgent: 128000 },
-  3: { fallMs: 5900, secondChance: 1.5,  nearFrac: 0.94, areaPerAgent: 118000 },
-  4: { fallMs: 5300, secondChance: 1.55, nearFrac: 0.96, areaPerAgent: 108000 },
-  5: { fallMs: 4800, secondChance: 1.6,  nearFrac: 0.98, areaPerAgent:  99000 },
-  6: { fallMs: 4300, secondChance: 1.65, nearFrac: 0.99, areaPerAgent:  91000 },
-  7: { fallMs: 3900, secondChance: 1.7,  nearFrac: 1.00, areaPerAgent:  84000 },
+  1: { fallMs: 7200, secondChance: 1.4,  nearFrac: 0.90, areaPerAgent: 110000 },
+  2: { fallMs: 6500, secondChance: 1.45, nearFrac: 0.92, areaPerAgent: 102000 },
+  3: { fallMs: 5900, secondChance: 1.5,  nearFrac: 0.94, areaPerAgent:  95000 },
+  4: { fallMs: 5300, secondChance: 1.55, nearFrac: 0.96, areaPerAgent:  88000 },
+  5: { fallMs: 4800, secondChance: 1.6,  nearFrac: 0.98, areaPerAgent:  81000 },
+  6: { fallMs: 4300, secondChance: 1.65, nearFrac: 0.99, areaPerAgent:  74000 },
+  7: { fallMs: 3900, secondChance: 1.7,  nearFrac: 1.00, areaPerAgent:  68000 },
 };
 const SPAWN_TICK = 150;    // tick rápido; a densidade real é limitada por targetConcurrent().
-const MAX_ON_SCREEN = 16;  // teto (bem menos amontoado). Desktop ~13-16, celular ~4.
+const MAX_ON_SCREEN = 24;  // teto. Desktop ~16 (N1) a ~24 (N7); celular ~5. Fluxo ritmado evita rajada.
 // Antes de o ALVO poder cair: pelo menos estes distratores + tempo (o alvo NUNCA é o 1º).
 const MIN_DISTRACTORS_BEFORE_TARGET = 4;
 const MIN_MS_BEFORE_TARGET = 1200;
