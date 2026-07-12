@@ -14,6 +14,15 @@ histórico completo anterior está no log do Git (452 commits no total, a partir
   Documentação (CLAUDE.md, README.md, ARCHITECTURE.md, ADRs) reescrita a partir do
   código real.
 
+## [2.24.4] — 2026-07-12
+
+- **Cubo Corsi — viradas lentas e naturais:** a rotação do cubo era brusca (0,85 s).
+  Agora: a peça ACENDE antes e permanece acesa durante toda a virada; pausa de 1 s;
+  o cubo gira em ~2,75 s com ease-in-out simétrico (acelera e desacelera progressivamente,
+  sem tranco/overshoot); pausa de 1 s ao terminar; só então apaga. O paciente consegue
+  acompanhar visualmente toda a trajetória. Flashes na mesma face seguem como antes.
+  Cubo, luzes, cores, câmera e lógica intactos.
+
 ## [2.24.3] — 2026-07-12
 
 - **Focus Agents — tamanho padronizado + Chuva menos amontoada:**

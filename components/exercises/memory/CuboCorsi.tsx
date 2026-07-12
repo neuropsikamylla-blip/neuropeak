@@ -119,7 +119,9 @@ function IsoCube({
       <div style={{
         width: S, height: S, position: "relative", transformStyle: "preserve-3d",
         transform: cubePose(litFace),
-        transition: "transform 0.85s cubic-bezier(.45,.05,.2,1)",
+        // Virada LENTA e fluida (~2,75s), ease-in-out simétrico (sem overshoot/quique):
+        // acelera progressivamente no início e desacelera no final (estilo smoothstep).
+        transition: "transform 2750ms cubic-bezier(0.45, 0, 0.55, 1)",
       }}>
         {["back","bottom","leftbk","right","front","top"].map(renderFace)}
       </div>
@@ -351,16 +353,26 @@ export function CuboCorsi({ difficulty, theme: _theme, onComplete }: Props) {
       await sleep(600);
       for (const idx of seq) {
         const face = FACE_OF[idx];
-        if (face !== curFace) {         // muda de face → gira o cubo (lento/fluido) e espera
-          setPoseFace(face);
+        if (face !== curFace) {
+          // Muda de face → a peça ACENDE ANTES e fica acesa durante TODA a virada,
+          // para o paciente acompanhar visualmente a trajetória do cubo.
+          setTS(prev => prev.map((_, j) => j === idx ? "lit" : "idle"));
+          sndFlash();
+          await sleep(1000);            // pausa de 1s ANTES de iniciar o movimento
+          setPoseFace(face);            // virada lenta (~2,75s, ease-in-out — ver IsoCube)
           curFace = face;
-          await sleep(900);             // tempo da virada completar antes de acender
+          await sleep(2750);            // espera a virada completar (sem corte)
+          await sleep(1000);            // pausa de 1s APÓS terminar, ainda acesa
+          setTS(Array(N_TILES).fill("idle"));
+          await sleep(320);
+        } else {
+          // Mesma face → flash normal (sem girar).
+          setTS(prev => prev.map((_, j) => j === idx ? "lit" : "idle"));
+          sndFlash();
+          await sleep(FLASH);
+          setTS(Array(N_TILES).fill("idle"));
+          await sleep(320);   // pausa entre flashes (cubo permanece na pose)
         }
-        setTS(prev => prev.map((_, j) => j === idx ? "lit" : "idle"));
-        sndFlash();
-        await sleep(FLASH);
-        setTS(Array(N_TILES).fill("idle"));
-        await sleep(320);   // pausa entre flashes (cubo permanece na pose)
       }
       setPoseFace(null);                // volta à vista isométrica para reproduzir
       await sleep(400);
