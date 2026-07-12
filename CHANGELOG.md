@@ -14,6 +14,18 @@ histórico completo anterior está no log do Git (452 commits no total, a partir
   Documentação (CLAUDE.md, README.md, ARCHITECTURE.md, ADRs) reescrita a partir do
   código real.
 
+## [2.25.2] — 2026-07-12
+
+- **Cubo Corsi — ajustes finos (a pedido):** virada de ~80% (a face acesa fica quase de
+  frente mantendo um resto de 3D — desvio 9-13°, provado por cálculo), bordas/estrutura
+  mais finas (gap 5%→3,2%, contorno 1,5→1 px) e cubo maior (proporção 0,46→0,52 + 540).
+
+## [2.25.1] — 2026-07-12
+
+- **HOTFIX Cubo Corsi:** o cubo renderizava como "placa" achatada — causa: sombra via
+  CSS `filter` no elemento 3D (filter achata o preserve-3d). Sombra refeita como elipse
+  separada no chão; alerta em comentário no código para nunca repetir.
+
 ## [2.25.0] — 2026-07-12
 
 - **Cubo Corsi — visual novo (paleta clara estilo referência) + maior:** estrutura

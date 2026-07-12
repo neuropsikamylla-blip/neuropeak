@@ -44,11 +44,13 @@ const TURN_MS = 1100;
 // vê a face acesa "chapada", de cara). ISO quando nada aceso.
 // Geometria: ESQUERDA do jogo = face "front" (normal +Z → 0°); DIREITA = face "right"
 // (normal +X → rotateY(-90°)); TOPO = face "top" (normal -Y → rotateX(-90°)).
+// Virada de ~80% do caminho até a frente (pedido da Kamylla): a face acesa fica
+// quase de frente, mantendo um resto de perspectiva 3D. pose = ISO + 0.8·(frente − ISO).
 function cubePose(face: Face | null): string {
   switch (face) {
-    case "top":   return "rotateX(-90deg) rotateY(0deg)";
-    case "left":  return "rotateX(0deg) rotateY(0deg)";
-    case "right": return "rotateX(0deg) rotateY(-90deg)";
+    case "top":   return "rotateX(-77deg) rotateY(-8deg)";
+    case "left":  return "rotateX(-5deg) rotateY(-8deg)";
+    case "right": return "rotateX(-5deg) rotateY(-80deg)";
     default:      return "rotateX(-26deg) rotateY(-38deg)";
   }
 }
@@ -77,8 +79,8 @@ function IsoCube({
   const litIdx = states.findIndex(s => s === "lit");
   const derivedFace: Face | null = litIdx >= 0 ? FACE_OF[litIdx] : null;
   const litFace: Face | null = poseFace !== undefined ? poseFace : derivedFace;
-  const S = Math.round(size * 0.46);
-  const gap = Math.max(4, Math.round(S * 0.05));
+  const S = Math.round(size * 0.52);                 // cubo maior no mesmo espaço
+  const gap = Math.max(3, Math.round(S * 0.032));    // bordas/estrutura mais finas
   const r = Math.round(S * 0.08);
 
   const renderFace = (name: string) => {
@@ -102,7 +104,7 @@ function IsoCube({
               style={{
                 borderRadius: r,
                 background: cellColor(st, fc),
-                border: `1.5px solid ${cellStroke(st)}`,
+                border: `1px solid ${cellStroke(st)}`,
                 boxShadow: st === "lit"
                   ? "0 0 16px rgba(79,143,234,0.55)"
                   : "inset 0 1px 2px rgba(255,255,255,0.7), 0 1px 2px rgba(0,0,0,0.10)",
@@ -516,7 +518,7 @@ export function CuboCorsi({ difficulty, theme: _theme, onComplete }: Props) {
           interactive={phase === "input"}
           onTile={handleTileTap}
           poseFace={poseFace}
-          size={500}
+          size={540}
         />
 
         {/* Dots de sequência */}
