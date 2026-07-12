@@ -14,6 +14,13 @@ histórico completo anterior está no log do Git (452 commits no total, a partir
   Documentação (CLAUDE.md, README.md, ARCHITECTURE.md, ADRs) reescrita a partir do
   código real.
 
+## [2.24.2] — 2026-07-12
+
+- **Chuva do Foco — menos amontoado, sem sobrepor:** agentes 92→88px; densidade reduzida
+  (teto 26→20, mais área por agente → ~18-20 no desktop); balanço horizontal menor
+  (22-56px→10-26px, evita derivar um por cima do outro); espalhamento melhor no spawn
+  (banda maior + 16 candidatos de posição). Expressão continua legível.
+
 ## [2.24.1] — 2026-07-12
 
 - **Chuva do Foco — agentes um pouco maiores (80→92px):** para ler a EXPRESSÃO do rosto

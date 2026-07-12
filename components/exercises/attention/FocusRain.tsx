@@ -33,7 +33,7 @@ import type { PresMode } from "@/components/exercises/PresentationConfig";
 const AGENT_V = "?v=7";   // cache-bust (imagens transparentes) — igual ao FocusAgents
 
 // ── Tamanho / hitbox (idênticos ao Foco da arena) ───────────────────────────────
-const CHAR_SIZE = 92;              // um pouco maior (80→92) p/ ler a EXPRESSÃO do rosto
+const CHAR_SIZE = 88;              // legível p/ a expressão, sem amontoar (80→92→88)
 const CHAR_H    = CHAR_SIZE * 1.5; // imagens 2:3 (512×768)
 // Área CLICÁVEL = só o corpo visível (o resto do PNG é transparente).
 const HIT_L = 0.24, HIT_R = 0.76;
@@ -80,16 +80,16 @@ function cleanForSpeech(text: string): string {
 //  • areaPerAgent MAIOR (menos denso, sem sobreposição).
 interface RainCfg { fallMs: number; secondChance: number; nearFrac: number; areaPerAgent: number }
 const RAIN_CFG: Record<number, RainCfg> = {
-  1: { fallMs: 7200, secondChance: 1.4,  nearFrac: 0.90, areaPerAgent: 80000 },
-  2: { fallMs: 6500, secondChance: 1.45, nearFrac: 0.92, areaPerAgent: 74000 },
-  3: { fallMs: 5900, secondChance: 1.5,  nearFrac: 0.94, areaPerAgent: 68000 },
-  4: { fallMs: 5300, secondChance: 1.55, nearFrac: 0.96, areaPerAgent: 62000 },
-  5: { fallMs: 4800, secondChance: 1.6,  nearFrac: 0.98, areaPerAgent: 57000 },
-  6: { fallMs: 4300, secondChance: 1.65, nearFrac: 0.99, areaPerAgent: 52000 },
-  7: { fallMs: 3900, secondChance: 1.7,  nearFrac: 1.00, areaPerAgent: 48000 },
+  1: { fallMs: 7200, secondChance: 1.4,  nearFrac: 0.90, areaPerAgent: 100000 },
+  2: { fallMs: 6500, secondChance: 1.45, nearFrac: 0.92, areaPerAgent:  92000 },
+  3: { fallMs: 5900, secondChance: 1.5,  nearFrac: 0.94, areaPerAgent:  85000 },
+  4: { fallMs: 5300, secondChance: 1.55, nearFrac: 0.96, areaPerAgent:  78000 },
+  5: { fallMs: 4800, secondChance: 1.6,  nearFrac: 0.98, areaPerAgent:  71000 },
+  6: { fallMs: 4300, secondChance: 1.65, nearFrac: 0.99, areaPerAgent:  65000 },
+  7: { fallMs: 3900, secondChance: 1.7,  nearFrac: 1.00, areaPerAgent:  60000 },
 };
 const SPAWN_TICK = 150;    // tick rápido; a densidade real é limitada por targetConcurrent().
-const MAX_ON_SCREEN = 26;  // teto (mais distratores; espalhamento por max-distância evita amontoar). Desktop ~24-26, celular ~5.
+const MAX_ON_SCREEN = 20;  // teto (menos amontoado; espalhamento por max-distância). Desktop ~18-20, celular ~5.
 // Antes de o ALVO poder cair: pelo menos estes distratores + tempo (o alvo NUNCA é o 1º).
 const MIN_DISTRACTORS_BEFORE_TARGET = 3;
 const MIN_MS_BEFORE_TARGET = 900;
@@ -417,13 +417,14 @@ export function FocusRain({ level, theme, presentMode, fbLevel, exerciseId, sett
     const W = playWRef.current || 360;
     const H = playHRef.current || 600;
     const maxX = Math.max(4, W - CHAR_SIZE - 4);
-    // Só considera quem ainda está perto do topo (onde a colisão de spawn ocorre).
+    // Evita sobrepor: considera quem está na METADE de cima (banda ampla) e escolhe o x
+    // mais distante de todos eles (16 candidatos) — reduz "um em cima do outro".
     const nearTop = agentsRef.current
-      .filter(a => a.state === "falling" && a.y < CHAR_H * 1.5)
+      .filter(a => a.state === "falling" && a.y < CHAR_H * 3)
       .map(a => a.x);
     let bestX = 4 + Math.random() * maxX;
     let bestGap = -1;
-    for (let i = 0; i < 8; i++) {
+    for (let i = 0; i < 16; i++) {
       const cand = 4 + Math.random() * maxX;
       const gap = nearTop.length ? Math.min(...nearTop.map(px => Math.abs(px - cand))) : Infinity;
       if (gap > bestGap) { bestGap = gap; bestX = cand; }
@@ -433,9 +434,9 @@ export function FocusRain({ level, theme, presentMode, fbLevel, exerciseId, sett
       x: bestX, baseX: bestX,
       y: -CHAR_H - Math.random() * CHAR_H * 2.5,                                   // entrada BEM escalonada (alturas variadas)
       vy: fallSpeed(H, RAIN_CFG[levelRef.current].fallMs) * (0.55 + Math.random() * 0.90), // 0.55–1.45x → alturas bem diferentes (sem fileira)
-      swayAmp: 22 + Math.random() * 34,          // 22–56px de balanço horizontal
+      swayAmp: 10 + Math.random() * 16,          // 10–26px de balanço (menor → não derivam um p/ cima do outro)
       swayPhase: Math.random() * Math.PI * 2,
-      swayFreq: 0.0012 + Math.random() * 0.0014, // rad/ms (balanço um pouco mais vivo)
+      swayFreq: 0.0010 + Math.random() * 0.0012, // rad/ms
       passCount: 0, spawnAt: Date.now(), state: "falling",
     };
   }, []);
