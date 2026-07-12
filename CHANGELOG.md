@@ -14,6 +14,12 @@ histórico completo anterior está no log do Git (452 commits no total, a partir
   Documentação (CLAUDE.md, README.md, ARCHITECTURE.md, ADRs) reescrita a partir do
   código real.
 
+## [2.24.6] — 2026-07-12
+
+- **Cubo Corsi — face acesa vira INTEIRA para a tela:** removido o resíduo de 12°;
+  a face acesa agora termina a 0° (totalmente de frente para o paciente). Verificado
+  por cálculo (desvio 0° nas 3 faces).
+
 ## [2.24.5] — 2026-07-12
 
 - **Cubo Corsi — face acesa agora vira DE FRENTE para o centro:** as poses estavam
