@@ -14,6 +14,13 @@ histórico completo anterior está no log do Git (452 commits no total, a partir
   Documentação (CLAUDE.md, README.md, ARCHITECTURE.md, ADRs) reescrita a partir do
   código real.
 
+## [2.28.3] — 2026-07-12
+
+- **Focus Agents — pipa e guarda-chuva roxos substituídos:** as versões anteriores
+  estavam cortadas; entraram as novas artes da terapeuta, normalizadas no padrão do
+  elenco (boneco no tamanho padrão, item inteiro no quadro — verificado com margens).
+  Cache `?v=9`→`?v=10`.
+
 ## [2.28.2] — 2026-07-12
 
 - **Chuva do Foco — variedade REAL entre comandos:** além de nunca repetir o comando,

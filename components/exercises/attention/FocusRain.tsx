@@ -30,7 +30,7 @@ import type { ExerciseResult, Theme } from "@/types";
 import type { FocusMode } from "@/types/commands";
 import type { PresMode } from "@/components/exercises/PresentationConfig";
 
-const AGENT_V = "?v=9";   // cache-bust (imagens NORMALIZADAS 360×540) — igual ao FocusAgents
+const AGENT_V = "?v=10";   // cache-bust (imagens NORMALIZADAS 360×540) — igual ao FocusAgents
 
 // ── Tamanho / hitbox (idênticos ao Foco da arena) ───────────────────────────────
 const CHAR_SIZE = 100;             // boneco na tela = CHAR_SIZE (imagens normalizadas pelo boneco)
