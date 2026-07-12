@@ -14,6 +14,16 @@ histórico completo anterior está no log do Git (452 commits no total, a partir
   Documentação (CLAUDE.md, README.md, ARCHITECTURE.md, ADRs) reescrita a partir do
   código real.
 
+## [2.24.8] — 2026-07-12
+
+- **Chuva do Foco — fluxo contínuo (sem "vácuo"):** os agentes entravam em rajada até o
+  teto e caíam como um bloco, deixando um vazio enorme na tela até saírem. Agora a entrada
+  é ritmada (1 agente a cada `fallMs/maxC` ms) — sempre há agentes distribuídos na vertical.
+- **Cubo Corsi — fluido, maior e tutorial corrigido:** virada 2,75 s → **1,6 s** (estava
+  lentificado) com pausas menores (0,5 s antes, 0,7 s de frente); cubo maior (360→430 no
+  jogo, 300→340 no tutorial); e o TUTORIAL agora controla a pose com o mesmo ciclo do jogo
+  — antes a virada era interrompida no meio (truncada) quando a peça apagava.
+
 ## [2.24.7] — 2026-07-12
 
 - **Cubo Corsi — TODA peça acesa faz a virada completa:** antes, peças seguidas na mesma

@@ -364,6 +364,7 @@ export function FocusRain({ level, theme, presentMode, fbLevel, exerciseId, sett
   const cmdStartRef   = useRef(0);        // ts em que a CHUVA do comando começou (RT)
   const phaseRef      = useRef<"card" | "playing">("card");   // espelho de `phase` p/ o loop/timers
   const distractorsThisCmdRef = useRef(0);   // quantos distratores já caíram NESTE comando (alvo nunca 1º)
+  const lastSpawnAtRef = useRef(0);          // ritmo do fluxo contínuo (1 spawn a cada fallMs/maxC)
 
   // Métricas.
   const capturesRef   = useRef(0);
@@ -403,6 +404,7 @@ export function FocusRain({ level, theme, presentMode, fbLevel, exerciseId, sett
     if (phaseRef.current !== "card" || doneRef.current) return;
     cmdStartRef.current = Date.now();
     distractorsThisCmdRef.current = 0;
+    lastSpawnAtRef.current = 0;          // 1º agente entra já; os demais ritmados
     const cmd = cmdRef.current;
     if (cmd) { subAliveRef.current = cmd.subRules.map(() => false); }
     phaseRef.current = "playing";
@@ -452,8 +454,14 @@ export function FocusRain({ level, theme, presentMode, fbLevel, exerciseId, sett
     const alive = agentsRef.current.filter(a => a.state === "falling").length;
     const maxC = targetConcurrent(levelRef.current, playWRef.current || 360, playHRef.current || 600);
     if (alive >= maxC) return;
+    // FLUXO CONTÍNUO (sem "vácuo"): ritma a entrada — 1 agente a cada fallMs/maxC ms.
+    // Sem isto, o teto enche em rajada, o "bloco" cai junto e sobra um vazio enorme
+    // até ele sair da tela. Ritmado, sempre há agentes distribuídos na vertical.
+    const minGapMs = cfg.fallMs / maxC;
+    if (Date.now() - lastSpawnAtRef.current < minGapMs) return;
     const cmd = cmdRef.current;
     if (!cmd) return;
+    lastSpawnAtRef.current = Date.now();
 
     // "Alvo nunca 1º": só libera QUALQUER alvo após ≥N distratores E ≥900ms.
     const targetUnlocked =

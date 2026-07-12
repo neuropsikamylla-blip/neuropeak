@@ -37,6 +37,9 @@ function cellStroke(st: BState): string {
   return "#CBDBEA";
 }
 
+// Duração da virada — fluida e acompanhável (nem brusca, nem lentificada). CALIBRÁVEL.
+const TURN_MS = 1600;
+
 // Pose do cubo: traz a face acesa INTEIRAMENTE de frente para a tela (0° — o paciente
 // vê a face acesa "chapada", de cara). ISO quando nada aceso.
 // Geometria: ESQUERDA do jogo = face "front" (normal +Z → 0°); DIREITA = face "right"
@@ -122,9 +125,9 @@ function IsoCube({
       <div style={{
         width: S, height: S, position: "relative", transformStyle: "preserve-3d",
         transform: cubePose(litFace),
-        // Virada LENTA e fluida (~2,75s), ease-in-out simétrico (sem overshoot/quique):
+        // Virada fluida (TURN_MS), ease-in-out simétrico (sem overshoot/quique):
         // acelera progressivamente no início e desacelera no final (estilo smoothstep).
-        transition: "transform 2750ms cubic-bezier(0.45, 0, 0.55, 1)",
+        transition: `transform ${TURN_MS}ms cubic-bezier(0.45, 0, 0.55, 1)`,
       }}>
         {["back","bottom","leftbk","right","front","top"].map(renderFace)}
       </div>
@@ -184,6 +187,7 @@ const DEMO_SEQ = [0, 4, 8, 3]; // topo · esquerda · direita · topo
 
 function TutorialDemoWatch({ onDone }: { onDone: () => void }) {
   const [states, setStates] = useState<BState[]>(Array(N_TILES).fill("idle"));
+  const [pose, setPose] = useState<Face | null>(null);
   const cancelRef = useRef(false);
   const timers = useRef<ReturnType<typeof setTimeout>[]>([]);
 
@@ -196,13 +200,19 @@ function TutorialDemoWatch({ onDone }: { onDone: () => void }) {
       });
       try {
         await sleep(400);
+        // Mesmo ciclo do jogo (pose CONTROLADA — sem truncar a virada no meio):
+        // acende → vira de frente → segura → apaga → volta ao canto.
         for (const idx of DEMO_SEQ) {
           if (cancelRef.current) return;
           setStates(prev => prev.map((_, j) => j === idx ? "lit" : "idle"));
           sndFlash();
-          await sleep(950);
+          await sleep(500);
+          setPose(FACE_OF[idx]);
+          await sleep(TURN_MS);
+          await sleep(700);
           setStates(Array(N_TILES).fill("idle"));
-          await sleep(320);
+          setPose(null);
+          await sleep(TURN_MS + 250);
         }
         if (!cancelRef.current) onDone();
       } catch { /* cancelado */ }
@@ -216,7 +226,7 @@ function TutorialDemoWatch({ onDone }: { onDone: () => void }) {
       <p className="text-xs text-center font-semibold mb-2" style={{ color: "#1D4ED8" }}>
         O quadrado dourado acende — memorize a ordem!
       </p>
-      <IsoCube states={states} interactive={false} onTile={() => {}} size={300} />
+      <IsoCube states={states} interactive={false} onTile={() => {}} size={340} poseFace={pose} />
     </div>
   );
 }
@@ -357,13 +367,13 @@ export function CuboCorsi({ difficulty, theme: _theme, onComplete }: Props) {
         const face = FACE_OF[idx];
         setTS(prev => prev.map((_, j) => j === idx ? "lit" : "idle"));
         sndFlash();
-        await sleep(1000);              // pausa de 1s ANTES de iniciar o movimento
-        setPoseFace(face);              // virada lenta (~2,75s, ease-in-out — ver IsoCube)
-        await sleep(2750);              // espera a virada completar (sem corte)
-        await sleep(1000);              // pausa de 1s APÓS terminar, ainda acesa de frente
+        await sleep(500);               // respiro antes do movimento
+        setPoseFace(face);              // virada fluida (TURN_MS, ease-in-out — ver IsoCube)
+        await sleep(TURN_MS);           // espera a virada completar (sem corte)
+        await sleep(700);               // segura de frente, ainda acesa
         setTS(Array(N_TILES).fill("idle"));
-        setPoseFace(null);              // volta suave à vista de canto (mesmos 2,75s)
-        await sleep(2750 + 350);        // espera a volta completar + respiro
+        setPoseFace(null);              // volta suave à vista de canto
+        await sleep(TURN_MS + 250);     // espera a volta completar + respiro
       }
       setPhase("input");
       inputStartRef.current = Date.now();
@@ -500,7 +510,7 @@ export function CuboCorsi({ difficulty, theme: _theme, onComplete }: Props) {
           interactive={phase === "input"}
           onTile={handleTileTap}
           poseFace={poseFace}
-          size={360}
+          size={430}
         />
 
         {/* Dots de sequência */}
