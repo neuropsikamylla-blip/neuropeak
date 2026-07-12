@@ -14,6 +14,16 @@ histórico completo anterior está no log do Git (452 commits no total, a partir
   Documentação (CLAUDE.md, README.md, ARCHITECTURE.md, ADRs) reescrita a partir do
   código real.
 
+## [2.25.6] — 2026-07-12
+
+- **Chuva do Foco — velocidade uniforme SEMPRE + menos buracos:** (1) alguns agentes
+  ultrapassavam os outros quando o nível subia (os novos entravam com a velocidade nova e
+  os antigos guardavam a antiga); agora a velocidade é calculada por quadro para TODOS —
+  o nível/velocidade só muda entre comandos (3 tarefas certas → sobe → vale a partir do
+  próximo comando), nunca no meio da tarefa; única exceção continua sendo a 2ª chance do
+  alvo (mais rápida, por design). (2) A regra de distância mínima adiava spawns demais e
+  criava buracos: faixa de entrada estreitada (1,2×altura) e limiar 0,8×largura.
+
 ## [2.25.5] — 2026-07-12
 
 - **Chuva do Foco — espaçamento correto (calibrado pela tela real):** a densidade estava

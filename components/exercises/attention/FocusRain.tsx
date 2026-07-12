@@ -313,7 +313,6 @@ interface RainAgent {
   x: number;           // posição horizontal ATUAL (baseX + balanço)
   baseX: number;       // âncora horizontal (o balanço oscila ao redor dela)
   y: number;
-  vy: number;
   swayAmp: number;     // amplitude do balanço horizontal (px)
   swayPhase: number;   // fase do balanço (avança com o tempo)
   swayFreq: number;    // rad por ms
@@ -440,25 +439,24 @@ export function FocusRain({ level, theme, presentMode, fbLevel, exerciseId, sett
     const maxX = Math.max(4, W - CHAR_SIZE - 4);
     // Evita sobrepor: considera quem está na METADE de cima (banda ampla) e escolhe o x
     // mais distante de todos eles (16 candidatos) — reduz "um em cima do outro".
+    // Faixa de entrada ESTREITA (só quem acabou de entrar, y < 1.2×CHAR_H): evita
+    // nascer sobreposto sem adiar spawns demais (adiar demais = buracos).
     const nearTop = agentsRef.current
-      .filter(a => a.state === "falling" && a.y < CHAR_H * 3)
+      .filter(a => a.state === "falling" && a.y < CHAR_H * 1.2)
       .map(a => a.x);
     let bestX = 4 + Math.random() * maxX;
     let bestGap = -1;
-    for (let i = 0; i < 16; i++) {
+    for (let i = 0; i < 24; i++) {
       const cand = 4 + Math.random() * maxX;
       const gap = nearTop.length ? Math.min(...nearTop.map(px => Math.abs(px - cand))) : Infinity;
       if (gap > bestGap) { bestGap = gap; bestX = cand; }
     }
-    // DISTÂNCIA MÍNIMA dura: se nem o melhor candidato fica a ≥0.95×CHAR_SIZE de
-    // quem entrou há pouco, adia este spawn (150ms depois a faixa desce) — nunca
-    // nasce um em cima do outro.
-    if (bestGap < CHAR_SIZE * 0.95) return null;
+    // DISTÂNCIA MÍNIMA dura no nascimento: sem vaga a ≥0.8×CHAR_SIZE → adia 150ms.
+    if (bestGap < CHAR_SIZE * 0.8) return null;
     return {
       uid: `r${uidSeq.current++}`, agent, isTarget, subIndex,
       x: bestX, baseX: bestX,
       y: -CHAR_H,                                            // entra do topo; o escalonamento vem do RITMO de entrada
-      vy: fallSpeed(H, RAIN_CFG[levelRef.current].fallMs),   // velocidade UNIFORME (movimento consistente, organizado)
       swayAmp: 8 + Math.random() * 10,           // balanço leve (8–18px) — vivo, sem bagunçar
       swayPhase: Math.random() * Math.PI * 2,
       swayFreq: 0.0009 + Math.random() * 0.0008, // rad/ms
@@ -682,9 +680,14 @@ export function FocusRain({ level, theme, presentMode, fbLevel, exerciseId, sett
       let changed = false;
       const omittedSubs: number[] = [];   // sub-regras que sofreram omissão neste frame
 
+      // Velocidade calculada POR QUADRO para TODOS (uniforme sempre — inclusive
+      // quando o nível muda, ninguém "ultrapassa" ninguém). Única exceção: alvo
+      // na 2ª chance cai secondChance× mais rápido (pedido da terapeuta).
+      const baseV = fallSpeed(H, RAIN_CFG[levelRef.current].fallMs);
       for (const a of agentsRef.current) {
         if (a.state !== "falling") continue;
-        a.y += a.vy * dt;
+        const v = a.isTarget && a.passCount === 1 ? baseV * RAIN_CFG[levelRef.current].secondChance : baseV;
+        a.y += v * dt;
         a.swayPhase += a.swayFreq * dt;
         const swayX = a.swayAmp * Math.sin(a.swayPhase);
         a.x = a.baseX + swayX;                       // posição horizontal viva (balanço)
@@ -696,10 +699,9 @@ export function FocusRain({ level, theme, presentMode, fbLevel, exerciseId, sett
         }
         if (a.y >= bottom) {
           if (a.isTarget && a.passCount === 0) {
-            // 2ª CHANCE (por alvo, independente).
+            // 2ª CHANCE (por alvo, independente) — velocidade vem do cálculo por quadro.
             a.passCount = 1;
             a.y = -CHAR_H;
-            a.vy = fallSpeed(H, RAIN_CFG[levelRef.current].fallMs) * RAIN_CFG[levelRef.current].secondChance;
             if (node) node.style.transform = `translate(${swayX}px, ${a.y}px)`;
           } else if (a.isTarget) {
             // OMISSÃO desta sub-regra (escapou 2×). O alvo daquela sub-regra não
