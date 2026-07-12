@@ -14,6 +14,15 @@ histórico completo anterior está no log do Git (452 commits no total, a partir
   Documentação (CLAUDE.md, README.md, ARCHITECTURE.md, ADRs) reescrita a partir do
   código real.
 
+## [2.25.4] — 2026-07-12
+
+- **Focus Agents — tamanho REALMENTE padronizado (causa raiz):** a normalização anterior
+  igualava o QUADRO (personagem+item), então quem segura pipa/guarda-chuva/skate ficava
+  com o boneco menor. Renormalizadas as 144 imagens pelo BONECO (âncora no rosto, pés
+  fixos): boneco do mesmo tamanho em todas — itens (coroa, balão, guarda-chuva, skate)
+  sobressaem do quadro naturalmente. Verificado em mosaico com linhas-guia (cabeça e pés
+  coincidem). Cache `?v=8`→`?v=9`; boneco na tela = 100 px em todos.
+
 ## [2.25.3] — 2026-07-12
 
 - **Chuva do Foco — a tela nunca esvazia:** a arena era LIMPA a cada comando resolvido e

@@ -30,10 +30,10 @@ import type { ExerciseResult, Theme } from "@/types";
 import type { FocusMode } from "@/types/commands";
 import type { PresMode } from "@/components/exercises/PresentationConfig";
 
-const AGENT_V = "?v=8";   // cache-bust (imagens NORMALIZADAS 360×540) — igual ao FocusAgents
+const AGENT_V = "?v=9";   // cache-bust (imagens NORMALIZADAS 360×540) — igual ao FocusAgents
 
 // ── Tamanho / hitbox (idênticos ao Foco da arena) ───────────────────────────────
-const CHAR_SIZE = 88;              // legível p/ a expressão, sem amontoar (80→92→88)
+const CHAR_SIZE = 100;             // boneco na tela = CHAR_SIZE (imagens normalizadas pelo boneco)
 const CHAR_H    = CHAR_SIZE * 1.5; // imagens 2:3 (512×768)
 // Área CLICÁVEL = só o corpo visível (o resto do PNG é transparente).
 const HIT_L = 0.24, HIT_R = 0.76;
