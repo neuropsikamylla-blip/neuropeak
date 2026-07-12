@@ -14,6 +14,13 @@ histórico completo anterior está no log do Git (452 commits no total, a partir
   Documentação (CLAUDE.md, README.md, ARCHITECTURE.md, ADRs) reescrita a partir do
   código real.
 
+## [2.28.2] — 2026-07-12
+
+- **Chuva do Foco — variedade REAL entre comandos:** além de nunca repetir o comando,
+  o comando seguinte agora não repete a COR nem a CARACTERÍSTICA do anterior (acabou o
+  "verde com X" → "verde com Y"). Provado em simulação: 200 trocas seguidas com 0
+  repetições de comando, 0 de cor e 0 de característica consecutivas.
+
 ## [2.28.1] — 2026-07-12
 
 - **Chuva do Foco — 2 regras duras:**

@@ -383,6 +383,8 @@ export function FocusRain({ level, theme, presentMode, fbLevel, exerciseId, sett
   const consecErrsRef = useRef(0);   // comandos FALHOS seguidos (2 → desce 1 nível)
   const usedSigsRef   = useRef<Set<string>>(new Set());  // comandos já usados NA SESSÃO (evita repetir)
   const lastSigRef    = useRef("");                       // comando anterior (NUNCA repete consecutivo)
+  const lastColorsRef = useRef<Set<string>>(new Set());   // CORES do comando anterior (não repetir em seguida)
+  const lastFeatsRef  = useRef<Set<string>>(new Set());   // FEATURES do comando anterior (idem)
   const pointsRef     = useRef(0);
   const eventsRef     = useRef<Array<{ mode: FocusMode; level: number; correct: boolean; endedBy: "correct" | "wrong" | "timeout"; rtMs: number }>>([]);
 
@@ -400,27 +402,40 @@ export function FocusRain({ level, theme, presentMode, fbLevel, exerciseId, sett
     // evita repetir qualquer comando já usado na sessão; só quando o repertório
     // do nível esgota, recomeça o ciclo (ainda sem consecutivos).
     const sigOf = (c: Command) => c.subRules.map(r => r.key).sort().join("|");
+    // Cor e feature de cada sub-regra (key "combo:blue+head:gorro" → cor blue, feat head:gorro).
+    const colorsOf = (c: Command) => new Set(c.subRules.map(r => r.key.match(/combo:(\w+)\+/)?.[1] ?? "").filter(Boolean));
+    const featsOf  = (c: Command) => new Set(c.subRules.map(r => r.key.replace(/^combo:\w+\+/, "")));
+    const shares = (a: Set<string>, b: Set<string>) => { for (const x of a) if (b.has(x)) return true; return false; };
     const mk = () => buildCommand(
       lv, rulesRef.current,
       a => falling.some(f => f.id === a.id),
       r => !falling.some(f => r.matches(f)),
     );
+    // Escolha com VARIEDADE REAL (regra da terapeuta): o comando novo não pode
+    // repetir a COR nem a FEATURE do anterior (nada de "verde com X" → "verde
+    // com Y"). Score 0 = cor E feature diferentes; relaxa só se impossível.
     let cmd: Command | null = null;
-    let fallback: Command | null = null;   // 1º candidato não-consecutivo (se tudo já foi usado)
-    for (let attempt = 0; attempt < 40; attempt++) {
+    let best: Command | null = null;
+    let bestScore = 99;
+    for (let attempt = 0; attempt < 60; attempt++) {
       const cand = mk();
       const sig = sigOf(cand);
       if (sig === lastSigRef.current) continue;            // consecutivo: proibido SEMPRE
-      if (!fallback) fallback = cand;
-      if (!usedSigsRef.current.has(sig)) { cmd = cand; break; }
+      const score =
+        (shares(colorsOf(cand), lastColorsRef.current) ? 2 : 0) +
+        (shares(featsOf(cand), lastFeatsRef.current) ? 1 : 0) +
+        (usedSigsRef.current.has(sig) ? 3 : 0);
+      if (score === 0) { cmd = cand; break; }
+      if (score < bestScore) { bestScore = score; best = cand; }
     }
     if (!cmd) {
-      // repertório esgotado nesta sessão → novo ciclo (mantendo o "nunca consecutivo")
-      usedSigsRef.current.clear();
-      cmd = fallback ?? mk();
+      if (bestScore >= 3) usedSigsRef.current.clear();     // repertório esgotado → novo ciclo
+      cmd = best ?? mk();
     }
     usedSigsRef.current.add(sigOf(cmd));
     lastSigRef.current = sigOf(cmd);
+    lastColorsRef.current = colorsOf(cmd);
+    lastFeatsRef.current = featsOf(cmd);
     // CULL de segurança: remove qualquer faller que bata alguma sub-regra nova.
     const clash = agentsRef.current.filter(a => a.state === "falling" && cmd.subRules.some(r => r.matches(a.agent)));
     if (clash.length) {
