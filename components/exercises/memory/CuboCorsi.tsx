@@ -118,14 +118,21 @@ function IsoCube({
 
   return (
     <div style={{
-      width: size, height: size, maxWidth: "100%", margin: "0 auto",
+      width: size, height: size, maxWidth: "100%", margin: "0 auto", position: "relative",
       display: "flex", alignItems: "center", justifyContent: "center",
       perspective: size * 1.9, touchAction: "manipulation",
     }}>
+      {/* Sombra no CHÃO (elemento separado — NUNCA usar filter/drop-shadow no elemento
+          3D: filter ACHATA o preserve-3d e o cubo vira uma placa). */}
+      <div aria-hidden style={{
+        position: "absolute", left: "50%", bottom: Math.round(size * 0.05), transform: "translateX(-50%)",
+        width: S * 1.6, height: S * 0.3, borderRadius: "50%",
+        background: "radial-gradient(ellipse at center, rgba(0,0,0,0.10) 0%, rgba(0,0,0,0.0) 70%)",
+        pointerEvents: "none",
+      }} />
       <div style={{
         width: S, height: S, position: "relative", transformStyle: "preserve-3d",
         transform: cubePose(litFace),
-        filter: "drop-shadow(0 16px 24px rgba(0,0,0,0.10))",   // sombra suave (paleta: preto ~10%)
         // Virada fluida (TURN_MS), ease-in-out simétrico (sem overshoot/quique):
         // acelera progressivamente no início e desacelera no final (estilo smoothstep).
         transition: `transform ${TURN_MS}ms cubic-bezier(0.45, 0, 0.55, 1)`,
