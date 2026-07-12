@@ -14,6 +14,15 @@ histórico completo anterior está no log do Git (452 commits no total, a partir
   Documentação (CLAUDE.md, README.md, ARCHITECTURE.md, ADRs) reescrita a partir do
   código real.
 
+## [2.27.2] — 2026-07-12
+
+- **Chuva do Foco — corrige os "acelerados":** com a chuva contínua, o ALVO do comando
+  anterior que sobrevivia à troca continuava marcado como alvo — se estava na 2ª chance,
+  caía 1,4-1,7× mais rápido para sempre (os agentes "ultrapassando os outros"), e ao
+  chegar embaixo podia marcar omissão no comando novo. Agora, ao abrir o próximo comando,
+  todos os sobreviventes são rebaixados a distratores comuns (isTarget/passCount limpos).
+  Única velocidade diferente que resta: a 2ª chance do alvo ATUAL (por design).
+
 ## [2.27.1] — 2026-07-12
 
 - **Span Numérico Auditivo — 2 correções:** (1) no inverso, as bolinhas giravam DUAS

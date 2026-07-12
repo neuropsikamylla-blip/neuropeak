@@ -408,6 +408,13 @@ export function FocusRain({ level, theme, presentMode, fbLevel, exerciseId, sett
       for (const uid of ids) nodesRef.current.delete(uid);
       commitRender();
     }
+    // REBAIXA os sobreviventes a DISTRATORES comuns do novo comando. Sem isto, um
+    // ALVO antigo herdado ficava com isTarget/passCount do comando anterior: se
+    // estava na 2ª chance, caía ×secondChance PARA SEMPRE (uns "mais rápidos que
+    // os outros"), e ao chegar embaixo marcava omissão em sub-regra do comando NOVO.
+    for (const a of agentsRef.current) {
+      if (a.state === "falling") { a.isTarget = false; a.subIndex = -1; a.passCount = 0; }
+    }
     cmdRef.current = cmd;
     subAliveRef.current = cmd.subRules.map(() => false);
     subResolvedRef.current = cmd.subRules.map(() => false);
