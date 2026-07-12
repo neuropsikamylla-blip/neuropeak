@@ -91,8 +91,8 @@ const RAIN_CFG: Record<number, RainCfg> = {
 const SPAWN_TICK = 150;    // tick rápido; a densidade real é limitada por targetConcurrent().
 const MAX_ON_SCREEN = 24;  // teto. Desktop ~16 (N1) a ~24 (N7); celular ~5. Fluxo ritmado evita rajada.
 // Antes de o ALVO poder cair: pelo menos estes distratores + tempo (o alvo NUNCA é o 1º).
-const MIN_DISTRACTORS_BEFORE_TARGET = 4;
-const MIN_MS_BEFORE_TARGET = 1200;
+const MIN_DISTRACTORS_BEFORE_TARGET = 7;    // cai bastante distrator antes do alvo (vigilância)
+const MIN_MS_BEFORE_TARGET = 2600;          // ≥2,6s de busca ativa antes do alvo poder entrar
 // Quantos agentes simultâneos p/ a ÁREA atual — adapta ao monitor (menos denso).
 function targetConcurrent(level: number, W: number, H: number): number {
   return Math.max(4, Math.min(MAX_ON_SCREEN, Math.round((W * H) / RAIN_CFG[level].areaPerAgent)));

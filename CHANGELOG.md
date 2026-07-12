@@ -14,6 +14,15 @@ histórico completo anterior está no log do Git (452 commits no total, a partir
   Documentação (CLAUDE.md, README.md, ARCHITECTURE.md, ADRs) reescrita a partir do
   código real.
 
+## [2.25.0] — 2026-07-12
+
+- **Cubo Corsi — visual novo (paleta clara estilo referência) + maior:** estrutura
+  #9EBEDD, bordas #82A9CF, placas #F7FBFF (topo/lados com leve gradação), luz ativa
+  #4F8FEA, fundo #F4F7FB e sombra suave (~10% preto). Cubo maior (430→500 no jogo,
+  380 no tutorial). Paleta fornecida pela terapeuta.
+- **Chuva do Foco — alvo demora mais a entrar:** caem ≥7 distratores (e ≥2,6 s) antes
+  do alvo aparecer — mais tempo de busca ativa/vigilância antes do estímulo (é treino).
+
 ## [2.24.11] — 2026-07-12
 
 - **Chuva do Foco — movimento consistente e organizado:** todos os agentes agora caem na

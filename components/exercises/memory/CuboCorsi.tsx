@@ -19,22 +19,22 @@ type BState = "idle" | "lit" | "tapped" | "correct" | "wrong";
 const FACE_OF: Face[] = ["top","top","top","top","left","left","left","left","right","right","right","right"];
 
 const IDLE: Record<Face, string> = {
-  top:   "#FDFEFF",   // topo — branco
-  left:  "#E8F2FA",   // esquerda — branco-azulado bem claro
-  right: "#DAE9F5",   // direita — levemente mais sombreada
+  top:   "#FCFEFF",   // topo — placa quase branca (paleta da Kamylla: placas #F7FBFF)
+  left:  "#F7FBFF",   // esquerda — placa
+  right: "#F2F8FD",   // direita — placa levemente sombreada (leitura 3D)
 };
 const ACTIVE: Record<Exclude<BState, "idle">, string> = {
-  lit:     "#46BEEA",
-  tapped:  "#B7E4F5",
+  lit:     "#4F8FEA",   // luz ativa (paleta da Kamylla)
+  tapped:  "#BBD4F7",
   correct: "#46C66A",
   wrong:   "#F26257",
 };
 function cellColor(st: BState, face: Face) { return st === "idle" ? IDLE[face] : ACTIVE[st]; }
 function cellStroke(st: BState): string {
-  if (st === "lit")     return "#1F97C9";
+  if (st === "lit")     return "#3B79D9";
   if (st === "correct") return "#2E9E4F";
   if (st === "wrong")   return "#C73B30";
-  return "#CBDBEA";
+  return "#82A9CF";     // bordas mais escuras (paleta da Kamylla)
 }
 
 // Duração da virada — rápida e fluida (sem truncar). CALIBRÁVEL.
@@ -89,10 +89,10 @@ function IsoCube({
         position: "absolute", width: S, height: S, transform: faceCss(name, S / 2),
         display: "grid", gridTemplateColumns: "1fr 1fr", gridTemplateRows: "1fr 1fr",
         gap, padding: gap, boxSizing: "border-box", borderRadius: Math.round(S * 0.1),
-        background: "#AEC6DC", backfaceVisibility: "hidden",
+        background: "#9EBEDD", backfaceVisibility: "hidden",   // estrutura (paleta da Kamylla)
       }}>
         {[0,1,2,3].map(i => {
-          if (!active) return <div key={i} style={{ borderRadius: r, background: "#C5D6E6" }} />;
+          if (!active) return <div key={i} style={{ borderRadius: r, background: "#EAF2FA" }} />;
           const idx = (base as number) + i;
           const st = states[idx] ?? "idle";
           const fc = FACE_COLOR[name];
@@ -104,8 +104,8 @@ function IsoCube({
                 background: cellColor(st, fc),
                 border: `1.5px solid ${cellStroke(st)}`,
                 boxShadow: st === "lit"
-                  ? "0 0 14px rgba(70,190,234,0.8)"
-                  : "inset 0 1px 2px rgba(255,255,255,0.55)",
+                  ? "0 0 16px rgba(79,143,234,0.55)"
+                  : "inset 0 1px 2px rgba(255,255,255,0.7), 0 1px 2px rgba(0,0,0,0.10)",
                 cursor: interactive ? "pointer" : "default",
                 transition: "background 0.15s ease, box-shadow 0.2s ease",
               }}
@@ -125,6 +125,7 @@ function IsoCube({
       <div style={{
         width: S, height: S, position: "relative", transformStyle: "preserve-3d",
         transform: cubePose(litFace),
+        filter: "drop-shadow(0 16px 24px rgba(0,0,0,0.10))",   // sombra suave (paleta: preto ~10%)
         // Virada fluida (TURN_MS), ease-in-out simétrico (sem overshoot/quique):
         // acelera progressivamente no início e desacelera no final (estilo smoothstep).
         transition: `transform ${TURN_MS}ms cubic-bezier(0.45, 0, 0.55, 1)`,
@@ -224,7 +225,7 @@ function TutorialDemoWatch({ onDone }: { onDone: () => void }) {
       <p className="text-xs text-center font-semibold mb-2" style={{ color: "#1D4ED8" }}>
         O quadrado dourado acende — memorize a ordem!
       </p>
-      <IsoCube states={states} interactive={false} onTile={() => {}} size={340} poseFace={pose} />
+      <IsoCube states={states} interactive={false} onTile={() => {}} size={380} poseFace={pose} />
     </div>
   );
 }
@@ -475,7 +476,7 @@ export function CuboCorsi({ difficulty, theme: _theme, onComplete }: Props) {
   };
 
   return (
-    <div style={{ background: "#F0F4F8", minHeight: "100vh" }}>
+    <div style={{ background: "#F4F7FB", minHeight: "100vh" }}>
       <div style={{ maxWidth: 500, margin: "0 auto", padding: "18px 14px 32px" }}>
 
         {/* Barra de progresso (tempo ativo) */}
@@ -508,7 +509,7 @@ export function CuboCorsi({ difficulty, theme: _theme, onComplete }: Props) {
           interactive={phase === "input"}
           onTile={handleTileTap}
           poseFace={poseFace}
-          size={430}
+          size={500}
         />
 
         {/* Dots de sequência */}
