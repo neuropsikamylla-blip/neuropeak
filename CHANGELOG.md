@@ -14,6 +14,16 @@ histórico completo anterior está no log do Git (452 commits no total, a partir
   Documentação (CLAUDE.md, README.md, ARCHITECTURE.md, ADRs) reescrita a partir do
   código real.
 
+## [2.28.1] — 2026-07-12
+
+- **Chuva do Foco — 2 regras duras:**
+  - **Nunca repete comando:** o mesmo comando não sai duas vezes seguidas (proibição
+    absoluta) e o jogo evita repetir qualquer comando já usado na sessão — só recomeça o
+    ciclo quando o repertório do nível esgota.
+  - **Ninguém cai mais rápido, NUNCA:** removida a antiga "2ª chance acelerada" (era ela
+    que fazia um agente "cortar a tela" mais rápido que todos). O alvo que escapa volta
+    ao topo na MESMA velocidade dos demais; a 2ª escapada continua contando omissão.
+
 ## [2.28.0] — 2026-07-12
 
 - **Conecta Números (trilha-visual) — bug do clique + tutorial:**

@@ -70,7 +70,6 @@ function cleanForSpeech(text: string): string {
 
 // ── Configuração de dificuldade por NÍVEL (ladder 1–7) — CALIBRÁVEL ─────────────
 //  • fallMs        — tempo-base p/ o agente cair do topo até embaixo (↓ = mais rápido).
-//  • secondChance  — multiplicador de velocidade da 2ª queda de um alvo que escapou.
 //  • nearFrac      — fração dos DISTRATORES tirados da família confusável (o resto
 //    vira variedade). Sobe com o nível (mais parecidos = mais difícil).
 //  • areaPerAgent  — px² de tela por agente (↓ = mais denso). A quantidade na tela
@@ -81,15 +80,15 @@ function cleanForSpeech(text: string): string {
 // DECISÃO da terapeuta (12/jul): tamanho E densidade PADRÃO em todos os níveis;
 // a progressão é só VELOCIDADE (fallMs ↓) + COMANDOS mais complexos (nearFrac ↑,
 // multi-alvo nos níveis altos).
-interface RainCfg { fallMs: number; secondChance: number; nearFrac: number; areaPerAgent: number }
+interface RainCfg { fallMs: number; nearFrac: number; areaPerAgent: number }
 const RAIN_CFG: Record<number, RainCfg> = {
-  1: { fallMs: 7200, secondChance: 1.4,  nearFrac: 0.90, areaPerAgent: 42000 },
-  2: { fallMs: 6500, secondChance: 1.45, nearFrac: 0.92, areaPerAgent: 42000 },
-  3: { fallMs: 5900, secondChance: 1.5,  nearFrac: 0.94, areaPerAgent: 42000 },
-  4: { fallMs: 5300, secondChance: 1.55, nearFrac: 0.96, areaPerAgent: 42000 },
-  5: { fallMs: 4800, secondChance: 1.6,  nearFrac: 0.98, areaPerAgent: 42000 },
-  6: { fallMs: 4300, secondChance: 1.65, nearFrac: 0.99, areaPerAgent: 42000 },
-  7: { fallMs: 3900, secondChance: 1.7,  nearFrac: 1.00, areaPerAgent: 42000 },
+  1: { fallMs: 7200, nearFrac: 0.90, areaPerAgent: 42000 },
+  2: { fallMs: 6500, nearFrac: 0.92, areaPerAgent: 42000 },
+  3: { fallMs: 5900, nearFrac: 0.94, areaPerAgent: 42000 },
+  4: { fallMs: 5300, nearFrac: 0.96, areaPerAgent: 42000 },
+  5: { fallMs: 4800, nearFrac: 0.98, areaPerAgent: 42000 },
+  6: { fallMs: 4300, nearFrac: 0.99, areaPerAgent: 42000 },
+  7: { fallMs: 3900, nearFrac: 1.00, areaPerAgent: 42000 },
 };
 const SPAWN_TICK = 150;    // tick rápido; a densidade real é limitada por targetConcurrent().
 const MAX_ON_SCREEN = 24;  // teto. Desktop ~16 (N1) a ~24 (N7); celular ~5. Fluxo ritmado evita rajada.
@@ -382,6 +381,8 @@ export function FocusRain({ level, theme, presentMode, fbLevel, exerciseId, sett
   const firstMsListRef = useRef<number[]>([]);
   const consecHitsRef = useRef(0);
   const consecErrsRef = useRef(0);   // comandos FALHOS seguidos (2 → desce 1 nível)
+  const usedSigsRef   = useRef<Set<string>>(new Set());  // comandos já usados NA SESSÃO (evita repetir)
+  const lastSigRef    = useRef("");                       // comando anterior (NUNCA repete consecutivo)
   const pointsRef     = useRef(0);
   const eventsRef     = useRef<Array<{ mode: FocusMode; level: number; correct: boolean; endedBy: "correct" | "wrong" | "timeout"; rtMs: number }>>([]);
 
@@ -395,11 +396,31 @@ export function FocusRain({ level, theme, presentMode, fbLevel, exerciseId, sett
   const openCommandCard = useCallback(() => {
     const lv = levelRef.current;
     const falling = agentsRef.current.filter(a => a.state === "falling").map(a => a.agent);
-    const cmd = buildCommand(
+    // ANTI-REPETIÇÃO (regra da terapeuta): NUNCA o mesmo comando consecutivo, e
+    // evita repetir qualquer comando já usado na sessão; só quando o repertório
+    // do nível esgota, recomeça o ciclo (ainda sem consecutivos).
+    const sigOf = (c: Command) => c.subRules.map(r => r.key).sort().join("|");
+    const mk = () => buildCommand(
       lv, rulesRef.current,
       a => falling.some(f => f.id === a.id),
       r => !falling.some(f => r.matches(f)),
     );
+    let cmd: Command | null = null;
+    let fallback: Command | null = null;   // 1º candidato não-consecutivo (se tudo já foi usado)
+    for (let attempt = 0; attempt < 40; attempt++) {
+      const cand = mk();
+      const sig = sigOf(cand);
+      if (sig === lastSigRef.current) continue;            // consecutivo: proibido SEMPRE
+      if (!fallback) fallback = cand;
+      if (!usedSigsRef.current.has(sig)) { cmd = cand; break; }
+    }
+    if (!cmd) {
+      // repertório esgotado nesta sessão → novo ciclo (mantendo o "nunca consecutivo")
+      usedSigsRef.current.clear();
+      cmd = fallback ?? mk();
+    }
+    usedSigsRef.current.add(sigOf(cmd));
+    lastSigRef.current = sigOf(cmd);
     // CULL de segurança: remove qualquer faller que bata alguma sub-regra nova.
     const clash = agentsRef.current.filter(a => a.state === "falling" && cmd.subRules.some(r => r.matches(a.agent)));
     if (clash.length) {
@@ -710,14 +731,13 @@ export function FocusRain({ level, theme, presentMode, fbLevel, exerciseId, sett
       let changed = false;
       const omittedSubs: number[] = [];   // sub-regras que sofreram omissão neste frame
 
-      // Velocidade calculada POR QUADRO para TODOS (uniforme sempre — inclusive
-      // quando o nível muda, ninguém "ultrapassa" ninguém). Única exceção: alvo
-      // na 2ª chance cai secondChance× mais rápido (pedido da terapeuta).
+      // Velocidade ÚNICA calculada POR QUADRO para TODOS — NINGUÉM cai mais
+      // rápido que ninguém, NUNCA (regra dura da terapeuta; a antiga "2ª chance
+      // acelerada" foi removida — o alvo que escapa volta na MESMA velocidade).
       const baseV = fallSpeed(H, RAIN_CFG[levelRef.current].fallMs);
       for (const a of agentsRef.current) {
         if (a.state !== "falling") continue;
-        const v = a.isTarget && a.passCount === 1 ? baseV * RAIN_CFG[levelRef.current].secondChance : baseV;
-        a.y += v * dt;
+        a.y += baseV * dt;
         a.swayPhase += a.swayFreq * dt;
         const swayX = a.swayAmp * Math.sin(a.swayPhase);
         a.x = a.baseX + swayX;                       // posição horizontal viva (balanço)
@@ -729,7 +749,7 @@ export function FocusRain({ level, theme, presentMode, fbLevel, exerciseId, sett
         }
         if (a.y >= bottom) {
           if (a.isTarget && a.passCount === 0) {
-            // 2ª CHANCE (por alvo, independente) — velocidade vem do cálculo por quadro.
+            // 2ª CHANCE (por alvo): volta ao topo na MESMA velocidade de todos.
             a.passCount = 1;
             a.y = -CHAR_H;
             if (node) node.style.transform = `translate(${swayX}px, ${a.y}px)`;
