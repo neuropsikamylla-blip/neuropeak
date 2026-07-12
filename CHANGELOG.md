@@ -14,6 +14,13 @@ histórico completo anterior está no log do Git (452 commits no total, a partir
   Documentação (CLAUDE.md, README.md, ARCHITECTURE.md, ADRs) reescrita a partir do
   código real.
 
+## [2.27.1] — 2026-07-12
+
+- **Span Numérico Auditivo — 2 correções:** (1) no inverso, as bolinhas giravam DUAS
+  vezes (a fileira da fase de resposta nascia reta e animava de novo); agora nasce já
+  virada — gira só uma vez, no fim da fala. (2) A sequência não repete mais números
+  (embaralha 1-9 e usa os N primeiros; provado em 500 sequências de 8 dígitos).
+
 ## [2.27.0] — 2026-07-12
 
 - **Span Numérico Auditivo (Direto e Inverso) — painel novo estilo referência:** teclado

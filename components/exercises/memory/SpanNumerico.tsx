@@ -140,6 +140,7 @@ function Beads({ total, filled, active, flipped = false, flipping = false }: {
 }) {
   return (
     <motion.div className="flex flex-wrap items-center justify-center gap-3"
+      initial={{ rotate: flipped ? 180 : 0 }}   // nasce JÁ virada no input do inverso (sem girar de novo)
       animate={flipping ? { rotate: 180 } : { rotate: flipped ? 180 : 0 }}
       transition={{ duration: 0.9, ease: [0.45, 0, 0.55, 1] }}>
       {Array.from({ length: total }).map((_, i) => {
@@ -241,8 +242,13 @@ export function SpanNumerico({ difficulty, onComplete, reverse = false, settings
   // ── Inicia uma rodada ────────────────────────────────────────────────────────
   const startRound = useCallback((lv: number) => {
     const n = digitsForLevel(lv);
-    const seq: number[] = [];
-    for (let i = 0; i < n; i++) seq.push(1 + Math.floor(Math.random() * 9)); // 1–9 (painel não tem 0)
+    // 1-9 SEM repetição (embaralha e corta): span máximo é 8 dígitos, sempre cabe.
+    const pool = [1, 2, 3, 4, 5, 6, 7, 8, 9];
+    for (let i = pool.length - 1; i > 0; i--) {
+      const j = Math.floor(Math.random() * (i + 1));
+      [pool[i], pool[j]] = [pool[j], pool[i]];
+    }
+    const seq: number[] = pool.slice(0, n);
     seqIdRef.current++;
     const myId = seqIdRef.current;
     setSequence(seq);
