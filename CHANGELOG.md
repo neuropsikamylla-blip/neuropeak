@@ -14,6 +14,15 @@ histórico completo anterior está no log do Git (452 commits no total, a partir
   Documentação (CLAUDE.md, README.md, ARCHITECTURE.md, ADRs) reescrita a partir do
   código real.
 
+## [2.25.3] — 2026-07-12
+
+- **Chuva do Foco — a tela nunca esvazia:** a arena era LIMPA a cada comando resolvido e
+  re-enchia devagar — na prática, boa parte do tempo a tela ficava vazia (até 100% vazia
+  logo após o card). Agora a chuva é contínua de verdade: os agentes em queda ficam
+  congelados atrás do card e seguem como distratores do próximo comando (com dupla
+  garantia de que nenhum deles bate a regra nova — verificado, 0 conflitos), e o
+  preenchimento inicial é ~3× mais rápido até a tela povoar.
+
 ## [2.25.2] — 2026-07-12
 
 - **Cubo Corsi — ajustes finos (a pedido):** virada de ~80% (a face acesa fica quase de

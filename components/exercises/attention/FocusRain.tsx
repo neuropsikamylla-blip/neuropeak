@@ -265,9 +265,15 @@ function ruleFrag(r: Rule): string {
 // exige que cada alvo escolhido bata SÓ a sua sub-regra (sem overlap) e que as
 // sub-regras/fragmentos sejam distintos. `avoid` = agentes que não podem ser alvo
 // (ex.: os que já estão caindo — mantém o card limpo). Fallback: 1 sub-regra.
-export function buildCommand(level: number, allRules: Rule[], avoid: (a: AgentConfig) => boolean = () => false): Command {
+export function buildCommand(
+  level: number, allRules: Rule[],
+  avoid: (a: AgentConfig) => boolean = () => false,
+  ruleOk: (r: Rule) => boolean = () => true,          // ex.: nenhum faller vivo pode bater a regra
+): Command {
   const n = numTargetsForLevel(level);
-  const allowed = allRules.filter(r => ruleAllowed(r, level));
+  const allowed0 = allRules.filter(r => ruleAllowed(r, level));
+  const allowedOk = allowed0.filter(ruleOk);
+  const allowed = allowedOk.length >= n ? allowedOk : allowed0;   // degrada com segurança (cull cobre)
   for (let attempt = 0; attempt < 60; attempt++) {
     const chosen: Rule[] = [];
     const targets: AgentConfig[] = [];
@@ -379,15 +385,27 @@ export function FocusRain({ level, theme, presentMode, fbLevel, exerciseId, sett
 
   const commitRender = useCallback(() => { setRenderAgents(agentsRef.current.map(a => ({ ...a }))); }, []);
 
-  // Abre o CARD do PRÓXIMO comando: escolhe a regra e mostra o card central com o
-  // texto + botão "Começar". A chuva fica PAUSADA (phase="card") — nada spawna até
-  // o "Começar". A arena já está limpa aqui (a transição de card esvazia os agentes).
+  // Abre o CARD do PRÓXIMO comando. A CHUVA NÃO É LIMPA: os agentes em queda ficam
+  // congelados atrás do card e continuam como distratores do novo comando (a tela
+  // nunca esvazia — sem "vácuo"). Segurança dupla: (a) o novo comando evita regras
+  // que algum faller vivo satisfaça; (b) se mesmo assim sobrar um (fallback), ele é
+  // removido na hora — garante "alvo só spawnado" e nunca 2 alvos.
   const openCommandCard = useCallback(() => {
     const lv = levelRef.current;
-    // A arena está limpa aqui (a transição de card esvazia os agentes); ainda assim
-    // evitamos como alvo qualquer agente que porventura esteja caindo.
     const falling = agentsRef.current.filter(a => a.state === "falling").map(a => a.agent);
-    const cmd = buildCommand(lv, rulesRef.current, a => falling.some(f => f.id === a.id));
+    const cmd = buildCommand(
+      lv, rulesRef.current,
+      a => falling.some(f => f.id === a.id),
+      r => !falling.some(f => r.matches(f)),
+    );
+    // CULL de segurança: remove qualquer faller que bata alguma sub-regra nova.
+    const clash = agentsRef.current.filter(a => a.state === "falling" && cmd.subRules.some(r => r.matches(a.agent)));
+    if (clash.length) {
+      const ids = new Set(clash.map(a => a.uid));
+      agentsRef.current = agentsRef.current.filter(a => !ids.has(a.uid));
+      for (const uid of ids) nodesRef.current.delete(uid);
+      commitRender();
+    }
     cmdRef.current = cmd;
     subAliveRef.current = cmd.subRules.map(() => false);
     subResolvedRef.current = cmd.subRules.map(() => false);
@@ -403,7 +421,8 @@ export function FocusRain({ level, theme, presentMode, fbLevel, exerciseId, sett
   const startPlaying = useCallback(() => {
     if (phaseRef.current !== "card" || doneRef.current) return;
     cmdStartRef.current = Date.now();
-    distractorsThisCmdRef.current = 0;
+    // Os fallers preservados já contam como distratores caídos (a tela já está povoada).
+    distractorsThisCmdRef.current = agentsRef.current.filter(a => a.state === "falling").length;
     lastSpawnAtRef.current = 0;          // 1º agente entra já; os demais ritmados
     const cmd = cmdRef.current;
     if (cmd) { subAliveRef.current = cmd.subRules.map(() => false); }
@@ -455,9 +474,9 @@ export function FocusRain({ level, theme, presentMode, fbLevel, exerciseId, sett
     const maxC = targetConcurrent(levelRef.current, playWRef.current || 360, playHRef.current || 600);
     if (alive >= maxC) return;
     // FLUXO CONTÍNUO (sem "vácuo"): ritma a entrada — 1 agente a cada fallMs/maxC ms.
-    // Sem isto, o teto enche em rajada, o "bloco" cai junto e sobra um vazio enorme
-    // até ele sair da tela. Ritmado, sempre há agentes distribuídos na vertical.
-    const minGapMs = cfg.fallMs / maxC;
+    // Com a tela ainda meio vazia (< 60% do alvo), entra mais rápido (fill inicial).
+    const baseGap = cfg.fallMs / maxC;
+    const minGapMs = alive < maxC * 0.6 ? baseGap * 0.35 : baseGap;
     if (Date.now() - lastSpawnAtRef.current < minGapMs) return;
     const cmd = cmdRef.current;
     if (!cmd) return;
@@ -523,23 +542,17 @@ export function FocusRain({ level, theme, presentMode, fbLevel, exerciseId, sett
   }, []);
 
   // Comando RESOLVIDO (todas as sub-regras capturadas/omitidas) → progressão +
-  // transição para o CARD do próximo comando: pausa a chuva, fade dos restantes,
-  // limpa a arena e abre o card. Mantém o fluxo contínuo (gate por comando).
+  // CARD do próximo comando. A CHUVA FICA (congelada atrás do card, sem limpar) —
+  // a tela nunca esvazia; os fallers viram distratores do próximo comando.
   const finishCommandAndNextCard = useCallback(() => {
     if (phaseRef.current !== "playing") return;   // já em transição
-    phaseRef.current = "card";     // pausa spawns imediatamente
+    phaseRef.current = "card";     // pausa spawns/física imediatamente
     onCommandResolved(cmdCleanRef.current);        // sobe de nível SÓ se limpo
-    // Fade dos que ainda estão caindo (não pontuam; era pra deixar cair mesmo).
-    for (const a of agentsRef.current) if (a.state === "falling") a.state = "captured";
-    commitRender();
     setTimeout(() => {
       if (doneRef.current) return;
-      agentsRef.current = [];
-      nodesRef.current.clear();
-      commitRender();
-      openCommandCard();           // mostra o card do próximo comando + Começar
+      openCommandCard();           // card do próximo comando (fallers preservados)
     }, 260);
-  }, [commitRender, openCommandCard, onCommandResolved]);
+  }, [openCommandCard, onCommandResolved]);
 
   // Marca a sub-regra i como resolvida (por captura ou omissão) e, se TODAS as
   // sub-regras estiverem resolvidas, encerra o comando → próximo card.
