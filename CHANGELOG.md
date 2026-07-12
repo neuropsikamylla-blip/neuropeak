@@ -14,6 +14,14 @@ histórico completo anterior está no log do Git (452 commits no total, a partir
   Documentação (CLAUDE.md, README.md, ARCHITECTURE.md, ADRs) reescrita a partir do
   código real.
 
+## [2.25.5] — 2026-07-12
+
+- **Chuva do Foco — espaçamento correto (calibrado pela tela real):** a densidade estava
+  calculada para monitores grandes e na tela da terapeuta resultava em só ~6 agentes
+  (buracos). Recalibrada ~2,4× mais densa (MacBook ~15-24, celular ~5-8). E distância
+  mínima DURA no nascimento: se não há vaga a ≥0,95×largura de quem entrou há pouco, o
+  spawn é adiado 150 ms — nunca nasce um em cima do outro.
+
 ## [2.25.4] — 2026-07-12
 
 - **Focus Agents — tamanho REALMENTE padronizado (causa raiz):** a normalização anterior

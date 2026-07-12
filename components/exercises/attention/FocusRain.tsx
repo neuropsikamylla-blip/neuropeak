@@ -80,13 +80,13 @@ function cleanForSpeech(text: string): string {
 //  • areaPerAgent MAIOR (menos denso, sem sobreposição).
 interface RainCfg { fallMs: number; secondChance: number; nearFrac: number; areaPerAgent: number }
 const RAIN_CFG: Record<number, RainCfg> = {
-  1: { fallMs: 7200, secondChance: 1.4,  nearFrac: 0.90, areaPerAgent: 110000 },
-  2: { fallMs: 6500, secondChance: 1.45, nearFrac: 0.92, areaPerAgent: 102000 },
-  3: { fallMs: 5900, secondChance: 1.5,  nearFrac: 0.94, areaPerAgent:  95000 },
-  4: { fallMs: 5300, secondChance: 1.55, nearFrac: 0.96, areaPerAgent:  88000 },
-  5: { fallMs: 4800, secondChance: 1.6,  nearFrac: 0.98, areaPerAgent:  81000 },
-  6: { fallMs: 4300, secondChance: 1.65, nearFrac: 0.99, areaPerAgent:  74000 },
-  7: { fallMs: 3900, secondChance: 1.7,  nearFrac: 1.00, areaPerAgent:  68000 },
+  1: { fallMs: 7200, secondChance: 1.4,  nearFrac: 0.90, areaPerAgent: 46000 },
+  2: { fallMs: 6500, secondChance: 1.45, nearFrac: 0.92, areaPerAgent: 42000 },
+  3: { fallMs: 5900, secondChance: 1.5,  nearFrac: 0.94, areaPerAgent: 38000 },
+  4: { fallMs: 5300, secondChance: 1.55, nearFrac: 0.96, areaPerAgent: 35000 },
+  5: { fallMs: 4800, secondChance: 1.6,  nearFrac: 0.98, areaPerAgent: 32000 },
+  6: { fallMs: 4300, secondChance: 1.65, nearFrac: 0.99, areaPerAgent: 29000 },
+  7: { fallMs: 3900, secondChance: 1.7,  nearFrac: 1.00, areaPerAgent: 27000 },
 };
 const SPAWN_TICK = 150;    // tick rápido; a densidade real é limitada por targetConcurrent().
 const MAX_ON_SCREEN = 24;  // teto. Desktop ~16 (N1) a ~24 (N7); celular ~5. Fluxo ritmado evita rajada.
@@ -434,7 +434,7 @@ export function FocusRain({ level, theme, presentMode, fbLevel, exerciseId, sett
   // Cria um RainAgent. ESPALHAMENTO anti-sobreposição: gera ~8 candidatos de X e
   // escolhe o que MAXIMIZA a menor distância aos X dos agentes VIVOS que ainda
   // estão no topo (os "recém-caídos", y < 1.5×CHAR_H) — evita "um em cima do outro".
-  const makeFaller = useCallback((agent: AgentConfig, isTarget: boolean, subIndex: number): RainAgent => {
+  const makeFaller = useCallback((agent: AgentConfig, isTarget: boolean, subIndex: number): RainAgent | null => {
     const W = playWRef.current || 360;
     const H = playHRef.current || 600;
     const maxX = Math.max(4, W - CHAR_SIZE - 4);
@@ -450,6 +450,10 @@ export function FocusRain({ level, theme, presentMode, fbLevel, exerciseId, sett
       const gap = nearTop.length ? Math.min(...nearTop.map(px => Math.abs(px - cand))) : Infinity;
       if (gap > bestGap) { bestGap = gap; bestX = cand; }
     }
+    // DISTÂNCIA MÍNIMA dura: se nem o melhor candidato fica a ≥0.95×CHAR_SIZE de
+    // quem entrou há pouco, adia este spawn (150ms depois a faixa desce) — nunca
+    // nasce um em cima do outro.
+    if (bestGap < CHAR_SIZE * 0.95) return null;
     return {
       uid: `r${uidSeq.current++}`, agent, isTarget, subIndex,
       x: bestX, baseX: bestX,
@@ -480,7 +484,8 @@ export function FocusRain({ level, theme, presentMode, fbLevel, exerciseId, sett
     if (Date.now() - lastSpawnAtRef.current < minGapMs) return;
     const cmd = cmdRef.current;
     if (!cmd) return;
-    lastSpawnAtRef.current = Date.now();
+    // (lastSpawnAtRef só é marcado APÓS um spawn bem-sucedido — spawn adiado por
+    // distância mínima tenta de novo no próximo tick, sem esperar o gap inteiro.)
 
     // "Alvo nunca 1º": só libera QUALQUER alvo após ≥N distratores E ≥900ms.
     const targetUnlocked =
@@ -500,21 +505,25 @@ export function FocusRain({ level, theme, presentMode, fbLevel, exerciseId, sett
       const famUnion = cmd.subRules.flatMap(r => r.family).filter(a => !matchesAnySub(a));
       const poolFar  = ROSTER.filter(a => !matchesAnySub(a));
       const pool = (near && famUnion.length ? famUnion : poolFar);
-      distractorsThisCmdRef.current++;
       return makeFaller(pick(pool.length ? pool : poolFar), false, -1);
     };
 
-    let ra: RainAgent;
+    let ra: RainAgent | null;
+    let targetSub = -1;
     if (targetUnlocked && needTarget.length > 0) {
       // spawna 1 alvo de UMA sub-regra pendente (1 alvo vivo por sub-regra).
       const i = pick(needTarget);
       const r = cmd.subRules[i];
       const agent = cmd.targetAgents[i];   // alvo canônico da sub-regra (bate só ela)
       ra = makeFaller(agent && r.matches(agent) ? agent : pick(r.targetPool), true, i);
-      subAliveRef.current[i] = true;
+      targetSub = i;
     } else {
       ra = spawnDistractor();
     }
+    if (!ra) return;                        // adiado (sem vaga com distância mínima); tenta no próximo tick
+    if (targetSub >= 0) subAliveRef.current[targetSub] = true;
+    else distractorsThisCmdRef.current++;
+    lastSpawnAtRef.current = Date.now();
     agentsRef.current = [...agentsRef.current, ra];
     commitRender();
   }, [makeFaller, commitRender]);
