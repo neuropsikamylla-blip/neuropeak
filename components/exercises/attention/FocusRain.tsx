@@ -33,7 +33,7 @@ import type { PresMode } from "@/components/exercises/PresentationConfig";
 const AGENT_V = "?v=7";   // cache-bust (imagens transparentes) — igual ao FocusAgents
 
 // ── Tamanho / hitbox (idênticos ao Foco da arena) ───────────────────────────────
-const CHAR_SIZE = 80;              // recalibração de elite — menores, clique preciso
+const CHAR_SIZE = 92;              // um pouco maior (80→92) p/ ler a EXPRESSÃO do rosto
 const CHAR_H    = CHAR_SIZE * 1.5; // imagens 2:3 (512×768)
 // Área CLICÁVEL = só o corpo visível (o resto do PNG é transparente).
 const HIT_L = 0.24, HIT_R = 0.76;

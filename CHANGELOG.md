@@ -14,6 +14,13 @@ histórico completo anterior está no log do Git (452 commits no total, a partir
   Documentação (CLAUDE.md, README.md, ARCHITECTURE.md, ADRs) reescrita a partir do
   código real.
 
+## [2.24.1] — 2026-07-12
+
+- **Chuva do Foco — agentes um pouco maiores (80→92px):** para ler a EXPRESSÃO do rosto
+  (feliz/triste/raiva), que no tamanho anterior era um detalhe sutil demais. O agente
+  feliz sempre esteve no jogo (verificado: 6 imagens + roster + comandos); o problema era
+  só de legibilidade no tamanho pequeno.
+
 ## [2.24.0] — 2026-07-12
 
 - **Chuva do Foco — múltiplos alvos (degrau final da progressão):** nos níveis altos o
