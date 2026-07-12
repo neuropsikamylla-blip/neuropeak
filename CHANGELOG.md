@@ -14,6 +14,16 @@ histórico completo anterior está no log do Git (452 commits no total, a partir
   Documentação (CLAUDE.md, README.md, ARCHITECTURE.md, ADRs) reescrita a partir do
   código real.
 
+## [2.24.0] — 2026-07-12
+
+- **Chuva do Foco — múltiplos alvos (degrau final da progressão):** nos níveis altos o
+  comando pede mais de um personagem — níveis 1-4: 1 alvo; 5-6: 2 alvos; 7: 3 alvos.
+  Ex.: "Ache o agente azul de gorro e o vermelho de bermuda". O paciente tem que achar e
+  tocar TODOS antes do próximo card; cada alvo com sua 2ª chance; distratores nunca batem
+  nenhuma pista; sobe de nível só com o comando resolvido limpo (todos capturados, sem
+  erro/omissão). Mesmo fluxo card → Começar → busca. Verificado: N1-4=1/N5-6=2/N7=3,
+  0 distrator que engana, alvos distintos, textos em uma linha.
+
 ## [2.23.7] — 2026-07-12
 
 - **Chuva do Foco — comando em uma linha, só combinados, mais denso:** (1) o texto do

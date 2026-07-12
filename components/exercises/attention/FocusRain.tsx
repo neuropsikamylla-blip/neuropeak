@@ -240,12 +240,70 @@ export function ruleAllowed(r: Rule, level: number): boolean {
   return r.combined;
 }
 
+// Nº de ALVOS por comando (sub-regras distintas): N1-4=1, N5-6=2, N7=3.
+export function numTargetsForLevel(level: number): number {
+  if (level >= 7) return 3;
+  if (level >= 5) return 2;
+  return 1;
+}
+
+// Um COMANDO = N sub-regras DISTINTAS (cada uma combinada cor+feature), com alvos
+// distintos e sem sobreposição (nenhum alvo de uma bate outra; nenhum distrator
+// bate qualquer sub-regra). O texto junta os fragmentos das sub-regras com " e o ".
+export interface Command {
+  subRules: Rule[];
+  targetAgents: AgentConfig[];   // 1 agente-alvo escolhido por sub-regra (distintos)
+  text: string;                  // "Ache o agente azul de gorro e o vermelho de bermuda"
+}
+
+// `frag` de uma regra combinada = "cor + feature" (tira o "Ache o agente " do texto).
+function ruleFrag(r: Rule): string {
+  return r.text.replace(/^Ache o agente /, "");
+}
+
+// Monta um comando com N sub-regras: sorteia regras combinadas permitidas no nível,
+// exige que cada alvo escolhido bata SÓ a sua sub-regra (sem overlap) e que as
+// sub-regras/fragmentos sejam distintos. `avoid` = agentes que não podem ser alvo
+// (ex.: os que já estão caindo — mantém o card limpo). Fallback: 1 sub-regra.
+export function buildCommand(level: number, allRules: Rule[], avoid: (a: AgentConfig) => boolean = () => false): Command {
+  const n = numTargetsForLevel(level);
+  const allowed = allRules.filter(r => ruleAllowed(r, level));
+  for (let attempt = 0; attempt < 60; attempt++) {
+    const chosen: Rule[] = [];
+    const targets: AgentConfig[] = [];
+    const usedFrag = new Set<string>();
+    for (const r of shuffle(allowed)) {
+      if (chosen.length >= n) break;
+      const frag = ruleFrag(r);
+      if (usedFrag.has(frag)) continue;
+      // alvo candidato: bate ESTA regra, não é agente já usado/evitado, e NÃO bate
+      // nenhuma sub-regra já escolhida (sem overlap entre sub-regras).
+      const cand = shuffle(r.targetPool).find(a =>
+        !targets.some(t => t.id === a.id) && !avoid(a) && !chosen.some(cr => cr.matches(a)),
+      );
+      if (!cand) continue;
+      // e nenhum alvo JÁ escolhido pode bater esta nova regra (simetria).
+      if (targets.some(t => r.matches(t))) continue;
+      chosen.push(r); targets.push(cand); usedFrag.add(frag);
+    }
+    if (chosen.length === n) {
+      const text = "Ache o agente " + chosen.map(ruleFrag).join(" e o ");
+      return { subRules: chosen, targetAgents: targets, text };
+    }
+  }
+  // Fallback graciosos: 1 sub-regra (nunca quebra).
+  const r = pick(allowed);
+  const t = pick(r.targetPool);
+  return { subRules: [r], targetAgents: [t], text: r.text };
+}
+
 type RainStateT = "falling" | "captured" | "wrong" | "missed";
 
 interface RainAgent {
   uid: string;
   agent: AgentConfig;
-  isTarget: boolean;   // é o alvo do comando ATUAL (marcado no spawn)
+  isTarget: boolean;   // é UM dos alvos do comando ATUAL (marcado no spawn)
+  subIndex: number;    // qual sub-regra este alvo representa (-1 = distrator)
   x: number;           // posição horizontal ATUAL (baseX + balanço)
   baseX: number;       // âncora horizontal (o balanço oscila ao redor dela)
   y: number;
@@ -297,10 +355,12 @@ export function FocusRain({ level, theme, presentMode, fbLevel, exerciseId, sett
   const uidSeq       = useRef(0);
   const doneRef      = useRef(false);
 
-  // Regra atual + controle de "há alvo vivo para esta regra".
+  // COMANDO atual = N sub-regras. Controle por sub-regra: alvo vivo? resolvida?
   const rulesRef      = useRef<Rule[]>(buildAllRules());
-  const ruleRef       = useRef<Rule | null>(null);
-  const targetAliveRef = useRef(false);   // já existe um alvo (não resolvido) da regra atual?
+  const cmdRef        = useRef<Command | null>(null);
+  const subAliveRef   = useRef<boolean[]>([]);   // sub i tem alvo vivo (não resolvido) na tela?
+  const subResolvedRef = useRef<boolean[]>([]);  // sub i já resolvida (capturada OU omitida)?
+  const cmdCleanRef   = useRef(true);            // comando sem erro/omissão até agora (p/ subir de nível)
   const cmdStartRef   = useRef(0);        // ts em que a CHUVA do comando começou (RT)
   const phaseRef      = useRef<"card" | "playing">("card");   // espelho de `phase` p/ o loop/timers
   const distractorsThisCmdRef = useRef(0);   // quantos distratores já caíram NESTE comando (alvo nunca 1º)
@@ -323,16 +383,16 @@ export function FocusRain({ level, theme, presentMode, fbLevel, exerciseId, sett
   // o "Começar". A arena já está limpa aqui (a transição de card esvazia os agentes).
   const openCommandCard = useCallback(() => {
     const lv = levelRef.current;
-    const allowed = rulesRef.current.filter(r => ruleAllowed(r, lv));
-    const prevKey = ruleRef.current?.key;
+    // A arena está limpa aqui (a transição de card esvazia os agentes); ainda assim
+    // evitamos como alvo qualquer agente que porventura esteja caindo.
     const falling = agentsRef.current.filter(a => a.state === "falling").map(a => a.agent);
-    // Regra ≠ anterior e não satisfeita por nenhum agente que ainda esteja na tela.
-    const safe = shuffle(allowed).filter(r => r.key !== prevKey && !falling.some(a => r.matches(a)));
-    const chosen = safe[0] ?? shuffle(allowed).find(r => !falling.some(a => r.matches(a))) ?? pick(allowed);
-    ruleRef.current = chosen;
-    targetAliveRef.current = false;
+    const cmd = buildCommand(lv, rulesRef.current, a => falling.some(f => f.id === a.id));
+    cmdRef.current = cmd;
+    subAliveRef.current = cmd.subRules.map(() => false);
+    subResolvedRef.current = cmd.subRules.map(() => false);
+    cmdCleanRef.current = true;
     distractorsThisCmdRef.current = 0;
-    setCommand(chosen.text);
+    setCommand(cmd.text);
     phaseRef.current = "card";
     setPhase("card");
   }, []);
@@ -343,16 +403,17 @@ export function FocusRain({ level, theme, presentMode, fbLevel, exerciseId, sett
     if (phaseRef.current !== "card" || doneRef.current) return;
     cmdStartRef.current = Date.now();
     distractorsThisCmdRef.current = 0;
-    targetAliveRef.current = false;
+    const cmd = cmdRef.current;
+    if (cmd) { subAliveRef.current = cmd.subRules.map(() => false); }
     phaseRef.current = "playing";
     setPhase("playing");
-    if (presentMode !== "visual" && ruleRef.current) speak(cleanForSpeech(ruleRef.current.text));
+    if (presentMode !== "visual" && cmd) speak(cleanForSpeech(cmd.text));
   }, [presentMode, speak]);
 
   // Cria um RainAgent. ESPALHAMENTO anti-sobreposição: gera ~8 candidatos de X e
   // escolhe o que MAXIMIZA a menor distância aos X dos agentes VIVOS que ainda
   // estão no topo (os "recém-caídos", y < 1.5×CHAR_H) — evita "um em cima do outro".
-  const makeFaller = useCallback((agent: AgentConfig, isTarget: boolean): RainAgent => {
+  const makeFaller = useCallback((agent: AgentConfig, isTarget: boolean, subIndex: number): RainAgent => {
     const W = playWRef.current || 360;
     const H = playHRef.current || 600;
     const maxX = Math.max(4, W - CHAR_SIZE - 4);
@@ -368,7 +429,7 @@ export function FocusRain({ level, theme, presentMode, fbLevel, exerciseId, sett
       if (gap > bestGap) { bestGap = gap; bestX = cand; }
     }
     return {
-      uid: `r${uidSeq.current++}`, agent, isTarget,
+      uid: `r${uidSeq.current++}`, agent, isTarget, subIndex,
       x: bestX, baseX: bestX,
       y: -CHAR_H - Math.random() * CHAR_H * 2.5,                                   // entrada BEM escalonada (alturas variadas)
       vy: fallSpeed(H, RAIN_CFG[levelRef.current].fallMs) * (0.55 + Math.random() * 0.90), // 0.55–1.45x → alturas bem diferentes (sem fileira)
@@ -380,52 +441,71 @@ export function FocusRain({ level, theme, presentMode, fbLevel, exerciseId, sett
   }, []);
 
   // Spawn de UM agente. Só corre em phase="playing" (o card pausa a chuva).
-  //  • O ALVO só pode aparecer depois de ≥MIN_DISTRACTORS_BEFORE_TARGET distratores
+  //  • Nenhum ALVO pode aparecer antes de ≥MIN_DISTRACTORS_BEFORE_TARGET distratores
   //    E ≥MIN_MS_BEFORE_TARGET desde o "Começar" (o alvo NUNCA é o primeiro a cair).
-  //  • Enquanto o alvo não pode/não está vivo → spawna DISTRATOR confusável.
-  //  • Nunca há 2 alvos (targetAliveRef controla).
+  //  • Garante 1 alvo VIVO por sub-regra pendente (subAlive/subResolved controlam) —
+  //    nunca 2 alvos da mesma sub-regra; distratores nunca batem NENHUMA sub-regra.
   const spawnOne = useCallback(() => {
     if (doneRef.current || phaseRef.current !== "playing") return;
     const cfg = RAIN_CFG[levelRef.current];
     const alive = agentsRef.current.filter(a => a.state === "falling").length;
     const maxC = targetConcurrent(levelRef.current, playWRef.current || 360, playHRef.current || 600);
     if (alive >= maxC) return;
-    const rule = ruleRef.current;
-    if (!rule) return;
+    const cmd = cmdRef.current;
+    if (!cmd) return;
 
+    // "Alvo nunca 1º": só libera QUALQUER alvo após ≥N distratores E ≥900ms.
     const targetUnlocked =
       distractorsThisCmdRef.current >= MIN_DISTRACTORS_BEFORE_TARGET &&
       Date.now() - cmdStartRef.current >= MIN_MS_BEFORE_TARGET;
 
-    let ra: RainAgent;
-    if (!targetAliveRef.current && targetUnlocked) {
-      // spawna o ÚNICO alvo do comando atual (liberado após os distratores).
-      ra = makeFaller(pick(rule.targetPool), true);
-      targetAliveRef.current = true;
-    } else {
-      // distrator: da família (confusável) na maioria; senão variedade do roster.
+    // Sub-regras que precisam de um alvo: não resolvidas E sem alvo vivo agora.
+    const needTarget = cmd.subRules
+      .map((_, i) => i)
+      .filter(i => !subResolvedRef.current[i] && !subAliveRef.current[i]);
+
+    // Distrator: NÃO bate NENHUMA sub-regra. Near = compartilha 1 atributo com
+    // alguma sub-regra (família); Far = variedade que não bate nenhuma.
+    const matchesAnySub = (a: AgentConfig) => cmd.subRules.some(r => r.matches(a));
+    const spawnDistractor = () => {
       const near = Math.random() < cfg.nearFrac;
-      const poolNear = rule.family.filter(a => !rule.matches(a));
-      const poolFar  = ROSTER.filter(a => !rule.matches(a));
-      const pool = (near && poolNear.length ? poolNear : poolFar);
-      ra = makeFaller(pick(pool), false);
+      const famUnion = cmd.subRules.flatMap(r => r.family).filter(a => !matchesAnySub(a));
+      const poolFar  = ROSTER.filter(a => !matchesAnySub(a));
+      const pool = (near && famUnion.length ? famUnion : poolFar);
       distractorsThisCmdRef.current++;
+      return makeFaller(pick(pool.length ? pool : poolFar), false, -1);
+    };
+
+    let ra: RainAgent;
+    if (targetUnlocked && needTarget.length > 0) {
+      // spawna 1 alvo de UMA sub-regra pendente (1 alvo vivo por sub-regra).
+      const i = pick(needTarget);
+      const r = cmd.subRules[i];
+      const agent = cmd.targetAgents[i];   // alvo canônico da sub-regra (bate só ela)
+      ra = makeFaller(agent && r.matches(agent) ? agent : pick(r.targetPool), true, i);
+      subAliveRef.current[i] = true;
+    } else {
+      ra = spawnDistractor();
     }
     agentsRef.current = [...agentsRef.current, ra];
     commitRender();
   }, [makeFaller, commitRender]);
 
-  // Progressão de nível.
-  const onGoodEvent = useCallback(() => {
-    consecHitsRef.current++;
-    if (consecHitsRef.current >= LEVEL_UP_HITS && levelRef.current < MAX_LEVEL) {
-      levelRef.current++;
+  // Progressão de nível: conta COMANDO resolvido LIMPO (todos os alvos capturados,
+  // sem erro nem omissão). 3 comandos limpos seguidos = sobe. Erro/omissão zera.
+  const onCommandResolved = useCallback((clean: boolean) => {
+    if (clean) {
+      consecHitsRef.current++;
+      if (consecHitsRef.current >= LEVEL_UP_HITS && levelRef.current < MAX_LEVEL) {
+        levelRef.current++;
+        consecHitsRef.current = 0;
+        reachedRef.current = Math.max(reachedRef.current, levelRef.current);
+        setDisplayLevel(levelRef.current);
+      }
+    } else {
       consecHitsRef.current = 0;
-      reachedRef.current = Math.max(reachedRef.current, levelRef.current);
-      setDisplayLevel(levelRef.current);
     }
   }, []);
-  const onBadEvent = useCallback(() => { consecHitsRef.current = 0; }, []);
 
   const showWrongFlash = useCallback((msg: string) => {
     setFlash({ msg });
@@ -433,12 +513,13 @@ export function FocusRain({ level, theme, presentMode, fbLevel, exerciseId, sett
     flashTimerRef.current = setTimeout(() => setFlash(null), 900);
   }, []);
 
-  // Resolve o alvo (ACERTO por toque OU OMISSÃO por escape) → transição para o
-  // CARD do próximo comando: pausa a chuva, faz FADE dos agentes restantes, limpa
-  // a arena e abre o card. Mantém o fluxo contínuo (só que com um gate por comando).
-  const resolveTargetAndSwitch = useCallback(() => {
+  // Comando RESOLVIDO (todas as sub-regras capturadas/omitidas) → progressão +
+  // transição para o CARD do próximo comando: pausa a chuva, fade dos restantes,
+  // limpa a arena e abre o card. Mantém o fluxo contínuo (gate por comando).
+  const finishCommandAndNextCard = useCallback(() => {
+    if (phaseRef.current !== "playing") return;   // já em transição
     phaseRef.current = "card";     // pausa spawns imediatamente
-    targetAliveRef.current = false;
+    onCommandResolved(cmdCleanRef.current);        // sobe de nível SÓ se limpo
     // Fade dos que ainda estão caindo (não pontuam; era pra deixar cair mesmo).
     for (const a of agentsRef.current) if (a.state === "falling") a.state = "captured";
     commitRender();
@@ -449,15 +530,28 @@ export function FocusRain({ level, theme, presentMode, fbLevel, exerciseId, sett
       commitRender();
       openCommandCard();           // mostra o card do próximo comando + Começar
     }, 260);
-  }, [commitRender, openCommandCard]);
+  }, [commitRender, openCommandCard, onCommandResolved]);
+
+  // Marca a sub-regra i como resolvida (por captura ou omissão) e, se TODAS as
+  // sub-regras estiverem resolvidas, encerra o comando → próximo card.
+  const resolveSub = useCallback((i: number) => {
+    subResolvedRef.current[i] = true;
+    subAliveRef.current[i] = false;
+    if (subResolvedRef.current.every(Boolean)) finishCommandAndNextCard();
+  }, [finishCommandAndNextCard]);
 
   // ── Toque num agente ──
   const handleTap = useCallback((uid: string) => {
     const a = agentsRef.current.find(x => x.uid === uid);
     if (!a || a.state !== "falling" || doneRef.current) return;
-    const rt = Date.now() - cmdStartRef.current;   // RT = comando → acerto
-    if (a.isTarget) {
-      // ACERTO — comando resolvido; troca IMEDIATA de regra.
+    const cmd = cmdRef.current;
+    if (!cmd) return;
+    const rt = Date.now() - cmdStartRef.current;   // RT = comando → captura
+    // Bate ALGUMA sub-regra ainda NÃO resolvida? (o alvo bate só a sua sub-regra.)
+    const subIdx = cmd.subRules.findIndex((r, i) => !subResolvedRef.current[i] && r.matches(a.agent));
+
+    if (subIdx >= 0) {
+      // ACERTO de uma sub-regra → captura esse alvo (o comando pode ainda ter outros).
       a.state = "captured";
       capturesRef.current++;
       rtSumRef.current += rt; rtNRef.current++;
@@ -466,26 +560,31 @@ export function FocusRain({ level, theme, presentMode, fbLevel, exerciseId, sett
       setPoints(pointsRef.current);
       soundCapture(); if (fbLevel !== "leve") vibrate(40);
       eventsRef.current.push({ mode: "foco", level: levelRef.current, correct: true, endedBy: "correct", rtMs: rt });
-      onGoodEvent();
-      resolveTargetAndSwitch();
+      commitRender();
+      setTimeout(() => {
+        agentsRef.current = agentsRef.current.filter(x => x.uid !== a.uid);
+        nodesRef.current.delete(a.uid);
+        commitRender();
+      }, 220);
+      resolveSub(subIdx);   // marca a sub-regra; encerra o comando se foi a última
     } else {
-      // ERRO impulsivo (distrator) — comando NÃO troca; o alvo certo ainda cai.
+      // ERRO impulsivo (não bate nenhuma sub-regra) — comando NÃO troca.
       a.state = "wrong";
       falsePosRef.current++;
+      cmdCleanRef.current = false;   // deixou de ser "limpo" (não sobe de nível)
       pointsRef.current = Math.max(0, pointsRef.current - 5);
       setPoints(pointsRef.current);
       soundWrong(); if (fbLevel !== "leve") vibrate(fbLevel === "intenso" ? [80, 50, 80] : [50, 40, 50]);
       showWrongFlash("Esse não é o do comando");
       eventsRef.current.push({ mode: "foco", level: levelRef.current, correct: false, endedBy: "wrong", rtMs: rt });
-      onBadEvent();
-    }
-    commitRender();
-    setTimeout(() => {
-      agentsRef.current = agentsRef.current.filter(x => x.uid !== a.uid);
-      nodesRef.current.delete(a.uid);
       commitRender();
-    }, a.isTarget ? 220 : 320);
-  }, [fbLevel, onGoodEvent, onBadEvent, showWrongFlash, commitRender, resolveTargetAndSwitch]);
+      setTimeout(() => {
+        agentsRef.current = agentsRef.current.filter(x => x.uid !== a.uid);
+        nodesRef.current.delete(a.uid);
+        commitRender();
+      }, 320);
+    }
+  }, [fbLevel, showWrongFlash, commitRender, resolveSub]);
 
   // ── Fim da sessão ──
   const endSession = useCallback(() => {
@@ -550,7 +649,7 @@ export function FocusRain({ level, theme, presentMode, fbLevel, exerciseId, sett
       const H = playHRef.current;
       const bottom = H;
       let changed = false;
-      let targetOmitted = false;
+      const omittedSubs: number[] = [];   // sub-regras que sofreram omissão neste frame
 
       for (const a of agentsRef.current) {
         if (a.state !== "falling") continue;
@@ -562,19 +661,20 @@ export function FocusRain({ level, theme, presentMode, fbLevel, exerciseId, sett
         if (node) node.style.transform = `translate(${swayX}px, ${a.y}px)`;
         if (a.y >= bottom) {
           if (a.isTarget && a.passCount === 0) {
-            // 2ª CHANCE.
+            // 2ª CHANCE (por alvo, independente).
             a.passCount = 1;
             a.y = -CHAR_H;
             a.vy = fallSpeed(H, RAIN_CFG[levelRef.current].fallMs) * RAIN_CFG[levelRef.current].secondChance;
             if (node) node.style.transform = `translate(${swayX}px, ${a.y}px)`;
           } else if (a.isTarget) {
-            // OMISSÃO (alvo escapou 2×) → troca de comando (mantém o fluxo).
+            // OMISSÃO desta sub-regra (escapou 2×). O alvo daquela sub-regra não
+            // volta; a sub-regra fica resolvida-por-omissão.
             a.state = "missed";
             omissionsRef.current++;
+            cmdCleanRef.current = false;
             soundMiss(); if (fbLevel === "intenso") vibrate([30, 20, 30]);
             eventsRef.current.push({ mode: "foco", level: levelRef.current, correct: false, endedBy: "timeout", rtMs: Date.now() - cmdStartRef.current });
-            onBadEvent();
-            targetOmitted = true;
+            if (a.subIndex >= 0) { subAliveRef.current[a.subIndex] = false; omittedSubs.push(a.subIndex); }
             changed = true;
           } else {
             // DISTRATOR que cai = correto deixar → some sem penalidade.
@@ -589,9 +689,10 @@ export function FocusRain({ level, theme, presentMode, fbLevel, exerciseId, sett
         for (const uid of nodesRef.current.keys()) {
           if (!agentsRef.current.some(a => a.uid === uid)) nodesRef.current.delete(uid);
         }
-        // OMISSÃO: abre o card do próximo comando (transição limpa a arena).
-        if (targetOmitted) resolveTargetAndSwitch();
         commitRender();
+        // Marca as sub-regras omitidas como resolvidas; se foi a última, o comando
+        // encerra e vai pro próximo card (resolveSub cuida disso).
+        for (const i of omittedSubs) resolveSub(i);
       }
 
       if (isTimeUp()) { endSession(); return; }
