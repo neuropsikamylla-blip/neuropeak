@@ -14,6 +14,13 @@ histórico completo anterior está no log do Git (452 commits no total, a partir
   Documentação (CLAUDE.md, README.md, ARCHITECTURE.md, ADRs) reescrita a partir do
   código real.
 
+## [2.24.11] — 2026-07-12
+
+- **Chuva do Foco — movimento consistente e organizado:** todos os agentes agora caem na
+  MESMA velocidade do nível (antes cada um tinha velocidade aleatória 0,55–1,45× — uns
+  alcançavam os outros, abriam buracos e parecia desorganizado). A entrada continua
+  ritmada (1 por vez) e o espalhamento vem das posições horizontais; balanço leve mantido.
+
 ## [2.24.10] — 2026-07-12
 
 - **Chuva do Foco — mais estímulos na tela** (a pedido, com exemplo): densidade sobe para

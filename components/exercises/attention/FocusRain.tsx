@@ -434,11 +434,11 @@ export function FocusRain({ level, theme, presentMode, fbLevel, exerciseId, sett
     return {
       uid: `r${uidSeq.current++}`, agent, isTarget, subIndex,
       x: bestX, baseX: bestX,
-      y: -CHAR_H - Math.random() * CHAR_H * 2.5,                                   // entrada BEM escalonada (alturas variadas)
-      vy: fallSpeed(H, RAIN_CFG[levelRef.current].fallMs) * (0.55 + Math.random() * 0.90), // 0.55–1.45x → alturas bem diferentes (sem fileira)
-      swayAmp: 10 + Math.random() * 16,          // 10–26px de balanço (menor → não derivam um p/ cima do outro)
+      y: -CHAR_H,                                            // entra do topo; o escalonamento vem do RITMO de entrada
+      vy: fallSpeed(H, RAIN_CFG[levelRef.current].fallMs),   // velocidade UNIFORME (movimento consistente, organizado)
+      swayAmp: 8 + Math.random() * 10,           // balanço leve (8–18px) — vivo, sem bagunçar
       swayPhase: Math.random() * Math.PI * 2,
-      swayFreq: 0.0010 + Math.random() * 0.0012, // rad/ms
+      swayFreq: 0.0009 + Math.random() * 0.0008, // rad/ms
       passCount: 0, spawnAt: Date.now(), state: "falling",
     };
   }, []);
