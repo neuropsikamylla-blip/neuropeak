@@ -30,7 +30,7 @@ import type { ExerciseResult, Theme } from "@/types";
 import type { FocusMode } from "@/types/commands";
 import type { PresMode } from "@/components/exercises/PresentationConfig";
 
-const AGENT_V = "?v=7";   // cache-bust (imagens transparentes) — igual ao FocusAgents
+const AGENT_V = "?v=8";   // cache-bust (imagens NORMALIZADAS 360×540) — igual ao FocusAgents
 
 // ── Tamanho / hitbox (idênticos ao Foco da arena) ───────────────────────────────
 const CHAR_SIZE = 88;              // legível p/ a expressão, sem amontoar (80→92→88)
@@ -80,19 +80,19 @@ function cleanForSpeech(text: string): string {
 //  • areaPerAgent MAIOR (menos denso, sem sobreposição).
 interface RainCfg { fallMs: number; secondChance: number; nearFrac: number; areaPerAgent: number }
 const RAIN_CFG: Record<number, RainCfg> = {
-  1: { fallMs: 7200, secondChance: 1.4,  nearFrac: 0.90, areaPerAgent: 100000 },
-  2: { fallMs: 6500, secondChance: 1.45, nearFrac: 0.92, areaPerAgent:  92000 },
-  3: { fallMs: 5900, secondChance: 1.5,  nearFrac: 0.94, areaPerAgent:  85000 },
-  4: { fallMs: 5300, secondChance: 1.55, nearFrac: 0.96, areaPerAgent:  78000 },
-  5: { fallMs: 4800, secondChance: 1.6,  nearFrac: 0.98, areaPerAgent:  71000 },
-  6: { fallMs: 4300, secondChance: 1.65, nearFrac: 0.99, areaPerAgent:  65000 },
-  7: { fallMs: 3900, secondChance: 1.7,  nearFrac: 1.00, areaPerAgent:  60000 },
+  1: { fallMs: 7200, secondChance: 1.4,  nearFrac: 0.90, areaPerAgent: 140000 },
+  2: { fallMs: 6500, secondChance: 1.45, nearFrac: 0.92, areaPerAgent: 128000 },
+  3: { fallMs: 5900, secondChance: 1.5,  nearFrac: 0.94, areaPerAgent: 118000 },
+  4: { fallMs: 5300, secondChance: 1.55, nearFrac: 0.96, areaPerAgent: 108000 },
+  5: { fallMs: 4800, secondChance: 1.6,  nearFrac: 0.98, areaPerAgent:  99000 },
+  6: { fallMs: 4300, secondChance: 1.65, nearFrac: 0.99, areaPerAgent:  91000 },
+  7: { fallMs: 3900, secondChance: 1.7,  nearFrac: 1.00, areaPerAgent:  84000 },
 };
 const SPAWN_TICK = 150;    // tick rápido; a densidade real é limitada por targetConcurrent().
-const MAX_ON_SCREEN = 20;  // teto (menos amontoado; espalhamento por max-distância). Desktop ~18-20, celular ~5.
+const MAX_ON_SCREEN = 16;  // teto (bem menos amontoado). Desktop ~13-16, celular ~4.
 // Antes de o ALVO poder cair: pelo menos estes distratores + tempo (o alvo NUNCA é o 1º).
-const MIN_DISTRACTORS_BEFORE_TARGET = 3;
-const MIN_MS_BEFORE_TARGET = 900;
+const MIN_DISTRACTORS_BEFORE_TARGET = 4;
+const MIN_MS_BEFORE_TARGET = 1200;
 // Quantos agentes simultâneos p/ a ÁREA atual — adapta ao monitor (menos denso).
 function targetConcurrent(level: number, W: number, H: number): number {
   return Math.max(4, Math.min(MAX_ON_SCREEN, Math.round((W * H) / RAIN_CFG[level].areaPerAgent)));
@@ -659,7 +659,11 @@ export function FocusRain({ level, theme, presentMode, fbLevel, exerciseId, sett
         const swayX = a.swayAmp * Math.sin(a.swayPhase);
         a.x = a.baseX + swayX;                       // posição horizontal viva (balanço)
         const node = nodesRef.current.get(a.uid);
-        if (node) node.style.transform = `translate(${swayX}px, ${a.y}px)`;
+        if (node) {
+          node.style.transform = `translate(${swayX}px, ${a.y}px)`;
+          // Profundidade: quem está mais EMBAIXO fica na FRENTE (clique previsível na sobreposição).
+          node.style.zIndex = String(1000 + Math.round(a.y));
+        }
         if (a.y >= bottom) {
           if (a.isTarget && a.passCount === 0) {
             // 2ª CHANCE (por alvo, independente).

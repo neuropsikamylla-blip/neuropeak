@@ -14,6 +14,17 @@ histórico completo anterior está no log do Git (452 commits no total, a partir
   Documentação (CLAUDE.md, README.md, ARCHITECTURE.md, ADRs) reescrita a partir do
   código real.
 
+## [2.24.3] — 2026-07-12
+
+- **Focus Agents — tamanho padronizado + Chuva menos amontoada:**
+  - **Personagens padronizados:** as 144 imagens tinham larguras diferentes (341-410px)
+    → renderizavam de 88 a 132px ("um grande, outro pequeno"). Normalizadas todas para
+    360×540 com o personagem em tamanho consistente (variação ±3%). Cache `?v=7`→`?v=8`.
+  - **Chuva menos amontoada:** densidade reduzida (teto 20→16, ~13-16 no desktop).
+  - **Clique mais confiável:** profundidade por posição (quem está mais embaixo fica na
+    frente) — na sobreposição o clique pega o agente da frente, reduzindo "clico e dá errado".
+  - **Alvo mais atrás:** agora exige ≥4 distratores e ≥1,2 s antes do alvo aparecer.
+
 ## [2.24.2] — 2026-07-12
 
 - **Chuva do Foco — menos amontoado, sem sobrepor:** agentes 92→88px; densidade reduzida
