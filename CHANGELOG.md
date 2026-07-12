@@ -14,6 +14,14 @@ histórico completo anterior está no log do Git (452 commits no total, a partir
   Documentação (CLAUDE.md, README.md, ARCHITECTURE.md, ADRs) reescrita a partir do
   código real.
 
+## [2.24.5] — 2026-07-12
+
+- **Cubo Corsi — face acesa agora vira DE FRENTE para o centro:** as poses estavam
+  geometricamente tortas (a face acesa terminava 16-34° fora do centro). Corrigido por
+  cálculo: topo=rotateX(-78°), esquerda=rotateX(-12°), direita=rotateX(-12°)+rotateY(-90°)
+  — as 3 faces terminam a 12° uniformes do centro (resíduo proposital para manter o
+  aspecto 3D). Verificado matematicamente (normal · eixo do espectador).
+
 ## [2.24.4] — 2026-07-12
 
 - **Cubo Corsi — viradas lentas e naturais:** a rotação do cubo era brusca (0,85 s).

@@ -37,12 +37,15 @@ function cellStroke(st: BState): string {
   return "#CBDBEA";
 }
 
-// Pose do cubo: traz a face acesa de frente (ISO base quando nada aceso).
+// Pose do cubo: traz a face acesa DE FRENTE para o CENTRO da tela (ISO quando nada aceso).
+// Geometria: ESQUERDA do jogo = face "front" (normal +Z → 0°); DIREITA = face "right"
+// (normal +X → rotateY(-90°)); TOPO = face "top" (normal +Y → rotateX(-90°)). Mantém
+// ~12° de inclinação residual só para o cubo continuar lendo como 3D.
 function cubePose(face: Face | null): string {
   switch (face) {
-    case "top":   return "rotateX(-66deg) rotateY(-12deg)";
-    case "left":  return "rotateX(-14deg) rotateY(34deg)";
-    case "right": return "rotateX(-14deg) rotateY(-74deg)";
+    case "top":   return "rotateX(-78deg) rotateY(0deg)";
+    case "left":  return "rotateX(-12deg) rotateY(0deg)";
+    case "right": return "rotateX(-12deg) rotateY(-90deg)";
     default:      return "rotateX(-26deg) rotateY(-38deg)";
   }
 }
