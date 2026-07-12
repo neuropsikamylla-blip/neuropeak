@@ -80,16 +80,16 @@ function cleanForSpeech(text: string): string {
 //  • areaPerAgent MAIOR (menos denso, sem sobreposição).
 interface RainCfg { fallMs: number; secondChance: number; nearFrac: number; areaPerAgent: number }
 const RAIN_CFG: Record<number, RainCfg> = {
-  1: { fallMs: 7200, secondChance: 1.4,  nearFrac: 0.90, areaPerAgent: 105000 },
-  2: { fallMs: 6500, secondChance: 1.45, nearFrac: 0.92, areaPerAgent:  96000 },
-  3: { fallMs: 5900, secondChance: 1.5,  nearFrac: 0.94, areaPerAgent:  88000 },
-  4: { fallMs: 5300, secondChance: 1.55, nearFrac: 0.96, areaPerAgent:  80000 },
-  5: { fallMs: 4800, secondChance: 1.6,  nearFrac: 0.98, areaPerAgent:  73000 },
-  6: { fallMs: 4300, secondChance: 1.65, nearFrac: 0.99, areaPerAgent:  66000 },
-  7: { fallMs: 3900, secondChance: 1.7,  nearFrac: 1.00, areaPerAgent:  60000 },
+  1: { fallMs: 7200, secondChance: 1.4,  nearFrac: 0.90, areaPerAgent: 80000 },
+  2: { fallMs: 6500, secondChance: 1.45, nearFrac: 0.92, areaPerAgent: 74000 },
+  3: { fallMs: 5900, secondChance: 1.5,  nearFrac: 0.94, areaPerAgent: 68000 },
+  4: { fallMs: 5300, secondChance: 1.55, nearFrac: 0.96, areaPerAgent: 62000 },
+  5: { fallMs: 4800, secondChance: 1.6,  nearFrac: 0.98, areaPerAgent: 57000 },
+  6: { fallMs: 4300, secondChance: 1.65, nearFrac: 0.99, areaPerAgent: 52000 },
+  7: { fallMs: 3900, secondChance: 1.7,  nearFrac: 1.00, areaPerAgent: 48000 },
 };
 const SPAWN_TICK = 150;    // tick rápido; a densidade real é limitada por targetConcurrent().
-const MAX_ON_SCREEN = 20;  // teto (mais distratores p/ busca). Desktop ~18-20, celular ~5.
+const MAX_ON_SCREEN = 26;  // teto (mais distratores; espalhamento por max-distância evita amontoar). Desktop ~24-26, celular ~5.
 // Antes de o ALVO poder cair: pelo menos estes distratores + tempo (o alvo NUNCA é o 1º).
 const MIN_DISTRACTORS_BEFORE_TARGET = 3;
 const MIN_MS_BEFORE_TARGET = 900;
@@ -236,10 +236,8 @@ export function ruleAllowed(r: Rule, level: number): boolean {
   if (r.key.includes("ball:") && level < 2) return false;         // lado da bola = fino
   if (r.key.includes("held:skate_bermuda") && level < 2) return false;
 
-  if (r.combined) return true;                                    // combinados desde N1 (dominam por quantidade)
-  // Regras SIMPLES: só nos níveis baixos (N1-2); do N3+ é só conjunção (2 pistas).
-  if (r.key.startsWith("color:")) return level <= 2;              // só-cor: fácil, só N1-2
-  return level <= 2;                                              // feature-simples: só N1-2
+  // SÓ comandos COMBINADOS (2 pistas: cor + feature). Nada de comando de 1 atributo.
+  return r.combined;
 }
 
 type RainStateT = "falling" | "captured" | "wrong" | "missed";
@@ -705,11 +703,12 @@ export function FocusRain({ level, theme, presentMode, fbLevel, exerciseId, sett
           <motion.div className="absolute inset-0 z-40 flex items-center justify-center px-6"
             style={{ background: "rgba(4, 10, 30, 0.72)", backdropFilter: "blur(3px)" }}
             initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} transition={{ duration: 0.18 }}>
-            <motion.div className="w-full max-w-sm rounded-3xl px-6 py-7 text-center"
+            <motion.div className="max-w-[94vw] rounded-3xl px-8 py-7 text-center"
               style={{ background: "rgba(124,58,237,0.22)", border: "1.5px solid rgba(167,139,250,0.55)", boxShadow: "0 12px 48px rgba(0,0,0,0.55)" }}
               initial={{ scale: 0.9, y: 10 }} animate={{ scale: 1, y: 0 }} exit={{ scale: 0.95 }}>
               <p className="text-violet-200/80 text-xs font-bold uppercase tracking-widest mb-2">Comando</p>
-              <p className="text-white text-2xl font-black leading-snug mb-6">{command}</p>
+              {/* uma linha só (sem quebrar o texto) */}
+              <p className="text-white text-xl font-black whitespace-nowrap mb-6">{command}</p>
               <button onClick={startPlaying}
                 className="w-full h-14 rounded-2xl text-white text-lg font-black active:scale-95"
                 style={{ background: "linear-gradient(90deg, #7c3aed, #a855f7)", boxShadow: "0 6px 24px rgba(124,58,237,0.5)" }}>

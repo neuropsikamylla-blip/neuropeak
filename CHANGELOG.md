@@ -14,6 +14,14 @@ histórico completo anterior está no log do Git (452 commits no total, a partir
   Documentação (CLAUDE.md, README.md, ARCHITECTURE.md, ADRs) reescrita a partir do
   código real.
 
+## [2.23.7] — 2026-07-12
+
+- **Chuva do Foco — comando em uma linha, só combinados, mais denso:** (1) o texto do
+  comando no card fica em UMA linha (sem quebrar), a caixa se ajusta; (2) só comandos
+  COMBINADOS de 2 pistas ("Ache o agente amarelo com skate") — acabaram os de 1 atributo;
+  (3) mais distratores na tela (teto 20→26) mantendo o espalhamento por distância máxima
+  (não amontoa). Queda e "quase idênticos" mantidos.
+
 ## [2.23.6] — 2026-07-11
 
 - **Chuva do Foco — corrige "de skate" ambíguo:** o comando "de skate" só aceitava o skate
