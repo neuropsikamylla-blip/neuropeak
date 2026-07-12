@@ -14,6 +14,15 @@ histórico completo anterior está no log do Git (452 commits no total, a partir
   Documentação (CLAUDE.md, README.md, ARCHITECTURE.md, ADRs) reescrita a partir do
   código real.
 
+## [2.26.0] — 2026-07-12
+
+- **Chuva do Foco — ciclo de tarefa completo (modelo da terapeuta):** cada comando é UMA
+  tarefa com UMA resposta: acertou → próximo comando; **errou → a tarefa acaba na hora**
+  e vai para o próximo comando (antes deixava continuar procurando). Progressão: 3 acertos
+  seguidos → **sobe** 1 nível; **2 falhas seguidas → desce** 1 nível (piso 1) — o nível
+  novo vale a partir do comando seguinte. O card do próximo comando mostra "Não foi dessa
+  vez" quando a tarefa anterior falhou.
+
 ## [2.25.6] — 2026-07-12
 
 - **Chuva do Foco — velocidade uniforme SEMPRE + menos buracos:** (1) alguns agentes

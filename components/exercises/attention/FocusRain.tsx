@@ -339,7 +339,7 @@ export function FocusRain({ level, theme, presentMode, fbLevel, exerciseId, sett
   const [command, setCommand]   = useState("");
   const [points, setPoints]     = useState(0);
   const [displayLevel, setDisplayLevel] = useState(Math.max(1, Math.min(MAX_LEVEL, Math.round(level))));
-  const [flash, setFlash]       = useState<null | { msg: string }>(null);
+  const [cardNote, setCardNote] = useState<string | null>(null);
   const [renderAgents, setRenderAgents] = useState<RainAgent[]>([]);
   // GATE DE COMANDO: "card" = card central + botão Começar (chuva PAUSADA);
   // "playing" = agentes caindo. Todo comando começa em "card".
@@ -351,7 +351,6 @@ export function FocusRain({ level, theme, presentMode, fbLevel, exerciseId, sett
   const playHRef     = useRef(600);
   const rafRef       = useRef<number | null>(null);
   const spawnTimerRef = useRef<ReturnType<typeof setInterval> | null>(null);
-  const flashTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const agentsRef    = useRef<RainAgent[]>([]);
   const nodesRef     = useRef<Map<string, HTMLDivElement>>(new Map());
   const levelRef     = useRef(Math.max(1, Math.min(MAX_LEVEL, Math.round(level))));
@@ -379,6 +378,7 @@ export function FocusRain({ level, theme, presentMode, fbLevel, exerciseId, sett
   const rtNRef        = useRef(0);
   const firstMsListRef = useRef<number[]>([]);
   const consecHitsRef = useRef(0);
+  const consecErrsRef = useRef(0);   // comandos FALHOS seguidos (2 → desce 1 nível)
   const pointsRef     = useRef(0);
   const eventsRef     = useRef<Array<{ mode: FocusMode; level: number; correct: boolean; endedBy: "correct" | "wrong" | "timeout"; rtMs: number }>>([]);
 
@@ -526,10 +526,12 @@ export function FocusRain({ level, theme, presentMode, fbLevel, exerciseId, sett
     commitRender();
   }, [makeFaller, commitRender]);
 
-  // Progressão de nível: conta COMANDO resolvido LIMPO (todos os alvos capturados,
-  // sem erro nem omissão). 3 comandos limpos seguidos = sobe. Erro/omissão zera.
+  // Progressão por COMANDO (modelo da terapeuta): acerto → novo comando (3 seguidos
+  // = SOBE 1 nível); erro/omissão → novo comando (2 falhos seguidos = DESCE 1 nível,
+  // piso 1). O nível novo vale a partir do PRÓXIMO comando.
   const onCommandResolved = useCallback((clean: boolean) => {
     if (clean) {
+      consecErrsRef.current = 0;
       consecHitsRef.current++;
       if (consecHitsRef.current >= LEVEL_UP_HITS && levelRef.current < MAX_LEVEL) {
         levelRef.current++;
@@ -539,13 +541,13 @@ export function FocusRain({ level, theme, presentMode, fbLevel, exerciseId, sett
       }
     } else {
       consecHitsRef.current = 0;
+      consecErrsRef.current++;
+      if (consecErrsRef.current >= 2 && levelRef.current > 1) {
+        levelRef.current--;
+        consecErrsRef.current = 0;
+        setDisplayLevel(levelRef.current);
+      }
     }
-  }, []);
-
-  const showWrongFlash = useCallback((msg: string) => {
-    setFlash({ msg });
-    if (flashTimerRef.current) clearTimeout(flashTimerRef.current);
-    flashTimerRef.current = setTimeout(() => setFlash(null), 900);
   }, []);
 
   // Comando RESOLVIDO (todas as sub-regras capturadas/omitidas) → progressão +
@@ -554,7 +556,8 @@ export function FocusRain({ level, theme, presentMode, fbLevel, exerciseId, sett
   const finishCommandAndNextCard = useCallback(() => {
     if (phaseRef.current !== "playing") return;   // já em transição
     phaseRef.current = "card";     // pausa spawns/física imediatamente
-    onCommandResolved(cmdCleanRef.current);        // sobe de nível SÓ se limpo
+    setCardNote(cmdCleanRef.current ? null : "❌ Não foi dessa vez — atenção no próximo!");
+    onCommandResolved(cmdCleanRef.current);        // 3 limpos = sobe · 2 falhos = desce
     setTimeout(() => {
       if (doneRef.current) return;
       openCommandCard();           // card do próximo comando (fallers preservados)
@@ -597,14 +600,15 @@ export function FocusRain({ level, theme, presentMode, fbLevel, exerciseId, sett
       }, 220);
       resolveSub(subIdx);   // marca a sub-regra; encerra o comando se foi a última
     } else {
-      // ERRO impulsivo (não bate nenhuma sub-regra) — comando NÃO troca.
+      // ERRO impulsivo (não bate nenhuma sub-regra) — a TAREFA ACABA AQUI:
+      // vai imediatamente para o card do PRÓXIMO comando (modelo da terapeuta:
+      // acerto→novo comando, erro→novo comando; 2 erros seguidos = desce 1 nível).
       a.state = "wrong";
       falsePosRef.current++;
-      cmdCleanRef.current = false;   // deixou de ser "limpo" (não sobe de nível)
+      cmdCleanRef.current = false;
       pointsRef.current = Math.max(0, pointsRef.current - 5);
       setPoints(pointsRef.current);
       soundWrong(); if (fbLevel !== "leve") vibrate(fbLevel === "intenso" ? [80, 50, 80] : [50, 40, 50]);
-      showWrongFlash("Esse não é o do comando");
       eventsRef.current.push({ mode: "foco", level: levelRef.current, correct: false, endedBy: "wrong", rtMs: rt });
       commitRender();
       setTimeout(() => {
@@ -612,8 +616,9 @@ export function FocusRain({ level, theme, presentMode, fbLevel, exerciseId, sett
         nodesRef.current.delete(a.uid);
         commitRender();
       }, 320);
+      finishCommandAndNextCard();    // encerra a tarefa → próximo card (phase="card" bloqueia toques)
     }
-  }, [fbLevel, showWrongFlash, commitRender, resolveSub]);
+  }, [fbLevel, commitRender, resolveSub, finishCommandAndNextCard]);
 
   // ── Fim da sessão ──
   const endSession = useCallback(() => {
@@ -741,7 +746,6 @@ export function FocusRain({ level, theme, presentMode, fbLevel, exerciseId, sett
       window.removeEventListener("resize", measure);
       if (rafRef.current !== null) cancelAnimationFrame(rafRef.current);
       if (spawnTimerRef.current) clearInterval(spawnTimerRef.current);
-      if (flashTimerRef.current) clearTimeout(flashTimerRef.current);
       cancelTTS();
     };
   // eslint-disable-next-line react-hooks/exhaustive-deps
@@ -820,18 +824,6 @@ export function FocusRain({ level, theme, presentMode, fbLevel, exerciseId, sett
           );
         })}
 
-        {/* Feedback rápido (erro impulsivo) */}
-        <AnimatePresence>
-          {flash && (
-            <motion.div className="absolute inset-x-0 bottom-6 z-30 flex justify-center pointer-events-none"
-              initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0 }}>
-              <div className="px-5 py-2.5 rounded-2xl text-white font-bold text-sm"
-                style={{ background: "rgba(220,38,38,0.92)", boxShadow: "0 6px 24px rgba(0,0,0,0.5)" }}>
-                ❌ {flash.msg}
-              </div>
-            </motion.div>
-          )}
-        </AnimatePresence>
       </div>
 
       {/* GATE DE COMANDO — card central + botão "Começar". Abre antes de CADA
@@ -844,6 +836,9 @@ export function FocusRain({ level, theme, presentMode, fbLevel, exerciseId, sett
             <motion.div className="max-w-[94vw] rounded-3xl px-8 py-7 text-center"
               style={{ background: "rgba(124,58,237,0.22)", border: "1.5px solid rgba(167,139,250,0.55)", boxShadow: "0 12px 48px rgba(0,0,0,0.55)" }}
               initial={{ scale: 0.9, y: 10 }} animate={{ scale: 1, y: 0 }} exit={{ scale: 0.95 }}>
+              {cardNote && (
+                <p className="text-red-300 text-sm font-bold mb-2">{cardNote}</p>
+              )}
               <p className="text-violet-200/80 text-xs font-bold uppercase tracking-widest mb-2">Comando</p>
               {/* uma linha só (sem quebrar o texto) */}
               <p className="text-white text-xl font-black whitespace-nowrap mb-6">{command}</p>
