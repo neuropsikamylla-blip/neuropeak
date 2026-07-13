@@ -149,6 +149,39 @@ function solveMinCells(cars: Car[]): number {
   return 99;
 }
 
+// Mínimo de MOVIMENTOS (regra clássica: mover um carro = 1 movimento, qualquer
+// distância). BFS onde cada aresta é levar um carro a QUALQUER posição alcançável.
+function solveMinMoves(cars: Car[]): number {
+  const posKey = (cs: Car[]) => cs.map((c) => (c.orientation === "horizontal" ? c.col : c.row)).join(",");
+  const start = cars.map((c) => ({ ...c }));
+  if (isWin(start)) return 0;
+  const seen = new Set<string>([posKey(start)]);
+  let frontier: Car[][] = [start];
+  for (let dist = 1; dist <= 60 && frontier.length; dist++) {
+    const next: Car[][] = [];
+    for (const state of frontier) {
+      for (let i = 0; i < state.length; i++) {
+        const car = state[i];
+        const pos = car.orientation === "horizontal" ? car.col : car.row;
+        // todas as posições alcançáveis em cada direção (deslize contínuo)
+        for (const dir of [-1, 1]) {
+          for (let np = pos + dir; canMove(state, car.id, np); np += dir) {
+            const ns = state.map((c, j) =>
+              j !== i ? c : (c.orientation === "horizontal" ? { ...c, col: np } : { ...c, row: np })
+            );
+            if (isWin(ns)) return dist;
+            const k = posKey(ns);
+            if (!seen.has(k)) { seen.add(k); next.push(ns); }
+          }
+        }
+      }
+      if (seen.size > 300000) return dist;
+    }
+    frontier = next;
+  }
+  return 99;
+}
+
 // ── Top-view vehicle (PNG transparente) ──────────────────────────
 // Largura de pista FIXA para todos os carros (mesmo "calibre", estilo Parking
 // Jam) — o comprimento sai da proporção nativa da imagem, sem distorcer. Assim
@@ -276,7 +309,7 @@ const TUTORIAL_LEVEL: Level = {
 };
 
 export function EstacionamentoLogico({ difficulty, theme: _theme, onComplete }: Props) {
-  const { begin, isTimeUp, elapsedSec, finish: finishTimer, progressPct } = useTimedProgress();
+  const { begin, isTimeUp, elapsedSec, finish: finishTimer, progressPct } = useTimedProgress(11 * 60 * 1000); // 11 min — tarefa de planejamento (pedido da Kamylla)
 
   const [cellPx, setCellPx] = useState(52);
   const wrapRef = useRef<HTMLDivElement>(null);
@@ -324,6 +357,7 @@ export function EstacionamentoLogico({ difficulty, theme: _theme, onComplete }: 
   const [dragPrev, setDragPrev] = useState<{ id: string; pos: number } | null>(null);
 
   const boardRef = useRef<HTMLDivElement>(null);
+  const cellRuleRef = useRef(false);
   const dragRef  = useRef<DragState | null>(null);
   const startedRef = useRef(false);
 
@@ -334,8 +368,14 @@ export function EstacionamentoLogico({ difficulty, theme: _theme, onComplete }: 
     [currentLevel],
   );
 
-  // Mínimo de quadradinhos para resolver a fase atual (para o "Melhor solução").
+  // REGRA (decisão clínica da Kamylla, 13/jul): nos níveis normais, mover um carro
+  // = 1 MOVIMENTO (qualquer distância — não pune quem "pensa com a mão"). Nos
+  // níveis DIFÍCEIS (diff >= 10), cada quadradinho conta (regra avançada, com aviso).
+  const cellRule = curDiffRef.current >= 10;
+  cellRuleRef.current = cellRule;
+  // "Melhor solução" na régua da regra vigente.
   const minCells = useMemo(() => solveMinCells(currentLevel.cars), [currentLevel]);
+  const minMoves = useMemo(() => solveMinMoves(currentLevel.cars), [currentLevel]);
 
   const loadLevel = useCallback((level: Level) => {
     levelSeqRef.current++;
@@ -397,10 +437,14 @@ export function EstacionamentoLogico({ difficulty, theme: _theme, onComplete }: 
         c.id === carId ? (c.orientation === "horizontal" ? { ...c, col: newPos } : { ...c, row: newPos }) : c
       );
       const winning = isWin(next);
-      // Conta CADA QUADRADINHO andado. No movimento vitorioso do alvo, conta só até a
-      // casa de saída (não penaliza o "empurrão" extra para fora do tabuleiro).
-      let delta = Math.abs(newPos - oldPos);
-      if (carId === "target" && winning) delta = Math.abs((GRID - car.len) - oldPos);
+      // Regra normal: mover um carro = 1 movimento (independe da distância).
+      // Regra avançada (níveis difíceis): cada quadradinho conta; no movimento
+      // vitorioso do alvo, conta só até a casa de saída.
+      let delta = 1;
+      if (cellRuleRef.current) {
+        delta = Math.abs(newPos - oldPos);
+        if (carId === "target" && winning) delta = Math.abs((GRID - car.len) - oldPos);
+      }
       setHistory(h => [...h, prev]);
       setMoves(m => m + delta);
       if (winning) setWon(true);
@@ -466,8 +510,8 @@ export function EstacionamentoLogico({ difficulty, theme: _theme, onComplete }: 
 
   // ── Result screen ─────────────────────────────────────────────────────────
   if (won) {
-    const ideal   = minCells;              // melhor solução em QUADRADINHOS
-    const extra   = moves - ideal;         // quadradinhos a mais que o mínimo
+    const ideal   = cellRule ? minCells : minMoves;  // régua da regra vigente
+    const extra   = moves - ideal;         // a mais que o mínimo (movimentos ou quadradinhos)
     const perfect = extra <= 0;            // resolveu no mínimo
     const oneOver = extra === 1;           // 1 a mais → pode seguir ou refazer
     // 2+ a mais → treino rígido: tem que refazer.
@@ -569,10 +613,19 @@ export function EstacionamentoLogico({ difficulty, theme: _theme, onComplete }: 
         {tutorial ? tutorialHint : "Libere o carro vermelho pela saída."}
       </p>
 
-      {/* Barra de progresso (pelo tempo, ~7 min, em saltos de 10%) */}
+      {/* Barra de progresso (pelo tempo, ~11 min, em saltos de 10%) */}
       <div style={{ width: "100%", maxWidth: 320, margin: "0 auto", display: "flex", alignItems: "center", gap: 8, paddingLeft: 14, paddingRight: 14 }}>
         <ExerciseProgressBar progressPct={progressPct} theme="GAMIFIED" />
       </div>
+
+      {/* Regra avançada (níveis difíceis): cada quadradinho conta */}
+      {cellRule && !won && (
+        <p style={{ textAlign: "center", fontSize: 12.5, fontWeight: 600, color: "#B45309",
+          background: "rgba(180,83,9,0.08)", border: "1px solid rgba(180,83,9,0.25)",
+          borderRadius: 10, padding: "7px 12px", margin: "0 auto", maxWidth: 340 }}>
+          Nível avançado: cada quadradinho percorrido conta como um movimento.
+        </p>
+      )}
 
       {/* Board — fills available width */}
       <div style={{ display: "flex", justifyContent: "center", paddingLeft: 12, paddingRight: 12 }}>

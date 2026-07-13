@@ -61,12 +61,12 @@ const CATEGORIES: Record<string, Product[]> = {
   mercearia: [
     { id: "aveia", name: "Aveia" }, { id: "granola", name: "Granola" },
     { id: "cereal", name: "Cereal" }, { id: "fermento", name: "Fermento em pó" },
-    { id: "batata-frita", name: "Batata frita" }, { id: "biscoito", name: "Biscoito recheado" },
+    { id: "batata-frita", name: "Batata frita" }, { id: "biscoito", name: "Bolacha" },
     { id: "achocolatado", name: "Achocolatado" }, { id: "acucar", name: "Açúcar" },
     { id: "sal", name: "Sal" }, { id: "cafe", name: "Café" },
-    { id: "pipoca", name: "Pipoca de micro-ondas" }, { id: "mel", name: "Mel" },
+    { id: "pipoca", name: "Pipoca" }, { id: "mel", name: "Mel" },
     { id: "geleia-morango", name: "Geleia de morango" }, { id: "leite-po", name: "Leite em pó" },
-    { id: "cream-cracker", name: "Biscoito água e sal" }, { id: "caldo-carne", name: "Caldo de carne" },
+    { id: "cream-cracker", name: "Biscoito" }, { id: "caldo-carne", name: "Caldo de carne" },
     { id: "pirulito", name: "Pirulito" }, { id: "amendoim", name: "Amendoim" },
     { id: "batata-chips", name: "Batata chips" }, { id: "chocolate", name: "Chocolate" },
   ],
@@ -75,7 +75,7 @@ const CATEGORIES: Record<string, Product[]> = {
     { id: "atum", name: "Atum" }, { id: "sardinha", name: "Sardinha" },
   ],
   molhos: [
-    { id: "extrato", name: "Extrato de tomate" }, { id: "maionese", name: "Maionese" },
+    { id: "extrato", name: "Molho de tomate" }, { id: "maionese", name: "Maionese" },
     { id: "ketchup", name: "Ketchup" }, { id: "mostarda", name: "Mostarda" },
     { id: "shoyu", name: "Molho shoyu" },
   ],
@@ -93,7 +93,7 @@ const CATEGORIES: Record<string, Product[]> = {
     { id: "frango-assado", name: "Frango assado" },
   ],
   congelados: [
-    { id: "nuggets", name: "Nuggets" }, { id: "pizza", name: "Pizza congelada" },
+    { id: "nuggets", name: "Nuggets" }, { id: "pizza", name: "Pizza" },
     { id: "sorvete", name: "Sorvete" }, { id: "acai", name: "Açaí" },
     { id: "pao-queijo", name: "Pão de queijo" }, { id: "ervilha-congelada", name: "Ervilha congelada" },
     { id: "lasanha", name: "Lasanha congelada" },
@@ -132,7 +132,7 @@ const CATEGORIES: Record<string, Product[]> = {
     { id: "pasta-dente", name: "Pasta de dente" }, { id: "creme-dental", name: "Creme dental" },
     { id: "fio-dental", name: "Fio dental" }, { id: "enxaguante", name: "Enxaguante bucal" },
     { id: "shampoo", name: "Shampoo" }, { id: "condicionador", name: "Condicionador" },
-    { id: "desodorante", name: "Desodorante" }, { id: "protetor-solar", name: "Protetor solar" },
+    { id: "desodorante", name: "Desodorante" }, { id: "protetor-solar", name: "Protetor" },
     { id: "creme-maos", name: "Creme para as mãos" }, { id: "lencos-umedecidos", name: "Lenços umedecidos" },
     { id: "cotonete", name: "Cotonete" }, { id: "fralda", name: "Fralda" },
   ],
@@ -249,7 +249,7 @@ function memoSpeechText(lists: Product[][], labels: string[]): string {
   if (lists.length > 1) {
     return lists.map((l, i) => `A ${labels[i]} pediu: ${l.map(p => p.name).join(", ")}.`).join(" ");
   }
-  return "Sua lista de compras: " + lists[0].map(p => p.name).join(", ") + ".";
+  return lists[0].map(p => p.name).join(", ") + ".";   // só os itens (pedido da Kamylla)
 }
 // Instrução exibida nas prateleiras (qual lista + ordem).
 function shopInstruction(t: Trial): string {

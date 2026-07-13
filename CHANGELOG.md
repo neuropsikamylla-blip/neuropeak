@@ -14,6 +14,26 @@ histórico completo anterior está no log do Git (452 commits no total, a partir
   Documentação (CLAUDE.md, README.md, ARCHITECTURE.md, ADRs) reescrita a partir do
   código real.
 
+## [2.31.0] — 2026-07-13
+
+Ajustes clínicos após aplicação com paciente (feedback da terapeuta):
+
+- **Estacionamento Lógico:** volta a regra clássica — mover um carro = **1 movimento**
+  (independe da distância; não pune quem "pensa com a mão"). A contagem por quadradinho
+  fica SÓ nos níveis difíceis (dificuldade ≥ 10), com aviso na tela explicando a regra
+  avançada. "Melhor solução" agora usa a régua da regra vigente (novo solver de
+  movimentos). Sessão passa de ~7 para **~11 minutos** (tempo de planejar).
+- **Torre de Hanói:** sessão também passa para ~11 minutos.
+- **Focus Agents / Chuva — escada de 10 níveis:** até o nível 4, MENOS personagens na
+  tela (pacientes com dificuldade); do 5 ao 8, um pouco mais de distratores; **níveis
+  9-10: mais velocidade e multi-pedido (2 e depois 3 alvos)**. Tamanho dos personagens
+  padrão em todos os níveis (cache forçado ?v=11 contra imagens antigas em aparelhos).
+  **Comando curto:** "Azul com luva", "Vermelho com skate", "Amarelo com bola de futebol
+  à direita" (sem o "Ache o agente").
+- **Supermercado:** o áudio fala **somente os itens** (sem "sua lista de compras") e
+  nomes encurtados onde não há confusão: Molho de tomate, Biscoito, Bolacha, Protetor,
+  Pizza, Pipoca. ("Álcool em gel" mantido: colidiria com o item "Álcool".)
+
 ## [2.30.0] — 2026-07-13
 
 - **Caminhos para a Meta — Bloco 3 (fecha a Etapa 1):**

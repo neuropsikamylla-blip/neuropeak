@@ -30,7 +30,7 @@ import type { ExerciseResult, Theme } from "@/types";
 import type { FocusMode } from "@/types/commands";
 import type { PresMode } from "@/components/exercises/PresentationConfig";
 
-const AGENT_V = "?v=10";   // cache-bust (imagens NORMALIZADAS 360×540) — igual ao FocusAgents
+const AGENT_V = "?v=11";   // cache-bust (imagens NORMALIZADAS 360×540) — igual ao FocusAgents
 
 // ── Tamanho / hitbox (idênticos ao Foco da arena) ───────────────────────────────
 const CHAR_SIZE = 100;             // boneco na tela = CHAR_SIZE (imagens normalizadas pelo boneco)
@@ -81,14 +81,22 @@ function cleanForSpeech(text: string): string {
 // a progressão é só VELOCIDADE (fallMs ↓) + COMANDOS mais complexos (nearFrac ↑,
 // multi-alvo nos níveis altos).
 interface RainCfg { fallMs: number; nearFrac: number; areaPerAgent: number }
+// ESCADA DE 10 NÍVEIS (decisão clínica da Kamylla, 13/jul):
+//  N1-4  = MENOS personagens na tela (pacientes com dificuldade) · 1 pedido
+//  N5-8  = um pouco MAIS de distratores · 1 pedido
+//  N9-10 = mais VELOCIDADE + multi-pedido (N9 = 2 · N10 = 3)
+// Tamanho dos personagens é SEMPRE o mesmo (CHAR_SIZE) — só densidade/velocidade mudam.
 const RAIN_CFG: Record<number, RainCfg> = {
-  1: { fallMs: 7200, nearFrac: 0.90, areaPerAgent: 42000 },
-  2: { fallMs: 6500, nearFrac: 0.92, areaPerAgent: 42000 },
-  3: { fallMs: 5900, nearFrac: 0.94, areaPerAgent: 42000 },
-  4: { fallMs: 5300, nearFrac: 0.96, areaPerAgent: 42000 },
-  5: { fallMs: 4800, nearFrac: 0.98, areaPerAgent: 42000 },
-  6: { fallMs: 4300, nearFrac: 0.99, areaPerAgent: 42000 },
-  7: { fallMs: 3900, nearFrac: 1.00, areaPerAgent: 42000 },
+  1:  { fallMs: 7200, nearFrac: 0.90, areaPerAgent: 62000 },
+  2:  { fallMs: 6800, nearFrac: 0.92, areaPerAgent: 58000 },
+  3:  { fallMs: 6400, nearFrac: 0.93, areaPerAgent: 55000 },
+  4:  { fallMs: 6000, nearFrac: 0.94, areaPerAgent: 52000 },
+  5:  { fallMs: 5600, nearFrac: 0.95, areaPerAgent: 42000 },
+  6:  { fallMs: 5200, nearFrac: 0.96, areaPerAgent: 40000 },
+  7:  { fallMs: 4800, nearFrac: 0.97, areaPerAgent: 38000 },
+  8:  { fallMs: 4400, nearFrac: 0.98, areaPerAgent: 36000 },
+  9:  { fallMs: 3900, nearFrac: 0.99, areaPerAgent: 36000 },
+  10: { fallMs: 3400, nearFrac: 1.00, areaPerAgent: 36000 },
 };
 const SPAWN_TICK = 150;    // tick rápido; a densidade real é limitada por targetConcurrent().
 const MAX_ON_SCREEN = 24;  // teto. Desktop ~16 (N1) a ~24 (N7); celular ~5. Fluxo ritmado evita rajada.
@@ -103,7 +111,7 @@ function targetConcurrent(level: number, W: number, H: number): number {
 // Progressão: sobe +1 nível a cada LEVEL_UP_HITS comandos resolvidos seguidos;
 // erro impulsivo OU omissão zera a sequência e MANTÉM o nível (não desce).
 const LEVEL_UP_HITS = 3;
-const MAX_LEVEL     = 7;
+const MAX_LEVEL     = 10;
 
 const fallSpeed = (playH: number, fallMs: number) => (playH + CHAR_H) / fallMs;
 const pick = <T,>(arr: T[]): T => arr[Math.floor(Math.random() * arr.length)];
@@ -167,19 +175,19 @@ const FEATURE_DEFS: FeatureDef[] = (() => {
   for (const v of ["chapeu", "coroa", "gorro"])
     defs.push({ key: `head:${v}`, frag: `de ${HEAD_PT[v]}`, match: a => a.headItem === v, pool: withHead(v) });
   for (const v of ["luva", "oculos_escuro"])
-    defs.push({ key: `special:${v}`, frag: `de ${SPEC_PT[v]}`, match: a => a.special === v, pool: withSpecial(v) });
+    defs.push({ key: `special:${v}`, frag: `com ${SPEC_PT[v]}`, match: a => a.special === v, pool: withSpecial(v) });
   for (const v of ["alegria", "tristeza", "raiva"])
     defs.push({ key: `expr:${v}`, frag: EXPR_PT[v], match: a => a.faceExpr === v, pool: withExpr(v) });
   for (const held of ["futebol", "basquete"] as const)
     for (const side of ["esq", "dir"] as const)
-      defs.push({ key: `ball:${held}/${side}`, frag: `com a bola ${BALL_PT[held]} ${SIDE_PT[side]}`,
+      defs.push({ key: `ball:${held}/${side}`, frag: `com bola ${BALL_PT[held]} ${SIDE_PT[side]}`,
         match: a => a.held === held && a.heldSide === side, pool: ROSTER.filter(a => a.held === held && a.heldSide === side) });
   // "de skate" = QUALQUER skate (calça OU bermuda) — senão vira ambíguo (os dois têm skate).
   // A distinção fina (bermuda) fica só no comando explícito "de skate de bermuda".
-  defs.push({ key: "held:skate", frag: "de skate", match: a => a.held === "skate", pool: [...skatePlain, ...skateBerm] });
-  defs.push({ key: "held:skate_bermuda", frag: "de skate de bermuda", match: a => a.held === "skate" && a.bermuda === true, pool: skateBerm });
+  defs.push({ key: "held:skate", frag: "com skate", match: a => a.held === "skate", pool: [...skatePlain, ...skateBerm] });
+  defs.push({ key: "held:skate_bermuda", frag: "com skate de bermuda", match: a => a.held === "skate" && a.bermuda === true, pool: skateBerm });
   for (const v of ["balao", "pipa", "guarda_chuva"])
-    defs.push({ key: `held:${v}`, frag: `que segura ${HELDOBJ_PT[v]}`, match: a => a.held === v, pool: ROSTER.filter(a => a.held === v) });
+    defs.push({ key: `held:${v}`, frag: `com ${HELDOBJ_PT[v]}`, match: a => a.held === v, pool: ROSTER.filter(a => a.held === v) });
   return defs;
 })();
 
@@ -200,13 +208,13 @@ export function buildAllRules(): Rule[] {
 
   // ── SIMPLES: 1 feature ──
   for (const f of FEATURE_DEFS) {
-    rules.push({ key: f.key, text: `Ache o agente ${f.frag}`, matches: f.match, targetPool: f.pool,
+    rules.push({ key: f.key, text: `${f.frag}`, matches: f.match, targetPool: f.pool,
       family: featureFamily(f), combined: false });
   }
   // ── SIMPLES: cor (família = cores vizinhas) ──
   for (const c of Object.keys(COLOR_LABEL)) {
     const fam = COLOR_NEIGHBORS[c].flatMap(nc => withColor(nc));
-    rules.push({ key: `color:${c}`, text: `Ache o agente ${COLOR_LABEL[c]}`, matches: a => a.color === c,
+    rules.push({ key: `color:${c}`, text: `${COLOR_LABEL[c]}`, matches: a => a.color === c,
       targetPool: withColor(c), family: fam, combined: false });
   }
   // ── COMBINADAS: cor + feature (busca por conjunção) ──
@@ -220,7 +228,7 @@ export function buildAllRules(): Rule[] {
       const sameColorOtherFeature = ROSTER.filter(a => a.color === c && !f.match(a));   // (a)
       const sameFeatureOtherColor = f.pool.filter(a => a.color !== c);                  // (b)
       const family = [...sameColorOtherFeature, ...sameFeatureOtherColor].filter(a => !matches(a));
-      rules.push({ key: `combo:${c}+${f.key}`, text: `Ache o agente ${COLOR_LABEL[c]} ${f.frag}`,
+      rules.push({ key: `combo:${c}+${f.key}`, text: `${COLOR_LABEL[c]} ${f.frag}`,
         matches, targetPool, family, combined: true });
     }
 
@@ -242,11 +250,11 @@ export function ruleAllowed(r: Rule, level: number): boolean {
   return r.combined;
 }
 
-// Nº de ALVOS por comando (sub-regras distintas): N1-4=1, N5-6=2, N7=3.
+// Nº de ALVOS por comando (sub-regras distintas): N1-8=1 · N9=2 · N10=3.
 export function numTargetsForLevel(level: number): number {
-  if (level >= 7) return 3;
-  if (level >= 5) return 2;
-  return 1;
+  if (level >= 10) return 3;   // acima do 8: primeiro 2, depois 3 pedidos
+  if (level >= 9) return 2;
+  return 1;                    // até o nível 8: um pedido por comando
 }
 
 // Um COMANDO = N sub-regras DISTINTAS (cada uma combinada cor+feature), com alvos
@@ -258,10 +266,11 @@ export interface Command {
   text: string;                  // "Ache o agente azul de gorro e o vermelho de bermuda"
 }
 
-// `frag` de uma regra combinada = "cor + feature" (tira o "Ache o agente " do texto).
+// `frag` de uma regra combinada = "cor + feature" (o texto curto já É o frag).
 function ruleFrag(r: Rule): string {
-  return r.text.replace(/^Ache o agente /, "");
+  return r.text;
 }
+const capitalizar = (t: string) => t.charAt(0).toUpperCase() + t.slice(1);
 
 // Monta um comando com N sub-regras: sorteia regras combinadas permitidas no nível,
 // exige que cada alvo escolhido bata SÓ a sua sub-regra (sem overlap) e que as
@@ -295,7 +304,8 @@ export function buildCommand(
       chosen.push(r); targets.push(cand); usedFrag.add(frag);
     }
     if (chosen.length === n) {
-      const text = "Ache o agente " + chosen.map(ruleFrag).join(" e o ");
+      // Comando CURTO (pedido da Kamylla): "Azul com luva" · "Azul com luva e vermelho com skate"
+      const text = capitalizar(chosen.map(ruleFrag).join(" e "));
       return { subRules: chosen, targetAgents: targets, text };
     }
   }

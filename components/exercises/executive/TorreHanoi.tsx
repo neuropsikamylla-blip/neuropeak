@@ -227,7 +227,7 @@ function HanoiRuleStep({ theme, onDone }: { theme: Theme; onDone: () => void }) 
 
 export function TorreHanoi({ difficulty, theme, onComplete }: TorreHanoiProps) {
   const [showTutorial, setShowTutorial] = useState(true);
-  const { begin, isTimeUp, elapsedSec, finish } = useTimedProgress();
+  const { begin, isTimeUp, elapsedSec, finish } = useTimedProgress(11 * 60 * 1000); // 11 min — planejamento (pedido da Kamylla)
 
   const [discCount, setDiscCount] = useState(initialDiscs(difficulty));
   const [puzzle, setPuzzle] = useState(0);
