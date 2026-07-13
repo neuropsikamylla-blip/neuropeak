@@ -27,5 +27,15 @@ export default async function BichinhoPage() {
     d.getFullYear() === now.getFullYear() && d.getMonth() === now.getMonth() && d.getDate() === now.getDate();
   const sessionsToday = (sessions as unknown as SessionData[]).filter((s) => isToday(new Date(s.completedAt))).length;
 
-  return <PetHabitat patientId={patient.id} playerName={patient.name} sessionsToday={sessionsToday} />;
+  const last = sessions[0] as unknown as (SessionData & { id?: string }) | undefined;
+  return (
+    <PetHabitat
+      patientId={patient.id}
+      playerName={patient.name}
+      sessionsToday={sessionsToday}
+      lastSessionId={last?.id}
+      lastScore={last?.score}
+      lastAtMs={last ? new Date(last.completedAt).getTime() : undefined}
+    />
+  );
 }

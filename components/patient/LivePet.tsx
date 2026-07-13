@@ -156,11 +156,16 @@ function FrameView({ activity, kind, stage, color, size }: {
   return <PetCreature kind={kind} stage={stage} color={color} pose={pose} mood={activity.mood ?? "idle"} size={size} />;
 }
 
-export function LivePet({ kind, stage, color, size, action }: {
+export function LivePet({ kind, stage, color, size, action, roam = true, staticPose }: {
   kind: PetKind; stage: number; color?: PetColorId; size: number;
   action?: "comer" | "brincar" | "dormir" | "cocegas" | "show" | "fogo" | "voar"
     | "piscar" | "dancar" | "acordando" | "descansar" | "acordar"
     | "carinho" | "pular" | "acenar" | "baterasas" | null;
+  /** roam=false: SEM troca aleatória de pose com o tempo (página principal do
+   *  bichinho — decisão da Kamylla: 1 imagem/estado por vez). */
+  roam?: boolean;
+  /** pose fixa quando parado sem ação (ex.: "feliz", "comfome"). */
+  staticPose?: string;
 }) {
   const [idx, setIdx] = useState(0);
   const [showIdx, setShowIdx] = useState(0);
@@ -172,7 +177,7 @@ export function LivePet({ kind, stage, color, size, action }: {
   const ACTMAP = isMonster ? ACTION_M : ACTION_D;
   const SEQMAP = isMonster ? SEQ_M : SEQ_D;
   const seq = action && SEQMAP[action] ? SEQMAP[action] : null;
-  const canRoam = stage >= 1 && !action;
+  const canRoam = roam && stage >= 1 && !action;
 
   // Toca a sequência da jornada (descansar / acordar) passo a passo e segura no fim.
   useEffect(() => {
@@ -215,13 +220,15 @@ export function LivePet({ kind, stage, color, size, action }: {
     : action === "show"
     ? (isMonster ? PULAR_M : SHOW_SEQ[showIdx])
     : action ? (ACTMAP[action] ?? ROAM[0]) // fallback seguro (ex.: monstro sem essa ação)
-    : (canRoam ? ROAM[safeIdx] : ROAM[0]);
+    : canRoam ? ROAM[safeIdx]
+    : { pose: staticPose ?? (stage >= 1 ? "feliz" : "idle"), motion: "bob" as MotionKind, dur: 3000 }; // ESTÁTICO
   const m = MOTION[act.motion];
 
   const actKey = seq ? `seq-${action}-${Math.min(seqIdx, seq.length - 1)}`
     : action === "show" ? `show-${isMonster ? 0 : showIdx}`
     : action ? `action-${action}`
-    : (canRoam ? `roam-${safeIdx}` : "idle0");
+    : canRoam ? `roam-${safeIdx}`
+    : `static-${staticPose ?? "feliz"}`;
 
   return (
     <motion.div

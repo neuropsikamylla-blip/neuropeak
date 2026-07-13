@@ -14,6 +14,21 @@ histórico completo anterior está no log do Git (452 commits no total, a partir
   Documentação (CLAUDE.md, README.md, ARCHITECTURE.md, ADRs) reescrita a partir do
   código real.
 
+## [2.31.1] — 2026-07-13
+
+- **Bichinho (dragão e monstrinho) — página principal:**
+  - **Estado estável:** o personagem fica com UMA imagem/estado por vez (se está feliz,
+    continua feliz) — acabou a troca aleatória de poses com o passar do tempo.
+  - **Necessidade só ao concluir exercício:** ao terminar um treino, o bichinho pode
+    ficar com fome ("{nome} está com fome! Que tal dar um lanche?"); o paciente escolhe
+    alimentá-lo (o estado volta ao normal) ou seguir para outro exercício. Um novo
+    treino pode gerar nova necessidade.
+  - **Reação a ótimo desempenho:** piscadinha breve (alguns segundos, 1x) quando o
+    último exercício teve ótimo desempenho — reação do personagem, não um comando.
+  - **Comandos:** removidos "Dançar" e "Acenar" do monstrinho (não têm arte própria —
+    dançar caía no mesmo desenho do pular). O dragão mantém "Dançar" (tem animação
+    própria de dança).
+
 ## [2.31.0] — 2026-07-13
 
 Ajustes clínicos após aplicação com paciente (feedback da terapeuta):

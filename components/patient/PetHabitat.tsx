@@ -3,7 +3,7 @@
 import { useEffect, useRef, useState } from "react";
 import Link from "next/link";
 import {
-  Apple, Gamepad2, Eye, Heart, Flame, Feather, Music2, Wind, ArrowUp, Hand,
+  Apple, Gamepad2, Eye, Heart, Flame, Feather, Music2, Wind, ArrowUp,
   Moon, Sun, Egg, ArrowRight, ChevronDown, Star, Smile, Lightbulb, type LucideIcon,
 } from "lucide-react";
 import {
@@ -22,7 +22,7 @@ const LAV = "#F3F0FF", SKY_A = "#EAF3FF", SKY_B = "#DCEBFF";
 type ActionId =
   | "comer" | "brincar" | "piscar" | "carinho"
   | "fogo" | "voar" | "dancar" | "baterasas"
-  | "pular" | "fazerCoracao" | "acenar";
+  | "pular" | "fazerCoracao";
 const ACTIONS: Record<ActionId, { label: string; Icon: LucideIcon; live: string; tint: string }> = {
   comer:       { label: "Comer",         Icon: Apple,   live: "comer",   tint: "#F59E0B" },
   brincar:     { label: "Brincar",       Icon: Gamepad2, live: "brincar", tint: "#1D4ED8" },
@@ -34,7 +34,6 @@ const ACTIONS: Record<ActionId, { label: string; Icon: LucideIcon; live: string;
   baterasas:   { label: "Bater asas",    Icon: Wind,    live: "baterasas", tint: "#0EA5E9" },
   pular:       { label: "Pular",         Icon: ArrowUp, live: "pular",   tint: "#1D4ED8" },
   fazerCoracao:{ label: "Fazer coração", Icon: Heart,   live: "carinho", tint: "#F43F5E" },
-  acenar:      { label: "Acenar",        Icon: Hand,    live: "acenar",  tint: "#8B5CF6" },
 };
 
 interface PetConfig { tipo: string; quick: ActionId[]; mais: ActionId[]; textos: Record<string, string>; }
@@ -54,13 +53,14 @@ const PETS: Record<PetKind, PetConfig> = {
   monstrinho: {
     tipo: "Bichinho fofo",
     quick: ["comer", "brincar", "piscar", "carinho"],
-    mais: ["pular", "fazerCoracao", "dancar", "acenar"],
+    // "dançar" e "acenar" saíram: o monstrinho não tem arte própria (dançar caía
+    // no mesmo desenho do pular) — decisão da Kamylla (13/jul).
+    mais: ["pular", "fazerCoracao"],
     textos: {
       idle: "{n} está feliz em te ver.", dormindo: "{n} está descansando.",
       comer: "{n} adorou o lanche!", brincar: "{n} quer brincar.",
       piscar: "{n} te deu uma piscadinha.", carinho: "{n} gostou do carinho.",
       pular: "{n} pulou de alegria!", fazerCoracao: "{n} mandou um coração.",
-      dancar: "{n} está dançando!", acenar: "{n} está te acenando!",
     },
   },
 };
@@ -79,10 +79,14 @@ function Twinkle({ style, size = 12, color = GOLD }: { style: React.CSSPropertie
   return <Star size={size} color={color} fill={color} style={{ position: "absolute", opacity: 0.85, ...style }} />;
 }
 
-export function PetHabitat({ patientId, sessionsToday }: { patientId: string; playerName?: string; sessionsToday: number }) {
+export function PetHabitat({ patientId, sessionsToday, lastSessionId, lastScore, lastAtMs }: {
+  patientId: string; playerName?: string; sessionsToday: number;
+  lastSessionId?: string; lastScore?: number; lastAtMs?: number;
+}) {
   const [pet, setPet] = useState<PetState | null>(null);
   const [sleeping, setSleeping] = useState(false);
   const [acting, setActing] = useState<ActionId | null>(null);
+  const [needFood, setNeedFood] = useState(false);   // necessidade após concluir exercício
   const [transition, setTransition] = useState<"descansar" | "acordar" | null>(null);
   const [showMore, setShowMore] = useState(false);
   const timers = useRef<ReturnType<typeof setTimeout>[]>([]);
@@ -90,7 +94,42 @@ export function PetHabitat({ patientId, sessionsToday }: { patientId: string; pl
   useEffect(() => {
     setPet(loadPet(patientId)); setSleeping(isPetSleeping(patientId));
     reconcilePet(patientId, setPet).catch(() => {}); // restaura do servidor (ARQ-002)
-  }, [patientId]);
+
+    // NECESSIDADE (decisão da Kamylla): o estado só muda quando o paciente CONCLUI
+    // um exercício — aí o bichinho pode ficar com fome. Detecta treino novo
+    // comparando com a última contagem vista (por dia).
+    try {
+      const seenKey = `np_pet_seen_${patientId}`;
+      const needKey = `np_pet_need_${patientId}`;
+      const today = new Date().toLocaleDateString("sv");
+      const seenRaw = localStorage.getItem(seenKey);
+      const seen = seenRaw ? (JSON.parse(seenRaw) as { date: string; count: number }) : null;
+      const seenCount = seen && seen.date === today ? seen.count : 0;
+      if (sessionsToday > seenCount) {
+        localStorage.setItem(needKey, "1");           // treinou → surge a necessidade
+        localStorage.setItem(seenKey, JSON.stringify({ date: today, count: sessionsToday }));
+      }
+      setNeedFood(localStorage.getItem(needKey) === "1");
+    } catch { /* ignore */ }
+
+    // REAÇÃO breve (não é comando): piscadinha alguns segundos após ÓTIMO
+    // desempenho no último exercício (score >= 85, nos últimos 15 min, 1x por sessão).
+    try {
+      const gleeKey = `np_pet_glee_${patientId}`;
+      if (
+        lastSessionId && (lastScore ?? 0) >= 85 && lastAtMs &&
+        Date.now() - lastAtMs < 15 * 60 * 1000 &&
+        localStorage.getItem(gleeKey) !== lastSessionId &&
+        !isPetSleeping(patientId)
+      ) {
+        localStorage.setItem(gleeKey, lastSessionId);
+        timers.current.push(setTimeout(() => {
+          setActing("piscar");
+          timers.current.push(setTimeout(() => setActing(null), 2600));
+        }, 900));
+      }
+    } catch { /* ignore */ }
+  }, [patientId, sessionsToday, lastSessionId, lastScore, lastAtMs]);
   useEffect(() => () => { timers.current.forEach(clearTimeout); }, []);
 
   if (!pet) return null;
@@ -130,6 +169,11 @@ export function PetHabitat({ patientId, sessionsToday }: { patientId: string; pl
   function play(id: ActionId) {
     if (sleeping || busy) return;
     setActing(id);
+    // Alimentar atende a necessidade (fome) — o estado volta ao normal.
+    if (id === "comer" && needFood) {
+      try { localStorage.removeItem(`np_pet_need_${patientId}`); } catch { /* */ }
+      timers.current.push(setTimeout(() => setNeedFood(false), 2000));
+    }
     timers.current.push(setTimeout(() => setActing(null), 2200));
   }
   function rest() {
@@ -149,6 +193,7 @@ export function PetHabitat({ patientId, sessionsToday }: { patientId: string; pl
     : transition === "acordar" ? "Acordando"
     : sleeping ? "Descansando"
     : acting ? "Animado"
+    : needFood ? "Com fome"
     : trainedToday ? "Feliz"
     : "Pronto para brincar";
   const moodSleepy = sleeping || transition === "descansar" || status === "Com sono";
@@ -160,6 +205,7 @@ export function PetHabitat({ patientId, sessionsToday }: { patientId: string; pl
     : sleeping ? t("dormindo")
     : justHatched ? `${nome} nasceu!`
     : acting ? t(acting)
+    : needFood ? `${nome} está com fome! Que tal dar um lanche?`
     : t("idle");
 
   const scene = `linear-gradient(180deg, ${SKY_A} 0%, ${SKY_B} 100%)`;
@@ -216,7 +262,9 @@ export function PetHabitat({ patientId, sessionsToday }: { patientId: string; pl
             <div style={{ position: "absolute", bottom: 34, left: "50%", transform: "translateX(-50%)", width: 150, height: 12, background: "rgba(20,33,61,.10)", borderRadius: "50%", filter: "blur(4px)" }} />
             <div style={{ position: "relative", marginBottom: 20 }}>
               {chocou
-                ? <LivePet kind={kind} stage={2} size={224} color={pet.color} action={liveAction} />
+                ? <LivePet kind={kind} stage={2} size={224} color={pet.color} action={liveAction}
+                    roam={false}
+                    staticPose={needFood ? (kind === "dragao" ? "comfome" : "bocejando") : "feliz"} />
                 : <PetCreature kind={kind} stage={0} size={210} color={pet.color} />}
             </div>
             {/* badges discretos */}
