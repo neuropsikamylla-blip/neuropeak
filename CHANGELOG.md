@@ -14,6 +14,27 @@ histórico completo anterior está no log do Git (452 commits no total, a partir
   Documentação (CLAUDE.md, README.md, ARCHITECTURE.md, ADRs) reescrita a partir do
   código real.
 
+## [2.29.0] — 2026-07-13
+
+- **NOVO MÓDULO: "Caminhos para a Meta"** (substitui a mecânica do Sequência Temporal;
+  exerciseId interno `antes-depois` preservado p/ histórico) — Etapa 1 da spec:
+  - **Fundação:** estrutura de dados completa pronta p/ 90 atividades (3 bibliotecas:
+    crianças/adolescentes/adultos-idosos — rótulos só p/ o terapeuta, sem bloqueio por
+    idade); motor de correção com ordem exata E relações de dependência (ordem
+    funcionalmente válida = correta), resposta parcial, imprevistos com detecção de
+    perseveração, 8 indicadores; 32 testes automatizados (68/68 no total).
+  - **Tela do paciente:** meta sempre visível; tocar-para-ordenar + arrastar (pointer)
+    + botões ↑/↓; desfazer/refazer/limpar; dicas graduais (3 níveis); feedback
+    correta/parcial/incorreta (parcial destaca só o que revisar, sem apagar o plano);
+    área "Não faz parte do plano"; 8 modos (ordenar, intruso, prioridade, completar,
+    corrigir, reorganizar, problema, plano alternativo — os 3 últimos em 2 fases com
+    card de mudança/obstáculo); áudio opcional (TTS); autosave com "continuar de onde
+    parou"; acessível (teclado/aria); responsivo; visual claro neutro adulto, sem imagens.
+  - **3 atividades provisórias** marcadas [EXEMPLO] (1 por biblioteca) para testar a
+    infraestrutura — as 90 definitivas entram na Etapa 2.
+  - Spec oficial em `CAMINHOS-PARA-A-META-SPEC.md`. Painel do terapeuta e relatório
+    (Bloco 3) na sequência.
+
 ## [2.28.3] — 2026-07-12
 
 - **Focus Agents — pipa e guarda-chuva roxos substituídos:** as versões anteriores

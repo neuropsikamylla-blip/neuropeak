@@ -37,7 +37,7 @@ const TorreHanoi          = dynamic(() => import("@/components/exercises/executi
 const Labirinto           = dynamic(() => import("@/components/exercises/executive/Labirinto").then(m => ({ default: m.Labirinto })), { loading: ExerciseLoader, ssr: false });
 const OrdemHistoria       = dynamic(() => import("@/components/exercises/executive/OrdemHistoria").then(m => ({ default: m.OrdemHistoria })), { loading: ExerciseLoader, ssr: false });
 const CertoOuErrado       = dynamic(() => import("@/components/exercises/processing/CertoOuErrado").then(m => ({ default: m.CertoOuErrado })), { loading: ExerciseLoader, ssr: false });
-const AntesDepois         = dynamic(() => import("@/components/exercises/attention/AntesDepois").then(m => ({ default: m.AntesDepois })), { loading: ExerciseLoader, ssr: false });
+const CaminhosMeta        = dynamic(() => import("@/components/exercises/executive/CaminhosMeta").then(m => ({ default: m.CaminhosMeta })), { loading: ExerciseLoader, ssr: false });
 const Semaforo            = dynamic(() => import("@/components/exercises/processing/Semaforo").then(m => ({ default: m.Semaforo })), { loading: ExerciseLoader, ssr: false });
 const DesafioSupermercado = dynamic(() => import("@/components/exercises/memory/DesafioSupermercado").then(m => ({ default: m.DesafioSupermercado })), { loading: ExerciseLoader, ssr: false });
 const DesafioCidade       = dynamic(() => import("@/components/exercises/executive/DesafioCidade").then(m => ({ default: m.DesafioCidade })), { loading: ExerciseLoader, ssr: false });
@@ -151,9 +151,11 @@ const EXERCISE_INSTRUCTIONS: Record<string, string[]> = {
     "Velocidade e precisão contam — confie no seu julgamento!",
   ],
   "antes-depois": [
-    "Uma figura ou palavra aparece no centro (dia, mês, número, letra ou rotina).",
-    "Veja se a pergunta pede o que vem ANTES ou DEPOIS dela.",
-    "Toque na alternativa certa. Use o 🔊 para ouvir a pergunta de novo.",
+    "Cada atividade tem uma META, sempre visível no topo.",
+    "Organize as ações na melhor ordem: toque numa ação para colocá-la no próximo espaço, ou arraste-a. Toque numa ação já posicionada para removê-la.",
+    "Use as setas ↑/↓ para reordenar, Desfazer/Refazer para corrigir e Pedir dica se precisar de ajuda.",
+    "Em algumas atividades, uma ação NÃO faz parte do plano — deixe-a de fora. Nos níveis avançados, algo pode mudar e você escolhe como continuar até a meta.",
+    "Toque em Confirmar quando terminar. Use o 🔊 para ouvir a meta e a instrução.",
   ],
   "semaforo": [
     "Três semáforos aparecem na tela e piscam ao mesmo tempo.",
@@ -612,7 +614,7 @@ export default function ExercicioPage() {
       case "nback": return <NBack {...props} />;
       case "ordem-historia": return <OrdemHistoria {...props} settings={exerciseSettings as { unlockIntruso?: boolean; unlockFalta?: boolean } | undefined} />;
       case "certo-ou-errado": return <CertoOuErrado {...props} patientAge={patientAge} />;
-      case "antes-depois": return <AntesDepois {...props} />;
+      case "antes-depois": return <CaminhosMeta {...props} settings={exerciseSettings} />;
       case "semaforo": return <Semaforo {...props} />;
       case "desafio-supermercado":
       case "desafio-supermercado-auditivo": return <DesafioSupermercado {...props} />;

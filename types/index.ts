@@ -273,11 +273,11 @@ export const EXERCISE_DEFINITIONS = {
   },
   "antes-depois": {
     id: "antes-depois",
-    name: "Sequência Temporal",
+    name: "Caminhos para a Meta",
     domain: "executive" as Domain,
-    description: "Identifique relações de ordem, causa e consequência",
+    description: "Organize as ações e encontre o melhor caminho para alcançar um objetivo.",
     estimatedMinutes: 7,
-    icon: "📅",
+    icon: "🧭",
   },
   "desafio-supermercado": {
     id: "desafio-supermercado",

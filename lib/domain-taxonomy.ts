@@ -32,7 +32,7 @@ export const DOMAIN_SUBDOMAINS: Record<Domain, Subdomain[]> = {
     { id: "decisao", label: "Tomada de Decisão", exercises: [] },
     { id: "problemas", label: "Resolução de Problemas", exercises: [] },
     { id: "logico", label: "Raciocínio Lógico", exercises: ["deductive-grid", "ordem-historia"] },
-    { id: "temporal", label: "Raciocínio Temporal e Causal", exercises: ["antes-depois"] },
+    { id: "temporal", label: "Planejamento e Flexibilidade", exercises: ["antes-depois"] },
   ],
   processing: [
     { id: "reacao", label: "Tempo de Reação", exercises: ["tempo-reacao", "semaforo"] },

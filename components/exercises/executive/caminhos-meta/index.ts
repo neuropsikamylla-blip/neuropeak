@@ -1,0 +1,1 @@
+export { CaminhosMeta } from "./CaminhosMeta";
