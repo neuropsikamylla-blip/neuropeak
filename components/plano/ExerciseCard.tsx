@@ -6,6 +6,8 @@ import { DEFAULT_SPAN_SETTINGS, type SpanSettings } from "@/components/exercises
 import { EXERCISE_SUBDOMAIN, EXERCISE_SUBDOMAIN_ID } from "@/lib/domain-taxonomy";
 import { ExerciseIcon } from "@/components/ExerciseIcon";
 import { SubdomainTag } from "./ExerciseTags";
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
+import { CaminhosMetaConfig } from "@/components/therapist/CaminhosMetaConfig";
 
 interface ExerciseCardProps {
   id: string;
@@ -34,6 +36,10 @@ export function ExerciseCard({
   const c: SpanSettings = { ...DEFAULT_SPAN_SETTINGS, ...(spanCfg ?? {}) };
   const isOrdemHistoria = id === "ordem-historia";
   const isFocus = id === "focus-agents" || id === "focus-agents-auditivo";
+  const isCaminhos = id === "antes-depois";
+  const nCaminhosSel = isCaminhos && Array.isArray(cfg?.atividadesSelecionadas)
+    ? (cfg!.atividadesSelecionadas as unknown[]).length
+    : 0;
   const FOCUS_MODES: { key: string; label: string }[] = [
     { key: "foco", label: "🎯 Foco" }, { key: "inibicao", label: "🚫 Inibição" },
     { key: "alternancia", label: "🔄 Alternância" }, { key: "desafio", label: "🧠 Desafio" },
@@ -75,17 +81,41 @@ export function ExerciseCard({
           </div>
         </div>
 
-        <button
-          type="button"
-          onClick={() => setOpen((o) => !o)}
-          aria-label="Ajustar"
-          className={`flex items-center gap-1.5 px-2.5 h-8 rounded-lg border text-xs font-medium transition-colors ${
-            open ? "border-blue-400/50 text-blue-300 bg-blue-500/15" : "border-white/15 text-slate-400 hover:text-slate-200 hover:bg-white/10"
-          }`}
-        >
-          <SlidersHorizontal className="w-3.5 h-3.5" />
-          Ajustar
-        </button>
+        {isCaminhos ? (
+          <Dialog>
+            <DialogTrigger asChild>
+              <button
+                type="button"
+                aria-label="Configurar atividades"
+                className="flex items-center gap-1.5 px-2.5 h-8 rounded-lg border text-xs font-medium border-white/15 text-slate-400 hover:text-slate-200 hover:bg-white/10 transition-colors"
+              >
+                <SlidersHorizontal className="w-3.5 h-3.5" />
+                Configurar
+                {nCaminhosSel > 0 && (
+                  <span className="ml-0.5 px-1.5 py-0.5 rounded-full text-[10px] font-bold bg-blue-500/20 text-blue-300">{nCaminhosSel}</span>
+                )}
+              </button>
+            </DialogTrigger>
+            <DialogContent className="max-w-2xl max-h-[85vh] overflow-y-auto border-white/10 bg-[#0D2547] text-slate-100">
+              <DialogHeader>
+                <DialogTitle className="text-slate-100">Caminhos para a Meta — configurar atividades</DialogTitle>
+              </DialogHeader>
+              <CaminhosMetaConfig cfg={cfg} onSetting={onSetting ?? (() => {})} />
+            </DialogContent>
+          </Dialog>
+        ) : (
+          <button
+            type="button"
+            onClick={() => setOpen((o) => !o)}
+            aria-label="Ajustar"
+            className={`flex items-center gap-1.5 px-2.5 h-8 rounded-lg border text-xs font-medium transition-colors ${
+              open ? "border-blue-400/50 text-blue-300 bg-blue-500/15" : "border-white/15 text-slate-400 hover:text-slate-200 hover:bg-white/10"
+            }`}
+          >
+            <SlidersHorizontal className="w-3.5 h-3.5" />
+            Ajustar
+          </button>
+        )}
         <button
           type="button"
           onClick={() => onRemove(id)}

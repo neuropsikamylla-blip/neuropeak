@@ -15,6 +15,7 @@ import { createElement } from "react";
 import { calculateDomainScore, generateRecommendations } from "@/lib/scoring";
 import { summarizeStoryTrail } from "@/lib/story-trail-report";
 import { summarizeFocusAgents, focusModeLabel } from "@/lib/focus-report";
+import { summarizeCaminhosMeta, caminhosModoLabel } from "@/lib/caminhos-report";
 import { formatDate, calculateAge } from "@/lib/utils";
 import { DOMAIN_LABELS } from "@/types";
 import type { SessionData } from "@/types";
@@ -185,6 +186,7 @@ export const GET = withApiHandler(async (req: NextRequest) => {
   const patient = { ...patientBase, sessions: sessionRows, achievements };
   const trail = summarizeStoryTrail(sessionRows);   // resumo da trilha (separa as incompletas)
   const focus = summarizeFocusAgents(sessionRows);  // resumo do Focus Agentes
+  const caminhos = summarizeCaminhosMeta(sessionRows);  // resumo do Caminhos para a Meta
   const isAbandoned = (s: { metadata?: string | null }) => {
     try { return (JSON.parse(s.metadata || "{}") as { abandoned?: boolean }).abandoned === true; } catch { return false; }
   };
@@ -196,6 +198,7 @@ export const GET = withApiHandler(async (req: NextRequest) => {
   let _sec = 5;
   const trailNo = trail ? _sec++ : 0;
   const focusNo = focus ? _sec++ : 0;
+  const caminhosNo = caminhos ? _sec++ : 0;
   const recNo = _sec;
 
   const stagePlain = trail ? trail.stageLabel.replace(/^[^A-Za-zÀ-ÿ]+/, "") : "";
@@ -223,6 +226,20 @@ export const GET = withApiHandler(async (req: NextRequest) => {
     createElement(View, { style: styles.row, key: "fs7" }, createElement(Text, { style: styles.label }, "Recomendação:"), createElement(Text, { style: styles.value }, focus.recommendation)),
     createElement(Text, { style: { ...styles.label, marginTop: 6 }, key: "fs8" }, "Observações automáticas:"),
     ...focus.observations.map((o, i) => createElement(Text, { style: styles.recommendations, key: `fso${i}` }, `• ${o}`)),
+  ] : [];
+
+  const caminhosSection = caminhos ? [
+    createElement(Text, { style: styles.sectionTitle, key: "cm" }, `${caminhosNo}. Caminhos para a Meta`),
+    createElement(View, { style: styles.row, key: "cm1" }, createElement(Text, { style: styles.label }, "Modo · nível:"), createElement(Text, { style: styles.value }, `${caminhosModoLabel(caminhos.lastModo)} · nível ${caminhos.lastNivel ?? "—"}`)),
+    createElement(View, { style: styles.row, key: "cm2" }, createElement(Text, { style: styles.label }, "Corretas / parciais / incorretas:"), createElement(Text, { style: styles.value }, `${caminhos.corretas} / ${caminhos.parciais} / ${caminhos.incorretas} (de ${caminhos.totalAtividades})`)),
+    createElement(View, { style: styles.row, key: "cm3" }, createElement(Text, { style: styles.label }, "Dicas (nº) · áudio:"), createElement(Text, { style: styles.value }, `${caminhos.dicasTotal} · ${caminhos.usouAudio} atividade(s)`)),
+    createElement(View, { style: styles.row, key: "cm4" }, createElement(Text, { style: styles.label }, "Tempo médio:"), createElement(Text, { style: styles.value }, `${caminhos.meanTimeS}s`)),
+    createElement(View, { style: styles.row, key: "cm5" }, createElement(Text, { style: styles.label }, "Corrigiu após revisão:"), createElement(Text, { style: styles.value }, `${caminhos.revisoes}${caminhos.naoAcertaramInicio ? ` de ${caminhos.naoAcertaramInicio}` : ""}`)),
+    createElement(View, { style: styles.row, key: "cm6" }, createElement(Text, { style: styles.label }, "Adaptação após mudança:"), createElement(Text, { style: styles.value }, caminhos.mudancasApresentadas > 0 ? `${Math.round(caminhos.adaptacaoMedia * 100)}% (${caminhos.adaptouAposMudanca} de ${caminhos.mudancasApresentadas})` : "—")),
+    createElement(View, { style: styles.row, key: "cm7" }, createElement(Text, { style: styles.label }, "Manteve estratégia anterior:"), createElement(Text, { style: styles.value }, `${caminhos.perseveracoes} situação(ões)`)),
+    createElement(View, { style: styles.row, key: "cm8" }, createElement(Text, { style: styles.label }, "Evolução (próprio histórico):"), createElement(Text, { style: styles.value }, caminhos.trend === "subiu" ? "Avançou" : caminhos.trend === "regrediu" ? "Regrediu" : "Manteve")),
+    createElement(Text, { style: { ...styles.label, marginTop: 6 }, key: "cm9" }, "Observações funcionais:"),
+    ...caminhos.observations.map((o, i) => createElement(Text, { style: styles.recommendations, key: `cmo${i}` }, `• ${o}`)),
   ] : [];
 
   const doc = createElement(Document, {},
@@ -280,6 +297,7 @@ export const GET = withApiHandler(async (req: NextRequest) => {
 
       ...trailSection,
       ...focusSection,
+      ...caminhosSection,
 
       createElement(Text, { style: styles.sectionTitle }, `${recNo}. Recomendações`),
       createElement(Text, { style: styles.recommendations }, recommendations),

@@ -14,6 +14,20 @@ histórico completo anterior está no log do Git (452 commits no total, a partir
   Documentação (CLAUDE.md, README.md, ARCHITECTURE.md, ADRs) reescrita a partir do
   código real.
 
+## [2.30.0] — 2026-07-13
+
+- **Caminhos para a Meta — Bloco 3 (fecha a Etapa 1):**
+  - **Painel do terapeuta** na prescrição (modal "Configurar" no card do exercício):
+    catálogo de atividades com busca e filtros (biblioteca/nível/modo/categoria), badges
+    (intrusa, imprevisto, tipo de correção, ordens alternativas), preview read-only
+    (meta/ações/dicas/feedbacks), seleção e ordenação da sequência misturando bibliotecas,
+    e opções da sessão (rodadas, ordem fixa/aleatória, dicas, áudio, tentativas, desfazer,
+    feedback imediato/final) — persistidas no plano e aplicadas na tela do paciente.
+  - **Relatório funcional** (`lib/caminhos-report.ts`): corretas/parciais/incorretas,
+    dicas por nível, revisões, adaptação após mudança, perseveração, desempenho por
+    modo/biblioteca, evolução contra o próprio histórico e observações FUNCIONAIS
+    (sem rótulos depreciativos, sem diagnóstico) — no perfil do paciente e no PDF.
+
 ## [2.29.0] — 2026-07-13
 
 - **NOVO MÓDULO: "Caminhos para a Meta"** (substitui a mecânica do Sequência Temporal;

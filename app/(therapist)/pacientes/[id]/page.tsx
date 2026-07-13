@@ -14,6 +14,7 @@ import { DistributionChart } from "@/components/plano/DistributionChart";
 import { parsePlanExercises } from "@/lib/exercise-plan";
 import { summarizeStoryTrail } from "@/lib/story-trail-report";
 import { summarizeFocusAgents, focusModeLabel } from "@/lib/focus-report";
+import { summarizeCaminhosMeta, caminhosModoLabel } from "@/lib/caminhos-report";
 import { ALL_DOMAINS, EXERCISE_DOMAIN } from "@/lib/domain-taxonomy";
 import { formatDate, formatDateTime, calculateAge, formatDuration } from "@/lib/utils";
 import { ArrowLeft, FileText, Target, Globe, Pencil } from "lucide-react";
@@ -58,6 +59,7 @@ export default async function PatientProfilePage({ params }: { params: Promise<{
   const sessions = sessionRows.filter((s) => !isAbandoned(s)) as unknown as SessionData[];
   const trail = summarizeStoryTrail(sessionRows);   // resumo da trilha (separa as incompletas)
   const focus = summarizeFocusAgents(sessionRows);  // resumo do Focus Agentes
+  const caminhos = summarizeCaminhosMeta(sessionRows);  // resumo do Caminhos para a Meta
   const typedAchievements = patient.achievements as unknown as Array<{ id: string; icon: string; title: string; unlockedAt: string }>;
   const domainScores = calculateDomainScore(sessions);
   const age = calculateAge(patient.birthDate);
@@ -303,6 +305,61 @@ export default async function PatientProfilePage({ params }: { params: Promise<{
                   <p className="text-[11px] font-bold text-slate-400 mb-1">Observações automáticas</p>
                   <ul className="space-y-1">
                     {focus.observations.map((o, i) => (
+                      <li key={i} className="text-xs text-slate-200 flex gap-1.5"><span className="text-slate-500">•</span>{o}</li>
+                    ))}
+                  </ul>
+                </div>
+              </CardContent>
+            </Card>
+          )}
+
+          {caminhos && (
+            <Card>
+              <CardHeader>
+                <CardTitle className="text-base flex items-center gap-2">
+                  🎯 Caminhos para a Meta
+                  <span className="text-xs font-semibold text-slate-400">{caminhosModoLabel(caminhos.lastModo)} · nível {caminhos.lastNivel ?? "—"}</span>
+                </CardTitle>
+              </CardHeader>
+              <CardContent className="space-y-3">
+                <div className="grid grid-cols-2 sm:grid-cols-4 gap-2">
+                  <div className="p-2.5 bg-white/5 rounded-lg">
+                    <p className="text-[11px] text-slate-400">Corretas / parciais / incorretas</p>
+                    <p className="text-sm font-bold text-slate-100">{caminhos.corretas} / {caminhos.parciais} / {caminhos.incorretas}</p>
+                  </div>
+                  <div className="p-2.5 bg-white/5 rounded-lg">
+                    <p className="text-[11px] text-slate-400">Dicas (nº) · áudio</p>
+                    <p className="text-sm font-bold text-slate-100">{caminhos.dicasTotal} · {caminhos.usouAudio}</p>
+                  </div>
+                  <div className="p-2.5 bg-white/5 rounded-lg">
+                    <p className="text-[11px] text-slate-400">Tempo médio</p>
+                    <p className="text-sm font-bold text-slate-100">{caminhos.meanTimeS}s</p>
+                  </div>
+                  <div className="p-2.5 bg-white/5 rounded-lg">
+                    <p className="text-[11px] text-slate-400">Adaptação após mudança</p>
+                    <p className="text-sm font-bold text-slate-100">{caminhos.mudancasApresentadas > 0 ? `${Math.round(caminhos.adaptacaoMedia * 100)}%` : "—"}</p>
+                  </div>
+                </div>
+
+                <div className="flex flex-wrap gap-2 text-[11px]">
+                  {(Object.keys(caminhos.byModo) as (keyof typeof caminhos.byModo)[]).map((m) => {
+                    const st = caminhos.byModo[m];
+                    if (!st || st.n === 0) return null;
+                    const acc = Math.round(((st.corretas + st.parciais * 0.5) / st.n) * 100);
+                    return <span key={m} className="px-2 py-1 rounded-md bg-white/5 text-slate-300">{caminhosModoLabel(m)}: {acc}% ({st.n})</span>;
+                  })}
+                  {caminhos.revisoes > 0 && (
+                    <span className="px-2 py-1 rounded-md bg-white/5 text-slate-300">Corrigiu após revisão: {caminhos.revisoes}</span>
+                  )}
+                  {caminhos.perseveracoes > 0 && (
+                    <span className="px-2 py-1 rounded-md bg-white/5 text-slate-300">Manteve estratégia anterior: {caminhos.perseveracoes}</span>
+                  )}
+                </div>
+
+                <div>
+                  <p className="text-[11px] font-bold text-slate-400 mb-1">Observações funcionais</p>
+                  <ul className="space-y-1">
+                    {caminhos.observations.map((o, i) => (
                       <li key={i} className="text-xs text-slate-200 flex gap-1.5"><span className="text-slate-500">•</span>{o}</li>
                     ))}
                   </ul>
