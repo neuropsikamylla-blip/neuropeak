@@ -14,6 +14,20 @@ histórico completo anterior está no log do Git (452 commits no total, a partir
   Documentação (CLAUDE.md, README.md, ARCHITECTURE.md, ADRs) reescrita a partir do
   código real.
 
+## [2.32.1] — 2026-07-13
+
+- **Caminhos para a Meta — correções da auditoria completa das 90 atividades:**
+  - **Leitura em voz alta por cartão:** cada cartão de ação (acervo, plano, descartadas)
+    e cada alternativa do imprevisto ganhou um botão-falante discreto — o recurso
+    estava previsto desde a Etapa 1 (`onFalarCartao`), mas nunca havia sido ligado.
+    Respeita a opção "áudio" prescrita pelo terapeuta.
+  - **Restrições dos imprevistos (Adolescentes):** 8 atividades (A22–A25, A27–A30)
+    tinham o campo "Atenção/restrições" vazio na tela de mudança; preenchido com a
+    restrição derivada do próprio obstáculo (padrão já usado em Crianças e Adultos).
+  - Auditoria completa (estrutural + comportamental com o motor real) registrada:
+    90/90 válidas, respostas corretas/parciais/incorretas verificadas em todas,
+    adaptação × perseveração verificadas nos 30 imprevistos, zero conteúdo sensível.
+
 ## [2.32.0] — 2026-07-13
 
 - **Caminhos para a Meta — Etapa 2: catálogo oficial com as 90 atividades.**

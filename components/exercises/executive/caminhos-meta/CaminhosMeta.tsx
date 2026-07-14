@@ -193,6 +193,7 @@ function Cartao({
   onClick,
   onPointerDown,
   onKeyDown,
+  onFalarTexto,
   disabled,
   refEl,
   extra,
@@ -205,6 +206,8 @@ function Cartao({
   onClick?: () => void;
   onPointerDown?: (e: React.PointerEvent) => void;
   onKeyDown?: (e: React.KeyboardEvent) => void;
+  /** Lê o texto do cartão em voz alta (spec §15); botão-falante discreto no cartão. */
+  onFalarTexto?: () => void;
   disabled?: boolean;
   refEl?: (el: HTMLDivElement | null) => void;
   extra?: React.ReactNode;
@@ -266,6 +269,33 @@ function Cartao({
       )}
       <span style={{ flex: 1, minWidth: 0 }}>{texto}</span>
       {extra}
+      {onFalarTexto && (
+        <button
+          type="button"
+          aria-label={`Ouvir: ${texto}`}
+          onClick={(e) => {
+            e.stopPropagation();
+            onFalarTexto();
+          }}
+          onPointerDown={(e) => e.stopPropagation()}
+          onKeyDown={(e) => e.stopPropagation()}
+          style={{
+            flexShrink: 0,
+            width: 28,
+            height: 28,
+            borderRadius: "50%",
+            border: `1.5px solid ${CM.borderSoft}`,
+            background: CM.card,
+            display: "flex",
+            alignItems: "center",
+            justifyContent: "center",
+            cursor: "pointer",
+            touchAction: "auto",
+          }}
+        >
+          <Volume2 size={13} color={CM.textMid} strokeWidth={2} />
+        </button>
+      )}
     </div>
   );
 }
@@ -1292,6 +1322,7 @@ function CorpoPlano({
                     onTocarPool(id);
                   }
                 }}
+                onFalarTexto={() => onFalarCartao(textoDe(id))}
                 extra={
                   selecionada ? (
                     <Check size={18} color={CM.accent} strokeWidth={2.6} style={{ flexShrink: 0 }} />
@@ -1387,6 +1418,7 @@ function CorpoPlano({
                         onClick={() => onTocarPlano(id)}
                         onPointerDown={iniciarDrag(id)}
                         onKeyDown={keyMove(pos)}
+                        onFalarTexto={() => onFalarCartao(textoDe(id))}
                       />
                     </div>
                     {editavel && (
@@ -1441,6 +1473,7 @@ function CorpoPlano({
                         plan.restaurarDescartada(id);
                       }
                     }}
+                    onFalarTexto={() => onFalarCartao(textoDe(id))}
                   />
                 ))}
                 {plan.snap.descartadas.length === 0 && (
@@ -1622,6 +1655,7 @@ function ImprevistoBloco({
                   onEscolher(id);
                 }
               }}
+              onFalarTexto={() => onFalar(textoDe(id))}
             />
           ))}
         </div>
