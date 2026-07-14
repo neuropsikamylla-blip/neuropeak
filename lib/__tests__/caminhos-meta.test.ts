@@ -441,6 +441,14 @@ describe("catálogo oficial (90 atividades)", () => {
     expect(r.intrusasIncluidas).toHaveLength(0);
   });
 
+  it("modo prioridade: o conjunto certo é correto em QUALQUER ordem de clique", () => {
+    for (const a of CAMINHOS_ATIVIDADES.filter((x) => x.modo === "prioridade")) {
+      const inv = [...a.correcao.acoesObrigatorias].reverse();
+      const r = corrigirResposta(a, { ordem: inv, selecionadas: inv, descartadas: [] });
+      expect(r.estado, a.id).toBe("correta");
+    }
+  });
+
   it("C29 (nível 8, duas mudanças) aceita o conjunto completo e recusa metade", () => {
     const a = CAMINHOS_ATIVIDADES.find((x) => x.id === "cm_c29")!;
     expect(a.imprevisto!.solucaoCorreta.length).toBeGreaterThan(1);

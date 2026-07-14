@@ -14,6 +14,15 @@ histórico completo anterior está no log do Git (452 commits no total, a partir
   Documentação (CLAUDE.md, README.md, ARCHITECTURE.md, ADRs) reescrita a partir do
   código real.
 
+## [2.32.2] — 2026-07-13
+
+- **Caminhos para a Meta — fix do modo prioridade (Adultos e idosos):** AD14, AD15,
+  AD16 e AD19 usavam correção por ordem exata, mas no modo prioridade a escolha é um
+  CONJUNTO — selecionar os essenciais certos numa ordem de clique diferente era
+  avaliado como incorreto. Corrigido para correção por dependências (sem precedências),
+  como nas demais bibliotecas. Teste permanente adicionado: toda atividade de
+  prioridade aceita o conjunto certo em qualquer ordem de clique (74 testes).
+
 ## [2.32.1] — 2026-07-13
 
 - **Caminhos para a Meta — correções da auditoria completa das 90 atividades:**

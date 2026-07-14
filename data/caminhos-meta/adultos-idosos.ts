@@ -757,7 +757,8 @@ const ad14: CaminhosAtividade = {
     { id: "a7", texto: "Iniciar uma atividade longa sem relação com o compromisso.", tipo: "desnecessaria" },
   ],
   correcao: {
-    tipo: "ordem_exata",
+    // prioridade = escolha de CONJUNTO, sem ordem: dependencias (a ordem do clique não pode reprovar)
+    tipo: "dependencias",
     ordemPrincipal: ["a1", "a2", "a3", "a4"],
     precedencias: [],
     ordensAlternativasAceitas: [],
@@ -808,7 +809,8 @@ const ad15: CaminhosAtividade = {
     { id: "a8", texto: "Começar uma atividade que impeça a saída no horário.", tipo: "desnecessaria" },
   ],
   correcao: {
-    tipo: "ordem_exata",
+    // prioridade = escolha de CONJUNTO, sem ordem: dependencias (a ordem do clique não pode reprovar)
+    tipo: "dependencias",
     ordemPrincipal: ["a1", "a2", "a3", "a4", "a5"],
     precedencias: [],
     ordensAlternativasAceitas: [],
@@ -860,7 +862,8 @@ const ad16: CaminhosAtividade = {
     { id: "a9", texto: "Realizar uma tarefa sem relação com a viagem.", tipo: "desnecessaria" },
   ],
   correcao: {
-    tipo: "ordem_exata",
+    // prioridade = escolha de CONJUNTO, sem ordem: dependencias (a ordem do clique não pode reprovar)
+    tipo: "dependencias",
     ordemPrincipal: ["a1", "a2", "a3", "a4", "a5", "a6"],
     precedencias: [],
     ordensAlternativasAceitas: [],
@@ -1026,7 +1029,8 @@ const ad19: CaminhosAtividade = {
     { id: "a7", texto: "Iniciar uma reforma no mesmo momento.", tipo: "desnecessaria" },
   ],
   correcao: {
-    tipo: "ordem_exata",
+    // prioridade = escolha de CONJUNTO, sem ordem: dependencias (a ordem do clique não pode reprovar)
+    tipo: "dependencias",
     ordemPrincipal: ["a1", "a2", "a3", "a4"],
     precedencias: [],
     ordensAlternativasAceitas: [],
