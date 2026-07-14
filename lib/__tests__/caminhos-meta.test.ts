@@ -5,7 +5,12 @@ import {
   corrigirImprevisto,
   indicadoresDe,
 } from "@/lib/caminhos-meta";
-import { CAMINHOS_ATIVIDADES_EXEMPLO } from "@/data/caminhos-meta-atividades";
+import {
+  CAMINHOS_ATIVIDADES,
+  CAMINHOS_CRIANCAS,
+  CAMINHOS_ADOLESCENTES,
+  CAMINHOS_ADULTOS_IDOSOS,
+} from "@/data/caminhos-meta-atividades";
 import type { CaminhosAtividade, CaminhosRegistro } from "@/types/caminhos-meta";
 
 // ── Fábricas de atividades de teste ─────────────────────────────────────────
@@ -241,26 +246,25 @@ describe("validarAtividade", () => {
 // ── corrigirImprevisto ──────────────────────────────────────────────────────
 
 describe("corrigirImprevisto", () => {
-  const atividade = CAMINHOS_ATIVIDADES_EXEMPLO.find(
-    (a) => a.id === "cm-ex-adultos-idosos-rua-fechada"
-  )!;
+  // AD21 "A rua habitual está fechada" — análogo oficial do antigo exemplo.
+  const atividade = CAMINHOS_ATIVIDADES.find((a) => a.id === "cm_ad21")!;
 
   it("solução correta (seguir o desvio) => correta, sem perseveração", () => {
-    const r = corrigirImprevisto(atividade, ["p4"]);
+    const r = corrigirImprevisto(atividade, ["a4"]);
     expect(r.estado).toBe("correta");
     expect(r.correto).toBe(true);
     expect(r.perseverou).toBe(false);
   });
 
-  it("insistir no plano inicial (rua principal) => incorreta, perseverou", () => {
-    const r = corrigirImprevisto(atividade, ["p2"]);
+  it("insistir no plano inicial (rua habitual) => incorreta, perseverou", () => {
+    const r = corrigirImprevisto(atividade, ["a2"]);
     expect(r.estado).toBe("incorreta");
     expect(r.correto).toBe(false);
     expect(r.perseverou).toBe(true);
   });
 
-  it("escolha insegura/irrelevante => incorreta, sem perseveração", () => {
-    const r = corrigirImprevisto(atividade, ["p5"]);
+  it("escolha insegura (atravessar o bloqueio) => incorreta, sem perseveração", () => {
+    const r = corrigirImprevisto(atividade, ["a5"]);
     expect(r.estado).toBe("incorreta");
     expect(r.perseverou).toBe(false);
   });
@@ -370,35 +374,79 @@ describe("indicadoresDe", () => {
   });
 });
 
-// ── atividades de exemplo ────────────────────────────────────────────────────
+// ── catálogo oficial (Etapa 2: as 90 atividades) ─────────────────────────────
 
-describe("atividades de exemplo", () => {
-  it("existem exatamente 3, uma por biblioteca, todas com [EXEMPLO]", () => {
-    expect(CAMINHOS_ATIVIDADES_EXEMPLO).toHaveLength(3);
-    const bibs = CAMINHOS_ATIVIDADES_EXEMPLO.map((a) => a.biblioteca).sort();
-    expect(bibs).toEqual(["adolescentes", "adultos_idosos", "criancas"]);
-    expect(CAMINHOS_ATIVIDADES_EXEMPLO.every((a) => a.titulo.startsWith("[EXEMPLO]"))).toBe(true);
+describe("catálogo oficial (90 atividades)", () => {
+  it("existem exatamente 90: 30 por biblioteca", () => {
+    expect(CAMINHOS_ATIVIDADES).toHaveLength(90);
+    expect(CAMINHOS_CRIANCAS).toHaveLength(30);
+    expect(CAMINHOS_ADOLESCENTES).toHaveLength(30);
+    expect(CAMINHOS_ADULTOS_IDOSOS).toHaveLength(30);
   });
 
-  it("as 3 atividades de exemplo passam em validarAtividade", () => {
-    for (const a of CAMINHOS_ATIVIDADES_EXEMPLO) {
-      expect(validarAtividade(a)).toHaveLength(0);
+  it("ids únicos e nenhum título com [EXEMPLO]", () => {
+    const ids = CAMINHOS_ATIVIDADES.map((a) => a.id);
+    expect(new Set(ids).size).toBe(90);
+    expect(CAMINHOS_ATIVIDADES.some((a) => a.titulo.includes("[EXEMPLO]"))).toBe(false);
+  });
+
+  it("cada biblioteca só contém atividades da própria biblioteca", () => {
+    expect(CAMINHOS_CRIANCAS.every((a) => a.biblioteca === "criancas")).toBe(true);
+    expect(CAMINHOS_ADOLESCENTES.every((a) => a.biblioteca === "adolescentes")).toBe(true);
+    expect(CAMINHOS_ADULTOS_IDOSOS.every((a) => a.biblioteca === "adultos_idosos")).toBe(true);
+  });
+
+  it("as 90 passam em validarAtividade", () => {
+    for (const a of CAMINHOS_ATIVIDADES) {
+      expect(validarAtividade(a), a.id).toHaveLength(0);
     }
   });
 
-  it("a atividade de crianças (ordenar) corrige a ordem certa como correta", () => {
-    const a = CAMINHOS_ATIVIDADES_EXEMPLO.find((x) => x.biblioteca === "criancas")!;
+  it("todas têm 3 dicas, feedback completo e estão ativas", () => {
+    for (const a of CAMINHOS_ATIVIDADES) {
+      expect(a.dicas, a.id).toHaveLength(3);
+      expect(a.feedback.correto.length, a.id).toBeGreaterThan(0);
+      expect(a.feedback.parcial.length, a.id).toBeGreaterThan(0);
+      expect(a.feedback.incorreto.length, a.id).toBeGreaterThan(0);
+      expect(a.feedback.explicacao.length, a.id).toBeGreaterThan(0);
+      expect(a.ativo, a.id).toBe(true);
+    }
+  });
+
+  it("modos com imprevisto trazem o bloco completo (solução + explicação)", () => {
+    const comMudanca = CAMINHOS_ATIVIDADES.filter((a) =>
+      ["reorganizar", "problema", "plano_alternativo"].includes(a.modo)
+    );
+    expect(comMudanca).toHaveLength(30);
+    for (const a of comMudanca) {
+      expect(a.imprevisto?.ativo, a.id).toBe(true);
+      expect(a.imprevisto!.solucaoCorreta.length, a.id).toBeGreaterThan(0);
+      expect(a.imprevisto!.explicacao.length, a.id).toBeGreaterThan(0);
+    }
+  });
+
+  it("C01 (ordenar, ordem_exata) corrige a ordem certa como correta", () => {
+    const a = CAMINHOS_ATIVIDADES.find((x) => x.id === "cm_c01")!;
     const r = corrigirResposta(a, { ordem: a.correcao.ordemPrincipal });
     expect(r.estado).toBe("correta");
   });
 
-  it("a atividade de adolescentes aceita a intrusa descartada", () => {
-    const a = CAMINHOS_ATIVIDADES_EXEMPLO.find((x) => x.biblioteca === "adolescentes")!;
+  it("C11 (intruso) aceita a intrusa descartada", () => {
+    const a = CAMINHOS_ATIVIDADES.find((x) => x.id === "cm_c11")!;
     const r = corrigirResposta(a, {
       ordem: a.correcao.ordemPrincipal,
       descartadas: a.correcao.acoesDesnecessarias,
     });
     expect(r.estado).toBe("correta");
     expect(r.intrusasIncluidas).toHaveLength(0);
+  });
+
+  it("C29 (nível 8, duas mudanças) aceita o conjunto completo e recusa metade", () => {
+    const a = CAMINHOS_ATIVIDADES.find((x) => x.id === "cm_c29")!;
+    expect(a.imprevisto!.solucaoCorreta.length).toBeGreaterThan(1);
+    const ok = corrigirImprevisto(a, [...a.imprevisto!.solucaoCorreta]);
+    expect(ok.correto).toBe(true);
+    const metade = corrigirImprevisto(a, [a.imprevisto!.solucaoCorreta[0]]);
+    expect(metade.correto).toBe(false);
   });
 });

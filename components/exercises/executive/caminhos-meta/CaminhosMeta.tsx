@@ -33,7 +33,12 @@ import { playTTS, cancelTTS } from "@/lib/tts";
 import { useTimedProgress } from "@/components/exercises/useExerciseEngine";
 import { ExerciseProgressBar } from "@/components/exercises/ExerciseProgressBar";
 import { corrigirResposta, corrigirImprevisto } from "@/lib/caminhos-meta";
-import { CAMINHOS_ATIVIDADES_EXEMPLO } from "@/data/caminhos-meta-atividades";
+import {
+  CAMINHOS_ATIVIDADES,
+  CAMINHOS_CRIANCAS,
+  CAMINHOS_ADOLESCENTES,
+  CAMINHOS_ADULTOS_IDOSOS,
+} from "@/data/caminhos-meta-atividades";
 import type {
   CaminhosAtividade,
   CaminhosAcao,
@@ -70,24 +75,31 @@ function shuffle<T>(a: T[]): T[] {
   return r;
 }
 
-/** Seleciona as atividades da sessão a partir das settings ou dos 3 exemplos. */
+/** Sem prescrição do terapeuta: 1 atividade de nível baixo por biblioteca. */
+function padraoSemConfig(): CaminhosAtividade[] {
+  const libs = [CAMINHOS_CRIANCAS, CAMINHOS_ADOLESCENTES, CAMINHOS_ADULTOS_IDOSOS];
+  return libs
+    .map((l) => [...l].filter((a) => a.ativo).sort((x, y) => x.nivel - y.nivel)[0])
+    .filter((a): a is CaminhosAtividade => !!a);
+}
+
+/** Seleciona as atividades da sessão a partir das settings (catálogo oficial de 90). */
 function montarSessao(settings: ReturnType<typeof normalizeCaminhosSettings>): CaminhosAtividade[] {
-  const porId = new Map(CAMINHOS_ATIVIDADES_EXEMPLO.map((a) => [a.id, a]));
+  const porId = new Map(CAMINHOS_ATIVIDADES.map((a) => [a.id, a]));
   let base: CaminhosAtividade[];
   if (settings.atividadesSelecionadas.length > 0) {
     base = settings.atividadesSelecionadas
       .map((id) => porId.get(id))
       .filter((a): a is CaminhosAtividade => !!a && a.ativo);
-    if (base.length === 0) base = [...CAMINHOS_ATIVIDADES_EXEMPLO].filter((a) => a.ativo);
+    if (base.length === 0) base = padraoSemConfig();
   } else {
-    // sem config: as 3 de exemplo, em ordem de nível
-    base = [...CAMINHOS_ATIVIDADES_EXEMPLO].filter((a) => a.ativo).sort((x, y) => x.nivel - y.nivel);
+    base = padraoSemConfig();
   }
   const ordenada = settings.ordemFixa ? base : shuffle(base);
   // expande por rodadas
   const out: CaminhosAtividade[] = [];
   for (let r = 0; r < Math.max(1, settings.rodadas); r++) out.push(...ordenada);
-  return out.length ? out : [...CAMINHOS_ATIVIDADES_EXEMPLO];
+  return out.length ? out : padraoSemConfig();
 }
 
 /** Modos que trabalham com espaços numerados de ordem. */
@@ -109,13 +121,26 @@ function planoInicialDe(a: CaminhosAtividade): PlanSnapshot {
   if (!usaOrdem(a.modo)) return snapshotInicial(0);
   if (a.modo === "completar") {
     // pré-preenche todas menos uma lacuna (a ação omitida vira opção no pool).
-    const gapIdx = Math.max(0, a.correcao.ordemPrincipal.length - 2); // penúltima como lacuna
+    // A atividade pode fixar QUAL ação é a lacuna (lacunaAcaoId); fallback: penúltima.
+    const idxFixado = a.lacunaAcaoId ? a.correcao.ordemPrincipal.indexOf(a.lacunaAcaoId) : -1;
+    const gapIdx = idxFixado >= 0 ? idxFixado : Math.max(0, a.correcao.ordemPrincipal.length - 2);
     const plano: (string | null)[] = a.correcao.ordemPrincipal.map((id, i) => (i === gapIdx ? null : id));
     return { plano, descartadas: [], selecionadas: [] };
   }
   if (a.modo === "corrigir") {
-    // pré-preenche com UMA troca inadequada (duas ações adjacentes trocadas).
-    const base = [...a.correcao.ordemPrincipal];
+    // pré-preenche com a ordem ERRADA fixada pela atividade (ordemInicial);
+    // fallback: troca de duas ações adjacentes do meio.
+    const correta = a.correcao.ordemPrincipal;
+    const fixada = a.ordemInicial;
+    if (
+      fixada &&
+      fixada.length === correta.length &&
+      new Set(fixada).size === fixada.length &&
+      fixada.every((id) => correta.includes(id))
+    ) {
+      return { plano: [...fixada], descartadas: [], selecionadas: [] };
+    }
+    const base = [...correta];
     if (base.length >= 2) {
       const i = Math.floor(base.length / 2) - 1;
       const j = i + 1;
@@ -164,6 +189,7 @@ function Cartao({
   ordem,
   estado = "normal",
   ariaLabel,
+  ariaPressed,
   onClick,
   onPointerDown,
   onKeyDown,
@@ -175,6 +201,7 @@ function Cartao({
   ordem?: number;
   estado?: EstadoVisual;
   ariaLabel?: string;
+  ariaPressed?: boolean;
   onClick?: () => void;
   onPointerDown?: (e: React.PointerEvent) => void;
   onKeyDown?: (e: React.KeyboardEvent) => void;
@@ -188,6 +215,7 @@ function Cartao({
       role="button"
       tabIndex={disabled ? -1 : 0}
       aria-label={ariaLabel ?? texto}
+      aria-pressed={ariaPressed}
       aria-disabled={disabled || undefined}
       onClick={disabled ? undefined : onClick}
       onKeyDown={disabled ? undefined : onKeyDown}
@@ -525,7 +553,12 @@ function AtividadeRunner({
 }) {
   const planoInicial = useMemo(() => planoInicialDe(atividade), [atividade]);
   const pool0 = useMemo(() => poolInicial(atividade, planoInicial), [atividade, planoInicial]);
-  const limPrio = limitePrioridade(cfg as unknown as Record<string, unknown>);
+  // Limite do modo prioridade = nº de essenciais DA ATIVIDADE (C16 pede 3, AD16 pede 6…);
+  // settings (limiteEscolhas) só sobrepõem se definidas explicitamente pelo terapeuta.
+  const limPrio = limitePrioridade(
+    cfg as unknown as Record<string, unknown>,
+    atividade.correcao.acoesObrigatorias.length || 3
+  );
   const modoOrdem = usaOrdem(atividade.modo);
   const modoIntruso = atividade.modo === "intruso";
   const modoPrioridade = atividade.modo === "prioridade";
@@ -539,7 +572,7 @@ function AtividadeRunner({
   const [resImprevisto, setResImprevisto] = useState<CaminhosResultadoImprevisto | null>(null);
   const [dicaNivel, setDicaNivel] = useState<0 | 1 | 2 | 3>(retomar?.dicaNivel ?? 0);
   const [aviso, setAviso] = useState<string | null>(null);
-  const [escolhaImprevisto, setEscolhaImprevisto] = useState<string | null>(null);
+  const [escolhaImprevisto, setEscolhaImprevisto] = useState<string[]>([]);
 
   // ── métricas do registro ──
   const tentativasRef = useRef(retomar?.tentativas ?? 0);
@@ -711,16 +744,33 @@ function AtividadeRunner({
     return shuffle(Array.from(ids));
   }, [comImprevisto, atividade]);
 
+  // Soluções com MAIS de uma ação (níveis 8: duas mudanças) exigem seleção múltipla
+  // + confirmação; solução de 1 ação mantém o toque único (responde na hora).
+  const imprevistoMulti = (atividade.imprevisto?.solucaoCorreta.length ?? 1) > 1;
+
   const escolherImprevisto = useCallback(
     (id: string) => {
       if (fase !== "imprevisto") return;
-      setEscolhaImprevisto(id);
-      const res = corrigirImprevisto(atividade, [id]);
-      setResImprevisto(res);
-      setFase("feedbackImprevisto");
+      if (!imprevistoMulti) {
+        setEscolhaImprevisto([id]);
+        const res = corrigirImprevisto(atividade, [id]);
+        setResImprevisto(res);
+        setFase("feedbackImprevisto");
+        return;
+      }
+      setEscolhaImprevisto((prev) =>
+        prev.includes(id) ? prev.filter((x) => x !== id) : [...prev, id]
+      );
     },
-    [fase, atividade]
+    [fase, atividade, imprevistoMulti]
   );
+
+  const confirmarImprevisto = useCallback(() => {
+    if (fase !== "imprevisto" || escolhaImprevisto.length === 0) return;
+    const res = corrigirImprevisto(atividade, escolhaImprevisto);
+    setResImprevisto(res);
+    setFase("feedbackImprevisto");
+  }, [fase, atividade, escolhaImprevisto]);
 
   // ── concluir a atividade: monta o registro (spec §18) ──
   const concluirAtividade = useCallback(() => {
@@ -754,7 +804,7 @@ function AtividadeRunner({
 
     // ações substituídas após a mudança: escolha do imprevisto ≠ ação que devia mudar
     const acoesSubstituidasAposMudanca =
-      comImprevisto && escolhaImprevisto && adaptou ? 1 : 0;
+      comImprevisto && adaptou ? escolhaImprevisto.length : 0;
 
     const registro: CaminhosRegistro = {
       atividadeId: atividade.id,
@@ -1039,7 +1089,9 @@ function AtividadeRunner({
             escolha={escolhaImprevisto}
             resultado={resImprevisto}
             editavel={fase === "imprevisto"}
+            multi={imprevistoMulti}
             onEscolher={escolherImprevisto}
+            onConfirmar={confirmarImprevisto}
             onFalar={falar}
           />
         )}
@@ -1451,21 +1503,30 @@ function ImprevistoBloco({
   escolha,
   resultado,
   editavel,
+  multi,
   onEscolher,
+  onConfirmar,
   onFalar,
 }: {
   imprevisto: NonNullable<CaminhosAtividade["imprevisto"]>;
   opcoes: string[];
   atividade: CaminhosAtividade;
-  escolha: string | null;
+  escolha: string[];
   resultado: CaminhosResultadoImprevisto | null;
   editavel: boolean;
+  multi: boolean;
   onEscolher: (id: string) => void;
+  onConfirmar: () => void;
   onFalar: (texto: string) => void;
 }) {
   const textoDe = (id: string) => acaoDe(atividade, id)?.texto ?? id;
   const estadoDe = (id: string): EstadoVisual => {
-    if (!resultado || escolha !== id) return editavel ? "normal" : "desabilitado";
+    const marcada = escolha.includes(id);
+    if (!resultado) {
+      if (marcada && editavel) return "foco";
+      return editavel ? "normal" : "desabilitado";
+    }
+    if (!marcada) return "desabilitado";
     return resultado.correto ? "ok" : "erro";
   };
   return (
@@ -1540,6 +1601,11 @@ function ImprevistoBloco({
         <h3 style={{ fontSize: 13, fontWeight: 800, color: CM.text, marginBottom: 10 }}>
           O que você faz agora?
         </h3>
+        {multi && (
+          <p style={{ fontSize: 12.5, color: CM.textMid, marginBottom: 10 }}>
+            Mais de uma coisa mudou: toque em todas as ações necessárias e depois confirme.
+          </p>
+        )}
         <div style={{ display: "flex", flexDirection: "column", gap: 10 }}>
           {opcoes.map((id) => (
             <Cartao
@@ -1548,6 +1614,7 @@ function ImprevistoBloco({
               estado={estadoDe(id)}
               disabled={!editavel}
               ariaLabel={`Opção: ${textoDe(id)}`}
+              ariaPressed={multi ? escolha.includes(id) : undefined}
               onClick={() => onEscolher(id)}
               onKeyDown={(e) => {
                 if (e.key === "Enter" || e.key === " ") {
@@ -1558,6 +1625,26 @@ function ImprevistoBloco({
             />
           ))}
         </div>
+        {multi && editavel && (
+          <button
+            onClick={onConfirmar}
+            disabled={escolha.length === 0}
+            style={{
+              marginTop: 12,
+              width: "100%",
+              padding: "12px 16px",
+              borderRadius: 14,
+              border: "none",
+              background: escolha.length === 0 ? CM.borderSoft : CM.accent,
+              color: escolha.length === 0 ? CM.textMid : "#fff",
+              fontSize: 15,
+              fontWeight: 800,
+              cursor: escolha.length === 0 ? "default" : "pointer",
+            }}
+          >
+            Confirmar escolha
+          </button>
+        )}
       </div>
     </div>
   );

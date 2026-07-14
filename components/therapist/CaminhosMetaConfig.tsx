@@ -12,7 +12,7 @@
 
 import { useMemo, useState } from "react";
 import { Search, ChevronDown, ChevronUp, X, Check, Info } from "lucide-react";
-import { CAMINHOS_ATIVIDADES_EXEMPLO } from "@/data/caminhos-meta-atividades";
+import { CAMINHOS_ATIVIDADES } from "@/data/caminhos-meta-atividades";
 import { DEFAULT_CAMINHOS_SETTINGS } from "@/components/exercises/executive/caminhos-meta/settings";
 import type {
   CaminhosAtividade,
@@ -76,7 +76,7 @@ type NivelFiltro = CaminhosNivel | "todos";
 type CatFiltro = CaminhosCategoria | "todas";
 
 export function CaminhosMetaConfig({ cfg, onSetting }: CaminhosMetaConfigProps) {
-  const atividades = CAMINHOS_ATIVIDADES_EXEMPLO;
+  const atividades = CAMINHOS_ATIVIDADES;
 
   // ── Settings atuais (com defaults) ──
   const d = DEFAULT_CAMINHOS_SETTINGS;

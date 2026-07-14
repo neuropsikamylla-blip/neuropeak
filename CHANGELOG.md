@@ -14,6 +14,34 @@ histórico completo anterior está no log do Git (452 commits no total, a partir
   Documentação (CLAUDE.md, README.md, ARCHITECTURE.md, ADRs) reescrita a partir do
   código real.
 
+## [2.32.0] — 2026-07-13
+
+- **Caminhos para a Meta — Etapa 2: catálogo oficial com as 90 atividades.**
+  - **90 atividades cadastradas** conforme a spec da terapeuta
+    (`CAMINHOS-ATIVIDADES-ETAPA2-SPEC.md`): 30 Crianças (cm_c01–cm_c30), 30
+    Adolescentes (cm_a01–cm_a30) e 30 Adultos e idosos (cm_ad01–cm_ad30), em
+    `data/caminhos-meta/{criancas,adolescentes,adultos-idosos}.ts`. As 3 atividades
+    provisórias [EXEMPLO] foram removidas.
+  - Todas com: níveis 1–8, os 8 modos (ordenar, intruso, prioridade, completar,
+    corrigir, reorganizar, problema, plano alternativo), 3 dicas graduais, feedback
+    específico (correto/parcial/incorreto + explicação funcional), bloco de imprevisto
+    completo nos modos de mudança (30 atividades) e leitura em voz alta.
+  - Catálogo inteiro disponível no painel do terapeuta (busca/filtros), misturável
+    entre bibliotecas, sem bloqueio por idade; apresentação embaralhada preservando a
+    correção cadastrada.
+- **Tela do paciente — fidelidade à spec (3 ajustes):**
+  - **Imprevisto com múltiplas mudanças (nível 8):** quando a solução exige mais de uma
+    ação (ex.: mudar de sala E de material), a fase do imprevisto passa a permitir
+    seleção múltipla com botão "Confirmar escolha" (antes, um toque respondia na hora e
+    era impossível acertar).
+  - **Modo completar/corrigir fiéis ao cadastro:** a lacuna do plano e o par
+    apresentado invertido agora são os definidos em cada atividade
+    (`lacunaAcaoId`/`ordemInicial`), não mais derivados genericamente pela tela.
+  - **Modo prioridade:** o número de escolhas passa a vir dos essenciais da própria
+    atividade (3 a 6 conforme o cadastro), não mais fixo em 3.
+- Testes: suíte atualizada para o catálogo oficial (90/90 validadas por
+  `validarAtividade`; 73 testes no total).
+
 ## [2.31.1] — 2026-07-13
 
 - **Bichinho (dragão e monstrinho) — página principal:**

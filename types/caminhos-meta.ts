@@ -169,6 +169,10 @@ export interface CaminhosAtividade {
   feedback: CaminhosFeedback;
   /** Imprevisto/problema; presente em modos problema/plano_alternativo/reorganizar. */
   imprevisto?: CaminhosImprevisto;
+  /** Modo `completar`: id da ação que fica como lacuna (fallback: penúltima). */
+  lacunaAcaoId?: string;
+  /** Modo `corrigir`: ordem inicial ERRADA apresentada ao paciente (fallback: troca do par central). */
+  ordemInicial?: string[];
   acessibilidade: CaminhosAcessibilidade;
   /** Se false, não é oferecida ao paciente (desativada pelo terapeuta). */
   ativo: boolean;
