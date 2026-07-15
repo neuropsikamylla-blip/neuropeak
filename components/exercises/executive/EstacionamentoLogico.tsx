@@ -5,35 +5,44 @@ import { calculateExerciseScore } from "@/lib/scoring";
 import { useTimedProgress } from "@/components/exercises/useExerciseEngine";
 import { ExerciseProgressBar } from "@/components/exercises/ExerciseProgressBar";
 import { assignCarImages, ALL_CAR_IMAGES } from "@/lib/parking-cars";
-import { LEVELS_BY_DIFFICULTY, DIFFICULTIES } from "@/lib/parking-levels";
+import { PARKING_LEVELS, PLAY_LEVELS } from "@/lib/parking-levels";
 import type { Level } from "@/types/parking";
 import type { ExerciseResult, Theme } from "@/types";
 
-// Só usamos fases com tabuleiro CHEIO (>= 5 movimentos ideais = 4+ carros). As
-// fases de 2-3 carros ficavam com cara de "vazio/joguinho" — foram removidas do
-// jogo (continuam no arquivo, mas nunca são sorteadas).
-const PLAY_DIFFS = DIFFICULTIES.filter((d) => d >= 5);
+// Escada de níveis 1–10 (ESTACIONAMENTO-PROGRESSAO-SPEC.md): cada nível tem
+// dezenas de fases geradas e validadas por BFS. O sorteio evita repetir fases
+// já jogadas — inclusive de sessões ANTERIORES (localStorage np-parking-recent).
+const RECENT_KEY = "np-parking-recent";
+const RECENT_MAX = 40;
 
-// Dificuldades ordenadas por proximidade do alvo (empate → menor primeiro).
-function orderedDiffs(target: number): number[] {
-  return [...PLAY_DIFFS].sort((a, b) => Math.abs(a - target) - Math.abs(b - target) || a - b);
+function loadRecentIds(): string[] {
+  try {
+    const v = JSON.parse(localStorage.getItem(RECENT_KEY) ?? "[]");
+    return Array.isArray(v) ? v.filter((x): x is string => typeof x === "string") : [];
+  } catch { return []; } // SSR / modo privado
 }
-// Sorteia uma fase perto do alvo, NUNCA repetindo as fases recentes (`recent`).
-// Se a dificuldade-alvo só tem fases já vistas, sobe/desce pra dificuldade
-// vizinha com fase inédita — garante variedade mesmo nas dificuldades de 1 fase.
-function pickLevel(targetDiff: number, recent: Level[] = []): { level: Level; diff: number } {
-  for (const d of orderedDiffs(targetDiff)) {
-    const pool = LEVELS_BY_DIFFICULTY[d].filter(l => !recent.includes(l));
-    if (pool.length) return { level: pool[Math.floor(Math.random() * pool.length)], diff: d };
+
+// Níveis ordenados por proximidade do alvo (empate → menor primeiro).
+function orderedLevels(target: number): number[] {
+  return [...PLAY_LEVELS].sort((a, b) => Math.abs(a - target) - Math.abs(b - target) || a - b);
+}
+// Sorteia uma fase do nível-alvo, NUNCA repetindo as recentes (`recent`, ids
+// mais novos primeiro). Se o nível só tem fases já vistas, tenta o nível
+// vizinho com fase inédita; em último caso repete a vista há mais tempo.
+function pickLevel(targetLevel: number, recent: string[] = []): { level: Level; diff: number } {
+  for (const l of orderedLevels(targetLevel)) {
+    const pool = PARKING_LEVELS[l].filter((lev) => !recent.includes(lev.id ?? ""));
+    if (pool.length) return { level: pool[Math.floor(Math.random() * pool.length)], diff: l };
   }
-  const d = orderedDiffs(targetDiff)[0];
-  const arr = LEVELS_BY_DIFFICULTY[d];
-  return { level: arr[Math.floor(Math.random() * arr.length)], diff: d };
+  const l = orderedLevels(targetLevel)[0];
+  const arr = PARKING_LEVELS[l];
+  const oldestFirst = [...arr].sort((a, b) => recent.indexOf(b.id ?? "") - recent.indexOf(a.id ?? ""));
+  return { level: oldestFirst[0], diff: l };
 }
 function stepDiff(cur: number, dir: 1 | -1): number {
-  const i = PLAY_DIFFS.indexOf(cur);
-  const ni = Math.max(0, Math.min(PLAY_DIFFS.length - 1, (i < 0 ? 0 : i) + dir));
-  return PLAY_DIFFS[ni];
+  const i = PLAY_LEVELS.indexOf(cur);
+  const ni = Math.max(0, Math.min(PLAY_LEVELS.length - 1, (i < 0 ? 0 : i) + dir));
+  return PLAY_LEVELS[ni];
 }
 
 // ── Layout constants ──────────────────────────────────────────────────────────
@@ -337,15 +346,15 @@ export function EstacionamentoLogico({ difficulty, theme: _theme, onComplete }: 
 
   // Dificuldade adaptativa: começa perto do nível do paciente e sobe/desce na sessão.
   const initRef = useRef<{ level: Level; diff: number } | null>(null);
-  // Começa já com tabuleiro cheio (mín. dificuldade 6 ≈ 5 carros) — nada de
-  // tabuleiro quase vazio. Sobe conforme o desempenho.
+  // Abre no tutorial; o jogo real começa no nível salvo do paciente (1–10) e
+  // sobe/desce conforme o desempenho na sessão.
   if (!initRef.current) initRef.current = { level: TUTORIAL_LEVEL, diff: 2 }; // começa no tutorial
   const curDiffRef  = useRef(initRef.current.diff);
   const streakRef   = useRef(0);
   const reachedRef  = useRef(initRef.current.diff);
   const statsRef    = useRef({ solved: 0, optimal: 0 });
   const levelSeqRef = useRef(0);
-  const recentRef   = useRef<Level[]>([initRef.current.level]); // fases recentes (não repetir)
+  const recentRef   = useRef<string[]>(loadRecentIds()); // ids de fases já jogadas (inclui sessões anteriores)
 
   const [currentLevel, setCurrentLevel] = useState<Level>(initRef.current.level);
   const [cars, setCars]         = useState<Car[]>(() => initRef.current!.level.cars.map(c => ({ ...c })));
@@ -369,10 +378,11 @@ export function EstacionamentoLogico({ difficulty, theme: _theme, onComplete }: 
     [currentLevel],
   );
 
-  // REGRA (decisão clínica da Kamylla, 13/jul): nos níveis normais, mover um carro
-  // = 1 MOVIMENTO (qualquer distância — não pune quem "pensa com a mão"). Nos
-  // níveis DIFÍCEIS (diff >= 10), cada quadradinho conta (regra avançada, com aviso).
-  const cellRule = curDiffRef.current >= 10;
+  // REGRA (decisão clínica da Kamylla, 15/jul): nos níveis normais, mover um carro
+  // = 1 MOVIMENTO (qualquer distância — não pune quem "pensa com a mão"). A regra
+  // avançada (cada quadradinho conta) é o TOPO da escada — nível 15, que só passa a
+  // existir nas Etapas 2–4 do épico; até lá fica efetivamente desligada.
+  const cellRule = curDiffRef.current >= 15;
   cellRuleRef.current = cellRule;
   // "Melhor solução" na régua da regra vigente.
   const minCells = useMemo(() => solveMinCells(currentLevel.cars), [currentLevel]);
@@ -380,7 +390,10 @@ export function EstacionamentoLogico({ difficulty, theme: _theme, onComplete }: 
 
   const loadLevel = useCallback((level: Level) => {
     levelSeqRef.current++;
-    recentRef.current = [level, ...recentRef.current.filter(l => l !== level)].slice(0, 6);
+    if (level.id) {
+      recentRef.current = [level.id, ...recentRef.current.filter((x) => x !== level.id)].slice(0, RECENT_MAX);
+      try { localStorage.setItem(RECENT_KEY, JSON.stringify(recentRef.current)); } catch { /* modo privado */ }
+    }
     setCurrentLevel(level);
     setCars(level.cars.map(c => ({ ...c })));
     setMoves(0); setHistory([]); setWon(false);
@@ -422,10 +435,12 @@ export function EstacionamentoLogico({ difficulty, theme: _theme, onComplete }: 
   // Fim do tutorial → começa o jogo de verdade (não conta nas estatísticas).
   const startRealGame = useCallback(() => {
     setTutorial(false);
-    const picked = pickLevel(Math.max(6, Math.round(difficulty) + 3));
+    // Começa no nível salvo do paciente (1–10) — a escada nova substitui o
+    // antigo mapeamento "+3" para a escala de movimentos mínimos.
+    const start = Math.max(1, Math.min(10, Math.round(difficulty)));
+    const picked = pickLevel(start, recentRef.current);
     curDiffRef.current = picked.diff;
     reachedRef.current = picked.diff;
-    recentRef.current = [picked.level];
     loadLevel(picked.level);
   }, [difficulty, loadLevel]);
 

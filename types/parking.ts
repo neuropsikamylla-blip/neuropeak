@@ -8,6 +8,8 @@ export interface ParkingCar {
 }
 
 export interface Level {
+  /** Identificador estável da fase (ex.: "n3-07") — usado para não repetir entre sessões. */
+  id?: string;
   idealMoves: number;
   cars: ParkingCar[];
 }

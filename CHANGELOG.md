@@ -14,6 +14,22 @@ histórico completo anterior está no log do Git (452 commits no total, a partir
   Documentação (CLAUDE.md, README.md, ARCHITECTURE.md, ADRs) reescrita a partir do
   código real.
 
+## [2.33.0] — 2026-07-15
+
+- **Estacionamento Lógico — Etapa 1 do épico de progressão** (`ESTACIONAMENTO-PROGRESSAO-SPEC.md`):
+  - **Banco de 400 fases gerado e validado por BFS** (`scripts/generate-parking-levels.mjs`):
+    40 fases POR NÍVEL (antes: 1–3 fases nos níveis altos → repetição constante).
+  - **Escada de níveis 1–10** substitui a escala "mínimo de movimentos" (5–14): sobe 1
+    nível por fase ótima, desce após 2 não-ótimas; começa no nível salvo do paciente.
+  - **Variedade entre sessões:** fases já jogadas ficam registradas (`np-parking-recent`)
+    e não repetem enquanto houver fase inédita no nível.
+  - **Regra avançada (quadradinhos) movida para o topo da escada** (nível 15 — entra nas
+    Etapas 2–4 do épico; até lá, desligada).
+  - **Fix de persistência:** a dificuldade gravada agora é o nível 1–10 — antes o jogo
+    reportava o mínimo de movimentos (até 14) e a API rejeitava a sessão nas fases 13/14.
+  - Teste novo (`lib/parking-levels.test.ts`): revalida o banco inteiro com um solver
+    independente do gerador (estrutura, faixas por nível e mínimo de movimentos).
+
 ## [2.32.4] — 2026-07-15
 
 - **Caminhos para a Meta — redesign "folha de caderno" da tela de ordenação:**
