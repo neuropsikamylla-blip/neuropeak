@@ -15,6 +15,7 @@
 // ─────────────────────────────────────────────────────────────────────────────
 
 import { useState, useRef, useCallback, useEffect, useMemo } from "react";
+import { Patrick_Hand } from "next/font/google";
 import {
   Compass,
   Volume2,
@@ -27,6 +28,7 @@ import {
   ChevronDown,
   RotateCcw,
   AlertTriangle,
+  GripVertical,
 } from "lucide-react";
 import { calculateExerciseScore } from "@/lib/scoring";
 import { playTTS, cancelTTS } from "@/lib/tts";
@@ -54,6 +56,11 @@ import { normalizeCaminhosSettings, limitePrioridade } from "./settings";
 import { usePlanState, snapshotInicial, type PlanSnapshot } from "./usePlanState";
 import { usePointerDrag, type DropTarget } from "./usePointerDrag";
 import { salvarProgresso, carregarProgresso, limparProgresso, type SavedProgress } from "./persist";
+
+// Fonte com toque manuscrito — SÓ em títulos e detalhes (redesign folha de
+// caderno, 15/jul). Textos de interação (cartões de ação) ficam na fonte padrão
+// por legibilidade clínica. Servida localmente pelo next/font (baixada no build).
+const fontCaderno = Patrick_Hand({ weight: "400", subsets: ["latin"], display: "swap" });
 
 // ── Props ────────────────────────────────────────────────────────────────────
 
@@ -148,6 +155,14 @@ function planoInicialDe(a: CaminhosAtividade): PlanSnapshot {
     }
     return { plano: base, descartadas: [], selecionadas: [] };
   }
+  // ORDENAÇÃO PURA (todas as ações do acervo cabem no plano, sem intrusas):
+  // lista ÚNICA — o plano nasce preenchido na ordem embaralhada e o paciente
+  // reordena na própria lista (redesign folha de caderno, 15/jul). A correção
+  // continua lendo `plan.noPlano`, então a validação não muda.
+  const ids = a.acoes.map((x) => x.id);
+  if (ids.length === n) {
+    return { plano: shuffle(ids), descartadas: [], selecionadas: [] };
+  }
   return snapshotInicial(n);
 }
 
@@ -197,6 +212,8 @@ function Cartao({
   disabled,
   refEl,
   extra,
+  alca,
+  arrastando,
 }: {
   texto: string;
   ordem?: number;
@@ -211,6 +228,10 @@ function Cartao({
   disabled?: boolean;
   refEl?: (el: HTMLDivElement | null) => void;
   extra?: React.ReactNode;
+  /** Alça de arraste (seis pontos) à esquerda — lista única reordenável. */
+  alca?: boolean;
+  /** Este cartão é a ORIGEM do arraste em curso (fica esmaecido no lugar). */
+  arrastando?: boolean;
 }) {
   return (
     <div
@@ -230,12 +251,12 @@ function Cartao({
         gap: 10,
         width: "100%",
         minHeight: 56,
-        padding: "12px 14px",
+        padding: alca ? "12px 14px 12px 8px" : "12px 14px",
         borderRadius: 16,
         background: estadoBg[estado],
-        border: `1.5px solid ${estadoBorda[estado]}`,
+        border: `1.5px ${arrastando ? "dashed" : "solid"} ${arrastando ? CM.accent : estadoBorda[estado]}`,
         boxShadow: estado === "desabilitado" ? "none" : SHADOW_CARD,
-        cursor: disabled ? "default" : "pointer",
+        cursor: disabled ? "default" : alca ? "grab" : "pointer",
         color: CM.ink,
         fontSize: 15,
         fontWeight: 600,
@@ -243,25 +264,42 @@ function Cartao({
         textAlign: "left",
         touchAction: "none", // deixa o pointer drag controlar o gesto
         outlineOffset: 2,
-        transition: "border-color .15s, background .15s, box-shadow .15s",
+        opacity: arrastando ? 0.4 : 1,
+        transition: "border-color .15s, background .15s, box-shadow .15s, opacity .15s",
       }}
     >
+      {alca && (
+        <span
+          role="img"
+          aria-label={`Alça de arraste: segure e arraste para mover "${texto}"`}
+          style={{
+            flexShrink: 0,
+            display: "flex",
+            alignItems: "center",
+            color: CM.textSoft,
+            cursor: disabled ? "default" : "grab",
+          }}
+        >
+          <GripVertical size={18} strokeWidth={2} />
+        </span>
+      )}
       {ordem != null && (
         <span
           aria-hidden
           style={{
             flexShrink: 0,
-            width: 26,
-            height: 26,
+            width: 28,
+            height: 28,
             borderRadius: "50%",
-            background: `linear-gradient(135deg, ${CM.accent}, ${CM.accentDark})`,
-            color: "#fff",
-            fontSize: 13,
+            background: "#F2F7FE",
+            border: `1.5px solid ${CM.accent}`,
+            color: CM.accentDark,
+            fontSize: 13.5,
             fontWeight: 800,
             display: "flex",
             alignItems: "center",
             justifyContent: "center",
-            boxShadow: "0 2px 6px rgba(79,143,234,0.4)",
+            boxShadow: "0 1px 4px rgba(79,143,234,0.22)",
           }}
         >
           {ordem}
@@ -516,6 +554,18 @@ export function CaminhosMeta({ difficulty, theme, onComplete, settings }: Caminh
 
 // ── Layout base ────────────────────────────────────────────────────────────────
 
+// Folha de caderno em CSS puro (redesign 15/jul): pauta azul bem suave +
+// linha de margem rosa à esquerda, decorativas ATRÁS do conteúdo (não roubam
+// espaço em telas pequenas). Sem imagem de fundo.
+const FUNDO_CADERNO = [
+  // linha vertical da margem (rosa clara)
+  "linear-gradient(90deg, transparent 34px, rgba(236,120,148,0.30) 34px, rgba(236,120,148,0.30) 36px, transparent 36px)",
+  // pauta horizontal (azul bem suave, a cada 32px)
+  "repeating-linear-gradient(180deg, transparent 0px, transparent 31px, rgba(110,155,215,0.16) 31px, rgba(110,155,215,0.16) 32px)",
+  // papel levemente azulado
+  "linear-gradient(180deg, #FDFEFF 0%, #F8FBFE 60%, #F4F8FD 100%)",
+].join(", ");
+
 function Tela({ children }: { children: React.ReactNode }) {
   return (
     <div
@@ -526,12 +576,84 @@ function Tela({ children }: { children: React.ReactNode }) {
         flexDirection: "column",
         alignItems: "center",
         justifyContent: "flex-start",
-        background: CM.bgGradient,
+        background: FUNDO_CADERNO,
         padding: "16px 14px 28px",
       }}
     >
       {children}
     </div>
+  );
+}
+
+// ── Detalhes escolares discretos (SVG de traço, sem imagens) ──────────────────
+
+/** Estrela "rabiscada" de contorno — decora o cartão da meta. */
+function EstrelaRabisco({ size = 30 }: { size?: number }) {
+  return (
+    <svg
+      aria-hidden
+      width={size}
+      height={size}
+      viewBox="0 0 24 24"
+      fill="none"
+      style={{ flexShrink: 0, transform: "rotate(-10deg)" }}
+    >
+      <path
+        d="M12 3.2l2.5 5.3 5.8.7-4.3 4 1.2 5.7-5.2-2.9-5.2 2.9 1.2-5.7-4.3-4 5.8-.7z"
+        stroke={CM.accent}
+        strokeWidth={1.6}
+        strokeLinejoin="round"
+        opacity={0.75}
+      />
+      <circle cx="20.5" cy="4.5" r="0.9" fill={CM.accent} opacity={0.5} />
+    </svg>
+  );
+}
+
+/** Sublinha "melhor ordem" (quando presente) com traço ondulado rosa de caderno. */
+function InstrucaoDestacada({ texto }: { texto: string }) {
+  const m = texto.match(/melhor ordem/i);
+  if (!m || m.index == null) return <>{texto}</>;
+  const fim = m.index + m[0].length;
+  return (
+    <>
+      {texto.slice(0, m.index)}
+      <span
+        style={{
+          textDecorationLine: "underline",
+          textDecorationStyle: "wavy",
+          textDecorationColor: "rgba(236,120,148,0.65)",
+          textDecorationThickness: 2,
+          textUnderlineOffset: 4,
+        }}
+      >
+        {m[0]}
+      </span>
+      {texto.slice(fim)}
+    </>
+  );
+}
+
+/** Setinha curvada de caderno — acompanha o texto de ajuda da lista. */
+function SetaRabisco({ size = 26 }: { size?: number }) {
+  return (
+    <svg aria-hidden width={size} height={size} viewBox="0 0 24 24" fill="none" style={{ flexShrink: 0 }}>
+      <path
+        d="M4 5c6 1 11 4 12.5 12"
+        stroke={CM.accent}
+        strokeWidth={1.8}
+        strokeLinecap="round"
+        opacity={0.7}
+      />
+      <path
+        d="M13 15.5l3.6 2.4 2-4"
+        stroke={CM.accent}
+        strokeWidth={1.8}
+        strokeLinecap="round"
+        strokeLinejoin="round"
+        opacity={0.7}
+      />
+    </svg>
   );
 }
 
@@ -594,7 +716,25 @@ function AtividadeRunner({
   const modoPrioridade = atividade.modo === "prioridade";
   const comImprevisto = temImprevisto(atividade);
 
-  const plan = usePlanState(retomar?.snap ?? planoInicial);
+  // LISTA ÚNICA (redesign 15/jul): plano nasce preenchido e o pool fica vazio —
+  // a ordenação acontece na própria lista "Ações disponíveis" (ordenar/corrigir).
+  const listaUnica = modoOrdem && pool0.length === 0;
+
+  // Autosave de versão anterior (duas áreas) pode ter espaços vazios numa
+  // atividade que agora é lista única: completa com as ações que faltavam.
+  const snapInicial = useMemo(() => {
+    const base = retomar?.snap ?? planoInicial;
+    if (listaUnica && base.plano.some((x) => x == null)) {
+      const presentes = new Set(base.plano.filter((x): x is string => x != null));
+      const faltam = shuffle(
+        atividade.acoes.map((a) => a.id).filter((id) => !presentes.has(id))
+      );
+      return { ...base, plano: base.plano.map((x) => x ?? faltam.shift() ?? null) };
+    }
+    return base;
+  }, [retomar, planoInicial, listaUnica, atividade]);
+
+  const plan = usePlanState(snapInicial);
   const drag = usePointerDrag((id, target) => aplicarDrop(id, target));
 
   const [fase, setFase] = useState<Fase>("resolvendo");
@@ -653,7 +793,13 @@ function AtividadeRunner({
       trocasRef.current += 1;
       if (!target) return;
       if (target.kind === "slot") {
-        plan.colocarNaPosicao(id, target.pos);
+        if (listaUnica) {
+          // lista única: soltar sobre um cartão INSERE antes/depois dele
+          const from = plan.snap.plano.indexOf(id);
+          if (from >= 0) plan.reordenar(from, target.pos + (target.after ? 1 : 0));
+        } else {
+          plan.colocarNaPosicao(id, target.pos);
+        }
       } else if (target.kind === "discard" && modoIntruso) {
         plan.descartar(id);
       } else if (target.kind === "pool") {
@@ -662,7 +808,7 @@ function AtividadeRunner({
         plan.restaurarDescartada(id);
       }
     },
-    [fase, plan, modoIntruso]
+    [fase, plan, modoIntruso, listaUnica]
   );
 
   // ── toque-para-ordenar (forma primária) ──
@@ -680,9 +826,10 @@ function AtividadeRunner({
   const tocarNoPlano = useCallback(
     (id: string) => {
       if (fase !== "resolvendo") return;
+      if (listaUnica) return; // lista única: toque não remove — reordena por arraste/teclado
       plan.removerDoPlano(id);
     },
-    [fase, plan]
+    [fase, plan, listaUnica]
   );
 
   // ── montar resposta e corrigir (spec §8/§9) ──
@@ -941,7 +1088,7 @@ function AtividadeRunner({
             position: "fixed",
             left: drag.drag.x,
             top: drag.drag.y,
-            transform: "translate(-50%, -50%)",
+            transform: "translate(-50%, -50%) rotate(1.5deg)",
             zIndex: 60,
             pointerEvents: "none",
             padding: "12px 16px",
@@ -980,7 +1127,10 @@ function AtividadeRunner({
             <Compass size={22} color={CM.accent} strokeWidth={2} />
           </div>
           <div style={{ minWidth: 0, flex: 1 }}>
-            <div style={{ fontSize: 16, fontWeight: 900, color: CM.text, lineHeight: 1.1 }}>
+            <div
+              className={fontCaderno.className}
+              style={{ fontSize: 21, fontWeight: 400, color: CM.ink, lineHeight: 1.05 }}
+            >
               Caminhos para a Meta
             </div>
             <div style={{ fontSize: 11.5, color: CM.textSoft }}>
@@ -1020,10 +1170,11 @@ function AtividadeRunner({
             boxShadow: SHADOW_CARD,
             padding: "14px 16px",
             display: "flex",
-            alignItems: "flex-start",
-            gap: 10,
+            alignItems: "center",
+            gap: 12,
           }}
         >
+          <EstrelaRabisco />
           <div style={{ flex: 1, minWidth: 0 }}>
             <div
               style={{
@@ -1037,7 +1188,10 @@ function AtividadeRunner({
             >
               Sua meta
             </div>
-            <div style={{ fontSize: 16.5, fontWeight: 700, color: CM.ink, lineHeight: 1.3 }}>
+            <div
+              className={fontCaderno.className}
+              style={{ fontSize: 19, fontWeight: 400, color: CM.ink, lineHeight: 1.25 }}
+            >
               {atividade.meta}
             </div>
           </div>
@@ -1064,10 +1218,17 @@ function AtividadeRunner({
 
         {/* Instrução (spec §13/§15) */}
         <div style={{ display: "flex", alignItems: "center", gap: 8, padding: "0 2px" }}>
-          <p style={{ fontSize: 14.5, fontWeight: 600, color: CM.textMid, flex: 1, lineHeight: 1.35 }}>
-            {fase === "imprevisto" || fase === "feedbackImprevisto"
-              ? "Algo mudou. Escolha o que fazer para continuar até a meta."
-              : atividade.instrucao}
+          <p
+            className={fontCaderno.className}
+            style={{ fontSize: 17.5, fontWeight: 400, color: CM.text, flex: 1, lineHeight: 1.3 }}
+          >
+            <InstrucaoDestacada
+              texto={
+                fase === "imprevisto" || fase === "feedbackImprevisto"
+                  ? "Algo mudou. Escolha o que fazer para continuar até a meta."
+                  : atividade.instrucao
+              }
+            />
           </p>
         </div>
 
@@ -1100,6 +1261,7 @@ function AtividadeRunner({
             modoOrdem={modoOrdem}
             modoIntruso={modoIntruso}
             modoPrioridade={modoPrioridade}
+            listaUnica={listaUnica}
             limPrio={limPrio}
             editavel={fase === "resolvendo"}
             resultado={resultado}
@@ -1186,7 +1348,7 @@ function AtividadeRunner({
                 <CtrlBtn icon={<Redo2 size={15} />} label="Refazer" onClick={plan.redo} disabled={!plan.canRedo} />
               </>
             )}
-            <CtrlBtn icon={<Eraser size={15} />} label="Limpar" onClick={plan.limpar} />
+            {!listaUnica && <CtrlBtn icon={<Eraser size={15} />} label="Limpar" onClick={plan.limpar} />}
             <div style={{ flex: 1 }} />
             <CtrlBtn primary icon={<Check size={16} />} label="Confirmar" onClick={confirmar} />
           </div>
@@ -1208,6 +1370,7 @@ function CorpoPlano({
   modoOrdem,
   modoIntruso,
   modoPrioridade,
+  listaUnica,
   limPrio,
   editavel,
   resultado,
@@ -1223,6 +1386,7 @@ function CorpoPlano({
   modoOrdem: boolean;
   modoIntruso: boolean;
   modoPrioridade: boolean;
+  listaUnica: boolean;
   limPrio: number;
   editavel: boolean;
   resultado: CaminhosResultado | null;
@@ -1260,6 +1424,93 @@ function CorpoPlano({
       if (id) onTocarPlano(id);
     }
   };
+
+  // ── LISTA ÚNICA (redesign folha de caderno, 15/jul): a ordenação acontece na
+  // própria lista "Ações disponíveis" — sem a segunda área "Seu plano". Cada
+  // cartão tem alça de arraste, número da posição atual e botão de áudio; o
+  // espaço de destino aparece como um traço azul entre os cartões durante o
+  // arraste. Teclado: setas ↑/↓ movem o cartão focado (keyMove).
+  if (listaUnica) {
+    const hover = drag.drag?.hover ?? null;
+    return (
+      <div style={{ display: "flex", flexDirection: "column", gap: 10 }}>
+        <div
+          style={{
+            background: CM.cardSoft,
+            borderRadius: 18,
+            border: `1px solid ${CM.borderSoft}`,
+            padding: 14,
+          }}
+        >
+          <h3
+            style={{
+              display: "inline-block",
+              fontSize: 12.5,
+              fontWeight: 800,
+              letterSpacing: 0.8,
+              color: CM.accentDark,
+              textTransform: "uppercase",
+              background: "linear-gradient(100deg, rgba(120,170,235,0.30), rgba(120,170,235,0.14))",
+              padding: "5px 12px",
+              borderRadius: 4,
+              transform: "rotate(-0.6deg)",
+              marginBottom: 12,
+            }}
+          >
+            Ações disponíveis
+          </h3>
+          <div style={{ display: "flex", flexDirection: "column", gap: 10 }}>
+            {plan.snap.plano.map((id, pos) => {
+              if (id == null) return null; // lista única não tem espaço vazio
+              const emArrasto = drag.drag?.id === id;
+              const marcaAntes = !emArrasto && hover != null && !hover.after && hover.pos === pos;
+              const marcaDepois = !emArrasto && hover != null && hover.after && hover.pos === pos;
+              return (
+                <div key={id} data-cm-drop="slot" data-cm-pos={pos} style={{ position: "relative" }}>
+                  {(marcaAntes || marcaDepois) && (
+                    <div
+                      aria-hidden
+                      style={{
+                        position: "absolute",
+                        left: 6,
+                        right: 6,
+                        height: 4,
+                        borderRadius: 3,
+                        background: CM.accent,
+                        boxShadow: "0 0 8px rgba(79,143,234,0.55)",
+                        zIndex: 5,
+                        ...(marcaAntes ? { top: -7 } : { bottom: -7 }),
+                      }}
+                    />
+                  )}
+                  <Cartao
+                    texto={textoDe(id)}
+                    ordem={pos + 1}
+                    alca
+                    arrastando={emArrasto}
+                    estado={editavel ? estadoCartaoPlano(id) : "desabilitado"}
+                    disabled={!editavel}
+                    ariaLabel={`Posição ${pos + 1}: ${textoDe(id)}. Arraste pela alça para reordenar, ou use as setas para cima e para baixo.`}
+                    onPointerDown={iniciarDrag(id)}
+                    onKeyDown={keyMove(pos)}
+                    onFalarTexto={() => onFalarCartao(textoDe(id))}
+                  />
+                </div>
+              );
+            })}
+          </div>
+        </div>
+        {editavel && (
+          <div style={{ display: "flex", alignItems: "center", gap: 8, padding: "0 6px" }}>
+            <SetaRabisco />
+            <span className={fontCaderno.className} style={{ fontSize: 15.5, color: CM.textMid }}>
+              Arraste as ações para reordenar.
+            </span>
+          </div>
+        )}
+      </div>
+    );
+  }
 
   return (
     <div

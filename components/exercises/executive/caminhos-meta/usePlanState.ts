@@ -38,6 +38,9 @@ export interface PlanStateApi {
   removerDoPlano: (id: string) => void;
   moverParaCima: (pos: number) => void;
   moverParaBaixo: (pos: number) => void;
+  /** Reordena por INSERÇÃO (lista única): tira de `from` e insere em `insertIdx`
+   *  (índice medido com o item ainda na lista, como num drop "antes/depois"). */
+  reordenar: (from: number, insertIdx: number) => void;
   descartar: (id: string) => void;
   restaurarDescartada: (id: string) => void;
   toggleSelecionada: (id: string, limite: number) => void;
@@ -154,6 +157,20 @@ export function usePlanState(inicial: PlanSnapshot): PlanStateApi {
     [commit]
   );
 
+  const reordenar = useCallback(
+    (from: number, insertIdx: number) =>
+      commit((s) => {
+        if (from < 0 || from >= s.plano.length) return s;
+        const [item] = s.plano.splice(from, 1);
+        let to = insertIdx;
+        if (from < to) to -= 1; // remoção desloca os índices seguintes
+        to = Math.max(0, Math.min(s.plano.length, to));
+        s.plano.splice(to, 0, item);
+        return s;
+      }),
+    [commit]
+  );
+
   const descartar = useCallback(
     (id: string) =>
       commit((s) => {
@@ -243,6 +260,7 @@ export function usePlanState(inicial: PlanSnapshot): PlanStateApi {
     removerDoPlano,
     moverParaCima,
     moverParaBaixo,
+    reordenar,
     descartar,
     restaurarDescartada,
     toggleSelecionada,

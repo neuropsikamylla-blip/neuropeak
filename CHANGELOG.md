@@ -14,6 +14,28 @@ histórico completo anterior está no log do Git (452 commits no total, a partir
   Documentação (CLAUDE.md, README.md, ARCHITECTURE.md, ADRs) reescrita a partir do
   código real.
 
+## [2.32.4] — 2026-07-15
+
+- **Caminhos para a Meta — redesign "folha de caderno" da tela de ordenação:**
+  - Ordenação em **lista única**: sem a área "Seu plano" — as atividades de ordenar
+    (e de corrigir) começam com as ações embaralhadas na própria lista "Ações
+    disponíveis" e o paciente arrasta para reordenar. Cada cartão tem alça de seis
+    pontos, número da posição atual e botão de áudio; durante o arraste aparece o
+    traço azul do espaço de destino; setas ↑/↓ movem pelo teclado.
+  - Fundo de folha de caderno em CSS puro (pauta azul suave + margem rosa), fonte
+    com toque manuscrito (Patrick Hand via next/font, servida localmente) só em
+    títulos e detalhes, estrela/seta rabiscadas discretas e sublinhado ondulado
+    em "melhor ordem".
+  - Modos intruso/completar/prioridade/imprevisto mantêm o fluxo de duas áreas com
+    o visual novo. Validação, conteúdo das ações e áudio inalterados.
+
+## [2.32.3] — 2026-07-15
+
+- **Estacionamento Lógico — contagem justa de movimentos** (decisão clínica da Kamylla):
+  empurrões seguidos no MESMO carro emendam num movimento só — quem "pensa com a mão"
+  movendo o carro aos poucos não é mais penalizado. Vai-e-volta seguido conta 1 (sem
+  estorno). A regra avançada (cada quadradinho conta) segue inalterada.
+
 ## [2.32.2] — 2026-07-13
 
 - **Caminhos para a Meta — fix do modo prioridade (Adultos e idosos):** AD14, AD15,

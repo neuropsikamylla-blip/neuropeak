@@ -18,10 +18,12 @@ export interface DragState {
   x: number;
   y: number;
   label: string;
+  /** Alvo sob o dedo DURANTE o arraste (feedback de espaço de destino). */
+  hover: { pos: number; after: boolean } | null;
 }
 
 export type DropTarget =
-  | { kind: "slot"; pos: number }
+  | { kind: "slot"; pos: number; after?: boolean }
   | { kind: "discard" }
   | { kind: "pool" }
   | null;
@@ -41,23 +43,31 @@ export function usePointerDrag(onDrop: (id: string, target: DropTarget) => void)
     const kind = host.getAttribute("data-cm-drop");
     if (kind === "slot") {
       const pos = Number(host.getAttribute("data-cm-pos"));
-      return Number.isFinite(pos) ? { kind: "slot", pos } : null;
+      if (!Number.isFinite(pos)) return null;
+      // metade de baixo do cartão = soltar DEPOIS dele (inserção em lista única)
+      const r = host.getBoundingClientRect();
+      return { kind: "slot", pos, after: y > r.top + r.height / 2 };
     }
     if (kind === "discard") return { kind: "discard" };
     if (kind === "pool") return { kind: "pool" };
     return null;
   }, []);
 
-  const onPointerMove = useCallback((e: PointerEvent) => {
-    const start = startRef.current;
-    if (!start) return;
-    const dx = e.clientX - start.x;
-    const dy = e.clientY - start.y;
-    if (!movedRef.current && Math.hypot(dx, dy) < THRESHOLD) return;
-    movedRef.current = true;
-    activeRef.current = true;
-    setDrag({ id: start.id, x: e.clientX, y: e.clientY, label: start.label });
-  }, []);
+  const onPointerMove = useCallback(
+    (e: PointerEvent) => {
+      const start = startRef.current;
+      if (!start) return;
+      const dx = e.clientX - start.x;
+      const dy = e.clientY - start.y;
+      if (!movedRef.current && Math.hypot(dx, dy) < THRESHOLD) return;
+      movedRef.current = true;
+      activeRef.current = true;
+      const t = resolveTarget(e.clientX, e.clientY);
+      const hover = t?.kind === "slot" ? { pos: t.pos, after: !!t.after } : null;
+      setDrag({ id: start.id, x: e.clientX, y: e.clientY, label: start.label, hover });
+    },
+    [resolveTarget]
+  );
 
   const onPointerUp = useCallback(
     (e: PointerEvent) => {
