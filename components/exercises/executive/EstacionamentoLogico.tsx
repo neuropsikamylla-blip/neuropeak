@@ -358,6 +358,7 @@ export function EstacionamentoLogico({ difficulty, theme: _theme, onComplete }: 
 
   const boardRef = useRef<HTMLDivElement>(null);
   const cellRuleRef = useRef(false);
+  const lastMovedRef = useRef<string | null>(null); // último carro movido (p/ emendar empurrões seguidos)
   const dragRef  = useRef<DragState | null>(null);
   const startedRef = useRef(false);
 
@@ -383,7 +384,7 @@ export function EstacionamentoLogico({ difficulty, theme: _theme, onComplete }: 
     setCurrentLevel(level);
     setCars(level.cars.map(c => ({ ...c })));
     setMoves(0); setHistory([]); setWon(false);
-    setDragPrev(null); dragRef.current = null;
+    setDragPrev(null); dragRef.current = null; lastMovedRef.current = null;
   }, []);
 
   const completeSession = useCallback(() => {
@@ -429,27 +430,33 @@ export function EstacionamentoLogico({ difficulty, theme: _theme, onComplete }: 
   }, [difficulty, loadLevel]);
 
   const commitMove = useCallback((carId: string, newPos: number) => {
-    setCars(prev => {
-      if (!canMove(prev, carId, newPos)) return prev;
-      const car = prev.find(c => c.id === carId)!;
-      const oldPos = car.orientation === "horizontal" ? car.col : car.row;
-      const next = prev.map(c =>
-        c.id === carId ? (c.orientation === "horizontal" ? { ...c, col: newPos } : { ...c, row: newPos }) : c
-      );
-      const winning = isWin(next);
-      // Regra normal: mover um carro = 1 movimento (independe da distância).
-      // Regra avançada (níveis difíceis): cada quadradinho conta; no movimento
-      // vitorioso do alvo, conta só até a casa de saída.
-      let delta = 1;
-      if (cellRuleRef.current) {
-        delta = Math.abs(newPos - oldPos);
-        if (carId === "target" && winning) delta = Math.abs((GRID - car.len) - oldPos);
-      }
-      setHistory(h => [...h, prev]);
-      setMoves(m => m + delta);
-      if (winning) setWon(true);
-      return next;
-    });
+    const prev = carsRef.current;
+    if (!canMove(prev, carId, newPos)) return;
+    const car = prev.find(c => c.id === carId)!;
+    const oldPos = car.orientation === "horizontal" ? car.col : car.row;
+    const next = prev.map(c =>
+      c.id === carId ? (c.orientation === "horizontal" ? { ...c, col: newPos } : { ...c, row: newPos }) : c
+    );
+    const winning = isWin(next);
+    // Regra normal: mover um carro = 1 movimento (independe da distância), e
+    // empurrões SEGUIDOS no mesmo carro emendam num movimento só — decisão
+    // clínica da Kamylla (15/jul): planejamento se mede por alternar de carro,
+    // não pela quantidade de toques. Vai-e-volta seguido também conta 1 (sem
+    // estorno: voltar é erro de planejamento ou necessidade real).
+    // Regra avançada (níveis difíceis): cada quadradinho conta; no movimento
+    // vitorioso do alvo, conta só até a casa de saída.
+    let delta: number;
+    if (cellRuleRef.current) {
+      delta = Math.abs(newPos - oldPos);
+      if (carId === "target" && winning) delta = Math.abs((GRID - car.len) - oldPos);
+    } else {
+      delta = lastMovedRef.current === carId ? 0 : 1;
+    }
+    lastMovedRef.current = carId;
+    setHistory(h => [...h, prev]);
+    setMoves(m => m + delta);
+    if (winning) setWon(true);
+    setCars(next);
   }, []);
 
   const onPtrDown = useCallback((e: React.PointerEvent, car: Car) => {
