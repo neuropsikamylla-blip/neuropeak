@@ -1,5 +1,5 @@
 import { describe, it, expect } from "vitest";
-import { calculateNewDifficulty, checkAchievements, calculateProgression } from "@/lib/adaptive";
+import { calculateNewDifficulty, checkAchievements, calculateProgression, calculateFocusProgression, focusDetectTargetMs } from "@/lib/adaptive";
 import type { SessionData } from "@/types";
 
 function mkSession(over: Partial<SessionData> = {}): SessionData {
@@ -65,6 +65,35 @@ describe("calculateProgression — teto de nível (CORR-001)", () => {
 
   it("com maxLevel 12, nível 10 ainda pode subir para 11", () => {
     expect(calculateProgression(10, good, 1, 12).nextLevel).toBe(11);
+  });
+});
+
+describe("calculateFocusProgression — critério duplo VP+atenção (16/jul)", () => {
+  it("régua de detecção: 3,5s no nível 1 → 1,5s no nível 10 (com clamp)", () => {
+    expect(focusDetectTargetMs(1)).toBe(3500);
+    expect(focusDetectTargetMs(10)).toBe(1500);
+    expect(focusDetectTargetMs(0)).toBe(3500);
+    expect(focusDetectTargetMs(15)).toBe(1500);
+  });
+  it("preciso E rápido sobe de nível", () => {
+    const r = calculateFocusProgression(3, 0.9, 2000); // alvo N3 = 3050ms
+    expect(r.action).toBe("increase");
+    expect(r.nextLevel).toBe(4);
+  });
+  it("preciso porém LENTO mantém o nível (treina velocidade)", () => {
+    const r = calculateFocusProgression(3, 0.9, 5000);
+    expect(r.action).toBe("maintain");
+    expect(r.nextLevel).toBe(3);
+    expect(r.reason).toContain("velocidade");
+  });
+  it("sem dado de detecção não trava a subida (sessões antigas)", () => {
+    const r = calculateFocusProgression(3, 0.9);
+    expect(r.action).toBe("increase");
+  });
+  it("acurácia baixa desce, mesmo rápido", () => {
+    const r = calculateFocusProgression(3, 0.4, 800);
+    expect(r.action).toBe("decrease");
+    expect(r.nextLevel).toBe(2);
   });
 });
 

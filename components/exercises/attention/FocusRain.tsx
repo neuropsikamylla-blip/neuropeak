@@ -21,6 +21,7 @@
 import { useState, useRef, useCallback, useEffect } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { calculateExerciseScore } from "@/lib/scoring";
+import { focusDetectTargetMs } from "@/lib/adaptive";
 import { playTTS, cancelTTS } from "@/lib/tts";
 import { useTimedProgress } from "@/components/exercises/useExerciseEngine";
 import { ExerciseProgressBar } from "@/components/exercises/ExerciseProgressBar";
@@ -331,6 +332,8 @@ interface RainAgent {
   passCount: number;
   spawnAt: number;
   state: RainStateT;
+  /** Captura dentro do tempo-alvo de detecção do nível (feedback ⚡). */
+  fastCapture?: boolean;
 }
 
 export interface FocusRainProps {
@@ -403,6 +406,11 @@ export function FocusRain({ level, theme, presentMode, fbLevel, exerciseId, sett
   const correctionsRef = useRef(0);   // comandos com correção apresentados
   const persevCorrRef  = useRef(0);   // toques que batem a ISCA após a correção (perseveração)
   const reviewsRef     = useRef(0);   // usos do "rever comando" (dependência da dica)
+  // CALIBRAÇÃO VP+ATENÇÃO (16/jul): detecção = alvo APARECER → toque. Cada captura
+  // registra {ms, alvo do nível na hora}; o comando só conta p/ SUBIR de nível se
+  // todas as capturas ficaram dentro do alvo (critério duplo: precisão E ritmo).
+  const detectListRef  = useRef<Array<{ ms: number; target: number }>>([]);
+  const cmdFastRef     = useRef(true);   // todas as capturas DESTE comando dentro do alvo?
   const [decoyText, setDecoyText] = useState<string | null>(null);
   const [corrected, setCorrected] = useState(true);  // comando final já exibido no card?
   const [reviewOverlay, setReviewOverlay] = useState(false);
@@ -525,6 +533,7 @@ export function FocusRain({ level, theme, presentMode, fbLevel, exerciseId, sett
     lastSpawnAtRef.current = 0;          // 1º agente entra já; os demais ritmados
     const cmd = cmdRef.current;
     if (cmd) { subAliveRef.current = cmd.subRules.map(() => false); }
+    cmdFastRef.current = true;
     phaseRef.current = "playing";
     setPhase("playing");
     if (presentMode !== "visual" && cmd) speak(cleanForSpeech(cmd.text));
@@ -644,10 +653,13 @@ export function FocusRain({ level, theme, presentMode, fbLevel, exerciseId, sett
   // Progressão por COMANDO (modelo da terapeuta): acerto → novo comando (3 seguidos
   // = SOBE 1 nível); erro/omissão → novo comando (2 falhos seguidos = DESCE 1 nível,
   // piso 1). O nível novo vale a partir do PRÓXIMO comando.
-  const onCommandResolved = useCallback((clean: boolean) => {
+  const onCommandResolved = useCallback((clean: boolean, fast: boolean) => {
     if (clean) {
       consecErrsRef.current = 0;
-      consecHitsRef.current++;
+      // CRITÉRIO DUPLO (VP+atenção): só o comando certo E dentro do ritmo conta
+      // para subir. Certo porém lento mantém a sequência parada (nem sobe nem
+      // zera) — o nível espera o ritmo chegar.
+      if (fast) consecHitsRef.current++;
       if (consecHitsRef.current >= LEVEL_UP_HITS && levelRef.current < MAX_LEVEL) {
         levelRef.current++;
         consecHitsRef.current = 0;
@@ -671,8 +683,12 @@ export function FocusRain({ level, theme, presentMode, fbLevel, exerciseId, sett
   const finishCommandAndNextCard = useCallback(() => {
     if (phaseRef.current !== "playing") return;   // já em transição
     phaseRef.current = "card";     // pausa spawns/física imediatamente
-    setCardNote(cmdCleanRef.current ? null : "❌ Não foi dessa vez — atenção no próximo!");
-    onCommandResolved(cmdCleanRef.current);        // 3 limpos = sobe · 2 falhos = desce
+    setCardNote(
+      !cmdCleanRef.current ? "❌ Não foi dessa vez — atenção no próximo!"
+      : !cmdFastRef.current ? "⏱ Certo! Agora tente um pouco mais rápido."
+      : null
+    );
+    onCommandResolved(cmdCleanRef.current, cmdFastRef.current);  // 3 certos E rápidos = sobe · 2 falhos = desce
     setTimeout(() => {
       if (doneRef.current) return;
       openCommandCard();           // card do próximo comando (fallers preservados)
@@ -703,7 +719,14 @@ export function FocusRain({ level, theme, presentMode, fbLevel, exerciseId, sett
       capturesRef.current++;
       rtSumRef.current += rt; rtNRef.current++;
       firstMsListRef.current.push(rt);
-      pointsRef.current += 10 + (rt < 2000 ? 5 : 0);
+      // Detecção pura (VP): do alvo APARECER na tela até o toque.
+      const detectMs = Date.now() - a.spawnAt;
+      const target = focusDetectTargetMs(levelRef.current);
+      const fast = detectMs <= target;
+      detectListRef.current.push({ ms: detectMs, target });
+      if (!fast) cmdFastRef.current = false;
+      a.fastCapture = fast;
+      pointsRef.current += 10 + (fast ? 5 : 0);
       setPoints(pointsRef.current);
       soundCapture(); if (fbLevel !== "leve") vibrate(40);
       eventsRef.current.push({ mode: "foco", level: levelRef.current, correct: true, endedBy: "correct", rtMs: rt });
@@ -770,6 +793,15 @@ export function FocusRain({ level, theme, presentMode, fbLevel, exerciseId, sett
         corrections: correctionsRef.current,
         persevAfterCorrection: persevCorrRef.current,
         commandReviews: reviewsRef.current,
+        // Calibração VP+atenção: detecção pura (alvo aparecer → toque).
+        detectMedianMs: (() => {
+          const ms = detectListRef.current.map(d => d.ms).sort((x, y) => x - y);
+          return ms.length ? ms[Math.floor(ms.length / 2)] : null;
+        })(),
+        withinTargetPct: detectListRef.current.length
+          ? Math.round((100 * detectListRef.current.filter(d => d.ms <= d.target).length) / detectListRef.current.length)
+          : null,
+        detectTargetMs: focusDetectTargetMs(reachedRef.current),
         rounds_detail: eventsRef.current,
       },
     });
@@ -964,7 +996,9 @@ export function FocusRain({ level, theme, presentMode, fbLevel, exerciseId, sett
                   background: "transparent", border: "none", padding: 0,
                   pointerEvents: a.state === "falling" ? "auto" : "none", touchAction: "manipulation" }} />
               {a.state === "captured" && a.isTarget && (
-                <div className="absolute -top-1 -right-1 w-7 h-7 rounded-full bg-green-500 flex items-center justify-center text-white text-sm font-black shadow-lg pointer-events-none">✓</div>
+                <div className="absolute -top-1 -right-1 w-7 h-7 rounded-full bg-green-500 flex items-center justify-center text-white text-sm font-black shadow-lg pointer-events-none">
+                  {a.fastCapture ? "⚡" : "✓"}
+                </div>
               )}
               {a.state === "wrong" && (
                 <div className="absolute -top-1 -right-1 w-7 h-7 rounded-full bg-red-500 flex items-center justify-center text-white text-sm font-black shadow-lg pointer-events-none">✕</div>

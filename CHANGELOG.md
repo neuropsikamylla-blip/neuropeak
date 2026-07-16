@@ -14,6 +14,25 @@ histórico completo anterior está no log do Git (452 commits no total, a partir
   Documentação (CLAUDE.md, README.md, ARCHITECTURE.md, ADRs) reescrita a partir do
   código real.
 
+## [2.37.0] — 2026-07-16
+
+- **Focus Agentes = velocidade de processamento + atenção (calibração aprovada pela
+  Kamylla):** a velocidade deixa de ser cenário e vira critério clínico.
+  - **Detecção pura medida**: do alvo aparecer na tela até o toque (antes o RT
+    misturava a espera pelo sorteio do alvo).
+  - **Critério duplo de progressão**: subir de nível exige acurácia ≥80% **E**
+    detecção dentro do tempo-alvo do nível — régua padrão 3,5s (nível 1) → 1,5s
+    (nível 10), compartilhada entre Chuva (progressão na sessão: 3 comandos certos
+    E rápidos seguidos) e arena (progressão entre sessões, no servidor). Preciso
+    porém lento mantém o nível, com nota gentil "⏱ Certo! Agora tente um pouco
+    mais rápido." no card seguinte.
+  - **Feedback ⚡** na captura dentro do ritmo (Chuva); bônus de pontos agora segue
+    o tempo-alvo do nível.
+  - **Relatório**: detecção mediana + % de respostas no ritmo-alvo no card do Focus,
+    com observações automáticas ("preciso porém fora do ritmo — alvo atual é
+    velocidade" / "rápido e preciso — pronto para avançar").
+  - Sessões antigas (sem o dado) não travam a progressão. 5 testes novos.
+
 ## [2.36.0] — 2026-07-16
 
 - **Focus Agentes — 3 pendências do épico fechadas** (decisões da Kamylla):

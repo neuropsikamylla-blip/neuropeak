@@ -146,7 +146,10 @@ export const POST = withApiHandler(async (req: NextRequest) => {
   // (a fonte da verdade do nível por modo são as sessões, não o ExerciseConfig).
   if ((data.exerciseId === "focus-agents" || data.exerciseId === "focus-agents-auditivo") && typeof meta.level === "number") {
     const auto = meta.autoAdvance !== false;
-    const prog = calculateFocusProgression(meta.level as number, data.accuracy);
+    // Critério duplo VP+atenção (16/jul): a detecção mediana da sessão participa
+    // da decisão de subir (preciso porém lento mantém o nível).
+    const detect = typeof meta.detectMedianMs === "number" ? (meta.detectMedianMs as number) : null;
+    const prog = calculateFocusProgression(meta.level as number, data.accuracy, detect);
     meta.nextLevel = auto ? prog.nextLevel : (meta.level as number);
     meta.endedLevel = meta.nextLevel;
     meta.progressionAction = auto ? prog.action : "maintain";

@@ -3,6 +3,7 @@
 import { useState, useRef, useCallback, useEffect } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { calculateExerciseScore } from "@/lib/scoring";
+import { focusDetectTargetMs } from "@/lib/adaptive";
 import { playTTS, cancelTTS } from "@/lib/tts";
 import { useTimedProgress } from "@/components/exercises/useExerciseEngine";
 import { ExerciseProgressBar } from "@/components/exercises/ExerciseProgressBar";
@@ -1135,6 +1136,18 @@ export function FocusAgents({ difficulty, theme, onComplete, exerciseId = "focus
             errOmission: sum(m => (m.errorType === "omissao" ? 1 : 0)),
             minRtMs: correctCount ? Math.round(Math.min(...newResults.filter(x => x.correct).map(x => x.rt))) : null,
             maxRtMs: correctCount ? Math.round(Math.max(...newResults.filter(x => x.correct).map(x => x.rt))) : null,
+            // Calibração VP+atenção: detecção = tempo até o 1º toque correto da
+            // rodada, comparado ao tempo-alvo do nível (critério duplo no servidor).
+            detectMedianMs: (() => {
+              const ms = M.filter(m => m.correct && typeof m.timeToFirstMs === "number")
+                .map(m => m.timeToFirstMs as number).sort((x, y) => x - y);
+              return ms.length ? ms[Math.floor(ms.length / 2)] : null;
+            })(),
+            withinTargetPct: (() => {
+              const ok = M.filter(m => m.correct && typeof m.timeToFirstMs === "number");
+              if (!ok.length) return null;
+              return Math.round((100 * ok.filter(m => (m.timeToFirstMs as number) <= focusDetectTargetMs(m.level)).length) / ok.length);
+            })(),
             rounds_detail: M,
           },
         });

@@ -31,6 +31,9 @@ type Meta = {
   corrections?: number;
   persevAfterCorrection?: number;
   commandReviews?: number;
+  // Calibração VP+atenção (v2.37.0): detecção pura e % dentro do tempo-alvo
+  detectMedianMs?: number | null;
+  withinTargetPct?: number | null;
 };
 
 export interface FocusModeStat { n: number; acc: number; }
@@ -52,6 +55,10 @@ export interface FocusSummary {
   persevAfterCorrection: number;
   /** Chuva: quantas vezes usou "rever comando" (dependência da dica). */
   commandReviews: number;
+  /** VP: detecção mediana (ms, alvo aparecer → toque) das sessões recentes. */
+  detectMedianMs: number | null;
+  /** VP: % de respostas dentro do tempo-alvo do nível (sessões recentes). */
+  withinTargetPct: number | null;
   byMode: Record<FocusMode, FocusModeStat>;
   byChannel: { visual: FocusModeStat; auditivo: FocusModeStat };
   lastMode: FocusMode | null;
@@ -93,6 +100,10 @@ export function summarizeFocusAgents(sessions: SessLike[]): FocusSummary | null 
   const corrections = rows.reduce((a, r) => a + (r.meta.corrections ?? 0), 0);
   const persevAfterCorrection = rows.reduce((a, r) => a + (r.meta.persevAfterCorrection ?? 0), 0);
   const commandReviews = rows.reduce((a, r) => a + (r.meta.commandReviews ?? 0), 0);
+  const detects = recent.map((r) => r.meta.detectMedianMs).filter((x): x is number => typeof x === "number");
+  const detectMedianMs = detects.length ? Math.round(mean(detects)) : null;
+  const withins = recent.map((r) => r.meta.withinTargetPct).filter((x): x is number => typeof x === "number");
+  const withinTargetPct = withins.length ? Math.round(mean(withins)) : null;
 
   const byMode = {} as Record<FocusMode, FocusModeStat>;
   (["foco", "inibicao", "alternancia", "desafio"] as const).forEach((m) => {
@@ -129,6 +140,10 @@ export function summarizeFocusAgents(sessions: SessLike[]): FocusSummary | null 
     else if (errOmission / errTotal >= 0.6) obs.push("Erros predominantemente por OMISSÃO (deixou o alvo passar).");
   }
   if (perSession(commandReviews) >= 2) obs.push("Reviu o comando com frequência durante a busca — apoio de memória ainda necessário.");
+  if (withinTargetPct !== null && withinTargetPct < 50 && recentAccuracy >= 0.75)
+    obs.push("Preciso, porém fora do ritmo-alvo na maioria das respostas — o alvo atual do treino é velocidade de processamento.");
+  if (withinTargetPct !== null && withinTargetPct >= 80 && recentAccuracy >= 0.8)
+    obs.push("Rápido E preciso no nível atual — pronto para avançar.");
   if (corrections >= 3 && persevAfterCorrection / corrections >= 0.4)
     obs.push("Nos comandos com correção, tocou no alvo da PRIMEIRA instrução — dificuldade de descartar a informação antiga.");
   if (!obs.length) obs.push("Desempenho dentro do esperado para o nível atual.");
@@ -144,6 +159,7 @@ export function summarizeFocusAgents(sessions: SessLike[]): FocusSummary | null 
     falsePositives, omissions, errorsAfterSwitch, switchRounds,
     errDetail, errImpulse, errOmission,
     corrections, persevAfterCorrection, commandReviews,
+    detectMedianMs, withinTargetPct,
     byMode, byChannel, lastMode, lastLevel, recommendation, observations: obs,
   };
 }

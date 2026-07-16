@@ -130,10 +130,33 @@ export function calculateProgression(
 // ── Focus Agentes: progressão por MODO (níveis 1-5 + desbloqueios 6-9) ──────────
 // ≥80% sobe um nível; <55% desce; senão mantém. Do 5 em diante (≥80%) abre os
 // desbloqueios (6 exceção · 7 sequência · 8 condicional · 9 ignorar distração).
-export function calculateFocusProgression(level: number, accuracy: number): { nextLevel: number; action: "increase" | "maintain" | "decrease"; reason: string } {
+// ── Focus Agentes: tempo-alvo de DETECÇÃO por nível (calibração VP+atenção, 16/jul) ──
+// Régua "padrão" aprovada pela Kamylla: nível 1 = 3,5s → nível 10 = 1,5s, medida
+// do momento em que o alvo aparece até o toque. Compartilhada entre a Chuva
+// (progressão intra-sessão, no cliente) e a arena (progressão entre sessões, aqui).
+const FOCUS_DETECT_TARGET_MS = [3500, 3300, 3050, 2800, 2600, 2400, 2200, 2000, 1750, 1500];
+export function focusDetectTargetMs(level: number): number {
+  const i = Math.min(10, Math.max(1, Math.round(level))) - 1;
+  return FOCUS_DETECT_TARGET_MS[i];
+}
+
+export function calculateFocusProgression(
+  level: number,
+  accuracy: number,
+  /** Detecção mediana da sessão (ms, do alvo aparecer ao toque). null/ausente = sem dado (não trava). */
+  detectMedianMs?: number | null,
+): { nextLevel: number; action: "increase" | "maintain" | "decrease"; reason: string } {
   const lvl = Math.min(9, Math.max(1, Math.round(level)));
   const pct = Math.round(accuracy * 100);
-  if (accuracy >= 0.80 && lvl < 9) return { nextLevel: lvl + 1, action: "increase", reason: `${pct}% — sobe para o nível ${lvl + 1}${lvl + 1 >= 6 ? " (desbloqueio)" : ""}.` };
+  if (accuracy >= 0.80 && lvl < 9) {
+    // CRITÉRIO DUPLO (VP + atenção): precisão sobe de nível só com ritmo dentro
+    // do tempo-alvo do nível — preciso porém lento mantém (treina velocidade).
+    const target = focusDetectTargetMs(lvl);
+    if (typeof detectMedianMs === "number" && detectMedianMs > target) {
+      return { nextLevel: lvl, action: "maintain", reason: `${pct}% de acerto, mas detecção mediana de ${(detectMedianMs / 1000).toFixed(1)}s (alvo do nível: ${(target / 1000).toFixed(1)}s) — mantém o nível ${lvl} para ganhar velocidade.` };
+    }
+    return { nextLevel: lvl + 1, action: "increase", reason: `${pct}% — sobe para o nível ${lvl + 1}${lvl + 1 >= 6 ? " (desbloqueio)" : ""}.` };
+  }
   if (accuracy < 0.55 && lvl > 1) return { nextLevel: lvl - 1, action: "decrease", reason: `${pct}% — desce para o nível ${lvl - 1}.` };
   return { nextLevel: lvl, action: "maintain", reason: `Mantém o nível ${lvl} (${pct}%).` };
 }

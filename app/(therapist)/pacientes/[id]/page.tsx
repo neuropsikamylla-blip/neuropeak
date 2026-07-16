@@ -302,6 +302,11 @@ export default async function PatientProfilePage({ params }: { params: Promise<{
                   {focus.commandReviews > 0 && (
                     <span className="px-2 py-1 rounded-md bg-white/5 text-slate-300">👁 Reviu o comando {focus.commandReviews}×</span>
                   )}
+                  {focus.detectMedianMs !== null && (
+                    <span className="px-2 py-1 rounded-md bg-white/5 text-slate-300">
+                      ⚡ Detecção {(focus.detectMedianMs / 1000).toFixed(1)}s{focus.withinTargetPct !== null && ` · ${focus.withinTargetPct}% no ritmo-alvo`}
+                    </span>
+                  )}
                   {focus.corrections > 0 && (
                     <span className="px-2 py-1 rounded-md bg-white/5 text-slate-300">
                       Comandos corrigidos {focus.corrections} · perseverou {focus.persevAfterCorrection}
