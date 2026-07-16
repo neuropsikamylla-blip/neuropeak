@@ -33,16 +33,20 @@ interface LevelSpec {
 // Tempos generosos: a forma fica visível tempo suficiente para reagir mesmo
 // na dupla tarefa (lenta ~2,6s · moderada ~2,1s · rápida ~1,7s).
 const LEVELS: Record<number, LevelSpec> = {
-  1:  { topRule: "any-green",    nback: 1, shapeMs: 2600, digitMs: 2600, shapes: false, greenLures: false, speedLabel: "lenta" },
-  2:  { topRule: "any-green",    nback: 1, shapeMs: 2100, digitMs: 2200, shapes: false, greenLures: false, speedLabel: "moderada" },
-  3:  { topRule: "any-green",    nback: 1, shapeMs: 1700, digitMs: 1900, shapes: false, greenLures: false, speedLabel: "rápida" },
-  4:  { topRule: "green-circle", nback: 1, shapeMs: 2100, digitMs: 2200, shapes: true,  greenLures: true,  speedLabel: "moderada" },
-  5:  { topRule: "green-circle", nback: 1, shapeMs: 1700, digitMs: 1900, shapes: true,  greenLures: true,  speedLabel: "rápida" },
-  6:  { topRule: "green-circle", nback: 2, shapeMs: 2600, digitMs: 2600, shapes: true,  greenLures: true,  speedLabel: "lenta" },
-  7:  { topRule: "green-circle", nback: 2, shapeMs: 2100, digitMs: 2200, shapes: true,  greenLures: true,  speedLabel: "moderada" },
-  8:  { topRule: "block-alt",    nback: 2, shapeMs: 2100, digitMs: 2200, shapes: true,  greenLures: true,  speedLabel: "moderada" },
-  9:  { topRule: "block-alt",    nback: 2, shapeMs: 1700, digitMs: 1900, shapes: true,  greenLures: true,  speedLabel: "rápida" },
-  10: { topRule: "block-alt",    nback: 2, shapeMs: 1550, digitMs: 1750, shapes: true,  greenLures: true,  speedLabel: "rápida" },
+  // Recalibração 16/jul (retorno de paciente "fácil demais" + decisão da Kamylla):
+  // formas variadas DESDE o nível 1, regra "só o círculo verde" + distratores
+  // verdes antecipada para o nível 3, ritmo mais apertado do nível 2 em diante.
+  // Nível 1 mantém o ritmo lento (porta de entrada p/ pacientes comprometidos).
+  1:  { topRule: "any-green",    nback: 1, shapeMs: 2600, digitMs: 2600, shapes: true, greenLures: false, speedLabel: "lenta" },
+  2:  { topRule: "any-green",    nback: 1, shapeMs: 2000, digitMs: 2100, shapes: true, greenLures: false, speedLabel: "moderada" },
+  3:  { topRule: "green-circle", nback: 1, shapeMs: 2200, digitMs: 2300, shapes: true, greenLures: true,  speedLabel: "lenta" },
+  4:  { topRule: "green-circle", nback: 1, shapeMs: 1900, digitMs: 2000, shapes: true, greenLures: true,  speedLabel: "moderada" },
+  5:  { topRule: "green-circle", nback: 1, shapeMs: 1600, digitMs: 1800, shapes: true, greenLures: true,  speedLabel: "rápida" },
+  6:  { topRule: "green-circle", nback: 2, shapeMs: 2600, digitMs: 2600, shapes: true, greenLures: true,  speedLabel: "lenta" },
+  7:  { topRule: "green-circle", nback: 2, shapeMs: 2100, digitMs: 2200, shapes: true, greenLures: true,  speedLabel: "moderada" },
+  8:  { topRule: "block-alt",    nback: 2, shapeMs: 2100, digitMs: 2200, shapes: true, greenLures: true,  speedLabel: "moderada" },
+  9:  { topRule: "block-alt",    nback: 2, shapeMs: 1700, digitMs: 1900, shapes: true, greenLures: true,  speedLabel: "rápida" },
+  10: { topRule: "block-alt",    nback: 2, shapeMs: 1550, digitMs: 1750, shapes: true, greenLures: true,  speedLabel: "rápida" },
 };
 const levelOf = (d: number): LevelSpec => LEVELS[Math.min(10, Math.max(1, Math.round(d)))];
 
@@ -83,8 +87,10 @@ function buildShapeSequence(spec: LevelSpec, length: number): ShapeTrial[] {
   let consecutiveNonTarget = 0;
 
   for (let i = 0; i < length; i++) {
-    const forceTarget = consecutiveNonTarget >= 3;
-    const makeTarget = forceTarget || Math.random() < 0.34;
+    // Alvos mais raros (~1 em 4) e trechos maiores sem alvo — exige vigilância
+    // sustentada de verdade (recalibração 16/jul).
+    const forceTarget = consecutiveNonTarget >= 5;
+    const makeTarget = forceTarget || Math.random() < 0.24;
 
     let color: ShapeColor, kind: ShapeKind;
     if (makeTarget) {
@@ -208,7 +214,6 @@ export function DualTask({ difficulty, theme, onComplete }: DualTaskProps) {
   const [shapePhase, setShapePhase] = useState<"isi" | "show">("isi");
 
   const [currentDigit, setCurrentDigit] = useState<number | null>(null);
-  const [refDigit, setRefDigit] = useState<number | null>(null); // dígito de referência (n atrás)
   const [digitFeedback, setDigitFeedback] = useState<"hit" | "fa" | null>(null);
   const [equalPressed, setEqualPressed] = useState(false);
   const [digitKey, setDigitKey] = useState(0);
@@ -330,7 +335,6 @@ export function DualTask({ difficulty, theme, onComplete }: DualTaskProps) {
       const ref = idx >= nback ? digitSeq[idx - nback] : null;
       digitWindowRef.current.push(d);
       setCurrentDigit(d);
-      setRefDigit(ref);
       setDigitKey((k) => k + 1);
       digitRespondedRef.current = false;
       setEqualPressed(false);
@@ -406,10 +410,9 @@ export function DualTask({ difficulty, theme, onComplete }: DualTaskProps) {
     eqBtn: theme === "GAMIFIED" ? "bg-blue-700 text-white active:bg-blue-600" : "bg-blue-500 text-white active:bg-blue-600",
   };
 
-  // Nos níveis fáceis mostramos o dígito de referência (apoio); a partir do
-  // moderado o paciente precisa memorizar o anterior (n-back de verdade).
-  const showRef = difficulty <= 3;
-
+  // O dígito de referência NUNCA é exibido (decisão clínica da Kamylla, 16/jul,
+  // após retorno de paciente): com o "anterior" na tela a comparação vira
+  // percepção visual e o n-back deixa de treinar memória operacional.
   return (
     <div className={`min-h-screen overflow-y-auto ${pal.bg}`}>
       <div className="max-w-md mx-auto px-4 py-4 flex flex-col gap-3">
@@ -460,14 +463,6 @@ export function DualTask({ difficulty, theme, onComplete }: DualTaskProps) {
             <p className={`text-xs font-bold ${pal.title}`}>INFERIOR — N-back {nback} (Igual?)</p>
           </div>
           <div className="flex items-center gap-4">
-            {showRef && (
-              <div className="flex flex-col items-center gap-1">
-                <p className={`text-[10px] ${pal.sub}`}>{nback === 1 ? "Anterior" : "2 atrás"}</p>
-                <div className={`w-14 h-14 rounded-xl flex items-center justify-center font-black text-3xl ${pal.digitBox}`}>
-                  <span className={pal.sub}>{refDigit ?? "—"}</span>
-                </div>
-              </div>
-            )}
             <div className="flex flex-col items-center gap-1 flex-1">
               <p className={`text-[10px] ${pal.sub}`}>Atual</p>
               <AnimatePresence mode="wait">

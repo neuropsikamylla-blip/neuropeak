@@ -14,6 +14,20 @@ histórico completo anterior está no log do Git (452 commits no total, a partir
   Documentação (CLAUDE.md, README.md, ARCHITECTURE.md, ADRs) reescrita a partir do
   código real.
 
+## [2.35.0] — 2026-07-16
+
+- **Dupla Tarefa — recalibração dos níveis** (retorno de paciente "fácil demais" +
+  decisões da Kamylla):
+  - **N-back sem apoio em TODOS os níveis:** o dígito anterior não aparece mais na
+    tela (antes era exibido nos níveis 1–3) — a comparação agora é de memória de
+    verdade.
+  - **Tarefa das cores endurecida:** formas variadas (círculo/quadrado/triângulo)
+    desde o nível 1; alvos mais raros (~1 em 4, antes 1 em 3) exigindo vigilância
+    sustentada; regra "só o CÍRCULO verde" + distratores verdes antecipada do nível
+    4 para o **nível 3**; ritmo mais apertado do nível 2 em diante. Nível 1 mantém
+    o ritmo lento (porta de entrada).
+  - Progressão entre sessões inalterada (+1 nível por sessão, nível consolidado).
+
 ## [2.34.1] — 2026-07-15
 
 - **Span Numérico Auditivo — fidelidade ao método (ajustes da Kamylla):**
