@@ -1127,6 +1127,14 @@ export function FocusAgents({ difficulty, theme, onComplete, exerciseId = "focus
             timeToFirstMs: firsts.length ? Math.round(firsts.reduce((a, b) => a + b, 0) / firsts.length) : null,
             switchRounds: switchRounds.length,
             errorsAfterSwitch: afterSwitchErr,
+            // Agregados por TIPO de erro (p/ o relatório do terapeuta): detalhe =
+            // confundiu por 1 critério; impulsividade = nada a ver com a regra;
+            // omissão = tempo esgotado sem responder.
+            errDetail: sum(m => (m.errorType === "detalhe" ? 1 : 0)),
+            errImpulse: sum(m => (m.errorType === "impulsividade" ? 1 : 0)),
+            errOmission: sum(m => (m.errorType === "omissao" ? 1 : 0)),
+            minRtMs: correctCount ? Math.round(Math.min(...newResults.filter(x => x.correct).map(x => x.rt))) : null,
+            maxRtMs: correctCount ? Math.round(Math.max(...newResults.filter(x => x.correct).map(x => x.rt))) : null,
             rounds_detail: M,
           },
         });

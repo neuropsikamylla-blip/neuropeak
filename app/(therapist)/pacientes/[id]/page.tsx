@@ -294,6 +294,19 @@ export default async function PatientProfilePage({ params }: { params: Promise<{
                   {focus.byChannel.visual.n > 0 && focus.byChannel.auditivo.n > 0 && (
                     <span className="px-2 py-1 rounded-md bg-white/5 text-slate-300">Visual {Math.round(focus.byChannel.visual.acc * 100)}% · Auditivo {Math.round(focus.byChannel.auditivo.acc * 100)}%</span>
                   )}
+                  {focus.errDetail + focus.errImpulse + focus.errOmission > 0 && (
+                    <span className="px-2 py-1 rounded-md bg-white/5 text-slate-300">
+                      Erros — detalhe {focus.errDetail} · impulso {focus.errImpulse} · omissão {focus.errOmission}
+                    </span>
+                  )}
+                  {focus.commandReviews > 0 && (
+                    <span className="px-2 py-1 rounded-md bg-white/5 text-slate-300">👁 Reviu o comando {focus.commandReviews}×</span>
+                  )}
+                  {focus.corrections > 0 && (
+                    <span className="px-2 py-1 rounded-md bg-white/5 text-slate-300">
+                      Comandos corrigidos {focus.corrections} · perseverou {focus.persevAfterCorrection}
+                    </span>
+                  )}
                 </div>
 
                 <div className="p-2.5 rounded-lg bg-blue-500/10 border border-blue-400/20">

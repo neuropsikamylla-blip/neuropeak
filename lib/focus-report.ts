@@ -23,6 +23,14 @@ type Meta = {
   timeToFirstMs?: number | null;
   errorsAfterSwitch?: number;
   switchRounds?: number;
+  // Tipos de erro agregados (arena, v2.36.0)
+  errDetail?: number;
+  errImpulse?: number;
+  errOmission?: number;
+  // Chuva de Agentes: comando com correção + "rever comando" (v2.36.0)
+  corrections?: number;
+  persevAfterCorrection?: number;
+  commandReviews?: number;
 };
 
 export interface FocusModeStat { n: number; acc: number; }
@@ -35,6 +43,15 @@ export interface FocusSummary {
   omissions: number;
   errorsAfterSwitch: number;
   switchRounds: number;
+  /** Erros por tipo: detalhe (confundiu 1 critério) · impulsividade · omissão. */
+  errDetail: number;
+  errImpulse: number;
+  errOmission: number;
+  /** Chuva: comandos com correção e perseverações na 1ª instrução. */
+  corrections: number;
+  persevAfterCorrection: number;
+  /** Chuva: quantas vezes usou "rever comando" (dependência da dica). */
+  commandReviews: number;
   byMode: Record<FocusMode, FocusModeStat>;
   byChannel: { visual: FocusModeStat; auditivo: FocusModeStat };
   lastMode: FocusMode | null;
@@ -70,6 +87,12 @@ export function summarizeFocusAgents(sessions: SessLike[]): FocusSummary | null 
   const omissions = rows.reduce((a, r) => a + (r.meta.omissions ?? 0), 0);
   const errorsAfterSwitch = rows.reduce((a, r) => a + (r.meta.errorsAfterSwitch ?? 0), 0);
   const switchRounds = rows.reduce((a, r) => a + (r.meta.switchRounds ?? 0), 0);
+  const errDetail = rows.reduce((a, r) => a + (r.meta.errDetail ?? 0), 0);
+  const errImpulse = rows.reduce((a, r) => a + (r.meta.errImpulse ?? 0), 0);
+  const errOmission = rows.reduce((a, r) => a + (r.meta.errOmission ?? 0), 0);
+  const corrections = rows.reduce((a, r) => a + (r.meta.corrections ?? 0), 0);
+  const persevAfterCorrection = rows.reduce((a, r) => a + (r.meta.persevAfterCorrection ?? 0), 0);
+  const commandReviews = rows.reduce((a, r) => a + (r.meta.commandReviews ?? 0), 0);
 
   const byMode = {} as Record<FocusMode, FocusModeStat>;
   (["foco", "inibicao", "alternancia", "desafio"] as const).forEach((m) => {
@@ -98,6 +121,16 @@ export function summarizeFocusAgents(sessions: SessLike[]): FocusSummary | null 
     obs.push("Pior desempenho no canal auditivo do que no visual.");
   if (byMode.foco.n >= 2 && byMode.alternancia.n >= 2 && byMode.foco.acc >= 0.8 && byMode.alternancia.acc < 0.6)
     obs.push("Vai bem em regras estáveis, mas cai quando a regra muda (flexibilidade).");
+  // Tipos de erro (quando medidos): aponta o padrão dominante.
+  const errTotal = errDetail + errImpulse + errOmission;
+  if (errTotal >= 4) {
+    if (errDetail / errTotal >= 0.6) obs.push("Erros predominantemente por DETALHE (confundiu por um critério) — vale reforçar a conferência de todos os critérios antes de responder.");
+    else if (errImpulse / errTotal >= 0.6) obs.push("Erros predominantemente por IMPULSIVIDADE (resposta sem relação com a regra).");
+    else if (errOmission / errTotal >= 0.6) obs.push("Erros predominantemente por OMISSÃO (deixou o alvo passar).");
+  }
+  if (perSession(commandReviews) >= 2) obs.push("Reviu o comando com frequência durante a busca — apoio de memória ainda necessário.");
+  if (corrections >= 3 && persevAfterCorrection / corrections >= 0.4)
+    obs.push("Nos comandos com correção, tocou no alvo da PRIMEIRA instrução — dificuldade de descartar a informação antiga.");
   if (!obs.length) obs.push("Desempenho dentro do esperado para o nível atual.");
 
   // ── Recomendação ──
@@ -109,6 +142,8 @@ export function summarizeFocusAgents(sessions: SessLike[]): FocusSummary | null 
   return {
     totalSessions: rows.length, recentAccuracy, meanTimeS, meanFirstMs,
     falsePositives, omissions, errorsAfterSwitch, switchRounds,
+    errDetail, errImpulse, errOmission,
+    corrections, persevAfterCorrection, commandReviews,
     byMode, byChannel, lastMode, lastLevel, recommendation, observations: obs,
   };
 }

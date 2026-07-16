@@ -14,6 +14,20 @@ histórico completo anterior está no log do Git (452 commits no total, a partir
   Documentação (CLAUDE.md, README.md, ARCHITECTURE.md, ADRs) reescrita a partir do
   código real.
 
+## [2.36.0] — 2026-07-16
+
+- **Focus Agentes — 3 pendências do épico fechadas** (decisões da Kamylla):
+  - **Chuva: comando com correção** (níveis 6–8, ~35% dos comandos de um pedido): o
+    card abre com uma instrução-isca que é riscada e corrigida ("Azul com gorro…
+    **Não!** Verde com gorro") — treina descartar a instrução antiga. Tocar no alvo
+    da 1ª instrução conta como perseveração no relatório. Com áudio, a correção é
+    falada.
+  - **Chuva: botão "👁 Rever"** durante a busca: mostra/fala o comando por ~1,6s sem
+    pausar a chuva; cada uso é registrado (dependência de apoio de memória).
+  - **Relatório do terapeuta:** erros por tipo (detalhe × impulsividade × omissão),
+    revisões de comando e perseveração pós-correção agora aparecem no card do Focus
+    no perfil do paciente, com observações automáticas do padrão dominante.
+
 ## [2.35.1] — 2026-07-16
 
 - **Span Numérico Auditivo (direto e inverso) — cabeçalho limpo:** removida a linha

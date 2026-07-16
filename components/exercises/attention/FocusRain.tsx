@@ -397,6 +397,15 @@ export function FocusRain({ level, theme, presentMode, fbLevel, exerciseId, sett
   const lastFeatsRef  = useRef<Set<string>>(new Set());   // FEATURES do comando anterior (idem)
   const pointsRef     = useRef(0);
   const eventsRef     = useRef<Array<{ mode: FocusMode; level: number; correct: boolean; endedBy: "correct" | "wrong" | "timeout"; rtMs: number }>>([]);
+  // COMANDO COM CORREÇÃO (degrau 3 da spec da Kamylla) + "rever comando".
+  const decoyRuleRef  = useRef<Rule | null>(null);   // 1ª instrução (isca) do comando corrigido
+  const correctionTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const correctionsRef = useRef(0);   // comandos com correção apresentados
+  const persevCorrRef  = useRef(0);   // toques que batem a ISCA após a correção (perseveração)
+  const reviewsRef     = useRef(0);   // usos do "rever comando" (dependência da dica)
+  const [decoyText, setDecoyText] = useState<string | null>(null);
+  const [corrected, setCorrected] = useState(true);  // comando final já exibido no card?
+  const [reviewOverlay, setReviewOverlay] = useState(false);
 
   const commitRender = useCallback(() => { setRenderAgents(agentsRef.current.map(a => ({ ...a }))); }, []);
 
@@ -467,8 +476,43 @@ export function FocusRain({ level, theme, presentMode, fbLevel, exerciseId, sett
     cmdCleanRef.current = true;
     distractorsThisCmdRef.current = 0;
     setCommand(cmd.text);
+
+    // COMANDO COM CORREÇÃO (níveis 6–8, ~35%, só comandos de UM pedido): o card
+    // abre com uma instrução-ISCA que compartilha exatamente 1 atributo com o
+    // comando verdadeiro ("Azul com gorro… Não! Verde com gorro") — o paciente
+    // precisa descartar a 1ª instrução e ficar com a corrigida.
+    if (correctionTimerRef.current) { clearTimeout(correctionTimerRef.current); correctionTimerRef.current = null; }
+    decoyRuleRef.current = null;
+    let decoy: Rule | null = null;
+    if (lv >= 6 && lv <= 8 && cmd.subRules.length === 1 && Math.random() < 0.35) {
+      const sub = cmd.subRules[0];
+      const subColor = sub.key.match(/combo:(\w+)\+/)?.[1] ?? "";
+      const subFeat = sub.key.replace(/^combo:\w+\+/, "");
+      const cands = rulesRef.current.filter(r => {
+        if (!r.combined || r.key === sub.key) return false;
+        const c = r.key.match(/combo:(\w+)\+/)?.[1] ?? "";
+        const f = r.key.replace(/^combo:\w+\+/, "");
+        return (c === subColor) !== (f === subFeat); // compartilha SÓ a cor OU SÓ a feature
+      });
+      if (cands.length) decoy = pick(cands);
+    }
+    if (decoy) {
+      correctionsRef.current++;
+      decoyRuleRef.current = decoy;
+      setDecoyText(decoy.text);
+      setCorrected(false);
+      if (presentMode !== "visual") playTTS(cleanForSpeech(decoy.text));
+      correctionTimerRef.current = setTimeout(() => {
+        setCorrected(true);
+        if (presentMode !== "visual") playTTS("Não! " + cleanForSpeech(cmdRef.current?.text ?? ""));
+      }, 1600);
+    } else {
+      setDecoyText(null);
+      setCorrected(true);
+    }
     phaseRef.current = "card";
     setPhase("card");
+  // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   // "Começar": fecha o card e a chuva do comando começa a cair. RT começa AQUI
@@ -676,6 +720,9 @@ export function FocusRain({ level, theme, presentMode, fbLevel, exerciseId, sett
       // acerto→novo comando, erro→novo comando; 2 erros seguidos = desce 1 nível).
       a.state = "wrong";
       falsePosRef.current++;
+      // Perseveração pós-correção: o toque errado bate a ISCA do comando corrigido
+      // (ficou com a 1ª instrução em vez da corrigida) — vai para o relatório.
+      if (decoyRuleRef.current?.matches(a.agent)) persevCorrRef.current++;
       cmdCleanRef.current = false;
       pointsRef.current = Math.max(0, pointsRef.current - 5);
       setPoints(pointsRef.current);
@@ -719,6 +766,10 @@ export function FocusRain({ level, theme, presentMode, fbLevel, exerciseId, sett
         falsePositives: fp, omissions: om,
         timeToFirstMs,
         switchRounds: 0, errorsAfterSwitch: 0,
+        // Comando com correção + "rever comando" (relatório do terapeuta).
+        corrections: correctionsRef.current,
+        persevAfterCorrection: persevCorrRef.current,
+        commandReviews: reviewsRef.current,
         rounds_detail: eventsRef.current,
       },
     });
@@ -840,15 +891,43 @@ export function FocusRain({ level, theme, presentMode, fbLevel, exerciseId, sett
           <ExerciseProgressBar progressPct={progressPct} theme={theme} />
           <span className="text-xs font-bold tabular-nums px-1.5 py-0.5 rounded-lg bg-black/20 whitespace-nowrap">Nível {displayLevel}</span>
           <span className="text-xs font-bold tabular-nums px-1.5 py-0.5 rounded-lg bg-amber-400/20 whitespace-nowrap" style={{ color: "#fbbf24" }}>⭐ {points}</span>
+          {phase === "playing" && (
+            <button
+              onClick={() => {
+                if (phaseRef.current !== "playing") return;
+                reviewsRef.current++;   // dependência da dica → relatório
+                if (presentMode !== "visual") playTTS(cleanForSpeech(cmdRef.current?.text ?? ""));
+                if (presentMode !== "audio_only") {
+                  setReviewOverlay(true);
+                  setTimeout(() => setReviewOverlay(false), 1600);
+                }
+              }}
+              aria-label="Rever o comando"
+              className="text-xs font-bold px-2 py-0.5 rounded-lg whitespace-nowrap active:scale-95"
+              style={{ background: "rgba(255,255,255,0.10)", border: "1px solid rgba(255,255,255,0.2)", color: "rgba(255,255,255,0.75)" }}>
+              👁 Rever
+            </button>
+          )}
         </div>
       </div>
+
+      {/* Overlay do "rever comando" — mostra o comando por ~1,6s SEM pausar a
+          chuva (rever custa tempo de busca; o uso é registrado p/ o relatório) */}
+      {reviewOverlay && phase === "playing" && (
+        <div className="relative z-20 flex-shrink-0 px-3 pb-1">
+          <div className="rounded-2xl px-3 py-2 text-center" style={{ background: "rgba(124,58,237,0.35)", border: "1px solid rgba(167,139,250,0.5)" }}>
+            <p className="text-white text-base font-bold leading-tight">{command}</p>
+          </div>
+        </div>
+      )}
 
       {/* Comando — aparece só no CARD (antes de "Começar"). Durante a busca ele SOME:
           o paciente já leu e deve procurar de memória (carga de memória de trabalho). */}
       {phase === "card" && (
         <div className="relative z-20 flex-shrink-0 px-3 pb-1">
           <div className="rounded-2xl px-3 py-2 text-center" style={{ background: "rgba(124,58,237,0.2)", border: "1px solid rgba(167,139,250,0.4)" }}>
-            <p className="text-white text-base font-bold leading-tight">{command}</p>
+            {/* com correção pendente, o topo mostra a ISCA (não vaza o comando final) */}
+            <p className="text-white text-base font-bold leading-tight">{decoyText && !corrected ? decoyText : command}</p>
           </div>
         </div>
       )}
@@ -910,10 +989,26 @@ export function FocusRain({ level, theme, presentMode, fbLevel, exerciseId, sett
                 <p className="text-red-300 text-sm font-bold mb-2">{cardNote}</p>
               )}
               <p className="text-violet-200/80 text-xs font-bold uppercase tracking-widest mb-2">Comando</p>
-              {/* uma linha só (sem quebrar o texto) */}
-              <p className="text-white text-xl font-black whitespace-nowrap mb-6">{command}</p>
-              <button onClick={startPlaying}
-                className="w-full h-14 rounded-2xl text-white text-lg font-black active:scale-95"
+              {/* Comando com CORREÇÃO: a isca aparece primeiro; ~1,6s depois é
+                  riscada e o comando verdadeiro entra com "Não!". O botão só
+                  habilita após a correção. Sem correção: comando direto. */}
+              {decoyText ? (
+                <div className="mb-6">
+                  <p className={`text-xl font-black whitespace-nowrap transition-all ${corrected ? "text-violet-300/50 line-through" : "text-white"}`}>
+                    {decoyText}
+                  </p>
+                  {corrected && (
+                    <motion.p initial={{ opacity: 0, y: 6 }} animate={{ opacity: 1, y: 0 }}
+                      className="text-white text-xl font-black whitespace-nowrap mt-1.5">
+                      <span className="text-red-300 font-black">Não!</span> {command}
+                    </motion.p>
+                  )}
+                </div>
+              ) : (
+                <p className="text-white text-xl font-black whitespace-nowrap mb-6">{command}</p>
+              )}
+              <button onClick={startPlaying} disabled={!corrected}
+                className="w-full h-14 rounded-2xl text-white text-lg font-black active:scale-95 disabled:opacity-40"
                 style={{ background: "linear-gradient(90deg, #7c3aed, #a855f7)", boxShadow: "0 6px 24px rgba(124,58,237,0.5)" }}>
                 Começar
               </button>
