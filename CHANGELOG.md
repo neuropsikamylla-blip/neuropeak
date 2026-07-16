@@ -14,6 +14,13 @@ histórico completo anterior está no log do Git (452 commits no total, a partir
   Documentação (CLAUDE.md, README.md, ARCHITECTURE.md, ADRs) reescrita a partir do
   código real.
 
+## [2.35.1] — 2026-07-16
+
+- **Span Numérico Auditivo (direto e inverso) — cabeçalho limpo:** removida a linha
+  "Nível X · N dígitos · Tentativa X de N · pts" (pedido da Kamylla): "N dígitos"
+  antecipava o tamanho da sequência e o restante distraía. A barra 0–100% segue
+  como único indicador de andamento.
+
 ## [2.35.0] — 2026-07-16
 
 - **Dupla Tarefa — recalibração dos níveis** (retorno de paciente "fácil demais" +

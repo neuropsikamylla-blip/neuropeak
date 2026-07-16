@@ -369,12 +369,11 @@ export function SpanNumerico({ difficulty, onComplete, reverse = false, settings
 
       <div className="w-full max-w-lg rounded-3xl p-6 space-y-5" style={CARD_STYLE}>
 
-        {/* Header */}
+        {/* Header — SEM nível/dígitos/tentativas/pontos (decisão da Kamylla, 16/jul:
+            "N dígitos" antecipa o tamanho da sequência e o resto distrai; a barra
+            0–100% abaixo já mostra o andamento do exercício) */}
         <div className="min-w-0 pr-10">
           <p className="text-sm font-bold leading-tight" style={{ color: "#3B5A75" }}>{title}</p>
-          <p className="text-xs mt-1" style={{ color: "#8FA9C0" }}>
-            Nível {level} · {digits} dígitos · Tentativa {Math.min(attempts.length + 1, cfg.trials)} de {cfg.trials} · {points} pts
-          </p>
         </div>
 
         {/* Conclusão do exercício (0–100% pelas tentativas feitas, como no método) */}
