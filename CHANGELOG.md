@@ -14,6 +14,20 @@ histórico completo anterior está no log do Git (452 commits no total, a partir
   Documentação (CLAUDE.md, README.md, ARCHITECTURE.md, ADRs) reescrita a partir do
   código real.
 
+## [2.34.1] — 2026-07-15
+
+- **Span Numérico Auditivo — fidelidade ao método (ajustes da Kamylla):**
+  - **Não mostra mais a sequência correta ao errar** — o exercício segue adiante e o
+    nível se ajusta sozinho. A opção "Mostrar resposta ao errar" saiu da prescrição.
+  - **Exercício termina pelas tentativas prescritas** (padrão 15; opção 10/15/20/30 do
+    plano agora vale de fato) em vez de tempo. A **barra 0–100%** passa a mostrar a
+    conclusão do exercício por tentativas — e um bug foi corrigido de quebra: a barra
+    existia mas estava invisível (cores de tema escuro sobre o fundo claro do Span).
+  - Cabeçalho mostra "Tentativa X de N".
+- **Pausa guiada removida dos 6 exercícios de MO** (decisão da Kamylla): a tela de
+  respiro após 3 erros não existe no software do método — a orientação de pausa é
+  papel do terapeuta. O motor por tentativa (v2.34.0) permanece.
+
 ## [2.34.0] — 2026-07-15
 
 - **Memória operacional — motor adaptativo por tentativa (Etapa 1 do épico de

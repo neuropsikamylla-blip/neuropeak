@@ -201,13 +201,6 @@ export function ExerciseCard({
           ) : (
             <div className="pt-2.5 space-y-2.5">
               <div className="flex items-center justify-between gap-2">
-                <span className="text-xs text-slate-300">Mostrar resposta ao errar</span>
-                <div className="flex gap-1.5">
-                  <Pill on={c.showAnswerOnError} onClick={() => onSpanCfg?.(id, "showAnswerOnError", true)}>Sim</Pill>
-                  <Pill on={!c.showAnswerOnError} onClick={() => onSpanCfg?.(id, "showAnswerOnError", false)}>Não</Pill>
-                </div>
-              </div>
-              <div className="flex items-center justify-between gap-2">
                 <span className="text-xs text-slate-300">Tentativas</span>
                 <div className="flex gap-1.5">
                   {[10, 15, 20, 30].map((t) => (

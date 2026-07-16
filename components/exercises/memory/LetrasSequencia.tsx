@@ -7,7 +7,6 @@ import { calculateExerciseScore } from "@/lib/scoring";
 import { useTimedProgress } from "@/components/exercises/useExerciseEngine";
 import { ExerciseProgressBar } from "@/components/exercises/ExerciseProgressBar";
 import { classifyTrial, nextLevelPerTrial } from "@/lib/adaptive-trial";
-import { PausaGuiada } from "@/components/exercises/PausaGuiada";
 import type { ExerciseResult, Theme } from "@/types";
 
 interface LetrasSequenciaProps {
@@ -62,7 +61,6 @@ export function LetrasSequencia({ difficulty, onComplete }: LetrasSequenciaProps
   // Espelho do nível: a próxima rodada é agendada por setTimeout e o closure
   // capturaria o nível ANTERIOR à subida. O ref garante a spec do nível atual.
   const levelRef = useRef(startLevel);
-  const errStreakRef = useRef(0); // erros SEGUIDOS (dispara a pausa guiada)
   const reachedRef = useRef(startLevel);
   const totalRef = useRef(0);
 
@@ -73,7 +71,6 @@ export function LetrasSequencia({ difficulty, onComplete }: LetrasSequenciaProps
   const [entered, setEntered] = useState<string[]>([]);
   const [feedback, setFeedback] = useState<"correct" | "incorrect" | null>(null);
   const [erroLeve, setErroLeve] = useState(false); // "quase": 1 item ou troca de vizinhos
-  const [pausa, setPausa] = useState(false);       // pausa guiada após 3 erros seguidos
 
   const correctRef = useRef(0);
   const rtsRef = useRef<number[]>([]);
@@ -169,15 +166,10 @@ export function LetrasSequencia({ difficulty, onComplete }: LetrasSequenciaProps
       reachedRef.current = Math.max(reachedRef.current, nl);
       return nl;
     });
-    errStreakRef.current = correct ? 0 : errStreakRef.current + 1;
     const timeUp = isTimeUp();
     setTimeout(() => {
       if (timeUp) { finish(); }
-      else if (errStreakRef.current >= 3) {
-        // 3 erros seguidos = fadiga → pausa guiada; a rodada seguinte espera o toque.
-        errStreakRef.current = 0;
-        setPausa(true);
-      } else { startRound(); }
+      else { startRound(); }
     }, correct ? 1300 : 2400);
   }, [expected, startRound, finish, isTimeUp]);
 
@@ -194,7 +186,6 @@ export function LetrasSequencia({ difficulty, onComplete }: LetrasSequenciaProps
   function begin() {
     correctRef.current = 0;
     totalRef.current = 0;
-    errStreakRef.current = 0;
     rtsRef.current = [];
     startTime.current = Date.now();
     startTimer();
@@ -229,14 +220,6 @@ export function LetrasSequencia({ difficulty, onComplete }: LetrasSequenciaProps
 
   return (
     <div className="min-h-screen w-full flex items-center justify-center p-4" style={{ background: "#020617" }}>
-      {pausa && (
-        <PausaGuiada
-          onContinuar={() => {
-            setPausa(false);
-            startRound();
-          }}
-        />
-      )}
       <div className="w-full max-w-lg rounded-3xl p-6 space-y-5" style={CARD}>
         <div>
           <p className="text-sm font-bold text-white leading-tight">Letras em Sequência</p>

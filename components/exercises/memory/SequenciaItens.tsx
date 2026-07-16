@@ -8,7 +8,6 @@ import { useTimedProgress } from "@/components/exercises/useExerciseEngine";
 import { ExerciseProgressBar } from "@/components/exercises/ExerciseProgressBar";
 import { ItemVisual } from "@/components/exercises/ItemVisual";
 import { classifyTrial, nextLevelPerTrial } from "@/lib/adaptive-trial";
-import { PausaGuiada } from "@/components/exercises/PausaGuiada";
 import type { ExerciseResult, Theme } from "@/types";
 
 interface SequenciaItensProps {
@@ -67,7 +66,6 @@ export function SequenciaItens({ difficulty, onComplete }: SequenciaItensProps) 
   const [level, setLevel] = useState(startLevel);
   const spec = SI_LEVELS[level];
   const levelRef = useRef(startLevel); // nível atual p/ a próxima rodada (evita closure antigo)
-  const errStreakRef = useRef(0); // erros SEGUIDOS (dispara a pausa guiada)
   const reachedRef = useRef(startLevel);
   const totalRef = useRef(0);
 
@@ -78,7 +76,6 @@ export function SequenciaItens({ difficulty, onComplete }: SequenciaItensProps) 
   const [entered, setEntered] = useState<Item[]>([]);
   const [feedback, setFeedback] = useState<"correct" | "incorrect" | null>(null);
   const [erroLeve, setErroLeve] = useState(false); // "quase": 1 item ou troca de vizinhos
-  const [pausa, setPausa] = useState(false);       // pausa guiada após 3 erros seguidos
 
   const correctRef = useRef(0);
   const rtsRef = useRef<number[]>([]);
@@ -168,16 +165,8 @@ export function SequenciaItens({ difficulty, onComplete }: SequenciaItensProps) 
       reachedRef.current = Math.max(reachedRef.current, nl);
       return nl;
     });
-    errStreakRef.current = correct ? 0 : errStreakRef.current + 1;
     const timeUp = isTimeUp();
-    setTimeout(() => {
-      if (timeUp) finish();
-      else if (errStreakRef.current >= 3) {
-        // 3 erros seguidos = fadiga → pausa guiada; a rodada seguinte espera o toque.
-        errStreakRef.current = 0;
-        setPausa(true);
-      } else startRound();
-    }, correct ? 1200 : 2200);
+    setTimeout(() => { if (timeUp) finish(); else startRound(); }, correct ? 1200 : 2200);
   }, [sequence, startRound, finish, isTimeUp]);
 
   function handleKey(it: Item) {
@@ -189,7 +178,7 @@ export function SequenciaItens({ difficulty, onComplete }: SequenciaItensProps) 
 
   useEffect(() => () => { runRef.current++; if (typeof window !== "undefined") window.speechSynthesis?.cancel(); }, []);
 
-  function begin() { correctRef.current = 0; totalRef.current = 0; errStreakRef.current = 0; rtsRef.current = []; startTime.current = Date.now(); startTimer(); startRound(); }
+  function begin() { correctRef.current = 0; totalRef.current = 0; rtsRef.current = []; startTime.current = Date.now(); startTimer(); startRound(); }
 
   if (phase === "ready") {
     return (
@@ -215,14 +204,6 @@ export function SequenciaItens({ difficulty, onComplete }: SequenciaItensProps) 
 
   return (
     <div className="min-h-screen w-full flex items-center justify-center p-4" style={{ background: "#020617" }}>
-      {pausa && (
-        <PausaGuiada
-          onContinuar={() => {
-            setPausa(false);
-            startRound();
-          }}
-        />
-      )}
       <div className="w-full max-w-lg rounded-3xl p-6 space-y-4" style={CARD}>
         <div>
           <p className="text-sm font-bold text-white leading-tight">Sequência de Itens</p>

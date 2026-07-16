@@ -7,24 +7,21 @@ import { calculateExerciseScore } from "@/lib/scoring";
 import { useTimedProgress } from "@/components/exercises/useExerciseEngine";
 import { ExerciseProgressBar } from "@/components/exercises/ExerciseProgressBar";
 import { classifyTrial, nextLevelPerTrial } from "@/lib/adaptive-trial";
-import { PausaGuiada } from "@/components/exercises/PausaGuiada";
 import type { ExerciseResult, Theme } from "@/types";
 
 // ── Tipos ───────────────────────────────────────────────────────────────────────
 
 /** Configuração definida pelo TERAPEUTA na prescrição (fixa para o paciente). */
 export interface SpanSettings {
-  trials: number;              // nº de tentativas da sessão
+  trials: number;              // nº de tentativas da sessão (define o fim do exercício)
   allowReplay: boolean;        // permitir repetir o áudio
   replayPenalty: boolean;      // repetir custa pontos
-  showAnswerOnError: boolean;  // treino (mostra a sequência) × avaliação (não mostra)
 }
 
 export const DEFAULT_SPAN_SETTINGS: SpanSettings = {
   trials: 15,
   allowReplay: true,
   replayPenalty: false,
-  showAnswerOnError: true,
 };
 
 interface SpanNumericoProps {
@@ -43,7 +40,6 @@ function normalizeSettings(s?: Record<string, unknown>): SpanSettings {
     trials:            typeof s?.trials === "number" ? s.trials : DEFAULT_SPAN_SETTINGS.trials,
     allowReplay:       typeof s?.allowReplay === "boolean" ? s.allowReplay : DEFAULT_SPAN_SETTINGS.allowReplay,
     replayPenalty:     typeof s?.replayPenalty === "boolean" ? s.replayPenalty : DEFAULT_SPAN_SETTINGS.replayPenalty,
-    showAnswerOnError: typeof s?.showAnswerOnError === "boolean" ? s.showAnswerOnError : DEFAULT_SPAN_SETTINGS.showAnswerOnError,
   };
 }
 
@@ -175,7 +171,7 @@ function Beads({ total, filled, active, flipped = false, flipping = false }: {
 export function SpanNumerico({ difficulty, onComplete, reverse = false, settings }: SpanNumericoProps) {
   const exerciseId = reverse ? "span-numerico-inverso" : "span-numerico";
   const title = reverse ? "Span Numérico Auditivo Inverso" : "Span Numérico Auditivo Direto";
-  const { begin, isTimeUp, elapsedSec, finish, progressPct } = useTimedProgress();
+  const { begin, elapsedSec, finish } = useTimedProgress();
 
   // Config do TERAPEUTA (prescrição) — fixa para o paciente. Ausente = padrões.
   const cfg: SpanSettings = normalizeSettings(settings);
@@ -194,10 +190,8 @@ export function SpanNumerico({ difficulty, onComplete, reverse = false, settings
   const [points, setPoints]     = useState(0);
   const [feedback, setFeedback] = useState<"correct" | "incorrect" | null>(null);
   const [erroLeve, setErroLeve] = useState(false); // "quase": 1 dígito ou troca de vizinhos
-  const [pausa, setPausa]       = useState(false); // pausa guiada após 3 erros seguidos
   const [replayed, setReplayed] = useState(false);
 
-  const errStreakRef = useRef(0); // erros SEGUIDOS (dispara a pausa guiada)
   const levelRef    = useRef(initialLevel);
   const maxLevelRef = useRef(initialLevel);
   const seqIdRef    = useRef(0);
@@ -297,13 +291,14 @@ export function SpanNumerico({ difficulty, onComplete, reverse = false, settings
 
     const nextLevel = nextLevelPerTrial(levelRef.current, verdict, 1, MAX_LEVEL);
     maxLevelRef.current = Math.max(maxLevelRef.current, nextLevel);
-    errStreakRef.current = correct ? 0 : errStreakRef.current + 1;
 
     const nextTrial = trial + 1;
-    const timeUp = isTimeUp();
+    // O exercício termina ao completar as tentativas prescritas (padrão 15) —
+    // a barra 0–100% reflete a CONCLUSÃO do exercício, como no método.
+    const done = newAttempts.length >= cfg.trials;
 
     setTimeout(() => {
-      if (timeUp) {
+      if (done) {
         finish();
         const total = Math.max(1, newAttempts.length);
         const correctCount = newAttempts.filter(a => a.correct).length;
@@ -326,18 +321,11 @@ export function SpanNumerico({ difficulty, onComplete, reverse = false, settings
         levelRef.current = nextLevel;
         setLevel(nextLevel);
         setTrial(nextTrial);
-        if (errStreakRef.current >= 3) {
-          // 3 erros seguidos = sinal de fadiga → pausa guiada; a rodada seguinte
-          // só começa quando o paciente tocar em "continuar".
-          errStreakRef.current = 0;
-          setPausa(true);
-        } else {
-          startRound(nextLevel);
-        }
+        startRound(nextLevel);
       }
-    }, cfg.showAnswerOnError && !correct ? 2600 : 1400);
+    }, correct ? 1400 : 1900);
   // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [sequence, attempts, digits, trial, cfg, replayed, reverse, exerciseId, difficulty, isTimeUp, elapsedSec, finish]);
+  }, [sequence, attempts, digits, trial, cfg, replayed, reverse, exerciseId, difficulty, elapsedSec, finish]);
 
   // ── Toque no teclado ────────────────────────────────────────────────────────
   function handleKey(n: number) {
@@ -355,7 +343,6 @@ export function SpanNumerico({ difficulty, onComplete, reverse = false, settings
   function beginSession(fullscreen: boolean) {
     levelRef.current = initialLevel;
     maxLevelRef.current = initialLevel;
-    errStreakRef.current = 0;
     startTime.current = Date.now();
     begin();
     setLevel(initialLevel);
@@ -374,21 +361,11 @@ export function SpanNumerico({ difficulty, onComplete, reverse = false, settings
   }
 
   const correctCount = attempts.filter(a => a.correct).length;
-  const expected = reverse ? [...sequence].reverse() : sequence;
 
   // ── Render do jogo ─────────────────────────────────────────────────────────────
   return (
     <div className="min-h-screen w-full flex flex-col items-center justify-center p-4" style={{ background: "#F4F9FD" }}>
       <GlassBg />
-
-      {pausa && (
-        <PausaGuiada
-          onContinuar={() => {
-            setPausa(false);
-            startRound(levelRef.current);
-          }}
-        />
-      )}
 
       <div className="w-full max-w-lg rounded-3xl p-6 space-y-5" style={CARD_STYLE}>
 
@@ -396,12 +373,12 @@ export function SpanNumerico({ difficulty, onComplete, reverse = false, settings
         <div className="min-w-0 pr-10">
           <p className="text-sm font-bold leading-tight" style={{ color: "#3B5A75" }}>{title}</p>
           <p className="text-xs mt-1" style={{ color: "#8FA9C0" }}>
-            Nível {level} · {digits} dígitos · {points} pts
+            Nível {level} · {digits} dígitos · Tentativa {Math.min(attempts.length + 1, cfg.trials)} de {cfg.trials} · {points} pts
           </p>
         </div>
 
-        {/* Progresso da sessão */}
-        <ExerciseProgressBar progressPct={progressPct} theme="GAMIFIED" />
+        {/* Conclusão do exercício (0–100% pelas tentativas feitas, como no método) */}
+        <ExerciseProgressBar progressPct={Math.min(100, Math.round((attempts.length / cfg.trials) * 100))} />
 
         {/* ── FASE: ouvir (painel visível; a tecla falada PISCA) ─────────── */}
         {(phase === "listen" || phase === "flip") && (
@@ -434,16 +411,9 @@ export function SpanNumerico({ difficulty, onComplete, reverse = false, settings
                 Só um detalhe escapou — o nível continua o mesmo.
               </p>
             )}
-            {feedback === "incorrect" && cfg.showAnswerOnError && (
-              <div className="text-center text-sm space-y-1 mt-1">
-                <p style={{ color: "#5C7A94" }}>
-                  Sequência correta: <span className="font-bold" style={{ color: "#3B5A75" }}>{expected.join(" — ")}</span>
-                </p>
-                <p style={{ color: "#8FA9C0" }}>
-                  Sua resposta: <span className="font-semibold">{entered.join(" — ") || "—"}</span>
-                </p>
-              </div>
-            )}
+            {/* A sequência correta NÃO é exibida no erro (decisão clínica da
+                Kamylla, 15/jul — fiel ao método: o exercício segue adiante e o
+                nível se ajusta sozinho). */}
           </div>
         )}
 
