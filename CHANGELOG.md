@@ -14,6 +14,23 @@ histórico completo anterior está no log do Git (452 commits no total, a partir
   Documentação (CLAUDE.md, README.md, ARCHITECTURE.md, ADRs) reescrita a partir do
   código real.
 
+## [2.34.0] — 2026-07-15
+
+- **Memória operacional — motor adaptativo por tentativa (Etapa 1 do épico de
+  padronização, `COGMED-PADRONIZACAO-PROPOSTA.md`):** nos 6 exercícios de MO
+  (Span Numérico direto/inverso/auditivos, Letras em Sequência, Cubo Corsi,
+  Matriz Espacial e inversa, Sequência de Itens):
+  - Tentativa **correta** sobe 1 nível já na próxima; **erro leve** (1 item errado
+    ou troca de dois vizinhos) mantém o nível; **erro grave** desce 1 — o paciente
+    treina na borda da capacidade (antes: 2 acertos seguidos para subir).
+  - Núcleo puro em `lib/adaptive-trial.ts` (classifyTrial/nextLevelPerTrial +
+    classifyTapTrial), com 13 testes.
+  - **Pausa guiada** (`PausaGuiada.tsx`): 3 erros seguidos abrem uma tela de
+    respiro; a rodada seguinte só volta no toque (o tempo ativo já não corre).
+  - Feedback "Quase!" no erro leve (Span/Letras/Itens); visual 3D do Corsi intacto.
+  - Teto do Span Numérico elevado: 8 → **10 dígitos** (repetição não adjacente
+    apenas no teto).
+
 ## [2.33.0] — 2026-07-15
 
 - **Estacionamento Lógico — Etapa 1 do épico de progressão** (`ESTACIONAMENTO-PROGRESSAO-SPEC.md`):

@@ -7,6 +7,8 @@ import { calculateExerciseScore } from "@/lib/scoring";
 import { useTimedProgress } from "@/components/exercises/useExerciseEngine";
 import { ExerciseProgressBar } from "@/components/exercises/ExerciseProgressBar";
 import { TutorialBase } from "@/components/exercises/TutorialBase";
+import { classifyTrial, nextLevelPerTrial } from "@/lib/adaptive-trial";
+import { PausaGuiada } from "@/components/exercises/PausaGuiada";
 import type { ExerciseResult, Theme } from "@/types";
 
 interface MatrizEspacialProps {
@@ -213,7 +215,8 @@ export function MatrizEspacial({ difficulty, theme, onComplete, alwaysReverse }:
   const reverse = alwaysReverse ?? REVERSE_MODE(difficulty);
   const [showTutorial, setShowTutorial] = useState(true);
   const [seqLength, setSeqLength] = useState(initialSeq(difficulty));
-  const [streak, setStreak] = useState(0);
+  const errStreakRef = useRef(0); // erros SEGUIDOS (dispara a pausa guiada)
+  const [pausa, setPausa] = useState(false);
   const [phase, setPhase] = useState<Phase>("showing");
   const [sequence, setSequence] = useState<number[]>([]);
   const [activeCell, setActiveCell] = useState<number | null>(null);
@@ -269,7 +272,11 @@ export function MatrizEspacial({ difficulty, theme, onComplete, alwaysReverse }:
     if (newSeq.length < seqLength) return;
 
     const expected = reverse ? [...sequence].reverse() : sequence;
-    const correct = newSeq.every((cell, i) => cell === expected[i]);
+    // Motor POR TENTATIVA (épico Cogmed): correta → sequência +1 já na próxima;
+    // erro LEVE (1 célula errada ou troca de duas vizinhas) → mantém; erro
+    // GRAVE → −1. Treina na borda da capacidade.
+    const verdict = classifyTrial(expected, newSeq);
+    const correct = verdict === "correta";
     if (correct) soundCorrect(); else soundWrong();
 
     setFeedbackData({ correct, userSeq: newSeq });
@@ -278,12 +285,8 @@ export function MatrizEspacial({ difficulty, theme, onComplete, alwaysReverse }:
     const newAttempts = [...attempts, { correct, seqLen: seqLength }];
     setAttempts(newAttempts);
 
-    // "Musculação": +1 a cada 2 acertos seguidos, −1 a cada 2 erros seguidos.
-    const newStreak = correct ? Math.max(0, streak) + 1 : Math.min(0, streak) - 1;
-    let nextSeqLen = seqLength;
-    let nextStreak = newStreak;
-    if (newStreak >= 2) { nextSeqLen = Math.min(seqLength + 1, MAX_SEQ); nextStreak = 0; }
-    if (newStreak <= -2) { nextSeqLen = Math.max(seqLength - 1, MIN_SEQ); nextStreak = 0; }
+    const nextSeqLen = nextLevelPerTrial(seqLength, verdict, MIN_SEQ, MAX_SEQ);
+    errStreakRef.current = correct ? 0 : errStreakRef.current + 1;
 
     const nextTrial = trial + 1;
     const timeUp = isTimeUp();
@@ -306,9 +309,14 @@ export function MatrizEspacial({ difficulty, theme, onComplete, alwaysReverse }:
         });
       } else {
         setFeedbackData(null);
-        setStreak(nextStreak);
         setSeqLength(nextSeqLen);
-        setTrial(nextTrial);
+        if (errStreakRef.current >= 3) {
+          // 3 erros seguidos = fadiga → pausa guiada; a rodada seguinte espera o toque.
+          errStreakRef.current = 0;
+          setPausa(true);
+        } else {
+          setTrial(nextTrial);
+        }
       }
     }, 1800);
   }
@@ -391,6 +399,15 @@ export function MatrizEspacial({ difficulty, theme, onComplete, alwaysReverse }:
 
   return (
     <div className="min-h-screen flex flex-col items-center p-4 pt-6" style={rootBg}>
+
+      {pausa && (
+        <PausaGuiada
+          onContinuar={() => {
+            setPausa(false);
+            setTrial((t) => t + 1); // dispara a próxima rodada (useEffect em `trial`)
+          }}
+        />
+      )}
 
       {/* Card do exercício */}
       <div className="w-full max-w-lg p-6" style={cardStyle}>

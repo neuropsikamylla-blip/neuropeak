@@ -6,6 +6,8 @@ import { Eye, Headphones } from "lucide-react";
 import { calculateExerciseScore } from "@/lib/scoring";
 import { useTimedProgress } from "@/components/exercises/useExerciseEngine";
 import { ExerciseProgressBar } from "@/components/exercises/ExerciseProgressBar";
+import { classifyTrial, nextLevelPerTrial } from "@/lib/adaptive-trial";
+import { PausaGuiada } from "@/components/exercises/PausaGuiada";
 import type { ExerciseResult, Theme } from "@/types";
 
 interface LetrasSequenciaProps {
@@ -60,7 +62,7 @@ export function LetrasSequencia({ difficulty, onComplete }: LetrasSequenciaProps
   // Espelho do nível: a próxima rodada é agendada por setTimeout e o closure
   // capturaria o nível ANTERIOR à subida. O ref garante a spec do nível atual.
   const levelRef = useRef(startLevel);
-  const streakRef = useRef(0);
+  const errStreakRef = useRef(0); // erros SEGUIDOS (dispara a pausa guiada)
   const reachedRef = useRef(startLevel);
   const totalRef = useRef(0);
 
@@ -70,6 +72,8 @@ export function LetrasSequencia({ difficulty, onComplete }: LetrasSequenciaProps
   const [keys, setKeys] = useState<string[]>([]);
   const [entered, setEntered] = useState<string[]>([]);
   const [feedback, setFeedback] = useState<"correct" | "incorrect" | null>(null);
+  const [erroLeve, setErroLeve] = useState(false); // "quase": 1 item ou troca de vizinhos
+  const [pausa, setPausa] = useState(false);       // pausa guiada após 3 erros seguidos
 
   const correctRef = useRef(0);
   const rtsRef = useRef<number[]>([]);
@@ -149,20 +153,31 @@ export function LetrasSequencia({ difficulty, onComplete }: LetrasSequenciaProps
   }, [onComplete, startLevel, spec, finishTimer, elapsedSec]);
 
   const validate = useCallback((entry: string[]) => {
-    const correct = entry.join("·") === expected.join("·");
+    // Motor POR TENTATIVA (épico Cogmed): correta → nível +1 já na próxima;
+    // erro LEVE (1 item errado ou troca de dois vizinhos) → mantém; erro
+    // GRAVE → desce 1. Treina na borda da capacidade.
+    const verdict = classifyTrial(expected, entry);
+    const correct = verdict === "correta";
     if (correct) correctRef.current++;
     rtsRef.current.push(Date.now() - inputShownAt.current);
     setFeedback(correct ? "correct" : "incorrect");
+    setErroLeve(verdict === "erro-leve");
     setPhase("feedback");
     totalRef.current++;
-    // "Musculação": 2 acertos seguidos → sobe o nível; 2 erros seguidos → desce.
-    streakRef.current = correct ? Math.max(0, streakRef.current) + 1 : Math.min(0, streakRef.current) - 1;
-    if (streakRef.current >= 2) { streakRef.current = 0; setLevel((l) => { const nl = Math.min(10, l + 1); reachedRef.current = Math.max(reachedRef.current, nl); return nl; }); }
-    else if (streakRef.current <= -2) { streakRef.current = 0; setLevel((l) => Math.max(1, l - 1)); }
+    setLevel((l) => {
+      const nl = nextLevelPerTrial(l, verdict, 1, 10);
+      reachedRef.current = Math.max(reachedRef.current, nl);
+      return nl;
+    });
+    errStreakRef.current = correct ? 0 : errStreakRef.current + 1;
     const timeUp = isTimeUp();
     setTimeout(() => {
       if (timeUp) { finish(); }
-      else { startRound(); }
+      else if (errStreakRef.current >= 3) {
+        // 3 erros seguidos = fadiga → pausa guiada; a rodada seguinte espera o toque.
+        errStreakRef.current = 0;
+        setPausa(true);
+      } else { startRound(); }
     }, correct ? 1300 : 2400);
   }, [expected, startRound, finish, isTimeUp]);
 
@@ -179,6 +194,7 @@ export function LetrasSequencia({ difficulty, onComplete }: LetrasSequenciaProps
   function begin() {
     correctRef.current = 0;
     totalRef.current = 0;
+    errStreakRef.current = 0;
     rtsRef.current = [];
     startTime.current = Date.now();
     startTimer();
@@ -213,6 +229,14 @@ export function LetrasSequencia({ difficulty, onComplete }: LetrasSequenciaProps
 
   return (
     <div className="min-h-screen w-full flex items-center justify-center p-4" style={{ background: "#020617" }}>
+      {pausa && (
+        <PausaGuiada
+          onContinuar={() => {
+            setPausa(false);
+            startRound();
+          }}
+        />
+      )}
       <div className="w-full max-w-lg rounded-3xl p-6 space-y-5" style={CARD}>
         <div>
           <p className="text-sm font-bold text-white leading-tight">Letras em Sequência</p>
@@ -288,11 +312,16 @@ export function LetrasSequencia({ difficulty, onComplete }: LetrasSequenciaProps
         {phase === "feedback" && (
           <div className="flex flex-col items-center gap-3 py-5">
             <motion.div initial={{ scale: 0.6, opacity: 0 }} animate={{ scale: 1, opacity: 1 }} className="text-5xl">
-              {feedback === "correct" ? "✅" : "❌"}
+              {feedback === "correct" ? "✅" : erroLeve ? "🟡" : "❌"}
             </motion.div>
-            <p className="text-2xl font-black" style={{ color: feedback === "correct" ? "#4ade80" : "#f87171" }}>
-              {feedback === "correct" ? "Correto" : "Incorreto"}
+            <p className="text-2xl font-black" style={{ color: feedback === "correct" ? "#4ade80" : erroLeve ? "#fbbf24" : "#f87171" }}>
+              {feedback === "correct" ? "Correto" : erroLeve ? "Quase!" : "Incorreto"}
             </p>
+            {feedback === "incorrect" && erroLeve && (
+              <p className="text-xs" style={{ color: "rgba(251,191,36,0.85)" }}>
+                Só um detalhe escapou — o nível continua o mesmo.
+              </p>
+            )}
             {feedback === "incorrect" && (
               <div className="text-center text-sm space-y-1 mt-1">
                 <p style={{ color: "rgba(148,163,184,0.85)" }}>Correto: <span className="font-bold text-white">{expected.join(" — ")}</span></p>

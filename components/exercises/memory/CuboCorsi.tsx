@@ -5,6 +5,8 @@ import { calculateExerciseScore } from "@/lib/scoring";
 import { useTimedProgress } from "@/components/exercises/useExerciseEngine";
 import { ExerciseProgressBar } from "@/components/exercises/ExerciseProgressBar";
 import { TutorialBase } from "@/components/exercises/TutorialBase";
+import { classifyTrial, nextLevelPerTrial } from "@/lib/adaptive-trial";
+import { PausaGuiada } from "@/components/exercises/PausaGuiada";
 import type { ExerciseResult, Theme } from "@/types";
 
 // ── Cubo 2×2×2 em CSS 3D real ──────────────────────────────
@@ -338,10 +340,14 @@ export function CuboCorsi({ difficulty, theme: _theme, onComplete }: Props) {
   const rtsRef        = useRef<number[]>([]);
   const inputStartRef = useRef(0);
 
-  // Dificuldade adaptativa intra-sessão (+1 a cada 2 acertos seguidos)
+  // Dificuldade adaptativa intra-sessão — motor POR TENTATIVA (épico Cogmed):
+  // correta → +1 já na próxima; erro leve (só o último toque errado ou troca de
+  // dois vizinhos) → mantém; erro grave → −1. Treina na borda da capacidade.
   const curDiffRef  = useRef(difficulty);
-  const streakRef   = useRef(0);
+  const errStreakRef = useRef(0); // erros SEGUIDOS (dispara a pausa guiada)
   const maxDiffRef  = useRef(difficulty);
+  const [pausa, setPausa] = useState(false);
+  const pendingRoundRef = useRef(0); // rodada a iniciar após a pausa guiada
 
   function clearAll() {
     cancelRef.current = true;
@@ -389,7 +395,8 @@ export function CuboCorsi({ difficulty, theme: _theme, onComplete }: Props) {
   }, [sleep]);
 
   const evaluateSequence = useCallback((userInput: number[], seq: number[], r: number) => {
-    const allOk = userInput.every((tap, i) => tap === seq[i]);
+    const verdict = classifyTrial(seq, userInput);
+    const allOk = verdict === "correta";
     const nr = r + 1;
 
     const rs: BState[] = Array(N_TILES).fill("idle");
@@ -405,23 +412,11 @@ export function CuboCorsi({ difficulty, theme: _theme, onComplete }: Props) {
     setPhase("result");
     rtsRef.current.push((Date.now() - inputStartRef.current) / seq.length);
 
-    // "Musculação": 2 acertos seguidos → sobe; 2 erros seguidos → desce um pouco.
-    if (allOk) {
-      correctRef.current++; sndCorrect();
-      streakRef.current = Math.max(0, streakRef.current) + 1;
-      if (streakRef.current >= 2) {
-        streakRef.current = 0;
-        curDiffRef.current = Math.min(10, curDiffRef.current + 1);
-        maxDiffRef.current = Math.max(maxDiffRef.current, curDiffRef.current);
-      }
-    } else {
-      errorsRef.current++; sndWrong();
-      streakRef.current = Math.min(0, streakRef.current) - 1;
-      if (streakRef.current <= -2) {
-        streakRef.current = 0;
-        curDiffRef.current = Math.max(1, curDiffRef.current - 1);
-      }
-    }
+    // Motor por tentativa: correta sobe 1; erro leve mantém; erro grave desce 1.
+    if (allOk) { correctRef.current++; sndCorrect(); } else { errorsRef.current++; sndWrong(); }
+    curDiffRef.current = nextLevelPerTrial(curDiffRef.current, verdict, 1, 10);
+    maxDiffRef.current = Math.max(maxDiffRef.current, curDiffRef.current);
+    errStreakRef.current = allOk ? 0 : errStreakRef.current + 1;
 
     const t = setTimeout(() => {
       setTS(Array(N_TILES).fill("idle"));
@@ -439,6 +434,13 @@ export function CuboCorsi({ difficulty, theme: _theme, onComplete }: Props) {
           score, accuracy: acc, reactionTime: avgRt, difficulty: reached, duration: dur,
           metadata: { correct: fc, errors: fe, rounds: nr, reachedDifficulty: reached },
         });
+        return;
+      }
+      if (errStreakRef.current >= 3) {
+        // 3 erros seguidos = fadiga → pausa guiada; a rodada só volta no toque.
+        errStreakRef.current = 0;
+        pendingRoundRef.current = nr;
+        setPausa(true);
         return;
       }
       setPhase("between");
@@ -486,6 +488,15 @@ export function CuboCorsi({ difficulty, theme: _theme, onComplete }: Props) {
 
   return (
     <div style={{ background: "#F4F7FB", minHeight: "100vh" }}>
+      {pausa && (
+        <PausaGuiada
+          onContinuar={() => {
+            setPausa(false);
+            setPhase("between");
+            timersRef.current.push(setTimeout(() => startRound(pendingRoundRef.current), 400));
+          }}
+        />
+      )}
       <div style={{ maxWidth: 500, margin: "0 auto", padding: "18px 14px 32px" }}>
 
         {/* Barra de progresso (tempo ativo) */}

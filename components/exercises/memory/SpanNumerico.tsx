@@ -6,6 +6,8 @@ import { Headphones } from "lucide-react";
 import { calculateExerciseScore } from "@/lib/scoring";
 import { useTimedProgress } from "@/components/exercises/useExerciseEngine";
 import { ExerciseProgressBar } from "@/components/exercises/ExerciseProgressBar";
+import { classifyTrial, nextLevelPerTrial } from "@/lib/adaptive-trial";
+import { PausaGuiada } from "@/components/exercises/PausaGuiada";
 import type { ExerciseResult, Theme } from "@/types";
 
 // ── Tipos ───────────────────────────────────────────────────────────────────────
@@ -49,11 +51,14 @@ type Phase = "ready" | "listen" | "flip" | "input" | "feedback";
 
 // ── Constantes ────────────────────────────────────────────────────────────────
 
-const MAX_LEVEL = 7;                          // Nível 7 = 8 dígitos
-const digitsForLevel = (lv: number) => lv + 1; // N1=2, N2=3 … N7=8
+// Teto elevado no épico Cogmed (15/jul): nível 9 = 10 dígitos (antes parava em 8).
+const MAX_LEVEL = 9;
+const digitsForLevel = (lv: number) => lv + 1; // N1=2, N2=3 … N9=10
 const clampLevel = (lv: number) => Math.max(1, Math.min(MAX_LEVEL, lv));
 
 // Nível inicial automático a partir do progresso salvo do paciente (difficulty 1–10).
+// Fator 0.7 mantido de propósito: começa um pouco abaixo do teto alcançado e o motor
+// por tentativa (acertou → sobe já na próxima) recoloca o paciente na borda em minutos.
 const levelFromDifficulty = (d: number) => clampLevel(Math.ceil(Math.max(1, d) * 0.7));
 
 
@@ -188,9 +193,11 @@ export function SpanNumerico({ difficulty, onComplete, reverse = false, settings
   const [attempts, setAttempts] = useState<{ correct: boolean; digits: number }[]>([]);
   const [points, setPoints]     = useState(0);
   const [feedback, setFeedback] = useState<"correct" | "incorrect" | null>(null);
+  const [erroLeve, setErroLeve] = useState(false); // "quase": 1 dígito ou troca de vizinhos
+  const [pausa, setPausa]       = useState(false); // pausa guiada após 3 erros seguidos
   const [replayed, setReplayed] = useState(false);
 
-  const streakRef   = useRef(0);
+  const errStreakRef = useRef(0); // erros SEGUIDOS (dispara a pausa guiada)
   const levelRef    = useRef(initialLevel);
   const maxLevelRef = useRef(initialLevel);
   const seqIdRef    = useRef(0);
@@ -242,13 +249,18 @@ export function SpanNumerico({ difficulty, onComplete, reverse = false, settings
   // ── Inicia uma rodada ────────────────────────────────────────────────────────
   const startRound = useCallback((lv: number) => {
     const n = digitsForLevel(lv);
-    // 1-9 SEM repetição (embaralha e corta): span máximo é 8 dígitos, sempre cabe.
+    // 1-9 SEM repetição até 9 dígitos (embaralha e corta). No teto de 10 dígitos
+    // (nível 9), completa com um dígito repetido NÃO adjacente ao anterior.
     const pool = [1, 2, 3, 4, 5, 6, 7, 8, 9];
     for (let i = pool.length - 1; i > 0; i--) {
       const j = Math.floor(Math.random() * (i + 1));
       [pool[i], pool[j]] = [pool[j], pool[i]];
     }
-    const seq: number[] = pool.slice(0, n);
+    const seq: number[] = pool.slice(0, Math.min(n, pool.length));
+    while (seq.length < n) {
+      const cand = 1 + Math.floor(Math.random() * 9);
+      if (cand !== seq[seq.length - 1]) seq.push(cand);
+    }
     seqIdRef.current++;
     const myId = seqIdRef.current;
     setSequence(seq);
@@ -266,8 +278,13 @@ export function SpanNumerico({ difficulty, onComplete, reverse = false, settings
   // ── Validação ─────────────────────────────────────────────────────────────────
   const validate = useCallback((entry: number[]) => {
     const expected = reverse ? [...sequence].reverse() : sequence;
-    const correct = entry.join("") === expected.join("");
+    // Motor POR TENTATIVA (épico Cogmed): correta → nível +1 já na próxima;
+    // erro LEVE (1 dígito errado ou troca de dois vizinhos) → mantém o nível;
+    // erro GRAVE → desce 1. Mantém o paciente treinando na borda da capacidade.
+    const verdict = classifyTrial(expected, entry);
+    const correct = verdict === "correta";
     setFeedback(correct ? "correct" : "incorrect");
+    setErroLeve(verdict === "erro-leve");
     setPhase("feedback");
 
     const newAttempts = [...attempts, { correct, digits }];
@@ -278,13 +295,9 @@ export function SpanNumerico({ difficulty, onComplete, reverse = false, settings
       setPoints(p => p + Math.round(gain));
     }
 
-    // Nível automático: 2 acertos seguidos sobem 1 dígito; 2 erros descem 1.
-    let nextLevel = levelRef.current;
-    const s = correct ? Math.max(streakRef.current, 0) + 1 : Math.min(streakRef.current, 0) - 1;
-    if (s >= 2)  { nextLevel = clampLevel(levelRef.current + 1); streakRef.current = 0; }
-    else if (s <= -2) { nextLevel = clampLevel(levelRef.current - 1); streakRef.current = 0; }
-    else streakRef.current = s;
+    const nextLevel = nextLevelPerTrial(levelRef.current, verdict, 1, MAX_LEVEL);
     maxLevelRef.current = Math.max(maxLevelRef.current, nextLevel);
+    errStreakRef.current = correct ? 0 : errStreakRef.current + 1;
 
     const nextTrial = trial + 1;
     const timeUp = isTimeUp();
@@ -313,7 +326,14 @@ export function SpanNumerico({ difficulty, onComplete, reverse = false, settings
         levelRef.current = nextLevel;
         setLevel(nextLevel);
         setTrial(nextTrial);
-        startRound(nextLevel);
+        if (errStreakRef.current >= 3) {
+          // 3 erros seguidos = sinal de fadiga → pausa guiada; a rodada seguinte
+          // só começa quando o paciente tocar em "continuar".
+          errStreakRef.current = 0;
+          setPausa(true);
+        } else {
+          startRound(nextLevel);
+        }
       }
     }, cfg.showAnswerOnError && !correct ? 2600 : 1400);
   // eslint-disable-next-line react-hooks/exhaustive-deps
@@ -335,7 +355,7 @@ export function SpanNumerico({ difficulty, onComplete, reverse = false, settings
   function beginSession(fullscreen: boolean) {
     levelRef.current = initialLevel;
     maxLevelRef.current = initialLevel;
-    streakRef.current = 0;
+    errStreakRef.current = 0;
     startTime.current = Date.now();
     begin();
     setLevel(initialLevel);
@@ -360,6 +380,15 @@ export function SpanNumerico({ difficulty, onComplete, reverse = false, settings
   return (
     <div className="min-h-screen w-full flex flex-col items-center justify-center p-4" style={{ background: "#F4F9FD" }}>
       <GlassBg />
+
+      {pausa && (
+        <PausaGuiada
+          onContinuar={() => {
+            setPausa(false);
+            startRound(levelRef.current);
+          }}
+        />
+      )}
 
       <div className="w-full max-w-lg rounded-3xl p-6 space-y-5" style={CARD_STYLE}>
 
@@ -396,10 +425,15 @@ export function SpanNumerico({ difficulty, onComplete, reverse = false, settings
         {phase === "feedback" && (
           <div className="flex flex-col items-center gap-3 py-5">
             <motion.div initial={{ scale: 0.6, opacity: 0 }} animate={{ scale: 1, opacity: 1 }}
-              className="text-5xl">{feedback === "correct" ? "✅" : "❌"}</motion.div>
-            <p className="text-2xl font-black" style={{ color: feedback === "correct" ? "#16A34A" : "#DC2626" }}>
-              {feedback === "correct" ? "Correto" : "Incorreto"}
+              className="text-5xl">{feedback === "correct" ? "✅" : erroLeve ? "🟡" : "❌"}</motion.div>
+            <p className="text-2xl font-black" style={{ color: feedback === "correct" ? "#16A34A" : erroLeve ? "#D97706" : "#DC2626" }}>
+              {feedback === "correct" ? "Correto" : erroLeve ? "Quase!" : "Incorreto"}
             </p>
+            {feedback === "incorrect" && erroLeve && (
+              <p className="text-xs" style={{ color: "#B45309" }}>
+                Só um detalhe escapou — o nível continua o mesmo.
+              </p>
+            )}
             {feedback === "incorrect" && cfg.showAnswerOnError && (
               <div className="text-center text-sm space-y-1 mt-1">
                 <p style={{ color: "#5C7A94" }}>
