@@ -14,6 +14,15 @@ histórico completo anterior está no log do Git (452 commits no total, a partir
   Documentação (CLAUDE.md, README.md, ARCHITECTURE.md, ADRs) reescrita a partir do
   código real.
 
+## [2.37.1] — 2026-07-20
+
+- **Chuva de Agentes (Focus Agentes, modo Foco) — áudio sincronizado com o comando
+  visível:** o comando agora é falado no instante em que o texto aparece no card
+  (antes só falava quando o paciente apertava "Começar", com atraso variável e
+  dessincronizado da leitura). Vale para o comando simples e para a instrução-isca
+  do comando com correção (cada trecho fala assim que fica visível). Removida a
+  narração duplicada que ocorria ao apertar "Começar".
+
 ## [2.37.0] — 2026-07-16
 
 - **Focus Agentes = velocidade de processamento + atenção (calibração aprovada pela

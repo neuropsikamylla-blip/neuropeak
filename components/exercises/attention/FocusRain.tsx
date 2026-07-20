@@ -348,9 +348,6 @@ export interface FocusRainProps {
 
 export function FocusRain({ level, theme, presentMode, fbLevel, exerciseId, settings, onComplete }: FocusRainProps) {
   const { begin, isTimeUp, elapsedSec, finish, progressPct } = useTimedProgress();
-  const speakOn = presentMode === "visual_audio" || presentMode === "audio_only";
-  const speak = useCallback((t: string) => { if (speakOn) playTTS(t); }, [speakOn]);
-
   const [command, setCommand]   = useState("");
   const [points, setPoints]     = useState(0);
   const [displayLevel, setDisplayLevel] = useState(Math.max(1, Math.min(MAX_LEVEL, Math.round(level))));
@@ -517,6 +514,10 @@ export function FocusRain({ level, theme, presentMode, fbLevel, exerciseId, sett
     } else {
       setDecoyText(null);
       setCorrected(true);
+      // SEM correção: fala o comando JÁ AQUI, no instante em que o texto fica
+      // visível no card — não espera o "Começar" (pedido da Kamylla, 20/jul: o
+      // áudio precisa acontecer quando o comando fica visível, não depois).
+      if (presentMode !== "visual") playTTS(cleanForSpeech(cmd.text));
     }
     phaseRef.current = "card";
     setPhase("card");
@@ -524,7 +525,8 @@ export function FocusRain({ level, theme, presentMode, fbLevel, exerciseId, sett
   }, []);
 
   // "Começar": fecha o card e a chuva do comando começa a cair. RT começa AQUI
-  // (busca real). Alvo só entra depois dos distratores (item 4). Fala se áudio.
+  // (busca real). Alvo só entra depois dos distratores (item 4). O áudio do
+  // comando já foi falado quando o card abriu (openCommandCard) — não repete aqui.
   const startPlaying = useCallback(() => {
     if (phaseRef.current !== "card" || doneRef.current) return;
     cmdStartRef.current = Date.now();
@@ -536,8 +538,7 @@ export function FocusRain({ level, theme, presentMode, fbLevel, exerciseId, sett
     cmdFastRef.current = true;
     phaseRef.current = "playing";
     setPhase("playing");
-    if (presentMode !== "visual" && cmd) speak(cleanForSpeech(cmd.text));
-  }, [presentMode, speak]);
+  }, []);
 
   // Cria um RainAgent. ESPALHAMENTO anti-sobreposição: gera ~8 candidatos de X e
   // escolhe o que MAXIMIZA a menor distância aos X dos agentes VIVOS que ainda
