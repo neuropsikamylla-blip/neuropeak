@@ -7,7 +7,7 @@ import { ScoreDisplay } from "@/components/gamification/ScoreDisplay";
 import { formatDuration, formatReactionTime } from "@/lib/utils";
 import { EXERCISE_FUNCTIONAL } from "@/lib/exercise-functional";
 import type { ExerciseResult, Theme } from "@/types";
-import { CheckCircle2, XCircle, Clock, Target, Zap, Lightbulb, Maximize2, Minimize2 } from "lucide-react";
+import { CheckCircle2, XCircle, Clock, Target, Zap, Lightbulb } from "lucide-react";
 
 type Phase = "instructions" | "exercise" | "results";
 
@@ -44,7 +44,6 @@ export function ExerciseWrapper({
 }: ExerciseWrapperProps) {
   const [phase, setPhase] = useState<Phase>(instructions.length === 0 ? "exercise" : "instructions");
   const [result, setResult] = useState<ExerciseResult | null>(null);
-  const [isFullscreen, setIsFullscreen] = useState(false);
 
   // Progresso interno do exercício atual (0-100), reportado via useExerciseProgress().
   const [innerPct, setInnerPct] = useState(0);
@@ -62,21 +61,6 @@ export function ExerciseWrapper({
     sessionTotal && sessionTotal > 0
       ? Math.round(((sessionCompleted + innerPct / 100) / sessionTotal) * 100)
       : Math.round(innerPct);
-
-  useEffect(() => {
-    const onChange = () => setIsFullscreen(!!document.fullscreenElement);
-    document.addEventListener("fullscreenchange", onChange);
-    return () => document.removeEventListener("fullscreenchange", onChange);
-  }, []);
-
-
-  function toggleFullscreen() {
-    if (!document.fullscreenElement) {
-      document.documentElement.requestFullscreen().catch(() => {});
-    } else {
-      document.exitFullscreen().catch(() => {});
-    }
-  }
 
   const functional = exerciseId ? EXERCISE_FUNCTIONAL[exerciseId] : undefined;
 
@@ -189,29 +173,6 @@ export function ExerciseWrapper({
             <ProgressContext.Provider value={reportProgress}>
               {children(handleComplete)}
             </ProgressContext.Provider>
-
-            {/* Fullscreen toggle button */}
-            <button
-              onClick={toggleFullscreen}
-              aria-label={isFullscreen ? "Sair da tela cheia" : "Tela cheia"}
-              className="fixed top-4 right-4 z-[60] p-2.5 rounded-xl transition-opacity"
-              style={{
-                background: theme === "GAMIFIED"
-                  ? "rgba(17,24,39,0.85)"
-                  : "rgba(255,255,255,0.85)",
-                border: theme === "GAMIFIED"
-                  ? "1px solid rgba(6,182,212,0.35)"
-                  : "1px solid rgba(0,0,0,0.12)",
-                backdropFilter: "blur(12px)",
-                boxShadow: "0 2px 12px rgba(0,0,0,0.2)",
-              }}
-              title={isFullscreen ? "Sair da tela cheia" : "Tela cheia"}
-            >
-              {isFullscreen
-                ? <Minimize2 className={`w-4 h-4 ${theme === "GAMIFIED" ? "text-cyan-400" : "text-gray-600"}`} />
-                : <Maximize2 className={`w-4 h-4 ${theme === "GAMIFIED" ? "text-cyan-400" : "text-gray-600"}`} />
-              }
-            </button>
 
             {difficulty !== undefined && !hideProgress && (
               <div className={`fixed bottom-6 left-4 z-50 pointer-events-none rounded-2xl px-4 py-3 min-w-[150px] shadow-lg ${

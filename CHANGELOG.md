@@ -14,6 +14,17 @@ histórico completo anterior está no log do Git (452 commits no total, a partir
   Documentação (CLAUDE.md, README.md, ARCHITECTURE.md, ADRs) reescrita a partir do
   código real.
 
+## [2.37.2] — 2026-07-20
+
+- **Correção urgente — cliques via Zoom (compartilhamento de tela com controle
+  remoto):** removida a TELA CHEIA NATIVA dos exercícios (botão de maximizar no
+  ExerciseWrapper e o toggle "Iniciar em tela cheia" do Span Numérico). No macOS a
+  tela cheia nativa cria um "Espaço" separado, e o controle remoto do Zoom não
+  consegue entregar cliques para esse Espaço — o paciente ficava sem conseguir
+  clicar em nenhum exercício (e sem conseguir nem sair da tela cheia). Sem a tela
+  cheia nativa, os exercícios rodam numa aba normal, compatível com o controle
+  remoto. Nenhuma função de treino foi afetada.
+
 ## [2.37.1] — 2026-07-20
 
 - **Chuva de Agentes (Focus Agentes, modo Foco) — áudio sincronizado com o comando

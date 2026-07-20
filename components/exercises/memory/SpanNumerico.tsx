@@ -340,7 +340,7 @@ export function SpanNumerico({ difficulty, onComplete, reverse = false, settings
   useEffect(() => () => { stopAudio(); seqIdRef.current++; }, [stopAudio]);
 
   // ── Início da sessão (a partir da tela inicial do paciente) ──────────────────
-  function beginSession(fullscreen: boolean) {
+  function beginSession() {
     levelRef.current = initialLevel;
     maxLevelRef.current = initialLevel;
     startTime.current = Date.now();
@@ -349,13 +349,10 @@ export function SpanNumerico({ difficulty, onComplete, reverse = false, settings
     setTrial(0);
     setAttempts([]);
     setPoints(0);
-    if (fullscreen && typeof document !== "undefined" && !document.fullscreenElement) {
-      document.documentElement.requestFullscreen?.().catch(() => {});
-    }
     startRound(initialLevel);
   }
 
-  // ── Tela inicial do paciente (nível é automático; só decide tela cheia) ──────
+  // ── Tela inicial do paciente (nível automático) ──────────────────────────────
   if (phase === "ready") {
     return <ReadyScreen title={title} reverse={reverse} level={initialLevel} onStart={beginSession} />;
   }
@@ -421,12 +418,11 @@ export function SpanNumerico({ difficulty, onComplete, reverse = false, settings
   );
 }
 
-// ── Tela inicial do paciente (nível automático; decide só tela cheia) ────────────
+// ── Tela inicial do paciente (nível automático) ──────────────────────────────
 
 function ReadyScreen({ title, reverse, level, onStart }: {
-  title: string; reverse: boolean; level: number; onStart: (fullscreen: boolean) => void;
+  title: string; reverse: boolean; level: number; onStart: () => void;
 }) {
-  const [fullscreen, setFullscreen] = useState(false);
   return (
     <div className="min-h-screen w-full flex flex-col items-center justify-center p-4" style={{ background: "#F4F9FD" }}>
       <GlassBg />
@@ -440,18 +436,7 @@ function ReadyScreen({ title, reverse, level, onStart }: {
           Você começa no nível {level} ({digitsForLevel(level)} dígitos) — onde parou da última vez.
         </p>
 
-        <button onClick={() => setFullscreen(v => !v)}
-          className="w-full flex items-center justify-between gap-3 px-4 py-3 rounded-2xl mb-3 active:scale-[0.98]"
-          style={{ background: "#FFFFFF", border: "1px solid rgba(158,190,221,0.5)", boxShadow: "0 4px 10px rgba(100,140,180,0.12)" }}>
-          <span className="text-sm" style={{ color: "#3B5A75" }}>⛶ Iniciar em tela cheia</span>
-          <span className="text-xs font-bold px-2.5 py-1 rounded-lg"
-            style={{ background: fullscreen ? "linear-gradient(135deg,#4F8FEA,#3B79D9)" : "rgba(79,143,234,0.12)",
-              color: fullscreen ? "#fff" : "#5C7A94" }}>
-            {fullscreen ? "SIM" : "NÃO"}
-          </span>
-        </button>
-
-        <button onClick={() => onStart(fullscreen)}
+        <button onClick={onStart}
           className="w-full rounded-2xl font-bold text-white text-sm flex items-center justify-center py-3.5 active:scale-95"
           style={{ background: "linear-gradient(135deg,#4F8FEA,#3B79D9)", boxShadow: "0 4px 20px rgba(79,143,234,0.45)" }}>
           Começar →
