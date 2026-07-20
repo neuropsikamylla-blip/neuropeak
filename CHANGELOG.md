@@ -14,6 +14,15 @@ histórico completo anterior está no log do Git (452 commits no total, a partir
   Documentação (CLAUDE.md, README.md, ARCHITECTURE.md, ADRs) reescrita a partir do
   código real.
 
+## [2.37.3] — 2026-07-20
+
+- **Botão de tela cheia restaurado.** A remoção feita na v2.37.2 partia de uma
+  hipótese equivocada: o problema de clique NÃO era do app. A causa real é a
+  permissão de Acessibilidade do macOS para o Zoom (o controle remoto move o
+  cursor mas os cliques não são acionados em NENHUM app da máquina) — conserto é
+  no Mac, não no código. O botão de maximizar volta como estava, com uma nota no
+  código lembrando que tela cheia nativa + Zoom pode desincronizar o clique.
+
 ## [2.37.2] — 2026-07-20
 
 - **Correção urgente — cliques via Zoom (compartilhamento de tela com controle
