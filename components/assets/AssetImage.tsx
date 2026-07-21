@@ -28,24 +28,31 @@ export interface AssetImageProps {
 export function AssetImage({
   id, alt, className, style, width, height, fallback, draggable = false,
 }: AssetImageProps) {
+  const base = parseAssetId(id) ? resolveAssetUrl(id) : null;
+  const [src, setSrc] = useState<string | null>(base);
   const [errored, setErrored] = useState(false);
-  const url = parseAssetId(id) ? resolveAssetUrl(id) : null;
 
-  if (!url || errored) {
+  // Se o SVG não existir, tenta o PNG (assets gerados por API paga) antes de desistir.
+  const handleError = () => {
+    if (src && src.endsWith(".svg")) { setSrc(src.replace(/\.svg$/, ".png")); return; }
+    setErrored(true);
+  };
+
+  if (!base || errored) {
     if (fallback !== undefined) return <>{fallback}</>;
     return <AssetPlaceholder label={alt ?? id} className={className} style={style} width={width} height={height} />;
   }
 
   return (
     <img
-      src={url}
+      src={src ?? base}
       alt={alt ?? ""}
       className={className}
       style={{ width, height, objectFit: "contain", ...style }}
       draggable={draggable}
       loading="lazy"
       decoding="async"
-      onError={() => setErrored(true)}
+      onError={handleError}
     />
   );
 }

@@ -30,10 +30,12 @@ const SIMPLE = [
 
 const humanize = (slug) => slug.replace(/-/g, " ").replace(/^\w/, (c) => c.toUpperCase());
 const slugFromCode = (code) => code.replace(/_/g, "-");
+const IMG = /\.(svg|png)$/;
+const stripExt = (f) => f.replace(IMG, "");
 
 async function listPng(dir) {
   if (!existsSync(dir)) return [];
-  return (await readdir(dir)).filter((f) => f.endsWith(".png")).sort();
+  return (await readdir(dir)).filter((f) => IMG.test(f)).sort();
 }
 
 async function main() {
@@ -45,10 +47,10 @@ async function main() {
   for (const [folder, ageGroup] of Object.entries(GROUP_TO_AGE)) {
     const files = await listPng(path.join(ASSETS, "characters", folder));
     for (const file of files) {
-      const code = file.replace(/\.png$/, "");            // child_001
+      const code = file.replace(IMG, "");            // child_001
       const slug = slugFromCode(code);                     // child-001
       const pref = `${code}_`;
-      const suffix = (f) => f.replace(/\.png$/, "").slice(pref.length);
+      const suffix = (f) => f.replace(IMG, "").slice(pref.length);
       assets.push({
         id: `character:${ageGroup}:${slug}`, kind: "character", title: humanize(slug), ageGroup,
         transparentBackground: true,
@@ -62,7 +64,7 @@ async function main() {
   for (const { folder, kind, transparent } of SIMPLE) {
     const files = await listPng(path.join(ASSETS, folder));
     for (const file of files) {
-      const slug = file.replace(/\.png$/, "");
+      const slug = file.replace(IMG, "");
       assets.push({ id: `${kind}:${slug}`, kind, title: humanize(slug), transparentBackground: transparent });
     }
   }

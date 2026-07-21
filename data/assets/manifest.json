@@ -1,5 +1,84 @@
 {
   "version": 1,
-  "generatedAt": null,
-  "assets": []
+  "generatedAt": "2026-07-21T15:32:59.394Z",
+  "assets": [
+    {
+      "id": "animal:dog",
+      "kind": "animal",
+      "title": "Dog",
+      "transparentBackground": true
+    },
+    {
+      "id": "character:adults:adult-001",
+      "kind": "character",
+      "title": "Adult 001",
+      "ageGroup": "adults",
+      "transparentBackground": true,
+      "expressions": [],
+      "poses": []
+    },
+    {
+      "id": "character:children:child-001",
+      "kind": "character",
+      "title": "Child 001",
+      "ageGroup": "children",
+      "transparentBackground": true,
+      "expressions": [],
+      "poses": []
+    },
+    {
+      "id": "character:olderAdults:elder-001",
+      "kind": "character",
+      "title": "Elder 001",
+      "ageGroup": "olderAdults",
+      "transparentBackground": true,
+      "expressions": [],
+      "poses": []
+    },
+    {
+      "id": "character:teenagers:teen-001",
+      "kind": "character",
+      "title": "Teen 001",
+      "ageGroup": "teenagers",
+      "transparentBackground": true,
+      "expressions": [],
+      "poses": []
+    },
+    {
+      "id": "icon:heart",
+      "kind": "icon",
+      "title": "Heart",
+      "transparentBackground": true
+    },
+    {
+      "id": "icon:lightbulb",
+      "kind": "icon",
+      "title": "Lightbulb",
+      "transparentBackground": true
+    },
+    {
+      "id": "icon:question-mark",
+      "kind": "icon",
+      "title": "Question mark",
+      "transparentBackground": true
+    },
+    {
+      "id": "icon:star",
+      "kind": "icon",
+      "title": "Star",
+      "transparentBackground": true
+    },
+    {
+      "id": "object:backpack",
+      "kind": "object",
+      "title": "Backpack",
+      "transparentBackground": true
+    },
+    {
+      "id": "object:book",
+      "kind": "object",
+      "title": "Book",
+      "transparentBackground": true
+    }
+  ]
 }

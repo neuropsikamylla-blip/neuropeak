@@ -18,7 +18,9 @@ import { AGE_GROUP_FOLDER, type PrimaryAssetKind } from "./types";
 import type { ParsedAssetId } from "./ids";
 
 export const ASSET_ROOT = "/assets";
-export const DEFAULT_EXT = "png";
+// Formato canônico dos assets. SVG = desenho por código (grátis, transparente,
+// escalável). Se um dia gerar PNG (API paga), o AssetImage cai de svg → png.
+export const DEFAULT_EXT = "svg";
 
 /** Pasta pública de cada tipo primário (kind → folder). */
 export const KIND_FOLDER: Record<PrimaryAssetKind, string> = {
