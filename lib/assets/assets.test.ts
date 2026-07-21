@@ -41,22 +41,22 @@ describe("parseAssetId", () => {
 // ── Caminhos (layout FLAT) ────────────────────────────────────────────────────────
 describe("resolução de caminhos flat", () => {
   it("joinUrl preserva a barra inicial e limpa duplicadas", () => {
-    expect(joinUrl("/assets/expressions", "/child_001_happy.svg")).toBe("/assets/expressions/child_001_happy.svg");
+    expect(joinUrl("/assets/expressions", "/child_001_happy.png")).toBe("/assets/expressions/child_001_happy.png");
   });
   it("codeFromSlug converte hífen → underscore", () => {
     expect(codeFromSlug("child-001")).toBe("child_001");
   });
   it("deterministicUrl por tipo", () => {
-    expect(deterministicUrl(parseAssetId("character:children:child-001")!)).toBe("/assets/characters/children/child_001.svg");
-    expect(deterministicUrl(parseAssetId("character:teenagers:teen-002")!)).toBe("/assets/characters/teens/teen_002.svg");
-    expect(deterministicUrl(parseAssetId("character:olderAdults:elder-001")!)).toBe("/assets/characters/elders/elder_001.svg");
-    expect(deterministicUrl(parseAssetId("expression:children:child-001:happy")!)).toBe("/assets/expressions/child_001_happy.svg");
-    expect(deterministicUrl(parseAssetId("pose:children:child-001:standing")!)).toBe("/assets/poses/child_001_standing.svg");
-    expect(deterministicUrl(parseAssetId("object:backpack")!)).toBe("/assets/objects/backpack.svg");
-    expect(deterministicUrl(parseAssetId("scene:classroom")!)).toBe("/assets/environments/classroom.svg");
-    expect(deterministicUrl(parseAssetId("animal:dog")!)).toBe("/assets/animals/dog.svg");
-    expect(deterministicUrl(parseAssetId("vehicle:school-bus")!)).toBe("/assets/vehicles/school-bus.svg");
-    expect(deterministicUrl(parseAssetId("icon:heart")!)).toBe("/assets/icons/heart.svg");
+    expect(deterministicUrl(parseAssetId("character:children:child-001")!)).toBe("/assets/characters/children/child_001.png");
+    expect(deterministicUrl(parseAssetId("character:teenagers:teen-002")!)).toBe("/assets/characters/teens/teen_002.png");
+    expect(deterministicUrl(parseAssetId("character:olderAdults:elder-001")!)).toBe("/assets/characters/elders/elder_001.png");
+    expect(deterministicUrl(parseAssetId("expression:children:child-001:happy")!)).toBe("/assets/expressions/child_001_happy.png");
+    expect(deterministicUrl(parseAssetId("pose:children:child-001:standing")!)).toBe("/assets/poses/child_001_standing.png");
+    expect(deterministicUrl(parseAssetId("object:backpack")!)).toBe("/assets/objects/backpack.png");
+    expect(deterministicUrl(parseAssetId("scene:classroom")!)).toBe("/assets/environments/classroom.png");
+    expect(deterministicUrl(parseAssetId("animal:dog")!)).toBe("/assets/animals/dog.png");
+    expect(deterministicUrl(parseAssetId("vehicle:school-bus")!)).toBe("/assets/vehicles/school-bus.png");
+    expect(deterministicUrl(parseAssetId("icon:heart")!)).toBe("/assets/icons/heart.png");
   });
 });
 
@@ -136,23 +136,23 @@ describe("AssetService", () => {
   const svc = new AssetService(repo);
 
   it("resolveUrl é determinístico por convenção", () => {
-    expect(svc.resolveUrl("character:children:child-001")).toBe("/assets/characters/children/child_001.svg");
-    expect(svc.resolveUrl("expression:children:child-001:happy")).toBe("/assets/expressions/child_001_happy.svg");
-    expect(svc.resolveUrl("object:mochila")).toBe("/assets/objects/mochila.svg");
+    expect(svc.resolveUrl("character:children:child-001")).toBe("/assets/characters/children/child_001.png");
+    expect(svc.resolveUrl("expression:children:child-001:happy")).toBe("/assets/expressions/child_001_happy.png");
+    expect(svc.resolveUrl("object:mochila")).toBe("/assets/objects/mochila.png");
     expect(svc.resolveUrl("lixo")).toBeNull();
   });
   it("getCharacter resolve URLs e mapeia a faixa social", () => {
     const c = svc.getCharacter("character:children:child-001")!;
     expect(c.name).toBe("Personagem 1");
     expect(c.faixa).toBe("crianca");
-    expect(c.baseUrl).toBe("/assets/characters/children/child_001.svg");
-    expect(c.expressions[0]).toMatchObject({ id: "happy", label: "Alegre", url: "/assets/expressions/child_001_happy.svg" });
-    expect(c.poses[0].url).toBe("/assets/poses/child_001_standing.svg");
+    expect(c.baseUrl).toBe("/assets/characters/children/child_001.png");
+    expect(c.expressions[0]).toMatchObject({ id: "happy", label: "Alegre", url: "/assets/expressions/child_001_happy.png" });
+    expect(c.poses[0].url).toBe("/assets/poses/child_001_standing.png");
   });
   it("listCharactersByFaixa e helpers de expressão/pose", () => {
     expect(svc.listCharactersByFaixa("crianca")).toHaveLength(1);
-    expect(svc.getExpressionUrl("character:children:child-001", "sad")).toBe("/assets/expressions/child_001_sad.svg");
-    expect(svc.getPoseUrl("character:children:child-001", "standing")).toBe("/assets/poses/child_001_standing.svg");
+    expect(svc.getExpressionUrl("character:children:child-001", "sad")).toBe("/assets/expressions/child_001_sad.png");
+    expect(svc.getPoseUrl("character:children:child-001", "standing")).toBe("/assets/poses/child_001_standing.png");
   });
   it("getObject/getAnimal e stats", () => {
     expect(svc.getObject("object:mochila")?.title).toBe("Mochila azul");

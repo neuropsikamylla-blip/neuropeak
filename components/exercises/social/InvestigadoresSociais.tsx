@@ -58,8 +58,8 @@ function SceneBlock({ story, scene, theme }: { story: SocialStory; scene: Social
         {chars.map((c) => (
           <div key={c.id} className="flex flex-col items-center">
             {c.imagem
-              ? <AssetImage id={c.imagem} alt={c.nome} width={64} height={64} />
-              : <span style={{ fontSize: 52, lineHeight: 1 }}>{c.emoji ?? "🙂"}</span>}
+              ? <AssetImage id={c.imagem} alt={c.nome} width={104} height={116} />
+              : <span style={{ fontSize: 64, lineHeight: 1 }}>{c.emoji ?? "🙂"}</span>}
             <span className={`text-xs font-bold mt-1 ${pal.title}`}>{c.nome}</span>
           </div>
         ))}

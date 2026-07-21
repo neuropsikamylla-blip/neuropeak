@@ -32,9 +32,9 @@ export function AssetImage({
   const [src, setSrc] = useState<string | null>(base);
   const [errored, setErrored] = useState(false);
 
-  // Se o SVG não existir, tenta o PNG (assets gerados por API paga) antes de desistir.
+  // Se o PNG (arte real) não existir, tenta o SVG (placeholder) antes de desistir.
   const handleError = () => {
-    if (src && src.endsWith(".svg")) { setSrc(src.replace(/\.svg$/, ".png")); return; }
+    if (src && src.endsWith(".png")) { setSrc(src.replace(/\.png$/, ".svg")); return; }
     setErrored(true);
   };
 

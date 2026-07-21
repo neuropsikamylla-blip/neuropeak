@@ -16,19 +16,19 @@ const recreioColega: SocialStory = {
   habilidadeTreinada: ["RE", "TP", "RP"],
   ambiente: { id: "ENV-002", nome: "Pátio da escola" },
   personagens: [
-    { id: "lara", nome: "Lara", papel: "colega nova", emoji: "👧" },
-    { id: "bento", nome: "Bento", papel: "colega de turma", emoji: "🧒" },
+    { id: "sofia", nome: "Sofia", papel: "colega nova", emoji: "👧", imagem: "expression:children:child-002:sad" },
+    { id: "miguel", nome: "Miguel", papel: "colega de turma", emoji: "🧒", imagem: "expression:children:child-003:neutral" },
   ],
   cenas: [
     {
       id: "c1",
-      descricao: "No recreio, todo mundo está brincando. A Lara, que chegou essa semana, está sozinha num canto: de cabeça baixa, ombros caídos, olhando as outras crianças de longe.",
-      contexto: "Primeira semana da Lara na escola.",
-      personagens: ["lara", "bento"],
+      descricao: "No recreio, todo mundo está brincando. A Sofia, que chegou essa semana, está sozinha num canto: de cabeça baixa, ombros caídos, olhando as outras crianças de longe.",
+      contexto: "Primeira semana da Sofia na escola.",
+      personagens: ["sofia", "miguel"],
       perguntas: [
         {
           id: "c1q1", tipo: "emocao", eixo: "RE",
-          enunciado: "Como a Lara parece estar se sentindo?",
+          enunciado: "Como a Sofia parece estar se sentindo?",
           formato: "escolherExpressao",
           opcoes: [
             { id: "triste", texto: "😟 Triste e sozinha", correta: true },
@@ -53,7 +53,7 @@ const recreioColega: SocialStory = {
         },
         {
           id: "c1q3", tipo: "perspectiva", eixo: "TP",
-          enunciado: "O que a Lara talvez esteja querendo?",
+          enunciado: "O que a Sofia talvez esteja querendo?",
           formato: "escolhaUnica",
           opcoes: [
             { id: "a", texto: "Brincar com alguém, mas está tímida para chegar", correta: true },
@@ -65,12 +65,12 @@ const recreioColega: SocialStory = {
         },
         {
           id: "c1q4", tipo: "solucao", eixo: "RP",
-          enunciado: "O que seria legal o Bento fazer?",
+          enunciado: "O que seria legal o Miguel fazer?",
           formato: "escolhaUnica",
           opcoes: [
-            { id: "a", texto: "Chamar a Lara para brincar junto", correta: true },
-            { id: "b", texto: "Continuar brincando e deixar a Lara de lado", erroTipo: "egocentrismo" },
-            { id: "c", texto: "Avisar todo mundo que a Lara está sozinha", erroTipo: "ignorar-contexto" },
+            { id: "a", texto: "Chamar a Sofia para brincar junto", correta: true },
+            { id: "b", texto: "Continuar brincando e deixar a Sofia de lado", erroTipo: "egocentrismo" },
+            { id: "c", texto: "Avisar todo mundo que a Sofia está sozinha", erroTipo: "ignorar-contexto" },
           ],
           gabarito: "a",
         },
@@ -90,19 +90,19 @@ const lancheDerrubado: SocialStory = {
   habilidadeTreinada: ["RE", "IN", "RP"],
   ambiente: { id: "ENV-003", nome: "Refeitório escolar" },
   personagens: [
-    { id: "caio", nome: "Caio", papel: "colega", emoji: "🧒" },
-    { id: "manu", nome: "Manu", papel: "colega", emoji: "👧" },
+    { id: "lucas", nome: "Lucas", papel: "colega", emoji: "🧒", imagem: "expression:children:child-001:worried" },
+    { id: "sofia", nome: "Sofia", papel: "colega", emoji: "👧", imagem: "expression:children:child-002:surprised" },
   ],
   cenas: [
     {
       id: "c1",
-      descricao: "Correndo para a mesa, o Caio esbarra sem querer no braço da Manu e o suco dela cai no chão. A Manu arregala os olhos e franze a testa, olhando para o suco derramado.",
-      contexto: "O Caio estava com pressa e não viu a Manu.",
-      personagens: ["caio", "manu"],
+      descricao: "Correndo para a mesa, o Lucas esbarra sem querer no braço da Sofia e o suco dela cai no chão. A Sofia arregala os olhos e franze a testa, olhando para o suco derramado.",
+      contexto: "O Lucas estava com pressa e não viu a Sofia.",
+      personagens: ["lucas", "sofia"],
       perguntas: [
         {
           id: "c1q1", tipo: "emocao", eixo: "RE",
-          enunciado: "Como a Manu ficou?",
+          enunciado: "Como a Sofia ficou?",
           formato: "escolherExpressao",
           opcoes: [
             { id: "surpresa", texto: "😲 Surpresa e chateada", correta: true },
@@ -114,24 +114,24 @@ const lancheDerrubado: SocialStory = {
         },
         {
           id: "c1q2", tipo: "perspectiva", eixo: "IN",
-          enunciado: "O Caio derrubou de propósito?",
+          enunciado: "O Lucas derrubou de propósito?",
           formato: "escolhaUnica",
           opcoes: [
             { id: "a", texto: "Não, foi sem querer: ele estava correndo e esbarrou", correta: true },
             { id: "b", texto: "Sim, ele quis derrubar o suco", erroTipo: "super-interpretacao" },
-            { id: "c", texto: "A Manu derrubou sozinha", erroTipo: "ignorar-contexto" },
+            { id: "c", texto: "A Sofia derrubou sozinha", erroTipo: "ignorar-contexto" },
           ],
           gabarito: "a",
           dica1: "Pense no que a cena mostra: ele estava correndo e não viu.",
         },
         {
           id: "c1q3", tipo: "solucao", eixo: "RP",
-          enunciado: "O que o Caio deveria fazer agora?",
+          enunciado: "O que o Lucas deveria fazer agora?",
           formato: "escolhaUnica",
           opcoes: [
             { id: "a", texto: "Pedir desculpas e ajudar a limpar", correta: true },
             { id: "b", texto: "Sair correndo e não falar nada", erroTipo: "egocentrismo" },
-            { id: "c", texto: "Dizer que a culpa é da Manu", erroTipo: "fato-vs-interpretacao" },
+            { id: "c", texto: "Dizer que a culpa é da Sofia", erroTipo: "fato-vs-interpretacao" },
           ],
           gabarito: "a",
         },
@@ -151,19 +151,19 @@ const levantarMao: SocialStory = {
   habilidadeTreinada: ["RS", "TP", "RP"],
   ambiente: { id: "ENV-001", nome: "Sala de aula" },
   personagens: [
-    { id: "theo", nome: "Théo", papel: "aluno", emoji: "🧒" },
+    { id: "miguel", nome: "Miguel", papel: "aluno", emoji: "🧒", imagem: "expression:children:child-003:very_happy" },
     { id: "profa", nome: "Professora", papel: "professora", emoji: "👩‍🏫" },
   ],
   cenas: [
     {
       id: "c1",
-      descricao: "A professora faz uma pergunta para a turma. O Théo sabe a resposta e fica tão animado que grita bem alto, sem levantar a mão. Alguns colegas se viram para ele, assustados.",
+      descricao: "A professora faz uma pergunta para a turma. O Miguel sabe a resposta e fica tão animado que grita bem alto, sem levantar a mão. Alguns colegas se viram para ele, assustados.",
       contexto: "Todos estavam em silêncio, esperando a vez de falar.",
-      personagens: ["theo", "profa"],
+      personagens: ["miguel", "profa"],
       perguntas: [
         {
           id: "c1q1", tipo: "regras", eixo: "RS",
-          enunciado: "O que o Théo esqueceu de fazer?",
+          enunciado: "O que o Miguel esqueceu de fazer?",
           formato: "escolhaUnica",
           opcoes: [
             { id: "a", texto: "Levantar a mão e esperar a vez", correta: true },
@@ -179,14 +179,14 @@ const levantarMao: SocialStory = {
           formato: "escolhaUnica",
           opcoes: [
             { id: "a", texto: "Estranharam ele gritar de repente no silêncio", correta: true },
-            { id: "b", texto: "Queriam brigar com o Théo", erroTipo: "super-interpretacao" },
+            { id: "b", texto: "Queriam brigar com o Miguel", erroTipo: "super-interpretacao" },
             { id: "c", texto: "Porque também adoram gritar", erroTipo: "erro-perspectiva" },
           ],
           gabarito: "a",
         },
         {
           id: "c1q3", tipo: "solucao", eixo: "RP",
-          enunciado: "Na próxima vez, o que o Théo pode fazer?",
+          enunciado: "Na próxima vez, o que o Miguel pode fazer?",
           formato: "escolhaUnica",
           opcoes: [
             { id: "a", texto: "Levantar a mão e esperar a professora chamar", correta: true },

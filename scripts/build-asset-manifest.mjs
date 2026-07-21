@@ -40,6 +40,7 @@ async function listPng(dir) {
 
 async function main() {
   const assets = [];
+  const seen = new Set();   // dedup por id (PNG vem antes de SVG na ordenação → ganha)
 
   // ── Personagens + expressões/poses (por code) ──────────────────────────────
   const expr = await listPng(path.join(ASSETS, "expressions"));
@@ -48,6 +49,8 @@ async function main() {
     const files = await listPng(path.join(ASSETS, "characters", folder));
     for (const file of files) {
       const code = file.replace(IMG, "");            // child_001
+      if (seen.has(`character:${ageGroup}:${slugFromCode(code)}`)) continue;
+      seen.add(`character:${ageGroup}:${slugFromCode(code)}`);
       const slug = slugFromCode(code);                     // child-001
       const pref = `${code}_`;
       const suffix = (f) => f.replace(IMG, "").slice(pref.length);
@@ -65,6 +68,8 @@ async function main() {
     const files = await listPng(path.join(ASSETS, folder));
     for (const file of files) {
       const slug = file.replace(IMG, "");
+      if (seen.has(`${kind}:${slug}`)) continue;
+      seen.add(`${kind}:${slug}`);
       assets.push({ id: `${kind}:${slug}`, kind, title: humanize(slug), transparentBackground: transparent });
     }
   }
