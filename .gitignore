@@ -51,3 +51,9 @@ public/exercises/historias-novas/
 public/exercises/Restaurante-bistro/
 public/exercises/icones novos/
 public/exercises/itens-novos/
+
+# Biblioteca de Assets — arquivos de trabalho da geração em lote (Etapa 4)
+scripts/assets-gen/.state.json
+scripts/assets-gen/prompts/
+dist/assets/
+public/assets/metadata/

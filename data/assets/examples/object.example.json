@@ -1,0 +1,9 @@
+{
+  "id": "object:backpack",
+  "kind": "object",
+  "title": "Mochila",
+  "category": "escola",
+  "transparentBackground": true,
+  "tags": ["escola", "objeto-pessoal"],
+  "authoring": { "generatedByAI": true, "reviewedBy": "", "approvedAt": "", "version": 1 }
+}

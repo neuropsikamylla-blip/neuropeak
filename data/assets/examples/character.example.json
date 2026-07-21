@@ -1,0 +1,25 @@
+{
+  "id": "character:children:child-001",
+  "kind": "character",
+  "title": "Personagem Exemplo",
+  "ageGroup": "children",
+  "transparentBackground": true,
+  "attributes": {
+    "skinTone": "medium",
+    "hairColor": "black",
+    "hairStyle": "curto",
+    "glasses": false,
+    "genderPresentation": "neutro"
+  },
+  "tags": ["exemplo", "escola"],
+  "expressions": [
+    "neutral", "happy", "very_happy", "sad", "crying", "angry", "surprised",
+    "worried", "afraid", "confused", "thinking", "embarrassed", "proud", "disgusted", "tired"
+  ],
+  "poses": [
+    "standing", "walking", "running", "sitting", "reading", "writing",
+    "pointing_left", "pointing_right", "raising_hand", "crossed_arms",
+    "hands_on_hips", "holding_object", "talking", "listening", "jumping", "using_phone", "waving"
+  ],
+  "authoring": { "generatedByAI": true, "reviewedBy": "", "approvedAt": "", "version": 1 }
+}
