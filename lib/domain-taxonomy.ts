@@ -44,6 +44,7 @@ export const DOMAIN_SUBDOMAINS: Record<Domain, Subdomain[]> = {
     { id: "sequenciamento", label: "Sequenciamento Temporal", exercises: [] },
     { id: "avd", label: "Atividades de Vida Diária", exercises: ["caca-item-barato"] },
     { id: "autonomia", label: "Autonomia", exercises: ["compra-multifuncional"] },
+    { id: "cognicao-social", label: "Cognição Social", exercises: ["investigadores-sociais"] },
   ],
 };
 

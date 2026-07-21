@@ -54,6 +54,7 @@ export const EXERCISE_META: Record<string, ExerciseMeta> = {
   // Desenvolvimento Funcional
   "caca-item-barato": { type: "visual", difficulty: "facil", secondary: ["Atenção Seletiva"] },
   "compra-multifuncional": { type: "visual", difficulty: "dificil", secondary: ["Tomada de Decisão", "Memória Operacional"] },
+  "investigadores-sociais": { type: "visual", difficulty: "medio", secondary: ["Cognição Social", "Teoria da Mente"] },
   "desafio-orcamento": { type: "verbal", difficulty: "medio", secondary: ["Raciocínio Lógico"] },
   "antes-depois": { type: "verbal", difficulty: "medio", secondary: ["Planejamento", "Flexibilidade Cognitiva"] },
 };

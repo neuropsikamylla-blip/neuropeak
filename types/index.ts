@@ -343,6 +343,14 @@ export const EXERCISE_DEFINITIONS = {
     estimatedMinutes: 7,
     icon: "🛒",
   },
+  "investigadores-sociais": {
+    id: "investigadores-sociais",
+    name: "Investigadores da Situação Social",
+    domain: "functional" as Domain,
+    description: "Observe a cena, leia as pistas sociais e responda: emoção, perspectiva, regras e a melhor ação.",
+    estimatedMinutes: 8,
+    icon: "🕵️",
+  },
   "task-switching": {
     id: "task-switching",
     name: "Task Switching",

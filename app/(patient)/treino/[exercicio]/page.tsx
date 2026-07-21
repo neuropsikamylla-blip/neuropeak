@@ -45,6 +45,7 @@ const CorridaContraOTempo = dynamic(() => import("@/components/exercises/process
 const CacaItemBarato      = dynamic(() => import("@/components/exercises/attention/CacaItemBarato").then(m => ({ default: m.CacaItemBarato })), { loading: ExerciseLoader, ssr: false });
 const MudancaRegras       = dynamic(() => import("@/components/exercises/executive/MudancaRegras").then(m => ({ default: m.MudancaRegras })), { loading: ExerciseLoader, ssr: false });
 const CompraMultifuncional = dynamic(() => import("@/components/exercises/executive/CompraMultifuncional").then(m => ({ default: m.CompraMultifuncional })), { loading: ExerciseLoader, ssr: false });
+const InvestigadoresSociais = dynamic(() => import("@/components/exercises/social/InvestigadoresSociais").then(m => ({ default: m.InvestigadoresSociais })), { loading: ExerciseLoader, ssr: false });
 const LetrasSequencia     = dynamic(() => import("@/components/exercises/memory/LetrasSequencia").then(m => ({ default: m.LetrasSequencia })), { loading: ExerciseLoader, ssr: false });
 const PadroesRotacao      = dynamic(() => import("@/components/exercises/memory/PadroesRotacao").then(m => ({ default: m.PadroesRotacao })), { loading: ExerciseLoader, ssr: false });
 const SequenciaItens      = dynamic(() => import("@/components/exercises/memory/SequenciaItens").then(m => ({ default: m.SequenciaItens })), { loading: ExerciseLoader, ssr: false });
@@ -625,6 +626,7 @@ export default function ExercicioPage() {
       case "caca-item-barato": return <CacaItemBarato {...props} />;
       case "mudanca-regras": return <MudancaRegras {...props} />;
       case "compra-multifuncional": return <CompraMultifuncional {...props} />;
+      case "investigadores-sociais": return <InvestigadoresSociais {...props} />;
       case "letras-sequencia": return <LetrasSequencia {...props} />;
       case "padroes-rotacao": return <PadroesRotacao {...props} />;
       case "sequencia-itens": return <SequenciaItens {...props} />;
@@ -646,7 +648,7 @@ export default function ExercicioPage() {
   // Exercícios que gerenciam o próprio layout (sem barra de progresso no canto)
   // Exercícios com barra de progresso própria (por tempo) no layout
   const HIDE_PROGRESS_WIDGET = new Set([
-    "estacionamento-logico", "cubo-corsi", "matriz-espacial", "matriz-espacial-inversa", "nback", "jogo-memoria", "sequencia-itens", "lista-distracao", "letras-sequencia", "padroes-rotacao", "torre-hanoi", "tempo-reacao", "semaforo", "certo-ou-errado", "stroop-task", "identificacao-simbolos", "trilha-visual", "caca-item-barato", "corrida-tempo", "mudanca-regras", "labirinto", "vigilancia", "atencao-dividida", "focus-agents", "mot", "dual-task", "desafio-orcamento", "compra-multifuncional", "ordem-historia", "desafio-cidade", "antes-depois", "restaurante-ordem", "desafio-supermercado", "task-switching", "deductive-grid", "span-numerico", "span-numerico-inverso",
+    "estacionamento-logico", "cubo-corsi", "matriz-espacial", "matriz-espacial-inversa", "nback", "jogo-memoria", "sequencia-itens", "lista-distracao", "letras-sequencia", "padroes-rotacao", "torre-hanoi", "tempo-reacao", "semaforo", "certo-ou-errado", "stroop-task", "identificacao-simbolos", "trilha-visual", "caca-item-barato", "corrida-tempo", "mudanca-regras", "labirinto", "vigilancia", "atencao-dividida", "focus-agents", "mot", "dual-task", "desafio-orcamento", "compra-multifuncional", "investigadores-sociais", "ordem-historia", "desafio-cidade", "antes-depois", "restaurante-ordem", "desafio-supermercado", "task-switching", "deductive-grid", "span-numerico", "span-numerico-inverso",
   ]);
 
   return (
