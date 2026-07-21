@@ -1,253 +1,43 @@
 "use client";
 
-import React, { useState, useEffect, useRef, useCallback } from "react";
+// ─────────────────────────────────────────────────────────────────────────────
+// Compra Multifuncional — MISSÕES MATEMÁTICAS PROGRESSIVAS
+// (COMPRA-MULTIFUNCIONAL-MISSOES-SPEC.md, Kamylla 20/jul/2026).
+//
+// Uma missão = história contínua com etapas que sobem UM conceito por vez. Dois
+// modos de resposta: DIGITAR o resultado (conta pura, via keypad) ou SELECIONAR
+// itens respeitando regras. O app NUNCA faz a conta pelo jogador durante a
+// tentativa — só verifica e explica DEPOIS de confirmar, com dicas em 3 níveis.
+// Toda lógica pura vem de `lib/compra-missoes.ts` (testada).
+// ─────────────────────────────────────────────────────────────────────────────
+
+import React, { useState, useRef, useCallback, useEffect, useMemo } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { calculateExerciseScore } from "@/lib/scoring";
 import { useTimedProgress } from "@/components/exercises/useExerciseEngine";
 import { TutorialBase } from "@/components/exercises/TutorialBase";
 import type { ExerciseResult, Theme } from "@/types";
 import {
-  buildRound, checkRound, ruleStatus, buildInstruction, buildHint, roundScore,
-  levelMeta, MAX_LEVEL, fmt, type Round, type Item, type RuleStatus,
-} from "@/data/compra-multifuncional";
+  buildMissao, verificarNumerica, verificarSelecao, feedbackNumerica, feedbackSelecao,
+  regraLabel, OP_FOCO_LABEL, TEMA_LABEL,
+  type Missao, type Etapa, type EtapaNumerica, type EtapaSelecao, type Feedback,
+  type OperacaoFoco, type TemaConfig,
+} from "@/lib/compra-missoes";
+import { CATEGORIA_LABEL, type ItemCompra } from "@/data/compra-itens";
 
 interface Props { difficulty: number; theme: Theme; onComplete: (result: ExerciseResult) => void; }
 
-const START_LEVEL = (d: number) => Math.max(1, Math.min(MAX_LEVEL, Math.round((d / 10) * 4) + 1));
-// Modo memória entra sozinho nos níveis difíceis (regras somem após alguns segundos).
-const MEMORY_FROM_LEVEL = 4;
+const MAX_LEVEL = 8;
+const START_LEVEL = (d: number) => Math.max(1, Math.min(MAX_LEVEL, Math.round(d * 0.8)));
+const money = (v: number) => `R$ ${v}`;
 
-export function CompraMultifuncional({ difficulty, theme, onComplete }: Props) {
-  const [showTutorial, setShowTutorial] = useState(true);
-  const { begin, isTimeUp, elapsedSec, finish } = useTimedProgress();
+const TEMAS: TemaConfig[] = ["variado", "piquenique", "praia", "frio", "alimentos", "mercado", "objetos"];
+const FOCOS: OperacaoFoco[] = ["tudo", "soma", "subtracao", "multiplicacao", "divisao"];
 
+// ── Estilos por tema ──────────────────────────────────────────────────────────
+function styles(theme: Theme) {
   const isG = theme === "GAMIFIED";
   const isC = theme === "COLORFUL";
-
-  // ── Estado do jogo ──
-  const [level, setLevel] = useState(() => START_LEVEL(difficulty));
-  const [round, setRound] = useState<Round>(() => buildRound(START_LEVEL(difficulty)));
-  const [selected, setSelected] = useState<Set<string>>(new Set());
-  const [phase, setPhase] = useState<"shopping" | "result">("shopping");
-  const [timeLeft, setTimeLeft] = useState(round.timeSecs);
-  const [rulesVisible, setRulesVisible] = useState(true);
-  const [hintText, setHintText] = useState<string | null>(null);
-
-  const memoryActive = level >= MEMORY_FROM_LEVEL;
-
-  const [feedback, setFeedback] = useState<null | {
-    correct: boolean; timeUp: boolean;
-    passed: { label: string; value: string }[]; failed: { label: string; value: string }[];
-    seconds: number; swaps: number; gained: number; total: number;
-    levelMsg: string | null; streakAfter: number; levelName: string;
-  }>(null);
-
-  // refs
-  const levelRef = useRef(level);
-  const reachedRef = useRef(level);
-  const correctStreakRef = useRef(0);
-  const wrongStreakRef = useRef(0);
-  const swapsRef = useRef(0);
-  const errorsRef = useRef(0);
-  const hintUsedRef = useRef(false);
-  const startTsRef = useRef(0);
-  const swapHistRef = useRef<number[]>([]);
-  const resultsRef = useRef<boolean[]>([]);
-  const pointsRef = useRef(0);
-  const roundConcludedRef = useRef(false);
-  const timerRef = useRef<ReturnType<typeof setInterval> | null>(null);
-  const memTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
-  // Espelho sempre atual da seleção — usado quando o TEMPO acaba (o closure do
-  // cronômetro captura a seleção do início da rodada e leria um conjunto vazio).
-  const selectedRef = useRef<Set<string>>(new Set());
-
-  useEffect(() => () => {
-    if (timerRef.current) clearInterval(timerRef.current);
-    if (memTimerRef.current) clearTimeout(memTimerRef.current);
-  }, []);
-
-  useEffect(() => { selectedRef.current = selected; }, [selected]);
-
-  // Cronômetro por rodada
-  useEffect(() => {
-    if (phase !== "shopping" || showTutorial) return;
-    if (timerRef.current) clearInterval(timerRef.current);
-    timerRef.current = setInterval(() => {
-      setTimeLeft(t => {
-        if (t <= 1) { clearInterval(timerRef.current!); onTimeUp(); return 0; }
-        return t - 1;
-      });
-    }, 1000);
-    return () => { if (timerRef.current) clearInterval(timerRef.current); };
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [phase, showTutorial, round]);
-
-  // Modo memória (níveis difíceis): esconde regras após 5s
-  useEffect(() => {
-    if (memTimerRef.current) clearTimeout(memTimerRef.current);
-    const active = level >= MEMORY_FROM_LEVEL;
-    if (phase === "shopping" && !showTutorial && active) {
-      setRulesVisible(true);
-      memTimerRef.current = setTimeout(() => setRulesVisible(false), 5000);
-    } else {
-      setRulesVisible(true);
-    }
-    return () => { if (memTimerRef.current) clearTimeout(memTimerRef.current); };
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [phase, showTutorial, level, round]);
-
-  const selItems = useCallback((s: Set<string>): Item[] => round.items.filter(i => s.has(i.id)), [round]);
-
-  function startNewRound(atLevel: number) {
-    roundConcludedRef.current = false;
-    swapsRef.current = 0; errorsRef.current = 0; hintUsedRef.current = false;
-    const r = buildRound(atLevel);
-    setRound(r);
-    setSelected(new Set());
-    selectedRef.current = new Set();
-    setTimeLeft(r.timeSecs);
-    setHintText(null);
-    setRulesVisible(true);
-    startTsRef.current = Date.now();
-    setPhase("shopping");
-  }
-
-  function toggle(id: string) {
-    if (phase !== "shopping") return;
-    setSelected(prev => {
-      const n = new Set(prev);
-      if (n.has(id)) { n.delete(id); swapsRef.current += 1; }
-      else n.add(id);
-      return n;
-    });
-  }
-
-  function useHint() {
-    if (phase !== "shopping") return;
-    hintUsedRef.current = true;
-    pointsRef.current = Math.max(0, pointsRef.current - 30);
-    setHintText(buildHint(round, selItems(selected)));
-  }
-
-  function revealRules() {
-    setRulesVisible(true);
-    pointsRef.current = Math.max(0, pointsRef.current - 15);
-    if (memTimerRef.current) clearTimeout(memTimerRef.current);
-    memTimerRef.current = setTimeout(() => setRulesVisible(false), 4000);
-  }
-
-  function advance() {
-    if (isTimeUp()) {
-      finish();
-      const results = resultsRef.current;
-      const accuracy = results.length ? results.filter(Boolean).length / results.length : 0;
-      onComplete({
-        exerciseId: "compra-multifuncional",
-        domain: "executive",
-        score: calculateExerciseScore("compra-multifuncional", accuracy, undefined, reachedRef.current),
-        accuracy, difficulty: reachedRef.current, duration: elapsedSec(),
-        metadata: { rounds: results.length, correct: results.filter(Boolean).length, points: pointsRef.current, reachedLevel: reachedRef.current },
-      });
-      return;
-    }
-    setLevel(levelRef.current);
-    startNewRound(levelRef.current);
-  }
-
-  function onTimeUp() {
-    if (roundConcludedRef.current) return;
-    roundConcludedRef.current = true;
-    concludeRound(false, true);
-  }
-
-  function confirmPurchase() {
-    if (phase !== "shopping" || selected.size === 0) return;
-    const sel = selItems(selected);
-    const { perRule, allOk } = checkRound(sel, round);
-    if (allOk) { roundConcludedRef.current = true; concludeRound(true, false); return; }
-    errorsRef.current += 1;
-    wrongStreakRef.current += 1;
-    correctStreakRef.current = 0;
-    pointsRef.current = Math.max(0, pointsRef.current - 25);
-    let levelMsg: string | null = null;
-    if (wrongStreakRef.current >= 2) {
-      wrongStreakRef.current = 0;
-      if (levelRef.current > 1) { levelRef.current -= 1; levelMsg = "Vamos reduzir um pouco a dificuldade para consolidar."; }
-    }
-    const { passed, failed } = splitRules(perRule);
-    const total = Math.round(sel.reduce((s, i) => s + i.price, 0) * 100) / 100;
-    setFeedback({
-      correct: false, timeUp: false, passed, failed,
-      seconds: Math.round((Date.now() - startTsRef.current) / 1000),
-      swaps: swapsRef.current, gained: -25, total, levelMsg, streakAfter: 0, levelName: levelMeta(levelRef.current).name,
-    });
-    if (timerRef.current) clearInterval(timerRef.current);
-    setPhase("result");
-  }
-
-  function concludeRound(correct: boolean, timeUp: boolean) {
-    if (timerRef.current) clearInterval(timerRef.current);
-    const sel = selItems(selectedRef.current);
-    const { perRule } = checkRound(sel, round);
-    const { passed, failed } = splitRules(perRule);
-    const seconds = Math.round((Date.now() - startTsRef.current) / 1000);
-    const total = Math.round(sel.reduce((s, i) => s + i.price, 0) * 100) / 100;
-    resultsRef.current = [...resultsRef.current, correct];
-
-    let gained = 0;
-    let levelMsg: string | null = null;
-    let streakAfter = correctStreakRef.current;
-
-    if (correct) {
-      correctStreakRef.current += 1;
-      wrongStreakRef.current = 0;
-      streakAfter = correctStreakRef.current;
-      const reached3 = correctStreakRef.current >= 3;
-      const rs = roundScore({
-        level: levelRef.current, correct: true, swaps: swapsRef.current,
-        hintUsed: hintUsedRef.current, seconds, reachedStreak3: reached3,
-      });
-      gained = rs.points;
-      pointsRef.current += rs.points;
-      swapHistRef.current = [...swapHistRef.current, swapsRef.current].slice(-3);
-      const avgSwaps = swapHistRef.current.reduce((a, b) => a + b, 0) / swapHistRef.current.length;
-      if (correctStreakRef.current >= 3) {
-        if (avgSwaps <= 3 && levelRef.current < MAX_LEVEL) {
-          levelRef.current += 1;
-          reachedRef.current = Math.max(reachedRef.current, levelRef.current);
-          levelMsg = `Você subiu para o Nível ${levelRef.current} — ${levelMeta(levelRef.current).name}!`;
-        } else if (avgSwaps > 3) {
-          levelMsg = "Ótimo! Tente acertar com menos trocas para subir de nível.";
-        }
-        correctStreakRef.current = 0;
-        streakAfter = 0;
-      }
-    } else {
-      wrongStreakRef.current += 1;
-      correctStreakRef.current = 0;
-      streakAfter = 0;
-      if (wrongStreakRef.current >= 2) {
-        wrongStreakRef.current = 0;
-        if (levelRef.current > 1) { levelRef.current -= 1; levelMsg = "Vamos reduzir um pouco a dificuldade para consolidar."; }
-      }
-    }
-
-    setFeedback({ correct, timeUp, passed, failed, seconds, swaps: swapsRef.current, gained, total, levelMsg, streakAfter, levelName: levelMeta(levelRef.current).name });
-    setPhase("result");
-  }
-
-  function splitRules(perRule: boolean[]): { passed: { label: string; value: string }[]; failed: { label: string; value: string }[] } {
-    const sel = selItems(selected);
-    const passed: { label: string; value: string }[] = [];
-    const failed: { label: string; value: string }[] = [];
-    round.rules.forEach((r, i) => {
-      const st = ruleStatus(r, sel, round.scenario.categories);
-      (perRule[i] ? passed : failed).push({ label: st.label, value: st.value });
-    });
-    return { passed, failed };
-  }
-
-  // ── Estilos por tema ──
   const rootBg: React.CSSProperties = isG
     ? { background: "linear-gradient(145deg, #0a1628 0%, #0d2244 45%, #132a52 70%, #081020 100%)" }
     : isC ? { background: "linear-gradient(135deg, #f0e6ff 0%, #fce4f0 55%, #ffe8e0 100%)" }
@@ -262,174 +52,448 @@ export function CompraMultifuncional({ difficulty, theme, onComplete }: Props) {
   const pal = {
     title: isG ? "text-white" : "text-[#1a2744]",
     sub: isG ? "text-white/70" : "text-[#8a7a6a]",
-    box: isG ? { background: "rgba(255,255,255,0.08)", border: "1.5px solid rgba(255,255,255,0.15)" } : { background: "#f8fafc", border: "1.5px solid rgba(26,39,68,0.08)" },
+    box: (isG ? { background: "rgba(255,255,255,0.08)", border: "1.5px solid rgba(255,255,255,0.15)" } : { background: "#f8fafc", border: "1.5px solid rgba(26,39,68,0.08)" }) as React.CSSProperties,
     item: isG ? "border-white/20 bg-white/10 text-white/90" : "border-slate-200 bg-white text-gray-700 shadow-sm",
     itemSel: "border-emerald-500 bg-emerald-50 text-gray-800",
+    key: (isG ? { background: "rgba(255,255,255,0.10)", border: "1.5px solid rgba(255,255,255,0.18)", color: "#fff" } : { background: "#fff", border: "1.5px solid rgba(26,39,68,0.12)", color: "#1a2744" }) as React.CSSProperties,
   };
+  return { isG, isC, rootBg, cardStyle, btnStyle, pal };
+}
 
-  // ── Tutorial ──
-  if (showTutorial) {
+// ── Cena de uma etapa numérica (visual da conta, sem revelar o resultado) ──────
+function SceneNumerica({ etapa, theme }: { etapa: EtapaNumerica; theme: Theme }) {
+  const { pal, isG } = styles(theme);
+  const r = etapa.render;
+  const unit = (v: number) => (etapa.unidade === "money" ? money(v) : etapa.unidade === "kg" ? `${v} kg` : `${v}`);
+  const chip = `inline-flex items-center gap-1.5 rounded-xl px-2.5 py-1.5 border`;
+
+  if (r.tipo === "soma") {
+    return (
+      <div className="flex flex-wrap items-center justify-center gap-2">
+        {r.parcelas.map((p, i) => (
+          <React.Fragment key={i}>
+            {i > 0 && <span className={`text-xl font-black ${pal.sub}`}>+</span>}
+            <span className={chip} style={pal.box}>
+              <span style={{ fontSize: 26 }}>{p.emoji}</span>
+              <span className={`text-sm font-bold ${pal.title}`}>{r.unidade === "money" ? money(p.valor) : `${p.valor} kg`}</span>
+            </span>
+          </React.Fragment>
+        ))}
+        <span className={`text-xl font-black ${pal.sub}`}>=</span>
+        <span className={`text-xl font-black ${isG ? "text-cyan-300" : "text-emerald-600"}`}>?</span>
+      </div>
+    );
+  }
+  if (r.tipo === "troco") {
+    return (
+      <div className="flex flex-wrap items-center justify-center gap-2 text-sm font-bold">
+        <span className={chip} style={pal.box}><span className={pal.sub}>tinha</span> <span className={pal.title}>{unit(r.had)}</span></span>
+        <span className={`text-xl font-black ${pal.sub}`}>−</span>
+        <span className={chip} style={pal.box}><span className={pal.sub}>usou</span> <span className={pal.title}>{unit(r.spent)}</span></span>
+        <span className={`text-xl font-black ${pal.sub}`}>=</span>
+        <span className={`text-xl font-black ${isG ? "text-cyan-300" : "text-emerald-600"}`}>?</span>
+      </div>
+    );
+  }
+  if (r.tipo === "mult") {
+    return (
+      <div className="flex flex-wrap items-center justify-center gap-2">
+        <span className={chip} style={pal.box}>
+          <span style={{ fontSize: 26 }}>{r.emoji}</span>
+          <span className={`text-sm font-bold ${pal.title}`}>{r.qtd} × {money(r.unitPrice)}</span>
+        </span>
+        <span className={`text-xl font-black ${pal.sub}`}>=</span>
+        <span className={`text-xl font-black ${isG ? "text-cyan-300" : "text-emerald-600"}`}>?</span>
+      </div>
+    );
+  }
+  // divisao
+  return (
+    <div className="flex flex-wrap items-center justify-center gap-2">
+      <span className={chip} style={pal.box}>
+        <span style={{ fontSize: 26 }}>{r.emoji}</span>
+        <span className={`text-sm font-bold ${pal.title}`}>{r.total} ÷ {r.partes}</span>
+      </span>
+      <span className={`text-xl font-black ${pal.sub}`}>=</span>
+      <span className={`text-xl font-black ${isG ? "text-cyan-300" : "text-emerald-600"}`}>?</span>
+    </div>
+  );
+}
+
+// ── Keypad numérico (tudo por clique — funciona com controle remoto) ───────────
+function Keypad({ value, unidade, onChange, theme, disabled }: {
+  value: string; unidade: EtapaNumerica["unidade"]; onChange: (v: string) => void; theme: Theme; disabled: boolean;
+}) {
+  const { pal } = styles(theme);
+  const press = (k: string) => {
+    if (disabled) return;
+    if (k === "del") onChange(value.slice(0, -1));
+    else if (value.length < 4) onChange((value + k).replace(/^0+(?=\d)/, ""));
+  };
+  const shown = value === "" ? "—" : unidade === "money" ? money(Number(value)) : unidade === "kg" ? `${value} kg` : value;
+  return (
+    <div>
+      <div className="rounded-xl border py-3 mb-2 text-center text-2xl font-black tabular-nums" style={pal.box}>
+        <span className={pal.title}>{shown}</span>
+      </div>
+      <div className="grid grid-cols-3 gap-2">
+        {["1", "2", "3", "4", "5", "6", "7", "8", "9"].map((k) => (
+          <button key={k} onClick={() => press(k)} disabled={disabled}
+            className="h-12 rounded-xl text-xl font-black active:scale-95 transition-transform disabled:opacity-40" style={pal.key}>{k}</button>
+        ))}
+        <button onClick={() => onChange("")} disabled={disabled}
+          className="h-12 rounded-xl text-sm font-bold active:scale-95 transition-transform disabled:opacity-40" style={pal.key}>C</button>
+        <button onClick={() => press("0")} disabled={disabled}
+          className="h-12 rounded-xl text-xl font-black active:scale-95 transition-transform disabled:opacity-40" style={pal.key}>0</button>
+        <button onClick={() => press("del")} disabled={disabled}
+          className="h-12 rounded-xl text-xl font-black active:scale-95 transition-transform disabled:opacity-40" style={pal.key}>⌫</button>
+      </div>
+    </div>
+  );
+}
+
+// ── Uma etapa jogável (numérica ou seleção) ───────────────────────────────────
+// Remonta a cada etapa (key no pai) → estado sempre fresco.
+function EtapaView({ etapa, theme, proceedLabel, onProceed, autoProceed }: {
+  etapa: Etapa; theme: Theme; proceedLabel: string; onProceed: (firstTry: boolean) => void; autoProceed?: boolean;
+}) {
+  const { isG, btnStyle, pal } = styles(theme);
+  const numeric = etapa.dados.modo === "numeric";
+
+  const [answer, setAnswer] = useState("");
+  const [selected, setSelected] = useState<Set<string>>(new Set());
+  const [attempts, setAttempts] = useState(0);        // nº de confirmações erradas
+  const [revealed, setRevealed] = useState<Feedback | null>(null);
+  const [done, setDone] = useState(false);
+  const [correct, setCorrect] = useState(false);
+  const firstTryRef = useRef(true);
+  const autoDoneRef = useRef(false);
+
+  // Modo tutorial: ao acertar, conclui sozinho (deixa só o CTA do TutorialBase).
+  useEffect(() => {
+    if (autoProceed && done && correct && !autoDoneRef.current) {
+      autoDoneRef.current = true;
+      onProceed(true);
+    }
+  }, [autoProceed, done, correct, onProceed]);
+
+  // Cronômetro só nas etapas avançadas (spec §Cronômetro).
+  const totalSecs = etapa.temCronometro ? (etapa.dados.modo === "select" ? 60 : 45) : 0;
+  const [timeLeft, setTimeLeft] = useState(totalSecs);
+  const stateRef = useRef({ answer, selected, attempts, done });
+  useEffect(() => { stateRef.current = { answer, selected, attempts, done }; }, [answer, selected, attempts, done]);
+
+  useEffect(() => {
+    if (!etapa.temCronometro) return;
+    const id = setInterval(() => {
+      setTimeLeft((t) => {
+        if (t <= 1) { clearInterval(id); onTimeUp(); return 0; }
+        return t - 1;
+      });
+    }, 1000);
+    return () => clearInterval(id);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+
+  function onTimeUp() {
+    if (stateRef.current.done) return;
+    // Confirma o que houver e explica o que faltou; sem retry após o tempo.
+    firstTryRef.current = false;
+    if (etapa.dados.modo === "numeric") {
+      const ok = stateRef.current.answer !== "" && verificarNumerica(etapa.dados, Number(stateRef.current.answer));
+      setCorrect(ok);
+      setRevealed(feedbackNumerica(etapa.dados, ok, 3));
+    } else {
+      const ids = [...stateRef.current.selected];
+      const ok = verificarSelecao(etapa.dados, ids).correto;
+      setCorrect(ok);
+      setRevealed(feedbackSelecao(etapa.dados, ids, 4));
+    }
+    setDone(true);
+  }
+
+  function toggle(id: string) {
+    if (done) return;
+    setSelected((prev) => { const n = new Set(prev); n.has(id) ? n.delete(id) : n.add(id); return n; });
+  }
+
+  function confirmar() {
+    if (done) return;
+    if (etapa.dados.modo === "numeric") {
+      if (answer === "") return;
+      const ok = verificarNumerica(etapa.dados, Number(answer));
+      const fb = feedbackNumerica(etapa.dados, ok, ok ? 0 : attempts + 1);
+      setRevealed(fb);
+      if (ok) { setCorrect(true); setDone(true); }
+      else { firstTryRef.current = false; setAttempts((a) => a + 1); }
+    } else {
+      const ids = [...selected];
+      if (ids.length === 0) return;
+      const v = verificarSelecao(etapa.dados, ids);
+      const fb = feedbackSelecao(etapa.dados, ids, v.correto ? 0 : attempts + 1);
+      setRevealed(fb);
+      if (v.correto) { setCorrect(true); setDone(true); }
+      else { firstTryRef.current = false; setAttempts((a) => a + 1); }
+    }
+  }
+
+  const timerRatio = totalSecs ? timeLeft / totalSecs : 0;
+  const timerColor = timerRatio > 0.5 ? "bg-green-500" : timerRatio > 0.25 ? "bg-amber-400" : "bg-red-500 animate-pulse";
+
+  // Painel de status permitido (nada calculável): contagem + regras da missão.
+  const regras = etapa.dados.modo === "select" ? etapa.dados.regras : [];
+  const selItems: ItemCompra[] = etapa.dados.modo === "select"
+    ? etapa.dados.pool.filter((i) => selected.has(i.id)) : [];
+
+  return (
+    <motion.div key={etapa.index} initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }}>
+      {/* História + objetivo */}
+      <div className="rounded-xl p-3 border mb-2" style={pal.box}>
+        <p className={`text-[11px] font-bold uppercase tracking-wide mb-0.5 ${pal.sub}`}>📖 {etapa.objetivo}</p>
+        <p className={`text-sm font-medium leading-snug ${pal.title}`}>{etapa.historia}</p>
+      </div>
+
+      {/* Instrução exata */}
+      <div className="rounded-xl p-3 border mb-3" style={{ background: isG ? "rgba(8,145,178,0.12)" : "#eef6ff", border: "1.5px solid rgba(8,145,178,0.3)" }}>
+        <p className={`text-sm font-semibold leading-snug ${isG ? "text-cyan-200" : "text-[#1a2744]"}`}>{etapa.instrucao}</p>
+      </div>
+
+      {/* Cronômetro (só etapas avançadas) */}
+      {etapa.temCronometro && (
+        <div className="mb-3">
+          <div className="flex justify-end mb-1">
+            <span className={`text-sm font-mono font-bold tabular-nums ${timeLeft <= 8 ? "text-red-500 animate-pulse" : pal.sub}`}>{timeLeft}s</span>
+          </div>
+          <div className={`h-1.5 rounded-full ${isG ? "bg-white/10" : "bg-gray-200"}`}>
+            <div className={`h-full rounded-full transition-all duration-1000 ${timerColor}`} style={{ width: `${timerRatio * 100}%` }} />
+          </div>
+        </div>
+      )}
+
+      {numeric ? (
+        <>
+          <div className="rounded-xl p-4 border mb-3" style={pal.box}>
+            <SceneNumerica etapa={etapa.dados as EtapaNumerica} theme={theme} />
+          </div>
+          <Keypad value={answer} unidade={(etapa.dados as EtapaNumerica).unidade} onChange={setAnswer} theme={theme} disabled={done} />
+        </>
+      ) : (
+        <>
+          {/* Regras da missão (permitido) */}
+          <div className="rounded-xl p-3 border mb-2 space-y-1" style={pal.box}>
+            <p className={`text-[11px] font-bold uppercase tracking-wide ${pal.sub}`}>Regras da missão</p>
+            {regras.map((r, i) => (
+              <div key={i} className={`flex items-start gap-2 text-xs font-semibold ${pal.title}`}>
+                <span className="text-sm leading-none mt-[1px]">•</span><span className="leading-snug">{regraLabel(r)}</span>
+              </div>
+            ))}
+          </div>
+
+          {/* Itens */}
+          <div className="grid grid-cols-3 sm:grid-cols-4 gap-2 mb-2">
+            {(etapa.dados as EtapaSelecao).pool.map((item) => {
+              const on = selected.has(item.id);
+              return (
+                <button key={item.id} onClick={() => toggle(item.id)} disabled={done}
+                  className={`p-2.5 rounded-xl border-2 flex flex-col items-center gap-1 transition-all active:scale-95 disabled:opacity-60 ${on ? pal.itemSel : pal.item}`}>
+                  <span style={{ fontSize: 32, lineHeight: 1 }}>{item.emoji}</span>
+                  <span className="text-xs text-center leading-tight font-medium">{item.name}</span>
+                  <span className={`text-xs font-bold tabular-nums ${isG ? "text-cyan-300" : "text-emerald-600"}`}>{money(item.price)}</span>
+                  <span className={`text-[9px] font-semibold px-1.5 py-0.5 rounded-full ${isG ? "bg-white/15 text-white/80" : "bg-slate-100 text-slate-500"}`}>{item.weight} kg</span>
+                  {on && <span className="text-xs text-green-600 font-bold">✓</span>}
+                </button>
+              );
+            })}
+          </div>
+
+          {/* Status permitido: contagem + nomes (NUNCA somas) */}
+          <div className="rounded-xl px-3 py-2 border mb-3 text-xs" style={pal.box}>
+            <span className={`font-bold ${pal.title}`}>{selected.size}</span>
+            <span className={pal.sub}> {selected.size === 1 ? "item selecionado" : "itens selecionados"}</span>
+            {selItems.length > 0 && <span className={pal.sub}>: {selItems.map((i) => i.name).join(", ")}</span>}
+          </div>
+        </>
+      )}
+
+      {/* Feedback (só depois de confirmar) */}
+      <AnimatePresence>
+        {revealed && (
+          <motion.div key={`fb-${attempts}-${done}`} initial={{ opacity: 0, y: 4 }} animate={{ opacity: 1, y: 0 }}
+            className="rounded-xl p-3 border mt-1 mb-3"
+            style={{
+              background: correct ? (isG ? "rgba(16,185,129,0.12)" : "#ecfdf5") : (isG ? "rgba(250,204,21,0.12)" : "#fffbeb"),
+              border: `1.5px solid ${correct ? "rgba(16,185,129,0.4)" : "rgba(250,204,21,0.4)"}`,
+            }}>
+            <p className={`font-bold text-sm mb-1 ${correct ? "text-emerald-600" : (isG ? "text-amber-300" : "text-amber-700")}`}>
+              {correct ? "✅ " : "💡 "}{revealed.titulo}
+            </p>
+            {revealed.linhas.map((l, i) => (
+              <p key={i} className={`text-xs leading-snug ${correct ? "text-emerald-700" : (isG ? "text-amber-100/90" : "text-amber-800")}`}>{l}</p>
+            ))}
+          </motion.div>
+        )}
+      </AnimatePresence>
+
+      {/* Ações */}
+      {done ? (
+        autoProceed ? null : (
+          <button onClick={() => onProceed(firstTryRef.current && correct)} className="w-full h-12 font-bold" style={btnStyle}>{proceedLabel}</button>
+        )
+      ) : (
+        <>
+          <button onClick={confirmar}
+            disabled={numeric ? answer === "" : selected.size === 0}
+            className="w-full h-12 font-bold transition-all disabled:opacity-40" style={btnStyle}>
+            {numeric ? (answer === "" ? "Digite a resposta" : "Confirmar") : (selected.size === 0 ? "Selecione itens" : "Confirmar compra")}
+          </button>
+          {!numeric && attempts >= 3 && (
+            <button onClick={() => { firstTryRef.current = false; onProceed(false); }}
+              className={`w-full mt-2 h-9 rounded-full font-semibold text-xs border-2 ${isG ? "border-white/25 text-white/70" : "border-slate-300 text-slate-500"}`}>
+              Avançar assim mesmo
+            </button>
+          )}
+        </>
+      )}
+    </motion.div>
+  );
+}
+
+// ── Componente principal ──────────────────────────────────────────────────────
+export function CompraMultifuncional({ difficulty, theme, onComplete }: Props) {
+  const { rootBg, cardStyle, btnStyle, pal, isG } = styles(theme);
+  const { begin, isTimeUp, elapsedSec, finish } = useTimedProgress();
+
+  const [stage, setStage] = useState<"config" | "tutorial" | "play">("config");
+  const [temaCfg, setTemaCfg] = useState<TemaConfig>("variado");
+  const [foco, setFoco] = useState<OperacaoFoco>("tudo");
+
+  const [missao, setMissao] = useState<Missao | null>(null);
+  const [etapaIdx, setEtapaIdx] = useState(0);
+  const [missionSeed, setMissionSeed] = useState(0);
+
+  const levelRef = useRef(START_LEVEL(difficulty));
+  const reachedRef = useRef(levelRef.current);
+  const sessionResultsRef = useRef<boolean[]>([]);   // acerto de 1ª por etapa (sessão)
+  const missionResultsRef = useRef<boolean[]>([]);   // acerto de 1ª por etapa (missão atual)
+
+  // Etapa de exemplo do tutorial (réplica real do jogo: uma soma simples).
+  const tutorialEtapa = useMemo(() => buildMissao("piquenique", 1, "soma").etapas[0], []);
+
+  function iniciarMissao() {
+    const m = buildMissao(temaCfg, levelRef.current, foco);
+    missionResultsRef.current = [];
+    setMissao(m);
+    setEtapaIdx(0);
+    setMissionSeed((s) => s + 1);
+  }
+
+  function finishSession() {
+    finish();
+    const results = sessionResultsRef.current;
+    const acertos = results.filter(Boolean).length;
+    const accuracy = results.length ? acertos / results.length : 0;
+    onComplete({
+      exerciseId: "compra-multifuncional",
+      domain: "executive",
+      score: calculateExerciseScore("compra-multifuncional", accuracy, undefined, reachedRef.current),
+      accuracy,
+      difficulty: reachedRef.current,
+      duration: elapsedSec(),
+      metadata: {
+        etapas: results.length, acertosPrimeira: acertos, nivelAlcancado: reachedRef.current,
+        tema: temaCfg, foco,
+      },
+    });
+  }
+
+  const handleEtapaDone = useCallback((firstTry: boolean) => {
+    sessionResultsRef.current = [...sessionResultsRef.current, firstTry];
+    missionResultsRef.current = [...missionResultsRef.current, firstTry];
+    if (isTimeUp()) { finishSession(); return; }
+
+    const m = missao!;
+    if (etapaIdx + 1 < m.etapas.length) { setEtapaIdx((i) => i + 1); return; }
+
+    // Fim da missão → ajusta o nível pelo desempenho e começa a próxima.
+    const res = missionResultsRef.current;
+    const rate = res.length ? res.filter(Boolean).length / res.length : 0;
+    if (rate >= 0.75 && levelRef.current < MAX_LEVEL) levelRef.current += 1;
+    else if (rate < 0.4 && levelRef.current > 1) levelRef.current -= 1;
+    reachedRef.current = Math.max(reachedRef.current, levelRef.current);
+    if (isTimeUp()) { finishSession(); return; }
+    iniciarMissao();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [missao, etapaIdx]);
+
+  // ── Config ──
+  if (stage === "config") {
+    const Chip = ({ on, onClick, children }: { on: boolean; onClick: () => void; children: React.ReactNode }) => (
+      <button onClick={onClick}
+        className={`px-3 py-2 rounded-full text-xs font-bold border-2 transition-all ${on ? "border-emerald-500 bg-emerald-50 text-emerald-700" : isG ? "border-white/20 text-white/75" : "border-slate-200 text-slate-600"}`}>
+        {children}
+      </button>
+    );
+    return (
+      <div className="min-h-screen overflow-y-auto" style={rootBg}>
+        <div className="max-w-2xl mx-auto px-4 py-6">
+          <div className="p-5" style={cardStyle}>
+            <h2 className={`font-bold text-lg ${pal.title}`}>🛒 Compra Multifuncional</h2>
+            <p className={`text-sm mb-4 ${pal.sub}`}>Missões de matemática numa situação de compra. Escolha o tema e o foco.</p>
+
+            <p className={`text-[11px] font-bold uppercase tracking-wide mb-1.5 ${pal.sub}`}>Tema</p>
+            <div className="flex flex-wrap gap-2 mb-4">
+              {TEMAS.map((t) => <Chip key={t} on={temaCfg === t} onClick={() => setTemaCfg(t)}>{TEMA_LABEL[t]}</Chip>)}
+            </div>
+
+            <p className={`text-[11px] font-bold uppercase tracking-wide mb-1.5 ${pal.sub}`}>Foco</p>
+            <div className="flex flex-wrap gap-2 mb-5">
+              {FOCOS.map((f) => <Chip key={f} on={foco === f} onClick={() => setFoco(f)}>{OP_FOCO_LABEL[f]}</Chip>)}
+            </div>
+
+            <button onClick={() => setStage("tutorial")} className="w-full h-12 font-bold" style={btnStyle}>Continuar</button>
+          </div>
+        </div>
+      </div>
+    );
+  }
+
+  // ── Tutorial (réplica real: resolve uma soma simples) ──
+  if (stage === "tutorial") {
     return (
       <TutorialBase theme={theme} title="Compra Multifuncional"
         steps={[{
           instruction:
-            "Monte a compra respeitando VÁRIAS regras ao mesmo tempo: quantidade, orçamento, categorias obrigatórias e proibidas. O painel mostra em tempo real o que já foi cumprido (✓), o que falta (○) e o que foi violado (✕). Leia tudo antes de clicar e planeje! A cada 3 acertos seguidos, o nível sobe.",
+            "Cada missão é uma historinha com etapas de matemática. Em algumas você digita o resultado da conta; em outras escolhe os itens respeitando as regras. O app NÃO faz a conta por você — só confere e explica depois que você confirmar. Resolva a soma abaixo para começar.",
           content: (done) => (
-            <div className="space-y-3">
-              <div className="rounded-xl p-3 text-sm" style={pal.box}>
-                <p className={`font-bold mb-1 ${pal.title}`}>Exemplo de rodada</p>
-                <p className={pal.sub}>Escolha exatamente 2 itens · máximo R$ 18,00 · inclua 1 🥦 Hortifruti.</p>
-              </div>
-              <button onClick={done} className="w-full h-11 font-bold" style={btnStyle}>Começar</button>
-            </div>
+            <EtapaView etapa={tutorialEtapa} theme={theme} proceedLabel="Começar" autoProceed onProceed={() => done()} />
           ),
         }]}
-        onDone={() => { begin(); startTsRef.current = Date.now(); setShowTutorial(false); }} />
+        onDone={() => { begin(); iniciarMissao(); setStage("play"); }} />
     );
   }
 
-  const meta = levelMeta(level);
-  const sel = selItems(selected);
-  const timerRatio = timeLeft / round.timeSecs;
-  const timerColor = timerRatio > 0.5 ? "bg-green-500" : timerRatio > 0.25 ? "bg-amber-400" : "bg-red-500 animate-pulse";
-  const statuses: RuleStatus[] = round.rules.map(r => ruleStatus(r, sel, round.scenario.categories));
-  const ins = buildInstruction(round);
-
-  const statusColor = (s: RuleStatus["state"]) =>
-    s === "ok" ? "text-green-500" : s === "violated" ? "text-red-500" : (isG ? "text-white/45" : "text-gray-400");
-  const statusIcon = (s: RuleStatus["state"]) => s === "ok" ? "✓" : s === "violated" ? "✕" : "○";
+  // ── Play ──
+  if (!missao) return null;
+  const etapa = missao.etapas[etapaIdx];
+  const proceedLabel = etapaIdx + 1 < missao.etapas.length ? "Continuar" : "Nova missão";
 
   return (
     <div className="min-h-screen overflow-y-auto" style={rootBg}>
       <div className="max-w-2xl mx-auto px-4 py-4">
         <div className="p-5" style={cardStyle}>
-
-          {/* Cabeçalho compacto: nome · nível · cronômetro */}
-          <div className="flex justify-between items-start mb-2">
+          {/* Cabeçalho: título da missão · progresso · nível */}
+          <div className="flex justify-between items-start mb-3">
             <div>
-              <h2 className={`font-bold text-base leading-none ${pal.title}`}>🛒 Compra Multifuncional</h2>
-              <p className={`text-xs font-semibold mt-1 ${pal.sub}`}>Nível {level} — {meta.name}</p>
+              <h2 className={`font-bold text-base leading-none ${pal.title}`}>🛒 {missao.titulo}</h2>
+              <p className={`text-xs font-semibold mt-1 ${pal.sub}`}>
+                {missao.personagem} · Etapa {etapaIdx + 1}/{missao.etapas.length} · Nível {missao.nivel}
+              </p>
             </div>
-            <span className={`text-lg font-mono font-bold tabular-nums ${timeLeft <= 8 ? "text-red-500 animate-pulse" : pal.title}`}>{timeLeft}s</span>
-          </div>
-
-          {/* Barra do cronômetro */}
-          <div className={`h-1.5 rounded-full mb-3 ${isG ? "bg-white/10" : "bg-gray-200"}`}>
-            <div className={`h-full rounded-full transition-all duration-1000 ${timerColor}`} style={{ width: `${timerRatio * 100}%` }} />
           </div>
 
           <AnimatePresence mode="wait">
-            {phase === "shopping" && (
-              <motion.div key={`shop-${resultsRef.current.length}`} initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }}>
-
-                {/* Situação */}
-                <div className="rounded-xl p-3 border mb-2" style={pal.box}>
-                  <p className={`text-[11px] font-bold uppercase tracking-wide mb-0.5 ${pal.sub}`}>📖 Situação</p>
-                  <p className={`text-sm font-medium leading-snug ${pal.title}`}>{ins.situation}</p>
-                </div>
-
-                {/* Painel de regras (ao vivo) */}
-                <div className="rounded-xl p-3 border mb-3 space-y-1.5" style={pal.box}>
-                  <div className="flex items-center justify-between">
-                    <p className={`text-[11px] font-bold uppercase tracking-wide ${pal.sub}`}>Regras — cumpra todas</p>
-                    {memoryActive && !rulesVisible && (
-                      <button onClick={revealRules} className={`text-[11px] font-semibold underline ${pal.sub}`}>👁 Rever regras (−15)</button>
-                    )}
-                  </div>
-                  {rulesVisible ? statuses.map((st, i) => (
-                    <div key={i} className={`flex items-start gap-2 text-xs font-semibold ${statusColor(st.state)}`}>
-                      <span className="text-sm font-black leading-none mt-[1px]">{statusIcon(st.state)}</span>
-                      <span className="leading-snug">{st.label}{st.value ? ` — ${st.value}` : ""}</span>
-                    </div>
-                  )) : (
-                    <p className={`text-xs italic ${pal.sub}`}>Regras ocultas (modo memória). Toque em &ldquo;Rever regras&rdquo; se precisar.</p>
-                  )}
-                </div>
-
-                {/* Itens */}
-                <div className="grid grid-cols-3 sm:grid-cols-4 gap-2 mb-3">
-                  {round.items.map(item => {
-                    const on = selected.has(item.id);
-                    const cat = round.scenario.categories.find(c => c.id === item.cat);
-                    return (
-                      <button key={item.id} onClick={() => toggle(item.id)}
-                        className={`p-2.5 rounded-xl border-2 flex flex-col items-center gap-1 transition-all active:scale-95 ${on ? pal.itemSel : pal.item}`}>
-                        <span style={{ fontSize: 34, lineHeight: 1 }}>{item.emoji}</span>
-                        <span className="text-xs text-center leading-tight font-medium">{item.name}</span>
-                        <span className={`text-xs font-bold tabular-nums ${isG ? "text-cyan-300" : "text-emerald-600"}`}>{fmt(item.price)}</span>
-                        <span className={`text-[9px] font-semibold px-1.5 py-0.5 rounded-full ${isG ? "bg-white/15 text-white/80" : "bg-slate-100 text-slate-500"}`}>{cat?.emoji} {cat?.label}</span>
-                        {on && <span className="text-xs text-green-600 font-bold">✓</span>}
-                      </button>
-                    );
-                  })}
-                </div>
-
-                {hintText && (
-                  <div className="rounded-xl p-2.5 border mb-2 text-xs font-semibold flex items-start gap-2" style={{ background: isG ? "rgba(250,204,21,0.12)" : "#fffbeb", border: "1.5px solid rgba(250,204,21,0.4)", color: isG ? "#fde68a" : "#b45309" }}>
-                    <span>💡</span><span>{hintText}</span>
-                  </div>
-                )}
-
-                {/* Botão principal + dica secundária */}
-                <button onClick={confirmPurchase} disabled={selected.size === 0}
-                  className="w-full h-12 font-bold transition-all disabled:opacity-40" style={btnStyle}>
-                  {selected.size === 0 ? "Selecione itens" : "Confirmar compra"}
-                </button>
-                <button onClick={useHint} disabled={hintUsedRef.current}
-                  className={`w-full mt-2 h-8 rounded-full font-semibold text-xs disabled:opacity-40 ${isG ? "text-white/55" : "text-slate-400"}`}>
-                  💡 Preciso de uma dica
-                </button>
-              </motion.div>
-            )}
-
-            {phase === "result" && feedback && (
-              <motion.div key={`res-${resultsRef.current.length}`} className="py-2"
-                initial={{ opacity: 0, scale: 0.95 }} animate={{ opacity: 1, scale: 1 }}>
-                <p className="text-5xl text-center mb-2">{feedback.correct ? "✅" : feedback.timeUp ? "⏱️" : "❌"}</p>
-                <p className={`font-bold text-lg text-center mb-1 ${feedback.correct ? "text-green-600" : "text-red-500"}`}>
-                  {feedback.correct ? "Compra correta!" : feedback.timeUp ? "Tempo esgotado" : "Ainda não cumpriu todas as regras"}
-                </p>
-                <p className={`text-xs text-center mb-3 ${pal.sub}`}>
-                  {feedback.correct ? "Você cumpriu todas as regras."
-                    : feedback.timeUp ? "A compra foi confirmada como estava."
-                    : "Revise os pontos abaixo e tente de novo — corrija só o necessário."}
-                </p>
-
-                {feedback.passed.length > 0 && (
-                  <div className="rounded-xl p-3 border mb-2" style={pal.box}>
-                    <p className="text-[11px] font-bold text-green-600 mb-1">Você cumpriu:</p>
-                    {feedback.passed.map((t, i) => <div key={i} className="flex items-start gap-2 text-xs text-green-600 font-semibold"><span>✓</span><span>{t.label}{t.value ? ` — ${t.value}` : ""}</span></div>)}
-                  </div>
-                )}
-                {feedback.failed.length > 0 && (
-                  <div className="rounded-xl p-3 border mb-2" style={pal.box}>
-                    <p className="text-[11px] font-bold text-red-500 mb-1">Você não cumpriu:</p>
-                    {feedback.failed.map((t, i) => <div key={i} className="flex items-start gap-2 text-xs text-red-500 font-semibold"><span>✕</span><span>{t.label}{t.value ? ` — ${t.value}` : ""}</span></div>)}
-                  </div>
-                )}
-
-                {/* Desempenho — só aqui, depois de confirmar */}
-                <div className="rounded-xl p-3 border mb-3 text-xs space-y-0.5" style={pal.box}>
-                  <p className={`text-[11px] font-bold mb-1 ${pal.sub}`}>Desempenho</p>
-                  <p className={pal.sub}>Tempo: <b className={pal.title}>{feedback.seconds}s</b> · Trocas: <b className={pal.title}>{feedback.swaps}</b> · Pontuação: <b className={feedback.gained >= 0 ? "text-emerald-500" : "text-red-500"}>{feedback.gained >= 0 ? "+" : ""}{feedback.gained}</b></p>
-                  <p className={pal.sub}>Acertos seguidos: <b className={pal.title}>{feedback.streakAfter}/3</b> · Nível: <b className={pal.title}>{feedback.levelName}</b></p>
-                  {feedback.total > 0 && <p className={pal.sub}>Total da compra: <b className={pal.title}>{fmt(feedback.total)}</b></p>}
-                  {feedback.levelMsg
-                    ? <p className="text-xs font-bold text-emerald-500 mt-1">{feedback.levelMsg}</p>
-                    : (feedback.correct && level < MAX_LEVEL && feedback.streakAfter > 0 &&
-                        <p className={`text-xs font-semibold mt-1 ${pal.sub}`}>Faltam {3 - feedback.streakAfter} acerto{3 - feedback.streakAfter !== 1 ? "s" : ""} seguido{3 - feedback.streakAfter !== 1 ? "s" : ""} para subir de nível.</p>)}
-                </div>
-
-                {feedback.correct || feedback.timeUp ? (
-                  <button onClick={advance} className="w-full h-11 font-bold" style={btnStyle}>→ Próxima rodada</button>
-                ) : (
-                  <div className="flex gap-2">
-                    <button onClick={() => setPhase("shopping")} className="flex-1 h-11 font-bold" style={btnStyle}>↩ Tentar novamente</button>
-                    <button onClick={advance} className={`h-11 px-4 rounded-full font-bold text-sm border-2 ${isG ? "border-white/25 text-white/80" : "border-slate-300 text-slate-600"}`}>Pular</button>
-                  </div>
-                )}
-              </motion.div>
-            )}
+            <EtapaView key={`${missionSeed}-${etapaIdx}`} etapa={etapa} theme={theme}
+              proceedLabel={proceedLabel} onProceed={handleEtapaDone} />
           </AnimatePresence>
         </div>
       </div>
