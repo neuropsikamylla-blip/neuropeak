@@ -401,6 +401,10 @@ export function EstacionamentoLogico({ difficulty, theme: _theme, onComplete }: 
   const [tutorial, setTutorial] = useState(true); // 1ª fase é o tutorial guiado
   const [dragPrev, setDragPrev] = useState<{ id: string; pos: number } | null>(null);
   const [hint, setHint]         = useState<{ carId: string; dir: -1 | 1 } | null>(null);
+  const [guided, setGuided]     = useState(false);            // fase em modo guiado (após "Ver dica")
+  const guidedRef = useRef(false); guidedRef.current = guided;
+  const [wrongStreak, setWrongStreak] = useState(0);          // solves não-perfeitos SEGUIDOS (erros)
+  const wonProcessedRef = useRef(false);
   const hintsRef = useRef(0);   // quantas dicas o paciente pediu na sessão (autonomia)
 
   const boardRef = useRef<HTMLDivElement>(null);
@@ -410,6 +414,16 @@ export function EstacionamentoLogico({ difficulty, theme: _theme, onComplete }: 
   const startedRef = useRef(false);
 
   useEffect(() => { if (!startedRef.current) { startedRef.current = true; begin(); } }, [begin]);
+
+  // Erros SEGUIDOS = solves não-perfeitos em sequência. Após 4, o resultado oferece "Ver dica".
+  useEffect(() => {
+    if (won && !tutorial && !wonProcessedRef.current) {
+      wonProcessedRef.current = true;
+      const ideal = cellRuleRef.current ? minCells : minMoves;
+      setWrongStreak((s) => (moves - ideal > 0 ? s + 1 : 0));
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [won]);
 
   const carImages = useMemo(
     () => assignCarImages(levelSeqRef.current, currentLevel.cars),
@@ -436,7 +450,7 @@ export function EstacionamentoLogico({ difficulty, theme: _theme, onComplete }: 
     setCars(level.cars.map(c => ({ ...c })));
     setMoves(0); setHistory([]); setWon(false);
     setDragPrev(null); dragRef.current = null; lastMovedRef.current = null;
-    setHint(null);
+    setHint(null); setGuided(false); wonProcessedRef.current = false;
   }, []);
 
   const completeSession = useCallback(() => {
@@ -483,6 +497,15 @@ export function EstacionamentoLogico({ difficulty, theme: _theme, onComplete }: 
     loadLevel(picked.level);
   }, [difficulty, loadLevel]);
 
+  // "Ver dica" (só aparece após 4 erros seguidos, no resultado): recomeça a fase em
+  // MODO GUIADO — destaca o próximo carro certo a cada movimento até resolver.
+  const verDica = () => {
+    loadLevel(currentLevel);
+    setGuided(true);
+    const sol = solveNext(currentLevel.cars);
+    if (sol && sol.dist > 0) { hintsRef.current += 1; setHint({ carId: sol.carId, dir: sol.dir }); }
+  };
+
   const commitMove = useCallback((carId: string, newPos: number) => {
     const prev = carsRef.current;
     if (!canMove(prev, carId, newPos)) return;
@@ -509,8 +532,11 @@ export function EstacionamentoLogico({ difficulty, theme: _theme, onComplete }: 
     lastMovedRef.current = carId;
     setHistory(h => [...h, prev]);
     setMoves(m => m + delta);
-    setHint(null);            // a dica vale por movimento: ao mover, ela some
-    if (winning) setWon(true);
+    if (winning) { setWon(true); setHint(null); }
+    else if (guidedRef.current) {
+      const sol = solveNext(next);   // modo guiado: destaca o próximo carro a cada movimento
+      setHint(sol && sol.dist > 0 ? { carId: sol.carId, dir: sol.dir } : null);
+    } else setHint(null);
     setCars(next);
   }, []);
 
@@ -621,6 +647,12 @@ export function EstacionamentoLogico({ difficulty, theme: _theme, onComplete }: 
               >
                 Tentar de novo
               </button>
+              {wrongStreak >= 4 && (
+                <button onClick={verDica} className="w-full mt-3 py-3 rounded-2xl text-sm font-semibold"
+                  style={{ background: "rgba(252,211,77,0.95)", color: "#7A4B00", border: "1px solid rgba(180,140,0,0.35)" }}>
+                  💡 Ver a dica
+                </button>
+              )}
             </>
           ) : (
             <>
@@ -634,6 +666,12 @@ export function EstacionamentoLogico({ difficulty, theme: _theme, onComplete }: 
               >
                 Tentar de novo
               </button>
+              {wrongStreak >= 4 && (
+                <button onClick={verDica} className="w-full mt-3 py-3 rounded-2xl text-sm font-semibold"
+                  style={{ background: "rgba(252,211,77,0.95)", color: "#7A4B00", border: "1px solid rgba(180,140,0,0.35)" }}>
+                  💡 Ver a dica
+                </button>
+              )}
             </>
           )}
         </div>
@@ -648,8 +686,7 @@ export function EstacionamentoLogico({ difficulty, theme: _theme, onComplete }: 
     ? "Agora arraste o carro VERMELHO para a direita, até a saída! →"
     : "Passo 1: arraste o carro à direita (que bloqueia a saída) para CIMA.";
 
-  // DICA sob demanda: o paciente aperta o botão quando trava; destacamos o próximo
-  // carro certo e a direção (a partir do solver). Nada é feito automaticamente.
+  // Texto da DICA (modo guiado): destaca o próximo carro certo e a direção.
   const hintCar = hint ? cars.find((c) => c.id === hint.carId) : null;
   const hintMsg = hintCar
     ? `Tente mover ${hintCar.id === "target" ? "o carro vermelho" : "o carro em destaque"} ${
@@ -658,10 +695,6 @@ export function EstacionamentoLogico({ difficulty, theme: _theme, onComplete }: 
           : (hint!.dir < 0 ? "para cima ↑" : "para baixo ↓")
       }.`
     : "";
-  const askHint = () => {
-    const sol = solveNext(carsRef.current);
-    if (sol && sol.dist > 0) { hintsRef.current += 1; setHint({ carId: sol.carId, dir: sol.dir }); }
-  };
 
   // ── Game screen ───────────────────────────────────────────────────────────
   return (
@@ -695,21 +728,11 @@ export function EstacionamentoLogico({ difficulty, theme: _theme, onComplete }: 
         <ExerciseProgressBar progressPct={progressPct} theme="GAMIFIED" />
       </div>
 
-      {/* Botão de DICA — o paciente pede ajuda quando trava (destaca o próximo carro certo) */}
-      {!tutorial && !won && (
-        <button onClick={askHint} style={{
-          marginTop: 10, padding: "8px 18px", borderRadius: 9999, fontSize: 13, fontWeight: 600,
-          color: hint ? "#7A4B00" : "#3A4050",
-          background: hint ? "rgba(252,211,77,0.95)" : "rgba(255,255,255,0.92)",
-          border: "1px solid rgba(0,0,0,0.08)", boxShadow: "0 2px 8px rgba(0,0,0,0.25)", cursor: "pointer",
-        }}>
-          💡 {hint ? "Ver a dica de novo" : "Preciso de uma dica"}
-        </button>
-      )}
+      {/* Banner da DICA no MODO GUIADO (ativado pelo "Ver dica" após 4 erros seguidos) */}
       {!tutorial && hint && (
         <p style={{ textAlign: "center", fontSize: 13, fontWeight: 600, color: "#7A4B00",
           background: "rgba(252,211,77,0.92)", borderRadius: 10, padding: "7px 14px",
-          margin: "8px auto 0", maxWidth: 340, boxShadow: "0 2px 8px rgba(0,0,0,0.25)" }}>
+          margin: "10px auto 0", maxWidth: 340, boxShadow: "0 2px 8px rgba(0,0,0,0.25)" }}>
           💡 {hintMsg}
         </p>
       )}
