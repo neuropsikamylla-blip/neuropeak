@@ -191,6 +191,42 @@ function solveMinMoves(cars: Car[]): number {
   return 99;
 }
 
+// PRÓXIMO movimento ótimo a partir do estado atual: mesma BFS de solveMinMoves,
+// mas propagando o PRIMEIRO movimento de cada ramo. Devolve o carro a mover, a
+// direção (-1/+1) e a distância mínima até resolver. Usado na DICA quando o
+// paciente trava (4 movimentos seguidos sem se aproximar da solução).
+type NextMove = { carId: string; dir: -1 | 1; toPos: number; dist: number };
+function solveNext(cars: Car[]): NextMove | null {
+  const posKey = (cs: Car[]) => cs.map((c) => (c.orientation === "horizontal" ? c.col : c.row)).join(",");
+  const start = cars.map((c) => ({ ...c }));
+  if (isWin(start)) return { carId: "", dir: 1, toPos: 0, dist: 0 };
+  const seen = new Set<string>([posKey(start)]);
+  let frontier: { s: Car[]; fm: { carId: string; dir: -1 | 1; toPos: number } | null }[] = [{ s: start, fm: null }];
+  for (let dist = 1; dist <= 60 && frontier.length; dist++) {
+    const next: typeof frontier = [];
+    for (const { s: state, fm } of frontier) {
+      for (let i = 0; i < state.length; i++) {
+        const car = state[i];
+        const pos = car.orientation === "horizontal" ? car.col : car.row;
+        for (const dir of [-1, 1] as const) {
+          for (let np = pos + dir; canMove(state, car.id, np); np += dir) {
+            const ns = state.map((c, j) =>
+              j !== i ? c : (c.orientation === "horizontal" ? { ...c, col: np } : { ...c, row: np })
+            );
+            const first = fm ?? { carId: car.id, dir, toPos: np };
+            if (isWin(ns)) return { ...first, dist };
+            const k = posKey(ns);
+            if (!seen.has(k)) { seen.add(k); next.push({ s: ns, fm: first }); }
+          }
+        }
+      }
+      if (seen.size > 300000) return null;
+    }
+    frontier = next;
+  }
+  return null;
+}
+
 // ── Top-view vehicle (PNG transparente) ──────────────────────────
 // Largura de pista FIXA para todos os carros (mesmo "calibre", estilo Parking
 // Jam) — o comprimento sai da proporção nativa da imagem, sem distorcer. Assim
@@ -364,6 +400,8 @@ export function EstacionamentoLogico({ difficulty, theme: _theme, onComplete }: 
   const [won, setWon]           = useState(false);
   const [tutorial, setTutorial] = useState(true); // 1ª fase é o tutorial guiado
   const [dragPrev, setDragPrev] = useState<{ id: string; pos: number } | null>(null);
+  const [hint, setHint]         = useState<{ carId: string; dir: -1 | 1 } | null>(null);
+  const hintsRef = useRef(0);   // quantas dicas o paciente pediu na sessão (autonomia)
 
   const boardRef = useRef<HTMLDivElement>(null);
   const cellRuleRef = useRef(false);
@@ -398,6 +436,7 @@ export function EstacionamentoLogico({ difficulty, theme: _theme, onComplete }: 
     setCars(level.cars.map(c => ({ ...c })));
     setMoves(0); setHistory([]); setWon(false);
     setDragPrev(null); dragRef.current = null; lastMovedRef.current = null;
+    setHint(null);
   }, []);
 
   const completeSession = useCallback(() => {
@@ -408,7 +447,7 @@ export function EstacionamentoLogico({ difficulty, theme: _theme, onComplete }: 
     onComplete({
       exerciseId: "estacionamento-logico", domain: "executive",
       score, accuracy: acc, difficulty: reachedRef.current, duration: elapsedSec(),
-      metadata: { solved: s.solved, optimal: s.optimal, reachedDifficulty: reachedRef.current },
+      metadata: { solved: s.solved, optimal: s.optimal, reachedDifficulty: reachedRef.current, hintsUsed: hintsRef.current },
     });
   }, [finishTimer, elapsedSec, onComplete]);
 
@@ -470,6 +509,7 @@ export function EstacionamentoLogico({ difficulty, theme: _theme, onComplete }: 
     lastMovedRef.current = carId;
     setHistory(h => [...h, prev]);
     setMoves(m => m + delta);
+    setHint(null);            // a dica vale por movimento: ao mover, ela some
     if (winning) setWon(true);
     setCars(next);
   }, []);
@@ -608,6 +648,21 @@ export function EstacionamentoLogico({ difficulty, theme: _theme, onComplete }: 
     ? "Agora arraste o carro VERMELHO para a direita, até a saída! →"
     : "Passo 1: arraste o carro à direita (que bloqueia a saída) para CIMA.";
 
+  // DICA sob demanda: o paciente aperta o botão quando trava; destacamos o próximo
+  // carro certo e a direção (a partir do solver). Nada é feito automaticamente.
+  const hintCar = hint ? cars.find((c) => c.id === hint.carId) : null;
+  const hintMsg = hintCar
+    ? `Tente mover ${hintCar.id === "target" ? "o carro vermelho" : "o carro em destaque"} ${
+        hintCar.orientation === "horizontal"
+          ? (hint!.dir < 0 ? "para a esquerda ←" : "para a direita →")
+          : (hint!.dir < 0 ? "para cima ↑" : "para baixo ↓")
+      }.`
+    : "";
+  const askHint = () => {
+    const sol = solveNext(carsRef.current);
+    if (sol && sol.dist > 0) { hintsRef.current += 1; setHint({ carId: sol.carId, dir: sol.dir }); }
+  };
+
   // ── Game screen ───────────────────────────────────────────────────────────
   return (
     <div
@@ -639,6 +694,25 @@ export function EstacionamentoLogico({ difficulty, theme: _theme, onComplete }: 
       <div style={{ width: "100%", maxWidth: 320, margin: "0 auto", display: "flex", alignItems: "center", gap: 8, paddingLeft: 14, paddingRight: 14 }}>
         <ExerciseProgressBar progressPct={progressPct} theme="GAMIFIED" />
       </div>
+
+      {/* Botão de DICA — o paciente pede ajuda quando trava (destaca o próximo carro certo) */}
+      {!tutorial && !won && (
+        <button onClick={askHint} style={{
+          marginTop: 10, padding: "8px 18px", borderRadius: 9999, fontSize: 13, fontWeight: 600,
+          color: hint ? "#7A4B00" : "#3A4050",
+          background: hint ? "rgba(252,211,77,0.95)" : "rgba(255,255,255,0.92)",
+          border: "1px solid rgba(0,0,0,0.08)", boxShadow: "0 2px 8px rgba(0,0,0,0.25)", cursor: "pointer",
+        }}>
+          💡 {hint ? "Ver a dica de novo" : "Preciso de uma dica"}
+        </button>
+      )}
+      {!tutorial && hint && (
+        <p style={{ textAlign: "center", fontSize: 13, fontWeight: 600, color: "#7A4B00",
+          background: "rgba(252,211,77,0.92)", borderRadius: 10, padding: "7px 14px",
+          margin: "8px auto 0", maxWidth: 340, boxShadow: "0 2px 8px rgba(0,0,0,0.25)" }}>
+          💡 {hintMsg}
+        </p>
+      )}
 
       {/* Regra avançada (níveis difíceis): cada quadradinho conta */}
       {cellRule && !won && (
@@ -702,6 +776,13 @@ export function EstacionamentoLogico({ difficulty, theme: _theme, onComplete }: 
                     isTarget={car.id === "target"}
                     cellPx={cellPx}
                   />
+                  {!tutorial && hint?.carId === car.id && (
+                    <div className="animate-pulse" style={{
+                      position: "absolute", inset: -2, borderRadius: 12,
+                      boxShadow: "0 0 0 3px #FCD34D, 0 0 16px 5px rgba(252,211,77,0.85)",
+                      pointerEvents: "none", zIndex: 25,
+                    }} />
+                  )}
                 </div>
               );
             })}
