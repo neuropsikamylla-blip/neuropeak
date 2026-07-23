@@ -28,12 +28,23 @@ const POSE = [
 export const LIBRARY_OVERVIEW: CategoryOverview[] = [
   {
     key: "characters", label: "Personagens", planned: 80,
-    note: "30 crianças · 20 adolescentes · 20 adultos · 10 idosos — com diversidade",
+    note: "15 crianças prontas (adolescentes / adultos / idosos a fazer)",
     samples: [
-      { id: "character:children:child-001", label: "Criança 1" },
-      { id: "character:teenagers:teen-001", label: "Adolescente 1" },
-      { id: "character:adults:adult-001", label: "Adulto 1" },
-      { id: "character:olderAdults:elder-001", label: "Idoso 1" },
+      { id: "character:children:child-001", label: "Lucas O." },
+      { id: "character:children:child-002", label: "Sofia" },
+      { id: "character:children:child-003", label: "Miguel" },
+      { id: "character:children:child-004", label: "Lucas T." },
+      { id: "character:children:child-005", label: "Pedro" },
+      { id: "character:children:child-006", label: "Ana" },
+      { id: "character:children:child-007", label: "Gabriel" },
+      { id: "character:children:child-008", label: "Mariana R." },
+      { id: "character:children:child-009", label: "João P." },
+      { id: "character:children:child-010", label: "Isabela" },
+      { id: "character:children:child-011", label: "Rafael" },
+      { id: "character:children:child-012", label: "Mariana F." },
+      { id: "character:children:child-013", label: "Camille" },
+      { id: "character:children:child-014", label: "Matteo" },
+      { id: "character:children:child-015", label: "Charlotte" },
     ],
   },
   {
