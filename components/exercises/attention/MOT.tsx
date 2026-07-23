@@ -380,11 +380,6 @@ export function MOT({ difficulty, theme, onComplete }: MOTProps) {
         <div className={`w-full rounded-2xl p-4 ${pal.card}`}>
           <div className="flex justify-between items-center mb-2">
             <h2 className={`font-bold text-sm ${pal.title}`}>👁️ Rastreamento de Objetos</h2>
-            <span className={`text-xs font-bold px-2 py-1 rounded-full ${
-              theme === "GAMIFIED" ? "bg-cyan-900/40 text-cyan-300" : "bg-blue-50 text-blue-700"
-            }`}>
-              Nível {level + 1} · {targetsForLevel(level)} alvos
-            </span>
           </div>
           <ExerciseProgressBar progressPct={progressPct} theme={theme} />
         </div>
