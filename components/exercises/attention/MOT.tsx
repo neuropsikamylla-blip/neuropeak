@@ -14,34 +14,31 @@ interface MOTProps {
   onComplete: (result: ExerciseResult) => void;
 }
 
-// ── Config ────────────────────────────────────────────────────────────────
+// ── Config (progressão DENTRO da sessão) ────────────────────────────────────
+// A cada 3 rodadas PERFEITAS seguidas sobe 1 nível. Alterna: +1 alvo, +velocidade,
+// +1 alvo, +velocidade... (começa com 2 alvos). Velocidade sobe suave (nada absurdo).
 
-function numTargets(d: number): number {
-  if (d <= 3) return 2;
-  if (d <= 5) return 3;
-  if (d <= 7) return 4;
-  return 5;
+const BALL_RADIUS = 27;
+const AREA_W = 660;   // arena lógica maior (mais espaço p/ as bolas não lotarem)
+const AREA_H = 620;
+const MAX_TARGETS = 6;
+
+function targetsForLevel(level: number): number {
+  return Math.min(MAX_TARGETS, 2 + Math.ceil(level / 2)); // +1 alvo nos níveis ímpares
 }
-
-function totalBalls(d: number): number {
-  const k = numTargets(d);
-  const extra = d <= 3 ? 4 : d <= 6 ? 5 : 8;
-  return k + extra;
+function speedStepForLevel(level: number): number {
+  return Math.floor(level / 2);                             // +velocidade nos níveis pares
 }
-
-function trackDuration(d: number): number {
-  if (d <= 3) return 3000;
-  if (d <= 6) return 4000;
-  return 5000;
+function ballSpeed(level: number): number {
+  return Math.min(3.0, 1.25 + speedStepForLevel(level) * 0.28); // px/frame, incremento gentil
 }
-
-function ballSpeed(d: number): number {
-  return 0.8 + d * 0.25; // px/frame roughly
+function totalBalls(level: number): number {
+  const k = targetsForLevel(level);
+  return k + Math.min(6, k + 2); // distratores moderados (não lota o quadro)
 }
-
-const BALL_RADIUS = 24;
-const AREA_W = 520; // arena lógica ampliada (~+30%); renderizada com escala responsiva p/ caber na tela
-const AREA_H = 460;
+function trackDuration(level: number): number {
+  return 3500 + Math.min(1800, level * 140); // acompanha um pouco mais a cada nível
+}
 
 interface Ball {
   id: number;
@@ -54,51 +51,66 @@ interface Ball {
 
 type Phase = "memorize" | "track" | "identify";
 
-function randomBalls(d: number, round: number): Ball[] {
-  const n = totalBalls(d);
-  const k = numTargets(d);
-  const speed = ballSpeed(d);
+function randomBalls(level: number, round: number): Ball[] {
+  const n = totalBalls(level);
+  const k = targetsForLevel(level);
+  const speed = ballSpeed(level);
+  const R = BALL_RADIUS;
   const balls: Ball[] = [];
-  const positions: { x: number; y: number }[] = [];
+  const pos: { x: number; y: number }[] = [];
 
   for (let i = 0; i < n; i++) {
-    let x: number, y: number, ok = false;
-    let attempts = 0;
+    let x = R, y = R, ok = false, tries = 0;
     do {
-      x = BALL_RADIUS + Math.random() * (AREA_W - BALL_RADIUS * 2);
-      y = BALL_RADIUS + Math.random() * (AREA_H - BALL_RADIUS * 2);
-      ok = positions.every(p => Math.hypot(p.x - x, p.y - y) > BALL_RADIUS * 2.5);
-      attempts++;
-    } while (!ok && attempts < 100);
-    positions.push({ x, y });
+      x = R + Math.random() * (AREA_W - 2 * R);
+      y = R + Math.random() * (AREA_H - 2 * R);
+      ok = pos.every(p => Math.hypot(p.x - x, p.y - y) >= R * 2.4); // nunca começam coladas
+      tries++;
+    } while (!ok && tries < 300);
+    pos.push({ x, y });
 
     const angle = Math.random() * Math.PI * 2;
-    const s = (0.6 + Math.random() * 0.8) * speed;
-    // Vary speed seed with round so pattern differs
+    const s = (0.8 + Math.random() * 0.4) * speed;
     void round;
-    balls.push({
-      id: i,
-      x, y,
-      vx: Math.cos(angle) * s,
-      vy: Math.sin(angle) * s,
-      isTarget: i < k,
-    });
+    balls.push({ id: i, x, y, vx: Math.cos(angle) * s, vy: Math.sin(angle) * s, isTarget: i < k });
   }
   return balls;
 }
 
-function stepBall(ball: Ball): Ball {
-  let x = ball.x + ball.vx;
-  let y = ball.y + ball.vy;
-  let vx = ball.vx;
-  let vy = ball.vy;
-
-  if (x - BALL_RADIUS < 0) { x = BALL_RADIUS; vx = Math.abs(vx); }
-  if (x + BALL_RADIUS > AREA_W) { x = AREA_W - BALL_RADIUS; vx = -Math.abs(vx); }
-  if (y - BALL_RADIUS < 0) { y = BALL_RADIUS; vy = Math.abs(vy); }
-  if (y + BALL_RADIUS > AREA_H) { y = AREA_H - BALL_RADIUS; vy = -Math.abs(vy); }
-
-  return { ...ball, x, y, vx, vy };
+// Um passo da física para TODAS as bolas: rebate nas paredes (nunca cortam a
+// borda) E colide entre si (nunca param uma atrás/em cima da outra).
+function stepAll(balls: Ball[]): Ball[] {
+  const R = BALL_RADIUS;
+  const bs = balls.map(b => {
+    let x = b.x + b.vx, y = b.y + b.vy, vx = b.vx, vy = b.vy;
+    if (x - R < 0)         { x = R;          vx = Math.abs(vx); }
+    if (x + R > AREA_W)    { x = AREA_W - R; vx = -Math.abs(vx); }
+    if (y - R < 0)         { y = R;          vy = Math.abs(vy); }
+    if (y + R > AREA_H)    { y = AREA_H - R; vy = -Math.abs(vy); }
+    return { ...b, x, y, vx, vy };
+  });
+  // colisão bola-a-bola (separa + troca elástica de velocidade, massas iguais)
+  for (let i = 0; i < bs.length; i++) {
+    for (let j = i + 1; j < bs.length; j++) {
+      const a = bs[i], c = bs[j];
+      const dx = c.x - a.x, dy = c.y - a.y;
+      const dist = Math.hypot(dx, dy) || 0.001;
+      const minD = 2 * R;
+      if (dist < minD) {
+        const nx = dx / dist, ny = dy / dist;
+        const push = (minD - dist) / 2 + 0.5;
+        a.x -= nx * push; a.y -= ny * push;
+        c.x += nx * push; c.y += ny * push;
+        const va = a.vx * nx + a.vy * ny, vc = c.vx * nx + c.vy * ny;
+        const dv = vc - va;
+        a.vx += dv * nx; a.vy += dv * ny;
+        c.vx -= dv * nx; c.vy -= dv * ny;
+        a.x = Math.max(R, Math.min(AREA_W - R, a.x)); a.y = Math.max(R, Math.min(AREA_H - R, a.y));
+        c.x = Math.max(R, Math.min(AREA_W - R, c.x)); c.y = Math.max(R, Math.min(AREA_H - R, c.y));
+      }
+    }
+  }
+  return bs;
 }
 
 // ── Tutorial ──────────────────────────────────────────────────────────────
@@ -169,6 +181,10 @@ export function MOT({ difficulty, theme, onComplete }: MOTProps) {
   const [showTutorial, setShowTutorial] = useState(true);
   const { begin, isTimeUp, elapsedSec, finish, progressPct } = useTimedProgress();
 
+  // Nível ADAPTATIVO dentro da sessão. Começa a partir da dificuldade salva do
+  // paciente (modesto) e sobe a cada 3 rodadas perfeitas seguidas.
+  const initialLevel = Math.max(0, Math.min(8, Math.round(difficulty) - 2));
+
   const [round, setRound] = useState(0);
   const [phase, setPhase] = useState<Phase>("memorize");
   const [balls, setBalls] = useState<Ball[]>([]);
@@ -176,11 +192,20 @@ export function MOT({ difficulty, theme, onComplete }: MOTProps) {
   const [roundScore, setRoundScore] = useState<number | null>(null);
   const [totalCorrect, setTotalCorrect] = useState(0);
   const [totalTargets, setTotalTargets] = useState(0);
+  const [level, setLevel] = useState(initialLevel);
 
   const rafRef = useRef<number | null>(null);
   const timerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const startTime = useRef(Date.now());
-  const k = numTargets(difficulty);
+  // levelRef espelha o nível atual p/ o startRound (chamado dentro de setTimeout)
+  // sempre ler o valor mais recente sem depender do fechamento do useCallback.
+  const levelRef = useRef(initialLevel);
+  levelRef.current = level;
+  const streakRef = useRef(0);          // rodadas perfeitas seguidas
+  const reachedLevelRef = useRef(initialLevel); // maior nível alcançado (p/ relatório)
+
+  // k = nº de alvos da RODADA ATUAL (deriva das bolas em jogo; cai no nível se vazio).
+  const k = balls.filter(b => b.isTarget).length || targetsForLevel(level);
 
   // PERF-03: durante a fase "track" a fisica corre num ref e o movimento e
   // aplicado direto via style.transform nos nos DOM (sem setState a ~60fps).
@@ -213,7 +238,7 @@ export function MOT({ difficulty, theme, onComplete }: MOTProps) {
   }, []);
 
   const startRound = useCallback((r: number) => {
-    const newBalls = randomBalls(difficulty, r);
+    const newBalls = randomBalls(levelRef.current, r);
     // A base renderizada (left/top) e `newBalls`; a fisica viva parte da mesma
     // referencia. Durante o track o transform e aplicado como delta sobre ela.
     ballsRef.current = newBalls;
@@ -228,11 +253,11 @@ export function MOT({ difficulty, theme, onComplete }: MOTProps) {
       // que o React renderizou em left/top). O transform anima o delta ate ela.
       const base = new Map(ballsRef.current.map(b => [b.id, { x: b.x, y: b.y }]));
       const startTrack = Date.now();
-      const dur = trackDuration(difficulty);
+      const dur = trackDuration(levelRef.current);
 
       function animate() {
-        // Avanca a fisica no ref (mesmo stepBall de antes) sem disparar render.
-        ballsRef.current = ballsRef.current.map(stepBall);
+        // Avanca a fisica no ref (paredes + colisao entre bolas) sem render.
+        ballsRef.current = stepAll(ballsRef.current);
         for (const ball of ballsRef.current) {
           const node = ballNodes.current.get(ball.id);
           const b0 = base.get(ball.id);
@@ -252,7 +277,7 @@ export function MOT({ difficulty, theme, onComplete }: MOTProps) {
       }
       rafRef.current = requestAnimationFrame(animate);
     }, 2000);
-  }, [difficulty, stopRaf]);
+  }, [stopRaf]);
 
   useEffect(() => {
     if (!showTutorial) {
@@ -276,25 +301,48 @@ export function MOT({ difficulty, theme, onComplete }: MOTProps) {
     if (phase !== "identify") return;
     const targets = balls.filter(b => b.isTarget).map(b => b.id);
     const correct = [...selected].filter(id => targets.includes(id)).length;
+    const perfect = k > 0 && correct === k;
     setRoundScore(correct);
     setTotalCorrect(tc => tc + correct);
     setTotalTargets(tt => tt + k);
 
+    // Progressão: 3 rodadas PERFEITAS seguidas → sobe 1 nível.
+    // Alterna +1 alvo (níveis ímpares) e +velocidade (níveis pares); erro zera a série.
+    if (perfect) {
+      streakRef.current += 1;
+      if (streakRef.current >= 3) {
+        streakRef.current = 0;
+        const nl = levelRef.current + 1;
+        levelRef.current = nl;
+        reachedLevelRef.current = Math.max(reachedLevelRef.current, nl);
+        setLevel(nl);
+      }
+    } else {
+      streakRef.current = 0;
+    }
+
     const nextRound = round + 1;
+    const reachedDifficulty = Math.max(1, Math.min(10, 2 + reachedLevelRef.current));
 
     if (isTimeUp()) {
       finish();
       const accuracy = (totalCorrect + correct) / Math.max(1, totalTargets + k);
       const duration = elapsedSec();
-      const sc = calculateExerciseScore("mot", accuracy, undefined, difficulty);
+      const sc = calculateExerciseScore("mot", accuracy, undefined, reachedDifficulty);
       onComplete({
         exerciseId: "mot",
         domain: "attention",
         score: sc,
         accuracy,
-        difficulty,
+        difficulty: reachedDifficulty,
         duration,
-        metadata: { totalCorrect: totalCorrect + correct, totalTargets: totalTargets + k, rounds: nextRound },
+        metadata: {
+          totalCorrect: totalCorrect + correct,
+          totalTargets: totalTargets + k,
+          rounds: nextRound,
+          reachedLevel: reachedLevelRef.current,
+          finalTargets: targetsForLevel(reachedLevelRef.current),
+        },
       });
       return;
     }
@@ -326,12 +374,17 @@ export function MOT({ difficulty, theme, onComplete }: MOTProps) {
 
   return (
     <div className={`min-h-screen overflow-y-auto ${pal.bg}`}>
-      <div className="max-w-[520px] mx-auto px-4 py-5 flex flex-col items-center gap-4">
+      <div className="max-w-[600px] mx-auto px-4 py-5 flex flex-col items-center gap-4">
 
         {/* Header */}
         <div className={`w-full rounded-2xl p-4 ${pal.card}`}>
           <div className="flex justify-between items-center mb-2">
             <h2 className={`font-bold text-sm ${pal.title}`}>👁️ Rastreamento de Objetos</h2>
+            <span className={`text-xs font-bold px-2 py-1 rounded-full ${
+              theme === "GAMIFIED" ? "bg-cyan-900/40 text-cyan-300" : "bg-blue-50 text-blue-700"
+            }`}>
+              Nível {level + 1} · {targetsForLevel(level)} alvos
+            </span>
           </div>
           <ExerciseProgressBar progressPct={progressPct} theme={theme} />
         </div>
