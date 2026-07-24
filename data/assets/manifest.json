@@ -1,6 +1,6 @@
 {
   "version": 1,
-  "generatedAt": "2026-07-24T01:55:12.529Z",
+  "generatedAt": "2026-07-24T03:10:45.722Z",
   "assets": [
     {
       "id": "animal:dog",
@@ -1228,6 +1228,336 @@
       "id": "character:children:child-024",
       "kind": "character",
       "title": "Child 024",
+      "ageGroup": "children",
+      "transparentBackground": true,
+      "expressions": [
+        {
+          "id": "afraid"
+        },
+        {
+          "id": "angry"
+        },
+        {
+          "id": "confident"
+        },
+        {
+          "id": "crying"
+        },
+        {
+          "id": "curious"
+        },
+        {
+          "id": "embarrassed"
+        },
+        {
+          "id": "excited"
+        },
+        {
+          "id": "happy"
+        },
+        {
+          "id": "neutral"
+        },
+        {
+          "id": "sad"
+        },
+        {
+          "id": "surprised"
+        },
+        {
+          "id": "thinking"
+        },
+        {
+          "id": "tired"
+        },
+        {
+          "id": "very_happy"
+        },
+        {
+          "id": "worried"
+        }
+      ],
+      "poses": []
+    },
+    {
+      "id": "character:children:child-025",
+      "kind": "character",
+      "title": "Child 025",
+      "ageGroup": "children",
+      "transparentBackground": true,
+      "expressions": [
+        {
+          "id": "afraid"
+        },
+        {
+          "id": "angry"
+        },
+        {
+          "id": "confident"
+        },
+        {
+          "id": "crying"
+        },
+        {
+          "id": "curious"
+        },
+        {
+          "id": "embarrassed"
+        },
+        {
+          "id": "excited"
+        },
+        {
+          "id": "happy"
+        },
+        {
+          "id": "neutral"
+        },
+        {
+          "id": "sad"
+        },
+        {
+          "id": "surprised"
+        },
+        {
+          "id": "thinking"
+        },
+        {
+          "id": "tired"
+        },
+        {
+          "id": "very_happy"
+        },
+        {
+          "id": "worried"
+        }
+      ],
+      "poses": []
+    },
+    {
+      "id": "character:children:child-026",
+      "kind": "character",
+      "title": "Child 026",
+      "ageGroup": "children",
+      "transparentBackground": true,
+      "expressions": [
+        {
+          "id": "afraid"
+        },
+        {
+          "id": "angry"
+        },
+        {
+          "id": "confident"
+        },
+        {
+          "id": "crying"
+        },
+        {
+          "id": "curious"
+        },
+        {
+          "id": "embarrassed"
+        },
+        {
+          "id": "excited"
+        },
+        {
+          "id": "happy"
+        },
+        {
+          "id": "neutral"
+        },
+        {
+          "id": "sad"
+        },
+        {
+          "id": "surprised"
+        },
+        {
+          "id": "thinking"
+        },
+        {
+          "id": "tired"
+        },
+        {
+          "id": "very_happy"
+        },
+        {
+          "id": "worried"
+        }
+      ],
+      "poses": []
+    },
+    {
+      "id": "character:children:child-027",
+      "kind": "character",
+      "title": "Child 027",
+      "ageGroup": "children",
+      "transparentBackground": true,
+      "expressions": [
+        {
+          "id": "afraid"
+        },
+        {
+          "id": "angry"
+        },
+        {
+          "id": "confident"
+        },
+        {
+          "id": "crying"
+        },
+        {
+          "id": "curious"
+        },
+        {
+          "id": "embarrassed"
+        },
+        {
+          "id": "excited"
+        },
+        {
+          "id": "happy"
+        },
+        {
+          "id": "neutral"
+        },
+        {
+          "id": "sad"
+        },
+        {
+          "id": "surprised"
+        },
+        {
+          "id": "thinking"
+        },
+        {
+          "id": "tired"
+        },
+        {
+          "id": "very_happy"
+        },
+        {
+          "id": "worried"
+        }
+      ],
+      "poses": []
+    },
+    {
+      "id": "character:children:child-028",
+      "kind": "character",
+      "title": "Child 028",
+      "ageGroup": "children",
+      "transparentBackground": true,
+      "expressions": [
+        {
+          "id": "afraid"
+        },
+        {
+          "id": "angry"
+        },
+        {
+          "id": "confident"
+        },
+        {
+          "id": "crying"
+        },
+        {
+          "id": "curious"
+        },
+        {
+          "id": "embarrassed"
+        },
+        {
+          "id": "excited"
+        },
+        {
+          "id": "happy"
+        },
+        {
+          "id": "neutral"
+        },
+        {
+          "id": "sad"
+        },
+        {
+          "id": "surprised"
+        },
+        {
+          "id": "thinking"
+        },
+        {
+          "id": "tired"
+        },
+        {
+          "id": "very_happy"
+        },
+        {
+          "id": "worried"
+        }
+      ],
+      "poses": []
+    },
+    {
+      "id": "character:children:child-029",
+      "kind": "character",
+      "title": "Child 029",
+      "ageGroup": "children",
+      "transparentBackground": true,
+      "expressions": [
+        {
+          "id": "afraid"
+        },
+        {
+          "id": "angry"
+        },
+        {
+          "id": "crying"
+        },
+        {
+          "id": "curious"
+        },
+        {
+          "id": "embarrassed"
+        },
+        {
+          "id": "excited"
+        },
+        {
+          "id": "happy"
+        },
+        {
+          "id": "neutral"
+        },
+        {
+          "id": "proud"
+        },
+        {
+          "id": "sad"
+        },
+        {
+          "id": "surprised"
+        },
+        {
+          "id": "thinking"
+        },
+        {
+          "id": "tired"
+        },
+        {
+          "id": "very_happy"
+        },
+        {
+          "id": "worried"
+        }
+      ],
+      "poses": []
+    },
+    {
+      "id": "character:children:child-030",
+      "kind": "character",
+      "title": "Child 030",
       "ageGroup": "children",
       "transparentBackground": true,
       "expressions": [
