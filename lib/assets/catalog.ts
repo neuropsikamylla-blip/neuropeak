@@ -28,7 +28,7 @@ const POSE = [
 export const LIBRARY_OVERVIEW: CategoryOverview[] = [
   {
     key: "characters", label: "Personagens", planned: 80,
-    note: "15 crianças prontas (adolescentes / adultos / idosos a fazer)",
+    note: "24 crianças prontas (adolescentes / adultos / idosos a fazer)",
     samples: [
       { id: "character:children:child-001", label: "Lucas O." },
       { id: "character:children:child-002", label: "Sofia" },
@@ -110,4 +110,40 @@ export const ART_DIRECTION_SUMMARY = [
   "Diversidade e representatividade",
   "Sem texto e sem marca d'água",
   "Fundo transparente (móveis) · cenários opacos",
+];
+
+// Rótulo PT de cada expressão (para a tela de revisão).
+export const EXPRESSION_LABELS: Record<string, string> = {
+  neutral: "Neutro", happy: "Feliz", very_happy: "Muito feliz", sad: "Triste",
+  crying: "Chorando", surprised: "Surpreso", thinking: "Pensativo", worried: "Preocupado",
+  excited: "Animado", angry: "Bravo", afraid: "Assustado", embarrassed: "Envergonhado",
+  proud: "Orgulhoso", confident: "Confiante", curious: "Curioso", confused: "Confuso",
+  disgusted: "Enojado", tired: "Cansado", irritated: "Irritado", grumpy: "Emburrado",
+};
+
+// Elenco de personagens já prontos (base + expressões) — fonte da tela de revisão.
+export const CHILDREN_ROSTER: { code: string; name: string; emotions: string[] }[] = [
+  { code: "child-001", name: "Lucas Oliveira", emotions: ["neutral", "happy", "very_happy", "sad", "crying", "surprised", "thinking", "worried", "angry", "afraid", "embarrassed", "proud", "confused", "disgusted", "tired"] },
+  { code: "child-002", name: "Sofia Martins", emotions: ["neutral", "happy", "very_happy", "sad", "crying", "surprised", "thinking", "worried", "angry", "afraid", "embarrassed", "proud", "confused", "disgusted", "tired"] },
+  { code: "child-003", name: "Miguel Santos", emotions: ["neutral", "happy", "very_happy", "sad", "crying", "surprised", "thinking", "worried", "angry", "afraid", "embarrassed", "proud", "confused", "disgusted", "tired"] },
+  { code: "child-004", name: "Lucas Tanaka", emotions: ["neutral", "happy", "very_happy", "sad", "crying", "surprised", "thinking", "worried", "angry", "afraid", "embarrassed", "proud", "confused", "tired", "irritated"] },
+  { code: "child-005", name: "Pedro Almeida", emotions: ["neutral", "happy", "very_happy", "sad", "crying", "surprised", "thinking", "worried", "angry", "afraid", "embarrassed", "proud", "confused", "disgusted", "tired"] },
+  { code: "child-006", name: "Ana Beatriz Souza", emotions: ["neutral", "happy", "very_happy", "sad", "crying", "surprised", "thinking", "worried", "angry", "afraid", "embarrassed", "proud", "confused", "disgusted", "tired"] },
+  { code: "child-007", name: "Gabriel Ferreira", emotions: ["neutral", "happy", "very_happy", "sad", "crying", "surprised", "thinking", "worried", "angry", "afraid", "embarrassed", "proud", "confused", "disgusted", "tired"] },
+  { code: "child-008", name: "Mariana Ribeiro", emotions: ["neutral", "happy", "very_happy", "sad", "crying", "surprised", "thinking", "worried", "angry", "afraid", "embarrassed", "proud", "confused", "grumpy"] },
+  { code: "child-009", name: "João Pedro Lima", emotions: ["neutral", "happy", "very_happy", "sad", "crying", "surprised", "thinking", "worried", "angry", "afraid", "embarrassed", "proud", "confused", "tired", "grumpy"] },
+  { code: "child-010", name: "Isabela Costa", emotions: ["neutral", "happy", "very_happy", "sad", "crying", "surprised", "thinking", "worried", "angry", "afraid", "embarrassed", "proud", "confused", "irritated"] },
+  { code: "child-011", name: "Rafael Nascimento", emotions: ["very_happy", "sad", "crying", "surprised", "thinking", "worried", "angry", "afraid", "embarrassed", "proud", "confused", "disgusted", "tired"] },
+  { code: "child-013", name: "Camille Dubois", emotions: ["neutral", "happy", "very_happy", "sad", "crying", "surprised", "thinking", "worried", "angry", "afraid", "embarrassed", "proud", "confused", "tired", "irritated"] },
+  { code: "child-014", name: "Matteo Rossi", emotions: ["neutral", "happy", "very_happy", "sad", "crying", "surprised", "thinking", "worried", "excited", "afraid", "embarrassed", "proud", "confused", "tired", "irritated"] },
+  { code: "child-015", name: "Charlotte Bennett", emotions: ["neutral", "happy", "very_happy", "sad", "crying", "surprised", "thinking", "worried", "angry", "afraid", "embarrassed", "proud", "confused", "tired", "irritated"] },
+  { code: "child-016", name: "Henry Williams", emotions: ["neutral", "happy", "very_happy", "sad", "crying", "surprised", "thinking", "worried", "excited", "angry", "afraid", "embarrassed", "proud", "tired", "curious"] },
+  { code: "child-017", name: "Amara Johnson", emotions: ["neutral", "happy", "very_happy", "sad", "crying", "surprised", "thinking", "worried", "excited", "angry", "afraid", "embarrassed", "confident", "tired", "curious"] },
+  { code: "child-018", name: "Sofia Rossi", emotions: ["neutral", "happy", "very_happy", "sad", "crying", "surprised", "thinking", "worried", "excited", "angry", "afraid", "embarrassed", "proud", "tired", "curious"] },
+  { code: "child-019", name: "Mateo Garcia", emotions: ["neutral", "happy", "very_happy", "sad", "crying", "surprised", "thinking", "worried", "excited", "angry", "afraid", "embarrassed", "confident", "tired", "curious"] },
+  { code: "child-020", name: "Lina Schneider", emotions: ["neutral", "happy", "very_happy", "sad", "crying", "surprised", "thinking", "worried", "excited", "angry", "afraid", "embarrassed", "confident", "tired", "curious"] },
+  { code: "child-021", name: "Erik Hansen", emotions: ["neutral", "happy", "very_happy", "sad", "crying", "surprised", "thinking", "worried", "excited", "angry", "afraid", "embarrassed", "confident", "tired", "curious"] },
+  { code: "child-022", name: "Fiona Mackenzie", emotions: ["neutral", "happy", "very_happy", "sad", "crying", "surprised", "thinking", "worried", "excited", "angry", "afraid", "embarrassed", "confident", "tired", "curious"] },
+  { code: "child-023", name: "Jake Miller", emotions: ["neutral", "happy", "very_happy", "sad", "crying", "surprised", "thinking", "worried", "excited", "angry", "afraid", "embarrassed", "confident", "tired", "curious"] },
+  { code: "child-024", name: "Valentina Cruz", emotions: ["neutral", "happy", "very_happy", "sad", "crying", "surprised", "thinking", "worried", "excited", "angry", "afraid", "embarrassed", "confident", "tired", "curious"] },
 ];

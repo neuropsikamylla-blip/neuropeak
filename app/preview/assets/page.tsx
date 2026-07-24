@@ -10,7 +10,8 @@
 import { useMemo } from "react";
 import { AssetImage } from "@/components/assets/AssetImage";
 import { assetService } from "@/data/assets";
-import { LIBRARY_OVERVIEW, TOTAL_PLANNED, ART_DIRECTION_SUMMARY } from "@/lib/assets/catalog";
+import { LIBRARY_OVERVIEW, TOTAL_PLANNED, ART_DIRECTION_SUMMARY,
+  CHILDREN_ROSTER, EXPRESSION_LABELS } from "@/lib/assets/catalog";
 
 export default function AssetsPreviewPage() {
   const stats = useMemo(() => assetService.stats(), []);
@@ -71,6 +72,51 @@ export default function AssetsPreviewPage() {
             </div>
           </section>
         ))}
+
+        {/* Personagens & Expressões — tela de revisão (cada criança + suas emoções) */}
+        <section className="mt-10">
+          <h2 className="text-lg font-bold mb-1">Personagens &amp; Expressões</h2>
+          <p className="text-xs text-white/50 mb-4">
+            {CHILDREN_ROSTER.length} crianças prontas. Confira o rótulo de cada expressão —
+            se alguma estiver trocada, me diga o nome da criança e a emoção.
+          </p>
+          <div className="flex flex-col gap-6">
+            {CHILDREN_ROSTER.map((kid) => (
+              <div key={kid.code} className="rounded-2xl p-4"
+                style={{ background: "rgba(255,255,255,0.05)", border: "1px solid rgba(255,255,255,0.12)" }}>
+                <div className="flex items-center gap-3 mb-3">
+                  <AssetImage
+                    id={`character:children:${kid.code}`}
+                    alt={kid.name}
+                    width={56}
+                    height={64}
+                    style={{ background: "rgba(255,255,255,0.06)", borderRadius: 12 }}
+                  />
+                  <div>
+                    <p className="font-bold text-sm">{kid.name}</p>
+                    <p className="text-[11px] text-white/50">{kid.code} · {kid.emotions.length} expressões</p>
+                  </div>
+                </div>
+                <div className="grid grid-cols-4 sm:grid-cols-6 md:grid-cols-8 gap-2">
+                  {kid.emotions.map((emo) => (
+                    <div key={emo} className="flex flex-col items-center gap-1">
+                      <AssetImage
+                        id={`expression:children:${kid.code}:${emo}`}
+                        alt={emo}
+                        width="100%"
+                        height={78}
+                        style={{ background: "rgba(255,255,255,0.04)", borderRadius: 10, border: "1px solid rgba(255,255,255,0.08)" }}
+                      />
+                      <span className="text-[10px] text-white/70 text-center leading-tight">
+                        {EXPRESSION_LABELS[emo] ?? emo}
+                      </span>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            ))}
+          </div>
+        </section>
 
         <p className="text-xs text-white/40 mt-10 pb-8">
           Tela de inspeção da infraestrutura · rota pública · não faz parte dos exercícios.
