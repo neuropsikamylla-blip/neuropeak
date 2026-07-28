@@ -42,7 +42,7 @@ export const ITENS: ItemCompra[] = [
   { id: "melancia", name: "melancia", emoji: "🍉", price: 12, weight: 3, cat: "fruta" },
 
   // ── Legumes ──
-  { id: "tomate",   name: "tomate",   emoji: "🍅", price: 3,  weight: 1, cat: "legume" },
+  { id: "brocolis", name: "brócolis", emoji: "🥦", price: 3,  weight: 1, cat: "legume" },
   { id: "cenoura",  name: "cenoura",  emoji: "🥕", price: 3,  weight: 1, cat: "legume" },
   { id: "cebola",   name: "cebola",   emoji: "🧅", price: 2,  weight: 1, cat: "legume" },
   { id: "batata",   name: "batata",   emoji: "🥔", price: 4,  weight: 2, cat: "legume" },

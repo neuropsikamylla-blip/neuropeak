@@ -217,7 +217,7 @@ const QUESTIONS: Question[] = [
     explanation: "Entra-se no banho, toma-se banho e só depois a pessoa se seca." },
   // Sequências simbólicas (rodadas só de símbolos — não misturam com ações)
   { id: "h11", diff: "hard", domain: "symbolic_sequence", mode: "missing_step",
-    prompt: "Qual número completa a sequência?  1 → 2 → ___ → 4", options: ["3", "5", "1", "6"],
+    prompt: "Qual número completa a sequência? 1 → 2 → ___ → 4", options: ["3", "5", "1", "6"],
     explanation: "Depois do 2 vem o 3." },
   { id: "h12", diff: "hard", domain: "symbolic_sequence", mode: "before_after",
     prompt: "Qual dia vem antes de quarta-feira?", options: ["Terça-feira", "Quinta-feira", "Segunda-feira", "Sexta-feira"],
@@ -226,7 +226,7 @@ const QUESTIONS: Question[] = [
     prompt: "Qual mês vem depois de março?", options: ["Abril", "Fevereiro", "Maio", "Janeiro"],
     explanation: "Depois de março vem abril." },
   { id: "h14", diff: "hard", domain: "symbolic_sequence", mode: "missing_step",
-    prompt: "Qual letra completa a sequência?  A → B → ___ → D", options: ["C", "E", "A", "F"],
+    prompt: "Qual letra completa a sequência? A → B → ___ → D", options: ["C", "E", "A", "F"],
     explanation: "Depois do B vem o C." },
 ];
 

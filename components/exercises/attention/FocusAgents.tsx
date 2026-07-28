@@ -381,6 +381,8 @@ function ModeSelect({ onConfirm }: { onConfirm: (mode: FocusMode, level: number)
 
 function FocusTutorial({ theme, onDone }: { theme: Theme; onDone: () => void }) {
   const noun = NOUN[theme];
+  // plural pt-BR correto (personagem→personagens, avatar→avatares, agente→agentes)
+  const nounPl = noun.endsWith("m") ? noun.slice(0, -1) + "ns" : noun.endsWith("r") ? noun + "es" : noun + "s";
   return (
     <div className="fixed inset-0 z-50 flex flex-col items-center justify-center px-4 py-8 overflow-y-auto"
       style={{ background: "rgba(6,14,48,0.98)" }}>
@@ -400,7 +402,7 @@ function FocusTutorial({ theme, onDone }: { theme: Theme; onDone: () => void }) 
         <div className="px-4 py-3 flex items-center gap-2">
           <div className="w-4 h-4 rounded-full flex-shrink-0 border-2 border-white/30"
             style={{ background: "#1E88E5" }} />
-          <p className="text-white font-bold text-sm">Toque nos {noun}s azuis com fone</p>
+          <p className="text-white font-bold text-sm">Toque nos {nounPl} azuis com fone</p>
         </div>
       </div>
 
@@ -428,7 +430,7 @@ function FocusTutorial({ theme, onDone }: { theme: Theme; onDone: () => void }) 
       <div className="w-full max-w-xs rounded-2xl px-4 py-3 mb-6 space-y-2"
         style={{ background: "rgba(255,255,255,0.05)", border: "1px solid rgba(255,255,255,0.1)" }}>
         <p className="text-white/70 text-xs leading-relaxed">
-          • Os {noun}s se movem pela arena em <span className="text-white font-semibold">direções e velocidades diferentes</span>
+          • Os {nounPl} se movem pela arena em <span className="text-white font-semibold">direções e velocidades diferentes</span>
         </p>
         <p className="text-white/70 text-xs leading-relaxed">
           • <span className="text-white font-semibold">Capture o alvo</span> antes que ele escape <span className="text-white font-semibold">2 vezes</span> pelas bordas!

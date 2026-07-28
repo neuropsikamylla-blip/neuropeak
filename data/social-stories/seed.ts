@@ -22,7 +22,7 @@ const recreioColega: SocialStory = {
   cenas: [
     {
       id: "c1",
-      descricao: "No recreio, todo mundo está brincando. A Sofia, que chegou essa semana, está sozinha num canto: de cabeça baixa, ombros caídos, olhando as outras crianças de longe.",
+      descricao: "No recreio, todo mundo está brincando junto. A Sofia, que chegou essa semana, está sozinha num canto, quietinha, olhando as outras crianças de longe. O rosto dela está tristinho.",
       contexto: "Primeira semana da Sofia na escola.",
       personagens: ["sofia", "miguel"],
       perguntas: [
@@ -36,15 +36,15 @@ const recreioColega: SocialStory = {
             { id: "brava", texto: "😡 Brava", erroTipo: "leitura-emocional" },
           ],
           gabarito: "triste",
-          dica1: "Olhe o corpo e o rosto dela.",
-          dica2: "Cabeça baixa + ombros caídos + ficar de fora costumam vir junto com a tristeza.",
+          dica1: "Olhe o rosto dela e o que ela está fazendo.",
+          dica2: "Rosto triste + ficar sozinha, de fora da brincadeira, costumam vir junto com a tristeza.",
         },
         {
           id: "c1q2", tipo: "contexto", eixo: "CX",
           enunciado: "Quais pistas mostram isso?",
           formato: "escolhaUnica",
           opcoes: [
-            { id: "a", texto: "A cabeça baixa e os ombros caídos", correta: true },
+            { id: "a", texto: "O rosto triste e o jeito de ficar sozinha, longe de todos", correta: true },
             { id: "b", texto: "Ela está pulando e rindo alto", erroTipo: "ignorar-contexto" },
             { id: "c", texto: "Ela está comendo um lanche", erroTipo: "ignorar-contexto" },
           ],
@@ -321,6 +321,45 @@ const colegaCalado: SocialStory = {
   ],
   notasProfissional: ["Tomada de perspectiva e acolhimento no ambiente de trabalho."],
   meta: { versao: 1, contemIronia: false, ordemToM: 1, geradoPorIA: true, revisadoPor: "", aprovadoEm: "" },
+};
+
+// Cena EXCLUSIVA do tutorial — demonstração simples e óbvia. NÃO entra no rodízio
+// de casos (fica fora de SEED_STORIES), pra nenhum caso real repetir o tutorial.
+export const TUTORIAL_STORY: SocialStory = {
+  id: "tutorial-demo",
+  titulo: "Como funciona",
+  faixa: "crianca",
+  nivel: 1,
+  objetivoClinico: "Demonstrar o formato: ler a cena, olhar o rosto e escolher.",
+  habilidadeTreinada: ["RE"],
+  ambiente: { id: "ENV-001", nome: "Casa" },
+  personagens: [
+    { id: "leo", nome: "Léo", papel: "menino", emoji: "🧒", imagem: "expression:children:child-001:very_happy" },
+  ],
+  cenas: [
+    {
+      id: "t1",
+      descricao: "O Léo acabou de ganhar de presente o brinquedo que ele mais queria.",
+      contexto: "Este é só um exemplo, para você praticar como responder.",
+      personagens: ["leo"],
+      perguntas: [
+        {
+          id: "t1q1", tipo: "emocao", eixo: "RE",
+          enunciado: "Como o Léo está se sentindo?",
+          formato: "escolhaUnica",
+          opcoes: [
+            { id: "feliz", texto: "😀 Muito feliz", correta: true },
+            { id: "triste", texto: "😢 Triste", erroTipo: "leitura-emocional" },
+            { id: "bravo", texto: "😡 Bravo", erroTipo: "leitura-emocional" },
+          ],
+          gabarito: "feliz",
+          dica1: "Olhe o rosto dele e pense no que acabou de acontecer.",
+        },
+      ],
+    },
+  ],
+  notasProfissional: ["Cena de demonstração do tutorial — não entra no rodízio de casos."],
+  meta: { versao: 1, contemIronia: false, ordemToM: 0, geradoPorIA: false, revisadoPor: "", aprovadoEm: "" },
 };
 
 export const SEED_STORIES: SocialStory[] = [

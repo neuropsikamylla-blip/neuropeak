@@ -308,7 +308,7 @@ function etPrecoEPeso(personagem: string, base: ItemCompra[], nivel: number, idx
   const pool = montarPoolComDistratores(solItens, base, Math.min(base.length, 6));
   return {
     index: idx, conceito: "preco-e-peso", operacao: "soma",
-    historia: `${personagem} precisa controlar dinheiro E peso.`,
+    historia: `${personagem} precisa controlar o dinheiro e o peso.`,
     objetivo: "Duas restrições ao mesmo tempo.",
     instrucao: `Escolha exatamente ${n} itens: no máximo ${money(orcamento)} e no máximo ${limitePeso} kg.`,
     dados: {

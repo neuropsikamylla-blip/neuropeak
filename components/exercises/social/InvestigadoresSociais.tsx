@@ -18,6 +18,7 @@ import { AssetImage } from "@/components/assets/AssetImage";
 import { socialStyles } from "./socialTheme";
 import { StoryHeader } from "./StoryHeader";
 import { storiesByFaixa } from "@/data/social-stories";
+import { TUTORIAL_STORY } from "@/data/social-stories/seed";
 import { verificarResposta, erroTipoDaResposta } from "@/lib/social/engine";
 import {
   FAIXA_LABEL, EIXO_LABEL, SOCIAL_EXERCISE_ID, SOCIAL_PROVISIONAL_DOMAIN,
@@ -247,8 +248,10 @@ export function InvestigadoresSociais({ difficulty, theme, onComplete }: Props) 
 
   // ── Tutorial (réplica: uma cena + uma pergunta real) ──
   if (stage === "tutorial") {
-    const tutStory = poolFor(faixa, target)[0] ?? storiesByFaixa(faixasDisp[0] ?? "crianca")[0];
-    const tutItem = tutStory ? scoredItems(tutStory)[0] : null;
+    // Tutorial usa uma cena DEDICADA (não um caso real) — assim nenhum caso
+    // do rodízio repete o que o paciente já fez no tutorial.
+    const tutStory = TUTORIAL_STORY;
+    const tutItem = scoredItems(tutStory)[0];
     return (
       <TutorialBase theme={theme} title="Investigadores da Situação Social"
         steps={[{
