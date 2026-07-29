@@ -18,10 +18,12 @@ interface MOTProps {
 // A cada 3 rodadas PERFEITAS seguidas sobe 1 nível. Alterna: +1 alvo, +velocidade,
 // +1 alvo, +velocidade... (começa com 2 alvos). Velocidade sobe suave (nada absurdo).
 
-const BALL_RADIUS = 27;
-const AREA_W = 660;   // arena lógica maior (mais espaço p/ as bolas não lotarem)
-const AREA_H = 620;
+const BALL_RADIUS = 26;
+const MAX_W = 640;    // largura máxima da arena (desktop); no celular ocupa a largura toda
+const ASPECT = 0.82;  // altura = largura × 0.82 (arena mais LARGA que alta)
 const MAX_TARGETS = 6;
+// A arena usa COORDENADAS REAIS em px (medidas da tela), sem escala CSS — assim o
+// clamp da física é exatamente a borda visível e a bola nunca ultrapassa o quadro.
 
 function targetsForLevel(level: number): number {
   return Math.min(MAX_TARGETS, 2 + Math.ceil(level / 2)); // +1 alvo nos níveis ímpares
@@ -51,7 +53,7 @@ interface Ball {
 
 type Phase = "memorize" | "track" | "identify";
 
-function randomBalls(level: number, round: number): Ball[] {
+function randomBalls(level: number, round: number, W: number, H: number): Ball[] {
   const n = totalBalls(level);
   const k = targetsForLevel(level);
   const speed = ballSpeed(level);
@@ -62,8 +64,8 @@ function randomBalls(level: number, round: number): Ball[] {
   for (let i = 0; i < n; i++) {
     let x = R, y = R, ok = false, tries = 0;
     do {
-      x = R + Math.random() * (AREA_W - 2 * R);
-      y = R + Math.random() * (AREA_H - 2 * R);
+      x = R + Math.random() * (W - 2 * R);
+      y = R + Math.random() * (H - 2 * R);
       ok = pos.every(p => Math.hypot(p.x - x, p.y - y) >= R * 2.4); // nunca começam coladas
       tries++;
     } while (!ok && tries < 300);
@@ -79,14 +81,14 @@ function randomBalls(level: number, round: number): Ball[] {
 
 // Um passo da física para TODAS as bolas: rebate nas paredes (nunca cortam a
 // borda) E colide entre si (nunca param uma atrás/em cima da outra).
-function stepAll(balls: Ball[]): Ball[] {
+function stepAll(balls: Ball[], W: number, H: number): Ball[] {
   const R = BALL_RADIUS;
   const bs = balls.map(b => {
     let x = b.x + b.vx, y = b.y + b.vy, vx = b.vx, vy = b.vy;
-    if (x - R < 0)         { x = R;          vx = Math.abs(vx); }
-    if (x + R > AREA_W)    { x = AREA_W - R; vx = -Math.abs(vx); }
-    if (y - R < 0)         { y = R;          vy = Math.abs(vy); }
-    if (y + R > AREA_H)    { y = AREA_H - R; vy = -Math.abs(vy); }
+    if (x - R < 0)     { x = R;     vx = Math.abs(vx); }
+    if (x + R > W)     { x = W - R; vx = -Math.abs(vx); }
+    if (y - R < 0)     { y = R;     vy = Math.abs(vy); }
+    if (y + R > H)     { y = H - R; vy = -Math.abs(vy); }
     return { ...b, x, y, vx, vy };
   });
   // colisão bola-a-bola (separa + troca elástica de velocidade, massas iguais)
@@ -105,58 +107,73 @@ function stepAll(balls: Ball[]): Ball[] {
         const dv = vc - va;
         a.vx += dv * nx; a.vy += dv * ny;
         c.vx -= dv * nx; c.vy -= dv * ny;
-        a.x = Math.max(R, Math.min(AREA_W - R, a.x)); a.y = Math.max(R, Math.min(AREA_H - R, a.y));
-        c.x = Math.max(R, Math.min(AREA_W - R, c.x)); c.y = Math.max(R, Math.min(AREA_H - R, c.y));
+        a.x = Math.max(R, Math.min(W - R, a.x)); a.y = Math.max(R, Math.min(H - R, a.y));
+        c.x = Math.max(R, Math.min(W - R, c.x)); c.y = Math.max(R, Math.min(H - R, c.y));
       }
     }
   }
   return bs;
 }
 
-// ── Tutorial ──────────────────────────────────────────────────────────────
+// ── Tutorial (1 etapa: explica tudo numa tela só, com demo em loop) ─────────
 
-function TutStep1({ theme, onDone }: { theme: Theme; onDone: () => void }) {
-  useEffect(() => { const t = setTimeout(onDone, 3000); return () => clearTimeout(t); }, []); // eslint-disable-line react-hooks/exhaustive-deps
-  const sub = theme === "GAMIFIED" ? "text-gray-400" : "text-gray-500";
+const DEMO_BALLS = [
+  { x: 46, y: 40, isTarget: true,  mx: 30, my: 22 },
+  { x: 150, y: 58, isTarget: true,  mx: -26, my: 30 },
+  { x: 96, y: 96, isTarget: false, mx: 34, my: -24 },
+  { x: 178, y: 104, isTarget: false, mx: -30, my: -20 },
+];
+
+function MOTDemo({ onReady }: { onReady: () => void }) {
+  const [pi, setPi] = useState(0); // 0 = memorize (dourado) · 1 = mover (cinza) · 2 = revelar (verde)
+  useEffect(() => {
+    onReady();  // libera o botão "COMEÇAR" logo
+    const id = setInterval(() => setPi(p => (p + 1) % 3), 1700);
+    return () => clearInterval(id);
+  }, []); // eslint-disable-line react-hooks/exhaustive-deps
+  const moving = pi === 1;
+
+  const steps = [
+    { n: "1", icon: "⭐", txt: "Memorize as bolas douradas — são os alvos." },
+    { n: "2", icon: "👁️", txt: "Todas ficam cinzas e se movem. Siga os alvos com os olhos." },
+    { n: "3", icon: "🎯", txt: "Quando pararem, toque nas que eram douradas." },
+  ];
+
   return (
     <div className="flex flex-col items-center gap-3">
-      <div className="relative w-48 h-36 rounded-xl overflow-hidden bg-gray-900/20 border border-gray-300">
-        {[
-          { x: 60, y: 80, isTarget: true },
-          { x: 140, y: 50, isTarget: true },
-          { x: 100, y: 110, isTarget: false },
-          { x: 180, y: 90, isTarget: false },
-        ].map((b, i) => (
-          <div key={i} style={{ position: "absolute", left: b.x - 16, top: b.y - 16, width: 32, height: 32 }}
-            className={`rounded-full border-2 border-white flex items-center justify-center text-xs font-bold ${
-              b.isTarget ? "bg-yellow-400 animate-pulse" : "bg-gray-400"
-            }`}>
-            {b.isTarget ? "★" : ""}
+      {/* Mini-arena da demo */}
+      <div className="relative w-[224px] h-[150px] rounded-xl overflow-hidden bg-slate-100 border border-gray-300">
+        {DEMO_BALLS.map((b, i) => {
+          const gold = pi === 0 && b.isTarget;
+          const green = pi === 2 && b.isTarget;
+          return (
+            <motion.div key={i}
+              animate={moving ? { x: [0, b.mx, 0], y: [0, b.my, 0] } : { x: 0, y: 0 }}
+              transition={moving ? { duration: 1.6, repeat: Infinity, ease: "easeInOut" } : { duration: 0.3 }}
+              style={{ position: "absolute", left: b.x - 17, top: b.y - 17, width: 34, height: 34 }}
+              className={`rounded-full border-2 flex items-center justify-center text-xs font-bold ${
+                green ? "bg-green-400 border-green-600 text-white" :
+                gold ? "bg-yellow-400 border-yellow-300 text-yellow-900 animate-pulse" :
+                "bg-gray-300 border-gray-400"
+              }`}>
+              {gold ? "★" : green ? "✓" : ""}
+            </motion.div>
+          );
+        })}
+      </div>
+      {/* 3 passos — o passo atual fica destacado */}
+      <div className="w-full flex flex-col gap-1.5">
+        {steps.map((s, i) => (
+          <div key={s.n} className={`flex items-center gap-2 rounded-lg px-2.5 py-1.5 transition-colors ${
+            i === pi ? "bg-blue-50" : ""
+          }`}>
+            <span className={`w-5 h-5 rounded-full flex items-center justify-center text-[11px] font-black flex-shrink-0 ${
+              i === pi ? "bg-blue-500 text-white" : "bg-gray-200 text-gray-500"
+            }`}>{s.n}</span>
+            <span className="text-xs text-gray-700 leading-tight">{s.icon} {s.txt}</span>
           </div>
         ))}
       </div>
-      <p className={`text-xs text-center ${sub}`}>Bolas douradas piscam — memorize quais são os alvos!</p>
-    </div>
-  );
-}
-
-function TutStep2({ theme, onDone }: { theme: Theme; onDone: () => void }) {
-  useEffect(() => { const t = setTimeout(onDone, 2500); return () => clearTimeout(t); }, []); // eslint-disable-line react-hooks/exhaustive-deps
-  const sub = theme === "GAMIFIED" ? "text-gray-400" : "text-gray-500";
-  return (
-    <div className="flex flex-col items-center gap-3">
-      <div className="relative w-48 h-36 rounded-xl overflow-hidden bg-gray-900/20 border border-gray-300">
-        {[
-          { x: 80, y: 60 }, { x: 160, y: 90 }, { x: 110, y: 120 }, { x: 50, y: 100 },
-        ].map((b, i) => (
-          <motion.div key={i}
-            style={{ position: "absolute", left: b.x - 16, top: b.y - 16, width: 32, height: 32 }}
-            animate={{ x: [0, 15 * (i % 2 ? 1 : -1), 0], y: [0, 10 * (i < 2 ? 1 : -1), 0] }}
-            transition={{ duration: 1.5, repeat: Infinity, delay: i * 0.2 }}
-            className="rounded-full border-2 border-white bg-gray-300 absolute" />
-        ))}
-      </div>
-      <p className={`text-xs text-center ${sub}`}>Todas ficam cinzas e se movem — acompanhe com os olhos!</p>
     </div>
   );
 }
@@ -164,12 +181,8 @@ function TutStep2({ theme, onDone }: { theme: Theme; onDone: () => void }) {
 function MOTTutorial({ theme, onDone }: { theme: Theme; onDone: () => void }) {
   const steps = [
     {
-      instruction: "Algumas bolas vão piscar em dourado — memorize quais são!",
-      content: (done: () => void) => <TutStep1 theme={theme} onDone={done} />,
-    },
-    {
-      instruction: "Todas as bolas se movem. Acompanhe os alvos com os olhos, depois toque neles.",
-      content: (done: () => void) => <TutStep2 theme={theme} onDone={done} />,
+      instruction: "Algumas bolas são alvos (douradas). Depois todas se misturam e se movem — sua missão é não perder os alvos de vista.",
+      content: (done: () => void) => <MOTDemo onReady={done} />,
     },
   ];
   return <TutorialBase theme={theme} title="Rastreamento de Objetos" steps={steps} onDone={onDone} />;
@@ -214,15 +227,20 @@ export function MOT({ difficulty, theme, onComplete }: MOTProps) {
   const ballsRef = useRef<Ball[]>([]);
   const ballNodes = useRef<Map<number, HTMLDivElement>>(new Map());
 
-  // Arena responsiva: o palco tem tamanho lógico fixo (AREA_W×AREA_H) e é
-  // escalado por CSS p/ caber na largura disponível (grande no tablet/desktop,
-  // ocupa a tela toda no celular sem vazar). A física e o rAF não mudam.
+  // Arena responsiva: mede a largura disponível e usa esse valor como as dimensões
+  // REAIS (px) da arena — a física roda nessas coordenadas, então o clamp coincide
+  // com a borda visível e a bola nunca ultrapassa (nem no celular, nem no desktop).
   const stageWrapRef = useRef<HTMLDivElement>(null);
-  const [stageScale, setStageScale] = useState(1);
+  const [dims, setDims] = useState(() => ({ w: 320, h: Math.round(320 * ASPECT) }));
+  const dimsRef = useRef(dims);
+  dimsRef.current = dims;
   useLayoutEffect(() => {
     const el = stageWrapRef.current;
     if (!el) return;
-    const compute = () => setStageScale(Math.min(1, el.clientWidth / AREA_W));
+    const compute = () => {
+      const w = Math.max(240, Math.min(MAX_W, Math.floor(el.clientWidth)));
+      setDims({ w, h: Math.round(w * ASPECT) });
+    };
     compute();
     const ro = new ResizeObserver(compute);
     ro.observe(el);
@@ -238,7 +256,7 @@ export function MOT({ difficulty, theme, onComplete }: MOTProps) {
   }, []);
 
   const startRound = useCallback((r: number) => {
-    const newBalls = randomBalls(levelRef.current, r);
+    const newBalls = randomBalls(levelRef.current, r, dimsRef.current.w, dimsRef.current.h);
     // A base renderizada (left/top) e `newBalls`; a fisica viva parte da mesma
     // referencia. Durante o track o transform e aplicado como delta sobre ela.
     ballsRef.current = newBalls;
@@ -257,7 +275,7 @@ export function MOT({ difficulty, theme, onComplete }: MOTProps) {
 
       function animate() {
         // Avanca a fisica no ref (paredes + colisao entre bolas) sem render.
-        ballsRef.current = stepAll(ballsRef.current);
+        ballsRef.current = stepAll(ballsRef.current, dimsRef.current.w, dimsRef.current.h);
         for (const ball of ballsRef.current) {
           const node = ballNodes.current.get(ball.id);
           const b0 = base.get(ball.id);
@@ -374,7 +392,7 @@ export function MOT({ difficulty, theme, onComplete }: MOTProps) {
 
   return (
     <div className={`min-h-screen overflow-y-auto ${pal.bg}`}>
-      <div className="max-w-[600px] mx-auto px-4 py-5 flex flex-col items-center gap-4">
+      <div className="max-w-[680px] mx-auto px-4 py-5 flex flex-col items-center gap-4">
 
         {/* Header */}
         <div className={`w-full rounded-2xl p-4 ${pal.card}`}>
@@ -396,11 +414,10 @@ export function MOT({ difficulty, theme, onComplete }: MOTProps) {
           </motion.div>
         </AnimatePresence>
 
-        {/* Ball area (responsiva: palco lógico escalado p/ caber) */}
+        {/* Ball area — coordenadas REAIS em px (sem escala CSS); a bola nunca passa da borda */}
         <div ref={stageWrapRef} className="w-full flex justify-center">
         <div className={`relative rounded-2xl overflow-hidden ${pal.area}`}
-          style={{ width: Math.round(AREA_W * stageScale), height: Math.round(AREA_H * stageScale) }}>
-        <div style={{ width: AREA_W, height: AREA_H, transform: `scale(${stageScale})`, transformOrigin: "top left", position: "relative" }}>
+          style={{ width: dims.w, height: dims.h }}>
           {balls.map(ball => {
             const isSelected = selected.has(ball.id);
             const showGold = phase === "memorize" && ball.isTarget;
@@ -414,8 +431,9 @@ export function MOT({ difficulty, theme, onComplete }: MOTProps) {
                 }}
                 style={{
                   position: "absolute",
-                  left: ball.x - BALL_RADIUS,
-                  top: ball.y - BALL_RADIUS,
+                  // clamp defensivo: mesmo se a arena mudar de tamanho, a base nunca sai do quadro
+                  left: Math.min(Math.max(0, ball.x - BALL_RADIUS), dims.w - BALL_RADIUS * 2),
+                  top: Math.min(Math.max(0, ball.y - BALL_RADIUS), dims.h - BALL_RADIUS * 2),
                   width: BALL_RADIUS * 2,
                   height: BALL_RADIUS * 2,
                   // Durante "track" o transform e controlado pelo rAF (omitido
@@ -435,7 +453,6 @@ export function MOT({ difficulty, theme, onComplete }: MOTProps) {
               </div>
             );
           })}
-        </div>
         </div>
         </div>
 
