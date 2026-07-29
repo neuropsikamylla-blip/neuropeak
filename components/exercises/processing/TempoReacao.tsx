@@ -14,19 +14,29 @@ interface TempoReacaoProps {
   onComplete: (result: ExerciseResult) => void;
 }
 
+// Direção de entrada do balão (o paciente não sabe de onde vem → trabalha o reflexo).
+type Dir = "top" | "bottom" | "left" | "right" | "diag";
+
 interface Balloon {
   id: number;
   isTarget: boolean;
   color: string;
-  x: number;       // % from left
   size: number;    // px diameter
   duration: number; // ms to cross the play area
   spawnedAt: number;
+  // trajetória (posição-base CSS + transform inicial→final, animado por framer-motion)
+  left: string; top: string;
+  fx: number; fy: number;   // transform inicial (fora da tela)
+  tx: number; ty: number;   // transform final (sai pelo lado oposto)
 }
 
+const SESSION_MS = 5 * 60 * 1000;   // 5 min (era 7)
 const GREEN = "#16a34a";
+// distratores "fáceis" (cores bem diferentes do verde)
 const DISTRACTOR_COLORS = ["#dc2626", "#2563eb", "#9333ea", "#ea580c", "#0891b2"];
-
+// distratores "difíceis" — tons ESVERDEADOS (parecidos, mas NÃO são o verde-alvo):
+// oliva, lima, teal, lima-claro, verde-amarelado. Entram só depois de vários acertos.
+const NEAR_GREEN_COLORS = ["#4d7c0f", "#84cc16", "#0d9488", "#a3e635", "#65a30d"];
 
 function speedMs(difficulty: number) {
   // 6500ms (diff 1) → 1400ms (diff 10) — começa confortável, mas acelera de verdade
@@ -42,15 +52,40 @@ function distractorCount(difficulty: number) {
   return 5;
 }
 
-function makeBalloon(isTarget: boolean, ms: number): Balloon {
+// Distribuição pedida: 30% de cima · 30% de um dos lados · 30% na diagonal · 10% de baixo.
+function pickDir(): Dir {
+  const r = Math.random();
+  if (r < 0.30) return "top";
+  if (r < 0.60) return Math.random() < 0.5 ? "left" : "right";
+  if (r < 0.90) return "diag";
+  return "bottom";
+}
+
+function makeBalloon(isTarget: boolean, ms: number, nearGreen: boolean): Balloon {
+  const size = 62 + Math.random() * 22;
+  const off = size * 1.6;   // deslocamento p/ nascer/sair FORA da área
+  const D = 1400;           // travessia grande (garante que cruza e some do outro lado)
+  const cross = 8 + Math.random() * 72;  // posição na direção transversal (%) — margem segura
+  const dir = pickDir();
+  let left = "0px", top = "0px", fx = 0, fy = 0, tx = 0, ty = 0;
+  if (dir === "top")         { left = `${cross}%`; top = "0px"; fy = -off; ty = D; }
+  else if (dir === "bottom") { left = `${cross}%`; top = "0px"; fy = D;    ty = -off; }
+  else if (dir === "left")   { left = "0px"; top = `${cross}%`; fx = -off; tx = D; }
+  else if (dir === "right")  { left = "0px"; top = `${cross}%`; fx = D;    tx = -off; }
+  else { // diag — entra por um canto, sai pelo oposto (4 variações)
+    const goRight = Math.random() < 0.5, goDown = Math.random() < 0.5;
+    fx = goRight ? -off : D; tx = goRight ? D : -off;
+    fy = goDown ? -off : D;  ty = goDown ? D : -off;
+  }
+  const pool = nearGreen && Math.random() < 0.5 ? NEAR_GREEN_COLORS : DISTRACTOR_COLORS;
   return {
     id: Date.now() * 1000 + Math.floor(Math.random() * 1000),
     isTarget,
-    color: isTarget ? GREEN : DISTRACTOR_COLORS[Math.floor(Math.random() * DISTRACTOR_COLORS.length)],
-    x: 4 + Math.random() * 78,
-    size: 62 + Math.random() * 22,
+    color: isTarget ? GREEN : pool[Math.floor(Math.random() * pool.length)],
+    size,
     duration: ms * (0.85 + Math.random() * 0.3),
     spawnedAt: Date.now(),
+    left, top, fx, fy, tx, ty,
   };
 }
 
@@ -75,7 +110,7 @@ function BalloonShape({ color, size = 70 }: { color: string; size?: number }) {
 function TempoReacaoTutorial({ theme, onDone }: { theme: Theme; onDone: () => void }) {
   const steps = [
     {
-      instruction: "Balões coloridos vão cair. Toque APENAS nos VERDES!",
+      instruction: "Balões vão aparecer de vários lados. Toque APENAS nos VERDES!",
       content: (onStepDone: () => void) => <TempoReacaoShowStep theme={theme} onDone={onStepDone} />,
     },
     {
@@ -169,7 +204,7 @@ function TempoReacaoTapStep({ theme, onDone }: { theme: Theme; onDone: () => voi
 
 export function TempoReacao({ difficulty, theme, onComplete }: TempoReacaoProps) {
   const [showTutorial, setShowTutorial] = useState(true);
-  const { begin, isTimeUp, elapsedSec, finish, progressPct } = useTimedProgress();
+  const { begin, isTimeUp, elapsedSec, finish, progressPct } = useTimedProgress(SESSION_MS);
 
   const [started, setStarted] = useState(false);
   const [balloons, setBalloons] = useState<Balloon[]>([]);
@@ -230,10 +265,13 @@ export function TempoReacao({ difficulty, theme, onComplete }: TempoReacaoProps)
     const bonus = Math.min(Math.floor(correctCountRef.current / 4), 2);
     const numTargets = 1 + bonus;
     const numDistr = nd + Math.min(Math.floor(correctCountRef.current / 4), 3);
+    // Depois de 8 acertos, os distratores passam a incluir tons esverdeados
+    // parecidos com o alvo — exige discriminação de cor mais fina.
+    const nearGreen = correctCountRef.current >= 8;
 
     const batch: Balloon[] = [
-      ...Array.from({ length: numTargets }, () => makeBalloon(true, ms)),
-      ...Array.from({ length: numDistr }, () => makeBalloon(false, ms)),
+      ...Array.from({ length: numTargets }, () => makeBalloon(true, ms, nearGreen)),
+      ...Array.from({ length: numDistr }, () => makeBalloon(false, ms, nearGreen)),
     ];
     pendingTargetsRef.current = numTargets;
     setBalloons(batch);
@@ -334,7 +372,7 @@ export function TempoReacao({ difficulty, theme, onComplete }: TempoReacaoProps)
         {!started && (
           <div className="absolute inset-0 flex flex-col items-center justify-center gap-3">
             <p className={`text-sm text-center px-6 ${subClass}`}>
-              Balões coloridos vão cair. Toque <strong className="text-green-600">só nos verdes</strong>!
+              Balões vão aparecer de vários lados. Toque <strong className="text-green-600">só nos verdes</strong>!
             </p>
             <button
               onClick={start}
@@ -353,14 +391,14 @@ export function TempoReacao({ difficulty, theme, onComplete }: TempoReacaoProps)
           {balloons.map((balloon) => (
             <motion.div
               key={balloon.id}
-              initial={{ y: -balloon.size * 1.4 }}
-              animate={{ y: 1200 }}
+              initial={{ x: balloon.fx, y: balloon.fy }}
+              animate={{ x: balloon.tx, y: balloon.ty }}
               transition={{ duration: balloon.duration / 1000, ease: "linear" }}
               onAnimationComplete={() => handleBalloonExit(balloon)}
               style={{
                 position: "absolute",
-                left: `${balloon.x}%`,
-                top: 0,
+                left: balloon.left,
+                top: balloon.top,
                 width: balloon.size,
                 display: "flex",
                 flexDirection: "column",

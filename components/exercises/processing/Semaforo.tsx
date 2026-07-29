@@ -225,15 +225,21 @@ interface RoundState {
   distractors: [LightColor, LightColor];
 }
 
+const SESSION_MS = 5 * 60 * 1000;   // 5 min (era 7)
+
 export function Semaforo({ difficulty, theme, onComplete }: SemaforoProps) {
   const [showTutorial, setShowTutorial] = useState(true);
-  const { begin, isTimeUp, elapsedSec, finish: finishProgress, progressPct } = useTimedProgress();
+  const { begin, isTimeUp, elapsedSec, finish: finishProgress, progressPct } = useTimedProgress(SESSION_MS);
 
   const [started, setStarted] = useState(false);
   const [phase, setPhase] = useState<Phase>("idle");
   const [round, setRound] = useState<RoundState | null>(null);
   const [results, setResults] = useState<{ correct: boolean; rt: number | null }[]>([]);
   const [feedback, setFeedback] = useState<"correct" | "wrong" | null>(null);
+  // Posição dos botões troca ao longo da sessão (o paciente não pode responder no
+  // automático — precisa LER o botão). Começa fixo; passa a alternar após algumas rodadas.
+  const [swapped, setSwapped] = useState(false);
+  const roundCountRef = useRef(0);
 
   const resultsRef = useRef<{ correct: boolean; rt: number | null }[]>([]);
   const doneRef = useRef(false);
@@ -290,6 +296,10 @@ export function Semaforo({ difficulty, theme, onComplete }: SemaforoProps) {
   // ─── Start a new round ────────────────────────────────────────────────────
   const startRound = useCallback(() => {
     if (doneRef.current) return;
+
+    // "Com o tempo": depois da 5ª rodada, a posição dos botões inverte a cada 4 rodadas.
+    const rc = ++roundCountRef.current;
+    if (rc > 5 && (rc - 6) % 4 === 0) setSwapped((s) => !s);
 
     const targetPos = ([0, 1, 2] as Position[])[Math.floor(Math.random() * 3)];
     const targetColor = randomLightColor();
@@ -474,8 +484,8 @@ export function Semaforo({ difficulty, theme, onComplete }: SemaforoProps) {
               </AnimatePresence>
             </div>
 
-            {/* Action buttons */}
-            <div className="flex gap-4 w-full max-w-xs">
+            {/* Action buttons — a posição inverte ao longo da sessão (flex-row-reverse) */}
+            <div className={`flex gap-4 w-full max-w-xs ${swapped ? "flex-row-reverse" : ""}`}>
               <button
                 onPointerDown={onPressAdvance}
                 className={`flex-1 py-5 rounded-2xl font-bold text-base transition-transform active:scale-95 select-none ${
