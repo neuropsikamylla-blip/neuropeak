@@ -270,7 +270,7 @@ const ALL_SCENARIOS: Scenario[] = [
     text: "Carregar objetos pesados curvando a coluna para baixo",
     emoji: "📦",
     answer: "errado",
-    explanation: "Dobrar a coluna ao carregar peso causa lesões lomabares.",
+    explanation: "Dobrar a coluna ao carregar peso causa lesões lombares.",
     hardness: 5,
   },
   {
