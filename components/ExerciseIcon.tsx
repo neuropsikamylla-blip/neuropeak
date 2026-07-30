@@ -1,5 +1,9 @@
 import { EXERCISE_ICON_IDS, ICON_SCALE } from "@/lib/exercise-icons";
 
+// "Cache-buster": os ícones têm cache de 7 dias no navegador. Ao trocar um PNG,
+// incremente este número para o navegador baixar a versão nova (sem limpar cache).
+const ICON_VER = 2;
+
 interface ExerciseIconProps {
   id: string;
   emoji: string;
@@ -15,7 +19,7 @@ export function ExerciseIcon({ id, emoji, size = 28, className = "" }: ExerciseI
     return (
       // eslint-disable-next-line @next/next/no-img-element
       <img
-        src={`/exercises/icones-exercicios/${id}.png`}
+        src={`/exercises/icones-exercicios/${id}.png?v=${ICON_VER}`}
         alt=""
         width={px}
         height={px}
