@@ -19,8 +19,9 @@ interface MOTProps {
 // +1 alvo, +velocidade... (começa com 2 alvos). Velocidade sobe suave (nada absurdo).
 
 const BALL_RADIUS = 26;
-const MAX_W = 640;    // largura máxima da arena (desktop); no celular ocupa a largura toda
-const ASPECT = 0.82;  // altura = largura × 0.82 (arena mais LARGA que alta)
+const MAX_W = 1120;      // arena GRANDE no desktop; adapta ao espaço no tablet/celular
+const ASPECT = 0.72;     // altura = largura × 0.72 (arena ampla, mais larga que alta)
+const RESERVED_H = 240;  // altura reservada p/ header + rótulo + botão; o resto vira arena
 const MAX_TARGETS = 6;
 // A arena usa COORDENADAS REAIS em px (medidas da tela), sem escala CSS — assim o
 // clamp da física é exatamente a borda visível e a bola nunca ultrapassa o quadro.
@@ -238,13 +239,18 @@ export function MOT({ difficulty, theme, onComplete }: MOTProps) {
     const el = stageWrapRef.current;
     if (!el) return;
     const compute = () => {
-      const w = Math.max(240, Math.min(MAX_W, Math.floor(el.clientWidth)));
+      const availW = Math.floor(el.clientWidth);
+      const availH = Math.max(320, window.innerHeight - RESERVED_H);
+      // maior arena que cabe na LARGURA e na ALTURA da tela, mantendo a proporção
+      let w = Math.min(availW, Math.floor(availH / ASPECT));
+      w = Math.max(280, Math.min(MAX_W, w));
       setDims({ w, h: Math.round(w * ASPECT) });
     };
     compute();
     const ro = new ResizeObserver(compute);
     ro.observe(el);
-    return () => ro.disconnect();
+    window.addEventListener("resize", compute);
+    return () => { ro.disconnect(); window.removeEventListener("resize", compute); };
   }, []);
 
   const stopRaf = useCallback(() => {
@@ -392,10 +398,10 @@ export function MOT({ difficulty, theme, onComplete }: MOTProps) {
 
   return (
     <div className={`min-h-screen overflow-y-auto ${pal.bg}`}>
-      <div className="max-w-[680px] mx-auto px-4 py-5 flex flex-col items-center gap-4">
+      <div className="max-w-[1180px] mx-auto px-4 py-5 flex flex-col items-center gap-4">
 
         {/* Header */}
-        <div className={`w-full rounded-2xl p-4 ${pal.card}`}>
+        <div className={`w-full max-w-[760px] rounded-2xl p-4 ${pal.card}`}>
           <div className="flex justify-between items-center mb-2">
             <h2 className={`font-bold text-sm ${pal.title}`}>👁️ Rastreamento de Objetos</h2>
           </div>
@@ -405,7 +411,7 @@ export function MOT({ difficulty, theme, onComplete }: MOTProps) {
         {/* Phase label */}
         <AnimatePresence mode="wait">
           <motion.div key={phase} initial={{ opacity: 0, y: -4 }} animate={{ opacity: 1, y: 0 }}
-            className={`w-full text-center py-2 px-4 rounded-xl font-bold text-sm ${
+            className={`w-full max-w-[760px] text-center py-2 px-4 rounded-xl font-bold text-sm ${
               phase === "memorize" ? (theme === "GAMIFIED" ? "bg-yellow-900/40 text-yellow-300" : "bg-yellow-50 text-yellow-800") :
               phase === "track" ? (theme === "GAMIFIED" ? "bg-blue-900/40 text-blue-300" : "bg-blue-50 text-blue-800") :
               (theme === "GAMIFIED" ? "bg-green-900/40 text-green-300" : "bg-green-50 text-green-800")
@@ -459,7 +465,7 @@ export function MOT({ difficulty, theme, onComplete }: MOTProps) {
         {/* Confirm button */}
         {phase === "identify" && roundScore === null && (
           <button onClick={handleConfirm}
-            className={`w-full py-3 rounded-xl font-bold text-sm ${pal.btn}`}
+            className={`w-full max-w-[760px] py-3 rounded-xl font-bold text-sm ${pal.btn}`}
             disabled={selected.size !== k}>
             {selected.size < k ? `Selecione mais ${k - selected.size} bola(s)` : "Confirmar →"}
           </button>
@@ -467,7 +473,7 @@ export function MOT({ difficulty, theme, onComplete }: MOTProps) {
 
         {roundScore !== null && (
           <motion.div initial={{ opacity: 0, scale: 0.8 }} animate={{ opacity: 1, scale: 1 }}
-            className={`w-full py-3 rounded-xl text-center font-bold text-sm ${
+            className={`w-full max-w-[760px] py-3 rounded-xl text-center font-bold text-sm ${
               roundScore === k ? (theme === "GAMIFIED" ? "bg-green-900/40 text-green-300" : "bg-green-100 text-green-800") :
               roundScore > 0 ? (theme === "GAMIFIED" ? "bg-yellow-900/40 text-yellow-300" : "bg-yellow-100 text-yellow-800") :
               (theme === "GAMIFIED" ? "bg-red-900/40 text-red-300" : "bg-red-100 text-red-800")
