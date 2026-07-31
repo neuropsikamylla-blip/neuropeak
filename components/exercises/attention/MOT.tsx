@@ -19,9 +19,10 @@ interface MOTProps {
 // +1 alvo, +velocidade... (começa com 2 alvos). Velocidade sobe suave (nada absurdo).
 
 const BALL_RADIUS = 22;  // bolas um pouco menores → mais espaço LIVRE entre elas (não ficam "juntinhas")
-const MAX_W = 1120;      // arena GRANDE no desktop; adapta ao espaço no tablet/celular
-const ASPECT = 0.62;     // altura = largura × 0.62 (arena ampla e panorâmica — bolas se espalham)
+const MAX_W = 1440;      // arena GRANDE no desktop; adapta ao espaço no tablet/celular
+const ASPECT = 0.66;     // altura = largura × 0.66 (arena ampla — bolas se espalham em 2D)
 const RESERVED_H = 150;  // altura reservada p/ header + rótulo + botão; o resto vira arena (era 240 — desperdiçava altura)
+const PAD_X = 72;        // padding lateral acumulado (wrapper + container) descontado da largura da janela
 const MAX_TARGETS = 6;
 // A arena usa COORDENADAS REAIS em px (medidas da tela), sem escala CSS — assim o
 // clamp da física é exatamente a borda visível e a bola nunca ultrapassa o quadro.
@@ -236,22 +237,21 @@ export function MOT({ difficulty, theme, onComplete }: MOTProps) {
   const dimsRef = useRef(dims);
   dimsRef.current = dims;
   useLayoutEffect(() => {
-    const el = stageWrapRef.current;
-    if (!el) return;
+    // Mede o VIEWPORT direto (window.innerWidth/innerHeight) — robusto: não depende
+    // do clientWidth de um wrapper que pode vir travado num valor pequeno.
     const compute = () => {
-      const availW = Math.floor(el.clientWidth);
-      const availH = Math.max(320, window.innerHeight - RESERVED_H);
+      const availW = Math.min(MAX_W, window.innerWidth - PAD_X);
+      const availH = Math.max(360, window.innerHeight - RESERVED_H);
       // maior arena que cabe na LARGURA e na ALTURA da tela, mantendo a proporção;
       // piso generoso (não fica minúscula) sem nunca estourar a largura disponível
       let w = Math.min(availW, Math.floor(availH / ASPECT));
-      w = Math.min(MAX_W, Math.max(Math.min(availW, 520), w));
+      w = Math.min(availW, Math.max(Math.min(availW, 560), w));
       setDims({ w, h: Math.round(w * ASPECT) });
     };
     compute();
-    const ro = new ResizeObserver(compute);
-    ro.observe(el);
     window.addEventListener("resize", compute);
-    return () => { ro.disconnect(); window.removeEventListener("resize", compute); };
+    const t = setTimeout(compute, 120); // re-mede após o layout assentar
+    return () => { window.removeEventListener("resize", compute); clearTimeout(t); };
   }, []);
 
   const stopRaf = useCallback(() => {
@@ -399,7 +399,7 @@ export function MOT({ difficulty, theme, onComplete }: MOTProps) {
 
   return (
     <div className={`min-h-screen overflow-y-auto ${pal.bg}`}>
-      <div className="max-w-[1180px] mx-auto px-4 py-5 flex flex-col items-center gap-4">
+      <div className="max-w-[1480px] mx-auto px-4 py-5 flex flex-col items-center gap-4">
 
         {/* Header */}
         <div style={{ width: dims.w, maxWidth: "100%" }} className={`rounded-2xl p-4 ${pal.card}`}>

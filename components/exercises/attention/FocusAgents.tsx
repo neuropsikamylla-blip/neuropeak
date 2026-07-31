@@ -3,7 +3,8 @@
 // ─────────────────────────────────────────────────────────────────────────────
 // Focus Agentes — REFORMULADO (atenção/busca visual, sem emoções). Ver
 // FOCUS-AGENTES-REFORMULACAO-SPEC.md. Fundação em lib/focus/*.
-//  • personagens CAEM de cima (sempre), velocidade sobe com a progressão
+//  • personagens ESPALHADOS pela tela (grade 2D, nunca em linha), com DERIVA LEVE
+//    que dá sensação de vida; rebatem na borda (não escapam); mais personagens sobe com a dificuldade
 //  • comando é ANUNCIADO antes de cada rodada E fica visível no topo
 //  • etapas 1–5 por escada de 1 variável/passo · adaptativo por BLOCO de 8
 //  • imagens em proporção 2:3 (não amassam) · tutorial demonstrativo
@@ -35,7 +36,8 @@ const CHAR_H = Math.round(CHAR_W / 0.667); // ≈168 — proporção da arte, n�
 const TOUCH_PAD = 10;                     // área de toque um pouco maior (§11)
 const BLOCO = 8;                          // tentativas por bloco (§9)
 
-// Escada de dificuldade — cada passo muda UMA variável (§8). vel = velocidade de QUEDA.
+// Escada de dificuldade — cada passo muda UMA variável (§8). n = nº de personagens
+// (sobe com a dificuldade). vel = velocidade da DERIVA (sempre LEVE, nunca rápida §7).
 type Step = { etapa: Etapa; n: number; vel: number };
 const STEPS: Step[] = [
   { etapa: 1, n: 4, vel: 0 }, { etapa: 1, n: 5, vel: 0 }, { etapa: 1, n: 6, vel: 1 },
@@ -44,7 +46,8 @@ const STEPS: Step[] = [
   { etapa: 4, n: 8, vel: 2 }, { etapa: 4, n: 9, vel: 3 }, { etapa: 5, n: 9, vel: 3 },
   { etapa: 5, n: 10, vel: 3 },
 ];
-const VEL_PX = [2.0, 2.8, 3.7, 4.8];  // px/frame de queda — SEMPRE cai; sobe com a progressão
+const VEL_LEVE = [0.18, 0.34, 0.52, 0.72]; // px/frame — deriva SEMPRE leve; sobe devagar com a progressão
+const MARGIN = 6;                          // margem interna da arena (não cola na borda)
 
 const ACC_EMOJI: Record<Acessorio, string> = {
   bone: "🧢", fone: "🎧", oculos: "👓", oculos_escuro: "🕶️", chapeu: "🎩",
@@ -55,12 +58,14 @@ const OBJ_EMOJI: Record<Objeto, string> = {
   bola_basquete: "🏀", bola_futebol: "⚽",
 };
 
-interface LiveChar { uid: string; id: string; isTarget: boolean; bx: number; by: number; y: number; vy: number; }
+// bx/by = posição-base (render via left/top); x/y = posição viva; vx/vy = deriva leve;
+// ph = fase do "bob" (flutuação suave que dá vida sem deslocar de fato).
+interface LiveChar { uid: string; id: string; isTarget: boolean; bx: number; by: number; x: number; y: number; vx: number; vy: number; ph: number; }
 
 const rnd = (a: number, b: number) => a + Math.random() * (b - a);
 const shuffle = <T,>(a: T[]): T[] => { const b = [...a]; for (let i = b.length - 1; i > 0; i--) { const j = Math.floor(Math.random() * (i + 1)); [b[i], b[j]] = [b[j], b[i]]; } return b; };
 
-// ── Sprite do personagem (proporção 2:3, cai) ────────────────────────────────
+// ── Sprite do personagem (proporção 2:3, deriva leve pela arena) ─────────────
 function CharView({ lc, big, dim, onTap, refNode }: {
   lc: LiveChar; big: boolean; dim: boolean; onTap: () => void; refNode: (n: HTMLButtonElement | null) => void;
 }) {
@@ -160,8 +165,8 @@ function Tutorial({ onStart }: { onStart: () => void }) {
         style={{ background: "rgba(255,255,255,0.05)", border: "1px solid rgba(255,255,255,0.1)" }}>
         {[
           "Leia o comando (cor + acessório) que aparece antes e fica no topo.",
-          "Os personagens caem pela tela — toque só no que corresponde.",
-          "Primeiro procure acertar; a velocidade aumenta aos poucos.",
+          "Os personagens ficam espalhados e se mexem devagar — toque só no que corresponde.",
+          "Primeiro procure acertar; com o tempo aparecem mais personagens.",
           "Use o 🔊 para ouvir o comando de novo.",
         ].map((b, i) => (
           <p key={i} className="text-white/75 text-xs leading-relaxed">• {b}</p>
@@ -228,20 +233,22 @@ export function FocusAgents({ difficulty, theme, onComplete, exerciseId = "focus
   const nodes = useRef<Map<string, HTMLButtonElement>>(new Map());
   const rafRef = useRef<number | null>(null);
   const timers = useRef<ReturnType<typeof setTimeout>[]>([]);
+  const omissaoRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const doneRef = useRef(false);
   const uidSeq = useRef(0);
   const iniciouRef = useRef(false);
 
   const clearTimers = () => { timers.current.forEach(clearTimeout); timers.current = []; };
+  const clearOmissao = () => { if (omissaoRef.current) { clearTimeout(omissaoRef.current); omissaoRef.current = null; } };
   const stopRaf = () => { if (rafRef.current) { cancelAnimationFrame(rafRef.current); rafRef.current = null; } };
 
-  useEffect(() => () => { stopRaf(); clearTimers(); cancelTTS(); }, []);
+  useEffect(() => () => { stopRaf(); clearTimers(); clearOmissao(); cancelTTS(); }, []);
 
   const falar = useCallback((r: FocusRound) => { playTTS(r.texto.replace(/\*\*/g, "")); }, []);
 
   const encerrar = useCallback(() => {
     if (doneRef.current) return;
-    doneRef.current = true; stopRaf(); clearTimers(); finish();
+    doneRef.current = true; stopRaf(); clearTimers(); clearOmissao(); finish();
     const t = totais.current;
     const acc = t.total ? t.acertos / t.total : 0;
     const avgRt = t.tempos.length ? (t.tempos.reduce((s, x) => s + x, 0) / t.tempos.length) * 1000 : 1500;
@@ -253,22 +260,26 @@ export function FocusAgents({ difficulty, theme, onComplete, exerciseId = "focus
     });
   }, [difficulty, elapsedSec, finish, onComplete]);
 
-  // loop de QUEDA — personagens sempre descem; sair por baixo NÃO é erro (§3)
-  const startRaf = useCallback((onOmissao: () => void) => {
+  // loop de DERIVA LEVE — personagens espalhados vagam devagar e REBATEM na borda
+  // (nunca escapam §3); um "bob" senoidal dá sensação de vida sem tirá-los do lugar.
+  const startRaf = useCallback(() => {
     stopRaf();
+    let f = 0;
     const tick = () => {
-      const H = dims.current.h;
-      let saiu = false;
+      f++;
+      const W = dims.current.w, H = dims.current.h;
+      const maxX = W - CHAR_W - MARGIN, maxY = H - CHAR_H - MARGIN;
       for (const c of charsRef.current) {
-        c.y += c.vy;
+        c.x += c.vx; c.y += c.vy;
+        if (c.x < MARGIN) { c.x = MARGIN; c.vx = Math.abs(c.vx); }
+        else if (c.x > maxX) { c.x = maxX; c.vx = -Math.abs(c.vx); }
+        if (c.y < MARGIN) { c.y = MARGIN; c.vy = Math.abs(c.vy); }
+        else if (c.y > maxY) { c.y = maxY; c.vy = -Math.abs(c.vy); }
         const node = nodes.current.get(c.uid);
-        if (node) node.style.transform = `translateY(${c.y - c.by}px)`;
-        if (c.y > H + 10) saiu = true;
-      }
-      if (saiu) {
-        charsRef.current = charsRef.current.filter((c) => c.y <= H + 10);
-        setChars([...charsRef.current]);
-        if (charsRef.current.length === 0 && !respondidoRef.current) { onOmissao(); return; }
+        if (node) {
+          const bob = Math.sin(f * 0.045 + c.ph) * 3;
+          node.style.transform = `translate(${c.x - c.bx}px, ${c.y - c.by + bob}px)`;
+        }
       }
       rafRef.current = requestAnimationFrame(tick);
     };
@@ -277,33 +288,49 @@ export function FocusAgents({ difficulty, theme, onComplete, exerciseId = "focus
 
   // encadeamento das rodadas via refs (evita ciclos de useCallback)
   const proximaRef = useRef<() => void>(() => {});
-  const iniciarQuedaRef = useRef<(r: FocusRound) => void>(() => {});
+  const iniciarRodadaRef = useRef<(r: FocusRound) => void>(() => {});
 
-  const iniciarQueda = useCallback((r: FocusRound) => {
+  const iniciarRodada = useCallback((r: FocusRound) => {
     const step = STEPS[stepRef.current];
     const W = dims.current.w, H = dims.current.h;
     const alvoIdx = r.personagensIds.indexOf(r.alvoId);
-    const v = VEL_PX[step.vel];
-    // colunas: um por coluna quando cabe; os que dividem coluna são escalonados no y
-    const nCols = Math.max(2, Math.floor(W / (CHAR_W + 12)));
-    const colW = W / nCols;
-    const colOrder = shuffle(r.personagensIds.map((_, i) => i % nCols));
-    const stackByCol: Record<number, number> = {};
+    const vBase = VEL_LEVE[step.vel];
+    const n = r.personagensIds.length;
+    // GRADE espalhada (nunca em linha): 1 personagem por célula embaralhada, com jitter.
+    // cols proporcional à razão da arena, para as células ficarem largas o bastante.
+    const cols = Math.max(2, Math.round(Math.sqrt(n * (W / Math.max(1, H)))));
+    const rows = Math.max(1, Math.ceil(n / cols));
+    const cells = shuffle(Array.from({ length: cols * rows }, (_, i) => i)).slice(0, n);
+    const cellW = W / cols, cellH = H / rows;
     const live: LiveChar[] = r.personagensIds.map((id, i) => {
-      const col = colOrder[i];
-      const stack = (stackByCol[col] = (stackByCol[col] ?? 0) + 1) - 1;
-      const x = Math.max(6, Math.min(W - CHAR_W - 6, col * colW + rnd(6, Math.max(8, colW - CHAR_W - 6))));
-      const y = -CHAR_H - stack * (CHAR_H * 0.9) - rnd(0, 30);
-      return { uid: `c${uidSeq.current++}`, id, isTarget: i === alvoIdx, bx: x, by: y, y, vy: v * rnd(0.92, 1.12) };
+      const cell = cells[i];
+      const cx = (cell % cols) * cellW, cy = Math.floor(cell / cols) * cellH;
+      const x = Math.max(MARGIN, Math.min(W - CHAR_W - MARGIN, cx + rnd(4, Math.max(6, cellW - CHAR_W - 4))));
+      const y = Math.max(MARGIN, Math.min(H - CHAR_H - MARGIN, cy + rnd(4, Math.max(6, cellH - CHAR_H - 4))));
+      const ang = rnd(0, Math.PI * 2);
+      const sp = vBase * rnd(0.7, 1.2);
+      return { uid: `c${uidSeq.current++}`, id, isTarget: i === alvoIdx,
+        bx: x, by: y, x, y, vx: Math.cos(ang) * sp, vy: Math.sin(ang) * sp, ph: rnd(0, Math.PI * 2) };
     });
     charsRef.current = live;
     setChars(live);
     respondidoRef.current = false;
     rodadaAbertaEm.current = Date.now();
     setFase("jogando");
-    startRaf(() => { registra(false, null, true); proximaRef.current(); });
+    startRaf();
+    // omissão por TEMPO (não caem mais para fora): se não tocar a tempo, conta omissão e avança
+    clearOmissao();
+    const tempoMs = Math.max(4200, 7000 - step.etapa * 450);
+    omissaoRef.current = setTimeout(() => {
+      if (respondidoRef.current || doneRef.current) return;
+      respondidoRef.current = true; stopRaf();
+      registra(false, null, true);
+      setFb({ ok: false, msg: "Acabou o tempo!", alvoUid: charsRef.current.find((c) => c.id === r.alvoId)?.uid ?? null });
+      setFase("feedback");
+      timers.current.push(setTimeout(proximaRef.current, 1450));
+    }, tempoMs);
   }, [startRaf]);
-  iniciarQuedaRef.current = iniciarQueda;
+  iniciarRodadaRef.current = iniciarRodada;
 
   // registra o resultado de uma tentativa (acerto / erro / omissão)
   const registra = useCallback((acertou: boolean, rt: number | null, omissao: boolean) => {
@@ -341,7 +368,7 @@ export function FocusAgents({ difficulty, theme, onComplete, exerciseId = "focus
     setFb(null);
     setFase("comando");
     if (auditivo) falar(r);
-    timers.current.push(setTimeout(() => iniciarQuedaRef.current(r), auditivo ? 1500 : 1150));
+    timers.current.push(setTimeout(() => iniciarRodadaRef.current(r), auditivo ? 1500 : 1150));
   }, [auditivo, falar, isTimeUp, encerrar]);
 
   const proxima = useCallback(() => {
@@ -354,7 +381,7 @@ export function FocusAgents({ difficulty, theme, onComplete, exerciseId = "focus
     if (fase !== "jogando" || respondidoRef.current || doneRef.current) return;
     const r = roundRef.current; if (!r) return;
     respondidoRef.current = true;
-    stopRaf();
+    stopRaf(); clearOmissao();
     const rt = (Date.now() - rodadaAbertaEm.current) / 1000;
     const escolhido = charById(tocado.id)!;
     const acertou = matches(escolhido, r.criterio) && tocado.id === r.alvoId;
