@@ -18,10 +18,10 @@ interface MOTProps {
 // A cada 3 rodadas PERFEITAS seguidas sobe 1 nível. Alterna: +1 alvo, +velocidade,
 // +1 alvo, +velocidade... (começa com 2 alvos). Velocidade sobe suave (nada absurdo).
 
-const BALL_RADIUS = 26;
+const BALL_RADIUS = 22;  // bolas um pouco menores → mais espaço LIVRE entre elas (não ficam "juntinhas")
 const MAX_W = 1120;      // arena GRANDE no desktop; adapta ao espaço no tablet/celular
-const ASPECT = 0.72;     // altura = largura × 0.72 (arena ampla, mais larga que alta)
-const RESERVED_H = 240;  // altura reservada p/ header + rótulo + botão; o resto vira arena
+const ASPECT = 0.62;     // altura = largura × 0.62 (arena ampla e panorâmica — bolas se espalham)
+const RESERVED_H = 150;  // altura reservada p/ header + rótulo + botão; o resto vira arena (era 240 — desperdiçava altura)
 const MAX_TARGETS = 6;
 // A arena usa COORDENADAS REAIS em px (medidas da tela), sem escala CSS — assim o
 // clamp da física é exatamente a borda visível e a bola nunca ultrapassa o quadro.
@@ -67,7 +67,7 @@ function randomBalls(level: number, round: number, W: number, H: number): Ball[]
     do {
       x = R + Math.random() * (W - 2 * R);
       y = R + Math.random() * (H - 2 * R);
-      ok = pos.every(p => Math.hypot(p.x - x, p.y - y) >= R * 2.4); // nunca começam coladas
+      ok = pos.every(p => Math.hypot(p.x - x, p.y - y) >= Math.max(R * 3, 78)); // nascem bem separadas, nunca coladas
       tries++;
     } while (!ok && tries < 300);
     pos.push({ x, y });
@@ -241,9 +241,10 @@ export function MOT({ difficulty, theme, onComplete }: MOTProps) {
     const compute = () => {
       const availW = Math.floor(el.clientWidth);
       const availH = Math.max(320, window.innerHeight - RESERVED_H);
-      // maior arena que cabe na LARGURA e na ALTURA da tela, mantendo a proporção
+      // maior arena que cabe na LARGURA e na ALTURA da tela, mantendo a proporção;
+      // piso generoso (não fica minúscula) sem nunca estourar a largura disponível
       let w = Math.min(availW, Math.floor(availH / ASPECT));
-      w = Math.max(280, Math.min(MAX_W, w));
+      w = Math.min(MAX_W, Math.max(Math.min(availW, 520), w));
       setDims({ w, h: Math.round(w * ASPECT) });
     };
     compute();
@@ -401,7 +402,7 @@ export function MOT({ difficulty, theme, onComplete }: MOTProps) {
       <div className="max-w-[1180px] mx-auto px-4 py-5 flex flex-col items-center gap-4">
 
         {/* Header */}
-        <div className={`w-full max-w-[760px] rounded-2xl p-4 ${pal.card}`}>
+        <div style={{ width: dims.w, maxWidth: "100%" }} className={`rounded-2xl p-4 ${pal.card}`}>
           <div className="flex justify-between items-center mb-2">
             <h2 className={`font-bold text-sm ${pal.title}`}>👁️ Rastreamento de Objetos</h2>
           </div>
@@ -411,7 +412,8 @@ export function MOT({ difficulty, theme, onComplete }: MOTProps) {
         {/* Phase label */}
         <AnimatePresence mode="wait">
           <motion.div key={phase} initial={{ opacity: 0, y: -4 }} animate={{ opacity: 1, y: 0 }}
-            className={`w-full max-w-[760px] text-center py-2 px-4 rounded-xl font-bold text-sm ${
+            style={{ width: dims.w, maxWidth: "100%" }}
+            className={`text-center py-2 px-4 rounded-xl font-bold text-sm ${
               phase === "memorize" ? (theme === "GAMIFIED" ? "bg-yellow-900/40 text-yellow-300" : "bg-yellow-50 text-yellow-800") :
               phase === "track" ? (theme === "GAMIFIED" ? "bg-blue-900/40 text-blue-300" : "bg-blue-50 text-blue-800") :
               (theme === "GAMIFIED" ? "bg-green-900/40 text-green-300" : "bg-green-50 text-green-800")
@@ -465,7 +467,8 @@ export function MOT({ difficulty, theme, onComplete }: MOTProps) {
         {/* Confirm button */}
         {phase === "identify" && roundScore === null && (
           <button onClick={handleConfirm}
-            className={`w-full max-w-[760px] py-3 rounded-xl font-bold text-sm ${pal.btn}`}
+            style={{ width: dims.w, maxWidth: "100%" }}
+            className={`py-3 rounded-xl font-bold text-sm ${pal.btn}`}
             disabled={selected.size !== k}>
             {selected.size < k ? `Selecione mais ${k - selected.size} bola(s)` : "Confirmar →"}
           </button>
@@ -473,7 +476,8 @@ export function MOT({ difficulty, theme, onComplete }: MOTProps) {
 
         {roundScore !== null && (
           <motion.div initial={{ opacity: 0, scale: 0.8 }} animate={{ opacity: 1, scale: 1 }}
-            className={`w-full max-w-[760px] py-3 rounded-xl text-center font-bold text-sm ${
+            style={{ width: dims.w, maxWidth: "100%" }}
+            className={`py-3 rounded-xl text-center font-bold text-sm ${
               roundScore === k ? (theme === "GAMIFIED" ? "bg-green-900/40 text-green-300" : "bg-green-100 text-green-800") :
               roundScore > 0 ? (theme === "GAMIFIED" ? "bg-yellow-900/40 text-yellow-300" : "bg-yellow-100 text-yellow-800") :
               (theme === "GAMIFIED" ? "bg-red-900/40 text-red-300" : "bg-red-100 text-red-800")

@@ -276,7 +276,6 @@ export function TempoReacao({ difficulty, theme, onComplete }: TempoReacaoProps)
 
     const acertos = correctCountRef.current;
     const prog = progressao(acertos);
-    const ms = durMs(prog.vel);
     // near-green (discriminação de cor fina) só na fase final de mistura
     const nearGreen = acertos >= 20;
 
@@ -284,6 +283,11 @@ export function TempoReacao({ difficulty, theme, onComplete }: TempoReacaoProps)
     const bonus = Math.min(Math.floor(acertos / 4), 2);
     const numTargets = 1 + bonus;
     const numDistr = nd + Math.min(Math.floor(acertos / 4), 3);
+
+    // Velocidade PROPORCIONAL ao nº de alvos (pedido da Kamylla): com mais estímulos
+    // para tocar, os balões atravessam mais devagar — senão, com 2–3 alvos + mudança
+    // de direção, fica impossível acertar todos a tempo. +40% de travessia por alvo extra.
+    const ms = Math.round(durMs(prog.vel) * (1 + (numTargets - 1) * 0.4));
 
     // direção: fixa (single), alterna a cada leva (alternate) ou aleatória por balão (mixed)
     const levaDir: Dir = prog.modo === "single" ? "top" : DIRS_ALT[levaCountRef.current % DIRS_ALT.length];
