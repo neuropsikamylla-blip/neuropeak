@@ -319,6 +319,14 @@ export const EXERCISE_DEFINITIONS = {
     estimatedMinutes: 7,
     icon: "💰",
   },
+  "informacao-em-foco": {
+    id: "informacao-em-foco",
+    name: "Informação em Foco",
+    domain: "attention" as Domain,
+    description: "Leia, confira e escolha: localize e compare informações de produtos — preço, quantidade, validade, ingredientes e conservação",
+    estimatedMinutes: 7,
+    icon: "🔎",
+  },
   "caca-item-barato": {
     id: "caca-item-barato",
     name: "Caça Informação",

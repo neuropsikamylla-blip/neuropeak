@@ -52,6 +52,7 @@ export const EXERCISE_META: Record<string, ExerciseMeta> = {
   "corrida-tempo": { type: "visual", difficulty: "medio", secondary: ["Atenção Seletiva"] },
   "identificacao-simbolos": { type: "visual", difficulty: "facil", secondary: ["Atenção Seletiva", "Velocidade de Processamento"] },
   // Desenvolvimento Funcional
+  "informacao-em-foco": { type: "visual", difficulty: "medio", secondary: ["Leitura Funcional", "Atenção Seletiva"] },
   "caca-item-barato": { type: "visual", difficulty: "facil", secondary: ["Atenção Seletiva"] },
   "compra-multifuncional": { type: "visual", difficulty: "dificil", secondary: ["Tomada de Decisão", "Memória Operacional"] },
   "investigadores-sociais": { type: "visual", difficulty: "medio", secondary: ["Cognição Social", "Teoria da Mente"] },

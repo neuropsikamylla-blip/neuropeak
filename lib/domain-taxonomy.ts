@@ -20,7 +20,7 @@ export const DOMAIN_SUBDOMAINS: Record<Domain, Subdomain[]> = {
     { id: "semantica", label: "Memória Semântica", exercises: [] },
   ],
   attention: [
-    { id: "seletiva", label: "Atenção Seletiva", exercises: ["trilha-visual"] },
+    { id: "seletiva", label: "Atenção Seletiva", exercises: ["trilha-visual", "informacao-em-foco"] },
     { id: "sustentada", label: "Atenção Sustentada", exercises: ["focus-agents", "vigilancia"] },
     { id: "alternada", label: "Atenção Alternada", exercises: [] },
     { id: "dividida", label: "Atenção Dividida", exercises: ["dual-task", "mot"] },
@@ -28,7 +28,7 @@ export const DOMAIN_SUBDOMAINS: Record<Domain, Subdomain[]> = {
   executive: [
     { id: "planejamento", label: "Planejamento", exercises: ["torre-hanoi", "labirinto", "estacionamento-logico"] },
     { id: "inibitorio", label: "Controle Inibitório", exercises: ["stroop-task"] },
-    { id: "flexibilidade", label: "Flexibilidade Cognitiva", exercises: ["mudanca-regras", "task-switching"] },
+    { id: "flexibilidade", label: "Flexibilidade Cognitiva", exercises: ["task-switching"] },
     { id: "decisao", label: "Tomada de Decisão", exercises: [] },
     { id: "problemas", label: "Resolução de Problemas", exercises: [] },
     { id: "logico", label: "Raciocínio Lógico", exercises: ["deductive-grid", "ordem-historia"] },
@@ -42,7 +42,7 @@ export const DOMAIN_SUBDOMAINS: Record<Domain, Subdomain[]> = {
   functional: [
     { id: "rotina", label: "Rotina", exercises: [] },
     { id: "sequenciamento", label: "Sequenciamento Temporal", exercises: [] },
-    { id: "avd", label: "Atividades de Vida Diária", exercises: ["caca-item-barato"] },
+    { id: "avd", label: "Atividades de Vida Diária", exercises: [] },
     { id: "autonomia", label: "Autonomia", exercises: ["compra-multifuncional"] },
     { id: "cognicao-social", label: "Cognição Social", exercises: ["investigadores-sociais"] },
   ],
