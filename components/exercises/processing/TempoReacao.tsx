@@ -15,7 +15,8 @@ interface TempoReacaoProps {
 }
 
 // Direção de entrada do balão (o paciente não sabe de onde vem → trabalha o reflexo).
-type Dir = "top" | "bottom" | "left" | "right" | "diag";
+// Nunca misturamos direções na MESMA leva — só alternamos entre levas (pedido da Kamylla).
+type Dir = "top" | "bottom" | "left" | "right";
 
 interface Balloon {
   id: number;
@@ -31,12 +32,13 @@ interface Balloon {
 }
 
 const SESSION_MS = 5 * 60 * 1000;   // 5 min (era 7)
-const GREEN = "#16a34a";
+const GREEN = "#16a34a";       // o ÚNICO verde que vale
 // distratores "fáceis" (cores bem diferentes do verde)
-const DISTRACTOR_COLORS = ["#dc2626", "#2563eb", "#9333ea", "#ea580c", "#0891b2"];
-// distratores "difíceis" — tons ESVERDEADOS (parecidos, mas NÃO são o verde-alvo):
-// oliva, lima, teal, lima-claro, verde-amarelado. Entram só depois de vários acertos.
-const NEAR_GREEN_COLORS = ["#4d7c0f", "#84cc16", "#0d9488", "#a3e635", "#65a30d"];
+const DISTRACTOR_COLORS = ["#dc2626", "#2563eb", "#9333ea", "#ea580c", "#f59e0b"];
+// distratores "difíceis" — tons AZUL-ESVERDEADOS (teal), parecidos mas NÃO são o verde-alvo.
+// Treinam discriminação fina de cor; entram na fase de alternância. (pedido da Kamylla)
+const NEAR_GREEN_COLORS = ["#14b8a6", "#2dd4bf", "#0d9488", "#5eead4", "#10b981"];
+const TEAL_SAMPLE = "#2dd4bf"; // amostra usada no tutorial para mostrar o que NÃO vale
 
 function distractorCount(difficulty: number) {
   // 0 distractors at diff 1-2, then grows progressively
@@ -47,31 +49,19 @@ function distractorCount(difficulty: number) {
   return 5;
 }
 
-type DirMode = "single" | "alternate" | "mixed";
+type DirMode = "single" | "alternate";
 const DIRS_ALT: Dir[] = ["top", "bottom", "left", "right"]; // descer · subir · esquerda · direita
 
-// Progressão dos balões (pedido da Kamylla): sobe UMA coisa por vez.
+// Progressão dos balões (pedido da Kamylla): sobe UMA coisa por vez, SEM misturar lados.
 //  1) UMA direção fixa (de cima) e a velocidade sobe;
-//  2) ALTERNA a direção a cada leva (descer, subir, laterais), velocidade segue subindo;
-//  3) quando vai bem, MISTURA as direções mas volta à velocidade BAIXA;
-//  4) mistura e a velocidade sobe de novo.
+//  2) depois ALTERNA a direção a cada leva (descer, subir, laterais), UMA por vez,
+//     e a velocidade segue subindo devagar. Nunca vários lados ao mesmo tempo.
 function progressao(acertos: number): { modo: DirMode; vel: number } {
-  if (acertos < 6)  return { modo: "single",    vel: Math.min(3, Math.floor(acertos / 2)) };          // 0,0,1,1,2,2
-  if (acertos < 14) return { modo: "alternate", vel: Math.min(5, 2 + Math.floor((acertos - 6) / 3)) }; // 2..4
-  if (acertos < 20) return { modo: "mixed",     vel: 1 + Math.floor((acertos - 14) / 3) };             // 1,1,1,2,2,2  (reset)
-  return { modo: "mixed", vel: Math.min(6, 2 + Math.floor((acertos - 20) / 3)) };                      // 2..6
+  if (acertos < 6) return { modo: "single", vel: Math.min(3, Math.floor(acertos / 2)) };   // 0,0,1,1,2,2 — só de cima
+  return { modo: "alternate", vel: Math.min(6, 1 + Math.floor((acertos - 6) / 4)) };        // alterna 1 lado por leva; vel 1..6
 }
 // duração da travessia (ms) por nível de velocidade — menor = mais rápido
 function durMs(vel: number): number { return Math.round(5200 - vel * 600); } // 5200 … 1600
-
-// direção aleatória (só no modo "mixed"; inclui diagonal)
-function pickDir(): Dir {
-  const r = Math.random();
-  if (r < 0.28) return "top";
-  if (r < 0.56) return Math.random() < 0.5 ? "left" : "right";
-  if (r < 0.86) return "diag";
-  return "bottom";
-}
 
 // direção → trajetória (posição-base + transform inicial→final)
 function trajetoria(dir: Dir, size: number) {
@@ -81,16 +71,13 @@ function trajetoria(dir: Dir, size: number) {
   if (dir === "top")         { left = `${cross}%`; top = "0px"; fy = -off; ty = D; }
   else if (dir === "bottom") { left = `${cross}%`; top = "0px"; fy = D;    ty = -off; }
   else if (dir === "left")   { left = "0px"; top = `${cross}%`; fx = -off; tx = D; }
-  else if (dir === "right")  { left = "0px"; top = `${cross}%`; fx = D;    tx = -off; }
-  else { const goRight = Math.random() < 0.5, goDown = Math.random() < 0.5;
-    fx = goRight ? -off : D; tx = goRight ? D : -off;
-    fy = goDown ? -off : D;  ty = goDown ? D : -off; }
+  else                       { left = "0px"; top = `${cross}%`; fx = D;    tx = -off; } // right
   return { left, top, fx, fy, tx, ty };
 }
 
-function makeBalloon(isTarget: boolean, ms: number, nearGreen: boolean, dir: Dir): Balloon {
+function makeBalloon(isTarget: boolean, ms: number, pNear: number, dir: Dir): Balloon {
   const size = 62 + Math.random() * 22;
-  const pool = nearGreen && Math.random() < 0.5 ? NEAR_GREEN_COLORS : DISTRACTOR_COLORS;
+  const pool = Math.random() < pNear ? NEAR_GREEN_COLORS : DISTRACTOR_COLORS;
   return {
     id: Date.now() * 1000 + Math.floor(Math.random() * 1000),
     isTarget,
@@ -123,7 +110,7 @@ function BalloonShape({ color, size = 70 }: { color: string; size?: number }) {
 function TempoReacaoTutorial({ theme, onDone }: { theme: Theme; onDone: () => void }) {
   const steps = [
     {
-      instruction: "Balões vão aparecer de vários lados. Toque APENAS nos VERDES!",
+      instruction: "Toque APENAS no VERDE. Cuidado: os AZUL-ESVERDEADOS parecem, mas NÃO valem!",
       content: (onStepDone: () => void) => <TempoReacaoShowStep theme={theme} onDone={onStepDone} />,
     },
     {
@@ -146,8 +133,8 @@ function TempoReacaoShowStep({ theme, onDone }: { theme: Theme; onDone: () => vo
     <div className="flex flex-col items-center gap-2">
       <div className="flex gap-4 justify-center items-end">
         <div className="flex flex-col items-center">
-          <BalloonShape color="#dc2626" size={55} />
-          <p className="text-xs text-red-500 mt-1">NÃO</p>
+          <BalloonShape color={TEAL_SAMPLE} size={55} />
+          <p className="text-xs mt-1" style={{ color: TEAL_SAMPLE }}>NÃO</p>
         </div>
         <div className="flex flex-col items-center">
           <div className="ring-4 ring-green-400 rounded-full">
@@ -156,12 +143,12 @@ function TempoReacaoShowStep({ theme, onDone }: { theme: Theme; onDone: () => vo
           <p className="text-xs text-green-600 font-bold mt-1">✓ TOQUE!</p>
         </div>
         <div className="flex flex-col items-center">
-          <BalloonShape color="#2563eb" size={55} />
-          <p className="text-xs text-blue-500 mt-1">NÃO</p>
+          <BalloonShape color="#dc2626" size={55} />
+          <p className="text-xs text-red-500 mt-1">NÃO</p>
         </div>
       </div>
       <p className={`text-xs text-center mt-2 ${theme === "GAMIFIED" ? "text-gray-400" : "text-gray-500"}`}>
-        Toque só no verde!
+        Só vale ESTE verde. O azul-esverdeado (à esquerda) parece, mas <b>não conta</b>.
       </p>
     </div>
   );
@@ -276,8 +263,9 @@ export function TempoReacao({ difficulty, theme, onComplete }: TempoReacaoProps)
 
     const acertos = correctCountRef.current;
     const prog = progressao(acertos);
-    // near-green (discriminação de cor fina) só na fase final de mistura
-    const nearGreen = acertos >= 20;
+    // Distratores AZUL-ESVERDEADOS (discriminação de cor fina): entram na fase de
+    // alternância e ficam mais frequentes conforme o paciente evolui (25%→60%).
+    const pNear = acertos < 6 ? 0 : Math.min(0.6, 0.25 + (acertos - 6) * 0.02);
 
     // Progressive: after every 4 correct hits, add 1 extra target (max 3) and 1 extra distractor (max +3)
     const bonus = Math.min(Math.floor(acertos / 4), 2);
@@ -285,18 +273,18 @@ export function TempoReacao({ difficulty, theme, onComplete }: TempoReacaoProps)
     const numDistr = nd + Math.min(Math.floor(acertos / 4), 3);
 
     // Velocidade PROPORCIONAL ao nº de alvos (pedido da Kamylla): com mais estímulos
-    // para tocar, os balões atravessam mais devagar — senão, com 2–3 alvos + mudança
-    // de direção, fica impossível acertar todos a tempo. +40% de travessia por alvo extra.
+    // para tocar, os balões atravessam mais devagar — senão, com 2–3 alvos fica impossível.
     const ms = Math.round(durMs(prog.vel) * (1 + (numTargets - 1) * 0.4));
 
-    // direção: fixa (single), alterna a cada leva (alternate) ou aleatória por balão (mixed)
+    // UMA direção por leva (nunca vários lados ao mesmo tempo): fixa de cima (single)
+    // ou alterna descer/subir/laterais a cada leva (alternate). Todos os balões da leva
+    // vêm do MESMO lado — assim, com a velocidade subindo, continua factível.
     const levaDir: Dir = prog.modo === "single" ? "top" : DIRS_ALT[levaCountRef.current % DIRS_ALT.length];
     levaCountRef.current++;
-    const dirDe = (): Dir => (prog.modo === "mixed" ? pickDir() : levaDir);
 
     const batch: Balloon[] = [
-      ...Array.from({ length: numTargets }, () => makeBalloon(true, ms, nearGreen, dirDe())),
-      ...Array.from({ length: numDistr }, () => makeBalloon(false, ms, nearGreen, dirDe())),
+      ...Array.from({ length: numTargets }, () => makeBalloon(true, ms, pNear, levaDir)),
+      ...Array.from({ length: numDistr }, () => makeBalloon(false, ms, pNear, levaDir)),
     ];
     pendingTargetsRef.current = numTargets;
     setBalloons(batch);
