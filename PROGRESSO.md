@@ -14,7 +14,7 @@
 - **Motor (`lib/informacao-foco.ts`):** `Produto.marca` deixou de ser derivada do nome (a marca é dado do produto); `modelos()` nunca põe dois cartões de mesmo nome na mesma questão; **"Conteúdo" (mL/L) só em líquido e "Peso" (g/kg) só em sólido** (antes um pacote de arroz podia aparecer com "1 litro"); nível 4 monta as cenas a partir do catálogo. `CATALOGO` exportado.
 - **6 testes de integridade novos** (imagem existe em disco, PNG RGBA, marca por produto, **nomes únicos e catálogo = 70**, campo coerente com o estado). 205 testes no total.
 
-**⚠️ Pendência para ela decidir — 3 imagens FORA do catálogo por marca REAL impressa:** gelatina **Dr. Oetker**, fermento **Apti** e leite em pó **Camponesa**. O projeto usa só marcas fictícias, por isso não entraram; ficaram guardadas em `~/neuropeak-asset-backups/informacao-foco-pendentes-marca-real/`. Se ela regerar as embalagens com marca inventada, viram 80 produtos.
+**⚠️ PENDENTE — 3 embalagens com marca REAL (decidido por ela em 01/ago):** gelatina **Dr. Oetker**, fermento **Apti** e leite em pó **Camponesa** ficaram FORA (o projeto só usa marca fictícia). **Ela vai regerar as 3 com marca inventada**; quando salvar na pasta `~/Downloads/Informação em foco`, integrar na hora → catálogo vai a **73**. Os arquivos atuais estão guardados em `~/neuropeak-asset-backups/informacao-foco-pendentes-marca-real/` (não entram no repo).
 
 <details><summary>Plano original (passos e provas)</summary>
 
