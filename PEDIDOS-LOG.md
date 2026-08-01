@@ -14,3 +14,6 @@ vou mandar elas aqui ok?
 
 ## 01/08/2026 18:14
 vou colocar la na pasta entao
+
+## 01/08/2026 18:15
+mandei la
