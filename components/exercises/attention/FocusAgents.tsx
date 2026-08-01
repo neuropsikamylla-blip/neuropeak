@@ -167,46 +167,16 @@ function Tutorial({ onStart }: { onStart: () => void }) {
   );
 }
 
-// ── Resultado do bloco (§13) ─────────────────────────────────────────────────
-type BlocoRes = { acertos: number; erros: number; precisao: number; medianaSeg: number; melhorSeq: number; nivel: number; ajuste: string };
-function ResultadoBloco({ r, onNext }: { r: BlocoRes; onNext: () => void }) {
-  const linha = (k: string, v: string) => (
-    <div className="flex justify-between py-1.5 border-b border-white/10 text-sm">
-      <span className="text-white/60">{k}</span><span className="text-white font-bold">{v}</span>
-    </div>
-  );
-  return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center px-5"
-      style={{ background: "linear-gradient(160deg,#0a1628,#0d2244,#081020)" }}>
-      <motion.div initial={{ opacity: 0, scale: 0.9 }} animate={{ opacity: 1, scale: 1 }}
-        className="w-full max-w-sm rounded-3xl p-6"
-        style={{ background: "rgba(255,255,255,0.06)", border: "1.5px solid rgba(255,255,255,0.16)" }}>
-        <h2 className="text-white font-black text-xl text-center mb-4">Resultado do bloco</h2>
-        {linha("Acertos", `${r.acertos} de ${r.acertos + r.erros}`)}
-        {linha("Precisão", `${r.precisao}%`)}
-        {linha("Tempo mediano", `${r.medianaSeg.toFixed(1)} s`)}
-        {linha("Melhor sequência", `${r.melhorSeq}`)}
-        {linha("Nível", `${r.nivel}`)}
-        <p className="text-center text-cyan-300 text-sm font-semibold mt-4">{r.ajuste}</p>
-        <button onClick={onNext}
-          className="w-full h-12 rounded-full font-bold text-white text-base mt-5 active:scale-95 transition-transform"
-          style={{ background: "linear-gradient(135deg,#2563eb,#7c3aed)" }}>Continuar</button>
-      </motion.div>
-    </div>
-  );
-}
-
 // ── Componente principal ─────────────────────────────────────────────────────
 export function FocusAgents({ difficulty, theme, onComplete, exerciseId = "focus-agents" }: FocusAgentsProps) {
   const auditivo = exerciseId === "focus-agents-auditivo";
   const { begin, isTimeUp, elapsedSec, finish, progressPct } = useTimedProgress();
 
-  type Fase = "instrucoes" | "comando" | "jogando" | "feedback" | "bloco";
+  type Fase = "instrucoes" | "comando" | "jogando" | "feedback";
   const [fase, setFase] = useState<Fase>("instrucoes");
   const [round, setRound] = useState<FocusRound | null>(null);
   const [chars, setChars] = useState<LiveChar[]>([]);
   const [fb, setFb] = useState<{ ok: boolean; msg: string; alvoUid: string | null } | null>(null);
-  const [blocoRes, setBlocoRes] = useState<BlocoRes | null>(null);
 
   const stepRef = useRef(Math.max(0, Math.min(STEPS.length - 1, Math.round((difficulty - 1) * 0.4))));
   const bloco = useRef({ tentativas: 0, acertos: 0, errosSeguidos: 0, maxErros: 0, seq: 0, melhorSeq: 0, tempos: [] as number[] });
@@ -308,13 +278,17 @@ export function FocusAgents({ difficulty, theme, onComplete, exerciseId = "focus
   // encadeamento das rodadas via refs (evita ciclos de useCallback)
   const proximaRef = useRef<() => void>(() => {});
   const iniciarRodadaRef = useRef<(r: FocusRound) => void>(() => {});
+  const novaRodadaRef = useRef<() => void>(() => {});
 
   const iniciarRodada = useCallback((r: FocusRound) => {
     const step = STEPS[stepRef.current];
     const W = dims.current.w, H = dims.current.h;
     const alvoIdx = r.personagensIds.indexOf(r.alvoId);
     const n = r.personagensIds.length;
-    const cai = stepRef.current >= 1;   // nível 1 = espalhado; nível 2+ = queda
+    // SEMPRE espalhado pela tela em 2D (pedido da Kamylla): ativa a busca visual.
+    // A queda em linha (concentrada numa faixa) foi removida — a dificuldade sobe
+    // por nº de personagens, semelhança dos distratores, velocidade e etapa do comando.
+    const cai = false;
     modoQuedaRef.current = cai;
     let live: LiveChar[];
 
@@ -337,8 +311,9 @@ export function FocusAgents({ difficulty, theme, onComplete, exerciseId = "focus
     } else {
       // ESPALHADO: grade embaralhada + deriva leve (1 personagem por célula, com jitter).
       const vBase = VEL_LEVE[step.vel];
-      const cols = Math.max(2, Math.round(Math.sqrt(n * (W / Math.max(1, H)))));
-      const rows = Math.max(1, Math.ceil(n / cols));
+      // cols/rows balanceados para ESPALHAR em 2D (várias linhas, não uma faixa só)
+      const cols = Math.max(2, Math.round(Math.sqrt(n * (W / Math.max(1, H)) / 1.4)));
+      const rows = Math.max(2, Math.ceil(n / cols));
       const cells = shuffle(Array.from({ length: cols * rows }, (_, i) => i)).slice(0, n);
       const cellW = W / cols, cellH = H / rows;
       live = r.personagensIds.map((id, i) => {
@@ -389,16 +364,15 @@ export function FocusAgents({ difficulty, theme, onComplete, exerciseId = "focus
     }
   }, []);
 
+  // Fecha o bloco de 8: ajusta a dificuldade em SILÊNCIO e segue direto para a
+  // próxima rodada — sem tela de "Resultado do bloco" (pedido da Kamylla).
   const fecharBloco = useCallback(() => {
     const b = bloco.current;
     const prec = Math.round((b.acertos / Math.max(1, b.tentativas)) * 100);
-    const med = b.tempos.length ? [...b.tempos].sort((x, y) => x - y)[Math.floor(b.tempos.length / 2)] : 0;
-    let ajuste = "Mesmo nível no próximo bloco.";
-    if (prec >= 80 && b.maxErros <= 2 && stepRef.current < STEPS.length - 1) { stepRef.current++; ajuste = "Dificuldade aumentada levemente."; }
-    else if ((prec < 60 || b.maxErros >= 3) && stepRef.current > 0) { stepRef.current--; ajuste = "Dificuldade reduzida para ajudar."; }
-    setBlocoRes({ acertos: b.acertos, erros: b.tentativas - b.acertos, precisao: prec, medianaSeg: med, melhorSeq: b.melhorSeq, nivel: stepRef.current + 1, ajuste });
+    if (prec >= 80 && b.maxErros <= 2 && stepRef.current < STEPS.length - 1) stepRef.current++;
+    else if ((prec < 60 || b.maxErros >= 3) && stepRef.current > 0) stepRef.current--;
     bloco.current = { tentativas: 0, acertos: 0, errosSeguidos: 0, maxErros: 0, seq: 0, melhorSeq: 0, tempos: [] };
-    setFase("bloco");
+    novaRodadaRef.current();
   }, []);
 
   // ANUNCIA o comando, depois solta a queda (§ "mandar antes" + sempre visível)
@@ -415,6 +389,7 @@ export function FocusAgents({ difficulty, theme, onComplete, exerciseId = "focus
     // NÃO inicia sozinho: o card mostra o comando e espera o paciente clicar OK
     // (confirma que leu). Depois disso, nenhuma dica fica na tela. (pedido da Kamylla)
   }, [auditivo, falar, isTimeUp, encerrar]);
+  novaRodadaRef.current = novaRodada;
 
   // Paciente confirmou que leu o comando → começa a rodada (sem o comando visível).
   const confirmarComando = useCallback(() => {
@@ -462,9 +437,6 @@ export function FocusAgents({ difficulty, theme, onComplete, exerciseId = "focus
   // ── render ─────────────────────────────────────────────────────────────────
   if (fase === "instrucoes") {
     return <Tutorial onStart={() => { begin(); setFase("comando"); }} />;
-  }
-  if (fase === "bloco" && blocoRes) {
-    return <ResultadoBloco r={blocoRes} onNext={() => { setBlocoRes(null); novaRodada(); }} />;
   }
 
   return (
