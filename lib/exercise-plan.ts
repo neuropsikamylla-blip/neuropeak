@@ -17,6 +17,10 @@ export interface NormalizedPlanExercise {
 // "compra-multifuncional" (que já cobre orçamento + categoria + quantidade + tempo).
 const EXERCISE_ALIASES: Record<string, string> = {
   "desafio-orcamento": "compra-multifuncional",
+  // "Caça Informação" + "Mudança de Regras" foram unificados em "Informação em Foco".
+  // Planos antigos que tinham um (ou os dois) passam a mostrar só o novo (dedup abaixo).
+  "caca-item-barato": "informacao-em-foco",
+  "mudanca-regras": "informacao-em-foco",
   // Modos visual/auditivo unificados: o -auditivo virou um MODO interno (tela
   // "Configurar atividade"). Planos antigos abrem o exercício único na leitura.
   "restaurante-ordem-auditivo": "restaurante-ordem",

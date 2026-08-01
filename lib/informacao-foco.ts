@@ -30,6 +30,7 @@ export type CampoKey = keyof Campos;
 export interface Produto {
   nome: string;
   emoji: string;
+  img?: string;      // imagem real (card branco em /exercises/busca); cai no emoji se ausente
   categoria: string;
   campos: Campos;
 }
@@ -115,22 +116,23 @@ const validadeAntes = (a: { mes: number; ano: number }, b: { mes: number; ano: n
 
 // ── Modelos de produto (genéricos, sem marcas reais) ─────────────────────────
 type Estado = "liquido" | "solido";
-interface Modelo { nome: string; emoji: string; categoria: string; estado: Estado; lactose?: boolean; sabor?: string; }
+interface Modelo { nome: string; emoji: string; img: string; categoria: string; estado: Estado; lactose?: boolean; sabor?: string; }
+export const imgProduto = (n: string) => `/exercises/busca/${n}.png`;
 const MODELOS: Modelo[] = [
-  { nome: "Leite integral", emoji: "🥛", categoria: "Laticínio", estado: "liquido", lactose: true },
-  { nome: "Leite desnatado", emoji: "🥛", categoria: "Laticínio", estado: "liquido", lactose: true },
-  { nome: "Bebida vegetal", emoji: "🥛", categoria: "Bebida", estado: "liquido", lactose: false },
-  { nome: "Iogurte natural", emoji: "🥣", categoria: "Laticínio", estado: "solido", lactose: true },
-  { nome: "Iogurte de morango", emoji: "🥣", categoria: "Laticínio", estado: "solido", lactose: true, sabor: "morango" },
-  { nome: "Suco de uva", emoji: "🧃", categoria: "Bebida", estado: "liquido", sabor: "uva" },
-  { nome: "Suco de laranja", emoji: "🧃", categoria: "Bebida", estado: "liquido", sabor: "laranja" },
-  { nome: "Refrigerante", emoji: "🥤", categoria: "Bebida", estado: "liquido" },
-  { nome: "Água mineral", emoji: "💧", categoria: "Bebida", estado: "liquido", lactose: false },
-  { nome: "Biscoito", emoji: "🍪", categoria: "Mercearia", estado: "solido" },
-  { nome: "Barra de cereal", emoji: "🍫", categoria: "Mercearia", estado: "solido" },
-  { nome: "Pacote de arroz", emoji: "🍚", categoria: "Mercearia", estado: "solido", lactose: false },
-  { nome: "Café", emoji: "☕", categoria: "Mercearia", estado: "solido", lactose: false },
-  { nome: "Queijo", emoji: "🧀", categoria: "Laticínio", estado: "solido", lactose: true },
+  { nome: "Leite integral", emoji: "🥛", img: imgProduto("leite"), categoria: "Laticínio", estado: "liquido", lactose: true },
+  { nome: "Leite desnatado", emoji: "🥛", img: imgProduto("leite-po"), categoria: "Laticínio", estado: "liquido", lactose: true },
+  { nome: "Bebida vegetal", emoji: "🥛", img: imgProduto("leite"), categoria: "Bebida", estado: "liquido", lactose: false },
+  { nome: "Iogurte natural", emoji: "🥣", img: imgProduto("iogurte"), categoria: "Laticínio", estado: "solido", lactose: true },
+  { nome: "Iogurte de morango", emoji: "🥣", img: imgProduto("iogurte"), categoria: "Laticínio", estado: "solido", lactose: true, sabor: "morango" },
+  { nome: "Suco de uva", emoji: "🧃", img: imgProduto("suco-uva"), categoria: "Bebida", estado: "liquido", sabor: "uva" },
+  { nome: "Suco de laranja", emoji: "🧃", img: imgProduto("suco-laranja"), categoria: "Bebida", estado: "liquido", sabor: "laranja" },
+  { nome: "Refrigerante", emoji: "🥤", img: imgProduto("refrigerante-cola"), categoria: "Bebida", estado: "liquido" },
+  { nome: "Água mineral", emoji: "💧", img: imgProduto("agua-mineral"), categoria: "Bebida", estado: "liquido", lactose: false },
+  { nome: "Biscoito", emoji: "🍪", img: imgProduto("biscoito"), categoria: "Mercearia", estado: "solido" },
+  { nome: "Cereal matinal", emoji: "🍫", img: imgProduto("cereal"), categoria: "Mercearia", estado: "solido" },
+  { nome: "Pacote de arroz", emoji: "🍚", img: imgProduto("arroz"), categoria: "Mercearia", estado: "solido", lactose: false },
+  { nome: "Café", emoji: "☕", img: imgProduto("cafe"), categoria: "Mercearia", estado: "solido", lactose: false },
+  { nome: "Queijo", emoji: "🧀", img: imgProduto("queijo"), categoria: "Laticínio", estado: "solido", lactose: true },
 ];
 const ALERGENICOS = ["amendoim", "castanha", "soja", "ovo"];
 
@@ -163,7 +165,7 @@ const uid = () => `q${seq++}`;
 type Tipo1 = "preco" | "volume" | "peso" | "validade" | "unidades" | "lactose" | "conservacao" | "acucar" | "sabor";
 function gerarNivel1(tipo: Tipo1, nProdutos: number): Questao {
   const ms = modelos(nProdutos);
-  let base: Produto[] = ms.map((m) => ({ nome: m.nome, emoji: m.emoji, categoria: m.categoria, campos: {} }));
+  let base: Produto[] = ms.map((m) => ({ nome: m.nome, emoji: m.emoji, img: m.img, categoria: m.categoria, campos: {} }));
   let campos: CampoKey[] = [];
   let relev: CampoKey[] = [];
   let pergunta = "", pista = "", explicaOk = "";
@@ -251,7 +253,7 @@ function gerarNivel1(tipo: Tipo1, nProdutos: number): Questao {
 // ── NÍVEL 2 — comparar uma informação ────────────────────────────────────────
 type Tipo2 = "menor-preco" | "maior-quantidade" | "vence-primeiro" | "validade-mais-longa" | "mais-unidades" | "maior-volume";
 function gerarNivel2(tipo: Tipo2): Questao {
-  const base: Produto[] = modelos(3).map((m) => ({ nome: m.nome, emoji: m.emoji, categoria: m.categoria, campos: {} }));
+  const base: Produto[] = modelos(3).map((m) => ({ nome: m.nome, emoji: m.emoji, img: m.img, categoria: m.categoria, campos: {} }));
   let campo: CampoKey, relev: CampoKey[], pergunta: string, pista: string, alvo: number, explicaOk: string;
 
   if (tipo === "menor-preco") {
@@ -305,7 +307,7 @@ function gerarNivel2(tipo: Tipo2): Questao {
 // ── NÍVEL 3 — combinar duas condições ────────────────────────────────────────
 // Distratores: um atende só a A, outro só a B, um a nenhuma; só o alvo atende às duas.
 function gerarNivel3(): Questao {
-  const base: Produto[] = modelos(4).map((m) => ({ nome: m.nome, emoji: m.emoji, categoria: m.categoria, campos: {} }));
+  const base: Produto[] = modelos(4).map((m) => ({ nome: m.nome, emoji: m.emoji, img: m.img, categoria: m.categoria, campos: {} }));
   // Condição A: peso >= 500 g. Condição B: preço < R$ 8.
   const pesoBom = () => pick([500, 600, 800]);
   const pesoRuim = () => pick([300, 400]);
@@ -348,9 +350,9 @@ function gerarNivel4(tipo: Tipo4): Questao {
   if (tipo === "leite-sem-lactose") {
     // Você precisa de 1 L de leite sem lactose.
     base = [
-      { nome: "Bebida vegetal", emoji: "🥛", categoria: "Bebida", campos: { volume: 1000, lactose: false } }, // alvo
-      { nome: "Leite integral", emoji: "🥛", categoria: "Laticínio", campos: { volume: 1000, lactose: true } },
-      { nome: "Bebida vegetal", emoji: "🥛", categoria: "Bebida", campos: { volume: 500, lactose: false } },
+      { nome: "Bebida vegetal", emoji: "🥛", img: imgProduto("leite"), categoria: "Bebida", campos: { volume: 1000, lactose: false } }, // alvo
+      { nome: "Leite integral", emoji: "🥛", img: imgProduto("leite"), categoria: "Laticínio", campos: { volume: 1000, lactose: true } },
+      { nome: "Bebida vegetal", emoji: "🥛", img: imgProduto("leite"), categoria: "Bebida", campos: { volume: 500, lactose: false } },
     ];
     alvo = 0; camposM = ["volume", "lactose"]; relev = ["volume", "lactose"];
     pergunta = "Você precisa de 1 litro de leite sem lactose. Qual produto atende ao pedido?";
@@ -367,9 +369,9 @@ function gerarNivel4(tipo: Tipo4): Questao {
     const alg = pick(ALERGENICOS);
     const outros = shuffle(ALERGENICOS.filter((a) => a !== alg));
     base = [
-      { nome: "Barra de cereal", emoji: "🍫", categoria: "Mercearia", campos: { alergenico: alg } }, // alvo (deve evitar)
-      { nome: "Biscoito", emoji: "🍪", categoria: "Mercearia", campos: { alergenico: outros[0] } },
-      { nome: "Pacote de castanhas", emoji: "🥜", categoria: "Mercearia", campos: { alergenico: outros[1] ?? undefined } },
+      { nome: "Cereal matinal", emoji: "🍫", img: imgProduto("cereal"), categoria: "Mercearia", campos: { alergenico: alg } }, // alvo (deve evitar)
+      { nome: "Biscoito", emoji: "🍪", img: imgProduto("biscoito"), categoria: "Mercearia", campos: { alergenico: outros[0] } },
+      { nome: "Pacote de amendoim", emoji: "🥜", img: imgProduto("amendoim"), categoria: "Mercearia", campos: { alergenico: outros[1] ?? undefined } },
     ];
     alvo = 0; camposM = ["alergenico"]; relev = ["alergenico"];
     pergunta = `Uma pessoa não pode consumir ${alg}. Qual produto ela deve evitar?`;
@@ -379,9 +381,9 @@ function gerarNivel4(tipo: Tipo4): Questao {
     explicarErro = (e) => `Esse produto informa “${valorCampo(base[e], "alergenico")}”. A pessoa precisa evitar ${alg} — procure a embalagem que contém ${alg}.`;
   } else if (tipo === "refrigerar") {
     base = [
-      { nome: "Iogurte natural", emoji: "🥣", categoria: "Laticínio", campos: { conservacao: "refrigerado" } }, // alvo
-      { nome: "Pacote de arroz", emoji: "🍚", categoria: "Mercearia", campos: { conservacao: "seco" } },
-      { nome: "Café", emoji: "☕", categoria: "Mercearia", campos: { conservacao: "luz" } },
+      { nome: "Iogurte natural", emoji: "🥣", img: imgProduto("iogurte"), categoria: "Laticínio", campos: { conservacao: "refrigerado" } }, // alvo
+      { nome: "Pacote de arroz", emoji: "🍚", img: imgProduto("arroz"), categoria: "Mercearia", campos: { conservacao: "seco" } },
+      { nome: "Café", emoji: "☕", img: imgProduto("cafe"), categoria: "Mercearia", campos: { conservacao: "luz" } },
     ];
     alvo = 0; camposM = ["conservacao"]; relev = ["conservacao"];
     pergunta = "Qual produto precisa ser guardado na geladeira?";
@@ -392,7 +394,7 @@ function gerarNivel4(tipo: Tipo4): Questao {
   } else {
     // vence no próximo mês (mais cedo)
     const datas = shuffle([{ mes: 8, ano: anoBase }, { mes: 11, ano: anoBase }, { mes: 2, ano: anoBase + 1 }]);
-    base = modelos(3).map((m, i) => ({ nome: m.nome, emoji: m.emoji, categoria: m.categoria, campos: { validade: datas[i] } }));
+    base = modelos(3).map((m, i) => ({ nome: m.nome, emoji: m.emoji, img: m.img, categoria: m.categoria, campos: { validade: datas[i] } }));
     alvo = datas.reduce((best, d, i) => (validadeAntes(d, datas[best]) ? i : best), 0);
     camposM = ["validade"]; relev = ["validade"];
     pergunta = "Qual produto deve ser consumido primeiro por causa da validade?";

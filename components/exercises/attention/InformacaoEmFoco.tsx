@@ -42,6 +42,17 @@ function styles(theme: Theme) {
   };
 }
 
+// ── Glifo do produto: imagem real (card branco) com fallback para o emoji ────
+function ProdGlifo({ img, emoji, size }: { img?: string; emoji: string; size: number }) {
+  const [erro, setErro] = useState(false);
+  if (img && !erro) {
+    // eslint-disable-next-line @next/next/no-img-element
+    return <img src={img} alt="" draggable={false} onError={() => setErro(true)}
+      style={{ width: size, height: size, objectFit: "contain", display: "block" }} />;
+  }
+  return <span style={{ fontSize: Math.round(size * 0.8), lineHeight: 1 }}>{emoji}</span>;
+}
+
 // ── Cartão de produto (clicável inteiro) ─────────────────────────────────────
 function ProductCard({ p, campos, destaque, estado, onTap, disabled, theme }: {
   p: Produto; campos: CampoKey[]; destaque: CampoKey[];
@@ -55,8 +66,8 @@ function ProductCard({ p, campos, destaque, estado, onTap, disabled, theme }: {
       className={`relative text-left rounded-2xl border-2 p-4 transition-all active:scale-[0.98] disabled:cursor-default ${ring} ${s.cardTxt}`}
       style={{ minHeight: 150 }}>
       <div className="flex flex-col items-center gap-1 mb-3">
-        <span style={{ fontSize: 44, lineHeight: 1 }}>{p.emoji}</span>
-        <span className="font-bold text-sm text-center leading-tight">{p.nome}</span>
+        <ProdGlifo img={p.img} emoji={p.emoji} size={64} />
+        <span className="font-bold text-sm text-center leading-tight mt-1">{p.nome}</span>
         <span className={`text-[11px] ${s.sub}`}>{p.categoria}</span>
       </div>
       <div className="space-y-1">
