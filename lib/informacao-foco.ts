@@ -171,22 +171,15 @@ const MODELOS: Modelo[] = [
   { nome: "Café solúvel", marca: "Bom Dia", emoji: "📦", img: imgProd("cafe"), categoria: "Mercearia", estado: "solido", lactose: false },
   { nome: "Chá de camomila", marca: "Floravita", emoji: "📦", img: imgProd("cha-camomila"), categoria: "Mercearia", estado: "solido" },
   { nome: "Sal refinado", marca: "Costa", emoji: "📦", img: imgProd("sal"), categoria: "Mercearia", estado: "solido" },
-  // ── 27 produtos acrescentados em 01/ago/2026 (embalagens reais dela, fundo transparente) ──
-  // Produtos do MESMO tipo com marcas diferentes são propositais (comparação por marca);
-  // `modelos()` garante que dois cartões de mesmo nome nunca caiam na mesma questão.
-  { nome: "Pasta de amendoim", marca: "NutriBem", emoji: "📦", img: imgProd("pasta-amendoim-nutribem"), categoria: "Mercearia", estado: "solido" },
-  { nome: "Pasta de amendoim", marca: "NutriVale", emoji: "📦", img: imgProd("pasta-amendoim-nutrivale"), categoria: "Mercearia", estado: "solido" },
-  { nome: "Azeite extra virgem", marca: "Oliva & Vida", emoji: "📦", img: imgProd("azeite-extra-virgem"), categoria: "Mercearia", estado: "liquido" },
-  { nome: "Mel", marca: "Apiário Flor do Campo", emoji: "📦", img: imgProd("mel-apiario"), categoria: "Mercearia", estado: "solido" },
-  { nome: "Mel", marca: "Melora", emoji: "📦", img: imgProd("mel-melora"), categoria: "Mercearia", estado: "solido" },
-  { nome: "Geleia de morango", marca: "Sabor da Fazenda", emoji: "📦", img: imgProd("geleia-morango-fazenda"), categoria: "Mercearia", estado: "solido", sabor: "morango" },
-  { nome: "Geleia de morango", marca: "Frutallis", emoji: "📦", img: imgProd("geleia-morango-frutallis"), categoria: "Mercearia", estado: "solido", sabor: "morango" },
-  { nome: "Farinha de trigo", marca: "Tradição da Casa", emoji: "📦", img: imgProd("farinha-trigo-tradicao"), categoria: "Mercearia", estado: "solido" },
-  { nome: "Açúcar refinado", marca: "Doce Dia", emoji: "📦", img: imgProd("acucar-refinado-doce-dia"), categoria: "Mercearia", estado: "solido" },
+  // ── 20 produtos acrescentados em 01/ago/2026 (embalagens reais dela, fundo transparente) ──
+  // Decisão dela: produto repetido, mantém só UM. As embalagens duplicadas (2ª pasta de amendoim,
+  // 2º mel, 2ª geleia, azeite, farinha de trigo, açúcar refinado e aveia) ficaram de fora.
+  { nome: "Pasta de amendoim", marca: "NutriBem", emoji: "📦", img: imgProd("pasta-amendoim"), categoria: "Mercearia", estado: "solido" },
+  { nome: "Mel", marca: "Apiário Flor do Campo", emoji: "📦", img: imgProd("mel"), categoria: "Mercearia", estado: "solido" },
+  { nome: "Geleia de morango", marca: "Sabor da Fazenda", emoji: "📦", img: imgProd("geleia-morango"), categoria: "Mercearia", estado: "solido", sabor: "morango" },
   { nome: "Adoçante dietético", marca: "Vida Leve", emoji: "📦", img: imgProd("adocante-stevia"), categoria: "Mercearia", estado: "solido" },
   { nome: "Café torrado e moído", marca: "Serra Bonita", emoji: "📦", img: imgProd("cafe-torrado"), categoria: "Mercearia", estado: "solido" },
   { nome: "Achocolatado em pó", marca: "Chocomax", emoji: "📦", img: imgProd("achocolatado"), categoria: "Mercearia", estado: "solido" },
-  { nome: "Aveia em flocos finos", marca: "NutriMais", emoji: "📦", img: imgProd("aveia-flocos-finos"), categoria: "Mercearia", estado: "solido" },
   { nome: "Chia em grãos", marca: "Vida Leve", emoji: "📦", img: imgProd("chia"), categoria: "Mercearia", estado: "solido" },
   { nome: "Semente de linhaça", marca: "Natureza Pura", emoji: "📦", img: imgProd("linhaca"), categoria: "Mercearia", estado: "solido" },
   { nome: "Vinagre balsâmico", marca: "Villa Romana", emoji: "📦", img: imgProd("vinagre-balsamico"), categoria: "Mercearia", estado: "liquido" },

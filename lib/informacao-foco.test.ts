@@ -99,12 +99,11 @@ describe("Informação em Foco — catálogo de produtos", () => {
     expect(semMarca).toEqual(["Ervas finas"]);
   });
 
-  it("nomes repetidos só existem com marcas diferentes (pares de marca)", () => {
-    const porNome = new Map<string, string[]>();
-    for (const m of CATALOGO) porNome.set(m.nome, [...(porNome.get(m.nome) ?? []), m.marca]);
-    for (const [nome, marcas] of porNome) {
-      expect(new Set(marcas).size, `marcas repetidas em ${nome}`).toBe(marcas.length);
-    }
+  it("nenhum produto repetido no catálogo (decisão dela: produto igual, só um)", () => {
+    const nomes = CATALOGO.map((m) => m.nome);
+    const repetidos = nomes.filter((n, i) => nomes.indexOf(n) !== i);
+    expect(repetidos, `nomes repetidos: ${repetidos.join(", ")}`).toEqual([]);
+    expect(CATALOGO.length).toBe(70);
   });
 
   it("nenhuma questão traz dois cartões com o mesmo nome", () => {
