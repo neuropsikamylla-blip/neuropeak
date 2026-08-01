@@ -15,6 +15,7 @@ export const EXERCISE_ICON_IDS = new Set<string>([
   "restaurante-ordem-auditivo",
   // atenção
   "trilha-visual",
+  "informacao-em-foco",
   "caca-item-barato",
   "focus-agents",
   "focus-agents-auditivo",
