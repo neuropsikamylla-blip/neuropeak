@@ -40,14 +40,18 @@ const BLOCO = 8;                          // tentativas por bloco (§9)
 // Escada de dificuldade — cada passo muda UMA variável (§8). n = nº de personagens
 // (sobe com a dificuldade). vel = velocidade da DERIVA (sempre LEVE, nunca rápida §7).
 type Step = { etapa: Etapa; n: number; vel: number };
+// Nível 1 (índice 0) = ESPALHADOS com deriva leve (tela já cheia). Do nível 2 em
+// diante (índice ≥1) os personagens CAEM de cima — a velocidade e o nº de
+// distratores sobem com a progressão (pedido da Kamylla).
 const STEPS: Step[] = [
-  { etapa: 1, n: 4, vel: 0 }, { etapa: 1, n: 5, vel: 0 }, { etapa: 1, n: 6, vel: 1 },
-  { etapa: 2, n: 6, vel: 1 }, { etapa: 2, n: 7, vel: 1 }, { etapa: 2, n: 7, vel: 2 },
-  { etapa: 2, n: 8, vel: 2 }, { etapa: 3, n: 8, vel: 2 }, { etapa: 3, n: 8, vel: 3 },
-  { etapa: 4, n: 8, vel: 2 }, { etapa: 4, n: 9, vel: 3 }, { etapa: 5, n: 9, vel: 3 },
-  { etapa: 5, n: 10, vel: 3 },
+  { etapa: 1, n: 7, vel: 0 }, { etapa: 1, n: 8, vel: 0 }, { etapa: 1, n: 9, vel: 1 },
+  { etapa: 2, n: 8, vel: 1 }, { etapa: 2, n: 9, vel: 1 }, { etapa: 2, n: 10, vel: 2 },
+  { etapa: 2, n: 10, vel: 2 }, { etapa: 3, n: 10, vel: 2 }, { etapa: 3, n: 11, vel: 3 },
+  { etapa: 4, n: 11, vel: 2 }, { etapa: 4, n: 12, vel: 3 }, { etapa: 5, n: 12, vel: 3 },
+  { etapa: 5, n: 13, vel: 3 },
 ];
-const VEL_LEVE = [0.18, 0.34, 0.52, 0.72]; // px/frame — deriva SEMPRE leve; sobe devagar com a progressão
+const VEL_LEVE = [0.18, 0.34, 0.52, 0.72]; // px/frame — deriva do nível 1 (sempre leve)
+const VEL_QUEDA = [1.5, 2.2, 3.0, 3.8];    // px/frame — queda do nível 2+ (sobe com a progressão)
 const MARGIN = 6;                          // margem interna da arena (não cola na borda)
 
 const ACC_EMOJI: Record<Acessorio, string> = {
@@ -166,8 +170,8 @@ function Tutorial({ onStart }: { onStart: () => void }) {
         style={{ background: "rgba(255,255,255,0.05)", border: "1px solid rgba(255,255,255,0.1)" }}>
         {[
           "Leia o comando (cor + acessório) que aparece antes e fica no topo.",
-          "Os personagens ficam espalhados e se mexem devagar — toque só no que corresponde.",
-          "Primeiro procure acertar; com o tempo aparecem mais personagens.",
+          "No começo eles ficam espalhados; nos níveis seguintes passam a cair de cima.",
+          "Toque só no que corresponde — com a evolução, aparecem mais personagens e a queda acelera.",
           "Use o 🔊 para ouvir o comando de novo.",
         ].map((b, i) => (
           <p key={i} className="text-white/75 text-xs leading-relaxed">• {b}</p>
@@ -268,25 +272,50 @@ export function FocusAgents({ difficulty, theme, onComplete, exerciseId = "focus
     });
   }, [difficulty, elapsedSec, finish, onComplete]);
 
-  // loop de DERIVA LEVE — personagens espalhados vagam devagar e REBATEM na borda
-  // (nunca escapam §3); um "bob" senoidal dá sensação de vida sem tirá-los do lugar.
+  const modoQuedaRef = useRef(false); // false = espalhados (nível 1); true = caindo (nível 2+)
+
+  // Loop de animação — dois modos:
+  //  • ESPALHADO (nível 1): vagam devagar e REBATEM na borda, com "bob" senoidal (vida).
+  //  • QUEDA (nível 2+): descem de cima; se o ALVO sai por baixo sem toque = omissão.
   const startRaf = useCallback(() => {
     stopRaf();
     let f = 0;
     const tick = () => {
       f++;
       const W = dims.current.w, H = dims.current.h;
-      const maxX = W - CHAR_W - MARGIN, maxY = H - CHAR_H - MARGIN;
-      for (const c of charsRef.current) {
-        c.x += c.vx; c.y += c.vy;
-        if (c.x < MARGIN) { c.x = MARGIN; c.vx = Math.abs(c.vx); }
-        else if (c.x > maxX) { c.x = maxX; c.vx = -Math.abs(c.vx); }
-        if (c.y < MARGIN) { c.y = MARGIN; c.vy = Math.abs(c.vy); }
-        else if (c.y > maxY) { c.y = maxY; c.vy = -Math.abs(c.vy); }
-        const node = nodes.current.get(c.uid);
-        if (node) {
-          const bob = Math.sin(f * 0.045 + c.ph) * 3;
-          node.style.transform = `translate(${c.x - c.bx}px, ${c.y - c.by + bob}px)`;
+      if (modoQuedaRef.current) {
+        let alvoSaiu = false, saiuAlgum = false;
+        for (const c of charsRef.current) {
+          c.y += c.vy;
+          const node = nodes.current.get(c.uid);
+          if (node) node.style.transform = `translateY(${c.y - c.by}px)`;
+          if (c.y > H + 12) { saiuAlgum = true; if (c.isTarget) alvoSaiu = true; }
+        }
+        if (saiuAlgum) {
+          charsRef.current = charsRef.current.filter((c) => c.y <= H + 12);
+          setChars([...charsRef.current]);
+        }
+        if (alvoSaiu && !respondidoRef.current && !doneRef.current) {
+          respondidoRef.current = true; stopRaf();
+          registra(false, null, true);
+          setFb({ ok: false, msg: "Passou! Toque mais rápido.", alvoUid: null });
+          setFase("feedback");
+          timers.current.push(setTimeout(proximaRef.current, 1250));
+          return;
+        }
+      } else {
+        const maxX = W - CHAR_W - MARGIN, maxY = H - CHAR_H - MARGIN;
+        for (const c of charsRef.current) {
+          c.x += c.vx; c.y += c.vy;
+          if (c.x < MARGIN) { c.x = MARGIN; c.vx = Math.abs(c.vx); }
+          else if (c.x > maxX) { c.x = maxX; c.vx = -Math.abs(c.vx); }
+          if (c.y < MARGIN) { c.y = MARGIN; c.vy = Math.abs(c.vy); }
+          else if (c.y > maxY) { c.y = maxY; c.vy = -Math.abs(c.vy); }
+          const node = nodes.current.get(c.uid);
+          if (node) {
+            const bob = Math.sin(f * 0.045 + c.ph) * 3;
+            node.style.transform = `translate(${c.x - c.bx}px, ${c.y - c.by + bob}px)`;
+          }
         }
       }
       rafRef.current = requestAnimationFrame(tick);
@@ -302,41 +331,66 @@ export function FocusAgents({ difficulty, theme, onComplete, exerciseId = "focus
     const step = STEPS[stepRef.current];
     const W = dims.current.w, H = dims.current.h;
     const alvoIdx = r.personagensIds.indexOf(r.alvoId);
-    const vBase = VEL_LEVE[step.vel];
     const n = r.personagensIds.length;
-    // GRADE espalhada (nunca em linha): 1 personagem por célula embaralhada, com jitter.
-    // cols proporcional à razão da arena, para as células ficarem largas o bastante.
-    const cols = Math.max(2, Math.round(Math.sqrt(n * (W / Math.max(1, H)))));
-    const rows = Math.max(1, Math.ceil(n / cols));
-    const cells = shuffle(Array.from({ length: cols * rows }, (_, i) => i)).slice(0, n);
-    const cellW = W / cols, cellH = H / rows;
-    const live: LiveChar[] = r.personagensIds.map((id, i) => {
-      const cell = cells[i];
-      const cx = (cell % cols) * cellW, cy = Math.floor(cell / cols) * cellH;
-      const x = Math.max(MARGIN, Math.min(W - CHAR_W - MARGIN, cx + rnd(4, Math.max(6, cellW - CHAR_W - 4))));
-      const y = Math.max(MARGIN, Math.min(H - CHAR_H - MARGIN, cy + rnd(4, Math.max(6, cellH - CHAR_H - 4))));
-      const ang = rnd(0, Math.PI * 2);
-      const sp = vBase * rnd(0.7, 1.2);
-      return { uid: `c${uidSeq.current++}`, id, isTarget: i === alvoIdx,
-        bx: x, by: y, x, y, vx: Math.cos(ang) * sp, vy: Math.sin(ang) * sp, ph: rnd(0, Math.PI * 2) };
-    });
+    const cai = stepRef.current >= 1;   // nível 1 = espalhado; nível 2+ = queda
+    modoQuedaRef.current = cai;
+    let live: LiveChar[];
+
+    if (cai) {
+      // QUEDA: nascem ACIMA do topo, distribuídos em colunas e escalonados no Y (chuva
+      // contínua, não em bloco); descem só de cima. Velocidade sobe com o nível.
+      const vq = VEL_QUEDA[step.vel];
+      const nCols = Math.max(2, Math.floor(W / (CHAR_W + 14)));
+      const colW = W / nCols;
+      const colOrder = shuffle(r.personagensIds.map((_, i) => i % nCols));
+      const stackByCol: Record<number, number> = {};
+      live = r.personagensIds.map((id, i) => {
+        const col = colOrder[i];
+        const stack = (stackByCol[col] = (stackByCol[col] ?? 0) + 1) - 1;
+        const x = Math.max(MARGIN, Math.min(W - CHAR_W - MARGIN, col * colW + rnd(6, Math.max(8, colW - CHAR_W - 6))));
+        const y = -CHAR_H - stack * (CHAR_H * 0.85) - rnd(0, 40);
+        return { uid: `c${uidSeq.current++}`, id, isTarget: i === alvoIdx,
+          bx: x, by: y, x, y, vx: 0, vy: vq * rnd(0.92, 1.1), ph: 0 };
+      });
+    } else {
+      // ESPALHADO: grade embaralhada + deriva leve (1 personagem por célula, com jitter).
+      const vBase = VEL_LEVE[step.vel];
+      const cols = Math.max(2, Math.round(Math.sqrt(n * (W / Math.max(1, H)))));
+      const rows = Math.max(1, Math.ceil(n / cols));
+      const cells = shuffle(Array.from({ length: cols * rows }, (_, i) => i)).slice(0, n);
+      const cellW = W / cols, cellH = H / rows;
+      live = r.personagensIds.map((id, i) => {
+        const cell = cells[i];
+        const cx = (cell % cols) * cellW, cy = Math.floor(cell / cols) * cellH;
+        const x = Math.max(MARGIN, Math.min(W - CHAR_W - MARGIN, cx + rnd(4, Math.max(6, cellW - CHAR_W - 4))));
+        const y = Math.max(MARGIN, Math.min(H - CHAR_H - MARGIN, cy + rnd(4, Math.max(6, cellH - CHAR_H - 4))));
+        const ang = rnd(0, Math.PI * 2);
+        const sp = vBase * rnd(0.7, 1.2);
+        return { uid: `c${uidSeq.current++}`, id, isTarget: i === alvoIdx,
+          bx: x, by: y, x, y, vx: Math.cos(ang) * sp, vy: Math.sin(ang) * sp, ph: rnd(0, Math.PI * 2) };
+      });
+    }
+
     charsRef.current = live;
     setChars(live);
     respondidoRef.current = false;
     rodadaAbertaEm.current = Date.now();
     setFase("jogando");
     startRaf();
-    // omissão por TEMPO (não caem mais para fora): se não tocar a tempo, conta omissão e avança
+    // Omissão: no modo QUEDA é tratada pelo RAF (alvo sai por baixo). No ESPALHADO,
+    // por TEMPO — senão a rodada nunca termina se o paciente não tocar.
     clearOmissao();
-    const tempoMs = Math.max(4200, 7000 - step.etapa * 450);
-    omissaoRef.current = setTimeout(() => {
-      if (respondidoRef.current || doneRef.current) return;
-      respondidoRef.current = true; stopRaf();
-      registra(false, null, true);
-      setFb({ ok: false, msg: "Acabou o tempo!", alvoUid: charsRef.current.find((c) => c.id === r.alvoId)?.uid ?? null });
-      setFase("feedback");
-      timers.current.push(setTimeout(proximaRef.current, 1450));
-    }, tempoMs);
+    if (!cai) {
+      const tempoMs = Math.max(4200, 7000 - step.etapa * 450);
+      omissaoRef.current = setTimeout(() => {
+        if (respondidoRef.current || doneRef.current) return;
+        respondidoRef.current = true; stopRaf();
+        registra(false, null, true);
+        setFb({ ok: false, msg: "Acabou o tempo!", alvoUid: charsRef.current.find((c) => c.id === r.alvoId)?.uid ?? null });
+        setFase("feedback");
+        timers.current.push(setTimeout(proximaRef.current, 1450));
+      }, tempoMs);
+    }
   }, [startRaf]);
   iniciarRodadaRef.current = iniciarRodada;
 
