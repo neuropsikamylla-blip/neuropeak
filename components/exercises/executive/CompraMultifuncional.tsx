@@ -35,6 +35,7 @@ const START_LEVEL = (d: number) => Math.max(1, Math.min(MAX_LEVEL, Math.round(d 
 const money = (v: number) => `R$ ${v}`;
 
 const TEMAS: TemaConfig[] = ["variado", "piquenique", "praia", "frio", "alimentos", "mercado", "objetos"];
+const TEMAS_JOGAVEIS: TemaKey[] = ["frio", "praia", "piquenique", "alimentos", "mercado", "objetos"];
 const FOCOS: OperacaoFoco[] = ["tudo", "soma", "subtracao", "multiplicacao", "divisao"];
 
 // Fundo temático (arte no canto, área clara p/ o texto). Arquivos em /exercises/compra-fundos.
@@ -96,14 +97,25 @@ function styles(theme: Theme) {
   return { isG, isC, rootBg, cardStyle, btnStyle, pal };
 }
 
+// ── Glifo do item: imagem real (card branco) com fallback para o emoji ─────────
+function ItemGlifo({ img, emoji, size }: { img?: string; emoji: string; size: number }) {
+  const [erro, setErro] = useState(false);
+  if (img && !erro) {
+    // eslint-disable-next-line @next/next/no-img-element
+    return <img src={img} alt="" draggable={false} onError={() => setErro(true)}
+      style={{ width: size, height: size, objectFit: "contain", display: "block" }} />;
+  }
+  return <span style={{ fontSize: Math.round(size * 0.82), lineHeight: 1 }}>{emoji}</span>;
+}
+
 // ── Cartão de um item (parcela) na conta — estilo do mockup ────────────────────
-function ItemCard({ emoji, name, sub, theme }: { emoji: string; name: string; sub: string; theme: Theme }) {
+function ItemCard({ img, emoji, name, sub, theme }: { img?: string; emoji: string; name: string; sub: string; theme: Theme }) {
   const { isG, pal } = styles(theme);
   return (
     <div className="rounded-2xl px-3 py-2.5 flex flex-col items-center min-w-[92px]"
       style={isG ? { background: "rgba(255,255,255,0.08)", border: "1.5px solid rgba(255,255,255,0.15)" } : { background: "#fffdf7", border: "1.5px solid rgba(26,39,68,0.10)" }}>
-      <span className={`text-[11px] font-semibold mb-0.5 ${pal.sub}`}>{name}</span>
-      <span style={{ fontSize: 40, lineHeight: 1 }}>{emoji}</span>
+      <span className={`text-[11px] font-semibold mb-1 ${pal.sub}`}>{name}</span>
+      <ItemGlifo img={img} emoji={emoji} size={50} />
       <span className={`text-base font-black mt-1 tabular-nums ${isG ? "text-cyan-300" : "text-emerald-600"}`}>{sub}</span>
     </div>
   );
@@ -127,7 +139,7 @@ function SceneNumerica({ etapa, theme }: { etapa: EtapaNumerica; theme: Theme })
         {r.parcelas.map((p, i) => (
           <React.Fragment key={i}>
             {i > 0 && op("+")}
-            <ItemCard emoji={p.emoji} name={p.name} sub={r.unidade === "money" ? money(p.valor) : `${p.valor} kg`} theme={theme} />
+            <ItemCard img={p.img} emoji={p.emoji} name={p.name} sub={r.unidade === "money" ? money(p.valor) : `${p.valor} kg`} theme={theme} />
           </React.Fragment>
         ))}
         {op("=")}
@@ -149,7 +161,7 @@ function SceneNumerica({ etapa, theme }: { etapa: EtapaNumerica; theme: Theme })
   if (r.tipo === "mult") {
     return (
       <div className="flex flex-wrap items-center justify-center gap-2">
-        <ItemCard emoji={r.emoji} name={`${r.qtd} × ${r.name}`} sub={`${money(r.unitPrice)} cada`} theme={theme} />
+        <ItemCard img={r.img} emoji={r.emoji} name={`${r.qtd} × ${r.name}`} sub={`${money(r.unitPrice)} cada`} theme={theme} />
         {op("=")}
         {QBox}
       </div>
@@ -158,7 +170,7 @@ function SceneNumerica({ etapa, theme }: { etapa: EtapaNumerica; theme: Theme })
   // divisao
   return (
     <div className="flex flex-wrap items-center justify-center gap-2">
-      <ItemCard emoji={r.emoji} name={`${r.total} ${r.name}`} sub={`÷ ${r.partes}`} theme={theme} />
+      <ItemCard img={r.img} emoji={r.emoji} name={`${r.total} ${r.name}`} sub={`÷ ${r.partes}`} theme={theme} />
       {op("=")}
       {QBox}
     </div>
@@ -223,13 +235,15 @@ function EtapaView({ etapa, theme, proceedLabel, onProceed, autoProceed, mostrar
     // eslint-disable-next-line react-hooks/exhaustive-deps
     []);
 
-  // Modo tutorial: ao acertar, conclui sozinho (deixa só o CTA do TutorialBase).
+  // Ao ACERTAR, avança sozinho — sem exigir um segundo clique (pedido da Kamylla).
+  // No tutorial é imediato (o TutorialBase tem o CTA); no jogo, após ~1s para ver o ✅.
   useEffect(() => {
-    if (autoProceed && done && correct && !autoDoneRef.current) {
-      autoDoneRef.current = true;
-      onProceed(true);
-    }
-  }, [autoProceed, done, correct, onProceed]);
+    if (!done || !correct || autoDoneRef.current) return;
+    autoDoneRef.current = true;
+    if (autoProceed) { onProceed(true); return; }
+    const t = setTimeout(() => onProceed(firstTryRef.current && correct), 1050);
+    return () => clearTimeout(t);
+  }, [done, correct, autoProceed, onProceed]);
 
   // Cronômetro só nas etapas avançadas (spec §Cronômetro).
   const totalSecs = etapa.temCronometro ? (etapa.dados.modo === "select" ? 60 : 45) : 0;
@@ -365,7 +379,7 @@ function EtapaView({ etapa, theme, proceedLabel, onProceed, autoProceed, mostrar
               return (
                 <button key={item.id} onClick={() => toggle(item.id)} disabled={done}
                   className={`p-2.5 rounded-xl border-2 flex flex-col items-center gap-1 transition-all active:scale-95 disabled:opacity-60 ${on ? pal.itemSel : pal.item}`}>
-                  <span style={{ fontSize: 32, lineHeight: 1 }}>{item.emoji}</span>
+                  <ItemGlifo img={item.img} emoji={item.emoji} size={40} />
                   <span className="text-xs text-center leading-tight font-medium">{item.name}</span>
                   <span className={`text-xs font-bold tabular-nums ${isG ? "text-cyan-300" : "text-emerald-600"}`}>{money(item.price)}</span>
                   <span className={`text-[9px] font-semibold px-1.5 py-0.5 rounded-full ${isG ? "bg-white/15 text-white/80" : "bg-slate-100 text-slate-500"}`}>{item.weight} kg</span>
@@ -403,9 +417,9 @@ function EtapaView({ etapa, theme, proceedLabel, onProceed, autoProceed, mostrar
         )}
       </AnimatePresence>
 
-      {/* Ações */}
+      {/* Ações — ao acertar não há botão (avança sozinho); só aparece se o tempo esgotou sem acerto */}
       {done ? (
-        autoProceed ? null : (
+        (autoProceed || correct) ? null : (
           <button onClick={() => onProceed(firstTryRef.current && correct)} className="w-full h-12 font-bold mt-3" style={btnStyle}>{proceedLabel}</button>
         )
       ) : (
@@ -470,6 +484,7 @@ export function CompraMultifuncional({ difficulty, theme, onComplete }: Props) {
 
   const levelRef = useRef(START_LEVEL(difficulty));
   const reachedRef = useRef(levelRef.current);
+  const ultimoTemaRef = useRef<TemaKey | null>(null);   // p/ não repetir o tema em seguida no modo variado
   const sessionResultsRef = useRef<boolean[]>([]);   // acerto de 1ª por etapa (sessão)
   const missionResultsRef = useRef<boolean[]>([]);   // acerto de 1ª por etapa (missão atual)
 
@@ -477,7 +492,15 @@ export function CompraMultifuncional({ difficulty, theme, onComplete }: Props) {
   const tutorialEtapa = useMemo(() => buildMissao("piquenique", 1, "soma").etapas[0], []);
 
   function iniciarMissao() {
-    const m = buildMissao(temaCfg, levelRef.current, foco);
+    // No modo "variado", alterna o tema a cada missão — nunca repete o anterior em
+    // seguida (pode repetir depois no mesmo dia, só não em sequência). (pedido da Kamylla)
+    let tema: TemaConfig = temaCfg;
+    if (temaCfg === "variado") {
+      const opcoes = TEMAS_JOGAVEIS.filter((t) => t !== ultimoTemaRef.current);
+      tema = opcoes[Math.floor(Math.random() * opcoes.length)];
+    }
+    const m = buildMissao(tema, levelRef.current, foco);
+    ultimoTemaRef.current = m.tema;
     missionResultsRef.current = [];
     setMissao(m);
     setEtapaIdx(0);

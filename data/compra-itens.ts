@@ -30,6 +30,7 @@ export interface ItemCompra {
   price: number;   // R$ (inteiro)
   weight: number;  // kg (inteiro)
   cat: Categoria;
+  img?: string;    // imagem real (card branco em /exercises/busca); cai no emoji se ausente
 }
 
 export const ITENS: ItemCompra[] = [
@@ -100,6 +101,25 @@ export const ITENS: ItemCompra[] = [
   { id: "lanterna",   name: "lanterna",      emoji: "🔦", price: 12, weight: 1, cat: "objeto" },
   { id: "cobertor",   name: "cobertor",      emoji: "🛏️", price: 20, weight: 2, cat: "objeto" },
 ];
+
+// Imagens reais (card branco em /exercises/busca) para os itens que têm ilustração.
+// Resolve o "gorro com cara de boné" (usa touca.png) e dá visual de verdade aos cards.
+// Itens sem entrada aqui continuam com o emoji.
+const IMG_BUSCA: Record<string, string> = {
+  maca: "maca", banana: "banana", laranja: "laranja", pera: "pera", uva: "uva", melancia: "melancia",
+  brocolis: "brocolis", cenoura: "cenoura", cebola: "cebola", batata: "batata", milho: "milho",
+  pao: "pao", queijo: "queijo", biscoito: "biscoito", bolo: "bolo", ovos: "ovos", arroz: "arroz",
+  agua: "agua-mineral", suco: "suco-laranja", refrigerante: "refrigerante-cola", leite: "leite",
+  sabonete: "sabonete", escova: "escova", shampoo: "shampoo",
+  lapis: "lapis", borracha: "borracha", mochila: "mochila",
+  protetor: "protetor-solar", oculos: "oculos", chapeu: "chapeu", toalha: "toalha-praia", chinelo: "chinelo",
+  gorro: "touca", luva: "luva", cachecol: "cachecol", casaco: "casaco", bota: "bota",
+  bola: "bola",
+};
+for (const it of ITENS) {
+  const f = IMG_BUSCA[it.id];
+  if (f) it.img = `/exercises/busca/${f}.png`;
+}
 
 export const ITENS_POR_CAT: Record<Categoria, ItemCompra[]> = ITENS.reduce((acc, it) => {
   (acc[it.cat] ??= []).push(it);

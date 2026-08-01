@@ -39,10 +39,10 @@ export type Unidade = "money" | "count" | "kg";
 
 // Como desenhar a cena de uma etapa NUMÉRICA (o componente decide o visual).
 export type NumRender =
-  | { tipo: "soma"; parcelas: { emoji: string; name: string; valor: number }[]; unidade: "money" | "kg" }
+  | { tipo: "soma"; parcelas: { emoji: string; img?: string; name: string; valor: number }[]; unidade: "money" | "kg" }
   | { tipo: "troco"; had: number; spent: number }
-  | { tipo: "mult"; emoji: string; name: string; qtd: number; unitPrice: number }
-  | { tipo: "divisao"; emoji: string; name: string; total: number; partes: number };
+  | { tipo: "mult"; emoji: string; img?: string; name: string; qtd: number; unitPrice: number }
+  | { tipo: "divisao"; emoji: string; img?: string; name: string; total: number; partes: number };
 
 export interface EtapaNumerica {
   modo: "numeric";
@@ -134,7 +134,7 @@ function etSomaN(nome: string, personagem: string, pool: ItemCompra[], n: number
     instrucao: `${personagem} vai comprar: ${lista}. Quanto vai gastar no total?`,
     dados: {
       modo: "numeric", unidade: "money", respostaCorreta: resposta,
-      render: { tipo: "soma", parcelas: its.map((i) => ({ emoji: i.emoji, name: i.name, valor: i.price })), unidade: "money" },
+      render: { tipo: "soma", parcelas: its.map((i) => ({ emoji: i.emoji, img: i.img, name: i.name, valor: i.price })), unidade: "money" },
       sinal: "+", operandos: its.map((i) => i.price),
     },
     temCronometro: false,
@@ -172,7 +172,7 @@ function etMultiplicacao(personagem: string, pool: ItemCompra[], nivel: number, 
     instrucao: `${personagem} vai levar ${qtd} ${plural(it)} de ${money(it.price)} cada. Quanto vai pagar no total?`,
     dados: {
       modo: "numeric", unidade: "money", respostaCorreta: resposta,
-      render: { tipo: "mult", emoji: it.emoji, name: it.name, qtd, unitPrice: it.price },
+      render: { tipo: "mult", emoji: it.emoji, img: it.img, name: it.name, qtd, unitPrice: it.price },
       sinal: "×", operandos: [qtd, it.price],
     },
     temCronometro: false,
@@ -192,7 +192,7 @@ function etDivisao(personagem: string, pool: ItemCompra[], nivel: number, idx: n
     instrucao: `${personagem} tem ${total} ${plural(it)} para dividir igualmente entre ${partes} pessoas. Quantas cada pessoa recebe?`,
     dados: {
       modo: "numeric", unidade: "count", respostaCorreta: cada,
-      render: { tipo: "divisao", emoji: it.emoji, name: it.name, total, partes },
+      render: { tipo: "divisao", emoji: it.emoji, img: it.img, name: it.name, total, partes },
       sinal: "÷", operandos: [total, partes],
     },
     temCronometro: false,
@@ -374,6 +374,76 @@ const ROTEIRO: Partial<Record<TemaKey, Cena[]>> = {
     { fundo: "frio", cat: ["objeto"], titulo: "Nem tudo cabe na mala.", corpo: "{p} escolhe o que levar sem passar do peso permitido." },
     { fundo: "supermercado", cat: ["alimento", "bebida"], titulo: "Última ida ao supermercado.", corpo: "{p} comprou comida para os dias — cuidando do dinheiro E do peso da sacola." },
     { fundo: "supermercado", cat: ["alimento", "bebida"], titulo: "Fechando as compras da viagem.", corpo: "{p} finaliza respeitando todas as regras." },
+  ],
+
+  praia: [
+    { fundo: "shopping", cat: ["praia"], titulo: "{p} vai passar o dia na praia!", corpo: "Foi à loja comprar o que precisa levar. Some o preço dos itens." },
+    { fundo: "shopping", cat: ["praia"], titulo: "Ainda faltam algumas coisas para a praia.", corpo: "{p} escolheu mais itens. Quanto custam juntos?" },
+    { fundo: "estacao", cat: ["bebida"], titulo: "A caminho do litoral.", corpo: "Na estação, {p} comprou uma água e pagou com uma nota. Quanto recebe de troco?" },
+    { fundo: "estacao", cat: ["bebida", "alimento"], titulo: "A viagem até o mar é longa.", corpo: "{p} tem um limite de dinheiro para os lanches. Escolha sem estourar." },
+    { fundo: "praia", cat: ["bebida"], titulo: "{p} chegou à praia!", corpo: "Estava calor — comprou várias bebidas geladas iguais para o grupo." },
+    { fundo: "praia", cat: ["fruta"], titulo: "Hora do lanche na areia.", corpo: "{p} comprou frutas para dividir igualmente com os amigos." },
+    { fundo: "praia", cat: ["praia"], titulo: "Arrumando a bolsa de praia.", corpo: "{p} quer saber o peso do que vai carregar até a areia." },
+    { fundo: "praia", cat: ["praia"], titulo: "A bolsa aguenta um peso máximo.", corpo: "Quanto ainda cabe sem passar do limite?" },
+    { fundo: "praia", cat: ["objeto"], titulo: "Nem tudo cabe na bolsa.", corpo: "{p} escolhe o que levar sem passar do peso." },
+    { fundo: "supermercado", cat: ["alimento", "bebida"], titulo: "Passando no mercadinho da praia.", corpo: "{p} comprou o lanche cuidando do dinheiro E do peso da sacola." },
+    { fundo: "praia", cat: ["praia", "bebida"], titulo: "Últimas compras antes de ir embora.", corpo: "{p} finaliza respeitando todas as regras." },
+  ],
+
+  piquenique: [
+    { fundo: "feira", cat: ["fruta"], titulo: "{p} vai fazer um piquenique no parque.", corpo: "Começou pela feira, escolhendo frutas fresquinhas. Some o preço." },
+    { fundo: "padaria", cat: ["alimento"], titulo: "Passando na padaria.", corpo: "{p} pegou pães e um bolo para o lanche. Quanto custam juntos?" },
+    { fundo: "supermercado", cat: ["bebida"], titulo: "Faltam as bebidas.", corpo: "No mercado, {p} comprou sucos e pagou com uma nota. Quanto de troco?" },
+    { fundo: "supermercado", cat: ["alimento", "bebida"], titulo: "A cesta não pode ficar cara.", corpo: "{p} tem um limite de dinheiro para o piquenique. Escolha sem estourar." },
+    { fundo: "vila-fruta", cat: ["fruta"], titulo: "Vão muitos amigos ao parque!", corpo: "{p} leva várias frutas iguais para todo mundo." },
+    { fundo: "neutro", cat: ["fruta"], titulo: "Chegaram ao parque!", corpo: "{p} dividiu as frutas igualmente entre os amigos." },
+    { fundo: "neutro", cat: ["alimento", "fruta"], titulo: "Montando a cesta de piquenique.", corpo: "{p} quer saber o peso de tudo o que vai levar." },
+    { fundo: "neutro", cat: ["fruta"], titulo: "A cesta tem um peso máximo.", corpo: "Quanto ainda cabe sem passar do limite?" },
+    { fundo: "neutro", cat: ["objeto"], titulo: "Nem tudo cabe na cesta.", corpo: "{p} escolhe o que levar sem passar do peso." },
+    { fundo: "supermercado", cat: ["alimento", "bebida"], titulo: "Última parada no mercado.", corpo: "{p} completa o lanche cuidando do dinheiro E do peso." },
+    { fundo: "neutro", cat: ["fruta", "alimento"], titulo: "Tudo pronto para o piquenique.", corpo: "{p} fecha as compras respeitando as regras." },
+  ],
+
+  alimentos: [
+    { fundo: "feira", cat: ["legume"], titulo: "{p} vai preparar o almoço de domingo.", corpo: "Na feira, escolheu legumes fresquinhos. Some o preço." },
+    { fundo: "vila-fruta", cat: ["fruta"], titulo: "Falta a sobremesa.", corpo: "{p} comprou frutas para o doce. Quanto custam juntas?" },
+    { fundo: "padaria", cat: ["alimento"], titulo: "Passando na padaria.", corpo: "{p} levou pão fresco e pagou com uma nota. Quanto de troco?" },
+    { fundo: "supermercado", cat: ["alimento"], titulo: "Ainda faltam alguns itens.", corpo: "{p} tem um limite de dinheiro para o almoço. Escolha sem estourar." },
+    { fundo: "supermercado", cat: ["alimento"], titulo: "A família é grande!", corpo: "{p} leva vários iguais para todos." },
+    { fundo: "cozinha", cat: ["fruta"], titulo: "De volta à cozinha.", corpo: "{p} dividiu as frutas igualmente nos pratos da sobremesa." },
+    { fundo: "cozinha", cat: ["legume"], titulo: "Preparando a panela.", corpo: "{p} pesa os legumes antes de cozinhar." },
+    { fundo: "feira", cat: ["legume"], titulo: "A sacola tem um peso máximo.", corpo: "Quanto ainda cabe sem passar do limite?" },
+    { fundo: "supermercado", cat: ["alimento"], titulo: "Nem tudo cabe na sacola.", corpo: "{p} escolhe o que levar sem passar do peso." },
+    { fundo: "supermercado", cat: ["alimento", "legume"], titulo: "Última ida ao mercado.", corpo: "{p} completa as compras cuidando do dinheiro E do peso." },
+    { fundo: "cozinha", cat: ["alimento", "fruta"], titulo: "Tudo pronto para o almoço.", corpo: "{p} fecha as compras respeitando as regras." },
+  ],
+
+  mercado: [
+    { fundo: "supermercado", cat: ["alimento"], titulo: "{p} foi fazer as compras da semana.", corpo: "No mercado, começou pegando alguns alimentos. Some o preço." },
+    { fundo: "vila-fruta", cat: ["fruta"], titulo: "Passando no hortifruti.", corpo: "{p} escolheu frutas da estação. Quanto custam juntas?" },
+    { fundo: "farmacia", cat: ["higiene"], titulo: "Uma parada na farmácia.", corpo: "{p} comprou itens de higiene e pagou com uma nota. Quanto de troco?" },
+    { fundo: "supermercado", cat: ["alimento", "bebida"], titulo: "A conta da semana não pode passar.", corpo: "{p} tem um limite de dinheiro. Escolha sem estourar." },
+    { fundo: "padaria", cat: ["alimento"], titulo: "Na padaria do bairro.", corpo: "{p} leva vários iguais para a semana toda." },
+    { fundo: "feira", cat: ["fruta"], titulo: "De passagem pela feira.", corpo: "{p} dividiu as frutas igualmente entre os filhos." },
+    { fundo: "supermercado", cat: ["alimento"], titulo: "Pesando o carrinho.", corpo: "{p} quer saber o peso das compras." },
+    { fundo: "supermercado", cat: ["alimento"], titulo: "As sacolas têm um peso máximo.", corpo: "Quanto ainda cabe sem passar do limite?" },
+    { fundo: "cidade", cat: ["alimento"], titulo: "Levando as sacolas para casa.", corpo: "{p} escolhe o que levar sem passar do peso." },
+    { fundo: "padaria", cat: ["alimento", "bebida"], titulo: "Última parada na padaria.", corpo: "{p} completa as compras cuidando do dinheiro E do peso." },
+    { fundo: "supermercado", cat: ["alimento", "bebida"], titulo: "Fechando as compras da semana.", corpo: "{p} finaliza respeitando todas as regras." },
+  ],
+
+  objetos: [
+    { fundo: "papelaria", cat: ["escolar"], titulo: "{p} está voltando às aulas!", corpo: "Na papelaria, comprou o material da lista. Some o preço." },
+    { fundo: "livraria", cat: ["escolar"], titulo: "Passando na livraria.", corpo: "{p} escolheu cadernos novos. Quanto custam juntos?" },
+    { fundo: "livraria", cat: ["escolar"], titulo: "Faltava um caderno especial.", corpo: "{p} comprou e pagou com uma nota. Quanto recebe de troco?" },
+    { fundo: "papelaria", cat: ["escolar"], titulo: "A lista de material é grande.", corpo: "{p} tem um limite de dinheiro. Escolha sem estourar." },
+    { fundo: "brinquedos", cat: ["objeto"], titulo: "Na loja de brinquedos.", corpo: "{p} leva vários iguais para o recreio." },
+    { fundo: "padaria", cat: ["fruta"], titulo: "Hora do lanche.", corpo: "{p} dividiu as frutas igualmente com os colegas." },
+    { fundo: "papelaria", cat: ["escolar"], titulo: "Enchendo a mochila.", corpo: "{p} quer saber o peso de todo o material." },
+    { fundo: "cidade", cat: ["escolar"], titulo: "A mochila tem um peso máximo.", corpo: "Quanto ainda cabe sem passar do limite?" },
+    { fundo: "papelaria", cat: ["objeto", "escolar"], titulo: "Nem tudo cabe na mochila.", corpo: "{p} escolhe o que levar sem passar do peso." },
+    { fundo: "padaria", cat: ["alimento"], titulo: "Comprando o lanche da semana.", corpo: "{p} controla o dinheiro E o peso da sacola." },
+    { fundo: "papelaria", cat: ["escolar", "objeto"], titulo: "Tudo pronto para a escola!", corpo: "{p} fecha as compras respeitando as regras." },
   ],
 };
 
