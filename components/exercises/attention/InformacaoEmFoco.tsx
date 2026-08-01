@@ -145,8 +145,7 @@ function Tutorial({ theme, onStart }: { theme: Theme; onStart: () => void }) {
 
 export function InformacaoEmFoco({ difficulty, theme, onComplete }: Props) {
   const s = styles(theme);
-  const { begin, isTimeUp, elapsedSec, finish, progressPct } = useTimedProgress();
-  const N_QUESTOES = 10;
+  const { begin, isTimeUp, elapsedSec, finish, progressPct } = useTimedProgress(6 * 60 * 1000); // sessão por TEMPO (~6 min)
 
   const [fase, setFase] = useState<"tutorial" | "play" | "fim">("tutorial");
   const nivelRef = useRef<Nivel>(nivelInicialDe(difficulty));
@@ -196,12 +195,12 @@ export function InformacaoEmFoco({ difficulty, theme, onComplete }: Props) {
   }, [finish, elapsedSec, onComplete]);
 
   const proxima = useCallback(() => {
-    if (qNum >= N_QUESTOES || isTimeUp()) { encerrar(); return; }
+    if (isTimeUp()) { encerrar(); return; }
     // adaptativo: 3 acertos de 1ª sobe; 2 erros seguidos desce (spec §21)
     if (acertosSeguidos.current >= 3 && nivelRef.current < 4) { nivelRef.current = (nivelRef.current + 1) as Nivel; acertosSeguidos.current = 0; }
     else if (errosSeguidos.current >= 2 && nivelRef.current > 1) { nivelRef.current = (nivelRef.current - 1) as Nivel; errosSeguidos.current = 0; }
     novaQuestao();
-  }, [qNum, isTimeUp, encerrar, novaQuestao]);
+  }, [isTimeUp, encerrar, novaQuestao]);
 
   const responder = useCallback((idx: number) => {
     if (!questao || revelou || fb?.ok) return;
@@ -276,12 +275,13 @@ export function InformacaoEmFoco({ difficulty, theme, onComplete }: Props) {
             </span>
           </div>
           <div className="flex items-center justify-between mt-2 mb-1">
-            <span className={`text-xs font-semibold ${s.sub}`}>Questão {qNum} de {N_QUESTOES}</span>
+            <span className={`text-xs font-semibold ${s.sub}`}>Questão {qNum}</span>
             <span className={`text-xs ${s.sub}`}>{Math.round(progressPct)}%</span>
           </div>
+          {/* progresso por TEMPO (sessão de ~6 min), não por nº de questões */}
           <div className={`h-2 rounded-full overflow-hidden ${s.isG ? "bg-white/10" : "bg-slate-200"}`}>
             <motion.div className="h-full rounded-full" style={{ background: s.isG ? "#22d3ee" : "#2563eb" }}
-              animate={{ width: `${(qNum - 1) / N_QUESTOES * 100 + progressPct / N_QUESTOES}%` }} transition={{ duration: 0.3 }} />
+              animate={{ width: `${progressPct}%` }} transition={{ duration: 0.3 }} />
           </div>
         </div>
 
@@ -343,7 +343,7 @@ export function InformacaoEmFoco({ difficulty, theme, onComplete }: Props) {
         {/* Continuar — só depois de resolver (sem auto-avanço) */}
         {revelou && (
           <button onClick={proxima} className={`w-full h-12 rounded-full font-bold ${s.btn}`}>
-            {qNum >= N_QUESTOES ? "Ver resultado" : "Continuar"}
+            {isTimeUp() ? "Ver resultado" : "Continuar"}
           </button>
         )}
       </div>
