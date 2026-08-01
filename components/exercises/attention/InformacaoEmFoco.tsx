@@ -60,7 +60,7 @@ function ProductCard({ p, campos, destaque, estado, onTap, disabled, theme }: {
 }) {
   const s = styles(theme);
   const isG = s.isG;
-  const marca = marcaDe(p.nome);
+  const marca = p.marca ?? marcaDe(p.nome);
   const ring = estado === "correta" ? "border-green-500 ring-2 ring-green-400"
     : estado === "selerr" ? "border-red-500 ring-2 ring-red-400" : s.card;
   const linha = isG ? "border-white/10" : "border-slate-100";

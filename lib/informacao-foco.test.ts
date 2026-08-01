@@ -1,7 +1,9 @@
 import { describe, it, expect } from "vitest";
+import fs from "node:fs";
+import path from "node:path";
 import {
   gerarQuestao, gerarSessao, validarQuestao, valorCampo,
-  CONFIG_PADRAO, type Nivel,
+  CONFIG_PADRAO, CATALOGO, type Nivel,
 } from "./informacao-foco";
 
 // Reexecuta cada nível muitas vezes: geração procedural precisa ser sempre válida.
@@ -72,5 +74,67 @@ describe("Informação em Foco — geração", () => {
     expect(s[s.length - 1].nivel).toBeGreaterThanOrEqual(s[0].nivel);
     const fixa = gerarSessao({ nQuestoes: 8, nivelInicial: 2, nivelFixo: true });
     expect(fixa.every((q) => q.nivel === 2)).toBe(true);
+  });
+});
+
+// ── Integridade do catálogo (77 produtos com embalagem real e fundo transparente) ──
+describe("Informação em Foco — catálogo de produtos", () => {
+  const dir = path.join(process.cwd(), "public", "exercises", "informacao-foco-produtos");
+
+  it("toda imagem do catálogo existe em disco e é PNG com canal alfa", () => {
+    for (const m of CATALOGO) {
+      const arq = path.join(dir, path.basename(m.img));
+      expect(fs.existsSync(arq), `faltando: ${m.img}`).toBe(true);
+      const buf = fs.readFileSync(arq);
+      // cabeçalho PNG: bytes 24 (bit depth) e 25 (color type). 6 = RGBA
+      expect(buf.subarray(1, 4).toString(), `não é PNG: ${m.img}`).toBe("PNG");
+      expect(buf[25], `sem canal alfa: ${m.img}`).toBe(6);
+    }
+  });
+
+  it("não há imagem repetida nem produto sem marca (exceto embalagem sem marca impressa)", () => {
+    const imgs = CATALOGO.map((m) => m.img);
+    expect(new Set(imgs).size).toBe(imgs.length);
+    const semMarca = CATALOGO.filter((m) => m.marca === "").map((m) => m.nome);
+    expect(semMarca).toEqual(["Ervas finas"]);
+  });
+
+  it("nomes repetidos só existem com marcas diferentes (pares de marca)", () => {
+    const porNome = new Map<string, string[]>();
+    for (const m of CATALOGO) porNome.set(m.nome, [...(porNome.get(m.nome) ?? []), m.marca]);
+    for (const [nome, marcas] of porNome) {
+      expect(new Set(marcas).size, `marcas repetidas em ${nome}`).toBe(marcas.length);
+    }
+  });
+
+  it("nenhuma questão traz dois cartões com o mesmo nome", () => {
+    for (let i = 0; i < 800; i++) {
+      const q = gerarQuestao(((i % 4) + 1) as Nivel);
+      const nomes = q.produtos.map((p) => p.nome);
+      expect(new Set(nomes).size, `nomes repetidos: ${nomes.join(" | ")}`).toBe(nomes.length);
+    }
+  });
+
+  it("todo cartão carrega a marca do próprio produto", () => {
+    const marcaDoNome = new Map(CATALOGO.map((m) => [m.img, m.marca]));
+    for (let i = 0; i < 400; i++) {
+      const q = gerarQuestao(((i % 4) + 1) as Nivel);
+      for (const p of q.produtos) {
+        expect(p.marca, `sem marca: ${p.nome}`).toBe(marcaDoNome.get(p.img!));
+      }
+    }
+  });
+
+  it("“Conteúdo” (mL/L) só aparece em líquido; “Peso” (g/kg), só em sólido", () => {
+    const estado = new Map(CATALOGO.map((m) => [m.img, m.estado]));
+    for (let i = 0; i < 600; i++) {
+      const q = gerarQuestao(((i % 4) + 1) as Nivel);
+      if (q.categoria === "localizacao-volume" || q.categoria === "comparacao-volume") {
+        for (const p of q.produtos) expect(estado.get(p.img!), `${p.nome} não é líquido`).toBe("liquido");
+      }
+      if (q.categoria === "localizacao-peso" || q.categoria === "duas-condicoes") {
+        for (const p of q.produtos) expect(estado.get(p.img!), `${p.nome} não é sólido`).toBe("solido");
+      }
+    }
   });
 });
