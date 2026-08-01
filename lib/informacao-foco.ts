@@ -194,6 +194,10 @@ const MODELOS: Modelo[] = [
   { nome: "Chá verde", marca: "Chá Vital", emoji: "📦", img: imgProd("cha-verde"), categoria: "Mercearia", estado: "solido" },
   { nome: "Molho barbecue", marca: "Churras Sabor", emoji: "📦", img: imgProd("molho-barbecue"), categoria: "Mercearia", estado: "solido" },
   { nome: "Molho shoyu", marca: "Sabor Oriental", emoji: "📦", img: imgProd("shoyu"), categoria: "Mercearia", estado: "liquido" },
+  // 3 embalagens que ela regerou com marca fictícia (as originais traziam marca real)
+  { nome: "Gelatina incolor", marca: "Doce Flora", emoji: "📦", img: imgProd("gelatina"), categoria: "Mercearia", estado: "solido" },
+  { nome: "Fermento químico", marca: "Casa Nobre", emoji: "📦", img: imgProd("fermento"), categoria: "Mercearia", estado: "solido" },
+  { nome: "Leite em pó integral", marca: "Vale do Campo", emoji: "📦", img: imgProd("leite-em-po"), categoria: "Laticínio", estado: "solido", lactose: true },
 ];
 export const TOTAL_PRODUTOS = MODELOS.length;
 // catálogo exposto (leitura) — usado pelos testes de integridade e por futuros painéis

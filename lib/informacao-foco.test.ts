@@ -103,7 +103,7 @@ describe("Informação em Foco — catálogo de produtos", () => {
     const nomes = CATALOGO.map((m) => m.nome);
     const repetidos = nomes.filter((n, i) => nomes.indexOf(n) !== i);
     expect(repetidos, `nomes repetidos: ${repetidos.join(", ")}`).toEqual([]);
-    expect(CATALOGO.length).toBe(70);
+    expect(CATALOGO.length).toBe(73);
   });
 
   it("nenhuma questão traz dois cartões com o mesmo nome", () => {

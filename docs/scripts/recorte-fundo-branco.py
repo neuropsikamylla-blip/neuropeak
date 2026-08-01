@@ -22,14 +22,21 @@ import numpy as np, cv2
 from PIL import Image
 from scipy import ndimage
 
-NUCLEO = 18          # dif = 255 - min(RGB); fundo dela fica entre 0 e 2
+NUCLEO = 18          # dif = distância à cor do fundo (amostrada nas bordas)
 CANNY = (8, 24)      # limiares baixos: a aresta da embalagem branca é sutil
 FECHA, ABRE = 9, 5
 
 
+def cor_do_fundo(rgb: np.ndarray, m: int = 12) -> np.ndarray:
+    """Fundo nem sempre é branco — a gelatina dela veio com fundo creme."""
+    borda = np.concatenate([rgb[:m].reshape(-1, 3), rgb[-m:].reshape(-1, 3),
+                            rgb[:, :m].reshape(-1, 3), rgb[:, -m:].reshape(-1, 3)])
+    return np.median(borda, axis=0)
+
+
 def envelope(rgb: np.ndarray) -> np.ndarray:
     gray = cv2.cvtColor(rgb, cv2.COLOR_RGB2GRAY)
-    dif = 255 - rgb.min(axis=2)
+    dif = np.abs(rgb.astype(int) - cor_do_fundo(rgb)[None, None, :]).max(axis=2)
     edges = cv2.Canny(cv2.GaussianBlur(gray, (3, 3), 0), *CANNY)
     m = ((edges > 0) | (dif > NUCLEO)).astype(np.uint8)
     m = cv2.morphologyEx(m, cv2.MORPH_CLOSE, np.ones((FECHA, FECHA), np.uint8))
