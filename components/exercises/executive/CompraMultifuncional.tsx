@@ -38,11 +38,12 @@ const TEMAS: TemaConfig[] = ["variado", "piquenique", "praia", "frio", "alimento
 const FOCOS: OperacaoFoco[] = ["tudo", "soma", "subtracao", "multiplicacao", "divisao"];
 
 // Fundo temático (arte no canto, área clara p/ o texto). Arquivos em /exercises/compra-fundos.
+// Fallback por tema quando a cena não define um local próprio.
 const FUNDO_TEMA: Record<TemaKey, string> = {
   frio: "frio", praia: "praia", piquenique: "neutro",
   alimentos: "feira", mercado: "vila-fruta", objetos: "shopping",
 };
-const fundoUrl = (tema: TemaKey) => `/exercises/compra-fundos/${FUNDO_TEMA[tema] ?? "neutro"}.webp`;
+const fundoUrl = (nome: string) => `/exercises/compra-fundos/${nome}.webp`;
 
 // Abertura narrativa da história (painel esquerdo), por tema.
 const CONTEXTO_TEMA: Record<TemaKey, string> = {
@@ -426,28 +427,29 @@ function EtapaView({ etapa, theme, proceedLabel, onProceed, autoProceed, mostrar
   );
 }
 
-// ── Painel esquerdo: a história sobre o fundo temático ────────────────────────
+// ── Painel esquerdo: a história sobre o LOCAL da cena (fundo alterna na jornada) ──
 function PainelHistoria({ missao, etapa }: { missao: Missao; etapa: Etapa }) {
-  const contexto = CONTEXTO_TEMA[missao.tema] ?? "foi às compras";
+  const rica = missao.narrativaRica;
+  const fundo = etapa.fundo ?? FUNDO_TEMA[missao.tema] ?? "neutro";
+  // Com narrativa rica, o título é a frase da cena; senão, o contexto do tema.
+  const titulo = rica ? etapa.historia : `${missao.personagem} ${CONTEXTO_TEMA[missao.tema] ?? "foi às compras"}.`;
   return (
     <div className="relative rounded-3xl overflow-hidden flex-1"
       style={{
         minHeight: 340,
-        backgroundImage: `url(${fundoUrl(missao.tema)})`,
+        backgroundImage: `url(${fundoUrl(fundo)})`,
         backgroundSize: "cover",
         backgroundPosition: "center",
         border: "1.5px solid rgba(26,39,68,0.08)",
       }}>
       {/* leve véu à esquerda p/ garantir leitura sobre a área clara */}
-      <div className="absolute inset-0" style={{ background: "linear-gradient(100deg, rgba(255,251,242,0.86) 0%, rgba(255,251,242,0.55) 42%, rgba(255,251,242,0) 66%)" }} />
+      <div className="absolute inset-0" style={{ background: "linear-gradient(100deg, rgba(255,251,242,0.88) 0%, rgba(255,251,242,0.58) 44%, rgba(255,251,242,0) 68%)" }} />
       <div className="relative p-6 max-w-[66%]">
         <span className="inline-flex w-9 h-9 rounded-full items-center justify-center text-lg mb-4"
           style={{ background: "rgba(255,255,255,0.85)", boxShadow: "0 2px 8px rgba(26,39,68,0.12)" }}>📖</span>
-        <h3 className="text-[#1a2744] font-black text-xl sm:text-2xl leading-tight mb-3">
-          {missao.personagem} {contexto}.
-        </h3>
-        <p className="text-[#3a4a63] text-sm leading-relaxed">{etapa.historia}</p>
-        <p className="text-[#3a4a63] text-sm leading-relaxed mt-2">{etapa.objetivo}</p>
+        <h3 className="text-[#1a2744] font-black text-xl sm:text-2xl leading-tight mb-3">{titulo}</h3>
+        <p className="text-[#3a4a63] text-sm leading-relaxed">{rica ? etapa.objetivo : etapa.historia}</p>
+        {!rica && <p className="text-[#3a4a63] text-sm leading-relaxed mt-2">{etapa.objetivo}</p>}
       </div>
     </div>
   );

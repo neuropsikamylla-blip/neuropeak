@@ -69,6 +69,7 @@ export interface Etapa {
   instrucao: string;
   dados: EtapaNumerica | EtapaSelecao;
   temCronometro: boolean;
+  fundo?: string;   // local desta cena (arquivo em /exercises/compra-fundos); alterna a jornada
 }
 
 export interface Missao {
@@ -77,6 +78,7 @@ export interface Missao {
   titulo: string;
   nivel: number;
   etapas: Etapa[];
+  narrativaRica?: boolean;   // true quando o tema tem ROTEIRO (título/corpo por cena)
 }
 
 // ── Utilitários ───────────────────────────────────────────────────────────────
@@ -352,6 +354,29 @@ function plural(it: ItemCompra): string {
   return it.name.endsWith("s") ? it.name : `${it.name}s`;
 }
 
+// ── Roteiros narrativos (JORNADA por LOCAIS) ──────────────────────────────────
+// Uma Cena por etapa da escada "tudo" (índices 0..10). Cada cena tem seu LOCAL
+// (`fundo` → arquivo em /exercises/compra-fundos), sua CATEGORIA de itens (`cat`,
+// de onde saem os produtos) e sua narrativa. A personagem passeia por vários
+// lugares, então o cenário ALTERNA e a sessão não cansa. {p} = nome do personagem.
+interface Cena { fundo: string; cat: Categoria[]; titulo: string; corpo: string }
+
+const ROTEIRO: Partial<Record<TemaKey, Cena[]>> = {
+  frio: [
+    { fundo: "vila-roupa", cat: ["frio"], titulo: "{p} vai viajar para um lugar muito frio.", corpo: "Antes de partir, foi à loja escolher roupas bem quentes. Some o preço das peças." },
+    { fundo: "vila-roupa", cat: ["frio"], titulo: "Ainda faltam peças para aguentar o frio.", corpo: "{p} separou mais algumas roupas quentes. Quanto custam juntas?" },
+    { fundo: "aeroporto", cat: ["alimento"], titulo: "No aeroporto, esperando o voo.", corpo: "{p} comprou um lanche e pagou com uma nota. Quanto recebe de troco?" },
+    { fundo: "aeroporto", cat: ["alimento"], titulo: "A viagem vai ser longa.", corpo: "{p} tem um limite de dinheiro para os lanches do voo. Escolha sem estourar." },
+    { fundo: "frio", cat: ["frio"], titulo: "{p} chegou ao destino gelado!", corpo: "Vai fazer frio todos os dias — ela leva vários pares iguais de meia." },
+    { fundo: "supermercado", cat: ["fruta"], titulo: "Compras no mercado do vilarejo.", corpo: "{p} comprou frutas para dividir igualmente com os amigos da viagem." },
+    { fundo: "frio", cat: ["frio"], titulo: "Arrumando a mochila para a neve.", corpo: "{p} quer saber o peso do que vai carregar nas costas." },
+    { fundo: "frio", cat: ["frio"], titulo: "A mala aguenta um peso máximo.", corpo: "Quanto ainda cabe sem passar do limite?" },
+    { fundo: "frio", cat: ["objeto"], titulo: "Nem tudo cabe na mala.", corpo: "{p} escolhe o que levar sem passar do peso permitido." },
+    { fundo: "supermercado", cat: ["alimento", "bebida"], titulo: "Última ida ao supermercado.", corpo: "{p} comprou comida para os dias — cuidando do dinheiro E do peso da sacola." },
+    { fundo: "supermercado", cat: ["alimento", "bebida"], titulo: "Fechando as compras da viagem.", corpo: "{p} finaliza respeitando todas as regras." },
+  ],
+};
+
 // ── Montagem da missão ────────────────────────────────────────────────────────
 
 export function resolverTema(cfg: TemaConfig): TemaKey {
@@ -369,21 +394,39 @@ export function buildMissao(temaCfg: TemaConfig, nivel: number, foco: OperacaoFo
   const cronometro = lv >= 6;
 
   let etapas: Etapa[] = [];
+  let narrativaRica = false;
   if (foco === "tudo") {
     // Escada completa (spec §Etapa 1..11), escalada pelo nível.
+    const roteiro = ROTEIRO[tema];
+    // pool coerente da cena i (cai no pool do tema se a cena não render itens suficientes)
+    const poolC = (i: number, fallback: ItemCompra[]): ItemCompra[] => {
+      if (!roteiro) return fallback;
+      const c = poolDe(roteiro[i].cat);
+      return c.length >= 2 ? c : fallback;
+    };
     etapas = [
-      etSomaN("soma2", p, base, 2, 0),
-      etSomaN("soma3", p, base, 3, 1),
-      etTroco(p, base, lv, 2),
-      etOrcamento(p, base, lv, 3),
-      etMultiplicacao(p, base, lv, 4),
-      etDivisao(p, base, lv, 5),
-      etPesoSoma(p, base, 6),
+      etSomaN("soma2", p, poolC(0, base), 2, 0),
+      etSomaN("soma3", p, poolC(1, base), 3, 1),
+      etTroco(p, poolC(2, base), lv, 2),
+      etOrcamento(p, poolC(3, base), lv, 3),
+      etMultiplicacao(p, poolC(4, base), lv, 4),
+      etDivisao(p, poolC(5, base), lv, 5),
+      etPesoSoma(p, poolC(6, base), 6),
       etPesoRestante(p, lv, 7),
-      etPesoEscolha(p, objPool, lv, 8),
-      etPrecoEPeso(p, base, lv, 9, cronometro),
-      etMultifuncional(p, base, lv, 10, cronometro),
+      etPesoEscolha(p, poolC(8, objPool), lv, 8),
+      etPrecoEPeso(p, poolC(9, base), lv, 9, cronometro),
+      etMultifuncional(p, poolC(10, base), lv, 10, cronometro),
     ];
+    // Injeta a narrativa e o LOCAL (fundo) de cada cena.
+    if (roteiro) {
+      narrativaRica = true;
+      etapas = etapas.map((e, i) => ({
+        ...e,
+        historia: roteiro[i].titulo.replaceAll("{p}", p),
+        objetivo: roteiro[i].corpo.replaceAll("{p}", p),
+        fundo: roteiro[i].fundo,
+      }));
+    }
   } else {
     // Foco numa operação: várias etapas dessa operação, crescendo.
     const g: () => Etapa = () => {
@@ -395,7 +438,7 @@ export function buildMissao(temaCfg: TemaConfig, nivel: number, foco: OperacaoFo
     };
     etapas = Array.from({ length: 8 }, g).map((e, i) => ({ ...e, index: i }));
   }
-  return { tema, personagem: p, titulo: def.titulo, nivel: lv, etapas };
+  return { tema, personagem: p, titulo: def.titulo, nivel: lv, etapas, narrativaRica };
 }
 
 // ── Verificação (SÓ depois de confirmar) ──────────────────────────────────────
