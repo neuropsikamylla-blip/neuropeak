@@ -17,7 +17,7 @@ import { useTimedProgress } from "@/components/exercises/useExerciseEngine";
 import { playTTS, cancelTTS } from "@/lib/tts";
 import type { ExerciseResult, Theme } from "@/types";
 import {
-  gerarQuestao, valorCampo, labelCampo,
+  gerarQuestao, valorCampo, labelCampo, marcaDe,
   type Questao, type Nivel, type Produto, type CampoKey,
 } from "@/lib/informacao-foco";
 
@@ -59,24 +59,28 @@ function ProductCard({ p, campos, destaque, estado, onTap, disabled, theme }: {
   estado: "idle" | "selerr" | "correta"; onTap: () => void; disabled: boolean; theme: Theme;
 }) {
   const s = styles(theme);
+  const isG = s.isG;
+  const marca = marcaDe(p.nome);
   const ring = estado === "correta" ? "border-green-500 ring-2 ring-green-400"
     : estado === "selerr" ? "border-red-500 ring-2 ring-red-400" : s.card;
+  const linha = isG ? "border-white/10" : "border-slate-100";
   return (
-    <button onClick={onTap} disabled={disabled} aria-label={`${p.nome}. ${campos.map((c) => `${labelCampo(c)}: ${valorCampo(p, c)}`).join(". ")}`}
-      className={`relative text-left rounded-2xl border-2 p-4 transition-all active:scale-[0.98] disabled:cursor-default ${ring} ${s.cardTxt}`}
-      style={{ minHeight: 150 }}>
-      <div className="flex flex-col items-center gap-1 mb-3">
-        <ProdGlifo img={p.img} emoji={p.emoji} size={64} />
-        <span className="font-bold text-sm text-center leading-tight mt-1">{p.nome}</span>
-        <span className={`text-[11px] ${s.sub}`}>{p.categoria}</span>
+    <button onClick={onTap} disabled={disabled} aria-label={`${p.nome}${marca ? " " + marca : ""}. ${campos.map((c) => `${labelCampo(c)}: ${valorCampo(p, c)}`).join(". ")}`}
+      className={`relative text-left rounded-2xl border-2 p-4 transition-all active:scale-[0.98] disabled:cursor-default ${ring} ${s.cardTxt}`}>
+      {/* imagem + nome + marca */}
+      <div className="flex flex-col items-center gap-0.5 mb-3">
+        <div className="h-[92px] flex items-end justify-center"><ProdGlifo img={p.img} emoji={p.emoji} size={88} /></div>
+        <span className="font-bold text-[15px] text-center leading-tight mt-1.5">{p.nome}</span>
+        {marca && <span className={`text-xs ${s.sub}`}>{marca}</span>}
       </div>
-      <div className="space-y-1">
+      {/* campos em linhas com divisória — valores NEUTROS (a cor não entrega a resposta) */}
+      <div>
         {campos.map((c) => {
-          const on = destaque.includes(c);
+          const on = destaque.includes(c); // só destaca DEPOIS de revelar (feedback), nunca antes
           return (
-            <div key={c} className={`flex items-baseline justify-between gap-2 rounded-lg px-2 py-1 ${on ? (styles(theme).isG ? "bg-amber-400/20" : "bg-amber-100") : ""}`}>
-              <span className={`text-[11px] font-semibold ${s.sub}`}>{labelCampo(c)}</span>
-              <span className={`text-sm font-bold tabular-nums text-right ${on ? "text-amber-600" : ""}`} style={on && styles(theme).isG ? { color: "#fbbf24" } : undefined}>
+            <div key={c} className={`flex items-baseline justify-between gap-2 py-2 border-t ${linha} ${on ? (isG ? "bg-green-400/10" : "bg-green-50") : ""} ${on ? "-mx-1 px-1 rounded" : ""}`}>
+              <span className={`text-xs ${s.sub}`}>{labelCampo(c)}</span>
+              <span className={`text-[13px] font-bold tabular-nums text-right ${on ? (isG ? "text-green-300" : "text-green-700") : ""}`}>
                 {valorCampo(p, c)}
               </span>
             </div>
@@ -259,7 +263,7 @@ export function InformacaoEmFoco({ difficulty, theme, onComplete }: Props) {
 
   return (
     <div className={`min-h-screen overflow-y-auto ${s.bg}`}>
-      <div className="max-w-[880px] mx-auto px-4 py-5 flex flex-col gap-4">
+      <div className="max-w-[1120px] mx-auto px-4 py-5 flex flex-col gap-4">
         {/* Header */}
         <div>
           <div className="flex justify-between items-baseline">

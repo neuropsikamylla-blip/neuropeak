@@ -136,6 +136,16 @@ const MODELOS: Modelo[] = [
 ];
 const ALERGENICOS = ["amendoim", "castanha", "soja", "ovo"];
 
+// Marcas FICTÍCIAS por produto (sem marcas reais) — aparecem abaixo do nome no cartão.
+export const MARCAS: Record<string, string> = {
+  "Leite integral": "Fazenda Boa", "Leite desnatado": "Vida Leve", "Bebida vegetal": "NatVeg",
+  "Iogurte natural": "Boa Sorte", "Iogurte de morango": "Frutello", "Suco de uva": "Pomar",
+  "Suco de laranja": "Pomar", "Refrigerante": "Fizz", "Água mineral": "Fonte Clara",
+  "Biscoito": "Crocante", "Cereal matinal": "Bom Dia", "Pacote de arroz": "Grão Nobre",
+  "Café": "Aroma", "Queijo": "Serra Boa", "Pacote de amendoim": "Nutri", "Pacote de castanhas": "Nutri",
+};
+export const marcaDe = (nome: string) => MARCAS[nome] ?? "";
+
 // escolhe N modelos distintos
 function modelos(n: number): Modelo[] { return shuffle(MODELOS).slice(0, n); }
 
