@@ -200,8 +200,9 @@ function Keypad({ value, unidade, onChange, theme, disabled }: {
 
 // ── Uma etapa jogável (numérica ou seleção) ───────────────────────────────────
 // Remonta a cada etapa (key no pai) → estado sempre fresco.
-function EtapaView({ etapa, theme, proceedLabel, onProceed, autoProceed }: {
+function EtapaView({ etapa, theme, proceedLabel, onProceed, autoProceed, mostrarOpcoes }: {
   etapa: Etapa; theme: Theme; proceedLabel: string; onProceed: (firstTry: boolean) => void; autoProceed?: boolean;
+  mostrarOpcoes?: boolean;  // opções de resposta rápida só nos níveis fáceis (apoio)
 }) {
   const { isG, btnStyle, pal } = styles(theme);
   const numeric = etapa.dados.modo === "numeric";
@@ -327,20 +328,22 @@ function EtapaView({ etapa, theme, proceedLabel, onProceed, autoProceed }: {
           </div>
           <Keypad value={answer} unidade={(etapa.dados as EtapaNumerica).unidade} onChange={setAnswer} theme={theme} disabled={done} />
 
-          {/* Opções de resposta rápida */}
-          <div className="flex items-center gap-2 mt-3">
-            {opcoes.map((v) => {
-              const on = answer === String(v);
-              return (
-                <button key={v} onClick={() => !done && setAnswer(String(v))} disabled={done}
-                  className={`flex-1 h-11 rounded-2xl border-2 font-black text-sm tabular-nums transition-all active:scale-95 disabled:opacity-50 ${
-                    on ? "border-emerald-500 bg-emerald-50 text-emerald-700"
-                       : isG ? "border-white/20 bg-white/5 text-white/85" : "border-slate-200 bg-white text-[#1a2744]"}`}>
-                  {optLabel(v)}
-                </button>
-              );
-            })}
-          </div>
+          {/* Opções de resposta rápida — só nos níveis fáceis (apoio; nos avançados só digita) */}
+          {mostrarOpcoes && (
+            <div className="flex items-center gap-2 mt-3">
+              {opcoes.map((v) => {
+                const on = answer === String(v);
+                return (
+                  <button key={v} onClick={() => !done && setAnswer(String(v))} disabled={done}
+                    className={`flex-1 h-11 rounded-2xl border-2 font-black text-sm tabular-nums transition-all active:scale-95 disabled:opacity-50 ${
+                      on ? "border-emerald-500 bg-emerald-50 text-emerald-700"
+                         : isG ? "border-white/20 bg-white/5 text-white/85" : "border-slate-200 bg-white text-[#1a2744]"}`}>
+                    {optLabel(v)}
+                  </button>
+                );
+              })}
+            </div>
+          )}
         </>
       ) : (
         <>
@@ -557,7 +560,7 @@ export function CompraMultifuncional({ difficulty, theme, onComplete }: Props) {
           instruction:
             "Cada missão é uma historinha com etapas de matemática. Em algumas você digita o resultado da conta; em outras escolhe os itens respeitando as regras. O app NÃO faz a conta por você — só confere e explica depois que você confirmar. Resolva a soma abaixo para começar.",
           content: (done) => (
-            <EtapaView etapa={tutorialEtapa} theme={theme} proceedLabel="Começar" autoProceed onProceed={() => done()} />
+            <EtapaView etapa={tutorialEtapa} theme={theme} proceedLabel="Começar" autoProceed mostrarOpcoes onProceed={() => done()} />
           ),
         }]}
         onDone={() => { begin(); iniciarMissao(); setStage("play"); }} />
@@ -605,7 +608,7 @@ export function CompraMultifuncional({ difficulty, theme, onComplete }: Props) {
           <div className="p-5 sm:p-6" style={cardStyle}>
             <AnimatePresence mode="wait">
               <EtapaView key={`${missionSeed}-${etapaIdx}`} etapa={etapa} theme={theme}
-                proceedLabel={proceedLabel} onProceed={handleEtapaDone} />
+                proceedLabel={proceedLabel} onProceed={handleEtapaDone} mostrarOpcoes={missao.nivel <= 3} />
             </AnimatePresence>
           </div>
         </div>
