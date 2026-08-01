@@ -1,11 +1,12 @@
 "use client";
 
 // ─────────────────────────────────────────────────────────────────────────────
-// Vigilância — "Encontre onde estava a pipa-alvo".
-// 8 pipas (7 distratoras idênticas + 1 alvo), exposição breve e resposta por
-// REGIÃO espacial (não precisa tocar em cima). Adaptativo por degraus, blocos de
-// 12, EXECUÇÃO CONTÍNUA (sem pausa/reinício). Motor puro em lib/vigilancia.ts.
-// Treino de velocidade de processamento e localização — NÃO é avaliação/diagnóstico.
+// Vigilância — "Encontre onde estava a pipa diferente".
+// 8 pipas (7 idênticas + 1 diferente) piscam juntas; o paciente clica na REGIÃO
+// onde estava a diferente. O modelo NÃO é reapresentado a cada rodada — ele deve
+// PERCEBER sozinho qual destoa (discriminação). Só o tutorial mostra o alvo 1×.
+// Fluxo contínuo (bloco de 12, sem pausa). Motor puro em lib/vigilancia.ts.
+// Treino de velocidade de processamento e localização — NÃO é avaliação.
 // ─────────────────────────────────────────────────────────────────────────────
 
 import { useState, useRef, useCallback, useEffect, useLayoutEffect } from "react";
@@ -13,7 +14,7 @@ import { motion, AnimatePresence } from "framer-motion";
 import { calculateExerciseScore } from "@/lib/scoring";
 import type { ExerciseResult, Theme } from "@/types";
 import {
-  EXPO_STEPS, tempoDoDegrau, gerarCentros, classificarToque, gerarSequenciaPosicoes,
+  tempoDoDegrau, gerarCentros, classificarToque, gerarSequenciaPosicoes,
   adaptar, estadoInicial, avaliarBloco, BLOCO_TENTATIVAS, POSICOES,
   type AdaptState, type Arranjo, type Tolerancia, type Ponto, type Classificacao,
 } from "@/lib/vigilancia";
@@ -26,42 +27,41 @@ const shuffle = <T,>(a: T[]): T[] => { const b = [...a]; for (let i = b.length -
 const nivelDe = (d: number) => Math.max(1, Math.min(NIVEIS.length, Math.round(d)));
 const DEGRAU_CONFORTAVEL = 4; // 1100 ms
 
-type Fase = "alvo" | "fixacao" | "exposicao" | "resposta" | "feedback";
-interface Kite { pos: number; variante: "A" | "B"; isAlvo: boolean }
+type Fase = "fixacao" | "exposicao" | "resposta" | "feedback";
+interface Kite { pos: number; isAlvo: boolean }
 
 export function Vigilancia({ difficulty, theme, onComplete }: Props) {
   const isG = theme === "GAMIFIED";
-  const [stage, setStage] = useState<"tutorial" | "pronto" | "bloco" | "resultado">("tutorial");
-  const [fase, setFase] = useState<Fase>("alvo");
+  const [stage, setStage] = useState<"tutorial" | "bloco" | "resultado">("tutorial");
+  const [fase, setFase] = useState<Fase>("fixacao");
   const [tutStep, setTutStep] = useState(0);
 
-  const nivelRef = useRef(nivelDe(difficulty / 1)); // 1..10
+  const nivelRef = useRef(nivelDe(difficulty));
   const estadoRef = useRef<AdaptState>(estadoInicial(DEGRAU_CONFORTAVEL));
-  const alvoVarRef = useRef<"A" | "B">("A");         // contrabalanceado por bloco
-  const posSeqRef = useRef<number[]>([]);            // 12 posições contrabalanceadas
+  const alvoVarRef = useRef<"A" | "B">("A");
+  const posSeqRef = useRef<number[]>([]);
   const blocoNumRef = useRef(0);
 
-  const nv = NIVEIS[nivelRef.current - 1];
-  const parRef = useRef<Par>(parById(nv.pairId));
-  const [par, setPar] = useState<Par>(parRef.current);
-  const [fundoArq, setFundoArq] = useState(fundoById(nv.fundo).arquivo);
-  const arranjoRef = useRef<Arranjo>(nv.arranjo);
+  const nv0 = NIVEIS[nivelRef.current - 1];
+  const [par, setPar] = useState<Par>(parById(nv0.pairId));
+  const [fundoArq, setFundoArq] = useState(fundoById(nv0.fundo).arquivo);
+  const arranjoRef = useRef<Arranjo>(nv0.arranjo);
   const tolRef = useRef<Tolerancia>("padrao");
 
+  const tentativaRef = useRef(1);
   const [tentativa, setTentativa] = useState(1);
   const [kites, setKites] = useState<Kite[]>([]);
   const [fb, setFb] = useState<{ correto: boolean; corretaPos: number; tocadaPos: number; classe: Classificacao } | null>(null);
+  const [cursor, setCursor] = useState<Ponto | null>(null); // linha-guia na resposta
 
-  // métricas do bloco
   const bloco = useRef({ acertos: 0, historico: [] as boolean[], temposResp: [] as number[], seq: 0, melhorSeq: 0 });
   const totalRef = useRef({ tentativas: 0, acertos: 0 });
   const sessionStart = useRef(Date.now());
 
-  // arena / geometria
   const arenaRef = useRef<HTMLDivElement>(null);
   const [dims, setDims] = useState({ w: 360, h: 360 });
   const centrosRef = useRef<Ponto[]>([]);
-  const kiteW = Math.max(58, Math.round(Math.min(dims.w, dims.h) * 0.12));
+  const kiteW = Math.max(56, Math.round(Math.min(dims.w, dims.h) * 0.13));
   const kiteH = Math.round(kiteW * 1.5);
 
   const timers = useRef<ReturnType<typeof setTimeout>[]>([]);
@@ -70,11 +70,8 @@ export function Vigilancia({ difficulty, theme, onComplete }: Props) {
   const respStart = useRef(0);
   const clearTimers = () => { timers.current.forEach(clearTimeout); timers.current = []; };
   useEffect(() => () => clearTimers(), []);
-
-  // pré-carrega TODAS as imagens antes de começar (§35)
   useEffect(() => { TODAS_IMAGENS.forEach((src) => { const im = new Image(); im.src = src; }); }, []);
 
-  // mede a arena e recalcula os centros
   useLayoutEffect(() => {
     const el = arenaRef.current; if (!el) return;
     const medir = () => {
@@ -90,32 +87,26 @@ export function Vigilancia({ difficulty, theme, onComplete }: Props) {
 
   const posToXY = (pos: number): Ponto => centrosRef.current[pos] ?? { x: dims.w / 2, y: dims.h / 2 };
 
-  // ── Fluxo de uma tentativa ──────────────────────────────────────────────────
-  const iniciarTentativa = useCallback(() => {
-    setFb(null); setKites([]); respondidoRef.current = false;
-    setFase("alvo");
-  }, []);
+  // finaliza bloco (declarado antes de quem o usa)
+  const finalizarBloco = useCallback(() => { clearTimers(); setStage("resultado"); }, []);
 
-  const aoPronto = useCallback(() => {
+  // ── Uma tentativa: fixação → exposição → resposta (SEM reapresentar o alvo) ──
+  const iniciarTentativa = useCallback(() => {
+    setFb(null); setKites([]); setCursor(null); respondidoRef.current = false;
     setFase("fixacao");
     timers.current.push(setTimeout(() => {
-      // monta as 8 pipas: alvo na posição da sequência; distratoras na outra variante
-      const idx = tentativa - 1;
+      const idx = tentativaRef.current - 1;
       const alvoPos = posSeqRef.current[idx] ?? 0;
-      const alvoVar = alvoVarRef.current;
-      const distVar = alvoVar === "A" ? "B" : "A";
-      const arr: Kite[] = POSICOES.map((_, pos) => ({ pos, variante: pos === alvoPos ? alvoVar : distVar, isAlvo: pos === alvoPos }));
+      const arr: Kite[] = POSICOES.map((_, pos) => ({ pos, isAlvo: pos === alvoPos }));
       setKites(arr);
       setFase("exposicao");
       expoStart.current = performance.now();
       const ms = tempoDoDegrau(estadoRef.current.degrau);
       timers.current.push(setTimeout(() => {
-        setKites([]);          // §4 desaparecem SIMULTANEAMENTE
-        setFase("resposta");
-        respStart.current = performance.now();
+        setKites([]); setFase("resposta"); respStart.current = performance.now();
       }, ms));
-    }, rnd(500, 800)));        // §9 fixação com intervalo variável
-  }, [tentativa]);
+    }, rnd(600, 900)));
+  }, []);
 
   const registrarEavancar = useCallback((correto: boolean, corretaPos: number, tocadaPos: number, classe: Classificacao) => {
     const b = bloco.current;
@@ -123,20 +114,17 @@ export function Vigilancia({ difficulty, theme, onComplete }: Props) {
     if (correto) { b.acertos++; b.seq++; b.melhorSeq = Math.max(b.melhorSeq, b.seq); b.temposResp.push(performance.now() - respStart.current); }
     else { b.seq = 0; }
     totalRef.current.tentativas++; if (correto) totalRef.current.acertos++;
-    // adapta (motor)
-    const { estado } = adaptar(estadoRef.current, correto);
-    estadoRef.current = estado;
+    estadoRef.current = adaptar(estadoRef.current, correto).estado;
 
     setFb({ correto, corretaPos, tocadaPos, classe });
     setFase("feedback");
-    const dur = correto ? 900 : 1900; // erro reapresenta o alvo ~1s a mais
+    const dur = correto ? 900 : 1800;
     timers.current.push(setTimeout(() => {
-      if (tentativa >= BLOCO_TENTATIVAS) { finalizarBloco(); return; }
-      setTentativa((t) => t + 1);
+      if (tentativaRef.current >= BLOCO_TENTATIVAS) { finalizarBloco(); return; }
+      tentativaRef.current += 1; setTentativa(tentativaRef.current);
       iniciarTentativa();
     }, dur));
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [tentativa, iniciarTentativa]);
+  }, [finalizarBloco, iniciarTentativa]);
 
   const aoTocar = useCallback((e: React.PointerEvent) => {
     if (fase !== "resposta" || respondidoRef.current) return;
@@ -144,34 +132,36 @@ export function Vigilancia({ difficulty, theme, onComplete }: Props) {
     const el = arenaRef.current; if (!el) return;
     const rect = el.getBoundingClientRect();
     const toque: Ponto = { x: e.clientX - rect.left, y: e.clientY - rect.top };
-    const idx = tentativa - 1;
-    const corretaPos = posSeqRef.current[idx] ?? 0;
+    const corretaPos = posSeqRef.current[tentativaRef.current - 1] ?? 0;
     const r = classificarToque(toque, centrosRef.current, corretaPos, arranjoRef.current, dims.w, dims.h, tolRef.current);
     registrarEavancar(r.correto, corretaPos, r.selecionada, r.classificacao);
-  }, [fase, tentativa, dims, registrarEavancar]);
+  }, [fase, dims, registrarEavancar]);
 
-  // ── Início / fim de bloco ───────────────────────────────────────────────────
+  const aoMover = useCallback((e: React.PointerEvent) => {
+    if (fase !== "resposta") return;
+    const el = arenaRef.current; if (!el) return;
+    const rect = el.getBoundingClientRect();
+    setCursor({ x: e.clientX - rect.left, y: e.clientY - rect.top });
+  }, [fase]);
+
   const iniciarBloco = useCallback(() => {
     blocoNumRef.current++;
-    alvoVarRef.current = blocoNumRef.current % 2 === 1 ? "A" : "B"; // alterna a variante-alvo (§7)
+    alvoVarRef.current = blocoNumRef.current % 2 === 1 ? "A" : "B";
     posSeqRef.current = gerarSequenciaPosicoes(BLOCO_TENTATIVAS, shuffle);
     bloco.current = { acertos: 0, historico: [], temposResp: [], seq: 0, melhorSeq: 0 };
     const nvv = NIVEIS[nivelRef.current - 1];
-    parRef.current = parById(nvv.pairId); setPar(parRef.current);
+    setPar(parById(nvv.pairId));
     arranjoRef.current = nvv.arranjo; setFundoArq(fundoById(nvv.fundo).arquivo);
-    setTentativa(1);
+    tentativaRef.current = 1; setTentativa(1);
     setStage("bloco");
     iniciarTentativa();
   }, [iniciarTentativa]);
 
-  const finalizarBloco = useCallback(() => { clearTimers(); setStage("resultado"); }, []);
-
   const continuar = useCallback(() => {
-    // avança de nível se o bloco foi muito bom (§20/§22), senão mantém
     const { decisao } = avaliarBloco(bloco.current.acertos);
     if (decisao === "avancar" && nivelRef.current < NIVEIS.length) {
       nivelRef.current++;
-      estadoRef.current = estadoInicial(DEGRAU_CONFORTAVEL); // condição confortável no novo nível (§22)
+      estadoRef.current = estadoInicial(DEGRAU_CONFORTAVEL);
     }
     iniciarBloco();
   }, [iniciarBloco]);
@@ -180,8 +170,8 @@ export function Vigilancia({ difficulty, theme, onComplete }: Props) {
     clearTimers();
     const t = totalRef.current;
     const acc = t.tentativas ? t.acertos / t.tentativas : 0;
-    const temposMed = bloco.current.temposResp;
-    const medResp = temposMed.length ? temposMed.slice().sort((a, b) => a - b)[Math.floor(temposMed.length / 2)] : undefined;
+    const tr = bloco.current.temposResp;
+    const medResp = tr.length ? tr.slice().sort((a, z) => a - z)[Math.floor(tr.length / 2)] : undefined;
     onComplete({
       exerciseId: "vigilancia", domain: "attention",
       score: calculateExerciseScore("vigilancia", acc, medResp, nivelRef.current),
@@ -194,48 +184,53 @@ export function Vigilancia({ difficulty, theme, onComplete }: Props) {
     });
   }, [onComplete]);
 
-  // ── Estilos ─────────────────────────────────────────────────────────────────
   const bg = isG ? "bg-[#061326]" : "bg-slate-100";
   const txt = isG ? "text-white" : "text-slate-800";
   const sub = isG ? "text-white/60" : "text-slate-500";
 
-  // ── Tutorial (§29) ──────────────────────────────────────────────────────────
+  // ── Tutorial curto (mostra o alvo 1× · NÃO se repete no jogo) ────────────────
   if (stage === "tutorial") {
-    const alvoImg = imgPipa(par.A.arquivo);
+    const comum = imgPipa(par.A.arquivo);
+    const dif = imgPipa(par.B.arquivo);
     const TELAS = [
-      { t: "Vigilância", d: "Você verá oito pipas. Uma delas será a pipa-alvo.", img: false },
-      { t: "Observe a pipa-alvo", d: "Guarde bem esta pipa — é a que você vai procurar.", img: true },
-      { t: "Fique pronto", d: "Toque em “Estou pronto” e mantenha o olhar no centro.", img: false },
-      { t: "Atenção!", d: "As pipas aparecem rapidamente e depois desaparecem.", img: false },
-      { t: "Onde estava?", d: "Toque na REGIÃO onde estava a pipa-alvo. Você não precisa tocar exatamente em cima dela.", img: false },
+      {
+        t: "Vigilância",
+        d: "Todas as pipas são iguais — menos UMA. Repare como a pipa diferente destoa do grupo.",
+        node: (
+          <div className="flex items-end justify-center gap-3 my-6">
+            <div className="flex flex-col items-center gap-1 opacity-70">
+              <img src={comum} alt="" style={{ width: 68, height: 102, objectFit: "contain" }} />
+              <span className={`text-[11px] ${sub}`}>iguais</span>
+            </div>
+            <div className="flex flex-col items-center gap-1">
+              <div className="rounded-2xl p-1" style={{ boxShadow: "0 0 0 3px #22c55e" }}>
+                <img src={dif} alt="pipa diferente" style={{ width: 84, height: 126, objectFit: "contain" }} />
+              </div>
+              <span className="text-[11px] font-bold text-green-600">diferente</span>
+            </div>
+          </div>
+        ),
+      },
+      {
+        t: "Como jogar",
+        d: "As pipas aparecem por um instante e somem. Depois, clique na REGIÃO onde estava a pipa diferente — não precisa acertar em cima.",
+        node: null,
+      },
     ];
     const tela = TELAS[tutStep];
     return (
       <div className={`min-h-screen flex items-center justify-center ${bg}`}>
         <div className="max-w-md mx-auto px-6 py-10 text-center">
           <h2 className={`text-2xl font-black ${txt}`}>{tela.t}</h2>
-          {tela.img && <img src={alvoImg} alt="pipa-alvo" className="mx-auto my-5" style={{ width: 120, height: 180, objectFit: "contain" }} />}
+          {tela.node}
           <p className={`text-base mt-3 leading-relaxed ${sub}`}>{tela.d}</p>
           <div className="flex items-center justify-center gap-1.5 my-6">
             {TELAS.map((_, i) => <span key={i} className={`h-2 rounded-full transition-all ${i === tutStep ? "w-6 bg-sky-500" : "w-2 " + (isG ? "bg-white/20" : "bg-slate-300")}`} />)}
           </div>
-          <button onClick={() => tutStep < TELAS.length - 1 ? setTutStep(tutStep + 1) : setStage("pronto")}
-            className="w-full h-12 rounded-full font-bold text-white bg-sky-600 active:bg-sky-700">
-            {tutStep < TELAS.length - 1 ? "Continuar" : "Entendi"}
+          <button onClick={() => tutStep < TELAS.length - 1 ? setTutStep(tutStep + 1) : iniciarBloco()}
+            className="w-full h-12 rounded-full font-black text-white bg-sky-600 active:bg-sky-700">
+            {tutStep < TELAS.length - 1 ? "Continuar" : "START"}
           </button>
-        </div>
-      </div>
-    );
-  }
-
-  if (stage === "pronto") {
-    return (
-      <div className={`min-h-screen flex items-center justify-center ${bg}`}>
-        <div className="max-w-md mx-auto px-6 text-center">
-          <h2 className={`text-xl font-black ${txt}`}>Vigilância</h2>
-          <p className={`text-sm mt-1 mb-6 ${sub}`}>Encontre onde estava a pipa-alvo</p>
-          <p className={`text-sm mb-8 ${sub}`}>Serão 12 rodadas seguidas. Você controla o início de cada uma.</p>
-          <button onClick={iniciarBloco} className="w-full h-12 rounded-full font-bold text-white bg-sky-600 active:bg-sky-700">Iniciar bloco</button>
         </div>
       </div>
     );
@@ -266,9 +261,10 @@ export function Vigilancia({ difficulty, theme, onComplete }: Props) {
     );
   }
 
-  // ── BLOCO em andamento (execução contínua — SEM controles) ──────────────────
+  // ── BLOCO em andamento ──────────────────────────────────────────────────────
   const alvoImg = imgPipa(par[alvoVarRef.current].arquivo);
   const distImg = imgPipa(par[alvoVarRef.current === "A" ? "B" : "A"].arquivo);
+  const cx = dims.w / 2, cy = dims.h / 2;
 
   return (
     <div className={`min-h-screen flex flex-col ${bg}`}>
@@ -278,61 +274,54 @@ export function Vigilancia({ difficulty, theme, onComplete }: Props) {
         <span className={`text-xs font-semibold ${sub}`}>Rodada {tentativa}/{BLOCO_TENTATIVAS} · Nível {nivelRef.current}</span>
       </div>
 
-      {/* Arena */}
-      <div ref={arenaRef} onPointerDown={aoTocar}
+      <div ref={arenaRef} onPointerDown={aoTocar} onPointerMove={aoMover}
         className="relative flex-1 mx-3 mb-3 rounded-2xl overflow-hidden"
-        style={{ backgroundImage: `url(${imgFundo(fundoArq)})`, backgroundSize: "cover", backgroundPosition: "center", cursor: fase === "resposta" ? "pointer" : "default", touchAction: "none" }}>
+        style={{ backgroundImage: `url(${imgFundo(fundoArq)})`, backgroundSize: "cover", backgroundPosition: "center", cursor: fase === "resposta" ? "crosshair" : "default", touchAction: "none" }}>
 
-        {/* ponto de fixação central */}
-        {(fase === "fixacao" || fase === "exposicao" || fase === "resposta") && (
-          <div className="absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 rounded-full"
-            style={{ width: 14, height: 14, background: fase === "resposta" ? "rgba(255,255,255,0.5)" : "#1e293b", border: "2px solid white", zIndex: 5 }} />
+        {/* ponto de fixação */}
+        {(fase === "fixacao" || fase === "exposicao") && (
+          <div className="absolute rounded-full" style={{ left: cx - 7, top: cy - 7, width: 14, height: 14, background: "#1e293b", border: "2px solid white", zIndex: 5 }} />
         )}
 
-        {/* pipas na exposição */}
+        {/* pipas na exposição (7 iguais + 1 diferente = alvo) */}
         {fase === "exposicao" && kites.map((k) => {
           const c = posToXY(k.pos);
           return <img key={k.pos} src={k.isAlvo ? alvoImg : distImg} alt="" draggable={false}
             style={{ position: "absolute", left: c.x - kiteW / 2, top: c.y - kiteH / 2, width: kiteW, height: kiteH, objectFit: "contain", zIndex: 3 }} />;
         })}
 
-        {/* alvo ampliado (fase "alvo") + botão Estou pronto */}
-        <AnimatePresence>
-          {fase === "alvo" && (
-            <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}
-              className="absolute inset-0 flex flex-col items-center justify-center gap-4 z-20"
-              style={{ background: isG ? "rgba(6,19,38,0.75)" : "rgba(241,245,249,0.82)" }}>
-              <p className={`font-bold ${txt}`}>Procure esta pipa</p>
-              <img src={alvoImg} alt="pipa-alvo" style={{ width: 96, height: 144, objectFit: "contain" }} draggable={false} />
-              <button onClick={aoPronto} className="h-12 px-8 rounded-full font-bold text-white bg-sky-600 active:bg-sky-700">Estou pronto</button>
-            </motion.div>
-          )}
-        </AnimatePresence>
-
-        {/* prompt de resposta */}
+        {/* resposta: prompt + linha-guia do cursor (a "luz") */}
         {fase === "resposta" && (
-          <div className="absolute top-3 left-1/2 -translate-x-1/2 px-4 py-1.5 rounded-full text-sm font-bold z-10"
-            style={{ background: "rgba(0,0,0,0.55)", color: "#fff" }}>Onde estava a pipa-alvo?</div>
+          <>
+            <div className="absolute top-3 left-1/2 -translate-x-1/2 px-4 py-1.5 rounded-full text-sm font-bold z-10"
+              style={{ background: "rgba(0,0,0,0.55)", color: "#fff" }}>Onde estava a pipa diferente?</div>
+            {cursor && (
+              <svg className="absolute inset-0 pointer-events-none" style={{ zIndex: 8 }} width={dims.w} height={dims.h}>
+                <line x1={cx} y1={cy} x2={cursor.x} y2={cursor.y} stroke="rgba(255,255,255,0.8)" strokeWidth={1.5} />
+                <circle cx={cursor.x} cy={cursor.y} r={9} fill="none" stroke="rgba(255,255,255,0.9)" strokeWidth={2} />
+              </svg>
+            )}
+          </>
         )}
 
-        {/* feedback: destaca a região correta (e a tocada); reapresenta o alvo se errou */}
+        {/* feedback: destaca a região correta e reapresenta a pipa diferente na posição */}
         {fase === "feedback" && fb && (() => {
           const cCorr = posToXY(fb.corretaPos);
           return (
             <>
               <motion.div initial={{ scale: 0.6, opacity: 0 }} animate={{ scale: 1, opacity: 1 }}
                 className="absolute rounded-full" style={{
-                  left: cCorr.x - kiteW * 0.75, top: cCorr.y - kiteH * 0.6, width: kiteW * 1.5, height: kiteH * 1.2,
+                  left: cCorr.x - kiteW * 0.8, top: cCorr.y - kiteH * 0.6, width: kiteW * 1.6, height: kiteH * 1.2,
                   border: "3px solid #22c55e", background: "rgba(34,197,94,0.12)", zIndex: 6,
                 }} />
-              {!fb.correto && <img src={alvoImg} alt="" draggable={false}
-                style={{ position: "absolute", left: cCorr.x - kiteW / 2, top: cCorr.y - kiteH / 2, width: kiteW, height: kiteH, objectFit: "contain", zIndex: 7 }} />}
+              <img src={alvoImg} alt="" draggable={false}
+                style={{ position: "absolute", left: cCorr.x - kiteW / 2, top: cCorr.y - kiteH / 2, width: kiteW, height: kiteH, objectFit: "contain", zIndex: 7 }} />
               {!fb.correto && fb.tocadaPos !== fb.corretaPos && (() => { const ct = posToXY(fb.tocadaPos); return (
                 <div className="absolute rounded-full" style={{ left: ct.x - kiteW * 0.6, top: ct.y - kiteH * 0.5, width: kiteW * 1.2, height: kiteH, border: "2px dashed rgba(239,68,68,0.7)", zIndex: 6 }} />
               ); })()}
               <div className="absolute bottom-4 left-1/2 -translate-x-1/2 px-5 py-2 rounded-full text-sm font-bold z-10"
                 style={{ background: fb.correto ? "rgba(22,163,74,0.95)" : "rgba(30,41,59,0.95)", color: "#fff" }}>
-                {fb.correto ? "Correto!" : "A pipa-alvo estava aqui."}
+                {fb.correto ? "Correto!" : "A pipa diferente estava aqui."}
               </div>
             </>
           );

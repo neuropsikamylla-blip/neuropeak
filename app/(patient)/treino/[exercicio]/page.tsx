@@ -84,9 +84,9 @@ const EXERCISE_INSTRUCTIONS: Record<string, string[]> = {
     "Antes de começar, você verá dois exemplos práticos para entender bem!",
   ],
   "vigilancia": [
-    "Você verá a pipa-alvo. Guarde bem como ela é.",
-    "Toque em “Estou pronto” e olhe para o centro. As 8 pipas aparecem por um instante e somem.",
-    "Toque na REGIÃO onde estava a pipa-alvo — não precisa acertar exatamente em cima.",
+    "Todas as pipas são iguais, menos UMA. Você vai achar a diferente sozinho.",
+    "Olhe para o centro. As 8 pipas aparecem por um instante e somem.",
+    "Clique na REGIÃO onde estava a pipa diferente — não precisa acertar em cima.",
     "Conforme você acerta, a exposição fica mais rápida.",
   ],
   "tempo-reacao": [
