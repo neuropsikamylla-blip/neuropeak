@@ -3,6 +3,25 @@
 > Checkpoint de contexto para continuidade entre sessões. Atualizado automaticamente.
 > 👉 Visão geral e handoff para o próximo Claude: **`ESTADO-DO-PROJETO.md`** (leia primeiro).
 
+## 🚧 EM ANDAMENTO (2026-08-01, tarde) — Informação em Foco: 80 imagens com FUNDO TRANSPARENTE
+
+**Pedido dela (palavras dela):** *"na verdade são 80 imagens, vamos integrar as 80 imagens no informação em foco, lembrando fundo transparente ok?"*
+
+**Fatos medidos antes de começar** (pasta `~/Downloads/Informação em foco`, 80 PNG):
+- 20 arquivos `31_…50_` = produtos NOVOS (pasta de amendoim, azeite, mel, geleia, farinha de trigo, açúcar refinado, adoçante, café torrado, achocolatado, leite em pó, aveia fina, chia, linhaça, 2 vinagres, sal rosa, mix de pimentas, ervas finas, gelatina, fermento).
+- 50 arquivos `ChatGPT…14:4x` = as ORIGINAIS dos 50 produtos já integrados (nada novo).
+- 10 arquivos `ChatGPT…17:18` = produtos NOVOS (pasta de amendoim NutriVale, geleia Frutallis, mel Melora, farinha de mandioca, polvilho doce, goma de tapioca, chocolate 70%, chá verde, molho barbecue, shoyu).
+- ⇒ **30 produtos novos** (50 → **80 no catálogo**) e as 80 imagens precisam ficar transparentes.
+- Estado atual das imagens do jogo: `public/exercises/informacao-foco-produtos/*.png` são RGBA 360×360 mas **100% opacas** (fundo branco) — no tema GAMIFIED o cartão é escuro (`bg-[#0D2547]`), então o fundo branco vira um quadrado feio. É exatamente o que ela apontou.
+
+**Passos (cada um termina com prova + commit):**
+1. **Recorte com alfa real** — pipeline PIL: remove o fundo branco conectado às bordas (inclui a sombra), preserva partes brancas internas da embalagem, normaliza em 360×360 RGBA. *Pronto quando:* verificação automática (cantos com alpha 0, área do produto preservada, 80/80 arquivos) **+ conferência visual minha** das 80 sobre fundo escuro, sem buraco na embalagem nem sobra de fundo.
+2. **Catálogo (`lib/informacao-foco.ts`)** — +30 modelos com marca fictícia, categoria, estado e flags coerentes (lactose/açúcar/alérgeno). *Pronto quando:* teste novo de integridade (toda imagem do catálogo existe em disco, nome único, marca definida) + `npm run test` verde + `npx tsc --noEmit` 0.
+3. **Exibição** — cartão renderiza o PNG transparente nos 3 temas; bump de versão + `npm run build`. *Pronto quando:* build OK e versão nova no `package.json`.
+4. **Publicação** — push na `main` e conferência de `/api/version` em produção.
+
+**Regra do trabalho:** as imagens originais dela ficam intocadas em `~/Downloads/Informação em foco`; o que for sobrescrito em `public/` tem backup datado antes.
+
 ## Checkpoint (2026-08-01) — Unificação + reescritas: Informação em Foco · Vigilância · Focus · Compra · Dupla Tarefa (v2.47.2 → v2.59.0)
 
 **Sessão longa de refinamento guiado pela Kamylla (ela testava em produção e devolvia ajustes).** Tudo em produção, git limpo, `local = ar = 2.59.0`, **199 testes** (16 arquivos), tsc 0, build OK.
