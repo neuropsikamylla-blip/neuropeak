@@ -18,7 +18,7 @@ import { ExerciseProgressBar } from "@/components/exercises/ExerciseProgressBar"
 import { playTTS, cancelTTS } from "@/lib/tts";
 import type { ExerciseResult, Theme } from "@/types";
 import { gerarRodada, matches, atributoFaltante, type FocusRound, type Etapa } from "@/lib/focus/commands";
-import { charById, COR_HEX, type Acessorio, type Objeto } from "@/lib/focus/roster";
+import { charById, COR_HEX, FOCUS_CHARS, type Acessorio, type Objeto } from "@/lib/focus/roster";
 
 export interface FocusAgentsProps {
   difficulty: number;
@@ -29,7 +29,8 @@ export interface FocusAgentsProps {
 }
 
 const IMG_BASE = "/exercises/agentes-personagens";
-const IMG_V = "?v=1";
+const IMG_V = "?v=1";                       // PNG já é bem leve (~24KB); o delay some com o PRELOAD abaixo
+const imgSrc = (id: string) => `${IMG_BASE}/${id}.png${IMG_V}`;
 // imagens são 360×540 (2:3). Mantemos a proporção — largura menor, altura maior.
 const CHAR_W = 112;                       // ~30% maior que os 86 de antes (§2)
 const CHAR_H = Math.round(CHAR_W / 0.667); // ≈168 — proporção da arte, não amassa
@@ -69,7 +70,7 @@ const shuffle = <T,>(a: T[]): T[] => { const b = [...a]; for (let i = b.length -
 function CharView({ lc, big, dim, onTap, refNode }: {
   lc: LiveChar; big: boolean; dim: boolean; onTap: () => void; refNode: (n: HTMLButtonElement | null) => void;
 }) {
-  const src = `${IMG_BASE}/${lc.id}.png${IMG_V}`;
+  const src = imgSrc(lc.id);
   return (
     <button ref={refNode} onPointerDown={onTap} aria-label="personagem"
       style={{ position: "absolute", left: lc.bx - TOUCH_PAD, top: lc.by - TOUCH_PAD,
@@ -153,7 +154,7 @@ function Tutorial({ onStart }: { onStart: () => void }) {
         {DEMO.map((d) => (
           <div key={d.id} className="relative flex items-end justify-center" style={{ height: 116 }}>
             {/* eslint-disable-next-line @next/next/no-img-element */}
-            <img src={`${IMG_BASE}/${d.id}.png${IMG_V}`} alt="" draggable={false}
+            <img src={imgSrc(d.id)} alt="" draggable={false}
               style={{ width: 68, height: 102, objectFit: "contain",
                 filter: d.alvo ? "drop-shadow(0 0 8px rgba(74,222,128,.95)) drop-shadow(0 0 16px rgba(74,222,128,.7))" : "drop-shadow(0 2px 4px rgba(0,0,0,.5))" }} />
             {d.alvo && <div className="absolute -top-1 right-2 w-6 h-6 rounded-full bg-green-500 flex items-center justify-center text-white text-xs font-black shadow-lg">✓</div>}
@@ -243,6 +244,13 @@ export function FocusAgents({ difficulty, theme, onComplete, exerciseId = "focus
   const stopRaf = () => { if (rafRef.current) { cancelAnimationFrame(rafRef.current); rafRef.current = null; } };
 
   useEffect(() => () => { stopRaf(); clearTimers(); clearOmissao(); cancelTTS(); }, []);
+
+  // Pré-carrega TODAS as imagens dos personagens já na tela de instruções, populando o
+  // cache do browser — assim cada rodada aparece na hora, sem o delay de carregamento.
+  useEffect(() => {
+    const imgs = FOCUS_CHARS.map((c) => { const im = new Image(); im.src = imgSrc(c.id); return im; });
+    return () => { imgs.forEach((im) => { im.onload = null; im.src = ""; }); };
+  }, []);
 
   const falar = useCallback((r: FocusRound) => { playTTS(r.texto.replace(/\*\*/g, "")); }, []);
 
