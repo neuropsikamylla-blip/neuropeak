@@ -3,9 +3,62 @@
 > Checkpoint de contexto para continuidade entre sessões. Atualizado automaticamente.
 > 👉 Visão geral e handoff para o próximo Claude: **`ESTADO-DO-PROJETO.md`** (leia primeiro).
 
+## Checkpoint (2026-08-01) — Unificação + reescritas: Informação em Foco · Vigilância · Focus · Compra · Dupla Tarefa (v2.47.2 → v2.59.0)
+
+**Sessão longa de refinamento guiado pela Kamylla (ela testava em produção e devolvia ajustes).** Tudo em produção, git limpo, `local = ar = 2.59.0`, **199 testes** (16 arquivos), tsc 0, build OK.
+
+### Decisões de design que valem para TODO o projeto (memória `principio-sem-dica-apos-instrucao`)
+- **Depois da instrução, NENHUMA dica ao paciente.** Comando/alvo não fica visível durante a execução (senão vira busca guiada e não treina memória de trabalho/percepção). Focus: barra "ALVO" removida + card com botão **OK**. Vigilância: modelo da pipa só no tutorial, nunca a cada rodada.
+- **Cor não pode entregar a resposta** — valores dos cartões em tom neutro; destaque só no feedback, depois de responder.
+- **Sessão por TEMPO (~5-7 min), não por nº fixo de questões.**
+- **Adaptativo por sequência: 3 acertos ↑ / 3 erros ↓**, silencioso — sem tela de "resultado do bloco" interrompendo.
+- **Imagens reais, não emoji**, sempre que houver acervo. **Estímulos não podem ser ambíguos entre si** (óculos de grau × escuros nunca na mesma cena).
+
+### 1. INFORMAÇÃO EM FOCO — NOVO, unifica 2 exercícios (v2.54.0 → v2.59.0) ✅
+- **Unifica "Caça Informação" (`caca-item-barato`) + "Mudança de Regras" (`mudanca-regras`)** num só (`informacao-em-foco`, attention/seletiva). Os antigos **saíram do menu** (taxonomia), redirecionam no switch e em `EXERCISE_ALIASES` (`lib/exercise-plan.ts`) — inclusive nos **planos já salvos** do paciente (era por isso que continuavam aparecendo no Início). Ícone herdado do Caça Informação.
+- `lib/informacao-foco.ts` (motor PURO, 9 testes rodando 500×/nível): 4 níveis (localizar → comparar → duas condições → situações funcionais), tipos variados (preço/peso/volume/unidades/validade/lactose/açúcar/conservação/sabor/alérgeno), **validação de resposta única**, distratores plausíveis, **balanceamento de posição**.
+- Componente: mecânica única (tocar no cartão), tutorial **PARE→LEIA→PROCURE→CONFIRA→RESPONDA**, feedback que ensina onde achar o dado, pista na 1ª errada (2 tentativas), sem auto-avanço.
+- **Catálogo 14 → 50 produtos com embalagem real** (imagens que a Kamylla gerou), com slug + **marca fictícia** (`MARCAS`) em `/exercises/informacao-foco-produtos/`. Cartão: imagem grande + nome + marca + campos em linhas. Sem OCR: dados continuam gerados pela lógica.
+
+### 2. VIGILÂNCIA — reescrita completa (v2.55.0 → v2.56.0) ✅
+- Era um CPT de letras A/X → virou **8 pipas (7 iguais + 1 diferente)** com **resposta por REGIÃO espacial** (não precisa tocar em cima).
+- `lib/vigilancia.ts` (motor PURO, 13 testes): escada de 15 degraus de exposição; adaptativo (2 acertos aceleram / 1 erro mantém / 2 erros desaceleram / 3 erros voltam ao estável); classificação espacial (exata/aproximada = certo, adjacente/distante = erro); contrabalanceamento das 8 posições; ponto estável; bloco de 12.
+- **Assets dela** (`~/Desktop/Exercicio Vigilancia`): 6 pares de pipas (tom / nº de laços / orientação) + 4 fundos → `/exercises/vigilancia/` com manifests JSON.
+- **v2.56.0 (correção importante):** NÃO reapresentar o modelo a cada rodada. Tutorial de 2 telas + fluxo automático (fixação → pipas piscam → somem → clique na região) + linha-guia no cursor.
+
+### 3. FOCUS AGENTES (v2.51.1 → v2.58.0) ✅
+- **Delay das imagens resolvido:** preload das 144 imagens no mount (PNG mantido — WebP ficou maior).
+- Personagens **sempre espalhados em 2D** (a queda em linha concentrava numa faixa); mais movimento com a dificuldade.
+- **Comando com botão OK** + barra "ALVO" removida; **sem tela de resultado do bloco**; **adaptativo 3↑/3↓**; **não repete o comando anterior**; **óculos de grau × escuros nunca na mesma cena**.
+
+### 4. COMPRA MULTIFUNCIONAL (v2.49.0 → v2.51.0) ✅
+- **Layout de 2 painéis** (história sobre fundo temático | missão) conforme mockup dela.
+- **Jornadas por LOCAIS nos 6 temas** (`ROTEIRO` em `lib/compra-missoes.ts`): cada missão passeia por lugares coerentes e o fundo alterna por cena — resolveu "só neve, fica repetitivo" e "viajar ao frio e comprar leite".
+- **18 fundos aquarela** (`/exercises/compra-fundos/`). Itens com **imagem real** (`IMG_BUSCA` em `data/compra-itens.ts`; resolveu o gorro com cara de boné → `touca.png`). **Auto-avanço ao acertar**. Modo "Variado" **não repete o tema anterior**. Opções de resposta só nos níveis 1-3.
+
+### 5. DUPLA TAREFA (v2.52.0) ✅
+- Alvo agora é **CONJUNÇÃO forma+cor: só o TRIÂNGULO VERDE** (era "círculo verde"). Distratores testam as 2 dimensões; losango adicionado. Validado nos 7 casos exigidos.
+- Bloco de instruções redesenhado (ícones lucide, sem emoji), layout do mockup, **aviso "REGRA ALTERADA"** nos níveis 8-10.
+
+### 6. TEMPO DE REAÇÃO (v2.48.1) ✅
+- **Velocidade proporcional ao nº de alvos** (+40% de travessia por alvo extra) — com 2-3 balões ficava impossível.
+- **Uma direção por leva** (sem misturar lados) + **distratores azul-esverdeados** com aviso no tutorial.
+
+### 7. MOT (v2.48.0) ✅
+- Arena finalmente maior: passou a medir `window.innerWidth/innerHeight` direto (o `clientWidth` do wrapper vinha travado pequeno); bolas menores e mais espaçadas.
+
+### Pendências para a próxima sessão
+1. **Informação em Foco:** integrar as **20 imagens restantes** (mel, geleia, adoçante, chia, linhaça, vinagres, sal rosa, ervas… em `~/Downloads/Informação em foco` — precisam virar produtos novos no catálogo); **Fase 2** = painel de config do profissional (~40 opções), relatório detalhado por categoria, custo-benefício (off por padrão), acessibilidade completa, confirmação de impulsividade.
+2. **Vigilância — Fase 3:** salvamento/retomada individual (não voltar ao nível 1), registro por tentativa, precisão técnica (`performance.now`), relatório profissional, config, calibração formal.
+3. **Focus — Fases 3/4:** registros detalhados do profissional e painel de acessibilidade (spec de 18 seções).
+4. **Compra Multifuncional:** gerar embalagens variadas (vários leites/iogurtes) se ela quiser comparações do mesmo tipo.
+5. **Aguardando teste dela** em tudo que subiu hoje (ela valida em produção e devolve ajustes).
+
+---
+
 ## Checkpoint (2026-07-12) — Sessão de reformas: Focus Chuva · Cubo Corsi · Span Auditivo · Perf de imagens (v2.17.1 → v2.27.1)
 
-**Modelo de operação vigente (definido pela Kamylla):** Fable orquestra, agentes Opus executam, Fable verifica TUDO com evidência própria (probes, geometria, build, produção) antes de aceitar; loop de devolução até passar. Registrado na memória (`modelo-operacao-fable-orquestra`).
+**Modelo de operação (CORRIGIDO em 01/ago/2026):** a sessão **orquestra em Opus 5, esforço xhigh FIXO** — padrão definido pela Kamylla, **não negociável**; nunca baixar modelo/esforço (fatiar o trabalho, sim). O que vale do método: verificar TUDO com evidência própria (probes, geometria, build, produção) antes de aceitar; loop de devolução até passar. Memória: `modelo-operacao-opus5-xhigh`. ⚠️ O texto original deste checkpoint dizia "Fable orquestra" — **estava errado** (veio de uma sessão cujo orquestrador era outro modelo) e foi corrigido; a memória antiga foi apagada.
 
 ### 1. Performance de imagens (v2.17.1-2.17.3) ✅
 - Todas as pastas de imagem usadas otimizadas: 421→110 MB (historias 193→51, pet 136→7…); 1530 PNGs verificados vs backup (0 perda de alfa). Backups em `~/neuropeak-asset-backups/`.
