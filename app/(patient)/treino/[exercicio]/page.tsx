@@ -84,10 +84,10 @@ const EXERCISE_INSTRUCTIONS: Record<string, string[]> = {
     "Antes de começar, você verá dois exemplos práticos para entender bem!",
   ],
   "vigilancia": [
-    "Uma sequência de letras e números aparecerá rapidamente.",
-    "Toque na área de estímulo quando vir a letra/número alvo (indicado na tela).",
-    "Não toque quando for outro estímulo.",
-    "Mantenha o foco — o exercício testa atenção sustentada!",
+    "Você verá a pipa-alvo. Guarde bem como ela é.",
+    "Toque em “Estou pronto” e olhe para o centro. As 8 pipas aparecem por um instante e somem.",
+    "Toque na REGIÃO onde estava a pipa-alvo — não precisa acertar exatamente em cima.",
+    "Conforme você acerta, a exposição fica mais rápida.",
   ],
   "tempo-reacao": [
     "Balões coloridos irão cair pela tela.",

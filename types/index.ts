@@ -411,9 +411,9 @@ export const EXERCISE_DEFINITIONS = {
     id: "vigilancia",
     name: "Vigilância",
     domain: "attention" as Domain,
-    description: "Identifique o estímulo-alvo em meio a uma sequência rápida de letras e números",
+    description: "Encontre onde estava a pipa-alvo entre outras pipas parecidas, numa exposição breve",
     estimatedMinutes: 7,
-    icon: "👁️",
+    icon: "🪁",
   },
   "identificacao-simbolos": {
     id: "identificacao-simbolos",

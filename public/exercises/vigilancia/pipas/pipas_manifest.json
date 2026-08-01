@@ -1,0 +1,142 @@
+{
+  "pares": [
+    {
+      "pairId": "P01",
+      "nome": "Ameixa suave",
+      "categoria": "tom",
+      "atributoDiferencial": "corCorpo",
+      "dificuldadeVisual": 1,
+      "permiteModoSemCor": false,
+      "aprovado": true,
+      "variantes": {
+        "A": {
+          "id": "P01_A",
+          "arquivo": "P01_A.png",
+          "descricao": "ameixa suave clara",
+          "kb": 55
+        },
+        "B": {
+          "id": "P01_B",
+          "arquivo": "P01_B.png",
+          "descricao": "ameixa suave escura",
+          "kb": 53
+        }
+      }
+    },
+    {
+      "pairId": "P02",
+      "nome": "Azul ardósia",
+      "categoria": "tom",
+      "atributoDiferencial": "corCorpo",
+      "dificuldadeVisual": 2,
+      "permiteModoSemCor": false,
+      "aprovado": true,
+      "variantes": {
+        "A": {
+          "id": "P02_A",
+          "arquivo": "P02_A.png",
+          "descricao": "azul ardósia claro",
+          "kb": 51
+        },
+        "B": {
+          "id": "P02_B",
+          "arquivo": "P02_B.png",
+          "descricao": "azul ardósia escuro",
+          "kb": 52
+        }
+      }
+    },
+    {
+      "pairId": "P03",
+      "nome": "Terracota",
+      "categoria": "tom",
+      "atributoDiferencial": "corCorpo",
+      "dificuldadeVisual": 2,
+      "permiteModoSemCor": false,
+      "aprovado": true,
+      "variantes": {
+        "A": {
+          "id": "P03_A",
+          "arquivo": "P03_A.png",
+          "descricao": "terracota claro",
+          "kb": 57
+        },
+        "B": {
+          "id": "P03_B",
+          "arquivo": "P03_B.png",
+          "descricao": "terracota escuro",
+          "kb": 49
+        }
+      }
+    },
+    {
+      "pairId": "P04",
+      "nome": "Verde sálvia",
+      "categoria": "tom",
+      "atributoDiferencial": "corCorpo",
+      "dificuldadeVisual": 3,
+      "permiteModoSemCor": false,
+      "aprovado": true,
+      "variantes": {
+        "A": {
+          "id": "P04_A",
+          "arquivo": "P04_A.png",
+          "descricao": "verde sálvia claro",
+          "kb": 52
+        },
+        "B": {
+          "id": "P04_B",
+          "arquivo": "P04_B.png",
+          "descricao": "verde sálvia escuro",
+          "kb": 49
+        }
+      }
+    },
+    {
+      "pairId": "P05",
+      "nome": "Verde — laços",
+      "categoria": "quantidade de laços",
+      "atributoDiferencial": "qtdLacos",
+      "dificuldadeVisual": 4,
+      "permiteModoSemCor": true,
+      "aprovado": true,
+      "variantes": {
+        "A": {
+          "id": "P05_A",
+          "arquivo": "P05_A.png",
+          "descricao": "verde com 2 laços",
+          "kb": 43
+        },
+        "B": {
+          "id": "P05_B",
+          "arquivo": "P05_B.png",
+          "descricao": "verde com 3 laços",
+          "kb": 49
+        }
+      }
+    },
+    {
+      "pairId": "P06",
+      "nome": "Faixa diagonal",
+      "categoria": "orientação",
+      "atributoDiferencial": "orientacaoFaixa",
+      "dificuldadeVisual": 4,
+      "permiteModoSemCor": true,
+      "aprovado": true,
+      "variantes": {
+        "A": {
+          "id": "P06_A",
+          "arquivo": "P06_A.png",
+          "descricao": "faixa diagonal para a esquerda",
+          "kb": 55
+        },
+        "B": {
+          "id": "P06_B",
+          "arquivo": "P06_B.png",
+          "descricao": "faixa diagonal para a direita",
+          "kb": 55
+        }
+      }
+    }
+  ]
+}

@@ -1,0 +1,36 @@
+{
+  "fundos": [
+    {
+      "id": "BG01",
+      "arquivo": "BG01.webp",
+      "complexidade": 1,
+      "contraste": "baixo",
+      "aprovado": true,
+      "kb": 4
+    },
+    {
+      "id": "BG02",
+      "arquivo": "BG02.webp",
+      "complexidade": 2,
+      "contraste": "baixo",
+      "aprovado": true,
+      "kb": 20
+    },
+    {
+      "id": "BG03",
+      "arquivo": "BG03.webp",
+      "complexidade": 3,
+      "contraste": "medio",
+      "aprovado": true,
+      "kb": 13
+    },
+    {
+      "id": "BG04",
+      "arquivo": "BG04.webp",
+      "complexidade": 4,
+      "contraste": "medio",
+      "aprovado": true,
+      "kb": 21
+    }
+  ]
+}
