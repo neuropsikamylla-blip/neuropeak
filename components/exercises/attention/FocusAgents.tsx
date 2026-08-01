@@ -91,34 +91,14 @@ function CharView({ lc, big, dim, onTap, refNode }: {
   );
 }
 
-// ── Barra de comando (SEMPRE visível) ────────────────────────────────────────
-function CommandBar({ round, onAudio }: { round: FocusRound; onAudio: () => void }) {
-  const partes = round.texto.split("**");
-  return (
-    <div className="w-full rounded-2xl px-3 py-2.5 flex items-center gap-3"
-      style={{ background: "rgba(255,255,255,0.08)", border: "1.5px solid rgba(255,255,255,0.18)" }}>
-      <span className="text-[10px] font-bold uppercase tracking-widest text-white/45 flex-shrink-0">Alvo</span>
-      {round.amostraCor && <span className="w-6 h-6 rounded-full flex-shrink-0 border-2 border-white/40" style={{ background: COR_HEX[round.amostraCor] }} />}
-      {round.acessorioIcone && <span className="text-xl flex-shrink-0">{ACC_EMOJI[round.acessorioIcone]}</span>}
-      {round.objetoIcone && <span className="text-xl flex-shrink-0">{OBJ_EMOJI[round.objetoIcone]}</span>}
-      <p className="text-white font-bold text-sm sm:text-base leading-tight flex-1">
-        {partes.map((p, i) => i % 2 === 1 ? <span key={i} className="text-red-400 font-black">{p}</span> : <span key={i}>{p}</span>)}
-      </p>
-      <button onClick={onAudio} aria-label="Ouvir o comando"
-        className="flex-shrink-0 w-9 h-9 rounded-full flex items-center justify-center text-lg active:scale-90 transition-transform"
-        style={{ background: "rgba(255,255,255,0.14)" }}>🔊</button>
-    </div>
-  );
-}
-
-// ── Anúncio do comando ANTES da rodada (§ "mandar antes") ────────────────────
-function AnuncioComando({ round }: { round: FocusRound }) {
+// ── Anúncio do comando ANTES da rodada (com OK; some ao começar — sem dica) ──
+function AnuncioComando({ round, onOk }: { round: FocusRound; onOk: () => void }) {
   const partes = round.texto.split("**");
   return (
     <motion.div key={round.alvoId + round.texto} initial={{ opacity: 0, scale: 0.9 }} animate={{ opacity: 1, scale: 1 }}
       className="absolute inset-0 flex items-center justify-center z-40 px-6">
-      <div className="rounded-3xl px-6 py-5 text-center max-w-sm"
-        style={{ background: "rgba(10,22,48,0.92)", border: "1.5px solid rgba(255,255,255,0.22)", boxShadow: "0 12px 40px rgba(0,0,0,.5)" }}>
+      <div className="rounded-3xl px-6 py-6 text-center max-w-sm"
+        style={{ background: "rgba(10,22,48,0.95)", border: "1.5px solid rgba(255,255,255,0.22)", boxShadow: "0 12px 40px rgba(0,0,0,.5)" }}>
         <p className="text-white/50 text-xs font-bold uppercase tracking-widest mb-3">👁 Encontre</p>
         <div className="flex items-center justify-center gap-3 mb-1">
           {round.amostraCor && <span className="w-8 h-8 rounded-full border-2 border-white/40" style={{ background: COR_HEX[round.amostraCor] }} />}
@@ -128,6 +108,8 @@ function AnuncioComando({ round }: { round: FocusRound }) {
         <p className="text-white font-black text-lg leading-snug">
           {partes.map((p, i) => i % 2 === 1 ? <span key={i} className="text-red-400">{p}</span> : <span key={i}>{p}</span>)}
         </p>
+        <p className="text-white/40 text-xs mt-3">Guarde bem — depois de começar, o alvo não fica na tela.</p>
+        <button onClick={onOk} className="mt-4 h-11 px-10 rounded-full font-black text-white text-base bg-sky-600 active:bg-sky-700 transition-transform active:scale-95">OK</button>
       </div>
     </motion.div>
   );
@@ -430,8 +412,16 @@ export function FocusAgents({ difficulty, theme, onComplete, exerciseId = "focus
     setFb(null);
     setFase("comando");
     if (auditivo) falar(r);
-    timers.current.push(setTimeout(() => iniciarRodadaRef.current(r), auditivo ? 1500 : 1150));
+    // NÃO inicia sozinho: o card mostra o comando e espera o paciente clicar OK
+    // (confirma que leu). Depois disso, nenhuma dica fica na tela. (pedido da Kamylla)
   }, [auditivo, falar, isTimeUp, encerrar]);
+
+  // Paciente confirmou que leu o comando → começa a rodada (sem o comando visível).
+  const confirmarComando = useCallback(() => {
+    const r = roundRef.current;
+    if (!r || doneRef.current) return;
+    iniciarRodadaRef.current(r);
+  }, []);
 
   const proxima = useCallback(() => {
     if (bloco.current.tentativas >= BLOCO) fecharBloco();
@@ -479,8 +469,9 @@ export function FocusAgents({ difficulty, theme, onComplete, exerciseId = "focus
 
   return (
     <div className="fixed inset-0 flex flex-col" style={{ background: "linear-gradient(160deg,#0a1628 0%,#0d2244 55%,#081020 100%)" }}>
-      <div className="flex-shrink-0 px-3 pt-3 pb-2 space-y-2" style={{ zIndex: 50 }}>
-        {round && <CommandBar round={round} onAudio={() => round && falar(round)} />}
+      {/* Só a barra de progresso no topo — SEM o comando visível durante a busca
+          (sem dica após a instrução). O comando aparece só no card "Encontre". */}
+      <div className="flex-shrink-0 px-3 pt-3 pb-2" style={{ zIndex: 50 }}>
         <ExerciseProgressBar progressPct={progressPct} theme={theme} />
       </div>
 
@@ -494,7 +485,7 @@ export function FocusAgents({ difficulty, theme, onComplete, exerciseId = "focus
             refNode={(n) => { if (n) nodes.current.set(lc.uid, n); else nodes.current.delete(lc.uid); }} />
         ))}
 
-        <AnimatePresence>{fase === "comando" && round && <AnuncioComando round={round} />}</AnimatePresence>
+        <AnimatePresence>{fase === "comando" && round && <AnuncioComando round={round} onOk={confirmarComando} />}</AnimatePresence>
 
         <AnimatePresence>
           {fase === "feedback" && fb && (
