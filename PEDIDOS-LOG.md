@@ -11,3 +11,6 @@ essas 3 embalagens de marcas reais sao de que mesmo? e preciso criar algo a mais
 
 ## 01/08/2026 18:14
 vou mandar elas aqui ok?
+
+## 01/08/2026 18:14
+vou colocar la na pasta entao
