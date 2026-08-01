@@ -118,31 +118,113 @@ const validadeAntes = (a: { mes: number; ano: number }, b: { mes: number; ano: n
 type Estado = "liquido" | "solido";
 interface Modelo { nome: string; emoji: string; img: string; categoria: string; estado: Estado; lactose?: boolean; sabor?: string; }
 export const imgProduto = (n: string) => `/exercises/busca/${n}.png`;
+export const imgProd = (slug: string) => `/exercises/informacao-foco-produtos/${slug}.png`;
 const MODELOS: Modelo[] = [
-  { nome: "Leite integral", emoji: "🥛", img: imgProduto("leite"), categoria: "Laticínio", estado: "liquido", lactose: true },
-  { nome: "Leite desnatado", emoji: "🥛", img: imgProduto("leite-po"), categoria: "Laticínio", estado: "liquido", lactose: true },
-  { nome: "Bebida vegetal", emoji: "🥛", img: imgProduto("leite"), categoria: "Bebida", estado: "liquido", lactose: false },
-  { nome: "Iogurte natural", emoji: "🥣", img: imgProduto("iogurte"), categoria: "Laticínio", estado: "solido", lactose: true },
-  { nome: "Iogurte de morango", emoji: "🥣", img: imgProduto("iogurte"), categoria: "Laticínio", estado: "solido", lactose: true, sabor: "morango" },
-  { nome: "Suco de uva", emoji: "🧃", img: imgProduto("suco-uva"), categoria: "Bebida", estado: "liquido", sabor: "uva" },
-  { nome: "Suco de laranja", emoji: "🧃", img: imgProduto("suco-laranja"), categoria: "Bebida", estado: "liquido", sabor: "laranja" },
-  { nome: "Refrigerante", emoji: "🥤", img: imgProduto("refrigerante-cola"), categoria: "Bebida", estado: "liquido" },
-  { nome: "Água mineral", emoji: "💧", img: imgProduto("agua-mineral"), categoria: "Bebida", estado: "liquido", lactose: false },
-  { nome: "Biscoito", emoji: "🍪", img: imgProduto("biscoito"), categoria: "Mercearia", estado: "solido" },
-  { nome: "Cereal matinal", emoji: "🍫", img: imgProduto("cereal"), categoria: "Mercearia", estado: "solido" },
-  { nome: "Pacote de arroz", emoji: "🍚", img: imgProduto("arroz"), categoria: "Mercearia", estado: "solido", lactose: false },
-  { nome: "Café", emoji: "☕", img: imgProduto("cafe"), categoria: "Mercearia", estado: "solido", lactose: false },
-  { nome: "Queijo", emoji: "🧀", img: imgProduto("queijo"), categoria: "Laticínio", estado: "solido", lactose: true },
+  { nome: "Leite integral", emoji: "📦", img: imgProd("leite-integral"), categoria: "Laticínio", estado: "liquido", lactose: true },
+  { nome: "Leite semidesnatado", emoji: "📦", img: imgProd("leite-semidesnatado"), categoria: "Laticínio", estado: "liquido", lactose: true },
+  { nome: "Leite desnatado", emoji: "📦", img: imgProd("leite-desnatado"), categoria: "Laticínio", estado: "liquido", lactose: true },
+  { nome: "Leite sem lactose", emoji: "📦", img: imgProd("leite-sem-lactose"), categoria: "Laticínio", estado: "liquido", lactose: false },
+  { nome: "Bebida de aveia", emoji: "📦", img: imgProd("bebida-aveia"), categoria: "Bebida", estado: "liquido", lactose: false },
+  { nome: "Bebida de amêndoas", emoji: "📦", img: imgProd("bebida-amendoas"), categoria: "Bebida", estado: "liquido", lactose: false },
+  { nome: "Iogurte natural", emoji: "📦", img: imgProd("iogurte-natural"), categoria: "Laticínio", estado: "solido", lactose: true },
+  { nome: "Iogurte sem lactose", emoji: "📦", img: imgProd("iogurte-sem-lactose"), categoria: "Laticínio", estado: "solido", lactose: false },
+  { nome: "Suco de uva", emoji: "📦", img: imgProd("suco-uva"), categoria: "Bebida", estado: "liquido", sabor: "uva" },
+  { nome: "Suco de laranja", emoji: "📦", img: imgProd("suco-laranja"), categoria: "Bebida", estado: "liquido", sabor: "laranja" },
+  { nome: "Biscoito Maria", emoji: "📦", img: imgProd("biscoito-maria"), categoria: "Mercearia", estado: "solido" },
+  { nome: "Biscoito integral", emoji: "📦", img: imgProd("biscoito-integral"), categoria: "Mercearia", estado: "solido" },
+  { nome: "Biscoito sem açúcar", emoji: "📦", img: imgProd("biscoito-sem-acucar"), categoria: "Mercearia", estado: "solido" },
+  { nome: "Granola", emoji: "📦", img: imgProd("granola"), categoria: "Mercearia", estado: "solido" },
+  { nome: "Granola sem açúcar", emoji: "📦", img: imgProd("granola-sem-acucar"), categoria: "Mercearia", estado: "solido" },
+  { nome: "Aveia em flocos", emoji: "📦", img: imgProd("aveia"), categoria: "Mercearia", estado: "solido" },
+  { nome: "Cereal matinal", emoji: "📦", img: imgProd("cereal-matinal"), categoria: "Mercearia", estado: "solido" },
+  { nome: "Espaguete", emoji: "📦", img: imgProd("espaguete"), categoria: "Mercearia", estado: "solido" },
+  { nome: "Arroz tipo 1", emoji: "📦", img: imgProd("arroz"), categoria: "Mercearia", estado: "solido" },
+  { nome: "Feijão carioca", emoji: "📦", img: imgProd("feijao"), categoria: "Mercearia", estado: "solido" },
+  { nome: "Milho em conserva", emoji: "📦", img: imgProd("milho-conserva"), categoria: "Mercearia", estado: "solido" },
+  { nome: "Torrada integral", emoji: "📦", img: imgProd("torrada"), categoria: "Mercearia", estado: "solido" },
+  { nome: "Ervilha em conserva", emoji: "📦", img: imgProd("ervilha"), categoria: "Mercearia", estado: "solido" },
+  { nome: "Molho de tomate", emoji: "📦", img: imgProd("molho-tomate"), categoria: "Mercearia", estado: "solido" },
+  { nome: "Atum em lata", emoji: "📦", img: imgProd("atum"), categoria: "Mercearia", estado: "solido" },
+  { nome: "Sopa de legumes", emoji: "📦", img: imgProd("sopa-legumes"), categoria: "Congelado", estado: "solido" },
+  { nome: "Lasanha congelada", emoji: "📦", img: imgProd("lasanha"), categoria: "Congelado", estado: "solido" },
+  { nome: "Hambúrguer vegetal", emoji: "📦", img: imgProd("hamburguer-vegetal"), categoria: "Congelado", estado: "solido" },
+  { nome: "Nuggets de frango", emoji: "📦", img: imgProd("nuggets"), categoria: "Congelado", estado: "solido" },
+  { nome: "Pão de forma integral", emoji: "📦", img: imgProd("pao-forma"), categoria: "Mercearia", estado: "solido" },
+  { nome: "Manteiga com sal", emoji: "📦", img: imgProd("manteiga"), categoria: "Laticínio", estado: "solido", lactose: true },
+  { nome: "Margarina", emoji: "📦", img: imgProd("margarina"), categoria: "Mercearia", estado: "solido", lactose: false },
+  { nome: "Requeijão", emoji: "📦", img: imgProd("requeijao"), categoria: "Laticínio", estado: "solido", lactose: true },
+  { nome: "Queijo muçarela", emoji: "📦", img: imgProd("mucarela"), categoria: "Laticínio", estado: "solido", lactose: true },
+  { nome: "Presunto cozido", emoji: "📦", img: imgProd("presunto"), categoria: "Frios", estado: "solido" },
+  { nome: "Ovos brancos", emoji: "📦", img: imgProd("ovos"), categoria: "Mercearia", estado: "solido" },
+  { nome: "Creme de leite", emoji: "📦", img: imgProd("creme-leite"), categoria: "Laticínio", estado: "solido", lactose: true },
+  { nome: "Leite condensado", emoji: "📦", img: imgProd("leite-condensado"), categoria: "Laticínio", estado: "solido", lactose: true },
+  { nome: "Maionese", emoji: "📦", img: imgProd("maionese"), categoria: "Mercearia", estado: "solido" },
+  { nome: "Ketchup", emoji: "📦", img: imgProd("ketchup"), categoria: "Mercearia", estado: "solido" },
+  { nome: "Açúcar refinado", emoji: "📦", img: imgProd("acucar-refinado"), categoria: "Mercearia", estado: "solido" },
+  { nome: "Açúcar mascavo", emoji: "📦", img: imgProd("acucar-mascavo"), categoria: "Mercearia", estado: "solido" },
+  { nome: "Farinha de trigo", emoji: "📦", img: imgProd("farinha-trigo"), categoria: "Mercearia", estado: "solido" },
+  { nome: "Fubá", emoji: "📦", img: imgProd("fuba"), categoria: "Mercearia", estado: "solido" },
+  { nome: "Óleo de soja", emoji: "📦", img: imgProd("oleo-soja"), categoria: "Mercearia", estado: "liquido" },
+  { nome: "Azeite de oliva", emoji: "📦", img: imgProd("azeite"), categoria: "Mercearia", estado: "liquido" },
+  { nome: "Vinagre de álcool", emoji: "📦", img: imgProd("vinagre"), categoria: "Mercearia", estado: "liquido" },
+  { nome: "Café solúvel", emoji: "📦", img: imgProd("cafe"), categoria: "Mercearia", estado: "solido", lactose: false },
+  { nome: "Chá de camomila", emoji: "📦", img: imgProd("cha-camomila"), categoria: "Mercearia", estado: "solido" },
+  { nome: "Sal refinado", emoji: "📦", img: imgProd("sal"), categoria: "Mercearia", estado: "solido" },
 ];
 const ALERGENICOS = ["amendoim", "castanha", "soja", "ovo"];
 
 // Marcas FICTÍCIAS por produto (sem marcas reais) — aparecem abaixo do nome no cartão.
 export const MARCAS: Record<string, string> = {
-  "Leite integral": "Fazenda Boa", "Leite desnatado": "Vida Leve", "Bebida vegetal": "NatVeg",
-  "Iogurte natural": "Boa Sorte", "Iogurte de morango": "Frutello", "Suco de uva": "Pomar",
-  "Suco de laranja": "Pomar", "Refrigerante": "Fizz", "Água mineral": "Fonte Clara",
-  "Biscoito": "Crocante", "Cereal matinal": "Bom Dia", "Pacote de arroz": "Grão Nobre",
-  "Café": "Aroma", "Queijo": "Serra Boa", "Pacote de amendoim": "Nutri", "Pacote de castanhas": "Nutri",
+  "Leite integral": "Fazenda Boa",
+  "Leite semidesnatado": "Vida Leve",
+  "Leite desnatado": "Serra Clara",
+  "Leite sem lactose": "LeveMais",
+  "Bebida de aveia": "Aveia Viva",
+  "Bebida de amêndoas": "Amêndoa Pura",
+  "Iogurte natural": "Campo Vivo",
+  "Iogurte sem lactose": "LeveMais",
+  "Suco de uva": "Vale da Uva",
+  "Suco de laranja": "Sol da Laranja",
+  "Biscoito Maria": "Casa do Trigo",
+  "Biscoito integral": "Sabor da Vila",
+  "Biscoito sem açúcar": "Leve Sabor",
+  "Granola": "Terra Viva",
+  "Granola sem açúcar": "Colheita Boa",
+  "Aveia em flocos": "Campo Dourado",
+  "Cereal matinal": "Bom Grão",
+  "Espaguete": "Massa Nobre",
+  "Arroz tipo 1": "Sítio Dourado",
+  "Feijão carioca": "Feijão da Roça",
+  "Milho em conserva": "Sabor do Campo",
+  "Torrada integral": "Grão Crocante",
+  "Ervilha em conserva": "Verde Vale",
+  "Molho de tomate": "Casa Toscana",
+  "Atum em lata": "Mar Azul",
+  "Sopa de legumes": "Prato Leve",
+  "Lasanha congelada": "Forno da Serra",
+  "Hambúrguer vegetal": "Verde Burger",
+  "Nuggets de frango": "Frango Dourado",
+  "Pão de forma integral": "Pão da Vila",
+  "Manteiga com sal": "Vale Dourado",
+  "Margarina": "Bela Mesa",
+  "Requeijão": "Vellano",
+  "Queijo muçarela": "Villaggio",
+  "Presunto cozido": "Saboratto",
+  "Ovos brancos": "Campo Sereno",
+  "Creme de leite": "Vale Sereno",
+  "Leite condensado": "Doçura",
+  "Maionese": "Vale Sabor",
+  "Ketchup": "Saborio",
+  "Açúcar refinado": "Doce Vida",
+  "Açúcar mascavo": "Terra Boa",
+  "Farinha de trigo": "Bom Campo",
+  "Fubá": "Campo Novo",
+  "Óleo de soja": "VitaNutri",
+  "Azeite de oliva": "Vale Verde",
+  "Vinagre de álcool": "Vitáre",
+  "Café solúvel": "Bom Dia",
+  "Chá de camomila": "Floravita",
+  "Sal refinado": "Costa",
 };
 export const marcaDe = (nome: string) => MARCAS[nome] ?? "";
 
@@ -360,9 +442,9 @@ function gerarNivel4(tipo: Tipo4): Questao {
   if (tipo === "leite-sem-lactose") {
     // Você precisa de 1 L de leite sem lactose.
     base = [
-      { nome: "Bebida vegetal", emoji: "🥛", img: imgProduto("leite"), categoria: "Bebida", campos: { volume: 1000, lactose: false } }, // alvo
-      { nome: "Leite integral", emoji: "🥛", img: imgProduto("leite"), categoria: "Laticínio", campos: { volume: 1000, lactose: true } },
-      { nome: "Bebida vegetal", emoji: "🥛", img: imgProduto("leite"), categoria: "Bebida", campos: { volume: 500, lactose: false } },
+      { nome: "Bebida de aveia", emoji: "🥛", img: imgProd("bebida-aveia"), categoria: "Bebida", campos: { volume: 1000, lactose: false } }, // alvo
+      { nome: "Leite integral", emoji: "🥛", img: imgProd("leite-integral"), categoria: "Laticínio", campos: { volume: 1000, lactose: true } },
+      { nome: "Bebida de aveia", emoji: "🥛", img: imgProd("bebida-aveia"), categoria: "Bebida", campos: { volume: 500, lactose: false } },
     ];
     alvo = 0; camposM = ["volume", "lactose"]; relev = ["volume", "lactose"];
     pergunta = "Você precisa de 1 litro de leite sem lactose. Qual produto atende ao pedido?";
@@ -379,8 +461,8 @@ function gerarNivel4(tipo: Tipo4): Questao {
     const alg = pick(ALERGENICOS);
     const outros = shuffle(ALERGENICOS.filter((a) => a !== alg));
     base = [
-      { nome: "Cereal matinal", emoji: "🍫", img: imgProduto("cereal"), categoria: "Mercearia", campos: { alergenico: alg } }, // alvo (deve evitar)
-      { nome: "Biscoito", emoji: "🍪", img: imgProduto("biscoito"), categoria: "Mercearia", campos: { alergenico: outros[0] } },
+      { nome: "Cereal matinal", emoji: "🍫", img: imgProd("cereal-matinal"), categoria: "Mercearia", campos: { alergenico: alg } }, // alvo (deve evitar)
+      { nome: "Biscoito", emoji: "🍪", img: imgProd("biscoito-maria"), categoria: "Mercearia", campos: { alergenico: outros[0] } },
       { nome: "Pacote de amendoim", emoji: "🥜", img: imgProduto("amendoim"), categoria: "Mercearia", campos: { alergenico: outros[1] ?? undefined } },
     ];
     alvo = 0; camposM = ["alergenico"]; relev = ["alergenico"];
@@ -391,9 +473,9 @@ function gerarNivel4(tipo: Tipo4): Questao {
     explicarErro = (e) => `Esse produto informa “${valorCampo(base[e], "alergenico")}”. A pessoa precisa evitar ${alg} — procure a embalagem que contém ${alg}.`;
   } else if (tipo === "refrigerar") {
     base = [
-      { nome: "Iogurte natural", emoji: "🥣", img: imgProduto("iogurte"), categoria: "Laticínio", campos: { conservacao: "refrigerado" } }, // alvo
-      { nome: "Pacote de arroz", emoji: "🍚", img: imgProduto("arroz"), categoria: "Mercearia", campos: { conservacao: "seco" } },
-      { nome: "Café", emoji: "☕", img: imgProduto("cafe"), categoria: "Mercearia", campos: { conservacao: "luz" } },
+      { nome: "Iogurte natural", emoji: "🥣", img: imgProd("iogurte-natural"), categoria: "Laticínio", campos: { conservacao: "refrigerado" } }, // alvo
+      { nome: "Pacote de arroz", emoji: "🍚", img: imgProd("arroz"), categoria: "Mercearia", campos: { conservacao: "seco" } },
+      { nome: "Café", emoji: "☕", img: imgProd("cafe"), categoria: "Mercearia", campos: { conservacao: "luz" } },
     ];
     alvo = 0; camposM = ["conservacao"]; relev = ["conservacao"];
     pergunta = "Qual produto precisa ser guardado na geladeira?";

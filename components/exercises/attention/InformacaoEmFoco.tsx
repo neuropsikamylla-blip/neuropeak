@@ -47,8 +47,8 @@ function ProdGlifo({ img, emoji, size }: { img?: string; emoji: string; size: nu
   const [erro, setErro] = useState(false);
   if (img && !erro) {
     // eslint-disable-next-line @next/next/no-img-element
-    return <img src={img} alt="" draggable={false} onError={() => setErro(true)}
-      style={{ width: size, height: size, objectFit: "contain", display: "block" }} />;
+    return <img src={img} alt="" draggable={false} loading="lazy" onError={() => setErro(true)}
+      style={{ width: size, height: size, objectFit: "contain", objectPosition: "center", display: "block" }} />;
   }
   return <span style={{ fontSize: Math.round(size * 0.8), lineHeight: 1 }}>{emoji}</span>;
 }
