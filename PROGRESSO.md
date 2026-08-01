@@ -3,9 +3,20 @@
 > Checkpoint de contexto para continuidade entre sessões. Atualizado automaticamente.
 > 👉 Visão geral e handoff para o próximo Claude: **`ESTADO-DO-PROJETO.md`** (leia primeiro).
 
-## 🚧 EM ANDAMENTO (2026-08-01, tarde) — Informação em Foco: 80 imagens com FUNDO TRANSPARENTE
+## ✅ CONCLUÍDO (2026-08-01, tarde) — Informação em Foco: catálogo 50 → 70 produtos com FUNDO TRANSPARENTE (v2.60.1)
 
 **Pedido dela (palavras dela):** *"na verdade são 80 imagens, vamos integrar as 80 imagens no informação em foco, lembrando fundo transparente ok?"*
+
+**Entregue e publicado (produção `2.60.1-dpl_W9NMxzb2d8YHqkuJHaAU1Es2aiiB`; 205 testes, tsc 0, build OK):**
+- **70 PNG 360×360 RGBA com alfa real** em `public/exercises/informacao-foco-produtos/` — as **50 antigas refeitas** (eram opacas, fundo branco: no tema GAMIFIED viravam um quadrado branco no cartão escuro) + **20 novas**.
+- **Destino das 80 imagens da pasta dela:** 50 já eram as fontes dos produtos que estavam no jogo · 20 viraram produto novo · 7 eram produto REPETIDO (decisão dela: "produto igual, mantém só 1" — azeite, farinha de trigo, açúcar refinado, aveia, 2ª pasta de amendoim, 2ª geleia, 2º mel) · 3 fora por marca REAL.
+- **Técnica do recorte** (script em `docs/scripts/recorte-fundo-branco.py`): contorno por **bordas (Canny 8/24)** somado ao núcleo colorido (`dif > 18`) → fechamento 9×9 → `fill_holes` (devolve o branco interno) → abertura 5×5 (solta a sombra) → maior corpo → erosão 1 px → antialias. Se a imagem já vier com alfa (ela mandou 3 assim), o alfa dela é respeitado. ⚠️ **Duas tentativas reprovaram antes**: flood fill com tolerância alta e núcleo puro `dif>18` COMEM a parte branca da embalagem (adoçante, leite semidesnatado, biscoito sem açúcar, suco de laranja) — quem pegou foi a Kamylla, olhando. Conferência VISUAL das imagens é obrigatória neste tipo de trabalho.
+- **Motor (`lib/informacao-foco.ts`):** `Produto.marca` deixou de ser derivada do nome (a marca é dado do produto); `modelos()` nunca põe dois cartões de mesmo nome na mesma questão; **"Conteúdo" (mL/L) só em líquido e "Peso" (g/kg) só em sólido** (antes um pacote de arroz podia aparecer com "1 litro"); nível 4 monta as cenas a partir do catálogo. `CATALOGO` exportado.
+- **6 testes de integridade novos** (imagem existe em disco, PNG RGBA, marca por produto, **nomes únicos e catálogo = 70**, campo coerente com o estado). 205 testes no total.
+
+**⚠️ Pendência para ela decidir — 3 imagens FORA do catálogo por marca REAL impressa:** gelatina **Dr. Oetker**, fermento **Apti** e leite em pó **Camponesa**. O projeto usa só marcas fictícias, por isso não entraram; ficaram guardadas em `~/neuropeak-asset-backups/informacao-foco-pendentes-marca-real/`. Se ela regerar as embalagens com marca inventada, viram 80 produtos.
+
+<details><summary>Plano original (passos e provas)</summary>
 
 **Fatos medidos antes de começar** (pasta `~/Downloads/Informação em foco`, 80 PNG):
 - 20 arquivos `31_…50_` = produtos NOVOS (pasta de amendoim, azeite, mel, geleia, farinha de trigo, açúcar refinado, adoçante, café torrado, achocolatado, leite em pó, aveia fina, chia, linhaça, 2 vinagres, sal rosa, mix de pimentas, ervas finas, gelatina, fermento).
@@ -20,7 +31,9 @@
 3. **Exibição** — cartão renderiza o PNG transparente nos 3 temas; bump de versão + `npm run build`. *Pronto quando:* build OK e versão nova no `package.json`.
 4. **Publicação** — push na `main` e conferência de `/api/version` em produção.
 
-**Regra do trabalho:** as imagens originais dela ficam intocadas em `~/Downloads/Informação em foco`; o que for sobrescrito em `public/` tem backup datado antes.
+**Regra do trabalho:** as imagens originais dela ficam intocadas em `~/Downloads/Informação em foco`; o que for sobrescrito em `public/` tem backup datado antes (feito: `~/neuropeak-asset-backups/informacao-foco-produtos-bak-20260801`).
+
+</details>
 
 ## Checkpoint (2026-08-01) — Unificação + reescritas: Informação em Foco · Vigilância · Focus · Compra · Dupla Tarefa (v2.47.2 → v2.59.0)
 

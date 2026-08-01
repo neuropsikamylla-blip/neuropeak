@@ -1,13 +1,14 @@
 # NeuroPeak — Guia para Claude Code
 
 > Documento derivado do código real em 2026-07-10 (base). Versão/testes atualizados
-> em 2026-08-01 (v2.59.0); demais fatos podem estar defasados — remeça por comando ao editar.
+> em 2026-08-01 (v2.60.1); demais fatos podem estar defasados — remeça por comando ao editar.
 >
 > Atualizações 2026-08-01 (não refletidas na tabela de exercícios abaixo):
 > - "Caça Informação" (caca-item-barato) + "Mudança de Regras" (mudanca-regras) UNIFICADOS em
 >   **"Informação em Foco"** (`informacao-em-foco`, attention/seletiva). Os dois antigos saíram do
 >   menu (taxonomia) e redirecionam no switch + em EXERCISE_ALIASES; ainda existem em EXERCISE_DEFINITIONS
->   p/ histórico. Ver [[informacao-em-foco-epico]].
+>   p/ histórico. Ver [[informacao-em-foco-epico]]. Catálogo em **70 produtos** com embalagem real e
+>   **fundo transparente** (v2.60.1); recorte reprodutível em `docs/scripts/recorte-fundo-branco.py`.
 > - **Vigilância** reescrita (era CPT de letras) → 8 pipas + resposta por REGIÃO espacial. Ver [[vigilancia-reestruturacao-epico]].
 > - **Focus Agentes** reformulado (personagens espalhados 2D, comando com OK, adaptativo 3↑/3↓). Ver [[focus-agentes-reformulacao]].
 
@@ -20,7 +21,7 @@ de **treino** (não de avaliação/diagnóstico). Ainda assim, a fidelidade das 
 (score/acurácia/progressão) importa: a **dificuldade adaptativa** decide o próximo nível a
 partir da acurácia, e o terapeuta acompanha a evolução do paciente por elas.
 
-- **Versão:** 2.59.0 (`package.json:3` — incrementar a cada atualização; exposta em `/api/version`)
+- **Versão:** 2.60.1 (`package.json:3` — incrementar a cada atualização; exposta em `/api/version`)
 - **Stack medida:** Next.js 15.5.18 (instalado; `package.json` declara `^15.3.9`), React 18,
   TypeScript 5 strict, Prisma 5.18 + PostgreSQL (Supabase), NextAuth v4, Tailwind 3, Radix UI, Vitest 4.
 - **Deploy:** Vercel (push na `main` → produção). Diretório: `/Users/kamyllahonorio/neuropeak`.
@@ -32,7 +33,7 @@ npm run dev          # dev server em http://localhost:3000
 npm run build        # build de produção — OK
 npm run start        # serve o build
 npm run lint         # next lint — 5 warnings, 0 errors
-npm run test         # vitest run — 199/199 passam (16 arquivos: scoring, adaptive, compra-missoes, focus, vigilancia, informacao-foco, ...)
+npm run test         # vitest run — 205/205 passam (16 arquivos: scoring, adaptive, compra-missoes, focus, vigilancia, informacao-foco, ...)
 npm run test:watch   # vitest em watch
 npm run db:push      # prisma db push (sincroniza schema)
 npm run db:studio    # Prisma Studio (GUI)
