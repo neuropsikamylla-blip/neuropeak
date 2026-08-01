@@ -3,18 +3,18 @@
 > Checkpoint de contexto para continuidade entre sessões. Atualizado automaticamente.
 > 👉 Visão geral e handoff para o próximo Claude: **`ESTADO-DO-PROJETO.md`** (leia primeiro).
 
-## ✅ CONCLUÍDO (2026-08-01, tarde) — Informação em Foco: catálogo 50 → 70 produtos com FUNDO TRANSPARENTE (v2.60.1)
+## ✅ CONCLUÍDO (2026-08-01, tarde) — Informação em Foco: catálogo 50 → 73 produtos com FUNDO TRANSPARENTE (v2.60.2)
 
 **Pedido dela (palavras dela):** *"na verdade são 80 imagens, vamos integrar as 80 imagens no informação em foco, lembrando fundo transparente ok?"*
 
-**Entregue e publicado (produção `2.60.1-dpl_W9NMxzb2d8YHqkuJHaAU1Es2aiiB`; 205 testes, tsc 0, build OK):**
-- **70 PNG 360×360 RGBA com alfa real** em `public/exercises/informacao-foco-produtos/` — as **50 antigas refeitas** (eram opacas, fundo branco: no tema GAMIFIED viravam um quadrado branco no cartão escuro) + **20 novas**.
+**Entregue e publicado (produção `2.60.2-dpl_H2n8PBo9fh251MdbHFHFq61Abz1E`; 205 testes, tsc 0, build OK):**
+- **73 PNG 360×360 RGBA com alfa real** em `public/exercises/informacao-foco-produtos/` — as **50 antigas refeitas** (eram opacas, fundo branco: no tema GAMIFIED viravam um quadrado branco no cartão escuro) + **20 novas**.
 - **Destino das 80 imagens da pasta dela:** 50 já eram as fontes dos produtos que estavam no jogo · 20 viraram produto novo · 7 eram produto REPETIDO (decisão dela: "produto igual, mantém só 1" — azeite, farinha de trigo, açúcar refinado, aveia, 2ª pasta de amendoim, 2ª geleia, 2º mel) · 3 fora por marca REAL.
 - **Técnica do recorte** (script em `docs/scripts/recorte-fundo-branco.py`): contorno por **bordas (Canny 8/24)** somado ao núcleo colorido (`dif > 18`) → fechamento 9×9 → `fill_holes` (devolve o branco interno) → abertura 5×5 (solta a sombra) → maior corpo → erosão 1 px → antialias. Se a imagem já vier com alfa (ela mandou 3 assim), o alfa dela é respeitado. ⚠️ **Duas tentativas reprovaram antes**: flood fill com tolerância alta e núcleo puro `dif>18` COMEM a parte branca da embalagem (adoçante, leite semidesnatado, biscoito sem açúcar, suco de laranja) — quem pegou foi a Kamylla, olhando. Conferência VISUAL das imagens é obrigatória neste tipo de trabalho.
 - **Motor (`lib/informacao-foco.ts`):** `Produto.marca` deixou de ser derivada do nome (a marca é dado do produto); `modelos()` nunca põe dois cartões de mesmo nome na mesma questão; **"Conteúdo" (mL/L) só em líquido e "Peso" (g/kg) só em sólido** (antes um pacote de arroz podia aparecer com "1 litro"); nível 4 monta as cenas a partir do catálogo. `CATALOGO` exportado.
-- **6 testes de integridade novos** (imagem existe em disco, PNG RGBA, marca por produto, **nomes únicos e catálogo = 70**, campo coerente com o estado). 205 testes no total.
+- **6 testes de integridade novos** (imagem existe em disco, PNG RGBA, marca por produto, **nomes únicos e catálogo = 73**, campo coerente com o estado). 205 testes no total.
 
-**⚠️ PENDENTE — 3 embalagens com marca REAL (decidido por ela em 01/ago):** gelatina **Dr. Oetker**, fermento **Apti** e leite em pó **Camponesa** ficaram FORA (o projeto só usa marca fictícia). **Ela vai regerar as 3 com marca inventada**; quando salvar na pasta `~/Downloads/Informação em foco`, integrar na hora → catálogo vai a **73**. Os arquivos atuais estão guardados em `~/neuropeak-asset-backups/informacao-foco-pendentes-marca-real/` (não entram no repo).
+**✅ RESOLVIDO no mesmo dia — as 3 embalagens de marca real:** ela regerou com marca fictícia (gelatina **Doce Flora**, fermento **Casa Nobre**, leite em pó **Vale do Campo**) e foram integradas (v2.60.2) → catálogo em **73**. Ao recortar apareceu um caso novo: a gelatina veio com **fundo CREME, não branco**, e o método deixava mancha — o script passou a **amostrar a cor do fundo nas bordas** em vez de assumir branco.
 
 <details><summary>Plano original (passos e provas)</summary>
 
