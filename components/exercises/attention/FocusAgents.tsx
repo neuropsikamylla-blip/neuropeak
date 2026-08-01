@@ -35,7 +35,6 @@ const imgSrc = (id: string) => `${IMG_BASE}/${id}.png${IMG_V}`;
 const CHAR_W = 112;                       // ~30% maior que os 86 de antes (§2)
 const CHAR_H = Math.round(CHAR_W / 0.667); // ≈168 — proporção da arte, não amassa
 const TOUCH_PAD = 10;                     // área de toque um pouco maior (§11)
-const BLOCO = 8;                          // tentativas por bloco (§9)
 
 // Escada de dificuldade — cada passo muda UMA variável (§8). n = nº de personagens
 // (sobe com a dificuldade). vel = velocidade da DERIVA (sempre LEVE, nunca rápida §7).
@@ -50,7 +49,7 @@ const STEPS: Step[] = [
   { etapa: 4, n: 11, vel: 2 }, { etapa: 4, n: 12, vel: 3 }, { etapa: 5, n: 12, vel: 3 },
   { etapa: 5, n: 13, vel: 3 },
 ];
-const VEL_LEVE = [0.18, 0.34, 0.52, 0.72]; // px/frame — deriva do nível 1 (sempre leve)
+const VEL_LEVE = [0.4, 0.8, 1.3, 1.9]; // px/frame — deriva; mais movimento conforme a dificuldade sobe
 const VEL_QUEDA = [1.5, 2.2, 3.0, 3.8];    // px/frame — queda do nível 2+ (sobe com a progressão)
 const MARGIN = 6;                          // margem interna da arena (não cola na borda)
 
@@ -278,7 +277,6 @@ export function FocusAgents({ difficulty, theme, onComplete, exerciseId = "focus
   // encadeamento das rodadas via refs (evita ciclos de useCallback)
   const proximaRef = useRef<() => void>(() => {});
   const iniciarRodadaRef = useRef<(r: FocusRound) => void>(() => {});
-  const novaRodadaRef = useRef<() => void>(() => {});
 
   const iniciarRodada = useCallback((r: FocusRound) => {
     const step = STEPS[stepRef.current];
@@ -352,6 +350,8 @@ export function FocusAgents({ difficulty, theme, onComplete, exerciseId = "focus
   iniciarRodadaRef.current = iniciarRodada;
 
   // registra o resultado de uma tentativa (acerto / erro / omissão)
+  // Adaptativo por SEQUÊNCIA (pedido da Kamylla): 3 acertos seguidos → sobe 1 nível;
+  // 3 erros seguidos → desce 1 nível (silenciosamente, sem tela de resultado).
   const registra = useCallback((acertou: boolean, rt: number | null, omissao: boolean) => {
     const b = bloco.current, t = totais.current;
     b.tentativas++; t.total++;
@@ -359,27 +359,18 @@ export function FocusAgents({ difficulty, theme, onComplete, exerciseId = "focus
     if (acertou) {
       b.acertos++; t.acertos++; if (rt != null) { b.tempos.push(rt); t.tempos.push(rt); }
       b.errosSeguidos = 0; b.seq++; b.melhorSeq = Math.max(b.melhorSeq, b.seq);
+      if (b.seq >= 3 && stepRef.current < STEPS.length - 1) { stepRef.current++; b.seq = 0; }
     } else {
-      b.errosSeguidos++; b.maxErros = Math.max(b.maxErros, b.errosSeguidos); b.seq = 0;
+      b.seq = 0; b.errosSeguidos++; b.maxErros = Math.max(b.maxErros, b.errosSeguidos);
+      if (b.errosSeguidos >= 3 && stepRef.current > 0) { stepRef.current--; b.errosSeguidos = 0; }
     }
-  }, []);
-
-  // Fecha o bloco de 8: ajusta a dificuldade em SILÊNCIO e segue direto para a
-  // próxima rodada — sem tela de "Resultado do bloco" (pedido da Kamylla).
-  const fecharBloco = useCallback(() => {
-    const b = bloco.current;
-    const prec = Math.round((b.acertos / Math.max(1, b.tentativas)) * 100);
-    if (prec >= 80 && b.maxErros <= 2 && stepRef.current < STEPS.length - 1) stepRef.current++;
-    else if ((prec < 60 || b.maxErros >= 3) && stepRef.current > 0) stepRef.current--;
-    bloco.current = { tentativas: 0, acertos: 0, errosSeguidos: 0, maxErros: 0, seq: 0, melhorSeq: 0, tempos: [] };
-    novaRodadaRef.current();
   }, []);
 
   // ANUNCIA o comando, depois solta a queda (§ "mandar antes" + sempre visível)
   const novaRodada = useCallback(() => {
     if (doneRef.current || isTimeUp()) { encerrar(); return; }
     const step = STEPS[stepRef.current];
-    const r = gerarRodada(step.etapa, step.n);
+    const r = gerarRodada(step.etapa, step.n, roundRef.current?.texto); // não repete o comando anterior
     roundRef.current = r;
     setRound(r);
     setChars([]); charsRef.current = [];
@@ -389,7 +380,6 @@ export function FocusAgents({ difficulty, theme, onComplete, exerciseId = "focus
     // NÃO inicia sozinho: o card mostra o comando e espera o paciente clicar OK
     // (confirma que leu). Depois disso, nenhuma dica fica na tela. (pedido da Kamylla)
   }, [auditivo, falar, isTimeUp, encerrar]);
-  novaRodadaRef.current = novaRodada;
 
   // Paciente confirmou que leu o comando → começa a rodada (sem o comando visível).
   const confirmarComando = useCallback(() => {
@@ -398,10 +388,7 @@ export function FocusAgents({ difficulty, theme, onComplete, exerciseId = "focus
     iniciarRodadaRef.current(r);
   }, []);
 
-  const proxima = useCallback(() => {
-    if (bloco.current.tentativas >= BLOCO) fecharBloco();
-    else novaRodada();
-  }, [fecharBloco, novaRodada]);
+  const proxima = useCallback(() => { novaRodada(); }, [novaRodada]);
   proximaRef.current = proxima;
 
   const responder = useCallback((tocado: LiveChar) => {

@@ -155,6 +155,11 @@ function montaCena(k: Criterio, etapa: Etapa, nPersonagens: number): { alvo: Foc
   // distratores = NÃO satisfazem o critério (garante alvo único)
   let pool = FOCUS_CHARS.filter((c) => !matches(c, k) && c.id !== alvo.id);
 
+  // Evita AMBIGUIDADE VISUAL entre óculos de grau e óculos escuros (parecidos):
+  // se o comando pede um, o outro não entra como distrator (a Kamylla errou por isso).
+  if (k.acessorios?.includes("oculos")) pool = pool.filter((c) => !c.acessorios.includes("oculos_escuro"));
+  if (k.acessorios?.includes("oculos_escuro")) pool = pool.filter((c) => !c.acessorios.includes("oculos"));
+
   // §3/§16: nas etapas 3+ garante ao menos 1 distrator SEMELHANTE (compartilha parte)
   const semelhantes = pool.filter((c) =>
     (k.cor && c.cor === k.cor) ||
@@ -178,16 +183,19 @@ function montaCena(k: Criterio, etapa: Etapa, nPersonagens: number): { alvo: Foc
   return { alvo, ids };
 }
 
-/** Gera uma rodada válida para a etapa e nº de personagens. Retenta se ambígua. */
-export function gerarRodada(etapa: Etapa, nPersonagens: number): FocusRound {
+/** Gera uma rodada válida para a etapa e nº de personagens. Retenta se ambígua.
+ *  `evitarTexto` = comando da rodada anterior (não repetir o mesmo em seguida). */
+export function gerarRodada(etapa: Etapa, nPersonagens: number, evitarTexto?: string): FocusRound {
   for (let tentativa = 0; tentativa < 40; tentativa++) {
     const k = criterioDaEtapa(etapa);
+    const texto = textoDe(k, etapa);
+    if (evitarTexto && texto === evitarTexto) continue; // não repetir o comando anterior
     const cena = montaCena(k, etapa, nPersonagens);
     if (!cena) continue;
     const negativo = !!(k.semAcessorio || k.semAcessorios || k.corNao);
     return {
       etapa, criterio: k,
-      texto: textoDe(k, etapa),
+      texto,
       negativo,
       amostraCor: k.cor ?? null,
       acessorioIcone: k.acessorios?.[0] ?? null,
