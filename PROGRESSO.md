@@ -3,6 +3,33 @@
 > Checkpoint de contexto para continuidade entre sessões. Atualizado automaticamente.
 > 👉 Visão geral e handoff para o próximo Claude: **`ESTADO-DO-PROJETO.md`** (leia primeiro).
 
+## 🚧 EM ANDAMENTO (02/ago/2026) — Informação em Foco: FASE 1 + FASE 2
+
+**Pedido dela (02/ago):** mandou a FASE 2 dizendo *"Antes de iniciar, verifique se a Fase 1 foi
+realmente aplicada no código. Caso ainda existam bloqueadores estruturais, informe-os objetivamente,
+corrija-os conforme as regras já definidas na Fase 1 e depois prossiga."*
+
+**Verificação: a FASE 1 NÃO estava aplicada** (só a spec existia). Bloqueadores medidos no código:
+`lib/informacao-foco.ts:315` sorteia `lactose` para qualquer produto · `:335` sorteia `sabor` ·
+peso/volume/unidades/validade inventados por questão (margarina muda de 500 g para 800 g) · sem
+snapshot de sessão · sem histórico anti-repetição · sem `directPackageReadingEnabled`.
+
+**Passos (cada um termina com prova rodada + commit):**
+- **F1.1** Catálogo com atributos FIXOS, lendo o conteúdo impresso nas 73 embalagens (o que não der
+  para ler vira `revisar: true` e sai das perguntas de conteúdo). *Prova:* relatório de auditoria +
+  teste de coerência por categoria.
+- **F1.2** Campos aplicáveis por categoria (`null` quando não se aplica) + faixas de preço plausíveis.
+- **F1.3** Gerador passa a LER o catálogo (fim do sorteio de atributo). *Prova:* 500×/nível sem
+  atributo contraditório, uma resposta correta.
+- **F1.4** Snapshot de sessão (preço/validade estáveis) + histórico anti-repetição.
+- **F1.5** Progresso 0/10/…/100 + validação obrigatória antes de exibir.
+- **F2.1** ProductCard novo (imagem 150–175 px, botão Ampliar sem selecionar o cartão, quadro funcional).
+- **F2.2** Campos por nível + ordem previsível no inicial.
+- **F2.3** Modal de ampliação acessível (Escape, foco contido, teclado).
+- **F2.4** Modalidades: 70% quadro · 10% leitura direta da embalagem · 20% situação do cotidiano.
+- **F2.5** Feedback pedagógico em 2 tentativas + destaque só depois da resposta.
+- **F2.6** Distribuição da sessão de 10 + responsividade + acessibilidade.
+
 ## 🔒 FECHAMENTO DA SESSÃO (01→02/ago/2026) — v2.59.0 → **v2.63.1**, tudo em produção
 
 **Estado real ao fechar:** git limpo · local = produção = **2.63.1** · **205 testes** (16 arquivos) ·
