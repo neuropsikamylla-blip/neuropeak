@@ -77,20 +77,20 @@ não é registrado como ajuda.
 
 ## Níveis
 
-- **Prescrição:** `ExerciseCard` tem "Nível inicial" — para o Focus, rótulo "(1–5)" com cinco
+- **Prescrição:** `ExerciseCard` tem "Nível inicial" — para Agentes Focus, rótulo "(1–5)" com cinco
   pastilhas; para os demais, `level` de 1 a 10 (`plano/page.tsx`, `exerciseLevels`).
 - **Progresso real:** `ExerciseConfig.currentDifficulty` no banco (por paciente e exercício),
   calculado server-side em `POST /api/sessions` por `lib/adaptive.ts` — quatro caminhos
   (`calculateProgression` genérica com `maxLevel`, `calculateFocusProgression` com
   `maxLevel = FOCUS_MAX_LEVEL = 13`, `calculateStoryTrailProgression`, `calculateNewDifficulty` legado).
-- **Inconsistência de escala:** o rótulo do card diz 1–10 (e 1–5 no Focus), mas há exercícios com
+- **Inconsistência de escala:** o rótulo do card diz 1–10 (e 1–5 em Agentes Focus), mas há exercícios com
   teto 12 (Supermercado, trilha da História) e 13 (Focus). O banco aceita 1–13 desde v2.65.3
   (CHECK `session_difficulty_range` + `sessionSchema.max(13)`).
 
 ## Retomada
 
 Não existe tela de "continuar ou recomeçar" para o paciente — o exercício lê a dificuldade vinda do
-banco. No Focus, `resolveFocusStartStep(settings?.startLevel, difficulty)` prioriza o nível
+banco. Em Agentes Focus, `resolveFocusStartStep(settings?.startLevel, difficulty)` prioriza o nível
 persistido e usa a conversão por `difficulty` só para sessões antigas
 (`lib/focus/progression.ts`). **O princípio já é o desejado**; o que falta é uniformidade entre
 exercícios e clareza sobre quando o "nível inicial" prescrito sobrescreve o progresso.

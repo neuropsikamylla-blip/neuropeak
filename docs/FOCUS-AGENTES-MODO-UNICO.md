@@ -1,4 +1,4 @@
-# Focus Agentes — MODO ÚNICO (decisão da Kamylla, 02/ago/2026)
+# Agentes Focus — MODO ÚNICO (decisão da Kamylla, 02/ago/2026)
 
 ## O que muda e por quê
 

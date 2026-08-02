@@ -1,7 +1,7 @@
 # 13 — Inventário real das atividades clínicas (auditoria, 02/ago/2026)
 
-> Fonte clínica: os 34 exercícios do catálogo. IDs técnicos são estáveis; os nomes abaixo são os
-> nomes oficiais de documentação.
+> Fonte clínica oficial: [`docs/architecture/CANONICAL_EXERCISES.md`](../architecture/CANONICAL_EXERCISES.md).
+> IDs técnicos são estáveis; os nomes abaixo são os nomes oficiais de documentação.
 
 ## Catálogo clínico atual
 
@@ -47,9 +47,9 @@
 | ID técnico | Situação técnica | Onde vive no código |
 |---|---|---|
 | `desafio-cidade` | **REMOVED_FROM_CURRENT_CATALOG** | `types/index.ts` — definição; `app/(patient)/treino/[exercicio]/page.tsx` — case do switch |
-| `caca-item-barato` | alias histórico | `types/index.ts`; `lib/exercise-plan.ts` — `EXERCISE_ALIASES`; `app/(patient)/treino/[exercicio]/page.tsx` — case do switch |
-| `mudanca-regras` | alias histórico | `types/index.ts`; `lib/exercise-plan.ts` — `EXERCISE_ALIASES`; `app/(patient)/treino/[exercicio]/page.tsx` — case do switch |
-| `desafio-orcamento` | alias histórico | `types/index.ts`; `lib/exercise-plan.ts` — `EXERCISE_ALIASES`; `app/(patient)/treino/[exercicio]/page.tsx` — case do switch |
-| `focus-agents-auditivo` | modo histórico | `types/index.ts`; `lib/exercise-plan.ts` — `EXERCISE_ALIASES`; `app/(patient)/treino/[exercicio]/page.tsx` — case do switch |
-| `restaurante-ordem-auditivo` | modo histórico | `types/index.ts`; `lib/exercise-plan.ts` — `EXERCISE_ALIASES`; `app/(patient)/treino/[exercicio]/page.tsx` — case do switch |
-| `desafio-supermercado-auditivo` | modo histórico | `types/index.ts`; `lib/exercise-plan.ts` — `EXERCISE_ALIASES`; `app/(patient)/treino/[exercicio]/page.tsx` — case do switch |
+| `caca-item-barato` | Legacy ID histórico de Informação em Foco | `types/index.ts`; `lib/exercise-plan.ts` — `EXERCISE_ALIASES`; `app/(patient)/treino/[exercicio]/page.tsx` — case do switch |
+| `mudanca-regras` | Legacy ID histórico de Informação em Foco | `types/index.ts`; `lib/exercise-plan.ts` — `EXERCISE_ALIASES`; `app/(patient)/treino/[exercicio]/page.tsx` — case do switch |
+| `desafio-orcamento` | Legacy ID histórico de Compra Multifuncional | `types/index.ts`; `lib/exercise-plan.ts` — `EXERCISE_ALIASES`; `app/(patient)/treino/[exercicio]/page.tsx` — case do switch |
+| `focus-agents-auditivo` | Legacy ID histórico de Agentes Focus | `types/index.ts`; `lib/exercise-plan.ts` — `EXERCISE_ALIASES`; `app/(patient)/treino/[exercicio]/page.tsx` — case do switch |
+| `restaurante-ordem-auditivo` | Legacy ID histórico de Restaurante | `types/index.ts`; `lib/exercise-plan.ts` — `EXERCISE_ALIASES`; `app/(patient)/treino/[exercicio]/page.tsx` — case do switch |
+| `desafio-supermercado-auditivo` | Legacy ID histórico de Supermercado | `types/index.ts`; `lib/exercise-plan.ts` — `EXERCISE_ALIASES`; `app/(patient)/treino/[exercicio]/page.tsx` — case do switch |

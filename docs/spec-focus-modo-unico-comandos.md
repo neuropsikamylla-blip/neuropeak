@@ -1,4 +1,4 @@
-# Focus Agentes — comandos novos e escada do MODO ÚNICO (spec de tarefa)
+# Agentes Focus — comandos novos e escada do MODO ÚNICO (spec de tarefa)
 
 Decisão de produto: `docs/FOCUS-AGENTES-MODO-UNICO.md` (ler antes).
 Alvo desta tarefa: **`lib/focus/commands.ts`** e o `STEPS` de

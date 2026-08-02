@@ -64,8 +64,8 @@ iniciar (nunca toca áudio sozinho).
 | Caminhos para a Meta (`antes-depois`) | idem | usa `PresentationConfig`, não aparecia na sua lista |
 
 **Aprovados e ainda não implementados (2):** Agentes Focus e Compra Multifuncional (§0).
-Hoje o `focus-agents-auditivo` existe como **id herdado** (alias) mas o exercício **não** oferece o
-seletor — ou seja, a modalidade auditiva do Focus está prometida no id e ausente na tela.
+Agentes Focus ainda não oferece o seletor — ou seja, a modalidade auditiva aprovada ainda está
+ausente na tela.
 
 ### Efeito de mudar a modalidade, por exercício
 

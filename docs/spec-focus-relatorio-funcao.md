@@ -1,4 +1,4 @@
-# Focus Agentes — fim do seletor de modo e relatório por FUNÇÃO COGNITIVA (spec de tarefa)
+# Agentes Focus — fim do seletor de modo e relatório por FUNÇÃO COGNITIVA (spec de tarefa)
 
 Decisão de produto: `docs/FOCUS-AGENTES-MODO-UNICO.md`. Passo anterior (comandos + escada) já está
 em produção (v2.66.0). Esta tarefa é o passo 4 de 5.

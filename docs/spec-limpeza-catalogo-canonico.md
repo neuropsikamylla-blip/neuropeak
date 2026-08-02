@@ -49,7 +49,7 @@ nomes usados na documentação.
 
 Não podem aparecer em inventário, tabelas, classificação, exemplos, contagens ou relatórios:
 
-- `desafio-cidade` (será reformulado como exercício novo);
+- `desafio-cidade` (**REMOVED_FROM_CURRENT_CATALOG**; será reformulado como exercício novo);
 - `caca-item-barato`, `mudanca-regras`, `desafio-orcamento` (aliases);
 - `focus-agents-auditivo`, `restaurante-ordem-auditivo`, `desafio-supermercado-auditivo` (modos).
 
@@ -79,8 +79,8 @@ claramente separada, dizendo apenas onde vivem no código.
 
 | Antigo | Oficial |
 |---|---|
-| Focus Agentes · Focus Agents | **Agentes Focus** |
-| Task Switching | **Alternância de Regras** |
+| Agentes Focus (forma oficial) | **Agentes Focus** |
+| Alternância de Regras (forma oficial) | **Alternância de Regras** |
 | Desafio do Supermercado | Supermercado |
 | Restaurante — Ordem de Instruções | Restaurante |
 | Corrida contra o Tempo | Busca Rápida |
@@ -96,11 +96,11 @@ correspondência para ninguém confundir ao ler o histórico.
 
 Rodar sobre `docs/auditoria-plano-terapeutico/*.md`:
 
-1. `grep -rn "desafio-cidade\|Desafio da Cidade"` — só pode aparecer na seção de referência técnica
+1. `grep -rn "desafio-cidade\|Desafio da Cidade"` — só pode aparecer na seção de referência técnica **REMOVED_FROM_CURRENT_CATALOG**
    do doc 13, marcado como `REMOVED_FROM_CURRENT_CATALOG`.
 2. `grep -rn "caca-item-barato\|mudanca-regras\|desafio-orcamento\|-auditivo"` — só na seção de
    referência técnica ou em texto que explica o mecanismo de alias.
-3. `grep -rn "Task Switching\|Focus Agentes\|Focus Agents"` — **zero ocorrências**.
+3. `grep -rn` dos nomes preteridos — **zero ocorrências**.
 4. O doc 16 tem exatamente **34 linhas** de exercício na lista canônica.
 5. O doc 03 tem exatamente **34 linhas** e as contagens por modelo somam 34.
 6. Todos os 34 nomes oficiais aparecem no doc 16, escritos exatamente como na tabela acima.

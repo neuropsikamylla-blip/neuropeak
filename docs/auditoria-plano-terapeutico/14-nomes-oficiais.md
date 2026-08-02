@@ -1,7 +1,9 @@
 # 14 — Nomes oficiais (auditoria)
 
-> A lista canônica definitiva de IDs e nomes é o documento 16. Esta auditoria registra a regra de
-> nomenclatura: o ID técnico é estável; o nome oficial é o texto clínico exibido na documentação.
+> A lista canônica definitiva de IDs e nomes é
+> [`docs/architecture/CANONICAL_EXERCISES.md`](../architecture/CANONICAL_EXERCISES.md). Esta auditoria
+> registra a regra de nomenclatura: o ID técnico é estável; o nome oficial é o texto clínico exibido
+> na documentação.
 
 ## Regra
 
@@ -52,5 +54,5 @@ o identificador técnico.
 
 - `corrida-tempo`, `cubo-corsi`, `task-switching` e outros IDs podem manter termos históricos ou
   estrangeiros; isto não muda o nome oficial apresentado.
-- A correspondência de aliases históricos e o alerta de desambiguação estão concentrados no fim do
-  documento 16, para não integrarem o catálogo clínico.
+- A correspondência de Legacy IDs históricos e o alerta de desambiguação estão concentrados na fonte
+  oficial, para não integrarem o catálogo clínico.

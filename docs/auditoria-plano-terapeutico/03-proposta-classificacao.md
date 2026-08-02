@@ -1,7 +1,8 @@
 # 03 — Proposta de classificação (REFEITA sobre os 34 canônicos)
 
-> ⚠️ **Esta versão substitui a anterior**, que classificava aliases e modos auditivos como se fossem
-> exercícios independentes. Base correta: os **34 canônicos** do documento 16.
+> ⚠️ **Esta versão substitui a anterior**, que classificava Legacy IDs e modos auditivos como se fossem
+> exercícios independentes. Base correta: os **34 canônicos** de
+> [`docs/architecture/CANONICAL_EXERCISES.md`](../architecture/CANONICAL_EXERCISES.md).
 > Incorpora a **decisão de modalidade de 02/ago** (documento 15 §0). Nada implementado.
 
 ## Contagem por modelo

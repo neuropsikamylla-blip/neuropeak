@@ -59,7 +59,7 @@ a medição bruta incluindo `scripts`/`prisma` chega a ~42,6k).
 | `components/dashboard/` | Visão do terapeuta sobre pacientes |
 | `components/therapeutic/MundoInterior.tsx` | Sessão terapêutica gamificada (polling + otimista); ver §6c |
 | `components/theme/` | `ThemeProvider` e alternância de tema |
-| `components/characters/` | Personagens/roster (Focus Agentes e afins) |
+| `components/characters/` | Personagens/roster (Agentes Focus e afins) |
 | `components/charts/` | Gráficos de evolução |
 | `components/gamification/` | Elementos de XP/jornada/conquista |
 | `components/reports/` | (pasta com pendência — ver ARQ-009) |
@@ -84,7 +84,7 @@ a medição bruta incluindo `scripts`/`prisma` chega a ~42,6k).
 
 ### `data/` — catálogos estáticos
 
-`agents.ts`, `agentAttributes.ts`, `commandTemplates.ts` (Focus Agentes);
+`agents.ts`, `agentAttributes.ts`, `commandTemplates.ts` (Agentes Focus);
 `historias.ts` (Ordem da História); `compra-*.ts` (compras contextuais);
 `tts-manifest.ts` (áudios pré-gerados).
 
@@ -312,7 +312,7 @@ A rota escolhe **um** caminho por sessão (`sessions/route.ts:64-182`):
    sobe >85%, desce <60%, mantém no meio; passo ±1, faixa 1-10.
 
 Em todos, o resultado grava `ExerciseConfig.currentDifficulty` (`sessions/route.ts:184`).
-Além disso, **Focus Agentes** (`focus-agents[-auditivo]`) tem progressão **por modo**
+Além disso, **Agentes Focus** (`focus-agents[-auditivo]`) tem progressão **por modo**
 via `calculateFocusProgression` (`adaptive.ts:132`), cujo nível vive no `metadata` da
 sessão (não no `ExerciseConfig`): ≥80% sobe, <55% desce, faixa 1-9.
 
@@ -372,7 +372,7 @@ por ID:
 - **ARQ-002** — Estado de **pet** (`lib/pet.ts`) e **skill tree** (`lib/skilltree.ts`)
   persistido **só em `localStorage`**, sem espelho no banco: perda silenciosa ao trocar
   de aparelho.
-- **ARQ-003 / ARQ-004** — Exercício **órfão** `desafio-cidade` (renderiza no `switch`,
+- **ARQ-003 / ARQ-004** — Exercício **órfão** `desafio-cidade` **REMOVED_FROM_CURRENT_CATALOG** (renderiza no `switch`,
   mas é filtrado do catálogo/planos) e **id fantasma** `atencao-dividida` (referenciado
   em `lib/domain-taxonomy.ts:26` e no filtro de planos, sem definição em
   `EXERCISE_DEFINITIONS` nem `case` de renderização; existe um **componente órfão**

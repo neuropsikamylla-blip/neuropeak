@@ -1,8 +1,8 @@
-# CORR-021 — Focus Agentes: teto da progressão vira PARÂMETRO (spec de tarefa)
+# CORR-021 — Agentes Focus: teto da progressão vira PARÂMETRO (spec de tarefa)
 
 ## Contexto (medido em 02/ago/2026, HEAD d88df5d)
 
-O Focus Agentes tem **13 passos** persistidos (`lib/focus/progression.ts`: `LAST_FOCUS_STEP = 12`,
+Agentes Focus tem **13 passos** persistidos (`lib/focus/progression.ts`: `LAST_FOCUS_STEP = 12`,
 nível = passo + 1 → 1..13). O banco e o `sessionSchema` já aceitam difficulty até 13 (v2.65.3).
 
 Mas a progressão ENTRE sessões trava em 9:
