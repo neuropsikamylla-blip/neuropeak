@@ -11,7 +11,7 @@
 
 import { useState, useRef, useCallback, useEffect } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import { HelpCircle, Lightbulb, Check, X, Volume2 } from "lucide-react";
+import { HelpCircle, Lightbulb, Check, X, Volume2, Search } from "lucide-react";
 import { calculateExerciseScore } from "@/lib/scoring";
 import { useTimedProgress } from "@/components/exercises/useExerciseEngine";
 import { playTTS, cancelTTS } from "@/lib/tts";
@@ -60,18 +60,69 @@ function styles(theme: Theme) {
 // ── Glifo do produto: imagem real (card branco) com fallback para o emoji ────
 function ProdGlifo({ img, emoji, size }: { img?: string; emoji: string; size: number }) {
   const [erro, setErro] = useState(false);
+  // clamp: no celular a embalagem encolhe até 110 px, no desktop chega ao tamanho pedido —
+  // sempre INTEIRA (contain), nunca cortada nem deformada (§4).
+  const lado = `clamp(110px, 30vw, ${size}px)`;
   if (img && !erro) {
     // eslint-disable-next-line @next/next/no-img-element
     return <img src={img} alt="" draggable={false} loading="lazy" onError={() => setErro(true)}
-      style={{ width: size, height: size, objectFit: "contain", objectPosition: "center", display: "block" }} />;
+      style={{ width: lado, height: lado, objectFit: "contain", objectPosition: "center", display: "block" }} />;
   }
-  return <span style={{ fontSize: Math.round(size * 0.8), lineHeight: 1 }}>{emoji}</span>;
+  return <span style={{ fontSize: `calc(${lado} * 0.8)`, lineHeight: 1 }}>{emoji}</span>;
+}
+
+// ── Modal de ampliação da embalagem (§11): não seleciona, não responde, não avança ──
+function ModalEmbalagem({ p, onFechar, theme }: { p: ProdutoNaQuestao; onFechar: () => void; theme: Theme }) {
+  const s = styles(theme);
+  const caixaRef = useRef<HTMLDivElement>(null);
+  const fecharRef = useRef<HTMLButtonElement>(null);
+
+  useEffect(() => {
+    fecharRef.current?.focus();
+    const onKey = (e: KeyboardEvent) => {
+      if (e.key === "Escape") { e.preventDefault(); onFechar(); return; }
+      if (e.key !== "Tab") return;
+      // foco contido no modal
+      const focaveis = caixaRef.current?.querySelectorAll<HTMLElement>("button, [tabindex='0']");
+      if (!focaveis?.length) return;
+      const primeiro = focaveis[0], ultimo = focaveis[focaveis.length - 1];
+      if (e.shiftKey && document.activeElement === primeiro) { e.preventDefault(); ultimo.focus(); }
+      else if (!e.shiftKey && document.activeElement === ultimo) { e.preventDefault(); primeiro.focus(); }
+    };
+    window.addEventListener("keydown", onKey);
+    return () => window.removeEventListener("keydown", onKey);
+  }, [onFechar]);
+
+  return (
+    <div role="dialog" aria-modal="true" aria-label={`Embalagem ampliada: ${p.produto.nome}`}
+      onClick={onFechar}
+      className="fixed inset-0 z-50 flex items-center justify-center p-4"
+      style={{ background: "rgba(2,6,23,0.72)" }}>
+      <div ref={caixaRef} onClick={(e) => e.stopPropagation()}
+        className={`relative rounded-3xl p-4 max-w-[92vw] max-h-[88vh] ${s.isG ? "bg-[#0D2547]" : "bg-white"}`}>
+        <button ref={fecharRef} onClick={onFechar} aria-label="Fechar a ampliação"
+          className={`absolute top-2 right-2 w-9 h-9 rounded-full flex items-center justify-center
+            ${s.isG ? "bg-white/10 text-white" : "bg-slate-100 text-slate-700"}`}>
+          <X size={18} />
+        </button>
+        {/* eslint-disable-next-line @next/next/no-img-element */}
+        <img src={p.produto.img} alt={`Embalagem de ${p.produto.nome}, marca ${p.produto.marca || "sem marca"}`}
+          className="block mx-auto"
+          style={{ maxWidth: "min(78vw, 520px)", maxHeight: "72vh", objectFit: "contain", background: "#fff", borderRadius: 16 }} />
+        <p className={`text-center mt-3 text-sm ${s.cardTxt}`}>
+          <b>{p.produto.nome}</b>{p.produto.marca ? ` · ${p.produto.marca}` : ""}
+        </p>
+        <p className={`text-center text-xs mt-0.5 ${s.sub}`}>Toque fora ou pressione Esc para voltar à atividade.</p>
+      </div>
+    </div>
+  );
 }
 
 // ── Cartão de produto (clicável inteiro) ─────────────────────────────────────
-function ProductCard({ p, campos, destaque, estado, onTap, disabled, theme }: {
+function ProductCard({ p, campos, destaque, estado, onTap, onAmpliar, disabled, theme }: {
   p: ProdutoNaQuestao; campos: CampoKey[]; destaque: CampoKey[];
-  estado: "idle" | "selerr" | "correta"; onTap: () => void; disabled: boolean; theme: Theme;
+  estado: "idle" | "selerr" | "correta"; onTap: () => void; onAmpliar: () => void;
+  disabled: boolean; theme: Theme;
 }) {
   const s = styles(theme);
   const isG = s.isG;
@@ -81,11 +132,23 @@ function ProductCard({ p, campos, destaque, estado, onTap, disabled, theme }: {
   const linha = isG ? "border-white/10" : "border-slate-100";
   return (
     <button onClick={onTap} disabled={disabled} aria-label={`${nome}${marca ? " " + marca : ""}. ${campos.map((c) => `${labelCampo(c, p.produto)}: ${valorCampo(p, c)}`).join(". ")}`}
-      className={`relative text-left rounded-2xl border-2 p-4 transition-all active:scale-[0.98] disabled:cursor-default ${ring} ${s.cardTxt}`}>
-      {/* imagem + nome + marca */}
+      className={`relative text-left rounded-2xl border-2 p-4 transition-all active:scale-[0.98] disabled:cursor-default
+        focus-visible:outline-none focus-visible:ring-4 focus-visible:ring-sky-400/70 ${ring} ${s.cardTxt}`}>
+      {/* imagem (150–175 px, §4) + botão de ampliar + nome + marca */}
       <div className="flex flex-col items-center gap-0.5 mb-3">
-        <div className="h-[92px] flex items-end justify-center"><ProdGlifo img={p.produto.img} emoji="📦" size={88} /></div>
-        <span className="font-bold text-[15px] text-center leading-tight mt-1.5">{nome}</span>
+        <div className="flex items-end justify-center" style={{ height: "clamp(118px, 32vw, 168px)" }}>
+          <ProdGlifo img={p.produto.img} emoji="📦" size={155} />
+        </div>
+        {/* o botão vive DENTRO do cartão, mas o clique não seleciona o produto (§3) */}
+        <span role="button" tabIndex={0}
+          onClick={(e) => { e.stopPropagation(); onAmpliar(); }}
+          onKeyDown={(e) => { if (e.key === "Enter" || e.key === " ") { e.preventDefault(); e.stopPropagation(); onAmpliar(); } }}
+          aria-label={`Ampliar a embalagem de ${nome}`}
+          className={`mt-1 inline-flex items-center gap-1 text-[11px] font-semibold px-2 py-1 rounded-full cursor-pointer
+            ${isG ? "text-white/70 hover:bg-white/10" : "text-slate-500 hover:bg-slate-100"}`}>
+          <Search size={12} /> Ampliar embalagem
+        </span>
+        <span className="font-bold text-[15px] text-center leading-tight mt-1">{nome}</span>
         {marca && <span className={`text-xs ${s.sub}`}>{marca}</span>}
       </div>
       {/* campos em linhas com divisória — valores NEUTROS (a cor não entrega a resposta) */}
@@ -175,6 +238,7 @@ export function InformacaoEmFoco({ difficulty, theme, onComplete }: Props) {
   const [revelou, setRevelou] = useState(false);                 // mostra a correta
   const [fb, setFb] = useState<{ ok: boolean; texto: string; pista?: boolean } | null>(null);
   const [ajuda, setAjuda] = useState(false);
+  const [ampliado, setAmpliado] = useState<ProdutoNaQuestao | null>(null);   // modal (§11)
 
   const resultados = useRef<{ acertou: boolean; primeira: boolean; usouPista: boolean }[]>([]);
   const acertosSeguidos = useRef(0);
@@ -344,13 +408,13 @@ export function InformacaoEmFoco({ difficulty, theme, onComplete }: Props) {
         </div>
 
         {/* Cartões */}
-        <div className={`grid gap-3 ${questao.produtos.length >= 4 ? "grid-cols-2 sm:grid-cols-4" : questao.produtos.length === 3 ? "grid-cols-1 sm:grid-cols-3" : "grid-cols-1 sm:grid-cols-2"}`}>
+        <div className={`grid gap-3 ${questao.produtos.length >= 4 ? "grid-cols-2 lg:grid-cols-4" : questao.produtos.length === 3 ? "grid-cols-1 sm:grid-cols-3" : "grid-cols-1 sm:grid-cols-2"}`}>
           {questao.produtos.map((p, i) => {
             const estado: "idle" | "selerr" | "correta" =
               revelou && i === questao.correta ? "correta"
               : (selecao === i && (!fb?.ok)) ? "selerr" : "idle";
             return (
-              <ProductCard key={i} p={p} campos={questao.camposVisiveis}
+              <ProductCard key={i} p={p} campos={questao.camposVisiveis} onAmpliar={() => setAmpliado(p)}
                 destaque={revelou ? questao.camposExigidos : []}
                 estado={estado} onTap={() => responder(i)} disabled={revelou || fb?.ok === true} theme={theme} />
             );
@@ -383,6 +447,9 @@ export function InformacaoEmFoco({ difficulty, theme, onComplete }: Props) {
           </button>
         )}
       </div>
+
+      {/* Ampliação da embalagem: não responde, não avança, não revela nada (§11) */}
+      {ampliado && <ModalEmbalagem p={ampliado} theme={theme} onFechar={() => setAmpliado(null)} />}
     </div>
   );
 }

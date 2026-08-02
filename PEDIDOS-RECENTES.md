@@ -1,9 +1,6 @@
 # As 3 ultimas especificacoes dela (automatico; a mais nova por ultimo)
 # Na retomada: ler as 3, conectar com PROGRESSO.md e git, declarar e seguir.
 
-## 02/08/2026 00:27
-vigilancia nao é por exercicio... segue a mesma regra do estacionamento, torre (é por tempo e tem a linha de progressao) tem de ter uns 7 a 10 min...
-
 ## 02/08/2026 01:02
 Quero implementar a FASE 3 do exercício existente “Informação em Foco”.
 
@@ -1087,3 +1084,6 @@ cobertura dos testes;
 exemplos reais de questões geradas automaticamente;
 confirmação de que todo o exercício já utiliza o novo gerador, e não mais o sistema antigo.
 Somente depois dessa validação iniciaremos a Fase 2.
+
+## 02/08/2026 09:52
+dei uma olhada agora e parece que está ok, não testei ela inteira, mas pare ok! podemos ir para fase 2

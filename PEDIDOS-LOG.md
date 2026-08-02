@@ -2614,3 +2614,6 @@ continue
 
 ## 02/08/2026 09:50
 e ai onde paramos?
+
+## 02/08/2026 09:52
+dei uma olhada agora e parece que está ok, não testei ela inteira, mas pare ok! podemos ir para fase 2
