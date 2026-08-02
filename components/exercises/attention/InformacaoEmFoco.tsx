@@ -17,14 +17,14 @@ import { useTimedProgress } from "@/components/exercises/useExerciseEngine";
 import { playTTS, cancelTTS } from "@/lib/tts";
 import type { ExerciseResult, Theme } from "@/types";
 import {
-  gerarQuestao, valorCampo, labelCampo, marcaDe,
-  type Questao, type Nivel, type Produto, type CampoKey,
-} from "@/lib/informacao-foco";
+  gerarQuestao, criarSnapshot, valorCampo, labelCampo, explicarErro, paramsDoNivel, tiposDoNivel,
+  type Questao, type ProdutoNaQuestao, type CampoKey, type Snapshot, type TipoQuestao,
+} from "@/lib/informacao-foco-questoes";
 
 interface Props { difficulty: number; theme: Theme; onComplete: (result: ExerciseResult) => void; }
 
-const NIVEL_LABEL: Record<Nivel, string> = { 1: "Localizar", 2: "Comparar", 3: "Duas condições", 4: "Situação real" };
-const nivelInicialDe = (d: number): Nivel => Math.max(1, Math.min(4, Math.round(d / 2.5))) as Nivel;
+const NIVEL_MAX = 8;
+const nivelInicialDe = (d: number) => Math.max(1, Math.min(NIVEL_MAX, Math.round(d * 0.8)));
 
 function styles(theme: Theme) {
   const isG = theme === "GAMIFIED";
@@ -55,22 +55,22 @@ function ProdGlifo({ img, emoji, size }: { img?: string; emoji: string; size: nu
 
 // ── Cartão de produto (clicável inteiro) ─────────────────────────────────────
 function ProductCard({ p, campos, destaque, estado, onTap, disabled, theme }: {
-  p: Produto; campos: CampoKey[]; destaque: CampoKey[];
+  p: ProdutoNaQuestao; campos: CampoKey[]; destaque: CampoKey[];
   estado: "idle" | "selerr" | "correta"; onTap: () => void; disabled: boolean; theme: Theme;
 }) {
   const s = styles(theme);
   const isG = s.isG;
-  const marca = p.marca ?? marcaDe(p.nome);
+  const { nome, marca } = p.produto;
   const ring = estado === "correta" ? "border-green-500 ring-2 ring-green-400"
     : estado === "selerr" ? "border-red-500 ring-2 ring-red-400" : s.card;
   const linha = isG ? "border-white/10" : "border-slate-100";
   return (
-    <button onClick={onTap} disabled={disabled} aria-label={`${p.nome}${marca ? " " + marca : ""}. ${campos.map((c) => `${labelCampo(c)}: ${valorCampo(p, c)}`).join(". ")}`}
+    <button onClick={onTap} disabled={disabled} aria-label={`${nome}${marca ? " " + marca : ""}. ${campos.map((c) => `${labelCampo(c, p.produto)}: ${valorCampo(p, c)}`).join(". ")}`}
       className={`relative text-left rounded-2xl border-2 p-4 transition-all active:scale-[0.98] disabled:cursor-default ${ring} ${s.cardTxt}`}>
       {/* imagem + nome + marca */}
       <div className="flex flex-col items-center gap-0.5 mb-3">
-        <div className="h-[92px] flex items-end justify-center"><ProdGlifo img={p.img} emoji={p.emoji} size={88} /></div>
-        <span className="font-bold text-[15px] text-center leading-tight mt-1.5">{p.nome}</span>
+        <div className="h-[92px] flex items-end justify-center"><ProdGlifo img={p.produto.img} emoji="📦" size={88} /></div>
+        <span className="font-bold text-[15px] text-center leading-tight mt-1.5">{nome}</span>
         {marca && <span className={`text-xs ${s.sub}`}>{marca}</span>}
       </div>
       {/* campos em linhas com divisória — valores NEUTROS (a cor não entrega a resposta) */}
@@ -79,7 +79,7 @@ function ProductCard({ p, campos, destaque, estado, onTap, disabled, theme }: {
           const on = destaque.includes(c); // só destaca DEPOIS de revelar (feedback), nunca antes
           return (
             <div key={c} className={`flex items-baseline justify-between gap-2 py-2 border-t ${linha} ${on ? (isG ? "bg-green-400/10" : "bg-green-50") : ""} ${on ? "-mx-1 px-1 rounded" : ""}`}>
-              <span className={`text-xs ${s.sub}`}>{labelCampo(c)}</span>
+              <span className={`text-xs ${s.sub}`}>{labelCampo(c, p.produto)}</span>
               <span className={`text-[13px] font-bold tabular-nums text-right ${on ? (isG ? "text-green-300" : "text-green-700") : ""}`}>
                 {valorCampo(p, c)}
               </span>
@@ -148,7 +148,11 @@ export function InformacaoEmFoco({ difficulty, theme, onComplete }: Props) {
   const { begin, isTimeUp, elapsedSec, finish, progressPct } = useTimedProgress(6 * 60 * 1000); // sessão por TEMPO (~6 min)
 
   const [fase, setFase] = useState<"tutorial" | "play" | "fim">("tutorial");
-  const nivelRef = useRef<Nivel>(nivelInicialDe(difficulty));
+  const nivelRef = useRef<number>(nivelInicialDe(difficulty));
+  const snapshotRef = useRef<Snapshot | null>(null);      // preço/validade estáveis na sessão
+  const historicoRef = useRef<string[]>([]);              // assinaturas: não repetir
+  const rodizioRef = useRef(0);                           // rotação de tipos, sem peso
+  const descartadasRef = useRef(0);
   const [qNum, setQNum] = useState(1);
   const [questao, setQuestao] = useState<Questao | null>(null);
   const [tentativas, setTentativas] = useState(0);
@@ -164,7 +168,15 @@ export function InformacaoEmFoco({ difficulty, theme, onComplete }: Props) {
   const usouPistaRef = useRef(false);
 
   const novaQuestao = useCallback((primeira = false) => {
-    const q = gerarQuestao(nivelRef.current);
+    if (!snapshotRef.current) snapshotRef.current = criarSnapshot();
+    const nivel = nivelRef.current;
+    const tipos = tiposDoNivel(nivel);
+    const tipo: TipoQuestao = tipos[rodizioRef.current++ % tipos.length];
+    const { questao: q, descartes } = gerarQuestao(
+      tipo, paramsDoNivel(nivel), snapshotRef.current, Math.random, historicoRef.current, tipos,
+    );
+    descartadasRef.current += descartes.length;
+    if (q) historicoRef.current = [...historicoRef.current, q.assinatura].slice(-6);
     setQuestao(q);
     setTentativas(0); setSelecao(null); setRevelou(false); setFb(null); setAjuda(false);
     usouPistaRef.current = false;
@@ -190,6 +202,7 @@ export function InformacaoEmFoco({ difficulty, theme, onComplete }: Props) {
       metadata: {
         questoes: rs.length, acertos, acertosPrimeira: primeira, pistasUsadas: pistas,
         nivelFinal: nivelRef.current, accuracyPrimeira: Number(accPrimeira.toFixed(3)),
+        questoesDescartadas: descartadasRef.current,
       },
     });
   }, [finish, elapsedSec, onComplete]);
@@ -197,8 +210,8 @@ export function InformacaoEmFoco({ difficulty, theme, onComplete }: Props) {
   const proxima = useCallback(() => {
     if (isTimeUp()) { encerrar(); return; }
     // adaptativo: 3 acertos de 1ª sobe; 2 erros seguidos desce (spec §21)
-    if (acertosSeguidos.current >= 3 && nivelRef.current < 4) { nivelRef.current = (nivelRef.current + 1) as Nivel; acertosSeguidos.current = 0; }
-    else if (errosSeguidos.current >= 2 && nivelRef.current > 1) { nivelRef.current = (nivelRef.current - 1) as Nivel; errosSeguidos.current = 0; }
+    if (acertosSeguidos.current >= 3 && nivelRef.current < NIVEL_MAX) { nivelRef.current += 1; acertosSeguidos.current = 0; }
+    else if (errosSeguidos.current >= 2 && nivelRef.current > 1) { nivelRef.current -= 1; errosSeguidos.current = 0; }
     novaQuestao();
   }, [isTimeUp, encerrar, novaQuestao]);
 
@@ -213,17 +226,17 @@ export function InformacaoEmFoco({ difficulty, theme, onComplete }: Props) {
       acertosSeguidos.current = tentAtual === 1 ? acertosSeguidos.current + 1 : 0;
       errosSeguidos.current = 0;
       setRevelou(true);
-      setFb({ ok: true, texto: questao.explicacaoAcerto });
+      setFb({ ok: true, texto: questao.explicacao });
       return;
     }
 
     // errou
-    if (tentAtual < questao.maxTentativas) {
+    if (tentAtual < 2) {
       // 1ª errada → pista, deixa observar de novo (não revela)
       usouPistaRef.current = true;
       setTentativas(tentAtual);
       setSelecao(null);  // libera para tocar de novo
-      setFb({ ok: false, pista: true, texto: `${questao.explicarErro(idx)} 💡 ${questao.pista}` });
+      setFb({ ok: false, pista: true, texto: `${explicarErro(questao, idx)} 💡 ${questao.pista}` });
     } else {
       // última errada → revela a correta e explica
       resultados.current.push({ acertou: false, primeira: false, usouPista: usouPistaRef.current });
@@ -231,7 +244,7 @@ export function InformacaoEmFoco({ difficulty, theme, onComplete }: Props) {
       errosSeguidos.current += 1;
       setTentativas(tentAtual);
       setRevelou(true);
-      setFb({ ok: false, texto: questao.explicarErro(idx) });
+      setFb({ ok: false, texto: explicarErro(questao, idx) });
     }
   }, [questao, revelou, fb, tentativas]);
 
@@ -271,7 +284,7 @@ export function InformacaoEmFoco({ difficulty, theme, onComplete }: Props) {
               <p className={`text-xs ${s.sub}`}>Leia, confira e escolha</p>
             </div>
             <span className={`text-xs font-semibold px-2.5 py-1 rounded-full ${s.isG ? "bg-white/10 text-white/80" : "bg-white text-slate-700 border border-slate-200"}`}>
-              {NIVEL_LABEL[questao.nivel]}
+              {`Nível ${nivelRef.current}`}
             </span>
           </div>
           <div className="flex items-center justify-between mt-2 mb-1">
@@ -296,7 +309,13 @@ export function InformacaoEmFoco({ difficulty, theme, onComplete }: Props) {
                 className={`w-9 h-9 rounded-full flex items-center justify-center ${s.isG ? "bg-white/10 text-white" : "bg-slate-100 text-slate-600"}`}><HelpCircle size={17} /></button>
             </div>
           </div>
-          {questao.instrucao && <p className={`text-sm mt-1.5 ${s.sub}`}>{questao.instrucao}</p>}
+          {questao.modalidade === "situacao" && questao.contexto && (
+            <div className={`mt-2 text-sm ${s.sub}`}>
+              <p className="font-semibold tracking-wide text-[11px] uppercase opacity-70">Situação do cotidiano</p>
+              <p className="mt-0.5">{questao.contexto}</p>
+              <p className="mt-0.5"><b>Pedido:</b> {questao.pedido}</p>
+            </div>
+          )}
           <AnimatePresence>
             {ajuda && (
               <motion.div initial={{ opacity: 0, height: 0 }} animate={{ opacity: 1, height: "auto" }} exit={{ opacity: 0, height: 0 }}
@@ -314,8 +333,8 @@ export function InformacaoEmFoco({ difficulty, theme, onComplete }: Props) {
               revelou && i === questao.correta ? "correta"
               : (selecao === i && (!fb?.ok)) ? "selerr" : "idle";
             return (
-              <ProductCard key={i} p={p} campos={questao.camposMostrados}
-                destaque={revelou ? questao.campoRelevante : []}
+              <ProductCard key={i} p={p} campos={questao.camposVisiveis}
+                destaque={revelou ? questao.camposExigidos : []}
                 estado={estado} onTap={() => responder(i)} disabled={revelou || fb?.ok === true} theme={theme} />
             );
           })}

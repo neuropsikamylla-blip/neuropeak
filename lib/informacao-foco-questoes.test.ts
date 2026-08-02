@@ -1,7 +1,7 @@
 import { describe, it, expect } from "vitest";
 import {
   gerarQuestao, montarQuestao, criarSnapshot, validarQuestao, motivoInvalidez,
-  labelCampo, valorCampo, temCampo, satisfaz, TIPOS_QUESTAO, PARAMS_PADRAO,
+  labelCampo, valorCampo, temCampo, satisfaz, explicarErro, TIPOS_QUESTAO, PARAMS_PADRAO,
   type ParametrosQuestao, type Questao, type TipoQuestao, type Snapshot,
 } from "./informacao-foco-questoes";
 import { dimensaoDe, produtoPorId } from "@/data/informacao-foco-catalogo";
@@ -253,4 +253,27 @@ describe("Amostra de questões geradas", () => {
     fs.writeFileSync("docs/auditoria/INFORMACAO-EM-FOCO-EXEMPLOS.md", doc);
     expect(blocos.length).toBeGreaterThanOrEqual(8);
   });
+});
+
+describe("Feedback do erro", () => {
+  it("diz o que a escolha atende e o que não atende, sem entregar a resposta", () => {
+    const rnd = rndSeed(313);
+    const snap = criarSnapshot(rnd);
+    let checados = 0;
+    for (let i = 0; i < 400; i++) {
+      const q = montarQuestao({ tipo: "duasCondicoes", params: NIVEIS[5], snapshot: snap, rnd });
+      if (!q) continue;
+      for (let idx = 0; idx < q.produtos.length; idx++) {
+        const txt = explicarErro(q, idx);
+        expect(txt.length).toBeGreaterThan(10);
+        if (idx !== q.correta) {
+          checados++;
+          // nunca cita o produto certo no feedback da tentativa errada
+          expect(txt.includes(q.produtos[q.correta].produto.nome)).toBe(false);
+          expect(txt.startsWith(q.produtos[idx].produto.nome)).toBe(true);
+        }
+      }
+    }
+    expect(checados).toBeGreaterThan(100);
+  }, 60_000);
 });

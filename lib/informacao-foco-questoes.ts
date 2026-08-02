@@ -262,6 +262,31 @@ export interface ParametrosQuestao {
   ordemCamposVariavel: boolean;
 }
 
+/**
+ * Parâmetros dos 8 níveis de referência (§9). Aqui são apenas CARGA COGNITIVA:
+ * a Fase 3 vai mexer nestas dimensões uma de cada vez, conforme o desempenho.
+ */
+export const PARAMS_POR_NIVEL: ParametrosQuestao[] = [
+  { nProdutos: 3, nCampos: 3, nCondicoes: 1, semelhancaDistratores: "baixa",    valoresProximos: false, ordemCamposVariavel: false },
+  { nProdutos: 3, nCampos: 4, nCondicoes: 1, semelhancaDistratores: "baixa",    valoresProximos: false, ordemCamposVariavel: false },
+  { nProdutos: 3, nCampos: 4, nCondicoes: 2, semelhancaDistratores: "moderada", valoresProximos: false, ordemCamposVariavel: false },
+  { nProdutos: 4, nCampos: 5, nCondicoes: 2, semelhancaDistratores: "moderada", valoresProximos: false, ordemCamposVariavel: false },
+  { nProdutos: 4, nCampos: 5, nCondicoes: 2, semelhancaDistratores: "moderada", valoresProximos: true,  ordemCamposVariavel: true },
+  { nProdutos: 4, nCampos: 5, nCondicoes: 2, semelhancaDistratores: "alta",     valoresProximos: true,  ordemCamposVariavel: true },
+  { nProdutos: 4, nCampos: 6, nCondicoes: 3, semelhancaDistratores: "alta",     valoresProximos: true,  ordemCamposVariavel: true },
+  { nProdutos: 4, nCampos: 6, nCondicoes: 3, semelhancaDistratores: "alta",     valoresProximos: true,  ordemCamposVariavel: true },
+];
+export const paramsDoNivel = (n: number) => PARAMS_POR_NIVEL[Math.min(8, Math.max(1, Math.round(n))) - 1];
+
+/** Tipos liberados por nível — carga, não peso: nada de sorteio ponderado. */
+export function tiposDoNivel(n: number): TipoQuestao[] {
+  const base: TipoQuestao[] = ["localizacao", "comparacao"];
+  if (n >= 3) base.push("duasCondicoes", "validade", "conservacao", "ingredientes", "alergenicos");
+  if (n >= 5) base.push("situacao");
+  if (n >= 7) base.push("tresCondicoes");
+  return base;
+}
+
 export const PARAMS_PADRAO: ParametrosQuestao = {
   nProdutos: 3, nCampos: 3, nCondicoes: 1,
   semelhancaDistratores: "baixa", valoresProximos: false, ordemCamposVariavel: false,
@@ -548,6 +573,24 @@ function finalizar(
     assinatura: `${tipo}|${cs.map((c) => `${c.campo}:${c.operador}:${c.valor ?? ""}`).join(",")}`,
   };
   return validarQuestao(q) ? q : null;
+}
+
+/**
+ * Feedback do erro: diz o que a escolha ATENDE e o que NÃO atende, sem entregar a
+ * resposta na primeira tentativa (§21/§22). Trabalha sobre as condições reais.
+ */
+export function explicarErro(q: Questao, escolha: number): string {
+  const pq = q.produtos[escolha];
+  if (escolha === q.correta) return q.explicacao;
+  const nome = pq.produto.nome;
+  const ok = q.condicoes.filter((c) => satisfaz(pq, c, q.produtos));
+  const falta = q.condicoes.filter((c) => !satisfaz(pq, c, q.produtos));
+  if (!falta.length) return q.explicacao;
+  if (ok.length) {
+    return `${nome} ${juntar(ok.map((c) => c.texto))}, mas ${juntar(falta.map((c) => `não ${c.texto}`))}.`;
+  }
+  const campos = juntar([...new Set(q.condicoes.map((c) => `“${labelCampo(c.campo, pq.produto)}”`))]);
+  return `${nome} não atende ao que a pergunta pede. Confira ${campos} em cada produto.`;
 }
 
 // ── VALIDAÇÃO OBRIGATÓRIA (§14 da Fase 1) ────────────────────────────────────

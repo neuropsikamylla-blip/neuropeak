@@ -2525,3 +2525,86 @@ Não considere a Fase 3 concluída apenas por criar níveis numerados.
 
 ## 02/08/2026 08:42
 onde paramos?
+
+## 02/08/2026 08:49
+Estamos no caminho certo. Continue exclusivamente a Fase 1.
+Não implemente ainda nenhuma parte visual da Fase 2 e nem a adaptação da Fase 3.
+Quero primeiro estabilizar completamente o motor do exercício.
+Continue a F1.3 seguindo estas diretrizes:
+Conclua todos os geradores de questões utilizando exclusivamente os dados oficiais do catálogo, nunca informações sorteadas ou texto extraído das imagens.
+Implemente os seguintes geradores:
+Localização direta
+Comparação
+Duas condições
+Três condições
+Validade
+Conservação
+Ingredientes
+Alergênicos
+Situação do cotidiano (quando os dados do catálogo permitirem)
+Importante
+Não quero que exista um sistema de pontuação ou pesos fixos de tipos de pergunta.
+Este é um treino cognitivo clínico, não um jogo.
+O objetivo é treinar funções cognitivas como:
+atenção seletiva;
+atenção sustentada;
+leitura funcional;
+velocidade de processamento;
+memória de trabalho;
+controle inibitório.
+A dificuldade deve aumentar apenas pela complexidade cognitiva da tarefa, nunca por um sistema de pontuação.
+Exemplo:
+Nível inicial:
+localizar uma informação.
+Nível intermediário:
+comparar informações.
+Nível avançado:
+integrar duas ou três condições simultaneamente.
+A função cognitiva treinada permanece a mesma; apenas aumenta a carga cognitiva.
+Organização dos geradores
+Quero que os geradores sejam independentes da dificuldade.
+Cada gerador deve apenas saber construir corretamente uma questão.
+A dificuldade será controlada depois por parâmetros como:
+quantidade de produtos;
+quantidade de campos visíveis;
+número de condições;
+semelhança entre distratores;
+proximidade dos valores;
+necessidade de integrar informações.
+Não quero um gerador diferente para cada nível.
+Quero um único gerador parametrizado.
+Validação obrigatória
+Antes de qualquer questão ser exibida, validar obrigatoriamente:
+os produtos pertencem à categoria correta;
+todos os atributos vêm do catálogo;
+as unidades são compatíveis;
+existe exatamente uma resposta correta;
+os distratores são plausíveis;
+não há atributos incompatíveis;
+a pergunta não foi utilizada recentemente;
+a situação do cotidiano corresponde aos produtos apresentados.
+Se qualquer validação falhar:
+descartar a questão;
+gerar outra automaticamente.
+Testes
+Depois de concluir os geradores, execute pelo menos:
+500 sessões simuladas por nível;
+milhares de questões geradas automaticamente;
+validar que nunca ocorram situações como:
+chá com lactose;
+lasanha sabor chocolate;
+leite em gramas;
+azeite em gramas;
+duas respostas corretas;
+nenhuma resposta correta;
+produtos incompatíveis;
+repetição excessiva da mesma pergunta.
+Antes de iniciar a Fase 2
+Quando a F1.3 estiver concluída, me entregue:
+arquitetura final do gerador;
+tipos de questões implementados;
+regras de validação;
+cobertura dos testes;
+exemplos reais de questões geradas automaticamente;
+confirmação de que todo o exercício já utiliza o novo gerador, e não mais o sistema antigo.
+Somente depois dessa validação iniciaremos a Fase 2.
