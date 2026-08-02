@@ -13,13 +13,13 @@ export interface Par {
 export interface Fundo { id: string; arquivo: string; complexidade: number }
 
 export const PARES: Par[] = [
-  { pairId: "P01", nome: "Ameixa suave", categoria: "tom", atributoDiferencial: "corCorpo", dificuldadeVisual: 1, permiteModoSemCor: false,
+  { pairId: "P01", nome: "Ameixa suave", categoria: "tom", atributoDiferencial: "corCorpo", dificuldadeVisual: 3, permiteModoSemCor: false,
     A: { id: "P01_A", arquivo: "P01_A.png", descricao: "ameixa suave clara" }, B: { id: "P01_B", arquivo: "P01_B.png", descricao: "ameixa suave escura" } },
-  { pairId: "P02", nome: "Azul ardósia", categoria: "tom", atributoDiferencial: "corCorpo", dificuldadeVisual: 2, permiteModoSemCor: false,
+  { pairId: "P02", nome: "Azul ardósia", categoria: "tom", atributoDiferencial: "corCorpo", dificuldadeVisual: 4, permiteModoSemCor: false,
     A: { id: "P02_A", arquivo: "P02_A.png", descricao: "azul ardósia claro" }, B: { id: "P02_B", arquivo: "P02_B.png", descricao: "azul ardósia escuro" } },
   { pairId: "P03", nome: "Terracota", categoria: "tom", atributoDiferencial: "corCorpo", dificuldadeVisual: 2, permiteModoSemCor: false,
     A: { id: "P03_A", arquivo: "P03_A.png", descricao: "terracota claro" }, B: { id: "P03_B", arquivo: "P03_B.png", descricao: "terracota escuro" } },
-  { pairId: "P04", nome: "Verde sálvia", categoria: "tom", atributoDiferencial: "corCorpo", dificuldadeVisual: 3, permiteModoSemCor: false,
+  { pairId: "P04", nome: "Verde sálvia", categoria: "tom", atributoDiferencial: "corCorpo", dificuldadeVisual: 1, permiteModoSemCor: false,
     A: { id: "P04_A", arquivo: "P04_A.png", descricao: "verde sálvia claro" }, B: { id: "P04_B", arquivo: "P04_B.png", descricao: "verde sálvia escuro" } },
   { pairId: "P05", nome: "Verde — laços", categoria: "quantidade de laços", atributoDiferencial: "qtdLacos", dificuldadeVisual: 4, permiteModoSemCor: true,
     A: { id: "P05_A", arquivo: "P05_A.png", descricao: "verde com 2 laços" }, B: { id: "P05_B", arquivo: "P05_B.png", descricao: "verde com 3 laços" } },
@@ -37,21 +37,24 @@ export const FUNDOS: Fundo[] = [
 // §16 Níveis visuais — 8 pipas SEMPRE; muda par (semelhança), arranjo (distância) e fundo.
 export interface NivelVisual { nivel: number; pairId: string; arranjo: Arranjo; fundo: string }
 export const NIVEIS: NivelVisual[] = [
-  { nivel: 1,  pairId: "P01", arranjo: "compacto",  fundo: "BG01" },
-  { nivel: 2,  pairId: "P01", arranjo: "expandido", fundo: "BG01" },
-  { nivel: 3,  pairId: "P02", arranjo: "compacto",  fundo: "BG01" },
-  { nivel: 4,  pairId: "P02", arranjo: "expandido", fundo: "BG02" },
-  { nivel: 5,  pairId: "P03", arranjo: "compacto",  fundo: "BG02" },
-  { nivel: 6,  pairId: "P03", arranjo: "expandido", fundo: "BG02" },
-  { nivel: 7,  pairId: "P04", arranjo: "compacto",  fundo: "BG03" },
-  { nivel: 8,  pairId: "P04", arranjo: "expandido", fundo: "BG03" },
+  { nivel: 1,  pairId: "P04", arranjo: "compacto",  fundo: "BG01" },
+  { nivel: 2,  pairId: "P04", arranjo: "expandido", fundo: "BG01" },
+  { nivel: 3,  pairId: "P03", arranjo: "compacto",  fundo: "BG01" },
+  { nivel: 4,  pairId: "P03", arranjo: "expandido", fundo: "BG02" },
+  { nivel: 5,  pairId: "P01", arranjo: "compacto",  fundo: "BG02" },
+  { nivel: 6,  pairId: "P01", arranjo: "expandido", fundo: "BG02" },
+  { nivel: 7,  pairId: "P02", arranjo: "compacto",  fundo: "BG03" },
+  { nivel: 8,  pairId: "P02", arranjo: "expandido", fundo: "BG03" },
   { nivel: 9,  pairId: "P05", arranjo: "compacto",  fundo: "BG04" },
   { nivel: 10, pairId: "P06", arranjo: "irregular", fundo: "BG04" },
 ];
 
 export const parById = (id: string) => PARES.find((p) => p.pairId === id) ?? PARES[0];
 export const fundoById = (id: string) => FUNDOS.find((f) => f.id === id) ?? FUNDOS[0];
-export const imgPipa = (arquivo: string) => `/exercises/vigilancia/pipas/${arquivo}`;
+// Sobe a cada troca de imagem que MANTÉM o nome do arquivo (senão o navegador serve a antiga).
+// v2 = 02/ago/2026: alvos de P01/P02/P04 regerados pela Kamylla (ficaram mais parecidos com o distrator).
+export const PIPA_V = 2;
+export const imgPipa = (arquivo: string) => `/exercises/vigilancia/pipas/${arquivo}?v=${PIPA_V}`;
 export const imgFundo = (arquivo: string) => `/exercises/vigilancia/fundos/${arquivo}`;
 export const TODAS_IMAGENS = [
   ...PARES.flatMap((p) => [imgPipa(p.A.arquivo), imgPipa(p.B.arquivo)]),
