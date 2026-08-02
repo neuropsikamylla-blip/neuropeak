@@ -3,7 +3,24 @@
 > Checkpoint de contexto para continuidade entre sessões. Atualizado automaticamente.
 > 👉 Visão geral e handoff para o próximo Claude: **`ESTADO-DO-PROJETO.md`** (leia primeiro).
 
-## 🚧 EM ANDAMENTO (02/ago/2026) — Informação em Foco: FASE 1 + FASE 2
+## ✅ FASE 1 CONCLUÍDA (02/ago/2026) — Informação em Foco: motor estabilizado (v2.64.1)
+
+**Todas as fatias entregues, com prova e em produção:**
+- **F1.1** `data/informacao-foco-catalogo.ts` — 73 produtos com atributos FIXOS lidos das embalagens (sem OCR). Relatório: `docs/auditoria/INFORMACAO-EM-FOCO-CATALOGO-2026-08-02.md`.
+- **F1.2** campos aplicáveis por categoria + faixas de preço plausíveis (dentro do catálogo e testadas).
+- **F1.3** `lib/informacao-foco-questoes.ts` — **um gerador parametrizado** com 9 tipos; nada de gerador por nível, pontuação ou peso de tipo. **Motor antigo (`lib/informacao-foco.ts`) APAGADO** — era ele que sorteava lactose e sabor.
+- **F1.4** regra de não repetição com motivo nomeado + snapshot no `sessionStorage` (refresh não muda mais o preço no meio da sessão).
+- **F1.5** progresso coerente: a barra é de TEMPO e agora diz isso ("Atividade N · Tempo da sessão · X%").
+
+**Provas:** 217 testes (16 só do gerador, ~40 mil questões em 500 sessões × 8 níveis), `tsc` 0, build OK, produção `2.64.1`. Exemplos gerados em `docs/auditoria/INFORMACAO-EM-FOCO-EXEMPLOS.md`.
+
+**Limitação declarada:** "ingredientes" usa lactose/glúten/açúcar adicionado — lista completa de ingredientes não existe no catálogo porque não está legível nas embalagens (não se inventa dado).
+
+**Próximo:** FASE 2 (cartões, quadro funcional, ampliação, situações) — só quando ela testar uma sessão inteira. Depois FASE 3 (adaptativa).
+
+<details><summary>Plano original das 3 fases</summary>
+
+## 🚧 (histórico) EM ANDAMENTO (02/ago/2026) — Informação em Foco: FASE 1 + FASE 2
 
 **Pedido dela (02/ago):** mandou a FASE 2 dizendo *"Antes de iniciar, verifique se a Fase 1 foi
 realmente aplicada no código. Caso ainda existam bloqueadores estruturais, informe-os objetivamente,
@@ -38,6 +55,8 @@ snapshot de sessão · sem histórico anti-repetição · sem `directPackageRead
 
 **Estado em 02/ago 01h:** F1.1 FEITA (catálogo de 73 produtos com atributos fixos lidos das
 embalagens, 9 testes, relatório de auditoria). Próxima: F1.3.
+
+</details>
 
 ## 🔒 FECHAMENTO DA SESSÃO (01→02/ago/2026) — v2.59.0 → **v2.63.1**, tudo em produção
 
