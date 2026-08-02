@@ -1515,3 +1515,6 @@ A sequência correta é:
 **Fase 1:** estabilizar produtos, unidades, dados e perguntas.
 **Fase 2:** criar cartões, etiquetas, ampliação e situações do cotidiano.
 **Fase 3:** ajustar dificuldade adaptativa após observar sessões completas.
+
+## 02/08/2026 00:27
+vigilancia nao é por exercicio... segue a mesma regra do estacionamento, torre (é por tempo e tem a linha de progressao) tem de ter uns 7 a 10 min...
