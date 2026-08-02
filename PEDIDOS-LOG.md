@@ -2522,3 +2522,6 @@ Não considere a Fase 3 concluída apenas por criar níveis numerados.
 - relatório profissional;
 - controles clínicos;
 - testes e simulações.
+
+## 02/08/2026 08:42
+onde paramos?
