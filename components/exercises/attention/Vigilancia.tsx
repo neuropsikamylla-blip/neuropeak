@@ -11,6 +11,7 @@
 
 import { useState, useRef, useCallback, useEffect, useLayoutEffect } from "react";
 import { motion, AnimatePresence } from "framer-motion";
+import { useTimedProgress } from "@/components/exercises/useExerciseEngine";
 import { calculateExerciseScore } from "@/lib/scoring";
 import type { ExerciseResult, Theme } from "@/types";
 import {
@@ -32,7 +33,10 @@ interface Kite { pos: number; isAlvo: boolean }
 
 export function Vigilancia({ difficulty, theme, onComplete }: Props) {
   const isG = theme === "GAMIFIED";
-  const [stage, setStage] = useState<"tutorial" | "bloco" | "resultado">("tutorial");
+  const [stage, setStage] = useState<"tutorial" | "bloco">("tutorial");
+  // Sessão por TEMPO (~8 min), como Estacionamento e Torre — não por nº de blocos.
+  const { begin, finish: finishTimer, progressPct } = useTimedProgress(8 * 60 * 1000);
+  const tempoAcabouRef = useRef(false);
   const [fase, setFase] = useState<Fase>("fixacao");
   const [tutStep, setTutStep] = useState(0);
 
@@ -85,10 +89,24 @@ export function Vigilancia({ difficulty, theme, onComplete }: Props) {
     return () => ro.disconnect();
   }, [stage, tentativa]);
 
+  useEffect(() => { tempoAcabouRef.current = progressPct >= 100; }, [progressPct]);
+
   const posToXY = (pos: number): Ponto => centrosRef.current[pos] ?? { x: dims.w / 2, y: dims.h / 2 };
 
-  // finaliza bloco (declarado antes de quem o usa)
-  const finalizarBloco = useCallback(() => { clearTimers(); setStage("resultado"); }, []);
+  // Fim de bloco SILENCIOSO (§ princípio dela: nada de tela de "resultado do bloco" no meio):
+  // avalia, sobe de nível quando merece e emenda o bloco seguinte. Quem encerra é o TEMPO.
+  const proximoBlocoRef = useRef<() => void>(() => {});
+  const encerrarRef = useRef<() => void>(() => {});
+  const finalizarBloco = useCallback(() => {
+    clearTimers();
+    if (tempoAcabouRef.current) { encerrarRef.current(); return; }
+    const { decisao } = avaliarBloco(bloco.current.acertos);
+    if (decisao === "avancar" && nivelRef.current < NIVEIS.length) {
+      nivelRef.current++;
+      estadoRef.current = estadoInicial(DEGRAU_CONFORTAVEL);
+    }
+    proximoBlocoRef.current();
+  }, []);
 
   // ── Uma tentativa: fixação → exposição → resposta (SEM reapresentar o alvo) ──
   const iniciarTentativa = useCallback(() => {
@@ -120,6 +138,7 @@ export function Vigilancia({ difficulty, theme, onComplete }: Props) {
     setFase("feedback");
     const dur = correto ? 900 : 1800;
     timers.current.push(setTimeout(() => {
+      if (tempoAcabouRef.current) { encerrarRef.current(); return; }
       if (tentativaRef.current >= BLOCO_TENTATIVAS) { finalizarBloco(); return; }
       tentativaRef.current += 1; setTentativa(tentativaRef.current);
       iniciarTentativa();
@@ -154,20 +173,15 @@ export function Vigilancia({ difficulty, theme, onComplete }: Props) {
     arranjoRef.current = nvv.arranjo; setFundoArq(fundoById(nvv.fundo).arquivo);
     tentativaRef.current = 1; setTentativa(1);
     setStage("bloco");
+    begin();                       // cronômetro da sessão (só conta com o paciente ativo)
     iniciarTentativa();
-  }, [iniciarTentativa]);
+  }, [iniciarTentativa, begin]);
 
-  const continuar = useCallback(() => {
-    const { decisao } = avaliarBloco(bloco.current.acertos);
-    if (decisao === "avancar" && nivelRef.current < NIVEIS.length) {
-      nivelRef.current++;
-      estadoRef.current = estadoInicial(DEGRAU_CONFORTAVEL);
-    }
-    iniciarBloco();
-  }, [iniciarBloco]);
+  useEffect(() => { proximoBlocoRef.current = iniciarBloco; }, [iniciarBloco]);
 
   const encerrar = useCallback(() => {
     clearTimers();
+    finishTimer();
     const t = totalRef.current;
     const acc = t.tentativas ? t.acertos / t.tentativas : 0;
     const tr = bloco.current.temposResp;
@@ -180,9 +194,15 @@ export function Vigilancia({ difficulty, theme, onComplete }: Props) {
         blocos: blocoNumRef.current, tentativas: t.tentativas, acertos: t.acertos,
         nivelVisual: nivelRef.current, degrauFinal: estadoRef.current.degrau,
         tempoExposicaoMs: tempoDoDegrau(estadoRef.current.degrau), melhorSequencia: bloco.current.melhorSeq,
+        sessaoPorTempo: true, alvoMin: 8,
       },
     });
-  }, [onComplete]);
+  }, [onComplete, finishTimer]);
+
+  useEffect(() => { encerrarRef.current = encerrar; }, [encerrar]);
+  // o tempo acabou entre tentativas (nenhum timer pendente): encerra assim que a barra enche
+  // NÃO encerrar no meio de uma tentativa: o corte acontece sempre DEPOIS do feedback
+  // (senão a barra encheria enquanto o paciente ainda está decidindo onde clicar).
 
   const bg = isG ? "bg-[#061326]" : "bg-slate-100";
   const txt = isG ? "text-white" : "text-slate-800";
@@ -236,31 +256,6 @@ export function Vigilancia({ difficulty, theme, onComplete }: Props) {
     );
   }
 
-  if (stage === "resultado") {
-    const b = bloco.current;
-    const prec = Math.round((b.acertos / BLOCO_TENTATIVAS) * 100);
-    const medResp = b.temposResp.length ? Math.round(b.temposResp.slice().sort((a, z) => a - z)[Math.floor(b.temposResp.length / 2)]) : null;
-    return (
-      <div className={`min-h-screen flex items-center justify-center ${bg}`}>
-        <div className="max-w-sm mx-auto px-6 py-10 text-center w-full">
-          <h2 className={`text-xl font-black ${txt}`}>Bloco concluído</h2>
-          <div className={`rounded-2xl p-5 mt-5 space-y-1.5 ${isG ? "bg-white/5" : "bg-white border border-slate-200"}`}>
-            <p className={txt}><b className="text-2xl">{b.acertos}</b> / {BLOCO_TENTATIVAS} acertos</p>
-            <p className={sub}>Precisão: {prec}%</p>
-            <p className={sub}>Nível visual: {nivelRef.current}</p>
-            <p className={sub}>Exposição atual: {tempoDoDegrau(estadoRef.current.degrau)} ms</p>
-            {medResp && <p className={sub}>Tempo de resposta (mediana): {(medResp / 1000).toFixed(1)} s</p>}
-            <p className={sub}>Melhor sequência: {b.melhorSeq}</p>
-          </div>
-          <div className="flex gap-3 mt-6">
-            <button onClick={encerrar} className={`flex-1 h-12 rounded-full font-bold border-2 ${isG ? "border-white/25 text-white/80" : "border-slate-300 text-slate-600"}`}>Encerrar sessão</button>
-            <button onClick={continuar} className="flex-1 h-12 rounded-full font-bold text-white bg-sky-600 active:bg-sky-700">Continuar</button>
-          </div>
-        </div>
-      </div>
-    );
-  }
-
   // ── BLOCO em andamento ──────────────────────────────────────────────────────
   const alvoImg = imgPipa(par[alvoVarRef.current].arquivo);
   const distImg = imgPipa(par[alvoVarRef.current === "A" ? "B" : "A"].arquivo);
@@ -268,10 +263,16 @@ export function Vigilancia({ difficulty, theme, onComplete }: Props) {
 
   return (
     <div className={`min-h-screen flex flex-col ${bg}`}>
-      {/* Barra superior mínima (§28): só nome, progresso e nível */}
-      <div className="flex-shrink-0 flex items-center justify-between px-4 py-3">
-        <span className={`font-black ${txt}`}>Vigilância</span>
-        <span className={`text-xs font-semibold ${sub}`}>Rodada {tentativa}/{BLOCO_TENTATIVAS} · Nível {nivelRef.current}</span>
+      {/* Barra superior mínima (§28): nome, nível e a LINHA DE PROGRESSÃO por tempo */}
+      <div className="flex-shrink-0 px-4 py-3">
+        <div className="flex items-center justify-between mb-2">
+          <span className={`font-black ${txt}`}>Vigilância</span>
+          <span className={`text-xs font-semibold ${sub}`}>Nível {nivelRef.current}</span>
+        </div>
+        <div className={`h-2 rounded-full overflow-hidden ${isG ? "bg-white/10" : "bg-slate-300"}`}>
+          <div className="h-full rounded-full transition-[width] duration-500"
+            style={{ width: `${Math.min(100, progressPct)}%`, background: isG ? "#22d3ee" : "#0284c7" }} />
+        </div>
       </div>
 
       <div ref={arenaRef} onPointerDown={aoTocar} onPointerMove={aoMover}
