@@ -3,9 +3,9 @@
 > Checkpoint de contexto para continuidade entre sessões. Atualizado automaticamente.
 > 👉 Visão geral e handoff para o próximo Claude: **`ESTADO-DO-PROJETO.md`** (leia primeiro).
 
-## 🔒 FECHAMENTO DA SESSÃO (01→02/ago/2026) — v2.59.0 → **v2.63.0**, tudo em produção
+## 🔒 FECHAMENTO DA SESSÃO (01→02/ago/2026) — v2.59.0 → **v2.63.1**, tudo em produção
 
-**Estado real ao fechar:** git limpo · local = produção = **2.63.0** · **205 testes** (16 arquivos) ·
+**Estado real ao fechar:** git limpo · local = produção = **2.63.1** · **205 testes** (16 arquivos) ·
 `tsc` 0 · build OK · imagens conferidas visualmente uma a uma.
 
 **O que foi entregue hoje**
