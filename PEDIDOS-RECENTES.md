@@ -1,9 +1,6 @@
 # As 3 ultimas especificacoes dela (automatico; a mais nova por ultimo)
 # Na retomada: ler as 3, conectar com PROGRESSO.md e git, declarar e seguir.
 
-## 02/08/2026 18:42
-pronto! agora voltamos para aquele comando que passei depois do focus ne?
-
 ## 02/08/2026 18:59
 Antes de continuar a auditoria de carga, duração e modelos de execução, precisamos corrigir o inventário real das atividades.
 
@@ -385,3 +382,34 @@ Ao terminar, pare e aguarde nossa validação.
 
 ## 02/08/2026 19:18
 salve tudo pois irei trocar de conta para continuarmos desse mesmo lugar
+
+## 02/08/2026 19:23
+Confirmando a decisão clínica:
+
+Os exercícios Span Numérico Auditivo Direto e Span Numérico Auditivo Inverso já são auditivos por definição. O áudio é intrínseco e obrigatório na mecânica desses exercícios.
+
+Portanto:
+
+- não criar seletor de modalidade para os spans;
+- não propor versão visual;
+- não propor versão visual + áudio;
+- não tratá-los como “só visual” na documentação.
+
+Classificação correta dos dois spans:
+
+- modalidade configurável: não;
+- canal sensorial intrínseco: auditivo;
+- áudio intrínseco à tarefa: sim;
+- leitura assistiva: apenas para textos instrucionais, separada do áudio dos números.
+
+A seleção Visual / Visual + áudio / Somente áudio continua restrita exclusivamente a:
+
+1. Restaurante;
+2. Supermercado;
+3. Caminhos para a Meta;
+4. Agentes Focus;
+5. Compra Multifuncional.
+
+Nenhum outro exercício deverá receber esse seletor sem nova decisão clínica explícita.
+
+Corrija somente a documentação e prossiga com a auditoria considerando essa regra.
