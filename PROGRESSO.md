@@ -3,6 +3,37 @@
 > Checkpoint de contexto para continuidade entre sessões. Atualizado automaticamente.
 > 👉 Visão geral e handoff para o próximo Claude: **`ESTADO-DO-PROJETO.md`** (leia primeiro).
 
+## 🔒 FECHAMENTO DA SESSÃO (01→02/ago/2026) — v2.59.0 → **v2.63.0**, tudo em produção
+
+**Estado real ao fechar:** git limpo · local = produção = **2.63.0** · **205 testes** (16 arquivos) ·
+`tsc` 0 · build OK · imagens conferidas visualmente uma a uma.
+
+**O que foi entregue hoje**
+1. **Informação em Foco — catálogo 50 → 73 produtos com fundo TRANSPARENTE** (v2.60.0–2.60.2).
+   As 80 imagens dela: 50 já eram as fontes do que estava no jogo · 20 viraram produto novo ·
+   7 repetidas (regra dela: produto igual, só um) · 3 regeradas por marca real. Motor: marca virou
+   dado do produto, nomes únicos por questão, "Conteúdo" só em líquido e "Peso" só em sólido.
+2. **Vigilância** (v2.61.0–2.63.0): alvos regerados por ela (ΔE Lab caiu de 46/25/33 para 19/13/23),
+   **8 pares** (entraram verde musgo e vinho), escada dos 10 níveis reordenada pela dificuldade
+   MEDIDA, e **sessão por TEMPO (~8 min) com linha de progressão**, sem tela de fim de bloco.
+3. **Specs gravadas** (nada iniciado): Fase 1 e Fase 2 do Informação em Foco, em `docs/`.
+
+**Decisões dela registradas**
+- Produto repetido: mantém só um. · Marca real não entra (ela regera com marca fictícia).
+- Sessão por TEMPO com barra é o padrão do projeto (Estacionamento, Torre, Vigilância…), e a
+  dificuldade sobe com os acertos. Nada de tela de "resultado do bloco" no meio.
+- A rabiola ondulada das pipas novas é **intencional** — não uniformizar.
+
+**Próximo passo (abrir com `claude --continue`)**
+**FASE 1 do Informação em Foco** — `docs/INFORMACAO-EM-FOCO-FASE1-CORRECAO-ESTRUTURAL.md`, fatia 1
+(catálogo com atributos fixos, lendo o conteúdo impresso nas 73 embalagens). Raiz já localizada:
+`lib/informacao-foco.ts:315` (lactose) e `:335` (sabor) sorteiam atributo para qualquer produto.
+Depois: Fase 2 (cartões/situações) só após ela testar 10 questões; Fase 3 (adaptativa) por último.
+
+**Nada ficou por salvar.** Único ponto em aberto, por escolha: `PEDIDOS-LOG.md` e
+`PEDIDOS-RECENTES.md` (gerados pelo gancho) seguem **fora do versionamento** — se ela quiser que
+entrem no repo, é só dizer.
+
 ## ✅ CONCLUÍDO (2026-08-02, madrugada) — Vigilância: 8 pares, alvos regerados e SESSÃO POR TEMPO (v2.61.0 → v2.63.0)
 
 **Terceira rodada (v2.63.0) — regra dela:** *"vigilancia nao é por exercicio... segue a mesma regra do estacionamento, torre (é por tempo e tem a linha de progressao) tem de ter uns 7 a 10 min"* + *"vamos aumentando a dificuldade com os acertos"*.
