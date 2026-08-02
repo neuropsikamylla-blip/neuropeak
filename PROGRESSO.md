@@ -29,6 +29,15 @@ snapshot de sessão · sem histórico anti-repetição · sem `directPackageRead
 - **F2.4** Modalidades: 70% quadro · 10% leitura direta da embalagem · 20% situação do cotidiano.
 - **F2.5** Feedback pedagógico em 2 tentativas + destaque só depois da resposta.
 - **F2.6** Distribuição da sessão de 10 + responsividade + acessibilidade.
+- **F3.x** FASE 3 (spec recebida 02/ago, `docs/INFORMACAO-EM-FOCO-FASE3-ADAPTATIVA.md`): adaptativo
+  por DIMENSÃO (produtos · campos · condições · semelhança dos distratores · tipo · ordem dos campos ·
+  proximidade dos valores), 3 acertos↑ com 2 na 1ª tentativa / 2 erros em 3↓, histerese anti-oscilação,
+  classificação do erro pela condição ignorada, uso do zoom, continuidade pelo ÚLTIMO NÍVEL ESTÁVEL,
+  relatório profissional por campo e por tipo (linguagem descritiva, sem diagnóstico), controles do
+  profissional. **Depende da Fase 2** (modal de ampliação e tipos de pergunta) e da Fase 1 (dados).
+
+**Estado em 02/ago 01h:** F1.1 FEITA (catálogo de 73 produtos com atributos fixos lidos das
+embalagens, 9 testes, relatório de auditoria). Próxima: F1.3.
 
 ## 🔒 FECHAMENTO DA SESSÃO (01→02/ago/2026) — v2.59.0 → **v2.63.1**, tudo em produção
 
