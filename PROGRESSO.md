@@ -3,6 +3,24 @@
 > Checkpoint de contexto para continuidade entre sessões. Atualizado automaticamente.
 > 👉 Visão geral e handoff para o próximo Claude: **`ESTADO-DO-PROJETO.md`** (leia primeiro).
 
+## ⏸️ AUDITORIA DO PLANO TERAPÊUTICO — pedida 02/ago, SUSPENSA por decisão dela
+
+Ela mandou a spec completa (auditoria + 8 documentos em `docs/auditoria-plano-terapeutico/`:
+estado atual · inventário de exercícios · classificação por modelo de execução · carga cognitiva ·
+interface · modelo de dados · riscos/migração · decisões pendentes). **Regra da etapa: só análise,
+nada de alterar código, sem commit, sem push.**
+
+**Decisão dela:** *"vamos esperar finalizar o focus, para quando vc for fazer, fazer de tudo"* —
+a auditoria começa depois que o Focus (modo único) fechar.
+
+**Achados já levantados (não repetir o trabalho):**
+- `estimatedMinutes` é **hardcoded** em `types/index.ts`: 38 exercícios com `7`, dois com `8`, um
+  com `9` (41 definições). Não vem de configuração, tentativas nem do exercício.
+- O total da sessão é a **soma** desses valores (`components/plano/PlanBuilderSidebar.tsx:38`) —
+  na prática "nº de exercícios × 7".
+- Tela do plano: `app/(therapist)/pacientes/[id]/plano/page.tsx` (259 l) + `components/plano/*.tsx`
+  (10 arquivos, 1.146 l no total). O seletor de duração da sessão está em `PlanBuilderSidebar.tsx:55`.
+
 ## 🚧 EM ANDAMENTO (02/ago/2026) — Focus Agentes: MODO ÚNICO
 
 **Decisão dela, aprovada:** `docs/FOCUS-AGENTES-MODO-UNICO.md` (escada de 13 passos, relatório por
