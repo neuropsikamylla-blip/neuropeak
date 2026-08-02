@@ -2,6 +2,8 @@ export const FOCUS_MODES = ["foco", "inibicao", "alternancia", "desafio"] as con
 
 export type FocusMode = (typeof FOCUS_MODES)[number];
 
+import type { Etapa } from "./commands";
+
 const LAST_FOCUS_STEP = 12;
 export const FOCUS_MAX_LEVEL = LAST_FOCUS_STEP + 1;
 
@@ -48,3 +50,25 @@ export function buildFocusCompletionMetadata(input: FocusCompletionMetadataInput
     mode: resolveFocusMode(input.mode),
   };
 }
+
+// ── Escada do MODO ÚNICO (13 passos) ─────────────────────────────────────────
+// Regra de desenho: entre dois passos consecutivos muda UMA variável só, e toda
+// troca de ETAPA acontece com a cena PARADA (mesmo n, mesma velocidade, mesma
+// semelhança) — o paciente encara o comando novo em terreno conhecido.
+export type Step = { etapa: Etapa; n: number; vel: number; semelhantes: boolean };
+
+export const STEPS: Step[] = [
+  { etapa: "cor",          n: 7,  vel: 0, semelhantes: false },
+  { etapa: "cor",          n: 8,  vel: 0, semelhantes: false },  // n
+  { etapa: "acessorio",    n: 8,  vel: 0, semelhantes: false },  // etapa (cena parada)
+  { etapa: "corAcessorio", n: 8,  vel: 0, semelhantes: false },  // etapa (cena parada)
+  { etapa: "corAcessorio", n: 9,  vel: 0, semelhantes: false },  // n
+  { etapa: "corAcessorio", n: 9,  vel: 1, semelhantes: false },  // velocidade
+  { etapa: "corAcessorio", n: 9,  vel: 1, semelhantes: true  },  // distratores semelhantes
+  { etapa: "doisAlvos",    n: 9,  vel: 1, semelhantes: true  },  // etapa (cena parada)
+  { etapa: "doisAlvos",    n: 10, vel: 1, semelhantes: true  },  // n
+  { etapa: "mudancaRegra", n: 10, vel: 1, semelhantes: true  },  // etapa (cena parada)
+  { etapa: "mudancaRegra", n: 10, vel: 2, semelhantes: true  },  // velocidade
+  { etapa: "inibicao",     n: 10, vel: 2, semelhantes: true  },  // etapa (cena parada)
+  { etapa: "inibicao",     n: 11, vel: 2, semelhantes: true  },  // n
+];

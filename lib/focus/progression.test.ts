@@ -4,6 +4,8 @@ import {
   buildFocusCompletionMetadata,
   focusLevelFromStep,
   resolveFocusStartStep,
+  STEPS,
+  FOCUS_MAX_LEVEL,
 } from "@/lib/focus/progression";
 
 describe("progressão do Focus Agentes", () => {
@@ -33,5 +35,42 @@ describe("progressão do Focus Agentes", () => {
     expect(FOCUS_MODES).toContain(metadata.mode);
     expect(metadata.mode).toBe(mode);
     expect(metadata).not.toHaveProperty("nivel");
+  });
+});
+
+// ── Escada do MODO ÚNICO ─────────────────────────────────────────────────────
+describe("STEPS — escada de 13 passos", () => {
+  it("tem 13 passos, um por nível persistido", () => {
+    expect(STEPS.length).toBe(FOCUS_MAX_LEVEL);
+  });
+
+  it("entre dois passos consecutivos muda UMA variável só", () => {
+    for (let i = 1; i < STEPS.length; i++) {
+      const a = STEPS[i - 1], b = STEPS[i];
+      const mudou = [a.etapa !== b.etapa, a.n !== b.n, a.vel !== b.vel, a.semelhantes !== b.semelhantes]
+        .filter(Boolean).length;
+      expect(mudou, `passo ${i} → ${i + 1} mudou ${mudou} variáveis`).toBe(1);
+    }
+  });
+
+  it("toda troca de etapa acontece com a cena parada", () => {
+    for (let i = 1; i < STEPS.length; i++) {
+      const a = STEPS[i - 1], b = STEPS[i];
+      if (a.etapa === b.etapa) continue;
+      expect({ n: b.n, vel: b.vel, sem: b.semelhantes }, `troca de etapa no passo ${i + 1} mexeu na cena`)
+        .toEqual({ n: a.n, vel: a.vel, sem: a.semelhantes });
+    }
+  });
+
+  it("a dificuldade nunca retrocede ao longo da escada", () => {
+    for (let i = 1; i < STEPS.length; i++) {
+      expect(STEPS[i].n).toBeGreaterThanOrEqual(STEPS[i - 1].n);
+      expect(STEPS[i].vel).toBeGreaterThanOrEqual(STEPS[i - 1].vel);
+    }
+  });
+
+  it("as 6 etapas aparecem, na ordem de carga cognitiva", () => {
+    const ordem = [...new Set(STEPS.map((s) => s.etapa))];
+    expect(ordem).toEqual(["cor", "acessorio", "corAcessorio", "doisAlvos", "mudancaRegra", "inibicao"]);
   });
 });

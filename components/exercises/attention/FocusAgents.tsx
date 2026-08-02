@@ -18,6 +18,7 @@ import { ExerciseProgressBar } from "@/components/exercises/ExerciseProgressBar"
 import { playTTS, cancelTTS } from "@/lib/tts";
 import type { ExerciseResult, Theme } from "@/types";
 import { gerarRodada, matches, atributoFaltante, type FocusRound, type Etapa } from "@/lib/focus/commands";
+import { STEPS, type Step } from "@/lib/focus/progression";
 import { charById, COR_HEX, FOCUS_CHARS, type Acessorio, type Objeto } from "@/lib/focus/roster";
 import {
   buildFocusCompletionMetadata,
@@ -50,19 +51,6 @@ const CHAR_W = 112;                       // ~30% maior que os 86 de antes (§2)
 const CHAR_H = Math.round(CHAR_W / 0.667); // ≈168 — proporção da arte, não amassa
 const TOUCH_PAD = 10;                     // área de toque um pouco maior (§11)
 
-// Escada de dificuldade — cada passo muda UMA variável (§8). n = nº de personagens
-// (sobe com a dificuldade). vel = velocidade da DERIVA (sempre LEVE, nunca rápida §7).
-type Step = { etapa: Etapa; n: number; vel: number };
-// Nível 1 (índice 0) = ESPALHADOS com deriva leve (tela já cheia). Do nível 2 em
-// diante (índice ≥1) os personagens CAEM de cima — a velocidade e o nº de
-// distratores sobem com a progressão (pedido da Kamylla).
-const STEPS: Step[] = [
-  { etapa: 1, n: 7, vel: 0 }, { etapa: 1, n: 8, vel: 0 }, { etapa: 1, n: 9, vel: 1 },
-  { etapa: 2, n: 8, vel: 1 }, { etapa: 2, n: 9, vel: 1 }, { etapa: 2, n: 10, vel: 2 },
-  { etapa: 2, n: 10, vel: 2 }, { etapa: 3, n: 10, vel: 2 }, { etapa: 3, n: 11, vel: 3 },
-  { etapa: 4, n: 11, vel: 2 }, { etapa: 4, n: 12, vel: 3 }, { etapa: 5, n: 12, vel: 3 },
-  { etapa: 5, n: 13, vel: 3 },
-];
 const VEL_LEVE = [0.4, 0.8, 1.3, 1.9]; // px/frame — deriva; mais movimento conforme a dificuldade sobe
 const VEL_QUEDA = [1.5, 2.2, 3.0, 3.8];    // px/frame — queda do nível 2+ (sobe com a progressão)
 const MARGIN = 6;                          // margem interna da arena (não cola na borda)
@@ -358,7 +346,7 @@ export function FocusAgents({ difficulty, theme, onComplete, exerciseId = "focus
     // por TEMPO — senão a rodada nunca termina se o paciente não tocar.
     clearOmissao();
     if (!cai) {
-      const tempoMs = Math.max(4200, 7000 - step.etapa * 450);
+      const tempoMs = Math.max(4200, 7000 - (stepRef.current + 1) * 450);
       omissaoRef.current = setTimeout(() => {
         if (respondidoRef.current || doneRef.current) return;
         respondidoRef.current = true; stopRaf();
@@ -392,7 +380,7 @@ export function FocusAgents({ difficulty, theme, onComplete, exerciseId = "focus
   const novaRodada = useCallback(() => {
     if (doneRef.current || isTimeUp()) { encerrar(); return; }
     const step = STEPS[stepRef.current];
-    const r = gerarRodada(step.etapa, step.n, roundRef.current?.texto); // não repete o comando anterior
+    const r = gerarRodada(step.etapa, step.n, roundRef.current?.texto, step.semelhantes); // não repete o comando anterior
     roundRef.current = r;
     setRound(r);
     setChars([]); charsRef.current = [];
