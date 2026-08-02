@@ -42,9 +42,16 @@ export interface FocusAgentsProps {
 }
 
 const IMG_BASE = "/exercises/agentes-personagens";
-const IMG_V = "?v=1";                       // PNG já é bem leve (~24KB); o delay some com o PRELOAD abaixo
+const IMG_V = "?v=2";   // v2 = 9 artes reescaladas em 02/ago (arquivo mudou, nome igual)                       // PNG já é bem leve (~24KB); o delay some com o PRELOAD abaixo
 const imgSrc = (id: string) => `${IMG_BASE}/${id}.png${IMG_V}`;
 // imagens são 360×540 (2:3). Mantemos a proporção — largura menor, altura maior.
+// Paleta CLARA (02/ago): o agente azul se camuflava no navy — num exercício em que a
+// COR é o critério, isso virava viés a favor das outras cores.
+const ARENA_BG = "#F3F6F9";
+const ARENA_BORDA = "#DDE3EC";
+const TXT = "#0f2038";        // texto principal sobre o claro
+const TXT_SUAVE = "#5b6b82";
+
 const CHAR_W = 112;                       // ~30% maior que os 86 de antes (§2)
 const CHAR_H = Math.round(CHAR_W / 0.667); // ≈168 — proporção da arte, não amassa
 const TOUCH_PAD = 10;                     // área de toque um pouco maior (§11)
@@ -98,17 +105,17 @@ function AnuncioComando({ round, onOk }: { round: FocusRound; onOk: () => void }
     <motion.div key={round.alvoId + round.texto} initial={{ opacity: 0, scale: 0.9 }} animate={{ opacity: 1, scale: 1 }}
       className="absolute inset-0 flex items-center justify-center z-40 px-6">
       <div className="rounded-3xl px-6 py-6 text-center max-w-sm"
-        style={{ background: "rgba(10,22,48,0.95)", border: "1.5px solid rgba(255,255,255,0.22)", boxShadow: "0 12px 40px rgba(0,0,0,.5)" }}>
-        <p className="text-white/50 text-xs font-bold uppercase tracking-widest mb-3">👁 Encontre</p>
+        style={{ background: "#FFFFFF", border: `1.5px solid ${ARENA_BORDA}`, boxShadow: "0 12px 40px rgba(15,32,56,.14)" }}>
+        <p className="text-xs font-bold uppercase tracking-widest mb-3" style={{ color: TXT_SUAVE }}>👁 Encontre</p>
         <div className="flex items-center justify-center gap-3 mb-1">
-          {round.amostraCor && <span className="w-8 h-8 rounded-full border-2 border-white/40" style={{ background: COR_HEX[round.amostraCor] }} />}
+          {round.amostraCor && <span className="w-8 h-8 rounded-full border-2" style={{ background: COR_HEX[round.amostraCor], borderColor: ARENA_BORDA }} />}
           {round.acessorioIcone && <span className="text-2xl">{ACC_EMOJI[round.acessorioIcone]}</span>}
           {round.objetoIcone && <span className="text-2xl">{OBJ_EMOJI[round.objetoIcone]}</span>}
         </div>
-        <p className="text-white font-black text-lg leading-snug">
+        <p className="font-black text-lg leading-snug" style={{ color: TXT }}>
           {partes.map((p, i) => i % 2 === 1 ? <span key={i} className="text-red-400">{p}</span> : <span key={i}>{p}</span>)}
         </p>
-        <p className="text-white/40 text-xs mt-3">Guarde bem — depois de começar, o alvo não fica na tela.</p>
+        <p className="text-xs mt-3" style={{ color: TXT_SUAVE }}>Guarde bem — depois de começar, o alvo não fica na tela.</p>
         <button onClick={onOk} className="mt-4 h-11 px-10 rounded-full font-black text-white text-base bg-sky-600 active:bg-sky-700 transition-transform active:scale-95">OK</button>
       </div>
     </motion.div>
@@ -123,16 +130,16 @@ const DEMO = [
 function Tutorial({ onStart }: { onStart: () => void }) {
   return (
     <div className="fixed inset-0 z-50 flex flex-col items-center justify-center px-5 py-8 overflow-y-auto"
-      style={{ background: "linear-gradient(160deg,#0a1628 0%,#0d2244 55%,#081020 100%)" }}>
-      <h2 className="text-white font-black text-2xl mb-1 text-center">Como jogar</h2>
-      <p className="text-white/60 text-sm mb-4 text-center">Encontre o personagem indicado.</p>
+      style={{ background: ARENA_BG }}>
+      <h2 className="font-black text-2xl mb-1 text-center" style={{ color: TXT }}>Como jogar</h2>
+      <p className="text-sm mb-4 text-center" style={{ color: TXT_SUAVE }}>Encontre o personagem indicado.</p>
 
       {/* Comando de exemplo */}
       <div className="w-full max-w-xs rounded-2xl px-3 py-2.5 flex items-center gap-3 mb-4"
-        style={{ background: "rgba(255,255,255,0.09)", border: "1.5px solid rgba(255,255,255,0.18)" }}>
-        <span className="w-6 h-6 rounded-full border-2 border-white/40" style={{ background: COR_HEX.azul }} />
+        style={{ background: "#FFFFFF", border: `1.5px solid ${ARENA_BORDA}` }}>
+        <span className="w-6 h-6 rounded-full border-2" style={{ background: COR_HEX.azul, borderColor: ARENA_BORDA }} />
         <span className="text-xl">🎧</span>
-        <p className="text-white font-bold text-sm">Toque no azul com fone</p>
+        <p className="font-bold text-sm" style={{ color: TXT }}>Toque no azul com fone</p>
       </div>
 
       {/* Grade demo — o ALVO fica destacado com ✓ verde */}
@@ -149,14 +156,14 @@ function Tutorial({ onStart }: { onStart: () => void }) {
       </div>
 
       <div className="w-full max-w-xs rounded-2xl px-4 py-3 mb-6 space-y-1.5"
-        style={{ background: "rgba(255,255,255,0.05)", border: "1px solid rgba(255,255,255,0.1)" }}>
+        style={{ background: "#FFFFFF", border: `1px solid ${ARENA_BORDA}` }}>
         {[
           "Leia o comando (cor + acessório) que aparece antes e fica no topo.",
           "No começo eles ficam espalhados; nos níveis seguintes passam a cair de cima.",
           "Toque só no que corresponde — com a evolução, aparecem mais personagens e a queda acelera.",
           "Use o 🔊 para ouvir o comando de novo.",
         ].map((b, i) => (
-          <p key={i} className="text-white/75 text-xs leading-relaxed">• {b}</p>
+          <p key={i} className="text-xs leading-relaxed" style={{ color: TXT_SUAVE }}>• {b}</p>
         ))}
       </div>
 
@@ -165,6 +172,36 @@ function Tutorial({ onStart }: { onStart: () => void }) {
         style={{ background: "linear-gradient(135deg,#2563eb,#7c3aed)" }}>Começar! 🚀</button>
     </div>
   );
+}
+
+
+// Personagem NÃO pode cobrir personagem: quando o alvo fica atrás de outro, o paciente
+// ou espera passar (o tempo de detecção infla) ou toca no de cima (conta erro) — e o
+// tempo de detecção decide a subida de nível. Empurra pelo eixo de MENOR penetração;
+// na queda só no eixo horizontal, para não bagunçar o ritmo da descida.
+function separarPersonagens(lista: LiveChar[], W: number, H: number, cai: boolean) {
+  const MIN_DX = CHAR_W * 0.80, MIN_DY = CHAR_H * 0.58;
+  for (let i = 0; i < lista.length; i++) {
+    for (let j = i + 1; j < lista.length; j++) {
+      const a = lista[i], b = lista[j];
+      const dx = b.x - a.x, dy = b.y - a.y;
+      const penX = MIN_DX - Math.abs(dx), penY = MIN_DY - Math.abs(dy);
+      if (penX <= 0 || penY <= 0) continue;                   // não se cobrem
+      if (cai || penX / MIN_DX <= penY / MIN_DY) {
+        const s = ((dx >= 0 ? 1 : -1) * Math.max(penX, 1)) / 2;
+        a.x -= s; b.x += s;
+      } else {
+        const s = ((dy >= 0 ? 1 : -1) * penY) / 2;
+        a.y -= s; b.y += s;
+      }
+      a.x = Math.max(MARGIN, Math.min(W - CHAR_W - MARGIN, a.x));
+      b.x = Math.max(MARGIN, Math.min(W - CHAR_W - MARGIN, b.x));
+      if (!cai) {
+        a.y = Math.max(MARGIN, Math.min(H - CHAR_H - MARGIN, a.y));
+        b.y = Math.max(MARGIN, Math.min(H - CHAR_H - MARGIN, b.y));
+      }
+    }
+  }
 }
 
 // ── Componente principal ─────────────────────────────────────────────────────
@@ -242,6 +279,8 @@ export function FocusAgents({ difficulty, theme, onComplete, exerciseId = "focus
 
   const modoQuedaRef = useRef(false); // false = espalhados (nível 1); true = caindo (nível 2+)
 
+
+
   // Loop de animação — dois modos:
   //  • ESPALHADO (nível 1): vagam devagar e REBATEM na borda, com "bob" senoidal (vida).
   //  • QUEDA (nível 2+): descem de cima; se o ALVO sai por baixo sem toque = omissão.
@@ -253,10 +292,11 @@ export function FocusAgents({ difficulty, theme, onComplete, exerciseId = "focus
       const W = dims.current.w, H = dims.current.h;
       if (modoQuedaRef.current) {
         let alvoSaiu = false, saiuAlgum = false;
+        for (const c of charsRef.current) c.y += c.vy;
+        separarPersonagens(charsRef.current, W, H, true);
         for (const c of charsRef.current) {
-          c.y += c.vy;
           const node = nodes.current.get(c.uid);
-          if (node) node.style.transform = `translateY(${c.y - c.by}px)`;
+          if (node) node.style.transform = `translate(${c.x - c.bx}px, ${c.y - c.by}px)`;
           if (c.y > H + 12) { saiuAlgum = true; if (c.isTarget) alvoSaiu = true; }
         }
         if (saiuAlgum) {
@@ -279,6 +319,9 @@ export function FocusAgents({ difficulty, theme, onComplete, exerciseId = "focus
           else if (c.x > maxX) { c.x = maxX; c.vx = -Math.abs(c.vx); }
           if (c.y < MARGIN) { c.y = MARGIN; c.vy = Math.abs(c.vy); }
           else if (c.y > maxY) { c.y = maxY; c.vy = -Math.abs(c.vy); }
+        }
+        separarPersonagens(charsRef.current, W, H, false);
+        for (const c of charsRef.current) {
           const node = nodes.current.get(c.uid);
           if (node) {
             const bob = Math.sin(f * 0.045 + c.ph) * 3;
@@ -487,7 +530,7 @@ export function FocusAgents({ difficulty, theme, onComplete, exerciseId = "focus
   }
 
   return (
-    <div className="fixed inset-0 flex flex-col" style={{ background: "linear-gradient(160deg,#0a1628 0%,#0d2244 55%,#081020 100%)" }}>
+    <div className="fixed inset-0 flex flex-col" style={{ background: ARENA_BG }}>
       {/* Só a barra de progresso no topo — SEM o comando visível durante a busca
           (sem dica após a instrução). O comando aparece só no card "Encontre". */}
       <div className="flex-shrink-0 px-3 pt-3 pb-2" style={{ zIndex: 50 }}>
@@ -495,7 +538,7 @@ export function FocusAgents({ difficulty, theme, onComplete, exerciseId = "focus
       </div>
 
       <div ref={arenaRef} className="relative flex-1 overflow-hidden mx-2 mb-2 rounded-2xl"
-        style={{ background: "rgba(255,255,255,0.03)", border: "1px solid rgba(255,255,255,0.06)" }}>
+        style={{ background: "#FFFFFF", border: `1px solid ${ARENA_BORDA}` }}>
         {chars.map((lc) => (
           <CharView key={lc.uid} lc={lc}
             big={fase === "feedback" && fb?.alvoUid === lc.uid}
