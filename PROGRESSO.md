@@ -3,6 +3,50 @@
 > Checkpoint de contexto para continuidade entre sessões. Atualizado automaticamente.
 > 👉 Visão geral e handoff para o próximo Claude: **`ESTADO-DO-PROJETO.md`** (leia primeiro).
 
+## 🔖 RETOMADA IMEDIATA (02/ago/2026, fim da tarde) — ela trocou de conta AQUI
+
+**Estado:** produção = local = **v2.67.1** · 250 testes · tsc 0 · git limpo.
+
+### O que está EM CURSO: auditoria do plano terapêutico (só análise, NADA de código)
+
+Regra da etapa, dita por ela: **não implementar, não alterar código/banco/rotas/progressão**.
+Os documentos ficam em `docs/auditoria-plano-terapeutico/`. Já escritos:
+
+| Doc | Conteúdo |
+|---|---|
+| `01-estado-atual.md` | onde a tela vive, duração/frequência/tentativas/níveis/retomada, 7 inconsistências |
+| `02-inventario-exercicios.md` | tabela das 41 definições (⚠️ **superada** pelo doc 13 — contou alias como exercício) |
+| `03-proposta-classificacao.md` | 4 modelos de execução (A contínuo · B planejamento · C alta fadiga · D bloco) |
+| `04-proposta-carga-cognitiva.md` | escala **1–3** + modificadores; fórmula da carga da sessão |
+| `05-proposta-interface.md` | card, painel da sessão, alertas, "Ajustar" |
+| `06-modelo-de-dados.md` | `ExerciseDefinition` · `ExercisePrescription` · `PatientExerciseProgress` … |
+| `07-riscos-e-migracao.md` | 8 riscos, ordem segura em 6 fases |
+| `08-decisoes-pendentes.md` | 5 bloqueantes · 5 importantes · 4 refinamentos |
+| `13-inventario-real-atividades.md` | **fonte de verdade:** 41 = **34 clínicos** + 3 modos + 3 aliases + 1 órfão |
+| `14-nomes-oficiais.md` | divergências de nome; id histórico não muda |
+| `15-modalidades-e-acessibilidade.md` | modalidade × leitura assistiva (conceitos diferentes) |
+| `16-lista-canonica.md` | os 34 canônicos com categoria, modalidades e aliases |
+
+### ⛔ Decisões dela que TRAVAM a continuação
+
+1. **`desafio-cidade`** (órfão: renderiza mas saiu do catálogo) — reativar ou remover?
+2. **Focus Agentes e Compra Multifuncional recebem seletor de modalidade?** Hoje
+   `focus-agents-auditivo` existe como id e a tela NÃO oferece o seletor — promessa sem entrega.
+3. **Nomes em inglês:** "Task Switching" (único 100% inglês exibido ao paciente), "Focus Agentes"
+   (meio inglês/meio português), "N-Back".
+4. Os 5 bloqueantes do doc 08 (carga basal · durações · duração/frequência fechadas · repetição de
+   áudio · se o nível prescrito sobrescreve o progresso do paciente).
+
+### ⚠️ O que refazer quando ela validar
+
+O **doc 03** classificou modo e alias como exercícios independentes. Precisa ser **refeito sobre os
+34 canônicos** do doc 16 antes de qualquer decisão de carga/duração.
+
+### Próximo passo concreto
+
+Aguardar as decisões acima. Nada mais a executar na auditoria sem elas.
+
+
 ## ⏸️ AUDITORIA DO PLANO TERAPÊUTICO — pedida 02/ago, SUSPENSA por decisão dela
 
 Ela mandou a spec completa (auditoria + 8 documentos em `docs/auditoria-plano-terapeutico/`:
