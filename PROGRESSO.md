@@ -69,6 +69,20 @@ autorizado, entregou o conserto (65.975 tokens). **O Codex não conseguiu rodar 
 é clone do código versionado e `node_modules` não é versionado (`ENOTCACHED`); ele declarou isso em
 vez de fingir. Toda prova acima é do repositório real.
 
+### Próximo passo daqui (Focus Agentes)
+
+**`CORR-021` — o teto da progressão do Foco ficou pela metade.** A correção de hoje fez o nível
+ser salvo e restaurado, mas `calculateFocusProgression` (`lib/adaptive.ts:149-151`) clampa em 9
+enquanto o exercício tem **13 passos** (`FocusAgents.tsx:45-51`). Na prática: o paciente sobe
+dentro da sessão até o passo 13, mas o nível que o servidor grava e devolve nunca passa de 9 —
+os quatro últimos passos não se consolidam entre sessões. É a continuação direta do trabalho de
+02/08, está em P2 no `docs/DIVIDA-TECNICA.md`, e é candidato natural ao próximo ciclo Codex.
+
+Também aberto no mesmo dia: **`ARQ-010`** (P3) — `utils/generateCommand.ts` (1.477 linhas) e
+`components/exercises/attention/FocusRain.tsx` (1.056) estão órfãos, zero importadores.
+`FocusRain` aparece citado como "Modo Foco" no histórico deste arquivo, mas quem o switch
+renderiza é `FocusAgents` — antes de apagar, confirmar que não é peça planejada e esquecida.
+
 ## 🔒 FECHAMENTO (02/ago/2026) — Informação em Foco: FASES 1 e 2 · **v2.64.1 → v2.65.1**
 
 **Estado real:** git limpo · local = produção = **2.65.1** · **223 testes** (17 arquivos) · `tsc` 0 · build OK.
