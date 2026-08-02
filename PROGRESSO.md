@@ -3,6 +3,36 @@
 > Checkpoint de contexto para continuidade entre sessões. Atualizado automaticamente.
 > 👉 Visão geral e handoff para o próximo Claude: **`ESTADO-DO-PROJETO.md`** (leia primeiro).
 
+## 🔒 FECHAMENTO (02/ago/2026) — Informação em Foco: FASES 1 e 2 · **v2.64.1 → v2.65.1**
+
+**Estado real:** git limpo · local = produção = **2.65.1** · **223 testes** (17 arquivos) · `tsc` 0 · build OK.
+
+**Entregue nesta sessão**
+1. **FASE 1 fechada** (v2.64.1): catálogo central de 73 produtos com atributos fixos lidos das
+   embalagens · **um gerador parametrizado** (9 tipos, sem pontuação nem peso de tipo) ·
+   **motor antigo apagado** · validação com motivo nomeado · não repetição · snapshot estável ·
+   progresso coerente ("Atividade N · Tempo da sessão · X%").
+2. **FASE 2 (núcleo)** (v2.65.0 → 2.65.1): **leitura direta da embalagem** (o quadro nunca entrega a
+   resposta — `campoReveladoPor` + validação `quadroEntregaResposta`) · composição 70/10/20 ·
+   **cartão com embalagem `clamp(110px, 30vw, 155px)`** e botão "Ampliar" que não seleciona ·
+   **modal acessível** (Esc, foco contido, alt descritivo) · quadro sem repetir o que o título diz ·
+   feedback com `aria-live` · foco visível no cartão.
+
+**Decisões dela registradas**
+- Autorizou a Fase 2 com **validação parcial** ("não testei ela inteira") — se aparecer defeito do
+  motor durante a Fase 2, corrigir antes de seguir.
+- Dificuldade só por carga cognitiva; nada de pontuação, peso de tipo ou gamificação
+  (memória `dificuldade-por-carga-cognitiva`).
+
+**Próximo passo (abrir com `claude --continue`)**
+**Conferência VISUAL dela em produção**, que é o que falta da Fase 2 e só se vê usando: cartão com a
+embalagem maior (inclusive no celular), ampliação abrindo/fechando, uma situação do cotidiano
+aparecendo, e se o quadro fica apertado com 6 campos em tela pequena. Depois disso a **FASE 3**
+(adaptativa, spec em `docs/INFORMACAO-EM-FOCO-FASE3-ADAPTATIVA.md`) fica liberada.
+
+**Limitação declarada:** o tipo "ingredientes" usa lactose/glúten/açúcar adicionado — lista completa
+de ingredientes não existe no catálogo porque não está legível nas embalagens.
+
 ## ✅ FASE 2 (núcleo) ENTREGUE (02/ago/2026) — Informação em Foco (v2.65.0 → v2.65.1)
 
 - **F2.4a leitura direta da embalagem:** tipo novo, só com produto autorizado
