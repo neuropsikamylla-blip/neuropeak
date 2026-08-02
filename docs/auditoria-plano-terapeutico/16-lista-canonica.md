@@ -12,14 +12,14 @@ fora: aliases, modos auditivos e o órfão `desafio-cidade`.
 |---|---|---|---|---|---|---|---|---|
 | `antes-depois` | Caminhos para a Meta | ACTIVE | Funções Executivas | visual · visual+áudio · só áudio | — | `/treino/antes-depois` | sim | sim |
 | `certo-ou-errado` | Certo ou Errado | ACTIVE | Velocidade de Processamento | — só visual | — | `/treino/certo-ou-errado` | sim | sim |
-| `compra-multifuncional` | Compra Multifuncional | ACTIVE | Desenvolvimento Funcional | (proposto) | `desafio-orcamento` | `/treino/compra-multifuncional` | sim | sim |
+| `compra-multifuncional` | Compra Multifuncional | ACTIVE | Desenvolvimento Funcional | **visual · visual+áudio · só áudio** (aprovado 02/ago, a implementar) | `desafio-orcamento` | `/treino/compra-multifuncional` | sim | sim |
 | `corrida-tempo` | Busca Rápida | ACTIVE | Velocidade de Processamento | — só visual | — | `/treino/corrida-tempo` | sim | sim |
 | `cubo-corsi` | Cubos | ACTIVE | Memória | — só visual | — | `/treino/cubo-corsi` | sim | sim |
 | `deductive-grid` | Grade Dedutiva | ACTIVE | Funções Executivas | — só visual | — | `/treino/deductive-grid` | sim | sim |
 | `desafio-supermercado` | Supermercado | ACTIVE | Memória | visual · visual+áudio · só áudio | `desafio-supermercado-auditivo` | `/treino/desafio-supermercado` | sim | sim |
 | `dual-task` | Dupla Tarefa | ACTIVE | Atenção | — só visual | — | `/treino/dual-task` | sim | sim |
 | `estacionamento-logico` | Estacionamento Lógico | ACTIVE | Funções Executivas | — só visual | — | `/treino/estacionamento-logico` | sim | sim |
-| `focus-agents` | Focus Agentes | ACTIVE | Atenção | (proposto: visual · visual+áudio · só áudio) | `focus-agents-auditivo` | `/treino/focus-agents` | sim | sim |
+| `focus-agents` | Focus Agentes | ACTIVE | Atenção | **visual · visual+áudio · só áudio** (aprovado 02/ago, a implementar) | `focus-agents-auditivo` | `/treino/focus-agents` | sim | sim |
 | `identificacao-simbolos` | Identificação de Símbolos | ACTIVE | Velocidade de Processamento | — só visual | — | `/treino/identificacao-simbolos` | sim | sim |
 | `informacao-em-foco` | Informação em Foco | ACTIVE | Atenção | — só visual | `caca-item-barato`, `mudanca-regras` | `/treino/informacao-em-foco` | sim | sim |
 | `investigadores-sociais` | Investigadores da Situação Social | ACTIVE | Desenvolvimento Funcional | — só visual | — | `/treino/investigadores-sociais` | sim | sim |
@@ -36,8 +36,8 @@ fora: aliases, modos auditivos e o órfão `desafio-cidade`.
 | `restaurante-ordem` | Restaurante | ACTIVE | Memória | visual · visual+áudio · só áudio | `restaurante-ordem-auditivo` | `/treino/restaurante-ordem` | sim | sim |
 | `semaforo` | Semáforo | ACTIVE | Velocidade de Processamento | — só visual | — | `/treino/semaforo` | sim | sim |
 | `sequencia-itens` | Sequência de Itens | ACTIVE | Memória | — só visual | — | `/treino/sequencia-itens` | sim | sim |
-| `span-numerico` | Span Numérico Auditivo Direto | ACTIVE | Memória | — só visual | — | `/treino/span-numerico` | sim | sim |
-| `span-numerico-inverso` | Span Numérico Auditivo Inverso | ACTIVE | Memória | — só visual | — | `/treino/span-numerico-inverso` | sim | sim |
+| `span-numerico` | Span Numérico Auditivo Direto | ACTIVE | Memória | **auditiva (intrínseca, sem seletor)** | — | `/treino/span-numerico` | sim | sim |
+| `span-numerico-inverso` | Span Numérico Auditivo Inverso | ACTIVE | Memória | **auditiva (intrínseca, sem seletor)** | — | `/treino/span-numerico-inverso` | sim | sim |
 | `stroop-task` | Cores e Palavras | ACTIVE | Funções Executivas | — só visual | — | `/treino/stroop-task` | sim | sim |
 | `task-switching` | Task Switching | ACTIVE | Funções Executivas | — só visual | — | `/treino/task-switching` | sim | sim |
 | `tempo-reacao` | Tempo de Reação | ACTIVE | Velocidade de Processamento | — só visual | — | `/treino/tempo-reacao` | sim | sim |

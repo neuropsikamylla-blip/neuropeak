@@ -18,7 +18,7 @@
 
 ## Tabela das 41 definições
 
-| ID | Nome no código | Subdomínio | No catálogo | Seleção de modalidade | Leitura assistiva | Status | Pertence a | Justificativa |
+| ID | Nome no código | Subdomínio | No catálogo | Modalidade | Leitura assistiva | Status | Pertence a | Justificativa |
 |---|---|---|---|---|---|---|---|---|
 | `antes-depois` | Caminhos para a Meta | Planejamento e Flexibilidade | sim | sim | sim | **ACTIVE_CLINICAL_EXERCISE** | — | no catálogo, com execução |
 | `caca-item-barato` | Caça Informação | — | não | não | não | **ACTIVE_ALIAS** | informacao-em-foco | id antigo redirecionado |
@@ -53,8 +53,8 @@
 | `restaurante-ordem-auditivo` | Restaurante — Ordem de Instruções (Auditivo) | — | não | não | não | **ACTIVE_EXERCISE_MODE** | restaurante-ordem | modo auditivo virou seletor interno |
 | `semaforo` | Semáforo | Tempo de Reação | sim | não | não | **ACTIVE_CLINICAL_EXERCISE** | — | no catálogo, com execução |
 | `sequencia-itens` | Sequência de Itens | Memória Operacional | sim | não | não | **ACTIVE_CLINICAL_EXERCISE** | — | no catálogo, com execução |
-| `span-numerico` | Span Numérico Auditivo Direto | Memória Operacional | sim | não | não | **ACTIVE_CLINICAL_EXERCISE** | — | no catálogo, com execução |
-| `span-numerico-inverso` | Span Numérico Auditivo Inverso | Memória Operacional | sim | não | não | **ACTIVE_CLINICAL_EXERCISE** | — | no catálogo, com execução |
+| `span-numerico` | Span Numérico Auditivo Direto | Memória Operacional | sim | **intrínseca (auditiva)** | não | **ACTIVE_CLINICAL_EXERCISE** | — | no catálogo, com execução |
+| `span-numerico-inverso` | Span Numérico Auditivo Inverso | Memória Operacional | sim | **intrínseca (auditiva)** | não | **ACTIVE_CLINICAL_EXERCISE** | — | no catálogo, com execução |
 | `stroop-task` | Cores e Palavras | Controle Inibitório | sim | não | não | **ACTIVE_CLINICAL_EXERCISE** | — | no catálogo, com execução |
 | `task-switching` | Task Switching | Flexibilidade Cognitiva | sim | não | não | **ACTIVE_CLINICAL_EXERCISE** | — | no catálogo, com execução |
 | `tempo-reacao` | Tempo de Reação | Tempo de Reação | sim | não | não | **ACTIVE_CLINICAL_EXERCISE** | — | no catálogo, com execução |

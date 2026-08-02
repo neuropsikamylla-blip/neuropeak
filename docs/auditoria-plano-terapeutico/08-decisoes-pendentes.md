@@ -3,6 +3,14 @@
 > Nenhuma decisão clínica foi tomada silenciosamente. As propostas estão nos documentos 03 a 06;
 > aqui está o que **não** posso decidir sozinha.
 
+## ✅ JÁ DECIDIDO POR ELA (02/ago/2026)
+
+- **Modalidade (seletor visual · visual+áudio · só áudio): restrito a CINCO** — Restaurante,
+  Supermercado, Caminhos para a Meta, **Focus Agentes** e **Compra Multifuncional**. Os dois últimos
+  aprovados e ainda não implementados. Nenhum outro sem nova decisão explícita.
+- **Os dois spans são auditivos por definição** — áudio intrínseco e obrigatório, sem seletor, sem
+  versão visual. Leitura assistiva neles só para textos instrucionais, separada do áudio dos números.
+
 ## BLOQUEANTES — sem isso não começo
 
 **B1. A tabela de carga basal dos 41 exercícios.** Está proposta no documento 03, derivada dos sete

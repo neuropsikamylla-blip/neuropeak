@@ -1,5 +1,10 @@
 # 02 — Inventário dos exercícios (auditoria do plano terapêutico)
 
+> ⚠️ **SUPERADO em 02/ago pelos documentos 13 e 16.** Esta tabela conta as **41 definições** de
+> `EXERCISE_DEFINITIONS`, incluindo aliases, modos auditivos e um órfão — que **não são exercícios
+> clínicos**. A fonte de verdade é o **catálogo** (`lib/domain-taxonomy.ts`): **34 exercícios**.
+> Mantido como registro técnico das definições existentes.
+
 > Levantado em 02/ago/2026 por cruzamento automático de `types/index.ts`
 > (`EXERCISE_DEFINITIONS`), do `switch` de `app/(patient)/treino/[exercicio]/page.tsx`
 > e do código de cada componente. **41 exercícios** — nenhum omitido.

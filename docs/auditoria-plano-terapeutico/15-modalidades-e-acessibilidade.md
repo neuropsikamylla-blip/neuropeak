@@ -14,6 +14,41 @@
 | Quem escolhe | terapeuta, na prescrição | paciente, durante a atividade |
 | Exemplo | Supermercado só-áudio: a lista **tem** que ser memorizada de ouvido | o botão lê a instrução visível na tela |
 
+## 0. REGRA FECHADA (decisão clínica dela, 02/ago/2026)
+
+O seletor **visual · visual+áudio · só áudio** é exclusivo de **cinco** exercícios:
+
+| # | Exercício | Situação |
+|---|---|---|
+| 1 | Restaurante | já tem |
+| 2 | Supermercado | já tem |
+| 3 | Caminhos para a Meta | já tem |
+| 4 | **Focus Agentes** | **aprovado — falta implementar** |
+| 5 | **Compra Multifuncional** | **aprovado — falta implementar** |
+
+**Nenhum outro exercício recebe o seletor sem nova decisão clínica explícita.**
+
+### Os dois spans NÃO têm modalidade configurável
+
+`span-numerico` e `span-numerico-inverso` são **auditivos por definição** — o áudio é intrínseco e
+obrigatório à mecânica. Classificação correta:
+
+| Atributo | Valor |
+|---|---|
+| Modalidade configurável | **não** |
+| Canal sensorial intrínseco | **auditivo** |
+| Áudio intrínseco à tarefa | **sim** |
+| Leitura assistiva | apenas para textos instrucionais, **separada** do áudio dos números |
+
+Não propor versão visual nem visual+áudio, e **não documentá-los como "só visual"** (erro da versão
+anterior deste documento, corrigido).
+
+**Fato técnico levantado no código, para constar:** o número é reproduzido por **áudio gravado**
+(`/exercises/audio/numeros/*.m4a`) e, desde o redesign de julho (v2.27), **a tecla correspondente
+acende em sincronia com a fala** — um realce visual do estímulo auditivo, aprovado por ela na época.
+O áudio segue sendo o canal da tarefa; o realce não mostra o número, só ilumina a tecla. Se a
+intenção clínica for retenção auditiva **pura**, esse realce merece uma decisão à parte.
+
 ## 1. Modalidade — situação atual
 
 O componente existe: `components/exercises/PresentationConfig.tsx`, com três modos —
@@ -28,7 +63,7 @@ iniciar (nunca toca áudio sozinho).
 | Supermercado (`desafio-supermercado`) | visual · visual+áudio · só áudio | confirmado no código |
 | Caminhos para a Meta (`antes-depois`) | idem | usa `PresentationConfig`, não aparecia na sua lista |
 
-**Deveriam ter, por decisão clínica (2):** Focus Agentes e Compra Multifuncional.
+**Aprovados e ainda não implementados (2):** Focus Agentes e Compra Multifuncional (§0).
 Hoje o `focus-agents-auditivo` existe como **id herdado** (alias) mas o exercício **não** oferece o
 seletor — ou seja, a modalidade auditiva do Focus está prometida no id e ausente na tela.
 
@@ -39,8 +74,8 @@ seletor — ou seja, a modalidade auditiva do Focus está prometida no id e ause
 | Restaurante | **sim** — de leitura funcional para retenção auditiva | +1 no só-áudio | sobe muito no só-áudio | some | central | **deveria ser separada por modo** |
 | Supermercado | **sim** — idem | +1 no só-áudio | sobe muito | some | central | idem |
 | Caminhos para a Meta | parcial — o enunciado é o mesmo, muda o canal | +0/+1 | igual | some no só-áudio | moderado | pode ser compartilhada |
-| Focus Agentes (proposto) | **sim** — comando ouvido exige reter a regra sem apoio visual | +1 | sobe | — | central | **separada** |
-| Compra Multifuncional (proposto) | **sim** — a situação passa a ser ouvida | +1 | sobe | some | central | **separada** |
+| Focus Agentes (aprovado) | **sim** — comando ouvido exige reter a regra sem apoio visual | +1 | sobe | — | central | **separada** |
+| Compra Multifuncional (aprovado) | **sim** — a situação passa a ser ouvida | +1 | sobe | some | central | **separada** |
 
 ⚠️ **Não tratar "visual + áudio" como automaticamente mais difícil.** Para paciente com dificuldade
 de leitura, o áudio **reduz** carga; para paciente com dificuldade auditiva ou distratibilidade, o
@@ -105,8 +140,10 @@ com texto), além das telas de instrução de praticamente todos os 34.
 
 1. **Modalidade vira campo de prescrição?** Se sim, `restaurante-ordem` no modo só-áudio e no modo
    visual precisam de **progressão separada** — são construtos diferentes, e hoje compartilham nível.
-2. **Focus e Compra recebem seletor de modalidade?** O id auditivo do Focus já existe e promete algo
-   que a tela não entrega.
+   ⚠️ Esta é a pergunta que sobra depois da decisão de 02/ago, e vale para os cinco.
+2. ✅ ~~Focus e Compra recebem seletor?~~ **DECIDIDO em 02/ago: sim.** Falta implementar.
+3. **O realce visual sincronizado dos spans** (tecla que acende com a fala) fica ou sai, se a
+   intenção for retenção auditiva pura?
 3. **Leitura assistiva conta como ajuda?** Recomendo registrar e mostrar ao terapeuta, sem afetar
    progressão.
 4. **Voz do aparelho ou banco de áudio para tudo?** Hoje é misto; para exercício auditivo de verdade,

@@ -1,103 +1,93 @@
-# 03 — Proposta de classificação por exercício
+# 03 — Proposta de classificação (REFEITA sobre os 34 canônicos)
 
-> Proposta do VP para discussão. **Nada implementado.** Base: documento 02 (inventário) e leitura
-> do código de cada exercício. Durações em minutos.
+> ⚠️ **Esta versão substitui a anterior**, que classificava aliases e modos auditivos como se fossem
+> exercícios independentes. Base correta: os **34 canônicos** do documento 16.
+> Incorpora a **decisão de modalidade de 02/ago** (documento 15 §0). Nada implementado.
 
-## As quatro categorias se confirmaram — com um ajuste importante
+## Contagem por modelo
 
-A hipótese de três modelos **não** cobre o projeto: **15 exercícios pertencem ao modelo D**
-(bloco/protocolo), e são justamente os de memória, cuja progressão depende de série fechada. Forçá-los
-em "contínuo" quebraria o cálculo de span. A quarta categoria é necessária.
-
-| Modelo | Quantos | O que define |
+| Modelo | Nº | O que define |
 |---|---|---|
-| **A — contínuo** | 12 | rodadas curtas e independentes; pode encerrar entre elas |
-| **B — resolução/planejamento** | 10 | um desafio inteiro por vez; interromper no meio perde o trabalho cognitivo |
-| **C — fechado/alta fadiga** | 4 | interferência alta por minuto; exposição longa degrada o dado |
-| **D — bloco/protocolo** | 15 | a progressão só fecha com a série completa (span, n-back, sequências) |
+| **A — contínuo** | 10 | rodadas curtas independentes; pode encerrar entre elas |
+| **B — resolução/planejamento** | 8 | um desafio inteiro por vez; interromper destrói o trabalho |
+| **C — fechado/alta fadiga** | 3 | interferência alta por minuto; exposição longa degrada o dado |
+| **D — bloco/protocolo** | 13 | a progressão só fecha com a série completa |
 
-## Tabela por exercício
+A quarta categoria continua necessária: **13 exercícios** dependem de série fechada para
+calcular span/progressão.
 
-| ID | Domínio | Modelo | mín | padrão | máx | Config. do terapeuta | Ao atingir o tempo | Carga basal |
-|---|---|---|---|---|---|---|---|---|
-| `antes-depois` | Executivas | B — resolução/planejamento | 8 | 10 | 15 | sim (faixa) | não inicia novo desafio; conclui o atual | 2 |
-| `caca-item-barato` | Atenção | A — contínuo | 4 | 5-6 | 8 | sim (faixa) | termina a rodada em curso | 2 |
-| `certo-ou-errado` | Velocidade | A — contínuo | 4 | 5-6 | 8 | sim (faixa) | termina a rodada em curso | 1 |
-| `compra-multifuncional` | Executivas | B — resolução/planejamento | 8 | 10 | 15 | sim (faixa) | não inicia novo desafio; conclui o atual | 3 |
-| `corrida-tempo` | Velocidade | A — contínuo | 4 | 5-6 | 8 | sim (faixa) | termina a rodada em curso | 1 |
-| `cubo-corsi` | Memória | D — bloco/protocolo | 5 | 6-7 | 9 | sim (nº de séries) | conclui o bloco/série em curso | 2 |
-| `deductive-grid` | Executivas | B — resolução/planejamento | 8 | 10 | 15 | sim (faixa) | não inicia novo desafio; conclui o atual | 3 |
-| `desafio-cidade` | Executivas | B — resolução/planejamento | 8 | 10 | 15 | sim (faixa) | não inicia novo desafio; conclui o atual | 3 |
-| `desafio-orcamento` | Executivas | B — resolução/planejamento | 8 | 10 | 15 | sim (faixa) | não inicia novo desafio; conclui o atual | 3 |
-| `desafio-supermercado` | Memória | D — bloco/protocolo | 5 | 6-7 | 9 | sim (nº de séries) | conclui o bloco/série em curso | 3 |
-| `desafio-supermercado-auditivo` | Memória | D — bloco/protocolo | 5 | 6-7 | 9 | sim (nº de séries) | conclui o bloco/série em curso | 3 |
-| `dual-task` | Atenção | C — fechado/alta fadiga | 3 | 4 | 5 | não (fixa) | encerra no tempo fixo | 3 |
-| `estacionamento-logico` | Executivas | B — resolução/planejamento | 8 | 10 | 15 | sim (faixa) | não inicia novo desafio; conclui o atual | 2 |
-| `focus-agents` | Atenção | A — contínuo | 4 | 5-6 | 8 | sim (faixa) | termina a rodada em curso | 2 |
-| `focus-agents-auditivo` | Atenção | A — contínuo | 4 | 5-6 | 8 | sim (faixa) | termina a rodada em curso | 2 |
-| `identificacao-simbolos` | Velocidade | A — contínuo | 4 | 5-6 | 8 | sim (faixa) | termina a rodada em curso | 1 |
-| `informacao-em-foco` | Atenção | A — contínuo | 4 | 5-6 | 8 | sim (faixa) | termina a rodada em curso | 2 |
-| `investigadores-sociais` | Funcional | B — resolução/planejamento | 8 | 10 | 15 | sim (faixa) | não inicia novo desafio; conclui o atual | 3 |
-| `jogo-memoria` | Memória | D — bloco/protocolo | 5 | 6-7 | 9 | sim (nº de séries) | conclui o bloco/série em curso | 1 |
-| `labirinto` | Executivas | B — resolução/planejamento | 8 | 10 | 15 | sim (faixa) | não inicia novo desafio; conclui o atual | 1 |
-| `letras-sequencia` | Memória | D — bloco/protocolo | 5 | 6-7 | 9 | sim (nº de séries) | conclui o bloco/série em curso | 2 |
-| `lista-distracao` | Memória | D — bloco/protocolo | 5 | 6-7 | 9 | sim (nº de séries) | conclui o bloco/série em curso | 3 |
-| `matriz-espacial` | Memória | D — bloco/protocolo | 5 | 6-7 | 9 | sim (nº de séries) | conclui o bloco/série em curso | 2 |
-| `matriz-espacial-inversa` | Memória | D — bloco/protocolo | 5 | 6-7 | 9 | sim (nº de séries) | conclui o bloco/série em curso | 2 |
-| `mot` | Atenção | A — contínuo | 4 | 5-6 | 8 | sim (faixa) | termina a rodada em curso | 2 |
-| `mudanca-regras` | Executivas | C — fechado/alta fadiga | 3 | 4 | 5 | não (fixa) | encerra no tempo fixo | 3 |
-| `nback` | Memória | D — bloco/protocolo | 5 | 6-7 | 9 | sim (nº de séries) | conclui o bloco/série em curso | 3 |
-| `ordem-historia` | Executivas | B — resolução/planejamento | 8 | 10 | 15 | sim (faixa) | não inicia novo desafio; conclui o atual | 2 |
-| `padroes-rotacao` | Memória | D — bloco/protocolo | 5 | 6-7 | 9 | sim (nº de séries) | conclui o bloco/série em curso | 2 |
-| `restaurante-ordem` | Memória | D — bloco/protocolo | 5 | 6-7 | 9 | sim (nº de séries) | conclui o bloco/série em curso | 2 |
-| `restaurante-ordem-auditivo` | Memória | D — bloco/protocolo | 5 | 6-7 | 9 | sim (nº de séries) | conclui o bloco/série em curso | 3 |
-| `semaforo` | Velocidade | A — contínuo | 4 | 5-6 | 8 | sim (faixa) | termina a rodada em curso | 1 |
-| `sequencia-itens` | Memória | D — bloco/protocolo | 5 | 6-7 | 9 | sim (nº de séries) | conclui o bloco/série em curso | 2 |
-| `span-numerico` | Memória | D — bloco/protocolo | 5 | 6-7 | 9 | sim (nº de séries) | conclui o bloco/série em curso | 2 |
-| `span-numerico-inverso` | Memória | D — bloco/protocolo | 5 | 6-7 | 9 | sim (nº de séries) | conclui o bloco/série em curso | 2 |
-| `stroop-task` | Executivas | C — fechado/alta fadiga | 3 | 4 | 5 | não (fixa) | encerra no tempo fixo | 3 |
-| `task-switching` | Executivas | C — fechado/alta fadiga | 3 | 4 | 5 | não (fixa) | encerra no tempo fixo | 3 |
-| `tempo-reacao` | Velocidade | A — contínuo | 4 | 5-6 | 8 | sim (faixa) | termina a rodada em curso | 1 |
-| `torre-hanoi` | Executivas | B — resolução/planejamento | 8 | 10 | 15 | sim (faixa) | não inicia novo desafio; conclui o atual | 2 |
-| `trilha-visual` | Atenção | A — contínuo | 4 | 5-6 | 8 | sim (faixa) | termina a rodada em curso | 1 |
-| `vigilancia` | Atenção | A — contínuo | 4 | 5-6 | 8 | sim (faixa) | termina a rodada em curso | 2 |
+## Tabela dos 34
 
-## Justificativas por modelo
+| ID | Nome | Domínio | Modelo | mín | padrão | máx | Config. terapeuta | Carga | Modalidade |
+|---|---|---|---|---|---|---|---|---|---|
+| `antes-depois` | Caminhos para a Meta | Executivas | **B** | 8 | 10 | 15 | janela máxima | 2 | seletor (3 modos) |
+| `certo-ou-errado` | Certo ou Errado | Velocidade | **A** | 4 | 5 | 8 | faixa de minutos | 1 | visual |
+| `compra-multifuncional` | Compra Multifuncional | Funcional | **B** | 8 | 10 | 15 | janela máxima | 3 | seletor (3 modos) |
+| `corrida-tempo` | Busca Rápida | Velocidade | **A** | 4 | 5 | 8 | faixa de minutos | 1 | visual |
+| `cubo-corsi` | Cubos | Memória | **D** | 5 | 6 | 9 | nº de séries | 2 | visual |
+| `deductive-grid` | Grade Dedutiva | Executivas | **B** | 8 | 10 | 15 | janela máxima | 3 | visual |
+| `desafio-supermercado` | Supermercado | Memória | **D** | 5 | 6 | 9 | nº de séries | 3 | seletor (3 modos) |
+| `dual-task` | Dupla Tarefa | Atenção | **C** | 3 | 4 | 5 | **não** (fixa) | 3 | visual |
+| `estacionamento-logico` | Estacionamento Lógico | Executivas | **B** | 8 | 10 | 15 | janela máxima | 2 | visual |
+| `focus-agents` | Focus Agentes | Atenção | **A** | 4 | 5 | 8 | faixa de minutos | 2 | seletor (3 modos) |
+| `identificacao-simbolos` | Identificação de Símbolos | Velocidade | **A** | 4 | 5 | 8 | faixa de minutos | 1 | visual |
+| `informacao-em-foco` | Informação em Foco | Atenção | **A** | 4 | 5 | 8 | faixa de minutos | 2 | visual |
+| `investigadores-sociais` | Investigadores da Situação Social | Funcional | **B** | 8 | 10 | 15 | janela máxima | 3 | visual |
+| `jogo-memoria` | Jogo da Memória | Memória | **D** | 5 | 6 | 9 | nº de séries | 1 | visual |
+| `labirinto` | Labirinto | Executivas | **B** | 8 | 10 | 15 | janela máxima | 1 | visual |
+| `letras-sequencia` | Letras em Sequência | Memória | **D** | 5 | 6 | 9 | nº de séries | 2 | visual |
+| `lista-distracao` | Lista com Distração | Memória | **D** | 5 | 6 | 9 | nº de séries | 3 | visual |
+| `matriz-espacial` | Matriz Espacial | Memória | **D** | 5 | 6 | 9 | nº de séries | 2 | visual |
+| `matriz-espacial-inversa` | Matriz Espacial Inversa | Memória | **D** | 5 | 6 | 9 | nº de séries | 2 | visual |
+| `mot` | Rastreamento de Objetos | Atenção | **A** | 4 | 5 | 8 | faixa de minutos | 2 | visual |
+| `nback` | N-Back | Memória | **D** | 5 | 6 | 9 | nº de séries | 3 | visual |
+| `ordem-historia` | Ordem da História | Executivas | **B** | 8 | 10 | 15 | janela máxima | 2 | visual |
+| `padroes-rotacao` | Matriz com Rotações | Memória | **D** | 5 | 6 | 9 | nº de séries | 2 | visual |
+| `restaurante-ordem` | Restaurante | Memória | **D** | 5 | 6 | 9 | nº de séries | 2 | seletor (3 modos) |
+| `semaforo` | Semáforo | Velocidade | **A** | 4 | 5 | 8 | faixa de minutos | 1 | visual |
+| `sequencia-itens` | Sequência de Itens | Memória | **D** | 5 | 6 | 9 | nº de séries | 2 | visual |
+| `span-numerico` | Span Numérico Auditivo Direto | Memória | **D** | 5 | 6 | 9 | nº de séries | 2 | **auditiva intrínseca** |
+| `span-numerico-inverso` | Span Numérico Auditivo Inverso | Memória | **D** | 5 | 6 | 9 | nº de séries | 3 | **auditiva intrínseca** |
+| `stroop-task` | Cores e Palavras | Executivas | **C** | 3 | 4 | 5 | **não** (fixa) | 3 | visual |
+| `task-switching` | Task Switching | Executivas | **C** | 3 | 4 | 5 | **não** (fixa) | 3 | visual |
+| `tempo-reacao` | Tempo de Reação | Velocidade | **A** | 4 | 5 | 8 | faixa de minutos | 1 | visual |
+| `torre-hanoi` | Jogo das Torres | Executivas | **B** | 8 | 10 | 15 | janela máxima | 2 | visual |
+| `trilha-visual` | Conecta Números | Atenção | **A** | 4 | 5 | 8 | faixa de minutos | 1 | visual |
+| `vigilancia` | Vigilância | Atenção | **A** | 4 | 5 | 8 | faixa de minutos | 2 | visual |
 
-**A — contínuo.** A rodada dura segundos e não depende da anterior. Encerrar entre rodadas não perde
-nada. Já é como esses 12 funcionam hoje (`useTimedProgress`). Só falta a duração ser **prescrita**
-em vez de fixa em ~7 min.
+## Comportamento ao atingir o tempo
 
-**B — resolução/planejamento.** Torre de Hanói, Estacionamento, Labirinto, Grade Dedutiva, Ordem da
-História, Caminhos, Compra, Investigadores. O paciente analisa, monta estratégia e executa —
-interromper no meio destrói justamente o que se quer treinar. Regra: **ao atingir o tempo, não
-iniciar novo desafio e deixar concluir o atual**. Métricas mínimas próprias: desafios iniciados ×
-concluídos, movimentos, eficiência (movimentos ÷ ótimo), tempo até o primeiro movimento (planejamento)
-e tempo de execução, desistências.
+| Modelo | Regra |
+|---|---|
+| A | termina a rodada em curso |
+| B | não inicia novo desafio; conclui o atual |
+| C | encerra no tempo fixo |
+| D | conclui a série em curso |
 
-**C — fechado/alta fadiga.** Stroop, Task Switching, Dupla Tarefa, Mudança de Regras. Interferência
-alta por minuto: passados ~4–5 min o dado piora por fadiga, não por dificuldade. Duração **fixa**,
-sem escolha do terapeuta — ele decide incluir ou não.
+## O que mudou em relação à versão anterior
 
-**D — bloco/protocolo.** Spans (numérico, letras, itens), Corsi, Matriz, N-back, Padrões, Restaurante,
-Supermercado, Lista com Distração, Jogo da Memória. A adaptação depende de **série fechada**: subir
-o span exige um bloco completo de tentativas naquele comprimento. Configurável em **número de séries**,
-não em minutos; a duração vira estimativa ("aprox. 5–7 min").
+1. **7 linhas saíram** (3 modos auditivos + 3 aliases + 1 órfão) — não são exercícios.
+2. **`desafio-orcamento` e `desafio-cidade` deixaram de ocupar linha de modelo B**; o primeiro é
+   alias da Compra, o segundo é órfão aguardando decisão.
+3. **Coluna de modalidade** passou a refletir a regra fechada: 5 com seletor, 2 auditivos
+   intrínsecos (spans), 27 visuais.
+4. **Span inverso subiu para carga 3** (era 2): além da retenção auditiva, exige reordenação mental —
+   é manipulação, não só armazenamento.
 
 ## Sequenciamento — o que não deve vir junto
 
-- **Nunca dois de modelo C seguidos** (interferência sobre interferência).
-- **Nunca dois auditivos seguidos** (`*-auditivo`, span numérico): competem pelo mesmo canal.
-- **Evitar dois de modelo B seguidos** numa sessão de 20 min — sozinhos já consomem a sessão.
-- **Evitar três exercícios do mesmo domínio em sequência** — a sessão vira treino de um construto só.
-- **Depois de um C, preferir um A de carga 1** (velocidade simples) como recuperação.
+- **Nunca dois de modelo C seguidos** (dual-task, stroop-task, task-switching).
+- **Nunca dois auditivos seguidos**: os dois spans entre si, e qualquer um deles com um dos cinco do
+  seletor quando prescrito em `visual+áudio` ou `só áudio`.
+- **Evitar dois de modelo B seguidos** numa sessão de 20 min — sozinhos já a consomem.
+- **Evitar três do mesmo domínio em sequência.**
+- **Depois de um C, preferir um A de carga 1.**
 
 ## Observações clínicas
 
-- `dual-task` e `mudanca-regras` estão em C por carga, mas são também dos poucos que treinam
-  alternância — se saírem da sessão por serem "pesados", perde-se o construto. Recomendação: um C
-  por sessão, sempre.
-- `nback` e `lista-distracao` são D com carga 3: exigem série fechada **e** cansam. Merecem limite de
-  séries menor que os demais D.
-- Os `*-auditivo` herdam o modelo do irmão visual, com carga +1 quando houver repetição de áudio
-  liberada (ver documento 04).
+- Os cinco com seletor mudam de carga conforme o modo prescrito (**+1 no só-áudio**) — a carga do
+  plano precisa ler o modo, não só o exercício.
+- `span-numerico-inverso` e `nback` são os dois D de carga 3: série fechada **e** manipulação ativa.
+  Merecem limite de séries menor que os demais D.
+- `labirinto` é modelo B de carga 1 — o único planejamento leve; serve de "B de entrada" para
+  paciente que ainda não sustenta Torre ou Estacionamento.
