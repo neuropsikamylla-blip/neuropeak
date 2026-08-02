@@ -2729,3 +2729,6 @@ eu quero que vc faça tudo para quando eu testar, testar tudo pode ser?
 
 ## 02/08/2026 17:21
 onde paramos?
+
+## 02/08/2026 17:23
+Ok! o ideal é esperar isso terminar para prosseguirmos para a proxima etapa?
