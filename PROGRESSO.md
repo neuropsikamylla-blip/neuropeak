@@ -3,6 +3,24 @@
 > Checkpoint de contexto para continuidade entre sessões. Atualizado automaticamente.
 > 👉 Visão geral e handoff para o próximo Claude: **`ESTADO-DO-PROJETO.md`** (leia primeiro).
 
+## ⏭️ PRÓXIMA TAREFA (recebida 01/ago 18h, NÃO iniciada — janela em 85%)
+
+**Informação em Foco — FASE 1: correção estrutural.** Spec completa dela gravada em
+**`docs/INFORMACAO-EM-FOCO-FASE1-CORRECAO-ESTRUTURAL.md`** (19 seções + plano em 5 fatias).
+
+**Raiz confirmada no código:** os atributos do produto são sorteados por questão em vez de virem do
+cadastro — `lib/informacao-foco.ts:315` joga `lactose` em qualquer produto (por isso "chá de camomila
+contém lactose") e `:335` sorteia `sabor` entre morango/uva/laranja/chocolate para qualquer produto
+(por isso "lasanha sabor chocolate", "pão de forma sabor morango"). Peso/volume/validade idem. A
+v2.60.0 corrigiu só a metade das unidades ("Conteúdo" em líquido, "Peso" em sólido).
+
+**Não começar sem ler a spec.** A fatia 1 exige LER o conteúdo impresso em cada uma das 73
+embalagens (trabalho visual, só o Claude faz) — o que não der para confirmar vira `revisar: true` e
+sai das perguntas sobre conteúdo, nunca se inventa o dado.
+
+**Ordem combinada com ela:** terminar a Fase 1 → ela testa uma sessão inteira de 10 questões →
+só então historinhas do cotidiano, dificuldade e melhorias visuais.
+
 ## ✅ CONCLUÍDO (2026-08-01, tarde) — Informação em Foco: catálogo 50 → 73 produtos com FUNDO TRANSPARENTE (v2.60.2)
 
 **Pedido dela (palavras dela):** *"na verdade são 80 imagens, vamos integrar as 80 imagens no informação em foco, lembrando fundo transparente ok?"*
