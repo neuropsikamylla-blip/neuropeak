@@ -3,6 +3,72 @@
 > Checkpoint de contexto para continuidade entre sessões. Atualizado automaticamente.
 > 👉 Visão geral e handoff para o próximo Claude: **`ESTADO-DO-PROJETO.md`** (leia primeiro).
 
+## 🚩 (02/ago/2026) — Focus Agentes + teto de difficulty · **v2.65.2 e v2.65.3** (ESTREIA do ciclo Codex)
+
+**Estado real:** `main` = `d4734b1` = produção · versão **2.65.3** · **231 testes** (18 arquivos) ·
+`npx tsc --noEmit` exit 0 · `npm run build` exit 0.
+
+### ⚠️ ARMADILHA PARA A PRÓXIMA SESSÃO — o teto de `difficulty` vive em DOIS lugares
+
+1. **Zod:** `app/api/sessions/route.ts:18` — `difficulty: z.number().min(1).max(13)`.
+2. **Banco de produção:** CHECK `session_difficulty_range` na tabela `Session` (hoje **1-13**).
+
+**Os dois têm que casar. Mexer num sem o outro cria defeito SILENCIOSO:** o paciente termina o
+exercício, o `INSERT` é recusado e a sessão dele se perde sem aviso na tela. A CHECK **não** está no
+`prisma/schema.prisma` (foi aplicada por SQL direto), então um `db push` pode recriá-la errada —
+reaplicar sempre pelo SQL da seção **SCHEMA-02** do `RUNBOOK-OPERACIONAL.md`, que tem o SQL aplicado
+e o SQL de reversão. Reaplicar a versão antiga (teto 10) quebra 3 exercícios.
+
+### v2.65.2 (`e37ddef`) — progressão do Focus Agentes volta a funcionar
+
+O paciente nunca voltava no nível em que parou. Três falhas encadeadas no mesmo fluxo, nenhuma
+listada em dívida técnica:
+1. o exercício emitia `metadata.nivel` e `sessions/route.ts` lia `metadata.level` — a condição era
+   sempre falsa, `calculateFocusProgression` **nunca** rodava;
+2. não emitia `mode`, então `patients/[id]/route.ts` nunca montava `focusLevels` e a página de treino
+   não tinha o que restaurar;
+3. a conversão de volta era destrutiva (`difficulty = passo+1` na ida, `(difficulty-1)*0.4` na volta):
+   passo 12 voltava como 5, passo 6 voltava como 2.
+
+**Correção:** `FocusAgents` passa a consumir `settings.mode` e `settings.startLevel`; a montagem do
+metadata e a conversão viraram funções puras em **`lib/focus/progression.ts`**, testáveis sem DOM.
+A conversão `*0.4` sobrevive só como fallback de sessões antigas (as que não têm `startLevel`).
+
+### v2.65.3 (`d4734b1`) — teto de difficulty vai a 13 no banco e no schema
+
+Defeito **encontrado pelo Codex** e confirmado no banco vivo: o Zod aceitava até 12, mas a CHECK
+recusava acima de 10 (aplicada em 30/05/2026 e nunca ajustada quando o CORR-001 liberou 11-12).
+Paciente que passasse do nível 10 teria a sessão recusada e perdida — e a correção do v2.65.2 é
+justamente o que o faz chegar lá.
+
+**Medido antes:** ZERO sessões com `difficulty > 10` em todo o banco; Ordem da História parada
+exatamente em 10 (o teto). Com 29 sessões no total, era **risco iminente, não perda em massa**.
+
+**Aplicado:** CHECK ampliada de 1-10 para **1-13** no banco de produção, com verificação antes
+(0 sessões ficariam fora) e depois (as 3 CHECKs de pé, 29 sessões intactas, nenhum dado tocado);
+`sessionSchema` de `max(12)` para `max(13)`; `RUNBOOK-OPERACIONAL.md` ganhou a seção **SCHEMA-02**
+com o SQL aplicado e o de reversão.
+
+**Provado contra o banco real:** `difficulty` 10, 12 e 13 aceitos; **14 recusado** pela CHECK — a
+validação não foi desligada, só ajustada. Sessões de teste removidas, contagem final 29 = inicial.
+
+### Provas das duas entregas (rodadas no repositório real, não no lab)
+
+| Comando | Resultado |
+|---|---|
+| `npx tsc --noEmit` | exit 0 |
+| `npx vitest run` | **231 testes / 18 arquivos**, todos passando (eram 223/17) |
+| `npm run build` | exit 0 |
+
+### Nota de método (estreia do ciclo Codex)
+
+Origem: lab `estreia-focus`, `gpt-5.6-sol` esforço `high`, **duas rodadas**. Na primeira o Codex
+**parou sem implementar** (59.926 tokens): relatou que o conserto pedido deixaria a restauração
+quebrada e pediu autorização de escopo, como a spec mandava. A segunda rodada, com o escopo
+autorizado, entregou o conserto (65.975 tokens). **O Codex não conseguiu rodar teste nenhum** — o lab
+é clone do código versionado e `node_modules` não é versionado (`ENOTCACHED`); ele declarou isso em
+vez de fingir. Toda prova acima é do repositório real.
+
 ## 🔒 FECHAMENTO (02/ago/2026) — Informação em Foco: FASES 1 e 2 · **v2.64.1 → v2.65.1**
 
 **Estado real:** git limpo · local = produção = **2.65.1** · **223 testes** (17 arquivos) · `tsc` 0 · build OK.

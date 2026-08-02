@@ -1,5 +1,26 @@
 # Dívida técnica — NeuroPeak
 
+> ## ⚠️ AVISO — A LISTA P1/P2/P3 ABAIXO NÃO REFLETE O ESTADO ATUAL
+>
+> **Leia isto antes de usar qualquer item desta página.**
+>
+> As listas **P1**, **P2** e **P3** são a **fotografia congelada da auditoria de 2026-07-10** e
+> **nunca foram podadas**: item corrigido continua aparecendo lá como se estivesse pendente.
+> Só o bloco "Progresso das correções", logo abaixo, registra o que já foi resolvido — e os dois
+> se contradizem.
+>
+> **Exemplo concreto de contradição dentro deste mesmo arquivo:** `CORR-003`, `CORR-004` e
+> `SEC-001` aparecem como pendentes nas listas (P2 e P1), e o bloco de progresso acima deles diz
+> que os três estão **resolvidos** (SEC-001 em v2.11.2; CORR-003 e CORR-004 em v2.11.4). Não são os
+> únicos casos.
+>
+> **Consequência prática:** o estado real de um item **só se determina lendo o código**. Nunca
+> abrir tarefa a partir desta lista sem antes verificar no repositório se o defeito ainda existe —
+> na dúvida, o código manda, não este arquivo. (Este aviso nasceu de dois erros reais cometidos em
+> 02/08/2026 por confiar na lista.)
+>
+> Poda da lista: pendente, e é tarefa própria — exige reauditar item a item.
+
 > Espelho dos achados da auditoria de 2026-07-10. Cada item referencia o ID
 > estável do relatório completo em [`auditoria/AUDITORIA-2026-07-10.md`](./auditoria/AUDITORIA-2026-07-10.md),
 > onde estão a evidência `arquivo:linha`, o cenário e a verificação adversarial.
