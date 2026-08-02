@@ -2708,3 +2708,6 @@ Focus Agentes (eu acho que aqui precisamos deixar o modo unitario, sem isso de t
 
 ## 02/08/2026 15:22
 relatorio do terapeuta eu acho que pode sim informa onde o paciente trava e onde ele evolui... foco, inibição, flexibilidade etc... Ordem dos degraus: eu dei exemplo, vc pode ver qual a melhor alternativa para o nivel de progressão, lembrando que é um treino, então a progressão precisa ser razoavel nem para ficar dificil demais de cara e nem manter a facilidade pois se nao o paciente perde o engajamento do treino certo? ... chuva orfa acho que pode apagar... E eu estava pensando em colocar o fundo do agente focus mais claro, O melhor seria um branco levemente acinzentado ou azulado, como #F5F7FA ou #F3F6F9, com uma borda cinza-azulada bem discreta. Assim, evita claridade excessiva e mantém a tela elegante. O que vc acha?
+
+## 02/08/2026 15:28
+perfeito, pode seguir
