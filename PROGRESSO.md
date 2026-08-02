@@ -3,6 +3,35 @@
 > Checkpoint de contexto para continuidade entre sessões. Atualizado automaticamente.
 > 👉 Visão geral e handoff para o próximo Claude: **`ESTADO-DO-PROJETO.md`** (leia primeiro).
 
+## 🚧 EM ANDAMENTO (02/ago/2026) — FASE 1 da arquitetura clínica: perfil cognitivo dos 34
+
+**Regra da etapa (dela):** só análise e documentos. Nada de código, progressão, níveis, duração,
+carga, banco, interface, catálogo ou engine.
+
+**Fonte única:** `docs/architecture/CANONICAL_EXERCISES.md` (34 ACTIVE) — a Constituição dos
+exercícios, criada no cleanup anterior.
+
+**Roteamento fixado por ela:** Codex para tudo que cabe numa spec sobre o HEAD commitado; Claude
+direto só em ajuste pós-colheita, integração com contexto vivo ou Codex indisponível.
+`sol xhigh` = arquitetura/alto risco · `sol high` = acoplado · `terra high` = comum/testável ·
+`luna high` = repetitivo e barato de validar.
+
+**Fatiado em 3 lotes** (34 fichas de 20 itens não cabem num disparo):
+
+| Lote | Conteúdo | Motor | Estado |
+|---|---|---|---|
+| **A** | doc 01 (taxonomia) + 12 fichas: Atenção e Velocidade | `sol xhigh` | 🔄 rodando (lab `perfilA`) |
+| **B** | 12 fichas: Memória | `sol xhigh` | ⬜ |
+| **C** | 10 fichas (Executivas/Funcional/Social) + matriz + JSON + doc 04 | `sol xhigh` | ⬜ |
+
+**Documentos-alvo:** `docs/clinical-architecture/01-cognitive-domain-taxonomy.md` ·
+`02-exercise-cognitive-profiles.md` · `03-cognitive-matrix.md` · `cognitive-matrix.json` ·
+`04-clinical-review-questions.md`.
+
+**Proibido nesta fase:** atribuir carga, duração, dose, ordem ideal ou fadiga — só o PERFIL
+(quais processos a mecânica recruta, 0–3). Fatores que influenciarão carga podem ser registrados.
+
+
 ## 📌 CATÁLOGO CANÔNICO CONSOLIDADO (02/ago/2026) — decisão dela, DEFINITIVA
 
 **Fonte única de verdade: `docs/auditoria-plano-terapeutico/16-lista-canonica.md` — 34 exercícios ACTIVE.**
