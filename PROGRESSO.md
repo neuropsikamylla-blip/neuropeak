@@ -3,7 +3,11 @@
 > Checkpoint de contexto para continuidade entre sessões. Atualizado automaticamente.
 > 👉 Visão geral e handoff para o próximo Claude: **`ESTADO-DO-PROJETO.md`** (leia primeiro).
 
-## ✅ CONCLUÍDO (2026-08-02, madrugada) — Vigilância: alvos regerados por ela + escada pela dificuldade medida (v2.61.0)
+## ✅ CONCLUÍDO (2026-08-02, madrugada) — Vigilância: 8 pares de pipas, alvos regerados, escada pela dificuldade medida (v2.61.0 → v2.62.0)
+
+**Segunda rodada (v2.62.0):** ela regerou também o **terracota** e mandou **2 pares novos** — **P07 verde musgo** e **P08 vinho**. ΔE Lab final: P04 22,8 · P01 19,3 · P03 **14,3** (era 19,4) · P07 13,8 · P02 13,0 · P08 11,3. **Escada dos 10 níveis refeita:** os 6 pares de tom entram em ordem de dificuldade medida (níveis 1-6), os 2 mais difíceis (P02, P08) voltam com arranjo irregular (7-8), laços no 9 e faixa diagonal no 10. `PIPA_V=3`. Observação de estilo: os pares novos têm **rabiola ondulada** (os antigos, reta) — não atrapalha (cada rodada usa um par só), mas se ela quiser uniformidade visual entre níveis, é regerar.
+
+### Primeira rodada (v2.61.0)
 
 **Pedido dela:** *"vigilancia percebi que a pipa está mto diferente... atualizei as pipas ALVOS verifica"*.
 
