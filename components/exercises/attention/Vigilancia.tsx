@@ -136,7 +136,7 @@ export function Vigilancia({ difficulty, theme, onComplete }: Props) {
 
     setFb({ correto, corretaPos, tocadaPos, classe });
     setFase("feedback");
-    const dur = correto ? 900 : 1800;
+    const dur = correto ? 900 : 2600;  // erro: tempo de OLHAR onde estava a certa
     timers.current.push(setTimeout(() => {
       if (tempoAcabouRef.current) { encerrarRef.current(); return; }
       if (tentativaRef.current >= BLOCO_TENTATIVAS) { finalizarBloco(); return; }
@@ -318,11 +318,17 @@ export function Vigilancia({ difficulty, theme, onComplete }: Props) {
               <img src={alvoImg} alt="" draggable={false}
                 style={{ position: "absolute", left: cCorr.x - kiteW / 2, top: cCorr.y - kiteH / 2, width: kiteW, height: kiteH, objectFit: "contain", zIndex: 7 }} />
               {!fb.correto && fb.tocadaPos !== fb.corretaPos && (() => { const ct = posToXY(fb.tocadaPos); return (
-                <div className="absolute rounded-full" style={{ left: ct.x - kiteW * 0.6, top: ct.y - kiteH * 0.5, width: kiteW * 1.2, height: kiteH, border: "2px dashed rgba(239,68,68,0.7)", zIndex: 6 }} />
+                <>
+                  <div className="absolute rounded-full" style={{ left: ct.x - kiteW * 0.6, top: ct.y - kiteH * 0.5, width: kiteW * 1.2, height: kiteH, border: "2px dashed rgba(239,68,68,0.7)", zIndex: 6 }} />
+                  {/* liga o que ele escolheu ao lugar certo — mostra a distância do erro */}
+                  <svg className="absolute inset-0 pointer-events-none" style={{ zIndex: 6 }} width={dims.w} height={dims.h}>
+                    <line x1={ct.x} y1={ct.y} x2={cCorr.x} y2={cCorr.y} stroke="rgba(255,255,255,0.75)" strokeWidth={2} strokeDasharray="6 5" />
+                  </svg>
+                </>
               ); })()}
               <div className="absolute bottom-4 left-1/2 -translate-x-1/2 px-5 py-2 rounded-full text-sm font-bold z-10"
                 style={{ background: fb.correto ? "rgba(22,163,74,0.95)" : "rgba(30,41,59,0.95)", color: "#fff" }}>
-                {fb.correto ? "Correto!" : "A pipa diferente estava aqui."}
+                {fb.correto ? "Correto!" : "A pipa diferente estava AQUI 👆"}
               </div>
             </>
           );
