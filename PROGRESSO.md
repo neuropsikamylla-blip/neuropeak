@@ -3,6 +3,29 @@
 > Checkpoint de contexto para continuidade entre sessões. Atualizado automaticamente.
 > 👉 Visão geral e handoff para o próximo Claude: **`ESTADO-DO-PROJETO.md`** (leia primeiro).
 
+## ✅ CONCLUÍDO (2026-08-02, madrugada) — Vigilância: alvos regerados por ela + escada pela dificuldade medida (v2.61.0)
+
+**Pedido dela:** *"vigilancia percebi que a pipa está mto diferente... atualizei as pipas ALVOS verifica"*.
+
+- **Ela tinha razão, e dá para medir.** ΔE Lab entre o corpo do alvo e o do distrator:
+  Ameixa **46,3 → 19,3** · Azul ardósia **25,3 → 13,0** · Verde sálvia **33,3 → 22,8**. Os alvos
+  antigos eram de outra família de cor (ameixa quase branco contra rosa escuro) — o alvo saltava aos
+  olhos e o exercício perdia a função de vigilância.
+- **Formato:** as 3 imagens novas vieram com o **xadrez de transparência achatado** (fundo
+  quadriculado gravado como pixel). Removido por limiar (o xadrez fica em `dif` 2–11, a pipa passa de
+  30) + `fill_holes`; alfa real restaurado, 400×600 RGBA como as demais. ⚠️ Se der para exportar PNG
+  com transparência de verdade, é melhor — mas dá para consertar assim.
+- **Escada de níveis reordenada pela dificuldade REAL** (`lib/vigilancia-dados.ts`): P04 (22,8) →
+  P03 (19,4) → P01 (19,3) → P02 (13,0). Antes começava em 19,3, **caía para o par mais difícil no
+  nível 3** e terminava no mais fácil nos níveis 7-8. `dificuldadeVisual` e `deltaELab` gravados no
+  `pipas_manifest.json`.
+- **`PIPA_V=2`** (cache-bust) porque o arquivo mudou mantendo o nome — sem isso o navegador serviria
+  a pipa antiga.
+- **Pendente:** o par **P03 (terracota)** não foi regerado por ela (segue o alvo de 31/jul). Por
+  coincidência o ΔE dele (19,4) ficou coerente com os novos, então está usável — mas, se ela quiser
+  uniformizar o critério, é o próximo a regerar.
+- Backup das pipas antigas: `~/neuropeak-asset-backups/vigilancia-pipas-bak-20260802`.
+
 ## ⏭️ PRÓXIMA TAREFA (recebida 01/ago 18h, NÃO iniciada — janela em 85%)
 
 **Informação em Foco — FASE 1: correção estrutural.** Spec completa dela gravada em
