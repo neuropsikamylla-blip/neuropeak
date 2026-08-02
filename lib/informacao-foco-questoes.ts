@@ -23,15 +23,18 @@ import {
 export type CampoKey =
   | "conteudo" | "preco" | "validade" | "saches" | "unidades" | "rendimento"
   | "tipo" | "sabor" | "lactose" | "gluten" | "acucar" | "alergenicos"
-  | "conservacao" | "cacau";
+  | "conservacao" | "cacau"
+  /** virtual: a resposta está IMPRESSA na embalagem, nunca no quadro funcional. */
+  | "fraseEmbalagem";
 
 export type TipoQuestao =
   | "localizacao" | "comparacao" | "duasCondicoes" | "tresCondicoes"
-  | "validade" | "conservacao" | "ingredientes" | "alergenicos" | "situacao";
+  | "validade" | "conservacao" | "ingredientes" | "alergenicos" | "situacao"
+  | "leituraEmbalagem";
 
 export const TIPOS_QUESTAO: TipoQuestao[] = [
   "localizacao", "comparacao", "duasCondicoes", "tresCondicoes",
-  "validade", "conservacao", "ingredientes", "alergenicos", "situacao",
+  "validade", "conservacao", "ingredientes", "alergenicos", "situacao", "leituraEmbalagem",
 ];
 
 export interface Validade { mes: number; ano: number }
@@ -46,7 +49,7 @@ export interface ProdutoNaQuestao {
 
 export type Operador =
   | "igual" | "maiorOuIgual" | "menorOuIgual" | "menor" | "maior"
-  | "eVerdadeiro" | "eFalso" | "contem" | "naoContem" | "minimo" | "maximo";
+  | "eVerdadeiro" | "eFalso" | "contem" | "naoContem" | "minimo" | "maximo" | "temFrase";
 
 export interface Condicao {
   campo: CampoKey;
@@ -125,7 +128,7 @@ export function labelCampo(k: CampoKey, p?: ProdutoCatalogo): string {
     preco: "Preço", validade: "Validade", saches: "Quantidade", unidades: "Quantidade",
     rendimento: "Rendimento", tipo: "Tipo", sabor: "Sabor", lactose: "Lactose",
     gluten: "Glúten", acucar: "Açúcar", alergenicos: "Alérgenos",
-    conservacao: "Conservação", cacau: "Cacau",
+    conservacao: "Conservação", cacau: "Cacau", fraseEmbalagem: "Na embalagem",
   };
   return m[k as Exclude<CampoKey, "conteudo">];
 }
@@ -147,6 +150,7 @@ export function valorCampo(pq: ProdutoNaQuestao, k: CampoKey): string {
     case "alergenicos": return p.alergenicos?.length ? `Contém ${p.alergenicos.join(", ")}` : "Sem alérgenos declarados";
     case "conservacao": return p.conservacao ? fmtConservacao(p.conservacao) : "—";
     case "cacau": return p.cacauPct != null ? `${p.cacauPct}%` : "—";
+    case "fraseEmbalagem": return "";   // nunca aparece no quadro
   }
 }
 
@@ -168,7 +172,26 @@ export function temCampo(p: ProdutoCatalogo, k: CampoKey): boolean {
     case "alergenicos": return true;
     case "conservacao": return p.conservacao != null;
     case "cacau": return p.cacauPct != null;
+    case "fraseEmbalagem": return (p.frasesNaEmbalagem?.length ?? 0) > 0 && p.directPackageReadingEnabled === true;
   }
+}
+
+/**
+ * Qual campo do quadro a frase impressa revelaria. Se a frase fala em "10 sachês",
+ * o campo "saches" NÃO pode aparecer no quadro — senão a resposta está dada (§9 da Fase 2).
+ */
+export function campoReveladoPor(frase: string): CampoKey | null {
+  const f = frase.toLowerCase();
+  if (/\bsach[êe]s?\b|envelopes?/.test(f)) return "saches";
+  if (/\bunidades?\b/.test(f)) return "unidades";
+  if (/rende|por[çc][õo]es|copos/.test(f)) return "rendimento";
+  if (/cacau/.test(f)) return "cacau";
+  if (/lactose/.test(f)) return "lactose";
+  if (/gl[úu]ten/.test(f)) return "gluten";
+  if (/a[çc][úu]car/.test(f)) return "acucar";
+  if (/congelado|refrigerado|abrigo da luz|local seco/.test(f)) return "conservacao";
+  if (/\bg\b|\bkg\b|\bml\b|\bl\b/.test(f)) return "conteudo";
+  return "tipo";      // "extra virgem", "integral", "tipo 1", "de Modena"…
 }
 
 // ── Avaliação de condição (pura, sem texto) ──────────────────────────────────
@@ -209,6 +232,7 @@ export function satisfaz(pq: ProdutoNaQuestao, c: Condicao, todos?: ProdutoNaQue
       return c.campo === "lactose" ? p.lactose === false
         : c.campo === "gluten" ? p.gluten === false
         : c.campo === "acucar" ? p.acucarAdicionado === false : false;
+    case "temFrase": return (p.frasesNaEmbalagem ?? []).some((f) => f.toLowerCase() === String(c.valor).toLowerCase());
     case "contem": return (p.alergenicos ?? []).includes(c.valor as string);
     case "naoContem": return !(p.alergenicos ?? []).includes(c.valor as string);
     case "minimo": case "maximo": {
@@ -278,11 +302,41 @@ export const PARAMS_POR_NIVEL: ParametrosQuestao[] = [
 ];
 export const paramsDoNivel = (n: number) => PARAMS_POR_NIVEL[Math.min(8, Math.max(1, Math.round(n))) - 1];
 
+/**
+ * Composição da sessão (§16/§17 da Fase 2): a cada 10 atividades, ~7 leem o quadro
+ * funcional, ~2 são situação do cotidiano e ~1 é leitura direta da embalagem.
+ * Isto é DISTRIBUIÇÃO de modalidade, não peso de dificuldade: dentro da modalidade os
+ * tipos entram por rodízio, sem sorteio ponderado.
+ */
+export type Modalidade = "quadro" | "situacao" | "embalagem";
+const PADRAO_MODALIDADES: Modalidade[] = [
+  "quadro", "quadro", "situacao", "quadro", "quadro",
+  "embalagem", "quadro", "situacao", "quadro", "quadro",
+];
+
+/** Modalidade da atividade `indice` (0-based), respeitando o que o nível liberou. */
+export function modalidadeDaAtividade(indice: number, nivel: number): Modalidade {
+  const m = PADRAO_MODALIDADES[indice % PADRAO_MODALIDADES.length];
+  if (m === "situacao" && nivel < 5) return "quadro";
+  if (m === "embalagem" && nivel < 6) return "quadro";
+  return m;
+}
+
+/** Tipo da atividade: modalidade decide o "onde ler"; o rodízio decide o "o quê". */
+export function tipoDaAtividade(indice: number, nivel: number): TipoQuestao {
+  const m = modalidadeDaAtividade(indice, nivel);
+  if (m === "situacao") return "situacao";
+  if (m === "embalagem") return "leituraEmbalagem";
+  const doQuadro = tiposDoNivel(nivel).filter((t) => t !== "situacao" && t !== "leituraEmbalagem");
+  return doQuadro[indice % doQuadro.length];
+}
+
 /** Tipos liberados por nível — carga, não peso: nada de sorteio ponderado. */
 export function tiposDoNivel(n: number): TipoQuestao[] {
   const base: TipoQuestao[] = ["localizacao", "comparacao"];
   if (n >= 3) base.push("duasCondicoes", "validade", "conservacao", "ingredientes", "alergenicos");
   if (n >= 5) base.push("situacao");
+  if (n >= 6) base.push("leituraEmbalagem");
   if (n >= 7) base.push("tresCondicoes");
   return base;
 }
@@ -359,6 +413,14 @@ const condValidadeApos: FabricaCondicao = (a) => {
     texto: `vence depois de ${ref}`, resumo: `Validade após ${ref}` };
 };
 
+const condFraseEmbalagem: FabricaCondicao = (a, rnd) => {
+  const p = a.produto;
+  if (!p.directPackageReadingEnabled || !p.frasesNaEmbalagem?.length) return null;
+  const frase = pick(p.frasesNaEmbalagem, rnd);
+  return { campo: "fraseEmbalagem", operador: "temFrase", valor: frase,
+    texto: `informa “${frase}” na embalagem`, resumo: `“${frase}” na embalagem` };
+};
+
 const FABRICAS_POR_TIPO: Record<TipoQuestao, FabricaCondicao[]> = {
   localizacao: [condConteudoExato, condSaches, condUnidades, condCacau, condTipo],
   comparacao: [],                                   // usa mínimo/máximo, montado à parte
@@ -368,6 +430,7 @@ const FABRICAS_POR_TIPO: Record<TipoQuestao, FabricaCondicao[]> = {
   conservacao: [condConservacao],
   ingredientes: [condSemLactose, condComLactose, condSemGluten, condSemAcucar],
   alergenicos: [condAlergenico],
+  leituraEmbalagem: [condFraseEmbalagem],
   situacao: [condConteudoExato, condConteudoMinimo, condPrecoMaximo, condSemLactose, condSemAcucar, condTipo, condCacau, condSaches],
 };
 
@@ -384,6 +447,7 @@ function juntar(partes: string[]): string {
 function textoPergunta(tipo: TipoQuestao, cs: Condicao[]): string {
   const lista = juntar(cs.map((c) => c.texto));
   if (tipo === "situacao") return "Qual produto atende ao pedido?";
+  if (tipo === "leituraEmbalagem") return `Olhe as embalagens: qual produto ${lista}?`;
   return `Qual produto ${lista}?`;
 }
 
@@ -526,14 +590,15 @@ function escolherDistratores(
 
 function camposDoQuadro(
   produtos: ProdutoNaQuestao[], exigidos: CampoKey[], params: ParametrosQuestao, rnd: Rnd,
+  proibidos: CampoKey[] = [],
 ): CampoKey[] {
   const ordemBase: CampoKey[] = ["conteudo", "preco", "validade", "tipo", "conservacao",
     "lactose", "gluten", "acucar", "sabor", "saches", "unidades", "rendimento", "alergenicos", "cacau"];
   const disponiveis = ordemBase.filter(
-    (c) => !exigidos.includes(c) && produtos.every((pq) => temCampo(pq.produto, c)));
+    (c) => !exigidos.includes(c) && !proibidos.includes(c) && produtos.every((pq) => temCampo(pq.produto, c)));
   const extras = (params.ordemCamposVariavel ? shuffle(disponiveis, rnd) : disponiveis)
     .slice(0, Math.max(0, params.nCampos - exigidos.length));
-  const todos = [...exigidos, ...extras];
+  const todos = [...exigidos.filter((c) => c !== "fraseEmbalagem"), ...extras];
   if (params.ordemCamposVariavel) return shuffle(todos, rnd);
   return ordemBase.filter((c) => todos.includes(c));   // posição previsível nos níveis baixos
 }
@@ -543,7 +608,12 @@ function finalizar(
   params: ParametrosQuestao, rnd: Rnd,
 ): Questao | null {
   const exigidos = [...new Set(cs.map(campoDaCondicao))];
-  const camposVisiveis = camposDoQuadro(produtos, exigidos, params, rnd);
+  // leitura direta: o campo que a frase revelaria fica FORA do quadro (§9 da Fase 2)
+  const proibidos = cs
+    .filter((c) => c.campo === "fraseEmbalagem")
+    .map((c) => campoReveladoPor(String(c.valor)))
+    .filter((c): c is CampoKey => c !== null);
+  const camposVisiveis = camposDoQuadro(produtos, exigidos, params, rnd, proibidos);
   const alvo = produtos[correta];
   const pedido = cs.map((c) => c.resumo).join(" · ");
   const ehSituacao = tipo === "situacao";
@@ -613,7 +683,16 @@ export function motivoInvalidez(q: Questao): string | null {
   if (q.produtos[q.correta] !== corretos[0]) return "corretaErrada";
 
   // campos exigidos visíveis e presentes em todos os produtos
-  if (!q.camposExigidos.every((c) => q.camposVisiveis.includes(c))) return "campoExigidoOculto";
+  const exigidosReais = q.camposExigidos.filter((c) => c !== "fraseEmbalagem");
+  if (!exigidosReais.every((c) => q.camposVisiveis.includes(c))) return "campoExigidoOculto";
+  if (q.camposVisiveis.includes("fraseEmbalagem")) return "fraseNoQuadro";
+  for (const c of q.condicoes) {
+    if (c.campo !== "fraseEmbalagem") continue;
+    const revelado = campoReveladoPor(String(c.valor));
+    if (revelado && q.camposVisiveis.includes(revelado)) return "quadroEntregaResposta";
+    // só produto autorizado entra nesta modalidade
+    if (!q.produtos[q.correta].produto.directPackageReadingEnabled) return "leituraNaoAutorizada";
+  }
   if (!q.camposVisiveis.every((c) => q.produtos.every((pq) => temCampo(pq.produto, c)))) return "campoAusenteEmProduto";
   if (q.camposVisiveis.length < 3) return "poucosCampos";
 

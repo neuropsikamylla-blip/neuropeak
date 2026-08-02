@@ -1,11 +1,11 @@
 import { describe, it, expect } from "vitest";
 import {
   gerarQuestao, montarQuestao, criarSnapshot, validarQuestao, motivoInvalidez,
-  labelCampo, valorCampo, temCampo, satisfaz, explicarErro, registroDe, motivoRepeticao,
-  TIPOS_QUESTAO, PARAMS_PADRAO,
+  labelCampo, valorCampo, temCampo, satisfaz, explicarErro, registroDe, motivoRepeticao, campoReveladoPor,
+  TIPOS_QUESTAO, PARAMS_PADRAO, modalidadeDaAtividade, tipoDaAtividade, tiposDoNivel,
   type ParametrosQuestao, type Questao, type TipoQuestao, type Snapshot, type RegistroHistorico,
 } from "./informacao-foco-questoes";
-import { dimensaoDe, produtoPorId } from "@/data/informacao-foco-catalogo";
+import { dimensaoDe, produtoPorId, CATALOGO_PRODUTOS } from "@/data/informacao-foco-catalogo";
 
 // Gerador determinístico: as falhas se reproduzem.
 function rndSeed(seed: number) {
@@ -311,4 +311,78 @@ describe("Regra de não repetição (§13)", () => {
       { ...r, assinatura: "b", camposChave: "y", produtoCorreto: "outro2" },
     ])).toBe("tresDoMesmoTipoSeguidas");
   });
+});
+
+describe("Leitura direta da embalagem (Fase 2 §9/§10)", () => {
+  it("toda frase do catálogo mapeia para um campo do quadro", () => {
+    for (const p of CATALOGO_PRODUTOS) {
+      for (const f of p.frasesNaEmbalagem ?? []) {
+        expect(campoReveladoPor(f), `frase sem campo: "${f}" (${p.id})`).not.toBeNull();
+      }
+    }
+  });
+
+  it("só usa produto autorizado e o quadro NUNCA entrega a resposta", () => {
+    const rnd = rndSeed(1201);
+    const snap = criarSnapshot(rnd);
+    let vistas = 0;
+    for (let i = 0; i < 800; i++) {
+      const q = montarQuestao({ tipo: "leituraEmbalagem", params: NIVEIS[6], snapshot: snap, rnd });
+      if (!q) continue;
+      vistas++;
+      const alvo = q.produtos[q.correta].produto;
+      expect(alvo.directPackageReadingEnabled, `${alvo.id} não autorizado`).toBe(true);
+      expect(alvo.revisar ?? false).toBe(false);
+      // a frase é do alvo e de mais ninguém
+      const frase = String(q.condicoes[0].valor);
+      expect(alvo.frasesNaEmbalagem).toContain(frase);
+      for (let i2 = 0; i2 < q.produtos.length; i2++) {
+        if (i2 === q.correta) continue;
+        expect(q.produtos[i2].produto.frasesNaEmbalagem ?? []).not.toContain(frase);
+      }
+      // o campo que a frase revelaria não está no quadro
+      const revelado = campoReveladoPor(frase);
+      expect(q.camposVisiveis).not.toContain(revelado);
+      expect(q.camposVisiveis).not.toContain("fraseEmbalagem");
+      expect(motivoInvalidez(q)).toBeNull();
+    }
+    expect(vistas).toBeGreaterThan(100);
+  }, 90_000);
+});
+
+describe("Composição da sessão (Fase 2 §16)", () => {
+  it("em 10 atividades do nível alto: ~70% quadro, ~20% situação, ~10% embalagem", () => {
+    const conta = { quadro: 0, situacao: 0, embalagem: 0 };
+    for (let i = 0; i < 10; i++) conta[modalidadeDaAtividade(i, 7)]++;
+    expect(conta.quadro).toBe(7);
+    expect(conta.situacao).toBe(2);
+    expect(conta.embalagem).toBe(1);
+  });
+
+  it("níveis iniciais não recebem situação nem leitura da embalagem", () => {
+    for (let nivel = 1; nivel <= 4; nivel++) {
+      for (let i = 0; i < 20; i++) {
+        expect(modalidadeDaAtividade(i, nivel), `nível ${nivel}`).toBe("quadro");
+        expect(["situacao", "leituraEmbalagem"]).not.toContain(tipoDaAtividade(i, nivel));
+      }
+    }
+    for (let i = 0; i < 20; i++) expect(modalidadeDaAtividade(i, 5)).not.toBe("embalagem");
+  });
+
+  it("a sessão gerada de verdade respeita a composição e continua válida", () => {
+    const rnd = rndSeed(1301);
+    const snap = criarSnapshot(rnd);
+    const hist: RegistroHistorico[] = [];
+    const modalidades: string[] = [];
+    for (let i = 0; i < 10; i++) {
+      const tipo = tipoDaAtividade(i, 7);
+      const { questao } = gerarQuestao(tipo, NIVEIS[6], snap, rnd, hist, tiposDoNivel(7));
+      if (!questao) continue;
+      modalidades.push(questao.modalidade);
+      expect(motivoInvalidez(questao)).toBeNull();
+      hist.push(registroDe(questao));
+    }
+    expect(modalidades.filter((m) => m === "quadro").length).toBeGreaterThanOrEqual(6);
+    expect(modalidades.filter((m) => m === "situacao").length).toBeGreaterThanOrEqual(1);
+  }, 30_000);
 });
