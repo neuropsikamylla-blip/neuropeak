@@ -3,6 +3,23 @@
 > Checkpoint de contexto para continuidade entre sessões. Atualizado automaticamente.
 > 👉 Visão geral e handoff para o próximo Claude: **`ESTADO-DO-PROJETO.md`** (leia primeiro).
 
+## 🚧 EM ANDAMENTO (02/ago/2026) — Focus Agentes: MODO ÚNICO
+
+**Decisão dela, aprovada:** `docs/FOCUS-AGENTES-MODO-UNICO.md` (escada de 13 passos, relatório por
+função cognitiva, fundo `#F3F6F9`, Chuva órfã removida).
+
+**Passos (cada um termina com prova + commit):**
+1. ✅ Decisão em arquivo + este plano.
+2. **Remover a Chuva órfã** (`FocusRain.tsx`, 1.056 linhas, ninguém importa) — antes, extrair a
+   lógica de comando multi-alvo sem sobreposição. *Pronto quando:* `tsc` 0 e testes verdes sem ela.
+3. **Comandos novos + escada** (Codex): dois alvos · mudança de regra · `STEPS` conforme a tabela.
+   *Pronto quando:* testes de `lib/focus/commands.ts` cobrindo alvo único por sub-regra, sem
+   sobreposição, e a escada com uma variável nova por passo.
+4. **Tirar o seletor de modo + relatório por função cognitiva** (`lib/focus-report.ts`, página do
+   paciente do terapeuta). *Pronto quando:* relatório mostra as 4 funções e sessões antigas não quebram.
+5. **Fundo `#F3F6F9`** + inversão dos textos da barra de comando. *Pronto quando:* conferência
+   VISUAL minha nos 3 temas antes de publicar.
+
 ## ✅ CORR-021 RESOLVIDO (02/ago/2026) — teto da progressão do Focus vira parâmetro (v2.65.4)
 
 **Ciclo Codex completo:** spec (`docs/spec-corr-021-focus-teto.md`) → `gpt-5.6-terra` high no lab
