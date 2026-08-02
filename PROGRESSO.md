@@ -3,6 +3,25 @@
 > Checkpoint de contexto para continuidade entre sessões. Atualizado automaticamente.
 > 👉 Visão geral e handoff para o próximo Claude: **`ESTADO-DO-PROJETO.md`** (leia primeiro).
 
+## 🚧 EM ANDAMENTO (02/ago/2026) — Informação em Foco: FASE 2
+
+**Autorização dela:** *"dei uma olhada agora e parece que está ok, não testei ela inteira, mas pare
+ok! podemos ir para fase 2"*. ⚠️ **Validação PARCIAL** — ela não rodou uma sessão inteira. Se
+aparecer defeito do motor (Fase 1) durante a Fase 2, corrigir na hora, antes de seguir.
+
+**Spec:** `docs/INFORMACAO-EM-FOCO-FASE2-CARTOES-E-SITUACOES.md`.
+
+**Passos (cada um termina com prova + commit):**
+- **F2.4a** motor: tipo **leitura direta da embalagem** (só produtos com `directPackageReadingEnabled`
+  e frase confirmada; o quadro NÃO pode repetir a informação avaliada). *Prova:* teste que verifica,
+  para toda frase do catálogo, qual campo ela revela — e que esse campo fica fora do quadro.
+- **F2.4b** composição da sessão: ~70% quadro · ~10% leitura da embalagem · ~20% situação.
+- **F2.1** ProductCard novo: imagem 150–175 px, botão "Ampliar embalagem" que NÃO seleciona o
+  cartão, quadro funcional em linhas.
+- **F2.3** modal de ampliação acessível (Escape, foco contido, retorno de foco, teclado).
+- **F2.5** feedback pedagógico em 2 tentativas + destaque só depois da resposta.
+- **F2.6** responsividade (4/2/1 cartões) e acessibilidade (teclado, leitor de tela, sem info só por cor).
+
 ## 🔒 FECHAMENTO (02/ago/2026, madrugada) — v2.60.2 → **v2.64.1**, tudo em produção
 
 **Estado real:** git limpo · local = produção = **2.64.1** · **217 testes** (17 arquivos) · `tsc` 0 ·
