@@ -397,7 +397,14 @@ export function FocusAgents({ difficulty, theme, onComplete, exerciseId = "focus
     // por TEMPO — senão a rodada nunca termina se o paciente não tocar.
     clearOmissao();
     if (!cai) {
-      const tempoMs = Math.max(4200, 7000 - (stepRef.current + 1) * 450);
+      // Tempo da rodada (§ ela, 02/ago): "quando temos 2 comandos, acaba o tempo antes
+      // de eu conseguir clicar". Duas correções:
+      //  • ESCALA COM O Nº DE ALVOS — achar dois personagens custa ~o dobro de achar um;
+      //  • começa FOLGADO e só aperta nos passos altos, quando a agilidade já é o alvo
+      //    do treino (nos primeiros, o que se treina é a busca, não a pressa).
+      const nAlvos = (r.alvoIds?.length ?? 1);
+      const porAlvo = Math.max(4600, 9000 - stepRef.current * 420);
+      const tempoMs = porAlvo * nAlvos;
       omissaoRef.current = setTimeout(() => {
         if (respondidoRef.current || doneRef.current) return;
         respondidoRef.current = true; stopRaf();
