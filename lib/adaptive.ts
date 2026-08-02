@@ -1,4 +1,5 @@
 import type { AdaptiveResult, SessionData } from "@/types";
+import { FOCUS_MAX_LEVEL } from "@/lib/focus/progression";
 import { average } from "@/lib/utils";
 
 /**
@@ -134,9 +135,10 @@ export function calculateProgression(
 // Régua "padrão" aprovada pela Kamylla: nível 1 = 3,5s → nível 10 = 1,5s, medida
 // do momento em que o alvo aparece até o toque. Compartilhada entre a Chuva
 // (progressão intra-sessão, no cliente) e a arena (progressão entre sessões, aqui).
-const FOCUS_DETECT_TARGET_MS = [3500, 3300, 3050, 2800, 2600, 2400, 2200, 2000, 1750, 1500];
+// Níveis 11–13: calibração provisória, a confirmar com a Kamylla.
+const FOCUS_DETECT_TARGET_MS = [3500, 3300, 3050, 2800, 2600, 2400, 2200, 2000, 1750, 1500, 1400, 1300, 1200];
 export function focusDetectTargetMs(level: number): number {
-  const i = Math.min(10, Math.max(1, Math.round(level))) - 1;
+  const i = Math.min(FOCUS_DETECT_TARGET_MS.length, Math.max(1, Math.round(level))) - 1;
   return FOCUS_DETECT_TARGET_MS[i];
 }
 
@@ -145,10 +147,11 @@ export function calculateFocusProgression(
   accuracy: number,
   /** Detecção mediana da sessão (ms, do alvo aparecer ao toque). null/ausente = sem dado (não trava). */
   detectMedianMs?: number | null,
+  maxLevel: number = FOCUS_MAX_LEVEL,
 ): { nextLevel: number; action: "increase" | "maintain" | "decrease"; reason: string } {
-  const lvl = Math.min(9, Math.max(1, Math.round(level)));
+  const lvl = Math.min(maxLevel, Math.max(1, Math.round(level)));
   const pct = Math.round(accuracy * 100);
-  if (accuracy >= 0.80 && lvl < 9) {
+  if (accuracy >= 0.80 && lvl < maxLevel) {
     // CRITÉRIO DUPLO (VP + atenção): precisão sobe de nível só com ritmo dentro
     // do tempo-alvo do nível — preciso porém lento mantém (treina velocidade).
     const target = focusDetectTargetMs(lvl);

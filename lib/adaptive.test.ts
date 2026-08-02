@@ -69,11 +69,28 @@ describe("calculateProgression — teto de nível (CORR-001)", () => {
 });
 
 describe("calculateFocusProgression — critério duplo VP+atenção (16/jul)", () => {
-  it("régua de detecção: 3,5s no nível 1 → 1,5s no nível 10 (com clamp)", () => {
+  it("régua de detecção: mantém calibração até N10 e alcança N13 (com clamp)", () => {
     expect(focusDetectTargetMs(1)).toBe(3500);
     expect(focusDetectTargetMs(10)).toBe(1500);
     expect(focusDetectTargetMs(0)).toBe(3500);
-    expect(focusDetectTargetMs(15)).toBe(1500);
+    expect(focusDetectTargetMs(11)).toBe(1400);
+    expect(focusDetectTargetMs(13)).toBe(1200);
+    expect(focusDetectTargetMs(99)).toBe(1200);
+  });
+  it("nível 9 sobe para 10", () => {
+    expect(calculateFocusProgression(9, 0.9, 1000).nextLevel).toBe(10);
+  });
+  it("nível 12 sobe para o último passo", () => {
+    expect(calculateFocusProgression(12, 0.9, 1000).nextLevel).toBe(13);
+  });
+  it("no nível 13 mantém o teto e ainda pode descer", () => {
+    const atTop = calculateFocusProgression(13, 0.9, 1000);
+    expect(atTop.action).toBe("maintain");
+    expect(atTop.nextLevel).toBe(13);
+    expect(calculateFocusProgression(13, 0.3).nextLevel).toBe(12);
+  });
+  it("respeita um teto explícito menor", () => {
+    expect(calculateFocusProgression(9, 0.9, 1000, 9).nextLevel).toBe(9);
   });
   it("preciso E rápido sobe de nível", () => {
     const r = calculateFocusProgression(3, 0.9, 2000); // alvo N3 = 3050ms
@@ -85,6 +102,9 @@ describe("calculateFocusProgression — critério duplo VP+atenção (16/jul)", 
     expect(r.action).toBe("maintain");
     expect(r.nextLevel).toBe(3);
     expect(r.reason).toContain("velocidade");
+  });
+  it("nível alto preciso porém lento também mantém", () => {
+    expect(calculateFocusProgression(11, 0.9, 5000).action).toBe("maintain");
   });
   it("sem dado de detecção não trava a subida (sessões antigas)", () => {
     const r = calculateFocusProgression(3, 0.9);

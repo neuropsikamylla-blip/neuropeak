@@ -3,6 +3,7 @@ export const FOCUS_MODES = ["foco", "inibicao", "alternancia", "desafio"] as con
 export type FocusMode = (typeof FOCUS_MODES)[number];
 
 const LAST_FOCUS_STEP = 12;
+export const FOCUS_MAX_LEVEL = LAST_FOCUS_STEP + 1;
 
 function clampStep(step: number): number {
   return Math.max(0, Math.min(LAST_FOCUS_STEP, Math.round(step)));
