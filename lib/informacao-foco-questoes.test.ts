@@ -1,8 +1,9 @@
 import { describe, it, expect } from "vitest";
 import {
   gerarQuestao, montarQuestao, criarSnapshot, validarQuestao, motivoInvalidez,
-  labelCampo, valorCampo, temCampo, satisfaz, explicarErro, TIPOS_QUESTAO, PARAMS_PADRAO,
-  type ParametrosQuestao, type Questao, type TipoQuestao, type Snapshot,
+  labelCampo, valorCampo, temCampo, satisfaz, explicarErro, registroDe, motivoRepeticao,
+  TIPOS_QUESTAO, PARAMS_PADRAO,
+  type ParametrosQuestao, type Questao, type TipoQuestao, type Snapshot, type RegistroHistorico,
 } from "./informacao-foco-questoes";
 import { dimensaoDe, produtoPorId } from "@/data/informacao-foco-catalogo";
 
@@ -26,14 +27,14 @@ const NIVEIS: ParametrosQuestao[] = [
 
 /** Uma "sessão" = 10 questões encadeadas, com histórico anti-repetição. */
 function simularSessao(params: ParametrosQuestao, rnd: () => number, snap: Snapshot) {
-  const historico: string[] = [];
+  const historico: RegistroHistorico[] = [];
   const questoes: Questao[] = [];
   let descartadas = 0;
   for (let i = 0; i < 10; i++) {
     const tipo = TIPOS_QUESTAO[i % TIPOS_QUESTAO.length];
     const { questao, descartes } = gerarQuestao(tipo, params, snap, rnd, historico);
     descartadas += descartes.length;
-    if (questao) { questoes.push(questao); historico.push(questao.assinatura); }
+    if (questao) { questoes.push(questao); historico.push(registroDe(questao)); }
   }
   return { questoes, descartadas };
 }
@@ -276,4 +277,38 @@ describe("Feedback do erro", () => {
     }
     expect(checados).toBeGreaterThan(100);
   }, 60_000);
+});
+
+describe("Regra de não repetição (§13)", () => {
+  it("numa sessão real: sem texto repetido, sem mesmos campos, sem produto correto seguido, sem 3 do mesmo tipo", () => {
+    const rnd = rndSeed(911);
+    const snap = criarSnapshot(rnd);
+    for (let s = 0; s < 400; s++) {
+      const hist: RegistroHistorico[] = [];
+      for (let i = 0; i < 10; i++) {
+        const tipo = TIPOS_QUESTAO[(i + s) % TIPOS_QUESTAO.length];
+        const { questao } = gerarQuestao(tipo, NIVEIS[4], snap, rnd, hist);
+        if (!questao) continue;
+        expect(motivoRepeticao(questao, hist), `sessão ${s} · questão ${i}`).toBeNull();
+        hist.push(registroDe(questao));
+      }
+      const assinaturas = hist.map((h) => h.assinatura);
+      for (const a of new Set(assinaturas)) {
+        expect(assinaturas.filter((x) => x === a).length, "no máximo 2 idênticas por sessão").toBeLessThanOrEqual(2);
+      }
+    }
+  }, 90_000);
+
+  it("cada motivo de recusa é detectado", () => {
+    const rnd = rndSeed(1013);
+    const snap = criarSnapshot(rnd);
+    const { questao: q } = gerarQuestao("localizacao", NIVEIS[3], snap, rnd);
+    const r = registroDe(q!);
+    expect(motivoRepeticao(q!, [r])).toBe("mesmoTextoNas3");
+    expect(motivoRepeticao(q!, [{ ...r, assinatura: "outra", camposChave: "x" }])).toBe("mesmoProdutoCorretoSeguido");
+    expect(motivoRepeticao(q!, [
+      { ...r, assinatura: "a", camposChave: "x", produtoCorreto: "outro" },
+      { ...r, assinatura: "b", camposChave: "y", produtoCorreto: "outro2" },
+    ])).toBe("tresDoMesmoTipoSeguidas");
+  });
 });

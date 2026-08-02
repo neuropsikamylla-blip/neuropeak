@@ -17,13 +17,28 @@ import { useTimedProgress } from "@/components/exercises/useExerciseEngine";
 import { playTTS, cancelTTS } from "@/lib/tts";
 import type { ExerciseResult, Theme } from "@/types";
 import {
-  gerarQuestao, criarSnapshot, valorCampo, labelCampo, explicarErro, paramsDoNivel, tiposDoNivel,
-  type Questao, type ProdutoNaQuestao, type CampoKey, type Snapshot, type TipoQuestao,
+  gerarQuestao, criarSnapshot, valorCampo, labelCampo, explicarErro, registroDe, paramsDoNivel, tiposDoNivel,
+  type Questao, type ProdutoNaQuestao, type CampoKey, type Snapshot, type TipoQuestao, type RegistroHistorico,
 } from "@/lib/informacao-foco-questoes";
 
 interface Props { difficulty: number; theme: Theme; onComplete: (result: ExerciseResult) => void; }
 
 const NIVEL_MAX = 8;
+// O snapshot (preço/validade) precisa sobreviver a um refresh acidental DENTRO da aba —
+// sem isso o mesmo produto mudaria de preço no meio da sessão (§4 da Fase 1).
+const CHAVE_SNAP = "np-info-foco-snapshot";
+function carregarSnapshot(): Snapshot {
+  if (typeof window !== "undefined") {
+    try {
+      const salvo = window.sessionStorage.getItem(CHAVE_SNAP);
+      if (salvo) return JSON.parse(salvo) as Snapshot;
+      const novo = criarSnapshot();
+      window.sessionStorage.setItem(CHAVE_SNAP, JSON.stringify(novo));
+      return novo;
+    } catch { /* sessionStorage bloqueado: segue sem persistir */ }
+  }
+  return criarSnapshot();
+}
 const nivelInicialDe = (d: number) => Math.max(1, Math.min(NIVEL_MAX, Math.round(d * 0.8)));
 
 function styles(theme: Theme) {
@@ -150,7 +165,7 @@ export function InformacaoEmFoco({ difficulty, theme, onComplete }: Props) {
   const [fase, setFase] = useState<"tutorial" | "play" | "fim">("tutorial");
   const nivelRef = useRef<number>(nivelInicialDe(difficulty));
   const snapshotRef = useRef<Snapshot | null>(null);      // preço/validade estáveis na sessão
-  const historicoRef = useRef<string[]>([]);              // assinaturas: não repetir
+  const historicoRef = useRef<RegistroHistorico[]>([]);    // não repetir (§13)
   const rodizioRef = useRef(0);                           // rotação de tipos, sem peso
   const descartadasRef = useRef(0);
   const [qNum, setQNum] = useState(1);
@@ -168,7 +183,7 @@ export function InformacaoEmFoco({ difficulty, theme, onComplete }: Props) {
   const usouPistaRef = useRef(false);
 
   const novaQuestao = useCallback((primeira = false) => {
-    if (!snapshotRef.current) snapshotRef.current = criarSnapshot();
+    if (!snapshotRef.current) snapshotRef.current = carregarSnapshot();
     const nivel = nivelRef.current;
     const tipos = tiposDoNivel(nivel);
     const tipo: TipoQuestao = tipos[rodizioRef.current++ % tipos.length];
@@ -176,7 +191,7 @@ export function InformacaoEmFoco({ difficulty, theme, onComplete }: Props) {
       tipo, paramsDoNivel(nivel), snapshotRef.current, Math.random, historicoRef.current, tipos,
     );
     descartadasRef.current += descartes.length;
-    if (q) historicoRef.current = [...historicoRef.current, q.assinatura].slice(-6);
+    if (q) historicoRef.current = [...historicoRef.current, registroDe(q)].slice(-8);
     setQuestao(q);
     setTentativas(0); setSelecao(null); setRevelou(false); setFb(null); setAjuda(false);
     usouPistaRef.current = false;
@@ -287,9 +302,11 @@ export function InformacaoEmFoco({ difficulty, theme, onComplete }: Props) {
               {`Nível ${nivelRef.current}`}
             </span>
           </div>
+          {/* O que a barra mede fica EXPLÍCITO: a sessão é por tempo, não por nº de questões.
+              Antes aparecia "Questão 7" ao lado de um "%" de tempo — parecia progresso errado. */}
           <div className="flex items-center justify-between mt-2 mb-1">
-            <span className={`text-xs font-semibold ${s.sub}`}>Questão {qNum}</span>
-            <span className={`text-xs ${s.sub}`}>{Math.round(progressPct)}%</span>
+            <span className={`text-xs font-semibold ${s.sub}`}>Atividade {qNum}</span>
+            <span className={`text-xs ${s.sub}`}>Tempo da sessão · {Math.round(progressPct)}%</span>
           </div>
           {/* progresso por TEMPO (sessão de ~6 min), não por nº de questões */}
           <div className={`h-2 rounded-full overflow-hidden ${s.isG ? "bg-white/10" : "bg-slate-200"}`}>

@@ -408,8 +408,8 @@ export interface EntradaGeracao {
   params: ParametrosQuestao;
   snapshot: Snapshot;
   rnd?: Rnd;
-  /** assinaturas das últimas questões — evita repetir (§13). */
-  historico?: string[];
+  /** histórico da sessão — evita repetição (§13). */
+  historico?: RegistroHistorico[];
 }
 
 export function montarQuestao(e: EntradaGeracao): Questao | null {
@@ -429,7 +429,7 @@ export function montarQuestao(e: EntradaGeracao): Questao | null {
 
   for (const grupo of grupos.slice(0, 6)) {
     const questao = tentarNoGrupo(grupo, tipo, params, snapshot, rnd, exigidosDoTipo);
-    if (questao && !(e.historico ?? []).slice(-3).includes(questao.assinatura)) return questao;
+    if (questao && !motivoRepeticao(questao, e.historico ?? [])) return questao;
   }
   return null;
 }
@@ -630,6 +630,36 @@ export function motivoInvalidez(q: Questao): string | null {
 
 export const validarQuestao = (q: Questao) => motivoInvalidez(q) === null;
 
+// ── Histórico da sessão: regra de NÃO REPETIÇÃO (§13 da Fase 1) ─────────────
+export interface RegistroHistorico {
+  assinatura: string;
+  tipo: TipoQuestao;
+  camposChave: string;
+  produtoCorreto: string;
+  categoria: Categoria;
+}
+
+export const registroDe = (q: Questao): RegistroHistorico => ({
+  assinatura: q.assinatura,
+  tipo: q.tipo,
+  camposChave: [...q.camposExigidos].sort().join("+"),
+  produtoCorreto: q.produtos[q.correta].produto.id,
+  categoria: q.categoria,
+});
+
+/** Devolve o motivo da recusa, ou null se a questão pode entrar agora. */
+export function motivoRepeticao(q: Questao, hist: RegistroHistorico[]): string | null {
+  const r = registroDe(q);
+  const u3 = hist.slice(-3);
+  if (u3.some((h) => h.assinatura === r.assinatura)) return "mesmoTextoNas3";
+  if (u3.some((h) => h.camposChave === r.camposChave)) return "mesmosCamposNas3";
+  if (hist[hist.length - 1]?.produtoCorreto === r.produtoCorreto) return "mesmoProdutoCorretoSeguido";
+  if (hist.length >= 2 && hist.slice(-2).every((h) => h.tipo === r.tipo)) return "tresDoMesmoTipoSeguidas";
+  if (hist.length >= 3 && hist.slice(-3).every((h) => h.categoria === r.categoria)) return "categoriaDemais";
+  if (hist.filter((h) => h.assinatura === r.assinatura).length >= 2) return "duasIdenticasNaSessao";
+  return null;
+}
+
 // ── Sessão: gera questões válidas, descartando e regerando o que falhar ─────
 export interface RegistroDescarte { tipo: TipoQuestao; motivo: string }
 
@@ -644,7 +674,7 @@ export interface ResultadoGeracao {
  */
 export function gerarQuestao(
   tipoPreferido: TipoQuestao, params: ParametrosQuestao, snapshot: Snapshot,
-  rnd: Rnd = Math.random, historico: string[] = [], tiposPermitidos: TipoQuestao[] = TIPOS_QUESTAO,
+  rnd: Rnd = Math.random, historico: RegistroHistorico[] = [], tiposPermitidos: TipoQuestao[] = TIPOS_QUESTAO,
 ): ResultadoGeracao {
   const descartes: RegistroDescarte[] = [];
   const ordem = [tipoPreferido, ...shuffle(tiposPermitidos.filter((t) => t !== tipoPreferido), rnd)];
