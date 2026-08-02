@@ -1,9 +1,6 @@
 # As 3 ultimas especificacoes dela (automatico; a mais nova por ultimo)
 # Na retomada: ler as 3, conectar com PROGRESSO.md e git, declarar e seguir.
 
-## 02/08/2026 09:52
-dei uma olhada agora e parece que está ok, não testei ela inteira, mas pare ok! podemos ir para fase 2
-
 ## 02/08/2026 14:04
 PARE antes de qualquer coisa. O repositório mudou por fora desta sessão, em outra
 sessão do Claude Code, enquanto você estava parada. Seu contexto está desatualizado.
@@ -88,3 +85,6 @@ a seguir, e já tem teste (`adaptive.test.ts`, procure "maxLevel 12").
 E confira se `focusDetectTargetMs` também assume 9 níveis: se assumir, o
 critério de velocidade quebra nos passos 10 a 13 e o conserto fica pela
 metade de novo.
+
+## 02/08/2026 15:02
+Focus Agentes (eu acho que aqui precisamos deixar o modo unitario, sem isso de terapeuta decidir) a progressão de dificuldade, misturar tudo de acordo com a progressão, eu já havia me esquecido das outras propostas extamente por isso o modo tem de ser unico, dentro dele vamos ter o comando "de achar apenas um agente com uma cor" "de achar um agente com uma cor e acessorio" "de acharmos 2 agentes com cores..." depois dois com acessorios... ter a mudança de regra Ache um agente azul, não, o amarelo ... ter a inibição marque todos os agentes vermelhos, menos o com o oculos enfim... isso pode ser inserido de acordo com a progressão de dificuldade o que acha? Me ajude analisar antes de mudar
