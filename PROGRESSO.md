@@ -3,6 +3,35 @@
 > Checkpoint de contexto para continuidade entre sessões. Atualizado automaticamente.
 > 👉 Visão geral e handoff para o próximo Claude: **`ESTADO-DO-PROJETO.md`** (leia primeiro).
 
+## ✅ CORR-021 RESOLVIDO (02/ago/2026) — teto da progressão do Focus vira parâmetro (v2.65.4)
+
+**Ciclo Codex completo:** spec (`docs/spec-corr-021-focus-teto.md`) → `gpt-5.6-terra` high no lab
+`corr021` → colheita revisada linha a linha pelo VP → aplicada e **provada no repositório real**
+(o lab não tem `node_modules` nem rede, então o Codex não conseguiu rodar as provas) → commit
+`9202ebc` → lab removido.
+
+**O que mudou**
+- `lib/focus/progression.ts` exporta **`FOCUS_MAX_LEVEL`** (`LAST_FOCUS_STEP + 1` = 13): fonte única
+  do teto, sem constante nova solta.
+- `calculateFocusProgression` ganhou 4º parâmetro **`maxLevel = FOCUS_MAX_LEVEL`**, no mesmo padrão
+  do `maxLevel` de `calculateProgression`. Os dois literais `9` saíram (`lib/adaptive.ts:149,151`).
+- **Régua de detecção estendida a 13 valores** — 11 = 1400 ms · 12 = 1300 · 13 = 1200, marcados no
+  código como **calibração PROVISÓRIA, a confirmar com a Kamylla**. O clamp usa o tamanho do array.
+- 6 testes novos em `lib/adaptive.test.ts` (o antigo `focusDetectTargetMs(15) === 1500` virou
+  `(99) === 1200`, coerente com a régua nova).
+
+**Provas:** `tsc` exit 0 · **236 testes / 18 arquivos** · build OK · produção `2.65.4` conferida.
+Único chamador (`app/api/sessions/route.ts:152`) passa 3 argumentos e herda o default 13 — nada a
+mudar na rota.
+
+**Achado durante a revisão (NÃO é regressão nova, é o próximo degrau):** `FocusRain.tsx` (a Chuva,
+modo Foco) tem **teto próprio `MAX_LEVEL = 10`** e `RAIN_CFG` com 10 níveis. Quem usa os 13 passos é
+`FocusAgents.tsx` (arena). Então um paciente restaurado nos níveis 11-13 é clampado para 10 ao
+entrar na Chuva. Decidir com ela: estender `RAIN_CFG` até 13 ou manter a Chuva com escala própria.
+
+**Pendente de decisão dela:** os valores 11-13 da régua de detecção (1400/1300/1200) são proposta
+minha seguindo a curva com desaceleração — ela aprovou só até o nível 10 (1500 ms).
+
 ## 🚩 (02/ago/2026) — Focus Agentes + teto de difficulty · **v2.65.2 e v2.65.3** (ESTREIA do ciclo Codex)
 
 **Estado real:** `main` = `d4734b1` = produção · versão **2.65.3** · **231 testes** (18 arquivos) ·
