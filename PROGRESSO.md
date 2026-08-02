@@ -21,7 +21,37 @@ a auditoria começa depois que o Focus (modo único) fechar.
 - Tela do plano: `app/(therapist)/pacientes/[id]/plano/page.tsx` (259 l) + `components/plano/*.tsx`
   (10 arquivos, 1.146 l no total). O seletor de duração da sessão está em `PlanBuilderSidebar.tsx:55`.
 
-## 🚧 EM ANDAMENTO (02/ago/2026) — Focus Agentes: MODO ÚNICO
+## ✅ CONCLUÍDO (02/ago/2026) — Focus Agentes: MODO ÚNICO + 3 defeitos que ela achou (v2.67.0)
+
+**Tudo em produção (`2.67.0`), 250 testes, tsc 0, build OK.** Os 5 passos do plano fechados:
+1. Decisão em arquivo (`docs/FOCUS-AGENTES-MODO-UNICO.md`) · 2. Chuva órfã removida (1.056 linhas) ·
+3. Comandos novos + escada de 13 passos (Codex `sol`) · 4. Fim do seletor de modo + relatório por
+FUNÇÃO COGNITIVA (Codex `terra`) · 5. Consertos + fundo claro.
+
+**Os 3 defeitos que ela reportou testando, todos resolvidos:**
+- **Dois alvos contando acerto com um toque só** (o mais grave — era falha da MINHA spec: criei
+  `alvoIds[]` no motor e proibi mexer no componente). Agora o 1º toque certo marca (anel verde) e a
+  rodada segue; só encerra com os dois. Erro no meio → "Achou 1 de 2", e o metadata grava
+  `multiAlvo {rodadas, completos, parciais}`.
+- **Personagens se cobrindo** → `separarPersonagens()` a cada quadro (eixo de menor penetração; na
+  queda só horizontal). Importa para a MEDIDA: alvo coberto infla o tempo de detecção, que decide a
+  subida de nível.
+- **Tamanhos diferentes** → medição das 144 artes por grupo: 135 consistentes, **9 fora** (o
+  `amarelo_chapeu` a 81%, o `verde_balao` a 110%). Reescaladas para a mediana do grupo, ancoradas
+  pelos pés. Backup em `~/neuropeak-asset-backups/agentes-personagens-bak-20260802`. `IMG_V` → `?v=2`.
+
+**Fundo `#F3F6F9`** (borda `#DDE3EC`) no lugar do navy: o agente azul se camuflava no `#0d2244` —
+num exercício em que a COR é o critério, isso era viés contra uma cor. Textos e cards invertidos junto.
+
+**Achado extra:** teste instável (`inclui distrator semelhante`) falhava ~1 em 3. Causa real:
+`compartilhaParte()` aceitava o LADO sozinho como semelhança ("pipa à direita" ~ "bola à direita"),
+então a cena "com semelhantes" podia sair sem nenhum distrator parecido. Gerador corrigido.
+
+**Aguardando o teste dela em produção.** Depois: auditoria do plano terapêutico (já registrada acima).
+
+<details><summary>Plano original dos 5 passos</summary>
+
+## (histórico) EM ANDAMENTO — Focus Agentes: MODO ÚNICO
 
 **Decisão dela, aprovada:** `docs/FOCUS-AGENTES-MODO-UNICO.md` (escada de 13 passos, relatório por
 função cognitiva, fundo `#F3F6F9`, Chuva órfã removida).
@@ -216,6 +246,8 @@ aparecer defeito do motor (Fase 1) durante a Fase 2, corrigir na hora, antes de 
 - **F2.3** modal de ampliação acessível (Escape, foco contido, retorno de foco, teclado).
 - **F2.5** feedback pedagógico em 2 tentativas + destaque só depois da resposta.
 - **F2.6** responsividade (4/2/1 cartões) e acessibilidade (teclado, leitor de tela, sem info só por cor).
+
+</details>
 
 </details>
 

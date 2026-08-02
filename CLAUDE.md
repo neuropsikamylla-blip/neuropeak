@@ -21,7 +21,7 @@ de **treino** (não de avaliação/diagnóstico). Ainda assim, a fidelidade das 
 (score/acurácia/progressão) importa: a **dificuldade adaptativa** decide o próximo nível a
 partir da acurácia, e o terapeuta acompanha a evolução do paciente por elas.
 
-- **Versão:** 2.65.4 (`package.json:3` — incrementar a cada atualização; exposta em `/api/version`)
+- **Versão:** 2.67.0 (`package.json:3` — incrementar a cada atualização; exposta em `/api/version`)
 - **Stack medida:** Next.js 15.5.18 (instalado; `package.json` declara `^15.3.9`), React 18,
   TypeScript 5 strict, Prisma 5.18 + PostgreSQL (Supabase), NextAuth v4, Tailwind 3, Radix UI, Vitest 4.
 - **Deploy:** Vercel (push na `main` → produção). Diretório: `/Users/kamyllahonorio/neuropeak`.
