@@ -15,7 +15,7 @@ const sessionSchema = z.object({
   score: z.number().min(0).max(100),
   accuracy: z.number().min(0).max(1),
   reactionTime: z.number().optional(),
-  difficulty: z.number().min(1).max(12),   // 11/12 = estágios de desafio da trilha (Ordem da História)
+  difficulty: z.number().min(1).max(13),   // 11/12 = estágios de desafio da trilha (Ordem da História); 13 = último passo do Focus Agentes. Tem que casar com a CHECK session_difficulty_range do banco (ver RUNBOOK-OPERACIONAL.md).
   duration: z.number(),
   metadata: z.record(z.unknown()).optional(),
 });

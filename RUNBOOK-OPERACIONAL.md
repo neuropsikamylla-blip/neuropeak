@@ -69,8 +69,51 @@ npx prisma db push       # cria as FKs no banco (revise o que ele propõe antes 
 ```sql
 ALTER TABLE "Session" ADD CONSTRAINT session_score_range      CHECK (score >= 0 AND score <= 100);
 ALTER TABLE "Session" ADD CONSTRAINT session_accuracy_range   CHECK (accuracy >= 0 AND accuracy <= 1);
+ALTER TABLE "Session" ADD CONSTRAINT session_difficulty_range CHECK (difficulty >= 1 AND difficulty <= 13);
+```
+
+> **Atenção ao reaplicar:** o teto de `difficulty` é **13**, não 10 (ampliado em 02/08/2026 —
+> ver a seção SCHEMA-02 logo abaixo). Reaplicar com 10 quebra o Desafio Supermercado (11-12),
+> a Ordem da História (11-12) e o Focus Agentes (13). O teto tem que casar com o
+> `sessionSchema` em `app/api/sessions/route.ts:18`.
+
+## SCHEMA-02 — teto de `difficulty` ampliado de 10 para 13 — ✅ APLICADO (2026-08-02)
+
+**O que era:** a CHECK `session_difficulty_range` limitava `difficulty` a **1–10** desde
+30/05/2026. Mas o código evoluiu e passou a usar níveis acima disso: Desafio Supermercado e
+Ordem da História chegam a 12 (correção CORR-001, v2.11.3), e o Focus Agentes tem 13 passos.
+O `sessionSchema` (`app/api/sessions/route.ts:18`) já aceitava 12 — **o banco é que recusava**.
+
+**Consequência real:** o `POST /api/sessions` de um paciente que passasse do nível 10 falharia
+no INSERT por violação da CHECK, e a sessão dele seria **perdida**. Medido em 02/08/2026 antes
+da correção: **zero** sessões gravadas com `difficulty > 10` em todo o banco, e a Ordem da
+História parada exatamente em 10 — o teto. O uso ainda era pequeno (29 sessões), então o dano
+provavelmente não chegou a se materializar; era risco iminente, não perda em massa.
+
+**O que foi feito** (verificado antes e depois, no banco de produção):
+
+```sql
+-- Confere que nenhuma sessão existente ficaria fora do novo range (deu 0):
+SELECT COUNT(*) FROM "Session" WHERE difficulty < 1 OR difficulty > 13;
+
+ALTER TABLE "Session" DROP CONSTRAINT IF EXISTS session_difficulty_range;
+ALTER TABLE "Session" ADD CONSTRAINT session_difficulty_range CHECK (difficulty >= 1 AND difficulty <= 13);
+```
+
+Verificado depois: `pg_get_constraintdef` devolve `difficulty >= 1 AND difficulty <= 13`, as
+três CHECK continuam presentes e as 29 sessões seguem intactas.
+
+**Como reverter**, se algum dia for preciso (só funciona se não houver sessão acima de 10):
+
+```sql
+ALTER TABLE "Session" DROP CONSTRAINT IF EXISTS session_difficulty_range;
 ALTER TABLE "Session" ADD CONSTRAINT session_difficulty_range CHECK (difficulty >= 1 AND difficulty <= 10);
 ```
+
+**Lição para a próxima vez:** o teto vive em **dois lugares** que não se conversam — o
+`sessionSchema` do Zod e a CHECK do banco. Mexer num sem o outro cria exatamente este defeito,
+e ele é silencioso: o código passa nos testes, e só quebra com um paciente real de alto
+desempenho. Ao mudar um, conferir o outro no mesmo ato.
 
 ### ⚠️ Nota — CHECK e `prisma db push`
 As CHECK **não existem no `schema.prisma`** (o Prisma não as suporta no schema), então um `db push` futuro **pode removê-las**. Saídas: reaplicar este SQL após um `db push`, **ou** migrar de `db push` para `prisma migrate` (versiona tudo). As **FKs** não têm esse problema (estão no schema).
