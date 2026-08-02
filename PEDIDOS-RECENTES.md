@@ -1,385 +1,6 @@
 # As 3 ultimas especificacoes dela (automatico; a mais nova por ultimo)
 # Na retomada: ler as 3, conectar com PROGRESSO.md e git, declarar e seguir.
 
-## 02/08/2026 18:59
-Antes de continuar a auditoria de carga, duração e modelos de execução, precisamos corrigir o inventário real das atividades.
-
-NÃO implemente mudanças ainda.
-
-NÃO altere código, banco, migrations, interface, progressão, duração ou exercícios.
-
-Sua tarefa agora é verificar quais atividades são realmente ativas e disponíveis no aplicativo atualmente, separar aliases e modalidades e corrigir os nomes exibidos.
-
-PROBLEMA IDENTIFICADO
-
-A auditoria anterior encontrou 41 definições em EXERCISE_DEFINITIONS, porém a interface atual do aplicativo mostra 34 atividades clínicas.
-
-Isso indica que as 41 definições podem incluir:
-
-- aliases;
-- variantes auditivas;
-- IDs técnicos antigos;
-- duplicações;
-- exercícios inativos;
-- exercícios em construção;
-- exercícios concluídos, mas não disponíveis;
-- nomes técnicos diferentes do nome exibido;
-- rotas ou componentes sem entrada real no catálogo.
-
-Antes de analisar carga cognitiva, duração ou protocolo, precisamos estabelecer uma fonte de verdade.
-
-ATIVIDADES QUE APARECEM ATUALMENTE NA INTERFACE
-
-Use esta lista como referência visual inicial, mas confirme tudo no código:
-
-1. Span Numérico Auditivo Direto
-2. Cores e Palavras
-3. Focus Agents
-4. Span Numérico Auditivo Inverso
-5. Matriz Espacial
-6. Matriz Espacial Inversa
-7. Jogo da Memória
-8. Conecta Números
-9. Caminhos para a Meta
-10. Informação em Foco
-11. Rastreamento de Objetos
-12. Dupla Tarefa
-13. Tempo de Reação
-14. Certo ou Errado
-15. Semáforo
-16. Busca Rápida
-17. Jogo das Torres
-18. Labirinto
-19. Ordem da História
-20. Compra Multifuncional
-21. Task Switching
-22. Grade Dedutiva
-23. Letras em Sequência
-24. Sequência de Itens
-25. Matriz com Rotações
-26. Lista com Distração
-27. Restaurante
-28. Supermercado
-29. N-Back
-30. Cubos
-31. Vigilância
-32. Identificação de Símbolos
-33. Estacionamento Lógico
-34. Investigadores da Situação Social
-
-OBJETIVO PRINCIPAL
-
-Descobrir com precisão:
-
-- quais são as atividades clínicas reais;
-- quais estão efetivamente ativas;
-- quais aparecem para terapeuta;
-- quais aparecem para paciente;
-- quais são apenas aliases;
-- quais são modalidades da mesma atividade;
-- quais são componentes antigos;
-- quais estão em construção;
-- quais estão desativadas;
-- quais possuem nomes técnicos diferentes dos nomes exibidos;
-- quais definições anteriores não deveriam ter sido contadas como exercícios independentes.
-
-NÃO CONSIDERE ALIAS COMO EXERCÍCIO INDEPENDENTE
-
-Exemplos da auditoria anterior:
-
-- focus-agents-auditivo;
-- matriz-espacial-inversa tratada como alias;
-- restaurante-ordem-auditivo;
-- desafio-supermercado-auditivo;
-- informação-em-foco;
-- mudança-regras.
-
-Verifique cuidadosamente se cada item é:
-
-1. atividade clínica independente;
-2. modalidade de uma atividade;
-3. alias de rota;
-4. componente reaproveitado;
-5. definição antiga;
-6. atividade efetivamente separada.
-
-Uma modalidade auditiva ou visual não deve ser automaticamente contabilizada como um exercício novo.
-
-NOMES OFICIAIS
-
-Para cada atividade, identifique:
-
-- ID técnico;
-- nome exibido atual;
-- nome correto desejado;
-- rota;
-- componente principal;
-- status;
-- categoria exibida;
-- descrição exibida;
-- ícone;
-- aliases relacionados.
-
-Não altere os nomes ainda.
-
-Apenas marque divergências como:
-
-- nome técnico diferente, mas aceitável;
-- nome exibido incorreto;
-- nome antigo;
-- duplicação;
-- tradução inconsistente;
-- nome provisório;
-- categoria possivelmente incorreta;
-- descrição possivelmente incorreta.
-
-STATUS OBRIGATÓRIOS
-
-Classifique cada definição encontrada como uma destas opções:
-
-- ACTIVE_CLINICAL_EXERCISE
-- ACTIVE_EXERCISE_MODE
-- ACTIVE_ALIAS
-- IN_DEVELOPMENT
-- INACTIVE
-- LEGACY
-- ORPHANED
-- UNKNOWN
-
-Definições classificadas como ACTIVE_EXERCISE_MODE ou ACTIVE_ALIAS não entram na contagem de exercícios clínicos.
-
-MODALIDADES VISUAL E AUDITIVA
-
-Precisamos distinguir dois conceitos diferentes.
-
-CONCEITO 1 — MODALIDADE DA ATIVIDADE
-
-A modalidade altera a forma cognitiva de apresentação da tarefa.
-
-Exemplos:
-
-- Visual;
-- Visual + áudio;
-- Somente áudio.
-
-Atualmente, visualmente confirmamos essa escolha em:
-
-- Restaurante;
-- Supermercado.
-
-Também deveria existir, conforme decisão clínica, em:
-
-- Focus Agents;
-- Compra Multifuncional.
-
-Audite cada exercício e informe se possui ou deveria possuir:
-
-- somente visual;
-- visual + áudio;
-- somente áudio;
-- nenhuma escolha de modalidade.
-
-Não implemente ainda.
-
-Para cada exercício, explique se mudar a modalidade altera:
-
-- o construto treinado;
-- a carga cognitiva;
-- a memória operacional;
-- a demanda de leitura;
-- a demanda auditiva;
-- a dificuldade;
-- a progressão;
-- o registro de desempenho.
-
-Não trate automaticamente “visual + áudio” como mais difícil. Em alguns pacientes, o áudio pode facilitar; em outros, pode aumentar interferência.
-
-CONCEITO 2 — LEITURA ASSISTIVA
-
-Existe um botão de som durante as atividades que pode ler o texto apresentado.
-
-Essa função NÃO é uma modalidade do exercício.
-
-Ela é um recurso de acessibilidade para ler:
-
-- instruções;
-- comandos;
-- perguntas;
-- alternativas;
-- textos auxiliares;
-- feedback, quando apropriado.
-
-Audite:
-
-- em quais exercícios o botão já existe;
-- quais textos ele lê;
-- qual mecanismo de voz é usado;
-- se utiliza speechSynthesis, áudio gravado ou outro mecanismo;
-- se a leitura pode ser repetida;
-- se há limitação;
-- se o uso é registrado;
-- se interfere na progressão;
-- se o botão aparece mesmo em exercícios sem texto;
-- se a leitura continua quando a tela muda;
-- se existe cancelamento da fala;
-- se há sobreposição de áudios;
-- se o paciente pode clicar várias vezes;
-- se o componente é global ou duplicado por exercício.
-
-A leitura assistiva deve ser planejada futuramente para todos os exercícios que contenham texto relevante, sem transformar a atividade em modalidade auditiva.
-
-EXEMPLO DA DIFERENÇA
-
-Supermercado — modo Somente áudio:
-- a lista deve ser memorizada auditivamente;
-- a modalidade faz parte da tarefa;
-- deve afetar classificação, carga e métricas.
-
-Supermercado — botão de leitura assistiva:
-- o sistema apenas lê uma instrução ou texto visível;
-- é acessibilidade;
-- não deve automaticamente transformar o exercício em auditivo.
-
-Essa distinção deve aparecer na arquitetura e no modelo de dados.
-
-AUDITORIA DA LISTA DE 41 DEFINIÇÕES
-
-Para cada uma das 41 definições encontradas anteriormente, mostre:
-
-- ID;
-- nome;
-- componente;
-- rota;
-- aparece no catálogo?;
-- aparece no plano terapêutico?;
-- aparece para o paciente?;
-- possui execução funcional?;
-- possui histórico?;
-- possui progressão?;
-- é atividade independente?;
-- é alias?;
-- é modalidade?;
-- status final;
-- exercício clínico principal ao qual pertence;
-- justificativa.
-
-Depois, apresente a contagem corrigida:
-
-- número de atividades clínicas ativas;
-- número de modalidades;
-- número de aliases;
-- número em desenvolvimento;
-- número inativo;
-- número legado;
-- número órfão;
-- número desconhecido.
-
-CONFIRME A LISTA VISUAL DE 34
-
-Compare as 34 atividades fornecidas com o código e responda:
-
-1. Todas as 34 existem e estão ativas?
-2. Alguma está apenas visualmente listada, mas sem execução funcional?
-3. Alguma atividade ativa não aparece nos prints?
-4. Alguma das 41 definições deveria entrar como uma 35ª atividade?
-5. Alguma das 34 é apenas modalidade ou alias e não atividade real?
-6. Alguma aparece com nome incorreto?
-7. Alguma aparece na categoria cognitiva errada?
-8. Alguma descrição exibida não corresponde ao exercício real?
-
-ARQUIVOS A CRIAR
-
-Crie:
-
-docs/auditoria-plano-terapeutico/13-inventario-real-atividades.md
-
-Inclua a tabela completa das definições técnicas e seus status.
-
-Crie:
-
-docs/auditoria-plano-terapeutico/14-nomes-oficiais.md
-
-Inclua:
-
-- nome técnico;
-- nome atual;
-- nome correto recomendado;
-- justificativa;
-- alteração necessária ou não.
-
-Crie:
-
-docs/auditoria-plano-terapeutico/15-modalidades-e-acessibilidade.md
-
-Inclua:
-
-- modalidades por exercício;
-- diferenças entre modalidade e leitura assistiva;
-- exercícios com visual;
-- exercícios com visual + áudio;
-- exercícios com somente áudio;
-- exercícios que deveriam receber essas opções;
-- presença atual do botão de leitura;
-- arquitetura atual;
-- proposta futura de componente global de leitura assistiva;
-- riscos cognitivos e técnicos;
-- decisões clínicas pendentes.
-
-Crie:
-
-docs/auditoria-plano-terapeutico/16-lista-canonica.md
-
-Esse arquivo deve apresentar uma lista canônica provisória das atividades clínicas reais, com:
-
-- canonicalExerciseId;
-- nome oficial;
-- status;
-- categoria;
-- modalidades;
-- aliases;
-- componente;
-- rota;
-- aparece para terapeuta;
-- aparece para paciente.
-
-Não altere ainda EXERCISE_DEFINITIONS.
-
-RELATÓRIO NO TERMINAL
-
-Ao final, mostre:
-
-1. Quantidade corrigida de exercícios clínicos ativos.
-2. Lista completa dos nomes oficiais.
-3. Quais das 41 definições não são exercícios independentes.
-4. Quais exercícios aparecem nos prints, mas possuem problema técnico.
-5. Quais exercícios ativos estavam ausentes dos prints.
-6. Quais nomes estão incorretos.
-7. Quais categorias estão incorretas.
-8. Quais descrições estão incorretas.
-9. Quais possuem seleção real de modalidade.
-10. Quais deveriam possuir seleção de modalidade.
-11. Quais possuem leitura assistiva.
-12. Quais não possuem, mas contêm texto que deveria poder ser lido.
-13. Diferenças entre a contagem anterior de 41 e a contagem clínica real.
-
-REGRAS
-
-- Não implementar.
-- Não corrigir nomes.
-- Não mudar catálogo.
-- Não mudar rotas.
-- Não remover aliases.
-- Não adicionar áudio.
-- Não alterar progressão.
-- Não alterar banco.
-- Não criar migration.
-- Não instalar dependências.
-- Não fazer commit.
-- Não fazer push.
-- Apenas analisar, documentar e relatar.
-
-Ao terminar, pare e aguarde nossa validação.
-
 ## 02/08/2026 19:18
 salve tudo pois irei trocar de conta para continuarmos desse mesmo lugar
 
@@ -413,3 +34,153 @@ A seleção Visual / Visual + áudio / Somente áudio continua restrita exclusiv
 Nenhum outro exercício deverá receber esse seletor sem nova decisão clínica explícita.
 
 Corrija somente a documentação e prossiga com a auditoria considerando essa regra.
+
+## 02/08/2026 19:29
+Vamos consolidar definitivamente o catálogo de exercícios antes de iniciar a implementação da nova arquitetura.
+
+A partir deste momento, considere como fonte única de verdade apenas os exercícios clínicos ativos.
+
+DECISÕES DEFINITIVAS
+
+1. O catálogo oficial possui exatamente 34 exercícios clínicos.
+
+2. Remova do catálogo canônico qualquer:
+- alias;
+- modo separado;
+- definição histórica;
+- exercício órfão;
+- exercício legado;
+- exercício descontinuado.
+
+3. O exercício `desafio-cidade` NÃO fará mais parte da arquitetura atual.
+
+Ele será completamente reformulado futuramente como um novo exercício.
+
+Portanto:
+
+- remover da lista canônica;
+- remover das contagens;
+- remover da documentação da auditoria;
+- não utilizá-lo na classificação de carga;
+- não utilizá-lo na classificação de duração;
+- não utilizá-lo na engine de prescrição;
+- não utilizá-lo em exemplos.
+
+Caso exista código relacionado, apenas documente sua localização.
+
+NÃO o remova do código nesta etapa.
+
+Marque-o apenas como:
+
+REMOVED_FROM_CURRENT_CATALOG
+
+Ele será tratado futuramente como um exercício novo.
+
+4. Os aliases antigos também não fazem mais parte da arquitetura conceitual.
+
+Mantenha apenas uma referência técnica, caso ainda existam no código.
+
+Não devem aparecer em:
+
+- inventário;
+- documentação clínica;
+- classificação;
+- tabelas;
+- relatórios.
+
+5. A partir deste momento, toda a documentação deverá utilizar exclusivamente os 34 exercícios ativos.
+
+6. Atualize todos os documentos criados anteriormente para remover referências a:
+
+- aliases;
+- modos contabilizados como exercícios;
+- desafio-cidade;
+- exercícios legados.
+
+7. Gere uma lista canônica definitiva contendo apenas:
+
+- ID técnico;
+- nome oficial;
+- categoria cognitiva;
+- domínio principal;
+- modalidades (quando existirem);
+- status = ACTIVE.
+
+Nenhum outro exercício deve aparecer.
+
+Ao final, apresente apenas:
+
+- lista final dos 34 exercícios;
+- confirmação de que não existem mais exercícios legados na documentação;
+- confirmação de que todas as próximas análises utilizarão exclusivamente essa lista.
+
+Não implemente alterações no código.
+Não remova arquivos do projeto.
+Não faça commits.
+Apenas limpe a documentação e a arquitetura conceitual. 8. A lista canônica deve manter exatamente os nomes oficiais abaixo.
+
+Esses passam a ser a nomenclatura padrão do projeto.
+
+Qualquer alias, tradução antiga ou nome técnico diferente deverá permanecer apenas internamente quando necessário para compatibilidade, nunca na interface nem na documentação clínica.
+
+Lista oficial:
+
+1. Span Numérico Auditivo Direto
+2. Cores e Palavras
+3. Agentes Focus
+4. Span Numérico Auditivo Inverso
+5. Matriz Espacial
+6. Matriz Espacial Inversa
+7. Jogo da Memória
+8. Conecta Números
+9. Caminhos para a Meta
+10. Informação em Foco
+11. Rastreamento de Objetos
+12. Dupla Tarefa
+13. Tempo de Reação
+14. Certo ou Errado
+15. Semáforo
+16. Busca Rápida
+17. Jogo das Torres
+18. Labirinto
+19. Ordem da História
+20. Compra Multifuncional
+21. Alternância de Regras
+22. Grade Dedutiva
+23. Letras em Sequência
+24. Sequência de Itens
+25. Matriz com Rotações
+26. Lista com Distração
+27. Restaurante
+28. Supermercado
+29. N-Back
+30. Cubos
+31. Vigilância
+32. Identificação de Símbolos
+33. Estacionamento Lógico
+34. Investigadores da Situação Social
+
+9. Atualize toda a documentação criada durante a auditoria para utilizar exclusivamente esses nomes oficiais.
+
+10. Caso algum ID técnico utilize outro nome, mantenha o ID apenas por compatibilidade interna, mas utilize sempre o nome oficial em:
+
+- documentação;
+- relatórios;
+- tabelas;
+- classificação;
+- carga cognitiva;
+- duração;
+- interface planejada;
+- engine de prescrição.
+
+11. Gere ao final uma tabela de correspondência contendo:
+
+- ID técnico;
+- Nome oficial;
+- Alias antigos (se existirem);
+- Status (ACTIVE).
+
+Essa tabela passa a ser a referência oficial do projeto para todos os desenvolvimentos futuros. Dos 34 nomes, só vejo dois que ainda valem uma reflexão antes de "congelar":
+Agentes Focus — eu gosto mais do que "Focus Agentes", porque soa natural em português e preserva a marca "Focus".
+Alternância de Regras — eu ainda prefiro esse nome a "Task Switching". Na sua mecânica, o paciente alterna regras de resposta (cor, forma, número etc.), não tarefas completamente distintas. Para um paciente, "Alternância de Regras" comunica melhor o que acontece no exercício.
+Os outros nomes eu manteria exatamente como estão. E vc está fazendo tudo isso com o opus? vc deveria estar usando o codex nao? pois minha janela caiu de 100% para 69%
