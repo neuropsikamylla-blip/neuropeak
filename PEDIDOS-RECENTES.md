@@ -1,9 +1,6 @@
 # As 3 ultimas especificacoes dela (automatico; a mais nova por ultimo)
 # Na retomada: ler as 3, conectar com PROGRESSO.md e git, declarar e seguir.
 
-## 02/08/2026 17:23
-Ok! o ideal é esperar isso terminar para prosseguirmos para a proxima etapa?
-
 ## 02/08/2026 17:25
 eu queria mandar comando de outra coisa do programa! Mas nao sei se esperamos vc concluir isso
 
@@ -594,3 +591,6 @@ Inspecione:
 Ao final, pare e aguarde nossa validação.
 
 Não implemente a proposta até receber uma autorização explícita.
+
+## 02/08/2026 18:42
+pronto! agora voltamos para aquele comando que passei depois do focus ne?
