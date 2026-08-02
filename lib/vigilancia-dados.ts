@@ -9,11 +9,13 @@ export interface Variante { id: string; arquivo: string; descricao: string }
 export interface Par {
   pairId: string; nome: string; categoria: string; atributoDiferencial: string;
   dificuldadeVisual: number; permiteModoSemCor: boolean; A: Variante; B: Variante;
+  /** false = fora do jogo (a Kamylla tirou por achar fácil demais); imagens ficam no repo. */
+  ativo?: boolean;
 }
 export interface Fundo { id: string; arquivo: string; complexidade: number }
 
 export const PARES: Par[] = [
-  { pairId: "P01", nome: "Ameixa suave", categoria: "tom", atributoDiferencial: "corCorpo", dificuldadeVisual: 2, permiteModoSemCor: false,
+  { pairId: "P01", nome: "Ameixa suave", categoria: "tom", atributoDiferencial: "corCorpo", dificuldadeVisual: 2, permiteModoSemCor: false, ativo: false,
     A: { id: "P01_A", arquivo: "P01_A.png", descricao: "ameixa suave clara" }, B: { id: "P01_B", arquivo: "P01_B.png", descricao: "ameixa suave escura" } },
   { pairId: "P02", nome: "Azul ardósia", categoria: "tom", atributoDiferencial: "corCorpo", dificuldadeVisual: 5, permiteModoSemCor: false,
     A: { id: "P02_A", arquivo: "P02_A.png", descricao: "azul ardósia claro" }, B: { id: "P02_B", arquivo: "P02_B.png", descricao: "azul ardósia escuro" } },
@@ -41,18 +43,24 @@ export const FUNDOS: Fundo[] = [
 // §16 Níveis visuais — 8 pipas SEMPRE; muda par (semelhança), arranjo (distância) e fundo.
 export interface NivelVisual { nivel: number; pairId: string; arranjo: Arranjo; fundo: string }
 export const NIVEIS: NivelVisual[] = [
-  // ordem pelo ΔE Lab medido em 02/ago: P04 22,8 · P01 19,3 · P03 14,3 · P07 13,8 · P02 13,0 · P08 11,3
+  // ordem pelo ΔE Lab medido: P04 22,8 · P03 14,3 · P07 13,8 · P02 13,0 · P08 11,3.
+  // Do nível 7 em diante o PAR já está no mais difícil (vinho) e quem endurece é o
+  // arranjo (irregular) e o fundo — a semelhança das pipas nunca retrocede.
+  // (P01 ameixa saiu em 02/ago — ela achou fácil demais)
   { nivel: 1,  pairId: "P04", arranjo: "compacto",  fundo: "BG01" },
-  { nivel: 2,  pairId: "P01", arranjo: "compacto",  fundo: "BG01" },
+  { nivel: 2,  pairId: "P04", arranjo: "expandido", fundo: "BG01" },
   { nivel: 3,  pairId: "P03", arranjo: "expandido", fundo: "BG02" },
   { nivel: 4,  pairId: "P07", arranjo: "expandido", fundo: "BG02" },
   { nivel: 5,  pairId: "P02", arranjo: "expandido", fundo: "BG02" },
   { nivel: 6,  pairId: "P08", arranjo: "expandido", fundo: "BG03" },
-  { nivel: 7,  pairId: "P02", arranjo: "irregular", fundo: "BG03" },
-  { nivel: 8,  pairId: "P08", arranjo: "irregular", fundo: "BG03" },
+  { nivel: 7,  pairId: "P08", arranjo: "irregular", fundo: "BG03" },
+  { nivel: 8,  pairId: "P08", arranjo: "irregular", fundo: "BG04" },
   { nivel: 9,  pairId: "P05", arranjo: "compacto",  fundo: "BG04" },
   { nivel: 10, pairId: "P06", arranjo: "irregular", fundo: "BG04" },
 ];
+
+/** Pares realmente em uso (respeita o que ela desativou). */
+export const PARES_ATIVOS = PARES.filter((p) => p.ativo !== false);
 
 export const parById = (id: string) => PARES.find((p) => p.pairId === id) ?? PARES[0];
 export const fundoById = (id: string) => FUNDOS.find((f) => f.id === id) ?? FUNDOS[0];

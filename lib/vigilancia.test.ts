@@ -1,3 +1,4 @@
+import { PARES, PARES_ATIVOS, NIVEIS } from "./vigilancia-dados";
 import { describe, it, expect } from "vitest";
 import {
   EXPO_STEPS, adaptar, estadoInicial, classificarToque, gerarCentros,
@@ -111,5 +112,23 @@ describe("Vigilância — ponto estável e bloco (§19-20)", () => {
     expect(avaliarBloco(11).decisao).toBe("avancar");
     expect(avaliarBloco(9).decisao).toBe("manter");
     expect(avaliarBloco(7).decisao).toBe("reforcar");
+  });
+});
+
+// ── Escada de níveis × pares ativos (02/ago: ela desativou o par ameixa) ──────
+describe("Vigilância — pares ativos e escada", () => {
+  it("a escada nunca usa um par desativado", () => {
+    const ativos = new Set(PARES_ATIVOS.map((p) => p.pairId));
+    for (const n of NIVEIS) {
+      expect(ativos.has(n.pairId), `nível ${n.nivel} usa par inativo: ${n.pairId}`).toBe(true);
+    }
+  });
+
+  it("os 10 níveis existem e a dificuldade não retrocede entre níveis de tom", () => {
+    expect(NIVEIS.length).toBe(10);
+    const tomDe = (id: string) => PARES.find((p) => p.pairId === id)!;
+    const tons = NIVEIS.filter((n) => tomDe(n.pairId).categoria === "tom");
+    const difs = tons.map((n) => tomDe(n.pairId).dificuldadeVisual);
+    for (let i = 1; i < difs.length; i++) expect(difs[i]).toBeGreaterThanOrEqual(difs[i - 1]);
   });
 });

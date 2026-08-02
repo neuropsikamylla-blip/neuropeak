@@ -23,7 +23,9 @@
         }
       },
       "deltaELab": 19.3,
-      "medidoEm": "2026-08-02"
+      "medidoEm": "2026-08-02",
+      "ativo": false,
+      "motivoInativo": "a Kamylla tirou em 02/ago: fácil demais"
     },
     {
       "pairId": "P02",
@@ -193,5 +195,5 @@
       }
     }
   ],
-  "nota": "dificuldadeVisual medida por ΔE Lab entre o corpo do alvo e o do distrator (maior ΔE = mais fácil). 02/ago/2026: alvos de P01/P02/P03/P04 regerados pela Kamylla; pares novos P07 (verde musgo) e P08 (vinho). Escada de níveis segue essa ordem."
+  "nota": "dificuldadeVisual medida por ΔE Lab entre o corpo do alvo e o do distrator (maior ΔE = mais fácil). 02/ago/2026: alvos de P01/P02/P03/P04 regerados pela Kamylla; pares novos P07 (verde musgo) e P08 (vinho). Escada de níveis segue essa ordem. P01 (ameixa) DESATIVADO em 02/ago por decisão dela."
 }
