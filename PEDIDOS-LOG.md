@@ -2682,3 +2682,23 @@ seção de 02/ago/2026:
   sessões.
 
 Não comece nada antes de me mostrar a saída dos comandos acima.
+
+## 02/08/2026 14:10
+Sim, ataque o CORR-021. Duas coisas antes:
+
+1. Rode `git pull --ff-only origin main` de novo — subiu mais um commit
+   (d88df5d), é só o log de pedidos do gancho, mas sincronize para não
+   divergir.
+
+2. Esta é a ÚNICA sessão trabalhando no neuropeak agora. A outra saiu do
+   caminho, então você não precisa se preocupar com colisão — mas também
+   não há ninguém para pegar o que você deixar pela metade. Commite cada
+   passo.
+
+Sobre o conserto: o teto tem que virar PARÂMETRO, não constante nova — o
+`maxLevel` de `calculateProgression` na mesma `lib/adaptive.ts` é o modelo
+a seguir, e já tem teste (`adaptive.test.ts`, procure "maxLevel 12").
+
+E confira se `focusDetectTargetMs` também assume 9 níveis: se assumir, o
+critério de velocidade quebra nos passos 10 a 13 e o conserto fica pela
+metade de novo.
