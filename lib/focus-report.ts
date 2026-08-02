@@ -1,7 +1,10 @@
 // Resumo do Focus Agentes para o relatório do terapeuta (Fase F).
 // Lê as sessões de focus-agents (visual) + focus-agents-auditivo e o metadata
 // (Fase D) e produz precisão, falsos+, omissões, erro após troca, desempenho
-// por modo e por canal, e observações automáticas.
+// por função cognitiva e por canal, e observações automáticas.
+
+import type { FuncaoCognitiva } from "./focus/commands";
+import type { PorFuncao } from "./focus/progression";
 
 type SessLike = {
   exerciseId: string;
@@ -16,6 +19,7 @@ type FocusMode = "foco" | "inibicao" | "alternancia" | "desafio";
 
 type Meta = {
   mode?: FocusMode;
+  porFuncao?: PorFuncao;
   level?: number;
   channel?: "visual" | "auditivo";
   falsePositives?: number;
@@ -37,6 +41,8 @@ type Meta = {
 };
 
 export interface FocusModeStat { n: number; acc: number; }
+export interface FocusFuncaoStat { tentativas: number; acertos: number; acc: number; }
+export type FocusPorFuncao = Record<FuncaoCognitiva, FocusFuncaoStat>;
 export interface FocusSummary {
   totalSessions: number;
   recentAccuracy: number;
@@ -59,7 +65,7 @@ export interface FocusSummary {
   detectMedianMs: number | null;
   /** VP: % de respostas dentro do tempo-alvo do nível (sessões recentes). */
   withinTargetPct: number | null;
-  byMode: Record<FocusMode, FocusModeStat>;
+  byFuncao: FocusPorFuncao;
   byChannel: { visual: FocusModeStat; auditivo: FocusModeStat };
   lastMode: FocusMode | null;
   lastLevel: number | null;
@@ -71,6 +77,15 @@ const MODE_LABEL: Record<FocusMode, string> = {
   foco: "Foco", inibicao: "Inibição", alternancia: "Alternância", desafio: "Desafio Executivo",
 };
 export const focusModeLabel = (m: FocusMode | null) => (m ? MODE_LABEL[m] : "—");
+
+const FUNCAO_LABEL: Record<FuncaoCognitiva, string> = {
+  seletiva: "Atenção seletiva",
+  memoriaTrabalho: "Memória de trabalho",
+  flexibilidade: "Flexibilidade",
+  inibicao: "Controle inibitório",
+};
+export const funcaoLabel = (f: FuncaoCognitiva) => FUNCAO_LABEL[f];
+const FUNCOES_COGNITIVAS: FuncaoCognitiva[] = ["seletiva", "memoriaTrabalho", "flexibilidade", "inibicao"];
 
 function parseMeta(m?: string | null): Meta {
   if (!m) return {};
@@ -105,10 +120,16 @@ export function summarizeFocusAgents(sessions: SessLike[]): FocusSummary | null 
   const withins = recent.map((r) => r.meta.withinTargetPct).filter((x): x is number => typeof x === "number");
   const withinTargetPct = withins.length ? Math.round(mean(withins)) : null;
 
-  const byMode = {} as Record<FocusMode, FocusModeStat>;
-  (["foco", "inibicao", "alternancia", "desafio"] as const).forEach((m) => {
-    const rs = rows.filter((r) => r.meta.mode === m);
-    byMode[m] = { n: rs.length, acc: mean(rs.map((r) => r.accuracy)) };
+  const byFuncao = {} as FocusPorFuncao;
+  FUNCOES_COGNITIVAS.forEach((funcao) => {
+    const { tentativas, acertos } = rows.reduce((total, r) => {
+      const contagem = r.meta.porFuncao?.[funcao];
+      return {
+        tentativas: total.tentativas + (contagem?.tentativas ?? 0),
+        acertos: total.acertos + (contagem?.acertos ?? 0),
+      };
+    }, { tentativas: 0, acertos: 0 });
+    byFuncao[funcao] = { tentativas, acertos, acc: tentativas ? acertos / tentativas : 0 };
   });
   const channelOf = (r: typeof rows[number]) => r.meta.channel ?? (r.exerciseId === "focus-agents-auditivo" ? "auditivo" : "visual");
   const vis = rows.filter((r) => channelOf(r) === "visual");
@@ -124,19 +145,19 @@ export function summarizeFocusAgents(sessions: SessLike[]): FocusSummary | null 
   // ── Observações automáticas ──
   const obs: string[] = [];
   const perSession = (n: number) => n / rows.length;
-  if (perSession(falsePositives) >= 2) obs.push("Muitos falsos positivos — sugere resposta impulsiva (tocar antes de conferir a regra).");
-  if (perSession(omissions) >= 2.5) obs.push("Muitas omissões — sugere dificuldade de varredura visual ou lentidão.");
+  if (perSession(falsePositives) >= 2) obs.push("Muitos falsos positivos — houve respostas antes da conferência da regra.");
+  if (perSession(omissions) >= 2.5) obs.push("Muitas omissões — vários alvos não receberam resposta a tempo.");
   if (meanFirstMs !== null && meanFirstMs > 3500 && recentAccuracy >= 0.75) obs.push("Preciso, mas demorou para iniciar a resposta.");
-  if (switchRounds >= 3 && errorsAfterSwitch / Math.max(1, switchRounds) >= 0.4) obs.push("Errou bastante após a troca de regra — possível perseveração (continuou na regra antiga).");
+  if (switchRounds >= 3 && errorsAfterSwitch / Math.max(1, switchRounds) >= 0.4) obs.push("Errou bastante após a troca de regra — continuou usando a regra anterior em parte das rodadas.");
   if (byChannel.visual.n >= 2 && byChannel.auditivo.n >= 2 && byChannel.auditivo.acc + 0.1 < byChannel.visual.acc)
     obs.push("Pior desempenho no canal auditivo do que no visual.");
-  if (byMode.foco.n >= 2 && byMode.alternancia.n >= 2 && byMode.foco.acc >= 0.8 && byMode.alternancia.acc < 0.6)
-    obs.push("Vai bem em regras estáveis, mas cai quando a regra muda (flexibilidade).");
+  if (byFuncao.seletiva.tentativas >= 10 && byFuncao.flexibilidade.tentativas >= 10 && byFuncao.seletiva.acc >= 0.8 && byFuncao.flexibilidade.acc < 0.6)
+    obs.push("Localiza bem os alvos, mas o desempenho cai quando a regra muda.");
   // Tipos de erro (quando medidos): aponta o padrão dominante.
   const errTotal = errDetail + errImpulse + errOmission;
   if (errTotal >= 4) {
     if (errDetail / errTotal >= 0.6) obs.push("Erros predominantemente por DETALHE (confundiu por um critério) — vale reforçar a conferência de todos os critérios antes de responder.");
-    else if (errImpulse / errTotal >= 0.6) obs.push("Erros predominantemente por IMPULSIVIDADE (resposta sem relação com a regra).");
+    else if (errImpulse / errTotal >= 0.6) obs.push("Erros predominantemente por respostas sem relação com a regra.");
     else if (errOmission / errTotal >= 0.6) obs.push("Erros predominantemente por OMISSÃO (deixou o alvo passar).");
   }
   if (perSession(commandReviews) >= 2) obs.push("Reviu o comando com frequência durante a busca — apoio de memória ainda necessário.");
@@ -145,12 +166,12 @@ export function summarizeFocusAgents(sessions: SessLike[]): FocusSummary | null 
   if (withinTargetPct !== null && withinTargetPct >= 80 && recentAccuracy >= 0.8)
     obs.push("Rápido E preciso no nível atual — pronto para avançar.");
   if (corrections >= 3 && persevAfterCorrection / corrections >= 0.4)
-    obs.push("Nos comandos com correção, tocou no alvo da PRIMEIRA instrução — dificuldade de descartar a informação antiga.");
+    obs.push("Nos comandos com correção, tocou no alvo da PRIMEIRA instrução — a primeira informação continuou sendo usada.");
   if (!obs.length) obs.push("Desempenho dentro do esperado para o nível atual.");
 
   // ── Recomendação ──
   let recommendation: string;
-  if (recentAccuracy >= 0.8 && perSession(falsePositives) < 1.5) recommendation = "Pode avançar de nível ou de modo.";
+  if (recentAccuracy >= 0.8 && perSession(falsePositives) < 1.5) recommendation = "Pode avançar de nível.";
   else if (recentAccuracy < 0.55 || perSession(falsePositives) >= 2.5) recommendation = "Recomenda-se reduzir o nível/velocidade antes de aumentar a complexidade.";
   else recommendation = "Recomenda-se manter o treino neste nível antes de avançar.";
 
@@ -160,6 +181,6 @@ export function summarizeFocusAgents(sessions: SessLike[]): FocusSummary | null 
     errDetail, errImpulse, errOmission,
     corrections, persevAfterCorrection, commandReviews,
     detectMedianMs, withinTargetPct,
-    byMode, byChannel, lastMode, lastLevel, recommendation, observations: obs,
+    byFuncao, byChannel, lastMode, lastLevel, recommendation, observations: obs,
   };
 }

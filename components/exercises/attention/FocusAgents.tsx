@@ -17,18 +17,16 @@ import { useTimedProgress } from "@/components/exercises/useExerciseEngine";
 import { ExerciseProgressBar } from "@/components/exercises/ExerciseProgressBar";
 import { playTTS, cancelTTS } from "@/lib/tts";
 import type { ExerciseResult, Theme } from "@/types";
-import { gerarRodada, matches, atributoFaltante, type FocusRound, type Etapa } from "@/lib/focus/commands";
+import { gerarRodada, matches, atributoFaltante, FUNCAO_DA_ETAPA, type FocusRound } from "@/lib/focus/commands";
 import { STEPS, type Step } from "@/lib/focus/progression";
 import { charById, COR_HEX, FOCUS_CHARS, type Acessorio, type Objeto } from "@/lib/focus/roster";
 import {
   buildFocusCompletionMetadata,
-  resolveFocusMode,
   resolveFocusStartStep,
-  type FocusMode,
+  type PorFuncao,
 } from "@/lib/focus/progression";
 
 export interface FocusAgentsSettings {
-  mode?: FocusMode;
   startLevel?: number;
   freeChoice?: boolean;
   feedback?: "leve" | "normal" | "intenso";
@@ -171,7 +169,6 @@ function Tutorial({ onStart }: { onStart: () => void }) {
 // ── Componente principal ─────────────────────────────────────────────────────
 export function FocusAgents({ difficulty, theme, onComplete, exerciseId = "focus-agents", settings }: FocusAgentsProps) {
   const auditivo = exerciseId === "focus-agents-auditivo";
-  const mode = resolveFocusMode(settings?.mode);
   const { begin, isTimeUp, elapsedSec, finish, progressPct } = useTimedProgress();
 
   type Fase = "instrucoes" | "comando" | "jogando" | "feedback";
@@ -183,6 +180,7 @@ export function FocusAgents({ difficulty, theme, onComplete, exerciseId = "focus
   const stepRef = useRef(resolveFocusStartStep(settings?.startLevel, difficulty));
   const bloco = useRef({ tentativas: 0, acertos: 0, errosSeguidos: 0, maxErros: 0, seq: 0, melhorSeq: 0, tempos: [] as number[] });
   const totais = useRef({ acertos: 0, total: 0, omissoes: 0, tempos: [] as number[] });
+  const porFuncao = useRef<PorFuncao>({});
   const rodadaAbertaEm = useRef(0);
   const respondidoRef = useRef(false);
   const arenaRef = useRef<HTMLDivElement>(null);
@@ -228,10 +226,10 @@ export function FocusAgents({ difficulty, theme, onComplete, exerciseId = "focus
         omissions: t.omissoes,
         avgRT: avgRt,
         step: stepRef.current,
-        mode,
+        porFuncao: porFuncao.current,
       }),
     });
-  }, [difficulty, elapsedSec, finish, mode, onComplete]);
+  }, [difficulty, elapsedSec, finish, onComplete]);
 
   const modoQuedaRef = useRef(false); // false = espalhados (nível 1); true = caindo (nível 2+)
 
@@ -364,6 +362,11 @@ export function FocusAgents({ difficulty, theme, onComplete, exerciseId = "focus
   // 3 erros seguidos → desce 1 nível (silenciosamente, sem tela de resultado).
   const registra = useCallback((acertou: boolean, rt: number | null, omissao: boolean) => {
     const b = bloco.current, t = totais.current;
+    const funcao = FUNCAO_DA_ETAPA[STEPS[stepRef.current].etapa];
+    const contagem = porFuncao.current[funcao] ?? { tentativas: 0, acertos: 0 };
+    contagem.tentativas++;
+    if (acertou) contagem.acertos++;
+    porFuncao.current[funcao] = contagem;
     b.tentativas++; t.total++;
     if (omissao) t.omissoes++;
     if (acertou) {

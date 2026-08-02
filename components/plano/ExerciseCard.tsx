@@ -40,10 +40,6 @@ export function ExerciseCard({
   const nCaminhosSel = isCaminhos && Array.isArray(cfg?.atividadesSelecionadas)
     ? (cfg!.atividadesSelecionadas as unknown[]).length
     : 0;
-  const FOCUS_MODES: { key: string; label: string }[] = [
-    { key: "foco", label: "🎯 Foco" }, { key: "inibicao", label: "🚫 Inibição" },
-    { key: "alternancia", label: "🔄 Alternância" }, { key: "desafio", label: "🧠 Desafio" },
-  ];
   const subLabel = EXERCISE_SUBDOMAIN[id];
   const subId = EXERCISE_SUBDOMAIN_ID[id];
 
@@ -131,14 +127,6 @@ export function ExerciseCard({
           {isFocus ? (
             <div className="pt-2.5 space-y-3">
               <div>
-                <p className="text-[11px] font-bold uppercase tracking-wide text-slate-400 mb-1.5">Modo do treino</p>
-                <div className="grid grid-cols-2 gap-1.5">
-                  {FOCUS_MODES.map((m) => (
-                    <Pill key={m.key} on={(cfg?.mode ?? "foco") === m.key} onClick={() => onSetting?.(id, "mode", m.key)}>{m.label}</Pill>
-                  ))}
-                </div>
-              </div>
-              <div>
                 <p className="text-[11px] font-bold uppercase tracking-wide text-slate-400 mb-1.5">Nível inicial (1–5)</p>
                 <div className="flex gap-1.5">
                   {[1, 2, 3, 4, 5].map((lv) => (
@@ -161,7 +149,7 @@ export function ExerciseCard({
                   <Pill on={cfg?.autoAdvance === false} onClick={() => onSetting?.(id, "autoAdvance", false)}>Não</Pill>
                 </div>
               </div>
-              <p className="text-[11px] text-slate-400">O paciente entra direto no &ldquo;Treino de hoje&rdquo; com o modo e o nível que você definir aqui — sem tela de escolha.</p>
+              <p className="text-[11px] text-slate-400">O paciente entra direto no &ldquo;Treino de hoje&rdquo; com o nível que você definir aqui — sem tela de escolha.</p>
             </div>
           ) : !isSpan ? (
             <div className="pt-2.5">

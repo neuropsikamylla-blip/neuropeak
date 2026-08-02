@@ -1,6 +1,5 @@
 import { describe, expect, it } from "vitest";
 import {
-  FOCUS_MODES,
   buildFocusCompletionMetadata,
   focusLevelFromStep,
   resolveFocusStartStep,
@@ -20,20 +19,26 @@ describe("progressão do Focus Agentes", () => {
     expect(resolveFocusStartStep(13, 13)).toBe(12);
   });
 
-  it.each(FOCUS_MODES)("emite level numérico e o modo %s", (mode) => {
+  it("emite level numérico e a contagem por função, sem modo", () => {
     const metadata = buildFocusCompletionMetadata({
       trials: 8,
       correct: 7,
       omissions: 1,
       avgRT: 1200,
       step: 6,
-      mode,
+      porFuncao: {
+        seletiva: { tentativas: 5, acertos: 5 },
+        memoriaTrabalho: { tentativas: 3, acertos: 2 },
+      },
     });
 
     expect(metadata.level).toBe(7);
     expect(typeof metadata.level).toBe("number");
-    expect(FOCUS_MODES).toContain(metadata.mode);
-    expect(metadata.mode).toBe(mode);
+    expect(metadata.porFuncao).toEqual({
+      seletiva: { tentativas: 5, acertos: 5 },
+      memoriaTrabalho: { tentativas: 3, acertos: 2 },
+    });
+    expect(metadata).not.toHaveProperty("mode");
     expect(metadata).not.toHaveProperty("nivel");
   });
 });

@@ -2,7 +2,10 @@ export const FOCUS_MODES = ["foco", "inibicao", "alternancia", "desafio"] as con
 
 export type FocusMode = (typeof FOCUS_MODES)[number];
 
-import type { Etapa } from "./commands";
+import type { Etapa, FuncaoCognitiva } from "./commands";
+
+export type ContagemFuncao = { tentativas: number; acertos: number };
+export type PorFuncao = Partial<Record<FuncaoCognitiva, ContagemFuncao>>;
 
 const LAST_FOCUS_STEP = 12;
 export const FOCUS_MAX_LEVEL = LAST_FOCUS_STEP + 1;
@@ -37,7 +40,7 @@ interface FocusCompletionMetadataInput {
   omissions: number;
   avgRT: number;
   step: number;
-  mode: unknown;
+  porFuncao: PorFuncao;
 }
 
 export function buildFocusCompletionMetadata(input: FocusCompletionMetadataInput) {
@@ -47,7 +50,7 @@ export function buildFocusCompletionMetadata(input: FocusCompletionMetadataInput
     omissoes: input.omissions,
     avgRT: input.avgRT,
     level: focusLevelFromStep(input.step),
-    mode: resolveFocusMode(input.mode),
+    porFuncao: input.porFuncao,
   };
 }
 

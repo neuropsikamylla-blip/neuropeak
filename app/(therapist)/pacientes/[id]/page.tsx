@@ -13,7 +13,7 @@ import { calculateDomainScore, calculateAdherence } from "@/lib/scoring";
 import { DistributionChart } from "@/components/plano/DistributionChart";
 import { parsePlanExercises } from "@/lib/exercise-plan";
 import { summarizeStoryTrail } from "@/lib/story-trail-report";
-import { summarizeFocusAgents, focusModeLabel } from "@/lib/focus-report";
+import { summarizeFocusAgents, focusModeLabel, funcaoLabel } from "@/lib/focus-report";
 import { summarizeCaminhosMeta, caminhosModoLabel } from "@/lib/caminhos-report";
 import { ALL_DOMAINS, EXERCISE_DOMAIN } from "@/lib/domain-taxonomy";
 import { formatDate, formatDateTime, calculateAge, formatDuration } from "@/lib/utils";
@@ -288,8 +288,8 @@ export default async function PatientProfilePage({ params }: { params: Promise<{
                 </div>
 
                 <div className="flex flex-wrap gap-2 text-[11px]">
-                  {(["foco", "inibicao", "alternancia", "desafio"] as const).map((m) => focus.byMode[m].n > 0 && (
-                    <span key={m} className="px-2 py-1 rounded-md bg-white/5 text-slate-300">{focusModeLabel(m)}: {Math.round(focus.byMode[m].acc * 100)}% ({focus.byMode[m].n})</span>
+                  {(["seletiva", "memoriaTrabalho", "flexibilidade", "inibicao"] as const).map((funcao) => focus.byFuncao[funcao].tentativas > 0 && (
+                    <span key={funcao} className="px-2 py-1 rounded-md bg-white/5 text-slate-300">{funcaoLabel(funcao)}: {Math.round(focus.byFuncao[funcao].acc * 100)}% ({focus.byFuncao[funcao].tentativas})</span>
                   ))}
                   {focus.byChannel.visual.n > 0 && focus.byChannel.auditivo.n > 0 && (
                     <span className="px-2 py-1 rounded-md bg-white/5 text-slate-300">Visual {Math.round(focus.byChannel.visual.acc * 100)}% · Auditivo {Math.round(focus.byChannel.auditivo.acc * 100)}%</span>

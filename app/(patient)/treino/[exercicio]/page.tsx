@@ -646,7 +646,7 @@ export default function ExercicioPage() {
       case "dual-task": return <DualTask {...props} />;
       case "deductive-grid": return <DeductiveGrid {...props} />;
       case "focus-agents":
-      case "focus-agents-auditivo": return <FocusAgents {...props} settings={exerciseSettings as { mode?: "foco"|"inibicao"|"alternancia"|"desafio"; startLevel?: number; freeChoice?: boolean; feedback?: "leve"|"normal"|"intenso"; autoAdvance?: boolean } | undefined} />;
+      case "focus-agents-auditivo": return <FocusAgents {...props} settings={exerciseSettings as { startLevel?: number; freeChoice?: boolean; feedback?: "leve"|"normal"|"intenso"; autoAdvance?: boolean } | undefined} />;
       case "cubo-corsi": return <CuboCorsi {...props} />;
       case "estacionamento-logico": return <EstacionamentoLogico {...props} />;
       default: return <div className="p-8 text-center text-gray-500">Exercício em desenvolvimento</div>;
