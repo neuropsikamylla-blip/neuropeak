@@ -594,8 +594,15 @@ function camposDoQuadro(
 ): CampoKey[] {
   const ordemBase: CampoKey[] = ["conteudo", "preco", "validade", "tipo", "conservacao",
     "lactose", "gluten", "acucar", "sabor", "saches", "unidades", "rendimento", "alergenicos", "cacau"];
+  // §6: não repetir no quadro o que o TÍTULO já diz ("Gelatina incolor" não precisa de
+  // Tipo: incolor). Vale só para campo extra — se a pergunta exige o campo, ele aparece.
+  const redundante = (c: CampoKey) => (c === "tipo" || c === "sabor") && produtos.every((pq) => {
+    const v = c === "tipo" ? pq.produto.tipo : pq.produto.sabor;
+    return !!v && pq.produto.nome.toLowerCase().includes(v.toLowerCase());
+  });
   const disponiveis = ordemBase.filter(
-    (c) => !exigidos.includes(c) && !proibidos.includes(c) && produtos.every((pq) => temCampo(pq.produto, c)));
+    (c) => !exigidos.includes(c) && !proibidos.includes(c) && !redundante(c)
+      && produtos.every((pq) => temCampo(pq.produto, c)));
   const extras = (params.ordemCamposVariavel ? shuffle(disponiveis, rnd) : disponiveis)
     .slice(0, Math.max(0, params.nCampos - exigidos.length));
   const todos = [...exigidos.filter((c) => c !== "fraseEmbalagem"), ...extras];

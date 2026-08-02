@@ -386,3 +386,22 @@ describe("Composição da sessão (Fase 2 §16)", () => {
     expect(modalidades.filter((m) => m === "situacao").length).toBeGreaterThanOrEqual(1);
   }, 30_000);
 });
+
+describe("Quadro funcional (Fase 2 §6)", () => {
+  it("não repete no quadro o que o nome do produto já diz", () => {
+    const rnd = rndSeed(1409);
+    const snap = criarSnapshot(rnd);
+    for (let i = 0; i < 600; i++) {
+      const { questao: q } = gerarQuestao(TIPOS_QUESTAO[i % TIPOS_QUESTAO.length], NIVEIS[6], snap, rnd);
+      if (!q) continue;
+      for (const campo of ["tipo", "sabor"] as const) {
+        if (!q.camposVisiveis.includes(campo) || q.camposExigidos.includes(campo)) continue;
+        const todosRedundantes = q.produtos.every((pq) => {
+          const v = campo === "tipo" ? pq.produto.tipo : pq.produto.sabor;
+          return !!v && pq.produto.nome.toLowerCase().includes(v.toLowerCase());
+        });
+        expect(todosRedundantes, `${campo} redundante no quadro: ${q.produtos.map((p) => p.produto.nome).join(", ")}`).toBe(false);
+      }
+    }
+  }, 60_000);
+});

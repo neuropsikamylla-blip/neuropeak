@@ -425,6 +425,7 @@ export function InformacaoEmFoco({ difficulty, theme, onComplete }: Props) {
         <AnimatePresence>
           {fb && (
             <motion.div key={fb.texto} initial={{ opacity: 0, y: 6 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0 }}
+              role="status" aria-live="polite"
               className="rounded-2xl p-4 flex items-start gap-3"
               style={{
                 background: fb.ok ? (s.isG ? "rgba(16,185,129,.12)" : "#ecfdf5") : fb.pista ? (s.isG ? "rgba(37,99,235,.12)" : "#eff6ff") : (s.isG ? "rgba(245,158,11,.12)" : "#fffbeb"),
@@ -433,6 +434,7 @@ export function InformacaoEmFoco({ difficulty, theme, onComplete }: Props) {
               <span className="flex-shrink-0 mt-0.5">
                 {fb.ok ? <Check className="text-emerald-500" size={20} /> : fb.pista ? <Lightbulb className="text-blue-500" size={20} /> : <X className="text-amber-600" size={20} />}
               </span>
+              <span className="sr-only">{fb.ok ? "Resposta correta. " : fb.pista ? "Ainda não. " : "Resposta incorreta. "}</span>
               <p className={`text-sm leading-snug font-medium ${fb.ok ? "text-emerald-700" : fb.pista ? (s.isG ? "text-blue-200" : "text-blue-800") : (s.isG ? "text-amber-200" : "text-amber-800")}`}>
                 {fb.texto}
               </p>
