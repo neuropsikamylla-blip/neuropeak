@@ -2732,3 +2732,6 @@ onde paramos?
 
 ## 02/08/2026 17:23
 Ok! o ideal é esperar isso terminar para prosseguirmos para a proxima etapa?
+
+## 02/08/2026 17:25
+eu queria mandar comando de outra coisa do programa! Mas nao sei se esperamos vc concluir isso
