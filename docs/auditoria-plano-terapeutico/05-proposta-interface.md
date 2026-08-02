@@ -12,7 +12,7 @@ está configurado. Tudo o mais fica atrás do "Ajustar".
 
 ```
 ┌──────────────────────────────────────────────┐
-│ 🧠 Cubo de Corsi                    ⋮  ✕     │
+│ 🧠 Cubos                             ⋮  ✕     │
 │ Memória · bloco                              │
 │                                              │
 │ 6 min · carga 2 · 8 séries        [Ajustar]  │

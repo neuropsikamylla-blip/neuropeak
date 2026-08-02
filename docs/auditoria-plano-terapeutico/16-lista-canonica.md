@@ -1,65 +1,86 @@
-# 16 — Lista canônica provisória das atividades clínicas
+# 16 — Lista canônica definitiva das atividades clínicas
 
-> **34 atividades clínicas reais.** Provisória: depende das decisões do documento 14
-> (nomes) e 15 (modalidades). Nada implementado.
+> Esta é a fonte válida para o catálogo clínico: **34 exercícios ACTIVE**. IDs técnicos permanecem
+> estáveis para planos, sessões e progresso; somente o nome exibido nesta documentação é canônico.
 
-## Regra da lista
+## Lista canônica
 
-Entra quem está no **catálogo** (`lib/domain-taxonomy.ts`) **e** tem execução no `switch`. Ficam de
-fora: aliases, modos auditivos e o órfão `desafio-cidade`.
+| ID técnico | Nome oficial | Categoria cognitiva | Domínio principal | Modalidades (quando existirem) | Status |
+|---|---|---|---|---|---|
+| `span-numerico` | Span Numérico Auditivo Direto | Memória | Memória Operacional | auditiva intrínseca | ACTIVE |
+| `stroop-task` | Cores e Palavras | Funções Executivas | Controle Inibitório | visual | ACTIVE |
+| `focus-agents` | Agentes Focus | Atenção | Atenção Sustentada | visual · visual+áudio · só áudio | ACTIVE |
+| `span-numerico-inverso` | Span Numérico Auditivo Inverso | Memória | Memória Operacional | auditiva intrínseca | ACTIVE |
+| `matriz-espacial` | Matriz Espacial | Memória | Memória Visuoespacial | visual | ACTIVE |
+| `matriz-espacial-inversa` | Matriz Espacial Inversa | Memória | Memória Visuoespacial | visual | ACTIVE |
+| `jogo-memoria` | Jogo da Memória | Memória | Memória Visuoespacial | visual | ACTIVE |
+| `trilha-visual` | Conecta Números | Atenção | Atenção Seletiva | visual | ACTIVE |
+| `antes-depois` | Caminhos para a Meta | Funções Executivas | Planejamento e Flexibilidade | visual · visual+áudio · só áudio | ACTIVE |
+| `informacao-em-foco` | Informação em Foco | Atenção | Atenção Seletiva | visual | ACTIVE |
+| `mot` | Rastreamento de Objetos | Atenção | Atenção Dividida | visual | ACTIVE |
+| `dual-task` | Dupla Tarefa | Atenção | Atenção Dividida | visual | ACTIVE |
+| `tempo-reacao` | Tempo de Reação | Velocidade de Processamento | Tempo de Reação | visual | ACTIVE |
+| `certo-ou-errado` | Certo ou Errado | Velocidade de Processamento | Resposta Rápida | visual | ACTIVE |
+| `semaforo` | Semáforo | Velocidade de Processamento | Tempo de Reação | visual | ACTIVE |
+| `corrida-tempo` | Busca Rápida | Velocidade de Processamento | Resposta Rápida | visual | ACTIVE |
+| `torre-hanoi` | Jogo das Torres | Funções Executivas | Planejamento | visual | ACTIVE |
+| `labirinto` | Labirinto | Funções Executivas | Planejamento | visual | ACTIVE |
+| `ordem-historia` | Ordem da História | Funções Executivas | Raciocínio Lógico | visual | ACTIVE |
+| `compra-multifuncional` | Compra Multifuncional | Desenvolvimento Funcional | Autonomia | visual · visual+áudio · só áudio | ACTIVE |
+| `task-switching` | Alternância de Regras | Funções Executivas | Flexibilidade Cognitiva | visual | ACTIVE |
+| `deductive-grid` | Grade Dedutiva | Funções Executivas | Raciocínio Lógico | visual | ACTIVE |
+| `letras-sequencia` | Letras em Sequência | Memória | Memória Operacional | visual | ACTIVE |
+| `sequencia-itens` | Sequência de Itens | Memória | Memória Operacional | visual | ACTIVE |
+| `padroes-rotacao` | Matriz com Rotações | Memória | Memória Visuoespacial | visual | ACTIVE |
+| `lista-distracao` | Lista com Distração | Memória | Memória Operacional | visual | ACTIVE |
+| `restaurante-ordem` | Restaurante | Memória | Memória Operacional | visual · visual+áudio · só áudio | ACTIVE |
+| `desafio-supermercado` | Supermercado | Memória | Memória Operacional | visual · visual+áudio · só áudio | ACTIVE |
+| `nback` | N-Back | Memória | Memória Operacional | visual | ACTIVE |
+| `cubo-corsi` | Cubos | Memória | Memória Visuoespacial | visual | ACTIVE |
+| `vigilancia` | Vigilância | Atenção | Atenção Sustentada | visual | ACTIVE |
+| `identificacao-simbolos` | Identificação de Símbolos | Velocidade de Processamento | Busca Visual Rápida | visual | ACTIVE |
+| `estacionamento-logico` | Estacionamento Lógico | Funções Executivas | Planejamento | visual | ACTIVE |
+| `investigadores-sociais` | Investigadores da Situação Social | Desenvolvimento Funcional | Cognição Social | visual | ACTIVE |
 
-| canonicalExerciseId | Nome oficial | Status | Categoria | Modalidades | Aliases | Rota | Terapeuta | Paciente |
-|---|---|---|---|---|---|---|---|---|
-| `antes-depois` | Caminhos para a Meta | ACTIVE | Funções Executivas | visual · visual+áudio · só áudio | — | `/treino/antes-depois` | sim | sim |
-| `certo-ou-errado` | Certo ou Errado | ACTIVE | Velocidade de Processamento | — só visual | — | `/treino/certo-ou-errado` | sim | sim |
-| `compra-multifuncional` | Compra Multifuncional | ACTIVE | Desenvolvimento Funcional | **visual · visual+áudio · só áudio** (aprovado 02/ago, a implementar) | `desafio-orcamento` | `/treino/compra-multifuncional` | sim | sim |
-| `corrida-tempo` | Busca Rápida | ACTIVE | Velocidade de Processamento | — só visual | — | `/treino/corrida-tempo` | sim | sim |
-| `cubo-corsi` | Cubos | ACTIVE | Memória | — só visual | — | `/treino/cubo-corsi` | sim | sim |
-| `deductive-grid` | Grade Dedutiva | ACTIVE | Funções Executivas | — só visual | — | `/treino/deductive-grid` | sim | sim |
-| `desafio-supermercado` | Supermercado | ACTIVE | Memória | visual · visual+áudio · só áudio | `desafio-supermercado-auditivo` | `/treino/desafio-supermercado` | sim | sim |
-| `dual-task` | Dupla Tarefa | ACTIVE | Atenção | — só visual | — | `/treino/dual-task` | sim | sim |
-| `estacionamento-logico` | Estacionamento Lógico | ACTIVE | Funções Executivas | — só visual | — | `/treino/estacionamento-logico` | sim | sim |
-| `focus-agents` | Focus Agentes | ACTIVE | Atenção | **visual · visual+áudio · só áudio** (aprovado 02/ago, a implementar) | `focus-agents-auditivo` | `/treino/focus-agents` | sim | sim |
-| `identificacao-simbolos` | Identificação de Símbolos | ACTIVE | Velocidade de Processamento | — só visual | — | `/treino/identificacao-simbolos` | sim | sim |
-| `informacao-em-foco` | Informação em Foco | ACTIVE | Atenção | — só visual | `caca-item-barato`, `mudanca-regras` | `/treino/informacao-em-foco` | sim | sim |
-| `investigadores-sociais` | Investigadores da Situação Social | ACTIVE | Desenvolvimento Funcional | — só visual | — | `/treino/investigadores-sociais` | sim | sim |
-| `jogo-memoria` | Jogo da Memória | ACTIVE | Memória | — só visual | — | `/treino/jogo-memoria` | sim | sim |
-| `labirinto` | Labirinto | ACTIVE | Funções Executivas | — só visual | — | `/treino/labirinto` | sim | sim |
-| `letras-sequencia` | Letras em Sequência | ACTIVE | Memória | — só visual | — | `/treino/letras-sequencia` | sim | sim |
-| `lista-distracao` | Lista com Distração | ACTIVE | Memória | — só visual | — | `/treino/lista-distracao` | sim | sim |
-| `matriz-espacial` | Matriz Espacial | ACTIVE | Memória | — só visual | — | `/treino/matriz-espacial` | sim | sim |
-| `matriz-espacial-inversa` | Matriz Espacial Inversa | ACTIVE | Memória | — só visual | — | `/treino/matriz-espacial-inversa` | sim | sim |
-| `mot` | Rastreamento de Objetos | ACTIVE | Atenção | — só visual | — | `/treino/mot` | sim | sim |
-| `nback` | N-Back | ACTIVE | Memória | — só visual | — | `/treino/nback` | sim | sim |
-| `ordem-historia` | Ordem da História | ACTIVE | Funções Executivas | — só visual | — | `/treino/ordem-historia` | sim | sim |
-| `padroes-rotacao` | Matriz com Rotações | ACTIVE | Memória | — só visual | — | `/treino/padroes-rotacao` | sim | sim |
-| `restaurante-ordem` | Restaurante | ACTIVE | Memória | visual · visual+áudio · só áudio | `restaurante-ordem-auditivo` | `/treino/restaurante-ordem` | sim | sim |
-| `semaforo` | Semáforo | ACTIVE | Velocidade de Processamento | — só visual | — | `/treino/semaforo` | sim | sim |
-| `sequencia-itens` | Sequência de Itens | ACTIVE | Memória | — só visual | — | `/treino/sequencia-itens` | sim | sim |
-| `span-numerico` | Span Numérico Auditivo Direto | ACTIVE | Memória | **auditiva (intrínseca, sem seletor)** | — | `/treino/span-numerico` | sim | sim |
-| `span-numerico-inverso` | Span Numérico Auditivo Inverso | ACTIVE | Memória | **auditiva (intrínseca, sem seletor)** | — | `/treino/span-numerico-inverso` | sim | sim |
-| `stroop-task` | Cores e Palavras | ACTIVE | Funções Executivas | — só visual | — | `/treino/stroop-task` | sim | sim |
-| `task-switching` | Task Switching | ACTIVE | Funções Executivas | — só visual | — | `/treino/task-switching` | sim | sim |
-| `tempo-reacao` | Tempo de Reação | ACTIVE | Velocidade de Processamento | — só visual | — | `/treino/tempo-reacao` | sim | sim |
-| `torre-hanoi` | Jogo das Torres | ACTIVE | Funções Executivas | — só visual | — | `/treino/torre-hanoi` | sim | sim |
-| `trilha-visual` | Conecta Números | ACTIVE | Atenção | — só visual | — | `/treino/trilha-visual` | sim | sim |
-| `vigilancia` | Vigilância | ACTIVE | Atenção | — só visual | — | `/treino/vigilancia` | sim | sim |
+## Tabela de correspondência histórica e referência técnica de compatibilidade
 
-## Fora da lista canônica
+> Alerta de desambiguação: `mudanca-regras` foi um exercício descontinuado, **Mudança de Regras**,
+> fundido em Informação em Foco. Não é `task-switching`, cujo nome oficial é **Alternância de
+> Regras**.
 
-| ID | Por quê | Pertence a |
-|---|---|---|
-| `focus-agents-auditivo` | modo, não exercício | `focus-agents` |
-| `restaurante-ordem-auditivo` | modo, não exercício | `restaurante-ordem` |
-| `desafio-supermercado-auditivo` | modo, não exercício | `desafio-supermercado` |
-| `desafio-orcamento` | id antigo redirecionado | `compra-multifuncional` |
-| `caca-item-barato` | id antigo redirecionado | `informacao-em-foco` |
-| `mudanca-regras` | id antigo redirecionado | `informacao-em-foco` |
-| `desafio-cidade` | **órfão**: renderiza, mas foi tirado do catálogo | — |
-
-## Campo que falta no modelo de dados
-
-A lista canônica mostra que `EXERCISE_DEFINITIONS` está fazendo três trabalhos ao mesmo tempo:
-catálogo clínico, dicionário de ids históricos e definição de modo. O documento 06 propõe separar —
-e o campo que resolve isto é um `status` explícito na definição, em vez de a informação estar
-espalhada entre três arquivos.
+| ID técnico | Nome oficial | Aliases antigos (se existirem) | Status |
+|---|---|---|---|
+| `span-numerico` | Span Numérico Auditivo Direto | — | ACTIVE |
+| `stroop-task` | Cores e Palavras | — | ACTIVE |
+| `focus-agents` | Agentes Focus | — | ACTIVE |
+| `span-numerico-inverso` | Span Numérico Auditivo Inverso | — | ACTIVE |
+| `matriz-espacial` | Matriz Espacial | — | ACTIVE |
+| `matriz-espacial-inversa` | Matriz Espacial Inversa | — | ACTIVE |
+| `jogo-memoria` | Jogo da Memória | — | ACTIVE |
+| `trilha-visual` | Conecta Números | — | ACTIVE |
+| `antes-depois` | Caminhos para a Meta | — | ACTIVE |
+| `informacao-em-foco` | Informação em Foco | `caca-item-barato`; `mudanca-regras` (Mudança de Regras, descontinuado e fundido) | ACTIVE |
+| `mot` | Rastreamento de Objetos | — | ACTIVE |
+| `dual-task` | Dupla Tarefa | — | ACTIVE |
+| `tempo-reacao` | Tempo de Reação | — | ACTIVE |
+| `certo-ou-errado` | Certo ou Errado | — | ACTIVE |
+| `semaforo` | Semáforo | — | ACTIVE |
+| `corrida-tempo` | Busca Rápida | — | ACTIVE |
+| `torre-hanoi` | Jogo das Torres | — | ACTIVE |
+| `labirinto` | Labirinto | — | ACTIVE |
+| `ordem-historia` | Ordem da História | — | ACTIVE |
+| `compra-multifuncional` | Compra Multifuncional | `desafio-orcamento` | ACTIVE |
+| `task-switching` | Alternância de Regras | — | ACTIVE |
+| `deductive-grid` | Grade Dedutiva | — | ACTIVE |
+| `letras-sequencia` | Letras em Sequência | — | ACTIVE |
+| `sequencia-itens` | Sequência de Itens | — | ACTIVE |
+| `padroes-rotacao` | Matriz com Rotações | — | ACTIVE |
+| `lista-distracao` | Lista com Distração | — | ACTIVE |
+| `restaurante-ordem` | Restaurante | — | ACTIVE |
+| `desafio-supermercado` | Supermercado | — | ACTIVE |
+| `nback` | N-Back | — | ACTIVE |
+| `cubo-corsi` | Cubos | — | ACTIVE |
+| `vigilancia` | Vigilância | — | ACTIVE |
+| `identificacao-simbolos` | Identificação de Símbolos | — | ACTIVE |
+| `estacionamento-logico` | Estacionamento Lógico | — | ACTIVE |
+| `investigadores-sociais` | Investigadores da Situação Social | — | ACTIVE |

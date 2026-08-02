@@ -29,7 +29,7 @@ calcular span/progressão.
 | `desafio-supermercado` | Supermercado | Memória | **D** | 5 | 6 | 9 | nº de séries | 3 | seletor (3 modos) |
 | `dual-task` | Dupla Tarefa | Atenção | **C** | 3 | 4 | 5 | **não** (fixa) | 3 | visual |
 | `estacionamento-logico` | Estacionamento Lógico | Executivas | **B** | 8 | 10 | 15 | janela máxima | 2 | visual |
-| `focus-agents` | Focus Agentes | Atenção | **A** | 4 | 5 | 8 | faixa de minutos | 2 | seletor (3 modos) |
+| `focus-agents` | Agentes Focus | Atenção | **A** | 4 | 5 | 8 | faixa de minutos | 2 | seletor (3 modos) |
 | `identificacao-simbolos` | Identificação de Símbolos | Velocidade | **A** | 4 | 5 | 8 | faixa de minutos | 1 | visual |
 | `informacao-em-foco` | Informação em Foco | Atenção | **A** | 4 | 5 | 8 | faixa de minutos | 2 | visual |
 | `investigadores-sociais` | Investigadores da Situação Social | Funcional | **B** | 8 | 10 | 15 | janela máxima | 3 | visual |
@@ -49,7 +49,7 @@ calcular span/progressão.
 | `span-numerico` | Span Numérico Auditivo Direto | Memória | **D** | 5 | 6 | 9 | nº de séries | 2 | **auditiva intrínseca** |
 | `span-numerico-inverso` | Span Numérico Auditivo Inverso | Memória | **D** | 5 | 6 | 9 | nº de séries | 3 | **auditiva intrínseca** |
 | `stroop-task` | Cores e Palavras | Executivas | **C** | 3 | 4 | 5 | **não** (fixa) | 3 | visual |
-| `task-switching` | Task Switching | Executivas | **C** | 3 | 4 | 5 | **não** (fixa) | 3 | visual |
+| `task-switching` | Alternância de Regras | Executivas | **C** | 3 | 4 | 5 | **não** (fixa) | 3 | visual |
 | `tempo-reacao` | Tempo de Reação | Velocidade | **A** | 4 | 5 | 8 | faixa de minutos | 1 | visual |
 | `torre-hanoi` | Jogo das Torres | Executivas | **B** | 8 | 10 | 15 | janela máxima | 2 | visual |
 | `trilha-visual` | Conecta Números | Atenção | **A** | 4 | 5 | 8 | faixa de minutos | 1 | visual |
@@ -66,9 +66,8 @@ calcular span/progressão.
 
 ## O que mudou em relação à versão anterior
 
-1. **7 linhas saíram** (3 modos auditivos + 3 aliases + 1 órfão) — não são exercícios.
-2. **`desafio-orcamento` e `desafio-cidade` deixaram de ocupar linha de modelo B**; o primeiro é
-   alias da Compra, o segundo é órfão aguardando decisão.
+1. **Sete registros técnicos ficaram fora da classificação** — não são exercícios clínicos.
+2. A classificação agora considera somente os 34 exercícios ACTIVE da lista canônica.
 3. **Coluna de modalidade** passou a refletir a regra fechada: 5 com seletor, 2 auditivos
    intrínsecos (spans), 27 visuais.
 4. **Span inverso subiu para carga 3** (era 2): além da retenção auditiva, exige reordenação mental —

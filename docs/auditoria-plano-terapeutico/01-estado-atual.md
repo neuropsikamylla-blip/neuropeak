@@ -39,7 +39,8 @@ nenhum — é dado de prescrição, guardado e exibido.
 **Origem: literal em `types/index.ts`**, dentro de `EXERCISE_DEFINITIONS`, campo
 `estimatedMinutes`. Não vem de configuração, de tentativas, do exercício nem de medição:
 
-- **38 exercícios com `7`**, dois com `8`, um com `9` (41 definições).
+- Nas definições técnicas: **38 registros com `7`**, dois com `8`, um com `9`. O catálogo clínico
+  válido continua com 34 exercícios; registros de compatibilidade não entram nessa contagem.
 
 Exibição: `ExerciseRow.tsx:43` (`{estimatedMinutes} min`) e `:55` (`~{estimatedMinutes} min`).
 
@@ -65,7 +66,7 @@ O controle de **10 / 15 / 20 / 30** existe **só para os spans**:
 - Efeito real: `SpanNumerico.tsx:298` → `const done = newAttempts.length >= cfg.trials;` — é o que
   encerra o exercício. Default `trials: 15`, `allowReplay: true` (`SpanNumerico.tsx:22-23`).
 
-**Os outros 38 exercícios não têm dose por tentativas** — encerram por tempo (`useTimedProgress`,
+**Os outros 32 exercícios clínicos não têm dose por tentativas** — encerram por tempo (`useTimedProgress`,
 sessão-alvo de tempo ATIVO). Ver o inventário no documento 02.
 
 ## Repetição de áudio

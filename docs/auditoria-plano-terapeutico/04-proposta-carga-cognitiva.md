@@ -109,7 +109,7 @@ alerta três vezes — e ainda assim deixa salvar, se o terapeuta quiser.
 
 ## Decisões que exigem validação humana
 
-1. A tabela de carga basal dos 41 exercícios (documento 03) — é proposta, não medida.
+1. A tabela de carga basal dos 34 exercícios (documento 03) — é proposta, não medida.
 2. Os limiares de alerta (12 para sessão, 70%/110% de duração).
 3. Se "repetição de áudio desligada" realmente sobe a carga, ou se muda o construto a ponto de
    virar outro exercício (ver documento 08).

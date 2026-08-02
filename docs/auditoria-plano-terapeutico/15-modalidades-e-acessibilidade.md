@@ -23,7 +23,7 @@ O seletor **visual · visual+áudio · só áudio** é exclusivo de **cinco** ex
 | 1 | Restaurante | já tem |
 | 2 | Supermercado | já tem |
 | 3 | Caminhos para a Meta | já tem |
-| 4 | **Focus Agentes** | **aprovado — falta implementar** |
+| 4 | **Agentes Focus** | **aprovado — falta implementar** |
 | 5 | **Compra Multifuncional** | **aprovado — falta implementar** |
 
 **Nenhum outro exercício recebe o seletor sem nova decisão clínica explícita.**
@@ -63,7 +63,7 @@ iniciar (nunca toca áudio sozinho).
 | Supermercado (`desafio-supermercado`) | visual · visual+áudio · só áudio | confirmado no código |
 | Caminhos para a Meta (`antes-depois`) | idem | usa `PresentationConfig`, não aparecia na sua lista |
 
-**Aprovados e ainda não implementados (2):** Focus Agentes e Compra Multifuncional (§0).
+**Aprovados e ainda não implementados (2):** Agentes Focus e Compra Multifuncional (§0).
 Hoje o `focus-agents-auditivo` existe como **id herdado** (alias) mas o exercício **não** oferece o
 seletor — ou seja, a modalidade auditiva do Focus está prometida no id e ausente na tela.
 
@@ -74,7 +74,7 @@ seletor — ou seja, a modalidade auditiva do Focus está prometida no id e ause
 | Restaurante | **sim** — de leitura funcional para retenção auditiva | +1 no só-áudio | sobe muito no só-áudio | some | central | **deveria ser separada por modo** |
 | Supermercado | **sim** — idem | +1 no só-áudio | sobe muito | some | central | idem |
 | Caminhos para a Meta | parcial — o enunciado é o mesmo, muda o canal | +0/+1 | igual | some no só-áudio | moderado | pode ser compartilhada |
-| Focus Agentes (aprovado) | **sim** — comando ouvido exige reter a regra sem apoio visual | +1 | sobe | — | central | **separada** |
+| Agentes Focus (aprovado) | **sim** — comando ouvido exige reter a regra sem apoio visual | +1 | sobe | — | central | **separada** |
 | Compra Multifuncional (aprovado) | **sim** — a situação passa a ser ouvida | +1 | sobe | some | central | **separada** |
 
 ⚠️ **Não tratar "visual + áudio" como automaticamente mais difícil.** Para paciente com dificuldade
@@ -88,7 +88,7 @@ dos três — e o só-áudio, o mais difícil.
 `/exercises/audio/tts/*.mp3`); se a frase não estiver no manifesto, cai para **Web Speech API**
 (`speechSynthesis`). Há `cancelTTS()` que pausa o áudio corrente e chama `speechSynthesis.cancel()`.
 
-**Onde existe hoje (3 exercícios):** Focus Agentes, Informação em Foco, Caminhos para a Meta.
+**Onde existe hoje (3 exercícios):** Agentes Focus, Informação em Foco, Caminhos para a Meta.
 
 | Pergunta da auditoria | Resposta |
 |---|---|

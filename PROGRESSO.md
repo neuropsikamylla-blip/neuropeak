@@ -3,6 +3,23 @@
 > Checkpoint de contexto para continuidade entre sessões. Atualizado automaticamente.
 > 👉 Visão geral e handoff para o próximo Claude: **`ESTADO-DO-PROJETO.md`** (leia primeiro).
 
+## 📌 CATÁLOGO CANÔNICO CONSOLIDADO (02/ago/2026) — decisão dela, DEFINITIVA
+
+**Fonte única de verdade: `docs/auditoria-plano-terapeutico/16-lista-canonica.md` — 34 exercícios ACTIVE.**
+
+- **Nomes oficiais congelados** (a lista dos 34 está no doc 16). Dois nomes mudaram por decisão dela:
+  `focus-agents` → **"Agentes Focus"** · `task-switching` → **"Alternância de Regras"**.
+- **IDs técnicos NÃO mudam** — são chave de planos, sessões e progresso no banco.
+- **Fora da arquitetura conceitual:** `desafio-cidade` (marcado `REMOVED_FROM_CURRENT_CATALOG`, será
+  reformulado como exercício NOVO — o código fica onde está), os 3 aliases e os 3 modos auditivos.
+- ⚠️ **Desambiguação:** "Mudança de Regras" (`mudanca-regras`) foi exercício DESCONTINUADO, fundido
+  no Informação em Foco. Não confundir com "Alternância de Regras" (`task-switching`), que é outro.
+- **Modalidade** (visual · visual+áudio · só áudio): exclusiva de **5** — Restaurante, Supermercado,
+  Caminhos para a Meta, Agentes Focus e Compra Multifuncional (os 2 últimos aprovados, a implementar).
+  Os spans são **auditivos intrínsecos**, sem seletor.
+
+Toda análise futura usa exclusivamente essa lista.
+
 ## 🔖 RETOMADA IMEDIATA (02/ago/2026, fim da tarde) — ela trocou de conta AQUI
 
 **Estado:** produção = local = **v2.67.1** · 250 testes · tsc 0 · git limpo.

@@ -6,18 +6,18 @@
 ## ✅ JÁ DECIDIDO POR ELA (02/ago/2026)
 
 - **Modalidade (seletor visual · visual+áudio · só áudio): restrito a CINCO** — Restaurante,
-  Supermercado, Caminhos para a Meta, **Focus Agentes** e **Compra Multifuncional**. Os dois últimos
+  Supermercado, Caminhos para a Meta, **Agentes Focus** e **Compra Multifuncional**. Os dois últimos
   aprovados e ainda não implementados. Nenhum outro sem nova decisão explícita.
 - **Os dois spans são auditivos por definição** — áudio intrínseco e obrigatório, sem seletor, sem
   versão visual. Leitura assistiva neles só para textos instrucionais, separada do áudio dos números.
 
 ## BLOQUEANTES — sem isso não começo
 
-**B1. A tabela de carga basal dos 41 exercícios.** Está proposta no documento 03, derivada dos sete
+**B1. A tabela de carga basal dos 34 exercícios.** Está proposta no documento 03, derivada dos sete
 eixos do documento 04. É julgamento profissional codificado, não medida. Precisa da sua revisão
 exercício por exercício — principalmente os que marquei como carga 3 (`nback`, `lista-distracao`,
-`stroop-task`, `task-switching`, `dual-task`, `mudanca-regras`, `deductive-grid`,
-`compra-multifuncional`, `investigadores-sociais`, os `*-auditivo`).
+`stroop-task`, `task-switching`, `dual-task`, `deductive-grid`, `compra-multifuncional` e
+`investigadores-sociais`).
 
 **B2. As durações recomendadas por modelo.** Propus: contínuo 4–8 (padrão 5–6) · planejamento até
 10–15 · fixo 4 · bloco 5–9. Se um paciente típico seu leva mais que isso na Torre de Hanói, a faixa
@@ -70,7 +70,7 @@ se a sessão precisa terminar **dentro** dos 30.
 
 ## O que eu decidi sozinha e você pode reverter
 
-- Criar a **quarta categoria** (bloco/protocolo): 15 exercícios de memória não cabem em nenhuma das
+- Criar a **quarta categoria** (bloco/protocolo): 13 exercícios de memória não cabem em nenhuma das
   três originais sem quebrar a progressão por série.
 - **Escala 1–3** em vez de 1–5, com modificadores fazendo o ajuste fino (documento 04).
 - **Lateralidade** deixa de ser eixo de dificuldade própria e vira variação.
