@@ -3,6 +3,39 @@
 > Checkpoint de contexto para continuidade entre sessões. Atualizado automaticamente.
 > 👉 Visão geral e handoff para o próximo Claude: **`ESTADO-DO-PROJETO.md`** (leia primeiro).
 
+## 🔒 FECHAMENTO (02/ago/2026, madrugada) — v2.60.2 → **v2.64.1**, tudo em produção
+
+**Estado real:** git limpo · local = produção = **2.64.1** · **217 testes** (17 arquivos) · `tsc` 0 ·
+build OK.
+
+**Entregue nesta sessão**
+1. **Vigilância** (v2.61.0 → 2.63.2): alvos regerados por ela e medidos por ΔE Lab · **8 pares**
+   (entraram verde musgo e vinho) · **sessão por TEMPO ~8 min com linha de progressão** (como
+   Estacionamento e Torre) · fim de bloco silencioso · erro mostra melhor onde estava a certa
+   (2,6 s + linha até o lugar certo) · **par ameixa desativado** a pedido dela, escada refeita.
+2. **Informação em Foco — FASE 1 COMPLETA** (v2.64.0 → 2.64.1): catálogo central de 73 produtos com
+   atributos fixos lidos das embalagens · **um gerador parametrizado** com 9 tipos ·
+   **motor antigo apagado** (era ele que sorteava lactose e sabor) · validação com motivo nomeado ·
+   não repetição · snapshot estável · progresso coerente.
+3. **Specs das 3 fases gravadas** em `docs/` (Fase 1, Fase 2 e Fase 3 do Informação em Foco).
+
+**Decisões dela registradas**
+- Dificuldade sobe por **carga cognitiva**, nunca por pontuação, peso de tipo ou gamificação —
+  memória `dificuldade-por-carga-cognitiva`.
+- Sessão por TEMPO com barra é o padrão do projeto; a dificuldade sobe com os acertos.
+- Ao receber a spec de uma fase, **conferir no código se a anterior foi aplicada** antes de avançar.
+- Vigilância: rabiola ondulada é intencional; par ameixa fora por ser fácil demais.
+
+**Próximo passo (abrir com `claude --continue`)**
+**Ela testar uma sessão inteira do Informação em Foco em produção.** É esse teste que autoriza a
+**FASE 2** (`docs/INFORMACAO-EM-FOCO-FASE2-CARTOES-E-SITUACOES.md`: cartão novo, imagem 150–175 px,
+modal de ampliação, 70/10/20 entre quadro · leitura da embalagem · situação). Depois a **FASE 3**
+(adaptativa, `docs/INFORMACAO-EM-FOCO-FASE3-ADAPTATIVA.md`). Se o teste dela apontar algo, corrigir
+ANTES de avançar de fase.
+
+**Limitação declarada:** o tipo "ingredientes" usa lactose/glúten/açúcar adicionado — lista completa
+de ingredientes não existe no catálogo porque não está legível nas embalagens (não se inventa dado).
+
 ## ✅ FASE 1 CONCLUÍDA (02/ago/2026) — Informação em Foco: motor estabilizado (v2.64.1)
 
 **Todas as fatias entregues, com prova e em produção:**
