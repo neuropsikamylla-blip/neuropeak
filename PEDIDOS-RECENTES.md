@@ -1,9 +1,6 @@
 # As 3 ultimas especificacoes dela (automatico; a mais nova por ultimo)
 # Na retomada: ler as 3, conectar com PROGRESSO.md e git, declarar e seguir.
 
-## 01/08/2026 17:19
-na verdade são 80 imagens, vamos integrar as 80 imagens no informação em foco, lembrando fundo transparente ok?
-
 ## 01/08/2026 18:10
 essas 3 embalagens de marcas reais sao de que mesmo? e preciso criar algo a mais?
 
@@ -587,3 +584,6 @@ Primeiro estabilize totalmente os dados e a geração das questões.
 ```
 
 Depois que ele concluir, teste pelo menos uma sessão inteira de 10 questões. **Só depois** envie o comando das situações do cotidiano. Caso contrário, as historinhas apenas reaproveitarão os mesmos dados errados.
+
+## 01/08/2026 23:58
+vigilancia percebi que a pipa está mto diferente... atualizei as pipas ALVOS verifica

@@ -598,3 +598,6 @@ Primeiro estabilize totalmente os dados e a geração das questões.
 ```
 
 Depois que ele concluir, teste pelo menos uma sessão inteira de 10 questões. **Só depois** envie o comando das situações do cotidiano. Caso contrário, as historinhas apenas reaproveitarão os mesmos dados errados.
+
+## 01/08/2026 23:58
+vigilancia percebi que a pipa está mto diferente... atualizei as pipas ALVOS verifica
