@@ -5,7 +5,7 @@
       "nome": "Ameixa suave",
       "categoria": "tom",
       "atributoDiferencial": "corCorpo",
-      "dificuldadeVisual": 3,
+      "dificuldadeVisual": 2,
       "permiteModoSemCor": false,
       "aprovado": true,
       "variantes": {
@@ -30,7 +30,7 @@
       "nome": "Azul ardósia",
       "categoria": "tom",
       "atributoDiferencial": "corCorpo",
-      "dificuldadeVisual": 4,
+      "dificuldadeVisual": 5,
       "permiteModoSemCor": false,
       "aprovado": true,
       "variantes": {
@@ -55,7 +55,7 @@
       "nome": "Terracota",
       "categoria": "tom",
       "atributoDiferencial": "corCorpo",
-      "dificuldadeVisual": 2,
+      "dificuldadeVisual": 3,
       "permiteModoSemCor": false,
       "aprovado": true,
       "variantes": {
@@ -72,7 +72,7 @@
           "kb": 49
         }
       },
-      "deltaELab": 19.4,
+      "deltaELab": 14.3,
       "medidoEm": "2026-08-02"
     },
     {
@@ -98,6 +98,52 @@
         }
       },
       "deltaELab": 22.8,
+      "medidoEm": "2026-08-02"
+    },
+    {
+      "pairId": "P07",
+      "nome": "Verde musgo",
+      "categoria": "tom",
+      "atributoDiferencial": "corCorpo",
+      "dificuldadeVisual": 4,
+      "permiteModoSemCor": false,
+      "aprovado": true,
+      "variantes": {
+        "A": {
+          "id": "P07_A",
+          "arquivo": "P07_A.png",
+          "descricao": "verde musgo claro"
+        },
+        "B": {
+          "id": "P07_B",
+          "arquivo": "P07_B.png",
+          "descricao": "verde musgo escuro"
+        }
+      },
+      "deltaELab": 13.8,
+      "medidoEm": "2026-08-02"
+    },
+    {
+      "pairId": "P08",
+      "nome": "Vinho",
+      "categoria": "tom",
+      "atributoDiferencial": "corCorpo",
+      "dificuldadeVisual": 6,
+      "permiteModoSemCor": false,
+      "aprovado": true,
+      "variantes": {
+        "A": {
+          "id": "P08_A",
+          "arquivo": "P08_A.png",
+          "descricao": "vinho claro"
+        },
+        "B": {
+          "id": "P08_B",
+          "arquivo": "P08_B.png",
+          "descricao": "vinho escuro"
+        }
+      },
+      "deltaELab": 11.3,
       "medidoEm": "2026-08-02"
     },
     {
@@ -147,5 +193,5 @@
       }
     }
   ],
-  "nota": "dificuldadeVisual medida por ΔE Lab entre o corpo do alvo e o do distrator (maior ΔE = mais fácil). Alvos de P01/P02/P04 regerados pela Kamylla em 02/ago/2026; P03 (terracota) segue com o alvo de 31/jul."
+  "nota": "dificuldadeVisual medida por ΔE Lab entre o corpo do alvo e o do distrator (maior ΔE = mais fácil). 02/ago/2026: alvos de P01/P02/P03/P04 regerados pela Kamylla; pares novos P07 (verde musgo) e P08 (vinho). Escada de níveis segue essa ordem."
 }
