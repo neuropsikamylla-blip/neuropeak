@@ -64,7 +64,7 @@ const OBJ_EMOJI: Record<Objeto, string> = {
 
 // bx/by = posição-base (render via left/top); x/y = posição viva; vx/vy = deriva leve;
 // ph = fase do "bob" (flutuação suave que dá vida sem deslocar de fato).
-interface LiveChar { uid: string; id: string; isTarget: boolean; bx: number; by: number; x: number; y: number; vx: number; vy: number; ph: number; }
+interface LiveChar { uid: string; id: string; isTarget: boolean; hit?: boolean; bx: number; by: number; x: number; y: number; vx: number; vy: number; ph: number; }
 
 const rnd = (a: number, b: number) => a + Math.random() * (b - a);
 const shuffle = <T,>(a: T[]): T[] => { const b = [...a]; for (let i = b.length - 1; i > 0; i--) { const j = Math.floor(Math.random() * (i + 1)); [b[i], b[j]] = [b[j], b[i]]; } return b; };
@@ -79,7 +79,8 @@ function CharView({ lc, big, dim, onTap, refNode }: {
       style={{ position: "absolute", left: lc.bx - TOUCH_PAD, top: lc.by - TOUCH_PAD,
         width: CHAR_W + TOUCH_PAD * 2, height: CHAR_H + TOUCH_PAD * 2, padding: TOUCH_PAD,
         background: "transparent", border: "none", cursor: "pointer", touchAction: "manipulation",
-        zIndex: big ? 30 : 10, opacity: dim ? 0.2 : 1, transition: "opacity .25s" }}>
+        zIndex: big ? 30 : lc.hit ? 20 : 10, opacity: dim ? 0.2 : 1, transition: "opacity .25s",
+        boxShadow: lc.hit ? "0 0 0 4px #22c55e" : undefined, borderRadius: lc.hit ? 16 : undefined }}>
       {/* eslint-disable-next-line @next/next/no-img-element */}
       <img src={src} alt="" draggable={false} decoding="async"
         style={{ width: CHAR_W, height: CHAR_H, display: "block", userSelect: "none", pointerEvents: "none",
@@ -181,6 +182,8 @@ export function FocusAgents({ difficulty, theme, onComplete, exerciseId = "focus
   const bloco = useRef({ tentativas: 0, acertos: 0, errosSeguidos: 0, maxErros: 0, seq: 0, melhorSeq: 0, tempos: [] as number[] });
   const totais = useRef({ acertos: 0, total: 0, omissoes: 0, tempos: [] as number[] });
   const porFuncao = useRef<PorFuncao>({});
+  const tocadosRef = useRef<Set<string>>(new Set());   // alvos já tocados na rodada (comando de 2 alvos)
+  const parciaisRef = useRef<{ achados: number; total: number }[]>([]);  // "achou 1 de 2" é dado clínico
   const rodadaAbertaEm = useRef(0);
   const respondidoRef = useRef(false);
   const arenaRef = useRef<HTMLDivElement>(null);
@@ -227,6 +230,12 @@ export function FocusAgents({ difficulty, theme, onComplete, exerciseId = "focus
         avgRT: avgRt,
         step: stepRef.current,
         porFuncao: porFuncao.current,
+        // comandos de 2 alvos: quantos completos, quantos pela metade
+        multiAlvo: parciaisRef.current.length ? {
+          rodadas: parciaisRef.current.length,
+          completos: parciaisRef.current.filter((p) => p.achados === p.total).length,
+          parciais: parciaisRef.current.filter((p) => p.achados > 0 && p.achados < p.total).length,
+        } : undefined,
       }),
     });
   }, [difficulty, elapsedSec, finish, onComplete]);
@@ -289,7 +298,8 @@ export function FocusAgents({ difficulty, theme, onComplete, exerciseId = "focus
   const iniciarRodada = useCallback((r: FocusRound) => {
     const step = STEPS[stepRef.current];
     const W = dims.current.w, H = dims.current.h;
-    const alvoIdx = r.personagensIds.indexOf(r.alvoId);
+    const alvoIds = r.alvoIds?.length ? r.alvoIds : [r.alvoId];
+    tocadosRef.current = new Set();
     const n = r.personagensIds.length;
     // SEMPRE espalhado pela tela em 2D (pedido da Kamylla): ativa a busca visual.
     // A queda em linha (concentrada numa faixa) foi removida — a dificuldade sobe
@@ -311,7 +321,7 @@ export function FocusAgents({ difficulty, theme, onComplete, exerciseId = "focus
         const stack = (stackByCol[col] = (stackByCol[col] ?? 0) + 1) - 1;
         const x = Math.max(MARGIN, Math.min(W - CHAR_W - MARGIN, col * colW + rnd(6, Math.max(8, colW - CHAR_W - 6))));
         const y = -CHAR_H - stack * (CHAR_H * 0.85) - rnd(0, 40);
-        return { uid: `c${uidSeq.current++}`, id, isTarget: i === alvoIdx,
+        return { uid: `c${uidSeq.current++}`, id, isTarget: alvoIds.includes(id),
           bx: x, by: y, x, y, vx: 0, vy: vq * rnd(0.92, 1.1), ph: 0 };
       });
     } else {
@@ -329,7 +339,7 @@ export function FocusAgents({ difficulty, theme, onComplete, exerciseId = "focus
         const y = Math.max(MARGIN, Math.min(H - CHAR_H - MARGIN, cy + rnd(4, Math.max(6, cellH - CHAR_H - 4))));
         const ang = rnd(0, Math.PI * 2);
         const sp = vBase * rnd(0.7, 1.2);
-        return { uid: `c${uidSeq.current++}`, id, isTarget: i === alvoIdx,
+        return { uid: `c${uidSeq.current++}`, id, isTarget: alvoIds.includes(id),
           bx: x, by: y, x, y, vx: Math.cos(ang) * sp, vy: Math.sin(ang) * sp, ph: rnd(0, Math.PI * 2) };
       });
     }
@@ -407,14 +417,51 @@ export function FocusAgents({ difficulty, theme, onComplete, exerciseId = "focus
   const responder = useCallback((tocado: LiveChar) => {
     if (fase !== "jogando" || respondidoRef.current || doneRef.current) return;
     const r = roundRef.current; if (!r) return;
+    const alvos = r.alvoIds?.length ? r.alvoIds : [r.alvoId];
+    const escolhidoChar = charById(tocado.id)!;
+
+    // ── COMANDO DE 2 ALVOS: o paciente precisa tocar nos DOIS. Tocar em um só não
+    // encerra — é justamente segurar os dois critérios que treina memória de trabalho.
+    if (alvos.length > 1) {
+      const ehAlvo = alvos.includes(tocado.id);
+      if (ehAlvo && !tocadosRef.current.has(tocado.id)) {
+        tocadosRef.current.add(tocado.id);
+        if (tocadosRef.current.size < alvos.length) {
+          // marca o que já foi achado e SEGUE na mesma rodada
+          charsRef.current = charsRef.current.map((c) => (c.uid === tocado.uid ? { ...c, hit: true } : c));
+          setChars([...charsRef.current]);
+          return;
+        }
+      } else if (!ehAlvo) {
+        // errou um dos dois: encerra a rodada registrando o acerto PARCIAL
+        respondidoRef.current = true; stopRaf(); clearOmissao();
+        const achados = tocadosRef.current.size;
+        registra(false, null, false);
+        parciaisRef.current.push({ achados, total: alvos.length });
+        setFb({ ok: false,
+          msg: achados ? `Achou ${achados} de ${alvos.length}. ${atributoFaltante(r.criterio, escolhidoChar)}`
+                       : atributoFaltante(r.criterio, escolhidoChar),
+          alvoUid: charsRef.current.find((c) => c.isTarget && !tocadosRef.current.has(c.id))?.uid ?? null });
+        setFase("feedback");
+        timers.current.push(setTimeout(proximaRef.current, 1600));
+        return;
+      } else {
+        return;   // tocou de novo no mesmo alvo já marcado: ignora
+      }
+    }
+
     respondidoRef.current = true;
     stopRaf(); clearOmissao();
     const rt = (Date.now() - rodadaAbertaEm.current) / 1000;
-    const escolhido = charById(tocado.id)!;
-    const acertou = matches(escolhido, r.criterio) && tocado.id === r.alvoId;
+    const escolhido = escolhidoChar;
+    const acertou = alvos.length > 1
+      ? tocadosRef.current.size === alvos.length
+      : matches(escolhido, r.criterio) && tocado.id === r.alvoId;
     registra(acertou, acertou ? rt : null, false);
+    if (acertou && alvos.length > 1) parciaisRef.current.push({ achados: alvos.length, total: alvos.length });
     const msg = acertou
-      ? (r.criterio.cor && (r.criterio.acessorios || r.criterio.objeto) ? "Acertou a cor e o acessório!" : "Correto!")
+      ? (alvos.length > 1 ? "Achou os dois!"
+        : r.criterio.cor && (r.criterio.acessorios || r.criterio.objeto) ? "Acertou a cor e o acessório!" : "Correto!")
       : atributoFaltante(r.criterio, escolhido);
     setFb({ ok: acertou, msg, alvoUid: acertou ? null : charsRef.current.find((c) => c.id === r.alvoId)?.uid ?? null });
     setFase("feedback");

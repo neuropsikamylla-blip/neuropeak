@@ -34,12 +34,16 @@ export function resolveFocusStartStep(startLevel: unknown, difficulty: number): 
   return clampStep((difficulty - 1) * 0.4);
 }
 
+/** Comandos de 2 alvos: "achou 1 de 2" é desempenho diferente de "achou os dois". */
+export interface MultiAlvoResumo { rodadas: number; completos: number; parciais: number }
+
 interface FocusCompletionMetadataInput {
   trials: number;
   correct: number;
   omissions: number;
   avgRT: number;
   step: number;
+  multiAlvo?: MultiAlvoResumo;
   porFuncao: PorFuncao;
 }
 
@@ -51,6 +55,7 @@ export function buildFocusCompletionMetadata(input: FocusCompletionMetadataInput
     avgRT: input.avgRT,
     level: focusLevelFromStep(input.step),
     porFuncao: input.porFuncao,
+    multiAlvo: input.multiAlvo,
   };
 }
 

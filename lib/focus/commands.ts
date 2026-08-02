@@ -168,12 +168,17 @@ function criterioDaEtapa(etapa: Exclude<Etapa, "doisAlvos" | "mudancaRegra">): C
   return { acessorios: [rnd(["oculos", "fone"] as Acessorio[])], corNao: rnd(CORES) };
 }
 
+/**
+ * Distrator SEMELHANTE = compartilha cor, acessório ou objeto com o critério.
+ * O LADO sozinho não conta: "pipa à direita" não é parecido com "bola à direita" —
+ * contar isso fazia a cena "com semelhantes" sair às vezes sem nenhum distrator
+ * de fato parecido (o teste pegava isso de forma intermitente).
+ */
 function compartilhaParte(c: FocusChar, k: Criterio): boolean {
   return !!(
     (k.cor && c.cor === k.cor) ||
     (k.acessorios?.some((a) => c.acessorios.includes(a))) ||
-    (k.objeto && c.objeto === k.objeto) ||
-    (k.lado && c.ladoObjeto === k.lado)
+    (k.objeto && c.objeto === k.objeto)
   );
 }
 
