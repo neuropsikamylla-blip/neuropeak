@@ -3,7 +3,15 @@
 > Checkpoint de contexto para continuidade entre sessões. Atualizado automaticamente.
 > 👉 Visão geral e handoff para o próximo Claude: **`ESTADO-DO-PROJETO.md`** (leia primeiro).
 
-## ✅ CONCLUÍDO (2026-08-02, madrugada) — Vigilância: 8 pares de pipas, alvos regerados, escada pela dificuldade medida (v2.61.0 → v2.62.0)
+## ✅ CONCLUÍDO (2026-08-02, madrugada) — Vigilância: 8 pares, alvos regerados e SESSÃO POR TEMPO (v2.61.0 → v2.63.0)
+
+**Terceira rodada (v2.63.0) — regra dela:** *"vigilancia nao é por exercicio... segue a mesma regra do estacionamento, torre (é por tempo e tem a linha de progressao) tem de ter uns 7 a 10 min"* + *"vamos aumentando a dificuldade com os acertos"*.
+- **`useTimedProgress(8 min)`** + **linha de progressão** no topo (tempo ATIVO: só corre com o paciente interagindo).
+- **Fim de bloco silencioso:** saiu a tela "Bloco concluído" (com botões Continuar/Encerrar). Agora avalia, sobe de nível quando merece e emenda o bloco seguinte sem interromper — mesmo princípio aplicado no Focus.
+- **Quem encerra é o tempo**, e sempre DEPOIS do feedback da tentativa: a barra nunca corta o paciente no meio de uma decisão.
+- **Dificuldade sobe com os acertos** (já era assim no motor, agora roda contínuo): degrau de exposição por tentativa (`adaptar`) + nível visual a cada bloco de 12 (`avaliarBloco`).
+
+### Rodada anterior (v2.62.0) — 8 pares
 
 **Segunda rodada (v2.62.0):** ela regerou também o **terracota** e mandou **2 pares novos** — **P07 verde musgo** e **P08 vinho**. ΔE Lab final: P04 22,8 · P01 19,3 · P03 **14,3** (era 19,4) · P07 13,8 · P02 13,0 · P08 11,3. **Escada dos 10 níveis refeita:** os 6 pares de tom entram em ordem de dificuldade medida (níveis 1-6), os 2 mais difíceis (P02, P08) voltam com arranjo irregular (7-8), laços no 9 e faixa diagonal no 10. `PIPA_V=3`. **A rabiola ondulada dos pares novos é INTENCIONAL — ela pediu assim** (os antigos têm rabiola reta). Não "uniformizar" achando que é defeito.
 
