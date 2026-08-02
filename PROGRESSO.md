@@ -5,7 +5,7 @@
 
 ## ✅ CONCLUÍDO (2026-08-02, madrugada) — Vigilância: 8 pares de pipas, alvos regerados, escada pela dificuldade medida (v2.61.0 → v2.62.0)
 
-**Segunda rodada (v2.62.0):** ela regerou também o **terracota** e mandou **2 pares novos** — **P07 verde musgo** e **P08 vinho**. ΔE Lab final: P04 22,8 · P01 19,3 · P03 **14,3** (era 19,4) · P07 13,8 · P02 13,0 · P08 11,3. **Escada dos 10 níveis refeita:** os 6 pares de tom entram em ordem de dificuldade medida (níveis 1-6), os 2 mais difíceis (P02, P08) voltam com arranjo irregular (7-8), laços no 9 e faixa diagonal no 10. `PIPA_V=3`. Observação de estilo: os pares novos têm **rabiola ondulada** (os antigos, reta) — não atrapalha (cada rodada usa um par só), mas se ela quiser uniformidade visual entre níveis, é regerar.
+**Segunda rodada (v2.62.0):** ela regerou também o **terracota** e mandou **2 pares novos** — **P07 verde musgo** e **P08 vinho**. ΔE Lab final: P04 22,8 · P01 19,3 · P03 **14,3** (era 19,4) · P07 13,8 · P02 13,0 · P08 11,3. **Escada dos 10 níveis refeita:** os 6 pares de tom entram em ordem de dificuldade medida (níveis 1-6), os 2 mais difíceis (P02, P08) voltam com arranjo irregular (7-8), laços no 9 e faixa diagonal no 10. `PIPA_V=3`. **A rabiola ondulada dos pares novos é INTENCIONAL — ela pediu assim** (os antigos têm rabiola reta). Não "uniformizar" achando que é defeito.
 
 ### Primeira rodada (v2.61.0)
 
@@ -30,10 +30,20 @@
   uniformizar o critério, é o próximo a regerar.
 - Backup das pipas antigas: `~/neuropeak-asset-backups/vigilancia-pipas-bak-20260802`.
 
-## ⏭️ PRÓXIMA TAREFA (recebida 01/ago 18h, NÃO iniciada — janela em 85%)
+## ⏭️ PRÓXIMAS TAREFAS — Informação em Foco em 3 FASES (specs dela gravadas, NADA iniciado)
 
-**Informação em Foco — FASE 1: correção estrutural.** Spec completa dela gravada em
-**`docs/INFORMACAO-EM-FOCO-FASE1-CORRECAO-ESTRUTURAL.md`** (19 seções + plano em 5 fatias).
+**Sequência definida por ela — não inverter:**
+1. **FASE 1 — correção estrutural** (`docs/INFORMACAO-EM-FOCO-FASE1-CORRECAO-ESTRUTURAL.md`):
+   estabilizar produtos, unidades, dados e geração das perguntas.
+2. **FASE 2 — cartões, etiquetas, ampliação e situações do cotidiano**
+   (`docs/INFORMACAO-EM-FOCO-FASE2-CARTOES-E-SITUACOES.md`, recebida 02/ago): quadro funcional,
+   embalagem maior (145–175 px), modal de ampliação, 3 modalidades (70% quadro · 10% leitura direta
+   da embalagem · 20% situação do cotidiano), campos por dificuldade, distratores parciais,
+   distribuição da sessão de 10, feedback processual. **Só depois da Fase 1 concluída E testada por
+   ela numa sessão inteira de 10 questões** — senão as situações do cotidiano só reaproveitam dados errados.
+3. **FASE 3 — dificuldade adaptativa**, ajustada depois de observar sessões completas.
+
+**Detalhe da FASE 1 (a próxima a executar):** spec de 19 seções + plano em 5 fatias.
 
 **Raiz confirmada no código:** os atributos do produto são sorteados por questão em vez de virem do
 cadastro — `lib/informacao-foco.ts:315` joga `lactose` em qualquer produto (por isso "chá de camomila
