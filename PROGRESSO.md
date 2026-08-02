@@ -3,7 +3,28 @@
 > Checkpoint de contexto para continuidade entre sessões. Atualizado automaticamente.
 > 👉 Visão geral e handoff para o próximo Claude: **`ESTADO-DO-PROJETO.md`** (leia primeiro).
 
-## 🚧 EM ANDAMENTO (02/ago/2026) — Informação em Foco: FASE 2
+## ✅ FASE 2 (núcleo) ENTREGUE (02/ago/2026) — Informação em Foco (v2.65.0 → v2.65.1)
+
+- **F2.4a leitura direta da embalagem:** tipo novo, só com produto autorizado
+  (`directPackageReadingEnabled`) e frase confirmada; `campoReveladoPor()` tira do quadro o campo
+  que a frase entregaria (validação `quadroEntregaResposta`). 800 questões testadas.
+- **F2.4b composição:** a cada 10 atividades ~7 quadro · ~2 situação · ~1 embalagem; níveis 1-4 só
+  quadro, situação a partir do 5, embalagem a partir do 6.
+- **F2.1 cartão:** embalagem de 88 px → `clamp(110px, 30vw, 155px)` (inteira, sem corte nem
+  deformação) + botão "Ampliar embalagem" que NÃO seleciona o produto.
+- **F2.3 modal acessível:** `role=dialog`, foco inicial no fechar, foco contido no Tab, Escape e
+  clique fora fecham, alt descritivo; não responde, não avança, não revela nada.
+- **F2.5/F2.6:** quadro sem repetir o que o título já diz · feedback com `aria-live` e prefixo para
+  leitor de tela · foco visível no cartão · grid 2 colunas até `lg`.
+
+**Provas:** 223 testes, `tsc` 0, build OK, produção `2.65.1`.
+
+**Falta da Fase 2 (próxima fatia):** conferência VISUAL dela em produção (cartão, ampliação e
+situação nos 3 temas) e o que só se vê usando — se o quadro ficou apertado com 6 campos no celular.
+
+<details><summary>Plano original da Fase 2</summary>
+
+## (histórico) EM ANDAMENTO — Informação em Foco: FASE 2
 
 **Autorização dela:** *"dei uma olhada agora e parece que está ok, não testei ela inteira, mas pare
 ok! podemos ir para fase 2"*. ⚠️ **Validação PARCIAL** — ela não rodou uma sessão inteira. Se
@@ -21,6 +42,8 @@ aparecer defeito do motor (Fase 1) durante a Fase 2, corrigir na hora, antes de 
 - **F2.3** modal de ampliação acessível (Escape, foco contido, retorno de foco, teclado).
 - **F2.5** feedback pedagógico em 2 tentativas + destaque só depois da resposta.
 - **F2.6** responsividade (4/2/1 cartões) e acessibilidade (teclado, leitor de tela, sem info só por cor).
+
+</details>
 
 ## 🔒 FECHAMENTO (02/ago/2026, madrugada) — v2.60.2 → **v2.64.1**, tudo em produção
 
