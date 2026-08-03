@@ -5374,3 +5374,6 @@ Não interrompa novamente para pedir uma distribuição numérica ideal, salvo s
 
 ## 03/08/2026 11:40
 e ai?
+
+## 03/08/2026 11:58
+vc esta fazendo?
