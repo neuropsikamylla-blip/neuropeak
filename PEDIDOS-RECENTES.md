@@ -1,94 +1,6 @@
 # As 3 ultimas especificacoes dela (automatico; a mais nova por ultimo)
 # Na retomada: ler as 3, conectar com PROGRESSO.md e git, declarar e seguir.
 
-## 02/08/2026 22:54
-Decisão clínica sobre Investigadores da Situação Social:
-
-Escolho a opção (a), com uma correção conceitual.
-
-Cognição Social não deve ser tratada apenas como tag funcional. Ela também é um domínio cognitivo legítimo e constitui o processo central do exercício Investigadores da Situação Social.
-
-Portanto, acrescente um 21º macro cognitivo:
-
-COGNIÇÃO SOCIAL E INFERÊNCIA SOCIAL
-
-Esse macro deverá agregar processos finos como:
-
-- reconhecimento de emoções;
-- interpretação de intenções;
-- teoria da mente;
-- tomada de perspectiva;
-- inferência social;
-- compreensão de pistas sociais;
-- julgamento social;
-- compreensão de regras sociais;
-- seleção de resposta social adequada.
-
-Para Investigadores da Situação Social, registrar:
-
-- mechanicalPrimary: Cognição Social e Inferência Social;
-- associatedCognitiveProfiles: apenas os macros realmente sustentados pela matriz, como Linguagem/Compreensão Verbal, Raciocínio e Tomada de Decisão, se atingirem os critérios definidos;
-- functionalClinicalTags:
-  - Cognição Social;
-  - Compreensão de Situações Sociais;
-  - Resolução de Situações Sociais;
-  - Habilidades Sociais.
-
-Não transformar o mechanicalPrimary em Raciocínio Lógico e Dedutivo.
-
-A inferência feita nesse exercício é social e contextual, não lógica formal. O raciocínio pode aparecer como processo associado, mas não substitui o domínio central.
-
-CORREÇÃO DA ARQUITETURA
-
-A estrutura passa a diferenciar:
-
-1. CognitiveMacroProfiles
-   - processos cognitivos efetivamente recrutados;
-   - inclui Cognição Social e Inferência Social.
-
-2. FunctionalClinicalTags
-   - contexto funcional ou aplicação clínica;
-   - exemplos:
-     - Autonomia Funcional;
-     - Atividades Instrumentais da Vida Diária;
-     - Uso Funcional de Dinheiro;
-     - Organização da Rotina;
-     - Compreensão de Situações Sociais;
-     - Habilidades Sociais.
-
-O mesmo conceito pode aparecer em níveis diferentes sem duplicação indevida:
-
-- macro cognitivo: Cognição Social e Inferência Social;
-- tag funcional: Habilidades Sociais ou Compreensão de Situações Sociais.
-
-O macro descreve o processo mental.
-A tag descreve a aplicação clínica e funcional.
-
-Atualize:
-
-- docs/clinical-architecture/05-associated-cognitive-profiles.md;
-- docs/clinical-architecture/associated-profiles.json;
-- mapeamento fino → macro;
-- tabela dos 34 exercícios.
-
-Preserve:
-
-- matriz fina original intacta;
-- catalogDomain e catalogSubdomain;
-- demais mechanicalPrimary;
-- Caminhos para a Meta como PROVISIONAL_PROFILE.
-
-Depois execute novamente as verificações e apresente:
-
-1. mechanicalPrimary final de Investigadores;
-2. associados finais;
-3. tags funcionais;
-4. confirmação de que nenhum exercício ficou sem mechanicalPrimary;
-5. confirmação de que os 21 macros foram utilizados ou indicação dos não utilizados;
-6. confirmação de que leitura não foi tratada como alvo principal de Investigadores.
-
-Pode então concluir e commitar somente esses documentos, sem iniciar a fase de carga cognitiva.
-
 ## 02/08/2026 22:58
 Perfeito. Vamos encerrar esta etapa aqui. Não inicie ainda a Fase 2. Considere toda a Fase 1 concluída e congelada até nova solicitação
 
@@ -449,3 +361,12 @@ Exercícios que ainda dependem de decisão clínica.
 Depois parar.
 
 Não implementar absolutamente nada. Antes de executar, lembre que a janela do Claude é mais escassa: use o Codex para toda codificação que caiba numa spec sobre o ⁠ HEAD ⁠ commitado, deixando o Claude direto apenas para ajuste pós-colheita, integração com contexto vivo ou indisponibilidade comprovada do Codex. No Codex, use ⁠ gpt-5.6-sol ⁠ ⁠ xhigh ⁠ para arquitetura, alto risco ou revisão final; ⁠ gpt-5.6-sol ⁠ ⁠ high ⁠ para conflitos ou código acoplado; ⁠ gpt-5.6-terra ⁠ ⁠ high ⁠ para código comum ou testável; e ⁠ gpt-5.6-luna ⁠ ⁠ high ⁠ para trabalho focalizado, repetível e barato de validar. Antes do primeiro comando, anuncie motor, modelo, esforço e motivo e, se for Codex, localize e use o ⁠ lab.sh ⁠ já instalado, sem presumir caminho nem criar outro.
+
+## 03/08/2026 09:58
+<task-notification>
+<task-id>b2uutqz8h</task-id>
+<tool-use-id>toolu_01PNf9Vz4LnnzGkHWXswgbTx</tool-use-id>
+<output-file>/private/tmp/claude-501/-Users-kamyllahonorio-neuropeak/3e6ecf11-e4e5-471f-bbf9-4595faa53598/tasks/b2uutqz8h.output</output-file>
+<status>completed</status>
+<summary>Background command "Aguardar o lote 1" completed (exit code 0)</summary>
+</task-notification>
