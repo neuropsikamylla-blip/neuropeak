@@ -1,0 +1,613 @@
+[
+  {
+    "exerciseId": "span-numerico",
+    "officialName": "Span Numérico Auditivo Direto",
+    "catalogDomain": "Memória",
+    "catalogSubdomain": "Memória Operacional",
+    "mechanicalPrimary": "Armazenamento de Curto Prazo",
+    "associatedCognitiveProfiles": [
+      "Memória Operacional Verbal",
+      "Organização e Sequenciamento",
+      "Linguagem, Leitura e Processamento Auditivo"
+    ],
+    "functionalClinicalTags": [],
+    "instrumentalDemands": [
+      "audição suficiente para fala gravada; reconhecimento de algarismos; visão do teclado e do realce; uso de mouse ou toque; coordenação visuomotora. O reconhecimento dos números e o ato de tocar não são, por si, os alvos de treino"
+    ],
+    "profileStatus": "FINALIZED_PROFILE"
+  },
+  {
+    "exerciseId": "stroop-task",
+    "officialName": "Cores e Palavras",
+    "catalogDomain": "Funções Executivas",
+    "catalogSubdomain": "Controle Inibitório",
+    "mechanicalPrimary": "Controle Inibitório",
+    "associatedCognitiveProfiles": [
+      "Atenção Seletiva",
+      "Flexibilidade Cognitiva",
+      "Monitoramento Executivo e Manutenção de Meta",
+      "Tempo de Reação"
+    ],
+    "functionalClinicalTags": [],
+    "instrumentalDemands": [
+      "leitura de palavras e do aviso de regra, visão de cores, distinção dos botões, uso de mouse ou toque e velocidade motora. Deficiência de visão cromática ou alfabetização altera o acesso à mecânica"
+    ],
+    "profileStatus": "FINALIZED_PROFILE"
+  },
+  {
+    "exerciseId": "focus-agents",
+    "officialName": "Agentes Focus",
+    "catalogDomain": "Atenção",
+    "catalogSubdomain": "Atenção Sustentada",
+    "mechanicalPrimary": "Busca e Rastreamento Visual",
+    "associatedCognitiveProfiles": [
+      "Atenção Seletiva",
+      "Controle Inibitório",
+      "Monitoramento Executivo e Manutenção de Meta",
+      "Percepção e Processamento Visuoespacial"
+    ],
+    "functionalClinicalTags": [],
+    "instrumentalDemands": [
+      "visão de cores, formas, acessórios e lateralidade; leitura do comando no modo visual; uso de mouse ou toque; precisão visuomotora para selecionar personagens móveis. Essas demandas não equivalem, por si, a treino de linguagem ou velocidade motora"
+    ],
+    "profileStatus": "FINALIZED_PROFILE"
+  },
+  {
+    "exerciseId": "span-numerico-inverso",
+    "officialName": "Span Numérico Auditivo Inverso",
+    "catalogDomain": "Memória",
+    "catalogSubdomain": "Memória Operacional",
+    "mechanicalPrimary": "Atualização e Manipulação Mental",
+    "associatedCognitiveProfiles": [
+      "Memória Operacional Verbal",
+      "Armazenamento de Curto Prazo",
+      "Organização e Sequenciamento",
+      "Monitoramento Executivo e Manutenção de Meta"
+    ],
+    "functionalClinicalTags": [],
+    "instrumentalDemands": [
+      "audição da fala gravada; reconhecimento visual de algarismos; compreensão da regra “ordem inversa”; uso de mouse ou toque; coordenação visuomotora"
+    ],
+    "profileStatus": "FINALIZED_PROFILE"
+  },
+  {
+    "exerciseId": "matriz-espacial",
+    "officialName": "Matriz Espacial",
+    "catalogDomain": "Memória",
+    "catalogSubdomain": "Memória Visuoespacial",
+    "mechanicalPrimary": "Armazenamento de Curto Prazo",
+    "associatedCognitiveProfiles": [
+      "Memória Operacional Visuoespacial",
+      "Organização e Sequenciamento",
+      "Percepção e Processamento Visuoespacial"
+    ],
+    "functionalClinicalTags": [],
+    "instrumentalDemands": [
+      "visão suficiente para localizar o brilho; uso de mouse ou toque; precisão visuomotora; percepção da grade. O bipe é um sinal temporal uniforme, não uma pista auditiva de qual célula acendeu"
+    ],
+    "profileStatus": "FINALIZED_PROFILE"
+  },
+  {
+    "exerciseId": "matriz-espacial-inversa",
+    "officialName": "Matriz Espacial Inversa",
+    "catalogDomain": "Memória",
+    "catalogSubdomain": "Memória Visuoespacial",
+    "mechanicalPrimary": "Atualização e Manipulação Mental",
+    "associatedCognitiveProfiles": [
+      "Memória Operacional Visuoespacial",
+      "Armazenamento de Curto Prazo",
+      "Organização e Sequenciamento",
+      "Percepção e Processamento Visuoespacial"
+    ],
+    "functionalClinicalTags": [],
+    "instrumentalDemands": [
+      "visão do realce, percepção espacial da grade, compreensão da regra inversa, uso de mouse ou toque e precisão visuomotora"
+    ],
+    "profileStatus": "FINALIZED_PROFILE"
+  },
+  {
+    "exerciseId": "jogo-memoria",
+    "officialName": "Jogo da Memória",
+    "catalogDomain": "Memória",
+    "catalogSubdomain": "Memória Visuoespacial",
+    "mechanicalPrimary": "Memória Operacional Visuoespacial",
+    "associatedCognitiveProfiles": [
+      "Percepção e Processamento Visuoespacial",
+      "Armazenamento de Curto Prazo",
+      "Atualização e Manipulação Mental"
+    ],
+    "functionalClinicalTags": [],
+    "instrumentalDemands": [
+      "visão e reconhecimento dos símbolos; discriminação de detalhes; exploração espacial; uso de mouse ou toque; precisão visuomotora"
+    ],
+    "profileStatus": "FINALIZED_PROFILE"
+  },
+  {
+    "exerciseId": "trilha-visual",
+    "officialName": "Conecta Números",
+    "catalogDomain": "Atenção",
+    "catalogSubdomain": "Atenção Seletiva",
+    "mechanicalPrimary": "Busca e Rastreamento Visual",
+    "associatedCognitiveProfiles": [
+      "Atenção Seletiva",
+      "Organização e Sequenciamento",
+      "Monitoramento Executivo e Manutenção de Meta"
+    ],
+    "functionalClinicalTags": [],
+    "instrumentalDemands": [
+      "reconhecimento visual de algarismos, visão do campo completo, uso de mouse ou toque e coordenação visuomotora. Reconhecer algarismos é requisito de acesso e não demonstra, isoladamente, treino de linguagem ou cálculo"
+    ],
+    "profileStatus": "FINALIZED_PROFILE"
+  },
+  {
+    "exerciseId": "antes-depois",
+    "officialName": "Caminhos para a Meta",
+    "catalogDomain": "Funções Executivas",
+    "catalogSubdomain": "Planejamento e Flexibilidade",
+    "mechanicalPrimary": "Organização",
+    "associatedCognitiveProfiles": [
+      "Organização e Sequenciamento",
+      "Monitoramento Executivo e Manutenção de Meta",
+      "Memória Operacional Verbal"
+    ],
+    "functionalClinicalTags": [
+      "Autonomia Funcional",
+      "Atividades Instrumentais da Vida Diária",
+      "Organização da Rotina"
+    ],
+    "instrumentalDemands": [
+      "leitura de meta, instrução e cartões no modo visual atual; visão do arranjo e dos marcadores de posição; uso de mouse, toque, arraste ou teclado; coordenação visuomotora. A leitura pode ser apoiada por áudio, e a destreza para arrastar não é domínio executivo treinado"
+    ],
+    "profileStatus": "PROVISIONAL_PROFILE"
+  },
+  {
+    "exerciseId": "informacao-em-foco",
+    "officialName": "Informação em Foco",
+    "catalogDomain": "Atenção",
+    "catalogSubdomain": "Atenção Seletiva",
+    "mechanicalPrimary": "Atenção Seletiva",
+    "associatedCognitiveProfiles": [
+      "Busca e Rastreamento Visual",
+      "Monitoramento Executivo e Manutenção de Meta"
+    ],
+    "functionalClinicalTags": [
+      "Atividades Instrumentais da Vida Diária",
+      "Tomada de Decisão Cotidiana"
+    ],
+    "instrumentalDemands": [
+      "leitura visual de perguntas, rótulos e valores; percepção de imagens e pequenos campos; distinção de números, datas e unidades; uso de mouse ou toque; eventual ampliação da embalagem. A decodificação básica é requisito, enquanto localizar e integrar informação escrita faz parte do alvo funcional desta mecânica"
+    ],
+    "profileStatus": "FINALIZED_PROFILE"
+  },
+  {
+    "exerciseId": "mot",
+    "officialName": "Rastreamento de Objetos",
+    "catalogDomain": "Atenção",
+    "catalogSubdomain": "Atenção Dividida",
+    "mechanicalPrimary": "Busca e Rastreamento Visual",
+    "associatedCognitiveProfiles": [
+      "Atenção Dividida",
+      "Memória Operacional Visuoespacial",
+      "Atualização e Manipulação Mental",
+      "Controle Inibitório"
+    ],
+    "functionalClinicalTags": [],
+    "instrumentalDemands": [
+      "visão do campo inteiro e do destaque inicial; percepção de movimento; uso de mouse ou toque; coordenação visuomotora para selecionar posições finais. A velocidade do clique não integra o critério de acerto da rodada"
+    ],
+    "profileStatus": "FINALIZED_PROFILE"
+  },
+  {
+    "exerciseId": "dual-task",
+    "officialName": "Dupla Tarefa",
+    "catalogDomain": "Atenção",
+    "catalogSubdomain": "Atenção Dividida",
+    "mechanicalPrimary": "Atenção Dividida",
+    "associatedCognitiveProfiles": [
+      "Memória Operacional Verbal",
+      "Atualização e Manipulação Mental",
+      "Controle Inibitório",
+      "Atenção Seletiva"
+    ],
+    "functionalClinicalTags": [],
+    "instrumentalDemands": [
+      "visão de cores, formas e dígitos; leitura das regras e rótulos de botão; uso de mouse ou toque em duas regiões; velocidade motora suficiente para as janelas dos dois fluxos. O tempo do movimento não deve ser confundido com a rapidez da decisão"
+    ],
+    "profileStatus": "FINALIZED_PROFILE"
+  },
+  {
+    "exerciseId": "tempo-reacao",
+    "officialName": "Tempo de Reação",
+    "catalogDomain": "Velocidade de Processamento",
+    "catalogSubdomain": "Tempo de Reação",
+    "mechanicalPrimary": "Tempo de Reação",
+    "associatedCognitiveProfiles": [
+      "Percepção e Processamento Visuoespacial"
+    ],
+    "functionalClinicalTags": [],
+    "instrumentalDemands": [
+      "visão de cores, percepção de movimento, alcance visuomotor, velocidade e precisão do toque ou mouse. A latência registrada combina decisão e execução motora, portanto não isola velocidade cognitiva"
+    ],
+    "profileStatus": "FINALIZED_PROFILE"
+  },
+  {
+    "exerciseId": "certo-ou-errado",
+    "officialName": "Certo ou Errado",
+    "catalogDomain": "Velocidade de Processamento",
+    "catalogSubdomain": "Resposta Rápida",
+    "mechanicalPrimary": "Resolução de Problemas e Tomada de Decisão",
+    "associatedCognitiveProfiles": [
+      "Raciocínio Lógico e Dedutivo"
+    ],
+    "functionalClinicalTags": [
+      "Cognição Social",
+      "Tomada de Decisão Cotidiana",
+      "Compreensão de Situações Sociais"
+    ],
+    "instrumentalDemands": [
+      "leitura da frase e dos botões, visão do emoji, uso de mouse ou toque. Alfabetização e acesso ao texto são requisitos fortes, mas não tornam linguagem o único alvo"
+    ],
+    "profileStatus": "FINALIZED_PROFILE"
+  },
+  {
+    "exerciseId": "semaforo",
+    "officialName": "Semáforo",
+    "catalogDomain": "Velocidade de Processamento",
+    "catalogSubdomain": "Tempo de Reação",
+    "mechanicalPrimary": "Tempo de Reação",
+    "associatedCognitiveProfiles": [
+      "Percepção e Processamento Visuoespacial",
+      "Atenção Seletiva",
+      "Velocidade de Processamento",
+      "Monitoramento Executivo e Manutenção de Meta"
+    ],
+    "functionalClinicalTags": [],
+    "instrumentalDemands": [
+      "visão de cores, leitura ou reconhecimento dos botões, localização do semáforo destacado, uso de mouse ou toque e velocidade motora. A inversão dos botões aumenta a dependência de localização e leitura da resposta"
+    ],
+    "profileStatus": "FINALIZED_PROFILE"
+  },
+  {
+    "exerciseId": "corrida-tempo",
+    "officialName": "Busca Rápida",
+    "catalogDomain": "Velocidade de Processamento",
+    "catalogSubdomain": "Resposta Rápida",
+    "mechanicalPrimary": "Busca e Rastreamento Visual",
+    "associatedCognitiveProfiles": [
+      "Atenção Seletiva",
+      "Controle Inibitório",
+      "Monitoramento Executivo e Manutenção de Meta",
+      "Velocidade de Processamento"
+    ],
+    "functionalClinicalTags": [],
+    "instrumentalDemands": [
+      "reconhecimento visual de objetos, leitura da categoria/regra, uso de mouse ou toque, coordenação e velocidade motora. Conhecer os objetos e categorias é requisito semântico que pode limitar a busca"
+    ],
+    "profileStatus": "FINALIZED_PROFILE"
+  },
+  {
+    "exerciseId": "torre-hanoi",
+    "officialName": "Jogo das Torres",
+    "catalogDomain": "Funções Executivas",
+    "catalogSubdomain": "Planejamento",
+    "mechanicalPrimary": "Planejamento",
+    "associatedCognitiveProfiles": [
+      "Monitoramento Executivo e Manutenção de Meta",
+      "Percepção e Processamento Visuoespacial",
+      "Resolução de Problemas e Tomada de Decisão",
+      "Memória Operacional Visuoespacial"
+    ],
+    "functionalClinicalTags": [],
+    "instrumentalDemands": [
+      "visão de tamanhos, posições e cores dos discos; compreensão da regra; uso de mouse ou toque; coordenação visuomotora para selecionar pinos. O número escrito no disco e a precisão do toque não são alvos cognitivos"
+    ],
+    "profileStatus": "FINALIZED_PROFILE"
+  },
+  {
+    "exerciseId": "labirinto",
+    "officialName": "Labirinto",
+    "catalogDomain": "Funções Executivas",
+    "catalogSubdomain": "Planejamento",
+    "mechanicalPrimary": "Planejamento",
+    "associatedCognitiveProfiles": [
+      "Monitoramento Executivo e Manutenção de Meta",
+      "Percepção e Processamento Visuoespacial",
+      "Resolução de Problemas e Tomada de Decisão",
+      "Memória Operacional Visuoespacial"
+    ],
+    "functionalClinicalTags": [],
+    "instrumentalDemands": [
+      "visão das paredes estreitas, trilha, jogador e bandeira; percepção espacial da grade; uso de mouse, toque, gesto ou teclado; coordenação e direção motora. Colisões na parede e latência incluem controle do dispositivo e não isolam planejamento"
+    ],
+    "profileStatus": "FINALIZED_PROFILE"
+  },
+  {
+    "exerciseId": "ordem-historia",
+    "officialName": "Ordem da História",
+    "catalogDomain": "Funções Executivas",
+    "catalogSubdomain": "Raciocínio Lógico",
+    "mechanicalPrimary": "Organização e Sequenciamento",
+    "associatedCognitiveProfiles": [
+      "Monitoramento Executivo e Manutenção de Meta",
+      "Resolução de Problemas e Tomada de Decisão",
+      "Percepção e Processamento Visuoespacial",
+      "Raciocínio Lógico e Dedutivo"
+    ],
+    "functionalClinicalTags": [],
+    "instrumentalDemands": [
+      "visão e interpretação de ilustrações; discriminação de detalhes entre cenas; uso de mouse, toque ou teclado para arrastar; coordenação visuomotora. A habilidade de arraste e familiaridade com convenções narrativas não são, por si, ordenação temporal"
+    ],
+    "profileStatus": "FINALIZED_PROFILE"
+  },
+  {
+    "exerciseId": "compra-multifuncional",
+    "officialName": "Compra Multifuncional",
+    "catalogDomain": "Desenvolvimento Funcional",
+    "catalogSubdomain": "Autonomia",
+    "mechanicalPrimary": "Resolução de Problemas e Tomada de Decisão",
+    "associatedCognitiveProfiles": [
+      "Monitoramento Executivo e Manutenção de Meta",
+      "Memória Operacional Verbal",
+      "Raciocínio Lógico e Dedutivo"
+    ],
+    "functionalClinicalTags": [
+      "Autonomia Funcional",
+      "Atividades Instrumentais da Vida Diária",
+      "Tomada de Decisão Cotidiana",
+      "Uso Funcional de Dinheiro"
+    ],
+    "instrumentalDemands": [
+      "leitura de narrativa, instrução, números, unidades e regras; reconhecimento visual dos itens; conhecimento de símbolos e operações aritméticas; uso de keypad, mouse ou toque; coordenação visuomotora. Escolaridade matemática e familiaridade com dinheiro e medidas podem limitar o desempenho sem representar autonomia global"
+    ],
+    "profileStatus": "FINALIZED_PROFILE"
+  },
+  {
+    "exerciseId": "task-switching",
+    "officialName": "Alternância de Regras",
+    "catalogDomain": "Funções Executivas",
+    "catalogSubdomain": "Flexibilidade Cognitiva",
+    "mechanicalPrimary": "Flexibilidade Cognitiva",
+    "associatedCognitiveProfiles": [
+      "Controle Inibitório",
+      "Atenção Seletiva",
+      "Atualização e Manipulação Mental",
+      "Monitoramento Executivo e Manutenção de Meta"
+    ],
+    "functionalClinicalTags": [],
+    "instrumentalDemands": [
+      "visão de cor, forma e algarismos; leitura do banner e dos rótulos; conhecimento de par e ímpar; uso de mouse ou toque; velocidade motora. Paridade é conhecimento prévio, e a latência mistura decisão com execução do toque"
+    ],
+    "profileStatus": "FINALIZED_PROFILE"
+  },
+  {
+    "exerciseId": "deductive-grid",
+    "officialName": "Grade Dedutiva",
+    "catalogDomain": "Funções Executivas",
+    "catalogSubdomain": "Raciocínio Lógico",
+    "mechanicalPrimary": "Raciocínio Lógico e Dedutivo",
+    "associatedCognitiveProfiles": [
+      "Monitoramento Executivo e Manutenção de Meta",
+      "Memória Operacional Verbal",
+      "Organização e Sequenciamento",
+      "Resolução de Problemas e Tomada de Decisão"
+    ],
+    "functionalClinicalTags": [],
+    "instrumentalDemands": [
+      "leitura de nomes, categorias e pistas; compreensão de negação, disjunção e exclusividade; visão da grade; uso de mouse ou toque; precisão para alternar estados. Alfabetização e domínio semântico dos enunciados podem limitar a dedução"
+    ],
+    "profileStatus": "FINALIZED_PROFILE"
+  },
+  {
+    "exerciseId": "letras-sequencia",
+    "officialName": "Letras em Sequência",
+    "catalogDomain": "Memória",
+    "catalogSubdomain": "Memória Operacional",
+    "mechanicalPrimary": "Armazenamento de Curto Prazo",
+    "associatedCognitiveProfiles": [
+      "Memória Operacional Verbal",
+      "Organização e Sequenciamento"
+    ],
+    "functionalClinicalTags": [],
+    "instrumentalDemands": [
+      "reconhecimento de letras e sílabas; leitura dos botões na resposta; visão no perfil basal; audição nos níveis falados; uso de mouse ou toque e coordenação visuomotora. Alfabetização e familiaridade grafêmica afetam o acesso sem constituir treino amplo de linguagem"
+    ],
+    "profileStatus": "FINALIZED_PROFILE"
+  },
+  {
+    "exerciseId": "sequencia-itens",
+    "officialName": "Sequência de Itens",
+    "catalogDomain": "Memória",
+    "catalogSubdomain": "Memória Operacional",
+    "mechanicalPrimary": "Armazenamento de Curto Prazo",
+    "associatedCognitiveProfiles": [
+      "Memória Operacional Visuoespacial",
+      "Percepção e Processamento Visuoespacial",
+      "Organização e Sequenciamento"
+    ],
+    "functionalClinicalTags": [],
+    "instrumentalDemands": [
+      "reconhecimento visual de objetos; familiaridade com seus nomes; visão e discriminação de figuras; audição nos níveis falados; uso de mouse ou toque e precisão visuomotora"
+    ],
+    "profileStatus": "FINALIZED_PROFILE"
+  },
+  {
+    "exerciseId": "padroes-rotacao",
+    "officialName": "Matriz com Rotações",
+    "catalogDomain": "Memória",
+    "catalogSubdomain": "Memória Visuoespacial",
+    "mechanicalPrimary": "Percepção e Processamento Visuoespacial",
+    "associatedCognitiveProfiles": [
+      "Memória Operacional Visuoespacial",
+      "Atualização e Manipulação Mental",
+      "Armazenamento de Curto Prazo"
+    ],
+    "functionalClinicalTags": [],
+    "instrumentalDemands": [
+      "visão do brilho, da grade e do marcador de orientação; percepção espacial; uso de mouse ou toque; precisão visuomotora. Os bipes são iguais para todas as posições e não codificam localização"
+    ],
+    "profileStatus": "FINALIZED_PROFILE"
+  },
+  {
+    "exerciseId": "lista-distracao",
+    "officialName": "Lista com Distração",
+    "catalogDomain": "Memória",
+    "catalogSubdomain": "Memória Operacional",
+    "mechanicalPrimary": "Memória Operacional Verbal",
+    "associatedCognitiveProfiles": [
+      "Atenção Alternada",
+      "Controle Inibitório",
+      "Armazenamento de Curto Prazo",
+      "Monitoramento Executivo e Manutenção de Meta"
+    ],
+    "functionalClinicalTags": [],
+    "instrumentalDemands": [
+      "leitura das palavras e instruções; reconhecimento de números e cores; visão para contar estrelas; uso de mouse ou toque; coordenação visuomotora. A correção das respostas distratoras não é requisito efetivo, porque o código aceita qualquer alternativa"
+    ],
+    "profileStatus": "FINALIZED_PROFILE"
+  },
+  {
+    "exerciseId": "restaurante-ordem",
+    "officialName": "Restaurante",
+    "catalogDomain": "Memória",
+    "catalogSubdomain": "Memória Operacional",
+    "mechanicalPrimary": "Memória Operacional Verbal",
+    "associatedCognitiveProfiles": [
+      "Armazenamento de Curto Prazo",
+      "Atenção Seletiva",
+      "Controle Inibitório"
+    ],
+    "functionalClinicalTags": [
+      "Atividades Instrumentais da Vida Diária"
+    ],
+    "instrumentalDemands": [
+      "leitura dos nomes e, conforme modo, audição da fala; reconhecimento visual de alimentos; visão da cena; uso de mouse ou toque; coordenação visuomotora. Familiaridade com os itens e o ruído ambiente podem afetar o desempenho"
+    ],
+    "profileStatus": "FINALIZED_PROFILE"
+  },
+  {
+    "exerciseId": "desafio-supermercado",
+    "officialName": "Supermercado",
+    "catalogDomain": "Memória",
+    "catalogSubdomain": "Memória Operacional",
+    "mechanicalPrimary": "Memória Operacional Verbal",
+    "associatedCognitiveProfiles": [
+      "Armazenamento de Curto Prazo",
+      "Busca e Rastreamento Visual",
+      "Atenção Seletiva",
+      "Controle Inibitório"
+    ],
+    "functionalClinicalTags": [
+      "Autonomia Funcional",
+      "Atividades Instrumentais da Vida Diária"
+    ],
+    "instrumentalDemands": [
+      "leitura de nomes e instruções conforme o modo; audição da lista nos modos com fala; reconhecimento visual de produtos; familiaridade lexical e semântica; uso de mouse ou toque; coordenação visuomotora e exploração da prateleira"
+    ],
+    "profileStatus": "FINALIZED_PROFILE"
+  },
+  {
+    "exerciseId": "nback",
+    "officialName": "N-Back",
+    "catalogDomain": "Memória",
+    "catalogSubdomain": "Memória Operacional",
+    "mechanicalPrimary": "Atualização e Manipulação Mental",
+    "associatedCognitiveProfiles": [
+      "Memória Operacional Verbal",
+      "Atenção Sustentada",
+      "Monitoramento Executivo e Manutenção de Meta",
+      "Tempo de Reação"
+    ],
+    "functionalClinicalTags": [],
+    "instrumentalDemands": [
+      "reconhecimento visual de letras e rótulos dos botões; leitura; uso de mouse ou toque; velocidade e coordenação motora suficientes para responder na janela. Ler letras é requisito, não treino de linguagem"
+    ],
+    "profileStatus": "FINALIZED_PROFILE"
+  },
+  {
+    "exerciseId": "cubo-corsi",
+    "officialName": "Cubos",
+    "catalogDomain": "Memória",
+    "catalogSubdomain": "Memória Visuoespacial",
+    "mechanicalPrimary": "Memória Operacional Visuoespacial",
+    "associatedCognitiveProfiles": [
+      "Percepção e Processamento Visuoespacial",
+      "Armazenamento de Curto Prazo",
+      "Atualização e Manipulação Mental",
+      "Organização e Sequenciamento"
+    ],
+    "functionalClinicalTags": [],
+    "instrumentalDemands": [
+      "percepção de profundidade e orientação das faces; visão do realce; uso de mouse ou toque; precisão visuomotora. O bipe tem frequência fixa e não identifica célula ou face"
+    ],
+    "profileStatus": "FINALIZED_PROFILE"
+  },
+  {
+    "exerciseId": "vigilancia",
+    "officialName": "Vigilância",
+    "catalogDomain": "Atenção",
+    "catalogSubdomain": "Atenção Sustentada",
+    "mechanicalPrimary": "Percepção e Processamento Visuoespacial",
+    "associatedCognitiveProfiles": [
+      "Armazenamento de Curto Prazo",
+      "Atenção Seletiva",
+      "Controle Inibitório"
+    ],
+    "functionalClinicalTags": [],
+    "instrumentalDemands": [
+      "acuidade e visão de cor/forma suficientes para distinguir os pares de pipas; percepção do fundo; uso de mouse ou toque e localização visuomotora aproximada. A precisão fina do cursor não é exigida porque a classificação usa regiões"
+    ],
+    "profileStatus": "FINALIZED_PROFILE"
+  },
+  {
+    "exerciseId": "identificacao-simbolos",
+    "officialName": "Identificação de Símbolos",
+    "catalogDomain": "Velocidade de Processamento",
+    "catalogSubdomain": "Busca Visual Rápida",
+    "mechanicalPrimary": "Busca e Rastreamento Visual",
+    "associatedCognitiveProfiles": [
+      "Atenção Seletiva",
+      "Controle Inibitório",
+      "Percepção e Processamento Visuoespacial"
+    ],
+    "functionalClinicalTags": [],
+    "instrumentalDemands": [
+      "acuidade visual para detalhes de glifos, exploração do campo, uso de mouse ou toque e coordenação visuomotora. Não há leitura linguística necessária, embora alguns glifos se pareçam com letras gregas"
+    ],
+    "profileStatus": "FINALIZED_PROFILE"
+  },
+  {
+    "exerciseId": "estacionamento-logico",
+    "officialName": "Estacionamento Lógico",
+    "catalogDomain": "Funções Executivas",
+    "catalogSubdomain": "Planejamento",
+    "mechanicalPrimary": "Planejamento",
+    "associatedCognitiveProfiles": [
+      "Monitoramento Executivo e Manutenção de Meta",
+      "Percepção e Processamento Visuoespacial",
+      "Organização e Sequenciamento",
+      "Resolução de Problemas e Tomada de Decisão"
+    ],
+    "functionalClinicalTags": [],
+    "instrumentalDemands": [
+      "visão de orientação, comprimento, posição e sobreposição dos veículos; percepção da saída e do carro-alvo; uso de mouse ou toque com arraste; coordenação e amplitude motora. O arraste contínuo e a imagem dos carros não são velocidade de processamento"
+    ],
+    "profileStatus": "FINALIZED_PROFILE"
+  },
+  {
+    "exerciseId": "investigadores-sociais",
+    "officialName": "Investigadores da Situação Social",
+    "catalogDomain": "Desenvolvimento Funcional",
+    "catalogSubdomain": "Cognição Social",
+    "mechanicalPrimary": "Linguagem, Leitura e Processamento Auditivo",
+    "associatedCognitiveProfiles": [],
+    "functionalClinicalTags": [
+      "Cognição Social",
+      "Tomada de Decisão Cotidiana",
+      "Compreensão de Situações Sociais"
+    ],
+    "instrumentalDemands": [
+      "leitura da descrição, contexto, pergunta e opções; visão de expressões, personagens ou emojis; compreensão lexical e cultural; uso de mouse ou toque. Alfabetização, familiaridade cultural e percepção visual de expressão podem limitar a resposta sem constituir cognição social por si"
+    ],
+    "profileStatus": "FINALIZED_PROFILE"
+  }
+]
