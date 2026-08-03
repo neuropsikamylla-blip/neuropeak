@@ -1,19 +1,37 @@
-# Decisões clínicas pendentes
+# Decisões clínicas e de arquitetura
 
 As prioridades abaixo indicam impacto em uma futura implementação. Elas não impedem a leitura da
 arquitetura, não são alertas de sessão e não autorizam preencher respostas por inferência técnica.
 
-> **Registro de 03/ago:** a margem de fechamento por modelo de execução foi validada por ela e
-> permanece definida no documento 02; portanto, deixou de ser uma decisão pendente.
+## Bloqueantes aprovadas — 03/ago/2026
 
-## Bloqueante
+As quatro decisões que bloqueavam a implementação foram **APROVADAS** por ela em 03/ago/2026.
+Não há bloqueante restante.
 
-1. **Faixas de sessão e limite máximo:** aprovar ou ajustar os envelopes e limites de atenção do
-   documento 02 antes de transformá-los em alertas de produção.
-2. **Fadiga alta:** confirmar os tetos por duração, a vedação no fechamento e a exigência de uma
-   atividade intermediária entre duas exposições altas.
-3. **Caminhos para a Meta:** reformular o exercício e então substituir seus parâmetros provisórios;
-   até lá, eles não servem de referência clínica para outros exercícios.
+1. **APROVADA — Faixas de duração em quatro estados.** Para 20 min: abaixo `< 18`, dentro do
+   esperado `18–22`, atenção `> 22 até 24` e `EXCESSO_IMPORTANTE` `> 24`; para 30 min: `< 27`,
+   `27–33`, `> 33 até 36` e `> 36`; para 40 min: `< 36`, `36–44`, `> 44 até 48` e `> 48`.
+   São estimativas operacionais, não limites clínicos, e nunca bloqueiam o salvamento.
+2. **APROVADA — Margem de fechamento por modelo.** `CONTINUOUS_TIMED`: 0,5 min;
+   `CLOSED_PROTOCOL`: 1 min; `PLANNING_WINDOW`: 3 min; `FIXED_HIGH_FATIGUE`: 0, além das
+   transições. Não se inicia nova unidade depois do tempo-base. Nos 3 min de planejamento, o teto
+   é de segurança, não obrigação: desafio não concluído encerra com segurança, preserva métricas e
+   progresso adaptativo, sem erro, penalização, redução ou bloqueio de subida automáticos.
+3. **APROVADA — Fadiga alta como recomendação.** Máximo recomendado de 1 em 20 min e 2 em 30/40
+   min; sugerir baixa ou moderada entre duas altas e evitar alta no fechamento, mas permitir salvar
+   e executar normalmente quando o terapeuta a mantiver.
+4. **APROVADA — Tetos de carga basal como heurística pura.** Referências de **7** (20 min),
+   **10** (30 min) e **13** (40 min). **Não** significam sessão válida, inválida, autorização,
+   proibição nem segurança garantida: duas sessões com a mesma soma podem receber alertas
+   diferentes. A leitura considera conjuntamente carga basal · fadiga · interferência · sequência ·
+   modalidade · modelo de execução · concentração de tarefas semelhantes · planejamento consecutivo.
+   Nenhum teto bloqueia salvamento.
+
+## Também aprovado em 03/ago (não era bloqueante)
+
+- **Caminhos para a Meta provisório.** Mantém `PROVISIONAL_PROFILE`, com duração,
+   carga e modelo provisórios, até a reformulação para planejamento. Não deve calibrar outros
+   exercícios.
 
 ## Importante
 
@@ -28,8 +46,8 @@ arquitetura, não são alertas de sessão e não autorizam preencher respostas p
 
 ## Refinamento
 
-1. **Posição preferencial:** confirmar se sair de `bestPosition`, mantendo `canOpen`/`canClose`, deve
-   permanecer informativo em todos os casos ou subir para atenção em qualificadores específicos.
+1. **Posição preferencial:** confirmar se sair de `bestPosition`, mantendo `canOpen`/`canClose`,
+   deve permanecer informativo em todos os casos ou subir para atenção em qualificadores específicos.
 2. **Faixa parcialmente sobreposta:** confirmar se uma estimativa que apenas intersecta a faixa-alvo
    deve permanecer informativa ou receber atenção.
 
@@ -37,6 +55,6 @@ arquitetura, não são alertas de sessão e não autorizam preencher respostas p
 
 | Prioridade | Decisões pendentes |
 |---|---:|
-| Bloqueante | 3 |
+| Bloqueante | 0 |
 | Importante | 4 |
 | Refinamento | 2 |

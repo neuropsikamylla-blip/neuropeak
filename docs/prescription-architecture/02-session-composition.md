@@ -15,20 +15,23 @@ arredondar; a interface pode exibir uma casa decimal.
 
 ## Duração da sessão
 
-### Faixas-alvo e limite seguro
+### Quatro estados operacionais aprovados
 
-A duração escolhida é o centro da faixa operacional, não uma promessa de término em um minuto exato.
-A tolerância operacional é de 10% da duração-alvo. O limite máximo seguro de composição é 20% acima
-do alvo.
+**Decisão aprovada em 03/ago/2026:** a duração estimada ou realizada da sessão é informada em um
+dos quatro estados nomeados abaixo. São estimativas operacionais, não limites clínicos. Nenhum
+estado bloqueia o salvamento, autoriza ou proíbe uma sessão.
 
-| Duração-alvo | Faixa operacional exibida | Tolerância em torno do alvo | Limite máximo seguro de duração real estimada |
-|---:|---:|---:|---:|
-| 20 min | 18–22 min | 2 min | 24 min |
-| 30 min | 27–33 min | 3 min | 36 min |
-| 40 min | 36–44 min | 4 min | 48 min |
+| Sessão | `ABAIXO_DO_ESPERADO` | `DENTRO_DO_ESPERADO` | `ATENÇÃO` | `EXCESSO_IMPORTANTE` |
+|---:|---:|---:|---:|---:|
+| 20 min | `< 18` | **18–22** | `> 22` até 24 | **`> 24`** |
+| 30 min | `< 27` | **27–33** | `> 33` até 36 | **`> 36`** |
+| 40 min | `< 36` | **36–44** | `> 44` até 48 | **`> 48`** |
 
-O limite seguro é um limiar de atenção para a composição estimada, não uma autorização para
-interromper uma unidade clínica válida e não um bloqueio de salvamento.
+Para uma faixa estimada, a interface mostra a faixa e seu estado conservador pelo extremo superior:
+abaixo se `tempoRealMax < piso`; dentro se `tempoRealMin ≥ piso` e `tempoRealMax ≤ teto`; atenção
+se `tempoRealMax > teto` e `tempoRealMax ≤ máximo`; excesso importante se `tempoRealMax > máximo`.
+Quando a faixa cruza uma fronteira, `SESSION_RANGE_PARTIAL` explicita a incerteza sem criar um quinto
+estado. Após execução, a duração realizada usa diretamente a tabela acima.
 
 ### Como formar a faixa de tempo real estimado
 
@@ -46,7 +49,7 @@ A margem operacional tem dois componentes somados:
 | Transição | 0,5 min | 1 min | Para cada troca entre dois exercícios; com `n` exercícios, há `n - 1` trocas. |
 | Fechamento `CONTINUOUS_TIMED` | 0 min | 0,5 min | Para concluir a tentativa ou rodada em andamento. |
 | Fechamento `CLOSED_PROTOCOL` | 0 min | 1 min | Para concluir a série, fase ou bloco em andamento. |
-| Fechamento `PLANNING_WINDOW` | 0 min | 3 min | Para concluir o desafio já iniciado. |
+| Fechamento `PLANNING_WINDOW` | 0 min | 3 min | Teto de segurança para concluir o desafio já iniciado. |
 | Fechamento `FIXED_HIGH_FATIGUE` | 0 min | 0 min | A exposição é fixa e termina no limite definido. |
 
 Para `n` exercícios, com faixas prescritas `[pMinᵢ, pMaxᵢ]` e máximos de fechamento `fMaxᵢ`:
@@ -58,6 +61,20 @@ tempoRealMax = Σ pMaxᵢ + 1,0 × max(0, n − 1) + Σ fMaxᵢ
 
 Assim, o resultado calculado e exibido é sempre uma faixa. A regra não soma uma margem genérica por
 fora dessa fórmula e não usa o `~7 min` atual.
+
+### Encerramento de `PLANNING_WINDOW` sem desafio concluído
+
+Os 3 min de `PLANNING_WINDOW` são teto de segurança, não obrigação de manter o paciente até o fim.
+Depois do tempo-base não se inicia novo desafio. Se o desafio em curso não terminar na margem, a
+execução deve encerrá-lo de forma segura e registrá-lo como **desafio não concluído**. Preserva
+tempo, movimentos, tentativas e todas as demais métricas já produzidas; o fato não conta como erro
+automático, não recebe penalização automática e não inicia novo desafio.
+
+Esta é política geral da arquitetura. O progresso adaptativo fica **protegido**: nesta etapa é
+proibido inventar regra individual que reduza nível, bloqueie subida ou trate desafio não concluído
+como erro. Cada exercício de planejamento poderá definir futuramente seus próprios critérios de
+impacto na progressão; até lá, somente o encerramento seguro e as métricas preservadas são
+registrados.
 
 ### Quantos exercícios cabem por modelo
 
@@ -77,15 +94,17 @@ Essas quantidades não são uma meta e não autorizam preencher espaço automati
 
 ### Alertas de duração
 
-| Código | Disparo verificável | Mensagem ao terapeuta | Severidade |
-|---|---|---|---|
-| `SESSION_BELOW_TARGET` | `tempoRealMax` é menor que o piso da faixa-alvo. | “A sessão está estimada em **X–Y min**, abaixo da faixa de **A–B min**.” | atenção |
-| `SESSION_ABOVE_TARGET` | `tempoRealMin` é maior que o teto da faixa-alvo. | “A sessão está estimada em **X–Y min**, acima da faixa de **A–B min**.” | atenção |
-| `SESSION_RANGE_PARTIAL` | A faixa estimada intersecta a faixa-alvo, mas um de seus extremos fica fora dela. | “A estimativa de **X–Y min** alcança a faixa-alvo, mas pode terminar fora de **A–B min**.” | informativa |
-| `SESSION_SAFE_MAX_EXCEEDED` | `tempoRealMax` é maior que o limite máximo seguro da duração escolhida. | “O extremo superior estimado é **Y min**, acima do limite de atenção de **L min**.” | atenção |
+| Estado | Alerta reutilizado | Disparo verificável | Mensagem ao terapeuta | Severidade |
+|---|---|---|---|---|
+| `ABAIXO_DO_ESPERADO` | `SESSION_BELOW_TARGET` | `tempoRealMax < piso`. | “A sessão está estimada em **X–Y min**, abaixo do esperado de **A–B min**.” | atenção |
+| `DENTRO_DO_ESPERADO` | nenhum | `tempoRealMin ≥ piso` e `tempoRealMax ≤ teto`. | “A sessão está estimada em **X–Y min**, dentro do esperado de **A–B min**.” | — |
+| `ATENÇÃO` | `SESSION_ABOVE_TARGET` | `tempoRealMax > teto` e `tempoRealMax ≤ máximo`. | “A estimativa de **X–Y min** entra em **atenção** acima de **B min**; o máximo operacional é **L min**.” | atenção |
+| `EXCESSO_IMPORTANTE` | `SESSION_SAFE_MAX_EXCEEDED` | `tempoRealMax > máximo`. | “O extremo superior estimado é **Y min**, em **excesso importante** acima do máximo operacional de **L min**.” | atenção |
 
-`SESSION_RANGE_PARTIAL` e `SESSION_SAFE_MAX_EXCEEDED` podem coexistir: o primeiro descreve incerteza
-operacional; o segundo marca que um resultado possível passa do teto seguro.
+`SESSION_RANGE_PARTIAL` permanece o alerta informativo para uma faixa que intersecta 18–22, 27–33 ou
+36–44 mas tem um extremo fora dela: “A estimativa de **X–Y min** alcança o esperado, mas pode
+terminar fora de **A–B min**.” Ele pode coexistir com `SESSION_ABOVE_TARGET` ou
+`SESSION_SAFE_MAX_EXCEEDED`; não cria código novo nem bloqueia salvamento.
 
 ## Regras determinísticas de composição
 
@@ -98,8 +117,10 @@ pontos; a fórmula dinâmica pertence a uma fase posterior.
 Os valores 7, 10 e 13 são **referências heurísticas de atenção**, não limites absolutos, nem
 autorização ou proibição de uma composição. A soma basal não descreve a sessão: duas sessões com a
 mesma carga total podem ter qualidades clínicas muito diferentes. A leitura clínica considera
-simultaneamente **carga basal · fadiga · interferência · modelo de execução · modalidade ·
-planejamento**; nenhum desses eixos, isoladamente, decide se a sessão é adequada.
+simultaneamente **carga basal · fadiga · interferência · sequência · modalidade · modelo de execução
+· concentração de tarefas semelhantes · planejamento consecutivo**; nenhum desses eixos,
+isoladamente, decide se a sessão é adequada. Duas sessões com a mesma soma podem receber alertas
+diferentes.
 
 | Duração | Teto de carga basal |
 |---:|---:|
@@ -129,9 +150,10 @@ clínica não são.
 | 30 min | 2 |
 | 40 min | 2 |
 
-Um exercício de fadiga alta pode ocupar abertura ou meio, respeitando o parâmetro 11. Não pode ser o
-último. Quando houver dois, deve existir ao menos um exercício de fadiga baixa ou moderada entre
-eles.
+Um exercício de fadiga alta pode ocupar abertura ou meio, respeitando o parâmetro 11. Recomenda-se
+evitar que seja o último, mas, se o terapeuta o mantiver, a execução e o salvamento são permitidos
+normalmente. Quando houver dois, sugere-se ao menos um exercício de fadiga baixa ou moderada entre
+eles; a regra é consultiva, não absoluta.
 
 | Código | Disparo verificável | Mensagem ao terapeuta | Severidade |
 |---|---|---|---|

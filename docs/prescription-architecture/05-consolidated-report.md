@@ -19,7 +19,7 @@ modalidade e planejamento.
 | Matriz Espacial Inversa | `CLOSED_PROTOCOL` | série | 2 | 4 min · 8 min · 10 min | MODERADA | BAIXA | 4 / 8 / 10 | FINAL_PARAMETERS |
 | Jogo da Memória | `CLOSED_PROTOCOL` | rodada | 2 | 3 min · 7 min · 11 min | MODERADA | MODERADA | 1 / 2 / 3 | FINAL_PARAMETERS |
 | Conecta Números | `CLOSED_PROTOCOL` | rodada | 1 | 2 min · 6 min · 10 min | BAIXA | BAIXA | 1 / 3 / 5 | FINAL_PARAMETERS |
-| Caminhos para a Meta | `PLANNING_WINDOW` | desafio completo | 2 | 4 min · 9 min · 14 min | MODERADA | BAIXA | 1 / 2 / 3 | PROVISIONAL_PARAMETERS |
+| Caminhos para a Meta | `PLANNING_WINDOW` | desafio completo | 2 | 4 min · 9 min · 14 min | MODERADA | BAIXA | 1 / 2 / 3 | PROVISIONAL_PROFILE |
 | Informação em Foco | `CONTINUOUS_TIMED` | tentativa | 2 | 4 min · 10 min · 16 min | MODERADA | MODERADA | 2 / 5 / 8 | FINAL_PARAMETERS |
 | Rastreamento de Objetos | `FIXED_HIGH_FATIGUE` | rodada | 3 | 3 min · 6 min · 9 min | ALTA | ALTA | 4 / 8 / 12 | FINAL_PARAMETERS |
 | Dupla Tarefa | `FIXED_HIGH_FATIGUE` | bloco | 3 | 3 min · 6 min · 8 min | ALTA | ALTA | 1 / 1 / 1 | FINAL_PARAMETERS |
@@ -75,9 +75,9 @@ reordenação ou bloqueio.
 | Código | O que dispara | Severidade |
 |---|---|---|
 | `SESSION_BELOW_TARGET` | `tempoRealMax` fica abaixo do piso da faixa-alvo. | atenção |
-| `SESSION_ABOVE_TARGET` | `tempoRealMin` fica acima do teto da faixa-alvo. | atenção |
+| `SESSION_ABOVE_TARGET` | `tempoRealMax` entra no intervalo `ATENÇÃO`: acima do teto esperado e até o máximo operacional. | atenção |
 | `SESSION_RANGE_PARTIAL` | A faixa estimada intersecta a faixa-alvo, mas um extremo fica fora. | informativa |
-| `SESSION_SAFE_MAX_EXCEEDED` | `tempoRealMax` supera o limite máximo seguro de atenção. | atenção |
+| `SESSION_SAFE_MAX_EXCEEDED` | `tempoRealMax` entra em `EXCESSO_IMPORTANTE`, acima do máximo operacional. | atenção |
 | `LOAD_AT_CAP` | A soma basal coincide com a referência heurística da duração. | informativa |
 | `LOAD_OVER_CAP` | A soma basal supera a referência heurística da duração. | atenção |
 | `HIGH_FATIGUE_COUNT` | A quantidade de exercícios de fadiga alta supera o teto da duração. | atenção |
@@ -97,15 +97,27 @@ reordenação ou bloqueio.
 `PLANNING_WINDOW_ADJACENT`, ela passa a enumerar 18. Não foram inventados quatro códigos adicionais
 apenas para atingir uma contagem de 22, pois isso criaria regras clínicas não aprovadas.
 
+## Decisões aprovadas em 03/ago/2026
+
+As quatro bloqueantes foram aprovadas; resta **nenhuma bloqueante**. As faixas operacionais têm quatro
+estados — `ABAIXO_DO_ESPERADO`, `DENTRO_DO_ESPERADO`, `ATENÇÃO` e `EXCESSO_IMPORTANTE` — com os
+intervalos 20: `<18`, `18–22`, `>22–24`, `>24`; 30: `<27`, `27–33`, `>33–36`, `>36`; e 40:
+`<36`, `36–44`, `>44–48`, `>48`. São consultivos e não bloqueiam salvar.
+
+As margens aprovadas são 0,5 min para `CONTINUOUS_TIMED`, 1 min para `CLOSED_PROTOCOL`, 3 min como
+teto de segurança de `PLANNING_WINDOW` e 0 para `FIXED_HIGH_FATIGUE`; não se inicia nova unidade após
+o tempo-base. Em planejamento não concluído, a execução encerra com segurança e preserva tempo,
+movimentos, tentativas, demais métricas e progresso adaptativo, sem erro, penalização, redução ou
+bloqueio de subida automáticos. É proibido definir nesta etapa regra adaptativa individual.
+
+Os tetos de carga 7/10/13 seguem como heurística pura, lida com carga basal, fadiga, interferência,
+sequência, modalidade, modelo, concentração de tarefas semelhantes e planejamento consecutivo. A
+fadiga alta é recomendação: máximo 1/2/2, sugerir intercalação e evitar o último exercício, mas
+permitir normalmente a escolha do terapeuta. `PLANNING_WINDOW_ADJACENT` permanece consultivo e
+sugere intercalar `CONTINUOUS_TIMED` ou `CLOSED_PROTOCOL`. Caminhos para a Meta continua
+`PROVISIONAL_PROFILE` e não calibra os demais exercícios.
+
 ## Exercícios que ainda dependem de decisão clínica
-
-### Bloqueante
-
-| Decisão | Exercícios afetados |
-|---|---|
-| Faixas de sessão e limites de atenção: aprovar ou ajustar os envelopes do documento 02 antes de uma implementação de produção. | Todos os 34 exercícios, pois todos podem compor sessões. |
-| Fadiga alta: confirmar tetos por duração, vedação no fechamento e intervalo entre duas exposições altas. | Cores e Palavras; Rastreamento de Objetos; Dupla Tarefa; Busca Rápida; Compra Multifuncional; Alternância de Regras; Grade Dedutiva; Lista com Distração; Supermercado; N-Back; Vigilância; Estacionamento Lógico. |
-| Reformular Caminhos para a Meta e substituir seus parâmetros provisórios. | Caminhos para a Meta — `PROVISIONAL_PARAMETERS`; não é referência para os demais exercícios. |
 
 ### Importante
 
