@@ -1,0 +1,3131 @@
+[
+  {
+    "exerciseId": "span-numerico",
+    "officialName": "Span Numérico Auditivo Direto",
+    "prescriptionParameterStatus": "FINAL_PARAMETERS",
+    "executionModel": {
+      "value": "CLOSED_PROTOCOL",
+      "justification": "A extensão adapta somente após reprodução integral, e a sessão é prescrita por quantidade de tentativas."
+    },
+    "minimumValidUnit": {
+      "value": "série",
+      "justification": "Apresentação e reprodução completas são necessárias para interpretar retenção serial."
+    },
+    "terminationPolicy": {
+      "atLimit": "não inicia outra série",
+      "midUnit": "Se o limite chegar durante apresentação ou resposta, conclui a série; uma interrupção real invalida apenas a série parcial."
+    },
+    "protocols": {
+      "BRIEF": {
+        "unitCount": 4,
+        "estimatedDuration": "~3 min",
+        "clinicalValidity": "Manutenção/aquecimento; insuficiente para progressão. Verifica compreensão, tolerância ao áudio e manutenção."
+      },
+      "STANDARD": {
+        "unitCount": 8,
+        "estimatedDuration": "~6 min",
+        "clinicalValidity": "Oito séries permitem observar estabilidade do span direto. Sustenta progressão somente com unidades completas; não permite concluir transferência além da mecânica."
+      },
+      "EXTENDED": {
+        "unitCount": 12,
+        "estimatedDuration": "~9 min",
+        "clinicalValidity": "Aumenta estabilidade ou variedade da observação. Não separa memória auditiva do apoio visual das teclas e exige vigiar queda por repetição."
+      }
+    },
+    "baselineCognitiveLoad": {
+      "value": 2,
+      "justification": "Retenção serial verbal relevante, sem transformação, distratores externos ou pressão de resposta."
+    },
+    "loadModifiers": [
+      {
+        "dimension": "quantidade de estímulos",
+        "effect": "Séries mais longas ampliam os dígitos a codificar."
+      },
+      {
+        "dimension": "memória exigida",
+        "effect": "Maior extensão aumenta retenção, ensaio e monitoramento serial; no teto pode haver repetição não adjacente."
+      }
+    ],
+    "clinicalDuration": {
+      "minimumUseful": "3 min",
+      "standard": "6 min",
+      "maximumRecommended": "9 min",
+      "justification": "Quatro séries dão o mínimo útil, oito equilibram amostra e esforço e, após doze, repetição e estratégia reduzem o retorno."
+    },
+    "fatigue": {
+      "level": "MODERADA",
+      "explanation": "O ensaio serial é contínuo, mas há pausa natural entre séries e não existe dupla tarefa."
+    },
+    "interference": {
+      "level": "BAIXA",
+      "explanation": "Não há distratores externos ou troca de regra; há apenas competição entre posições da própria série."
+    },
+    "resumptionAfterInterruption": {
+      "strategy": "do início do bloco",
+      "rationale": "Preserva séries fechadas, descarta a interrompida e reinicia o conjunto restante."
+    },
+    "sessionEligibility": {
+      "canOpen": true,
+      "canClose": true,
+      "bestPosition": "início ou meio; no fim apenas em BREVE",
+      "badCombinations": [
+        {
+          "exercise": "Span Numérico Auditivo Inverso",
+          "reason": "Interferência de ordem direta/inversa."
+        },
+        {
+          "exercise": "Letras em Sequência",
+          "reason": "Fadiga verbal e efeito de ensaio serial."
+        }
+      ]
+    },
+    "modality": "não se aplica"
+  },
+  {
+    "exerciseId": "stroop-task",
+    "officialName": "Cores e Palavras",
+    "prescriptionParameterStatus": "FINAL_PARAMETERS",
+    "executionModel": {
+      "value": "CONTINUOUS_TIMED",
+      "justification": "Cada tentativa fecha em poucos segundos e o temporizador é verificado ao final dela; não há série obrigatória."
+    },
+    "minimumValidUnit": {
+      "value": "tentativa",
+      "justification": "Regra, estímulo conflitante e escolha fechada já produzem um resultado interpretável."
+    },
+    "terminationPolicy": {
+      "atLimit": "termina a tentativa",
+      "midUnit": "Se o limite chegar com a barra ativa, permite resposta ou omissão e fecha a tentativa; não apresenta outro estímulo."
+    },
+    "protocols": {
+      "BRIEF": {
+        "unitCount": 12,
+        "estimatedDuration": "~2 min",
+        "clinicalValidity": "Manutenção/aquecimento; insuficiente para progressão. Checa acesso a cores, leitura e mapeamento, sem amostrar adequadamente trocas."
+      },
+      "STANDARD": {
+        "unitCount": 30,
+        "estimatedDuration": "~5 min",
+        "clinicalValidity": "Trinta tentativas amostram conflito, regras e trocas aleatórias. Sustenta progressão somente com unidades completas; não permite concluir transferência além da mecânica."
+      },
+      "EXTENDED": {
+        "unitCount": 48,
+        "estimatedDuration": "~8 min",
+        "clinicalValidity": "Aumenta estabilidade ou variedade da observação. Melhora proporções amostrais, mas a queda tardia pode refletir fadiga inibitória."
+      }
+    },
+    "baselineCognitiveLoad": {
+      "value": 3,
+      "justification": "Conflito cor-palavra, duas regras, cinco respostas e janela temporal combinam inibição, seleção e monitoramento."
+    },
+    "loadModifiers": [
+      {
+        "dimension": "velocidade",
+        "effect": "Janela menor eleva pressão temporal."
+      },
+      {
+        "dimension": "interferência",
+        "effect": "Maior proporção incongruente reforça o conflito."
+      },
+      {
+        "dimension": "mudança de regra",
+        "effect": "Maior equilíbrio entre COR e PALAVRA aumenta a frequência esperada de troca, ainda aleatória."
+      }
+    ],
+    "clinicalDuration": {
+      "minimumUseful": "2 min",
+      "standard": "5 min",
+      "maximumRecommended": "8 min",
+      "justification": "Doze tentativas só confirmam acesso, trinta amostram conflito e, além de quarenta e oito, fadiga contamina latência e erro."
+    },
+    "fatigue": {
+      "level": "ALTA",
+      "explanation": "Supressão repetida da dimensão dominante, trocas e resposta sob prazo acumulam esforço executivo."
+    },
+    "interference": {
+      "level": "ALTA",
+      "explanation": "A incongruência palavra-tinta é constitutiva da tarefa."
+    },
+    "resumptionAfterInterruption": {
+      "strategy": "retoma exatamente de onde parou",
+      "rationale": "Mantém tentativas fechadas; descarta a incompleta e inicia novo estímulo."
+    },
+    "sessionEligibility": {
+      "canOpen": true,
+      "canClose": false,
+      "bestPosition": "início, após adaptação curta ao dispositivo",
+      "badCombinations": [
+        {
+          "exercise": "Alternância de Regras",
+          "reason": "Somação de troca e inibição reduz a comparabilidade."
+        },
+        {
+          "exercise": "Semáforo",
+          "reason": "Mapeamentos de cor e resposta geram interferência proativa."
+        }
+      ]
+    },
+    "modality": "não se aplica"
+  },
+  {
+    "exerciseId": "focus-agents",
+    "officialName": "Agentes Focus",
+    "prescriptionParameterStatus": "FINAL_PARAMETERS",
+    "executionModel": {
+      "value": "CONTINUOUS_TIMED",
+      "justification": "Cada comando e busca formam rodada autônoma, e o tempo é verificado ao final dela."
+    },
+    "minimumValidUnit": {
+      "value": "rodada",
+      "justification": "Apresentar e ocultar o comando, buscar e selecionar são necessários para interpretar manutenção do critério."
+    },
+    "terminationPolicy": {
+      "atLimit": "termina a rodada",
+      "midUnit": "Se o limite chegar durante a busca, fecha a janela do alvo e a rodada; não inicia novo comando."
+    },
+    "protocols": {
+      "BRIEF": {
+        "unitCount": 4,
+        "estimatedDuration": "~3 min",
+        "clinicalValidity": "Manutenção/aquecimento; insuficiente para progressão. Familiariza com comando e campo móvel, mas não compara tipos de critério."
+      },
+      "STANDARD": {
+        "unitCount": 8,
+        "estimatedDuration": "~6 min",
+        "clinicalValidity": "Oito rodadas amostram retenção do comando e busca visual. Sustenta progressão somente com unidades completas; não permite concluir transferência além da mecânica."
+      },
+      "EXTENDED": {
+        "unitCount": 12,
+        "estimatedDuration": "~9 min",
+        "clinicalValidity": "Aumenta estabilidade ou variedade da observação. Permite consistência entre critérios, com teto para limitar fadiga visual."
+      }
+    },
+    "baselineCognitiveLoad": {
+      "value": 2,
+      "justification": "Reter critério e buscar personagens móveis combina memória verbal e seleção visual, sem planejamento ou fluxo duplo."
+    },
+    "loadModifiers": [
+      {
+        "dimension": "velocidade",
+        "effect": "Movimento mais rápido e janela menor elevam rapidez perceptiva e pressão temporal."
+      },
+      {
+        "dimension": "quantidade de estímulos",
+        "effect": "Mais personagens e dois alvos ampliam varredura e monitoramento."
+      },
+      {
+        "dimension": "memória exigida",
+        "effect": "Conjunções, lateralidade e dois alvos aumentam retenção do comando."
+      },
+      {
+        "dimension": "interferência",
+        "effect": "Critérios negativos e atributos parcialmente compatíveis elevam controle de distração."
+      },
+      {
+        "dimension": "mudança de regra",
+        "effect": "Correção de regra abandonada substitui o critério ativo."
+      },
+      {
+        "dimension": "semelhança dos distratores",
+        "effect": "Atributos compartilhados aumentam comparação fina."
+      },
+      {
+        "dimension": "modalidade",
+        "effect": "O canal do comando altera apoio visual, codificação auditiva e conversão para busca visual."
+      }
+    ],
+    "clinicalDuration": {
+      "minimumUseful": "3 min",
+      "standard": "6 min",
+      "maximumRecommended": "9 min",
+      "justification": "Quatro rodadas estabilizam a regra, oito cobrem variações e, após doze, movimento e busca acumulam fadiga visual."
+    },
+    "fatigue": {
+      "level": "MODERADA",
+      "explanation": "Busca em campo móvel e retenção exigem esforço, com pausas breves entre comandos."
+    },
+    "interference": {
+      "level": "MODERADA",
+      "explanation": "Distratores competem por atributos; a intensidade cresce com semelhança parcial."
+    },
+    "resumptionAfterInterruption": {
+      "strategy": "retoma exatamente de onde parou",
+      "rationale": "Preserva rodadas completas; descarta a cortada e reinicia com novo comando."
+    },
+    "sessionEligibility": {
+      "canOpen": true,
+      "canClose": true,
+      "bestPosition": "início ou meio; no fim apenas em BREVE",
+      "badCombinations": [
+        {
+          "exercise": "Rastreamento de Objetos",
+          "reason": "Rastreamento e fadiga em campo móvel se acumulam."
+        },
+        {
+          "exercise": "Vigilância",
+          "reason": "Concentra discriminação visual e controle de distração."
+        }
+      ]
+    },
+    "modality": {
+      "applies": true,
+      "implementationStatus": "projeção; seletor aprovado e ainda não implementado",
+      "modes": {
+        "visual": {
+          "durationImpact": "referência",
+          "loadImpact": "Comando escrito e amostras visuais apoiam codificação."
+        },
+        "visual+audio": {
+          "durationImpact": "neutro ou até ~10% menor se a fala facilitar",
+          "loadImpact": "Redundância congruente pode facilitar; só aumenta divisão/interferência se fontes competirem. Não é automaticamente mais difícil."
+        },
+        "audioOnly": {
+          "durationImpact": "~15–25% maior",
+          "loadImpact": "Aumenta memória verbal auditiva e conversão auditivo-visual; reduz pistas visuais do comando."
+        }
+      }
+    }
+  },
+  {
+    "exerciseId": "span-numerico-inverso",
+    "officialName": "Span Numérico Auditivo Inverso",
+    "prescriptionParameterStatus": "FINAL_PARAMETERS",
+    "executionModel": {
+      "value": "CLOSED_PROTOCOL",
+      "justification": "A progressão depende da reprodução integral da série transformada; resposta parcial perde a operação central."
+    },
+    "minimumValidUnit": {
+      "value": "série",
+      "justification": "Codificação, inversão e reprodução completas são inseparáveis."
+    },
+    "terminationPolicy": {
+      "atLimit": "não inicia outra série",
+      "midUnit": "Se o limite chegar durante apresentação ou resposta, conclui a série; interrupção real invalida só a série parcial."
+    },
+    "protocols": {
+      "BRIEF": {
+        "unitCount": 4,
+        "estimatedDuration": "~4 min",
+        "clinicalValidity": "Manutenção/aquecimento; insuficiente para progressão. Confirma entendimento da inversão e tolerância."
+      },
+      "STANDARD": {
+        "unitCount": 8,
+        "estimatedDuration": "~8 min",
+        "clinicalValidity": "Oito séries permitem observar retenção e manipulação. Sustenta progressão somente com unidades completas; não permite concluir transferência além da mecânica."
+      },
+      "EXTENDED": {
+        "unitCount": 12,
+        "estimatedDuration": "~12 min",
+        "clinicalValidity": "Aumenta estabilidade ou variedade da observação. A queda tardia precisa ser interpretada como possível fadiga executiva."
+      }
+    },
+    "baselineCognitiveLoad": {
+      "value": 3,
+      "justification": "É preciso manter a série, inverter a ordem e monitorar a reprodução sem correção."
+    },
+    "loadModifiers": [
+      {
+        "dimension": "quantidade de estímulos",
+        "effect": "Maior extensão aumenta dígitos codificados."
+      },
+      {
+        "dimension": "memória exigida",
+        "effect": "Séries maiores ampliam armazenamento e transformação serial simultaneamente."
+      }
+    ],
+    "clinicalDuration": {
+      "minimumUseful": "4 min",
+      "standard": "8 min",
+      "maximumRecommended": "12 min",
+      "justification": "A inversão alonga cada série; oito dão amostra útil e, após doze minutos, fadiga de manipulação domina o resultado."
+    },
+    "fatigue": {
+      "level": "ALTA",
+      "explanation": "Armazenamento e inversão serial são mantidos simultaneamente."
+    },
+    "interference": {
+      "level": "BAIXA",
+      "explanation": "A concorrência é interna entre ordem original e invertida, sem distratores externos."
+    },
+    "resumptionAfterInterruption": {
+      "strategy": "do início do bloco",
+      "rationale": "Conserva séries completas e reinicia integralmente a série interrompida."
+    },
+    "sessionEligibility": {
+      "canOpen": true,
+      "canClose": false,
+      "bestPosition": "início",
+      "badCombinations": [
+        {
+          "exercise": "Span Numérico Auditivo Direto",
+          "reason": "Interferência de regra direta/inversa."
+        },
+        {
+          "exercise": "N-Back",
+          "reason": "Sobrecarga atualização e memória verbal."
+        }
+      ]
+    },
+    "modality": "não se aplica"
+  },
+  {
+    "exerciseId": "matriz-espacial",
+    "officialName": "Matriz Espacial",
+    "prescriptionParameterStatus": "FINAL_PARAMETERS",
+    "executionModel": {
+      "value": "CLOSED_PROTOCOL",
+      "justification": "A extensão ajusta somente após reprodução completa da sequência espacial."
+    },
+    "minimumValidUnit": {
+      "value": "série",
+      "justification": "Apresentação serial e reprodução integral do caminho são a menor medida válida."
+    },
+    "terminationPolicy": {
+      "atLimit": "não inicia outra série",
+      "midUnit": "Se o limite chegar durante flashes ou resposta, conclui a série; interrupção real invalida só a série parcial."
+    },
+    "protocols": {
+      "BRIEF": {
+        "unitCount": 4,
+        "estimatedDuration": "~3 min",
+        "clinicalValidity": "Manutenção/aquecimento; insuficiente para progressão. Adapta à grade e verifica manutenção."
+      },
+      "STANDARD": {
+        "unitCount": 8,
+        "estimatedDuration": "~6 min",
+        "clinicalValidity": "Oito séries observam retenção e ordem espacial. Sustenta progressão somente com unidades completas; não permite concluir transferência além da mecânica."
+      },
+      "EXTENDED": {
+        "unitCount": 12,
+        "estimatedDuration": "~9 min",
+        "clinicalValidity": "Aumenta estabilidade ou variedade da observação. Estratégias espaciais e repetição passam a reduzir o ganho."
+      }
+    },
+    "baselineCognitiveLoad": {
+      "value": 2,
+      "justification": "Retenção e ordem espacial com regra direta, sem distratores ou pressão de resposta."
+    },
+    "loadModifiers": [
+      {
+        "dimension": "quantidade de estímulos",
+        "effect": "Sequência e grade maiores ampliam posições e precisão espacial."
+      },
+      {
+        "dimension": "memória exigida",
+        "effect": "Maior extensão aumenta retenção e monitoramento da ordem."
+      },
+      {
+        "dimension": "mudança de regra",
+        "effect": "No mesmo ID, dificuldade inicial alta pode impor resposta inversa; não deve ser agregada ao basal direto."
+      }
+    ],
+    "clinicalDuration": {
+      "minimumUseful": "3 min",
+      "standard": "6 min",
+      "maximumRecommended": "9 min",
+      "justification": "Quatro séries estabelecem acesso, oito estabilidade e doze limitam exposição repetitiva antes da fadiga visuoespacial."
+    },
+    "fatigue": {
+      "level": "MODERADA",
+      "explanation": "Há retenção serial repetida, mas regra direta e pausas contêm o esforço."
+    },
+    "interference": {
+      "level": "BAIXA",
+      "explanation": "Não há distratores; posições competem apenas por ordem e localização."
+    },
+    "resumptionAfterInterruption": {
+      "strategy": "do início do bloco",
+      "rationale": "Preserva séries fechadas e reinicia a interrompida desde o primeiro flash."
+    },
+    "sessionEligibility": {
+      "canOpen": true,
+      "canClose": true,
+      "bestPosition": "início ou meio",
+      "badCombinations": [
+        {
+          "exercise": "Matriz Espacial Inversa",
+          "reason": "Mistura regras direta e inversa."
+        },
+        {
+          "exercise": "Cubos",
+          "reason": "Acumula retenção serial espacial."
+        }
+      ]
+    },
+    "modality": "não se aplica"
+  },
+  {
+    "exerciseId": "matriz-espacial-inversa",
+    "officialName": "Matriz Espacial Inversa",
+    "prescriptionParameterStatus": "FINAL_PARAMETERS",
+    "executionModel": {
+      "value": "CLOSED_PROTOCOL",
+      "justification": "A progressão exige fechar a sequência e sua reprodução invertida."
+    },
+    "minimumValidUnit": {
+      "value": "série",
+      "justification": "Codificação, inversão e reprodução espacial completas são inseparáveis."
+    },
+    "terminationPolicy": {
+      "atLimit": "não inicia outra série",
+      "midUnit": "Se o limite chegar no meio, conclui a série; interrupção real descarta toda a série parcial."
+    },
+    "protocols": {
+      "BRIEF": {
+        "unitCount": 4,
+        "estimatedDuration": "~4 min",
+        "clinicalValidity": "Manutenção/aquecimento; insuficiente para progressão. Confirma compreensão da inversão."
+      },
+      "STANDARD": {
+        "unitCount": 8,
+        "estimatedDuration": "~8 min",
+        "clinicalValidity": "Oito séries observam manipulação e retenção. Sustenta progressão somente com unidades completas; não permite concluir transferência além da mecânica."
+      },
+      "EXTENDED": {
+        "unitCount": 10,
+        "estimatedDuration": "~10 min",
+        "clinicalValidity": "Aumenta estabilidade ou variedade da observação. Limita a dez séries para evitar que fadiga executiva domine o resultado."
+      }
+    },
+    "baselineCognitiveLoad": {
+      "value": 3,
+      "justification": "Combina memória operacional visuoespacial intensa, retenção e inversão mental."
+    },
+    "loadModifiers": [
+      {
+        "dimension": "quantidade de estímulos",
+        "effect": "Mais posições e grade maior ampliam o conjunto espacial."
+      },
+      {
+        "dimension": "memória exigida",
+        "effect": "Extensão aumenta armazenamento, inversão e monitoramento serial."
+      }
+    ],
+    "clinicalDuration": {
+      "minimumUseful": "4 min",
+      "standard": "8 min",
+      "maximumRecommended": "10 min",
+      "justification": "A inversão torna cada série mais lenta; oito fornecem amostra útil e dez contêm fadiga executiva."
+    },
+    "fatigue": {
+      "level": "ALTA",
+      "explanation": "A trajetória precisa ser transformada enquanto todas as posições permanecem ativas."
+    },
+    "interference": {
+      "level": "BAIXA",
+      "explanation": "A competição é entre ordem apresentada e inversa, sem distratores externos."
+    },
+    "resumptionAfterInterruption": {
+      "strategy": "do início do bloco",
+      "rationale": "Reinicia integralmente a série interrompida e conserva apenas séries fechadas."
+    },
+    "sessionEligibility": {
+      "canOpen": true,
+      "canClose": false,
+      "bestPosition": "início",
+      "badCombinations": [
+        {
+          "exercise": "Matriz Espacial",
+          "reason": "Contaminação entre regras direta e inversa."
+        },
+        {
+          "exercise": "Matriz com Rotações",
+          "reason": "Acumula transformação espacial intensa."
+        }
+      ]
+    },
+    "modality": "não se aplica"
+  },
+  {
+    "exerciseId": "jogo-memoria",
+    "officialName": "Jogo da Memória",
+    "prescriptionParameterStatus": "FINAL_PARAMETERS",
+    "executionModel": {
+      "value": "CLOSED_PROTOCOL",
+      "justification": "A adaptação ocorre ao fechar o tabuleiro por sucesso ou orçamento de desencontros."
+    },
+    "minimumValidUnit": {
+      "value": "rodada",
+      "justification": "Somente tabuleiro encerrado permite interpretar aprendizagem, atualização e repetição de escolhas."
+    },
+    "terminationPolicy": {
+      "atLimit": "termina a rodada",
+      "midUnit": "Se o limite chegar no meio do tabuleiro, permite concluir a rodada e depois não inicia outra."
+    },
+    "protocols": {
+      "BRIEF": {
+        "unitCount": 1,
+        "estimatedDuration": "~3 min",
+        "clinicalValidity": "Manutenção/aquecimento; insuficiente para progressão. Um tabuleiro mostra estratégia, mas não a consistência exigida pela adaptação."
+      },
+      "STANDARD": {
+        "unitCount": 2,
+        "estimatedDuration": "~7 min",
+        "clinicalValidity": "Duas rodadas permitem observar a regra de resultados consecutivos. Sustenta progressão somente com unidades completas; não permite concluir transferência além da mecânica."
+      },
+      "EXTENDED": {
+        "unitCount": 3,
+        "estimatedDuration": "~11 min",
+        "clinicalValidity": "Aumenta estabilidade ou variedade da observação. Aprendizagem específica do formato e fadiga passam a limitar comparações."
+      }
+    },
+    "baselineCognitiveLoad": {
+      "value": 2,
+      "justification": "Exige manter e atualizar associações símbolo-posição, com apoio dos pares revelados e sem prazo."
+    },
+    "loadModifiers": [
+      {
+        "dimension": "quantidade de estímulos",
+        "effect": "Mais pares ampliam identidades, posições e combinações."
+      },
+      {
+        "dimension": "memória exigida",
+        "effect": "Tabuleiro maior exige atualizar o mapa após cada abertura."
+      },
+      {
+        "dimension": "interferência",
+        "effect": "Mais cartas ocultas aumentam competição entre associações."
+      }
+    ],
+    "clinicalDuration": {
+      "minimumUseful": "3 min",
+      "standard": "7 min",
+      "maximumRecommended": "11 min",
+      "justification": "Uma rodada é a menor leitura, duas capturam consistência e três limitam aprendizagem do formato e retorno decrescente."
+    },
+    "fatigue": {
+      "level": "MODERADA",
+      "explanation": "Atualização espacial é repetida, mas o ritmo é autocadenciado e pares visíveis apoiam."
+    },
+    "interference": {
+      "level": "MODERADA",
+      "explanation": "Posições ocultas e símbolos concorrentes competem na recuperação."
+    },
+    "resumptionAfterInterruption": {
+      "strategy": "do início do bloco",
+      "rationale": "Tabuleiro interrompido perde a história de exposições; reinicia a rodada."
+    },
+    "sessionEligibility": {
+      "canOpen": true,
+      "canClose": true,
+      "bestPosition": "meio ou fim",
+      "badCombinations": [
+        {
+          "exercise": "Matriz Espacial",
+          "reason": "Transfere estratégia de codificação de posições."
+        },
+        {
+          "exercise": "Cubos",
+          "reason": "Acumula memória visuoespacial e fadiga perceptiva."
+        }
+      ]
+    },
+    "modality": "não se aplica"
+  },
+  {
+    "exerciseId": "trilha-visual",
+    "officialName": "Conecta Números",
+    "prescriptionParameterStatus": "FINAL_PARAMETERS",
+    "executionModel": {
+      "value": "CLOSED_PROTOCOL",
+      "justification": "A sequência precisa chegar ao maior número para produzir resultado de rodada."
+    },
+    "minimumValidUnit": {
+      "value": "rodada",
+      "justification": "O caminho completo mostra cobertura, sequenciamento e erros fora de ordem."
+    },
+    "terminationPolicy": {
+      "atLimit": "termina a rodada",
+      "midUnit": "Se o limite chegar no meio, conclui o caminho em andamento e não gera nova disposição."
+    },
+    "protocols": {
+      "BRIEF": {
+        "unitCount": 1,
+        "estimatedDuration": "~2 min",
+        "clinicalValidity": "Manutenção/aquecimento; insuficiente para progressão. Confirma acesso à sequência numérica."
+      },
+      "STANDARD": {
+        "unitCount": 3,
+        "estimatedDuration": "~6 min",
+        "clinicalValidity": "Três disposições permitem consistência de busca. Sustenta progressão somente com unidades completas; não permite concluir transferência além da mecânica."
+      },
+      "EXTENDED": {
+        "unitCount": 5,
+        "estimatedDuration": "~10 min",
+        "clinicalValidity": "Aumenta estabilidade ou variedade da observação. Prática de varredura e repetição reduzem o ganho após cinco rodadas."
+      }
+    },
+    "baselineCognitiveLoad": {
+      "value": 2,
+      "justification": "Varredura e manutenção de meta moderadas, com números tocados e caminho ainda visíveis."
+    },
+    "loadModifiers": [
+      {
+        "dimension": "quantidade de estímulos",
+        "effect": "Mais números e densidade ampliam sequência e cobertura espacial."
+      },
+      {
+        "dimension": "memória exigida",
+        "effect": "A extensão aumenta monitoramento do próximo número, ainda com apoio visual."
+      }
+    ],
+    "clinicalDuration": {
+      "minimumUseful": "2 min",
+      "standard": "6 min",
+      "maximumRecommended": "10 min",
+      "justification": "Uma rodada fecha a sequência, três variam o layout e cinco precedem prática excessiva e cansaço visual."
+    },
+    "fatigue": {
+      "level": "BAIXA",
+      "explanation": "Ritmo autocadenciado, regra estável e caminho visível reduzem esforço."
+    },
+    "interference": {
+      "level": "BAIXA",
+      "explanation": "Não há distratores de outra classe; os demais números são etapas futuras."
+    },
+    "resumptionAfterInterruption": {
+      "strategy": "do início do bloco",
+      "rationale": "Uma disposição interrompida reinicia para não preservar metade do caminho."
+    },
+    "sessionEligibility": {
+      "canOpen": true,
+      "canClose": true,
+      "bestPosition": "início como aquecimento ou fim",
+      "badCombinations": [
+        {
+          "exercise": "Busca Rápida",
+          "reason": "Prática de varredura e fadiga visual."
+        },
+        {
+          "exercise": "Identificação de Símbolos",
+          "reason": "Repetição de busca reduz independência."
+        }
+      ]
+    },
+    "modality": "não se aplica"
+  },
+  {
+    "exerciseId": "antes-depois",
+    "officialName": "Caminhos para a Meta",
+    "prescriptionParameterStatus": "PROVISIONAL_PARAMETERS",
+    "executionModel": {
+      "value": "PLANNING_WINDOW",
+      "justification": "PROVISÓRIO: cortar a organização elimina o encadeamento construído e a relação plano–imprevisto; não usar como referência para outros exercícios."
+    },
+    "minimumValidUnit": {
+      "value": "desafio completo",
+      "justification": "PROVISÓRIO: a meta só é interpretável após estruturar e confirmar todas as ações e, se houver, o imprevisto."
+    },
+    "terminationPolicy": {
+      "atLimit": "termina o desafio",
+      "midUnit": "PROVISÓRIO: se o limite chegar no meio, preserva a janela até confirmação e eventual imprevisto; depois não inicia outra atividade."
+    },
+    "protocols": {
+      "BRIEF": {
+        "unitCount": 1,
+        "estimatedDuration": "~4 min",
+        "clinicalValidity": "Manutenção/aquecimento; insuficiente para progressão. PROVISÓRIO: mostra uma estratégia de organização."
+      },
+      "STANDARD": {
+        "unitCount": 2,
+        "estimatedDuration": "~9 min",
+        "clinicalValidity": "PROVISÓRIO: duas metas permitem comparação cautelosa dentro da mecânica atual. Sustenta progressão somente com unidades completas; não permite concluir transferência além da mecânica."
+      },
+      "EXTENDED": {
+        "unitCount": 3,
+        "estimatedDuration": "~14 min",
+        "clinicalValidity": "Aumenta estabilidade ou variedade da observação. PROVISÓRIO: conhecimento da rotina e uso de dicas limitam comparações."
+      }
+    },
+    "baselineCognitiveLoad": {
+      "value": 2,
+      "justification": "PROVISÓRIO: cartões e meta visíveis apoiam memória; ordenação, precedência e monitoramento mantêm demanda moderada."
+    },
+    "loadModifiers": [
+      {
+        "dimension": "quantidade de estímulos",
+        "effect": "PROVISÓRIO: mais ações e precedências ampliam sequenciamento."
+      },
+      {
+        "dimension": "memória exigida",
+        "effect": "PROVISÓRIO: mais relações e alternativas aumentam manutenção verbal."
+      },
+      {
+        "dimension": "interferência",
+        "effect": "PROVISÓRIO: intrusos e prioridades exigem selecionar relevância."
+      },
+      {
+        "dimension": "mudança de regra",
+        "effect": "PROVISÓRIO: imprevistos exigem atualizar ou abandonar a estratégia."
+      },
+      {
+        "dimension": "planejamento",
+        "effect": "PROVISÓRIO: completar, corrigir, priorizar e lidar com mudanças alteram profundidade."
+      },
+      {
+        "dimension": "modalidade",
+        "effect": "PROVISÓRIO: o canal muda apoio externo e memória verbal."
+      }
+    ],
+    "clinicalDuration": {
+      "minimumUseful": "4 min",
+      "standard": "9 min",
+      "maximumRecommended": "14 min",
+      "justification": "PROVISÓRIO: uma meta fecha a unidade, duas contrastam desempenho e três limitam familiaridade e cansaço de leitura."
+    },
+    "fatigue": {
+      "level": "MODERADA",
+      "explanation": "PROVISÓRIO: organizar e revisar exige esforço, mas a tarefa é autocadenciada e mantém material visível."
+    },
+    "interference": {
+      "level": "BAIXA",
+      "explanation": "PROVISÓRIO: no basal não há intrusos nem mudança; cresce apenas nos conteúdos correspondentes."
+    },
+    "resumptionAfterInterruption": {
+      "strategy": "outra estratégia",
+      "rationale": "PROVISÓRIO: reinicia da meta e cartões originais, sem restaurar ordem parcial."
+    },
+    "sessionEligibility": {
+      "canOpen": true,
+      "canClose": false,
+      "bestPosition": "início ou meio; parâmetros provisórios",
+      "badCombinations": [
+        {
+          "exercise": "Jogo das Torres",
+          "reason": "PROVISÓRIO: acumula organização e planejamento."
+        },
+        {
+          "exercise": "Estacionamento Lógico",
+          "reason": "PROVISÓRIO: resolução planejada consecutiva contamina persistência."
+        }
+      ]
+    },
+    "modality": {
+      "applies": true,
+      "implementationStatus": "PROVISÓRIO; projeção, sem seletor em três vias implementado",
+      "modes": {
+        "visual": {
+          "durationImpact": "referência",
+          "loadImpact": "Texto e posição ficam consultáveis e reduzem memória interna."
+        },
+        "visual+audio": {
+          "durationImpact": "neutro ou até ~10% menor",
+          "loadImpact": "Fala congruente pode facilitar; só eleva divisão/interferência se fontes competirem. Não é automaticamente mais difícil."
+        },
+        "audioOnly": {
+          "durationImpact": "~20–35% maior",
+          "loadImpact": "Eleva processamento auditivo e memória verbal; depende de contrato acessível para ordenar ações sem texto."
+        }
+      }
+    }
+  },
+  {
+    "exerciseId": "informacao-em-foco",
+    "officialName": "Informação em Foco",
+    "prescriptionParameterStatus": "FINAL_PARAMETERS",
+    "executionModel": {
+      "value": "CONTINUOUS_TIMED",
+      "justification": "Cada questão fecha antes da verificação do tempo; não há série obrigatória."
+    },
+    "minimumValidUnit": {
+      "value": "tentativa",
+      "justification": "Questão, pista eventual, resposta e feedback produzem decisão completa."
+    },
+    "terminationPolicy": {
+      "atLimit": "termina a tentativa",
+      "midUnit": "Se o limite chegar durante leitura, pista ou segunda chance, conclui a questão; não apresenta outra."
+    },
+    "protocols": {
+      "BRIEF": {
+        "unitCount": 2,
+        "estimatedDuration": "~4 min",
+        "clinicalValidity": "Manutenção/aquecimento; insuficiente para progressão. Checa leitura funcional e uso básico dos cartões."
+      },
+      "STANDARD": {
+        "unitCount": 5,
+        "estimatedDuration": "~10 min",
+        "clinicalValidity": "Cinco questões amostram busca e integração de critérios. Sustenta progressão somente com unidades completas; não permite concluir transferência além da mecânica."
+      },
+      "EXTENDED": {
+        "unitCount": 8,
+        "estimatedDuration": "~16 min",
+        "clinicalValidity": "Aumenta estabilidade ou variedade da observação. Alfabetização e familiaridade com produtos limitam conclusões além da tarefa."
+      }
+    },
+    "baselineCognitiveLoad": {
+      "value": 2,
+      "justification": "Busca, comparação e compreensão de critérios, com informação visível e sem prazo por item."
+    },
+    "loadModifiers": [
+      {
+        "dimension": "quantidade de estímulos",
+        "effect": "Mais produtos e campos ampliam busca e comparação."
+      },
+      {
+        "dimension": "memória exigida",
+        "effect": "Duas ou três condições elevam manutenção do critério."
+      },
+      {
+        "dimension": "interferência",
+        "effect": "Alternativas parcialmente válidas e campos variáveis aumentam controle de distração."
+      },
+      {
+        "dimension": "semelhança dos distratores",
+        "effect": "Valores próximos exigem comparação fina."
+      }
+    ],
+    "clinicalDuration": {
+      "minimumUseful": "4 min",
+      "standard": "10 min",
+      "maximumRecommended": "16 min",
+      "justification": "Duas questões confirmam acesso, cinco cobrem critérios variados e, após oito, leitura e familiaridade dominam o ganho."
+    },
+    "fatigue": {
+      "level": "MODERADA",
+      "explanation": "Leitura e comparação repetidas geram esforço, mas sem prazo por questão."
+    },
+    "interference": {
+      "level": "MODERADA",
+      "explanation": "Produtos e campos parcialmente relevantes competem pela seleção."
+    },
+    "resumptionAfterInterruption": {
+      "strategy": "retoma exatamente de onde parou",
+      "rationale": "Preserva questões encerradas; reinicia a interrompida sem pista ou resposta parcial."
+    },
+    "sessionEligibility": {
+      "canOpen": true,
+      "canClose": true,
+      "bestPosition": "meio; pode abrir para observar leitura sem fadiga",
+      "badCombinations": [
+        {
+          "exercise": "Compra Multifuncional",
+          "reason": "Acumula leitura funcional, critérios e decisões."
+        },
+        {
+          "exercise": "Supermercado",
+          "reason": "Conteúdo de produtos gera familiaridade e interferência semântica."
+        }
+      ]
+    },
+    "modality": "não se aplica"
+  },
+  {
+    "exerciseId": "mot",
+    "officialName": "Rastreamento de Objetos",
+    "prescriptionParameterStatus": "FINAL_PARAMETERS",
+    "executionModel": {
+      "value": "FIXED_HIGH_FATIGUE",
+      "justification": "Rastreamento simultâneo em movimento é sensível à fadiga visual; a exposição deve ser fixa."
+    },
+    "minimumValidUnit": {
+      "value": "rodada",
+      "justification": "Codificação, movimento completo e identificação final medem preservação de identidade."
+    },
+    "terminationPolicy": {
+      "atLimit": "termina a rodada",
+      "midUnit": "Se o limite chegar durante movimento ou seleção, conclui a rodada; interrupção real invalida a parcial."
+    },
+    "protocols": {
+      "BRIEF": {
+        "unitCount": 4,
+        "estimatedDuration": "~3 min",
+        "clinicalValidity": "Manutenção/aquecimento; insuficiente para progressão. Verifica tolerância ao movimento e manutenção."
+      },
+      "STANDARD": {
+        "unitCount": 8,
+        "estimatedDuration": "~6 min",
+        "clinicalValidity": "Oito rodadas observam rastreamento sob carga controlada. Sustenta progressão somente com unidades completas; não permite concluir transferência além da mecânica."
+      },
+      "EXTENDED": {
+        "unitCount": 12,
+        "estimatedDuration": "~9 min",
+        "clinicalValidity": "Aumenta estabilidade ou variedade da observação. A parte final precisa ser interpretada à luz de fadiga visual."
+      }
+    },
+    "baselineCognitiveLoad": {
+      "value": 3,
+      "justification": "Múltiplos alvos idênticos em movimento combinam atenção dividida, atualização e distração."
+    },
+    "loadModifiers": [
+      {
+        "dimension": "velocidade",
+        "effect": "Movimento mais rápido exige atualização frequente."
+      },
+      {
+        "dimension": "quantidade de estímulos",
+        "effect": "Mais alvos e bolas ampliam distribuição de atenção."
+      },
+      {
+        "dimension": "memória exigida",
+        "effect": "Mais alvos aumentam identidades espaciais mantidas."
+      },
+      {
+        "dimension": "interferência",
+        "effect": "Colisões e cruzamentos elevam competição visual."
+      },
+      {
+        "dimension": "semelhança dos distratores",
+        "effect": "Alvos e distratores ficam idênticos após memorização."
+      }
+    ],
+    "clinicalDuration": {
+      "minimumUseful": "3 min",
+      "standard": "6 min",
+      "maximumRecommended": "9 min",
+      "justification": "Quatro rodadas confirmam tolerância, oito equilibram amostra e carga e, após doze, fadiga ocular degrada o dado."
+    },
+    "fatigue": {
+      "level": "ALTA",
+      "explanation": "Identidades precisam ser atualizadas continuamente durante movimento e colisões."
+    },
+    "interference": {
+      "level": "ALTA",
+      "explanation": "Objetos idênticos cruzam trajetórias; a interferência é central."
+    },
+    "resumptionAfterInterruption": {
+      "strategy": "um nível abaixo",
+      "rationale": "Se a interrupção refletir intolerância, reinicia bloco um nível abaixo; se externa, mantém o nível e reinicia a rodada."
+    },
+    "sessionEligibility": {
+      "canOpen": true,
+      "canClose": false,
+      "bestPosition": "início",
+      "badCombinations": [
+        {
+          "exercise": "Agentes Focus",
+          "reason": "Movimento e busca acumulam fadiga perceptiva."
+        },
+        {
+          "exercise": "Dupla Tarefa",
+          "reason": "Somação de atenção dividida reduz validade."
+        }
+      ]
+    },
+    "modality": "não se aplica"
+  },
+  {
+    "exerciseId": "dual-task",
+    "officialName": "Dupla Tarefa",
+    "prescriptionParameterStatus": "FINAL_PARAMETERS",
+    "executionModel": {
+      "value": "FIXED_HIGH_FATIGUE",
+      "justification": "Dois fluxos assíncronos ficam ativos sem pausas naturais; exposição longa degrada o dado."
+    },
+    "minimumValidUnit": {
+      "value": "bloco",
+      "justification": "Intervalo contínuo com ambos os fluxos é necessário para interpretar omissões e falsos positivos separados."
+    },
+    "terminationPolicy": {
+      "atLimit": "termina imediatamente",
+      "midUnit": "O fim programado encerra simultaneamente os fluxos e consolida o bloco; interrupção não programada invalida o bloco parcial."
+    },
+    "protocols": {
+      "BRIEF": {
+        "unitCount": 1,
+        "estimatedDuration": "~3 min",
+        "clinicalValidity": "Manutenção/aquecimento; insuficiente para progressão. Verifica tolerância e coordenação dos fluxos."
+      },
+      "STANDARD": {
+        "unitCount": 1,
+        "estimatedDuration": "~6 min",
+        "clinicalValidity": "Um bloco fixo de seis minutos amostra eventos dos dois fluxos. Sustenta progressão somente com unidades completas; não permite concluir transferência além da mecânica."
+      },
+      "EXTENDED": {
+        "unitCount": 1,
+        "estimatedDuration": "~8 min",
+        "clinicalValidity": "Aumenta estabilidade ou variedade da observação. Acima de oito minutos, fadiga e omissões tardias contaminam a interpretação."
+      }
+    },
+    "baselineCognitiveLoad": {
+      "value": 3,
+      "justification": "Dois fluxos com ritmos, regras, janelas e respostas próprias recrutam divisão e atualização máximas."
+    },
+    "loadModifiers": [
+      {
+        "dimension": "velocidade",
+        "effect": "Janelas menores elevam pressão temporal."
+      },
+      {
+        "dimension": "quantidade de estímulos",
+        "effect": "Maior frequência reduz recuperação entre respostas."
+      },
+      {
+        "dimension": "memória exigida",
+        "effect": "2-back amplia janela mantida e atualizada."
+      },
+      {
+        "dimension": "interferência",
+        "effect": "Distratores parcialmente compatíveis exigem inibição."
+      },
+      {
+        "dimension": "dupla tarefa",
+        "effect": "Simultaneidade dos fluxos é o modificador central."
+      },
+      {
+        "dimension": "mudança de regra",
+        "effect": "Mudança do alvo superior substitui a meta ativa."
+      },
+      {
+        "dimension": "semelhança dos distratores",
+        "effect": "Só cor ou forma corretas aumentam competição."
+      }
+    ],
+    "clinicalDuration": {
+      "minimumUseful": "3 min",
+      "standard": "6 min",
+      "maximumRecommended": "8 min",
+      "justification": "Três minutos só confirmam tolerância, seis fornecem eventos suficientes e, após oito, fadiga degrada o dado."
+    },
+    "fatigue": {
+      "level": "ALTA",
+      "explanation": "Não há pausa entre dois fluxos que exigem monitoramento e resposta sob janela."
+    },
+    "interference": {
+      "level": "ALTA",
+      "explanation": "Fluxos competem por atenção e resposta, além de distratores internos."
+    },
+    "resumptionAfterInterruption": {
+      "strategy": "um nível abaixo",
+      "rationale": "Sobrecarga pede novo bloco integral um nível abaixo; interrupção externa, bloco integral no mesmo nível."
+    },
+    "sessionEligibility": {
+      "canOpen": true,
+      "canClose": false,
+      "bestPosition": "início, após breve checagem motora",
+      "badCombinations": [
+        {
+          "exercise": "N-Back",
+          "reason": "Atualização contínua e prazo acumulam fadiga intensa."
+        },
+        {
+          "exercise": "Rastreamento de Objetos",
+          "reason": "Atenção dividida consecutiva compromete tolerância."
+        }
+      ]
+    },
+    "modality": "não se aplica"
+  },
+  {
+    "exerciseId": "tempo-reacao",
+    "officialName": "Tempo de Reação",
+    "prescriptionParameterStatus": "FINAL_PARAMETERS",
+    "executionModel": {
+      "value": "CONTINUOUS_TIMED",
+      "justification": "Cada leva fecha seus alvos e o resultado é registrado continuamente."
+    },
+    "minimumValidUnit": {
+      "value": "rodada",
+      "justification": "Uma leva completa reúne acertos, distratores e alvos perdidos sob mesma direção e velocidade."
+    },
+    "terminationPolicy": {
+      "atLimit": "termina a rodada",
+      "midUnit": "Se o limite chegar com balões em trânsito, deixa a leva resolver e não lança outra."
+    },
+    "protocols": {
+      "BRIEF": {
+        "unitCount": 6,
+        "estimatedDuration": "~2 min",
+        "clinicalValidity": "Manutenção/aquecimento; insuficiente para progressão. Aquece e checa acesso visuomotor."
+      },
+      "STANDARD": {
+        "unitCount": 18,
+        "estimatedDuration": "~5 min",
+        "clinicalValidity": "Dezoito levas amostram reação inicial e escolha com distratores. Sustenta progressão somente com unidades completas; não permite concluir transferência além da mecânica."
+      },
+      "EXTENDED": {
+        "unitCount": 30,
+        "estimatedDuration": "~8 min",
+        "clinicalValidity": "Aumenta estabilidade ou variedade da observação. Prática motora e antecipação reduzem o retorno após trinta levas."
+      }
+    },
+    "baselineCognitiveLoad": {
+      "value": 1,
+      "justification": "O basal começa com alvo único e resposta direta; escolha cresce apenas com alvos e distratores."
+    },
+    "loadModifiers": [
+      {
+        "dimension": "velocidade",
+        "effect": "Travessias rápidas reduzem janela de interceptação."
+      },
+      {
+        "dimension": "quantidade de estímulos",
+        "effect": "Múltiplos alvos ampliam rastreamento."
+      },
+      {
+        "dimension": "interferência",
+        "effect": "Distratores coloridos introduzem seleção e inibição."
+      },
+      {
+        "dimension": "semelhança dos distratores",
+        "effect": "Tons próximos do verde exigem discriminação fina."
+      }
+    ],
+    "clinicalDuration": {
+      "minimumUseful": "2 min",
+      "standard": "5 min",
+      "maximumRecommended": "8 min",
+      "justification": "Seis levas aquecem, dezoito capturam escolha e, além de trinta, prática e fadiga visual reduzem o retorno."
+    },
+    "fatigue": {
+      "level": "MODERADA",
+      "explanation": "Pressão temporal e rastreamento acumulam esforço, com pequenas pausas entre levas."
+    },
+    "interference": {
+      "level": "MODERADA",
+      "explanation": "O basal é baixo, mas a sessão padrão introduz distratores cromáticos e múltiplos alvos."
+    },
+    "resumptionAfterInterruption": {
+      "strategy": "retoma exatamente de onde parou",
+      "rationale": "Mantém levas fechadas; descarta a cortada e começa nova leva."
+    },
+    "sessionEligibility": {
+      "canOpen": true,
+      "canClose": true,
+      "bestPosition": "início como aquecimento ou meio",
+      "badCombinations": [
+        {
+          "exercise": "Semáforo",
+          "reason": "Resposta rápida a cor acumula preparação motora."
+        },
+        {
+          "exercise": "Busca Rápida",
+          "reason": "Velocidade visual consecutiva aumenta fadiga."
+        }
+      ]
+    },
+    "modality": "não se aplica"
+  },
+  {
+    "exerciseId": "certo-ou-errado",
+    "officialName": "Certo ou Errado",
+    "prescriptionParameterStatus": "FINAL_PARAMETERS",
+    "executionModel": {
+      "value": "CONTINUOUS_TIMED",
+      "justification": "Cada situação recebe escolha, explicação e fechamento próprios."
+    },
+    "minimumValidUnit": {
+      "value": "tentativa",
+      "justification": "Afirmação, julgamento binário e feedback formam unidade interpretável."
+    },
+    "terminationPolicy": {
+      "atLimit": "termina a tentativa",
+      "midUnit": "Se o limite chegar durante leitura, permite responder e ver explicação; não mostra nova situação."
+    },
+    "protocols": {
+      "BRIEF": {
+        "unitCount": 3,
+        "estimatedDuration": "~3 min",
+        "clinicalValidity": "Manutenção/aquecimento; insuficiente para progressão. Confirma regra e oferece conversa inicial."
+      },
+      "STANDARD": {
+        "unitCount": 7,
+        "estimatedDuration": "~7 min",
+        "clinicalValidity": "Sete situações permitem observar consistência editorial. Sustenta progressão somente com unidades completas; não permite concluir transferência além da mecânica."
+      },
+      "EXTENDED": {
+        "unitCount": 12,
+        "estimatedDuration": "~12 min",
+        "clinicalValidity": "Aumenta estabilidade ou variedade da observação. Não autoriza generalização para comportamento cotidiano real."
+      }
+    },
+    "baselineCognitiveLoad": {
+      "value": 1,
+      "justification": "Texto permanece visível, há duas alternativas e não existe prazo; a dificuldade é editorial."
+    },
+    "loadModifiers": [
+      {
+        "dimension": "interferência",
+        "effect": "Cenários menos óbvios podem aumentar competição entre interpretações, sem parâmetro mecânico contínuo."
+      }
+    ],
+    "clinicalDuration": {
+      "minimumUseful": "3 min",
+      "standard": "7 min",
+      "maximumRecommended": "12 min",
+      "justification": "Três itens estabelecem entendimento, sete variam situações e, após doze, repetição e feedback reduzem o ganho."
+    },
+    "fatigue": {
+      "level": "BAIXA",
+      "explanation": "Tarefa autocadenciada, binária e sem memória oculta ou prazo."
+    },
+    "interference": {
+      "level": "BAIXA",
+      "explanation": "Não há distratores perceptivos ou regras concorrentes; ambiguidade vem do conteúdo."
+    },
+    "resumptionAfterInterruption": {
+      "strategy": "retoma exatamente de onde parou",
+      "rationale": "Preserva itens fechados; reinicia situação interrompida antes da escolha."
+    },
+    "sessionEligibility": {
+      "canOpen": true,
+      "canClose": true,
+      "bestPosition": "fim, com espaço para discussão",
+      "badCombinations": [
+        {
+          "exercise": "Investigadores da Situação Social",
+          "reason": "Feedback normativo prepara respostas sociais subsequentes."
+        }
+      ]
+    },
+    "modality": "não se aplica"
+  },
+  {
+    "exerciseId": "semaforo",
+    "officialName": "Semáforo",
+    "prescriptionParameterStatus": "FINAL_PARAMETERS",
+    "executionModel": {
+      "value": "CONTINUOUS_TIMED",
+      "justification": "Cada sinal fecha por resposta ou fim da janela e o tempo global é verificado depois do feedback."
+    },
+    "minimumValidUnit": {
+      "value": "tentativa",
+      "justification": "Aviso, sinal-alvo e escolha avançar/parar produzem decisão completa."
+    },
+    "terminationPolicy": {
+      "atLimit": "termina a tentativa",
+      "midUnit": "Se o limite chegar com o sinal ativo, aguarda resposta ou fim da janela e não apresenta outro."
+    },
+    "protocols": {
+      "BRIEF": {
+        "unitCount": 8,
+        "estimatedDuration": "~2 min",
+        "clinicalValidity": "Manutenção/aquecimento; insuficiente para progressão. Confirma mapeamento de resposta, sem balancear cores."
+      },
+      "STANDARD": {
+        "unitCount": 24,
+        "estimatedDuration": "~6 min",
+        "clinicalValidity": "Vinte e quatro tentativas amostram cores, posições e inversões. Sustenta progressão somente com unidades completas; não permite concluir transferência além da mecânica."
+      },
+      "EXTENDED": {
+        "unitCount": 36,
+        "estimatedDuration": "~9 min",
+        "clinicalValidity": "Aumenta estabilidade ou variedade da observação. É preciso separar fadiga e assimetria de omissões em sinais de parar."
+      }
+    },
+    "baselineCognitiveLoad": {
+      "value": 2,
+      "justification": "Escolha rápida por cor, orientação entre sinais e mapeamento de botões formam demanda moderada."
+    },
+    "loadModifiers": [
+      {
+        "dimension": "velocidade",
+        "effect": "Janela menor aumenta pressão temporal."
+      },
+      {
+        "dimension": "quantidade de estímulos",
+        "effect": "Cores concorrentes nos semáforos não alvo ampliam seleção."
+      },
+      {
+        "dimension": "interferência",
+        "effect": "Concorrentes e inversão espacial reduzem respostas automáticas."
+      }
+    ],
+    "clinicalDuration": {
+      "minimumUseful": "2 min",
+      "standard": "6 min",
+      "maximumRecommended": "9 min",
+      "justification": "Oito sinais estabilizam mapeamento, vinte e quatro amostram variações e, após trinta e seis, prática reduz o retorno."
+    },
+    "fatigue": {
+      "level": "MODERADA",
+      "explanation": "Prazo e monitoramento do botão acumulam esforço, com feedback entre tentativas."
+    },
+    "interference": {
+      "level": "MODERADA",
+      "explanation": "Sinais concorrentes e posição variável do botão interferem sem mudar a regra."
+    },
+    "resumptionAfterInterruption": {
+      "strategy": "retoma exatamente de onde parou",
+      "rationale": "Conserva tentativas completas; descarta o sinal interrompido e cria outro."
+    },
+    "sessionEligibility": {
+      "canOpen": true,
+      "canClose": true,
+      "bestPosition": "início ou meio",
+      "badCombinations": [
+        {
+          "exercise": "Cores e Palavras",
+          "reason": "Mapeamentos por cor geram interferência."
+        },
+        {
+          "exercise": "Tempo de Reação",
+          "reason": "Aquecimento motor altera a segunda tarefa."
+        }
+      ]
+    },
+    "modality": "não se aplica"
+  },
+  {
+    "exerciseId": "corrida-tempo",
+    "officialName": "Busca Rápida",
+    "prescriptionParameterStatus": "FINAL_PARAMETERS",
+    "executionModel": {
+      "value": "CLOSED_PROTOCOL",
+      "justification": "A grade tem contador próprio e só fecha ao localizar alvos ou esgotar o tempo."
+    },
+    "minimumValidUnit": {
+      "value": "rodada",
+      "justification": "Regra, grade, conjunto de alvos e encerramento temporal precisam ser observados juntos."
+    },
+    "terminationPolicy": {
+      "atLimit": "termina a rodada",
+      "midUnit": "Se o limite global chegar durante a grade, deixa o contador terminar ou os alvos serem encontrados; não inicia outra."
+    },
+    "protocols": {
+      "BRIEF": {
+        "unitCount": 2,
+        "estimatedDuration": "~3 min",
+        "clinicalValidity": "Manutenção/aquecimento; insuficiente para progressão. Confirma categoria e busca, sem comparar regras."
+      },
+      "STANDARD": {
+        "unitCount": 5,
+        "estimatedDuration": "~8 min",
+        "clinicalValidity": "Cinco grades observam velocidade, precisão e omissões. Sustenta progressão somente com unidades completas; não permite concluir transferência além da mecânica."
+      },
+      "EXTENDED": {
+        "unitCount": 8,
+        "estimatedDuration": "~13 min",
+        "clinicalValidity": "Aumenta estabilidade ou variedade da observação. Penalidade por erro e fadiga visual contaminam o final."
+      }
+    },
+    "baselineCognitiveLoad": {
+      "value": 3,
+      "justification": "Busca de múltiplos alvos sob contador combina categorização, pressão e seleção intensa."
+    },
+    "loadModifiers": [
+      {
+        "dimension": "velocidade",
+        "effect": "Menos tempo e penalidade por erro elevam pressão."
+      },
+      {
+        "dimension": "quantidade de estímulos",
+        "effect": "Mais itens e alvos aumentam cobertura."
+      },
+      {
+        "dimension": "interferência",
+        "effect": "Exclusão exige evitar a categoria indicada."
+      },
+      {
+        "dimension": "mudança de regra",
+        "effect": "Direta versus exclusão substitui o critério."
+      },
+      {
+        "dimension": "semelhança dos distratores",
+        "effect": "Categorias próximas aumentam comparação."
+      }
+    ],
+    "clinicalDuration": {
+      "minimumUseful": "3 min",
+      "standard": "8 min",
+      "maximumRecommended": "13 min",
+      "justification": "Duas grades aquecem, cinco dão consistência e, após oito, fadiga e estratégia categorial reduzem o retorno."
+    },
+    "fatigue": {
+      "level": "ALTA",
+      "explanation": "Varredura, múltiplos toques e contador mantêm pressão durante toda a rodada."
+    },
+    "interference": {
+      "level": "ALTA",
+      "explanation": "Distratores semânticos, exclusão e penalidade tornam competição central."
+    },
+    "resumptionAfterInterruption": {
+      "strategy": "do início do bloco",
+      "rationale": "Grade parcial perde tempo e itens removidos; reinicia a rodada."
+    },
+    "sessionEligibility": {
+      "canOpen": true,
+      "canClose": false,
+      "bestPosition": "início ou meio",
+      "badCombinations": [
+        {
+          "exercise": "Identificação de Símbolos",
+          "reason": "Busca em grade transfere varredura e fadiga."
+        },
+        {
+          "exercise": "Agentes Focus",
+          "reason": "Concentra seleção visual sob distratores."
+        }
+      ]
+    },
+    "modality": "não se aplica"
+  },
+  {
+    "exerciseId": "torre-hanoi",
+    "officialName": "Jogo das Torres",
+    "prescriptionParameterStatus": "FINAL_PARAMETERS",
+    "executionModel": {
+      "value": "PLANNING_WINDOW",
+      "justification": "Interromper antes da configuração final destrói a sequência de submetas e a medida de optimalidade."
+    },
+    "minimumValidUnit": {
+      "value": "desafio completo",
+      "justification": "Somente transferir toda a torre permite distinguir solução e número de movimentos."
+    },
+    "terminationPolicy": {
+      "atLimit": "termina o desafio",
+      "midUnit": "Se o limite chegar no meio, mantém a janela até a solução; interrupção real invalida o desafio parcial."
+    },
+    "protocols": {
+      "BRIEF": {
+        "unitCount": 1,
+        "estimatedDuration": "~4 min",
+        "clinicalValidity": "Manutenção/aquecimento; insuficiente para progressão. Observa uma solução e estratégia."
+      },
+      "STANDARD": {
+        "unitCount": 2,
+        "estimatedDuration": "~9 min",
+        "clinicalValidity": "Duas soluções permitem consistência e optimalidade. Sustenta progressão somente com unidades completas; não permite concluir transferência além da mecânica."
+      },
+      "EXTENDED": {
+        "unitCount": 3,
+        "estimatedDuration": "~14 min",
+        "clinicalValidity": "Aumenta estabilidade ou variedade da observação. Aprendizagem da solução e fadiga limitam comparações."
+      }
+    },
+    "baselineCognitiveLoad": {
+      "value": 3,
+      "justification": "Submetas, antecipação de estados e monitoramento exigem planejamento, mesmo com apoio visível."
+    },
+    "loadModifiers": [
+      {
+        "dimension": "quantidade de estímulos",
+        "effect": "Mais discos ampliam estados e movimentos mínimos."
+      },
+      {
+        "dimension": "memória exigida",
+        "effect": "Maior profundidade exige manter submetas."
+      },
+      {
+        "dimension": "planejamento",
+        "effect": "Solução mínima cresce exponencialmente sem mudar a regra."
+      }
+    ],
+    "clinicalDuration": {
+      "minimumUseful": "4 min",
+      "standard": "9 min",
+      "maximumRecommended": "14 min",
+      "justification": "Um desafio fecha a operação, dois mostram consistência e, após três, aprendizagem e movimentos exponenciais reduzem retorno."
+    },
+    "fatigue": {
+      "level": "ALTA",
+      "explanation": "Planejamento de submetas e monitoramento acumulam esforço."
+    },
+    "interference": {
+      "level": "BAIXA",
+      "explanation": "Não há distratores; estados intermediários são restrições do problema."
+    },
+    "resumptionAfterInterruption": {
+      "strategy": "outra estratégia",
+      "rationale": "Reinicia do estado inicial e registra nova trajetória, sem restaurar sequência parcial."
+    },
+    "sessionEligibility": {
+      "canOpen": true,
+      "canClose": false,
+      "bestPosition": "início",
+      "badCombinations": [
+        {
+          "exercise": "Estacionamento Lógico",
+          "reason": "Duas janelas profundas de planejamento acumulam fadiga."
+        },
+        {
+          "exercise": "Grade Dedutiva",
+          "reason": "Raciocínio prolongado reduz persistência."
+        }
+      ]
+    },
+    "modality": "não se aplica"
+  },
+  {
+    "exerciseId": "labirinto",
+    "officialName": "Labirinto",
+    "prescriptionParameterStatus": "FINAL_PARAMETERS",
+    "executionModel": {
+      "value": "PLANNING_WINDOW",
+      "justification": "Rota e pontos de decisão só são interpretáveis ao sair ou esgotar a janela própria."
+    },
+    "minimumValidUnit": {
+      "value": "desafio completo",
+      "justification": "Labirinto encerrado reúne solução, eficiência, becos, retornos e colisões."
+    },
+    "terminationPolicy": {
+      "atLimit": "termina o desafio",
+      "midUnit": "Se o limite global chegar durante a rota, permite saída ou fim da janela do labirinto; não gera outro mapa."
+    },
+    "protocols": {
+      "BRIEF": {
+        "unitCount": 1,
+        "estimatedDuration": "~3 min",
+        "clinicalValidity": "Manutenção/aquecimento; insuficiente para progressão. Mostra uma estratégia espacial e tolerância."
+      },
+      "STANDARD": {
+        "unitCount": 3,
+        "estimatedDuration": "~9 min",
+        "clinicalValidity": "Três mapas permitem consistência e eficiência. Sustenta progressão somente com unidades completas; não permite concluir transferência além da mecânica."
+      },
+      "EXTENDED": {
+        "unitCount": 4,
+        "estimatedDuration": "~13 min",
+        "clinicalValidity": "Aumenta estabilidade ou variedade da observação. Fadiga espacial e longas caudas de resolução têm retorno decrescente."
+      }
+    },
+    "baselineCognitiveLoad": {
+      "value": 3,
+      "justification": "Combina planejamento, busca, manutenção de rota e monitoramento sob janela própria."
+    },
+    "loadModifiers": [
+      {
+        "dimension": "quantidade de estímulos",
+        "effect": "Grades maiores ampliam células e pontos de decisão."
+      },
+      {
+        "dimension": "memória exigida",
+        "effect": "Mais bifurcações aumentam pontos a manter, apesar da trilha."
+      },
+      {
+        "dimension": "interferência",
+        "effect": "Rotas falsas e corredores de borda competem com o caminho útil."
+      },
+      {
+        "dimension": "planejamento",
+        "effect": "Margem menor sobre o ótimo exige antecipar mais."
+      }
+    ],
+    "clinicalDuration": {
+      "minimumUseful": "3 min",
+      "standard": "9 min",
+      "maximumRecommended": "13 min",
+      "justification": "Um mapa dá medida mínima, três reduzem dependência do layout e quatro limitam fadiga e resolução longa."
+    },
+    "fatigue": {
+      "level": "MODERADA",
+      "explanation": "Resolução exige revisão espacial, mas trilha visível e ritmo próprio reduzem memória pura."
+    },
+    "interference": {
+      "level": "MODERADA",
+      "explanation": "Becos e rotas alternativas competem com a rota útil."
+    },
+    "resumptionAfterInterruption": {
+      "strategy": "outra estratégia",
+      "rationale": "Reinicia desde a origem sem conservar trilha parcial; se o mapa mudar, marca o anterior inválido."
+    },
+    "sessionEligibility": {
+      "canOpen": true,
+      "canClose": false,
+      "bestPosition": "início ou meio",
+      "badCombinations": [
+        {
+          "exercise": "Estacionamento Lógico",
+          "reason": "Planejamento visuoespacial consecutivo acumula fadiga."
+        },
+        {
+          "exercise": "Jogo das Torres",
+          "reason": "Duas janelas de resolução reduzem persistência."
+        }
+      ]
+    },
+    "modality": "não se aplica"
+  },
+  {
+    "exerciseId": "ordem-historia",
+    "officialName": "Ordem da História",
+    "prescriptionParameterStatus": "FINAL_PARAMETERS",
+    "executionModel": {
+      "value": "PLANNING_WINDOW",
+      "justification": "Cortar antes da confirmação perde relações temporal-causais construídas."
+    },
+    "minimumValidUnit": {
+      "value": "desafio completo",
+      "justification": "História confirmada é a menor unidade para julgar coerência, intruso ou lacuna."
+    },
+    "terminationPolicy": {
+      "atLimit": "termina o desafio",
+      "midUnit": "Se o limite chegar durante a ordenação, mantém a janela até confirmação e feedback; não apresenta outra história."
+    },
+    "protocols": {
+      "BRIEF": {
+        "unitCount": 1,
+        "estimatedDuration": "~4 min",
+        "clinicalValidity": "Manutenção/aquecimento; insuficiente para progressão. Mostra uma estratégia narrativa."
+      },
+      "STANDARD": {
+        "unitCount": 2,
+        "estimatedDuration": "~9 min",
+        "clinicalValidity": "Duas histórias permitem consistência dentro do mesmo modo. Sustenta progressão somente com unidades completas; não permite concluir transferência além da mecânica."
+      },
+      "EXTENDED": {
+        "unitCount": 3,
+        "estimatedDuration": "~14 min",
+        "clinicalValidity": "Aumenta estabilidade ou variedade da observação. Não autoriza agregar ordenação, intruso e lacuna como uma operação única."
+      }
+    },
+    "baselineCognitiveLoad": {
+      "value": 2,
+      "justification": "Cenas ficam visíveis e o ritmo é próprio, enquanto relações temporais e causais mantêm demanda moderada."
+    },
+    "loadModifiers": [
+      {
+        "dimension": "quantidade de estímulos",
+        "effect": "Mais cenas ampliam relações temporais."
+      },
+      {
+        "dimension": "memória exigida",
+        "effect": "Sequências maiores exigem manter mais transições."
+      },
+      {
+        "dimension": "interferência",
+        "effect": "Intruso e hipóteses de lacuna adicionam concorrência."
+      },
+      {
+        "dimension": "semelhança dos distratores",
+        "effect": "Continuidades plausíveis exigem comparação causal."
+      }
+    ],
+    "clinicalDuration": {
+      "minimumUseful": "4 min",
+      "standard": "9 min",
+      "maximumRecommended": "14 min",
+      "justification": "Uma história fecha a unidade, duas reduzem dependência do roteiro e três limitam familiaridade, dicas e cansaço."
+    },
+    "fatigue": {
+      "level": "MODERADA",
+      "explanation": "Integrar transições exige raciocínio, com cenas disponíveis e sem prazo."
+    },
+    "interference": {
+      "level": "MODERADA",
+      "explanation": "Cenas competem por posição; intruso e lacuna elevam a competição nos modos próprios."
+    },
+    "resumptionAfterInterruption": {
+      "strategy": "outra estratégia",
+      "rationale": "Reinicia no embaralhamento inicial e descarta arranjo parcial."
+    },
+    "sessionEligibility": {
+      "canOpen": true,
+      "canClose": true,
+      "bestPosition": "meio; pode fechar se a história for curta",
+      "badCombinations": [
+        {
+          "exercise": "Caminhos para a Meta",
+          "reason": "Ordenação de cartões transfere estratégia."
+        },
+        {
+          "exercise": "Grade Dedutiva",
+          "reason": "Raciocínio relacional consecutivo aumenta fadiga."
+        }
+      ]
+    },
+    "modality": "não se aplica"
+  },
+  {
+    "exerciseId": "compra-multifuncional",
+    "officialName": "Compra Multifuncional",
+    "prescriptionParameterStatus": "FINAL_PARAMETERS",
+    "executionModel": {
+      "value": "CLOSED_PROTOCOL",
+      "justification": "A missão encadeia fases e ajusta nível pelos resultados; cada fase precisa fechar."
+    },
+    "minimumValidUnit": {
+      "value": "fase",
+      "justification": "Problema numérico ou combinatório completo, com confirmação e feedback, é a menor unidade válida."
+    },
+    "terminationPolicy": {
+      "atLimit": "termina a fase",
+      "midUnit": "Se o limite chegar durante cálculo, seleção ou nova tentativa, conclui a fase; não inicia a seguinte."
+    },
+    "protocols": {
+      "BRIEF": {
+        "unitCount": 2,
+        "estimatedDuration": "~5 min",
+        "clinicalValidity": "Manutenção/aquecimento; insuficiente para progressão. Amostra operações isoladas, sem concluir desempenho multifuncional."
+      },
+      "STANDARD": {
+        "unitCount": 7,
+        "estimatedDuration": "~18 min",
+        "clinicalValidity": "Sete fases fecham uma missão e permitem interpretar o encadeamento. Sustenta progressão somente com unidades completas; não permite concluir transferência além da mecânica."
+      },
+      "EXTENDED": {
+        "unitCount": 10,
+        "estimatedDuration": "~25 min",
+        "clinicalValidity": "Aumenta estabilidade ou variedade da observação. Escolaridade matemática e fadiga limitam conclusões funcionais."
+      }
+    },
+    "baselineCognitiveLoad": {
+      "value": 3,
+      "justification": "Integra leitura, cálculo, regras, monitoramento e seleção sob restrições."
+    },
+    "loadModifiers": [
+      {
+        "dimension": "velocidade",
+        "effect": "Fases finais avançadas podem introduzir janela."
+      },
+      {
+        "dimension": "quantidade de estímulos",
+        "effect": "Mais itens, valores e regras ampliam combinações."
+      },
+      {
+        "dimension": "memória exigida",
+        "effect": "Números maiores e múltiplas condições elevam manutenção."
+      },
+      {
+        "dimension": "interferência",
+        "effect": "Combinações parcialmente válidas exigem eliminação."
+      },
+      {
+        "dimension": "mudança de regra",
+        "effect": "O foco completo muda operação entre fases anunciadas, não como alternância rápida."
+      },
+      {
+        "dimension": "semelhança dos distratores",
+        "effect": "Valores próximos dos limites elevam comparação."
+      },
+      {
+        "dimension": "modalidade",
+        "effect": "Canal do enunciado altera apoio visual e memória verbal."
+      }
+    ],
+    "clinicalDuration": {
+      "minimumUseful": "5 min",
+      "standard": "18 min",
+      "maximumRecommended": "25 min",
+      "justification": "Duas fases mostram operações isoladas, sete fecham missão e, após dez, carga matemática e fadiga têm retorno decrescente."
+    },
+    "fatigue": {
+      "level": "ALTA",
+      "explanation": "A missão alterna cálculo, comparação e múltiplas restrições."
+    },
+    "interference": {
+      "level": "MODERADA",
+      "explanation": "Itens e condições parcialmente compatíveis competem, com dados visíveis e sem fluxo simultâneo."
+    },
+    "resumptionAfterInterruption": {
+      "strategy": "do início do bloco",
+      "rationale": "Preserva fases fechadas e reinicia a interrompida com dados originais."
+    },
+    "sessionEligibility": {
+      "canOpen": true,
+      "canClose": false,
+      "bestPosition": "início ou meio, com tempo para fechar a fase",
+      "badCombinations": [
+        {
+          "exercise": "Informação em Foco",
+          "reason": "Acumula leitura funcional e critérios."
+        },
+        {
+          "exercise": "Grade Dedutiva",
+          "reason": "Sobrecarga integração verbal e resolução."
+        }
+      ]
+    },
+    "modality": {
+      "applies": true,
+      "implementationStatus": "projeção; seletor aprovado e ainda não implementado",
+      "modes": {
+        "visual": {
+          "durationImpact": "referência",
+          "loadImpact": "Enunciado, valores e regras ficam consultáveis."
+        },
+        "visual+audio": {
+          "durationImpact": "neutro a ~10% maior; pode diminuir se apoiar leitura",
+          "loadImpact": "Redundância pode facilitar; competição voz-inspeção pode elevar divisão. Não é automaticamente mais difícil."
+        },
+        "audioOnly": {
+          "durationImpact": "~20–30% maior",
+          "loadImpact": "Aumenta processamento auditivo e memória de valores/regras; seleção exige identificação acessível."
+        }
+      }
+    }
+  },
+  {
+    "exerciseId": "task-switching",
+    "officialName": "Alternância de Regras",
+    "prescriptionParameterStatus": "FINAL_PARAMETERS",
+    "executionModel": {
+      "value": "CLOSED_PROTOCOL",
+      "justification": "A operação depende de blocos e da primeira tentativa após trocas; tentativas soltas não medem alternância."
+    },
+    "minimumValidUnit": {
+      "value": "bloco",
+      "justification": "Quatro a seis cartas fecham manutenção da regra e preparam troca interpretável."
+    },
+    "terminationPolicy": {
+      "atLimit": "termina o bloco",
+      "midUnit": "Se o limite chegar no meio, conclui as cartas do bloco e não apresenta nova regra."
+    },
+    "protocols": {
+      "BRIEF": {
+        "unitCount": 2,
+        "estimatedDuration": "~3 min",
+        "clinicalValidity": "Manutenção/aquecimento; insuficiente para progressão. Inclui ao menos uma troca, sem custo estável."
+      },
+      "STANDARD": {
+        "unitCount": 4,
+        "estimatedDuration": "~7 min",
+        "clinicalValidity": "Quatro blocos amostram manutenção e múltiplas trocas. Sustenta progressão somente com unidades completas; não permite concluir transferência além da mecânica."
+      },
+      "EXTENDED": {
+        "unitCount": 6,
+        "estimatedDuration": "~10 min",
+        "clinicalValidity": "Aumenta estabilidade ou variedade da observação. Fadiga e previsibilidade do tamanho de bloco passam a influenciar."
+      }
+    },
+    "baselineCognitiveLoad": {
+      "value": 3,
+      "justification": "Aplicar regra, ignorar atributos e substituir critério exige flexibilidade, inibição e atualização."
+    },
+    "loadModifiers": [
+      {
+        "dimension": "quantidade de estímulos",
+        "effect": "Quatro a seis cartas mudam classificações antes da troca."
+      },
+      {
+        "dimension": "interferência",
+        "effect": "Atributos irrelevantes competem com a dimensão ativa."
+      },
+      {
+        "dimension": "mudança de regra",
+        "effect": "Retirada dos avisos aumenta monitoramento; não há modificador de nível."
+      }
+    ],
+    "clinicalDuration": {
+      "minimumUseful": "3 min",
+      "standard": "7 min",
+      "maximumRecommended": "10 min",
+      "justification": "Dois blocos dão uma troca, quatro permitem contraste e seis limitam fadiga e aprendizagem dos mapeamentos."
+    },
+    "fatigue": {
+      "level": "ALTA",
+      "explanation": "Substituir regra e inibir atributos repetidamente acumula custo executivo."
+    },
+    "interference": {
+      "level": "ALTA",
+      "explanation": "Atributos múltiplos e regra anterior competem especialmente após a troca."
+    },
+    "resumptionAfterInterruption": {
+      "strategy": "do início do bloco",
+      "rationale": "Reapresenta a regra e reinicia o bloco, sem criar troca adicional por interrupção."
+    },
+    "sessionEligibility": {
+      "canOpen": true,
+      "canClose": false,
+      "bestPosition": "início",
+      "badCombinations": [
+        {
+          "exercise": "Cores e Palavras",
+          "reason": "Troca e inibição compartilhadas geram interferência."
+        },
+        {
+          "exercise": "Dupla Tarefa",
+          "reason": "Atualização após atenção dividida reduz validade."
+        }
+      ]
+    },
+    "modality": "não se aplica"
+  },
+  {
+    "exerciseId": "deductive-grid",
+    "officialName": "Grade Dedutiva",
+    "prescriptionParameterStatus": "FINAL_PARAMETERS",
+    "executionModel": {
+      "value": "PLANNING_WINDOW",
+      "justification": "A cadeia de pistas perde sentido se cortada antes da solução correta."
+    },
+    "minimumValidUnit": {
+      "value": "desafio completo",
+      "justification": "Grade resolvida permite interpretar integração, revisões e monitoramento."
+    },
+    "terminationPolicy": {
+      "atLimit": "termina o desafio",
+      "midUnit": "Se o limite chegar no meio, mantém a janela até solução e feedback; não seleciona outro problema."
+    },
+    "protocols": {
+      "BRIEF": {
+        "unitCount": 1,
+        "estimatedDuration": "~6 min",
+        "clinicalValidity": "Manutenção/aquecimento; insuficiente para progressão. Observa uma estratégia, sem controlar equivalência das pistas."
+      },
+      "STANDARD": {
+        "unitCount": 2,
+        "estimatedDuration": "~13 min",
+        "clinicalValidity": "Dois problemas permitem comparar organização e revisão. Sustenta progressão somente com unidades completas; não permite concluir transferência além da mecânica."
+      },
+      "EXTENDED": {
+        "unitCount": 3,
+        "estimatedDuration": "~20 min",
+        "clinicalValidity": "Aumenta estabilidade ou variedade da observação. Leitura, aprendizagem do formato e equivalência do banco limitam conclusões."
+      }
+    },
+    "baselineCognitiveLoad": {
+      "value": 3,
+      "justification": "Combinar pistas, exclusões e associações exige raciocínio, memória verbal e monitoramento intensos."
+    },
+    "loadModifiers": [
+      {
+        "dimension": "quantidade de estímulos",
+        "effect": "Mais pessoas, valores e pistas ampliam hipóteses."
+      },
+      {
+        "dimension": "memória exigida",
+        "effect": "Negação e disjunção aumentam relações mantidas."
+      },
+      {
+        "dimension": "interferência",
+        "effect": "Hipóteses permanecem até outra pista eliminá-las."
+      },
+      {
+        "dimension": "semelhança dos distratores",
+        "effect": "Associações plausíveis exigem mais pistas."
+      }
+    ],
+    "clinicalDuration": {
+      "minimumUseful": "6 min",
+      "standard": "13 min",
+      "maximumRecommended": "20 min",
+      "justification": "Um problema fecha a janela, dois reduzem dependência do item e, após três, fadiga de leitura supera o ganho."
+    },
+    "fatigue": {
+      "level": "ALTA",
+      "explanation": "Integração, exclusão e revisão até solução mantêm alta demanda."
+    },
+    "interference": {
+      "level": "MODERADA",
+      "explanation": "Hipóteses e negações concorrem, mas pistas e marcações ficam visíveis."
+    },
+    "resumptionAfterInterruption": {
+      "strategy": "outra estratégia",
+      "rationale": "Reinicia com grade limpa e mesmas pistas, sem restaurar exclusões parciais."
+    },
+    "sessionEligibility": {
+      "canOpen": true,
+      "canClose": false,
+      "bestPosition": "início ou meio, com tempo para solução",
+      "badCombinations": [
+        {
+          "exercise": "Jogo das Torres",
+          "reason": "Raciocínio prolongado acumula fadiga."
+        },
+        {
+          "exercise": "Compra Multifuncional",
+          "reason": "Integração verbal sob regras sobrecarrega memória."
+        }
+      ]
+    },
+    "modality": "não se aplica"
+  },
+  {
+    "exerciseId": "letras-sequencia",
+    "officialName": "Letras em Sequência",
+    "prescriptionParameterStatus": "FINAL_PARAMETERS",
+    "executionModel": {
+      "value": "CLOSED_PROTOCOL",
+      "justification": "A resposta só é classificada após reconstruir toda a série; direção e canal podem mudar por nível."
+    },
+    "minimumValidUnit": {
+      "value": "série",
+      "justification": "Apresentação serial e reconstrução completa entre alvos/distratores formam medida válida."
+    },
+    "terminationPolicy": {
+      "atLimit": "não inicia outra série",
+      "midUnit": "Se o limite chegar durante apresentação ou resposta, conclui a série; interrupção real a invalida."
+    },
+    "protocols": {
+      "BRIEF": {
+        "unitCount": 4,
+        "estimatedDuration": "~3 min",
+        "clinicalValidity": "Manutenção/aquecimento; insuficiente para progressão. Confirma reconhecimento e retenção curta."
+      },
+      "STANDARD": {
+        "unitCount": 8,
+        "estimatedDuration": "~6 min",
+        "clinicalValidity": "Oito séries permitem estabilidade com canal e direção registrados. Sustenta progressão somente com unidades completas; não permite concluir transferência além da mecânica."
+      },
+      "EXTENDED": {
+        "unitCount": 12,
+        "estimatedDuration": "~9 min",
+        "clinicalValidity": "Aumenta estabilidade ou variedade da observação. Mudanças não monotônicas impedem agregar canais e direções como uma carga única."
+      }
+    },
+    "baselineCognitiveLoad": {
+      "value": 2,
+      "justification": "Retenção serial verbal e escolha entre distratores, sem atualização contínua ou planejamento."
+    },
+    "loadModifiers": [
+      {
+        "dimension": "velocidade",
+        "effect": "Apresentação rápida reduz tempo de ensaio."
+      },
+      {
+        "dimension": "quantidade de estímulos",
+        "effect": "Séries maiores ampliam unidades verbais."
+      },
+      {
+        "dimension": "memória exigida",
+        "effect": "Sílabas e ordem inversa aumentam retenção e manipulação."
+      },
+      {
+        "dimension": "interferência",
+        "effect": "Distratores e inversão competem com a série-alvo."
+      },
+      {
+        "dimension": "mudança de regra",
+        "effect": "Direção e canal mudam por faixas não monotônicas e devem ser registrados."
+      }
+    ],
+    "clinicalDuration": {
+      "minimumUseful": "3 min",
+      "standard": "6 min",
+      "maximumRecommended": "9 min",
+      "justification": "Quatro séries confirmam acesso, oito consistência e, após doze, fadiga verbal e prática reduzem o ganho."
+    },
+    "fatigue": {
+      "level": "MODERADA",
+      "explanation": "Retenção se repete, com pausas e apoio de reconhecimento."
+    },
+    "interference": {
+      "level": "MODERADA",
+      "explanation": "Distratores e, em níveis específicos, inversão ou remapeamento som-grafema competem."
+    },
+    "resumptionAfterInterruption": {
+      "strategy": "do início do bloco",
+      "rationale": "Reinicia desde o primeiro item e mantém canal/direção prescritos."
+    },
+    "sessionEligibility": {
+      "canOpen": true,
+      "canClose": true,
+      "bestPosition": "início ou meio",
+      "badCombinations": [
+        {
+          "exercise": "Span Numérico Auditivo Direto",
+          "reason": "Efeito de ensaio e fadiga subvocal."
+        },
+        {
+          "exercise": "Lista com Distração",
+          "reason": "Manutenção verbal contamina a tarefa seguinte."
+        }
+      ]
+    },
+    "modality": "não se aplica"
+  },
+  {
+    "exerciseId": "sequencia-itens",
+    "officialName": "Sequência de Itens",
+    "prescriptionParameterStatus": "FINAL_PARAMETERS",
+    "executionModel": {
+      "value": "CLOSED_PROTOCOL",
+      "justification": "A adaptação ocorre após reconstruir toda a série; resposta parcial não avalia identidade e ordem."
+    },
+    "minimumValidUnit": {
+      "value": "série",
+      "justification": "Codificação, ocultação e seleção ordenada completa são a menor unidade."
+    },
+    "terminationPolicy": {
+      "atLimit": "não inicia outra série",
+      "midUnit": "Se o limite chegar durante apresentação ou resposta, conclui a série; interrupção real a invalida."
+    },
+    "protocols": {
+      "BRIEF": {
+        "unitCount": 4,
+        "estimatedDuration": "~4 min",
+        "clinicalValidity": "Manutenção/aquecimento; insuficiente para progressão. Verifica reconhecimento, ordenação e tolerância."
+      },
+      "STANDARD": {
+        "unitCount": 8,
+        "estimatedDuration": "~8 min",
+        "clinicalValidity": "Oito séries permitem estabilidade com canal registrado. Sustenta progressão somente com unidades completas; não permite concluir transferência além da mecânica."
+      },
+      "EXTENDED": {
+        "unitCount": 12,
+        "estimatedDuration": "~12 min",
+        "clinicalValidity": "Aumenta estabilidade ou variedade da observação. Canal e familiaridade semântica precisam permanecer distintos."
+      }
+    },
+    "baselineCognitiveLoad": {
+      "value": 2,
+      "justification": "Identidade, ordem e discriminação entre figuras, com resposta por reconhecimento e sem inversão."
+    },
+    "loadModifiers": [
+      {
+        "dimension": "velocidade",
+        "effect": "Exposição breve reduz tempo de codificação."
+      },
+      {
+        "dimension": "quantidade de estímulos",
+        "effect": "Mais itens e distratores ampliam identidades."
+      },
+      {
+        "dimension": "memória exigida",
+        "effect": "Maior extensão e fala elevam retenção e remapeamento palavra-imagem."
+      },
+      {
+        "dimension": "interferência",
+        "effect": "Distratores da mesma categoria competem."
+      },
+      {
+        "dimension": "semelhança dos distratores",
+        "effect": "Itens da mesma categoria aumentam interferência semântica."
+      }
+    ],
+    "clinicalDuration": {
+      "minimumUseful": "4 min",
+      "standard": "8 min",
+      "maximumRecommended": "12 min",
+      "justification": "Quatro séries estabelecem acesso, oito consistência e doze limitam fadiga e aprendizagem das figuras."
+    },
+    "fatigue": {
+      "level": "MODERADA",
+      "explanation": "Retenção ordenada se repete, com resposta visual e pausas."
+    },
+    "interference": {
+      "level": "MODERADA",
+      "explanation": "Distratores e itens semanticamente próximos competem."
+    },
+    "resumptionAfterInterruption": {
+      "strategy": "do início do bloco",
+      "rationale": "Reinicia desde a codificação, preservando só séries fechadas e canal prescrito."
+    },
+    "sessionEligibility": {
+      "canOpen": true,
+      "canClose": true,
+      "bestPosition": "meio",
+      "badCombinations": [
+        {
+          "exercise": "Supermercado",
+          "reason": "Itens e listas geram interferência semântica."
+        },
+        {
+          "exercise": "Jogo da Memória",
+          "reason": "Memória visual consecutiva acumula fadiga."
+        }
+      ]
+    },
+    "modality": "não se aplica"
+  },
+  {
+    "exerciseId": "padroes-rotacao",
+    "officialName": "Matriz com Rotações",
+    "prescriptionParameterStatus": "FINAL_PARAMETERS",
+    "executionModel": {
+      "value": "CLOSED_PROTOCOL",
+      "justification": "A rodada só fecha após codificar, transformar e confirmar todo o padrão."
+    },
+    "minimumValidUnit": {
+      "value": "série",
+      "justification": "Padrão, rotação e reconstrução confirmada formam a menor medida."
+    },
+    "terminationPolicy": {
+      "atLimit": "não inicia outra série",
+      "midUnit": "Se o limite chegar durante flashes, giro ou resposta, conclui a série; interrupção real a invalida."
+    },
+    "protocols": {
+      "BRIEF": {
+        "unitCount": 3,
+        "estimatedDuration": "~4 min",
+        "clinicalValidity": "Manutenção/aquecimento; insuficiente para progressão. Confirma compreensão do giro."
+      },
+      "STANDARD": {
+        "unitCount": 6,
+        "estimatedDuration": "~8 min",
+        "clinicalValidity": "Seis transformações observam estabilidade. Sustenta progressão somente com unidades completas; não permite concluir transferência além da mecânica."
+      },
+      "EXTENDED": {
+        "unitCount": 9,
+        "estimatedDuration": "~12 min",
+        "clinicalValidity": "Aumenta estabilidade ou variedade da observação. Divergência temporal executada e fadiga espacial limitam interpretação tardia."
+      }
+    },
+    "baselineCognitiveLoad": {
+      "value": 3,
+      "justification": "Combina retenção de padrão, rotação mental e reconstrução sem alvos visíveis."
+    },
+    "loadModifiers": [
+      {
+        "dimension": "velocidade",
+        "effect": "Exposição, giro e intervalo breves reduzem tempo; temporização declarada e executada divergem."
+      },
+      {
+        "dimension": "quantidade de estímulos",
+        "effect": "Grade e padrão maiores ampliam posições."
+      },
+      {
+        "dimension": "memória exigida",
+        "effect": "Mais posições e intervalo vazio aumentam retenção."
+      }
+    ],
+    "clinicalDuration": {
+      "minimumUseful": "4 min",
+      "standard": "8 min",
+      "maximumRecommended": "12 min",
+      "justification": "Três séries estabilizam a mecânica, seis amostram padrões e nove limitam fadiga de rotação."
+    },
+    "fatigue": {
+      "level": "ALTA",
+      "explanation": "Manter e transformar posições sem alvo visível exige esforço intenso."
+    },
+    "interference": {
+      "level": "BAIXA",
+      "explanation": "Não há distratores; a dificuldade vem da transformação."
+    },
+    "resumptionAfterInterruption": {
+      "strategy": "do início do bloco",
+      "rationale": "Reinicia desde a apresentação do padrão e mantém só séries confirmadas."
+    },
+    "sessionEligibility": {
+      "canOpen": true,
+      "canClose": false,
+      "bestPosition": "início",
+      "badCombinations": [
+        {
+          "exercise": "Matriz Espacial Inversa",
+          "reason": "Transformações espaciais acumulam fadiga."
+        },
+        {
+          "exercise": "Cubos",
+          "reason": "Remapeamento compartilhado reduz independência."
+        }
+      ]
+    },
+    "modality": "não se aplica"
+  },
+  {
+    "exerciseId": "lista-distracao",
+    "officialName": "Lista com Distração",
+    "prescriptionParameterStatus": "FINAL_PARAMETERS",
+    "executionModel": {
+      "value": "CLOSED_PROTOCOL",
+      "justification": "Lista, atividade interveniente e recuperação precisam fechar juntas."
+    },
+    "minimumValidUnit": {
+      "value": "rodada",
+      "justification": "Memorização, interferência e recuperação formam a menor unidade clínica."
+    },
+    "terminationPolicy": {
+      "atLimit": "termina a rodada",
+      "midUnit": "Se o limite chegar em qualquer fase, conclui miniatividade e recuperação; interrupção real invalida a rodada."
+    },
+    "protocols": {
+      "BRIEF": {
+        "unitCount": 3,
+        "estimatedDuration": "~4 min",
+        "clinicalValidity": "Manutenção/aquecimento; insuficiente para progressão. Verifica tolerância à interferência."
+      },
+      "STANDARD": {
+        "unitCount": 6,
+        "estimatedDuration": "~9 min",
+        "clinicalValidity": "Seis listas amostram o ciclo sob miniatividades variadas. Sustenta progressão somente com unidades completas; não permite concluir transferência além da mecânica."
+      },
+      "EXTENDED": {
+        "unitCount": 8,
+        "estimatedDuration": "~12 min",
+        "clinicalValidity": "Aumenta estabilidade ou variedade da observação. A resposta distratora não validada e ordem não monotônica limitam conclusões."
+      }
+    },
+    "baselineCognitiveLoad": {
+      "value": 3,
+      "justification": "Manter lista durante atividade interveniente e recuperar entre distratores impõe alta carga."
+    },
+    "loadModifiers": [
+      {
+        "dimension": "quantidade de estímulos",
+        "effect": "Mais palavras, distratores e miniatividades ampliam conteúdo e retenção."
+      },
+      {
+        "dimension": "memória exigida",
+        "effect": "Listas maiores e ordem aumentam reconstrução serial."
+      },
+      {
+        "dimension": "interferência",
+        "effect": "Mais miniatividades prolongam a tarefa interveniente, cuja precisão não é validada."
+      },
+      {
+        "dimension": "mudança de regra",
+        "effect": "Níveis com e sem ordem alternam de modo não monotônico."
+      },
+      {
+        "dimension": "semelhança dos distratores",
+        "effect": "Palavras próximas aumentam competição quando presentes."
+      }
+    ],
+    "clinicalDuration": {
+      "minimumUseful": "4 min",
+      "standard": "9 min",
+      "maximumRecommended": "12 min",
+      "justification": "Três rodadas demonstram o ciclo, seis variam interferência e oito limitam fadiga e aprendizagem."
+    },
+    "fatigue": {
+      "level": "ALTA",
+      "explanation": "A lista permanece ativa durante tarefa concorrente repetidamente."
+    },
+    "interference": {
+      "level": "ALTA",
+      "explanation": "A miniatividade interveniente é constitutiva, mesmo sem pontuação de precisão."
+    },
+    "resumptionAfterInterruption": {
+      "strategy": "do início do bloco",
+      "rationale": "Reinicia desde a lista para não alterar intervalo de retenção."
+    },
+    "sessionEligibility": {
+      "canOpen": true,
+      "canClose": false,
+      "bestPosition": "início ou meio",
+      "badCombinations": [
+        {
+          "exercise": "N-Back",
+          "reason": "Manutenção e atualização acumulam fadiga."
+        },
+        {
+          "exercise": "Restaurante",
+          "reason": "Listas sob distratores sofrem interferência proativa."
+        }
+      ]
+    },
+    "modality": "não se aplica"
+  },
+  {
+    "exerciseId": "restaurante-ordem",
+    "officialName": "Restaurante",
+    "prescriptionParameterStatus": "FINAL_PARAMETERS",
+    "executionModel": {
+      "value": "CLOSED_PROTOCOL",
+      "justification": "Pedido, ocultação, montagem e confirmação precisam fechar para adaptar a rodada seguinte."
+    },
+    "minimumValidUnit": {
+      "value": "rodada",
+      "justification": "Pedido ligado à mesa, bandeja completa e feedback formam unidade interpretável."
+    },
+    "terminationPolicy": {
+      "atLimit": "termina a rodada",
+      "midUnit": "Se o limite chegar na memorização ou montagem, permite confirmar e receber feedback; não mostra outra mesa."
+    },
+    "protocols": {
+      "BRIEF": {
+        "unitCount": 2,
+        "estimatedDuration": "~4 min",
+        "clinicalValidity": "Manutenção/aquecimento; insuficiente para progressão. Familiariza e permite checagem inicial de modalidade."
+      },
+      "STANDARD": {
+        "unitCount": 5,
+        "estimatedDuration": "~10 min",
+        "clinicalValidity": "Cinco pedidos observam retenção, seleção e consistência. Sustenta progressão somente com unidades completas; não permite concluir transferência além da mecânica."
+      },
+      "EXTENDED": {
+        "unitCount": 8,
+        "estimatedDuration": "~16 min",
+        "clinicalValidity": "Aumenta estabilidade ou variedade da observação. Repetição, ruído ambiente e fadiga verbal limitam retorno."
+      }
+    },
+    "baselineCognitiveLoad": {
+      "value": 2,
+      "justification": "Pedido oculto, associação com mesa e seleção entre distratores exigem memória verbal e visual."
+    },
+    "loadModifiers": [
+      {
+        "dimension": "quantidade de estímulos",
+        "effect": "Mais pessoas, itens e distratores ampliam conteúdo e busca."
+      },
+      {
+        "dimension": "memória exigida",
+        "effect": "Ordem, atualização e duas mesas aumentam retenção e fonte."
+      },
+      {
+        "dimension": "interferência",
+        "effect": "Distratores, ruído e competição entre mesas elevam distração."
+      },
+      {
+        "dimension": "mudança de regra",
+        "effect": "Troca/inclusão/remoção atualiza o pedido; ordem muda reconstrução."
+      },
+      {
+        "dimension": "semelhança dos distratores",
+        "effect": "Alimentos próximos aumentam comparação."
+      },
+      {
+        "dimension": "modalidade",
+        "effect": "Canal do pedido altera código de retenção e duração."
+      }
+    ],
+    "clinicalDuration": {
+      "minimumUseful": "4 min",
+      "standard": "10 min",
+      "maximumRecommended": "16 min",
+      "justification": "Duas rodadas estabilizam, cinco permitem consistência e oito limitam interferência entre pedidos e fadiga."
+    },
+    "fatigue": {
+      "level": "MODERADA",
+      "explanation": "Retenção e busca se repetem, com pausa e resposta visual de apoio."
+    },
+    "interference": {
+      "level": "MODERADA",
+      "explanation": "Itens concorrentes e, nos avançados, duas mesas e atualização competem."
+    },
+    "resumptionAfterInterruption": {
+      "strategy": "do início do bloco",
+      "rationale": "Reinicia desde o pedido; retomar na bancada alteraria retenção e exposições."
+    },
+    "sessionEligibility": {
+      "canOpen": true,
+      "canClose": true,
+      "bestPosition": "meio; no fim apenas em BREVE",
+      "badCombinations": [
+        {
+          "exercise": "Supermercado",
+          "reason": "Listas semelhantes geram interferência de fonte."
+        },
+        {
+          "exercise": "Lista com Distração",
+          "reason": "Manutenção sob distratores acumula interferência."
+        }
+      ]
+    },
+    "modality": {
+      "applies": true,
+      "implementationStatus": "implementado; resposta visual em todos os modos",
+      "modes": {
+        "visual": {
+          "durationImpact": "referência",
+          "loadImpact": "Foto e nome apoiam memória visual e recodificação."
+        },
+        "visual+audio": {
+          "durationImpact": "neutro ou até ~10% menor",
+          "loadImpact": "Redundância pode facilitar; só aumenta divisão se fala, texto ou ruído competirem. Não é automaticamente mais difícil."
+        },
+        "audioOnly": {
+          "durationImpact": "~10–20% maior, inclusive por repetição",
+          "loadImpact": "Aumenta memória auditiva, mas preserva cena, pessoas e resposta visual; não é auditiva pura."
+        }
+      }
+    }
+  },
+  {
+    "exerciseId": "desafio-supermercado",
+    "officialName": "Supermercado",
+    "prescriptionParameterStatus": "FINAL_PARAMETERS",
+    "executionModel": {
+      "value": "CLOSED_PROTOCOL",
+      "justification": "Lista, ocultação, busca e confirmação precisam fechar; ordem e fonte só aparecem na compra completa."
+    },
+    "minimumValidUnit": {
+      "value": "rodada",
+      "justification": "Lista solicitada e carrinho confirmado são a menor unidade de recuperação sob busca."
+    },
+    "terminationPolicy": {
+      "atLimit": "termina a rodada",
+      "midUnit": "Se o limite chegar na memorização ou prateleira, permite confirmar e ver resultado; não apresenta nova lista."
+    },
+    "protocols": {
+      "BRIEF": {
+        "unitCount": 2,
+        "estimatedDuration": "~5 min",
+        "clinicalValidity": "Manutenção/aquecimento; insuficiente para progressão. Familiariza e checa modalidade."
+      },
+      "STANDARD": {
+        "unitCount": 5,
+        "estimatedDuration": "~12 min",
+        "clinicalValidity": "Cinco compras observam retenção, busca e fonte. Sustenta progressão somente com unidades completas; não permite concluir transferência além da mecânica."
+      },
+      "EXTENDED": {
+        "unitCount": 7,
+        "estimatedDuration": "~18 min",
+        "clinicalValidity": "Aumenta estabilidade ou variedade da observação. Familiaridade com produtos, repetição e fadiga de busca reduzem retorno."
+      }
+    },
+    "baselineCognitiveLoad": {
+      "value": 3,
+      "justification": "Lista oculta, prateleira ampla e distratores semânticos combinam memória, busca e controle."
+    },
+    "loadModifiers": [
+      {
+        "dimension": "quantidade de estímulos",
+        "effect": "Listas e prateleiras maiores ampliam itens."
+      },
+      {
+        "dimension": "memória exigida",
+        "effect": "Ordem e duas listas aumentam retenção, manipulação e fonte."
+      },
+      {
+        "dimension": "interferência",
+        "effect": "Distratores e competição entre listas elevam distração."
+      },
+      {
+        "dimension": "mudança de regra",
+        "effect": "Sem ordem, direta e inversa são reconstruções qualitativamente distintas."
+      },
+      {
+        "dimension": "semelhança dos distratores",
+        "effect": "Mesma categoria aumenta interferência semântica."
+      },
+      {
+        "dimension": "modalidade",
+        "effect": "Canal altera codificação e pareamento nome-imagem."
+      }
+    ],
+    "clinicalDuration": {
+      "minimumUseful": "5 min",
+      "standard": "12 min",
+      "maximumRecommended": "18 min",
+      "justification": "Duas compras estabelecem a mecânica, cinco dão consistência e sete limitam interferência e cansaço de busca."
+    },
+    "fatigue": {
+      "level": "ALTA",
+      "explanation": "Lista oculta, busca extensa e controle de fonte/ordem sustentam esforço elevado."
+    },
+    "interference": {
+      "level": "ALTA",
+      "explanation": "Muitos distratores, inclusive semânticos, e duas listas competem com o alvo."
+    },
+    "resumptionAfterInterruption": {
+      "strategy": "do início do bloco",
+      "rationale": "Reinicia desde a lista para preservar intervalo de retenção e exposições."
+    },
+    "sessionEligibility": {
+      "canOpen": true,
+      "canClose": false,
+      "bestPosition": "início ou meio",
+      "badCombinations": [
+        {
+          "exercise": "Restaurante",
+          "reason": "Listas funcionais semelhantes geram interferência."
+        },
+        {
+          "exercise": "Sequência de Itens",
+          "reason": "Nomeação e objetos favorecem interferência semântica."
+        }
+      ]
+    },
+    "modality": {
+      "applies": true,
+      "implementationStatus": "implementado; fotos persistem em partes de Somente áudio",
+      "modes": {
+        "visual": {
+          "durationImpact": "referência",
+          "loadImpact": "Fotos e nomes apoiam memória visual e recodificação."
+        },
+        "visual+audio": {
+          "durationImpact": "neutro ou até ~10% menor",
+          "loadImpact": "Redundância congruente pode facilitar e não é automaticamente mais difícil; fontes concorrentes podem dividir atenção."
+        },
+        "audioOnly": {
+          "durationImpact": "~10–20% maior, sobretudo com repetição",
+          "loadImpact": "Eleva memória auditiva e pareamento nome-imagem, mas fotos e alguns nomes permanecem."
+        }
+      }
+    }
+  },
+  {
+    "exerciseId": "nback",
+    "officialName": "N-Back",
+    "prescriptionParameterStatus": "FINAL_PARAMETERS",
+    "executionModel": {
+      "value": "FIXED_HIGH_FATIGUE",
+      "justification": "Cada bloco tem preparação e 14 estímulos contínuos; progressão exige blocos completos e longa exposição fatiga atualização."
+    },
+    "minimumValidUnit": {
+      "value": "bloco",
+      "justification": "A sequência completa sob o mesmo N é necessária para decidir progressão."
+    },
+    "terminationPolicy": {
+      "atLimit": "termina o bloco",
+      "midUnit": "Se o limite chegar durante os 14 estímulos, conclui o bloco; interrupção real invalida o parcial."
+    },
+    "protocols": {
+      "BRIEF": {
+        "unitCount": 1,
+        "estimatedDuration": "~2,5 min",
+        "clinicalValidity": "Manutenção/aquecimento; insuficiente para progressão. Confirma regra e tolerância; progressão exige mais de um bloco."
+      },
+      "STANDARD": {
+        "unitCount": 3,
+        "estimatedDuration": "~7,5 min",
+        "clinicalValidity": "Três blocos permitem consistência e regra de progressão. Sustenta progressão somente com unidades completas; não permite concluir transferência além da mecânica."
+      },
+      "EXTENDED": {
+        "unitCount": 4,
+        "estimatedDuration": "~10 min",
+        "clinicalValidity": "Aumenta estabilidade ou variedade da observação. Teto curto limita fadiga de atualização e omissões tardias."
+      }
+    },
+    "baselineCognitiveLoad": {
+      "value": 3,
+      "justification": "Atualizar janela verbal, comparar cada letra e responder sob prazo impõe carga alta."
+    },
+    "loadModifiers": [
+      {
+        "dimension": "quantidade de estímulos",
+        "effect": "Cada bloco mantém 14 itens ativos."
+      },
+      {
+        "dimension": "memória exigida",
+        "effect": "1-back a 4-back amplia distância e itens intervenientes."
+      },
+      {
+        "dimension": "interferência",
+        "effect": "Letras intervenientes competem com a referência."
+      },
+      {
+        "dimension": "semelhança dos distratores",
+        "effect": "Repetições próximas aumentam competição serial, com coincidências acidentais controladas."
+      }
+    ],
+    "clinicalDuration": {
+      "minimumUseful": "2,5 min",
+      "standard": "7,5 min",
+      "maximumRecommended": "10 min",
+      "justification": "Um bloco confirma regra, três permitem progressão e quatro limitam queda por fadiga."
+    },
+    "fatigue": {
+      "level": "ALTA",
+      "explanation": "Cada estímulo exige atualização, comparação e resposta sem pausa no bloco."
+    },
+    "interference": {
+      "level": "ALTA",
+      "explanation": "Itens intervenientes precisam ser mantidos e descartados sem perder a referência."
+    },
+    "resumptionAfterInterruption": {
+      "strategy": "um nível abaixo",
+      "rationale": "Sobrecarga pede novo bloco um N abaixo; interrupção externa repete bloco integral no mesmo N."
+    },
+    "sessionEligibility": {
+      "canOpen": true,
+      "canClose": false,
+      "bestPosition": "início",
+      "badCombinations": [
+        {
+          "exercise": "Dupla Tarefa",
+          "reason": "Atualização contínua e prazo acumulam fadiga intensa."
+        },
+        {
+          "exercise": "Lista com Distração",
+          "reason": "Interferência verbal altera manutenção e descarte."
+        }
+      ]
+    },
+    "modality": "não se aplica"
+  },
+  {
+    "exerciseId": "cubo-corsi",
+    "officialName": "Cubos",
+    "prescriptionParameterStatus": "FINAL_PARAMETERS",
+    "executionModel": {
+      "value": "CLOSED_PROTOCOL",
+      "justification": "A extensão adapta após reprodução completa; cortar perde retenção e remapeamento."
+    },
+    "minimumValidUnit": {
+      "value": "série",
+      "justification": "Giros, flashes e toques em ordem são necessários para interpretar memória visuoespacial."
+    },
+    "terminationPolicy": {
+      "atLimit": "não inicia outra série",
+      "midUnit": "Se o limite chegar durante apresentação ou resposta, conclui a série; interrupção real a invalida."
+    },
+    "protocols": {
+      "BRIEF": {
+        "unitCount": 3,
+        "estimatedDuration": "~4 min",
+        "clinicalValidity": "Manutenção/aquecimento; insuficiente para progressão. Confirma acesso ao cubo e remapeamento."
+      },
+      "STANDARD": {
+        "unitCount": 6,
+        "estimatedDuration": "~8 min",
+        "clinicalValidity": "Seis séries observam estabilidade. Sustenta progressão somente com unidades completas; não permite concluir transferência além da mecânica."
+      },
+      "EXTENDED": {
+        "unitCount": 9,
+        "estimatedDuration": "~12 min",
+        "clinicalValidity": "Aumenta estabilidade ou variedade da observação. Fadiga 3D e estratégia verbal podem reduzir retorno."
+      }
+    },
+    "baselineCognitiveLoad": {
+      "value": 3,
+      "justification": "Reter faces quase frontais e responder na vista isométrica combina memória e remapeamento."
+    },
+    "loadModifiers": [
+      {
+        "dimension": "quantidade de estímulos",
+        "effect": "Séries maiores ampliam posições e trocas de face."
+      },
+      {
+        "dimension": "memória exigida",
+        "effect": "Maior extensão aumenta retenção e sequenciamento."
+      }
+    ],
+    "clinicalDuration": {
+      "minimumUseful": "4 min",
+      "standard": "8 min",
+      "maximumRecommended": "12 min",
+      "justification": "Três séries estabilizam a interface 3D, seis dão amostra útil e nove limitam fadiga perceptiva."
+    },
+    "fatigue": {
+      "level": "ALTA",
+      "explanation": "Rotação visual, constância perceptiva e retenção se acumulam."
+    },
+    "interference": {
+      "level": "BAIXA",
+      "explanation": "Não há distratores externos; competição vem de faces e orientações."
+    },
+    "resumptionAfterInterruption": {
+      "strategy": "do início do bloco",
+      "rationale": "Reinicia desde o primeiro giro e preserva apenas séries completas."
+    },
+    "sessionEligibility": {
+      "canOpen": true,
+      "canClose": false,
+      "bestPosition": "início ou meio",
+      "badCombinations": [
+        {
+          "exercise": "Matriz com Rotações",
+          "reason": "Remapeamento e rotação acumulam fadiga."
+        },
+        {
+          "exercise": "Matriz Espacial",
+          "reason": "Retenção serial espacial favorece interferência."
+        }
+      ]
+    },
+    "modality": "não se aplica"
+  },
+  {
+    "exerciseId": "vigilancia",
+    "officialName": "Vigilância",
+    "prescriptionParameterStatus": "FINAL_PARAMETERS",
+    "executionModel": {
+      "value": "FIXED_HIGH_FATIGUE",
+      "justification": "Exposições breves repetidas são sensíveis a fadiga perceptiva; blocos fixos preservam comparabilidade."
+    },
+    "minimumValidUnit": {
+      "value": "bloco",
+      "justification": "Seis tentativas completas oferecem repetição mínima do ciclo sem tratar uma imagem como vigilância."
+    },
+    "terminationPolicy": {
+      "atLimit": "termina o bloco",
+      "midUnit": "Se o limite chegar no meio, conclui a tentativa e o bloco fixo; interrupção real invalida o bloco parcial."
+    },
+    "protocols": {
+      "BRIEF": {
+        "unitCount": 1,
+        "estimatedDuration": "~3 min",
+        "clinicalValidity": "Manutenção/aquecimento; insuficiente para progressão. Seis tentativas verificam tolerância."
+      },
+      "STANDARD": {
+        "unitCount": 2,
+        "estimatedDuration": "~6 min",
+        "clinicalValidity": "Doze tentativas observam consistência sob duração controlada. Sustenta progressão somente com unidades completas; não permite concluir transferência além da mecânica."
+      },
+      "EXTENDED": {
+        "unitCount": 3,
+        "estimatedDuration": "~9 min",
+        "clinicalValidity": "Aumenta estabilidade ou variedade da observação. Queda no terceiro bloco deve ser lida como possível fadiga."
+      }
+    },
+    "baselineCognitiveLoad": {
+      "value": 3,
+      "justification": "Exposição de oito itens, discriminação e retenção espacial combinam demandas intensas."
+    },
+    "loadModifiers": [
+      {
+        "dimension": "velocidade",
+        "effect": "Exposição breve aumenta rapidez perceptiva."
+      },
+      {
+        "dimension": "memória exigida",
+        "effect": "Arranjos irregulares ampliam retenção da posição."
+      },
+      {
+        "dimension": "interferência",
+        "effect": "Fundo complexo aumenta figura-fundo."
+      },
+      {
+        "dimension": "semelhança dos distratores",
+        "effect": "Diferenças menores de tom/estrutura elevam discriminação."
+      }
+    ],
+    "clinicalDuration": {
+      "minimumUseful": "3 min",
+      "standard": "6 min",
+      "maximumRecommended": "9 min",
+      "justification": "Seis tentativas estabilizam, doze dão amostra útil e dezoito limitam fadiga; mais tempo não infere atenção sustentada."
+    },
+    "fatigue": {
+      "level": "ALTA",
+      "explanation": "Discriminação rápida e retenção espacial degradam com esforço acumulado."
+    },
+    "interference": {
+      "level": "ALTA",
+      "explanation": "Sete itens quase equivalentes e fundo complexo competem com o discrepante."
+    },
+    "resumptionAfterInterruption": {
+      "strategy": "um nível abaixo",
+      "rationale": "Fadiga visual pede novo bloco um nível abaixo; interrupção externa repete integralmente no mesmo nível."
+    },
+    "sessionEligibility": {
+      "canOpen": true,
+      "canClose": false,
+      "bestPosition": "início",
+      "badCombinations": [
+        {
+          "exercise": "Identificação de Símbolos",
+          "reason": "Discriminação consecutiva acumula fadiga."
+        },
+        {
+          "exercise": "Agentes Focus",
+          "reason": "Seleção visual concorrente reduz tolerância."
+        }
+      ]
+    },
+    "modality": "não se aplica"
+  },
+  {
+    "exerciseId": "identificacao-simbolos",
+    "officialName": "Identificação de Símbolos",
+    "prescriptionParameterStatus": "FINAL_PARAMETERS",
+    "executionModel": {
+      "value": "CONTINUOUS_TIMED",
+      "justification": "Cada pareamento fecha no primeiro toque e o encerramento é verificado após a tentativa."
+    },
+    "minimumValidUnit": {
+      "value": "tentativa",
+      "justification": "Modelo, grade e primeira seleção produzem comparação completa."
+    },
+    "terminationPolicy": {
+      "atLimit": "termina a tentativa",
+      "midUnit": "Se o limite chegar durante busca, permite toque e feedback; não gera outro modelo. Interpretar a primeira tentativa com cautela."
+    },
+    "protocols": {
+      "BRIEF": {
+        "unitCount": 8,
+        "estimatedDuration": "~2 min",
+        "clinicalValidity": "Manutenção/aquecimento; insuficiente para progressão. Aquece e checa acesso visual; a primeira tentativa não fundamenta conclusão."
+      },
+      "STANDARD": {
+        "unitCount": 20,
+        "estimatedDuration": "~5 min",
+        "clinicalValidity": "Vinte pareamentos posteriores amostram busca. Sustenta progressão somente com unidades completas; não permite concluir transferência além da mecânica."
+      },
+      "EXTENDED": {
+        "unitCount": 32,
+        "estimatedDuration": "~8 min",
+        "clinicalValidity": "Aumenta estabilidade ou variedade da observação. Similaridade não controlada e fadiga visual limitam ganho."
+      }
+    },
+    "baselineCognitiveLoad": {
+      "value": 2,
+      "justification": "Busca e discriminação com modelo visível e sem prazo próprio."
+    },
+    "loadModifiers": [
+      {
+        "dimension": "quantidade de estímulos",
+        "effect": "Mais distratores e densidade ampliam busca."
+      },
+      {
+        "dimension": "interferência",
+        "effect": "Maior densidade aumenta competição visual."
+      }
+    ],
+    "clinicalDuration": {
+      "minimumUseful": "2 min",
+      "standard": "5 min",
+      "maximumRecommended": "8 min",
+      "justification": "Oito tentativas aquecem, vinte estabilizam após o primeiro item e trinta e duas limitam fadiga e repetição."
+    },
+    "fatigue": {
+      "level": "MODERADA",
+      "explanation": "Varredura e discriminação se repetem, com modelo visível e sem prazo."
+    },
+    "interference": {
+      "level": "MODERADA",
+      "explanation": "Símbolos concorrem, mas a semelhança não é controlada para rotular tudo como alta."
+    },
+    "resumptionAfterInterruption": {
+      "strategy": "retoma exatamente de onde parou",
+      "rationale": "Mantém tentativas fechadas; descarta a interrompida e cria novo pareamento."
+    },
+    "sessionEligibility": {
+      "canOpen": true,
+      "canClose": true,
+      "bestPosition": "início como aquecimento ou meio",
+      "badCombinations": [
+        {
+          "exercise": "Busca Rápida",
+          "reason": "Busca em grade transfere varredura."
+        },
+        {
+          "exercise": "Vigilância",
+          "reason": "Discriminação repetida reduz validade."
+        }
+      ]
+    },
+    "modality": "não se aplica"
+  },
+  {
+    "exerciseId": "estacionamento-logico",
+    "officialName": "Estacionamento Lógico",
+    "prescriptionParameterStatus": "FINAL_PARAMETERS",
+    "executionModel": {
+      "value": "PLANNING_WINDOW",
+      "justification": "Interromper perde a cadeia de desbloqueios e impede classificar solução e distância do ótimo."
+    },
+    "minimumValidUnit": {
+      "value": "desafio completo",
+      "justification": "Retirar o carro-alvo fecha estados e permite comparar movimentos com a solução mínima."
+    },
+    "terminationPolicy": {
+      "atLimit": "termina o desafio",
+      "midUnit": "Se o limite chegar no meio, mantém a janela até a saída; interrupção real invalida a trajetória parcial."
+    },
+    "protocols": {
+      "BRIEF": {
+        "unitCount": 1,
+        "estimatedDuration": "~5 min",
+        "clinicalValidity": "Manutenção/aquecimento; insuficiente para progressão. Observa uma estratégia e solução."
+      },
+      "STANDARD": {
+        "unitCount": 2,
+        "estimatedDuration": "~11 min",
+        "clinicalValidity": "Dois desafios permitem consistência, optimalidade e repetição. Sustenta progressão somente com unidades completas; não permite concluir transferência além da mecânica."
+      },
+      "EXTENDED": {
+        "unitCount": 3,
+        "estimatedDuration": "~17 min",
+        "clinicalValidity": "Aumenta estabilidade ou variedade da observação. Aprendizagem da fase, guia e fadiga limitam comparabilidade."
+      }
+    },
+    "baselineCognitiveLoad": {
+      "value": 3,
+      "justification": "Cadeias de bloqueio, antecipação e submetas exigem planejamento visuoespacial intenso."
+    },
+    "loadModifiers": [
+      {
+        "dimension": "quantidade de estímulos",
+        "effect": "Mais veículos ampliam bloqueios."
+      },
+      {
+        "dimension": "memória exigida",
+        "effect": "Soluções profundas exigem manter submetas."
+      },
+      {
+        "dimension": "interferência",
+        "effect": "Veículos adicionais criam bloqueios concorrentes, não mero tempo de tela."
+      },
+      {
+        "dimension": "planejamento",
+        "effect": "Maior mínimo aprofunda antecipação; modo guiado reduz construção autônoma."
+      }
+    ],
+    "clinicalDuration": {
+      "minimumUseful": "5 min",
+      "standard": "11 min",
+      "maximumRecommended": "17 min",
+      "justification": "Uma fase fecha a operação, duas mostram consistência e três limitam aprendizagem, guia e fadiga."
+    },
+    "fatigue": {
+      "level": "ALTA",
+      "explanation": "Antecipar estados e desfazer bloqueios mantém esforço até a saída."
+    },
+    "interference": {
+      "level": "MODERADA",
+      "explanation": "Veículos e bloqueios competem espacialmente, sem distratores sem função."
+    },
+    "resumptionAfterInterruption": {
+      "strategy": "outra estratégia",
+      "rationale": "Reinicia no estado inicial e registra nova trajetória, sem misturar execução guiada e autônoma."
+    },
+    "sessionEligibility": {
+      "canOpen": true,
+      "canClose": false,
+      "bestPosition": "início",
+      "badCombinations": [
+        {
+          "exercise": "Jogo das Torres",
+          "reason": "Planejamento profundo consecutivo acumula fadiga."
+        },
+        {
+          "exercise": "Labirinto",
+          "reason": "Resolução visuoespacial reduz persistência."
+        }
+      ]
+    },
+    "modality": "não se aplica"
+  },
+  {
+    "exerciseId": "investigadores-sociais",
+    "officialName": "Investigadores da Situação Social",
+    "prescriptionParameterStatus": "FINAL_PARAMETERS",
+    "executionModel": {
+      "value": "CLOSED_PROTOCOL",
+      "justification": "Perguntas da cena compartilham contexto e feedback; fechar o caso evita corte e contaminação desigual."
+    },
+    "minimumValidUnit": {
+      "value": "desafio completo",
+      "justification": "Caso social com todas as perguntas preserva contexto e sequência de feedback."
+    },
+    "terminationPolicy": {
+      "atLimit": "termina o desafio",
+      "midUnit": "Se o limite chegar entre perguntas, conclui o caso e encerra ao fim da cena; não inicia outra história."
+    },
+    "protocols": {
+      "BRIEF": {
+        "unitCount": 1,
+        "estimatedDuration": "~4 min",
+        "clinicalValidity": "Manutenção/aquecimento; insuficiente para progressão. Permite discutir um caso, sem progressão ou generalização social."
+      },
+      "STANDARD": {
+        "unitCount": 2,
+        "estimatedDuration": "~9 min",
+        "clinicalValidity": "Dois casos observam consistência entre eixos disponíveis. Sustenta progressão somente com unidades completas; não permite concluir transferência além da mecânica."
+      },
+      "EXTENDED": {
+        "unitCount": 3,
+        "estimatedDuration": "~14 min",
+        "clinicalValidity": "Aumenta estabilidade ou variedade da observação. Feedback entre perguntas, desigualdade etária e banco pequeno limitam conclusões."
+      }
+    },
+    "baselineCognitiveLoad": {
+      "value": 2,
+      "justification": "Contexto e três hipóteses ficam visíveis, enquanto inferência e compreensão mantêm demanda moderada."
+    },
+    "loadModifiers": [
+      {
+        "dimension": "quantidade de estímulos",
+        "effect": "Mais perguntas ampliam decisões, mas reduzem novidade da cena."
+      },
+      {
+        "dimension": "memória exigida",
+        "effect": "Múltiplas pistas exigem contexto, ainda visível."
+      },
+      {
+        "dimension": "interferência",
+        "effect": "Hipóteses competem e feedback anterior orienta itens seguintes."
+      },
+      {
+        "dimension": "semelhança dos distratores",
+        "effect": "Interpretações plausíveis aumentam comparação quando presentes."
+      }
+    ],
+    "clinicalDuration": {
+      "minimumUseful": "4 min",
+      "standard": "9 min",
+      "maximumRecommended": "14 min",
+      "justification": "Um caso fecha contexto, dois reduzem dependência da história e três limitam aprendizagem pelo feedback e repetição do banco."
+    },
+    "fatigue": {
+      "level": "MODERADA",
+      "explanation": "Leitura e inferência se repetem, com ritmo próprio e contexto visível."
+    },
+    "interference": {
+      "level": "MODERADA",
+      "explanation": "Hipóteses sociais competem e feedback pode interferir nas perguntas seguintes."
+    },
+    "resumptionAfterInterruption": {
+      "strategy": "do início do bloco",
+      "rationale": "Reinicia o caso desde a primeira pergunta para não retomar após feedback parcial."
+    },
+    "sessionEligibility": {
+      "canOpen": true,
+      "canClose": true,
+      "bestPosition": "fim, com espaço para discussão clínica",
+      "badCombinations": [
+        {
+          "exercise": "Certo ou Errado",
+          "reason": "Feedback normativo prepara julgamentos socialmente desejáveis."
+        }
+      ]
+    },
+    "modality": "não se aplica"
+  }
+]
