@@ -34,7 +34,7 @@
     },
     "baselineCognitiveLoad": {
       "value": 2,
-      "justification": "Retenção serial verbal relevante, sem transformação, distratores externos ou pressão de resposta."
+      "justification": "A retenção serial ocupa a série, mas a regra é estável, a resposta é simples e cada tentativa oferece recuperação."
     },
     "loadModifiers": [
       {
@@ -54,7 +54,7 @@
     },
     "fatigue": {
       "level": "MODERADA",
-      "explanation": "O ensaio serial é contínuo, mas há pausa natural entre séries e não existe dupla tarefa."
+      "explanation": "A repetição da retenção pode reduzir o rendimento gradualmente, embora as pausas entre séries permitam recuperação."
     },
     "interference": {
       "level": "BAIXA",
@@ -116,7 +116,7 @@
     },
     "baselineCognitiveLoad": {
       "value": 3,
-      "justification": "Conflito cor-palavra, duas regras, cinco respostas e janela temporal combinam inibição, seleção e monitoramento."
+      "justification": "Conflito cor-palavra, trocas de regra e resposta temporizada se repetem quase continuamente, com pouca recuperação entre tentativas."
     },
     "loadModifiers": [
       {
@@ -140,7 +140,7 @@
     },
     "fatigue": {
       "level": "ALTA",
-      "explanation": "Supressão repetida da dimensão dominante, trocas e resposta sob prazo acumulam esforço executivo."
+      "explanation": "Conflito inibitório e trocas sob prazo se repetem sem pausa relevante, favorecendo queda rápida de precisão e latência."
     },
     "interference": {
       "level": "ALTA",
@@ -202,7 +202,7 @@
     },
     "baselineCognitiveLoad": {
       "value": 2,
-      "justification": "Reter critério e buscar personagens móveis combina memória verbal e seleção visual, sem planejamento ou fluxo duplo."
+      "justification": "Cada rodada mantém um critério durante busca em campo móvel, com seleção de resposta contínua e recuperação entre comandos."
     },
     "loadModifiers": [
       {
@@ -242,7 +242,7 @@
     },
     "fatigue": {
       "level": "MODERADA",
-      "explanation": "Busca em campo móvel e retenção exigem esforço, com pausas breves entre comandos."
+      "explanation": "Busca em campo móvel e retenção do critério podem reduzir o desempenho gradualmente, mas há pausa entre comandos."
     },
     "interference": {
       "level": "MODERADA",
@@ -320,8 +320,8 @@
       }
     },
     "baselineCognitiveLoad": {
-      "value": 3,
-      "justification": "É preciso manter a série, inverter a ordem e monitorar a reprodução sem correção."
+      "value": 2,
+      "justification": "Manter e inverter a série exige manipulação moderada, porém as séries são curtas, a resposta é simples e há recuperação entre tentativas."
     },
     "loadModifiers": [
       {
@@ -340,8 +340,8 @@
       "justification": "A inversão alonga cada série; oito dão amostra útil e, após doze minutos, fadiga de manipulação domina o resultado."
     },
     "fatigue": {
-      "level": "ALTA",
-      "explanation": "Armazenamento e inversão serial são mantidos simultaneamente."
+      "level": "MODERADA",
+      "explanation": "A inversão repetida produz desgaste gradual, contido pelas pausas entre séries e pela ausência de distratores externos."
     },
     "interference": {
       "level": "BAIXA",
@@ -402,8 +402,8 @@
       }
     },
     "baselineCognitiveLoad": {
-      "value": 2,
-      "justification": "Retenção e ordem espacial com regra direta, sem distratores ou pressão de resposta."
+      "value": 1,
+      "justification": "Regra direta e estável, reprodução simples, baixa interferência e séries curtas permitem recuperação clara entre tentativas."
     },
     "loadModifiers": [
       {
@@ -426,8 +426,8 @@
       "justification": "Quatro séries estabelecem acesso, oito estabilidade e doze limitam exposição repetitiva antes da fadiga visuoespacial."
     },
     "fatigue": {
-      "level": "MODERADA",
-      "explanation": "Há retenção serial repetida, mas regra direta e pausas contêm o esforço."
+      "level": "BAIXA",
+      "explanation": "Séries curtas, regra direta e pausas naturais favorecem boa recuperação mesmo com repetição."
     },
     "interference": {
       "level": "BAIXA",
@@ -488,8 +488,8 @@
       }
     },
     "baselineCognitiveLoad": {
-      "value": 3,
-      "justification": "Combina memória operacional visuoespacial intensa, retenção e inversão mental."
+      "value": 2,
+      "justification": "A inversão espacial exige manutenção e manipulação, mas ocorre em séries discretas, sem distratores e com recuperação entre tentativas."
     },
     "loadModifiers": [
       {
@@ -508,8 +508,8 @@
       "justification": "A inversão torna cada série mais lenta; oito fornecem amostra útil e dez contêm fadiga executiva."
     },
     "fatigue": {
-      "level": "ALTA",
-      "explanation": "A trajetória precisa ser transformada enquanto todas as posições permanecem ativas."
+      "level": "MODERADA",
+      "explanation": "Transformar trajetórias repetidamente gera desgaste gradual, mas as séries fechadas oferecem pausas de recuperação."
     },
     "interference": {
       "level": "BAIXA",
@@ -571,7 +571,7 @@
     },
     "baselineCognitiveLoad": {
       "value": 2,
-      "justification": "Exige manter e atualizar associações símbolo-posição, com apoio dos pares revelados e sem prazo."
+      "justification": "Manter e atualizar pares exige memória operacional consistente durante o tabuleiro, com ritmo próprio e apoio dos pares revelados."
     },
     "loadModifiers": [
       {
@@ -595,7 +595,7 @@
     },
     "fatigue": {
       "level": "MODERADA",
-      "explanation": "Atualização espacial é repetida, mas o ritmo é autocadenciado e pares visíveis apoiam."
+      "explanation": "A atualização espacial repetida pode reduzir o rendimento, mas o ritmo autocadenciado e os pares visíveis limitam o desgaste."
     },
     "interference": {
       "level": "MODERADA",
@@ -656,8 +656,8 @@
       }
     },
     "baselineCognitiveLoad": {
-      "value": 2,
-      "justification": "Varredura e manutenção de meta moderadas, com números tocados e caminho ainda visíveis."
+      "value": 1,
+      "justification": "Regra numérica estável, caminho visível, resposta motora simples e ritmo próprio mantêm baixa demanda por minuto."
     },
     "loadModifiers": [
       {
@@ -677,7 +677,7 @@
     },
     "fatigue": {
       "level": "BAIXA",
-      "explanation": "Ritmo autocadenciado, regra estável e caminho visível reduzem esforço."
+      "explanation": "Regra estável, ritmo autocadenciado e caminho visível permitem exposição longa com boa recuperação."
     },
     "interference": {
       "level": "BAIXA",
@@ -739,7 +739,7 @@
     },
     "baselineCognitiveLoad": {
       "value": 2,
-      "justification": "PROVISÓRIO: cartões e meta visíveis apoiam memória; ordenação, precedência e monitoramento mantêm demanda moderada."
+      "justification": "PROVISÓRIO: ordenar e monitorar precedências mantém demanda consistente, mas cartões visíveis, ritmo próprio e intervalos entre metas permitem recuperação."
     },
     "loadModifiers": [
       {
@@ -775,7 +775,7 @@
     },
     "fatigue": {
       "level": "MODERADA",
-      "explanation": "PROVISÓRIO: organizar e revisar exige esforço, mas a tarefa é autocadenciada e mantém material visível."
+      "explanation": "PROVISÓRIO: planejamento e revisão prolongados podem reduzir o engajamento gradualmente, apesar do ritmo próprio e do material visível."
     },
     "interference": {
       "level": "BAIXA",
@@ -854,7 +854,7 @@
     },
     "baselineCognitiveLoad": {
       "value": 2,
-      "justification": "Busca, comparação e compreensão de critérios, com informação visível e sem prazo por item."
+      "justification": "Comparar critérios e controlar alternativas exige atenção consistente, mas a informação permanece visível e há recuperação entre questões."
     },
     "loadModifiers": [
       {
@@ -882,7 +882,7 @@
     },
     "fatigue": {
       "level": "MODERADA",
-      "explanation": "Leitura e comparação repetidas geram esforço, mas sem prazo por questão."
+      "explanation": "Leitura e comparação repetidas podem reduzir o rendimento ao longo da exposição, embora cada questão ofereça pausa natural e não haja prazo."
     },
     "interference": {
       "level": "MODERADA",
@@ -944,7 +944,7 @@
     },
     "baselineCognitiveLoad": {
       "value": 3,
-      "justification": "Múltiplos alvos idênticos em movimento combinam atenção dividida, atualização e distração."
+      "justification": "Rastrear simultaneamente alvos idênticos em movimento exige atualização contínua sob forte interferência, sem recuperação durante cada rodada."
     },
     "loadModifiers": [
       {
@@ -976,7 +976,7 @@
     },
     "fatigue": {
       "level": "ALTA",
-      "explanation": "Identidades precisam ser atualizadas continuamente durante movimento e colisões."
+      "explanation": "Atualização contínua de alvos idênticos, cruzamentos e movimento sustentado favorecem queda rápida de qualidade e fadiga visual."
     },
     "interference": {
       "level": "ALTA",
@@ -1038,7 +1038,7 @@
     },
     "baselineCognitiveLoad": {
       "value": 3,
-      "justification": "Dois fluxos com ritmos, regras, janelas e respostas próprias recrutam divisão e atualização máximas."
+      "justification": "Dois fluxos simultâneos exigem monitoramento, atualização e respostas temporizadas contínuas, sem pausas ao longo do bloco."
     },
     "loadModifiers": [
       {
@@ -1078,7 +1078,7 @@
     },
     "fatigue": {
       "level": "ALTA",
-      "explanation": "Não há pausa entre dois fluxos que exigem monitoramento e resposta sob janela."
+      "explanation": "Monitorar e responder a dois fluxos sob janela, sem pausas no bloco, favorece omissões e queda rápida de qualidade."
     },
     "interference": {
       "level": "ALTA",
@@ -1140,7 +1140,7 @@
     },
     "baselineCognitiveLoad": {
       "value": 1,
-      "justification": "O basal começa com alvo único e resposta direta; escolha cresce apenas com alvos e distratores."
+      "justification": "No basal, alvo único, regra estável e resposta motora direta formam rodadas curtas com recuperação entre levas."
     },
     "loadModifiers": [
       {
@@ -1168,7 +1168,7 @@
     },
     "fatigue": {
       "level": "MODERADA",
-      "explanation": "Pressão temporal e rastreamento acumulam esforço, com pequenas pausas entre levas."
+      "explanation": "A pressão temporal e o rastreamento repetido podem reduzir gradualmente a precisão, apesar das pequenas pausas entre levas."
     },
     "interference": {
       "level": "MODERADA",
@@ -1230,7 +1230,7 @@
     },
     "baselineCognitiveLoad": {
       "value": 1,
-      "justification": "Texto permanece visível, há duas alternativas e não existe prazo; a dificuldade é editorial."
+      "justification": "Texto visível, regra binária estável, ritmo próprio e resposta simples mantêm baixa demanda por minuto."
     },
     "loadModifiers": [
       {
@@ -1246,7 +1246,7 @@
     },
     "fatigue": {
       "level": "BAIXA",
-      "explanation": "Tarefa autocadenciada, binária e sem memória oculta ou prazo."
+      "explanation": "Ritmo próprio, resposta binária, texto visível e ausência de prazo permitem exposição longa com boa recuperação."
     },
     "interference": {
       "level": "BAIXA",
@@ -1304,7 +1304,7 @@
     },
     "baselineCognitiveLoad": {
       "value": 2,
-      "justification": "Escolha rápida por cor, orientação entre sinais e mapeamento de botões formam demanda moderada."
+      "justification": "Selecionar rapidamente entre sinais e mapear a resposta mantém demanda consistente, mas uma regra estável e o feedback permitem recuperação entre tentativas."
     },
     "loadModifiers": [
       {
@@ -1328,7 +1328,7 @@
     },
     "fatigue": {
       "level": "MODERADA",
-      "explanation": "Prazo e monitoramento do botão acumulam esforço, com feedback entre tentativas."
+      "explanation": "Prazo e monitoramento repetidos produzem desgaste gradual, atenuado pelo feedback e pela separação entre tentativas."
     },
     "interference": {
       "level": "MODERADA",
@@ -1389,8 +1389,8 @@
       }
     },
     "baselineCognitiveLoad": {
-      "value": 3,
-      "justification": "Busca de múltiplos alvos sob contador combina categorização, pressão e seleção intensa."
+      "value": 2,
+      "justification": "A busca sob contador exige seleção e controle de distratores durante cada grade, mas usa um critério por vez e oferece recuperação entre rodadas."
     },
     "loadModifiers": [
       {
@@ -1422,7 +1422,7 @@
     },
     "fatigue": {
       "level": "ALTA",
-      "explanation": "Varredura, múltiplos toques e contador mantêm pressão durante toda a rodada."
+      "explanation": "Varredura extensa, pressão do contador, penalidade por erro e competição visual favorecem queda rápida de precisão e engajamento."
     },
     "interference": {
       "level": "ALTA",
@@ -1483,8 +1483,8 @@
       }
     },
     "baselineCognitiveLoad": {
-      "value": 3,
-      "justification": "Submetas, antecipação de estados e monitoramento exigem planejamento, mesmo com apoio visível."
+      "value": 2,
+      "justification": "Planejar submetas e antecipar estados exige esforço consistente, mas o tabuleiro visível, o ritmo próprio e as pausas entre desafios permitem recuperação."
     },
     "loadModifiers": [
       {
@@ -1507,8 +1507,8 @@
       "justification": "Um desafio fecha a operação, dois mostram consistência e, após três, aprendizagem e movimentos exponenciais reduzem retorno."
     },
     "fatigue": {
-      "level": "ALTA",
-      "explanation": "Planejamento de submetas e monitoramento acumulam esforço."
+      "level": "MODERADA",
+      "explanation": "O planejamento prolongado pode reduzir o desempenho gradualmente, mas o ritmo próprio e a recuperação entre desafios contêm a fadiga."
     },
     "interference": {
       "level": "BAIXA",
@@ -1569,8 +1569,8 @@
       }
     },
     "baselineCognitiveLoad": {
-      "value": 3,
-      "justification": "Combina planejamento, busca, manutenção de rota e monitoramento sob janela própria."
+      "value": 2,
+      "justification": "Planejamento e seleção de rota mantêm demanda moderada, com trilha visível, ritmo próprio e recuperação entre mapas."
     },
     "loadModifiers": [
       {
@@ -1598,7 +1598,7 @@
     },
     "fatigue": {
       "level": "MODERADA",
-      "explanation": "Resolução exige revisão espacial, mas trilha visível e ritmo próprio reduzem memória pura."
+      "explanation": "Revisão espacial e rotas falsas podem reduzir o rendimento gradualmente, mas a trilha visível e o ritmo próprio contêm o desgaste."
     },
     "interference": {
       "level": "MODERADA",
@@ -1660,7 +1660,7 @@
     },
     "baselineCognitiveLoad": {
       "value": 2,
-      "justification": "Cenas ficam visíveis e o ritmo é próprio, enquanto relações temporais e causais mantêm demanda moderada."
+      "justification": "Ordenar relações temporais e causais exige integração consistente, mas as cenas visíveis, o ritmo próprio e as pausas entre histórias permitem recuperação."
     },
     "loadModifiers": [
       {
@@ -1688,7 +1688,7 @@
     },
     "fatigue": {
       "level": "MODERADA",
-      "explanation": "Integrar transições exige raciocínio, com cenas disponíveis e sem prazo."
+      "explanation": "Integrar transições repetidamente pode reduzir o engajamento, embora as cenas disponíveis, o ritmo próprio e as pausas limitem a fadiga."
     },
     "interference": {
       "level": "MODERADA",
@@ -1749,8 +1749,8 @@
       }
     },
     "baselineCognitiveLoad": {
-      "value": 3,
-      "justification": "Integra leitura, cálculo, regras, monitoramento e seleção sob restrições."
+      "value": 2,
+      "justification": "As fases alternam operações anunciadas e mantêm dados visíveis, gerando demanda consistente sem fluxos simultâneos ou troca rápida de regra."
     },
     "loadModifiers": [
       {
@@ -1790,7 +1790,7 @@
     },
     "fatigue": {
       "level": "ALTA",
-      "explanation": "A missão alterna cálculo, comparação e múltiplas restrições."
+      "explanation": "A missão longa acumula cálculo, comparação e múltiplas restrições, elevando risco de exaustão e perda de engajamento."
     },
     "interference": {
       "level": "MODERADA",
@@ -1869,7 +1869,7 @@
     },
     "baselineCognitiveLoad": {
       "value": 3,
-      "justification": "Aplicar regra, ignorar atributos e substituir critério exige flexibilidade, inibição e atualização."
+      "justification": "A regra ativa precisa ser substituída repetidamente enquanto atributos e regra anterior competem, sustentando inibição e atualização com pouca recuperação dentro dos blocos."
     },
     "loadModifiers": [
       {
@@ -1893,7 +1893,7 @@
     },
     "fatigue": {
       "level": "ALTA",
-      "explanation": "Substituir regra e inibir atributos repetidamente acumula custo executivo."
+      "explanation": "Trocas repetidas e inibição da regra anterior acumulam custo rapidamente e reduzem a qualidade dentro dos blocos."
     },
     "interference": {
       "level": "ALTA",
@@ -1954,8 +1954,8 @@
       }
     },
     "baselineCognitiveLoad": {
-      "value": 3,
-      "justification": "Combinar pistas, exclusões e associações exige raciocínio, memória verbal e monitoramento intensos."
+      "value": 2,
+      "justification": "Pistas e marcações visíveis apoiam a memória; combinar hipóteses e exclusões mantém demanda consistente em ritmo próprio."
     },
     "loadModifiers": [
       {
@@ -1983,7 +1983,7 @@
     },
     "fatigue": {
       "level": "ALTA",
-      "explanation": "Integração, exclusão e revisão até solução mantêm alta demanda."
+      "explanation": "Problemas longos, negações, revisão de hipóteses e risco de impasse elevam frustração e favorecem perda de qualidade antes da solução."
     },
     "interference": {
       "level": "MODERADA",
@@ -2045,7 +2045,7 @@
     },
     "baselineCognitiveLoad": {
       "value": 2,
-      "justification": "Retenção serial verbal e escolha entre distratores, sem atualização contínua ou planejamento."
+      "justification": "Reter a série e selecionar entre distratores exige demanda consistente, mas a resposta por reconhecimento e as pausas entre séries permitem recuperação."
     },
     "loadModifiers": [
       {
@@ -2077,7 +2077,7 @@
     },
     "fatigue": {
       "level": "MODERADA",
-      "explanation": "Retenção se repete, com pausas e apoio de reconhecimento."
+      "explanation": "Retenção e seleção repetidas podem reduzir o rendimento gradualmente, mas as pausas e o reconhecimento permitem recuperação."
     },
     "interference": {
       "level": "MODERADA",
@@ -2139,7 +2139,7 @@
     },
     "baselineCognitiveLoad": {
       "value": 2,
-      "justification": "Identidade, ordem e discriminação entre figuras, com resposta por reconhecimento e sem inversão."
+      "justification": "Reter identidade e ordem entre figuras exige demanda consistente, mas o reconhecimento visual e as pausas entre séries permitem recuperação."
     },
     "loadModifiers": [
       {
@@ -2171,7 +2171,7 @@
     },
     "fatigue": {
       "level": "MODERADA",
-      "explanation": "Retenção ordenada se repete, com resposta visual e pausas."
+      "explanation": "Retenção ordenada e discriminação repetidas geram desgaste gradual, contido pela resposta visual e pelas pausas."
     },
     "interference": {
       "level": "MODERADA",
@@ -2232,8 +2232,8 @@
       }
     },
     "baselineCognitiveLoad": {
-      "value": 3,
-      "justification": "Combina retenção de padrão, rotação mental e reconstrução sem alvos visíveis."
+      "value": 2,
+      "justification": "Reter e rotacionar o padrão exige manipulação espacial, mas ocorre em séries curtas, sem distratores e com recuperação entre transformações."
     },
     "loadModifiers": [
       {
@@ -2256,8 +2256,8 @@
       "justification": "Três séries estabilizam a mecânica, seis amostram padrões e nove limitam fadiga de rotação."
     },
     "fatigue": {
-      "level": "ALTA",
-      "explanation": "Manter e transformar posições sem alvo visível exige esforço intenso."
+      "level": "MODERADA",
+      "explanation": "Transformação espacial repetida gera desgaste gradual, contido pelas pausas entre séries."
     },
     "interference": {
       "level": "BAIXA",
@@ -2319,7 +2319,7 @@
     },
     "baselineCognitiveLoad": {
       "value": 3,
-      "justification": "Manter lista durante atividade interveniente e recuperar entre distratores impõe alta carga."
+      "justification": "A lista permanece ativa durante uma atividade interveniente, sustentando retenção e forte interferência em cada ciclo, com pouca recuperação interna."
     },
     "loadModifiers": [
       {
@@ -2351,7 +2351,7 @@
     },
     "fatigue": {
       "level": "ALTA",
-      "explanation": "A lista permanece ativa durante tarefa concorrente repetidamente."
+      "explanation": "Manter a lista sob atividade concorrente, alternar fases e reconstruir a resposta favorecem queda rápida de qualidade ao longo das rodadas."
     },
     "interference": {
       "level": "ALTA",
@@ -2413,7 +2413,7 @@
     },
     "baselineCognitiveLoad": {
       "value": 2,
-      "justification": "Pedido oculto, associação com mesa e seleção entre distratores exigem memória verbal e visual."
+      "justification": "Reter pedido e fonte enquanto seleciona entre concorrentes mantém demanda consistente, com fases discretas e recuperação entre mesas."
     },
     "loadModifiers": [
       {
@@ -2449,7 +2449,7 @@
     },
     "fatigue": {
       "level": "MODERADA",
-      "explanation": "Retenção e busca se repetem, com pausa e resposta visual de apoio."
+      "explanation": "Retenção e busca repetidas podem reduzir o rendimento gradualmente, mas as fases e o apoio visual permitem recuperação."
     },
     "interference": {
       "level": "MODERADA",
@@ -2527,8 +2527,8 @@
       }
     },
     "baselineCognitiveLoad": {
-      "value": 3,
-      "justification": "Lista oculta, prateleira ampla e distratores semânticos combinam memória, busca e controle."
+      "value": 2,
+      "justification": "Reter a lista e controlar distratores durante a busca exige demanda consistente, mas memorização e seleção ocorrem em fases, não em fluxos simultâneos."
     },
     "loadModifiers": [
       {
@@ -2564,7 +2564,7 @@
     },
     "fatigue": {
       "level": "ALTA",
-      "explanation": "Lista oculta, busca extensa e controle de fonte/ordem sustentam esforço elevado."
+      "explanation": "Busca longa, lista oculta, distratores semânticos e controle de fonte/ordem elevam frustração e favorecem perda rápida de qualidade."
     },
     "interference": {
       "level": "ALTA",
@@ -2643,7 +2643,7 @@
     },
     "baselineCognitiveLoad": {
       "value": 3,
-      "justification": "Atualizar janela verbal, comparar cada letra e responder sob prazo impõe carga alta."
+      "justification": "Cada estímulo exige atualizar a janela, comparar e responder sob prazo, sem pausa durante o bloco."
     },
     "loadModifiers": [
       {
@@ -2671,7 +2671,7 @@
     },
     "fatigue": {
       "level": "ALTA",
-      "explanation": "Cada estímulo exige atualização, comparação e resposta sem pausa no bloco."
+      "explanation": "Atualização, comparação e resposta temporizada em cada estímulo, sem pausa no bloco, favorecem omissões e queda rápida de qualidade."
     },
     "interference": {
       "level": "ALTA",
@@ -2732,8 +2732,8 @@
       }
     },
     "baselineCognitiveLoad": {
-      "value": 3,
-      "justification": "Reter faces quase frontais e responder na vista isométrica combina memória e remapeamento."
+      "value": 2,
+      "justification": "Reter faces e remapear para a vista isométrica exige manipulação moderada, mas as séries são curtas, sem distratores e com recuperação entre elas."
     },
     "loadModifiers": [
       {
@@ -2752,8 +2752,8 @@
       "justification": "Três séries estabilizam a interface 3D, seis dão amostra útil e nove limitam fadiga perceptiva."
     },
     "fatigue": {
-      "level": "ALTA",
-      "explanation": "Rotação visual, constância perceptiva e retenção se acumulam."
+      "level": "MODERADA",
+      "explanation": "Remapeamento e retenção repetidos geram desgaste gradual, mas as pausas entre séries limitam a fadiga."
     },
     "interference": {
       "level": "BAIXA",
@@ -2814,8 +2814,8 @@
       }
     },
     "baselineCognitiveLoad": {
-      "value": 3,
-      "justification": "Exposição de oito itens, discriminação e retenção espacial combinam demandas intensas."
+      "value": 2,
+      "justification": "Cada tentativa exige discriminação e retenção espacial consistentes, mas mantém uma regra estável e permite recuperação entre exposições."
     },
     "loadModifiers": [
       {
@@ -2843,7 +2843,7 @@
     },
     "fatigue": {
       "level": "ALTA",
-      "explanation": "Discriminação rápida e retenção espacial degradam com esforço acumulado."
+      "explanation": "Discriminação visual repetitiva, alta semelhança e monotonia do bloco favorecem queda rápida de vigilância e precisão."
     },
     "interference": {
       "level": "ALTA",
@@ -2904,8 +2904,8 @@
       }
     },
     "baselineCognitiveLoad": {
-      "value": 2,
-      "justification": "Busca e discriminação com modelo visível e sem prazo próprio."
+      "value": 1,
+      "justification": "Modelo visível, regra estável, resposta simples e ausência de prazo próprio mantêm baixa demanda por minuto."
     },
     "loadModifiers": [
       {
@@ -2925,7 +2925,7 @@
     },
     "fatigue": {
       "level": "MODERADA",
-      "explanation": "Varredura e discriminação se repetem, com modelo visível e sem prazo."
+      "explanation": "Varredura visual repetitiva e monotonia podem reduzir gradualmente a atenção, mesmo com modelo visível e sem prazo."
     },
     "interference": {
       "level": "MODERADA",
@@ -2986,8 +2986,8 @@
       }
     },
     "baselineCognitiveLoad": {
-      "value": 3,
-      "justification": "Cadeias de bloqueio, antecipação e submetas exigem planejamento visuoespacial intenso."
+      "value": 2,
+      "justification": "Antecipar bloqueios e submetas mantém demanda consistente, mas o tabuleiro visível e o ritmo próprio reduzem simultaneidade e pressão temporal."
     },
     "loadModifiers": [
       {
@@ -3015,7 +3015,7 @@
     },
     "fatigue": {
       "level": "ALTA",
-      "explanation": "Antecipar estados e desfazer bloqueios mantém esforço até a saída."
+      "explanation": "Soluções prolongadas, impasses e necessidade de desfazer bloqueios elevam frustração e favorecem perda rápida de engajamento."
     },
     "interference": {
       "level": "MODERADA",
@@ -3077,7 +3077,7 @@
     },
     "baselineCognitiveLoad": {
       "value": 2,
-      "justification": "Contexto e três hipóteses ficam visíveis, enquanto inferência e compreensão mantêm demanda moderada."
+      "justification": "Integrar contexto e comparar hipóteses exige raciocínio consistente, mas o material visível, o ritmo próprio e as pausas entre casos permitem recuperação."
     },
     "loadModifiers": [
       {
@@ -3105,7 +3105,7 @@
     },
     "fatigue": {
       "level": "MODERADA",
-      "explanation": "Leitura e inferência se repetem, com ritmo próprio e contexto visível."
+      "explanation": "Leitura e inferência repetidas podem reduzir o engajamento gradualmente, mas o ritmo próprio e o contexto visível contêm o desgaste."
     },
     "interference": {
       "level": "MODERADA",

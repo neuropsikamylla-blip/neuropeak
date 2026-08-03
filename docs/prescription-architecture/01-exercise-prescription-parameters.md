@@ -20,13 +20,13 @@ Este documento prescreve os 34 exercícios canônicos sem alterar catálogo, mec
 
 4. **Protocolos:** **BREVE — 4 unidade(s), ~3 min:** Manutenção/aquecimento; insuficiente para progressão. Verifica compreensão, tolerância ao áudio e manutenção. **PADRÃO — 8 unidade(s), ~6 min:** Oito séries permitem observar estabilidade do span direto. Sustenta progressão somente com unidades completas; não permite concluir transferência além da mecânica. **ESTENDIDO — 12 unidade(s), ~9 min:** Aumenta estabilidade ou variedade da observação. Não separa memória auditiva do apoio visual das teclas e exige vigiar queda por repetição.
 
-5. **Carga cognitiva basal — 2:** Retenção serial verbal relevante, sem transformação, distratores externos ou pressão de resposta.
+5. **Carga cognitiva basal — 2:** A retenção serial ocupa a série, mas a regra é estável, a resposta é simples e cada tentativa oferece recuperação.
 
 6. **Modificadores de carga:** **quantidade de estímulos:** Séries mais longas ampliam os dígitos a codificar. **memória exigida:** Maior extensão aumenta retenção, ensaio e monitoramento serial; no teto pode haver repetição não adjacente.
 
 7. **Duração clínica:** mínima útil **3 min** · padrão **6 min** · máxima recomendada **9 min**. Quatro séries dão o mínimo útil, oito equilibram amostra e esforço e, após doze, repetição e estratégia reduzem o retorno.
 
-8. **Fadiga — moderada:** O ensaio serial é contínuo, mas há pausa natural entre séries e não existe dupla tarefa.
+8. **Fadiga — moderada:** A repetição da retenção pode reduzir o rendimento gradualmente, embora as pausas entre séries permitam recuperação.
 
 9. **Interferência — baixa:** Não há distratores externos ou troca de regra; há apenas competição entre posições da própria série.
 
@@ -46,13 +46,13 @@ Este documento prescreve os 34 exercícios canônicos sem alterar catálogo, mec
 
 4. **Protocolos:** **BREVE — 12 unidade(s), ~2 min:** Manutenção/aquecimento; insuficiente para progressão. Checa acesso a cores, leitura e mapeamento, sem amostrar adequadamente trocas. **PADRÃO — 30 unidade(s), ~5 min:** Trinta tentativas amostram conflito, regras e trocas aleatórias. Sustenta progressão somente com unidades completas; não permite concluir transferência além da mecânica. **ESTENDIDO — 48 unidade(s), ~8 min:** Aumenta estabilidade ou variedade da observação. Melhora proporções amostrais, mas a queda tardia pode refletir fadiga inibitória.
 
-5. **Carga cognitiva basal — 3:** Conflito cor-palavra, duas regras, cinco respostas e janela temporal combinam inibição, seleção e monitoramento.
+5. **Carga cognitiva basal — 3:** Conflito cor-palavra, trocas de regra e resposta temporizada se repetem quase continuamente, com pouca recuperação entre tentativas.
 
 6. **Modificadores de carga:** **velocidade:** Janela menor eleva pressão temporal. **interferência:** Maior proporção incongruente reforça o conflito. **mudança de regra:** Maior equilíbrio entre COR e PALAVRA aumenta a frequência esperada de troca, ainda aleatória.
 
 7. **Duração clínica:** mínima útil **2 min** · padrão **5 min** · máxima recomendada **8 min**. Doze tentativas só confirmam acesso, trinta amostram conflito e, além de quarenta e oito, fadiga contamina latência e erro.
 
-8. **Fadiga — alta:** Supressão repetida da dimensão dominante, trocas e resposta sob prazo acumulam esforço executivo.
+8. **Fadiga — alta:** Conflito inibitório e trocas sob prazo se repetem sem pausa relevante, favorecendo queda rápida de precisão e latência.
 
 9. **Interferência — alta:** A incongruência palavra-tinta é constitutiva da tarefa.
 
@@ -72,13 +72,13 @@ Este documento prescreve os 34 exercícios canônicos sem alterar catálogo, mec
 
 4. **Protocolos:** **BREVE — 4 unidade(s), ~3 min:** Manutenção/aquecimento; insuficiente para progressão. Familiariza com comando e campo móvel, mas não compara tipos de critério. **PADRÃO — 8 unidade(s), ~6 min:** Oito rodadas amostram retenção do comando e busca visual. Sustenta progressão somente com unidades completas; não permite concluir transferência além da mecânica. **ESTENDIDO — 12 unidade(s), ~9 min:** Aumenta estabilidade ou variedade da observação. Permite consistência entre critérios, com teto para limitar fadiga visual.
 
-5. **Carga cognitiva basal — 2:** Reter critério e buscar personagens móveis combina memória verbal e seleção visual, sem planejamento ou fluxo duplo.
+5. **Carga cognitiva basal — 2:** Cada rodada mantém um critério durante busca em campo móvel, com seleção de resposta contínua e recuperação entre comandos.
 
 6. **Modificadores de carga:** **velocidade:** Movimento mais rápido e janela menor elevam rapidez perceptiva e pressão temporal. **quantidade de estímulos:** Mais personagens e dois alvos ampliam varredura e monitoramento. **memória exigida:** Conjunções, lateralidade e dois alvos aumentam retenção do comando. **interferência:** Critérios negativos e atributos parcialmente compatíveis elevam controle de distração. **mudança de regra:** Correção de regra abandonada substitui o critério ativo. **semelhança dos distratores:** Atributos compartilhados aumentam comparação fina. **modalidade:** O canal do comando altera apoio visual, codificação auditiva e conversão para busca visual.
 
 7. **Duração clínica:** mínima útil **3 min** · padrão **6 min** · máxima recomendada **9 min**. Quatro rodadas estabilizam a regra, oito cobrem variações e, após doze, movimento e busca acumulam fadiga visual.
 
-8. **Fadiga — moderada:** Busca em campo móvel e retenção exigem esforço, com pausas breves entre comandos.
+8. **Fadiga — moderada:** Busca em campo móvel e retenção do critério podem reduzir o desempenho gradualmente, mas há pausa entre comandos.
 
 9. **Interferência — moderada:** Distratores competem por atributos; a intensidade cresce com semelhança parcial.
 
@@ -98,13 +98,13 @@ Este documento prescreve os 34 exercícios canônicos sem alterar catálogo, mec
 
 4. **Protocolos:** **BREVE — 4 unidade(s), ~4 min:** Manutenção/aquecimento; insuficiente para progressão. Confirma entendimento da inversão e tolerância. **PADRÃO — 8 unidade(s), ~8 min:** Oito séries permitem observar retenção e manipulação. Sustenta progressão somente com unidades completas; não permite concluir transferência além da mecânica. **ESTENDIDO — 12 unidade(s), ~12 min:** Aumenta estabilidade ou variedade da observação. A queda tardia precisa ser interpretada como possível fadiga executiva.
 
-5. **Carga cognitiva basal — 3:** É preciso manter a série, inverter a ordem e monitorar a reprodução sem correção.
+5. **Carga cognitiva basal — 2:** Manter e inverter a série exige manipulação moderada, porém as séries são curtas, a resposta é simples e há recuperação entre tentativas.
 
 6. **Modificadores de carga:** **quantidade de estímulos:** Maior extensão aumenta dígitos codificados. **memória exigida:** Séries maiores ampliam armazenamento e transformação serial simultaneamente.
 
 7. **Duração clínica:** mínima útil **4 min** · padrão **8 min** · máxima recomendada **12 min**. A inversão alonga cada série; oito dão amostra útil e, após doze minutos, fadiga de manipulação domina o resultado.
 
-8. **Fadiga — alta:** Armazenamento e inversão serial são mantidos simultaneamente.
+8. **Fadiga — moderada:** A inversão repetida produz desgaste gradual, contido pelas pausas entre séries e pela ausência de distratores externos.
 
 9. **Interferência — baixa:** A concorrência é interna entre ordem original e invertida, sem distratores externos.
 
@@ -124,13 +124,13 @@ Este documento prescreve os 34 exercícios canônicos sem alterar catálogo, mec
 
 4. **Protocolos:** **BREVE — 4 unidade(s), ~3 min:** Manutenção/aquecimento; insuficiente para progressão. Adapta à grade e verifica manutenção. **PADRÃO — 8 unidade(s), ~6 min:** Oito séries observam retenção e ordem espacial. Sustenta progressão somente com unidades completas; não permite concluir transferência além da mecânica. **ESTENDIDO — 12 unidade(s), ~9 min:** Aumenta estabilidade ou variedade da observação. Estratégias espaciais e repetição passam a reduzir o ganho.
 
-5. **Carga cognitiva basal — 2:** Retenção e ordem espacial com regra direta, sem distratores ou pressão de resposta.
+5. **Carga cognitiva basal — 1:** Regra direta e estável, reprodução simples, baixa interferência e séries curtas permitem recuperação clara entre tentativas.
 
 6. **Modificadores de carga:** **quantidade de estímulos:** Sequência e grade maiores ampliam posições e precisão espacial. **memória exigida:** Maior extensão aumenta retenção e monitoramento da ordem. **mudança de regra:** No mesmo ID, dificuldade inicial alta pode impor resposta inversa; não deve ser agregada ao basal direto.
 
 7. **Duração clínica:** mínima útil **3 min** · padrão **6 min** · máxima recomendada **9 min**. Quatro séries estabelecem acesso, oito estabilidade e doze limitam exposição repetitiva antes da fadiga visuoespacial.
 
-8. **Fadiga — moderada:** Há retenção serial repetida, mas regra direta e pausas contêm o esforço.
+8. **Fadiga — baixa:** Séries curtas, regra direta e pausas naturais favorecem boa recuperação mesmo com repetição.
 
 9. **Interferência — baixa:** Não há distratores; posições competem apenas por ordem e localização.
 
@@ -150,13 +150,13 @@ Este documento prescreve os 34 exercícios canônicos sem alterar catálogo, mec
 
 4. **Protocolos:** **BREVE — 4 unidade(s), ~4 min:** Manutenção/aquecimento; insuficiente para progressão. Confirma compreensão da inversão. **PADRÃO — 8 unidade(s), ~8 min:** Oito séries observam manipulação e retenção. Sustenta progressão somente com unidades completas; não permite concluir transferência além da mecânica. **ESTENDIDO — 10 unidade(s), ~10 min:** Aumenta estabilidade ou variedade da observação. Limita a dez séries para evitar que fadiga executiva domine o resultado.
 
-5. **Carga cognitiva basal — 3:** Combina memória operacional visuoespacial intensa, retenção e inversão mental.
+5. **Carga cognitiva basal — 2:** A inversão espacial exige manutenção e manipulação, mas ocorre em séries discretas, sem distratores e com recuperação entre tentativas.
 
 6. **Modificadores de carga:** **quantidade de estímulos:** Mais posições e grade maior ampliam o conjunto espacial. **memória exigida:** Extensão aumenta armazenamento, inversão e monitoramento serial.
 
 7. **Duração clínica:** mínima útil **4 min** · padrão **8 min** · máxima recomendada **10 min**. A inversão torna cada série mais lenta; oito fornecem amostra útil e dez contêm fadiga executiva.
 
-8. **Fadiga — alta:** A trajetória precisa ser transformada enquanto todas as posições permanecem ativas.
+8. **Fadiga — moderada:** Transformar trajetórias repetidamente gera desgaste gradual, mas as séries fechadas oferecem pausas de recuperação.
 
 9. **Interferência — baixa:** A competição é entre ordem apresentada e inversa, sem distratores externos.
 
@@ -176,13 +176,13 @@ Este documento prescreve os 34 exercícios canônicos sem alterar catálogo, mec
 
 4. **Protocolos:** **BREVE — 1 unidade(s), ~3 min:** Manutenção/aquecimento; insuficiente para progressão. Um tabuleiro mostra estratégia, mas não a consistência exigida pela adaptação. **PADRÃO — 2 unidade(s), ~7 min:** Duas rodadas permitem observar a regra de resultados consecutivos. Sustenta progressão somente com unidades completas; não permite concluir transferência além da mecânica. **ESTENDIDO — 3 unidade(s), ~11 min:** Aumenta estabilidade ou variedade da observação. Aprendizagem específica do formato e fadiga passam a limitar comparações.
 
-5. **Carga cognitiva basal — 2:** Exige manter e atualizar associações símbolo-posição, com apoio dos pares revelados e sem prazo.
+5. **Carga cognitiva basal — 2:** Manter e atualizar pares exige memória operacional consistente durante o tabuleiro, com ritmo próprio e apoio dos pares revelados.
 
 6. **Modificadores de carga:** **quantidade de estímulos:** Mais pares ampliam identidades, posições e combinações. **memória exigida:** Tabuleiro maior exige atualizar o mapa após cada abertura. **interferência:** Mais cartas ocultas aumentam competição entre associações.
 
 7. **Duração clínica:** mínima útil **3 min** · padrão **7 min** · máxima recomendada **11 min**. Uma rodada é a menor leitura, duas capturam consistência e três limitam aprendizagem do formato e retorno decrescente.
 
-8. **Fadiga — moderada:** Atualização espacial é repetida, mas o ritmo é autocadenciado e pares visíveis apoiam.
+8. **Fadiga — moderada:** A atualização espacial repetida pode reduzir o rendimento, mas o ritmo autocadenciado e os pares visíveis limitam o desgaste.
 
 9. **Interferência — moderada:** Posições ocultas e símbolos concorrentes competem na recuperação.
 
@@ -202,13 +202,13 @@ Este documento prescreve os 34 exercícios canônicos sem alterar catálogo, mec
 
 4. **Protocolos:** **BREVE — 1 unidade(s), ~2 min:** Manutenção/aquecimento; insuficiente para progressão. Confirma acesso à sequência numérica. **PADRÃO — 3 unidade(s), ~6 min:** Três disposições permitem consistência de busca. Sustenta progressão somente com unidades completas; não permite concluir transferência além da mecânica. **ESTENDIDO — 5 unidade(s), ~10 min:** Aumenta estabilidade ou variedade da observação. Prática de varredura e repetição reduzem o ganho após cinco rodadas.
 
-5. **Carga cognitiva basal — 2:** Varredura e manutenção de meta moderadas, com números tocados e caminho ainda visíveis.
+5. **Carga cognitiva basal — 1:** Regra numérica estável, caminho visível, resposta motora simples e ritmo próprio mantêm baixa demanda por minuto.
 
 6. **Modificadores de carga:** **quantidade de estímulos:** Mais números e densidade ampliam sequência e cobertura espacial. **memória exigida:** A extensão aumenta monitoramento do próximo número, ainda com apoio visual.
 
 7. **Duração clínica:** mínima útil **2 min** · padrão **6 min** · máxima recomendada **10 min**. Uma rodada fecha a sequência, três variam o layout e cinco precedem prática excessiva e cansaço visual.
 
-8. **Fadiga — baixa:** Ritmo autocadenciado, regra estável e caminho visível reduzem esforço.
+8. **Fadiga — baixa:** Regra estável, ritmo autocadenciado e caminho visível permitem exposição longa com boa recuperação.
 
 9. **Interferência — baixa:** Não há distratores de outra classe; os demais números são etapas futuras.
 
@@ -228,13 +228,13 @@ Este documento prescreve os 34 exercícios canônicos sem alterar catálogo, mec
 
 4. **Protocolos:** **BREVE — 1 unidade(s), ~4 min:** Manutenção/aquecimento; insuficiente para progressão. PROVISÓRIO: mostra uma estratégia de organização. **PADRÃO — 2 unidade(s), ~9 min:** PROVISÓRIO: duas metas permitem comparação cautelosa dentro da mecânica atual. Sustenta progressão somente com unidades completas; não permite concluir transferência além da mecânica. **ESTENDIDO — 3 unidade(s), ~14 min:** Aumenta estabilidade ou variedade da observação. PROVISÓRIO: conhecimento da rotina e uso de dicas limitam comparações.
 
-5. **Carga cognitiva basal — 2:** PROVISÓRIO: cartões e meta visíveis apoiam memória; ordenação, precedência e monitoramento mantêm demanda moderada.
+5. **Carga cognitiva basal — 2:** PROVISÓRIO: ordenar e monitorar precedências mantém demanda consistente, mas cartões visíveis, ritmo próprio e intervalos entre metas permitem recuperação.
 
 6. **Modificadores de carga:** **quantidade de estímulos:** PROVISÓRIO: mais ações e precedências ampliam sequenciamento. **memória exigida:** PROVISÓRIO: mais relações e alternativas aumentam manutenção verbal. **interferência:** PROVISÓRIO: intrusos e prioridades exigem selecionar relevância. **mudança de regra:** PROVISÓRIO: imprevistos exigem atualizar ou abandonar a estratégia. **planejamento:** PROVISÓRIO: completar, corrigir, priorizar e lidar com mudanças alteram profundidade. **modalidade:** PROVISÓRIO: o canal muda apoio externo e memória verbal.
 
 7. **Duração clínica:** mínima útil **4 min** · padrão **9 min** · máxima recomendada **14 min**. PROVISÓRIO: uma meta fecha a unidade, duas contrastam desempenho e três limitam familiaridade e cansaço de leitura.
 
-8. **Fadiga — moderada:** PROVISÓRIO: organizar e revisar exige esforço, mas a tarefa é autocadenciada e mantém material visível.
+8. **Fadiga — moderada:** PROVISÓRIO: planejamento e revisão prolongados podem reduzir o engajamento gradualmente, apesar do ritmo próprio e do material visível.
 
 9. **Interferência — baixa:** PROVISÓRIO: no basal não há intrusos nem mudança; cresce apenas nos conteúdos correspondentes.
 
@@ -254,13 +254,13 @@ Este documento prescreve os 34 exercícios canônicos sem alterar catálogo, mec
 
 4. **Protocolos:** **BREVE — 2 unidade(s), ~4 min:** Manutenção/aquecimento; insuficiente para progressão. Checa leitura funcional e uso básico dos cartões. **PADRÃO — 5 unidade(s), ~10 min:** Cinco questões amostram busca e integração de critérios. Sustenta progressão somente com unidades completas; não permite concluir transferência além da mecânica. **ESTENDIDO — 8 unidade(s), ~16 min:** Aumenta estabilidade ou variedade da observação. Alfabetização e familiaridade com produtos limitam conclusões além da tarefa.
 
-5. **Carga cognitiva basal — 2:** Busca, comparação e compreensão de critérios, com informação visível e sem prazo por item.
+5. **Carga cognitiva basal — 2:** Comparar critérios e controlar alternativas exige atenção consistente, mas a informação permanece visível e há recuperação entre questões.
 
 6. **Modificadores de carga:** **quantidade de estímulos:** Mais produtos e campos ampliam busca e comparação. **memória exigida:** Duas ou três condições elevam manutenção do critério. **interferência:** Alternativas parcialmente válidas e campos variáveis aumentam controle de distração. **semelhança dos distratores:** Valores próximos exigem comparação fina.
 
 7. **Duração clínica:** mínima útil **4 min** · padrão **10 min** · máxima recomendada **16 min**. Duas questões confirmam acesso, cinco cobrem critérios variados e, após oito, leitura e familiaridade dominam o ganho.
 
-8. **Fadiga — moderada:** Leitura e comparação repetidas geram esforço, mas sem prazo por questão.
+8. **Fadiga — moderada:** Leitura e comparação repetidas podem reduzir o rendimento ao longo da exposição, embora cada questão ofereça pausa natural e não haja prazo.
 
 9. **Interferência — moderada:** Produtos e campos parcialmente relevantes competem pela seleção.
 
@@ -280,13 +280,13 @@ Este documento prescreve os 34 exercícios canônicos sem alterar catálogo, mec
 
 4. **Protocolos:** **BREVE — 4 unidade(s), ~3 min:** Manutenção/aquecimento; insuficiente para progressão. Verifica tolerância ao movimento e manutenção. **PADRÃO — 8 unidade(s), ~6 min:** Oito rodadas observam rastreamento sob carga controlada. Sustenta progressão somente com unidades completas; não permite concluir transferência além da mecânica. **ESTENDIDO — 12 unidade(s), ~9 min:** Aumenta estabilidade ou variedade da observação. A parte final precisa ser interpretada à luz de fadiga visual.
 
-5. **Carga cognitiva basal — 3:** Múltiplos alvos idênticos em movimento combinam atenção dividida, atualização e distração.
+5. **Carga cognitiva basal — 3:** Rastrear simultaneamente alvos idênticos em movimento exige atualização contínua sob forte interferência, sem recuperação durante cada rodada.
 
 6. **Modificadores de carga:** **velocidade:** Movimento mais rápido exige atualização frequente. **quantidade de estímulos:** Mais alvos e bolas ampliam distribuição de atenção. **memória exigida:** Mais alvos aumentam identidades espaciais mantidas. **interferência:** Colisões e cruzamentos elevam competição visual. **semelhança dos distratores:** Alvos e distratores ficam idênticos após memorização.
 
 7. **Duração clínica:** mínima útil **3 min** · padrão **6 min** · máxima recomendada **9 min**. Quatro rodadas confirmam tolerância, oito equilibram amostra e carga e, após doze, fadiga ocular degrada o dado.
 
-8. **Fadiga — alta:** Identidades precisam ser atualizadas continuamente durante movimento e colisões.
+8. **Fadiga — alta:** Atualização contínua de alvos idênticos, cruzamentos e movimento sustentado favorecem queda rápida de qualidade e fadiga visual.
 
 9. **Interferência — alta:** Objetos idênticos cruzam trajetórias; a interferência é central.
 
@@ -306,13 +306,13 @@ Este documento prescreve os 34 exercícios canônicos sem alterar catálogo, mec
 
 4. **Protocolos:** **BREVE — 1 unidade(s), ~3 min:** Manutenção/aquecimento; insuficiente para progressão. Verifica tolerância e coordenação dos fluxos. **PADRÃO — 1 unidade(s), ~6 min:** Um bloco fixo de seis minutos amostra eventos dos dois fluxos. Sustenta progressão somente com unidades completas; não permite concluir transferência além da mecânica. **ESTENDIDO — 1 unidade(s), ~8 min:** Aumenta estabilidade ou variedade da observação. Acima de oito minutos, fadiga e omissões tardias contaminam a interpretação.
 
-5. **Carga cognitiva basal — 3:** Dois fluxos com ritmos, regras, janelas e respostas próprias recrutam divisão e atualização máximas.
+5. **Carga cognitiva basal — 3:** Dois fluxos simultâneos exigem monitoramento, atualização e respostas temporizadas contínuas, sem pausas ao longo do bloco.
 
 6. **Modificadores de carga:** **velocidade:** Janelas menores elevam pressão temporal. **quantidade de estímulos:** Maior frequência reduz recuperação entre respostas. **memória exigida:** 2-back amplia janela mantida e atualizada. **interferência:** Distratores parcialmente compatíveis exigem inibição. **dupla tarefa:** Simultaneidade dos fluxos é o modificador central. **mudança de regra:** Mudança do alvo superior substitui a meta ativa. **semelhança dos distratores:** Só cor ou forma corretas aumentam competição.
 
 7. **Duração clínica:** mínima útil **3 min** · padrão **6 min** · máxima recomendada **8 min**. Três minutos só confirmam tolerância, seis fornecem eventos suficientes e, após oito, fadiga degrada o dado.
 
-8. **Fadiga — alta:** Não há pausa entre dois fluxos que exigem monitoramento e resposta sob janela.
+8. **Fadiga — alta:** Monitorar e responder a dois fluxos sob janela, sem pausas no bloco, favorece omissões e queda rápida de qualidade.
 
 9. **Interferência — alta:** Fluxos competem por atenção e resposta, além de distratores internos.
 
@@ -332,13 +332,13 @@ Este documento prescreve os 34 exercícios canônicos sem alterar catálogo, mec
 
 4. **Protocolos:** **BREVE — 6 unidade(s), ~2 min:** Manutenção/aquecimento; insuficiente para progressão. Aquece e checa acesso visuomotor. **PADRÃO — 18 unidade(s), ~5 min:** Dezoito levas amostram reação inicial e escolha com distratores. Sustenta progressão somente com unidades completas; não permite concluir transferência além da mecânica. **ESTENDIDO — 30 unidade(s), ~8 min:** Aumenta estabilidade ou variedade da observação. Prática motora e antecipação reduzem o retorno após trinta levas.
 
-5. **Carga cognitiva basal — 1:** O basal começa com alvo único e resposta direta; escolha cresce apenas com alvos e distratores.
+5. **Carga cognitiva basal — 1:** No basal, alvo único, regra estável e resposta motora direta formam rodadas curtas com recuperação entre levas.
 
 6. **Modificadores de carga:** **velocidade:** Travessias rápidas reduzem janela de interceptação. **quantidade de estímulos:** Múltiplos alvos ampliam rastreamento. **interferência:** Distratores coloridos introduzem seleção e inibição. **semelhança dos distratores:** Tons próximos do verde exigem discriminação fina.
 
 7. **Duração clínica:** mínima útil **2 min** · padrão **5 min** · máxima recomendada **8 min**. Seis levas aquecem, dezoito capturam escolha e, além de trinta, prática e fadiga visual reduzem o retorno.
 
-8. **Fadiga — moderada:** Pressão temporal e rastreamento acumulam esforço, com pequenas pausas entre levas.
+8. **Fadiga — moderada:** A pressão temporal e o rastreamento repetido podem reduzir gradualmente a precisão, apesar das pequenas pausas entre levas.
 
 9. **Interferência — moderada:** O basal é baixo, mas a sessão padrão introduz distratores cromáticos e múltiplos alvos.
 
@@ -358,13 +358,13 @@ Este documento prescreve os 34 exercícios canônicos sem alterar catálogo, mec
 
 4. **Protocolos:** **BREVE — 3 unidade(s), ~3 min:** Manutenção/aquecimento; insuficiente para progressão. Confirma regra e oferece conversa inicial. **PADRÃO — 7 unidade(s), ~7 min:** Sete situações permitem observar consistência editorial. Sustenta progressão somente com unidades completas; não permite concluir transferência além da mecânica. **ESTENDIDO — 12 unidade(s), ~12 min:** Aumenta estabilidade ou variedade da observação. Não autoriza generalização para comportamento cotidiano real.
 
-5. **Carga cognitiva basal — 1:** Texto permanece visível, há duas alternativas e não existe prazo; a dificuldade é editorial.
+5. **Carga cognitiva basal — 1:** Texto visível, regra binária estável, ritmo próprio e resposta simples mantêm baixa demanda por minuto.
 
 6. **Modificadores de carga:** **interferência:** Cenários menos óbvios podem aumentar competição entre interpretações, sem parâmetro mecânico contínuo.
 
 7. **Duração clínica:** mínima útil **3 min** · padrão **7 min** · máxima recomendada **12 min**. Três itens estabelecem entendimento, sete variam situações e, após doze, repetição e feedback reduzem o ganho.
 
-8. **Fadiga — baixa:** Tarefa autocadenciada, binária e sem memória oculta ou prazo.
+8. **Fadiga — baixa:** Ritmo próprio, resposta binária, texto visível e ausência de prazo permitem exposição longa com boa recuperação.
 
 9. **Interferência — baixa:** Não há distratores perceptivos ou regras concorrentes; ambiguidade vem do conteúdo.
 
@@ -384,13 +384,13 @@ Este documento prescreve os 34 exercícios canônicos sem alterar catálogo, mec
 
 4. **Protocolos:** **BREVE — 8 unidade(s), ~2 min:** Manutenção/aquecimento; insuficiente para progressão. Confirma mapeamento de resposta, sem balancear cores. **PADRÃO — 24 unidade(s), ~6 min:** Vinte e quatro tentativas amostram cores, posições e inversões. Sustenta progressão somente com unidades completas; não permite concluir transferência além da mecânica. **ESTENDIDO — 36 unidade(s), ~9 min:** Aumenta estabilidade ou variedade da observação. É preciso separar fadiga e assimetria de omissões em sinais de parar.
 
-5. **Carga cognitiva basal — 2:** Escolha rápida por cor, orientação entre sinais e mapeamento de botões formam demanda moderada.
+5. **Carga cognitiva basal — 2:** Selecionar rapidamente entre sinais e mapear a resposta mantém demanda consistente, mas uma regra estável e o feedback permitem recuperação entre tentativas.
 
 6. **Modificadores de carga:** **velocidade:** Janela menor aumenta pressão temporal. **quantidade de estímulos:** Cores concorrentes nos semáforos não alvo ampliam seleção. **interferência:** Concorrentes e inversão espacial reduzem respostas automáticas.
 
 7. **Duração clínica:** mínima útil **2 min** · padrão **6 min** · máxima recomendada **9 min**. Oito sinais estabilizam mapeamento, vinte e quatro amostram variações e, após trinta e seis, prática reduz o retorno.
 
-8. **Fadiga — moderada:** Prazo e monitoramento do botão acumulam esforço, com feedback entre tentativas.
+8. **Fadiga — moderada:** Prazo e monitoramento repetidos produzem desgaste gradual, atenuado pelo feedback e pela separação entre tentativas.
 
 9. **Interferência — moderada:** Sinais concorrentes e posição variável do botão interferem sem mudar a regra.
 
@@ -410,13 +410,13 @@ Este documento prescreve os 34 exercícios canônicos sem alterar catálogo, mec
 
 4. **Protocolos:** **BREVE — 2 unidade(s), ~3 min:** Manutenção/aquecimento; insuficiente para progressão. Confirma categoria e busca, sem comparar regras. **PADRÃO — 5 unidade(s), ~8 min:** Cinco grades observam velocidade, precisão e omissões. Sustenta progressão somente com unidades completas; não permite concluir transferência além da mecânica. **ESTENDIDO — 8 unidade(s), ~13 min:** Aumenta estabilidade ou variedade da observação. Penalidade por erro e fadiga visual contaminam o final.
 
-5. **Carga cognitiva basal — 3:** Busca de múltiplos alvos sob contador combina categorização, pressão e seleção intensa.
+5. **Carga cognitiva basal — 2:** A busca sob contador exige seleção e controle de distratores durante cada grade, mas usa um critério por vez e oferece recuperação entre rodadas.
 
 6. **Modificadores de carga:** **velocidade:** Menos tempo e penalidade por erro elevam pressão. **quantidade de estímulos:** Mais itens e alvos aumentam cobertura. **interferência:** Exclusão exige evitar a categoria indicada. **mudança de regra:** Direta versus exclusão substitui o critério. **semelhança dos distratores:** Categorias próximas aumentam comparação.
 
 7. **Duração clínica:** mínima útil **3 min** · padrão **8 min** · máxima recomendada **13 min**. Duas grades aquecem, cinco dão consistência e, após oito, fadiga e estratégia categorial reduzem o retorno.
 
-8. **Fadiga — alta:** Varredura, múltiplos toques e contador mantêm pressão durante toda a rodada.
+8. **Fadiga — alta:** Varredura extensa, pressão do contador, penalidade por erro e competição visual favorecem queda rápida de precisão e engajamento.
 
 9. **Interferência — alta:** Distratores semânticos, exclusão e penalidade tornam competição central.
 
@@ -436,13 +436,13 @@ Este documento prescreve os 34 exercícios canônicos sem alterar catálogo, mec
 
 4. **Protocolos:** **BREVE — 1 unidade(s), ~4 min:** Manutenção/aquecimento; insuficiente para progressão. Observa uma solução e estratégia. **PADRÃO — 2 unidade(s), ~9 min:** Duas soluções permitem consistência e optimalidade. Sustenta progressão somente com unidades completas; não permite concluir transferência além da mecânica. **ESTENDIDO — 3 unidade(s), ~14 min:** Aumenta estabilidade ou variedade da observação. Aprendizagem da solução e fadiga limitam comparações.
 
-5. **Carga cognitiva basal — 3:** Submetas, antecipação de estados e monitoramento exigem planejamento, mesmo com apoio visível.
+5. **Carga cognitiva basal — 2:** Planejar submetas e antecipar estados exige esforço consistente, mas o tabuleiro visível, o ritmo próprio e as pausas entre desafios permitem recuperação.
 
 6. **Modificadores de carga:** **quantidade de estímulos:** Mais discos ampliam estados e movimentos mínimos. **memória exigida:** Maior profundidade exige manter submetas. **planejamento:** Solução mínima cresce exponencialmente sem mudar a regra.
 
 7. **Duração clínica:** mínima útil **4 min** · padrão **9 min** · máxima recomendada **14 min**. Um desafio fecha a operação, dois mostram consistência e, após três, aprendizagem e movimentos exponenciais reduzem retorno.
 
-8. **Fadiga — alta:** Planejamento de submetas e monitoramento acumulam esforço.
+8. **Fadiga — moderada:** O planejamento prolongado pode reduzir o desempenho gradualmente, mas o ritmo próprio e a recuperação entre desafios contêm a fadiga.
 
 9. **Interferência — baixa:** Não há distratores; estados intermediários são restrições do problema.
 
@@ -462,13 +462,13 @@ Este documento prescreve os 34 exercícios canônicos sem alterar catálogo, mec
 
 4. **Protocolos:** **BREVE — 1 unidade(s), ~3 min:** Manutenção/aquecimento; insuficiente para progressão. Mostra uma estratégia espacial e tolerância. **PADRÃO — 3 unidade(s), ~9 min:** Três mapas permitem consistência e eficiência. Sustenta progressão somente com unidades completas; não permite concluir transferência além da mecânica. **ESTENDIDO — 4 unidade(s), ~13 min:** Aumenta estabilidade ou variedade da observação. Fadiga espacial e longas caudas de resolução têm retorno decrescente.
 
-5. **Carga cognitiva basal — 3:** Combina planejamento, busca, manutenção de rota e monitoramento sob janela própria.
+5. **Carga cognitiva basal — 2:** Planejamento e seleção de rota mantêm demanda moderada, com trilha visível, ritmo próprio e recuperação entre mapas.
 
 6. **Modificadores de carga:** **quantidade de estímulos:** Grades maiores ampliam células e pontos de decisão. **memória exigida:** Mais bifurcações aumentam pontos a manter, apesar da trilha. **interferência:** Rotas falsas e corredores de borda competem com o caminho útil. **planejamento:** Margem menor sobre o ótimo exige antecipar mais.
 
 7. **Duração clínica:** mínima útil **3 min** · padrão **9 min** · máxima recomendada **13 min**. Um mapa dá medida mínima, três reduzem dependência do layout e quatro limitam fadiga e resolução longa.
 
-8. **Fadiga — moderada:** Resolução exige revisão espacial, mas trilha visível e ritmo próprio reduzem memória pura.
+8. **Fadiga — moderada:** Revisão espacial e rotas falsas podem reduzir o rendimento gradualmente, mas a trilha visível e o ritmo próprio contêm o desgaste.
 
 9. **Interferência — moderada:** Becos e rotas alternativas competem com a rota útil.
 
@@ -488,13 +488,13 @@ Este documento prescreve os 34 exercícios canônicos sem alterar catálogo, mec
 
 4. **Protocolos:** **BREVE — 1 unidade(s), ~4 min:** Manutenção/aquecimento; insuficiente para progressão. Mostra uma estratégia narrativa. **PADRÃO — 2 unidade(s), ~9 min:** Duas histórias permitem consistência dentro do mesmo modo. Sustenta progressão somente com unidades completas; não permite concluir transferência além da mecânica. **ESTENDIDO — 3 unidade(s), ~14 min:** Aumenta estabilidade ou variedade da observação. Não autoriza agregar ordenação, intruso e lacuna como uma operação única.
 
-5. **Carga cognitiva basal — 2:** Cenas ficam visíveis e o ritmo é próprio, enquanto relações temporais e causais mantêm demanda moderada.
+5. **Carga cognitiva basal — 2:** Ordenar relações temporais e causais exige integração consistente, mas as cenas visíveis, o ritmo próprio e as pausas entre histórias permitem recuperação.
 
 6. **Modificadores de carga:** **quantidade de estímulos:** Mais cenas ampliam relações temporais. **memória exigida:** Sequências maiores exigem manter mais transições. **interferência:** Intruso e hipóteses de lacuna adicionam concorrência. **semelhança dos distratores:** Continuidades plausíveis exigem comparação causal.
 
 7. **Duração clínica:** mínima útil **4 min** · padrão **9 min** · máxima recomendada **14 min**. Uma história fecha a unidade, duas reduzem dependência do roteiro e três limitam familiaridade, dicas e cansaço.
 
-8. **Fadiga — moderada:** Integrar transições exige raciocínio, com cenas disponíveis e sem prazo.
+8. **Fadiga — moderada:** Integrar transições repetidamente pode reduzir o engajamento, embora as cenas disponíveis, o ritmo próprio e as pausas limitem a fadiga.
 
 9. **Interferência — moderada:** Cenas competem por posição; intruso e lacuna elevam a competição nos modos próprios.
 
@@ -514,13 +514,13 @@ Este documento prescreve os 34 exercícios canônicos sem alterar catálogo, mec
 
 4. **Protocolos:** **BREVE — 2 unidade(s), ~5 min:** Manutenção/aquecimento; insuficiente para progressão. Amostra operações isoladas, sem concluir desempenho multifuncional. **PADRÃO — 7 unidade(s), ~18 min:** Sete fases fecham uma missão e permitem interpretar o encadeamento. Sustenta progressão somente com unidades completas; não permite concluir transferência além da mecânica. **ESTENDIDO — 10 unidade(s), ~25 min:** Aumenta estabilidade ou variedade da observação. Escolaridade matemática e fadiga limitam conclusões funcionais.
 
-5. **Carga cognitiva basal — 3:** Integra leitura, cálculo, regras, monitoramento e seleção sob restrições.
+5. **Carga cognitiva basal — 2:** As fases alternam operações anunciadas e mantêm dados visíveis, gerando demanda consistente sem fluxos simultâneos ou troca rápida de regra.
 
 6. **Modificadores de carga:** **velocidade:** Fases finais avançadas podem introduzir janela. **quantidade de estímulos:** Mais itens, valores e regras ampliam combinações. **memória exigida:** Números maiores e múltiplas condições elevam manutenção. **interferência:** Combinações parcialmente válidas exigem eliminação. **mudança de regra:** O foco completo muda operação entre fases anunciadas, não como alternância rápida. **semelhança dos distratores:** Valores próximos dos limites elevam comparação. **modalidade:** Canal do enunciado altera apoio visual e memória verbal.
 
 7. **Duração clínica:** mínima útil **5 min** · padrão **18 min** · máxima recomendada **25 min**. Duas fases mostram operações isoladas, sete fecham missão e, após dez, carga matemática e fadiga têm retorno decrescente.
 
-8. **Fadiga — alta:** A missão alterna cálculo, comparação e múltiplas restrições.
+8. **Fadiga — alta:** A missão longa acumula cálculo, comparação e múltiplas restrições, elevando risco de exaustão e perda de engajamento.
 
 9. **Interferência — moderada:** Itens e condições parcialmente compatíveis competem, com dados visíveis e sem fluxo simultâneo.
 
@@ -540,13 +540,13 @@ Este documento prescreve os 34 exercícios canônicos sem alterar catálogo, mec
 
 4. **Protocolos:** **BREVE — 2 unidade(s), ~3 min:** Manutenção/aquecimento; insuficiente para progressão. Inclui ao menos uma troca, sem custo estável. **PADRÃO — 4 unidade(s), ~7 min:** Quatro blocos amostram manutenção e múltiplas trocas. Sustenta progressão somente com unidades completas; não permite concluir transferência além da mecânica. **ESTENDIDO — 6 unidade(s), ~10 min:** Aumenta estabilidade ou variedade da observação. Fadiga e previsibilidade do tamanho de bloco passam a influenciar.
 
-5. **Carga cognitiva basal — 3:** Aplicar regra, ignorar atributos e substituir critério exige flexibilidade, inibição e atualização.
+5. **Carga cognitiva basal — 3:** A regra ativa precisa ser substituída repetidamente enquanto atributos e regra anterior competem, sustentando inibição e atualização com pouca recuperação dentro dos blocos.
 
 6. **Modificadores de carga:** **quantidade de estímulos:** Quatro a seis cartas mudam classificações antes da troca. **interferência:** Atributos irrelevantes competem com a dimensão ativa. **mudança de regra:** Retirada dos avisos aumenta monitoramento; não há modificador de nível.
 
 7. **Duração clínica:** mínima útil **3 min** · padrão **7 min** · máxima recomendada **10 min**. Dois blocos dão uma troca, quatro permitem contraste e seis limitam fadiga e aprendizagem dos mapeamentos.
 
-8. **Fadiga — alta:** Substituir regra e inibir atributos repetidamente acumula custo executivo.
+8. **Fadiga — alta:** Trocas repetidas e inibição da regra anterior acumulam custo rapidamente e reduzem a qualidade dentro dos blocos.
 
 9. **Interferência — alta:** Atributos múltiplos e regra anterior competem especialmente após a troca.
 
@@ -566,13 +566,13 @@ Este documento prescreve os 34 exercícios canônicos sem alterar catálogo, mec
 
 4. **Protocolos:** **BREVE — 1 unidade(s), ~6 min:** Manutenção/aquecimento; insuficiente para progressão. Observa uma estratégia, sem controlar equivalência das pistas. **PADRÃO — 2 unidade(s), ~13 min:** Dois problemas permitem comparar organização e revisão. Sustenta progressão somente com unidades completas; não permite concluir transferência além da mecânica. **ESTENDIDO — 3 unidade(s), ~20 min:** Aumenta estabilidade ou variedade da observação. Leitura, aprendizagem do formato e equivalência do banco limitam conclusões.
 
-5. **Carga cognitiva basal — 3:** Combinar pistas, exclusões e associações exige raciocínio, memória verbal e monitoramento intensos.
+5. **Carga cognitiva basal — 2:** Pistas e marcações visíveis apoiam a memória; combinar hipóteses e exclusões mantém demanda consistente em ritmo próprio.
 
 6. **Modificadores de carga:** **quantidade de estímulos:** Mais pessoas, valores e pistas ampliam hipóteses. **memória exigida:** Negação e disjunção aumentam relações mantidas. **interferência:** Hipóteses permanecem até outra pista eliminá-las. **semelhança dos distratores:** Associações plausíveis exigem mais pistas.
 
 7. **Duração clínica:** mínima útil **6 min** · padrão **13 min** · máxima recomendada **20 min**. Um problema fecha a janela, dois reduzem dependência do item e, após três, fadiga de leitura supera o ganho.
 
-8. **Fadiga — alta:** Integração, exclusão e revisão até solução mantêm alta demanda.
+8. **Fadiga — alta:** Problemas longos, negações, revisão de hipóteses e risco de impasse elevam frustração e favorecem perda de qualidade antes da solução.
 
 9. **Interferência — moderada:** Hipóteses e negações concorrem, mas pistas e marcações ficam visíveis.
 
@@ -592,13 +592,13 @@ Este documento prescreve os 34 exercícios canônicos sem alterar catálogo, mec
 
 4. **Protocolos:** **BREVE — 4 unidade(s), ~3 min:** Manutenção/aquecimento; insuficiente para progressão. Confirma reconhecimento e retenção curta. **PADRÃO — 8 unidade(s), ~6 min:** Oito séries permitem estabilidade com canal e direção registrados. Sustenta progressão somente com unidades completas; não permite concluir transferência além da mecânica. **ESTENDIDO — 12 unidade(s), ~9 min:** Aumenta estabilidade ou variedade da observação. Mudanças não monotônicas impedem agregar canais e direções como uma carga única.
 
-5. **Carga cognitiva basal — 2:** Retenção serial verbal e escolha entre distratores, sem atualização contínua ou planejamento.
+5. **Carga cognitiva basal — 2:** Reter a série e selecionar entre distratores exige demanda consistente, mas a resposta por reconhecimento e as pausas entre séries permitem recuperação.
 
 6. **Modificadores de carga:** **velocidade:** Apresentação rápida reduz tempo de ensaio. **quantidade de estímulos:** Séries maiores ampliam unidades verbais. **memória exigida:** Sílabas e ordem inversa aumentam retenção e manipulação. **interferência:** Distratores e inversão competem com a série-alvo. **mudança de regra:** Direção e canal mudam por faixas não monotônicas e devem ser registrados.
 
 7. **Duração clínica:** mínima útil **3 min** · padrão **6 min** · máxima recomendada **9 min**. Quatro séries confirmam acesso, oito consistência e, após doze, fadiga verbal e prática reduzem o ganho.
 
-8. **Fadiga — moderada:** Retenção se repete, com pausas e apoio de reconhecimento.
+8. **Fadiga — moderada:** Retenção e seleção repetidas podem reduzir o rendimento gradualmente, mas as pausas e o reconhecimento permitem recuperação.
 
 9. **Interferência — moderada:** Distratores e, em níveis específicos, inversão ou remapeamento som-grafema competem.
 
@@ -618,13 +618,13 @@ Este documento prescreve os 34 exercícios canônicos sem alterar catálogo, mec
 
 4. **Protocolos:** **BREVE — 4 unidade(s), ~4 min:** Manutenção/aquecimento; insuficiente para progressão. Verifica reconhecimento, ordenação e tolerância. **PADRÃO — 8 unidade(s), ~8 min:** Oito séries permitem estabilidade com canal registrado. Sustenta progressão somente com unidades completas; não permite concluir transferência além da mecânica. **ESTENDIDO — 12 unidade(s), ~12 min:** Aumenta estabilidade ou variedade da observação. Canal e familiaridade semântica precisam permanecer distintos.
 
-5. **Carga cognitiva basal — 2:** Identidade, ordem e discriminação entre figuras, com resposta por reconhecimento e sem inversão.
+5. **Carga cognitiva basal — 2:** Reter identidade e ordem entre figuras exige demanda consistente, mas o reconhecimento visual e as pausas entre séries permitem recuperação.
 
 6. **Modificadores de carga:** **velocidade:** Exposição breve reduz tempo de codificação. **quantidade de estímulos:** Mais itens e distratores ampliam identidades. **memória exigida:** Maior extensão e fala elevam retenção e remapeamento palavra-imagem. **interferência:** Distratores da mesma categoria competem. **semelhança dos distratores:** Itens da mesma categoria aumentam interferência semântica.
 
 7. **Duração clínica:** mínima útil **4 min** · padrão **8 min** · máxima recomendada **12 min**. Quatro séries estabelecem acesso, oito consistência e doze limitam fadiga e aprendizagem das figuras.
 
-8. **Fadiga — moderada:** Retenção ordenada se repete, com resposta visual e pausas.
+8. **Fadiga — moderada:** Retenção ordenada e discriminação repetidas geram desgaste gradual, contido pela resposta visual e pelas pausas.
 
 9. **Interferência — moderada:** Distratores e itens semanticamente próximos competem.
 
@@ -644,13 +644,13 @@ Este documento prescreve os 34 exercícios canônicos sem alterar catálogo, mec
 
 4. **Protocolos:** **BREVE — 3 unidade(s), ~4 min:** Manutenção/aquecimento; insuficiente para progressão. Confirma compreensão do giro. **PADRÃO — 6 unidade(s), ~8 min:** Seis transformações observam estabilidade. Sustenta progressão somente com unidades completas; não permite concluir transferência além da mecânica. **ESTENDIDO — 9 unidade(s), ~12 min:** Aumenta estabilidade ou variedade da observação. Divergência temporal executada e fadiga espacial limitam interpretação tardia.
 
-5. **Carga cognitiva basal — 3:** Combina retenção de padrão, rotação mental e reconstrução sem alvos visíveis.
+5. **Carga cognitiva basal — 2:** Reter e rotacionar o padrão exige manipulação espacial, mas ocorre em séries curtas, sem distratores e com recuperação entre transformações.
 
 6. **Modificadores de carga:** **velocidade:** Exposição, giro e intervalo breves reduzem tempo; temporização declarada e executada divergem. **quantidade de estímulos:** Grade e padrão maiores ampliam posições. **memória exigida:** Mais posições e intervalo vazio aumentam retenção.
 
 7. **Duração clínica:** mínima útil **4 min** · padrão **8 min** · máxima recomendada **12 min**. Três séries estabilizam a mecânica, seis amostram padrões e nove limitam fadiga de rotação.
 
-8. **Fadiga — alta:** Manter e transformar posições sem alvo visível exige esforço intenso.
+8. **Fadiga — moderada:** Transformação espacial repetida gera desgaste gradual, contido pelas pausas entre séries.
 
 9. **Interferência — baixa:** Não há distratores; a dificuldade vem da transformação.
 
@@ -670,13 +670,13 @@ Este documento prescreve os 34 exercícios canônicos sem alterar catálogo, mec
 
 4. **Protocolos:** **BREVE — 3 unidade(s), ~4 min:** Manutenção/aquecimento; insuficiente para progressão. Verifica tolerância à interferência. **PADRÃO — 6 unidade(s), ~9 min:** Seis listas amostram o ciclo sob miniatividades variadas. Sustenta progressão somente com unidades completas; não permite concluir transferência além da mecânica. **ESTENDIDO — 8 unidade(s), ~12 min:** Aumenta estabilidade ou variedade da observação. A resposta distratora não validada e ordem não monotônica limitam conclusões.
 
-5. **Carga cognitiva basal — 3:** Manter lista durante atividade interveniente e recuperar entre distratores impõe alta carga.
+5. **Carga cognitiva basal — 3:** A lista permanece ativa durante uma atividade interveniente, sustentando retenção e forte interferência em cada ciclo, com pouca recuperação interna.
 
 6. **Modificadores de carga:** **quantidade de estímulos:** Mais palavras, distratores e miniatividades ampliam conteúdo e retenção. **memória exigida:** Listas maiores e ordem aumentam reconstrução serial. **interferência:** Mais miniatividades prolongam a tarefa interveniente, cuja precisão não é validada. **mudança de regra:** Níveis com e sem ordem alternam de modo não monotônico. **semelhança dos distratores:** Palavras próximas aumentam competição quando presentes.
 
 7. **Duração clínica:** mínima útil **4 min** · padrão **9 min** · máxima recomendada **12 min**. Três rodadas demonstram o ciclo, seis variam interferência e oito limitam fadiga e aprendizagem.
 
-8. **Fadiga — alta:** A lista permanece ativa durante tarefa concorrente repetidamente.
+8. **Fadiga — alta:** Manter a lista sob atividade concorrente, alternar fases e reconstruir a resposta favorecem queda rápida de qualidade ao longo das rodadas.
 
 9. **Interferência — alta:** A miniatividade interveniente é constitutiva, mesmo sem pontuação de precisão.
 
@@ -696,13 +696,13 @@ Este documento prescreve os 34 exercícios canônicos sem alterar catálogo, mec
 
 4. **Protocolos:** **BREVE — 2 unidade(s), ~4 min:** Manutenção/aquecimento; insuficiente para progressão. Familiariza e permite checagem inicial de modalidade. **PADRÃO — 5 unidade(s), ~10 min:** Cinco pedidos observam retenção, seleção e consistência. Sustenta progressão somente com unidades completas; não permite concluir transferência além da mecânica. **ESTENDIDO — 8 unidade(s), ~16 min:** Aumenta estabilidade ou variedade da observação. Repetição, ruído ambiente e fadiga verbal limitam retorno.
 
-5. **Carga cognitiva basal — 2:** Pedido oculto, associação com mesa e seleção entre distratores exigem memória verbal e visual.
+5. **Carga cognitiva basal — 2:** Reter pedido e fonte enquanto seleciona entre concorrentes mantém demanda consistente, com fases discretas e recuperação entre mesas.
 
 6. **Modificadores de carga:** **quantidade de estímulos:** Mais pessoas, itens e distratores ampliam conteúdo e busca. **memória exigida:** Ordem, atualização e duas mesas aumentam retenção e fonte. **interferência:** Distratores, ruído e competição entre mesas elevam distração. **mudança de regra:** Troca/inclusão/remoção atualiza o pedido; ordem muda reconstrução. **semelhança dos distratores:** Alimentos próximos aumentam comparação. **modalidade:** Canal do pedido altera código de retenção e duração.
 
 7. **Duração clínica:** mínima útil **4 min** · padrão **10 min** · máxima recomendada **16 min**. Duas rodadas estabilizam, cinco permitem consistência e oito limitam interferência entre pedidos e fadiga.
 
-8. **Fadiga — moderada:** Retenção e busca se repetem, com pausa e resposta visual de apoio.
+8. **Fadiga — moderada:** Retenção e busca repetidas podem reduzir o rendimento gradualmente, mas as fases e o apoio visual permitem recuperação.
 
 9. **Interferência — moderada:** Itens concorrentes e, nos avançados, duas mesas e atualização competem.
 
@@ -722,13 +722,13 @@ Este documento prescreve os 34 exercícios canônicos sem alterar catálogo, mec
 
 4. **Protocolos:** **BREVE — 2 unidade(s), ~5 min:** Manutenção/aquecimento; insuficiente para progressão. Familiariza e checa modalidade. **PADRÃO — 5 unidade(s), ~12 min:** Cinco compras observam retenção, busca e fonte. Sustenta progressão somente com unidades completas; não permite concluir transferência além da mecânica. **ESTENDIDO — 7 unidade(s), ~18 min:** Aumenta estabilidade ou variedade da observação. Familiaridade com produtos, repetição e fadiga de busca reduzem retorno.
 
-5. **Carga cognitiva basal — 3:** Lista oculta, prateleira ampla e distratores semânticos combinam memória, busca e controle.
+5. **Carga cognitiva basal — 2:** Reter a lista e controlar distratores durante a busca exige demanda consistente, mas memorização e seleção ocorrem em fases, não em fluxos simultâneos.
 
 6. **Modificadores de carga:** **quantidade de estímulos:** Listas e prateleiras maiores ampliam itens. **memória exigida:** Ordem e duas listas aumentam retenção, manipulação e fonte. **interferência:** Distratores e competição entre listas elevam distração. **mudança de regra:** Sem ordem, direta e inversa são reconstruções qualitativamente distintas. **semelhança dos distratores:** Mesma categoria aumenta interferência semântica. **modalidade:** Canal altera codificação e pareamento nome-imagem.
 
 7. **Duração clínica:** mínima útil **5 min** · padrão **12 min** · máxima recomendada **18 min**. Duas compras estabelecem a mecânica, cinco dão consistência e sete limitam interferência e cansaço de busca.
 
-8. **Fadiga — alta:** Lista oculta, busca extensa e controle de fonte/ordem sustentam esforço elevado.
+8. **Fadiga — alta:** Busca longa, lista oculta, distratores semânticos e controle de fonte/ordem elevam frustração e favorecem perda rápida de qualidade.
 
 9. **Interferência — alta:** Muitos distratores, inclusive semânticos, e duas listas competem com o alvo.
 
@@ -748,13 +748,13 @@ Este documento prescreve os 34 exercícios canônicos sem alterar catálogo, mec
 
 4. **Protocolos:** **BREVE — 1 unidade(s), ~2,5 min:** Manutenção/aquecimento; insuficiente para progressão. Confirma regra e tolerância; progressão exige mais de um bloco. **PADRÃO — 3 unidade(s), ~7,5 min:** Três blocos permitem consistência e regra de progressão. Sustenta progressão somente com unidades completas; não permite concluir transferência além da mecânica. **ESTENDIDO — 4 unidade(s), ~10 min:** Aumenta estabilidade ou variedade da observação. Teto curto limita fadiga de atualização e omissões tardias.
 
-5. **Carga cognitiva basal — 3:** Atualizar janela verbal, comparar cada letra e responder sob prazo impõe carga alta.
+5. **Carga cognitiva basal — 3:** Cada estímulo exige atualizar a janela, comparar e responder sob prazo, sem pausa durante o bloco.
 
 6. **Modificadores de carga:** **quantidade de estímulos:** Cada bloco mantém 14 itens ativos. **memória exigida:** 1-back a 4-back amplia distância e itens intervenientes. **interferência:** Letras intervenientes competem com a referência. **semelhança dos distratores:** Repetições próximas aumentam competição serial, com coincidências acidentais controladas.
 
 7. **Duração clínica:** mínima útil **2,5 min** · padrão **7,5 min** · máxima recomendada **10 min**. Um bloco confirma regra, três permitem progressão e quatro limitam queda por fadiga.
 
-8. **Fadiga — alta:** Cada estímulo exige atualização, comparação e resposta sem pausa no bloco.
+8. **Fadiga — alta:** Atualização, comparação e resposta temporizada em cada estímulo, sem pausa no bloco, favorecem omissões e queda rápida de qualidade.
 
 9. **Interferência — alta:** Itens intervenientes precisam ser mantidos e descartados sem perder a referência.
 
@@ -774,13 +774,13 @@ Este documento prescreve os 34 exercícios canônicos sem alterar catálogo, mec
 
 4. **Protocolos:** **BREVE — 3 unidade(s), ~4 min:** Manutenção/aquecimento; insuficiente para progressão. Confirma acesso ao cubo e remapeamento. **PADRÃO — 6 unidade(s), ~8 min:** Seis séries observam estabilidade. Sustenta progressão somente com unidades completas; não permite concluir transferência além da mecânica. **ESTENDIDO — 9 unidade(s), ~12 min:** Aumenta estabilidade ou variedade da observação. Fadiga 3D e estratégia verbal podem reduzir retorno.
 
-5. **Carga cognitiva basal — 3:** Reter faces quase frontais e responder na vista isométrica combina memória e remapeamento.
+5. **Carga cognitiva basal — 2:** Reter faces e remapear para a vista isométrica exige manipulação moderada, mas as séries são curtas, sem distratores e com recuperação entre elas.
 
 6. **Modificadores de carga:** **quantidade de estímulos:** Séries maiores ampliam posições e trocas de face. **memória exigida:** Maior extensão aumenta retenção e sequenciamento.
 
 7. **Duração clínica:** mínima útil **4 min** · padrão **8 min** · máxima recomendada **12 min**. Três séries estabilizam a interface 3D, seis dão amostra útil e nove limitam fadiga perceptiva.
 
-8. **Fadiga — alta:** Rotação visual, constância perceptiva e retenção se acumulam.
+8. **Fadiga — moderada:** Remapeamento e retenção repetidos geram desgaste gradual, mas as pausas entre séries limitam a fadiga.
 
 9. **Interferência — baixa:** Não há distratores externos; competição vem de faces e orientações.
 
@@ -800,13 +800,13 @@ Este documento prescreve os 34 exercícios canônicos sem alterar catálogo, mec
 
 4. **Protocolos:** **BREVE — 1 unidade(s), ~3 min:** Manutenção/aquecimento; insuficiente para progressão. Seis tentativas verificam tolerância. **PADRÃO — 2 unidade(s), ~6 min:** Doze tentativas observam consistência sob duração controlada. Sustenta progressão somente com unidades completas; não permite concluir transferência além da mecânica. **ESTENDIDO — 3 unidade(s), ~9 min:** Aumenta estabilidade ou variedade da observação. Queda no terceiro bloco deve ser lida como possível fadiga.
 
-5. **Carga cognitiva basal — 3:** Exposição de oito itens, discriminação e retenção espacial combinam demandas intensas.
+5. **Carga cognitiva basal — 2:** Cada tentativa exige discriminação e retenção espacial consistentes, mas mantém uma regra estável e permite recuperação entre exposições.
 
 6. **Modificadores de carga:** **velocidade:** Exposição breve aumenta rapidez perceptiva. **memória exigida:** Arranjos irregulares ampliam retenção da posição. **interferência:** Fundo complexo aumenta figura-fundo. **semelhança dos distratores:** Diferenças menores de tom/estrutura elevam discriminação.
 
 7. **Duração clínica:** mínima útil **3 min** · padrão **6 min** · máxima recomendada **9 min**. Seis tentativas estabilizam, doze dão amostra útil e dezoito limitam fadiga; mais tempo não infere atenção sustentada.
 
-8. **Fadiga — alta:** Discriminação rápida e retenção espacial degradam com esforço acumulado.
+8. **Fadiga — alta:** Discriminação visual repetitiva, alta semelhança e monotonia do bloco favorecem queda rápida de vigilância e precisão.
 
 9. **Interferência — alta:** Sete itens quase equivalentes e fundo complexo competem com o discrepante.
 
@@ -826,13 +826,13 @@ Este documento prescreve os 34 exercícios canônicos sem alterar catálogo, mec
 
 4. **Protocolos:** **BREVE — 8 unidade(s), ~2 min:** Manutenção/aquecimento; insuficiente para progressão. Aquece e checa acesso visual; a primeira tentativa não fundamenta conclusão. **PADRÃO — 20 unidade(s), ~5 min:** Vinte pareamentos posteriores amostram busca. Sustenta progressão somente com unidades completas; não permite concluir transferência além da mecânica. **ESTENDIDO — 32 unidade(s), ~8 min:** Aumenta estabilidade ou variedade da observação. Similaridade não controlada e fadiga visual limitam ganho.
 
-5. **Carga cognitiva basal — 2:** Busca e discriminação com modelo visível e sem prazo próprio.
+5. **Carga cognitiva basal — 1:** Modelo visível, regra estável, resposta simples e ausência de prazo próprio mantêm baixa demanda por minuto.
 
 6. **Modificadores de carga:** **quantidade de estímulos:** Mais distratores e densidade ampliam busca. **interferência:** Maior densidade aumenta competição visual.
 
 7. **Duração clínica:** mínima útil **2 min** · padrão **5 min** · máxima recomendada **8 min**. Oito tentativas aquecem, vinte estabilizam após o primeiro item e trinta e duas limitam fadiga e repetição.
 
-8. **Fadiga — moderada:** Varredura e discriminação se repetem, com modelo visível e sem prazo.
+8. **Fadiga — moderada:** Varredura visual repetitiva e monotonia podem reduzir gradualmente a atenção, mesmo com modelo visível e sem prazo.
 
 9. **Interferência — moderada:** Símbolos concorrem, mas a semelhança não é controlada para rotular tudo como alta.
 
@@ -852,13 +852,13 @@ Este documento prescreve os 34 exercícios canônicos sem alterar catálogo, mec
 
 4. **Protocolos:** **BREVE — 1 unidade(s), ~5 min:** Manutenção/aquecimento; insuficiente para progressão. Observa uma estratégia e solução. **PADRÃO — 2 unidade(s), ~11 min:** Dois desafios permitem consistência, optimalidade e repetição. Sustenta progressão somente com unidades completas; não permite concluir transferência além da mecânica. **ESTENDIDO — 3 unidade(s), ~17 min:** Aumenta estabilidade ou variedade da observação. Aprendizagem da fase, guia e fadiga limitam comparabilidade.
 
-5. **Carga cognitiva basal — 3:** Cadeias de bloqueio, antecipação e submetas exigem planejamento visuoespacial intenso.
+5. **Carga cognitiva basal — 2:** Antecipar bloqueios e submetas mantém demanda consistente, mas o tabuleiro visível e o ritmo próprio reduzem simultaneidade e pressão temporal.
 
 6. **Modificadores de carga:** **quantidade de estímulos:** Mais veículos ampliam bloqueios. **memória exigida:** Soluções profundas exigem manter submetas. **interferência:** Veículos adicionais criam bloqueios concorrentes, não mero tempo de tela. **planejamento:** Maior mínimo aprofunda antecipação; modo guiado reduz construção autônoma.
 
 7. **Duração clínica:** mínima útil **5 min** · padrão **11 min** · máxima recomendada **17 min**. Uma fase fecha a operação, duas mostram consistência e três limitam aprendizagem, guia e fadiga.
 
-8. **Fadiga — alta:** Antecipar estados e desfazer bloqueios mantém esforço até a saída.
+8. **Fadiga — alta:** Soluções prolongadas, impasses e necessidade de desfazer bloqueios elevam frustração e favorecem perda rápida de engajamento.
 
 9. **Interferência — moderada:** Veículos e bloqueios competem espacialmente, sem distratores sem função.
 
@@ -878,13 +878,13 @@ Este documento prescreve os 34 exercícios canônicos sem alterar catálogo, mec
 
 4. **Protocolos:** **BREVE — 1 unidade(s), ~4 min:** Manutenção/aquecimento; insuficiente para progressão. Permite discutir um caso, sem progressão ou generalização social. **PADRÃO — 2 unidade(s), ~9 min:** Dois casos observam consistência entre eixos disponíveis. Sustenta progressão somente com unidades completas; não permite concluir transferência além da mecânica. **ESTENDIDO — 3 unidade(s), ~14 min:** Aumenta estabilidade ou variedade da observação. Feedback entre perguntas, desigualdade etária e banco pequeno limitam conclusões.
 
-5. **Carga cognitiva basal — 2:** Contexto e três hipóteses ficam visíveis, enquanto inferência e compreensão mantêm demanda moderada.
+5. **Carga cognitiva basal — 2:** Integrar contexto e comparar hipóteses exige raciocínio consistente, mas o material visível, o ritmo próprio e as pausas entre casos permitem recuperação.
 
 6. **Modificadores de carga:** **quantidade de estímulos:** Mais perguntas ampliam decisões, mas reduzem novidade da cena. **memória exigida:** Múltiplas pistas exigem contexto, ainda visível. **interferência:** Hipóteses competem e feedback anterior orienta itens seguintes. **semelhança dos distratores:** Interpretações plausíveis aumentam comparação quando presentes.
 
 7. **Duração clínica:** mínima útil **4 min** · padrão **9 min** · máxima recomendada **14 min**. Um caso fecha contexto, dois reduzem dependência da história e três limitam aprendizagem pelo feedback e repetição do banco.
 
-8. **Fadiga — moderada:** Leitura e inferência se repetem, com ritmo próprio e contexto visível.
+8. **Fadiga — moderada:** Leitura e inferência repetidas podem reduzir o engajamento gradualmente, mas o ritmo próprio e o contexto visível contêm o desgaste.
 
 9. **Interferência — moderada:** Hipóteses sociais competem e feedback pode interferir nas perguntas seguintes.
 
