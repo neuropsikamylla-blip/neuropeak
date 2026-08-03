@@ -6251,3 +6251,135 @@ Ao terminar apresentar:
 Não iniciar automaticamente a Implementação — Fase 3.
 
 Pare e aguarde minha validação.
+
+## 03/08/2026 15:43
+Escolho a opção (b).
+
+Pode seguir com a Implementação — Fase 2 usando uma camada pura de apresentação em:
+
+lib/prescription/presentation.ts
+
+A decisão é:
+
+- não instalar dependências;
+- não alterar package.json;
+- não alterar vitest.config.ts;
+- não adicionar jsdom, happy-dom ou Testing Library nesta fase;
+- não criar infraestrutura nova de testes de componente.
+
+OBJETIVO DA CAMADA DE APRESENTAÇÃO
+
+Centralizar em funções puras:
+
+- tradução dos 18 códigos de alerta para português;
+- título e mensagem de cada alerta;
+- sugestão de ajuste;
+- agrupamento por gravidade consultiva;
+- rótulos amigáveis dos modelos de execução;
+- rótulos dos estados da sessão;
+- formatação da faixa de duração;
+- formatação da carga basal e referência heurística;
+- resumo de fadiga;
+- resumo de interferência;
+- marcador de plano legado ou parâmetro indefinido;
+- textos auxiliares e tooltips.
+
+Os componentes React deverão apenas consumir os objetos já preparados.
+
+Não duplicar regras ou textos clínicos nos componentes.
+
+TESTES AUTOMÁTICOS
+
+Criar testes puros para:
+
+1. tradução dos 18 alertas;
+2. títulos e mensagens em português;
+3. gravidade consultiva;
+4. rótulos dos quatro modelos de execução;
+5. rótulos dos quatro estados de duração;
+6. formatação das faixas;
+7. carga e referência heurística;
+8. resumo de fadiga e interferência;
+9. plano vazio;
+10. plano legado;
+11. ausência de códigos técnicos no conteúdo apresentado;
+12. garantia de que todos os 18 alertas possuem configuração de apresentação;
+13. garantia de que nenhum alerta possui comportamento bloqueante.
+
+PROTEÇÃO DO BOTÃO SALVAR
+
+Como não há infraestrutura de renderização, criar um teste estático em Node que:
+
+- leia os componentes alterados;
+- falhe caso o botão de salvar seja desabilitado com base em:
+  - alertas;
+  - carga;
+  - fadiga;
+  - interferência;
+  - estado da sessão;
+  - resultado do interpretador.
+
+O botão poderá continuar sendo desabilitado por razões técnicas já existentes, como:
+
+- ausência de paciente;
+- operação de salvamento em andamento;
+- dados obrigatórios ausentes;
+
+mas nunca por causa da arquitetura consultiva.
+
+O teste deve procurar padrões reais no código e ter justificativa clara. Não criar um teste superficial que sempre passe.
+
+COMPONENTES
+
+Os componentes podem ser alterados para consumir:
+
+- interpretPrescriptionPlan;
+- presentation.ts;
+- leitura legada.
+
+Mas não devem conter:
+
+- fórmulas;
+- limiares;
+- regras dos alertas;
+- traduções duplicadas;
+- lógica de carga;
+- lógica de fadiga;
+- lógica de margem;
+- decisões de bloqueio.
+
+VALIDAÇÃO VISUAL
+
+Como não haverá teste automatizado de renderização nesta fase, fazer validação manual documentada:
+
+- abrir a tela do plano;
+- testar plano vazio;
+- testar plano dentro do esperado;
+- testar plano acima do esperado;
+- testar excesso importante;
+- testar fadiga alta consecutiva;
+- testar planejamento consecutivo;
+- testar plano legado;
+- confirmar que salvar permanece disponível.
+
+Apresentar evidências por:
+
+- prints;
+- descrição precisa do estado exibido;
+- logs apenas se necessários;
+- lista dos cenários verificados.
+
+LIMITAÇÃO REGISTRADA
+
+Registrar explicitamente que:
+
+- a lógica de apresentação está coberta por testes;
+- a integração visual foi validada manualmente;
+- testes React poderão ser adicionados futuramente quando o projeto adotar infraestrutura própria para componentes;
+- a ausência de Testing Library nesta fase não deve ser escondida.
+
+Pode prosseguir imediatamente com a opção (b).
+
+Mantenha todas as outras restrições da Implementação — Fase 2.
+
+Não iniciar automaticamente a Fase 3.
