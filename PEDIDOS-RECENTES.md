@@ -1,72 +1,6 @@
 # As 3 ultimas especificacoes dela (automatico; a mais nova por ultimo)
 # Na retomada: ler as 3, conectar com PROGRESSO.md e git, declarar e seguir.
 
-## 03/08/2026 12:55
-Excelente.
-
-A arquitetura está seguindo exatamente a direção que eu queria.
-
-Tenho apenas alguns ajustes conceituais antes do lote 3.
-
-1.
-
-O teto de carga basal (7 / 10 / 13) deve permanecer como um alerta heurístico.
-
-Não deve ser tratado como limite absoluto.
-
-A composição da sessão deverá considerar simultaneamente:
-
-- carga basal;
-- fadiga;
-- interferência;
-- modelo de execução;
-- modalidade;
-- planejamento.
-
-Ou seja, duas sessões com carga total 7 podem ter qualidades muito diferentes.
-
-2.
-
-A margem de fechamento baseada no modelo de execução está aprovada.
-
-Esse conceito permanece.
-
-3.
-
-Adicionar um novo alerta:
-
-PLANNING_WINDOW
-
-Não recomendar dois exercícios classificados como PLANNING_WINDOW consecutivos.
-
-Exemplos:
-
-Jogo das Torres
-
-↓
-
-Estacionamento Lógico
-
-↓
-
-Caminhos para a Meta
-
-O sistema deverá sugerir inserir entre eles um exercício CONTINUOUS_TIMED ou CLOSED_PROTOCOL.
-
-Continua sendo apenas sugestão.
-
-Nunca bloqueio.
-
-4.
-
-Todos os alertas continuam consultivos.
-
-O terapeuta sempre poderá salvar o plano.
-
-Não criar bloqueios.
-
-Com esses ajustes, pode concluir normalmente o lote 3.
-
 ## 03/08/2026 14:41
 A Fase 2 está validada. Vamos fechar as quatro decisões bloqueantes conforme abaixo.
 
@@ -274,3 +208,235 @@ Depois pare.
 <status>completed</status>
 <summary>Background command "Aguardar o fechamento" completed (exit code 0)</summary>
 </task-notification>
+
+## 03/08/2026 15:11
+Excelente.
+
+Considero encerrada a Fase 2 da arquitetura clínica.
+
+A partir deste momento, congelamos toda a arquitetura.
+
+Não quero reabrir discussões conceituais durante a implementação.
+
+Toda alteração arquitetural futura deverá ocorrer apenas se surgir necessidade real durante testes clínicos.
+
+==========================================================
+INICIAR IMPLEMENTAÇÃO
+==========================================================
+
+Vamos iniciar a implementação da arquitetura.
+
+Seguiremos exatamente a ordem de menor risco para maior risco.
+
+Não pule etapas.
+
+Não implemente duas fases simultaneamente.
+
+Cada fase deverá terminar completamente antes da próxima.
+
+==========================================================
+FASE 1
+NÚCLEO DA PRESCRIÇÃO
+==========================================================
+
+Objetivo:
+
+Implementar toda a lógica pura da arquitetura, sem alterar a interface do terapeuta e sem alterar a experiência do paciente.
+
+Nesta fase implementar apenas:
+
+• tipos
+• estruturas
+• calculadores
+• validadores
+• interpretadores
+• modelos
+• enums
+• helpers
+• testes
+
+Nada visual.
+
+==========================================================
+IMPLEMENTAR
+==========================================================
+
+Implementar:
+
+1.
+
+Modelos de execução
+
+- CONTINUOUS_TIMED
+- CLOSED_PROTOCOL
+- PLANNING_WINDOW
+- FIXED_HIGH_FATIGUE
+
+2.
+
+Modelos de duração
+
+3.
+
+Protocolos
+
+BREVE
+
+PADRÃO
+
+ESTENDIDO
+
+4.
+
+Carga basal
+
+5.
+
+Fadiga
+
+6.
+
+Interferência
+
+7.
+
+Margens de fechamento
+
+8.
+
+Estados da sessão
+
+- abaixo
+- dentro
+- acima
+- excesso importante
+
+9.
+
+Calculador de duração
+
+Utilizar toda a fórmula definida na Fase 2.
+
+10.
+
+Calculador de carga
+
+11.
+
+Motor de validação
+
+Gerar os 18 alertas definidos.
+
+12.
+
+Interpretador
+
+Receber um plano terapêutico e devolver:
+
+- duração estimada;
+- faixa;
+- carga;
+- fadiga;
+- alertas;
+- conflitos;
+- estado geral.
+
+==========================================================
+IMPORTANTE
+==========================================================
+
+Nesta fase:
+
+NÃO alterar:
+
+- páginas;
+- componentes;
+- banco;
+- migrations;
+- APIs;
+- tela do terapeuta;
+- tela do paciente;
+- comportamento dos exercícios.
+
+Toda implementação deverá ficar isolada em módulos reutilizáveis.
+
+==========================================================
+COMPATIBILIDADE
+==========================================================
+
+Todos os planos atuais devem continuar funcionando.
+
+Nada poderá quebrar pacientes existentes.
+
+Nenhum exercício poderá deixar de abrir.
+
+Nenhum plano salvo poderá ficar inválido.
+
+==========================================================
+TESTES
+==========================================================
+
+Criar testes automáticos para validar:
+
+- cálculo de duração;
+- cálculo de carga;
+- cálculo de fadiga;
+- margens de fechamento;
+- 18 alertas;
+- estados da sessão;
+- compatibilidade com planos antigos.
+
+Não aceitar implementação sem testes.
+
+==========================================================
+ENTREGA
+==========================================================
+
+Ao terminar apresentar:
+
+1.
+
+Arquivos criados.
+
+2.
+
+Arquivos alterados.
+
+3.
+
+Arquitetura implementada.
+
+4.
+
+Cobertura dos testes.
+
+5.
+
+Exemplos reais:
+
+Sessão de 20 minutos
+
+Sessão de 30 minutos
+
+Sessão de 40 minutos
+
+Mostrando exatamente:
+
+- duração;
+- carga;
+- fadiga;
+- alertas;
+- estado.
+
+6.
+
+Confirmação de que:
+
+- nenhum exercício foi alterado;
+- nenhuma interface foi alterada;
+- nenhum paciente perde compatibilidade;
+- nenhum progresso foi modificado.
+
+Não iniciar automaticamente a Fase 2 (interface do terapeuta).
+
+Pare e aguarde minha validação.
