@@ -4215,3 +4215,8 @@ Esse comando deixa o projeto com uma base arquitetural limpa e consistente antes
 
 ## 02/08/2026 20:14
 falta muito?
+
+## 02/08/2026 20:50
+Pode concluir os três lotes normalmente.
+Ao final, antes de qualquer commit ou implementação, apresente a documentação consolidada e um relatório único.
+Depois faremos uma revisão clínica global dos 34 exercícios antes de iniciar a fase de carga cognitiva.

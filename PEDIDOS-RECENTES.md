@@ -1,37 +1,6 @@
 # As 3 ultimas especificacoes dela (automatico; a mais nova por ultimo)
 # Na retomada: ler as 3, conectar com PROGRESSO.md e git, declarar e seguir.
 
-## 02/08/2026 19:23
-Confirmando a decisão clínica:
-
-Os exercícios Span Numérico Auditivo Direto e Span Numérico Auditivo Inverso já são auditivos por definição. O áudio é intrínseco e obrigatório na mecânica desses exercícios.
-
-Portanto:
-
-- não criar seletor de modalidade para os spans;
-- não propor versão visual;
-- não propor versão visual + áudio;
-- não tratá-los como “só visual” na documentação.
-
-Classificação correta dos dois spans:
-
-- modalidade configurável: não;
-- canal sensorial intrínseco: auditivo;
-- áudio intrínseco à tarefa: sim;
-- leitura assistiva: apenas para textos instrucionais, separada do áudio dos números.
-
-A seleção Visual / Visual + áudio / Somente áudio continua restrita exclusivamente a:
-
-1. Restaurante;
-2. Supermercado;
-3. Caminhos para a Meta;
-4. Agentes Focus;
-5. Compra Multifuncional.
-
-Nenhum outro exercício deverá receber esse seletor sem nova decisão clínica explícita.
-
-Corrija somente a documentação e prossiga com a auditoria considerando essa regra.
-
 ## 02/08/2026 19:29
 Vamos consolidar definitivamente o catálogo de exercícios antes de iniciar a implementação da nova arquitetura.
 
@@ -486,3 +455,8 @@ Após isso, considerar encerrada definitivamente a fase de organização do cat�
 ```
 
 Esse comando deixa o projeto com uma base arquitetural limpa e consistente antes de partir para a próxima etapa.
+
+## 02/08/2026 20:50
+Pode concluir os três lotes normalmente.
+Ao final, antes de qualquer commit ou implementação, apresente a documentação consolidada e um relatório único.
+Depois faremos uma revisão clínica global dos 34 exercícios antes de iniciar a fase de carga cognitiva.
