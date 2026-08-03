@@ -1,18 +1,19 @@
 # Decisões clínicas pendentes
 
 As prioridades abaixo indicam impacto em uma futura implementação. Elas não impedem a leitura da
-arquitetura e não autorizam preencher respostas por inferência técnica.
+arquitetura, não são alertas de sessão e não autorizam preencher respostas por inferência técnica.
+
+> **Registro de 03/ago:** a margem de fechamento por modelo de execução foi validada por ela e
+> permanece definida no documento 02; portanto, deixou de ser uma decisão pendente.
 
 ## Bloqueante
 
-1. **Faixas de sessão e limite máximo:** aprovar ou ajustar os envelopes e tetos do documento 02
-   antes de transformá-los em alertas de produção.
-2. **Margem de fechamento por modelo:** aprovar os máximos operacionais, principalmente o término de
-   um desafio `PLANNING_WINDOW`, que domina o extremo superior da estimativa.
-3. **Tetos de carga basal:** confirmar se os três limiares propostos são adequados enquanto os
-   modificadores permanecerem apenas qualitativos.
-4. **Fadiga alta:** confirmar os tetos por duração, a vedação no fechamento e a exigência de uma
+1. **Faixas de sessão e limite máximo:** aprovar ou ajustar os envelopes e limites de atenção do
+   documento 02 antes de transformá-los em alertas de produção.
+2. **Fadiga alta:** confirmar os tetos por duração, a vedação no fechamento e a exigência de uma
    atividade intermediária entre duas exposições altas.
+3. **Caminhos para a Meta:** reformular o exercício e então substituir seus parâmetros provisórios;
+   até lá, eles não servem de referência clínica para outros exercícios.
 
 ## Importante
 
@@ -36,6 +37,6 @@ arquitetura e não autorizam preencher respostas por inferência técnica.
 
 | Prioridade | Decisões pendentes |
 |---|---:|
-| Bloqueante | 4 |
+| Bloqueante | 3 |
 | Importante | 4 |
 | Refinamento | 2 |

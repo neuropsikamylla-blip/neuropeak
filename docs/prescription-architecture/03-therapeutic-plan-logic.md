@@ -46,6 +46,10 @@ pela interface. Os modificadores afetados pelos parâmetros prescritos são cole
 qualitativas (`appliedLoadModifiers`), sem pesos e sem alterar `baselineLoadTotal`. Uma futura fórmula
 dinâmica poderá consumir essas evidências, mas ela não é definida aqui.
 
+Os valores 7, 10 e 13 usados na composição são referências heurísticas de atenção. O total basal não
+autoriza, proíbe ou descreve sozinho uma sessão: deve ser lido junto de fadiga, interferência, modelo
+de execução, modalidade e planejamento.
+
 #### Distribuição
 
 O sistema agrega quantidade de exercícios e faixa de minutos prescritos por:
@@ -243,6 +247,7 @@ type PlanWarningCode =
   | "AUDITORY_ONLY_ADJACENT"
   | "COGNITIVE_CONCENTRATION"
   | "PLANNING_WINDOW_COUNT"
+  | "PLANNING_WINDOW_ADJACENT"
   | "OPEN_POSITION_NOT_ELIGIBLE"
   | "CLOSE_POSITION_NOT_ELIGIBLE"
   | "OUTSIDE_BEST_POSITION"

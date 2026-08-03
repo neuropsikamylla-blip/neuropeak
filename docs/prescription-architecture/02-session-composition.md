@@ -38,6 +38,9 @@ lote 1 são aplicados antes da margem; por exemplo, 10 min com impacto de `+10�
 
 A margem operacional tem dois componentes somados:
 
+> **Decisão clínica validada em 03/ago:** as margens de fechamento por modelo abaixo foram
+> aprovadas por ela e permanecem como estão nesta arquitetura.
+
 | Componente | Mínimo | Máximo | Aplicação |
 |---|---:|---:|---|
 | Transição | 0,5 min | 1 min | Para cada troca entre dois exercícios; com `n` exercícios, há `n - 1` trocas. |
@@ -92,6 +95,12 @@ Por enquanto, carga da sessão é somente a soma de `baselineCognitiveLoad.value
 prescritos. Modificadores de carga continuam registrados de forma qualitativa, sem conversão em
 pontos; a fórmula dinâmica pertence a uma fase posterior.
 
+Os valores 7, 10 e 13 são **referências heurísticas de atenção**, não limites absolutos, nem
+autorização ou proibição de uma composição. A soma basal não descreve a sessão: duas sessões com a
+mesma carga total podem ter qualidades clínicas muito diferentes. A leitura clínica considera
+simultaneamente **carga basal · fadiga · interferência · modelo de execução · modalidade ·
+planejamento**; nenhum desses eixos, isoladamente, decide se a sessão é adequada.
+
 | Duração | Teto de carga basal |
 |---:|---:|
 | 20 min | 7 |
@@ -100,8 +109,17 @@ pontos; a fórmula dinâmica pertence a uma fase posterior.
 
 | Código | Disparo verificável | Mensagem ao terapeuta | Severidade |
 |---|---|---|---|
-| `LOAD_AT_CAP` | Soma basal igual ao teto da duração. | “A carga basal somada é **C**, exatamente o teto de **T** para esta duração.” | informativa |
-| `LOAD_OVER_CAP` | Soma basal maior que o teto. | “A carga basal somada é **C**, acima do teto de **T** para esta duração.” | atenção |
+| `LOAD_AT_CAP` | Soma basal igual à referência da duração. | “A carga basal somada é **C**, na referência de atenção **T** para esta duração; revise-a junto dos demais eixos da composição.” | informativa |
+| `LOAD_OVER_CAP` | Soma basal maior que a referência da duração. | “A carga basal somada é **C**, acima da referência de atenção **T** para esta duração; revise-a junto dos demais eixos da composição.” | atenção |
+
+Esses alertas informam apenas onde a soma se situa em relação à referência; não classificam a
+sessão como certa ou errada e não substituem a leitura clínica.
+
+**Mesmo total, leituras diferentes:** Matriz Espacial (1), Conecta Números (1), Agentes Focus (2) e
+Cores e Palavras (3) somam carga 7, mas concentram uma exposição de fadiga alta em Cores e Palavras.
+Cores e Palavras (3), Alternância de Regras (3) e Certo ou Errado (1) também somam 7, mas os dois
+primeiros concentram interferência alta em sequência. O número é igual, mas os perfis e a decisão
+clínica não são.
 
 ### 2. Fadiga
 
@@ -176,6 +194,13 @@ por qualidade.
 | Código | Disparo verificável | Mensagem ao terapeuta | Severidade |
 |---|---|---|---|
 | `PLANNING_WINDOW_COUNT` | Quantidade de `PLANNING_WINDOW` maior que o teto da duração. | “Há **Q** janelas de planejamento; o teto desta sessão é **T**.” | atenção |
+| `PLANNING_WINDOW_ADJACENT` | Para algum índice `i`, os exercícios `i` e `i + 1` são ambos `PLANNING_WINDOW`. | “**{A}** e **{B}** são janelas de planejamento consecutivas; considere inserir entre elas um `CONTINUOUS_TIMED` ou `CLOSED_PROTOCOL`.” | atenção |
+
+`PLANNING_WINDOW_ADJACENT` é independente de `PLANNING_WINDOW_COUNT`: o primeiro observa cada par
+consecutivo, e o segundo observa a quantidade na sessão. Há uma ocorrência por par adjacente, para
+que a posição permaneça auditável. Por exemplo, **Jogo das Torres → Estacionamento Lógico → Caminhos
+para a Meta** contém os pares consecutivos que este alerta chama a atenção para intercalar. A
+sugestão nunca bloqueia o salvamento.
 
 ### 7. Posição
 
@@ -270,7 +295,7 @@ acima dispara; não significa recomendação de plano.
 - A sessão tem cinco `mechanicalPrimary` distintos e nenhuma assinatura comum aos cinco.
 - Resultado: **sem alertas**.
 
-### Inválida — 20 minutos, concentração de carga, fadiga e interferência
+### Com alertas — 20 minutos, concentração de carga, fadiga e interferência
 
 | Ordem | Exercício | Modelo | Dose | Duração prescrita | Carga | Fadiga | Interferência |
 |---:|---|---|---|---:|---:|---|---|
@@ -297,7 +322,7 @@ Tempo real estimado: **20,5–23 min**. Alertas:
 
 Apesar do conjunto de alertas, o salvamento permanece disponível.
 
-### Inválida — 30 minutos, sequência auditiva e combinação declarada
+### Com alertas — 30 minutos, sequência auditiva e combinação declarada
 
 | Ordem | Exercício | Modalidade | Dose | Duração após modalidade | Carga | Fadiga | Interferência |
 |---:|---|---|---|---:|---:|---|---|
