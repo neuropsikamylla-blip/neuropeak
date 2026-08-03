@@ -598,12 +598,16 @@
     "officialName": "Investigadores da Situação Social",
     "catalogDomain": "Desenvolvimento Funcional",
     "catalogSubdomain": "Cognição Social",
-    "mechanicalPrimary": "Linguagem, Leitura e Processamento Auditivo",
-    "associatedCognitiveProfiles": [],
+    "mechanicalPrimary": "Cognição Social e Inferência Social",
+    "associatedCognitiveProfiles": [
+      "Linguagem, Leitura e Processamento Auditivo",
+      "Resolução de Problemas e Tomada de Decisão"
+    ],
     "functionalClinicalTags": [
       "Cognição Social",
-      "Tomada de Decisão Cotidiana",
-      "Compreensão de Situações Sociais"
+      "Compreensão de Situações Sociais",
+      "Resolução de Situações Sociais",
+      "Habilidades Sociais"
     ],
     "instrumentalDemands": [
       "leitura da descrição, contexto, pergunta e opções; visão de expressões, personagens ou emojis; compreensão lexical e cultural; uso de mouse ou toque. Alfabetização, familiaridade cultural e percepção visual de expressão podem limitar a resposta sem constituir cognição social por si"

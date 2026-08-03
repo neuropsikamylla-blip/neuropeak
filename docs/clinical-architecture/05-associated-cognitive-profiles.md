@@ -52,9 +52,21 @@ Leitura não foi convertida automaticamente em alvo de linguagem, duração não
 | Chave na matriz | Domínio fino | Tratamento nesta camada |
 |---|---|---|
 | `functionalAutonomy` | autonomia funcional | Somente `functionalClinicalTags`: **Autonomia Funcional**, quando aplicável. |
-| `socialCognition` | cognição social | Somente `functionalClinicalTags`: **Cognição Social** e/ou **Compreensão de Situações Sociais**, conforme a aplicação. |
+| — | — | — |
 
-Esses dois campos são contextos funcionais, não processos dos 20 macros, e por isso nunca são usados como `mechanicalPrimary` nem como `associatedCognitiveProfiles`.
+`functionalAutonomy` é contexto funcional, não processo, e por isso nunca é usado como
+`mechanicalPrimary` nem como `associatedCognitiveProfiles`.
+
+⚠️ **Correção de 02/ago (decisão clínica dela):** `socialCognition` **deixou de ser** um domínio sem
+macro. Foi criado o **21º macro — Cognição Social e Inferência Social** — que agrega: reconhecimento
+de emoções · interpretação de intenções · teoria da mente · tomada de perspectiva · inferência
+social · compreensão de pistas sociais · julgamento social · compreensão de regras sociais · seleção
+de resposta social adequada.
+
+**Cognição social existe nos dois níveis, sem duplicação indevida:** como **macro** descreve o
+processo mental recrutado; como **tag funcional** ("Cognição Social", "Compreensão de Situações
+Sociais", "Habilidades Sociais") descreve a aplicação clínica. São camadas diferentes do mesmo
+conceito, não repetição.
 
 ## Perfis dos 34 exercícios
 
@@ -93,7 +105,7 @@ Esses dois campos são contextos funcionais, não processos dos 20 macros, e por
 | `vigilancia` — Vigilância | Atenção | Atenção Sustentada | Percepção e Processamento Visuoespacial | Armazenamento de Curto Prazo<br>Atenção Seletiva<br>Controle Inibitório | — | `FINALIZED_PROFILE` |
 | `identificacao-simbolos` — Identificação de Símbolos | Velocidade de Processamento | Busca Visual Rápida | Busca e Rastreamento Visual | Atenção Seletiva<br>Controle Inibitório<br>Percepção e Processamento Visuoespacial | — | `FINALIZED_PROFILE` |
 | `estacionamento-logico` — Estacionamento Lógico | Funções Executivas | Planejamento | Planejamento | Monitoramento Executivo e Manutenção de Meta<br>Percepção e Processamento Visuoespacial<br>Organização e Sequenciamento<br>Resolução de Problemas e Tomada de Decisão | — | `FINALIZED_PROFILE` |
-| `investigadores-sociais` — Investigadores da Situação Social | Desenvolvimento Funcional | Cognição Social | Linguagem, Leitura e Processamento Auditivo | — | Cognição Social<br>Tomada de Decisão Cotidiana<br>Compreensão de Situações Sociais | `FINALIZED_PROFILE` |
+| `investigadores-sociais` — Investigadores da Situação Social | Desenvolvimento Funcional | Cognição Social | **Cognição Social e Inferência Social** | Linguagem, Leitura e Processamento Auditivo<br>Resolução de Problemas e Tomada de Decisão | Cognição Social<br>Compreensão de Situações Sociais<br>Resolução de Situações Sociais<br>Habilidades Sociais | `FINALIZED_PROFILE` |
 
 ## Divergências entre catálogo e mecânica
 
@@ -125,7 +137,7 @@ Os casos abaixo são diferenças literais entre `catalogSubdomain` e `mechanical
 | `cubo-corsi` — Cubos | Memória Visuoespacial | Memória Operacional Visuoespacial |
 | `vigilancia` — Vigilância | Atenção Sustentada | Percepção e Processamento Visuoespacial |
 | `identificacao-simbolos` — Identificação de Símbolos | Busca Visual Rápida | Busca e Rastreamento Visual |
-| `investigadores-sociais` — Investigadores da Situação Social | Cognição Social | Linguagem, Leitura e Processamento Auditivo |
+| `investigadores-sociais` — Investigadores da Situação Social | Cognição Social | **Cognição Social e Inferência Social** |
 
 ## Decisões clínicas específicas
 
