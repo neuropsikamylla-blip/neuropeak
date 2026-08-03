@@ -1,364 +1,6 @@
 # As 3 ultimas especificacoes dela (automatico; a mais nova por ultimo)
 # Na retomada: ler as 3, conectar com PROGRESSO.md e git, declarar e seguir.
 
-## 03/08/2026 09:35
-então os exercicios, eu vou verificar depois. agora vou iniciar a fase 2  : FASE 2 — ARQUITETURA DE PRESCRIÇÃO CLÍNICA
-
-A Fase 1 está oficialmente encerrada.
-
-Todos os documentos da arquitetura clínica passam a ser considerados congelados e servirão como base para esta etapa.
-
-NÃO revisar novamente:
-
-- taxonomia;
-- perfis cognitivos;
-- mechanicalPrimary;
-- associatedProfiles;
-- categorias;
-- catálogo;
-- nomenclatura;
-- documentação da Fase 1.
-
-Essas informações passam a ser consideradas válidas.
-
-==========================================================
-OBJETIVO
-==========================================================
-
-Projetar toda a arquitetura de prescrição clínica do NeuroPeak.
-
-O objetivo desta fase NÃO é implementar.
-
-Também NÃO é alterar exercícios.
-
-O objetivo é definir exatamente como cada exercício deverá funcionar dentro de um plano terapêutico.
-
-Ao final desta fase, quero conseguir montar qualquer protocolo clínico apenas utilizando os parâmetros definidos.
-
-==========================================================
-NÃO IMPLEMENTAR
-==========================================================
-
-Não alterar:
-
-- código;
-- exercícios;
-- níveis;
-- banco;
-- migrations;
-- interface;
-- catálogo;
-- modalidades;
-- engine.
-
-Apenas analisar, documentar e definir arquitetura.
-
-==========================================================
-PARA CADA UM DOS 34 EXERCÍCIOS
-==========================================================
-
-Determinar obrigatoriamente:
-
-1.
-Modelo de execução
-
-Escolher apenas um:
-
-- CONTINUOUS_TIMED
-- CLOSED_PROTOCOL
-- PLANNING_WINDOW
-- FIXED_HIGH_FATIGUE
-
-Justificar.
-
-----------------------------------------------------------
-
-2.
-Unidade mínima válida
-
-Identificar qual é a menor unidade clinicamente válida.
-
-Exemplos:
-
-- tentativa
-- rodada
-- série
-- bloco
-- desafio completo
-- fase
-
-Justificar.
-
-----------------------------------------------------------
-
-3.
-Política de encerramento
-
-Quando o limite for atingido:
-
-- termina imediatamente?
-- termina a rodada?
-- termina o bloco?
-- termina o desafio?
-- não inicia outro?
-
-Definir comportamento.
-
-----------------------------------------------------------
-
-4.
-Protocolos
-
-Definir:
-
-BREVE
-
-PADRÃO
-
-ESTENDIDO
-
-Cada protocolo deve informar:
-
-- quantidade de unidades
-- duração estimada
-- validade clínica
-
-----------------------------------------------------------
-
-5.
-Carga Cognitiva Basal
-
-Escala:
-
-1
-2
-3
-
-Apenas carga basal.
-
-Não calcular ainda carga dinâmica.
-
-Justificar.
-
-----------------------------------------------------------
-
-6.
-Modificadores de carga
-
-Identificar tudo o que aumenta carga.
-
-Exemplos:
-
-- velocidade
-- memória
-- quantidade
-- interferência
-- dupla tarefa
-- mudança de regra
-- semelhança
-- planejamento
-- modalidade
-
-Sem calcular ainda.
-
-----------------------------------------------------------
-
-7.
-Duração Clínica
-
-Definir:
-
-mínima útil
-
-padrão
-
-máxima recomendada
-
-Nunca usar o mesmo valor para todos.
-
-Justificar.
-
-----------------------------------------------------------
-
-8.
-Fadiga
-
-Classificar:
-
-baixa
-
-moderada
-
-alta
-
-Explicar.
-
-----------------------------------------------------------
-
-9.
-Interferência
-
-Classificar:
-
-baixa
-
-moderada
-
-alta
-
-----------------------------------------------------------
-
-10.
-Retomada
-
-Como o exercício volta após interrupção?
-
-Retoma:
-
-- exatamente de onde parou?
-- início do bloco?
-- um nível abaixo?
-- outra estratégia?
-
-----------------------------------------------------------
-
-11.
-Elegibilidade para sessão
-
-Responder:
-
-Pode abrir uma sessão?
-
-Pode finalizar uma sessão?
-
-Melhor no início?
-
-Melhor no meio?
-
-Melhor no final?
-
-Existe combinação ruim?
-
-----------------------------------------------------------
-
-12.
-Modalidade
-
-Somente para:
-
-- Restaurante
-- Supermercado
-- Caminhos para a Meta
-- Agentes Focus
-- Compra Multifuncional
-
-Analisar impacto na duração e carga.
-
-==========================================================
-DEPOIS DOS 34
-==========================================================
-
-Projetar a composição automática das sessões.
-
-Exemplo:
-
-Sessão:
-
-20 minutos
-
-30 minutos
-
-40 minutos
-
-O sistema deve conseguir distribuir automaticamente os exercícios respeitando:
-
-- carga
-- fadiga
-- duração
-- modalidade
-- planejamento
-- diversidade cognitiva
-
-==========================================================
-PLANO TERAPÊUTICO
-==========================================================
-
-Projetar a lógica que será usada pelo terapeuta.
-
-O terapeuta escolherá:
-
-- frequência semanal
-- duração da sessão
-- exercícios
-
-O sistema calculará automaticamente:
-
-- tempo real
-- carga
-- distribuição
-- alertas
-- conflitos
-- balanceamento
-
-==========================================================
-NÃO PROJETAR A ENGINE AINDA
-==========================================================
-
-Nesta fase não decidir:
-
-- IA
-- sugestões automáticas
-- prescrição inteligente
-
-Primeiro quero consolidar toda a arquitetura da sessão.
-
-==========================================================
-DOCUMENTOS
-==========================================================
-
-Criar documentação organizada desta fase.
-
-Separar claramente:
-
-- arquitetura
-- decisões
-- dúvidas
-- pendências
-
-==========================================================
-RELATÓRIO FINAL
-==========================================================
-
-Ao terminar, apresentar:
-
-1.
-Tabela única dos 34 exercícios.
-
-2.
-Modelo de execução.
-
-3.
-Carga basal.
-
-4.
-Duração.
-
-5.
-Fadiga.
-
-6.
-Interferência.
-
-7.
-Protocolos.
-
-8.
-Exercícios que ainda dependem de decisão clínica.
-
-Depois parar.
-
-Não implementar absolutamente nada. Antes de executar, lembre que a janela do Claude é mais escassa: use o Codex para toda codificação que caiba numa spec sobre o ⁠ HEAD ⁠ commitado, deixando o Claude direto apenas para ajuste pós-colheita, integração com contexto vivo ou indisponibilidade comprovada do Codex. No Codex, use ⁠ gpt-5.6-sol ⁠ ⁠ xhigh ⁠ para arquitetura, alto risco ou revisão final; ⁠ gpt-5.6-sol ⁠ ⁠ high ⁠ para conflitos ou código acoplado; ⁠ gpt-5.6-terra ⁠ ⁠ high ⁠ para código comum ou testável; e ⁠ gpt-5.6-luna ⁠ ⁠ high ⁠ para trabalho focalizado, repetível e barato de validar. Antes do primeiro comando, anuncie motor, modelo, esforço e motivo e, se for Codex, localize e use o ⁠ lab.sh ⁠ já instalado, sem presumir caminho nem criar outro.
-
 ## 03/08/2026 09:58
 <task-notification>
 <task-id>b2uutqz8h</task-id>
@@ -376,3 +18,241 @@ Não implementar absolutamente nada. Antes de executar, lembre que a janela do C
 <status>completed</status>
 <summary>Background command "Aguardar a reconstrução do lote 1" completed (exit code 0)</summary>
 </task-notification>
+
+## 03/08/2026 10:25
+Concordo com a opção (a).
+
+Recalibre apenas:
+
+- carga cognitiva basal;
+- fadiga.
+
+Mantenha intactos os outros 10 parâmetros já analisados no lote 1.
+
+A correção conceitual é:
+
+CARGA BASAL NÃO REPRESENTA:
+
+- quantidade de domínios recrutados;
+- multidimensionalidade;
+- quantidade de funções cognitivas associadas;
+- importância clínica do exercício;
+- dificuldade máxima que ele pode atingir.
+
+CARGA BASAL REPRESENTA:
+
+- intensidade cognitiva média por unidade de tempo;
+- esforço necessário na configuração inicial ou padrão;
+- continuidade da demanda;
+- quantidade de operações simultâneas;
+- necessidade de manter/manipular informação;
+- interferência;
+- pressão temporal;
+- complexidade da resposta;
+- possibilidade de recuperação entre rodadas.
+
+Um exercício pode recrutar muitos processos e ainda ter carga basal baixa ou moderada quando:
+
+- as rodadas são curtas;
+- há pausas naturais;
+- a resposta é simples;
+- a regra permanece estável;
+- a informação exigida é pequena;
+- o paciente consegue recuperar-se entre tentativas.
+
+==================================================
+CRITÉRIOS DA CARGA BASAL
+==================================================
+
+Utilizar escala 1–3:
+
+1 — BAIXA
+
+Demanda leve por minuto, com uma ou poucas operações centrais, resposta simples, baixa interferência e possibilidade clara de recuperação entre rodadas.
+
+Características frequentes:
+
+- regra simples e estável;
+- baixa manutenção de informação;
+- pouca ou nenhuma manipulação mental;
+- ausência de dupla tarefa;
+- baixa pressão temporal;
+- resposta motora simples;
+- unidades curtas;
+- pausas naturais;
+- poucos estímulos simultâneos.
+
+2 — MODERADA
+
+Demanda cognitiva consistente, mas administrável, com combinação de processos, manutenção de informações, seleção entre alternativas ou planejamento limitado.
+
+Características frequentes:
+
+- duas ou mais operações relevantes;
+- manutenção de meta;
+- controle de distração;
+- memória operacional moderada;
+- seleção de resposta;
+- interferência moderada;
+- planejamento ou monitoramento;
+- exigência contínua, mas com alguma recuperação.
+
+3 — ALTA
+
+Demanda intensa e sustentada por minuto, com múltiplas operações simultâneas, forte interferência, manipulação ativa, mudança frequente de regra, dupla tarefa ou pressão temporal elevada.
+
+Características frequentes:
+
+- dupla tarefa real;
+- interferência forte;
+- atualização contínua;
+- manipulação mental intensa;
+- alternância frequente de regras;
+- pressão temporal alta;
+- baixa possibilidade de recuperação;
+- necessidade de manter vários elementos simultaneamente;
+- alto custo de erro;
+- demanda contínua durante a maior parte da atividade.
+
+==================================================
+REGRAS IMPORTANTES
+==================================================
+
+Não classificar como carga 3 apenas porque o exercício:
+
+- recruta muitos domínios;
+- está em Funções Executivas;
+- possui níveis avançados difíceis;
+- exige planejamento;
+- possui memória operacional;
+- dura vários minutos;
+- envolve vários estímulos visuais.
+
+A carga basal descreve a configuração inicial ou padrão.
+
+A dificuldade dos níveis avançados deverá aparecer em:
+
+- dynamicLoadModifiers;
+- faixa dinâmica de carga.
+
+Exemplo conceitual:
+
+Cubos pode ter:
+
+- carga basal 1 ou 2;
+- carga dinâmica máxima 3 conforme tamanho da sequência e velocidade.
+
+Vigilância pode ter:
+
+- carga basal 1 ou 2;
+- aumento de carga por duração, velocidade, semelhança dos alvos e densidade de estímulos.
+
+Jogo das Torres pode ter:
+
+- carga basal 2;
+- carga dinâmica 3 em problemas complexos.
+
+Carga 3 basal deve ser reservada para tarefas cuja própria mecânica padrão já sustenta intensidade elevada.
+
+Possíveis candidatos, apenas se confirmados pela mecânica:
+
+- Cores e Palavras;
+- Dupla Tarefa;
+- N-Back;
+- Alternância de Regras;
+- Lista com Distração;
+- outros com interferência, atualização ou simultaneidade efetivamente altas.
+
+Não force quantidade mínima ou máxima de exercícios em cada classe.
+
+A distribuição deve resultar dos critérios, não de uma meta estatística.
+
+Entretanto, ao final, avalie se a escala ficou discriminativa.
+
+Se mais de aproximadamente 40% dos exercícios permanecerem na mesma classe, revise as justificativas e verifique se ainda existe confusão conceitual.
+
+==================================================
+FADIGA
+==================================================
+
+Recalibre fadiga separadamente da carga.
+
+Fadiga não é sinônimo de carga basal.
+
+Fadiga representa a probabilidade de queda de qualidade, exaustão ou perda de engajamento ao longo da exposição.
+
+Considerar:
+
+- repetitividade;
+- interferência;
+- duração típica;
+- pressão temporal;
+- esforço inibitório;
+- esforço de atualização;
+- sobrecarga visual;
+- sobrecarga auditiva;
+- frustração;
+- custo de erro;
+- ausência de pausas;
+- monotonia;
+- necessidade de planejamento prolongado.
+
+Escala:
+
+BAIXA
+
+- tolera exposição relativamente longa;
+- possui pausas naturais;
+- baixa interferência;
+- baixa frustração;
+- resposta simples;
+- boa possibilidade de recuperação.
+
+MODERADA
+
+- pode gerar redução gradual de desempenho;
+- exige atenção ou memória de forma consistente;
+- tolera duração intermediária;
+- precisa de limite razoável.
+
+ALTA
+
+- perde qualidade rapidamente;
+- forte interferência;
+- alternância intensa;
+- dupla tarefa;
+- pressão temporal alta;
+- manipulação contínua;
+- grande risco de frustração;
+- exposição deve ser curta ou rigidamente limitada.
+
+Um exercício pode ter:
+
+- carga basal alta e fadiga moderada;
+- carga basal moderada e fadiga alta;
+- carga basal baixa e fadiga moderada por monotonia.
+
+Portanto, não derive automaticamente fadiga da carga.
+
+==================================================
+ENTREGA DA RECALIBRAÇÃO
+==================================================
+
+Recalibre os 34 exercícios e apresente:
+
+1. Distribuição final da carga basal.
+2. Distribuição final da fadiga.
+3. Lista de exercícios que mudaram de carga.
+4. Lista de exercícios que mudaram de fadiga.
+5. Justificativa curta para cada carga 3.
+6. Justificativa curta para cada fadiga alta.
+7. Exercícios com:
+   - carga basal baixa e faixa dinâmica alta;
+   - carga basal moderada e fadiga alta;
+   - carga basal alta e fadiga moderada.
+8. Confirmação de que multidimensionalidade não foi usada como sinônimo de carga.
+9. Confirmação de que os outros 10 parâmetros do lote 1 permaneceram intactos.
+
+Depois aplique a recalibração aos documentos e JSON do lote 1 e prossiga normalmente para os lotes 2 e 3.
+
+Não interrompa novamente para pedir uma distribuição numérica ideal, salvo se surgir uma inconsistência clínica real.
