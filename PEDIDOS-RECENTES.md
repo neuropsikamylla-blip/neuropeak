@@ -1,37 +1,6 @@
 # As 3 ultimas especificacoes dela (automatico; a mais nova por ultimo)
 # Na retomada: ler as 3, conectar com PROGRESSO.md e git, declarar e seguir.
 
-## 02/08/2026 22:30
-Revendo a Fase 1, acredito que a estrutura principal está correta.
-
-Minha decisão clínica é manter cada exercício organizado pelo seu DOMÍNIO e SUBDOMÍNIO PRINCIPAL, exatamente como está hoje.
-
-Entretanto, reconheço que praticamente todos os exercícios treinam processos cognitivos secundários.
-
-Portanto, não quero mover exercícios entre categorias.
-
-Quero acrescentar um PERFIL COGNITIVO ASSOCIADO para cada exercício.
-
-Exemplo:
-
-- Caminhos para a Meta:
-  Principal: Planejamento.
-  Associados: Flexibilidade Cognitiva, Memória Operacional e Organização Sequencial.
-
-- Compra Multifuncional:
-  Principal: Autonomia.
-  Associados: Funções Executivas, Atenção Seletiva, Memória Operacional e Velocidade de Processamento.
-
-- Restaurante:
-  Principal: Memória Operacional.
-  Associados: Atenção Sustentada, Controle Inibitório e Flexibilidade Cognitiva.
-
-O domínio principal continua sendo o responsável pela organização visual do catálogo.
-
-Os perfis associados servirão para a futura engine de prescrição, cálculo de carga cognitiva e recomendações clínicas.
-
-Ou seja, não quero reorganizar o catálogo. Quero enriquecer o perfil cognitivo de cada exercício.
-
 ## 02/08/2026 22:33
 Decisões clínicas para aplicar o perfil associado aos 34 exercícios:
 
@@ -519,3 +488,6 @@ Depois execute novamente as verificações e apresente:
 6. confirmação de que leitura não foi tratada como alvo principal de Investigadores.
 
 Pode então concluir e commitar somente esses documentos, sem iniciar a fase de carga cognitiva.
+
+## 02/08/2026 22:58
+Perfeito. Vamos encerrar esta etapa aqui. Não inicie ainda a Fase 2. Considere toda a Fase 1 concluída e congelada até nova solicitação
