@@ -298,3 +298,326 @@ A matriz é esparsa: mostra apenas domínios com valor de 1 a 3. Demandas instru
 | Busca Rápida | velocidade de busca | velocidade de busca 3 · busca visual 3 · pressão temporal 3 · categorização 2 · atenção seletiva 2 · controle de distração 2 · varredura espacial 2 · manutenção de meta 2 · velocidade de processamento 2 · discriminação visual 1 · percepção de forma 1 | alto |
 | Identificação de Símbolos | busca visual | busca visual 3 · comparação 2 · discriminação visual 2 · percepção de forma 2 · atenção seletiva 2 · controle de distração 2 · varredura espacial 2 · velocidade de busca 1 · constância perceptiva 1 · rapidez perceptiva 1 · manutenção de meta 1 | moderado; tentativas seguintes: alto |
 | Cores e Palavras | controle inibitório | controle inibitório 3 · atenção seletiva 3 · alternância de regra 2 · flexibilidade cognitiva 2 · manutenção de meta 2 · leitura 2 · discriminação visual 2 · tempo de reação de escolha 2 · velocidade de decisão 2 · pressão temporal 2 · comparação 1 | alto |
+
+# Adendo — Lote B (Memória)
+
+As 13 fichas abaixo acrescentam o Lote B sem modificar as fichas nem a matriz do Lote A. Categoria e subdomínio atuais continuam transcritos de `docs/architecture/CANONICAL_EXERCISES.md`; domínio principal e valores resultam da mecânica executável. O perfil basal considera o nível inicial. Mudanças internas de apresentação em Letras em Sequência e Sequência de Itens são modificadores de nível, não seletores de modalidade. Restaurante e Supermercado são os únicos exercícios deste lote com seletor Visual · Visual + áudio · Somente áudio.
+
+## 13. Span Numérico Auditivo Direto
+
+1. **Nome oficial:** Span Numérico Auditivo Direto.
+2. **ID técnico:** `span-numerico`.
+3. **Categoria atual:** Memória.
+4. **Subdomínio atual:** Memória Operacional.
+5. **Objetivo funcional aparente:** reter uma sequência de números apresentados oralmente e reproduzi-la na mesma ordem.
+6. **Resumo da mecânica real:** cada tentativa sorteia dígitos de 1 a 9, sem repetição até que a extensão ultrapasse o conjunto disponível, e reproduz os arquivos gravados de `/exercises/audio/numeros/*.m4a` um a um. Durante cada fala, a tecla que contém exatamente o número pronunciado acende no painel; marcadores também mostram quantos itens já foram apresentados. Terminada a sequência, o mesmo teclado fica interativo. A resposta é validada automaticamente ao atingir a extensão esperada, e a próxima tentativa ajusta essa extensão conforme o tipo de acerto ou erro. A sessão termina pelo número prescrito de tentativas. Embora a configuração declare permissão e penalidade de repetição, a interface executável não oferece ação de replay e o estado de repetição nunca é ativado.
+7. **Resposta exigida do paciente:** tocar, sem apagar ou corrigir, todos os dígitos na mesma ordem em que foram falados.
+8. **Unidade básica da tarefa:** codificação audiovisual sequencial de uma série de dígitos, seguida de reprodução serial imediata.
+9. **Domínio principal:** **armazenamento verbal de curto prazo**.
+10. **Domínios secundários:** memória operacional verbal; processamento auditivo sequencial; sequenciamento; manutenção de meta; atenção seletiva; armazenamento visuoespacial de curto prazo como apoio possível do realce das teclas.
+11. **Demandas instrumentais:** audição suficiente para fala gravada; reconhecimento de algarismos; visão do teclado e do realce; uso de mouse ou toque; coordenação visuomotora. O reconhecimento dos números e o ato de tocar não são, por si, os alvos de treino.
+12. **Estratégias possíveis:** repetição subvocal; agrupamento; ritmo; associação do som à posição da tecla; ensaio mental da série; monitoramento da quantidade de respostas pelos marcadores.
+13. **Perfil basal 0–3:** armazenamento verbal de curto prazo — **3**; memória operacional verbal — **2**; processamento auditivo sequencial — **2**; sequenciamento — **2**; manutenção de meta — **1**; atenção seletiva — **1**; armazenamento visuoespacial de curto prazo — **1**.
+14. **Modificadores nos níveis avançados:** a extensão cresce de uma série curta até dez dígitos; somente no teto aparece repetição de um dígito, não adjacente ao anterior. A fala não acelera nas séries maiores. O aumento da extensão amplia retenção, ensaio e monitoramento serial, sem introduzir transformação da ordem, regra alternante ou distratores externos.
+15. **Processos pouco ou não recrutados:** manipulação mental, atualização contínua de informação, rotação mental, planejamento, resolução de problemas, memória episódica, atenção dividida e pressão temporal de resposta.
+16. **Risco de confundir requisito da tarefa com alvo de treino:** audição, conhecimento de algarismos e precisão de toque podem reduzir o desempenho sem representar falha de memória. Mais importante, o `flashKey` revela visualmente a identidade de cada estímulo em sincronia com a fala; portanto, o desempenho não sustenta a interpretação de retenção auditiva pura.
+17. **Impacto da modalidade:** não há seletor: o áudio é intrínseco e obrigatório. Contudo, a apresentação implementada é **audiovisual**, porque a tecla correspondente acende durante cada gravação. O realce pode facilitar a codificação, permitir uma estratégia espacial e reduzir a dependência exclusiva de discriminação auditiva.
+18. **Impacto da leitura assistiva:** não se aplica. As gravações são o próprio estímulo a memorizar, não leitura de instrução nem recurso assistivo. Uma eventual repetição seria nova exposição ao conteúdo memorizando e precisaria ser distinguida de acessibilidade.
+19. **Confiança:** **alto**.
+20. **Questões que precisam de decisão clínica humana:** se o realce visual deve permanecer; se o construto será registrado como auditivo ou audiovisual; se replay deve existir e como uma repetição altera a interpretação; e se o subdomínio atual “Memória Operacional” deve ser mantido quando o perfil basal é reprodução direta sem transformação.
+
+## 14. Span Numérico Auditivo Inverso
+
+1. **Nome oficial:** Span Numérico Auditivo Inverso.
+2. **ID técnico:** `span-numerico-inverso`.
+3. **Categoria atual:** Memória.
+4. **Subdomínio atual:** Memória Operacional.
+5. **Objetivo funcional aparente:** reter números apresentados oralmente, inverter mentalmente sua ordem e reproduzir a série do último para o primeiro.
+6. **Resumo da mecânica real:** usa o mesmo gerador, gravações e teclado do span direto, inclusive o acendimento sincronizado da tecla falada. Após o último número, uma fileira de marcadores gira e o marcador de início muda de lado; os dígitos não reaparecem. O paciente então deve tocar a sequência invertida. A validação, a adaptação da extensão e o encerramento por número prescrito de tentativas são compartilhados com o modo direto; o replay declarado na configuração também não aparece na interface executável.
+7. **Resposta exigida do paciente:** tocar todos os dígitos na ordem contrária à apresentação, sem apoio para desfazer entradas.
+8. **Unidade básica da tarefa:** codificação audiovisual de uma série, transformação da ordem e reprodução serial inversa.
+9. **Domínio principal:** **manipulação mental**.
+10. **Domínios secundários:** memória operacional verbal; armazenamento verbal de curto prazo; processamento auditivo sequencial; sequenciamento; manutenção de meta; armazenamento visuoespacial de curto prazo como apoio possível do realce.
+11. **Demandas instrumentais:** audição da fala gravada; reconhecimento visual de algarismos; compreensão da regra “ordem inversa”; uso de mouse ou toque; coordenação visuomotora.
+12. **Estratégias possíveis:** repetição subvocal; recitação regressiva; agrupamento em blocos e inversão dos blocos; ensaio mental; associação som–posição; uso da virada dos marcadores como pista de direção; autorregulação antes de iniciar a resposta.
+13. **Perfil basal 0–3:** manipulação mental — **3**; memória operacional verbal — **3**; armazenamento verbal de curto prazo — **2**; processamento auditivo sequencial — **2**; sequenciamento — **2**; manutenção de meta — **2**; armazenamento visuoespacial de curto prazo — **1**.
+14. **Modificadores nos níveis avançados:** o crescimento da extensão amplia simultaneamente armazenamento e transformação serial; no teto pode haver um dígito repetido não adjacente. A regra continua sempre inversa e a apresentação não acelera nas séries maiores. A virada visual dos marcadores permanece como pista abstrata de direção, mas não fornece a ordem dos dígitos.
+15. **Processos pouco ou não recrutados:** atualização contínua, alternância de regra, planejamento de múltiplos passos, resolução de problemas, memória episódica, rotação mental espacial e atenção dividida.
+16. **Risco de confundir requisito da tarefa com alvo de treino:** dificuldade auditiva, reconhecimento numérico e toque afetam a resposta, mas não são manipulação mental. Inversamente, classificá-lo como simples retenção apagaria a operação que o separa do direto. O acendimento da tecla impede interpretar o resultado como memória auditiva pura.
+17. **Impacto da modalidade:** não há seletor e o áudio é obrigatório, mas o estímulo é audiovisual pelo `flashKey`. O apoio visual pode favorecer codificação espacial; a transformação inversa, porém, continua necessária porque nenhum dígito é reapresentado durante a resposta.
+18. **Impacto da leitura assistiva:** não se aplica. O áudio constitui o estímulo, e uma repetição futura seria repetição do conteúdo que deveria ser mantido, não mera leitura de instrução.
+19. **Confiança:** **alto**.
+20. **Questões que precisam de decisão clínica humana:** como separar armazenamento e manipulação nos resultados; se o realce e a animação de virada facilitam de forma clinicamente desejada; se o construto deve ser chamado auditivo ou audiovisual; e se replay pode ser permitido sem alterar a interpretação.
+
+## 15. Matriz Espacial
+
+1. **Nome oficial:** Matriz Espacial.
+2. **ID técnico:** `matriz-espacial`.
+3. **Categoria atual:** Memória.
+4. **Subdomínio atual:** Memória Visuoespacial.
+5. **Objetivo funcional aparente:** reter uma sequência de posições em uma grade e reproduzi-la na ordem apresentada.
+6. **Resumo da mecânica real:** o nível inicial usa uma grade 4×4 e sorteia duas células distintas. Elas acendem uma de cada vez, cada qual acompanhada pelo mesmo bipe sem informação de posição. Depois do desaparecimento dos realces, o paciente toca células ainda não usadas até completar a extensão, quando a resposta é comparada com a sequência. A extensão seguinte é ajustada por tentativa; o tamanho da grade depende da dificuldade recebida no início. A sessão termina quando o critério global de tempo ativo é verificado ao final de uma tentativa. Há uma mudança importante: no próprio ID direto, `difficulty >= 6` ativa resposta inversa para toda a sessão.
+7. **Resposta exigida do paciente:** tocar células distintas na mesma ordem em que acenderam no perfil basal; quando o componente é iniciado em dificuldade 6 ou superior, tocá-las em ordem inversa.
+8. **Unidade básica da tarefa:** apresentação serial de posições, retenção imediata e reprodução por toques em uma grade.
+9. **Domínio principal:** **armazenamento visuoespacial de curto prazo**.
+10. **Domínios secundários:** memória operacional visuoespacial; sequenciamento; percepção de posição; orientação atencional; manutenção de meta; integração visuoespacial.
+11. **Demandas instrumentais:** visão suficiente para localizar o brilho; uso de mouse ou toque; precisão visuomotora; percepção da grade. O bipe é um sinal temporal uniforme, não uma pista auditiva de qual célula acendeu.
+12. **Estratégias possíveis:** codificação por trajetória; agrupamento por linha, coluna ou quadrante; nomeação verbal de posições; ensaio mental; reconstrução de um caminho; monitoramento dos marcadores de resposta.
+13. **Perfil basal 0–3:** armazenamento visuoespacial de curto prazo — **3**; memória operacional visuoespacial — **2**; sequenciamento — **2**; percepção de posição — **2**; orientação atencional — **1**; manutenção de meta — **1**; integração visuoespacial — **1**.
+14. **Modificadores nos níveis avançados:** a extensão adaptativa pode crescer até nove posições e a grade inicial passa de 4×4 a 5×5 ou 6×6 conforme a dificuldade recebida. A partir de dificuldade inicial 6, este mesmo componente exige ordem inversa, acrescentando manipulação mental e elevando memória operacional; isso não é apenas aumento quantitativo do perfil direto. As células sorteadas continuam sem repetição dentro da sequência.
+15. **Processos pouco ou não recrutados:** memória verbal obrigatória, processamento auditivo sequencial de conteúdo, busca visual entre distratores, pressão temporal de resposta, planejamento, tomada de decisão cotidiana e memória episódica.
+16. **Risco de confundir requisito da tarefa com alvo de treino:** precisão do toque e percepção do brilho não são memória. O som simultâneo não transforma a tarefa em memória auditiva. Sobretudo, resultados do ID `matriz-espacial` iniciado em dificuldade alta não representam a mesma mecânica direta do perfil basal, pois o código muda a regra para inversa.
+17. **Impacto da modalidade:** não se aplica; não há seletor. O bipe fixo acompanha cada flash, mas não identifica posição nem cria uma modalidade auditiva equivalente.
+18. **Impacto da leitura assistiva:** não se aplica; o conteúdo a memorizar é espacial e não há recurso de leitura assistiva.
+19. **Confiança:** **moderado**, porque a mecânica basal é clara, mas o mesmo ID muda automaticamente para resposta inversa conforme a dificuldade inicial.
+20. **Questões que precisam de decisão clínica humana:** se o ID direto deve algum dia executar a regra inversa; se resultados diretos e inversos podem ser agregados; se o tamanho da grade deve ser interpretado separadamente da extensão; e se o feedback, que indexa posições pela ordem direta mesmo quando `reverse` está ativo, deve ser considerado confiável para orientação do paciente.
+
+## 16. Matriz Espacial Inversa
+
+1. **Nome oficial:** Matriz Espacial Inversa.
+2. **ID técnico:** `matriz-espacial-inversa`.
+3. **Categoria atual:** Memória.
+4. **Subdomínio atual:** Memória Visuoespacial.
+5. **Objetivo funcional aparente:** reter uma sequência de posições e reproduzi-la do último local apresentado para o primeiro.
+6. **Resumo da mecânica real:** um wrapper chama o mesmo componente da Matriz Espacial com `alwaysReverse=true` e corrige apenas o ID do resultado. Células distintas acendem serialmente em uma grade; após o desaparecimento dos realces, o paciente deve tocar todas em ordem contrária. A resposta completa é então classificada, a extensão se ajusta e o encerramento é verificado entre tentativas.
+7. **Resposta exigida do paciente:** tocar células distintas na ordem inversa à apresentação, sem poder selecionar novamente uma célula já tocada.
+8. **Unidade básica da tarefa:** codificação serial de posições, inversão mental da sequência e reprodução espacial.
+9. **Domínio principal:** **manipulação mental**.
+10. **Domínios secundários:** memória operacional visuoespacial; armazenamento visuoespacial de curto prazo; sequenciamento; percepção de posição; manutenção de meta; orientação atencional; integração visuoespacial.
+11. **Demandas instrumentais:** visão do realce, percepção espacial da grade, compreensão da regra inversa, uso de mouse ou toque e precisão visuomotora.
+12. **Estratégias possíveis:** codificar uma trajetória e percorrê-la mentalmente ao contrário; agrupamento por quadrantes; nomeação de posições; ensaio mental; começar deliberadamente pelo último estímulo; monitoramento dos toques já realizados.
+13. **Perfil basal 0–3:** manipulação mental — **3**; memória operacional visuoespacial — **3**; armazenamento visuoespacial de curto prazo — **2**; sequenciamento — **2**; percepção de posição — **2**; manutenção de meta — **2**; orientação atencional — **1**; integração visuoespacial — **1**.
+14. **Modificadores nos níveis avançados:** a sequência pode crescer até nove posições, e a grade definida pela dificuldade inicial passa de 4×4 a 5×5 ou 6×6. Mais posições ampliam armazenamento, inversão e monitoramento serial; a regra permanece inversa em todos os níveis e as posições não se repetem dentro da tentativa.
+15. **Processos pouco ou não recrutados:** memória verbal obrigatória, atualização contínua, alternância de regra, processamento auditivo de conteúdo, busca visual entre distratores, planejamento e memória episódica.
+16. **Risco de confundir requisito da tarefa com alvo de treino:** localização visual e toque são requisitos instrumentais. Descrevê-la apenas como memória visuoespacial apagaria a inversão deliberada que a separa da versão direta. O bipe uniforme não representa memória auditiva.
+17. **Impacto da modalidade:** não se aplica; não há seletor e o som fixo não carrega identidade espacial.
+18. **Impacto da leitura assistiva:** não se aplica; não há conteúdo textual a memorizar nem recurso assistivo.
+19. **Confiança:** **moderado**, devido à inconsistência do realce de feedback compartilhado, que compara a posição do toque com a ordem direta mesmo quando a validação correta usa a ordem inversa.
+20. **Questões que precisam de decisão clínica humana:** como separar armazenamento e manipulação no resultado; se o feedback visual inverso precisa ser desconsiderado até revisão futura; se extensão e tamanho da grade devem ser reportados separadamente; e se a proibição de repetir uma célula é adequada ao construto pretendido.
+
+## 17. Jogo da Memória
+
+1. **Nome oficial:** Jogo da Memória.
+2. **ID técnico:** `jogo-memoria`.
+3. **Categoria atual:** Memória.
+4. **Subdomínio atual:** Memória Visuoespacial.
+5. **Objetivo funcional aparente:** aprender e recuperar as associações entre símbolos e posições para encontrar todos os pares.
+6. **Resumo da mecânica real:** no perfil inicial, quatro pares de símbolos são embaralhados em oito posições e todas as cartas ficam visíveis durante uma fase prévia de memorização. Em seguida, viram para baixo. O paciente abre duas por vez: pares permanecem revelados e são retirados da busca; não pares voltam a esconder-se depois de breve exposição. A rodada termina com sucesso ao encontrar todos os pares ou com falha quando os desencontros ultrapassam o orçamento calculado para aquela quantidade de pares. Duas rodadas consecutivas com o mesmo resultado alteram a quantidade de pares, e o encerramento global é verificado ao fim de cada rodada.
+7. **Resposta exigida do paciente:** escolher duas posições por vez, procurando símbolos idênticos e evitando repetir combinações que já falharam.
+8. **Unidade básica da tarefa:** recuperação de uma associação símbolo–posição para formar um par, dentro de uma rodada com múltiplas escolhas.
+9. **Domínio principal:** **memória operacional visuoespacial**.
+10. **Domínios secundários:** armazenamento visuoespacial de curto prazo; atualização de informação; aprendizagem por repetição; percepção de posição; discriminação visual; comparação; busca visual; monitoramento; formação de estratégia.
+11. **Demandas instrumentais:** visão e reconhecimento dos símbolos; discriminação de detalhes; exploração espacial; uso de mouse ou toque; precisão visuomotora.
+12. **Estratégias possíveis:** varredura sistemática na exposição inicial; agrupamento por linhas ou quadrantes; associação verbal de símbolo e posição; atualização do mapa após cada abertura; evitar combinações já testadas; priorizar pares conhecidos; autorregulação diante do limite de erros.
+13. **Perfil basal 0–3:** memória operacional visuoespacial — **3**; armazenamento visuoespacial de curto prazo — **2**; atualização de informação — **2**; percepção de posição — **2**; discriminação visual — **2**; comparação — **2**; aprendizagem por repetição — **1**; busca visual — **1**; monitoramento — **1**; formação de estratégia — **1**.
+14. **Modificadores nos níveis avançados:** a quantidade pode crescer de quatro para até nove pares, alterando o número de posições e a organização da grade; a fase inicial de exposição permanece. Mais cartas ampliam a necessidade de mapear identidades e posições, atualizar revelações e controlar combinações já testadas. Os pares encontrados continuam visíveis, oferecendo apoio externo progressivo.
+15. **Processos pouco ou não recrutados:** manipulação da ordem, processamento auditivo, rotação mental, atenção dividida, pressão temporal por escolha, planejamento de múltiplos passos obrigatório, leitura e tomada de decisão cotidiana.
+16. **Risco de confundir requisito da tarefa com alvo de treino:** discriminar símbolos e tocar cartas são requisitos perceptivomotores. A exposição inicial de todo o tabuleiro e a permanência de pares encontrados apoiam a memória; por isso, o resultado não representa recuperação sem pistas. Familiaridade desigual com símbolos também pode afetar a codificação.
+17. **Impacto da modalidade:** não se aplica; não há seletor e a tarefa é visual.
+18. **Impacto da leitura assistiva:** não se aplica; não há conteúdo textual nem leitura assistiva.
+19. **Confiança:** **alto**.
+20. **Questões que precisam de decisão clínica humana:** se a fase prévia de exposição deve ser interpretada separadamente da aprendizagem por reabertura; se terminar a rodada ao ultrapassar o orçamento de erros mede adequadamente o objetivo; se identidade e posição precisam de métricas distintas; e quanto os pares já visíveis devem contar como facilitação.
+
+## 18. Letras em Sequência
+
+1. **Nome oficial:** Letras em Sequência.
+2. **ID técnico:** `letras-sequencia`.
+3. **Categoria atual:** Memória.
+4. **Subdomínio atual:** Memória Operacional.
+5. **Objetivo funcional aparente:** reter unidades verbais apresentadas em série e reconstruí-las na ordem solicitada.
+6. **Resumo da mecânica real:** no nível inicial, três letras distintas aparecem visualmente, uma por vez. Depois, surge um teclado embaralhado com as letras da série e dois distratores; cada opção pode ser usada uma vez, e a resposta é avaliada ao completar o número esperado. A progressão mistura mudanças de extensão, direção, tipo de estímulo e forma de apresentação: surgem resposta inversa, sílabas e níveis falados por síntese de voz. A próxima tentativa é ajustada pelo tipo de erro, e o encerramento global é verificado após a resposta.
+7. **Resposta exigida do paciente:** tocar as letras ou sílabas da sequência na mesma ordem no perfil basal; em níveis específicos, na ordem inversa.
+8. **Unidade básica da tarefa:** apresentação serial de unidades verbais, retenção e reconstrução por escolha entre alvos e distratores.
+9. **Domínio principal:** **armazenamento verbal de curto prazo**.
+10. **Domínios secundários:** memória operacional verbal; sequenciamento; atenção seletiva; controle de distração; manutenção de meta; discriminação visual; manipulação mental nos níveis inversos; processamento auditivo sequencial nos níveis falados.
+11. **Demandas instrumentais:** reconhecimento de letras e sílabas; leitura dos botões na resposta; visão no perfil basal; audição nos níveis falados; uso de mouse ou toque e coordenação visuomotora. Alfabetização e familiaridade grafêmica afetam o acesso sem constituir treino amplo de linguagem.
+12. **Estratégias possíveis:** repetição subvocal; agrupamento; ritmo; formação de uma palavra ou padrão sonoro; ensaio mental; eliminação dos dois distratores; recitação regressiva nos níveis inversos; comparação da resposta montada com a série lembrada.
+13. **Perfil basal 0–3:** armazenamento verbal de curto prazo — **3**; memória operacional verbal — **2**; sequenciamento — **2**; atenção seletiva — **1**; controle de distração — **1**; manutenção de meta — **1**; discriminação visual — **1**.
+14. **Modificadores nos níveis avançados:** a série cresce; a partir do nível 4 aparecem tentativas inversas, acrescentando manipulação mental; a partir do nível 6 o material passa a sílabas e alguns níveis apresentam somente fala durante a codificação; nos dois níveis finais, sílabas voltam a ser visuais, inversas e apresentadas mais rapidamente. Assim, direção e canal não crescem de modo monotônico: o nível 6 é falado e direto, os seguintes alternam combinações. Os dois distratores permanecem.
+15. **Processos pouco ou não recrutados:** memória visuoespacial de posições, atualização contínua, aprendizagem episódica, planejamento, resolução de problemas, atenção dividida e tomada de decisão cotidiana.
+16. **Risco de confundir requisito da tarefa com alvo de treino:** ler letras/sílabas e tocar botões são requisitos; não autorizam concluir treino de linguagem geral. Também não se deve descrever todo o exercício como inverso ou auditivo: essas operações aparecem apenas em faixas específicas da progressão.
+17. **Impacto da modalidade:** não há seletor configurável. A alternância visual–auditiva é imposta pelo nível; nos níveis falados, o estímulo não aparece como texto durante a codificação, mas a resposta continua escrita. Isso muda memória visual, memória auditiva e o remapeamento som–grafema dentro do mesmo ID.
+18. **Impacto da leitura assistiva:** não se aplica. A síntese de voz dos níveis auditivos é a própria forma de apresentação do conteúdo, não leitura assistiva. Falar novamente a série seria nova exposição ao material memorizando.
+19. **Confiança:** **alto**.
+20. **Questões que precisam de decisão clínica humana:** se perfis direto/inverso, visual/auditivo e letra/sílaba podem ser agregados; se mudanças simultâneas de canal e conteúdo permitem interpretação longitudinal; como controlar diferenças de alfabetização e discriminação fonológica; e se a síntese de voz deve ser clinicamente padronizada.
+
+## 19. Sequência de Itens
+
+1. **Nome oficial:** Sequência de Itens.
+2. **ID técnico:** `sequencia-itens`.
+3. **Categoria atual:** Memória.
+4. **Subdomínio atual:** Memória Operacional.
+5. **Objetivo funcional aparente:** reter a identidade e a ordem de uma série de itens cotidianos e reconstruí-la entre alternativas.
+6. **Resumo da mecânica real:** no nível inicial, três figuras distintas aparecem visualmente uma por vez. Depois, uma grade reúne os itens apresentados e dois distratores; o paciente monta a sequência por toques e cada figura só pode ser escolhida uma vez. A resposta completa determina o ajuste da próxima tentativa. Em níveis intermediários, a apresentação muda para nomes falados sem a figura; em outros, volta a ser visual e passa a selecionar itens de uma mesma categoria ampla, enquanto aumentam extensão, quantidade de distratores e rapidez de exposição. O encerramento global é verificado após cada sequência.
+7. **Resposta exigida do paciente:** selecionar as figuras correspondentes na mesma ordem da apresentação, inclusive quando os itens foram apresentados apenas pelo nome falado.
+8. **Unidade básica da tarefa:** codificação serial de identidades de itens, retenção e reconstrução visual ordenada entre distratores.
+9. **Domínio principal:** **armazenamento visuoespacial de curto prazo**.
+10. **Domínios secundários:** memória operacional visuoespacial; sequenciamento; discriminação visual; atenção seletiva; controle de distração; comparação; memória operacional verbal e processamento auditivo sequencial nos níveis falados.
+11. **Demandas instrumentais:** reconhecimento visual de objetos; familiaridade com seus nomes; visão e discriminação de figuras; audição nos níveis falados; uso de mouse ou toque e precisão visuomotora.
+12. **Estratégias possíveis:** nomeação verbal das figuras; agrupamento por categoria; construção de uma narrativa; repetição subvocal; ensaio mental da ordem; eliminação de distratores; comparação item a item; uso das categorias animal/objeto como pista.
+13. **Perfil basal 0–3:** armazenamento visuoespacial de curto prazo — **3**; memória operacional visuoespacial — **2**; sequenciamento — **2**; discriminação visual — **2**; atenção seletiva — **1**; controle de distração — **1**; comparação — **1**.
+14. **Modificadores nos níveis avançados:** aumentam a extensão e os distratores; em alguns níveis, alvos e parte dos distratores pertencem à mesma categoria ampla, ampliando discriminação e interferência; os níveis 6 a 8 substituem as figuras da codificação por nomes falados, elevando memória verbal auditiva e o pareamento palavra–imagem; os níveis finais voltam ao visual, com mais itens semelhantes e exposição mais breve. A ordem de resposta permanece direta.
+15. **Processos pouco ou não recrutados:** manipulação inversa, atualização contínua, rotação mental, planejamento, resolução de problemas, atenção dividida e tomada de decisão cotidiana.
+16. **Risco de confundir requisito da tarefa com alvo de treino:** reconhecer e nomear figuras é requisito semântico/perceptivo, não alvo garantido. A nomeação espontânea pode transformar uma apresentação visual em estratégia verbal. Nos níveis auditivos, dificuldade lexical ou auditiva pode parecer déficit de memória de itens.
+17. **Impacto da modalidade:** não há seletor. A apresentação muda internamente com o nível: visual no perfil basal e nos níveis finais, auditiva em níveis intermediários; a resposta é sempre visual. Essa mudança altera o código de retenção e exige remapeamento transmodal quando o item foi ouvido.
+18. **Impacto da leitura assistiva:** não se aplica; a fala interna dos níveis auditivos é estímulo de tarefa. Os nomes não são uma leitura assistiva das figuras visíveis, pois a figura-alvo fica oculta durante essa apresentação.
+19. **Confiança:** **alto**.
+20. **Questões que precisam de decisão clínica humana:** se níveis visuais e auditivos devem gerar perfis separados; como controlar familiaridade e nomeabilidade das imagens; se a semelhança por apenas duas categorias é clinicamente suficiente; e se desempenho transmodal deve ser distinguido de memória visual direta.
+
+## 20. Matriz com Rotações
+
+1. **Nome oficial:** Matriz com Rotações.
+2. **ID técnico:** `padroes-rotacao`.
+3. **Categoria atual:** Memória.
+4. **Subdomínio atual:** Memória Visuoespacial.
+5. **Objetivo funcional aparente:** reter posições em uma matriz e indicar onde elas ficam depois de uma rotação do tabuleiro.
+6. **Resumo da mecânica real:** no perfil inicial, duas posições distintas de uma grade 3×3 acendem uma por vez. Em seguida, a matriz vazia gira visualmente 90° no sentido horário; uma barra de orientação sai da borda superior e reaparece na borda correspondente. Com o tabuleiro novamente desenhado sem os alvos, o paciente marca um conjunto de posições, pode desmarcá-las e confirma. A ordem dos toques não importa: a rodada exige o conjunto exato de posições transformadas. O nível adapta grade, quantidade e ângulo; o encerramento global é verificado depois da confirmação.
+7. **Resposta exigida do paciente:** tocar todas e somente as posições resultantes da rotação indicada e confirmar o conjunto.
+8. **Unidade básica da tarefa:** codificação de um padrão espacial, transformação rotacional e reconstrução do padrão resultante.
+9. **Domínio principal:** **rotação mental**.
+10. **Domínios secundários:** manipulação mental; memória operacional visuoespacial; armazenamento visuoespacial de curto prazo; percepção de posição; relações espaciais; integração visuoespacial; manutenção de meta; monitoramento.
+11. **Demandas instrumentais:** visão do brilho, da grade e do marcador de orientação; percepção espacial; uso de mouse ou toque; precisão visuomotora. Os bipes são iguais para todas as posições e não codificam localização.
+12. **Estratégias possíveis:** imaginar o giro de cada posição; acompanhar linhas, colunas e cantos; usar a barra de borda como âncora; codificar o padrão como forma; transformar coordenadas mentalmente; verificar o número de marcações; eliminar posições incompatíveis.
+13. **Perfil basal 0–3:** rotação mental — **3**; memória operacional visuoespacial — **3**; manipulação mental — **2**; armazenamento visuoespacial de curto prazo — **2**; percepção de posição — **2**; relações espaciais — **2**; integração visuoespacial — **2**; manutenção de meta — **1**; monitoramento — **1**.
+14. **Modificadores nos níveis avançados:** a grade cresce de 3×3 a 6×6; o padrão passa de duas para até sete posições; entram rotações de 180° e 270° e, nos níveis finais, um intervalo vazio após o giro. O nível corrente controla grade, quantidade, ângulo e intervalo. A velocidade CSS do giro também acompanha o nível, mas o agendamento dos flashes e da espera do giro usa faixas capturadas da dificuldade inicial, e os campos `showMs` da tabela não são consumidos pela apresentação; portanto, a progressão temporal declarada e a executada não coincidem integralmente.
+15. **Processos pouco ou não recrutados:** memória verbal obrigatória, processamento auditivo de conteúdo, sequenciamento da resposta, atenção dividida, planejamento de ações, tomada de decisão cotidiana e memória episódica.
+16. **Risco de confundir requisito da tarefa com alvo de treino:** tocar a grade e ver a animação são requisitos de acesso. A rotação não é totalmente sem apoio externo: o tabuleiro vazio gira e o marcador de borda explicita a nova orientação. Por outro lado, como os alvos somem antes do giro, o paciente ainda precisa mantê-los e transformá-los; classificá-la apenas como memória visual apagaria essa operação.
+17. **Impacto da modalidade:** não se aplica; não há seletor. O som é feedback uniforme e não cria uma representação auditiva do padrão.
+18. **Impacto da leitura assistiva:** não se aplica; o conteúdo espacial não é textual.
+19. **Confiança:** **moderado**, pela divergência entre parâmetros temporais declarados e temporização efetivamente usada.
+20. **Questões que precisam de decisão clínica humana:** se rotação mental ou memória operacional visuoespacial deve rotular o principal; quanto a animação e a barra de orientação devem facilitar; se os diferentes ângulos precisam de resultados separados; e como interpretar sessões cujo nível muda sem que toda a temporização acompanhe essa mudança.
+
+## 21. Lista com Distração
+
+1. **Nome oficial:** Lista com Distração.
+2. **ID técnico:** `lista-distracao`.
+3. **Categoria atual:** Memória.
+4. **Subdomínio atual:** Memória Operacional.
+5. **Objetivo funcional aparente:** manter uma lista verbal durante uma atividade interveniente e recuperar seus itens depois.
+6. **Resumo da mecânica real:** no perfil inicial, três palavras aparecem simultaneamente por uma janela de memorização. A lista some e uma miniatividade é apresentada: escolher o maior entre dois números, contar estrelas ou tocar uma cor nomeada. Qualquer botão avança, independentemente de estar correto; a miniatividade interfere, mas não é pontuada nem validada. Depois, o paciente escolhe os três itens da lista em uma grade que contém dois distratores. No início, a ordem não é considerada; em níveis específicos, passa a ser exigida. A rodada se ajusta após sequências de resultados, e o encerramento global é verificado depois da recuperação.
+7. **Resposta exigida do paciente:** ler e reter a lista, produzir pelo menos uma resposta na miniatividade e então selecionar os itens-alvo; quando indicado, respeitar a ordem original.
+8. **Unidade básica da tarefa:** retenção de uma lista verbal através de uma tarefa interveniente, seguida de reconhecimento ou reconstrução.
+9. **Domínio principal:** **memória operacional verbal**.
+10. **Domínios secundários:** armazenamento verbal de curto prazo; controle de distração; atenção alternada; atualização do foco entre etapas; atenção seletiva; comparação; sequenciamento nos níveis que exigem ordem; manutenção de meta.
+11. **Demandas instrumentais:** leitura das palavras e instruções; reconhecimento de números e cores; visão para contar estrelas; uso de mouse ou toque; coordenação visuomotora. A correção das respostas distratoras não é requisito efetivo, porque o código aceita qualquer alternativa.
+12. **Estratégias possíveis:** repetição subvocal durante a interferência; agrupamento semântico; formação de história; categorização; ensaio mental; retorno deliberado à lista após a miniatividade; eliminação dos distratores; reconstrução serial quando a ordem é solicitada.
+13. **Perfil basal 0–3:** memória operacional verbal — **3**; armazenamento verbal de curto prazo — **2**; controle de distração — **2**; atenção alternada — **2**; manutenção de meta — **2**; atenção seletiva — **1**; comparação — **1**; atualização — **1**.
+14. **Modificadores nos níveis avançados:** crescem o número de palavras, os distratores e a quantidade de miniatividades intervenientes; alguns níveis exigem a ordem original e outros voltam ao reconhecimento sem ordem, de modo não monotônico. A exigência serial amplia sequenciamento, mas não implica inverter ou reorganizar a lista. O tipo de miniatividade é sorteado e sua precisão continua sem validação.
+15. **Processos pouco ou não recrutados:** manipulação inversa, rotação mental, planejamento, memória episódica contextual, aprendizagem por repetição, pressão temporal de resposta e tomada de decisão cotidiana. Comparação numérica, contagem e discriminação de cor não são alvos treinados de forma verificável, pois toda alternativa avança.
+16. **Risco de confundir requisito da tarefa com alvo de treino:** leitura pode limitar a codificação sem ser o alvo. A aparência de três miniatividades cognitivas não autoriza atribuir treino de cálculo, contagem ou seleção de cor, já que o sistema ignora a correção dessas respostas. A interferência é central; a precisão do distrator, não.
+17. **Impacto da modalidade:** não se aplica; não há seletor e a lista é visual/textual.
+18. **Impacto da leitura assistiva:** não se aplica; não há leitura assistiva. Ler em voz alta as palavras seria repetição do próprio conteúdo a memorizar e alteraria o código de retenção, não apenas o acesso à instrução.
+19. **Confiança:** **alto**.
+20. **Questões que precisam de decisão clínica humana:** se as respostas distratoras deveriam ser validadas para sustentar interpretação de dupla tarefa; se níveis com e sem ordem devem ser agregados; como controlar alfabetização; e se o principal deve enfatizar resistência à interferência ou manutenção verbal.
+
+## 22. Restaurante
+
+1. **Nome oficial:** Restaurante.
+2. **ID técnico:** `restaurante-ordem`.
+3. **Categoria atual:** Memória.
+4. **Subdomínio atual:** Memória Operacional.
+5. **Objetivo funcional aparente:** lembrar um pedido associado a uma mesa e montar a bandeja correta entre itens concorrentes.
+6. **Resumo da mecânica real:** no perfil inicial, uma cena mostra uma pessoa e um pedido de dois itens distintos. O conteúdo permanece até o fim da janela de memorização ou até o paciente indicar que já memorizou. Na bancada, os dois itens aparecem misturados a quatro distratores; o paciente preenche uma bandeja e confirma. A validação exige os itens corretos, sem ordem no perfil basal. Em níveis posteriores há mais pessoas e itens, ordem, atualização do pedido e duas mesas apresentadas em sequência, das quais uma é chamada. Um som ambiente de restaurante começa por padrão e pode ser silenciado. O encerramento global é verificado depois do feedback de cada rodada.
+7. **Resposta exigida do paciente:** selecionar na bancada os itens do pedido da mesa chamada e montar a bandeja; quando indicado, respeitar a ordem e a versão atualizada.
+8. **Unidade básica da tarefa:** codificação de um pedido ligado a uma mesa, retenção após ocultação e reconstrução entre distratores.
+9. **Domínio principal:** **memória operacional verbal**.
+10. **Domínios secundários:** armazenamento verbal de curto prazo; armazenamento visuoespacial de curto prazo; atenção seletiva; controle de distração; comparação; busca visual; manutenção de meta; memória operacional visuoespacial; atualização de informação nos níveis com mudança; sequenciamento nos níveis com ordem.
+11. **Demandas instrumentais:** leitura dos nomes e, conforme modo, audição da fala; reconhecimento visual de alimentos; visão da cena; uso de mouse ou toque; coordenação visuomotora. Familiaridade com os itens e o ruído ambiente podem afetar o desempenho.
+12. **Estratégias possíveis:** repetição subvocal; associação pessoa–pedido; agrupamento por tipo de alimento; criação de narrativa; conversão do pedido em imagens; ensaio mental; eliminação de distratores; marcação da ordem; substituição deliberada da versão antiga após uma atualização.
+13. **Perfil basal 0–3:** memória operacional verbal — **3**; armazenamento verbal de curto prazo — **2**; armazenamento visuoespacial de curto prazo — **2**; atenção seletiva — **2**; controle de distração — **2**; comparação — **2**; busca visual — **1**; manutenção de meta — **1**; memória operacional visuoespacial — **1**.
+14. **Modificadores nos níveis avançados:** aumentam pessoas, itens e distratores; a ordem passa de irrelevante a obrigatória; três pessoas exigem ligar itens ao pedido mostrado na cena; o nível 9 acrescenta troca, inclusão ou remoção de item e exige atualizar a representação, suprimindo a versão antiga; o nível 10 apresenta duas mesas e só depois informa qual deve ser servida, aumentando associação de fonte, seleção e interferência entre listas. Essas mudanças introduzem operações qualitativas além do simples aumento do pedido.
+15. **Processos pouco ou não recrutados:** uso funcional de dinheiro, cálculo, planejamento de atividade cotidiana, resolução de problemas aberta, tomada de decisão cotidiana com consequências, memória prospectiva e velocidade de processamento como alvo. O cenário funcional não basta para inferir autonomia funcional.
+16. **Risco de confundir requisito da tarefa com alvo de treino:** reconhecer alimentos, ler e tocar são requisitos. A ambientação de restaurante não transforma a seleção fechada em treino amplo de atendimento, planejamento ou autonomia. Ordem e atualização não pertencem ao perfil basal e não devem ser projetadas retroativamente sobre todos os resultados.
+17. **Impacto da modalidade:** **perfil comum:** em todos os modos, o pedido some antes da bancada, a resposta é visual e apresenta fotos com nomes, e a seleção ocorre entre distratores; cena, pessoas e mesa permanecem visuais. **Visual:** exibe foto e nome de cada item, favorecendo leitura, memória visual e recodificação verbal; a memória auditiva do pedido não é necessária. **Visual + áudio:** mantém os mesmos itens visuais e acrescenta narração, podendo recrutar atenção dividida ou produzir interferência se o paciente tenta acompanhar fontes desalinhadas; quando congruentes e sincronizadas, a redundância audiovisual pode facilitar codificação e compensar dificuldade de leitura. **Somente áudio:** oculta as linhas de itens durante o pedido e exige memória verbal auditiva, mas conserva cena, nomes das pessoas, número da mesa e resposta visual com fotos e texto; portanto, não é uma tarefa auditiva pura. O botão “Ouvir” permite repetir o pedido durante a fase de memorização. O som ambiente pode interferir em todos os modos, especialmente nos que usam fala, embora possa ser silenciado. Na atualização avançada, o texto da mudança continua visível mesmo em Somente áudio.
+18. **Impacto da leitura assistiva:** não há leitura assistiva separada. A narração pertence ao modo escolhido. Falar uma instrução geral reduziria apenas a barreira de acesso; narrar o pedido atual é apresentação de **conteúdo da tarefa**; usar “Ouvir” de novo é **repetição do conteúdo que deveria ser memorizado** e pode facilitar a retenção. Esses eventos precisam ser diferenciados na interpretação.
+19. **Confiança:** **alto** para a mecânica; **moderado** para chamar Somente áudio de perfil auditivo, porque permanecem apoios visuais e texto na atualização.
+20. **Questões que precisam de decisão clínica humana:** quantas repetições do pedido são aceitáveis e como registrá-las; se o ruído ambiente deve ser padronizado; se Somente áudio deve ocultar também nomes de pessoas e texto de atualização; como registrar facilitação audiovisual; e se ordem, atualização e seleção entre duas mesas precisam de resultados separados.
+
+## 23. Supermercado
+
+1. **Nome oficial:** Supermercado.
+2. **ID técnico:** `desafio-supermercado`.
+3. **Categoria atual:** Memória.
+4. **Subdomínio atual:** Memória Operacional.
+5. **Objetivo funcional aparente:** memorizar uma lista de produtos e recuperá-la ao selecionar itens em uma prateleira com concorrentes.
+6. **Resumo da mecânica real:** no perfil inicial, uma lista de dois produtos de categorias diferentes é apresentada e depois ocultada. A prateleira contém os dois alvos e oito distratores; o paciente pode adicionar ou remover produtos do carrinho e confirmar. A ordem não importa no início. A progressão aumenta itens e distratores, introduz concorrentes das mesmas categorias, ordem direta ou inversa e duas listas associadas a “mãe” e “avó”; quando há duas listas, somente uma é solicitada na fase de compra. A apresentação encerra por contador ou pelo botão “Já memorizei”, e o encerramento global é verificado após cada compra.
+7. **Resposta exigida do paciente:** selecionar todos e somente os produtos da lista solicitada; em níveis ordenados, selecioná-los na sequência direta ou inversa especificada.
+8. **Unidade básica da tarefa:** codificação de uma ou duas listas, ocultação, busca visual e reconstrução da lista-alvo entre distratores.
+9. **Domínio principal:** **memória operacional verbal**.
+10. **Domínios secundários:** armazenamento verbal de curto prazo; armazenamento visuoespacial de curto prazo; busca visual; atenção seletiva; controle de distração; comparação; manutenção de meta; memória operacional visuoespacial; categorização; manipulação mental nos níveis inversos.
+11. **Demandas instrumentais:** leitura de nomes e instruções conforme o modo; audição da lista nos modos com fala; reconhecimento visual de produtos; familiaridade lexical e semântica; uso de mouse ou toque; coordenação visuomotora e exploração da prateleira.
+12. **Estratégias possíveis:** repetição subvocal; agrupamento por categoria; criação de uma rota mental; associação pessoa–lista; conversão som–imagem; eliminação de produtos concorrentes; varredura sistemática; conferência do carrinho; ensaio regressivo nos níveis inversos.
+13. **Perfil basal 0–3:** memória operacional verbal — **3**; armazenamento verbal de curto prazo — **2**; armazenamento visuoespacial de curto prazo — **2**; busca visual — **2**; atenção seletiva — **2**; controle de distração — **2**; comparação — **2**; manutenção de meta — **2**; memória operacional visuoespacial — **1**; categorização — **1**.
+14. **Modificadores nos níveis avançados:** crescem lista e prateleira; distratores passam a compartilhar categorias com os alvos, ampliando discriminação e interferência semântica; a ordem direta acrescenta manutenção serial; a ordem inversa acrescenta manipulação mental; duas listas exigem codificação de fonte, manutenção paralela e seleção da lista indicada apenas na compra. As combinações não são monotônicas: há blocos de duas listas sem ordem antes da introdução da inversão.
+15. **Processos pouco ou não recrutados:** cálculo, uso funcional de dinheiro, planejamento de compras com orçamento, tomada de decisão cotidiana, memória prospectiva e autonomia funcional ampla. O cenário de mercado não cria essas operações porque preços, recursos e consequências não participam da regra.
+16. **Risco de confundir requisito da tarefa com alvo de treino:** reconhecimento e nomeação de produtos, leitura e toque podem limitar o desempenho. A aparência cotidiana não autoriza inferir treino de compra real. Busca visual e familiaridade semântica contribuem materialmente e não devem ser registradas como se todo erro fosse de memória.
+17. **Impacto da modalidade:** **perfil comum:** a resposta sempre usa prateleira visual com fotos, e os itens selecionados aparecem no carrinho com seus nomes; a instrução de qual lista e ordem também permanece escrita. **Visual:** mostra fotos e nomes na memorização e na prateleira, recrutando leitura, memória visual e recodificação verbal. **Visual + áudio:** mantém fotos e nomes e acrescenta fala; pode recrutar atenção dividida ou interferência, mas a redundância audiovisual congruente pode facilitar codificação e compensar leitura. **Somente áudio:** fala os nomes e esconde seus rótulos durante a memorização e nas prateleiras, aumentando memória auditiva e o pareamento nome–imagem; porém as fotos dos produtos continuam visíveis durante a própria memorização, e os nomes aparecem no carrinho após a seleção. Logo, a codificação continua audiovisual e a memória visual não é eliminada. O botão de repetição permite ouvir novamente enquanto a lista está em apresentação.
+18. **Impacto da leitura assistiva:** não há recurso separado de leitura assistiva; a fala pertence à modalidade. A instrução escrita que indica pessoa e ordem não é narrada pelo mesmo fluxo. Narrar instrução geral teria efeito de acesso; narrar a lista é apresentação de conteúdo; “Ouvir de novo” repete material que deve ser memorizado. Esses três usos não são equivalentes.
+19. **Confiança:** **alto** para a mecânica; **moderado** para a interpretação do rótulo Somente áudio, pois fotos e alguns textos permanecem.
+20. **Questões que precisam de decisão clínica humana:** se Somente áudio deve ocultar as fotos durante a memorização e os nomes do carrinho; se pessoa, ordem e instruções também precisam de áudio; como registrar repetição e facilitação audiovisual; se duas listas e ordem inversa devem ter resultados separados; e como controlar familiaridade cultural com produtos visualmente semelhantes.
+
+## 24. N-Back
+
+1. **Nome oficial:** N-Back.
+2. **ID técnico:** `nback`.
+3. **Categoria atual:** Memória.
+4. **Subdomínio atual:** Memória Operacional.
+5. **Objetivo funcional aparente:** atualizar continuamente a referência mantida e decidir se cada letra corresponde à apresentada N posições antes.
+6. **Resumo da mecânica real:** cada bloco começa mostrando N letras de preparação e depois apresenta 14 letras ativas, uma por vez. Para cada estímulo, o paciente deve escolher “IGUAL” ou “DIFERENTE” em relação à letra de N posições atrás; omissão dentro da janela conta como erro. O gerador cria correspondências em aproximadamente parte substancial das tentativas e impede que um não alvo coincida acidentalmente com a referência. Dois blocos com bom desempenho elevam N; desempenho muito baixo o reduz. A sessão termina quando o critério global é atingido entre blocos, portanto um bloco iniciado é concluído antes da verificação final.
+7. **Resposta exigida do paciente:** responder em toda letra ativa se ela é igual ou diferente da referência N-back antes que a janela se encerre.
+8. **Unidade básica da tarefa:** atualização de uma janela móvel de letras, comparação com a referência e escolha binária.
+9. **Domínio principal:** **atualização de informação**.
+10. **Domínios secundários:** memória operacional verbal; atualização executiva; comparação; atenção sustentada; manutenção de meta; tempo de reação de escolha; pressão temporal; sequenciamento; controle de distração por itens intervenientes; monitoramento.
+11. **Demandas instrumentais:** reconhecimento visual de letras e rótulos dos botões; leitura; uso de mouse ou toque; velocidade e coordenação motora suficientes para responder na janela. Ler letras é requisito, não treino de linguagem.
+12. **Estratégias possíveis:** janela mental deslizante; repetição subvocal; agrupamento por posição; marcação mental da referência; comparação explícita; descarte deliberado de itens antigos; ritmo; monitoramento de omissões; preparação dos dois botões.
+13. **Perfil basal 0–3:** atualização de informação — **3**; memória operacional verbal — **3**; atualização — **2**; comparação — **2**; atenção sustentada — **2**; manutenção de meta — **2**; tempo de reação de escolha — **2**; pressão temporal — **2**; sequenciamento — **1**; controle de distração — **1**; monitoramento — **1**.
+14. **Modificadores nos níveis avançados:** N pode crescer de 1-back a 4-back, aumentando a distância da referência e a quantidade de itens intervenientes que precisam ser atualizados e descartados. A extensão do bloco, o conjunto de letras e a janela de resposta permanecem constantes; a mudança qualitativa é a defasagem da comparação, não uma regra nova.
+15. **Processos pouco ou não recrutados:** memória visuoespacial, rotação mental, planejamento, resolução de problemas, alternância de regra, processamento auditivo, memória episódica e tomada de decisão cotidiana.
+16. **Risco de confundir requisito da tarefa com alvo de treino:** alfabetização, visão, velocidade motora e compreensão dos botões podem produzir erros ou omissões. A resposta é de escolha, não tempo de reação simples. O simples tempo total da atividade não fundamenta atenção sustentada; aqui ela é atribuída porque cada bloco contém uma sequência contínua de eventos que requer resposta e atualização em todos os itens.
+17. **Impacto da modalidade:** não se aplica; não há seletor e os estímulos são visuais.
+18. **Impacto da leitura assistiva:** não se aplica. Falar cada letra criaria um segundo canal de estímulo e poderia facilitar ou interferir na atualização; não seria apoio neutro à instrução.
+19. **Confiança:** **alto**.
+20. **Questões que precisam de decisão clínica humana:** se atualização de informação ou memória operacional verbal deve rotular o principal; se resultados devem ser separados por N; como interpretar omissões versus escolhas incorretas; e se a proporção de correspondências e a conclusão integral do último bloco são adequadas ao uso clínico pretendido.
+
+## 25. Cubos
+
+1. **Nome oficial:** Cubos.
+2. **ID técnico:** `cubo-corsi`.
+3. **Categoria atual:** Memória.
+4. **Subdomínio atual:** Memória Visuoespacial.
+5. **Objetivo funcional aparente:** reter uma sequência de posições distribuídas em faces de um cubo e reproduzi-la no mesmo objeto.
+6. **Resumo da mecânica real:** o objeto tem doze células clicáveis em três faces visíveis. Para cada item da sequência, o cubo sai da vista isométrica, gira até deixar quase frontal a face relevante, acende uma célula com um bipe uniforme, apaga e volta à vista isométrica antes do próximo item. No perfil inicial são dois itens; uma célula não se repete imediatamente, mas pode reaparecer mais tarde. Na resposta, o cubo permanece em vista isométrica e o paciente toca a sequência completa na mesma ordem. A extensão se ajusta por tentativa e o encerramento global é verificado depois da resposta.
+7. **Resposta exigida do paciente:** tocar, na vista isométrica estável, as células correspondentes na mesma ordem em que foram mostradas sob diferentes orientações do cubo.
+8. **Unidade básica da tarefa:** codificação serial de posição e face, remapeamento de orientação e reprodução visuoespacial.
+9. **Domínio principal:** **memória operacional visuoespacial**.
+10. **Domínios secundários:** armazenamento visuoespacial de curto prazo; manipulação mental; rotação mental; relações espaciais; percepção de posição; constância perceptiva; integração visuoespacial; sequenciamento; orientação atencional; manutenção de meta.
+11. **Demandas instrumentais:** percepção de profundidade e orientação das faces; visão do realce; uso de mouse ou toque; precisão visuomotora. O bipe tem frequência fixa e não identifica célula ou face.
+12. **Estratégias possíveis:** nomear face e quadrante; construir uma trajetória tridimensional; converter cada posição em rótulo verbal; ensaio mental; acompanhar as rotações; remapear a face frontal para a vista isométrica; agrupar itens por face; monitorar a quantidade de toques.
+13. **Perfil basal 0–3:** memória operacional visuoespacial — **3**; armazenamento visuoespacial de curto prazo — **2**; manipulação mental — **2**; rotação mental — **2**; relações espaciais — **2**; percepção de posição — **2**; constância perceptiva — **2**; integração visuoespacial — **2**; sequenciamento — **2**; orientação atencional — **1**; manutenção de meta — **1**.
+14. **Modificadores nos níveis avançados:** a extensão cresce de duas para até nove posições; a sequência pode retornar a uma célula já usada desde que não seja repetição imediata. O número de faces e o ritmo de giro permanecem. Séries maiores ampliam retenção serial, remapeamento entre orientações e monitoramento, sem introduzir ordem inversa ou regra alternante.
+15. **Processos pouco ou não recrutados:** memória verbal obrigatória, processamento auditivo de conteúdo, atualização contínua no sentido de N-back, busca visual entre distratores, planejamento, pressão temporal de resposta, memória episódica e tomada de decisão cotidiana.
+16. **Risco de confundir requisito da tarefa com alvo de treino:** percepção 3D e precisão de toque podem limitar a execução. Classificá-lo apenas pelo rótulo histórico de tarefa espacial apagaria que cada posição é mostrada com uma face quase frontal, mas deve ser respondida no cubo isométrico; essa mudança recruta constância perceptiva, relações espaciais e remapeamento/rotação, além da retenção serial.
+17. **Impacto da modalidade:** não se aplica; não há seletor. O bipe uniforme marca o momento do flash, mas não oferece código auditivo para a posição.
+18. **Impacto da leitura assistiva:** não se aplica; o estímulo espacial não é textual.
+19. **Confiança:** **alto**.
+20. **Questões que precisam de decisão clínica humana:** quanto do desempenho deve ser atribuído a armazenamento serial versus remapeamento tridimensional; se resultados precisam separar trocas de face e repetições na mesma face; se a animação de giro facilita orientação ou adiciona interferência; e se o nome clínico deve explicitar que não se trata de aplicação padronizada de um teste neuropsicológico.
+
+## Matriz consolidada do perfil basal — Lote B
+
+A matriz mantém somente valores de 1 a 3. Mudanças de modalidade e operações que entram apenas em níveis posteriores permanecem descritas nas fichas, não são retroprojetadas para o perfil basal.
+
+| Exercício | Domínio principal | Perfil basal 0–3 (somente valores ≥ 1) | Confiança |
+|---|---|---|---|
+| Span Numérico Auditivo Direto | armazenamento verbal de curto prazo | armazenamento verbal de curto prazo 3 · memória operacional verbal 2 · processamento auditivo sequencial 2 · sequenciamento 2 · manutenção de meta 1 · atenção seletiva 1 · armazenamento visuoespacial de curto prazo 1 | alto |
+| Span Numérico Auditivo Inverso | manipulação mental | manipulação mental 3 · memória operacional verbal 3 · armazenamento verbal de curto prazo 2 · processamento auditivo sequencial 2 · sequenciamento 2 · manutenção de meta 2 · armazenamento visuoespacial de curto prazo 1 | alto |
+| Matriz Espacial | armazenamento visuoespacial de curto prazo | armazenamento visuoespacial de curto prazo 3 · memória operacional visuoespacial 2 · sequenciamento 2 · percepção de posição 2 · orientação atencional 1 · manutenção de meta 1 · integração visuoespacial 1 | moderado |
+| Matriz Espacial Inversa | manipulação mental | manipulação mental 3 · memória operacional visuoespacial 3 · armazenamento visuoespacial de curto prazo 2 · sequenciamento 2 · percepção de posição 2 · manutenção de meta 2 · orientação atencional 1 · integração visuoespacial 1 | moderado |
+| Jogo da Memória | memória operacional visuoespacial | memória operacional visuoespacial 3 · armazenamento visuoespacial de curto prazo 2 · atualização de informação 2 · percepção de posição 2 · discriminação visual 2 · comparação 2 · aprendizagem por repetição 1 · busca visual 1 · monitoramento 1 · formação de estratégia 1 | alto |
+| Letras em Sequência | armazenamento verbal de curto prazo | armazenamento verbal de curto prazo 3 · memória operacional verbal 2 · sequenciamento 2 · atenção seletiva 1 · controle de distração 1 · manutenção de meta 1 · discriminação visual 1 | alto |
+| Sequência de Itens | armazenamento visuoespacial de curto prazo | armazenamento visuoespacial de curto prazo 3 · memória operacional visuoespacial 2 · sequenciamento 2 · discriminação visual 2 · atenção seletiva 1 · controle de distração 1 · comparação 1 | alto |
+| Matriz com Rotações | rotação mental | rotação mental 3 · memória operacional visuoespacial 3 · manipulação mental 2 · armazenamento visuoespacial de curto prazo 2 · percepção de posição 2 · relações espaciais 2 · integração visuoespacial 2 · manutenção de meta 1 · monitoramento 1 | moderado |
+| Lista com Distração | memória operacional verbal | memória operacional verbal 3 · armazenamento verbal de curto prazo 2 · controle de distração 2 · atenção alternada 2 · manutenção de meta 2 · atenção seletiva 1 · comparação 1 · atualização 1 | alto |
+| Restaurante | memória operacional verbal | memória operacional verbal 3 · armazenamento verbal de curto prazo 2 · armazenamento visuoespacial de curto prazo 2 · atenção seletiva 2 · controle de distração 2 · comparação 2 · busca visual 1 · manutenção de meta 1 · memória operacional visuoespacial 1 | alto; interpretação de Somente áudio: moderado |
+| Supermercado | memória operacional verbal | memória operacional verbal 3 · armazenamento verbal de curto prazo 2 · armazenamento visuoespacial de curto prazo 2 · busca visual 2 · atenção seletiva 2 · controle de distração 2 · comparação 2 · manutenção de meta 2 · memória operacional visuoespacial 1 · categorização 1 | alto; interpretação de Somente áudio: moderado |
+| N-Back | atualização de informação | atualização de informação 3 · memória operacional verbal 3 · atualização 2 · comparação 2 · atenção sustentada 2 · manutenção de meta 2 · tempo de reação de escolha 2 · pressão temporal 2 · sequenciamento 1 · controle de distração 1 · monitoramento 1 | alto |
+| Cubos | memória operacional visuoespacial | memória operacional visuoespacial 3 · armazenamento visuoespacial de curto prazo 2 · manipulação mental 2 · rotação mental 2 · relações espaciais 2 · percepção de posição 2 · constância perceptiva 2 · integração visuoespacial 2 · sequenciamento 2 · orientação atencional 1 · manutenção de meta 1 | alto |
