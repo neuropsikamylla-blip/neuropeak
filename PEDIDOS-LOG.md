@@ -5889,3 +5889,39 @@ Confirmação de que:
 Não iniciar automaticamente a Fase 2 (interface do terapeuta).
 
 Pare e aguarde minha validação.
+
+## 03/08/2026 15:17
+Pode concluir normalmente a Implementação — Fase 1.
+
+Ao terminar, apresente antes de qualquer nova fase:
+
+1. Arquivos criados e alterados.
+2. Diff resumido.
+3. Confirmação de que somente `lib/prescription/` e arquivos de teste foram tocados.
+4. Resultado de todos os testes novos.
+5. Resultado da suíte antiga completa.
+6. Cobertura dos testes do núcleo de prescrição.
+7. Lista dos 18 alertas implementados.
+8. Prova de que todos possuem:
+   - `blocksSave: false`;
+   - `canSave: true`.
+9. Resultados das fronteiras de sessão para 20, 30 e 40 minutos.
+10. Três exemplos executados de planos:
+   - 20 minutos;
+   - 30 minutos;
+   - 40 minutos;
+   mostrando duração estimada, carga, fadiga, estado e alertas.
+11. Confirmação de que não foram alterados:
+   - interface;
+   - páginas;
+   - APIs;
+   - banco;
+   - migrations;
+   - progressão;
+   - exercícios;
+   - dados de pacientes.
+12. Limitações ou decisões ainda não implementadas.
+
+Não iniciar automaticamente a próxima fase.
+
+Pare e aguarde minha validação.
