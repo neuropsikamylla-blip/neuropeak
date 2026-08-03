@@ -3,6 +3,52 @@
 > Checkpoint de contexto para continuidade entre sessões. Atualizado automaticamente.
 > 👉 Visão geral e handoff para o próximo Claude: **`ESTADO-DO-PROJETO.md`** (leia primeiro).
 
+## 🧊 FASE 1 CONCLUÍDA E CONGELADA (02/ago/2026) — perfil cognitivo dos 34
+
+**Decisão dela:** *"Considere toda a Fase 1 concluída e congelada até nova solicitação."*
+**NÃO iniciar a Fase 2 (carga cognitiva) sem pedido explícito dela.**
+
+### O que está pronto e é fonte de verdade
+
+| Documento | Conteúdo |
+|---|---|
+| `docs/architecture/CANONICAL_EXERCISES.md` | **Constituição:** 34 exercícios ACTIVE, nomes oficiais, Legacy IDs, modalidades |
+| `docs/architecture/NOMENCLATURA-EXERCICIOS.md` | por que Cubos ≠ Corsi, Cores e Palavras ≠ Stroop, etc. |
+| `docs/clinical-architecture/01-cognitive-domain-taxonomy.md` | 8 famílias, ~60 domínios finos, escala 0–3, limites |
+| `docs/clinical-architecture/02-exercise-cognitive-profiles.md` | 34 fichas de 20 itens, lidas do código real |
+| `docs/clinical-architecture/03-cognitive-matrix.md` + `cognitive-matrix.json` | matriz fina 34 × 36 — **DESCRITIVA da mecânica, nunca aspiracional** |
+| `docs/clinical-architecture/04-clinical-review-questions.md` | 150 questões clínicas por exercício |
+| `docs/clinical-architecture/05-associated-cognitive-profiles.md` + `associated-profiles.json` | **camada macro:** 21 macros + tags funcionais |
+
+### Decisões clínicas que valem daqui em diante
+
+- **Quatro campos convivem:** `catalogDomain`/`catalogSubdomain` (organizam a TELA, intocados) ·
+  `mechanicalPrimary` (o que a mecânica recruta) · `associatedCognitiveProfiles` (macros) ·
+  `functionalClinicalTags` (aplicação). **Divergência entre catálogo e mecânica NÃO é erro** —
+  são 21 de 34, e a matriz continua descritiva.
+- **21 macros cognitivos** (o 21º = Cognição Social e Inferência Social) + **tags funcionais**
+  separadas. O mesmo conceito pode viver nos dois níveis sem duplicação: macro = processo mental,
+  tag = aplicação clínica.
+- **Nunca inflar rótulo:** duração não vira Atenção Sustentada · ordem inversa não vira
+  Flexibilidade · leitura não vira Linguagem-alvo · movimento rápido não vira Velocidade.
+- **Caminhos para a Meta = `PROVISIONAL_PROFILE`** — será reformulado para virar treino real de
+  Planejamento. Até lá **não usar como modelo para a engine** nem tratar seu perfil como definitivo.
+- Máx. 4 associados na camada resumida, **sem forçar 4** (há um com 2, dois com 1).
+
+### Quando a Fase 2 começar
+
+Ela usará: `mechanicalPrimary` + associados + intensidade dos domínios finos + modificadores de
+nível + modalidade + duração + interferência + pressão temporal. **Não só o `mechanicalPrimary`.**
+
+### Achados de código registrados nas fichas (NÃO corrigidos — fora do escopo da auditoria)
+
+- **Lista com Distração:** a tarefa distratora aceita **qualquer** resposta (o código não valida).
+- **Alternância de Regras:** **não há modificador por nível** — não fica mais difícil com a progressão.
+- **Certo ou Errado:** sem janela por item, sem aumento de alternativas; dificuldade só editorial.
+- **Matriz Espacial / Cubos / Matriz com Rotações:** o bipe é idêntico para todas as posições — não
+  é pista auditiva e não conta como demanda auditiva.
+
+
 ## 🚧 EM ANDAMENTO (02/ago/2026) — FASE 1 da arquitetura clínica: perfil cognitivo dos 34
 
 **Regra da etapa (dela):** só análise e documentos. Nada de código, progressão, níveis, duração,
