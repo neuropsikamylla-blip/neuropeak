@@ -1,15 +1,6 @@
 # As 3 ultimas especificacoes dela (automatico; a mais nova por ultimo)
 # Na retomada: ler as 3, conectar com PROGRESSO.md e git, declarar e seguir.
 
-## 03/08/2026 09:58
-<task-notification>
-<task-id>b2uutqz8h</task-id>
-<tool-use-id>toolu_01PNf9Vz4LnnzGkHWXswgbTx</tool-use-id>
-<output-file>/private/tmp/claude-501/-Users-kamyllahonorio-neuropeak/3e6ecf11-e4e5-471f-bbf9-4595faa53598/tasks/b2uutqz8h.output</output-file>
-<status>completed</status>
-<summary>Background command "Aguardar o lote 1" completed (exit code 0)</summary>
-</task-notification>
-
 ## 03/08/2026 10:10
 <task-notification>
 <task-id>b6u09qnjr</task-id>
@@ -256,3 +247,69 @@ Recalibre os 34 exercícios e apresente:
 Depois aplique a recalibração aos documentos e JSON do lote 1 e prossiga normalmente para os lotes 2 e 3.
 
 Não interrompa novamente para pedir uma distribuição numérica ideal, salvo se surgir uma inconsistência clínica real.
+
+## 03/08/2026 12:55
+Excelente.
+
+A arquitetura está seguindo exatamente a direção que eu queria.
+
+Tenho apenas alguns ajustes conceituais antes do lote 3.
+
+1.
+
+O teto de carga basal (7 / 10 / 13) deve permanecer como um alerta heurístico.
+
+Não deve ser tratado como limite absoluto.
+
+A composição da sessão deverá considerar simultaneamente:
+
+- carga basal;
+- fadiga;
+- interferência;
+- modelo de execução;
+- modalidade;
+- planejamento.
+
+Ou seja, duas sessões com carga total 7 podem ter qualidades muito diferentes.
+
+2.
+
+A margem de fechamento baseada no modelo de execução está aprovada.
+
+Esse conceito permanece.
+
+3.
+
+Adicionar um novo alerta:
+
+PLANNING_WINDOW
+
+Não recomendar dois exercícios classificados como PLANNING_WINDOW consecutivos.
+
+Exemplos:
+
+Jogo das Torres
+
+↓
+
+Estacionamento Lógico
+
+↓
+
+Caminhos para a Meta
+
+O sistema deverá sugerir inserir entre eles um exercício CONTINUOUS_TIMED ou CLOSED_PROTOCOL.
+
+Continua sendo apenas sugestão.
+
+Nunca bloqueio.
+
+4.
+
+Todos os alertas continuam consultivos.
+
+O terapeuta sempre poderá salvar o plano.
+
+Não criar bloqueios.
+
+Com esses ajustes, pode concluir normalmente o lote 3.

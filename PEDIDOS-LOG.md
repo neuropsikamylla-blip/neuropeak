@@ -5380,3 +5380,69 @@ vc esta fazendo?
 
 ## 03/08/2026 12:50
 e ai?
+
+## 03/08/2026 12:55
+Excelente.
+
+A arquitetura está seguindo exatamente a direção que eu queria.
+
+Tenho apenas alguns ajustes conceituais antes do lote 3.
+
+1.
+
+O teto de carga basal (7 / 10 / 13) deve permanecer como um alerta heurístico.
+
+Não deve ser tratado como limite absoluto.
+
+A composição da sessão deverá considerar simultaneamente:
+
+- carga basal;
+- fadiga;
+- interferência;
+- modelo de execução;
+- modalidade;
+- planejamento.
+
+Ou seja, duas sessões com carga total 7 podem ter qualidades muito diferentes.
+
+2.
+
+A margem de fechamento baseada no modelo de execução está aprovada.
+
+Esse conceito permanece.
+
+3.
+
+Adicionar um novo alerta:
+
+PLANNING_WINDOW
+
+Não recomendar dois exercícios classificados como PLANNING_WINDOW consecutivos.
+
+Exemplos:
+
+Jogo das Torres
+
+↓
+
+Estacionamento Lógico
+
+↓
+
+Caminhos para a Meta
+
+O sistema deverá sugerir inserir entre eles um exercício CONTINUOUS_TIMED ou CLOSED_PROTOCOL.
+
+Continua sendo apenas sugestão.
+
+Nunca bloqueio.
+
+4.
+
+Todos os alertas continuam consultivos.
+
+O terapeuta sempre poderá salvar o plano.
+
+Não criar bloqueios.
+
+Com esses ajustes, pode concluir normalmente o lote 3.
