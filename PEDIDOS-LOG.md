@@ -10007,3 +10007,17 @@ Não publicar automaticamente.
 
 Pare para validação.
 ```
+
+## 04/08/2026 16:51
+Perfeito. Pode concluir esse lote normalmente.
+
+Quando terminar:
+
+- rode TypeScript;
+- rode a suíte completa;
+- rode o build;
+- confirme que 26, 35, 37 e 45 não foram arredondados;
+- confirme que 20, 30 e 40 preservaram o comportamento anterior;
+- confirme que nenhuma interface, protocolo, nível, progresso ou plano foi alterado;
+- não publique ainda;
+- pare para minha validação.
