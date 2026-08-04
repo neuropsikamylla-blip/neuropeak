@@ -17,6 +17,7 @@ import { ExerciseTable } from "@/components/plano/ExerciseTable";
 import { PlanBuilderSidebar } from "@/components/plano/PlanBuilderSidebar";
 import { parsePlanExercises, buildPlanExercises } from "@/lib/exercise-plan";
 import { DEFAULT_SPAN_SETTINGS, type SpanSettings } from "@/components/exercises/memory/SpanNumerico";
+import { presentCatalogExercise, presentLegacyPlan } from "@/lib/prescription/presentation";
 
 const SPAN_IDS = ["span-numerico", "span-numerico-inverso"];
 const exDef = (id: string) => EXERCISE_DEFINITIONS[id as keyof typeof EXERCISE_DEFINITIONS];
@@ -149,6 +150,11 @@ export default function PlanoPage() {
 
   const addedIds = useMemo(() => new Set(selectedExercises), [selectedExercises]);
 
+  const planPresentation = useMemo(() => presentLegacyPlan(
+    buildPlanExercises(selectedExercises, exerciseSettings),
+    sessionDuration,
+  ), [selectedExercises, exerciseSettings, sessionDuration]);
+
   const visibleExercises = useMemo(() => {
     const subs = DOMAIN_SUBDOMAINS[activeDomain];
     const ids = activeSubdomain
@@ -160,7 +166,16 @@ export default function PlanoPage() {
       .filter(Boolean)
       .filter((ex) => difficulty === "todas" || metaOf(ex.id).difficulty === difficulty)
       .filter((ex) => !q || ex.name.toLowerCase().includes(q) || ex.description.toLowerCase().includes(q))
-      .map((ex) => ({ id: ex.id, name: ex.name, description: ex.description, estimatedMinutes: ex.estimatedMinutes, icon: ex.icon }));
+      .flatMap((ex) => {
+        const prescription = presentCatalogExercise(ex.id);
+        return prescription ? [{
+          id: ex.id,
+          name: ex.name,
+          description: ex.description,
+          icon: ex.icon,
+          prescription,
+        }] : [];
+      });
   }, [activeDomain, activeSubdomain, query, difficulty]);
 
   if (loadingPlan) {
@@ -251,6 +266,7 @@ export default function PlanoPage() {
             onSave={handleSave}
             onVisualize={() => router.push(`/pacientes/${patientId}`)}
             saving={loading}
+            presentation={planPresentation}
           />
         </div>
       </div>

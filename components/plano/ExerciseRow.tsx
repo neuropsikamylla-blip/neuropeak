@@ -4,13 +4,15 @@ import { EXERCISE_SUBDOMAIN, EXERCISE_SUBDOMAIN_ID } from "@/lib/domain-taxonomy
 import { ExerciseIcon } from "@/components/ExerciseIcon";
 import { DifficultyDots } from "./badges";
 import { SubdomainTag, SecondaryChips } from "./ExerciseTags";
+import type { PresentedExercise } from "@/lib/prescription/presentation";
+import { ExercisePrescriptionMeta } from "./prescription/ExercisePrescriptionMeta";
 
 export interface ExerciseInfo {
   id: string;
   name: string;
   description: string;
-  estimatedMinutes: number;
   icon: string;
+  prescription: PresentedExercise;
 }
 
 interface ExerciseRowProps {
@@ -32,15 +34,22 @@ export function ExerciseRow({ exercise, added, onToggle }: ExerciseRowProps) {
         <ExerciseIcon id={exercise.id} emoji={exercise.icon} size={50} className="mt-0.5" />
         <div className="min-w-0">
           <p className="font-medium text-sm text-slate-100 leading-tight">{exercise.name}</p>
-          <p className="text-xs text-slate-400 leading-snug mt-0.5 line-clamp-1">{exercise.description}</p>
-          {meta.secondary.length > 0 && (
-            <div className="mt-1.5"><SecondaryChips skills={meta.secondary} /></div>
-          )}
+          <ExercisePrescriptionMeta
+            exercise={exercise.prescription}
+            details={(
+              <>
+                <p className="leading-snug">{exercise.description}</p>
+                {meta.secondary.length > 0 && (
+                  <div className="mt-1.5"><SecondaryChips skills={meta.secondary} /></div>
+                )}
+              </>
+            )}
+          />
           {/* Em telas pequenas, metadados embaixo (colunas somem) */}
           <div className="flex flex-wrap items-center gap-2 mt-2 sm:hidden">
             {subLabel && <SubdomainTag id={subId} label={subLabel} />}
             <DifficultyDots difficulty={meta.difficulty} showLabel={false} />
-            <span className="text-xs text-slate-400">{exercise.estimatedMinutes} min</span>
+            <span className="text-xs text-slate-400">{exercise.prescription.durationLabel}</span>
           </div>
         </div>
       </div>
@@ -52,7 +61,7 @@ export function ExerciseRow({ exercise, added, onToggle }: ExerciseRowProps) {
       <div className="hidden sm:block"><DifficultyDots difficulty={meta.difficulty} /></div>
 
       {/* Duração */}
-      <div className="hidden sm:block text-sm text-slate-400 tabular-nums">~{exercise.estimatedMinutes} min</div>
+      <div className="hidden sm:block text-xs text-slate-400 tabular-nums">{exercise.prescription.durationLabel}</div>
 
       {/* Ação */}
       <div className="flex justify-end">

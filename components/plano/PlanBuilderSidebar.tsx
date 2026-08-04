@@ -4,7 +4,9 @@ import { Loader2, Save, Eye, ClipboardList } from "lucide-react";
 import { EXERCISE_DEFINITIONS, DOMAIN_COLORS, DOMAIN_LABELS } from "@/types";
 import { ALL_DOMAINS, EXERCISE_DOMAIN } from "@/lib/domain-taxonomy";
 import type { SpanSettings } from "@/components/exercises/memory/SpanNumerico";
+import type { PlanPresentation } from "@/lib/prescription/presentation";
 import { ExerciseCard } from "./ExerciseCard";
+import { PrescriptionSummary } from "./prescription/PrescriptionSummary";
 
 const SPAN_IDS = ["span-numerico", "span-numerico-inverso"];
 const exDef = (id: string) => EXERCISE_DEFINITIONS[id as keyof typeof EXERCISE_DEFINITIONS];
@@ -25,6 +27,7 @@ interface PlanBuilderSidebarProps {
   onSave: () => void;
   onVisualize: () => void;
   saving: boolean;
+  presentation: PlanPresentation;
 }
 
 /** Coluna direita — "Plano em construção", exercícios agrupados por domínio. */
@@ -32,10 +35,10 @@ export function PlanBuilderSidebar(props: PlanBuilderSidebarProps) {
   const {
     selectedExercises, exerciseLevels, exerciseSettings, onLevel, onSpanCfg, onSetting, onRemove, onMove,
     sessionDuration, frequency, onSessionDuration, onFrequency, onSave, onVisualize, saving,
+    presentation,
   } = props;
 
   const items = selectedExercises.map(exDef).filter(Boolean);
-  const totalMinutes = items.reduce((sum, ex) => sum + (ex.estimatedMinutes ?? 0), 0);
 
   // Agrupa os exercícios escolhidos por domínio (mesma estrutura da biblioteca).
   const grouped = ALL_DOMAINS
@@ -65,6 +68,8 @@ export function PlanBuilderSidebar(props: PlanBuilderSidebarProps) {
         </label>
       </div>
 
+      <PrescriptionSummary presentation={presentation} />
+
       {/* Lista de exercícios agrupada por domínio */}
       <div className="space-y-3 max-h-[58vh] overflow-y-auto -mr-1 pr-1">
         {items.length === 0 ? (
@@ -88,7 +93,7 @@ export function PlanBuilderSidebar(props: PlanBuilderSidebarProps) {
                   id={ex.id}
                   name={ex.name}
                   icon={ex.icon}
-                  minutes={ex.estimatedMinutes}
+                  prescription={presentation.exercises.find((exercise) => exercise.exerciseId === ex.id)}
                   color={DOMAIN_COLORS[group.domain]}
                   isSpan={SPAN_IDS.includes(ex.id)}
                   level={exerciseLevels[ex.id] ?? 1}
@@ -108,17 +113,7 @@ export function PlanBuilderSidebar(props: PlanBuilderSidebarProps) {
         )}
       </div>
 
-      {/* Resumo */}
-      <div className="flex items-center justify-between rounded-xl bg-white/5 px-3.5 py-2.5">
-        <div>
-          <p className="text-xs text-slate-400">Total de exercícios</p>
-          <p className="text-lg font-bold text-slate-100 tabular-nums">{items.length}</p>
-        </div>
-        <div className="text-right">
-          <p className="text-xs text-slate-400">Tempo total estimado</p>
-          <p className="text-lg font-bold text-slate-100 tabular-nums">{totalMinutes} min</p>
-        </div>
-      </div>
+      <p className="text-xs text-slate-400">Total de exercícios: <span className="font-semibold text-slate-200">{items.length}</span></p>
 
       {/* Botões */}
       <div className="space-y-2">

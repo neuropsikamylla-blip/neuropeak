@@ -8,12 +8,14 @@ import { ExerciseIcon } from "@/components/ExerciseIcon";
 import { SubdomainTag } from "./ExerciseTags";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 import { CaminhosMetaConfig } from "@/components/therapist/CaminhosMetaConfig";
+import type { PresentedExercise } from "@/lib/prescription/presentation";
+import { ExercisePrescriptionMeta } from "./prescription/ExercisePrescriptionMeta";
 
 interface ExerciseCardProps {
   id: string;
   name: string;
   icon: string;
-  minutes: number;
+  prescription?: PresentedExercise;
   color: string;
   isSpan: boolean;
   level: number;
@@ -30,7 +32,7 @@ interface ExerciseCardProps {
 
 /** Item do plano — card largo com reordenar, ajustes e remover. */
 export function ExerciseCard({
-  id, name, icon, minutes, color, isSpan, level, onLevel, spanCfg, onSpanCfg, cfg, onSetting, onRemove, onMove, isFirst, isLast,
+  id, name, icon, prescription, color, isSpan, level, onLevel, spanCfg, onSpanCfg, cfg, onSetting, onRemove, onMove, isFirst, isLast,
 }: ExerciseCardProps) {
   const [open, setOpen] = useState(false);
   const c: SpanSettings = { ...DEFAULT_SPAN_SETTINGS, ...(spanCfg ?? {}) };
@@ -71,10 +73,12 @@ export function ExerciseCard({
         <ExerciseIcon id={id} emoji={icon} size={38} />
         <div className="min-w-0 flex-1">
           <p className="text-sm font-semibold text-slate-100 truncate">{name}</p>
-          <div className="flex items-center gap-2 mt-0.5">
-            {subLabel && <SubdomainTag id={subId} label={subLabel} />}
-            <span className="text-xs text-slate-400 shrink-0">~{minutes} min</span>
-          </div>
+          {prescription && (
+            <ExercisePrescriptionMeta
+              exercise={prescription}
+              details={subLabel ? <SubdomainTag id={subId} label={subLabel} /> : undefined}
+            />
+          )}
         </div>
 
         {isCaminhos ? (
