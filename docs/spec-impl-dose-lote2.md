@@ -146,7 +146,7 @@ converte.
 que **hoje ainda acrescentam etapas** e que a separação entre dose e variedade virá na reformulação.
 **Não fingir** que já são só variantes.
 
-**Nível** — o slider **permanece**, em "Preferências de execução", com o rótulo
+**Nível** — o slider **permanece**, na seção **"Configurações de nível"** (a 4ª), com o rótulo
 **"Configuração de nível — revisão futura"**. Não removê-lo: a regra definitiva depende de histórico
 do paciente, fora deste escopo. Não alterar seu comportamento.
 
