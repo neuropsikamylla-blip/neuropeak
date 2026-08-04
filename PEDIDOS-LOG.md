@@ -7585,3 +7585,49 @@ vc esta fazendo?
 <status>completed</status>
 <summary>Background command "Disparar o lote 2 sem interromper" completed (exit code 0)</summary>
 </task-notification>
+
+## 04/08/2026 09:06
+Pode publicar esta versão para validação visual.
+
+Faça o bump de versão, publique na Vercel e confirme:
+
+- appVersion;
+- buildId;
+- health check;
+- commit publicado;
+- que a entrega do Lote 2 está contida no deploy.
+
+Não iniciar nenhuma nova fase.
+
+Depois da publicação, vou validar principalmente:
+
+1. A janela “Ajustar” com as cinco seções:
+   - Dose do treino;
+   - Modalidade e variantes;
+   - Assistência;
+   - Configurações de nível;
+   - Preferências de execução.
+
+2. Se Breve, Padrão e Estendido estão claros e visualmente equilibrados.
+
+3. Se a duração da sessão muda imediatamente ao trocar o protocolo.
+
+4. Se as unidades aparecem corretamente:
+   - séries;
+   - rodadas;
+   - tentativas;
+   - desafios completos.
+
+5. Se o aviso do Breve está claro e não faz o protocolo parecer inadequado.
+
+6. Se o plano legado preserva a dose antiga e oferece conversão explícita.
+
+7. Se Caminhos para a Meta aparece como provisório sem esconder o valor preservado.
+
+8. Se a janela ficou visualmente pesada ou extensa demais.
+
+9. Se o botão Salvar plano continua funcionando normalmente.
+
+Não alterar código durante a publicação, salvo ajuste estritamente necessário para o deploy.
+
+Após publicar, pare e aguarde minha validação visual.
