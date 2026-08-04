@@ -6666,3 +6666,10 @@ botão **"Salvar plano"** continua disponível.
 - Não iniciei nem preparei nada da Fase 3.</result>
 <usage><subagent_tokens>26668</subagent_tokens><tool_uses>4</tool_uses><duration_ms>63993</duration_ms></usage>
 </task-notification>
+
+## 03/08/2026 23:52
+Encontramos uma inconsistência arquitetônica. Os parâmetros ajustáveis (tentativas, repetições, nível inicial etc.) alteram a dose clínica do exercício, mas o painel continua exibindo a duração, carga basal e fadiga do protocolo original. Isso quebra a consistência da prescrição.
+Antes de continuar a implementação, precisamos definir uma regra única:
+Todo parâmetro ajustável que modifica a dose clínica deve atualizar automaticamente duração estimada, carga basal e fadiga da sessão; ou
+Esses parâmetros deixam de ser livres e passam a ser derivados exclusivamente do protocolo (Breve, Padrão ou Estendido).
+Não implemente ainda. Faça primeiro uma análise arquitetônica indicando quais parâmetros realmente modificam a dose clínica de cada exercício e quais são apenas configurações que não alteram carga, duração ou fadiga.
