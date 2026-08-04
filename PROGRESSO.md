@@ -3,6 +3,106 @@
 > Checkpoint de contexto para continuidade entre sessões. Atualizado automaticamente.
 > 👉 Visão geral e handoff para o próximo Claude: **`ESTADO-DO-PROJETO.md`** (leia primeiro).
 
+## ⏱️ DURAÇÃO CONTÍNUA DA SESSÃO ENTREGUE E PUBLICADA (04/ago/2026) — `6fcd831`, v2.72.0
+
+**Commits:** implementação = `a6b686d` · análise de prescrição × execução = `5ed7580` · release = `6fcd831`.
+
+### O que mudou
+
+O motor passa a respeitar a **duração exata escolhida pelo terapeuta**. Antes, a interface aceitava de
+**10 a 90 minutos** e o núcleo modelava só **20 | 30 | 40**, com a função **`nearestTarget`** arredondando
+entre os dois — uma sessão de **45 min** era avaliada contra a faixa de **40** e ainda recebia o **marcador de
+parâmetro não determinado** só por não ser um dos três valores.
+
+- **`targetDurationBounds`** deriva a faixa **por percentual**: **piso 0,9 · teto 1,1 · máximo 1,2** do alvo.
+  A fórmula **não é nova**: as faixas aprovadas na **Fase 2** já eram exatamente isso, apenas escritas como
+  **tabela**. Por isso **20, 30 e 40 saem idênticos** a **18–22**, **27–33** e **36–44**, **sem exceção nem
+  arredondamento**;
+- **`nearestTarget` removido**; **`TargetMinutes` deixou de ser união literal** e a validação passou para a
+  **fronteira**, em **`isTarget`**, na **mesma faixa de 10 a 90** que a interface já aceitava;
+- **nenhuma duração é marcada como legada** só por não ser 20, 30 ou 40; o marcador continua para **id
+  desconhecido** e **parâmetro irresolúvel**;
+- **comparações de fronteira com tolerância**, para o **ruído binário** (`25 × 1,1` dá `27,500000000000004`)
+  **não deslocar um estado**. Os valores exibidos saem limpos: **22,5–27,5 · 23,4–28,6 · 31,5–38,5 ·
+  33,3–40,7 · 40,5–49,5 · 45–55**.
+
+### ⚠️ Carga e fadiga NÃO foram interpoladas — decisão dela
+
+Fora de **20/30/40**, os **quatro alertas que dependem de tabela clínica** (**`LOAD_AT_CAP`**,
+**`LOAD_OVER_CAP`**, **`HIGH_FATIGUE_COUNT`**, **`PLANNING_WINDOW_COUNT`**) **não são emitidos** e
+**`loadReference` fica indefinido**. **Carga, fadiga e interferência continuam calculadas e visíveis** —
+**some a comparação, não o dado**. Verificado: **20 min devolve referência 7**, **30 devolve 10**,
+**40 devolve 13** e **emitem** os alertas; **26, 35 e 45** devolvem **referência indefinida** e **não emitem
+nenhum dos quatro**.
+
+### Roteamento
+
+Codex **`gpt-5.6-sol`, esforço xhigh, lab `durcont3`**. **Dois disparos anteriores falharam** — o primeiro
+**travou** (ver incidente abaixo) e o segundo **parou corretamente** porque a spec do VP citava **`isTarget`**
+sem listar **`legacy.ts`** entre os arquivos permitidos; o **Codex pediu autorização em vez de improvisar**,
+e a **spec foi corrigida em `9b63eac`**.
+
+**Consertos pós-colheita — Claude Opus 5 xhigh (exceção 1 da regra 8):** **quatro testes novos afirmavam
+valores que contradizem o catálogo** — **`deductive-grid` é ALTA em fadiga mas MODERADA em interferência**,
+**`tempo-reacao` é MODERADA nos dois eixos**, e o **teste de faixa derivada proibia uma string que aparecia
+legitimamente como estimativa**. **O código estava certo nos quatro casos.**
+
+### 🚨 Incidente de operação RESOLVIDO — causa identificada
+
+**Vários disparos do Codex nesta sessão travaram**, ficando com o **log parado em 2 linhas** e **zero arquivos
+escritos**. Cruzando os **oito disparos**, o padrão ficou claro: **TODO disparo que travou tinha o `rodar`
+encadeado logo após o `preparar`** ou **após um `git commit` na mesma invocação**; **TODO disparo isolado
+funcionou**. A **spec vai ao Codex por stdin**, e o **comando anterior da cadeia consome esse stdin**, deixando
+o Codex **esperando uma entrada que já foi engolida**.
+
+**REGRA PERMANENTE:** disparar **`lab.sh rodar` sempre em invocação própria, nunca encadeado**. E **armar um
+vigia a cada disparo** — um **loop em segundo plano** que avisa quando o **log cresce** (saudável) ou quando
+passam **15 a 25 minutos sem progresso** (travado), para o **VP descobrir sozinho** em vez de depender de ela
+perguntar.
+
+### Provas (repositório real)
+
+`npx tsc --noEmit` exit 0 · `npx vitest run` **453/453** em **34 arquivos** (eram **405** → **+48**) ·
+`npm run build` exit 0 · **`canSave` true**.
+**Escopo:** só **`lib/prescription/`** — **nenhum componente, banco, API, migration, protocolo, dose, nível ou
+progresso tocado**.
+
+### ✅ Publicação confirmada por evidência
+
+`/api/version` → `{"appVersion":"2.72.0","buildId":"dpl_B1txCkhzVnFtdq5wA6NaTaSWNggi"}` · `/api/health` →
+`{"ok":true}` · `git merge-base` confirmou que **`a6b686d` está contido em `6fcd831`**.
+
+### 🧭 Decisão arquitetônica registrada em `5ed7580` (`10-prescription-execution-real-time.md`), aprovada por ela
+
+A **duração-alvo é META ESTIMADA, não cronômetro de interrupção**. Os **três tempos ficam formalmente
+separados**: **duração-alvo prescrita**, **duração estimada** e **duração real**. **Tempo acima ou abaixo da
+estimativa é dado clínico, não erro.**
+
+### Conclusão da análise do runtime, aprovada por ela — NÃO HÁ CORREÇÃO NECESSÁRIA
+
+A **duração-alvo não interrompe a execução**; **`sessionDuration` nunca chega ao lado do paciente**; o
+**paciente pode concluir todos os exercícios prescritos**; os **exercícios temporizados encerram ENTRE
+unidades**, **preservando a tentativa em andamento**, conforme a **`terminationPolicy` aprovada na Fase 2**.
+**DECISÃO EXPLÍCITA DELA:** **não remover nem alterar `isTimeUp()`** dos exercícios **`CONTINUOUS_TIMED`**.
+
+### 🔎 Achado a preservar
+
+**`Session.duration` guarda TEMPO ATIVO, não tempo de relógio** — **`elapsedSec` devolve `activeMs/1000`**, e
+**`activeMs` só acumula com interação nos últimos 15 segundos**. O **dado existente mede engajamento, não
+permanência**; **pausa e interrupção não são registradas em lugar nenhum**.
+
+### 📌 Fase futura separada, NÃO INICIADA — "Execução e histórico das sessões"
+
+Deverá **distinguir**: **duração-alvo prescrita**, **duração estimada**, **tempo ativo**, **tempo total
+decorrido**, **pausas**, e **conclusão integral ou parcial**.
+
+**NÃO IMPLEMENTAR AINDA (lista explícita dela):** **tempo de parede** · **pausas** · **sessão como entidade de
+execução** · **histórico de sessões** · **comparação estimado × realizado** · **alterações de banco** ·
+**alterações no runtime** · **presets 20/35/50**.
+
+### ⏸️ PRÓXIMO PASSO — PARADO. Nenhuma fase nova iniciada.
+
+
 ## 🪟 REFINO DE UX DA TELA DE MONTAGEM DO PLANO ENTREGUE E PUBLICADO (04/ago/2026) — `b7b22dd`, v2.71.0
 
 **Commits:** lote A = `19e8412` · lote B = `e1f0392` · release = `b7b22dd`.
