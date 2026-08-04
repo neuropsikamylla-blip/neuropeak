@@ -26,7 +26,7 @@ esta mudança remove.
 ## Arquivos permitidos
 
 - **alterar** `lib/prescription/types.ts` · `duration.ts` · `load.ts` · `validation.ts` ·
-  `interpreter.ts` · `presentation.ts`
+  `interpreter.ts` · `presentation.ts` · **`legacy.ts`** (é onde vive `isTarget`, citado na seção 3)
 - **alterar/criar** testes em `lib/prescription/`
 
 Se precisar tocar em algo fora da lista, **parar e explicar**.
