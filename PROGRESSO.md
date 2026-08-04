@@ -3,7 +3,9 @@
 > Checkpoint de contexto para continuidade entre sessões. Atualizado automaticamente.
 > 👉 Visão geral e handoff para o próximo Claude: **`ESTADO-DO-PROJETO.md`** (leia primeiro).
 
-## 🚧 EM ANDAMENTO (04/ago/2026) — DOSE POR PROTOCOLO: implementação dos passos 1 a 5 da ordem segura
+## ✅ PLANO DA DOSE POR PROTOCOLO — EXECUTADO (04/ago/2026) — os 8 passos concluídos
+
+> Bloco encerrado. A entrega publicada está registrada no topo (`0873db8`, v2.69.0).
 
 **Autorização dela:** validou a análise de parâmetros e dose em
 `docs/prescription-architecture/08-dose-parameter-decisions.md` (commit `271e037`) e autorizou
