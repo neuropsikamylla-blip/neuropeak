@@ -108,10 +108,30 @@ describe("apresentação consultiva da prescrição", () => {
     expect(formatMinutesRange([27, 33])).not.toContain("27-33");
   });
 
+  it.each([
+    [26, "23,4–28,6 min", ["27–33 min"]],
+    [35, "31,5–38,5 min", ["27–33 min", "36–44 min"]],
+    [37, "33,3–40,7 min", ["36–44 min"]],
+    [45, "40,5–49,5 min", ["36–44 min"]],
+  ] as const)("apresenta a faixa derivada de %s min sem arredondar o alvo", (targetMinutes, expected, roundedRanges) => {
+    // A estimativa precisa ser distinta das faixas proibidas: o `context` padrão usa [27, 33],
+    // que apareceria na mensagem como estimativa e daria falso positivo na checagem abaixo.
+    const translated = presentAlert(alert("SESSION_BELOW_TARGET"), { ...context, targetMinutes, durationRange: [11, 12] });
+    expect(translated.mensagem).toContain(expected);
+    for (const roundedRange of roundedRanges) expect(translated.mensagem).not.toContain(roundedRange);
+  });
+
   it("formata carga, referência e aviso consultivo", () => {
     expect(formatLoad(8, 10)).toEqual({
       text: "Carga basal: 8 / referência 10",
       helper: "Referência consultiva; não determina se o plano é válido.",
+    });
+  });
+
+  it("formata carga sem comparação quando não há referência clínica definida", () => {
+    expect(formatLoad(8)).toEqual({
+      text: "Carga basal: 8",
+      helper: "Referência clínica ainda não definida para esta duração.",
     });
   });
 
@@ -136,6 +156,36 @@ describe("apresentação consultiva da prescrição", () => {
     expect(plan.exercises).toHaveLength(1);
     expect(plan.exercises[0].doseLabel).toBe("Protocolo padrão");
     expect(plan.legacyMarker).toBeUndefined();
+  });
+
+  it.each([26, 35, 37, 45])("não marca %s min como legado nem arredonda a duração prescrita", (targetMinutes) => {
+    const plan = presentLegacyPlan(["tempo-reacao"], targetMinutes);
+    expect(plan.prescribedMinutes).toBe(targetMinutes);
+    expect(plan.prescribedLabel).toBe(`Duração prescrita: ${targetMinutes} min`);
+    expect(plan.legacyMarker).toBeUndefined();
+  });
+
+  it("apresenta a carga calculada e a ausência de referência para duração contínua", () => {
+    const plan = presentLegacyPlan(["tempo-reacao"], 26);
+    expect(plan.loadText).toBe("Carga basal: 1");
+    expect(plan.loadHelper).toBe(PRESENTATION_TEXTS.undefinedLoadReference);
+    // tempo-reacao é MODERADA em fadiga e em interferência no catálogo.
+    expect(plan.fatigueText).toBe("1 moderada");
+    expect(plan.interferenceText).toBe("1 moderada");
+    expect(plan.canSave).toBe(true);
+  });
+
+  it("abre envelope antigo com duração contínua salva sem converter o formato", () => {
+    const raw = { targetMinutes: 45, exercises: ["tempo-reacao"] };
+    const before = structuredClone(raw);
+    const plan = presentLegacyPlan(raw);
+    const currentDuration = presentLegacyPlan({ ...raw, targetMinutes: 30 }, 45);
+
+    expect(plan.prescribedMinutes).toBe(45);
+    expect(plan.legacyMarker).toBeUndefined();
+    expect(currentDuration.alerts.find((item) => item.code === "SESSION_BELOW_TARGET")?.mensagem)
+      .toContain("40,5–49,5 min");
+    expect(raw).toEqual(before);
   });
 
   it("distingue protocolo atual, legado estimado e legado sem estimativa", () => {

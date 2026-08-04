@@ -13,11 +13,12 @@ export function interpretPlan(plan: SessionPrescription) {
   });
   const durationRange = calculateDuration(exercises);
   const baseline = baselineLoad(exercises);
+  const loadReference = LOAD_REFERENCE[plan.targetMinutes];
   return {
     durationRange,
     durationState: durationState(durationRange, plan.targetMinutes),
     baselineLoad: baseline,
-    loadReference: LOAD_REFERENCE[plan.targetMinutes],
+    ...(loadReference === undefined ? {} : { loadReference }),
     fatigueSummary: levelSummary(exercises, "fatigue"),
     interferenceSummary: levelSummary(exercises, "interference"),
     alerts: validateComposition({ targetMinutes: plan.targetMinutes, durationRange, baselineLoad: baseline, exercises }),

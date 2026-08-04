@@ -14,7 +14,7 @@ function definition(id: string, overrides: Partial<ExerciseDefinition> = {}): Ex
 function resolved(def: ExerciseDefinition, index: number): ResolvedExercisePrescription {
   return { definition: def, prescription: { exerciseId: def.exerciseId, order: index + 1, dose: { kind: "protocol", protocol: "PADRAO" } }, prescribedMinutes: [1, 1] };
 }
-function codes(exercises: ExerciseDefinition[], range: readonly [number, number] = [20, 20], baseline = 0, target: 20 | 30 | 40 = 20) {
+function codes(exercises: ExerciseDefinition[], range: readonly [number, number] = [20, 20], baseline = 0, target = 20) {
   return validateComposition({ targetMinutes: target, durationRange: range, baselineLoad: baseline, exercises: exercises.map(resolved) }).map((alert) => alert.code);
 }
 
@@ -49,5 +49,48 @@ describe("18 alertas de composição", () => {
     const alerts = validateComposition({ targetMinutes: 20, durationRange: [20, 20], baselineLoad: 0, exercises: ["a", "b", "c"].map((id, index) => resolved(definition(id, { interference: "ALTA" }), index)) });
     expect(alerts.filter((alert) => alert.code === "HIGH_INTERFERENCE_ADJACENT")).toHaveLength(2);
     expect(alerts.every((alert) => alert.blocksSave === false)).toBe(true);
+  });
+
+  it("omite somente os quatro alertas com tabela quando a duração não tem referência clínica", () => {
+    const exercises = ["a", "b", "c"].map((id) => definition(id, {
+      executionModel: "PLANNING_WINDOW",
+      fatigue: "ALTA",
+      interference: "ALTA",
+    }));
+    const result = codes(exercises, [31, 31], 100, 35);
+
+    expect(result).not.toContain("LOAD_AT_CAP");
+    expect(result).not.toContain("LOAD_OVER_CAP");
+    expect(result).not.toContain("HIGH_FATIGUE_COUNT");
+    expect(result).not.toContain("PLANNING_WINDOW_COUNT");
+    expect(result).toEqual(expect.arrayContaining([
+      "SESSION_BELOW_TARGET",
+      "HIGH_FATIGUE_ADJACENT",
+      "HIGH_FATIGUE_POSITION",
+      "HIGH_INTERFERENCE_ADJACENT",
+      "PLANNING_WINDOW_ADJACENT",
+    ]));
+  });
+
+  it.each([
+    [20, 7, 1],
+    [30, 10, 2],
+    [40, 13, 2],
+  ])("mantém as referências discretas aprovadas para %s min", (target, loadReference, countCap) => {
+    const overCount = Array.from({ length: countCap + 1 }, (_, index) => definition(`e${index}`, {
+      executionModel: "PLANNING_WINDOW",
+      fatigue: "ALTA",
+    }));
+    const atCount = overCount.slice(0, countCap);
+    const atReference = codes(overCount, [target, target], loadReference, target);
+    const overReference = codes(overCount, [target, target], loadReference + 1, target);
+    const atCaps = codes(atCount, [target, target], 0, target);
+
+    expect(atReference).toContain("LOAD_AT_CAP");
+    expect(atReference).not.toContain("LOAD_OVER_CAP");
+    expect(overReference).toContain("LOAD_OVER_CAP");
+    expect(atReference).toEqual(expect.arrayContaining(["HIGH_FATIGUE_COUNT", "PLANNING_WINDOW_COUNT"]));
+    expect(atCaps).not.toContain("HIGH_FATIGUE_COUNT");
+    expect(atCaps).not.toContain("PLANNING_WINDOW_COUNT");
   });
 });

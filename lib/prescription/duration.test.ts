@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest";
 import { catalogExercise, EXERCISE_CATALOG } from "./catalog";
-import { calculateDuration, durationState, doseMinutes, legacyDoseMinutes } from "./duration";
+import { calculateDuration, durationState, doseMinutes, legacyDoseMinutes, targetDurationBounds } from "./duration";
 import { interpretPlan } from "./interpreter";
 import type { ResolvedExercisePrescription } from "./types";
 
@@ -102,6 +102,42 @@ describe("estados conservadores de duração", () => {
     [40, 35.9, "ABAIXO"], [40, 36, "DENTRO"], [40, 44, "DENTRO"], [40, 44.1, "ACIMA"], [40, 48, "ACIMA"], [40, 48.1, "EXCESSO_IMPORTANTE"],
   ];
   it.each(cases)("%s min: %s fica %s", (target, value, expected) => {
+    expect(durationState([value, value], target)).toBe(expected);
+  });
+
+  it.each([
+    [20, 18, 22, 24],
+    [25, 22.5, 27.5, 30],
+    [26, 23.4, 28.6, 31.2],
+    [30, 27, 33, 36],
+    [35, 31.5, 38.5, 42],
+    [37, 33.3, 40.7, 44.4],
+    [40, 36, 44, 48],
+    [45, 40.5, 49.5, 54],
+    [50, 45, 55, 60],
+  ])("deriva %s min como %s–%s min, com máximo %s", (target, floor, ceiling, maximum) => {
+    const bounds = targetDurationBounds(target);
+    expect(bounds.floor).toBeCloseTo(floor, 12);
+    expect(bounds.ceiling).toBeCloseTo(ceiling, 12);
+    expect(bounds.maximum).toBeCloseTo(maximum, 12);
+  });
+
+  it("preserva exatamente os limites aprovados de 20, 30 e 40 min", () => {
+    expect(targetDurationBounds(20)).toEqual({ floor: 18, ceiling: 22, maximum: 24 });
+    expect(targetDurationBounds(30)).toEqual({ floor: 27, ceiling: 33, maximum: 36 });
+    expect(targetDurationBounds(40)).toEqual({ floor: 36, ceiling: 44, maximum: 48 });
+  });
+
+  const continuousBoundaryCases = [
+    [25, 22.4, "ABAIXO"], [25, 22.5, "DENTRO"], [25, 27.5, "DENTRO"],
+    [25, 27.6, "ACIMA"], [25, 30, "ACIMA"], [25, 30.1, "EXCESSO_IMPORTANTE"],
+    [35, 31.4, "ABAIXO"], [35, 31.5, "DENTRO"], [35, 38.5, "DENTRO"],
+    [35, 38.6, "ACIMA"], [35, 42, "ACIMA"], [35, 42.1, "EXCESSO_IMPORTANTE"],
+    [50, 44.9, "ABAIXO"], [50, 45, "DENTRO"], [50, 55, "DENTRO"],
+    [50, 55.1, "ACIMA"], [50, 60, "ACIMA"], [50, 60.1, "EXCESSO_IMPORTANTE"],
+  ] as const;
+
+  it.each(continuousBoundaryCases)("%s min contínuos: %s fica %s", (target, value, expected) => {
     expect(durationState([value, value], target)).toBe(expected);
   });
 });

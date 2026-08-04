@@ -1,4 +1,4 @@
-import { TARGET_DURATION_BOUNDS } from "./duration";
+import { isAboveDurationBoundary, isBelowDurationBoundary, targetDurationBounds } from "./duration";
 import { HIGH_FATIGUE_CAP, LOAD_REFERENCE, PLANNING_WINDOW_CAP } from "./load";
 import type { AlertCode, PrescriptionAlert, ResolvedExercisePrescription, TargetMinutes } from "./types";
 
@@ -14,27 +14,29 @@ const rangeText = ([min, max]: readonly [number, number]) => `${text(min)}–${t
 
 export function validateComposition(input: ValidationInput): PrescriptionAlert[] {
   const { exercises, targetMinutes, durationRange } = input;
-  const bounds = TARGET_DURATION_BOUNDS[targetMinutes];
+  const bounds = targetDurationBounds(targetMinutes);
   const collected: { position: number; alert: PrescriptionAlert }[] = [];
   const alert = (code: AlertCode, severity: PrescriptionAlert["severity"], message: string, exerciseIds: readonly string[] = [], position = 0) => {
     collected.push({ position, alert: { code, severity, message, exerciseIds, blocksSave: false } });
   };
   const names = (exercise: ResolvedExercisePrescription) => exercise.definition.officialName;
 
-  if (durationRange[1] < bounds.floor) alert("SESSION_BELOW_TARGET", "atencao", `Sessão ${rangeText(durationRange)}, abaixo do esperado ${bounds.floor}–${bounds.ceiling} min.`);
-  if (durationRange[1] > bounds.ceiling && durationRange[1] <= bounds.maximum) alert("SESSION_ABOVE_TARGET", "atencao", `Estimativa em atenção acima de ${bounds.ceiling} min; máximo ${bounds.maximum} min.`);
-  if (durationRange[0] <= bounds.ceiling && durationRange[1] >= bounds.floor && (durationRange[0] < bounds.floor || durationRange[1] > bounds.ceiling)) {
+  if (isBelowDurationBoundary(durationRange[1], bounds.floor)) alert("SESSION_BELOW_TARGET", "atencao", `Sessão ${rangeText(durationRange)}, abaixo do esperado ${bounds.floor}–${bounds.ceiling} min.`);
+  if (isAboveDurationBoundary(durationRange[1], bounds.ceiling) && !isAboveDurationBoundary(durationRange[1], bounds.maximum)) alert("SESSION_ABOVE_TARGET", "atencao", `Estimativa em atenção acima de ${bounds.ceiling} min; máximo ${bounds.maximum} min.`);
+  if (!isAboveDurationBoundary(durationRange[0], bounds.ceiling)
+    && !isBelowDurationBoundary(durationRange[1], bounds.floor)
+    && (isBelowDurationBoundary(durationRange[0], bounds.floor) || isAboveDurationBoundary(durationRange[1], bounds.ceiling))) {
     alert("SESSION_RANGE_PARTIAL", "informativa", `Alcança o esperado, mas pode terminar fora de ${bounds.floor}–${bounds.ceiling} min.`);
   }
-  if (durationRange[1] > bounds.maximum) alert("SESSION_SAFE_MAX_EXCEEDED", "atencao", `Extremo superior em excesso importante acima de ${bounds.maximum} min.`);
+  if (isAboveDurationBoundary(durationRange[1], bounds.maximum)) alert("SESSION_SAFE_MAX_EXCEEDED", "atencao", `Extremo superior em excesso importante acima de ${bounds.maximum} min.`);
 
   const loadReference = LOAD_REFERENCE[targetMinutes];
-  if (input.baselineLoad === loadReference) alert("LOAD_AT_CAP", "informativa", `Carga basal ${input.baselineLoad} na referência ${loadReference}; revise os eixos.`);
-  if (input.baselineLoad > loadReference) alert("LOAD_OVER_CAP", "atencao", `Carga basal ${input.baselineLoad} acima da referência ${loadReference}; revise os eixos.`);
+  if (loadReference !== undefined && input.baselineLoad === loadReference) alert("LOAD_AT_CAP", "informativa", `Carga basal ${input.baselineLoad} na referência ${loadReference}; revise os eixos.`);
+  if (loadReference !== undefined && input.baselineLoad > loadReference) alert("LOAD_OVER_CAP", "atencao", `Carga basal ${input.baselineLoad} acima da referência ${loadReference}; revise os eixos.`);
 
   const highFatigue = exercises.filter((exercise) => exercise.definition.fatigue === "ALTA");
   const fatigueCap = HIGH_FATIGUE_CAP[targetMinutes];
-  if (highFatigue.length > fatigueCap) alert("HIGH_FATIGUE_COUNT", "atencao", `Há ${highFatigue.length} altas; máximo recomendado ${fatigueCap}.`, highFatigue.map((exercise) => exercise.definition.exerciseId), exercises.indexOf(highFatigue[0]));
+  if (fatigueCap !== undefined && highFatigue.length > fatigueCap) alert("HIGH_FATIGUE_COUNT", "atencao", `Há ${highFatigue.length} altas; máximo recomendado ${fatigueCap}.`, highFatigue.map((exercise) => exercise.definition.exerciseId), exercises.indexOf(highFatigue[0]));
   const last = exercises.at(-1);
   if (last?.definition.fatigue === "ALTA") alert("HIGH_FATIGUE_POSITION", "atencao", `${names(last)} fecha apesar de fadiga alta.`, [last.definition.exerciseId], exercises.length - 1);
 
@@ -62,7 +64,7 @@ export function validateComposition(input: ValidationInput): PrescriptionAlert[]
 
   const planning = exercises.filter((exercise) => exercise.definition.executionModel === "PLANNING_WINDOW");
   const planningCap = PLANNING_WINDOW_CAP[targetMinutes];
-  if (planning.length > planningCap) alert("PLANNING_WINDOW_COUNT", "atencao", `Há ${planning.length} janelas; teto ${planningCap}.`, planning.map((exercise) => exercise.definition.exerciseId), exercises.indexOf(planning[0]));
+  if (planningCap !== undefined && planning.length > planningCap) alert("PLANNING_WINDOW_COUNT", "atencao", `Há ${planning.length} janelas; teto ${planningCap}.`, planning.map((exercise) => exercise.definition.exerciseId), exercises.indexOf(planning[0]));
 
   for (let index = 0; index < exercises.length; index += 1) {
     const exercise = exercises[index];

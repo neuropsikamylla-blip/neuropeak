@@ -30,4 +30,30 @@ describe("interpretador", () => {
       expect(result.alerts).toEqual([]);
     }
   });
+
+  it("mantém os dados calculados e canSave sem inventar referência para duração contínua", () => {
+    const result = interpretPlan({
+      targetMinutes: 35,
+      exercises: ["deductive-grid", "matriz-espacial", "certo-ou-errado"]
+        .map((exerciseId, index) => ({ exerciseId, order: index + 1 })),
+    });
+    const tableDependentCodes = new Set([
+      "LOAD_AT_CAP",
+      "LOAD_OVER_CAP",
+      "HIGH_FATIGUE_COUNT",
+      "PLANNING_WINDOW_COUNT",
+    ]);
+
+    expect(result.durationRange).toEqual([27, 32.5]);
+    expect(result.baselineLoad).toBe(4);
+    // Catálogo: matriz-espacial e certo-ou-errado são BAIXA nos dois eixos; deductive-grid é
+    // ALTA em fadiga mas MODERADA em interferência — os resumos não são iguais entre si.
+    expect(result.fatigueSummary).toEqual({ BAIXA: 2, MODERADA: 0, ALTA: 1 });
+    expect(result.interferenceSummary).toEqual({ BAIXA: 2, MODERADA: 1, ALTA: 0 });
+    expect(result).not.toHaveProperty("loadReference");
+    expect(result.loadReference).toBeUndefined();
+    expect(result.alerts.every((alert) => !tableDependentCodes.has(alert.code))).toBe(true);
+    expect(result.alerts.every((alert) => alert.blocksSave === false)).toBe(true);
+    expect(result.canSave).toBe(true);
+  });
 });

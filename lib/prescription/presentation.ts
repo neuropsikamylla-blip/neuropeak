@@ -1,7 +1,7 @@
 import { catalogExercise } from "./catalog";
-import { calculateDuration, doseMinutes, legacyDoseMinutes, TARGET_DURATION_BOUNDS } from "./duration";
+import { calculateDuration, doseMinutes, legacyDoseMinutes, targetDurationBounds } from "./duration";
 import { interpretPlan } from "./interpreter";
-import { readLegacyPlan } from "./legacy";
+import { isTarget, readLegacyPlan } from "./legacy";
 import { HIGH_FATIGUE_CAP, PLANNING_WINDOW_CAP } from "./load";
 import type {
   AlertCode,
@@ -39,6 +39,7 @@ export const SESSION_STATE_LABELS: Readonly<Record<SessionDurationState, string>
 export const PRESENTATION_TEXTS = {
   estimateTooltip: "Faixa estimada a partir da dose, modalidade e transições entre exercícios.",
   loadHelper: "Referência consultiva; não determina se o plano é válido.",
+  undefinedLoadReference: "Referência clínica ainda não definida para esta duração.",
   loadTooltip: "Soma da carga cognitiva basal dos exercícios, comparada à referência da duração prescrita.",
   alertsTooltip: "Observações consultivas para apoiar a revisão da composição. Não impedem salvar.",
   legacyMarker: "Alguns parâmetros não puderam ser determinados.",
@@ -190,7 +191,13 @@ export function protocolOptions(exerciseId: string): readonly ProtocolOptionPres
   });
 }
 
-export function formatLoad(baselineLoad: number, loadReference: number) {
+export function formatLoad(baselineLoad: number, loadReference?: number) {
+  if (loadReference === undefined) {
+    return {
+      text: `Carga basal: ${baselineLoad}`,
+      helper: PRESENTATION_TEXTS.undefinedLoadReference,
+    } as const;
+  }
   return {
     text: `Carga basal: ${baselineLoad} / referência ${loadReference}`,
     helper: PRESENTATION_TEXTS.loadHelper,
@@ -222,7 +229,7 @@ interface AlertContext {
   targetMinutes: TargetMinutes;
   durationRange: MinutesRange;
   baselineLoad: number;
-  loadReference: number;
+  loadReference?: number;
   exercises: readonly ResolvedExercisePrescription[];
 }
 
@@ -239,8 +246,8 @@ interface AlertCopy {
 
 const namesText = (names: readonly string[]) => names.length > 0 ? names.join(" e ") : "Os exercícios selecionados";
 const expectedRange = (target: TargetMinutes) => {
-  const bounds = TARGET_DURATION_BOUNDS[target];
-  return `${bounds.floor}–${bounds.ceiling} min`;
+  const bounds = targetDurationBounds(target);
+  return formatMinutesRange([bounds.floor, bounds.ceiling]);
 };
 const highCount = (context: AlertCopyContext, key: "fatigue" | "interference") =>
   context.exercises.filter((exercise) => exercise.definition[key] === "ALTA").length;
@@ -377,7 +384,7 @@ export const ALERT_PRESENTATION_CONFIG = {
   },
   SESSION_SAFE_MAX_EXCEEDED: {
     titulo: "Duração estimada acima da sessão prescrita",
-    mensagem: (c) => `A duração estimada ultrapassa ${TARGET_DURATION_BOUNDS[c.targetMinutes].maximum} min para a sessão prescrita.`,
+    mensagem: (c) => `A duração estimada ultrapassa ${targetDurationBounds(c.targetMinutes).maximum} min para a sessão prescrita.`,
     sugestao: () => "Considere revisar a composição ou as doses do plano.",
   },
   LOAD_AT_CAP: {
@@ -865,12 +872,6 @@ function planPresentation(plan: SessionPrescription, prescribedMinutes: number, 
   };
 }
 
-function nearestTarget(minutes: number): TargetMinutes {
-  if (minutes <= 25) return 20;
-  if (minutes <= 35) return 30;
-  return 40;
-}
-
 function parsedLegacyValue(rawPlan: unknown): unknown {
   if (typeof rawPlan !== "string") return rawPlan;
   try { return JSON.parse(rawPlan); } catch { return []; }
@@ -911,13 +912,16 @@ export function presentPlan(plan: SessionPrescription): PlanPresentation {
 /** Lê o formato salvo atual sem convertê-lo ou produzir qualquer mutação. */
 export function presentLegacyPlan(rawPlan: unknown, prescribedMinutes?: number): PlanPresentation {
   const requestedMinutes = prescribedMinutes ?? 30;
-  const target = nearestTarget(requestedMinutes);
-  const legacy = readLegacyPlan(rawPlan, target);
-  const displayedMinutes = prescribedMinutes ?? legacy.plan.targetMinutes;
-  const exactTarget = displayedMinutes === 20 || displayedMinutes === 30 || displayedMinutes === 40;
+  const legacy = readLegacyPlan(rawPlan, requestedMinutes);
+  const displayedMinutes = prescribedMinutes === undefined
+    ? legacy.plan.targetMinutes
+    : isTarget(prescribedMinutes) ? prescribedMinutes : legacy.plan.targetMinutes;
+  const plan = displayedMinutes === legacy.plan.targetMinutes
+    ? legacy.plan
+    : { ...legacy.plan, targetMinutes: displayedMinutes };
   return planPresentation(
-    legacy.plan,
+    plan,
     displayedMinutes,
-    !exactTarget || legacy.ignoredIds.length > 0 || hasUnresolvedLegacyParameter(rawPlan),
+    legacy.ignoredIds.length > 0 || hasUnresolvedLegacyParameter(rawPlan),
   );
 }

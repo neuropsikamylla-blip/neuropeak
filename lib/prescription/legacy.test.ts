@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest";
 import { interpretPlan } from "./interpreter";
-import { readLegacyPlan } from "./legacy";
+import { isTarget, readLegacyPlan } from "./legacy";
 
 describe("leitor tolerante de planos antigos", () => {
   it("lê strings, preserva trials e mantém a duração original", () => {
@@ -72,5 +72,25 @@ describe("leitor tolerante de planos antigos", () => {
     expect(result.ignoredIds).toEqual(["nao-existe"]);
     expect(result.plan.exercises.map((exercise) => exercise.exerciseId)).toEqual(["matriz-espacial"]);
     expect(result.provisionalExerciseIds).toEqual([]);
+  });
+
+  it("isTarget aceita todos os inteiros de 10 a 90", () => {
+    for (let value = 10; value <= 90; value += 1) expect(isTarget(value)).toBe(true);
+  });
+
+  it("isTarget rejeita valores fora da faixa, fracionários e não numéricos", () => {
+    for (const value of [9, 91, 10.5, Number.NaN, Number.POSITIVE_INFINITY, "20", null]) {
+      expect(isTarget(value)).toBe(false);
+    }
+  });
+
+  it("preserva uma duração inteira contínua salva sem conversão", () => {
+    expect(readLegacyPlan({ targetMinutes: 26, exercises: [] }).plan.targetMinutes).toBe(26);
+  });
+
+  it("usa o padrão tolerante para duração salva inválida", () => {
+    for (const targetMinutes of [9, 91, 10.5]) {
+      expect(readLegacyPlan({ targetMinutes, exercises: [] }).plan.targetMinutes).toBe(20);
+    }
   });
 });

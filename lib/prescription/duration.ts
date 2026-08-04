@@ -8,6 +8,7 @@ export interface LegacyDoseMinutesResult {
 }
 
 const LEGACY_RATE_TOLERANCE = 1e-9;
+const DURATION_BOUNDARY_TOLERANCE = 1e-9;
 
 export const CLOSING_MARGIN_MAX: Readonly<Record<ExecutionModel, number>> = {
   CONTINUOUS_TIMED: 0.5,
@@ -16,11 +17,28 @@ export const CLOSING_MARGIN_MAX: Readonly<Record<ExecutionModel, number>> = {
   FIXED_HIGH_FATIGUE: 0,
 };
 
-export const TARGET_DURATION_BOUNDS: Readonly<Record<TargetMinutes, { floor: number; ceiling: number; maximum: number }>> = {
-  20: { floor: 18, ceiling: 22, maximum: 24 },
-  30: { floor: 27, ceiling: 33, maximum: 36 },
-  40: { floor: 36, ceiling: 44, maximum: 48 },
-};
+export interface TargetDurationBounds {
+  floor: number;
+  ceiling: number;
+  maximum: number;
+}
+
+/** Faixa derivada diretamente da duração prescrita, sem arredondamento. */
+export function targetDurationBounds(targetMinutes: TargetMinutes): TargetDurationBounds {
+  return {
+    floor: targetMinutes * 0.9,
+    ceiling: targetMinutes * 1.1,
+    maximum: targetMinutes * 1.2,
+  };
+}
+
+export function isBelowDurationBoundary(value: number, boundary: number): boolean {
+  return value < boundary - DURATION_BOUNDARY_TOLERANCE;
+}
+
+export function isAboveDurationBoundary(value: number, boundary: number): boolean {
+  return value > boundary + DURATION_BOUNDARY_TOLERANCE;
+}
 
 function applyModality(
   definition: ResolvedExercisePrescription["definition"],
@@ -88,10 +106,10 @@ export function calculateDuration(exercises: readonly Pick<ResolvedExercisePresc
 
 /** Estado conservador pelo extremo superior; cruzamentos são descritos pelo alerta parcial. */
 export function durationState(durationRange: MinutesRange, targetMinutes: TargetMinutes): SessionDurationState {
-  const bounds = TARGET_DURATION_BOUNDS[targetMinutes];
+  const bounds = targetDurationBounds(targetMinutes);
   const upper = durationRange[1];
-  if (upper < bounds.floor) return "ABAIXO";
-  if (upper > bounds.maximum) return "EXCESSO_IMPORTANTE";
-  if (upper > bounds.ceiling) return "ACIMA";
+  if (isBelowDurationBoundary(upper, bounds.floor)) return "ABAIXO";
+  if (isAboveDurationBoundary(upper, bounds.maximum)) return "EXCESSO_IMPORTANTE";
+  if (isAboveDurationBoundary(upper, bounds.ceiling)) return "ACIMA";
   return "DENTRO";
 }

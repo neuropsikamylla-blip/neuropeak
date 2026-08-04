@@ -15,8 +15,8 @@ function parseRaw(raw: unknown): unknown {
   try { return JSON.parse(raw); } catch { return []; }
 }
 
-function isTarget(value: unknown): value is TargetMinutes {
-  return value === 20 || value === 30 || value === 40;
+export function isTarget(value: unknown): value is TargetMinutes {
+  return typeof value === "number" && Number.isInteger(value) && value >= 10 && value <= 90;
 }
 function isFrequency(value: unknown): value is WeeklyFrequency {
   return value === 1 || value === 2 || value === 3 || value === 4 || value === 5;
@@ -87,7 +87,9 @@ export function readLegacyPlan(rawPlan: unknown, fallbackTargetMinutes: TargetMi
   const plan: SessionPrescription = {
     schemaVersion: envelope?.schemaVersion === 1 ? 1 : undefined,
     patientId: typeof envelope?.patientId === "string" ? envelope.patientId : undefined,
-    targetMinutes: isTarget(envelope?.targetMinutes) ? envelope.targetMinutes : fallbackTargetMinutes,
+    targetMinutes: isTarget(envelope?.targetMinutes)
+      ? envelope.targetMinutes
+      : isTarget(fallbackTargetMinutes) ? fallbackTargetMinutes : 20,
     weeklyFrequency: isFrequency(envelope?.weeklyFrequency) ? envelope.weeklyFrequency : undefined,
     exercises,
   };
