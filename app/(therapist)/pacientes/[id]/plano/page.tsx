@@ -21,7 +21,6 @@ import { presentCatalogExercise, presentLegacyPlan } from "@/lib/prescription/pr
 import { convertLegacyDose } from "@/lib/prescription/dose-settings";
 import type { ProtocolName } from "@/lib/prescription/types";
 
-const SPAN_IDS = ["span-numerico", "span-numerico-inverso"];
 const exDef = (id: string) => EXERCISE_DEFINITIONS[id as keyof typeof EXERCISE_DEFINITIONS];
 
 export default function PlanoPage() {
@@ -36,6 +35,8 @@ export default function PlanoPage() {
   const [hasPlan, setHasPlan] = useState(false);
   const [selectedExercises, setSelectedExercises] = useState<string[]>([]);
   const [exerciseSettings, setExerciseSettings] = useState<Record<string, Record<string, unknown>>>({});
+  // Mantido no fluxo da tela para não alterar o estado adaptativo já carregado.
+  // O salvamento rotineiro da prescrição não o envia nem o regrava.
   const [exerciseLevels, setExerciseLevels] = useState<Record<string, number>>({});
   const [sessionDuration, setSessionDuration] = useState(30);
   const [frequency, setFrequency] = useState(3);
@@ -144,11 +145,6 @@ export default function PlanoPage() {
             sessionDuration,
             frequency,
           },
-          exerciseLevels: Object.fromEntries(
-            selectedExercises
-              .filter((exId) => !SPAN_IDS.includes(exId))
-              .map((exId) => [exId, exerciseLevels[exId] ?? 1])
-          ),
         }),
       });
       if (!res.ok) throw new Error("Erro ao salvar plano");

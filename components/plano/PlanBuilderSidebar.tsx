@@ -14,6 +14,8 @@ const exDef = (id: string) => EXERCISE_DEFINITIONS[id as keyof typeof EXERCISE_D
 
 interface PlanBuilderSidebarProps {
   selectedExercises: string[];
+  // Mantidos no contrato para preservar o caminho de dados do nível adaptativo;
+  // a prescrição rotineira não o exibe nem o persiste.
   exerciseLevels: Record<string, number>;
   exerciseSettings: Record<string, Record<string, unknown>>;
   onLevel: (id: string, value: number) => void;
@@ -97,7 +99,6 @@ export function PlanBuilderSidebar(props: PlanBuilderSidebarProps) {
                   description={ex.description}
                   icon={ex.icon}
                   prescription={presentation.exercises.find((exercise) => exercise.exerciseId === ex.id)}
-                  color={DOMAIN_COLORS[group.domain]}
                   isSpan={SPAN_IDS.includes(ex.id)}
                   level={exerciseLevels[ex.id] ?? 1}
                   onLevel={onLevel}

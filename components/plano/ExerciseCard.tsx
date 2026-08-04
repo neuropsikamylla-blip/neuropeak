@@ -20,8 +20,9 @@ interface ExerciseCardProps {
   description: string;
   icon: string;
   prescription?: PresentedExercise;
-  color: string;
   isSpan: boolean;
+  // Preservados para não romper o caminho de dados do nível adaptativo.
+  // A janela de prescrição não os exibe nem os persiste.
   level: number;
   onLevel: (id: string, value: number) => void;
   spanCfg?: Partial<SpanSettings>;
@@ -37,7 +38,7 @@ interface ExerciseCardProps {
 
 /** Item do plano — card largo com reordenar, ajustes e remover. */
 export function ExerciseCard({
-  id, name, description, icon, prescription, color, isSpan, level, onLevel, spanCfg, onSpanCfg, cfg,
+  id, name, description, icon, prescription, isSpan, spanCfg, onSpanCfg, cfg,
   onSetting, onConvertLegacy, onRemove, onMove, isFirst, isLast,
 }: ExerciseCardProps) {
   const [open, setOpen] = useState(false);
@@ -201,34 +202,7 @@ export function ExerciseCard({
                   <Pill on={!c.allowReplay} onClick={() => onSpanCfg?.(id, "allowReplay", false)}>Não</Pill>
                 </div>
               </div>
-              <p className="mt-1.5 text-[11px] text-slate-400">A repetição é um recurso assistivo e não altera a dose nem a estimativa atual.</p>
-            </PrescriptionSection>
-          )}
-
-          {!isSpan && (
-            <PrescriptionSection title="Configurações de nível">
-              <p className="mb-2 text-xs font-semibold text-slate-300">Configuração de nível — revisão futura</p>
-              {isFocus ? (
-                <div className="flex gap-1.5">
-                  {[1, 2, 3, 4, 5].map((lv) => (
-                    <Pill key={lv} on={(Number(cfg?.startLevel) || 1) === lv} onClick={() => onSetting?.(id, "startLevel", lv)}>{lv}</Pill>
-                  ))}
-                </div>
-              ) : (
-                <>
-                  <div className="flex items-center justify-between mb-1.5">
-                    <span className="text-[11px] text-slate-400">Nível inicial</span>
-                    <span className="text-sm font-bold tabular-nums" style={{ color }}>{level} <span className="text-slate-500 font-normal">/ 10</span></span>
-                  </div>
-                  <input
-                    type="range" min={1} max={10} step={1} value={level}
-                    onChange={(event) => onLevel(id, Number(event.target.value))}
-                    className="w-full cursor-pointer"
-                    style={{ accentColor: color }}
-                  />
-                </>
-              )}
-              <p className="mt-1.5 text-[11px] text-slate-400">O comportamento atual do nível foi mantido; a regra definitiva depende do histórico do paciente.</p>
+              <p className="mt-1.5 text-[11px] text-slate-400">Repetir o áudio reapresenta o conteúdo auditivo. Não altera a dose prescrita nem a estimativa atual.</p>
             </PrescriptionSection>
           )}
 
