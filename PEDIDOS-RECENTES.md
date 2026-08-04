@@ -1,130 +1,6 @@
 # As 3 ultimas especificacoes dela (automatico; a mais nova por ultimo)
 # Na retomada: ler as 3, conectar com PROGRESSO.md e git, declarar e seguir.
 
-## ⏱️ DURAÇÃO CONTÍNUA DA SESSÃO ENTREGUE E PUBLICADA (04/ago/2026) — `6fcd831`, v2.72.0
-
-**Commits:** implementação = `a6b686d` · análise de prescrição × execução = `5ed7580` · release = `6fcd831`.
-
-### O que mudou
-
-O motor passa a respeitar a **duração exata escolhida pelo terapeuta**. Antes, a interface aceitava de
-**10 a 90 minutos** e o núcleo modelava só **20 | 30 | 40**, com a função **`nearestTarget`** arredondando
-entre os dois — uma sessão de **45 min** era avaliada contra a faixa de **40** e ainda recebia o **marcador de
-parâmetro não determinado** só por não ser um dos três valores.
-
-- **`targetDurationBounds`** deriva a faixa **por percentual**: **piso 0,9 · teto 1,1 · máximo 1,2** do alvo.
-  A fórmula **não é nova**: as faixas aprovadas na **Fase 2** já eram exatamente isso, apenas escritas como
-  **tabela**. Por isso **20, 30 e 40 saem idênticos** a **18–22**, **27–33** e **36–44**, **sem exceção nem
-  arredondamento**;
-- **`nearestTarget` removido**; **`TargetMinutes` deixou de ser união literal** e a validação passou para a
-  **fronteira**, em **`isTarget`**, na **mesma faixa de 10 a 90** que a interface já aceitava;
-- **nenhuma duração é marcada como legada** só por não ser 20, 30 ou 40; o marcador continua para **id
-  desconhecido** e **parâmetro irresolúvel**;
-- **comparações de fronteira com tolerância**, para o **ruído binário** (`25 × 1,1` dá `27,500000000000004`)
-  **não deslocar um estado**. Os valores exibidos saem limpos: **22,5–27,5 · 23,4–28,6 · 31,5–38,5 ·
-  33,3–40,7 · 40,5–49,5 · 45–55**.
-
-### ⚠️ Carga e fadiga NÃO foram interpoladas — decisão dela
-
-Fora de **20/30/40**, os **quatro alertas que dependem de tabela clínica** (**`LOAD_AT_CAP`**,
-**`LOAD_OVER_CAP`**, **`HIGH_FATIGUE_COUNT`**, **`PLANNING_WINDOW_COUNT`**) **não são emitidos** e
-**`loadReference` fica indefinido**. **Carga, fadiga e interferência continuam calculadas e visíveis** —
-**some a comparação, não o dado**. Verificado: **20 min devolve referência 7**, **30 devolve 10**,
-**40 devolve 13** e **emitem** os alertas; **26, 35 e 45** devolvem **referência indefinida** e **não emitem
-nenhum dos quatro**.
-
-### Roteamento
-
-Codex **`gpt-5.6-sol`, esforço xhigh, lab `durcont3`**. **Dois disparos anteriores falharam** — o primeiro
-**travou** (ver incidente abaixo) e o segundo **parou corretamente** porque a spec do VP citava **`isTarget`**
-sem listar **`legacy.ts`** entre os arquivos permitidos; o **Codex pediu autorização em vez de improvisar**,
-e a **spec foi corrigida em `9b63eac`**.
-
-**Consertos pós-colheita — Claude Opus 5 xhigh (exceção 1 da regra 8):** **quatro testes novos afirmavam
-valores que contradizem o catálogo** — **`deductive-grid` é ALTA em fadiga mas MODERADA em interferência**,
-**`tempo-reacao` é MODERADA nos dois eixos**, e o **teste de faixa derivada proibia uma string que aparecia
-legitimamente como estimativa**. **O código estava certo nos quatro casos.**
-
-### 🚨 Incidente de operação RESOLVIDO — causa identificada
-
-**Vários disparos do Codex nesta sessão travaram**, ficando com o **log parado em 2 linhas** e **zero arquivos
-escritos**. Cruzando os **oito disparos**, o padrão ficou claro: **TODO disparo que travou tinha o `rodar`
-encadeado logo após o `preparar`** ou **após um `git commit` na mesma invocação**; **TODO disparo isolado
-funcionou**. A **spec vai ao Codex por stdin**, e o **comando anterior da cadeia consome esse stdin**, deixando
-o Codex **esperando uma entrada que já foi engolida**.
-
-**REGRA PERMANENTE:** disparar **`lab.sh rodar` sempre em invocação própria, nunca encadeado**. E **armar um
-vigia a cada disparo** — um **loop em segundo plano** que avisa quando o **log cresce** (saudável) ou quando
-passam **15 a 25 minutos sem progresso** (travado), para o **VP descobrir sozinho** em vez de depender de ela
-perguntar.
-
-### Provas (repositório real)
-
-`npx tsc --noEmit` exit 0 · `npx vitest run` **453/453** em **34 arquivos** (eram **405** → **+48**) ·
-`npm run build` exit 0 · **`canSave` true**.
-**Escopo:** só **`lib/prescription/`** — **nenhum componente, banco, API, migration, protocolo, dose, nível ou
-progresso tocado**.
-
-### ✅ Publicação confirmada por evidência
-
-`/api/version` → `{"appVersion":"2.72.0","buildId":"dpl_B1txCkhzVnFtdq5wA6NaTaSWNggi"}` · `/api/health` →
-`{"ok":true}` · `git merge-base` confirmou que **`a6b686d` está contido em `6fcd831`**.
-
-### 🧭 Decisão arquitetônica registrada em `5ed7580` (`10-prescription-execution-real-time.md`), aprovada por ela
-
-A **duração-alvo é META ESTIMADA, não cronômetro de interrupção**. Os **três tempos ficam formalmente
-separados**: **duração-alvo prescrita**, **duração estimada** e **duração real**. **Tempo acima ou abaixo da
-estimativa é dado clínico, não erro.**
-
-### Conclusão da análise do runtime, aprovada por ela — NÃO HÁ CORREÇÃO NECESSÁRIA
-
-A **duração-alvo não interrompe a execução**; **`sessionDuration` nunca chega ao lado do paciente**; o
-**paciente pode concluir todos os exercícios prescritos**; os **exercícios temporizados encerram ENTRE
-unidades**, **preservando a tentativa em andamento**, conforme a **`terminationPolicy` aprovada na Fase 2**.
-**DECISÃO EXPLÍCITA DELA:** **não remover nem alterar `isTimeUp()`** dos exercícios **`CONTINUOUS_TIMED`**.
-
-### 🔎 Achado a preservar
-
-**`Session.duration` guarda TEMPO ATIVO, não tempo de relógio** — **`elapsedSec` devolve `activeMs/1000`**, e
-**`activeMs` só acumula com interação nos últimos 15 segundos**. O **dado existente mede engajamento, não
-permanência**; **pausa e interrupção não são registradas em lugar nenhum**.
-
-### 📌 Fase futura separada, NÃO INICIADA — "Execução e histórico das sessões"
-
-Deverá **distinguir**: **duração-alvo prescrita**, **duração estimada**, **tempo ativo**, **tempo total
-decorrido**, **pausas**, e **conclusão integral ou parcial**.
-
-**NÃO IMPLEMENTAR AINDA (lista explícita dela):** **tempo de parede** · **pausas** · **sessão como entidade de
-execução** · **histórico de sessões** · **comparação estimado × realizado** · **alterações de banco** ·
-**alterações no runtime** · **presets 20/35/50**.
-
-### ⏸️ PRÓXIMO PASSO — PARADO. Nenhuma fase nova iniciada.
-```
-
----
-
-**O QUE MUDOU**
-
-- `/Users/kamyllahonorio/neuropeak/PROGRESSO.md`: bloco novo inserido no topo, imediatamente após as 5 linhas de cabeçalho e antes do bloco `## 🪟 REFINO DE UX ... v2.71.0`. Estilo seguiu o dos blocos existentes: título com emoji + caixa alta + data + hash de release + versão, linha de commits com separador `·`, subseções `###`, negrito nos dados decisivos, alertas com ⚠️/🚨, provas em bloco próprio, publicação com ✅, e fecho `### ⏸️ PRÓXIMO PASSO`. Único ajuste editorial: "versus" grafado como `×`, convenção já usada no arquivo ("estimado × realizado" segue o padrão de "prescrição × execução").
-
-**COMO PROVEI**
-
-- `git status --short` → exit 0, saída ` M PROGRESSO.md` (nenhum outro arquivo tocado, nenhum untracked criado).
-- `git diff --stat` → exit 0, `1 file changed, 100 insertions(+)` — zero deleções, ou seja, nada do conteúdo anterior foi alterado ou perdido.
-- `git diff -U0` → exit 0, cabeçalho de hunk único `@@ -5,0 +6,100 @@`, confirmando inserção pura começando na linha 6 (topo, após o cabeçalho); a cauda do diff mostra o bloco terminando logo antes do título da v2.71.0.
-- `wc -l PROGRESSO.md` → exit 0, 1328 → 1428 linhas.
-- `git cat-file -t` nos 4 hashes citados → exit 0 em todos; assuntos conferem: `a6b686d` = feat duração contínua, `5ed7580` = docs decisão, `6fcd831` = chore release v2.72.0, `9b63eac` = docs spec incluindo `legacy.ts`.
-- Nenhum commit executado — `git status` continua acusando a modificação pendente para o VP.
-
-**O QUE NÃO FIZ**
-
-- Não commitei, não fiz push, não criei branch nem stash.
-- Não toquei em nenhum arquivo além do `PROGRESSO.md` — nem `CLAUDE.md`, nem `ESTADO-DO-PROJETO.md`, nem `docs/`, nem código.
-- Não re-executei as provas técnicas do despacho (`tsc`, `vitest`, `build`, `/api/version`, `/api/health`): foram transcritas como fato reportado pelo VP, não verificadas por mim nesta tarefa. Do lado das provas, o que verifiquei de forma independente foi apenas a existência e o assunto dos 4 commits citados.
-- Não registrei nada no arquivo de roteamento nem em memória — o despacho pedia somente o bloco no `PROGRESSO.md`.</result>
-<usage><subagent_tokens>30188</subagent_tokens><tool_uses>6</tool_uses><duration_ms>102310</duration_ms></usage>
-</task-notification>
-
 ## 04/08/2026 20:05
 Finalizamos uma etapa importante da arquitetura da prescrição.
 
@@ -470,3 +346,204 @@ Antes de implementar, responder:
 Não implementar ainda.
 
 Criar um documento arquitetônico novo, preservar os documentos anteriores e parar para minha validação.
+
+## 04/08/2026 20:52
+A análise está aprovada, com as seguintes decisões.
+
+==================================================
+1. MODELAGEM E ROTA
+==================================================
+
+Aprovo utilizar ExerciseConfig, que já possui a granularidade correta por paciente e exercício.
+
+Adicionar futuramente:
+
+- tutorialCompletedAt;
+- tutorialVersion.
+
+Aprovo uma rota específica para conclusão do tutorial.
+
+Não utilizar /api/sessions para registrar tutorial.
+
+A rota do tutorial não poderá tocar:
+
+- Session;
+- currentDifficulty;
+- lastAttemptAt;
+- totalAttempts;
+- progressão;
+- achievements;
+- alertas;
+- métricas clínicas;
+- dose realizada.
+
+A separação deve ser garantida por arquitetura e testes.
+
+==================================================
+2. PACIENTES ATUAIS
+==================================================
+
+Pacientes que já possuem histórico real naquele exercício não devem ser obrigados a rever automaticamente o tutorial após a migration.
+
+Na transição inicial:
+
+- se o paciente já tiver totalAttempts > 0 ou evidência equivalente de execução real naquele exercício, considerar o tutorial conhecido;
+- se nunca tiver executado o exercício, tutorial obrigatório no primeiro acesso;
+- todos continuam podendo acessar “Como funciona” voluntariamente.
+
+Essa inferência pelo histórico será utilizada somente na transição inicial.
+
+Depois da migration, a fonte de verdade passa a ser:
+
+- tutorialCompletedAt;
+- tutorialVersion.
+
+Não continuar inferindo indefinidamente pelo número de tentativas.
+
+Documentar claramente como será feito o backfill, sem alterar:
+
+- tentativas;
+- níveis;
+- progresso;
+- datas de treino;
+- sessões anteriores.
+
+==================================================
+3. VERSIONAMENTO
+==================================================
+
+Cada tutorial terá uma versão explícita.
+
+O tutorial será considerado concluído quando:
+
+tutorialVersion concluída pelo paciente
+=
+versão atual exigida pelo exercício.
+
+Uma alteração apenas visual ou textual não deve obrigar reapresentação.
+
+Somente uma mudança relevante da mecânica, da regra de resposta ou da forma de interação poderá aumentar a versão obrigatória.
+
+Não criar aumento automático de versão por deploy.
+
+A versão deverá ser definida explicitamente no catálogo ou contrato do tutorial.
+
+==================================================
+4. EXERCÍCIOS CONTINUOUS_TIMED
+==================================================
+
+Para exercícios cronometrados, “Sua vez” não significa executar o protocolo completo.
+
+Utilizar uma micro-unidade guiada representativa da mecânica.
+
+Exemplos:
+
+- Vigilância: sequência curta contendo um alvo;
+- Informação em Foco: uma questão completa;
+- Tempo de Reação: poucos estímulos;
+- Rastreamento de Objetos: uma rodada curta;
+- Cores e Palavras: pequeno bloco de respostas.
+
+A unidade guiada deve apenas confirmar que o paciente compreendeu:
+
+- qual estímulo observar;
+- qual resposta emitir;
+- quando responder;
+- quando não responder, quando aplicável.
+
+Ela não deve:
+
+- usar a duração clínica do protocolo;
+- consumir a dose prescrita;
+- alterar nível;
+- contar como tentativa;
+- registrar precisão ou tempo de reação;
+- entrar no histórico clínico;
+- afetar progressão.
+
+Se houver erro, repetir somente essa micro-unidade com uma orientação curta.
+
+Não reiniciar toda a demonstração.
+
+==================================================
+5. EXERCÍCIOS SEM TUTORIAL
+==================================================
+
+Registrar explicitamente que 15 exercícios ainda não possuem tutorial.
+
+Não criar os 15 de uma vez.
+
+Primeiro implementar e validar o framework e os dois pilotos.
+
+Após validação, converter os exercícios restantes em lotes, respeitando a mecânica específica de cada um.
+
+Não transformar tutorial em animação genérica.
+
+O tutorial deve reproduzir a regra real do exercício.
+
+==================================================
+6. TUTORIAIS FORA DO CONTRATO
+==================================================
+
+Os cinco tutoriais próprios — Agentes Focus, Informação em Foco, Vigilância, Cores e Palavras e Padrões com Rotação — devem ser auditados individualmente antes da conversão.
+
+Não substituir automaticamente sua lógica pelo framework.
+
+Em especial, preservar as decisões clínicas da Vigilância:
+
+- o alvo é apresentado conforme a regra definida;
+- não introduzir pistas durante o treino;
+- não repetir informação que descaracterize o construto.
+
+O framework deve controlar o fluxo global, mas permitir que cada exercício forneça sua demonstração real e sua unidade guiada específica.
+
+==================================================
+7. PILOTOS
+==================================================
+
+Aprovo os dois pilotos:
+
+1. Conecta Números
+- caso visual simples;
+- já compartilha componentes com o jogo;
+- valida o fluxo global com menor risco.
+
+2. Span Numérico Auditivo Direto
+- caso auditivo;
+- atualmente sem tutorial;
+- valida estímulo sonoro, repetição guiada e ausência de apoio visual indevido.
+
+Os pilotos precisam provar:
+
+- primeira utilização obrigatória;
+- acesso seguinte direto à tela de preparação;
+- botão “Como funciona”;
+- persistência entre dispositivos;
+- versionamento;
+- tutorial sem impacto clínico;
+- repetição apenas da tentativa guiada em caso de erro.
+
+==================================================
+8. PRÓXIMA ENTREGA
+==================================================
+
+Ainda não implementar.
+
+Atualize o documento arquitetônico com estas decisões e apresente:
+
+1. schema exato proposto;
+2. estratégia de migration e backfill;
+3. contrato TypeScript do framework;
+4. formato da versão do tutorial;
+5. contrato da micro-unidade guiada;
+6. fluxo completo do Conecta Números;
+7. fluxo completo do Span Numérico Auditivo Direto;
+8. arquivos previstos para a Fase T1;
+9. testes obrigatórios da Fase T1;
+10. riscos que ainda dependem da minha decisão.
+
+Também liste claramente as outras decisões clínicas pendentes mencionadas no documento que não apareceram no resumo da resposta.
+
+Não implementar.
+Não publicar.
+Pare após a proposta detalhada da Fase T1.
