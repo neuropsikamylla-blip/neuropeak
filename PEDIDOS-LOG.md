@@ -10454,3 +10454,301 @@ Não implementar ainda.
 Quero primeiro uma análise completa do fluxo atual do tutorial, da entrada do paciente no exercício, do início da sessão e da experiência de primeira utilização, tomando como referência também as observações que fizemos sobre o Cogmed.
 
 Ao final, apresente apenas a análise e aguarde minha validação.
+
+## 04/08/2026 20:32
+A análise está aprovada. Vamos consolidar as decisões antes de implementar.
+
+==================================================
+DECISÕES — TUTORIAL E ENTRADA NO EXERCÍCIO
+==================================================
+
+1. MEMÓRIA DO TUTORIAL
+
+A informação de que o tutorial foi concluído deve ser armazenada no banco, por:
+
+- paciente;
+- exercício.
+
+Não usar localStorage como fonte principal.
+
+Motivo:
+
+- o paciente pode trocar de dispositivo;
+- pode treinar parte em casa e parte na clínica;
+- o terapeuta precisa ter um estado consistente;
+- a experiência não pode depender do navegador utilizado.
+
+O localStorage poderá existir apenas como apoio técnico temporário, nunca como fonte de verdade.
+
+Antes de implementar, analisar a modelagem mínima necessária e o impacto sobre banco, API e compatibilidade.
+
+==================================================
+2. PRIMEIRA UTILIZAÇÃO
+==================================================
+
+Na primeira vez que o paciente abrir determinado exercício:
+
+- apresentar o tutorial automaticamente;
+- o tutorial deve ser obrigatório antes do treino real;
+- ao concluir o tutorial, retornar para a tela de preparação ou oferecer “Começar treino”.
+
+O tutorial não pode:
+
+- contar como tentativa clínica;
+- alterar nível;
+- alterar progressão;
+- registrar pontuação;
+- interferir nas métricas do exercício;
+- ser contabilizado como parte da dose prescrita.
+
+==================================================
+3. UTILIZAÇÕES SEGUINTES
+==================================================
+
+Depois que o tutorial daquele exercício já tiver sido concluído, o paciente deve encontrar uma tela de preparação simples:
+
+NOME DO EXERCÍCIO
+
+Nível atual, quando aplicável.
+
+[ Começar ]
+
+[ Como funciona ]
+
+“Começar” inicia imediatamente o treino real.
+
+“Como funciona” abre novamente o tutorial completo por escolha do paciente.
+
+O tutorial nunca deve reaparecer automaticamente depois de concluído, salvo se:
+
+- o terapeuta futuramente redefinir esse estado;
+- houver uma mudança incompatível na mecânica do exercício;
+- existir uma nova versão do tutorial que exija reapresentação.
+
+Não implementar ainda redefinição pelo terapeuta, mas deixar a arquitetura preparada para isso.
+
+==================================================
+4. ESTRUTURA GLOBAL DO TUTORIAL
+==================================================
+
+Todos os exercícios deverão seguir um único fluxo:
+
+1. Demonstração
+2. Sua vez
+3. Validação
+4. Conclusão
+
+DEMONSTRAÇÃO
+
+- o sistema executa um exemplo real;
+- utiliza os mesmos componentes e regras visuais do exercício;
+- não usar animação meramente ilustrativa que diverge do jogo;
+- texto mínimo;
+- sem explicações longas.
+
+SUA VEZ
+
+- o paciente realiza uma única tentativa guiada;
+- dificuldade inicial simples;
+- objetivo apenas de confirmar compreensão;
+- não representa o nível clínico do paciente.
+
+VALIDAÇÃO
+
+Se acertar:
+
+“Você entendeu como funciona.”
+
+[ Começar treino ]
+
+Se errar:
+
+- apresentar orientação curta;
+- repetir somente a tentativa guiada;
+- não reiniciar todo o tutorial;
+- não registrar o erro como desempenho clínico;
+- não reduzir nível.
+
+==================================================
+5. PADRÃO DE ETAPAS
+==================================================
+
+O tutorial global deverá ter uma única sequência lógica.
+
+Os exercícios que hoje possuem duas ou três etapas precisam ser auditados.
+
+Não reduzir mecanicamente todos para “um slide”.
+
+A regra correta é:
+
+- uma demonstração contínua;
+- uma tentativa guiada;
+- uma conclusão.
+
+Caso a mecânica realmente possua decisões distintas, elas devem ocorrer dentro dessa mesma demonstração, sem obrigar o paciente a atravessar vários tutoriais separados.
+
+Não manter tutoriais repetitivos apenas porque foram implementados historicamente em mais de uma etapa.
+
+==================================================
+6. TELA TEXTUAL DE INSTRUÇÕES
+==================================================
+
+A tela atual com:
+
+- lista numerada;
+- cenário funcional;
+- estratégias;
+- botão “Iniciar”;
+
+não deve continuar como etapa obrigatória antes de todo treino.
+
+Evitar a sequência atual:
+
+instruções textuais
+→ tutorial interativo
+→ treino.
+
+Isso duplica explicações e aumenta a carga cognitiva antes da tarefa.
+
+A futura tela “Como funciona” poderá reunir:
+
+- tutorial demonstrativo;
+- explicação textual opcional;
+- cenário funcional;
+- estratégias.
+
+Mas o paciente não deve ser obrigado a ler essas informações em todas as sessões.
+
+==================================================
+7. RESULTADO E PERCEPÇÃO DE EVOLUÇÃO
+==================================================
+
+A tela final precisa comunicar evolução sem utilizar comparação punitiva.
+
+Quando houver subida de nível:
+
+“Você avançou para o nível X.”
+
+Quando mantiver o nível:
+
+“Treino concluído. Você manteve seu nível.”
+
+Quando a sessão tiver maior dificuldade ou eventual redução adaptativa:
+
+“Treino concluído. Hoje esta atividade exigiu mais esforço.”
+
+Não usar:
+
+- “você piorou”;
+- “você regrediu”;
+- “seu desempenho caiu” como mensagem principal ao paciente;
+- mensagens que incentivem competição com sessões anteriores.
+
+A informação técnica completa permanece disponível ao terapeuta.
+
+A comunicação ao paciente deve reforçar:
+
+- conclusão;
+- esforço;
+- continuidade;
+- progressão quando existente.
+
+==================================================
+8. TELA DE PREPARAÇÃO
+==================================================
+
+Padronizar uma tela global antes do início de cada exercício.
+
+Mostrar somente o necessário:
+
+- nome oficial do exercício;
+- nível atual, quando aplicável;
+- botão “Começar”;
+- botão “Como funciona”.
+
+Não mostrar excesso de métricas antes do treino.
+
+Não mostrar recorde como elemento principal.
+
+Não mostrar carga, fadiga, protocolo clínico ou dados destinados ao terapeuta.
+
+==================================================
+9. FRAMEWORK GLOBAL
+==================================================
+
+Não corrigir os 34 exercícios individualmente antes de definir o framework.
+
+Primeiro criar uma arquitetura reutilizável que controle:
+
+- tela de preparação;
+- estado de tutorial concluído;
+- demonstração;
+- tentativa guiada;
+- validação;
+- conclusão;
+- início do treino;
+- reabertura voluntária do tutorial.
+
+Cada exercício deverá fornecer apenas sua lógica específica, por exemplo:
+
+- demonstração real;
+- tentativa guiada;
+- regra de validação;
+- mensagens específicas estritamente necessárias.
+
+Não permitir que cada exercício volte a inventar seu próprio fluxo.
+
+==================================================
+10. IMPLEMENTAÇÃO EM FASES
+==================================================
+
+Antes do código, apresentar uma proposta em fases:
+
+FASE T1
+- modelagem do estado “tutorial concluído”;
+- contrato global;
+- tela de preparação;
+- nenhuma conversão dos exercícios ainda.
+
+FASE T2
+- implementar o framework;
+- converter 1 ou 2 exercícios-piloto representativos;
+- validar experiência e persistência.
+
+Sugestão de pilotos:
+- um exercício simples e visual;
+- um exercício auditivo ou operacionalmente complexo.
+
+FASE T3
+- converter os exercícios restantes em lotes seguros;
+- auditar os tutoriais com 2 ou 3 etapas;
+- garantir réplica real da mecânica.
+
+FASE T4
+- padronizar tela de resultado e comunicação de evolução.
+
+Não iniciar todas as fases de uma vez.
+
+==================================================
+11. ANÁLISE OBRIGATÓRIA ANTES DO CÓDIGO
+==================================================
+
+Antes de implementar, responder:
+
+1. Onde e como armazenar tutorial concluído por paciente e exercício.
+2. Se já existe entidade ou tabela adequada que possa ser estendida.
+3. Se será necessária migration.
+4. Quais APIs precisarão ler e gravar esse estado.
+5. Como versionar o tutorial para reapresentá-lo após mudança relevante de mecânica.
+6. Como garantir que o tutorial não altere progressão nem métricas.
+7. Quais componentes atuais podem ser reutilizados.
+8. Quais tutoriais não são réplicas reais da mecânica.
+9. Quais exercícios possuem 1, 2 ou 3 etapas.
+10. Quais dois exercícios são os melhores pilotos e por quê.
+11. Quais arquivos seriam alterados na Fase T1.
+12. Quais testes serão necessários.
+13. Quais decisões clínicas ainda dependem da minha validação.
+
+Não implementar ainda.
+
+Criar um documento arquitetônico novo, preservar os documentos anteriores e parar para minha validação.
