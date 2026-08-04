@@ -7502,3 +7502,40 @@ Sem conversão automática.
 6. Se a interface continua limpa e não aumentou excessivamente a carga visual.
 
 Depois da entrega vou validar visualmente antes de qualquer nova implementação.
+
+## 04/08/2026 00:43
+Perfeito.
+
+Pode concluir normalmente o lote 2.
+
+Apenas uma observação importante.
+
+O aviso sobre validade adaptativa do protocolo Breve não deve aparecer por uma regra genérica do tipo “poucas unidades”.
+
+Ele deve existir apenas quando isso estiver explicitamente documentado para aquele exercício no catálogo de prescrição.
+
+Ou seja, a regra deve ser específica por exercício, não derivada automaticamente da quantidade de unidades.
+
+Se ainda não houver essa informação validada para determinado exercício, prefiro não exibir esse aviso nesta etapa.
+
+Outro ponto: a quantidade interna mostrada ao terapeuta deve utilizar a unidade real de cada exercício, e não a palavra “séries” de forma genérica.
+
+Exemplos:
+
+- Span: séries;
+- Restaurante: pedidos, se essa for a unidade definida;
+- Supermercado: listas ou rodadas, conforme o catálogo;
+- Informação em Foco: rodadas;
+- Jogo das Torres: desafios.
+
+Utilize sempre a unidade já registrada no catálogo de prescrição. Não invente nem renomeie unidades nesta etapa.
+
+Sobre a carga visual, concordo com sua decisão.
+
+Não recolha automaticamente nenhuma seção antes da validação visual.
+
+Primeiro quero ver a interface completa.
+
+Depois decidiremos, com a tela aberta, quais seções permanecem expandidas por padrão e quais poderão iniciar recolhidas.
+
+Prefiro tomar essa decisão observando a experiência real de uso, e não antecipadamente.
