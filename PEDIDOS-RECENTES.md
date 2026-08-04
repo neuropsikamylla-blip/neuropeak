@@ -1,53 +1,6 @@
 # As 3 ultimas especificacoes dela (automatico; a mais nova por ultimo)
 # Na retomada: ler as 3, conectar com PROGRESSO.md e git, declarar e seguir.
 
-## 04/08/2026 19:48
-A análise está aprovada.
-
-A conclusão é que não há correção necessária no runtime atual:
-
-- a duração-alvo da sessão não interrompe a execução;
-- o paciente pode concluir todos os exercícios prescritos;
-- os exercícios temporizados encerram entre unidades, preservando a tentativa em andamento;
-- não remover nem alterar isTimeUp() dos exercícios CONTINUOUS_TIMED.
-
-A duração contínua implementada no commit a6b686d está aprovada para publicação.
-
-Pode agora:
-
-1. fazer o bump de versão;
-2. publicar na Vercel;
-3. confirmar appVersion, buildId, health check e commit publicado;
-4. confirmar que a6b686d está contido no deploy;
-5. registrar a publicação no PROGRESSO.md;
-6. parar.
-
-Não implementar ainda:
-
-- tempo de parede;
-- pausas;
-- sessão como entidade de execução;
-- histórico de sessões;
-- comparação estimado × realizado;
-- alterações de banco;
-- alterações no runtime;
-- presets 20/35/50.
-
-Registrar como fase futura separada:
-
-EXECUÇÃO E HISTÓRICO DAS SESSÕES
-
-Essa fase deverá distinguir:
-
-- duração-alvo prescrita;
-- duração estimada;
-- tempo ativo;
-- tempo total decorrido;
-- pausas;
-- conclusão integral ou parcial.
-
-Não iniciar essa fase agora.
-
 ## 04/08/2026 19:54
 <task-notification>
 <task-id>ad3845efa84ebcf25</task-id>
@@ -183,3 +136,51 @@ execução** · **histórico de sessões** · **comparação estimado × realiza
 - Não registrei nada no arquivo de roteamento nem em memória — o despacho pedia somente o bloco no `PROGRESSO.md`.</result>
 <usage><subagent_tokens>30188</subagent_tokens><tool_uses>6</tool_uses><duration_ms>102310</duration_ms></usage>
 </task-notification>
+
+## 04/08/2026 20:05
+Finalizamos uma etapa importante da arquitetura da prescrição.
+
+Antes de abrir qualquer nova fase estrutural, quero voltar o foco para aquilo que realmente determina a qualidade clínica da plataforma: os exercícios.
+
+A partir deste momento, vamos trabalhar exercício por exercício.
+
+O objetivo não é apenas corrigir bugs.
+
+Quero revisar profundamente:
+
+- objetivo cognitivo;
+- validade clínica do treino;
+- mecânica;
+- progressão;
+- adaptação de dificuldade;
+- feedback ao paciente;
+- tutorial;
+- interface;
+- motivação ao longo das sessões;
+- sensação de evolução;
+- métricas registradas;
+- quais indicadores realmente importam para o terapeuta;
+- quais dados serão usados futuramente na evolução clínica.
+
+A cada exercício quero seguir este fluxo:
+
+1. análise do exercício atual;
+2. identificar limitações clínicas e de UX;
+3. propor melhorias;
+4. validar a arquitetura antes de qualquer código;
+5. implementar;
+6. testar;
+7. publicar;
+8. passar para o próximo exercício.
+
+Não abrir novas frentes arquitetônicas em paralelo.
+
+Vamos evoluir um exercício por vez, até que os 34 estejam no padrão clínico e de experiência que buscamos.
+
+Primeiro exercício da próxima etapa: Tutorial e experiência inicial de execução.
+
+Não implementar ainda.
+
+Quero primeiro uma análise completa do fluxo atual do tutorial, da entrada do paciente no exercício, do início da sessão e da experiência de primeira utilização, tomando como referência também as observações que fizemos sobre o Cogmed.
+
+Ao final, apresente apenas a análise e aguarde minha validação.
