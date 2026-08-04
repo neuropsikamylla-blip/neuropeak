@@ -6480,3 +6480,100 @@ disponível.
 - Não fiz nenhuma verificação visual da tela de plano nem validei os 7 cenários listados.</result>
 <usage><subagent_tokens>38988</subagent_tokens><tool_uses>11</tool_uses><duration_ms>132095</duration_ms></usage>
 </task-notification>
+
+## 03/08/2026 22:55
+A Implementação — Fase 2 está tecnicamente aprovada.
+
+Decisões visuais:
+
+1. DESCRIÇÃO DOS EXERCÍCIOS
+
+Não quero que a descrição do exercício desapareça completamente da visão principal da biblioteca.
+
+Manter em cada ExerciseRow ou card:
+
+- nome oficial;
+- descrição curta de uma linha;
+- modelo/dose/duração de forma compacta;
+- carga e fadiga;
+- botão “Ver detalhes”.
+
+A descrição curta deve:
+
+- ajudar o terapeuta a reconhecer rapidamente a finalidade da atividade;
+- ter no máximo uma ou duas linhas;
+- usar truncamento visual quando necessário;
+- não aumentar excessivamente a altura dos cards.
+
+Dentro de “Ver detalhes”, manter:
+
+- descrição completa;
+- perfil cognitivo;
+- modelo de execução;
+- protocolo;
+- carga;
+- fadiga;
+- interferência;
+- modalidade;
+- demais informações técnicas.
+
+Não reintroduzir excesso de informação na linha principal.
+
+2. AGRUPAMENTO DOS ALERTAS
+
+Sim, o paredão de alertas deve ser tratado na próxima fase.
+
+Não alterar agora o núcleo dos 18 alertas.
+
+Não eliminar alertas.
+
+Não fundir códigos técnicos.
+
+Na futura exibição, agrupar ocorrências repetidas ou relacionadas visualmente.
+
+Exemplos:
+
+- três ocorrências de fadiga alta consecutiva:
+  mostrar um grupo “Fadiga alta em sequência” com os pares envolvidos;
+
+- múltiplas interferências altas:
+  mostrar um grupo “Interferência elevada entre exercícios”;
+
+- várias posições pouco recomendadas:
+  consolidar em um grupo de organização da sessão.
+
+O agrupamento será exclusivamente de apresentação.
+
+O núcleo deve continuar retornando todas as ocorrências individuais para:
+
+- rastreabilidade;
+- testes;
+- relatórios;
+- futuras análises.
+
+3. VALIDAÇÃO VISUAL
+
+Antes de iniciar a Implementação — Fase 3:
+
+- disponibilize esta versão para validação visual;
+- faça o bump de versão necessário;
+- publique na Vercel;
+- não altere banco, APIs ou formato persistido;
+- informe a URL ou ambiente implantado;
+- confirme que o commit implantado contém a Fase 2.
+
+Depois da publicação, vou validar manualmente:
+
+- plano vazio;
+- dentro do esperado;
+- acima do esperado;
+- excesso importante;
+- fadiga alta consecutiva;
+- planejamento consecutivo;
+- plano legado;
+- descrição curta dos exercícios;
+- botão Salvar plano disponível nos cenários com alertas.
+
+Não iniciar automaticamente a Fase 3 após publicar.
+
+Pare e aguarde minha validação visual.

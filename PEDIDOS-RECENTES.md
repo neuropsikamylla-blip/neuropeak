@@ -1,63 +1,6 @@
 # As 3 ultimas especificacoes dela (automatico; a mais nova por ultimo)
 # Na retomada: ler as 3, conectar com PROGRESSO.md e git, declarar e seguir.
 
-## ✅ FASE 2 DA PRESCRIÇÃO ENTREGUE (03/ago/2026) — exibição consultiva na tela de plano (`a6f61f0`)
-
-**Não mudou dado, API, banco nem comportamento de exercício.** A Fase 1 (núcleo puro em
-`lib/prescription/`, 7 módulos) segue aprovada e congelada; a Fase 2 apenas **EXIBE** ao terapeuta,
-na área dele, o que o núcleo calcula. O commit não tocou `package.json` — versão segue **2.67.1**.
-
-### O que entrou
-
-| Arquivo criado | Papel |
-|---|---|
-| `lib/prescription/presentation.ts` (469 l) | camada pura de apresentação — **sem React** |
-| `lib/prescription/presentation.test.ts` (144 l) | testes da camada pura |
-| `lib/prescription/__tests__/save-button-guard.test.ts` (63 l) | teste **estático**: lê o fonte e garante que o "Salvar plano" não some |
-| `lib/prescription/__tests__/library-coverage.test.ts` | regressão criada pelo VP na revisão (ver achado abaixo) |
-| `components/plano/prescription/PrescriptionSummary.tsx` (98 l) | resumo da sessão prescrita |
-| `components/plano/prescription/ExercisePrescriptionMeta.tsx` (28 l) | metadados de prescrição por exercício |
-
-**Alterados:** `app/(therapist)/pacientes/[id]/plano/page.tsx` · `components/plano/PlanBuilderSidebar.tsx` ·
-`components/plano/ExerciseCard.tsx` · `components/plano/ExerciseRow.tsx`.
-
-### Roteamento (regra 8)
-
-Codificação no **Codex `gpt-5.6-sol`, esforço high, lab `impl2b`**. O primeiro disparo (lab `impl2`)
-**panicou com bug de Rust em `std::env`** e não produziu nada — lab recriado e redisparado, aí com
-sucesso. Dois consertos pequenos pós-colheita foram do **Claude Opus 5 xhigh (exceção 1 da regra 8)**:
-tipagem em `presentation.ts` (acesso a propriedade opcional numa união criada por `satisfies`) e a
-criação do `library-coverage.test.ts`.
-
-### Provas (repositório real)
-
-`npx tsc --noEmit` exit 0 · `npx vitest run` **330/330 em 28 arquivos** (eram 296 → **+34 testes**) ·
-`npm run build` exit 0.
-
-### ⚠️ Achado da revisão do VP — já blindado por teste
-
-A **biblioteca de exercícios da tela de plano** passou a montar cada cartão a partir do catálogo de
-prescrição e **descarta com `flatMap` quem não tem entrada**. Hoje a cobertura é total (**34 de 34**),
-mas o descarte seria **silencioso** — um exercício sumiria da tela sem erro nenhum.
-`library-coverage.test.ts` transforma esse caso em teste vermelho.
-
-### ⏸️ PRÓXIMO PASSO — validação VISUAL dela; **NÃO iniciar a Fase 3**
-
-Ela pediu explicitamente para não começar a Fase 3 automaticamente. Não há teste de renderização,
-então estes cenários da tela de plano só se conferem com olho humano: **plano vazio · dentro do
-esperado · acima do esperado · excesso importante · fadiga alta consecutiva · planejamento
-consecutivo · plano legado** — e, em **todos**, confirmar que o botão **"Salvar plano"** continua
-disponível.
-
-### 🔷 Decisões dela pendentes
-
-1. **Paredão de alertas:** numa sessão muito sobrecarregada os alertas chegam a **~21**, com "fadiga
-   alta em sequência" e "interferência alta em sequência" repetidos par a par. Decidir se a Fase 3
-   agrupa ou limita visualmente.
-2. **`ExerciseRow`:** a descrição do exercício saiu da linha principal e foi para dentro de **"Ver
-   detalhes"** (fiel à spec, que mandava "o resto atrás de Ver detalhes"). Decidir se fica assim.
-```
-
 ## COMO PROVEI
 
 - `git show --stat --oneline a6f61f0` — exit 0. Confirma os 6 arquivos criados e os 4 alterados exatamente como descritos no despacho (mais `PEDIDOS-LOG.md`, +3 linhas, que não citei por ser gancho automático), e que `package.json` **não** foi tocado.
@@ -74,3 +17,100 @@ disponível.
 - Não fiz nenhuma verificação visual da tela de plano nem validei os 7 cenários listados.</result>
 <usage><subagent_tokens>38988</subagent_tokens><tool_uses>11</tool_uses><duration_ms>132095</duration_ms></usage>
 </task-notification>
+
+## 03/08/2026 22:55
+A Implementação — Fase 2 está tecnicamente aprovada.
+
+Decisões visuais:
+
+1. DESCRIÇÃO DOS EXERCÍCIOS
+
+Não quero que a descrição do exercício desapareça completamente da visão principal da biblioteca.
+
+Manter em cada ExerciseRow ou card:
+
+- nome oficial;
+- descrição curta de uma linha;
+- modelo/dose/duração de forma compacta;
+- carga e fadiga;
+- botão “Ver detalhes”.
+
+A descrição curta deve:
+
+- ajudar o terapeuta a reconhecer rapidamente a finalidade da atividade;
+- ter no máximo uma ou duas linhas;
+- usar truncamento visual quando necessário;
+- não aumentar excessivamente a altura dos cards.
+
+Dentro de “Ver detalhes”, manter:
+
+- descrição completa;
+- perfil cognitivo;
+- modelo de execução;
+- protocolo;
+- carga;
+- fadiga;
+- interferência;
+- modalidade;
+- demais informações técnicas.
+
+Não reintroduzir excesso de informação na linha principal.
+
+2. AGRUPAMENTO DOS ALERTAS
+
+Sim, o paredão de alertas deve ser tratado na próxima fase.
+
+Não alterar agora o núcleo dos 18 alertas.
+
+Não eliminar alertas.
+
+Não fundir códigos técnicos.
+
+Na futura exibição, agrupar ocorrências repetidas ou relacionadas visualmente.
+
+Exemplos:
+
+- três ocorrências de fadiga alta consecutiva:
+  mostrar um grupo “Fadiga alta em sequência” com os pares envolvidos;
+
+- múltiplas interferências altas:
+  mostrar um grupo “Interferência elevada entre exercícios”;
+
+- várias posições pouco recomendadas:
+  consolidar em um grupo de organização da sessão.
+
+O agrupamento será exclusivamente de apresentação.
+
+O núcleo deve continuar retornando todas as ocorrências individuais para:
+
+- rastreabilidade;
+- testes;
+- relatórios;
+- futuras análises.
+
+3. VALIDAÇÃO VISUAL
+
+Antes de iniciar a Implementação — Fase 3:
+
+- disponibilize esta versão para validação visual;
+- faça o bump de versão necessário;
+- publique na Vercel;
+- não altere banco, APIs ou formato persistido;
+- informe a URL ou ambiente implantado;
+- confirme que o commit implantado contém a Fase 2.
+
+Depois da publicação, vou validar manualmente:
+
+- plano vazio;
+- dentro do esperado;
+- acima do esperado;
+- excesso importante;
+- fadiga alta consecutiva;
+- planejamento consecutivo;
+- plano legado;
+- descrição curta dos exercícios;
+- botão Salvar plano disponível nos cenários com alertas.
+
+Não iniciar automaticamente a Fase 3 após publicar.
+
+Pare e aguarde minha validação visual.
