@@ -8949,3 +8949,6 @@ Perfeito. Pode seguir conforme planejado.
 Não altere a arquitetura clínica nem as regras de prescrição. Conclua o Lote A, rode as provas e depois siga para o Lote B.
 
 Após publicar os dois lotes juntos, pare para minha validação visual.
+
+## 04/08/2026 13:51
+me avisa quando terminar
