@@ -462,6 +462,11 @@ export interface PresentedAlert {
   titulo: string;
   mensagem: string;
   sugestao?: string;
+  /** Dado já produzido pelo núcleo e promovido para o resumo visual do alerta. */
+  dadoPrincipal?: string;
+  /** Quantidade de alertas individuais representados por este cartão. */
+  occurrenceCount: number;
+  expansionLabel: "Ver detalhes" | "Ver exercícios" | "Ver sequências";
   gravidadeVisual: VisualSeverity;
   exercicios: readonly string[];
   ocorrencias?: readonly PresentedAlertOccurrence[];
@@ -474,6 +479,52 @@ export interface PresentedAlertOccurrence {
   sugestao?: string;
 }
 
+function countText(count: number, singular: string, plural: string): string {
+  return `${count} ${count === 1 ? singular : plural}`;
+}
+
+function alertMainDatum(alert: PrescriptionAlert, context: AlertContext): string | undefined {
+  switch (alert.code) {
+    case "SESSION_BELOW_TARGET":
+    case "SESSION_ABOVE_TARGET":
+    case "SESSION_RANGE_PARTIAL":
+    case "SESSION_SAFE_MAX_EXCEEDED":
+      return formatMinutesRange(context.durationRange);
+    case "LOAD_AT_CAP":
+    case "LOAD_OVER_CAP":
+      return `${context.baselineLoad} / referência ${context.loadReference}`;
+    case "HIGH_FATIGUE_COUNT":
+      return countText(alert.exerciseIds.length, "atividade", "atividades");
+    case "HIGH_FATIGUE_ADJACENT":
+    case "HIGH_INTERFERENCE_ADJACENT":
+    case "PLANNING_WINDOW_ADJACENT":
+    case "AUDITORY_ONLY_ADJACENT":
+      return "1 sequência";
+    case "PLANNING_WINDOW_COUNT":
+      return countText(alert.exerciseIds.length, "janela", "janelas");
+    case "HIGH_FATIGUE_POSITION":
+    case "OPEN_POSITION_NOT_ELIGIBLE":
+    case "CLOSE_POSITION_NOT_ELIGIBLE":
+    case "OUTSIDE_BEST_POSITION":
+      return countText(alert.exerciseIds.length, "atividade", "atividades");
+    case "DECLARED_BAD_COMBINATION":
+      return "1 par";
+    case "COGNITIVE_CONCENTRATION":
+      return undefined;
+  }
+}
+
+function alertExpansionLabel(alert: PrescriptionAlert): PresentedAlert["expansionLabel"] {
+  if ([
+    "HIGH_FATIGUE_ADJACENT",
+    "HIGH_INTERFERENCE_ADJACENT",
+    "PLANNING_WINDOW_ADJACENT",
+    "AUDITORY_ONLY_ADJACENT",
+    "DECLARED_BAD_COMBINATION",
+  ].includes(alert.code)) return "Ver sequências";
+  return alert.exerciseIds.length > 0 ? "Ver exercícios" : "Ver detalhes";
+}
+
 export function presentAlert(alert: PrescriptionAlert, context: AlertContext): PresentedAlert {
   // `satisfies` preserva o tipo literal de cada entrada (bom: força cobertura exaustiva),
   // mas a união resultante não expõe `sugestao`, que é opcional. A anotação recupera o acesso
@@ -483,11 +534,15 @@ export function presentAlert(alert: PrescriptionAlert, context: AlertContext): P
     context.exercises.find((exercise) => exercise.definition.exerciseId === id)?.definition.officialName,
   ).filter((name): name is string => Boolean(name));
   const copyContext = { ...context, alert, exerciseNames };
+  const dadoPrincipal = alertMainDatum(alert, context);
   return {
     code: alert.code,
     titulo: typeof copy.titulo === "function" ? copy.titulo(copyContext) : copy.titulo,
     mensagem: copy.mensagem(copyContext),
     ...(copy.sugestao ? { sugestao: copy.sugestao(copyContext) } : {}),
+    ...(dadoPrincipal ? { dadoPrincipal } : {}),
+    occurrenceCount: 1,
+    expansionLabel: alertExpansionLabel(alert),
     gravidadeVisual: visualSeverity(alert),
     exercicios: exerciseNames,
     blocksSave: false,
@@ -515,6 +570,8 @@ function aggregateSequence(alerts: readonly PresentedAlert[], code: AlertCode, l
       ? `Há 1 sequência de atividades com ${label}.`
       : `Há ${count} sequências de atividades com ${label}.`,
     exercicios: [...new Set(matching.flatMap((alert) => alert.exercicios))],
+    dadoPrincipal: countText(count, "sequência", "sequências"),
+    occurrenceCount: count,
     ocorrencias: matching.map(occurrence),
   };
   return alerts.flatMap((alert, index) => index === firstIndex ? [grouped] : alert.code === code ? [] : [alert]);
@@ -533,6 +590,8 @@ function aggregatePreferredPositions(alerts: readonly PresentedAlert[]): Present
       ? "1 atividade está fora de sua posição preferencial."
       : `${count} atividades estão fora de sua posição preferencial.`,
     exercicios: [...new Set(matching.flatMap((alert) => alert.exercicios))],
+    dadoPrincipal: countText(count, "atividade", "atividades"),
+    occurrenceCount: count,
     ocorrencias: matching.map(occurrence),
   };
   return alerts.flatMap((alert, index) => index === firstIndex ? [grouped] : alert.code === code ? [] : [alert]);
@@ -558,6 +617,8 @@ function aggregateClinicalOverlap(alerts: readonly PresentedAlert[]): PresentedA
       ...alert,
       mensagem: `${alert.mensagem} Há ${matching.length} pares relacionados nesta observação.`,
       exercicios: [...new Set(matching.flatMap((item) => item.exercicios))],
+      dadoPrincipal: countText(matching.length, "par", "pares"),
+      occurrenceCount: matching.length,
       ocorrencias: matching.map(occurrence),
     }];
   });
@@ -577,6 +638,36 @@ export function groupAlerts(alerts: readonly PresentedAlert[]): AlertGroups {
     observacao_clinica: aggregated.filter((alert) => alert.gravidadeVisual === "observacao_clinica"),
     informacao: aggregated.filter((alert) => alert.gravidadeVisual === "informacao"),
   };
+}
+
+export const INITIAL_ALERT_LIMITS = {
+  revisao_plano: 4,
+  observacao_clinica: 3,
+} as const;
+
+export interface LimitedAlertGroup {
+  initial: readonly PresentedAlert[];
+  hidden: readonly PresentedAlert[];
+  hiddenCount: number;
+}
+
+/** Limites puramente visuais; os arrays integrais de `PlanPresentation` permanecem intactos. */
+export function limitAlertGroup(
+  alerts: readonly PresentedAlert[],
+  severity: keyof typeof INITIAL_ALERT_LIMITS,
+): LimitedAlertGroup {
+  const limit = INITIAL_ALERT_LIMITS[severity];
+  const initial = alerts.slice(0, limit);
+  const hidden = alerts.slice(limit);
+  return { initial, hidden, hiddenCount: hidden.length };
+}
+
+export function firstLevelAlertCardCounts(groups: AlertGroups) {
+  return {
+    revisao_plano: Math.min(groups.revisao_plano.length, INITIAL_ALERT_LIMITS.revisao_plano),
+    observacao_clinica: Math.min(groups.observacao_clinica.length, INITIAL_ALERT_LIMITS.observacao_clinica),
+    informacao: groups.informacao.length > 0 ? 1 : 0,
+  } as const;
 }
 
 export interface PresentedExercise {

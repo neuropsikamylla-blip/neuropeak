@@ -1,13 +1,6 @@
 # As 3 ultimas especificacoes dela (automatico; a mais nova por ultimo)
 # Na retomada: ler as 3, conectar com PROGRESSO.md e git, declarar e seguir.
 
-## 04/08/2026 13:33
-Perfeito. Pode seguir conforme planejado.
-
-Não altere a arquitetura clínica nem as regras de prescrição. Conclua o Lote A, rode as provas e depois siga para o Lote B.
-
-Após publicar os dois lotes juntos, pare para minha validação visual.
-
 ## 04/08/2026 13:45
 Perfeito. Pode seguir conforme planejado.
 
@@ -22,4 +15,13 @@ Após publicar os dois lotes juntos, pare para minha validação visual.
 <output-file>/private/tmp/claude-501/-Users-kamyllahonorio-neuropeak/3e6ecf11-e4e5-471f-bbf9-4595faa53598/tasks/bfsj0pdh8.output</output-file>
 <status>completed</status>
 <summary>Background command "Redisparar o lote A" completed (exit code 0)</summary>
+</task-notification>
+
+## 04/08/2026 15:54
+<task-notification>
+<task-id>bvsiehsy5</task-id>
+<tool-use-id>toolu_013u1AUbThGtr8kjFZ2dwLKn</tool-use-id>
+<output-file>/private/tmp/claude-501/-Users-kamyllahonorio-neuropeak/3e6ecf11-e4e5-471f-bbf9-4595faa53598/tasks/bvsiehsy5.output</output-file>
+<status>completed</status>
+<summary>Background command "Disparar o lote B" completed (exit code 0)</summary>
 </task-notification>

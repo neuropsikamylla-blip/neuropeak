@@ -1,6 +1,7 @@
-import { Info } from "lucide-react";
+import { ChevronDown, Info } from "lucide-react";
 import {
   PRESENTATION_TEXTS,
+  limitAlertGroup,
   type PlanPresentation,
   type PresentedAlert,
   type VisualSeverity,
@@ -16,129 +17,220 @@ const stateClasses: Readonly<Record<PlanPresentation["state"], string>> = {
 const groupInfo: Readonly<Record<VisualSeverity, { label: string; classes: string }>> = {
   revisao_plano: {
     label: "Revisão do plano",
-    classes: "border-orange-400/25 bg-orange-400/10",
+    classes: "border-orange-400/25 bg-orange-400/[0.07]",
   },
   observacao_clinica: {
     label: "Observações clínicas",
-    classes: "border-amber-400/20 bg-amber-400/5",
+    classes: "border-amber-400/20 bg-amber-400/[0.04]",
   },
   informacao: {
     label: "Informações",
-    classes: "border-blue-400/20 bg-blue-400/5",
+    classes: "border-blue-400/20 bg-blue-400/[0.04]",
   },
 };
 
-function occurrenceLabel(alert: PresentedAlert): string {
-  if (alert.code === "OUTSIDE_BEST_POSITION") return "Ver atividades e posições recomendadas";
-  if (["HIGH_FATIGUE_ADJACENT", "HIGH_INTERFERENCE_ADJACENT", "PLANNING_WINDOW_ADJACENT"].includes(alert.code)) {
-    return "Ver sequências";
-  }
-  return "Ver pares relacionados";
+function AlertArticle({ alert }: { alert: PresentedAlert }) {
+  const category = groupInfo[alert.gravidadeVisual].label;
+
+  return (
+    <details className="group rounded-xl border border-white/10 bg-[#07162D]/70 open:border-white/20">
+      <summary className="cursor-pointer list-none px-3.5 py-3.5 marker:content-none">
+        <span className="block text-base font-semibold leading-snug text-slate-100">{alert.titulo}</span>
+        {alert.dadoPrincipal && (
+          <span className="mt-2 block text-lg font-bold leading-tight text-white tabular-nums">
+            {alert.dadoPrincipal}
+          </span>
+        )}
+        <span className="mt-3 flex items-center justify-between gap-3">
+          <span className="rounded-full border border-white/10 bg-white/5 px-2.5 py-1 text-xs font-medium text-slate-300">
+            {category}
+          </span>
+          <span className="flex items-center gap-1.5 text-sm font-semibold text-blue-300 group-hover:text-blue-200">
+            {alert.expansionLabel}
+            <ChevronDown className="h-4 w-4 transition-transform group-open:rotate-180" />
+          </span>
+        </span>
+      </summary>
+
+      <div className="space-y-3 border-t border-white/10 px-3.5 py-3.5 text-sm leading-relaxed text-slate-300">
+        <p>
+          <span className="font-semibold text-slate-100">Explicação e justificativa:</span>{" "}
+          {alert.mensagem}
+        </p>
+        {alert.exercicios.length > 0 && (
+          <div>
+            <p className="font-semibold text-slate-100">Exercícios envolvidos</p>
+            <ul className="mt-1.5 list-disc space-y-1 pl-5">
+              {alert.exercicios.map((exercise) => <li key={exercise}>{exercise}</li>)}
+            </ul>
+          </div>
+        )}
+        {alert.sugestao && (
+          <p>
+            <span className="font-semibold text-slate-100">Sugestão clínica:</span> {alert.sugestao}
+          </p>
+        )}
+        {alert.ocorrencias && (
+          <div>
+            <p className="font-semibold text-slate-100">Ocorrências individuais ({alert.occurrenceCount})</p>
+            <ol className="mt-2 space-y-3">
+              {alert.ocorrencias.map((occurrence, occurrenceIndex) => (
+                <li
+                  key={`${occurrence.exercicios.join("-")}-${occurrenceIndex}`}
+                  className="rounded-lg border border-white/10 bg-white/[0.03] p-3"
+                >
+                  <p className="font-medium text-slate-200">Ocorrência {occurrenceIndex + 1}</p>
+                  {occurrence.exercicios.length > 0 && (
+                    <p className="mt-1 text-slate-300">{occurrence.exercicios.join(" · ")}</p>
+                  )}
+                  <p className="mt-1 text-slate-400">{occurrence.mensagem}</p>
+                  {occurrence.sugestao && <p className="mt-1 text-slate-400">Sugestão: {occurrence.sugestao}</p>}
+                </li>
+              ))}
+            </ol>
+          </div>
+        )}
+      </div>
+    </details>
+  );
 }
 
-function AlertArticle({ alert }: { alert: PresentedAlert }) {
+function EmptyGroup() {
+  return <p className="text-sm text-slate-400">Nenhum apontamento neste grupo.</p>;
+}
+
+function LimitedGroup({
+  severity,
+  alerts,
+}: {
+  severity: "revisao_plano" | "observacao_clinica";
+  alerts: readonly PresentedAlert[];
+}) {
+  const info = groupInfo[severity];
+  const limited = limitAlertGroup(alerts, severity);
+  const hiddenNoun = severity === "revisao_plano"
+    ? limited.hiddenCount === 1 ? "revisão" : "revisões"
+    : limited.hiddenCount === 1 ? "observação" : "observações";
+
   return (
-    <article className="text-xs">
-      <p className="font-semibold text-slate-100">{alert.titulo}</p>
-      <p className="mt-0.5 leading-relaxed text-slate-300">{alert.mensagem}</p>
-      {!alert.ocorrencias && alert.exercicios.length > 0 && (
-        <p className="mt-1 text-slate-400">Exercícios: {alert.exercicios.join(" · ")}</p>
-      )}
-      {alert.sugestao && <p className="mt-1 leading-relaxed text-slate-400">Sugestão: {alert.sugestao}</p>}
-      {alert.ocorrencias && (
-        <details className="mt-2 rounded-lg border border-white/10 px-2.5 py-2 text-slate-400">
-          <summary className="cursor-pointer font-medium text-slate-300">{occurrenceLabel(alert)}</summary>
-          <div className="mt-2 space-y-2 border-t border-white/10 pt-2">
-            {alert.ocorrencias.map((occurrence, occurrenceIndex) => (
-              <div key={`${occurrence.exercicios.join("-")}-${occurrenceIndex}`}>
-                {occurrence.exercicios.length > 0 && (
-                  <p className="font-medium text-slate-300">{occurrence.exercicios.join(" · ")}</p>
-                )}
-                <p className="leading-relaxed">{occurrence.mensagem}</p>
-              </div>
-            ))}
-          </div>
-        </details>
-      )}
-    </article>
+    <section className={`rounded-2xl border p-3.5 ${info.classes}`} aria-labelledby={`alert-group-${severity}`}>
+      <h4 id={`alert-group-${severity}`} className="text-sm font-bold uppercase tracking-wide text-slate-200">
+        {info.label}
+      </h4>
+      <div className="mt-3 space-y-2.5">
+        {alerts.length === 0 ? <EmptyGroup /> : limited.initial.map((alert, index) => (
+          <AlertArticle key={`${alert.code}-${index}`} alert={alert} />
+        ))}
+        {limited.hiddenCount > 0 && (
+          <details className="group/more rounded-xl border border-white/10 bg-white/[0.03] px-3.5 py-3">
+            <summary className="flex cursor-pointer list-none items-center justify-between gap-3 text-sm font-semibold text-slate-200 marker:content-none">
+              Ver mais {limited.hiddenCount} {hiddenNoun}
+              <ChevronDown className="h-4 w-4 transition-transform group-open/more:rotate-180" />
+            </summary>
+            <div className="mt-3 space-y-2.5 border-t border-white/10 pt-3">
+              {limited.hidden.map((alert, index) => (
+                <AlertArticle key={`${alert.code}-hidden-${index}`} alert={alert} />
+              ))}
+            </div>
+          </details>
+        )}
+      </div>
+    </section>
+  );
+}
+
+function InformationGroup({ alerts }: { alerts: readonly PresentedAlert[] }) {
+  const info = groupInfo.informacao;
+  return (
+    <section className={`rounded-2xl border p-3.5 ${info.classes}`} aria-labelledby="alert-group-informacao">
+      <h4 id="alert-group-informacao" className="text-sm font-bold uppercase tracking-wide text-slate-200">
+        {info.label}
+      </h4>
+      <div className="mt-3">
+        {alerts.length === 0 ? <EmptyGroup /> : (
+          <details className="group/info rounded-xl border border-white/10 bg-[#07162D]/60 px-3.5 py-3.5">
+            <summary className="cursor-pointer list-none marker:content-none">
+              <span className="flex items-center justify-between gap-3">
+                <span>
+                  <span className="block text-base font-semibold text-slate-100">Informações do plano</span>
+                  <span className="mt-1 block text-sm text-slate-400">
+                    {alerts.length} {alerts.length === 1 ? "item agrupado" : "itens agrupados"}
+                  </span>
+                </span>
+                <span className="flex items-center gap-1.5 text-sm font-semibold text-blue-300">
+                  Ver detalhes
+                  <ChevronDown className="h-4 w-4 transition-transform group-open/info:rotate-180" />
+                </span>
+              </span>
+            </summary>
+            <div className="mt-3 space-y-2.5 border-t border-white/10 pt-3">
+              {alerts.map((alert, index) => <AlertArticle key={`${alert.code}-${index}`} alert={alert} />)}
+            </div>
+          </details>
+        )}
+      </div>
+    </section>
   );
 }
 
 export function PrescriptionSummary({ presentation }: { presentation: PlanPresentation }) {
   return (
-    <div className="space-y-3">
-      <div className="rounded-xl bg-white/5 px-3.5 py-3 space-y-2">
-        <div className="flex items-start justify-between gap-3">
-          <div>
-            <p className="text-xs text-slate-400">{presentation.prescribedLabel}</p>
-            <p className="text-base font-bold text-slate-100 tabular-nums" title={PRESENTATION_TEXTS.estimateTooltip}>
-              {presentation.estimateLabel}
+    <div className="space-y-5">
+      <section aria-labelledby="session-summary-title">
+        <h4 id="session-summary-title" className="mb-3 text-sm font-bold uppercase tracking-wide text-slate-300">
+          Resumo da sessão
+        </h4>
+        <div className="space-y-3 rounded-2xl border border-white/10 bg-white/5 px-4 py-4">
+          <div className="flex items-start justify-between gap-3">
+            <div>
+              <p className="text-sm text-slate-400">{presentation.prescribedLabel}</p>
+              <p className="text-lg font-bold text-slate-100 tabular-nums" title={PRESENTATION_TEXTS.estimateTooltip}>
+                {presentation.estimateLabel}
+              </p>
+            </div>
+            <span className={`rounded-full border px-2.5 py-1 text-xs ${stateClasses[presentation.state]}`}>
+              {presentation.stateLabel}
+            </span>
+          </div>
+
+          <div title={PRESENTATION_TEXTS.loadTooltip}>
+            <p className="text-sm font-medium text-slate-200">{presentation.loadText}</p>
+            <p className="mt-1 text-xs leading-relaxed text-slate-400">{presentation.loadHelper}</p>
+          </div>
+
+          <div className="grid grid-cols-2 gap-2 text-sm">
+            <div className="rounded-lg border border-white/10 px-3 py-2.5">
+              <p className="text-slate-400">Fadiga</p>
+              <p className="mt-1 text-slate-200">{presentation.fatigueText}</p>
+            </div>
+            <div className="rounded-lg border border-white/10 px-3 py-2.5">
+              <p className="text-slate-400">Interferência</p>
+              <p className="mt-1 text-slate-200">{presentation.interferenceText}</p>
+            </div>
+          </div>
+
+          {presentation.legacyMarker && (
+            <p className="flex items-center gap-1.5 text-xs text-slate-400" title={presentation.legacyMarker.tooltip}>
+              <Info className="h-3.5 w-3.5 shrink-0" />
+              {presentation.legacyMarker.label}
             </p>
-          </div>
-          <span className={`rounded-full border px-2.5 py-1 text-[11px] ${stateClasses[presentation.state]}`}>
-            {presentation.stateLabel}
-          </span>
+          )}
+          {presentation.empty && (
+            <p className="rounded-xl border border-dashed border-white/15 px-3 py-3 text-sm leading-relaxed text-slate-400">
+              {presentation.emptyGuidance}
+            </p>
+          )}
         </div>
+      </section>
 
-        <div title={PRESENTATION_TEXTS.loadTooltip}>
-          <p className="text-xs font-medium text-slate-200">{presentation.loadText}</p>
-          <p className="mt-0.5 text-[11px] leading-snug text-slate-500">{presentation.loadHelper}</p>
-        </div>
-
-        <div className="grid grid-cols-2 gap-2 text-xs">
-          <div className="rounded-lg border border-white/10 px-2.5 py-2">
-            <p className="text-slate-500">Fadiga</p>
-            <p className="mt-0.5 text-slate-300">{presentation.fatigueText}</p>
-          </div>
-          <div className="rounded-lg border border-white/10 px-2.5 py-2">
-            <p className="text-slate-500">Interferência</p>
-            <p className="mt-0.5 text-slate-300">{presentation.interferenceText}</p>
-          </div>
-        </div>
-
-        {presentation.legacyMarker && (
-          <p className="flex items-center gap-1.5 text-[11px] text-slate-500" title={presentation.legacyMarker.tooltip}>
-            <Info className="h-3 w-3 shrink-0" />
-            {presentation.legacyMarker.label}
-          </p>
-        )}
-      </div>
-
-      {presentation.empty ? (
-        <p className="rounded-xl border border-dashed border-white/15 px-3 py-3 text-xs leading-relaxed text-slate-400">
-          {presentation.emptyGuidance}
-        </p>
-      ) : (
-        <div className="space-y-2" title={PRESENTATION_TEXTS.alertsTooltip}>
-          {(["revisao_plano", "observacao_clinica", "informacao"] as const).map((severity) => {
-            const alerts = presentation.alertGroups[severity];
-            if (alerts.length === 0) return null;
-            const info = groupInfo[severity];
-            return (
-              <section key={severity} className={`rounded-xl border p-3 ${info.classes}`}>
-                <h4 className="text-[11px] font-bold uppercase tracking-wide text-slate-300">{info.label}</h4>
-                <div className="mt-2 space-y-3">
-                  {(severity === "observacao_clinica" ? alerts.slice(0, 3) : alerts).map((alert, index) => (
-                    <AlertArticle key={`${alert.code}-${index}`} alert={alert} />
-                  ))}
-                  {severity === "observacao_clinica" && alerts.length > 3 && (
-                    <details className="rounded-lg border border-white/10 px-2.5 py-2">
-                      <summary className="cursor-pointer text-xs font-semibold text-slate-200">
-                        Ver todas as observações
-                      </summary>
-                      <div className="mt-3 space-y-3 border-t border-white/10 pt-3">
-                        {alerts.slice(3).map((alert, index) => (
-                          <AlertArticle key={`${alert.code}-extra-${index}`} alert={alert} />
-                        ))}
-                      </div>
-                    </details>
-                  )}
-                </div>
-              </section>
-            );
-          })}
-        </div>
-      )}
+      <section className="space-y-3 border-t border-white/10 pt-5" aria-labelledby="plan-analysis-title" title={PRESENTATION_TEXTS.alertsTooltip}>
+        <h4 id="plan-analysis-title" className="text-sm font-bold uppercase tracking-wide text-slate-300">
+          Análise do plano
+        </h4>
+        <LimitedGroup severity="revisao_plano" alerts={presentation.alertGroups.revisao_plano} />
+        <LimitedGroup severity="observacao_clinica" alerts={presentation.alertGroups.observacao_clinica} />
+        <InformationGroup alerts={presentation.alertGroups.informacao} />
+      </section>
     </div>
   );
 }

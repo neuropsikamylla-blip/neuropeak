@@ -9,7 +9,7 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from 
 import { CaminhosMetaConfig } from "@/components/therapist/CaminhosMetaConfig";
 import type { PresentedExercise } from "@/lib/prescription/presentation";
 import type { ProtocolName } from "@/lib/prescription/types";
-import { ExercisePrescriptionMeta } from "./prescription/ExercisePrescriptionMeta";
+import { CompactExerciseMeta } from "./prescription/CompactExerciseMeta";
 import { PrescriptionSection } from "./prescription/PrescriptionSection";
 import { ProtocolDoseSection } from "./prescription/ProtocolDoseSection";
 
@@ -55,7 +55,7 @@ export function ExerciseCard({
 
   const Pill = ({ on, onClick, children }: { on: boolean; onClick: () => void; children: React.ReactNode }) => (
     <button type="button" onClick={onClick}
-      className={`px-2.5 py-1 rounded-md text-xs font-semibold border transition-colors ${
+      className={`rounded-md border px-2.5 py-1 text-xs font-semibold transition-colors ${
         on ? "bg-blue-600 text-white border-blue-600" : "bg-white/5 text-slate-300 border-white/20 hover:border-white/40"}`}>
       {children}
     </button>
@@ -79,9 +79,9 @@ export function ExerciseCard({
 
         <ExerciseIcon id={id} emoji={icon} size={38} />
         <div className="min-w-0 flex-1">
-          <p className="text-sm font-semibold text-slate-100 truncate">{name}</p>
+          <p className="truncate text-base font-semibold text-slate-100">{name}</p>
           {prescription && (
-            <ExercisePrescriptionMeta
+            <CompactExerciseMeta
               exercise={prescription}
               description={description}
               details={subLabel ? <SubdomainTag id={subId} label={subLabel} /> : undefined}
@@ -89,29 +89,6 @@ export function ExerciseCard({
           )}
         </div>
 
-        {isCaminhos && (
-          <Dialog>
-            <DialogTrigger asChild>
-              <button
-                type="button"
-                aria-label="Configurar atividades"
-                className="flex items-center gap-1.5 px-2.5 h-8 rounded-lg border text-xs font-medium border-white/15 text-slate-400 hover:text-slate-200 hover:bg-white/10 transition-colors"
-              >
-                <SlidersHorizontal className="w-3.5 h-3.5" />
-                Configurar
-                {nCaminhosSel > 0 && (
-                  <span className="ml-0.5 px-1.5 py-0.5 rounded-full text-[10px] font-bold bg-blue-500/20 text-blue-300">{nCaminhosSel}</span>
-                )}
-              </button>
-            </DialogTrigger>
-            <DialogContent className="max-w-2xl max-h-[85vh] overflow-y-auto border-white/10 bg-[#0D2547] text-slate-100">
-              <DialogHeader>
-                <DialogTitle className="text-slate-100">Caminhos para a Meta — configurar atividades</DialogTitle>
-              </DialogHeader>
-              <CaminhosMetaConfig cfg={cfg} onSetting={onSetting ?? (() => {})} />
-            </DialogContent>
-          </Dialog>
-        )}
         <button
           type="button"
           onClick={() => onToggleOpen(id)}
@@ -143,6 +120,34 @@ export function ExerciseCard({
             />
           )}
 
+          {isCaminhos && (
+            <PrescriptionSection title="Configuração da atividade">
+              <Dialog>
+                <DialogTrigger asChild>
+                  <button
+                    type="button"
+                    aria-label="Configurar atividades"
+                    className="flex h-9 items-center gap-1.5 rounded-lg border border-white/15 px-3 text-sm font-medium text-slate-300 transition-colors hover:bg-white/10 hover:text-slate-100"
+                  >
+                    <SlidersHorizontal className="h-4 w-4" />
+                    Configurar atividades
+                    {nCaminhosSel > 0 && (
+                      <span className="ml-0.5 rounded-full bg-blue-500/20 px-2 py-0.5 text-xs font-bold text-blue-300">
+                        {nCaminhosSel}
+                      </span>
+                    )}
+                  </button>
+                </DialogTrigger>
+                <DialogContent className="max-h-[85vh] max-w-2xl overflow-y-auto border-white/10 bg-[#0D2547] text-slate-100">
+                  <DialogHeader>
+                    <DialogTitle className="text-slate-100">Caminhos para a Meta — configurar atividades</DialogTitle>
+                  </DialogHeader>
+                  <CaminhosMetaConfig cfg={cfg} onSetting={onSetting ?? (() => {})} />
+                </DialogContent>
+              </Dialog>
+            </PrescriptionSection>
+          )}
+
           {(hasModality || isOrdemHistoria) && (
             <PrescriptionSection title="Modalidade e variantes">
               {hasModality && (
@@ -163,7 +168,7 @@ export function ExerciseCard({
                       </Pill>
                     ))}
                   </div>
-                  <p className="mt-1.5 text-[11px] text-slate-400">A modalidade pode recalcular a duração quando o catálogo define impacto temporal.</p>
+                  <p className="mt-1.5 text-xs text-slate-400">A modalidade pode recalcular a duração quando o catálogo define impacto temporal.</p>
                 </div>
               )}
 
@@ -185,7 +190,7 @@ export function ExerciseCard({
                       </div>
                     </div>
                   </div>
-                  <p className="mt-2 text-[11px] leading-relaxed text-slate-400">
+                  <p className="mt-2 text-xs leading-relaxed text-slate-400">
                     Hoje estes atalhos ainda acrescentam etapas. A separação entre dose e variedade virá na reformulação da atividade.
                   </p>
                 </div>
@@ -202,7 +207,7 @@ export function ExerciseCard({
                   <Pill on={!c.allowReplay} onClick={() => onSpanCfg?.(id, "allowReplay", false)}>Não</Pill>
                 </div>
               </div>
-              <p className="mt-1.5 text-[11px] text-slate-400">Repetir o áudio reapresenta o conteúdo auditivo. Não altera a dose prescrita nem a estimativa atual.</p>
+              <p className="mt-1.5 text-xs text-slate-400">Repetir o áudio reapresenta o conteúdo auditivo. Não altera a dose prescrita nem a estimativa atual.</p>
             </PrescriptionSection>
           )}
 

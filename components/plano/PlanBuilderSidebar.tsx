@@ -54,7 +54,7 @@ export function PlanBuilderSidebar(props: PlanBuilderSidebarProps) {
     .filter((g) => g.items.length > 0);
 
   return (
-    <aside className="rounded-[20px] border border-white/10 bg-[#0D2547] p-5 flex flex-col gap-4 shadow-[0_1px_3px_rgba(0,0,0,0.2)]">
+    <aside className="flex flex-col gap-5 rounded-[20px] border border-white/10 bg-[#0D2547] p-5 shadow-[0_1px_3px_rgba(0,0,0,0.2)]">
       <div className="flex items-center justify-between gap-2">
         <div className="flex items-center gap-2 min-w-0">
           <ClipboardList className="w-4 h-4 text-slate-400 shrink-0" />
@@ -64,15 +64,15 @@ export function PlanBuilderSidebar(props: PlanBuilderSidebarProps) {
       </div>
 
       {/* Configurações de sessão */}
-      <div className="grid grid-cols-2 gap-2">
+      <div className="grid grid-cols-2 gap-3 border-b border-white/10 pb-5">
         <label className="block">
-          <span className="text-[11px] font-semibold text-slate-400">Duração da sessão (min)</span>
+          <span className="text-xs font-semibold text-slate-300">Duração da sessão (min)</span>
           <input type="number" min={10} max={90} value={sessionDuration}
             onChange={(e) => onSessionDuration(Number(e.target.value))}
             className="mt-1 w-full px-2.5 py-1.5 rounded-lg border border-white/15 bg-white/5 text-slate-100 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500/30 focus:border-blue-400" />
         </label>
         <label className="block">
-          <span className="text-[11px] font-semibold text-slate-400">Frequência (×/sem)</span>
+          <span className="text-xs font-semibold text-slate-300">Frequência (×/sem)</span>
           <input type="number" min={1} max={7} value={frequency}
             onChange={(e) => onFrequency(Number(e.target.value))}
             className="mt-1 w-full px-2.5 py-1.5 rounded-lg border border-white/15 bg-white/5 text-slate-100 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500/30 focus:border-blue-400" />
@@ -82,58 +82,66 @@ export function PlanBuilderSidebar(props: PlanBuilderSidebarProps) {
       <PrescriptionSummary presentation={presentation} />
 
       {/* Lista de exercícios agrupada por domínio */}
-      <div className="space-y-3 max-h-[58vh] overflow-y-auto -mr-1 pr-1">
-        {items.length === 0 ? (
-          <div className="py-8 text-center">
-            <p className="text-sm text-slate-400">Nenhum exercício ainda.</p>
-            <p className="text-xs text-slate-500 mt-1">Toque em <span className="font-semibold">+</span> na tabela para adicionar.</p>
-          </div>
-        ) : (
-          grouped.map((group) => (
-            <div key={group.domain} className="space-y-1.5">
-              <div className="flex items-center gap-2 px-0.5">
-                <span className="w-2 h-2 rounded-full shrink-0" style={{ backgroundColor: DOMAIN_COLORS[group.domain] }} />
-                <span className="text-[11px] font-bold uppercase tracking-wide" style={{ color: DOMAIN_COLORS[group.domain] }}>
-                  {DOMAIN_LABELS[group.domain]}
-                </span>
-                <span className="text-[11px] text-slate-400 font-semibold">· {group.items.length}</span>
-              </div>
-              {group.items.map((ex, i) => (
-                <ExerciseCard
-                  key={ex.id}
-                  id={ex.id}
-                  name={ex.name}
-                  description={ex.description}
-                  icon={ex.icon}
-                  prescription={presentation.exercises.find((exercise) => exercise.exerciseId === ex.id)}
-                  isSpan={SPAN_IDS.includes(ex.id)}
-                  level={exerciseLevels[ex.id] ?? 1}
-                  onLevel={onLevel}
-                  spanCfg={exerciseSettings[ex.id] as unknown as Partial<SpanSettings> | undefined}
-                  onSpanCfg={onSpanCfg}
-                  cfg={exerciseSettings[ex.id]}
-                  onSetting={onSetting}
-                  onConvertLegacy={onConvertLegacy}
-                  onMove={onMove}
-                  isFirst={i === 0}
-                  isLast={i === group.items.length - 1}
-                  open={openExerciseId === ex.id}
-                  onToggleOpen={(id) => setOpenExerciseId((current) => toggleOpenExercise(current, id))}
-                  onRemove={(id) => {
-                    if (openExerciseId === id) setOpenExerciseId(null);
-                    onRemove(id);
-                  }}
-                />
-              ))}
+      <section className="space-y-3 border-t border-white/10 pt-5" aria-labelledby="selected-exercises-title">
+        <div className="flex items-baseline justify-between gap-3">
+          <h4 id="selected-exercises-title" className="text-sm font-bold uppercase tracking-wide text-slate-300">
+            Exercícios selecionados
+          </h4>
+          <p className="text-xs text-slate-400">
+            Total: <span className="font-semibold text-slate-200">{items.length}</span>
+          </p>
+        </div>
+        <div className="-mr-1 max-h-[58vh] space-y-3 overflow-y-auto pr-1">
+          {items.length === 0 ? (
+            <div className="py-8 text-center">
+              <p className="text-sm text-slate-400">Nenhum exercício ainda.</p>
+              <p className="mt-1 text-xs text-slate-400">Toque em <span className="font-semibold">+</span> na tabela para adicionar.</p>
             </div>
-          ))
-        )}
-      </div>
-
-      <p className="text-xs text-slate-400">Total de exercícios: <span className="font-semibold text-slate-200">{items.length}</span></p>
+          ) : (
+            grouped.map((group) => (
+              <div key={group.domain} className="space-y-2">
+                <div className="flex items-center gap-2 px-0.5">
+                  <span className="h-2 w-2 shrink-0 rounded-full" style={{ backgroundColor: DOMAIN_COLORS[group.domain] }} />
+                  <span className="text-xs font-bold uppercase tracking-wide" style={{ color: DOMAIN_COLORS[group.domain] }}>
+                    {DOMAIN_LABELS[group.domain]}
+                  </span>
+                  <span className="text-xs font-semibold text-slate-400">· {group.items.length}</span>
+                </div>
+                {group.items.map((ex, i) => (
+                  <ExerciseCard
+                    key={ex.id}
+                    id={ex.id}
+                    name={ex.name}
+                    description={ex.description}
+                    icon={ex.icon}
+                    prescription={presentation.exercises.find((exercise) => exercise.exerciseId === ex.id)}
+                    isSpan={SPAN_IDS.includes(ex.id)}
+                    level={exerciseLevels[ex.id] ?? 1}
+                    onLevel={onLevel}
+                    spanCfg={exerciseSettings[ex.id] as unknown as Partial<SpanSettings> | undefined}
+                    onSpanCfg={onSpanCfg}
+                    cfg={exerciseSettings[ex.id]}
+                    onSetting={onSetting}
+                    onConvertLegacy={onConvertLegacy}
+                    onMove={onMove}
+                    isFirst={i === 0}
+                    isLast={i === group.items.length - 1}
+                    open={openExerciseId === ex.id}
+                    onToggleOpen={(id) => setOpenExerciseId((current) => toggleOpenExercise(current, id))}
+                    onRemove={(id) => {
+                      if (openExerciseId === id) setOpenExerciseId(null);
+                      onRemove(id);
+                    }}
+                  />
+                ))}
+              </div>
+            ))
+          )}
+        </div>
+      </section>
 
       {/* Botões */}
-      <div className="space-y-2">
+      <div className="space-y-2 border-t border-white/10 pt-5" aria-label="Ações finais do plano">
         <button
           type="button"
           onClick={onSave}
