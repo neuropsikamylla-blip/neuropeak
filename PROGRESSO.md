@@ -3,6 +3,59 @@
 > Checkpoint de contexto para continuidade entre sessões. Atualizado automaticamente.
 > 👉 Visão geral e handoff para o próximo Claude: **`ESTADO-DO-PROJETO.md`** (leia primeiro).
 
+## 🚧 EM ANDAMENTO (04/ago/2026) — DOSE POR PROTOCOLO: implementação dos passos 1 a 5 da ordem segura
+
+**Autorização dela:** validou a análise de parâmetros e dose em
+`docs/prescription-architecture/08-dose-parameter-decisions.md` (commit `271e037`) e autorizou
+implementar os **passos 1 a 5 da ordem segura**.
+
+**Explicitamente FORA desta etapa** (não iniciar nada disso, mesmo que pareça pequeno):
+redefinição de nível · leitura de histórico do paciente · reformulação de **Caminhos para a Meta**
+e **Ordem da História** · carga dinâmica · fadiga dinâmica · dose personalizada em planos novos ·
+mudanças nos exercícios · mudanças na progressão adaptativa.
+
+### Decisões de desenho já tomadas pelo VP (valem para os dois lotes)
+
+1. **A gravação usa `settings.protocol`** com os valores **`"BREVE"` / `"PADRAO"` / `"ESTENDIDO"`**,
+   porque `normalizeDose` em `legacy.ts` **já reconhece essa chave hoje** — é o caminho de menor
+   risco de compatibilidade, sem inventar formato novo.
+2. **Estimativa de dose legada só é permitida quando o minuto-por-unidade for constante nos três
+   protocolos.** Verificado por script: vale para **19 dos 34** exercícios, incluindo **os dois
+   spans**, que são os únicos com dose legada real hoje (**0,75 min/unidade** no Span Direto,
+   **1,00** no Inverso). Nos outros **15** não há faixa — só o texto
+   *"Duração aproximada — configuração anterior"*.
+3. **O slider de nível inicial FICA nesta etapa**, marcado visualmente como
+   *"Configuração de nível — revisão futura"*. Removê-lo exigiria ler o histórico do paciente, que
+   está fora do escopo. Segue o critério dela: *"Prefira preservar comportamento a introduzir uma
+   redefinição incorreta"*. **Registrado como dívida técnica.**
+
+### LOTE 1 — núcleo puro (`sol xhigh`; mexe em `legacy.ts` = compatibilidade de planos salvos, alto risco)
+
+Só `lib/prescription/` e testes. **NENHUM componente tocado.**
+
+| Passo | Conteúdo | Critério de pronto | Motor | Estado |
+|---|---|---|---|---|
+| **1.1** | categorias formais de parâmetro (**DOSE / DIFFICULTY / ASSISTIVE / VARIANT / ADMINISTRATIVE**) + tipo da **dose legada** em `types.ts` | `npx tsc --noEmit` exit 0 e as categorias exportadas | `sol xhigh` | ⬜ |
+| **1.2** | `legacy.ts` reconhece `trials` (**10/15/20/30**) como `LEGACY_CUSTOM_DOSE`, **preservando o valor exato** — sem converter nem arredondar | teste prova que trials 10/15/20/30 **sobrevivem à leitura** | `sol xhigh` | ⬜ |
+| **1.3** | estimativa **aproximada** da dose legada em `duration.ts`, permitida **só** quando o minuto-por-unidade for constante nos três protocolos | teste prova **faixa correta para os spans** e **ausência de faixa** para exercício não colinear | `sol xhigh` | ⬜ |
+| **1.4** | `presentation.ts` ganha os **textos dos três protocolos**, a **quantidade interna de unidades** e o **marcador visual** que distingue *duração por protocolo atual* de *duração aproximada de dose legada* | teste prova os três textos e a distinção | `sol xhigh` | ⬜ |
+
+### LOTE 2 — interface (`sol high`; acoplado à tela já entregue)
+
+| Passo | Conteúdo | Critério de pronto | Motor | Estado |
+|---|---|---|---|---|
+| **2.1** | janela **"Ajustar"** reorganizada em 4 seções: **Dose do treino** / **Modalidade e variantes** / **Assistência** / **Preferências de execução** | `npm run build` exit 0 e as 4 seções presentes | `sol high` | ⬜ |
+| **2.2** | seletor **Breve / Padrão / Estendido** com texto orientativo, quantidade de unidades e duração estimada **por opção** | trocar o protocolo muda a **duração da sessão imediatamente** | `sol high` | ⬜ |
+| **2.3** | **gravação explícita** do protocolo no plano (`PADRAO` por padrão ao adicionar exercício) | teste prova que um plano novo grava **`PADRAO` explicitamente**, sem fallback silencioso | `sol high` | ⬜ |
+| **2.4** | bloco de **dose legada** com o valor preservado e 4 ações (**manter** / converter para **Breve**, **Padrão** ou **Estendido**); conversão **só por ação explícita com confirmação** | teste prova que **abrir a tela e salvar outro campo NÃO convertem** a dose | `sol high` | ⬜ |
+
+### Validação visual dela ao final (cobertura obrigatória)
+
+**novo Span Direto** · **novo Span Inverso** · **Span legado com 15 tentativas** · **conversão
+explícita de legado para Padrão** · **exercício comum nos três protocolos** · **exercício com
+modalidade** · **exercício com `allowReplay`** · **Caminhos para a Meta** · **Ordem da História**.
+
+
 ## 🚀 FASE 2b ENTREGUE E PUBLICADA (03/ago/2026) — descrição curta de volta à linha principal (`e98d069`, v2.68.0)
 
 Continuação direta da Fase 2 abaixo. Ela **aprovou tecnicamente a Fase 2** e tomou três decisões:
