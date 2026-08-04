@@ -1,13 +1,6 @@
 # As 3 ultimas especificacoes dela (automatico; a mais nova por ultimo)
 # Na retomada: ler as 3, conectar com PROGRESSO.md e git, declarar e seguir.
 
-## 03/08/2026 23:52
-Encontramos uma inconsistência arquitetônica. Os parâmetros ajustáveis (tentativas, repetições, nível inicial etc.) alteram a dose clínica do exercício, mas o painel continua exibindo a duração, carga basal e fadiga do protocolo original. Isso quebra a consistência da prescrição.
-Antes de continuar a implementação, precisamos definir uma regra única:
-Todo parâmetro ajustável que modifica a dose clínica deve atualizar automaticamente duração estimada, carga basal e fadiga da sessão; ou
-Esses parâmetros deixam de ser livres e passam a ser derivados exclusivamente do protocolo (Breve, Padrão ou Estendido).
-Não implemente ainda. Faça primeiro uma análise arquitetônica indicando quais parâmetros realmente modificam a dose clínica de cada exercício e quais são apenas configurações que não alteram carga, duração ou fadiga.
-
 ## 04/08/2026 00:01
 A análise confirmou a inconsistência. Vamos adotar uma terceira via, com as decisões abaixo.
 
@@ -795,3 +788,12 @@ Não reformular exercícios.
 Não iniciar nova fase automaticamente.
 
 Pare para validação visual.
+
+## 04/08/2026 00:35
+<task-notification>
+<task-id>bzne5c4qu</task-id>
+<tool-use-id>toolu_01FkAVFd8PxmoJnYrrFXMXbb</tool-use-id>
+<output-file>/private/tmp/claude-501/-Users-kamyllahonorio-neuropeak/3e6ecf11-e4e5-471f-bbf9-4595faa53598/tasks/bzne5c4qu.output</output-file>
+<status>completed</status>
+<summary>Background command "Disparar o lote 1" completed (exit code 0)</summary>
+</task-notification>

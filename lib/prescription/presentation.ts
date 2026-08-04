@@ -1,5 +1,5 @@
 import { catalogExercise } from "./catalog";
-import { doseMinutes, TARGET_DURATION_BOUNDS } from "./duration";
+import { calculateDuration, doseMinutes, legacyDoseMinutes, TARGET_DURATION_BOUNDS } from "./duration";
 import { interpretPlan } from "./interpreter";
 import { readLegacyPlan } from "./legacy";
 import { HIGH_FATIGUE_CAP, PLANNING_WINDOW_CAP } from "./load";
@@ -13,6 +13,7 @@ import type {
   MinutesRange,
   PrescriptionAlert,
   PresentationMode,
+  ProtocolName,
   ResolvedExercisePrescription,
   SessionDurationState,
   SessionPrescription,
@@ -45,7 +46,25 @@ export const PRESENTATION_TEXTS = {
   emptyGuidance: "Adicione exercícios para consultar a estimativa e a composição do plano.",
 } as const;
 
+export const PROTOCOL_GUIDANCE_TEXTS: Readonly<Record<ProtocolName, string>> = {
+  BREVE: "Dose reduzida. Pode ser útil para introdução à atividade, menor tolerância à fadiga, retorno após pausa ou sessões com maior variedade de exercícios.",
+  PADRAO: "Dose habitual recomendada para a maioria dos treinos, equilibrando duração, repetição e adaptação.",
+  ESTENDIDO: "Dose ampliada para treino focal, maior familiaridade com a tarefa ou sessões com menor número de exercícios. Pode aumentar a fadiga.",
+};
+
+export const PROTOCOL_EXPOSURE_TEXTS = {
+  BREVE: "Menor exposição.",
+  ESTENDIDO: "Maior exposição; pode aumentar a fadiga.",
+} as const;
+
+export const ADAPTIVE_VALIDITY_NOTE = "Pode não fornecer unidades suficientes para decisão adaptativa robusta.";
+
 const PROTOCOL_LABELS = { BREVE: "breve", PADRAO: "padrão", ESTENDIDO: "estendido" } as const;
+const PROTOCOL_TITLES: Readonly<Record<ProtocolName, string>> = {
+  BREVE: "Breve",
+  PADRAO: "Padrão",
+  ESTENDIDO: "Estendido",
+};
 const PRESENTATION_MODE_LABELS: Readonly<Record<PresentationMode, string>> = {
   visual: "visual",
   "visual+audio": "visual e áudio",
@@ -68,7 +87,7 @@ export function visualSeverity(alert: Pick<PrescriptionAlert, "code" | "severity
 
 const numberText = (value: number) => Number.isInteger(value)
   ? String(value)
-  : String(Number(value.toFixed(1))).replace(".", ",");
+  : String(Number(value.toFixed(2))).replace(".", ",");
 
 export function formatMinutesRange(range: MinutesRange): string {
   return `${numberText(range[0])}–${numberText(range[1])} min`;
@@ -76,6 +95,68 @@ export function formatMinutesRange(range: MinutesRange): string {
 
 function formatExerciseDuration(range: MinutesRange): string {
   return range[0] === range[1] ? `${numberText(range[0])} min` : formatMinutesRange(range);
+}
+
+const UNIT_PLURALS: Readonly<Record<string, string>> = {
+  bloco: "blocos",
+  "desafio completo": "desafios completos",
+  fase: "fases",
+  rodada: "rodadas",
+  série: "séries",
+  tentativa: "tentativas",
+};
+
+function minimumValidUnit(definition: ExerciseDefinition): string {
+  const value = definition.parameterSchema.minimumValidUnit;
+  if (!value || typeof value !== "object") return "unidade";
+  const unit = (value as Record<string, unknown>).value;
+  return typeof unit === "string" && unit.trim() ? unit.trim() : "unidade";
+}
+
+function unitsLabel(unitCount: number, unit: string): string {
+  return `${numberText(unitCount)} ${unitCount === 1 ? unit : UNIT_PLURALS[unit] ?? `${unit}s`}`;
+}
+
+export interface ProtocolOptionPresentation {
+  protocol: ProtocolName;
+  label: string;
+  guidance: string;
+  unitCount: number;
+  unitName: string;
+  unitsLabel: string;
+  durationRange: MinutesRange;
+  durationLabel: string;
+  adaptiveValidityNote?: string;
+  exposureNote?: string;
+}
+
+export function protocolOptions(exerciseId: string): readonly ProtocolOptionPresentation[] {
+  const definition = catalogExercise(exerciseId);
+  if (!definition) return [];
+  const unitName = minimumValidUnit(definition);
+  return (["BREVE", "PADRAO", "ESTENDIDO"] as const).map((protocol) => {
+    const protocolDefinition = definition.protocols[protocol];
+    const durationRange = calculateDuration([{
+      definition,
+      prescribedMinutes: doseMinutes(definition, { kind: "protocol", protocol }),
+    }]);
+    return {
+      protocol,
+      label: PROTOCOL_TITLES[protocol],
+      guidance: PROTOCOL_GUIDANCE_TEXTS[protocol],
+      unitCount: protocolDefinition.unitCount,
+      unitName,
+      unitsLabel: unitsLabel(protocolDefinition.unitCount, unitName),
+      durationRange,
+      durationLabel: `Estimativa: ${formatMinutesRange(durationRange)}`,
+      ...(protocol === "BREVE" && protocolDefinition.unitCount <= 2
+        ? { adaptiveValidityNote: ADAPTIVE_VALIDITY_NOTE }
+        : {}),
+      ...(protocol === "BREVE" || protocol === "ESTENDIDO"
+        ? { exposureNote: PROTOCOL_EXPOSURE_TEXTS[protocol] }
+        : {}),
+    };
+  });
 }
 
 export function formatLoad(baselineLoad: number, loadReference: number) {
@@ -306,6 +387,8 @@ export interface PresentedExercise {
   modelLabel: string;
   doseLabel: string;
   durationLabel: string;
+  durationApproximate: boolean;
+  durationEstimateAvailable: boolean;
   protocolLabel: string;
   cognitiveProfileLabel: string;
   loadLabel: string;
@@ -348,6 +431,11 @@ function resolvedExercise(definition: ExerciseDefinition, prescription: Exercise
   };
 }
 
+function legacyDoseLabel(definition: ExerciseDefinition, unitCount: number, sourceKey: string): string {
+  const unit = sourceKey === "trials" ? "tentativa" : minimumValidUnit(definition);
+  return unitsLabel(unitCount, unit);
+}
+
 function resolveExercises(plan: SessionPrescription): ResolvedExercisePrescription[] {
   return plan.exercises.flatMap((prescription) => {
     const definition = catalogExercise(prescription.exerciseId);
@@ -358,18 +446,30 @@ function resolveExercises(plan: SessionPrescription): ResolvedExercisePrescripti
 export function presentExercise(exercise: ResolvedExercisePrescription): PresentedExercise {
   const { definition, prescription } = exercise;
   const dose = prescription.dose;
+  const legacyDuration = dose?.kind === "legacyCustom"
+    ? legacyDoseMinutes(definition, dose, prescription.presentationMode)
+    : undefined;
   const doseLabel = !dose || dose.kind === "protocol"
     ? `Protocolo ${PROTOCOL_LABELS[dose?.kind === "protocol" ? dose.protocol : "PADRAO"]}`
-    : dose.kind === "planningWindow"
-      ? `Até ${numberText(dose.maximumMinutes)} min`
-      : `${numberText(dose.kind === "timed" ? dose.prescribedMinutes : dose.minutes)} min`;
+    : dose.kind === "legacyCustom"
+      ? legacyDoseLabel(definition, dose.unitCount, dose.sourceKey)
+      : dose.kind === "planningWindow"
+        ? `Até ${numberText(dose.maximumMinutes)} min`
+        : `${numberText(dose.kind === "timed" ? dose.prescribedMinutes : dose.minutes)} min`;
+  const durationLabel = dose?.kind !== "legacyCustom"
+    ? formatExerciseDuration(exercise.prescribedMinutes)
+    : legacyDuration?.minutes
+      ? `${formatExerciseDuration(legacyDuration.minutes)} · aproximado`
+      : "Duração aproximada — configuração anterior.";
   const modalityApplies = definition.supportedPresentationModes.length > 0;
   return {
     exerciseId: definition.exerciseId,
     name: definition.officialName,
     modelLabel: EXECUTION_MODEL_LABELS[definition.executionModel],
     doseLabel,
-    durationLabel: formatExerciseDuration(exercise.prescribedMinutes),
+    durationLabel,
+    durationApproximate: legacyDuration?.approximate ?? false,
+    durationEstimateAvailable: dose?.kind !== "legacyCustom" || Boolean(legacyDuration?.minutes),
     protocolLabel: standardProtocolLabel(definition),
     cognitiveProfileLabel: cognitiveProfileLabel(definition),
     loadLabel: `Carga ${definition.baselineCognitiveLoad}`,
@@ -392,6 +492,7 @@ export interface PlanPresentation {
   prescribedLabel: string;
   durationRange: MinutesRange;
   estimateLabel: string;
+  durationEstimateIncomplete: boolean;
   state: SessionDurationState;
   stateLabel: string;
   loadText: string;
@@ -410,6 +511,8 @@ export interface PlanPresentation {
 function planPresentation(plan: SessionPrescription, prescribedMinutes: number, hasUndefinedParameter: boolean): PlanPresentation {
   const interpreted = interpretPlan(plan);
   const exercises = resolveExercises(plan);
+  const presentedExercises = exercises.map(presentExercise);
+  const durationEstimateIncomplete = presentedExercises.some((exercise) => !exercise.durationEstimateAvailable);
   const context: AlertContext = {
     targetMinutes: plan.targetMinutes,
     durationRange: interpreted.durationRange,
@@ -425,7 +528,12 @@ function planPresentation(plan: SessionPrescription, prescribedMinutes: number, 
     prescribedMinutes,
     prescribedLabel: `Duração prescrita: ${numberText(prescribedMinutes)} min`,
     durationRange: interpreted.durationRange,
-    estimateLabel: empty ? "Estimativa: 0 min" : `Estimativa: ${formatMinutesRange(interpreted.durationRange)}`,
+    estimateLabel: empty
+      ? "Estimativa: 0 min"
+      : durationEstimateIncomplete
+        ? `Estimativa incompleta: ${formatMinutesRange(interpreted.durationRange)}`
+        : `Estimativa: ${formatMinutesRange(interpreted.durationRange)}`,
+    durationEstimateIncomplete,
     state,
     stateLabel: SESSION_STATE_LABELS[state],
     loadText: load.text,
@@ -434,7 +542,7 @@ function planPresentation(plan: SessionPrescription, prescribedMinutes: number, 
     interferenceText: formatInterferenceSummary(interpreted.interferenceSummary),
     alerts,
     alertGroups: groupAlerts(alerts),
-    exercises: exercises.map(presentExercise),
+    exercises: presentedExercises,
     empty,
     ...(empty ? { emptyGuidance: PRESENTATION_TEXTS.emptyGuidance } : {}),
     ...(hasUndefinedParameter ? { legacyMarker: { label: PRESENTATION_TEXTS.legacyMarker, tooltip: PRESENTATION_TEXTS.legacyTooltip } } : {}),
@@ -458,6 +566,7 @@ function recognizedDose(value: unknown): boolean {
   if (!value || typeof value !== "object") return false;
   const dose = value as Record<string, unknown>;
   if (dose.kind === "protocol") return recognizedDose(dose.protocol);
+  if (dose.kind === "legacyCustom") return typeof dose.unitCount === "number" && Number.isFinite(dose.unitCount) && dose.unitCount > 0 && typeof dose.sourceKey === "string";
   if (dose.kind === "timed") return typeof dose.prescribedMinutes === "number" && Number.isFinite(dose.prescribedMinutes);
   if (dose.kind === "planningWindow") return typeof dose.maximumMinutes === "number" && Number.isFinite(dose.maximumMinutes);
   if (dose.kind === "fixedExposure") return typeof dose.minutes === "number" && Number.isFinite(dose.minutes);

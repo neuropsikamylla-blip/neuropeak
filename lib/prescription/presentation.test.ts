@@ -1,8 +1,11 @@
 import { describe, expect, it } from "vitest";
 import {
   ALERT_PRESENTATION_CONFIG,
+  ADAPTIVE_VALIDITY_NOTE,
   EXECUTION_MODEL_LABELS,
   PRESENTATION_TEXTS,
+  PROTOCOL_EXPOSURE_TEXTS,
+  PROTOCOL_GUIDANCE_TEXTS,
   SESSION_STATE_LABELS,
   formatFatigueSummary,
   formatInterferenceSummary,
@@ -14,6 +17,7 @@ import {
   presentExercise,
   presentLegacyPlan,
   presentPlan,
+  protocolOptions,
   visualSeverity,
 } from "./presentation";
 import { EXERCISE_CATALOG } from "./catalog";
@@ -113,6 +117,35 @@ describe("apresentação consultiva da prescrição", () => {
     expect(plan.legacyMarker).toBeUndefined();
   });
 
+  it("distingue protocolo atual, legado estimado e legado sem estimativa", () => {
+    const current = presentLegacyPlan([{ id: "span-numerico", settings: { protocol: "PADRAO" } }], 30).exercises[0];
+    expect(current).toMatchObject({
+      doseLabel: "Protocolo padrão",
+      durationLabel: "6 min",
+      durationApproximate: false,
+      durationEstimateAvailable: true,
+    });
+
+    const estimated = presentLegacyPlan([{ id: "span-numerico", settings: { trials: 15 } }], 30);
+    expect(estimated.exercises[0]).toMatchObject({
+      doseLabel: "15 tentativas",
+      durationLabel: "11,25 min · aproximado",
+      durationApproximate: true,
+      durationEstimateAvailable: true,
+    });
+    expect(estimated.durationEstimateIncomplete).toBe(false);
+
+    const unavailable = presentLegacyPlan([{ id: "antes-depois", settings: { trials: 15 } }], 30);
+    expect(unavailable.exercises[0]).toMatchObject({
+      doseLabel: "15 tentativas",
+      durationLabel: "Duração aproximada — configuração anterior.",
+      durationApproximate: false,
+      durationEstimateAvailable: false,
+    });
+    expect(unavailable.durationEstimateIncomplete).toBe(true);
+    expect(unavailable.estimateLabel).toBe("Estimativa incompleta: 0–3 min");
+  });
+
   it("marca discretamente parâmetro legado que não pôde ser determinado", () => {
     const plan = presentLegacyPlan(["tempo-reacao", "id-desconhecido"], 30);
     expect(plan.legacyMarker).toEqual({
@@ -128,6 +161,40 @@ describe("apresentação consultiva da prescrição", () => {
     expect(labels).toHaveLength(34);
     expect(labels.every((label) => label?.startsWith("Protocolo padrão: "))).toBe(true);
     expect(labels.every((label) => /\d+ blocos? · .+ min$/.test(label ?? ""))).toBe(true);
+  });
+
+  it("expõe literalmente os três textos orientativos aprovados", () => {
+    expect(PROTOCOL_GUIDANCE_TEXTS).toEqual({
+      BREVE: "Dose reduzida. Pode ser útil para introdução à atividade, menor tolerância à fadiga, retorno após pausa ou sessões com maior variedade de exercícios.",
+      PADRAO: "Dose habitual recomendada para a maioria dos treinos, equilibrando duração, repetição e adaptação.",
+      ESTENDIDO: "Dose ampliada para treino focal, maior familiaridade com a tarefa ou sessões com menor número de exercícios. Pode aumentar a fadiga.",
+    });
+  });
+
+  it("apresenta as três opções com unidade do catálogo e faixa estimada", () => {
+    const options = protocolOptions("span-numerico");
+    expect(options).toHaveLength(3);
+    expect(options[1]).toMatchObject({
+      protocol: "PADRAO",
+      label: "Padrão",
+      unitsLabel: "8 séries",
+      durationRange: [6, 7],
+      durationLabel: "Estimativa: 6–7 min",
+      guidance: PROTOCOL_GUIDANCE_TEXTS.PADRAO,
+    });
+    expect(options[0].exposureNote).toBe(PROTOCOL_EXPOSURE_TEXTS.BREVE);
+    expect(options[2].exposureNote).toBe(PROTOCOL_EXPOSURE_TEXTS.ESTENDIDO);
+    expect(options[1].exposureNote).toBeUndefined();
+  });
+
+  it("mostra a observação adaptativa somente no Breve com até duas unidades", () => {
+    const allOptions = EXERCISE_CATALOG.flatMap((definition) => protocolOptions(definition.exerciseId));
+    for (const option of allOptions) {
+      expect(Boolean(option.adaptiveValidityNote)).toBe(option.protocol === "BREVE" && option.unitCount <= 2);
+      if (option.adaptiveValidityNote) expect(option.adaptiveValidityNote).toBe(ADAPTIVE_VALIDITY_NOTE);
+    }
+    expect(protocolOptions("antes-depois")[0].adaptiveValidityNote).toBe(ADAPTIVE_VALIDITY_NOTE);
+    expect(protocolOptions("span-numerico")[0].adaptiveValidityNote).toBeUndefined();
   });
 
   it("apresenta o perfil cognitivo de todos os 34 exercícios em texto legível", () => {
@@ -162,6 +229,16 @@ describe("apresentação consultiva da prescrição", () => {
     for (const definition of EXERCISE_CATALOG) {
       const exercise = presentCatalogExercise(definition.exerciseId);
       if (exercise) visibleTexts.push(exercise.protocolLabel, exercise.cognitiveProfileLabel);
+      for (const option of protocolOptions(definition.exerciseId)) {
+        visibleTexts.push(
+          option.label,
+          option.guidance,
+          option.unitsLabel,
+          option.durationLabel,
+          option.adaptiveValidityNote ?? "",
+          option.exposureNote ?? "",
+        );
+      }
     }
     expect(visibleTexts.join(" ")).not.toMatch(/[A-Z]{3,}_[A-Z_]+/);
   });

@@ -1,6 +1,7 @@
 import { describe, expect, it } from "vitest";
-import { catalogExercise } from "./catalog";
-import { calculateDuration, durationState, doseMinutes } from "./duration";
+import { catalogExercise, EXERCISE_CATALOG } from "./catalog";
+import { calculateDuration, durationState, doseMinutes, legacyDoseMinutes } from "./duration";
+import { interpretPlan } from "./interpreter";
 import type { ResolvedExercisePrescription } from "./types";
 
 const exercise = (id: string): ResolvedExercisePrescription => {
@@ -22,6 +23,75 @@ describe("duração da composição", () => {
   it("aplica modalidade antes das margens", () => {
     const definition = catalogExercise("restaurante-ordem")!;
     expect(doseMinutes(definition, { kind: "protocol", protocol: "PADRAO" }, "audioOnly")).toEqual([11, 12]);
+  });
+
+  it("produz durações diferentes para Breve, Padrão e Estendido", () => {
+    const definition = catalogExercise("span-numerico")!;
+    expect(["BREVE", "PADRAO", "ESTENDIDO"].map((protocol) =>
+      doseMinutes(definition, { kind: "protocol", protocol: protocol as "BREVE" | "PADRAO" | "ESTENDIDO" })))
+      .toEqual([[3, 3], [6, 6], [9, 9]]);
+  });
+
+  it.each([
+    [10, 7.5],
+    [15, 11.25],
+    [20, 15],
+    [30, 22.5],
+  ])("estima %s tentativas do Span Direto como %s min", (unitCount, minutes) => {
+    const definition = catalogExercise("span-numerico")!;
+    const dose = { kind: "legacyCustom", unitCount, sourceKey: "trials" } as const;
+    expect(legacyDoseMinutes(definition, dose)).toEqual({ minutes: [minutes, minutes], approximate: true });
+    expect(doseMinutes(definition, dose)).toEqual([minutes, minutes]);
+  });
+
+  it("não estima dose legada quando a taxa por unidade varia entre protocolos", () => {
+    const definition = catalogExercise("antes-depois")!;
+    const dose = { kind: "legacyCustom", unitCount: 15, sourceKey: "trials" } as const;
+    expect(legacyDoseMinutes(definition, dose)).toEqual({ approximate: false });
+    expect(doseMinutes(definition, dose)).toEqual([0, 0]);
+  });
+
+  it("mantém a sessão numérica quando um exercício legado não tem faixa segura", () => {
+    const definition = catalogExercise("antes-depois")!;
+    const prescribedMinutes = doseMinutes(definition, { kind: "legacyCustom", unitCount: 15, sourceKey: "trials" });
+    const duration = calculateDuration([{ definition, prescribedMinutes }]);
+    expect(duration).toEqual([0, 3]);
+    expect(duration.every(Number.isFinite)).toBe(true);
+  });
+
+  it("identifica taxa constante exatamente nos 19 exercícios catalogados", () => {
+    const dose = { kind: "legacyCustom", unitCount: 1, sourceKey: "trials" } as const;
+    expect(EXERCISE_CATALOG.filter((definition) => legacyDoseMinutes(definition, dose).minutes).length).toBe(19);
+  });
+
+  it("modalidade recalcula duração sem alterar carga basal", () => {
+    const base = interpretPlan({
+      targetMinutes: 20,
+      exercises: [{ exerciseId: "restaurante-ordem", order: 1, dose: { kind: "protocol", protocol: "PADRAO" }, presentationMode: "visual" }],
+    });
+    const audio = interpretPlan({
+      targetMinutes: 20,
+      exercises: [{ exerciseId: "restaurante-ordem", order: 1, dose: { kind: "protocol", protocol: "PADRAO" }, presentationMode: "audioOnly" }],
+    });
+    expect(audio.durationRange).not.toEqual(base.durationRange);
+    expect(audio.baselineLoad).toBe(base.baselineLoad);
+  });
+
+  it("allowReplay não altera duração, carga nem fadiga", () => {
+    const plan = (allowReplay: boolean) => interpretPlan({
+      targetMinutes: 20,
+      exercises: [{
+        exerciseId: "span-numerico",
+        order: 1,
+        dose: { kind: "protocol", protocol: "PADRAO" },
+        clinicalParameters: { allowReplay },
+      }],
+    });
+    const disabled = plan(false);
+    const enabled = plan(true);
+    expect(enabled.durationRange).toEqual(disabled.durationRange);
+    expect(enabled.baselineLoad).toBe(disabled.baselineLoad);
+    expect(enabled.fatigueSummary).toEqual(disabled.fatigueSummary);
   });
 });
 

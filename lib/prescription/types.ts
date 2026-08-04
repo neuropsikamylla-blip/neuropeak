@@ -10,6 +10,46 @@ export type PresentationMode = "visual" | "visual+audio" | "audioOnly";
 export type EffectiveChannel = "visual" | "auditory";
 export type SessionPosition = "OPEN" | "MIDDLE" | "CLOSE";
 
+export type ParameterCategory =
+  | "DOSE_PARAMETER"
+  | "DIFFICULTY_PARAMETER"
+  | "ASSISTIVE_PARAMETER"
+  | "VARIANT_PARAMETER"
+  | "ADMINISTRATIVE_PARAMETER";
+
+export type PrescriptionParameterKey =
+  | "protocol"
+  | "trials"
+  | "atividadesSelecionadas"
+  | "startLevel"
+  | "level"
+  | "allowReplay"
+  | "presentationMode"
+  | "unlockIntruso"
+  | "unlockFalta"
+  | "feedback"
+  | "autoAdvance";
+
+export const PARAMETER_CATEGORIES = {
+  protocol: "DOSE_PARAMETER",
+  trials: "DOSE_PARAMETER",
+  atividadesSelecionadas: "DOSE_PARAMETER",
+  startLevel: "DIFFICULTY_PARAMETER",
+  level: "DIFFICULTY_PARAMETER",
+  allowReplay: "ASSISTIVE_PARAMETER",
+  presentationMode: "VARIANT_PARAMETER",
+  unlockIntruso: "VARIANT_PARAMETER",
+  unlockFalta: "VARIANT_PARAMETER",
+  feedback: "ADMINISTRATIVE_PARAMETER",
+  autoAdvance: "ADMINISTRATIVE_PARAMETER",
+} as const satisfies Readonly<Record<PrescriptionParameterKey, ParameterCategory>>;
+
+export function parameterCategory(key: string): ParameterCategory | undefined {
+  return Object.prototype.hasOwnProperty.call(PARAMETER_CATEGORIES, key)
+    ? PARAMETER_CATEGORIES[key as PrescriptionParameterKey]
+    : undefined;
+}
+
 export type MinutesRange = readonly [minimum: number, maximum: number];
 
 export type AlertCode =
@@ -74,6 +114,7 @@ export interface ExerciseDefinition {
 
 export type PrescribedDose =
   | { kind: "protocol"; protocol: ProtocolName }
+  | { kind: "legacyCustom"; unitCount: number; sourceKey: string }
   | { kind: "timed"; prescribedMinutes: number }
   | { kind: "planningWindow"; maximumMinutes: number }
   | { kind: "fixedExposure"; minutes: number };
@@ -104,4 +145,5 @@ export interface ResolvedExercisePrescription {
 export interface LegacyReadResult {
   plan: SessionPrescription;
   ignoredIds: readonly string[];
+  provisionalExerciseIds: readonly string[];
 }
