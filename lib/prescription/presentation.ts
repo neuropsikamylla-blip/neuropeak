@@ -57,7 +57,7 @@ export const PROTOCOL_EXPOSURE_TEXTS = {
   ESTENDIDO: "Maior exposição; pode aumentar a fadiga.",
 } as const;
 
-export const ADAPTIVE_VALIDITY_NOTE = "Pode não fornecer unidades suficientes para decisão adaptativa robusta.";
+export const ADAPTIVE_VALIDITY_NOTE = "Treino válido em dose reduzida. O desempenho desta sessão pode não ser suficiente, isoladamente, para atualizar o nível adaptativo.";
 
 const PROTOCOL_LABELS = { BREVE: "breve", PADRAO: "padrão", ESTENDIDO: "estendido" } as const;
 const PROTOCOL_TITLES: Readonly<Record<ProtocolName, string>> = {
@@ -117,6 +117,16 @@ function unitsLabel(unitCount: number, unit: string): string {
   return `${numberText(unitCount)} ${unitCount === 1 ? unit : UNIT_PLURALS[unit] ?? `${unit}s`}`;
 }
 
+function briefDeclaresInsufficientProgression(definition: ExerciseDefinition): boolean {
+  const protocols = definition.parameterSchema.protocols;
+  if (!protocols || typeof protocols !== "object") return false;
+  const brief = (protocols as Record<string, unknown>).BRIEF;
+  if (!brief || typeof brief !== "object") return false;
+  const clinicalValidity = (brief as Record<string, unknown>).clinicalValidity;
+  return typeof clinicalValidity === "string"
+    && clinicalValidity.toLocaleLowerCase("pt-BR").includes("insuficiente para progressão");
+}
+
 export interface ProtocolOptionPresentation {
   protocol: ProtocolName;
   label: string;
@@ -149,7 +159,7 @@ export function protocolOptions(exerciseId: string): readonly ProtocolOptionPres
       unitsLabel: unitsLabel(protocolDefinition.unitCount, unitName),
       durationRange,
       durationLabel: `Estimativa: ${formatMinutesRange(durationRange)}`,
-      ...(protocol === "BREVE" && protocolDefinition.unitCount <= 2
+      ...(protocol === "BREVE" && briefDeclaresInsufficientProgression(definition)
         ? { adaptiveValidityNote: ADAPTIVE_VALIDITY_NOTE }
         : {}),
       ...(protocol === "BREVE" || protocol === "ESTENDIDO"
@@ -395,6 +405,13 @@ export interface PresentedExercise {
   fatigueLabel: string;
   interferenceLabel: string;
   modalityLabel?: string;
+  doseKind: "protocol" | "legacyCustom" | "other";
+  selectedProtocol?: ProtocolName;
+  legacyDose?: {
+    valueLabel: string;
+    durationLabel: string;
+  };
+  provisional: boolean;
 }
 
 /**
@@ -408,9 +425,13 @@ function readableCognitiveProfile(value: string): string {
 
 function standardProtocolLabel(definition: ExerciseDefinition): string {
   const protocol = definition.protocols.PADRAO;
-  const units = `${protocol.unitCount} ${protocol.unitCount === 1 ? "bloco" : "blocos"}`;
+  const units = unitsLabel(protocol.unitCount, minimumValidUnit(definition));
   const duration = protocol.durationText.trim() || `${numberText(protocol.durationMinutes)} min`;
   return `Protocolo padrão: ${units} · ${duration}`;
+}
+
+function provisionalParameters(definition: ExerciseDefinition): boolean {
+  return String(definition.parameterSchema.prescriptionParameterStatus).startsWith("PROVISIONAL_");
 }
 
 function cognitiveProfileLabel(definition: ExerciseDefinition): string {
@@ -446,10 +467,13 @@ function resolveExercises(plan: SessionPrescription): ResolvedExercisePrescripti
 export function presentExercise(exercise: ResolvedExercisePrescription): PresentedExercise {
   const { definition, prescription } = exercise;
   const dose = prescription.dose;
+  const provisional = provisionalParameters(definition);
   const legacyDuration = dose?.kind === "legacyCustom"
     ? legacyDoseMinutes(definition, dose, prescription.presentationMode)
     : undefined;
-  const doseLabel = !dose || dose.kind === "protocol"
+  const doseLabel = provisional
+    ? "Configuração provisória"
+    : !dose || dose.kind === "protocol"
     ? `Protocolo ${PROTOCOL_LABELS[dose?.kind === "protocol" ? dose.protocol : "PADRAO"]}`
     : dose.kind === "legacyCustom"
       ? legacyDoseLabel(definition, dose.unitCount, dose.sourceKey)
@@ -470,7 +494,7 @@ export function presentExercise(exercise: ResolvedExercisePrescription): Present
     durationLabel,
     durationApproximate: legacyDuration?.approximate ?? false,
     durationEstimateAvailable: dose?.kind !== "legacyCustom" || Boolean(legacyDuration?.minutes),
-    protocolLabel: standardProtocolLabel(definition),
+    protocolLabel: provisional ? "Configuração provisória" : standardProtocolLabel(definition),
     cognitiveProfileLabel: cognitiveProfileLabel(definition),
     loadLabel: `Carga ${definition.baselineCognitiveLoad}`,
     fatigueLabel: `Fadiga ${definition.fatigue.toLocaleLowerCase("pt-BR")}`,
@@ -478,6 +502,16 @@ export function presentExercise(exercise: ResolvedExercisePrescription): Present
     ...(modalityApplies ? {
       modalityLabel: `Modalidade: ${prescription.presentationMode ? PRESENTATION_MODE_LABELS[prescription.presentationMode] : "padrão do exercício"}`,
     } : {}),
+    doseKind: !dose || dose.kind === "protocol"
+      ? "protocol"
+      : dose.kind === "legacyCustom" ? "legacyCustom" : "other",
+    ...(!dose || dose.kind === "protocol"
+      ? { selectedProtocol: dose?.kind === "protocol" ? dose.protocol : "PADRAO" as const }
+      : {}),
+    ...(dose?.kind === "legacyCustom" ? {
+      legacyDose: { valueLabel: doseLabel, durationLabel },
+    } : {}),
+    provisional,
   };
 }
 

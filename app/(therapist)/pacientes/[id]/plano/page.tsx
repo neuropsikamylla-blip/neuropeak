@@ -15,9 +15,11 @@ import { SubdomainTabs } from "@/components/plano/SubdomainTabs";
 import { ExerciseSearch, type DifficultyFilter } from "@/components/plano/ExerciseSearch";
 import { ExerciseTable } from "@/components/plano/ExerciseTable";
 import { PlanBuilderSidebar } from "@/components/plano/PlanBuilderSidebar";
-import { parsePlanExercises, buildPlanExercises } from "@/lib/exercise-plan";
-import { DEFAULT_SPAN_SETTINGS, type SpanSettings } from "@/components/exercises/memory/SpanNumerico";
+import { addPlanExercise, parsePlanExercises, buildPlanExercises } from "@/lib/exercise-plan";
+import type { SpanSettings } from "@/components/exercises/memory/SpanNumerico";
 import { presentCatalogExercise, presentLegacyPlan } from "@/lib/prescription/presentation";
+import { convertLegacyDose } from "@/lib/prescription/dose-settings";
+import type { ProtocolName } from "@/lib/prescription/types";
 
 const SPAN_IDS = ["span-numerico", "span-numerico-inverso"];
 const exDef = (id: string) => EXERCISE_DEFINITIONS[id as keyof typeof EXERCISE_DEFINITIONS];
@@ -69,9 +71,13 @@ export default function PlanoPage() {
   }, [patientId]);
 
   function toggleExercise(exerciseId: string) {
-    setSelectedExercises((prev) =>
-      prev.includes(exerciseId) ? prev.filter((e) => e !== exerciseId) : [...prev, exerciseId]
-    );
+    if (selectedExercises.includes(exerciseId)) {
+      setSelectedExercises((previous) => previous.filter((id) => id !== exerciseId));
+      return;
+    }
+    const added = addPlanExercise(selectedExercises, exerciseSettings, exerciseId);
+    setSelectedExercises(added.ids);
+    setExerciseSettings(added.settingsById);
   }
 
   // Reordena um exercício dentro do seu domínio (setas ↑↓ no painel).
@@ -91,7 +97,7 @@ export default function PlanoPage() {
   function setSpanCfg<K extends keyof SpanSettings>(exId: string, key: K, value: SpanSettings[K]) {
     setExerciseSettings((prev) => ({
       ...prev,
-      [exId]: { ...DEFAULT_SPAN_SETTINGS, ...(prev[exId] ?? {}), [key]: value },
+      [exId]: { ...(prev[exId] ?? {}), [key]: value },
     }));
   }
 
@@ -100,6 +106,13 @@ export default function PlanoPage() {
     setExerciseSettings((prev) => ({
       ...prev,
       [exId]: { ...(prev[exId] ?? {}), [key]: value },
+    }));
+  }
+
+  function convertLegacy(exId: string, protocol: ProtocolName) {
+    setExerciseSettings((previous) => ({
+      ...previous,
+      [exId]: convertLegacyDose(previous[exId] ?? {}, protocol),
     }));
   }
 
@@ -257,6 +270,7 @@ export default function PlanoPage() {
             onLevel={setLevel}
             onSpanCfg={setSpanCfg}
             onSetting={setExSetting}
+            onConvertLegacy={convertLegacy}
             onRemove={toggleExercise}
             onMove={moveExercise}
             sessionDuration={sessionDuration}

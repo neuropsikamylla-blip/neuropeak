@@ -135,7 +135,10 @@ describe("apresentação consultiva da prescrição", () => {
     });
     expect(estimated.durationEstimateIncomplete).toBe(false);
 
-    const unavailable = presentLegacyPlan([{ id: "antes-depois", settings: { trials: 15 } }], 30);
+    // Jogo da Memória: taxas por unidade 3,0 / 3,5 / 3,67 — não colineares, logo sem base segura
+    // para estimar a dose legada. Não usar aqui um exercício PROVISIONAL_, cuja marca de
+    // "Configuração provisória" substitui o rótulo da dose por outra regra.
+    const unavailable = presentLegacyPlan([{ id: "jogo-memoria", settings: { trials: 15 } }], 30);
     expect(unavailable.exercises[0]).toMatchObject({
       doseLabel: "15 tentativas",
       durationLabel: "Duração aproximada — configuração anterior.",
@@ -143,7 +146,14 @@ describe("apresentação consultiva da prescrição", () => {
       durationEstimateAvailable: false,
     });
     expect(unavailable.durationEstimateIncomplete).toBe(true);
-    expect(unavailable.estimateLabel).toBe("Estimativa incompleta: 0–3 min");
+
+    // Exercício provisório: a marca substitui o rótulo da dose, e a janela de ajuste mostra o
+    // bloco de configuração provisória em vez de protocolo ou conversão.
+    const provisional = presentLegacyPlan([{ id: "antes-depois", settings: { trials: 15 } }], 30);
+    expect(provisional.exercises[0]).toMatchObject({
+      doseLabel: "Configuração provisória",
+      provisional: true,
+    });
   });
 
   it("marca discretamente parâmetro legado que não pôde ser determinado", () => {
@@ -159,8 +169,13 @@ describe("apresentação consultiva da prescrição", () => {
   it("apresenta o protocolo padrão de todos os 34 exercícios em texto legível", () => {
     const labels = EXERCISE_CATALOG.map((definition) => presentCatalogExercise(definition.exerciseId)?.protocolLabel);
     expect(labels).toHaveLength(34);
-    expect(labels.every((label) => label?.startsWith("Protocolo padrão: "))).toBe(true);
-    expect(labels.every((label) => /\d+ blocos? · .+ min$/.test(label ?? ""))).toBe(true);
+    expect(labels.filter((label) => label?.startsWith("Protocolo padrão: "))).toHaveLength(33);
+    expect(presentCatalogExercise("antes-depois")?.protocolLabel).toBe("Configuração provisória");
+    expect(presentCatalogExercise("span-numerico")?.protocolLabel).toBe("Protocolo padrão: 8 séries · ~6 min");
+    expect(presentCatalogExercise("restaurante-ordem")?.protocolLabel).toBe("Protocolo padrão: 5 rodadas · ~10 min");
+    expect(presentCatalogExercise("informacao-em-foco")?.protocolLabel).toBe("Protocolo padrão: 5 tentativas · ~10 min");
+    expect(presentCatalogExercise("desafio-supermercado")?.protocolLabel).toBe("Protocolo padrão: 5 rodadas · ~12 min");
+    expect(presentCatalogExercise("torre-hanoi")?.protocolLabel).toBe("Protocolo padrão: 2 desafios completos · ~9 min");
   });
 
   it("expõe literalmente os três textos orientativos aprovados", () => {
@@ -187,14 +202,15 @@ describe("apresentação consultiva da prescrição", () => {
     expect(options[1].exposureNote).toBeUndefined();
   });
 
-  it("mostra a observação adaptativa somente no Breve com até duas unidades", () => {
+  it("deriva a observação adaptativa do clinicalValidity do protocolo BRIEF", () => {
     const allOptions = EXERCISE_CATALOG.flatMap((definition) => protocolOptions(definition.exerciseId));
     for (const option of allOptions) {
-      expect(Boolean(option.adaptiveValidityNote)).toBe(option.protocol === "BREVE" && option.unitCount <= 2);
+      expect(Boolean(option.adaptiveValidityNote)).toBe(option.protocol === "BREVE");
       if (option.adaptiveValidityNote) expect(option.adaptiveValidityNote).toBe(ADAPTIVE_VALIDITY_NOTE);
     }
     expect(protocolOptions("antes-depois")[0].adaptiveValidityNote).toBe(ADAPTIVE_VALIDITY_NOTE);
-    expect(protocolOptions("span-numerico")[0].adaptiveValidityNote).toBeUndefined();
+    expect(protocolOptions("span-numerico")[0].adaptiveValidityNote).toBe(ADAPTIVE_VALIDITY_NOTE);
+    expect(ADAPTIVE_VALIDITY_NOTE).not.toContain("insuficiente para progressão");
   });
 
   it("apresenta o perfil cognitivo de todos os 34 exercícios em texto legível", () => {

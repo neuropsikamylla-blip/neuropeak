@@ -5,6 +5,7 @@ import { EXERCISE_DEFINITIONS, DOMAIN_COLORS, DOMAIN_LABELS } from "@/types";
 import { ALL_DOMAINS, EXERCISE_DOMAIN } from "@/lib/domain-taxonomy";
 import type { SpanSettings } from "@/components/exercises/memory/SpanNumerico";
 import type { PlanPresentation } from "@/lib/prescription/presentation";
+import type { ProtocolName } from "@/lib/prescription/types";
 import { ExerciseCard } from "./ExerciseCard";
 import { PrescriptionSummary } from "./prescription/PrescriptionSummary";
 
@@ -18,6 +19,7 @@ interface PlanBuilderSidebarProps {
   onLevel: (id: string, value: number) => void;
   onSpanCfg: <K extends keyof SpanSettings>(id: string, key: K, value: SpanSettings[K]) => void;
   onSetting: (id: string, key: string, value: unknown) => void;
+  onConvertLegacy: (id: string, protocol: ProtocolName) => void;
   onRemove: (id: string) => void;
   onMove: (id: string, dir: -1 | 1) => void;
   sessionDuration: number;
@@ -33,7 +35,7 @@ interface PlanBuilderSidebarProps {
 /** Coluna direita — "Plano em construção", exercícios agrupados por domínio. */
 export function PlanBuilderSidebar(props: PlanBuilderSidebarProps) {
   const {
-    selectedExercises, exerciseLevels, exerciseSettings, onLevel, onSpanCfg, onSetting, onRemove, onMove,
+    selectedExercises, exerciseLevels, exerciseSettings, onLevel, onSpanCfg, onSetting, onConvertLegacy, onRemove, onMove,
     sessionDuration, frequency, onSessionDuration, onFrequency, onSave, onVisualize, saving,
     presentation,
   } = props;
@@ -103,6 +105,7 @@ export function PlanBuilderSidebar(props: PlanBuilderSidebarProps) {
                   onSpanCfg={onSpanCfg}
                   cfg={exerciseSettings[ex.id]}
                   onSetting={onSetting}
+                  onConvertLegacy={onConvertLegacy}
                   onRemove={onRemove}
                   onMove={onMove}
                   isFirst={i === 0}

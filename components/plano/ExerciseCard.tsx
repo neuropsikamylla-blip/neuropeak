@@ -9,7 +9,10 @@ import { SubdomainTag } from "./ExerciseTags";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 import { CaminhosMetaConfig } from "@/components/therapist/CaminhosMetaConfig";
 import type { PresentedExercise } from "@/lib/prescription/presentation";
+import type { ProtocolName } from "@/lib/prescription/types";
 import { ExercisePrescriptionMeta } from "./prescription/ExercisePrescriptionMeta";
+import { PrescriptionSection } from "./prescription/PrescriptionSection";
+import { ProtocolDoseSection } from "./prescription/ProtocolDoseSection";
 
 interface ExerciseCardProps {
   id: string;
@@ -25,6 +28,7 @@ interface ExerciseCardProps {
   onSpanCfg?: <K extends keyof SpanSettings>(id: string, key: K, value: SpanSettings[K]) => void;
   cfg?: Record<string, unknown>;
   onSetting?: (id: string, key: string, value: unknown) => void;
+  onConvertLegacy: (id: string, protocol: ProtocolName) => void;
   onRemove: (id: string) => void;
   onMove: (id: string, dir: -1 | 1) => void;
   isFirst: boolean;
@@ -33,15 +37,17 @@ interface ExerciseCardProps {
 
 /** Item do plano — card largo com reordenar, ajustes e remover. */
 export function ExerciseCard({
-  id, name, description, icon, prescription, color, isSpan, level, onLevel, spanCfg, onSpanCfg, cfg, onSetting, onRemove, onMove, isFirst, isLast,
+  id, name, description, icon, prescription, color, isSpan, level, onLevel, spanCfg, onSpanCfg, cfg,
+  onSetting, onConvertLegacy, onRemove, onMove, isFirst, isLast,
 }: ExerciseCardProps) {
   const [open, setOpen] = useState(false);
   const c: SpanSettings = { ...DEFAULT_SPAN_SETTINGS, ...(spanCfg ?? {}) };
   const isOrdemHistoria = id === "ordem-historia";
   const isFocus = id === "focus-agents" || id === "focus-agents-auditivo";
   const isCaminhos = id === "antes-depois";
+  const hasModality = Boolean(prescription?.modalityLabel);
   const nCaminhosSel = isCaminhos && Array.isArray(cfg?.atividadesSelecionadas)
-    ? (cfg!.atividadesSelecionadas as unknown[]).length
+    ? (cfg.atividadesSelecionadas as unknown[]).length
     : 0;
   const subLabel = EXERCISE_SUBDOMAIN[id];
   const subId = EXERCISE_SUBDOMAIN_ID[id];
@@ -57,7 +63,6 @@ export function ExerciseCard({
   return (
     <div className="rounded-xl border border-white/10 bg-[#07162D] hover:border-white/20 transition-colors">
       <div className="flex items-center gap-2 p-2.5">
-        {/* Reordenar */}
         <div className="flex flex-col shrink-0">
           <button type="button" onClick={() => onMove(id, -1)} disabled={isFirst}
             aria-label="Mover para cima"
@@ -83,7 +88,7 @@ export function ExerciseCard({
           )}
         </div>
 
-        {isCaminhos ? (
+        {isCaminhos && (
           <Dialog>
             <DialogTrigger asChild>
               <button
@@ -105,19 +110,18 @@ export function ExerciseCard({
               <CaminhosMetaConfig cfg={cfg} onSetting={onSetting ?? (() => {})} />
             </DialogContent>
           </Dialog>
-        ) : (
-          <button
-            type="button"
-            onClick={() => setOpen((o) => !o)}
-            aria-label="Ajustar"
-            className={`flex items-center gap-1.5 px-2.5 h-8 rounded-lg border text-xs font-medium transition-colors ${
-              open ? "border-blue-400/50 text-blue-300 bg-blue-500/15" : "border-white/15 text-slate-400 hover:text-slate-200 hover:bg-white/10"
-            }`}
-          >
-            <SlidersHorizontal className="w-3.5 h-3.5" />
-            Ajustar
-          </button>
         )}
+        <button
+          type="button"
+          onClick={() => setOpen((current) => !current)}
+          aria-label="Ajustar"
+          className={`flex items-center gap-1.5 px-2.5 h-8 rounded-lg border text-xs font-medium transition-colors ${
+            open ? "border-blue-400/50 text-blue-300 bg-blue-500/15" : "border-white/15 text-slate-400 hover:text-slate-200 hover:bg-white/10"
+          }`}
+        >
+          <SlidersHorizontal className="w-3.5 h-3.5" />
+          Ajustar
+        </button>
         <button
           type="button"
           onClick={() => onRemove(id)}
@@ -129,79 +133,67 @@ export function ExerciseCard({
       </div>
 
       {open && (
-        <div className="px-3 pb-3 pt-1 border-t border-white/10">
-          {isFocus ? (
-            <div className="pt-2.5 space-y-3">
-              <div>
-                <p className="text-[11px] font-bold uppercase tracking-wide text-slate-400 mb-1.5">Nível inicial (1–5)</p>
-                <div className="flex gap-1.5">
-                  {[1, 2, 3, 4, 5].map((lv) => (
-                    <Pill key={lv} on={(Number(cfg?.startLevel) || 1) === lv} onClick={() => onSetting?.(id, "startLevel", lv)}>{lv}</Pill>
-                  ))}
-                </div>
-              </div>
-              <div>
-                <p className="text-[11px] font-bold uppercase tracking-wide text-slate-400 mb-1.5">Feedback</p>
-                <div className="flex gap-1.5">
-                  {[["leve", "Leve"], ["normal", "Normal"], ["intenso", "Intenso"]].map(([k, lbl]) => (
-                    <Pill key={k} on={(cfg?.feedback ?? "normal") === k} onClick={() => onSetting?.(id, "feedback", k)}>{lbl}</Pill>
-                  ))}
-                </div>
-              </div>
-              <div className="flex items-center justify-between gap-2">
-                <span className="text-xs text-slate-300">Avanço automático de nível</span>
-                <div className="flex gap-1.5">
-                  <Pill on={cfg?.autoAdvance !== false} onClick={() => onSetting?.(id, "autoAdvance", true)}>Sim</Pill>
-                  <Pill on={cfg?.autoAdvance === false} onClick={() => onSetting?.(id, "autoAdvance", false)}>Não</Pill>
-                </div>
-              </div>
-              <p className="text-[11px] text-slate-400">O paciente entra direto no &ldquo;Treino de hoje&rdquo; com o nível que você definir aqui — sem tela de escolha.</p>
-            </div>
-          ) : !isSpan ? (
-            <div className="pt-2.5">
-              <div className="flex items-center justify-between mb-1.5">
-                <span className="text-[11px] font-bold uppercase tracking-wide text-slate-400">Nível inicial</span>
-                <span className="text-sm font-bold tabular-nums" style={{ color }}>{level} <span className="text-slate-500 font-normal">/ 10</span></span>
-              </div>
-              <input
-                type="range" min={1} max={10} step={1} value={level}
-                onChange={(e) => onLevel(id, Number(e.target.value))}
-                className="w-full cursor-pointer"
-                style={{ accentColor: color }}
-              />
-              <p className="text-[11px] text-slate-400 pt-1.5">Começa neste nível e sobe/desce sozinho conforme o paciente acerta ou erra.</p>
+        <div className="space-y-3 border-t border-white/10 px-3 pb-3 pt-3">
+          {prescription && (
+            <ProtocolDoseSection
+              exercise={prescription}
+              onProtocol={(protocol) => onSetting?.(id, "protocol", protocol)}
+              onConvertLegacy={(protocol) => onConvertLegacy(id, protocol)}
+            />
+          )}
 
-              {isOrdemHistoria && (
-                <div className="mt-3 pt-3 border-t border-white/10 space-y-2.5">
-                  <p className="text-[11px] font-bold uppercase tracking-wide text-slate-400">Liberar desafios</p>
-                  <div className="flex items-center justify-between gap-2">
-                    <span className="text-xs text-slate-300">🔍 Encontre o Intruso</span>
-                    <div className="flex gap-1.5">
-                      <Pill on={!!cfg?.unlockIntruso} onClick={() => onSetting?.(id, "unlockIntruso", true)}>Sim</Pill>
-                      <Pill on={!cfg?.unlockIntruso} onClick={() => onSetting?.(id, "unlockIntruso", false)}>Não</Pill>
-                    </div>
+          {(hasModality || isOrdemHistoria) && (
+            <PrescriptionSection title="Modalidade e variantes">
+              {hasModality && (
+                <div>
+                  <p className="mb-1.5 text-xs text-slate-300">Modalidade de apresentação</p>
+                  <div className="flex flex-wrap gap-1.5">
+                    {([
+                      ["visual", "Visual"],
+                      ["visual+audio", "Visual e áudio"],
+                      ["audioOnly", "Somente áudio"],
+                    ] as const).map(([mode, label]) => (
+                      <Pill
+                        key={mode}
+                        on={(cfg?.presentationMode ?? "visual") === mode}
+                        onClick={() => onSetting?.(id, "presentationMode", mode)}
+                      >
+                        {label}
+                      </Pill>
+                    ))}
                   </div>
-                  <div className="flex items-center justify-between gap-2">
-                    <span className="text-xs text-slate-300">🧩 Descubra o que falta</span>
-                    <div className="flex gap-1.5">
-                      <Pill on={!!cfg?.unlockFalta} onClick={() => onSetting?.(id, "unlockFalta", true)}>Sim</Pill>
-                      <Pill on={!cfg?.unlockFalta} onClick={() => onSetting?.(id, "unlockFalta", false)}>Não</Pill>
-                    </div>
-                  </div>
-                  <p className="text-[11px] text-slate-400">Atalho: liga o desafio agora. Sem isso, a trilha libera sozinha por desempenho (acertar ≥80%): ordenar → Intruso → Descubra.</p>
+                  <p className="mt-1.5 text-[11px] text-slate-400">A modalidade pode recalcular a duração quando o catálogo define impacto temporal.</p>
                 </div>
               )}
-            </div>
-          ) : (
-            <div className="pt-2.5 space-y-2.5">
-              <div className="flex items-center justify-between gap-2">
-                <span className="text-xs text-slate-300">Tentativas</span>
-                <div className="flex gap-1.5">
-                  {[10, 15, 20, 30].map((t) => (
-                    <Pill key={t} on={c.trials === t} onClick={() => onSpanCfg?.(id, "trials", t)}>{t}</Pill>
-                  ))}
+
+              {isOrdemHistoria && (
+                <div className={hasModality ? "mt-3 border-t border-white/10 pt-3" : ""}>
+                  <div className="space-y-2.5">
+                    <div className="flex items-center justify-between gap-2">
+                      <span className="text-xs text-slate-300">🔍 Encontre o Intruso</span>
+                      <div className="flex gap-1.5">
+                        <Pill on={Boolean(cfg?.unlockIntruso)} onClick={() => onSetting?.(id, "unlockIntruso", true)}>Sim</Pill>
+                        <Pill on={!cfg?.unlockIntruso} onClick={() => onSetting?.(id, "unlockIntruso", false)}>Não</Pill>
+                      </div>
+                    </div>
+                    <div className="flex items-center justify-between gap-2">
+                      <span className="text-xs text-slate-300">🧩 Descubra o que falta</span>
+                      <div className="flex gap-1.5">
+                        <Pill on={Boolean(cfg?.unlockFalta)} onClick={() => onSetting?.(id, "unlockFalta", true)}>Sim</Pill>
+                        <Pill on={!cfg?.unlockFalta} onClick={() => onSetting?.(id, "unlockFalta", false)}>Não</Pill>
+                      </div>
+                    </div>
+                  </div>
+                  <p className="mt-2 text-[11px] leading-relaxed text-slate-400">
+                    Hoje estes atalhos ainda acrescentam etapas. A separação entre dose e variedade virá na reformulação da atividade.
+                  </p>
                 </div>
-              </div>
+              )}
+            </PrescriptionSection>
+          )}
+
+          {isSpan && (
+            <PrescriptionSection title="Assistência">
               <div className="flex items-center justify-between gap-2">
                 <span className="text-xs text-slate-300">Repetir áudio</span>
                 <div className="flex gap-1.5">
@@ -209,8 +201,55 @@ export function ExerciseCard({
                   <Pill on={!c.allowReplay} onClick={() => onSpanCfg?.(id, "allowReplay", false)}>Não</Pill>
                 </div>
               </div>
-              <p className="text-[11px] text-slate-400">O nível é automático (o paciente retoma onde parou).</p>
-            </div>
+              <p className="mt-1.5 text-[11px] text-slate-400">A repetição é um recurso assistivo e não altera a dose nem a estimativa atual.</p>
+            </PrescriptionSection>
+          )}
+
+          {!isSpan && (
+            <PrescriptionSection title="Configurações de nível">
+              <p className="mb-2 text-xs font-semibold text-slate-300">Configuração de nível — revisão futura</p>
+              {isFocus ? (
+                <div className="flex gap-1.5">
+                  {[1, 2, 3, 4, 5].map((lv) => (
+                    <Pill key={lv} on={(Number(cfg?.startLevel) || 1) === lv} onClick={() => onSetting?.(id, "startLevel", lv)}>{lv}</Pill>
+                  ))}
+                </div>
+              ) : (
+                <>
+                  <div className="flex items-center justify-between mb-1.5">
+                    <span className="text-[11px] text-slate-400">Nível inicial</span>
+                    <span className="text-sm font-bold tabular-nums" style={{ color }}>{level} <span className="text-slate-500 font-normal">/ 10</span></span>
+                  </div>
+                  <input
+                    type="range" min={1} max={10} step={1} value={level}
+                    onChange={(event) => onLevel(id, Number(event.target.value))}
+                    className="w-full cursor-pointer"
+                    style={{ accentColor: color }}
+                  />
+                </>
+              )}
+              <p className="mt-1.5 text-[11px] text-slate-400">O comportamento atual do nível foi mantido; a regra definitiva depende do histórico do paciente.</p>
+            </PrescriptionSection>
+          )}
+
+          {isFocus && (
+            <PrescriptionSection title="Preferências de execução">
+              <div>
+                <p className="mb-1.5 text-xs text-slate-300">Feedback</p>
+                <div className="flex gap-1.5">
+                  {([["leve", "Leve"], ["normal", "Normal"], ["intenso", "Intenso"]] as const).map(([key, label]) => (
+                    <Pill key={key} on={(cfg?.feedback ?? "normal") === key} onClick={() => onSetting?.(id, "feedback", key)}>{label}</Pill>
+                  ))}
+                </div>
+              </div>
+              <div className="mt-2.5 flex items-center justify-between gap-2">
+                <span className="text-xs text-slate-300">Avanço automático de nível</span>
+                <div className="flex gap-1.5">
+                  <Pill on={cfg?.autoAdvance !== false} onClick={() => onSetting?.(id, "autoAdvance", true)}>Sim</Pill>
+                  <Pill on={cfg?.autoAdvance === false} onClick={() => onSetting?.(id, "autoAdvance", false)}>Não</Pill>
+                </div>
+              </div>
+            </PrescriptionSection>
           )}
         </div>
       )}

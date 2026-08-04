@@ -1,38 +1,6 @@
 # As 3 ultimas especificacoes dela (automatico; a mais nova por ultimo)
 # Na retomada: ler as 3, conectar com PROGRESSO.md e git, declarar e seguir.
 
-## 04/08/2026 00:41
-Perfeito.
-
-Pode concluir normalmente o Lote 2.
-
-Na validação visual vou observar principalmente:
-
-1. Se a janela "Ajustar" ficou simples e intuitiva para o terapeuta.
-
-2. Se a diferença entre Breve, Padrão e Estendido é compreendida apenas lendo a interface, sem necessidade de documentação externa.
-
-3. Se a troca do protocolo atualiza imediatamente a duração estimada da sessão.
-
-4. Se os planos legados aparecem claramente identificados como configuração anterior, oferecendo apenas:
-- Manter configuração atual;
-- Converter para Breve;
-- Converter para Padrão;
-- Converter para Estendido.
-
-Sem conversão automática.
-
-5. Se a organização ficou nesta ordem:
-
-- Dose do treino
-- Modalidade e variantes
-- Assistência
-- Configurações de nível (temporariamente, até a futura revisão)
-
-6. Se a interface continua limpa e não aumentou excessivamente a carga visual.
-
-Depois da entrega vou validar visualmente antes de qualquer nova implementação.
-
 ## 04/08/2026 00:43
 Perfeito.
 
@@ -103,3 +71,12 @@ Mantenha a quarta seção como “Configurações de nível” e feedback/autoAd
 Não recolha nenhuma seção antes da validação visual.
 
 Pode concluir o lote 2 e parar para eu revisar a tela.
+
+## 04/08/2026 05:26
+<task-notification>
+<task-id>bwv4pav74</task-id>
+<tool-use-id>toolu_01EMEmuQqyKWw9s8B7hWCTyJ</tool-use-id>
+<output-file>/private/tmp/claude-501/-Users-kamyllahonorio-neuropeak/3e6ecf11-e4e5-471f-bbf9-4595faa53598/tasks/bwv4pav74.output</output-file>
+<status>completed</status>
+<summary>Background command "Disparar o lote 2 sem interromper" completed (exit code 0)</summary>
+</task-notification>

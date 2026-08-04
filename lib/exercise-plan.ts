@@ -12,6 +12,11 @@ export interface NormalizedPlanExercise {
   settings?: Record<string, unknown>;
 }
 
+export interface PlanExerciseSelection {
+  ids: string[];
+  settingsById: Record<string, Record<string, unknown>>;
+}
+
 // Exercícios fundidos/aposentados → id atual. Planos antigos são convertidos
 // na leitura (sem migração de banco). "desafio-orcamento" foi fundido na
 // "compra-multifuncional" (que já cobre orçamento + categoria + quantidade + tempo).
@@ -74,4 +79,23 @@ export function buildPlanExercises(
     const s = settingsById[id];
     return s && Object.keys(s).length > 0 ? { id, settings: s } : id;
   });
+}
+
+/**
+ * Adiciona um exercício novo com protocolo padrão explícito. Configurações que já existam no
+ * estado da tela (por exemplo, após remover e recolocar um item legado) são preservadas para que
+ * esta operação nunca se torne uma conversão silenciosa.
+ */
+export function addPlanExercise(
+  ids: readonly string[],
+  settingsById: Readonly<Record<string, Record<string, unknown>>>,
+  id: string,
+): PlanExerciseSelection {
+  if (ids.includes(id)) return { ids: [...ids], settingsById: { ...settingsById } };
+  return {
+    ids: [...ids, id],
+    settingsById: Object.prototype.hasOwnProperty.call(settingsById, id)
+      ? { ...settingsById }
+      : { ...settingsById, [id]: { protocol: "PADRAO" } },
+  };
 }
