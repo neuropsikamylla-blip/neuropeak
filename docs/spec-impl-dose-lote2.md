@@ -21,7 +21,8 @@ para planos novos**.
 **O botão de salvar não muda:** `disabled={saving || items.length === 0}`.
 `save-button-guard.test.ts` e `library-coverage.test.ts` precisam passar **sem edição**.
 
-Os **367 testes atuais não podem quebrar.**
+Os **367 testes atuais não podem quebrar** — exceto o único que consagra o defeito do
+`protocolLabel` com "blocos", que deve ser corrigido junto (ver seção 3).
 
 ## Arquivos permitidos
 
@@ -54,9 +55,13 @@ Reorganizar o painel do `ExerciseCard` nesta ordem:
 2. **Modalidade e variantes** — `presentationMode` (5 exercícios) · `unlockIntruso`/`unlockFalta`
    (Ordem da História)
 3. **Assistência** — `allowReplay` (spans)
-4. **Preferências de execução** — `feedback` · `autoAdvance` (Focus) · o slider de nível
+4. **Configurações de nível** — o slider de nível
+5. **Preferências de execução** — `feedback` · `autoAdvance` (Focus)
 
 Seções vazias **não aparecem**. Cada seção com título discreto, visualmente separada.
+
+⚠️ **Nenhuma seção começa recolhida.** Ela quer ver a janela inteira aberta antes de decidir o que
+recolher. Não usar `<details>` fechado nem acordeão nas seções.
 
 ## 3. Seletor de protocolo
 
@@ -68,9 +73,25 @@ Padrão
 Estimativa: 6–7 min
 ```
 
-mais o **texto orientativo** de `PROTOCOL_GUIDANCE_TEXTS` e, quando houver, a observação de validade
-adaptativa (`ADAPTIVE_VALIDITY_NOTE`) e a observação qualitativa de exposição
+mais o **texto orientativo** de `PROTOCOL_GUIDANCE_TEXTS` e a observação qualitativa de exposição
 (`PROTOCOL_EXPOSURE_TEXTS`).
+
+### Aviso de validade adaptativa — CORRIGIR
+
+O lote 1 derivou este aviso de uma regra genérica (`unitCount` de BREVE ≤ 2). **Ela rejeitou.**
+Substituir por:
+
+- **Origem:** o campo `clinicalValidity` do protocolo **BRIEF** no catálogo. O aviso existe **apenas**
+  quando aquele exercício declara ali a insuficiência para progressão. Hoje os 34 declaram, então
+  aparece em todos os Breves — mas a regra passa a ser **por exercício**, não por contagem.
+- **Texto exato, aprovado por ela — não reescrever:**
+
+  > "Treino válido em dose reduzida. O desempenho desta sessão pode não ser suficiente, isoladamente,
+  > para atualizar o nível adaptativo."
+
+⚠️ **Nunca exibir "insuficiente para progressão" cru.** O terapeuta leria como se o Breve fosse
+inadequado. O Breve é opção válida de treino; a limitação é só sobre a robustez da decisão adaptativa
+naquela execução.
 
 **Padrão vem selecionado** em exercício sem protocolo gravado.
 
@@ -79,6 +100,20 @@ sidebar reflete a troca sem recarregar.
 
 ⚠️ **Não** oferecer campo editável de tentativas, séries, rodadas ou blocos. A quantidade é
 **exibição**, nunca entrada.
+
+### Unidade real — CORRIGIR `protocolLabel`
+
+`protocolOptions().unitsLabel` **já usa** a unidade certa do catálogo (séries, rodadas, tentativas,
+desafios completos). Mas o **`protocolLabel`** de `presentExercise`, que aparece em "Ver detalhes",
+está com **"blocos" fixo para os 34** — "8 blocos" no Span (são séries), "2 blocos" no Jogo das
+Torres (são desafios completos). Nasceu de um exemplo da spec da Fase 2b que virou valor fixo.
+
+Corrigir para usar `minimumValidUnit` do catálogo, com plural correto. **Não inventar nem renomear
+unidades:** Spans = séries · Restaurante = rodadas · Informação em Foco = tentativas · Supermercado =
+rodadas · Jogo das Torres = desafios completos.
+
+O teste da Fase 2b que valida `/\d+ blocos? · .+ min$/` **precisa ser atualizado** — ele consagra o
+defeito.
 
 ## 4. Dose legada na interface
 
