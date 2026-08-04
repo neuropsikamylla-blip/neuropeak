@@ -10224,3 +10224,50 @@ Não alterar interface.
 Não alterar banco.
 Não alterar execução.
 Não iniciar histórico, relatório ou tutorial.
+
+## 04/08/2026 19:48
+A análise está aprovada.
+
+A conclusão é que não há correção necessária no runtime atual:
+
+- a duração-alvo da sessão não interrompe a execução;
+- o paciente pode concluir todos os exercícios prescritos;
+- os exercícios temporizados encerram entre unidades, preservando a tentativa em andamento;
+- não remover nem alterar isTimeUp() dos exercícios CONTINUOUS_TIMED.
+
+A duração contínua implementada no commit a6b686d está aprovada para publicação.
+
+Pode agora:
+
+1. fazer o bump de versão;
+2. publicar na Vercel;
+3. confirmar appVersion, buildId, health check e commit publicado;
+4. confirmar que a6b686d está contido no deploy;
+5. registrar a publicação no PROGRESSO.md;
+6. parar.
+
+Não implementar ainda:
+
+- tempo de parede;
+- pausas;
+- sessão como entidade de execução;
+- histórico de sessões;
+- comparação estimado × realizado;
+- alterações de banco;
+- alterações no runtime;
+- presets 20/35/50.
+
+Registrar como fase futura separada:
+
+EXECUÇÃO E HISTÓRICO DAS SESSÕES
+
+Essa fase deverá distinguir:
+
+- duração-alvo prescrita;
+- duração estimada;
+- tempo ativo;
+- tempo total decorrido;
+- pausas;
+- conclusão integral ou parcial.
+
+Não iniciar essa fase agora.
