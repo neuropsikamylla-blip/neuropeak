@@ -3,6 +3,63 @@
 > Checkpoint de contexto para continuidade entre sessões. Atualizado automaticamente.
 > 👉 Visão geral e handoff para o próximo Claude: **`ESTADO-DO-PROJETO.md`** (leia primeiro).
 
+## ✅ FASE 2 DA PRESCRIÇÃO ENTREGUE (03/ago/2026) — exibição consultiva na tela de plano (`a6f61f0`)
+
+**Não mudou dado, API, banco nem comportamento de exercício.** A Fase 1 (núcleo puro em
+`lib/prescription/`, 7 módulos) segue aprovada e congelada; a Fase 2 apenas **EXIBE** ao terapeuta,
+na área dele, o que o núcleo calcula. O commit não tocou `package.json` — versão segue **2.67.1**.
+
+### O que entrou
+
+| Arquivo criado | Papel |
+|---|---|
+| `lib/prescription/presentation.ts` (469 l) | camada pura de apresentação — **sem React** |
+| `lib/prescription/presentation.test.ts` (144 l) | testes da camada pura |
+| `lib/prescription/__tests__/save-button-guard.test.ts` (63 l) | teste **estático**: lê o fonte e garante que o "Salvar plano" não some |
+| `lib/prescription/__tests__/library-coverage.test.ts` | regressão criada pelo VP na revisão (ver achado abaixo) |
+| `components/plano/prescription/PrescriptionSummary.tsx` (98 l) | resumo da sessão prescrita |
+| `components/plano/prescription/ExercisePrescriptionMeta.tsx` (28 l) | metadados de prescrição por exercício |
+
+**Alterados:** `app/(therapist)/pacientes/[id]/plano/page.tsx` · `components/plano/PlanBuilderSidebar.tsx` ·
+`components/plano/ExerciseCard.tsx` · `components/plano/ExerciseRow.tsx`.
+
+### Roteamento (regra 8)
+
+Codificação no **Codex `gpt-5.6-sol`, esforço high, lab `impl2b`**. O primeiro disparo (lab `impl2`)
+**panicou com bug de Rust em `std::env`** e não produziu nada — lab recriado e redisparado, aí com
+sucesso. Dois consertos pequenos pós-colheita foram do **Claude Opus 5 xhigh (exceção 1 da regra 8)**:
+tipagem em `presentation.ts` (acesso a propriedade opcional numa união criada por `satisfies`) e a
+criação do `library-coverage.test.ts`.
+
+### Provas (repositório real)
+
+`npx tsc --noEmit` exit 0 · `npx vitest run` **330/330 em 28 arquivos** (eram 296 → **+34 testes**) ·
+`npm run build` exit 0.
+
+### ⚠️ Achado da revisão do VP — já blindado por teste
+
+A **biblioteca de exercícios da tela de plano** passou a montar cada cartão a partir do catálogo de
+prescrição e **descarta com `flatMap` quem não tem entrada**. Hoje a cobertura é total (**34 de 34**),
+mas o descarte seria **silencioso** — um exercício sumiria da tela sem erro nenhum.
+`library-coverage.test.ts` transforma esse caso em teste vermelho.
+
+### ⏸️ PRÓXIMO PASSO — validação VISUAL dela; **NÃO iniciar a Fase 3**
+
+Ela pediu explicitamente para não começar a Fase 3 automaticamente. Não há teste de renderização,
+então estes cenários da tela de plano só se conferem com olho humano: **plano vazio · dentro do
+esperado · acima do esperado · excesso importante · fadiga alta consecutiva · planejamento
+consecutivo · plano legado** — e, em **todos**, confirmar que o botão **"Salvar plano"** continua
+disponível.
+
+### 🔷 Decisões dela pendentes
+
+1. **Paredão de alertas:** numa sessão muito sobrecarregada os alertas chegam a **~21**, com "fadiga
+   alta em sequência" e "interferência alta em sequência" repetidos par a par. Decidir se a Fase 3
+   agrupa ou limita visualmente.
+2. **`ExerciseRow`:** a descrição do exercício saiu da linha principal e foi para dentro de **"Ver
+   detalhes"** (fiel à spec, que mandava "o resto atrás de Ver detalhes"). Decidir se fica assim.
+
+
 ## 🧊 FASE 1 CONCLUÍDA E CONGELADA (02/ago/2026) — perfil cognitivo dos 34
 
 **Decisão dela:** *"Considere toda a Fase 1 concluída e congelada até nova solicitação."*
@@ -49,7 +106,10 @@ nível + modalidade + duração + interferência + pressão temporal. **Não só
   é pista auditiva e não conta como demanda auditiva.
 
 
-## 🚧 EM ANDAMENTO (02/ago/2026) — FASE 1 da arquitetura clínica: perfil cognitivo dos 34
+## (histórico) EM ANDAMENTO — FASE 1 da arquitetura clínica: perfil cognitivo dos 34
+
+> **Encerrado em 02/ago/2026:** os três lotes foram entregues e ela declarou a Fase 1 concluída e
+> congelada. Mantido como registro do fatiamento e do roteamento usados.
 
 **Regra da etapa (dela):** só análise e documentos. Nada de código, progressão, níveis, duração,
 carga, banco, interface, catálogo ou engine.
@@ -66,9 +126,9 @@ direto só em ajuste pós-colheita, integração com contexto vivo ou Codex indi
 
 | Lote | Conteúdo | Motor | Estado |
 |---|---|---|---|
-| **A** | doc 01 (taxonomia) + 12 fichas: Atenção e Velocidade | `sol xhigh` | 🔄 rodando (lab `perfilA`) |
-| **B** | 12 fichas: Memória | `sol xhigh` | ⬜ |
-| **C** | 10 fichas (Executivas/Funcional/Social) + matriz + JSON + doc 04 | `sol xhigh` | ⬜ |
+| **A** | doc 01 (taxonomia) + 12 fichas: Atenção e Velocidade | `sol xhigh` | ✅ |
+| **B** | 12 fichas: Memória | `sol xhigh` | ✅ |
+| **C** | 10 fichas (Executivas/Funcional/Social) + matriz + JSON + doc 04 | `sol xhigh` | ✅ |
 
 **Documentos-alvo:** `docs/clinical-architecture/01-cognitive-domain-taxonomy.md` ·
 `02-exercise-cognitive-profiles.md` · `03-cognitive-matrix.md` · `cognitive-matrix.json` ·
