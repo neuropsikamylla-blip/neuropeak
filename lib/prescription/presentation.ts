@@ -20,7 +20,7 @@ import type {
   TargetMinutes,
 } from "./types";
 
-export type VisualSeverity = "informativo" | "atencao" | "revisao_recomendada";
+export type VisualSeverity = "revisao_plano" | "observacao_clinica" | "informacao";
 
 export const EXECUTION_MODEL_LABELS: Readonly<Record<ExecutionModel, string>> = {
   CONTINUOUS_TIMED: "Por tempo",
@@ -71,18 +71,39 @@ const PRESENTATION_MODE_LABELS: Readonly<Record<PresentationMode, string>> = {
   audioOnly: "somente áudio",
 };
 
-const REVISION_CODES = new Set<AlertCode>([
+export const REVISION_CODES: ReadonlySet<AlertCode> = new Set<AlertCode>([
+  "SESSION_ABOVE_TARGET",
   "SESSION_SAFE_MAX_EXCEEDED",
+  "LOAD_AT_CAP",
   "LOAD_OVER_CAP",
   "HIGH_FATIGUE_COUNT",
   "HIGH_FATIGUE_ADJACENT",
+  // As três pernas da regra de fadiga alta aprovada na Fase 2 — quantidade, consecutividade e
+  // fechamento — são condições objetivas e ficam juntas na revisão do plano.
+  "HIGH_FATIGUE_POSITION",
   "HIGH_INTERFERENCE_ADJACENT",
+  "PLANNING_WINDOW_COUNT",
+  "PLANNING_WINDOW_ADJACENT",
+]);
+
+export const CLINICAL_OBSERVATION_CODES: ReadonlySet<AlertCode> = new Set<AlertCode>([
+  "COGNITIVE_CONCENTRATION",
   "DECLARED_BAD_COMBINATION",
 ]);
 
+export const INFORMATION_CODES: ReadonlySet<AlertCode> = new Set<AlertCode>([
+  "SESSION_BELOW_TARGET",
+  "SESSION_RANGE_PARTIAL",
+  "OUTSIDE_BEST_POSITION",
+  "OPEN_POSITION_NOT_ELIGIBLE",
+  "CLOSE_POSITION_NOT_ELIGIBLE",
+  "AUDITORY_ONLY_ADJACENT",
+]);
+
 export function visualSeverity(alert: Pick<PrescriptionAlert, "code" | "severity">): VisualSeverity {
-  if (alert.severity === "informativa") return "informativo";
-  return REVISION_CODES.has(alert.code) ? "revisao_recomendada" : "atencao";
+  if (REVISION_CODES.has(alert.code)) return "revisao_plano";
+  if (CLINICAL_OBSERVATION_CODES.has(alert.code)) return "observacao_clinica";
+  return "informacao";
 }
 
 const numberText = (value: number) => Number.isInteger(value)
@@ -211,7 +232,7 @@ interface AlertCopyContext extends AlertContext {
 }
 
 interface AlertCopy {
-  titulo: string;
+  titulo: string | ((context: AlertCopyContext) => string);
   mensagem: (context: AlertCopyContext) => string;
   sugestao?: (context: AlertCopyContext) => string;
 }
@@ -242,15 +263,100 @@ function concentrationText(exercises: readonly ResolvedExercisePrescription[]): 
   return common ? `${common} aparece nos ${exercises.length} exercícios` : "há repetição de um mesmo processo cognitivo";
 }
 
-function badCombinationReason(context: AlertCopyContext): string | undefined {
-  for (const exercise of context.exercises) {
-    const match = exercise.definition.sessionEligibility.badCombinations.find((combination) =>
-      context.alert.exerciseIds.includes(combination.exerciseId));
-    if (match) return match.reason
-      .replace(/^PROVISÓRIO:\s*/i, "")
-      .replace(/[A-Z]{3,}_[A-Z_]+/g, "parâmetro técnico");
+const OVERLAP_COMPLEMENT = "Essa concentração pode ser intencional em um plano focal. Caso o objetivo seja maior variedade, considere intercalar outro tipo de atividade.";
+
+function definitionsForAlert(context: AlertCopyContext): readonly ExerciseDefinition[] {
+  return context.alert.exerciseIds.flatMap((id) => {
+    const definition = context.exercises.find((exercise) => exercise.definition.exerciseId === id)?.definition;
+    return definition ? [definition] : [];
+  });
+}
+
+function declaredReason(context: AlertCopyContext): string {
+  const definitions = definitionsForAlert(context);
+  for (const definition of definitions) {
+    const otherIds = new Set(definitions.filter((candidate) => candidate !== definition).map((candidate) => candidate.exerciseId));
+    const match = definition.sessionEligibility.badCombinations.find((combination) => otherIds.has(combination.exerciseId));
+    if (match) return match.reason.toLocaleLowerCase("pt-BR");
   }
-  return undefined;
+  return "";
+}
+
+function cognitiveSignatures(definition: ExerciseDefinition): readonly string[] {
+  return [definition.mechanicalPrimary, ...definition.associatedCognitiveProfiles];
+}
+
+function sharedCognitiveProcesses(definitions: readonly ExerciseDefinition[]): readonly string[] {
+  if (definitions.length < 2) return [];
+  const remaining = definitions.slice(1).map((definition) => new Set(
+    cognitiveSignatures(definition).map((value) => value.toLocaleLowerCase("pt-BR")),
+  ));
+  return cognitiveSignatures(definitions[0]).filter((process) =>
+    remaining.every((signature) => signature.has(process.toLocaleLowerCase("pt-BR"))),
+  );
+}
+
+function declaredObservation(context: AlertCopyContext): { titulo: string; mensagem: string } {
+  const definitions = definitionsForAlert(context);
+  const reason = declaredReason(context);
+  const shared = sharedCognitiveProcesses(definitions);
+  const normalizedShared = shared.join(" ").toLocaleLowerCase("pt-BR");
+
+  if (/cor.+resposta|mapeamentos?.*cor/.test(reason)) {
+    return {
+      titulo: "Mapeamento cor–resposta semelhante",
+      mensagem: "Ambas as atividades utilizam mapeamentos entre cor e resposta.",
+    };
+  }
+  if (/(troca.*inibi|inibi.*troca)/.test(reason)) {
+    return {
+      titulo: "Sobreposição executiva",
+      mensagem: "Há alta sobreposição de controle inibitório e alternância de regras.",
+    };
+  }
+  if (normalizedShared.includes("memória operacional verbal")) {
+    return {
+      titulo: "Concentração de treino verbal",
+      mensagem: "Há concentração de treino verbal nesta sessão.",
+    };
+  }
+  if (normalizedShared.includes("planejamento")) {
+    return {
+      titulo: "Sobreposição em planejamento",
+      mensagem: "Os exercícios recrutam processos de planejamento semelhantes.",
+    };
+  }
+  if (normalizedShared.includes("busca e rastreamento visual")) {
+    return {
+      titulo: "Concentração de busca visual",
+      mensagem: "Os exercícios recrutam processos de busca e rastreamento visual semelhantes.",
+    };
+  }
+  if (normalizedShared.includes("visuoespacial")) {
+    return {
+      titulo: "Sobreposição visuoespacial",
+      mensagem: "Os exercícios recrutam processos visuoespaciais semelhantes.",
+    };
+  }
+  if (definitions.length >= 2 && definitions.every((definition) =>
+    /controle|flexibilidade|planejamento|organização|resolução|raciocínio|atualização/.test(
+      definition.mechanicalPrimary.toLocaleLowerCase("pt-BR"),
+    ))) {
+    return {
+      titulo: "Sobreposição executiva",
+      mensagem: "Os exercícios recrutam processos executivos semelhantes.",
+    };
+  }
+  if (shared.length > 0) {
+    return {
+      titulo: `Concentração em ${shared[0].toLocaleLowerCase("pt-BR")}`,
+      mensagem: `Os exercícios recrutam ${shared[0].toLocaleLowerCase("pt-BR")} em comum.`,
+    };
+  }
+  return {
+    titulo: "Processos cognitivos semelhantes",
+    mensagem: "Os exercícios recrutam processos cognitivos semelhantes.",
+  };
 }
 
 /** Configuração exaustiva: o `satisfies` faz um novo AlertCode falhar no typecheck até receber texto. */
@@ -261,8 +367,8 @@ export const ALERT_PRESENTATION_CONFIG = {
     sugestao: () => "Considere incluir outra atividade ou revisar a dose prescrita.",
   },
   SESSION_ABOVE_TARGET: {
-    titulo: "Duração acima da faixa esperada",
-    mensagem: (c) => `A estimativa de ${formatMinutesRange(c.durationRange)} fica acima da faixa esperada de ${expectedRange(c.targetMinutes)}.`,
+    titulo: "Duração acima da faixa prescrita",
+    mensagem: (c) => `A duração estimada de ${formatMinutesRange(c.durationRange)} fica acima da faixa prescrita de ${expectedRange(c.targetMinutes)}.`,
     sugestao: () => "Considere revisar a quantidade de atividades ou suas doses.",
   },
   SESSION_RANGE_PARTIAL: {
@@ -270,18 +376,18 @@ export const ALERT_PRESENTATION_CONFIG = {
     mensagem: (c) => `A faixa de ${formatMinutesRange(c.durationRange)} pode terminar dentro ou fora do esperado de ${expectedRange(c.targetMinutes)}.`,
   },
   SESSION_SAFE_MAX_EXCEEDED: {
-    titulo: "Duração com excesso importante",
-    mensagem: (c) => `O extremo superior da estimativa ultrapassa ${TARGET_DURATION_BOUNDS[c.targetMinutes].maximum} min.`,
-    sugestao: () => "Revise a composição e as doses antes de aplicar o plano.",
+    titulo: "Duração estimada acima da sessão prescrita",
+    mensagem: (c) => `A duração estimada ultrapassa ${TARGET_DURATION_BOUNDS[c.targetMinutes].maximum} min para a sessão prescrita.`,
+    sugestao: () => "Considere revisar a composição ou as doses do plano.",
   },
   LOAD_AT_CAP: {
-    titulo: "Carga basal na referência",
-    mensagem: (c) => `A carga basal ${c.baselineLoad} alcança a referência ${c.loadReference} para esta duração.`,
+    titulo: "Carga elevada para a duração",
+    mensagem: (c) => `A carga basal ${c.baselineLoad} alcança a referência ${c.loadReference} para a duração escolhida.`,
     sugestao: () => "Observe também fadiga, interferência e características do paciente.",
   },
   LOAD_OVER_CAP: {
-    titulo: "Carga basal acima da referência",
-    mensagem: (c) => `A carga basal ${c.baselineLoad} está acima da referência ${c.loadReference} para esta duração.`,
+    titulo: "Carga elevada para a duração",
+    mensagem: (c) => `A carga basal ${c.baselineLoad} está acima da referência ${c.loadReference} para a duração escolhida.`,
     sugestao: () => "Revise a distribuição da carga entre os exercícios.",
   },
   HIGH_FATIGUE_COUNT: {
@@ -296,7 +402,7 @@ export const ALERT_PRESENTATION_CONFIG = {
   },
   HIGH_FATIGUE_ADJACENT: {
     titulo: "Fadiga alta em sequência",
-    mensagem: (c) => `${namesText(c.exerciseNames)} aparecem em sequência e têm fadiga alta.`,
+    mensagem: () => "Há atividades de fadiga alta em sequência.",
     sugestao: () => "Considere intercalar uma atividade menos fatigante.",
   },
   HIGH_INTERFERENCE_ADJACENT: {
@@ -310,9 +416,9 @@ export const ALERT_PRESENTATION_CONFIG = {
     sugestao: () => "Considere intercalar uma atividade com outro canal de apresentação.",
   },
   COGNITIVE_CONCENTRATION: {
-    titulo: "Concentração em um processo cognitivo",
-    mensagem: (c) => `A composição tem pouca variedade: ${concentrationText(c.exercises)}.`,
-    sugestao: () => "Considere ampliar a variedade de processos trabalhados.",
+    titulo: "Concentração do treino",
+    mensagem: (c) => `A sessão concentra treino: ${concentrationText(c.exercises)}.`,
+    sugestao: () => OVERLAP_COMPLEMENT,
   },
   PLANNING_WINDOW_COUNT: {
     titulo: "Muitas janelas de planejamento",
@@ -320,7 +426,7 @@ export const ALERT_PRESENTATION_CONFIG = {
     sugestao: () => "Considere combinar com atividades por tempo ou por protocolo.",
   },
   PLANNING_WINDOW_ADJACENT: {
-    titulo: "Janelas de planejamento consecutivas",
+    titulo: "Planejamento consecutivo",
     mensagem: (c) => `${namesText(c.exerciseNames)} aparecem consecutivamente.`,
     sugestao: () => "Considere intercalar uma atividade por tempo ou por protocolo.",
   },
@@ -344,9 +450,9 @@ export const ALERT_PRESENTATION_CONFIG = {
     },
   },
   DECLARED_BAD_COMBINATION: {
-    titulo: "Combinação que merece revisão",
-    mensagem: (c) => `${namesText(c.exerciseNames)} têm uma combinação desfavorável${badCombinationReason(c) ? `: ${badCombinationReason(c)}` : "."}`,
-    sugestao: () => "Considere manter apenas uma das atividades ou separá-las conforme o raciocínio clínico.",
+    titulo: (c) => declaredObservation(c).titulo,
+    mensagem: (c) => declaredObservation(c).mensagem,
+    sugestao: () => OVERLAP_COMPLEMENT,
   },
 } satisfies Record<AlertCode, AlertCopy>;
 
@@ -358,7 +464,14 @@ export interface PresentedAlert {
   sugestao?: string;
   gravidadeVisual: VisualSeverity;
   exercicios: readonly string[];
+  ocorrencias?: readonly PresentedAlertOccurrence[];
   blocksSave: false;
+}
+
+export interface PresentedAlertOccurrence {
+  mensagem: string;
+  exercicios: readonly string[];
+  sugestao?: string;
 }
 
 export function presentAlert(alert: PrescriptionAlert, context: AlertContext): PresentedAlert {
@@ -372,7 +485,7 @@ export function presentAlert(alert: PrescriptionAlert, context: AlertContext): P
   const copyContext = { ...context, alert, exerciseNames };
   return {
     code: alert.code,
-    titulo: copy.titulo,
+    titulo: typeof copy.titulo === "function" ? copy.titulo(copyContext) : copy.titulo,
     mensagem: copy.mensagem(copyContext),
     ...(copy.sugestao ? { sugestao: copy.sugestao(copyContext) } : {}),
     gravidadeVisual: visualSeverity(alert),
@@ -383,11 +496,86 @@ export function presentAlert(alert: PrescriptionAlert, context: AlertContext): P
 
 export type AlertGroups = Readonly<Record<VisualSeverity, readonly PresentedAlert[]>>;
 
-export function groupAlerts(alerts: readonly PresentedAlert[]): AlertGroups {
+function occurrence(alert: PresentedAlert): PresentedAlertOccurrence {
   return {
-    revisao_recomendada: alerts.filter((alert) => alert.gravidadeVisual === "revisao_recomendada"),
-    atencao: alerts.filter((alert) => alert.gravidadeVisual === "atencao"),
-    informativo: alerts.filter((alert) => alert.gravidadeVisual === "informativo"),
+    mensagem: alert.mensagem,
+    exercicios: alert.exercicios,
+    ...(alert.sugestao ? { sugestao: alert.sugestao } : {}),
+  };
+}
+
+function aggregateSequence(alerts: readonly PresentedAlert[], code: AlertCode, label: string): PresentedAlert[] {
+  const matching = alerts.filter((alert) => alert.code === code);
+  if (matching.length === 0) return [...alerts];
+  const firstIndex = alerts.findIndex((alert) => alert.code === code);
+  const count = matching.length;
+  const grouped: PresentedAlert = {
+    ...matching[0],
+    mensagem: count === 1
+      ? `Há 1 sequência de atividades com ${label}.`
+      : `Há ${count} sequências de atividades com ${label}.`,
+    exercicios: [...new Set(matching.flatMap((alert) => alert.exercicios))],
+    ocorrencias: matching.map(occurrence),
+  };
+  return alerts.flatMap((alert, index) => index === firstIndex ? [grouped] : alert.code === code ? [] : [alert]);
+}
+
+function aggregatePreferredPositions(alerts: readonly PresentedAlert[]): PresentedAlert[] {
+  const code: AlertCode = "OUTSIDE_BEST_POSITION";
+  const matching = alerts.filter((alert) => alert.code === code);
+  if (matching.length === 0) return [...alerts];
+  const firstIndex = alerts.findIndex((alert) => alert.code === code);
+  const count = matching.length;
+  const grouped: PresentedAlert = {
+    ...matching[0],
+    titulo: "Posição preferencial",
+    mensagem: count === 1
+      ? "1 atividade está fora de sua posição preferencial."
+      : `${count} atividades estão fora de sua posição preferencial.`,
+    exercicios: [...new Set(matching.flatMap((alert) => alert.exercicios))],
+    ocorrencias: matching.map(occurrence),
+  };
+  return alerts.flatMap((alert, index) => index === firstIndex ? [grouped] : alert.code === code ? [] : [alert]);
+}
+
+function aggregateClinicalOverlap(alerts: readonly PresentedAlert[]): PresentedAlert[] {
+  const declared = alerts.filter((alert) => alert.code === "DECLARED_BAD_COMBINATION");
+  if (declared.length < 2) return [...alerts];
+  const buckets = new Map<string, PresentedAlert[]>();
+  for (const alert of declared) {
+    const key = `${alert.titulo}\u0000${alert.mensagem}`;
+    buckets.set(key, [...(buckets.get(key) ?? []), alert]);
+  }
+  const emitted = new Set<string>();
+  return alerts.flatMap((alert) => {
+    if (alert.code !== "DECLARED_BAD_COMBINATION") return [alert];
+    const key = `${alert.titulo}\u0000${alert.mensagem}`;
+    if (emitted.has(key)) return [];
+    emitted.add(key);
+    const matching = buckets.get(key) ?? [alert];
+    if (matching.length === 1) return [alert];
+    return [{
+      ...alert,
+      mensagem: `${alert.mensagem} Há ${matching.length} pares relacionados nesta observação.`,
+      exercicios: [...new Set(matching.flatMap((item) => item.exercicios))],
+      ocorrencias: matching.map(occurrence),
+    }];
+  });
+}
+
+export function aggregateAlerts(alerts: readonly PresentedAlert[]): readonly PresentedAlert[] {
+  const fatigue = aggregateSequence(alerts, "HIGH_FATIGUE_ADJACENT", "fadiga alta");
+  const interference = aggregateSequence(fatigue, "HIGH_INTERFERENCE_ADJACENT", "interferência alta");
+  const planning = aggregateSequence(interference, "PLANNING_WINDOW_ADJACENT", "planejamento consecutivo");
+  return aggregatePreferredPositions(aggregateClinicalOverlap(planning));
+}
+
+export function groupAlerts(alerts: readonly PresentedAlert[]): AlertGroups {
+  const aggregated = aggregateAlerts(alerts);
+  return {
+    revisao_plano: aggregated.filter((alert) => alert.gravidadeVisual === "revisao_plano"),
+    observacao_clinica: aggregated.filter((alert) => alert.gravidadeVisual === "observacao_clinica"),
+    informacao: aggregated.filter((alert) => alert.gravidadeVisual === "informacao"),
   };
 }
 
@@ -533,7 +721,9 @@ export interface PlanPresentation {
   loadHelper: string;
   fatigueText: string;
   interferenceText: string;
+  /** Ocorrências individuais, espelhando o núcleo para rastreabilidade. */
   alerts: readonly PresentedAlert[];
+  /** Cartões agrupados exclusivamente para apresentação. */
   alertGroups: AlertGroups;
   exercises: readonly PresentedExercise[];
   empty: boolean;

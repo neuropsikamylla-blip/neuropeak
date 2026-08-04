@@ -1,16 +1,6 @@
 # As 3 ultimas especificacoes dela (automatico; a mais nova por ultimo)
 # Na retomada: ler as 3, conectar com PROGRESSO.md e git, declarar e seguir.
 
-## (histórico) EM ANDAMENTO — DOSE POR PROTOCOLO: implementação dos passos 1 a 5 da ordem segura
-
-&gt; **Encerrado em 04/ago/2026:** os **8 passos** (1.1 a 1.4 e 2.1 a 2.4) foram entregues, provados e
-&gt; publicados em `0873db8` (v2.69.0) — registro no topo. Mantido como registro do fatiamento, das
-&gt; decisões de desenho e do roteamento usados. **Diferença entre plano e entrega:** o passo **2.1**
-&gt; previa **4 seções** na janela "Ajustar"; ela pediu **5**, com **"Configurações de nível"** própria.
-```</result>
-<usage><subagent_tokens>34608</subagent_tokens><tool_uses>8</tool_uses><duration_ms>112539</duration_ms></usage>
-</task-notification>
-
 ## 04/08/2026 09:45
 Vamos realizar uma etapa de refinamento clínico e de UX na área de prescrição do terapeuta.
 
@@ -551,4 +541,13 @@ Pare após a publicação e aguarde minha validação.
 <output-file>/private/tmp/claude-501/-Users-kamyllahonorio-neuropeak/3e6ecf11-e4e5-471f-bbf9-4595faa53598/tasks/b4vwqd82v.output</output-file>
 <status>completed</status>
 <summary>Background command "Disparar o lote A" completed (exit code 0)</summary>
+</task-notification>
+
+## 04/08/2026 13:01
+<task-notification>
+<task-id>bpxlkgzv4</task-id>
+<tool-use-id>toolu_01WYDK8h5PGtAWhJ1xkpmRyu</tool-use-id>
+<output-file>/private/tmp/claude-501/-Users-kamyllahonorio-neuropeak/3e6ecf11-e4e5-471f-bbf9-4595faa53598/tasks/bpxlkgzv4.output</output-file>
+<status>completed</status>
+<summary>Background command "Disparar o lote B" completed (exit code 0)</summary>
 </task-notification>

@@ -6,6 +6,9 @@ import {
   PRESENTATION_TEXTS,
   PROTOCOL_EXPOSURE_TEXTS,
   PROTOCOL_GUIDANCE_TEXTS,
+  REVISION_CODES,
+  CLINICAL_OBSERVATION_CODES,
+  INFORMATION_CODES,
   SESSION_STATE_LABELS,
   formatFatigueSummary,
   formatInterferenceSummary,
@@ -55,12 +58,30 @@ describe("apresentação consultiva da prescrição", () => {
     const informative = presentAlert(alert("SESSION_RANGE_PARTIAL", "informativa"), context);
     const attention = presentAlert(alert("SESSION_ABOVE_TARGET"), context);
     const revision = presentAlert(alert("LOAD_OVER_CAP"), context);
-    expect(visualSeverity(alert("OUTSIDE_BEST_POSITION", "informativa"))).toBe("informativo");
+    expect(visualSeverity(alert("OUTSIDE_BEST_POSITION", "informativa"))).toBe("informacao");
     expect(groupAlerts([informative, attention, revision])).toEqual({
-      revisao_recomendada: [revision],
-      atencao: [attention],
-      informativo: [informative],
+      revisao_plano: [attention, revision],
+      observacao_clinica: [],
+      informacao: [informative],
     });
+  });
+
+  it("distribui os 18 códigos entre os três níveis visuais", () => {
+    expect([...REVISION_CODES]).toEqual([
+      "SESSION_ABOVE_TARGET", "SESSION_SAFE_MAX_EXCEEDED", "LOAD_AT_CAP", "LOAD_OVER_CAP",
+      "HIGH_FATIGUE_COUNT", "HIGH_FATIGUE_ADJACENT", "HIGH_FATIGUE_POSITION",
+      "HIGH_INTERFERENCE_ADJACENT", "PLANNING_WINDOW_COUNT", "PLANNING_WINDOW_ADJACENT",
+    ]);
+    // As três pernas da regra de fadiga alta aprovada na Fase 2 — quantidade, consecutividade e
+    // fechamento — ficam juntas na revisão do plano por serem condições objetivas.
+    expect([...CLINICAL_OBSERVATION_CODES]).toEqual([
+      "COGNITIVE_CONCENTRATION", "DECLARED_BAD_COMBINATION",
+    ]);
+    expect([...INFORMATION_CODES]).toEqual([
+      "SESSION_BELOW_TARGET", "SESSION_RANGE_PARTIAL", "OUTSIDE_BEST_POSITION",
+      "OPEN_POSITION_NOT_ELIGIBLE", "CLOSE_POSITION_NOT_ELIGIBLE", "AUDITORY_ONLY_ADJACENT",
+    ]);
+    expect(new Set([...REVISION_CODES, ...CLINICAL_OBSERVATION_CODES, ...INFORMATION_CODES]).size).toBe(18);
   });
 
   it("rotula os quatro modelos sem expor o código", () => {
