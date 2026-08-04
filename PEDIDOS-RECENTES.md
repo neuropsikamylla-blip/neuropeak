@@ -1,12 +1,6 @@
 # As 3 ultimas especificacoes dela (automatico; a mais nova por ultimo)
 # Na retomada: ler as 3, conectar com PROGRESSO.md e git, declarar e seguir.
 
-## COMO PROVEI
-
-- `git status --porcelain` → exit 0, saída ` M PROGRESSO.md` — nenhum outro arquivo tocado, nada criado nem removido.
-- `git diff --stat` → `1 file changed, 108 insertions(+)` — **zero deleções**, ou seja, nenhum conteúdo anterior do arquivo foi perdido ou reescrito.
-- Leitura das linhas 1–10 pós-edição confirma o bloco novo começando na linha 6, logo após o cabeçalho, e a leitura prévia do arquivo confirma que o bloco `v2.69.0` segue intacto imediatamente abaixo.
-
 ## O QUE NÃO FIZ
 
 - **Não commitei e não dei push** — a árvore está suja de propósito, com a mudança pronta para o VP commitar.
@@ -496,3 +490,10 @@ Não iniciar tutoriais.
 Não iniciar nova fase.
 
 Pare após publicar e aguarde minha validação.
+
+## 04/08/2026 13:33
+Perfeito. Pode seguir conforme planejado.
+
+Não altere a arquitetura clínica nem as regras de prescrição. Conclua o Lote A, rode as provas e depois siga para o Lote B.
+
+Após publicar os dois lotes juntos, pare para minha validação visual.
