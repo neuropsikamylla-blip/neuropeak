@@ -4,7 +4,7 @@ import { useState, useEffect, useMemo } from "react";
 import { useRouter, useParams } from "next/navigation";
 import { Button } from "@/components/ui/button";
 import { useToast } from "@/components/ui/use-toast";
-import { ArrowLeft, Loader2, Save, Eye } from "lucide-react";
+import { ArrowLeft, Loader2, Save, Eye, ChevronLeft, ChevronRight } from "lucide-react";
 import Link from "next/link";
 import { EXERCISE_DEFINITIONS, DOMAIN_LABELS, DOMAIN_COLORS, DOMAIN_DESCRIPTIONS, type Domain } from "@/types";
 import { DOMAIN_SUBDOMAINS, DOMAIN_EXERCISES, DOMAIN_COUNTS, EXERCISE_DOMAIN } from "@/lib/domain-taxonomy";
@@ -20,6 +20,7 @@ import type { SpanSettings } from "@/components/exercises/memory/SpanNumerico";
 import { presentCatalogExercise, presentLegacyPlan } from "@/lib/prescription/presentation";
 import { convertLegacyDose } from "@/lib/prescription/dose-settings";
 import type { ProtocolName } from "@/lib/prescription/types";
+import { usePanelPreference } from "@/components/plano/usePanelPreference";
 
 const exDef = (id: string) => EXERCISE_DEFINITIONS[id as keyof typeof EXERCISE_DEFINITIONS];
 
@@ -45,6 +46,7 @@ export default function PlanoPage() {
   const [activeSubdomain, setActiveSubdomain] = useState<string | null>(null);
   const [query, setQuery] = useState("");
   const [difficulty, setDifficulty] = useState<DifficultyFilter>("todas");
+  const { panels, togglePanel } = usePanelPreference();
 
   useEffect(() => {
     fetch(`/api/patients/${patientId}?config=true`)
@@ -226,23 +228,42 @@ export default function PlanoPage() {
       {/* Abas de domínio */}
       <DomainTabs active={activeDomain} onSelect={selectDomain} counts={DOMAIN_COUNTS} />
 
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-5 items-start">
+      <div className={`grid gap-5 items-start transition-[grid-template-columns] duration-200 ease-out ${
+        panels.libraryOpen && panels.planOpen
+          ? "grid-cols-1 lg:grid-cols-2"
+          : panels.libraryOpen
+            ? "grid-cols-[minmax(0,1fr)_auto]"
+            : "grid-cols-[auto_minmax(0,1fr)]"
+      }`}>
         {/* Área central */}
-        <div className="space-y-4 min-w-0">
+        <div id="exercise-library-panel" className={panels.libraryOpen ? "space-y-4 min-w-0" : "hidden"}>
           {/* Cabeçalho do domínio */}
-          <div className="flex items-start gap-3">
-            <span className="flex items-center justify-center w-12 h-12 rounded-xl shrink-0" style={{ backgroundColor: `${color}14` }}>
-              <Icon className="w-6 h-6" style={{ color }} strokeWidth={1.9} />
-            </span>
-            <div className="min-w-0">
-              <div className="flex items-center gap-2 flex-wrap">
-                <h2 className="text-lg font-bold" style={{ color }}>{DOMAIN_LABELS[activeDomain]}</h2>
-                <span className="px-2 py-0.5 rounded-full text-xs font-semibold" style={{ color, backgroundColor: `${color}14` }}>
-                  {DOMAIN_COUNTS[activeDomain]} exercícios
-                </span>
+          <div className="flex items-start justify-between gap-3">
+            <div className="flex items-start gap-3 min-w-0">
+              <span className="flex items-center justify-center w-12 h-12 rounded-xl shrink-0" style={{ backgroundColor: `${color}14` }}>
+                <Icon className="w-6 h-6" style={{ color }} strokeWidth={1.9} />
+              </span>
+              <div className="min-w-0">
+                <div className="flex items-center gap-2 flex-wrap">
+                  <h2 className="text-lg font-bold" style={{ color }}>{DOMAIN_LABELS[activeDomain]}</h2>
+                  <span className="px-2 py-0.5 rounded-full text-xs font-semibold" style={{ color, backgroundColor: `${color}14` }}>
+                    {DOMAIN_COUNTS[activeDomain]} exercícios
+                  </span>
+                </div>
+                <p className="text-sm text-slate-400">{DOMAIN_DESCRIPTIONS[activeDomain]}</p>
               </div>
-              <p className="text-sm text-slate-400">{DOMAIN_DESCRIPTIONS[activeDomain]}</p>
             </div>
+            <button
+              type="button"
+              onClick={() => togglePanel("library")}
+              aria-expanded={panels.libraryOpen}
+              aria-controls="exercise-library-panel"
+              aria-label="Recolher exercícios"
+              title="Recolher exercícios"
+              className="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg border border-white/15 text-slate-400 transition-colors hover:bg-white/10 hover:text-slate-200 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-400"
+            >
+              <ChevronLeft className="h-4 w-4" />
+            </button>
           </div>
 
           {/* Subdomínios + busca */}
@@ -257,8 +278,22 @@ export default function PlanoPage() {
           <ExerciseTable exercises={visibleExercises} addedIds={addedIds} onToggle={toggleExercise} />
         </div>
 
+        {!panels.libraryOpen && (
+          <button
+            type="button"
+            onClick={() => togglePanel("library")}
+            aria-expanded={panels.libraryOpen}
+            aria-controls="exercise-library-panel"
+            aria-label="Expandir exercícios"
+            className="self-start rounded-lg border border-white/15 bg-[#0D2547] px-2 py-3 text-xs font-semibold text-slate-300 transition-colors hover:bg-white/10 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-400 [writing-mode:vertical-rl]"
+          >
+            <ChevronRight className="mb-1 h-4 w-4" />
+            Exercícios
+          </button>
+        )}
+
         {/* Painel direito */}
-        <div className="lg:sticky lg:top-6">
+        <div id="plan-builder-panel" className={panels.planOpen ? "lg:sticky lg:top-6" : "hidden"}>
           <PlanBuilderSidebar
             selectedExercises={selectedExercises}
             exerciseLevels={exerciseLevels}
@@ -277,8 +312,35 @@ export default function PlanoPage() {
             onVisualize={() => router.push(`/pacientes/${patientId}`)}
             saving={loading}
             presentation={planPresentation}
+            headerAction={(
+              <button
+                type="button"
+                onClick={() => togglePanel("plan")}
+                aria-expanded={panels.planOpen}
+                aria-controls="plan-builder-panel"
+                aria-label="Recolher plano"
+                title="Recolher plano"
+                className="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg border border-white/15 text-slate-400 transition-colors hover:bg-white/10 hover:text-slate-200 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-400"
+              >
+                <ChevronRight className="h-4 w-4" />
+              </button>
+            )}
           />
         </div>
+
+        {!panels.planOpen && (
+          <button
+            type="button"
+            onClick={() => togglePanel("plan")}
+            aria-expanded={panels.planOpen}
+            aria-controls="plan-builder-panel"
+            aria-label="Expandir plano"
+            className="self-start rounded-lg border border-white/15 bg-[#0D2547] px-2 py-3 text-xs font-semibold text-slate-300 transition-colors hover:bg-white/10 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-400 [writing-mode:vertical-rl]"
+          >
+            Plano
+            <ChevronLeft className="mt-1 h-4 w-4" />
+          </button>
+        )}
       </div>
     </div>
   );

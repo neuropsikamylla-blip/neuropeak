@@ -1,6 +1,5 @@
 "use client";
 
-import { useState } from "react";
 import { X, SlidersHorizontal, ChevronUp, ChevronDown } from "lucide-react";
 import { DEFAULT_SPAN_SETTINGS, type SpanSettings } from "@/components/exercises/memory/SpanNumerico";
 import { EXERCISE_SUBDOMAIN, EXERCISE_SUBDOMAIN_ID } from "@/lib/domain-taxonomy";
@@ -34,14 +33,15 @@ interface ExerciseCardProps {
   onMove: (id: string, dir: -1 | 1) => void;
   isFirst: boolean;
   isLast: boolean;
+  open: boolean;
+  onToggleOpen: (id: string) => void;
 }
 
 /** Item do plano — card largo com reordenar, ajustes e remover. */
 export function ExerciseCard({
   id, name, description, icon, prescription, isSpan, spanCfg, onSpanCfg, cfg,
-  onSetting, onConvertLegacy, onRemove, onMove, isFirst, isLast,
+  onSetting, onConvertLegacy, onRemove, onMove, isFirst, isLast, open, onToggleOpen,
 }: ExerciseCardProps) {
-  const [open, setOpen] = useState(false);
   const c: SpanSettings = { ...DEFAULT_SPAN_SETTINGS, ...(spanCfg ?? {}) };
   const isOrdemHistoria = id === "ordem-historia";
   const isFocus = id === "focus-agents" || id === "focus-agents-auditivo";
@@ -114,7 +114,7 @@ export function ExerciseCard({
         )}
         <button
           type="button"
-          onClick={() => setOpen((current) => !current)}
+          onClick={() => onToggleOpen(id)}
           aria-label="Ajustar"
           className={`flex items-center gap-1.5 px-2.5 h-8 rounded-lg border text-xs font-medium transition-colors ${
             open ? "border-blue-400/50 text-blue-300 bg-blue-500/15" : "border-white/15 text-slate-400 hover:text-slate-200 hover:bg-white/10"

@@ -1,5 +1,6 @@
 "use client";
 
+import { useState, type ReactNode } from "react";
 import { Loader2, Save, Eye, ClipboardList } from "lucide-react";
 import { EXERCISE_DEFINITIONS, DOMAIN_COLORS, DOMAIN_LABELS } from "@/types";
 import { ALL_DOMAINS, EXERCISE_DOMAIN } from "@/lib/domain-taxonomy";
@@ -8,6 +9,7 @@ import type { PlanPresentation } from "@/lib/prescription/presentation";
 import type { ProtocolName } from "@/lib/prescription/types";
 import { ExerciseCard } from "./ExerciseCard";
 import { PrescriptionSummary } from "./prescription/PrescriptionSummary";
+import { toggleOpenExercise } from "@/lib/panel-preference";
 
 const SPAN_IDS = ["span-numerico", "span-numerico-inverso"];
 const exDef = (id: string) => EXERCISE_DEFINITIONS[id as keyof typeof EXERCISE_DEFINITIONS];
@@ -32,6 +34,7 @@ interface PlanBuilderSidebarProps {
   onVisualize: () => void;
   saving: boolean;
   presentation: PlanPresentation;
+  headerAction?: ReactNode;
 }
 
 /** Coluna direita — "Plano em construção", exercícios agrupados por domínio. */
@@ -39,8 +42,9 @@ export function PlanBuilderSidebar(props: PlanBuilderSidebarProps) {
   const {
     selectedExercises, exerciseLevels, exerciseSettings, onLevel, onSpanCfg, onSetting, onConvertLegacy, onRemove, onMove,
     sessionDuration, frequency, onSessionDuration, onFrequency, onSave, onVisualize, saving,
-    presentation,
+    presentation, headerAction,
   } = props;
+  const [openExerciseId, setOpenExerciseId] = useState<string | null>(null);
 
   const items = selectedExercises.map(exDef).filter(Boolean);
 
@@ -51,9 +55,12 @@ export function PlanBuilderSidebar(props: PlanBuilderSidebarProps) {
 
   return (
     <aside className="rounded-[20px] border border-white/10 bg-[#0D2547] p-5 flex flex-col gap-4 shadow-[0_1px_3px_rgba(0,0,0,0.2)]">
-      <div className="flex items-center gap-2">
-        <ClipboardList className="w-4 h-4 text-slate-400" />
-        <h3 className="text-base font-bold text-slate-100">Plano em construção</h3>
+      <div className="flex items-center justify-between gap-2">
+        <div className="flex items-center gap-2 min-w-0">
+          <ClipboardList className="w-4 h-4 text-slate-400 shrink-0" />
+          <h3 className="text-base font-bold text-slate-100">Plano em construção</h3>
+        </div>
+        {headerAction}
       </div>
 
       {/* Configurações de sessão */}
@@ -107,10 +114,15 @@ export function PlanBuilderSidebar(props: PlanBuilderSidebarProps) {
                   cfg={exerciseSettings[ex.id]}
                   onSetting={onSetting}
                   onConvertLegacy={onConvertLegacy}
-                  onRemove={onRemove}
                   onMove={onMove}
                   isFirst={i === 0}
                   isLast={i === group.items.length - 1}
+                  open={openExerciseId === ex.id}
+                  onToggleOpen={(id) => setOpenExerciseId((current) => toggleOpenExercise(current, id))}
+                  onRemove={(id) => {
+                    if (openExerciseId === id) setOpenExerciseId(null);
+                    onRemove(id);
+                  }}
                 />
               ))}
             </div>
