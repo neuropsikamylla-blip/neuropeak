@@ -1,553 +1,126 @@
 # As 3 ultimas especificacoes dela (automatico; a mais nova por ultimo)
 # Na retomada: ler as 3, conectar com PROGRESSO.md e git, declarar e seguir.
 
-## 04/08/2026 09:45
-Vamos realizar uma etapa de refinamento clínico e de UX na área de prescrição do terapeuta.
+## 🩺 REFINO CLÍNICO E DE UX DA PRESCRIÇÃO ENTREGUE E PUBLICADO (04/ago/2026) — `8b833dc`, v2.70.0
 
-A versão atual da dose por protocolo está aprovada e deve permanecer funcional.
+**Commits:** lote A = `0f9bea5` · lote B = `6f1364c` · release = `8b833dc`.
 
-Esta etapa possui três objetivos:
+### 🧭 O princípio que ela fixou — governa tudo o que está abaixo
 
-1. retirar o ajuste rotineiro de nível da prescrição;
-2. melhorar o espaçamento e a hierarquia visual da janela “Ajustar”;
-3. corrigir a filosofia e a apresentação dos alertas clínicos.
+O NeuroPeak é plataforma de **TREINO** cognitivo, **não instrumento de avaliação psicológica**.
+Princípios de **contaminação de teste NÃO valem como regra universal de treino**. Dois exercícios podem
+trabalhar **o mesmo domínio intencionalmente**; uma sessão pode ser **ampla ou focal**; **concentração num
+domínio é decisão clínica legítima**; **sobreposição não é automaticamente combinação ruim**.
+**O sistema informa — não corrige nem reprova a escolha do terapeuta.**
 
-Não iniciar tutoriais, modo autoguiado ou qualquer outra fase.
+### LOTE A — o nível saiu da prescrição rotineira (`0f9bea5`)
 
-==================================================
-PRINCÍPIOS GERAIS
-==================================================
+Codex **`gpt-5.6-terra`, esforço high, lab `refinoA`**.
 
-O NeuroPeak é uma plataforma de TREINO COGNITIVO.
+- **removidos da janela "Ajustar"**: a seção **"Configurações de nível"**, o **slider** e o texto
+  **"revisão futura"**; o **`startLevel` 1–5 do Agentes Focus** saiu **pela mesma regra**;
+- a janela ficou com **quatro seções**: **Dose do treino · Modalidade e variantes · Assistência ·
+  Preferências de execução**;
+- **salvar o plano deixou de enviar `exerciseLevels` à API**;
+- **cartões de protocolo com mais respiro**; o **aviso do Breve** trocou a **paleta âmbar de advertência**
+  por **informação discreta**, mantendo o texto clínico aprovado;
+- **novo texto da assistência:** *"Repetir o áudio reapresenta o conteúdo auditivo. Não altera a dose
+  prescrita nem a estimativa atual."*
 
-Não é instrumento de avaliação psicológica.
+### ⚠️ Risco antigo que essa mudança corrigiu — registrar como lição
 
-Não utilizar princípios de contaminação de teste como se fossem regras universais de treino.
+O código anterior **carregava `exerciseLevels` de `patient.exerciseConfigs`** (a **dificuldade real do
+banco**) e **reenviava a cada salvamento** com fallback **`?? 1`**. Se o paciente **treinasse e subisse de
+nível depois de a tela ser aberta**, **salvar o plano o rebaixava** ao valor carregado na abertura.
+A API **só grava quando o campo vem preenchido** (`if (exerciseLevels &amp;&amp; Object.keys(...).length &gt; 0)`),
+então **parar de enviar significa não tocar em `currentDifficulty`**. **Exercícios novos não perdem nada:**
+o `ExerciseConfig` **nasce na primeira sessão**, pelo **upsert de `/api/sessions`**. **Nenhum dado de nível
+foi apagado, migrado ou zerado**, e **há teste provando**.
 
-Em treino cognitivo:
+### LOTE B — taxonomia, linguagem e agrupamento dos alertas (`6f1364c`)
 
-- dois exercícios podem trabalhar o mesmo domínio intencionalmente;
-- uma sessão pode ser ampla ou focal;
-- concentração em memória operacional, atenção, planejamento ou outra função pode ser uma decisão clínica legítima;
-- sobreposição cognitiva não significa automaticamente combinação ruim;
-- o sistema deve informar o terapeuta, não corrigir ou reprovar sua escolha.
+Codex **`gpt-5.6-sol`, esforço high, lab `refinoB`**.
 
-Todos os alertas continuam consultivos.
+- **três níveis visuais** no lugar do bloco único: **Revisão do plano · Observações clínicas · Informações**;
+- **`DECLARED_BAD_COMBINATION` saiu inteiro da revisão** e virou **observação clínica neutra**.
+  **A medição que sustenta:** o disparo era **por presença no plano, não por adjacência**; dos **41 pares
+  únicos** declarados no catálogo, só **6** têm **fadiga alta bilateral** e **5** **interferência alta
+  bilateral**, e esses casos **já são cobertos** por `HIGH_FATIGUE_ADJACENT`, `HIGH_INTERFERENCE_ADJACENT`
+  e `HIGH_FATIGUE_COUNT`, **que continuam intactos**. **Nenhum sinal objetivo se perde.**
+- as **`reason` do catálogo contêm linguagem proibida** ("contaminação", "reduz a comparabilidade",
+  "reduz a validade"); **o catálogo NÃO foi tocado** — a **camada de apresentação** passou a **traduzir ou
+  suprimir** essas frases, e **o texto cru não chega mais à tela**;
+- **títulos informativos derivados do perfil cognitivo real do par**, no lugar de
+  *"Combinação que merece revisão"* repetido;
+- **agrupamento por tema**, com **as ocorrências individuais preservadas no núcleo**.
 
-Nunca bloquear salvamento.
+### Conserto pós-colheita — Claude Opus 5 xhigh (exceção 1 da regra 8)
 
-==================================================
-PARTE 1 — CONFIGURAÇÕES DE NÍVEL
-==================================================
+`HIGH_FATIGUE_POSITION` **tinha ficado como observação clínica**; foi **devolvido à revisão do plano**,
+porque **fadiga alta no fechamento é a terceira perna da regra de fadiga aprovada na Fase 2**, junto com
+**quantidade** e **consecutividade**. **A spec do VP tinha esquecido de listá-la.**
 
-Hoje o botão “Ajustar” apresenta:
+### 📊 Medição antes e depois — plano com os 34 exercícios, protocolo Padrão, alvo de 40 min
 
-CONFIGURAÇÕES DE NÍVEL
+- **ANTES: 66 cartões** — **50** em "revisão recomendada", **3** em atenção, **13** informativos.
+  Por código: **41** `DECLARED_BAD_COMBINATION` · **13** `OUTSIDE_BEST_POSITION` · **4**
+  `HIGH_FATIGUE_ADJACENT` · **2** `HIGH_INTERFERENCE_ADJACENT` · **2** `PLANNING_WINDOW_ADJACENT` ·
+  **1 cada** de `LOAD_OVER_CAP`, `SESSION_SAFE_MAX_EXCEEDED`, `HIGH_FATIGUE_COUNT` e
+  `PLANNING_WINDOW_COUNT`.
+- **DEPOIS: 21 cartões** — **7** em Revisão do plano · **13** em Observações clínicas · **1** em
+  Informações. **As 66 ocorrências continuam preservadas e rastreáveis**; **o núcleo segue devolvendo 66**.
+  As **13 posições preferenciais colapsaram num único cartão expansível**.
 
-Configuração de nível — revisão futura
+### Verificações de linguagem (todos os textos visíveis do plano com 34 exercícios)
 
-Nível inicial
-3 / 10
+**Ausentes:** "combinação desfavorável" · "manter apenas uma" · "contaminação" · "comparabilidade" ·
+"reduz a validade" · "Combinação que merece revisão". **Nenhum código técnico**; **nada bloqueia salvar**;
+**`canSave` true**.
 
-Essa configuração não deve permanecer como parte rotineira da prescrição.
+### 🎯 Prova clínica central
 
-O nível pertence ao sistema adaptativo e ao histórico de desempenho do paciente, não à dose prescrita pelo terapeuta.
+Plano **focal em memória operacional** com **Span Numérico Auditivo Direto, Span Inverso, Letras em
+Sequência, Matriz Espacial e Matriz Espacial Inversa** — **exatamente os pares que ela mandou não alertar** —
+gera **ZERO revisões** e **três observações neutras**.
 
-Para o fluxo habitual:
+### Provas (repositório real)
 
-- o paciente inicia no nível inicial definido pela mecânica;
-- o exercício progride automaticamente conforme o desempenho;
-- o paciente retoma do ponto alcançado;
-- o terapeuta acompanha a evolução;
-- o terapeuta não precisa escolher um nível toda vez que prescreve ou edita o plano.
+`npx tsc --noEmit` exit 0 · `npx vitest run` **395/395 em 31 arquivos** (eram **375** antes do lote A →
+**+20**) · `npm run build` exit 0 · **botão de salvar inalterado**.
 
-Portanto:
+### ✅ Publicação confirmada por evidência
 
-1. Remover da janela “Ajustar”:
-   - seção “Configurações de nível”;
-   - slider de nível inicial;
-   - texto “revisão futura”.
+`/api/version` → `{"appVersion":"2.70.0","buildId":"dpl_61ZvV2hDyMy5qPczkTXX5zwQu8JS"}` · `/api/health` →
+`{"ok":true}` · `git merge-base` confirmou que **`0f9bea5` e `6f1364c` estão contidos em `8b833dc`**.
 
-2. Não apagar, migrar ou alterar:
-   - nível já salvo;
-   - progresso existente;
-   - histórico;
-   - regra adaptativa;
-   - startLevel legado;
-   - nível atual do paciente.
+### 📌 Funcionalidade futura separada — decidida por ela, **NÃO implementada**
 
-3. Apenas deixar de expor esse controle no fluxo rotineiro de prescrição.
+**"REDEFINIR NÍVEL"** — deverá ficar na **área de evolução/histórico do paciente**, **nunca no botão
+"Ajustar"**; usada **só em casos específicos**; **mostra nível atual e novo**; **exige confirmação**;
+**preserva histórico**; **nunca rebaixa ou reinicia silenciosamente**.
 
-4. Novos planos não devem redefinir o nível ao serem salvos.
+### ⏸️ PRÓXIMO PASSO — PARADO aguardando a validação visual dela; **NÃO iniciar tutoriais nem nova fase**
 
-5. Planos antigos com `level` ou `startLevel` devem manter esses campos intactos.
-
-6. Não implementar ainda uma nova tela de redefinição.
-
-Registrar como futura funcionalidade separada:
-
-REDEFINIR NÍVEL
-
-Essa ação futura deverá:
-
-- ficar na área de evolução/histórico do paciente, não no botão “Ajustar”;
-- ser utilizada apenas em casos específicos;
-- mostrar o nível atual e o novo;
-- exigir confirmação;
-- preservar o histórico;
-- nunca rebaixar ou reiniciar silenciosamente.
-
-Nesta etapa, apenas remover o controle da prescrição e proteger os dados existentes.
-
-==================================================
-PARTE 2 — JANELA “AJUSTAR”
-==================================================
-
-A estrutura conceitual está aprovada:
-
-1. Dose do treino
-2. Modalidade e variantes
-3. Assistência
-4. Preferências de execução
-
-A seção de nível será removida.
-
-O painel está visualmente comprimido. Refinar sem redesenhar completamente.
-
-Objetivos:
-
-- aumentar o respiro vertical;
-- melhorar a leitura;
-- manter o painel clínico e discreto;
-- evitar textos colados;
-- não aumentar excessivamente a altura total.
-
-Nos cartões Breve, Padrão e Estendido:
-
-- manter nome;
-- manter unidade real;
-- manter estimativa;
-- manter descrição;
-- manter destaque do selecionado.
-
-Ajustar os espaçamentos aproximadamente assim:
-
-- mais espaço entre nome e quantidade;
-- mais espaço entre quantidade e descrição;
-- mais espaço antes das observações de exposição;
-- mais espaço antes do aviso do Breve;
-- padding interno um pouco maior;
-- separação mais clara entre os três protocolos.
-
-Não alterar:
-
-- valores de unidades;
-- durações;
-- protocolos;
-- seleção padrão;
-- cálculo da sessão;
-- dose legada.
-
-Aviso do Breve:
-
-Manter o conteúdo clínico aprovado, mas reduzir o peso visual.
-
-Texto:
-
-“Treino válido em dose reduzida. O desempenho desta sessão pode não ser suficiente, isoladamente, para atualizar o nível adaptativo.”
-
-Apresentar como informação clínica discreta, não como alerta de erro:
-
-- fundo neutro ou azul/cinza discreto;
-- menor contraste que um alerta;
-- opcionalmente ícone informativo;
-- não usar aparência de advertência grave.
-
-Manter as unidades reais do catálogo:
-
-- séries;
-- rodadas;
-- tentativas;
-- desafios completos;
-- demais unidades específicas.
-
-Não usar “blocos” genericamente.
-
-Modalidade:
-
-Manter:
-
-- Visual;
-- Visual e áudio;
-- Somente áudio.
-
-Manter o recálculo de duração quando houver multiplicador definido.
-
-Assistência:
-
-Para repetição de áudio, substituir o texto atual por algo mais claro:
-
-“Repetir o áudio reapresenta o conteúdo auditivo. Não altera a dose prescrita nem a estimativa atual.”
-
-Não chamar automaticamente de acessibilidade quando o áudio repetido for o próprio conteúdo que deveria ser memorizado.
-
-==================================================
-PARTE 3 — ANÁLISE E ALERTAS DO PLANO
-==================================================
-
-O problema atual é conceitual:
-
-`DECLARED_BAD_COMBINATION` está tratando sobreposição de processos como combinação desfavorável.
-
-Isso é inadequado para treino cognitivo.
-
-A seção atual “REVISÃO RECOMENDADA” mistura:
-
-- problemas objetivos da sessão;
-- fadiga;
-- duração;
-- carga;
-- semelhança de exercícios;
-- concentração intencional de um domínio;
-- posição preferencial;
-- simples informações.
-
-Reorganizar em três níveis visuais:
-
-1. REVISÃO DO PLANO
-2. OBSERVAÇÕES CLÍNICAS
-3. INFORMAÇÕES
-
-Não usar “Revisão recomendada” como bloco único para tudo.
-
-==================================================
-3.1 — REVISÃO DO PLANO
-==================================================
-
-Manter nesta categoria apenas condições objetivas que realmente justificam revisar a composição:
-
-- duração acima da faixa;
-- excesso importante;
-- carga basal acima da referência heurística;
-- quantidade elevada de atividades de fadiga alta;
-- fadiga alta consecutiva;
-- interferência alta consecutiva;
-- excesso de janelas de planejamento;
-- janelas de planejamento consecutivas;
-- outras incompatibilidades objetivas já aprovadas na arquitetura.
-
-Essas mensagens devem continuar consultivas.
-
-Exemplos de linguagem:
-
-“Carga elevada para a duração escolhida.”
-
-“Duração estimada acima da sessão prescrita.”
-
-“Há atividades de fadiga alta em sequência.”
-
-Nunca:
-
-- “plano inválido”;
-- “combinação errada”;
-- “não pode”;
-- bloqueio de salvar.
-
-==================================================
-3.2 — OBSERVAÇÕES CLÍNICAS
-==================================================
-
-Semelhança de processo, modalidade ou estratégia deve ir para esta categoria, quando realmente for útil.
-
-Não classificar como erro.
-
-Não usar:
-
-- “combinação desfavorável”;
-- “contaminação”;
-- “reduz a comparabilidade”;
-- “considere manter apenas uma”;
-- “separe obrigatoriamente”.
-
-Usar linguagem neutra, por exemplo:
-
-“Os exercícios recrutam processos cognitivos semelhantes.”
-
-“Há concentração de treino auditivo-verbal nesta sessão.”
-
-“Ambas as atividades utilizam mapeamentos entre cor e resposta.”
-
-“Há alta sobreposição de controle inibitório e alternância de regras.”
-
-Complemento padrão:
-
-“Essa concentração pode ser intencional em um plano focal. Caso o objetivo seja maior variedade, considere intercalar outro tipo de atividade.”
-
-Não recomendar automaticamente retirar um exercício.
-
-==================================================
-3.3 — COMBINAÇÕES QUE NÃO DEVEM SER DESFAVORÁVEIS
-==================================================
-
-Remover como combinação desfavorável, no mínimo:
-
-- Span Numérico Auditivo Direto + Span Numérico Auditivo Inverso;
-- Letras em Sequência + Span Numérico Auditivo Direto;
-- N-Back + Span Numérico Auditivo Inverso;
-- Matriz Espacial + Matriz Espacial Inversa;
-- Matriz Espacial Inversa + Matriz com Rotações;
-- Cubos + Matriz Espacial;
-- Cubos + Matriz com Rotações;
-- Jogo da Memória + Matriz Espacial;
-- Cubos + Jogo da Memória;
-- Jogo da Memória + Sequência de Itens;
-- Letras em Sequência + Lista com Distração;
-- Lista com Distração + N-Back;
-- Lista com Distração + Restaurante;
-- Supermercado + Restaurante;
-- Supermercado + Sequência de Itens;
-- Supermercado + Informação em Foco;
-- Compra Multifuncional + Informação em Foco.
-
-Esses pares podem representar concentração legítima do domínio treinado.
-
-Caso seja útil descrevê-los, usar somente “Observações clínicas”, sem recomendação de exclusão.
-
-==================================================
-3.4 — OUTRAS DECLARED_BAD_COMBINATION
-==================================================
-
-Auditar todas as regras atuais de `DECLARED_BAD_COMBINATION`.
-
-Aplicar esta regra:
-
-Similaridade ou sobreposição, isoladamente, NÃO pode gerar “Revisão do plano”.
-
-Se a justificativa for apenas:
-
-- dois exercícios treinam a mesma função;
-- usam estímulos semelhantes;
-- exigem busca visual;
-- exigem memória verbal;
-- exigem planejamento;
-- trabalham controle inibitório;
-- usam conteúdo de produtos;
-- usam regras diretas/inversas;
-- recrutam processos espaciais semelhantes;
-
-então:
-
-- remover como alerta de revisão;
-- ou converter em observação clínica neutra;
-- nunca sugerir manter apenas uma atividade.
-
-Só manter como revisão quando houver uma justificativa objetiva e clinicamente defensável de:
-
-- fadiga;
-- interferência alta;
-- impossibilidade temporal;
-- sequência operacional problemática;
-- risco real de execução;
-- incompatibilidade documentada que não seja mera sobreposição.
-
-Não inventar novos riscos clínicos.
-
-==================================================
-3.5 — POSIÇÃO PREFERENCIAL
-==================================================
-
-“Atividade fora da posição preferencial” deve permanecer apenas como informação discreta.
-
-Não repetir dezenas de cartões extensos.
-
-Agrupar visualmente, por exemplo:
-
-“13 atividades estão fora de sua posição preferencial.”
-
-Permitir expandir para ver:
-
-- exercício;
-- posição recomendada;
-- justificativa.
-
-Não apresentar como erro.
-
-Não bloquear.
-
-==================================================
-3.6 — AGRUPAMENTO E REDUÇÃO DO PAREDÃO
-==================================================
-
-O núcleo pode continuar retornando ocorrências individuais para rastreabilidade.
-
-A camada de apresentação deve agrupar ocorrências semelhantes.
-
-Exemplos:
-
-FADIGA ALTA EM SEQUÊNCIA
-
-Em vez de vários cartões repetidos:
-
-“Há 4 sequências de atividades com fadiga alta.”
-
-Ao expandir, listar os pares.
-
-SOBREPOSIÇÃO EXECUTIVA
-
-Agrupar pares relacionados em uma única observação, quando possível.
-
-POSIÇÃO PREFERENCIAL
-
-Agrupar todas as ocorrências num único bloco expansível.
-
-Apresentação inicial:
-
-- mostrar no máximo os alertas mais relevantes;
-- usar “Ver todas as observações” quando houver muitas;
-- evitar uma coluna interminável;
-- não apagar os dados individuais do núcleo.
-
-==================================================
-3.7 — TÍTULOS
-==================================================
-
-Substituir títulos genéricos repetidos como:
-
-“Combinação que merece revisão”
-
-por títulos informativos:
-
-- “Concentração de treino verbal”
-- “Sobreposição executiva”
-- “Mapeamento cor–resposta semelhante”
-- “Fadiga alta em sequência”
-- “Planejamento consecutivo”
-- “Carga elevada para a duração”
-- “Duração acima da faixa prescrita”
-
-Não exibir códigos técnicos.
-
-==================================================
-TESTES
-==================================================
-
-Criar ou atualizar testes para provar:
-
-1. Span Direto + Inverso não gera revisão.
-2. Matriz Espacial + Inversa não gera revisão.
-3. Letras em Sequência + Span Direto não gera revisão.
-4. Sessão focal em memória operacional pode ser salva sem mensagens de combinação desfavorável.
-5. Sobreposição cognitiva aparece, quando aplicável, como observação neutra.
-6. Nenhuma mensagem visível contém “combinação desfavorável”.
-7. Nenhuma sugestão visível contém “manter apenas uma”.
-8. Duração excessiva continua em revisão.
-9. Carga elevada continua em revisão consultiva.
-10. Fadiga alta consecutiva continua em revisão.
-11. Planejamento consecutivo continua como ponto de atenção/revisão consultiva.
-12. Posição preferencial aparece como informação agrupada.
-13. Ocorrências individuais continuam disponíveis no resultado do núcleo.
-14. Nenhum alerta bloqueia o salvamento.
-15. O slider de nível não aparece na janela Ajustar.
-16. Abrir e salvar plano antigo não altera level/startLevel.
-17. Trocar protocolo continua atualizando a duração.
-18. Modalidade continua funcionando.
-19. Todos os testes existentes continuam passando.
-20. Build e TypeScript sem erros.
-
-==================================================
-VALIDAÇÃO VISUAL
-==================================================
-
-Validar manualmente:
-
-1. Exercício com Breve/Padrão/Estendido.
-2. Exercício com modalidade.
-3. Exercício com repetição de áudio.
-4. Plano focal em memória operacional.
-5. Plano com Span Direto + Inverso.
-6. Plano com Matriz Direta + Inversa.
-7. Plano com duração excessiva.
-8. Plano com fadiga alta consecutiva.
-9. Plano com várias posições preferenciais.
-10. Plano teste com os 34 exercícios.
-
-Na validação com 34 exercícios:
-
-- carga e duração devem continuar alertando;
-- o painel não deve virar um paredão de combinações desfavoráveis;
-- observações semelhantes devem estar agrupadas;
-- Salvar plano deve continuar disponível.
-
-==================================================
-ESCOPO
-==================================================
-
-Pode alterar:
-
-- núcleo e apresentação dos alertas;
-- componentes do resumo da prescrição;
-- componentes da janela Ajustar;
-- testes correspondentes.
-
-Não alterar:
-
-- exercícios;
-- progressão adaptativa;
-- nível atual do paciente;
-- banco;
-- migrations;
-- APIs, salvo necessidade técnica comprovada e previamente explicada;
-- protocolos e durações já aprovados;
-- formato persistido dos planos;
-- modalidade;
-- dose legada;
-- experiência do paciente.
-
-Antes de implementar, faça uma leitura do código real e apresente:
-
-1. quais regras atuais de combinação serão removidas;
-2. quais virarão observações clínicas;
-3. quais continuarão como revisão objetiva;
-4. quais arquivos serão alterados.
-
-Depois implemente em lotes seguros:
-
-Lote A:
-- nível e refinamento visual do Ajustar.
-
-Lote B:
-- taxonomia, linguagem e agrupamento dos alertas.
-
-Ao final de cada lote:
-
-- rodar TypeScript;
-- rodar suíte completa;
-- rodar build;
-- revisar o diff;
-- confirmar escopo.
-
-Depois publicar para validação visual.
-
-Não iniciar tutoriais.
-
-Não iniciar nova fase.
-
-Pare após a publicação e aguarde minha validação.
-
-## 04/08/2026 09:58
-<task-notification>
-<task-id>b4vwqd82v</task-id>
-<tool-use-id>toolu_011TVKbi8HCpntygb8QctL9N</tool-use-id>
-<output-file>/private/tmp/claude-501/-Users-kamyllahonorio-neuropeak/3e6ecf11-e4e5-471f-bbf9-4595faa53598/tasks/b4vwqd82v.output</output-file>
-<status>completed</status>
-<summary>Background command "Disparar o lote A" completed (exit code 0)</summary>
-</task-notification>
-
-## 04/08/2026 13:01
-<task-notification>
-<task-id>bpxlkgzv4</task-id>
-<tool-use-id>toolu_01WYDK8h5PGtAWhJ1xkpmRyu</tool-use-id>
-<output-file>/private/tmp/claude-501/-Users-kamyllahonorio-neuropeak/3e6ecf11-e4e5-471f-bbf9-4595faa53598/tasks/bpxlkgzv4.output</output-file>
-<status>completed</status>
-<summary>Background command "Disparar o lote B" completed (exit code 0)</summary>
+Em `https://neuropeak-5jyl.vercel.app`, ela vai validar: **exercício nos três protocolos** · **exercício com
+modalidade** · **exercício com repetição de áudio** · **plano focal em memória operacional** · **Span Direto
++ Inverso** · **Matriz Direta + Inversa** · **plano com duração excessiva** · **plano com fadiga alta
+consecutiva** · **plano com várias posições preferenciais** · e um **plano teste com os 34 exercícios**, no
+qual **carga e duração devem continuar alertando**, **o painel não pode virar paredão**, **as observações
+semelhantes devem estar agrupadas** e **"Salvar plano" deve continuar disponível**.
+```
+
+## COMO PROVEI
+
+- `git status --porcelain` → exit 0, saída ` M PROGRESSO.md` — nenhum outro arquivo tocado, nada criado nem removido.
+- `git diff --stat` → `1 file changed, 108 insertions(+)` — **zero deleções**, ou seja, nenhum conteúdo anterior do arquivo foi perdido ou reescrito.
+- Leitura das linhas 1–10 pós-edição confirma o bloco novo começando na linha 6, logo após o cabeçalho, e a leitura prévia do arquivo confirma que o bloco `v2.69.0` segue intacto imediatamente abaixo.
+
+## O QUE NÃO FIZ
+
+- **Não commitei e não dei push** — a árvore está suja de propósito, com a mudança pronta para o VP commitar.
+- Não alterei nenhum outro arquivo (nem `CLAUDE.md`, nem `ESTADO-DO-PROJETO.md`, nem código, nem docs).
+- Não rodei `tsc`, `vitest`, `build` nem consultei `/api/version` — os números do despacho foram transcritos como fato recebido, não re-verificados por mim; se o VP quiser essas provas independentes, é outra tarefa.
+- Não conferi no código-fonte as afirmações do despacho (contagem de cartões, códigos de alerta, `exerciseLevels`) — o escopo era registro, não auditoria.
+- Não abri nem iniciei nada da funcionalidade futura "REDEFINIR NÍVEL", nem tutoriais, nem nova fase.</result>
+<usage><subagent_tokens>29808</subagent_tokens><tool_uses>4</tool_uses><duration_ms>99299</duration_ms></usage>
 </task-notification>
