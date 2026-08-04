@@ -92,6 +92,7 @@ export function PlanBuilderSidebar(props: PlanBuilderSidebarProps) {
                   key={ex.id}
                   id={ex.id}
                   name={ex.name}
+                  description={ex.description}
                   icon={ex.icon}
                   prescription={presentation.exercises.find((exercise) => exercise.exerciseId === ex.id)}
                   color={DOMAIN_COLORS[group.domain]}

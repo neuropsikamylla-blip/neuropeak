@@ -10,10 +10,13 @@ import {
   formatMinutesRange,
   groupAlerts,
   presentAlert,
+  presentCatalogExercise,
+  presentExercise,
   presentLegacyPlan,
   presentPlan,
   visualSeverity,
 } from "./presentation";
+import { EXERCISE_CATALOG } from "./catalog";
 import type { AlertCode, PrescriptionAlert } from "./types";
 
 const alertCodes = Object.keys(ALERT_PRESENTATION_CONFIG) as AlertCode[];
@@ -120,11 +123,46 @@ describe("apresentação consultiva da prescrição", () => {
     expect(presentLegacyPlan([{ id: "tempo-reacao", settings: { protocol: "desconhecido" } }], 30).legacyMarker).toBeDefined();
   });
 
+  it("apresenta o protocolo padrão de todos os 34 exercícios em texto legível", () => {
+    const labels = EXERCISE_CATALOG.map((definition) => presentCatalogExercise(definition.exerciseId)?.protocolLabel);
+    expect(labels).toHaveLength(34);
+    expect(labels.every((label) => label?.startsWith("Protocolo padrão: "))).toBe(true);
+    expect(labels.every((label) => /\d+ blocos? · .+ min$/.test(label ?? ""))).toBe(true);
+  });
+
+  it("apresenta o perfil cognitivo de todos os 34 exercícios em texto legível", () => {
+    const labels = EXERCISE_CATALOG.map((definition) => presentCatalogExercise(definition.exerciseId)?.cognitiveProfileLabel);
+    expect(labels).toHaveLength(34);
+    expect(labels.every((label) => Boolean(label?.trim()))).toBe(true);
+    expect(labels.join(" ")).not.toMatch(/[A-Z]{3,}_[A-Z_]+/);
+  });
+
+  // O catálogo entrega os perfis já redigidos em português ("Atenção Sustentada"); a apresentação
+  // só normaliza a caixa. Este teste usa o formato real, não um identificador técnico inventado.
+  it("mostra apenas o perfil primário quando não há perfis associados", () => {
+    const definition = {
+      ...EXERCISE_CATALOG[0],
+      mechanicalPrimary: "Atenção Sustentada",
+      associatedCognitiveProfiles: [],
+    };
+    const exercise = presentExercise({
+      definition,
+      prescription: { exerciseId: definition.exerciseId, order: 1 },
+      prescribedMinutes: [6, 6],
+    });
+    expect(exercise.cognitiveProfileLabel).toBe("Atenção sustentada");
+    expect(exercise.cognitiveProfileLabel).not.toMatch(/[·,:]$/);
+  });
+
   it("não deixa códigos técnicos chegarem aos textos visíveis", () => {
     const visibleTexts = alertCodes.flatMap((code) => {
       const item = presentAlert(alert(code), context);
       return [item.titulo, item.mensagem, item.sugestao ?? "", ...item.exercicios];
     });
+    for (const definition of EXERCISE_CATALOG) {
+      const exercise = presentCatalogExercise(definition.exerciseId);
+      if (exercise) visibleTexts.push(exercise.protocolLabel, exercise.cognitiveProfileLabel);
+    }
     expect(visibleTexts.join(" ")).not.toMatch(/[A-Z]{3,}_[A-Z_]+/);
   });
 

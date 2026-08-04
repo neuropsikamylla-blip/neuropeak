@@ -14,6 +14,7 @@ import { ExercisePrescriptionMeta } from "./prescription/ExercisePrescriptionMet
 interface ExerciseCardProps {
   id: string;
   name: string;
+  description: string;
   icon: string;
   prescription?: PresentedExercise;
   color: string;
@@ -32,7 +33,7 @@ interface ExerciseCardProps {
 
 /** Item do plano — card largo com reordenar, ajustes e remover. */
 export function ExerciseCard({
-  id, name, icon, prescription, color, isSpan, level, onLevel, spanCfg, onSpanCfg, cfg, onSetting, onRemove, onMove, isFirst, isLast,
+  id, name, description, icon, prescription, color, isSpan, level, onLevel, spanCfg, onSpanCfg, cfg, onSetting, onRemove, onMove, isFirst, isLast,
 }: ExerciseCardProps) {
   const [open, setOpen] = useState(false);
   const c: SpanSettings = { ...DEFAULT_SPAN_SETTINGS, ...(spanCfg ?? {}) };
@@ -76,6 +77,7 @@ export function ExerciseCard({
           {prescription && (
             <ExercisePrescriptionMeta
               exercise={prescription}
+              description={description}
               details={subLabel ? <SubdomainTag id={subId} label={subLabel} /> : undefined}
             />
           )}

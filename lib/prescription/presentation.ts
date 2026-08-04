@@ -306,10 +306,38 @@ export interface PresentedExercise {
   modelLabel: string;
   doseLabel: string;
   durationLabel: string;
+  protocolLabel: string;
+  cognitiveProfileLabel: string;
   loadLabel: string;
   fatigueLabel: string;
   interferenceLabel: string;
   modalityLabel?: string;
+}
+
+/**
+ * Os perfis do catálogo já vêm redigidos em português ("Atenção Seletiva"). Aqui só normalizamos a
+ * caixa, para que virem frase corrida em vez de Título Com Todas As Iniciais Maiúsculas.
+ */
+function readableCognitiveProfile(value: string): string {
+  const label = value.trim().replace(/[_-]+/g, " ").replace(/\s+/g, " ").toLocaleLowerCase("pt-BR");
+  return label ? `${label[0].toLocaleUpperCase("pt-BR")}${label.slice(1)}` : "Perfil não informado";
+}
+
+function standardProtocolLabel(definition: ExerciseDefinition): string {
+  const protocol = definition.protocols.PADRAO;
+  const units = `${protocol.unitCount} ${protocol.unitCount === 1 ? "bloco" : "blocos"}`;
+  const duration = protocol.durationText.trim() || `${numberText(protocol.durationMinutes)} min`;
+  return `Protocolo padrão: ${units} · ${duration}`;
+}
+
+function cognitiveProfileLabel(definition: ExerciseDefinition): string {
+  const primary = readableCognitiveProfile(definition.mechanicalPrimary);
+  if (definition.associatedCognitiveProfiles.length === 0) return primary;
+  const associated = definition.associatedCognitiveProfiles
+    .map(readableCognitiveProfile)
+    .map((label) => `${label[0].toLocaleLowerCase("pt-BR")}${label.slice(1)}`)
+    .join(", ");
+  return `${primary} · também recruta: ${associated}`;
 }
 
 function resolvedExercise(definition: ExerciseDefinition, prescription: ExercisePrescription): ResolvedExercisePrescription {
@@ -342,6 +370,8 @@ export function presentExercise(exercise: ResolvedExercisePrescription): Present
     modelLabel: EXECUTION_MODEL_LABELS[definition.executionModel],
     doseLabel,
     durationLabel: formatExerciseDuration(exercise.prescribedMinutes),
+    protocolLabel: standardProtocolLabel(definition),
+    cognitiveProfileLabel: cognitiveProfileLabel(definition),
     loadLabel: `Carga ${definition.baselineCognitiveLoad}`,
     fatigueLabel: `Fadiga ${definition.fatigue.toLocaleLowerCase("pt-BR")}`,
     interferenceLabel: `Interferência ${definition.interference.toLocaleLowerCase("pt-BR")}`,

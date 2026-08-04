@@ -36,14 +36,8 @@ export function ExerciseRow({ exercise, added, onToggle }: ExerciseRowProps) {
           <p className="font-medium text-sm text-slate-100 leading-tight">{exercise.name}</p>
           <ExercisePrescriptionMeta
             exercise={exercise.prescription}
-            details={(
-              <>
-                <p className="leading-snug">{exercise.description}</p>
-                {meta.secondary.length > 0 && (
-                  <div className="mt-1.5"><SecondaryChips skills={meta.secondary} /></div>
-                )}
-              </>
-            )}
+            description={exercise.description}
+            details={meta.secondary.length > 0 ? <SecondaryChips skills={meta.secondary} /> : undefined}
           />
           {/* Em telas pequenas, metadados embaixo (colunas somem) */}
           <div className="flex flex-wrap items-center gap-2 mt-2 sm:hidden">
