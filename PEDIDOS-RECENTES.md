@@ -1,15 +1,6 @@
 # As 3 ultimas especificacoes dela (automatico; a mais nova por ultimo)
 # Na retomada: ler as 3, conectar com PROGRESSO.md e git, declarar e seguir.
 
-## 04/08/2026 15:54
-<task-notification>
-<task-id>bvsiehsy5</task-id>
-<tool-use-id>toolu_013u1AUbThGtr8kjFZ2dwLKn</tool-use-id>
-<output-file>/private/tmp/claude-501/-Users-kamyllahonorio-neuropeak/3e6ecf11-e4e5-471f-bbf9-4595faa53598/tasks/bvsiehsy5.output</output-file>
-<status>completed</status>
-<summary>Background command "Disparar o lote B" completed (exit code 0)</summary>
-</task-notification>
-
 ## 04/08/2026 16:01
 <task-notification>
 <task-id>aebb95709f9096f34</task-id>
@@ -144,3 +135,402 @@ exercício com "Ajustar" aberto** · **exercício com modalidade** · **exercíc
 ```</result>
 <usage><subagent_tokens>27953</subagent_tokens><tool_uses>3</tool_uses><duration_ms>75205</duration_ms></usage>
 </task-notification>
+
+## 04/08/2026 16:23
+PROPOSTA ARQUITETÔNICA — SESSÃO COMO UNIDADE PRINCIPAL
+
+Não implementar ainda.
+
+Quero primeiro uma análise arquitetônica completa, baseada no código real e nos documentos atuais da prescrição.
+
+A nova direção conceitual é esta:
+
+==================================================
+1. PRINCÍPIO CENTRAL
+==================================================
+
+A unidade clínica principal da prescrição passa a ser a SESSÃO.
+
+O terapeuta define:
+
+- duração da sessão;
+- exercícios;
+- ordem;
+- protocolo de cada exercício;
+- frequência semanal.
+
+O sistema não escolhe automaticamente quais exercícios ficam em Breve, Padrão ou Estendido.
+
+Essa decisão continua sendo do terapeuta, porque depende:
+
+- do objetivo clínico;
+- da tolerância do paciente;
+- da fadiga observada;
+- da evolução;
+- da prioridade daquele exercício;
+- do julgamento profissional.
+
+O sistema deve:
+
+- calcular;
+- resumir;
+- alertar;
+- mostrar consequências da composição;
+
+mas não substituir a decisão clínica.
+
+==================================================
+2. DURAÇÕES DA SESSÃO
+==================================================
+
+A duração da sessão passa a funcionar por faixas-alvo.
+
+BREVE
+
+- alvo: 20 minutos;
+- faixa esperada: 18–22 minutos.
+
+PADRÃO
+
+- alvo: 35 minutos;
+- faixa esperada: 32–38 minutos.
+
+EXTENSO
+
+- alvo: 50 minutos;
+- faixa esperada: 46–54 minutos.
+
+Essas faixas representam variação natural entre pacientes.
+
+Não gerar alerta quando a estimativa permanecer dentro da faixa esperada.
+
+Acima da faixa:
+
+- gerar observação ou revisão consultiva;
+- nunca bloquear salvamento.
+
+Abaixo da faixa:
+
+- informar discretamente;
+- não considerar automaticamente inadequado;
+- o terapeuta pode deliberadamente prescrever uma sessão menor.
+
+==================================================
+3. PROTOCOLOS DOS EXERCÍCIOS
+==================================================
+
+Cada exercício continua possuindo:
+
+- Breve;
+- Padrão;
+- Estendido.
+
+O terapeuta escolhe manualmente o protocolo de cada exercício.
+
+O sistema não redistribui doses automaticamente.
+
+O sistema não troca protocolos sem ação explícita.
+
+O protocolo Breve precisa continuar sendo uma dose válida de treino.
+
+Ele não pode existir apenas para “fazer caber” a sessão.
+
+Reavaliar, em fase posterior, se as unidades internas de cada Breve realmente constituem dose mínima clinicamente útil.
+
+Não recalibrar agora.
+
+==================================================
+4. TEMPO INDIVIDUAL DOS EXERCÍCIOS
+==================================================
+
+A duração estimada individual deixa de ocupar a linha principal do card.
+
+Na visualização compacta do exercício, mostrar prioritariamente:
+
+- nome;
+- protocolo selecionado;
+- carga;
+- fadiga;
+- Ajustar;
+- remover;
+- ordem.
+
+A duração individual permanece disponível em:
+
+- “Ver detalhes”;
+- janela “Ajustar”;
+- cálculo interno da sessão.
+
+Não apagar nem deixar de calcular o tempo individual.
+
+Apenas reduzir sua prioridade visual.
+
+==================================================
+5. CABEÇALHO DA SESSÃO
+==================================================
+
+O topo do plano deve futuramente comunicar:
+
+SESSÃO PRESCRITA
+
+Tipo: Padrão
+
+Alvo: 35 min
+
+Estimativa atual: aproximadamente 34 min
+
+Estado: Dentro da faixa esperada
+
+Faixa esperada: 32–38 min
+
+Outro exemplo:
+
+SESSÃO PRESCRITA
+
+Tipo: Padrão
+
+Alvo: 35 min
+
+Estimativa atual: aproximadamente 43 min
+
+Estado: Acima da faixa esperada
+
+A interface deve deixar claro que:
+
+- 35 min é alvo;
+- 32–38 min é faixa esperada;
+- não é necessário fechar exatamente em 35:00.
+
+==================================================
+6. AUTONOMIA DO TERAPEUTA
+==================================================
+
+O terapeuta pode deliberadamente:
+
+- manter cinco exercícios em 35 minutos;
+- aumentar para 50 minutos;
+- utilizar uma sessão focal;
+- manter exercícios de alta prioridade;
+- aceitar uma estimativa um pouco acima;
+- reduzir protocolos conforme tolerância;
+- aumentar protocolos conforme evolução.
+
+O sistema deve informar:
+
+- duração;
+- carga;
+- fadiga;
+- interferência;
+- composição;
+
+mas não deve decidir sozinho quais exercícios reduzir, remover ou ampliar.
+
+Não criar otimizador automático de protocolos.
+
+Não criar recomendação automática de substituição.
+
+Não criar IA prescritor.
+
+==================================================
+7. RELAÇÃO COM O HISTÓRICO DO PACIENTE
+==================================================
+
+A arquitetura futura poderá usar dados do paciente para informar o terapeuta, por exemplo:
+
+- queda de desempenho após determinado tempo;
+- fadiga relatada;
+- aumento de erros no final da sessão;
+- estabilidade em sessões mais longas;
+- adesão;
+- interrupções;
+- tempo real de execução.
+
+Mas essas informações devem ser consultivas.
+
+Não implementar isso agora.
+
+A decisão permanece com o profissional.
+
+==================================================
+8. ALERTAS
+==================================================
+
+Reavaliar os estados de duração atuais considerando as novas faixas:
+
+Breve:
+- dentro: 18–22 min.
+
+Padrão:
+- dentro: 32–38 min.
+
+Extenso:
+- dentro: 46–54 min.
+
+Antes de propor novos limites de atenção ou excesso importante, analisar o impacto sobre:
+
+- SESSION_BELOW_TARGET;
+- SESSION_ABOVE_TARGET;
+- SESSION_RANGE_PARTIAL;
+- SESSION_SAFE_MAX_EXCEEDED;
+- tetos de carga;
+- mensagens visíveis;
+- testes existentes.
+
+Não alterar ainda.
+
+Apenas documentar quais regras precisarão ser revistas.
+
+==================================================
+9. COMPATIBILIDADE
+==================================================
+
+Preservar:
+
+- planos antigos de 20, 30 e 40 minutos;
+- protocolos já salvos;
+- doses legadas;
+- níveis;
+- progresso;
+- histórico;
+- frequência;
+- exercícios;
+- ordem;
+- modalidade;
+- parâmetros assistivos.
+
+Não migrar automaticamente planos antigos para 20/35/50.
+
+A análise deve propor como diferenciar:
+
+- plano legado com duração anterior;
+- nova sessão Breve/Padrão/Extenso;
+- sessão personalizada, caso necessário.
+
+Não implementar migração.
+
+==================================================
+10. ANÁLISE OBRIGATÓRIA
+==================================================
+
+Antes de qualquer código, responder:
+
+1. Quais módulos atuais tratam 20/30/40 como duração da sessão.
+
+2. Quais tipos, fórmulas, alertas e testes dependem dessas três durações.
+
+3. Quais partes podem ser reutilizadas sem alteração.
+
+4. Quais partes precisariam ser modificadas para 20/35/50.
+
+5. Como preservar planos antigos sem conversão silenciosa.
+
+6. Como diferenciar protocolo da sessão e protocolo do exercício sem confundir a interface nem os tipos.
+
+7. Se os nomes Breve/Padrão/Extenso em ambos os níveis geram ambiguidade.
+
+8. Se recomenda nomes diferentes para:
+   - duração da sessão;
+   - dose do exercício.
+
+9. Como o cabeçalho da sessão deveria ser estruturado.
+
+10. Como ocultar a duração individual da linha principal sem perder transparência clínica.
+
+11. Quais arquivos seriam alterados numa futura implementação.
+
+12. Qual seria a ordem segura de implementação.
+
+13. Quais decisões clínicas ainda precisam ser validadas antes do código.
+
+==================================================
+11. PONTO CRÍTICO DE NOMENCLATURA
+==================================================
+
+Avaliar com atenção se usar:
+
+- Breve / Padrão / Extenso para a sessão;
+
+e simultaneamente:
+
+- Breve / Padrão / Estendido para cada exercício;
+
+pode confundir o terapeuta.
+
+Não renomear ainda.
+
+Apresentar opções claras de nomenclatura.
+
+Exemplo possível:
+
+SESSÃO
+- 20 min;
+- 35 min;
+- 50 min.
+
+DOSE DO EXERCÍCIO
+- Breve;
+- Padrão;
+- Estendida.
+
+Ou outra solução mais clara.
+
+Quero recomendação justificada, não alteração automática.
+
+==================================================
+12. BASE DOCUMENTAL
+==================================================
+
+Use como referência os documentos atuais da arquitetura de prescrição e o código real.
+
+Não reabra:
+
+- taxonomia cognitiva;
+- classificação dos 34 exercícios;
+- carga basal;
+- fadiga;
+- interferência;
+- modalidades;
+- compatibilidade legada;
+- progressão adaptativa.
+
+Esta análise deve se limitar à relação entre:
+
+- duração da sessão;
+- dose dos exercícios;
+- apresentação do tempo;
+- alertas de duração;
+- compatibilidade.
+
+==================================================
+13. ENTREGA
+==================================================
+
+Criar um documento arquitetônico novo, sem alterar os documentos aprovados anteriores.
+
+O documento deve conter:
+
+- diagnóstico do modelo atual;
+- nova proposta;
+- diferenças entre sessão e exercício;
+- alternativas de nomenclatura;
+- impacto técnico;
+- impacto clínico;
+- impacto de UX;
+- compatibilidade;
+- riscos;
+- decisões pendentes;
+- ordem segura de implementação.
+
+Não alterar código.
+
+Não alterar interface.
+
+Não alterar banco.
+
+Não criar migration.
+
+Não publicar.
+
+Não iniciar implementação.
+
+Ao final, pare e apresente a análise para validação.
