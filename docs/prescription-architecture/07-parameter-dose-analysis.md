@@ -1,8 +1,11 @@
 # Análise: quais parâmetros ajustáveis alteram a dose clínica
 
 > Análise arquitetônica pedida por ela em 03/ago/2026, ao encontrar que os parâmetros ajustáveis do
-> painel não movem duração, carga nem fadiga. **Nada implementado** — este documento existe para ela
-> decidir a regra única.
+> painel não movem duração, carga nem fadiga.
+>
+> **STATUS: análise encerrada. As decisões foram tomadas por ela em 04/ago/2026 e estão em
+> [`08-dose-parameter-decisions.md`](08-dose-parameter-decisions.md), que é a fonte a seguir.**
+> Este documento permanece como o diagnóstico que originou aquelas decisões.
 
 ## 1. O que está quebrado, com prova
 
@@ -41,6 +44,9 @@ São **cinco painéis distintos**, não um só:
 | Ordem da História | 1 | nível 1–10 · `unlockIntruso` · `unlockFalta` |
 | Genérico | 29 | nível inicial 1–10 (slider) |
 
+> Os 30 exercícios do slider = 29 genéricos + a Ordem da História, que usa o mesmo slider e ainda
+> ganha os dois controles de desafio.
+
 ## 3. Classificação por natureza
 
 ### Grupo A — SÃO a dose clínica (mudam a quantidade de unidades)
@@ -55,7 +61,12 @@ Estes **precisam** mover duração, carga e fadiga. Hoje não movem nada.
 
 ### Grupo B — mudam a dificuldade, não a quantidade
 
-`startLevel` / nível inicial — **30 exercícios** (29 no slider 1–10, mais o Focus em 1–5).
+`startLevel` / nível inicial — **31 exercícios**: 30 no slider 1–10 (incluindo a Ordem da História,
+que ganha controles extras) e o Focus em 1–5. Os 3 restantes — os dois spans e o Caminhos para a
+Meta — não têm controle de nível, porque o painel deles substitui o botão "Ajustar".
+
+> Correção de contagem: a primeira redação desta análise dizia 30. A contagem correta, verificada
+> por script sobre os 34 ids, é **31**.
 
 O efeito depende do modelo de execução:
 
@@ -102,7 +113,7 @@ Consequência de cada caminho:
   exibiria número de carga com aparência de precisão sem o modelo por trás.
 - **Opção 2 pura (tudo derivado do protocolo):** os quatro valores do painel morrem e viram três.
   Mas também **mataria** `atividadesSelecionadas` do Caminhos para a Meta, que é escolha clínica
-  legítima de conteúdo, e o `startLevel`, que é a espinha da progressão adaptativa de 30 exercícios.
+  legítima de conteúdo, e o `startLevel`, que é a espinha da progressão adaptativa de 31 exercícios.
 
 ## 5. Recomendação — terceira via, dividida por natureza
 
