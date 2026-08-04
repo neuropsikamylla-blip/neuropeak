@@ -34,9 +34,23 @@ Indicado para: primeiro contato com o exercício · baixa tolerância à fadiga 
 sessões curtas · composição com maior número de exercícios · pacientes com dificuldade de
 permanência · retorno após interrupção prolongada.
 
-**Aviso, quando aplicável:** em alguns exercícios o protocolo breve produz treino válido, mas **não
-fornece unidades suficientes para decisão adaptativa robusta**. Esse aviso deve aparecer só nos
-exercícios em que a limitação existe.
+**Aviso — texto exato aprovado por ela em 04/ago/2026:**
+
+> "Treino válido em dose reduzida. O desempenho desta sessão pode não ser suficiente, isoladamente,
+> para atualizar o nível adaptativo."
+
+**Origem da regra:** o aviso sai do campo `clinicalValidity` do protocolo BRIEF no catálogo de
+prescrição — **nunca** de uma regra genérica derivada da quantidade de unidades. Hoje os **34**
+exercícios declaram lá a insuficiência para progressão, então o aviso aparece em todos os Breves.
+Se um exercício deixar de declarar, o aviso some para ele.
+
+⚠️ **A interface não pode exibir "insuficiente para progressão" cru.** O terapeuta leria como se o
+Breve fosse inadequado ou como se o treino se perdesse. O texto acima deixa explícito que:
+
+- o Breve **continua sendo opção válida de treino**;
+- é indicado para introdução, menor tolerância, retorno após pausa ou maior variedade na sessão;
+- a limitação é **apenas** sobre a robustez da decisão adaptativa **naquela execução**;
+- **não** é erro, contraindicação nem perda do treino realizado.
 
 ### Padrão
 
@@ -64,6 +78,23 @@ Estendido e **não vê nem altera o número de tentativas**.
 
 A quantidade interna pode aparecer em "Ver detalhes": *Breve — 4 séries · Padrão — 8 séries ·
 Estendido — 12 séries*.
+
+### Unidade exibida — sempre a do catálogo
+
+A quantidade usa a **unidade real registrada em `minimumValidUnit`**, nunca uma palavra genérica.
+**Não inventar nem renomear unidades nesta etapa.**
+
+| Exercício | Unidade do catálogo |
+|---|---|
+| Spans | séries |
+| Restaurante | rodadas |
+| Informação em Foco | tentativas |
+| Supermercado | rodadas |
+| Jogo das Torres | desafios completos |
+
+> Defeito corrigido em 04/ago: o `protocolLabel` exibia **"blocos" para os 34** — "8 blocos" no Span
+> (que são séries) e "2 blocos" no Jogo das Torres (que são desafios completos). Nasceu de um exemplo
+> da spec da Fase 2b que virou valor fixo.
 
 **Esses valores não mudam nesta etapa sem nova validação clínica.**
 
