@@ -1,16 +1,6 @@
 # As 3 ultimas especificacoes dela (automatico; a mais nova por ultimo)
 # Na retomada: ler as 3, conectar com PROGRESSO.md e git, declarar e seguir.
 
-## O QUE NÃO FIZ
-
-- **Não commitei e não dei push** — a árvore está suja de propósito, com a mudança pronta para o VP commitar.
-- Não alterei nenhum outro arquivo (nem `CLAUDE.md`, nem `ESTADO-DO-PROJETO.md`, nem código, nem docs).
-- Não rodei `tsc`, `vitest`, `build` nem consultei `/api/version` — os números do despacho foram transcritos como fato recebido, não re-verificados por mim; se o VP quiser essas provas independentes, é outra tarefa.
-- Não conferi no código-fonte as afirmações do despacho (contagem de cartões, códigos de alerta, `exerciseLevels`) — o escopo era registro, não auditoria.
-- Não abri nem iniciei nada da funcionalidade futura "REDEFINIR NÍVEL", nem tutoriais, nem nova fase.</result>
-<usage><subagent_tokens>29808</subagent_tokens><tool_uses>4</tool_uses><duration_ms>99299</duration_ms></usage>
-</task-notification>
-
 ## 04/08/2026 13:28
 Vamos iniciar um novo refinamento de UX na tela de montagem do plano do terapeuta.
 
@@ -492,6 +482,13 @@ Não iniciar nova fase.
 Pare após publicar e aguarde minha validação.
 
 ## 04/08/2026 13:33
+Perfeito. Pode seguir conforme planejado.
+
+Não altere a arquitetura clínica nem as regras de prescrição. Conclua o Lote A, rode as provas e depois siga para o Lote B.
+
+Após publicar os dois lotes juntos, pare para minha validação visual.
+
+## 04/08/2026 13:45
 Perfeito. Pode seguir conforme planejado.
 
 Não altere a arquitetura clínica nem as regras de prescrição. Conclua o Lote A, rode as provas e depois siga para o Lote B.
