@@ -1,116 +1,76 @@
 # As 3 ultimas especificacoes dela (automatico; a mais nova por ultimo)
 # Na retomada: ler as 3, conectar com PROGRESSO.md e git, declarar e seguir.
 
+## 🚀 FASE 2b ENTREGUE E PUBLICADA (03/ago/2026) — descrição curta de volta à linha principal (`e98d069`, v2.68.0)
+
+Continuação direta da Fase 2 abaixo. Ela **aprovou tecnicamente a Fase 2** e tomou três decisões:
+
+1. **A descrição do exercício NÃO pode sumir da linha principal** da biblioteca — na Fase 2 ela tinha
+   ido inteira para dentro de "Ver detalhes". Volta **curta, em uma linha, truncada**, sem inchar o cartão.
+2. **O agrupamento visual dos alertas fica para a FASE 3, explicitamente.** O **núcleo dos 18 alertas
+   NÃO muda** e continua devolvendo **todas as ocorrências individuais** — rastreabilidade, testes,
+   relatórios e análises futuras dependem disso. O agrupamento será **exclusivamente de apresentação**.
+   Exemplos dela: juntar as ocorrências de "fadiga alta em sequência" num grupo só, com os pares
+   envolvidos; agrupar as interferências altas; consolidar as posições pouco recomendadas num grupo
+   de organização da sessão.
+3. **Publicar esta versão** para validação visual dela **antes de qualquer Fase 3**.
+
+### O que entrou
+
+- **Linha principal de cada exercício:** nome oficial · **descrição em uma linha truncada** (texto
+  completo no `title` do hover) · modelo/dose/duração · etiquetas de carga e fadiga · "Ver detalhes".
+- **Dentro de "Ver detalhes", rotulados:** descrição completa · perfil cognitivo · modelo de execução ·
+  protocolo · carga/fadiga/interferência · modalidade quando aplicável.
+- **`lib/prescription/presentation.ts`** ganhou dois campos: **`protocolLabel`** e
+  **`cognitiveProfileLabel`**, derivados de `protocols.PADRAO`, `mechanicalPrimary` e
+  `associatedCognitiveProfiles`.
+- **`ExerciseCard`** passou a receber a prop **`description`** (não recebia); **`PlanBuilderSidebar`** a repassa.
+
+### Roteamento (regra 8)
+
+Codificação no **Codex `gpt-5.6-sol`, esforço high, lab `fase2b`**, spec em
+`docs/spec-impl-fase2b-descricao.md` (`8eefc2d`). **Escopo respeitado** — só os 6 arquivos permitidos.
+Dois consertos pós-colheita do **Claude Opus 5 xhigh (exceção 1 da regra 8)**: removido um dicionário
+de reacentuação que era **código morto** (o catálogo já entrega português acentuado, então as chaves
+sem acento nunca casavam) e corrigido o **teste sintético** que o sustentava, que usava o identificador
+`ATENCAO_SUSTENTADA`, formato inexistente no catálogo real.
+
+### Provas (repositório real)
+
+`npx tsc --noEmit` exit 0 · `npx vitest run` **333/333** (eram 330 → **+3**) · `npm run build` exit 0.
+
+### ✅ Publicação confirmada por evidência
+
+`https://neuropeak-5jyl.vercel.app/api/version` → `{"appVersion":"2.68.0","buildId":"dpl_3qKhboJuMhC9w6tZTqC147b9AjVg"}` ·
+`/api/health` → `{"ok":true}` · `git merge-base --is-ancestor a6f61f0 e98d069` confirmou que o commit
+da Fase 2 está contido no deploy.
+
+### ⏸️ PRÓXIMO PASSO — PARADO aguardando a validação visual dela; **NÃO iniciar a Fase 3**
+
+Em `https://neuropeak-5jyl.vercel.app`, conferir com olho humano: **plano vazio · dentro do esperado ·
+acima do esperado · excesso importante · fadiga alta consecutiva · planejamento consecutivo · plano
+legado · descrição curta dos exercícios** — e, em **todos** os cenários com alertas, confirmar que o
+botão **"Salvar plano"** continua disponível.
+
+**Dois pontos que o VP quer que ela olhe:**
+
+- **(a)** no **Caminhos para a Meta** o perfil sai como *"Organização · também recruta: organização e
+  sequenciamento"* — redundância que vem do **dado congelado da Fase 1**, não da apresentação.
+- **(b)** na linha principal aparece *"Por protocolo · Protocolo padrão · 6 min"* — modelo e dose
+  **repetem a palavra protocolo**.
+```
+
 ## COMO PROVEI
 
-- `git show --stat --oneline a6f61f0` — exit 0. Confirma os 6 arquivos criados e os 4 alterados exatamente como descritos no despacho (mais `PEDIDOS-LOG.md`, +3 linhas, que não citei por ser gancho automático), e que `package.json` **não** foi tocado.
-- `node -p "require('./package.json').version"` → `2.67.1`; `wc -l lib/prescription/presentation.ts` → 469 linhas; `library-coverage.test.ts` → 29 linhas (o despacho não deu número; registrei sem contagem).
-- `npx tsc --noEmit` → `TSC_EXIT=0`. `npx vitest run` → `Test Files 28 passed (28)` / `Tests 330 passed (330)`, comando com exit code 0. Ou seja, reproduzi por conta própria as duas primeiras provas do despacho no repositório real.
-- `git status --short` após a edição → apenas ` M PROGRESSO.md`; `git diff --stat` → 1 arquivo, 57 inserções, 0 remoções.
+- `git log --oneline -3 &amp;&amp; git show e98d069 --stat &amp;&amp; node -p "require('./package.json').version"` → exit 0. Confirma o commit `e98d069` ("feat(prescricao): descrição curta na linha principal + perfil e protocolo nos detalhes (v2.68.0)"), a spec em `8eefc2d`, os **7 arquivos** tocados (os 6 de código/teste + `package.json`) e `package.json` em **2.68.0**. Os fatos do despacho batem com o repositório.
+- `git status --porcelain &amp;&amp; git diff --stat` → exit 0. Saída: `M PROGRESSO.md` e `PROGRESSO.md | 59 +++++`, 1 arquivo, 59 inserções, 0 remoções. Nenhum outro arquivo alterado; nada staged, nada commitado.
+- Posicionamento verificado pelo próprio diff: bloco inserido antes do cabeçalho da Fase 2, que segue intacto logo abaixo.
 
 ## O QUE NÃO FIZ
 
-- Não commitei nem dei push (o commit é do VP). A árvore está com `PROGRESSO.md` modificado e não staged.
-- Não rodei `npm run build` (a prova de build do despacho segue sendo do VP; as outras duas eu reproduzi). Status do build nesta sessão: DESCONHECIDO por evidência própria.
-- Não alterei nenhum outro arquivo — nem `ESTADO-DO-PROJETO.md`, nem `CLAUDE.md`, nem o registro de roteamento em outro lugar.
-- Não mexi no bloco `## 🚧 EM ANDAMENTO (02/ago/2026) — FASE 1 da arquitetura clínica` (linha ~52 antes da edição). Observação para o VP: ele está marcado como em andamento com os lotes B e C ⬜, mas o bloco de topo declara essa Fase 1 concluída e congelada — é contradição residual dentro do arquivo, fora do escopo deste despacho.
-- Não fiz nenhuma verificação visual da tela de plano nem validei os 7 cenários listados.</result>
-<usage><subagent_tokens>38988</subagent_tokens><tool_uses>11</tool_uses><duration_ms>132095</duration_ms></usage>
+- Não commitei e não dei push (é do VP).
+- Não alterei nenhum outro arquivo — nem código, nem `ESTADO-DO-PROJETO.md`, nem docs, nem memória.
+- Não reexecutei `tsc`, `vitest`, `build` nem as chamadas a `/api/version` e `/api/health`: as provas registradas são as que o despacho trouxe do VP, não evidência colhida por mim nesta tarefa. Se o VP quiser reconfirmação independente dessas quatro provas, é um despacho novo.
+- Não iniciei nem preparei nada da Fase 3.</result>
+<usage><subagent_tokens>26668</subagent_tokens><tool_uses>4</tool_uses><duration_ms>63993</duration_ms></usage>
 </task-notification>
-
-## 03/08/2026 22:55
-A Implementação — Fase 2 está tecnicamente aprovada.
-
-Decisões visuais:
-
-1. DESCRIÇÃO DOS EXERCÍCIOS
-
-Não quero que a descrição do exercício desapareça completamente da visão principal da biblioteca.
-
-Manter em cada ExerciseRow ou card:
-
-- nome oficial;
-- descrição curta de uma linha;
-- modelo/dose/duração de forma compacta;
-- carga e fadiga;
-- botão “Ver detalhes”.
-
-A descrição curta deve:
-
-- ajudar o terapeuta a reconhecer rapidamente a finalidade da atividade;
-- ter no máximo uma ou duas linhas;
-- usar truncamento visual quando necessário;
-- não aumentar excessivamente a altura dos cards.
-
-Dentro de “Ver detalhes”, manter:
-
-- descrição completa;
-- perfil cognitivo;
-- modelo de execução;
-- protocolo;
-- carga;
-- fadiga;
-- interferência;
-- modalidade;
-- demais informações técnicas.
-
-Não reintroduzir excesso de informação na linha principal.
-
-2. AGRUPAMENTO DOS ALERTAS
-
-Sim, o paredão de alertas deve ser tratado na próxima fase.
-
-Não alterar agora o núcleo dos 18 alertas.
-
-Não eliminar alertas.
-
-Não fundir códigos técnicos.
-
-Na futura exibição, agrupar ocorrências repetidas ou relacionadas visualmente.
-
-Exemplos:
-
-- três ocorrências de fadiga alta consecutiva:
-  mostrar um grupo “Fadiga alta em sequência” com os pares envolvidos;
-
-- múltiplas interferências altas:
-  mostrar um grupo “Interferência elevada entre exercícios”;
-
-- várias posições pouco recomendadas:
-  consolidar em um grupo de organização da sessão.
-
-O agrupamento será exclusivamente de apresentação.
-
-O núcleo deve continuar retornando todas as ocorrências individuais para:
-
-- rastreabilidade;
-- testes;
-- relatórios;
-- futuras análises.
-
-3. VALIDAÇÃO VISUAL
-
-Antes de iniciar a Implementação — Fase 3:
-
-- disponibilize esta versão para validação visual;
-- faça o bump de versão necessário;
-- publique na Vercel;
-- não altere banco, APIs ou formato persistido;
-- informe a URL ou ambiente implantado;
-- confirme que o commit implantado contém a Fase 2.
-
-Depois da publicação, vou validar manualmente:
-
-- plano vazio;
-- dentro do esperado;
-- acima do esperado;
-- excesso importante;
-- fadiga alta consecutiva;
-- planejamento consecutivo;
-- plano legado;
-- descrição curta dos exercícios;
-- botão Salvar plano disponível nos cenários com alertas.
-
-Não iniciar automaticamente a Fase 3 após publicar.
-
-Pare e aguarde minha validação visual.
