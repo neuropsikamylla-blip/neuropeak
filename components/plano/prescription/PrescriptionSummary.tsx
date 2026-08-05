@@ -8,10 +8,10 @@ import {
 } from "@/lib/prescription/presentation";
 
 const stateClasses: Readonly<Record<PlanPresentation["state"], string>> = {
-  ABAIXO: "border-slate-400/25 bg-slate-400/10 text-slate-300",
-  DENTRO: "border-emerald-400/25 bg-emerald-400/10 text-emerald-300",
-  ACIMA: "border-amber-400/30 bg-amber-400/10 text-amber-200",
-  EXCESSO_IMPORTANTE: "border-orange-400/40 bg-orange-400/15 text-orange-200 font-semibold",
+  ABAIXO: "text-amber-200",
+  DENTRO: "text-slate-400",
+  ACIMA: "text-amber-200",
+  EXCESSO_IMPORTANTE: "text-orange-200 font-semibold",
 };
 
 const groupInfo: Readonly<Record<VisualSeverity, { label: string; classes: string }>> = {
@@ -36,6 +36,10 @@ function AlertArticle({ alert }: { alert: PresentedAlert }) {
     <details className="group rounded-xl border border-white/10 bg-[#07162D]/70 open:border-white/20">
       <summary className="cursor-pointer list-none px-3.5 py-3.5 marker:content-none">
         <span className="block text-base font-semibold leading-snug text-slate-100">{alert.titulo}</span>
+        <span className="mt-1.5 block text-sm leading-relaxed text-slate-300">{alert.mensagem}</span>
+        {alert.sugestao && (
+          <span className="mt-1.5 block text-sm italic leading-relaxed text-slate-400">{alert.sugestao}</span>
+        )}
         {alert.dadoPrincipal && (
           <span className="mt-2 block text-lg font-bold leading-tight text-white tabular-nums">
             {alert.dadoPrincipal}
@@ -53,10 +57,6 @@ function AlertArticle({ alert }: { alert: PresentedAlert }) {
       </summary>
 
       <div className="space-y-3 border-t border-white/10 px-3.5 py-3.5 text-sm leading-relaxed text-slate-300">
-        <p>
-          <span className="font-semibold text-slate-100">Explicação e justificativa:</span>{" "}
-          {alert.mensagem}
-        </p>
         {alert.exercicios.length > 0 && (
           <div>
             <p className="font-semibold text-slate-100">Exercícios envolvidos</p>
@@ -65,21 +65,16 @@ function AlertArticle({ alert }: { alert: PresentedAlert }) {
             </ul>
           </div>
         )}
-        {alert.sugestao && (
-          <p>
-            <span className="font-semibold text-slate-100">Sugestão clínica:</span> {alert.sugestao}
-          </p>
-        )}
         {alert.ocorrencias && (
           <div>
-            <p className="font-semibold text-slate-100">Ocorrências individuais ({alert.occurrenceCount})</p>
+            <p className="font-semibold text-slate-100">Detalhes ({alert.occurrenceCount})</p>
             <ol className="mt-2 space-y-3">
               {alert.ocorrencias.map((occurrence, occurrenceIndex) => (
                 <li
                   key={`${occurrence.exercicios.join("-")}-${occurrenceIndex}`}
                   className="rounded-lg border border-white/10 bg-white/[0.03] p-3"
                 >
-                  <p className="font-medium text-slate-200">Ocorrência {occurrenceIndex + 1}</p>
+                  <p className="font-medium text-slate-200">Aspecto {occurrenceIndex + 1}</p>
                   {occurrence.exercicios.length > 0 && (
                     <p className="mt-1 text-slate-300">{occurrence.exercicios.join(" · ")}</p>
                   )}
@@ -181,32 +176,14 @@ export function PrescriptionSummary({ presentation }: { presentation: PlanPresen
           Resumo da sessão
         </h4>
         <div className="space-y-3 rounded-2xl border border-white/10 bg-white/5 px-4 py-4">
-          <div className="flex items-start justify-between gap-3">
-            <div>
-              <p className="text-sm text-slate-400">{presentation.prescribedLabel}</p>
-              <p className="text-lg font-bold text-slate-100 tabular-nums" title={PRESENTATION_TEXTS.estimateTooltip}>
-                {presentation.estimateLabel}
-              </p>
-            </div>
-            <span className={`rounded-full border px-2.5 py-1 text-xs ${stateClasses[presentation.state]}`}>
+          <div>
+            <p className="text-lg font-bold text-slate-100 tabular-nums">{presentation.prescribedLabel}</p>
+            <p className="mt-1 text-sm font-medium text-slate-200 tabular-nums" title={PRESENTATION_TEXTS.estimateTooltip}>
+              {presentation.estimateLabel}
+            </p>
+            <p className={`mt-1 text-sm tabular-nums ${stateClasses[presentation.state]}`}>
               {presentation.stateLabel}
-            </span>
-          </div>
-
-          <div title={PRESENTATION_TEXTS.loadTooltip}>
-            <p className="text-sm font-medium text-slate-200">{presentation.loadText}</p>
-            <p className="mt-1 text-xs leading-relaxed text-slate-400">{presentation.loadHelper}</p>
-          </div>
-
-          <div className="grid grid-cols-2 gap-2 text-sm">
-            <div className="rounded-lg border border-white/10 px-3 py-2.5">
-              <p className="text-slate-400">Fadiga</p>
-              <p className="mt-1 text-slate-200">{presentation.fatigueText}</p>
-            </div>
-            <div className="rounded-lg border border-white/10 px-3 py-2.5">
-              <p className="text-slate-400">Interferência</p>
-              <p className="mt-1 text-slate-200">{presentation.interferenceText}</p>
-            </div>
+            </p>
           </div>
 
           {presentation.legacyMarker && (
@@ -227,9 +204,20 @@ export function PrescriptionSummary({ presentation }: { presentation: PlanPresen
         <h4 id="plan-analysis-title" className="text-sm font-bold uppercase tracking-wide text-slate-300">
           Análise do plano
         </h4>
-        <LimitedGroup severity="revisao_plano" alerts={presentation.alertGroups.revisao_plano} />
-        <LimitedGroup severity="observacao_clinica" alerts={presentation.alertGroups.observacao_clinica} />
-        <InformationGroup alerts={presentation.alertGroups.informacao} />
+        {presentation.alertGroups.revisao_plano.length > 0 && (
+          <LimitedGroup severity="revisao_plano" alerts={presentation.alertGroups.revisao_plano} />
+        )}
+        {presentation.alertGroups.observacao_clinica.length > 0 && (
+          <LimitedGroup severity="observacao_clinica" alerts={presentation.alertGroups.observacao_clinica} />
+        )}
+        {presentation.alertGroups.informacao.length > 0 && (
+          <InformationGroup alerts={presentation.alertGroups.informacao} />
+        )}
+        {presentation.alerts.length === 0 && !presentation.empty && (
+          <p className="rounded-xl border border-white/10 bg-white/[0.03] px-3.5 py-3 text-sm text-slate-300">
+            Nenhum ponto de atenção identificado para este plano.
+          </p>
+        )}
       </section>
     </div>
   );

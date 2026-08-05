@@ -4,7 +4,6 @@ import { EXERCISE_CATALOG } from "./catalog";
 import { interpretPlan } from "./interpreter";
 import {
   firstLevelAlertCardCounts,
-  formatMinutesRange,
   limitAlertGroup,
   presentPlan,
 } from "./presentation";
@@ -19,70 +18,55 @@ function completePlan(): SessionPrescription {
   };
 }
 
-describe("divulgação progressiva dos alertas", () => {
-  it("expõe contagem e dado principal corretos nos alertas agrupados", () => {
-    const plan = completePlan();
-    const core = interpretPlan(plan);
-    const presentation = presentPlan(plan);
-    const cards = Object.values(presentation.alertGroups).flat();
+describe("divulgação progressiva dos insights", () => {
+  it("mantém os pares cognitivos apenas nos detalhes", () => {
+    const presentation = presentPlan(completePlan());
+    const concentration = presentation.alertGroups.observacao_clinica.find((alert) =>
+      alert.titulo === "Concentração cognitiva do plano");
 
-    for (const card of cards.filter((alert) => alert.ocorrencias)) {
-      expect(card.occurrenceCount).toBe(card.ocorrencias?.length);
-    }
-
-    expect(presentation.alertGroups.revisao_plano.find((alert) => alert.code === "LOAD_OVER_CAP"))
-      .toMatchObject({ dadoPrincipal: `${core.baselineLoad} / referência ${core.loadReference}`, expansionLabel: "Ver detalhes" });
-    expect(presentation.alertGroups.revisao_plano.find((alert) => alert.code === "HIGH_FATIGUE_COUNT"))
-      .toMatchObject({ dadoPrincipal: `${core.fatigueSummary.ALTA} atividades`, expansionLabel: "Ver exercícios" });
-    expect(presentation.alertGroups.revisao_plano.find((alert) => alert.code === "HIGH_FATIGUE_ADJACENT"))
-      .toMatchObject({ dadoPrincipal: "4 sequências", occurrenceCount: 4, expansionLabel: "Ver sequências" });
-    expect(presentation.alertGroups.revisao_plano.find((alert) => alert.code === "SESSION_SAFE_MAX_EXCEEDED")?.dadoPrincipal)
-      .toBe(formatMinutesRange(core.durationRange));
+    expect(concentration?.dadoPrincipal).toBeUndefined();
+    expect(concentration?.mensagem).not.toMatch(/\d/);
+    expect(concentration?.ocorrencias).toHaveLength(41);
+    expect(concentration?.occurrenceCount).toBe(41);
+    expect(concentration?.expansionLabel).toBe("Ver detalhes");
   });
 
-  it("faz a contagem de Ver mais coincidir com cada item oculto", () => {
+  it("mantém os limites visuais sem esconder insights no plano completo", () => {
     const groups = presentPlan(completePlan()).alertGroups;
     const revisions = limitAlertGroup(groups.revisao_plano, "revisao_plano");
     const observations = limitAlertGroup(groups.observacao_clinica, "observacao_clinica");
 
-    expect(revisions.hiddenCount).toBe(groups.revisao_plano.length - revisions.initial.length);
-    expect(revisions.hidden).toHaveLength(revisions.hiddenCount);
-    expect(observations.hiddenCount).toBe(groups.observacao_clinica.length - observations.initial.length);
-    expect(observations.hidden).toHaveLength(observations.hiddenCount);
+    expect(revisions.hiddenCount).toBe(0);
+    expect(observations.hiddenCount).toBe(0);
+    expect(revisions.initial).toHaveLength(1);
+    expect(observations.initial).toHaveLength(2);
   });
 
-  it("limita somente a exibição sem reduzir o retorno do núcleo", () => {
+  it("mantém três cartões de primeiro nível e 66 ocorrências no núcleo", () => {
     const plan = completePlan();
     const core = interpretPlan(plan);
     const presentation = presentPlan(plan);
-    const revisions = limitAlertGroup(presentation.alertGroups.revisao_plano, "revisao_plano");
-    const observations = limitAlertGroup(presentation.alertGroups.observacao_clinica, "observacao_clinica");
 
-    expect(presentation.alerts).toHaveLength(core.alerts.length);
-    expect(revisions.initial.length + revisions.hidden.length).toBe(presentation.alertGroups.revisao_plano.length);
-    expect(observations.initial.length + observations.hidden.length).toBe(presentation.alertGroups.observacao_clinica.length);
-  });
-
-  it("mantém 4 revisões, 3 observações e 1 bloco de informações no primeiro nível com 34 exercícios", () => {
-    const presentation = presentPlan(completePlan());
-
-    expect(presentation.exercises).toHaveLength(34);
+    expect(core.alerts).toHaveLength(66);
     expect(firstLevelAlertCardCounts(presentation.alertGroups)).toEqual({
-      revisao_plano: 4,
-      observacao_clinica: 3,
-      informacao: 1,
+      revisao_plano: 1,
+      observacao_clinica: 2,
+      informacao: 0,
     });
   });
 
-  it("mantém ocorrências individuais e posição preferencial acessíveis no objeto apresentado", () => {
-    const presentation = presentPlan(completePlan());
-    const preferredPosition = presentation.alertGroups.informacao.find((alert) => alert.code === "OUTSIDE_BEST_POSITION");
-    const representedOccurrences = Object.values(presentation.alertGroups).flat()
-      .reduce((total, alert) => total + (alert.ocorrencias?.length ?? 1), 0);
+  it("expande a intensidade pelos exercícios de fadiga alta, sem expor a escala", () => {
+    const intensity = presentPlan(completePlan()).alertGroups.revisao_plano[0];
+    expect(intensity.expansionLabel).toBe("Ver exercícios");
+    expect(intensity.exercicios).toHaveLength(12);
+    expect(intensity).not.toHaveProperty("dadoPrincipal");
+  });
 
-    expect(preferredPosition?.ocorrencias).toHaveLength(13);
-    expect(preferredPosition?.occurrenceCount).toBe(13);
-    expect(representedOccurrences).toBe(presentation.alerts.length);
+  it("expande o planejamento pelos seis exercícios envolvidos", () => {
+    const planning = presentPlan(completePlan()).alertGroups.observacao_clinica.find((alert) =>
+      alert.titulo === "Planejamento prolongado");
+    expect(planning?.expansionLabel).toBe("Ver exercícios");
+    expect(planning?.exercicios).toHaveLength(6);
   });
 
   it("abrir Ajustar troca apenas o id visual aberto e não altera a dose", () => {

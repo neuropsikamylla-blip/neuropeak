@@ -15,12 +15,8 @@ export function CompactExerciseMeta({
       <p className="text-sm leading-snug text-slate-300">
         <span className="font-medium text-slate-200">{exercise.doseLabel}</span>
         <span className="text-slate-500"> · </span>
-        {exercise.durationLabel}
+        {exercise.fatigueLabel}
       </p>
-      <div className="flex flex-wrap items-center gap-1.5 text-xs text-slate-300">
-        <span className="rounded-md bg-white/5 px-2 py-1">{exercise.loadLabel}</span>
-        <span className="rounded-md bg-white/5 px-2 py-1">{exercise.fatigueLabel}</span>
-      </div>
       <details className="text-sm text-slate-300">
         <summary className="w-fit cursor-pointer select-none font-semibold text-blue-300 hover:text-blue-200">
           Ver detalhes
@@ -29,10 +25,11 @@ export function CompactExerciseMeta({
           <p><span className="font-medium text-slate-100">Descrição:</span> {description}</p>
           <p><span className="font-medium text-slate-100">Perfil cognitivo:</span> {exercise.cognitiveProfileLabel}</p>
           <p><span className="font-medium text-slate-100">Modelo de execução:</span> {exercise.modelLabel}</p>
+          <p><span className="font-medium text-slate-100">Duração estimada:</span> {exercise.durationLabel}</p>
           <p>{exercise.protocolLabel}</p>
           <p>
-            <span className="font-medium text-slate-100">Carga e demanda:</span>{" "}
-            {exercise.loadLabel} · {exercise.fatigueLabel} · {exercise.interferenceLabel}
+            <span className="font-medium text-slate-100">Fadiga e interferência:</span>{" "}
+            {exercise.fatigueLabel} · {exercise.interferenceLabel}
           </p>
           {exercise.modalityLabel && <p>{exercise.modalityLabel}</p>}
           {details && <div className="pt-1">{details}</div>}

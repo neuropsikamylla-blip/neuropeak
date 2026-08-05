@@ -1,71 +1,6 @@
 # As 3 ultimas especificacoes dela (automatico; a mais nova por ultimo)
 # Na retomada: ler as 3, conectar com PROGRESSO.md e git, declarar e seguir.
 
-## 04/08/2026 22:05
-Mais uma decisão arquitetônica.
-
-A revisão do plano não deve ser um relatório do motor de prescrição.
-
-Ela deve funcionar como um assistente clínico para o terapeuta.
-
-O motor pode calcular dezenas ou centenas de regras internamente, mas a interface deve exibir apenas aquelas que realmente possam modificar uma decisão clínica.
-
-Princípios:
-
-1. O objetivo da tela é responder apenas:
-
-"Existe algo neste plano que merece minha atenção antes de salvar?"
-
-2. Informações redundantes ou puramente técnicas não devem aparecer.
-
-Exemplos:
-
-- carga basal 11 / referência 10;
-- repetição da estimativa em texto;
-- valores internos do algoritmo;
-- escalas que não possuem significado clínico direto.
-
-3. O sistema deve evitar produzir muitos avisos.
-
-Quando praticamente todo plano gera uma longa lista de observações, o terapeuta deixa de diferenciá-las por importância.
-
-4. Sempre que possível, vários alertas relacionados devem ser sintetizados em um único insight clínico.
-
-Exemplo:
-
-Em vez de:
-
-- fadiga alta em sequência;
-- muitas atividades de fadiga alta;
-- carga elevada para a duração;
-
-o sistema pode produzir uma única observação clínica relacionada à intensidade global do plano.
-
-5. As observações devem priorizar:
-
-- composição cognitiva;
-- concentração excessiva de um mesmo processo;
-- ausência de domínios importantes;
-- sobreposição relevante de construtos;
-- duração muito distante da meta;
-- conflitos realmente capazes de justificar revisão.
-
-6. A interface deve privilegiar qualidade de insight e não quantidade de alertas.
-
-Prefiro receber cinco observações realmente úteis do que vinte regras produzidas pelo algoritmo.
-
-Antes de qualquer implementação, analise:
-
-- quais alertas atuais podem ser fundidos;
-- quais são redundantes;
-- quais representam apenas cálculo interno;
-- quais efetivamente ajudam um terapeuta experiente a revisar um plano;
-- proponha uma hierarquia de importância para essas observações.
-
-Não implementar.
-
-Apenas analisar e documentar.
-
 ## 04/08/2026 22:11
 O NeuroPeak já está pronto, em produção e sendo utilizado com pacientes.
 
@@ -360,4 +295,13 @@ Depois implemente, publique e pare para minha validação visual.
 <output-file>/private/tmp/claude-501/-Users-kamyllahonorio-neuropeak/3e6ecf11-e4e5-471f-bbf9-4595faa53598/tasks/bpfcwrwer.output</output-file>
 <status>completed</status>
 <summary>Background command "Vigiar o disparo" completed (exit code 0)</summary>
+</task-notification>
+
+## 04/08/2026 23:39
+<task-notification>
+<task-id>bn48lueai</task-id>
+<tool-use-id>toolu_01QPrGuv3qKrJBr26uKfsjwn</tool-use-id>
+<output-file>/private/tmp/claude-501/-Users-kamyllahonorio-neuropeak/3e6ecf11-e4e5-471f-bbf9-4595faa53598/tasks/bn48lueai.output</output-file>
+<status>completed</status>
+<summary>Background command "Disparar a Fase 1 isolado" completed (exit code 0)</summary>
 </task-notification>

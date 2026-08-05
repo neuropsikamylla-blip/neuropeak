@@ -12,7 +12,6 @@ import {
   SESSION_STATE_LABELS,
   formatFatigueSummary,
   formatInterferenceSummary,
-  formatLoad,
   formatMinutesRange,
   groupAlerts,
   presentAlert,
@@ -51,7 +50,8 @@ describe("apresentação consultiva da prescrição", () => {
       titulo: "Duração abaixo da faixa esperada",
       mensagem: "A estimativa de 27–33 min fica abaixo da faixa esperada de 27–33 min.",
     });
-    expect(presentAlert(alert("HIGH_FATIGUE_ADJACENT"), context).sugestao).toContain("Considere");
+    expect(presentAlert(alert("HIGH_FATIGUE_ADJACENT"), context).mensagem)
+      .toBe("Esta ocorrência não é exibida na revisão do plano.");
   });
 
   it("deriva e agrupa as três gravidades consultivas", () => {
@@ -60,26 +60,25 @@ describe("apresentação consultiva da prescrição", () => {
     const revision = presentAlert(alert("LOAD_OVER_CAP"), context);
     expect(visualSeverity(alert("OUTSIDE_BEST_POSITION", "informativa"))).toBe("informacao");
     expect(groupAlerts([informative, attention, revision])).toEqual({
-      revisao_plano: [attention, revision],
+      revisao_plano: [revision],
       observacao_clinica: [],
-      informacao: [informative],
+      informacao: [informative, attention],
     });
   });
 
   it("distribui os 18 códigos entre os três níveis visuais", () => {
     expect([...REVISION_CODES]).toEqual([
-      "SESSION_ABOVE_TARGET", "SESSION_SAFE_MAX_EXCEEDED", "LOAD_AT_CAP", "LOAD_OVER_CAP",
-      "HIGH_FATIGUE_COUNT", "HIGH_FATIGUE_ADJACENT", "HIGH_FATIGUE_POSITION",
-      "HIGH_INTERFERENCE_ADJACENT", "PLANNING_WINDOW_COUNT", "PLANNING_WINDOW_ADJACENT",
+      "LOAD_AT_CAP", "LOAD_OVER_CAP", "HIGH_FATIGUE_COUNT",
     ]);
-    // As três pernas da regra de fadiga alta aprovada na Fase 2 — quantidade, consecutividade e
-    // fechamento — ficam juntas na revisão do plano por serem condições objetivas.
     expect([...CLINICAL_OBSERVATION_CODES]).toEqual([
-      "COGNITIVE_CONCENTRATION", "DECLARED_BAD_COMBINATION",
+      "COGNITIVE_CONCENTRATION", "DECLARED_BAD_COMBINATION", "AUDITORY_ONLY_ADJACENT",
+      "PLANNING_WINDOW_COUNT",
     ]);
     expect([...INFORMATION_CODES]).toEqual([
-      "SESSION_BELOW_TARGET", "SESSION_RANGE_PARTIAL", "OUTSIDE_BEST_POSITION",
-      "OPEN_POSITION_NOT_ELIGIBLE", "CLOSE_POSITION_NOT_ELIGIBLE", "AUDITORY_ONLY_ADJACENT",
+      "SESSION_BELOW_TARGET", "SESSION_ABOVE_TARGET", "SESSION_RANGE_PARTIAL",
+      "SESSION_SAFE_MAX_EXCEEDED", "OUTSIDE_BEST_POSITION", "OPEN_POSITION_NOT_ELIGIBLE",
+      "CLOSE_POSITION_NOT_ELIGIBLE", "HIGH_FATIGUE_POSITION", "HIGH_FATIGUE_ADJACENT",
+      "HIGH_INTERFERENCE_ADJACENT", "PLANNING_WINDOW_ADJACENT",
     ]);
     expect(new Set([...REVISION_CODES, ...CLINICAL_OBSERVATION_CODES, ...INFORMATION_CODES]).size).toBe(18);
   });
@@ -121,20 +120,6 @@ describe("apresentação consultiva da prescrição", () => {
     for (const roundedRange of roundedRanges) expect(translated.mensagem).not.toContain(roundedRange);
   });
 
-  it("formata carga, referência e aviso consultivo", () => {
-    expect(formatLoad(8, 10)).toEqual({
-      text: "Carga basal: 8 / referência 10",
-      helper: "Referência consultiva; não determina se o plano é válido.",
-    });
-  });
-
-  it("formata carga sem comparação quando não há referência clínica definida", () => {
-    expect(formatLoad(8)).toEqual({
-      text: "Carga basal: 8",
-      helper: "Referência clínica ainda não definida para esta duração.",
-    });
-  });
-
   it("resume fadiga e interferência omitindo níveis zerados", () => {
     const summary = { BAIXA: 0, MODERADA: 2, ALTA: 1 } as const;
     expect(formatFatigueSummary(summary)).toBe("2 moderadas · 1 alta");
@@ -146,7 +131,7 @@ describe("apresentação consultiva da prescrição", () => {
     const plan = presentPlan({ targetMinutes: 30, exercises: [] });
     expect(plan.durationRange).toEqual([0, 0]);
     expect(plan.estimateLabel).toBe("Estimativa: 0 min");
-    expect(plan.stateLabel).toBe("Abaixo do esperado");
+    expect(plan.stateLabel).toBe("Abaixo da faixa esperada (27–33 min)");
     expect(plan.alerts).toEqual([]);
     expect(plan.emptyGuidance).toBe(PRESENTATION_TEXTS.emptyGuidance);
   });
@@ -161,18 +146,34 @@ describe("apresentação consultiva da prescrição", () => {
   it.each([26, 35, 37, 45])("não marca %s min como legado nem arredonda a duração prescrita", (targetMinutes) => {
     const plan = presentLegacyPlan(["tempo-reacao"], targetMinutes);
     expect(plan.prescribedMinutes).toBe(targetMinutes);
-    expect(plan.prescribedLabel).toBe(`Duração prescrita: ${targetMinutes} min`);
+    expect(plan.prescribedLabel).toBe(`Sessão de ${targetMinutes} min`);
     expect(plan.legacyMarker).toBeUndefined();
   });
 
-  it("apresenta a carga calculada e a ausência de referência para duração contínua", () => {
+  it("não expõe a escala interna quando a duração não tem referência", () => {
     const plan = presentLegacyPlan(["tempo-reacao"], 26);
-    expect(plan.loadText).toBe("Carga basal: 1");
-    expect(plan.loadHelper).toBe(PRESENTATION_TEXTS.undefinedLoadReference);
+    expect(plan).not.toHaveProperty("loadText");
+    expect(plan).not.toHaveProperty("loadHelper");
     // tempo-reacao é MODERADA em fadiga e em interferência no catálogo.
     expect(plan.fatigueText).toBe("1 moderada");
     expect(plan.interferenceText).toBe("1 moderada");
     expect(plan.canSave).toBe(true);
+  });
+
+  it("não expõe a escala interna mesmo quando existe referência clínica", () => {
+    const plan = presentLegacyPlan(["tempo-reacao", "letras-sequencia", "certo-ou-errado"], 20);
+    expect(plan).not.toHaveProperty("loadText");
+    expect(plan).not.toHaveProperty("loadHelper");
+    expect(JSON.stringify(PRESENTATION_TEXTS)).not.toMatch(/carga basal/i);
+  });
+
+  it("resume a duração da sessão em três linhas de cabeçalho", () => {
+    const plan = presentLegacyPlan(["tempo-reacao", "letras-sequencia", "certo-ou-errado"], 20);
+    expect([plan.prescribedLabel, plan.estimateLabel, plan.stateLabel]).toEqual([
+      "Sessão de 20 min",
+      "Estimativa: aproximadamente 21 min",
+      "Dentro da faixa esperada (18–22 min)",
+    ]);
   });
 
   it("abre envelope antigo com duração contínua salva sem converter o formato", () => {
@@ -183,8 +184,7 @@ describe("apresentação consultiva da prescrição", () => {
 
     expect(plan.prescribedMinutes).toBe(45);
     expect(plan.legacyMarker).toBeUndefined();
-    expect(currentDuration.alerts.find((item) => item.code === "SESSION_BELOW_TARGET")?.mensagem)
-      .toContain("40,5–49,5 min");
+    expect(currentDuration.stateLabel).toContain("40,5–49,5 min");
     expect(raw).toEqual(before);
   });
 
