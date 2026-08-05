@@ -3,7 +3,96 @@
 > Checkpoint de contexto para continuidade entre sessões. Atualizado automaticamente.
 > 👉 Visão geral e handoff para o próximo Claude: **`ESTADO-DO-PROJETO.md`** (leia primeiro).
 
-## 🗄️ T1.0 — BANCO ALTERADO E BACKFILL CONCLUÍDO (05/ago/2026) — CÓDIGO AINDA NÃO
+## ✅ T1.0 — CÓDIGO REALINHADO AO BANCO E PUBLICADO (05/ago/2026) — `f9b8584`, v2.76.0
+
+**Publicado na Vercel.** Esta seção **supera** a seção seguinte (banco alterado, código pendente): o
+**código voltou à paridade com o banco de produção**, com todos os gates verdes e smoke test não
+destrutivo executado.
+
+### O que mudou no código — cinco pontos
+
+1. **`prisma/schema.prisma`** — devolvidos o **enum `TutorialSource`**, com **`BACKFILL`** e **`PATIENT`
+   nesta ordem** (a mesma ordem gravada no banco), e os **três campos nuláveis em `ExerciseConfig`**:
+   **`tutorialCompletedAt DateTime?`**, **`tutorialVersion Int?`** e **`tutorialSource TutorialSource?`**.
+   É o **primeiro enum do schema**.
+2. **`app/api/exercise-tutorial/route.ts`** — **restaurada** a partir de
+   **`docs/t1-pausada/exercise-tutorial-route.ts.txt`**, **byte a byte**. Trata-se de **restauração, não de
+   reescrita**: há **teste que trava essa identidade**.
+3. **`lib/schema-banco-alinhado.test.ts`** — o teste **deixou de proibir os três campos e passou a exigi-los**,
+   mantendo a **igualdade exata da lista `CAMPOS_NO_BANCO` (12 campos)** — é justamente essa igualdade que
+   **impede um campo novo de entrar no schema antes de existir no banco**. Os **novos testes verificam**: que
+   os **três campos são nuláveis**; que o **enum tem exatamente `BACKFILL` e `PATIENT`**; e **quatro garantias
+   da rota** — grava **somente os três campos de tutorial**; **não escreve** em `currentDifficulty`,
+   `totalAttempts` nem `lastAttemptAt`; **não cria `Session`** nem **dispara progressão, conquistas ou
+   alertas**; e **exige sessão de `PATIENT`**, usando o **`patientId` da sessão, nunca o do corpo**, com
+   **`.strict()` no Zod**.
+4. **`lib/tutorial/contracts.test.ts`** — o guarda que **exigia a rota FORA de `app/api`** foi **invertido**:
+   agora **exige que ela esteja ativa**.
+5. **`app/api/patients/[id]/route.ts` — NÃO foi tocada.** O include é **booleano**
+   (`exerciseConfigs: includeConfig`), portanto **já devolve os três campos novos automaticamente**.
+
+### Gates — todos verdes
+
+**`prisma validate` exit 0** · **`prisma generate` OK (Prisma Client v5.22.0)** · **`npx tsc --noEmit` exit 0** ·
+**`npm run test` — 517/517 em 41 arquivos** · **`npm run build` exit 0**.
+
+### Provas de que schema e banco estão alinhados
+
+- **Prisma Client (DMMF):** **`ExerciseConfig` com 12 campos**; os **três campos de tutorial presentes e todos
+  nuláveis**; **enum `TutorialSource` com `BACKFILL` e `PATIENT`**.
+- **Prova decisiva:** o **Prisma Client executou `findFirst` em `ExerciseConfig` filtrando pelo enum**, contra o
+  **banco de produção**, **sem erro** — era **exatamente essa consulta que devolvia 500 durante o incidente**.
+- **Invariantes inalterados após todos os gates:** **16 `BACKFILL`** · **66 com `totalAttempts = 0` e sem
+  tutorial** · **0 `PATIENT`** · **82 `ExerciseConfig`** · **33 `Session`**.
+- **Nenhum dado alterado pelos testes locais:** **nenhum arquivo de teste importa `PrismaClient` nem `lib/db`** —
+  a **suíte é inteiramente offline**.
+
+### Deploy e smoke test não destrutivo
+
+**`/api/version`** devolveu **`appVersion 2.76.0`** e **buildId `dpl_F98Yg2xSmXZ8ryR95N4gNd1P5tth`**;
+**`/api/health`** devolveu **`{"ok": true}`**.
+
+- **`POST /api/exercise-tutorial` sem sessão → 401** — a **rota existe e exige sessão** (**404 indicaria rota
+  ausente**);
+- **`GET` na mesma rota → 405**;
+- **`GET /api/patients` → 401**;
+- **`GET /api/patients/xxx?config=true` → 401**;
+- **`/api/health` e `/api/version` → 200**;
+- **`/dashboard` e `/inicio` → 307** — **middleware ativo**.
+
+### ⚠️ O QUE NÃO FOI PROVADO — sete itens dependem de sessão autenticada real
+
+**Não verificados**, por exigirem **sessão autenticada real**:
+
+1. **`GET /api/patients/[id]?config=true` retornando 200 autenticado**;
+2. **plano do terapeuta carregando**;
+3. **nível real carregando**;
+4. **bloqueio diário**;
+5. **`POST /api/sessions` atualizando `ExerciseConfig`**;
+6. **rota do tutorial gravando `PATIENT`**;
+7. **registro `BACKFILL` virando `PATIENT` após conclusão real**.
+
+**Os três últimos escrevem no banco de produção** e **alterariam o estado de tutorial de um paciente real dela** —
+**por isso o VP parou e não os executou**. **A decisão sobre como prová-los é dela**: **paciente de teste** ou
+**aceitar a verificação no uso real**.
+
+### 🧠 Lição de método — duas perdas de tempo do VP na conferência do deploy
+
+- **(a)** o VP usou **`NEXTAUTH_URL` do `.env.local`**, que aponta para **`localhost`** — é a **variável de
+  desenvolvimento**, **não a URL de produção** — e ficou **5 minutos consultando o endereço errado**;
+- **(b)** em seguida comparou o campo **`version`** com **igualdade exata a `"2.76.0"`**, mas esse campo **traz o
+  deployment ID como sufixo** (**`2.76.0-dpl_…`**); o **deploy já estava no ar desde a primeira tentativa** e o
+  VP **esperou mais 4 minutos à toa**.
+
+**REGRA: para conferir deploy, usar o campo `appVersion` (limpo), nunca `version` (que carrega o buildId); e a
+URL de produção é `https://neuropeak-5jyl.vercel.app`, não o `NEXTAUTH_URL` local.**
+
+### ⏭️ PRÓXIMO PASSO
+
+**Conversão dos tutoriais dos 34 exercícios, em lotes** — **somente após a validação dela**.
+
+
+## 🗄️ T1.0 — BANCO ALTERADO E BACKFILL CONCLUÍDO (05/ago/2026) — CÓDIGO ALINHADO NA SEÇÃO ACIMA
 
 **Roteiro:** `docs/operacao/T1.0-roteiro-implantacao.sql` · **SQL do backfill como rodou:**
 `docs/operacao/T1.0-backfill-executado-2026-08-05.sql`. **Banco de PRODUÇÃO (Supabase), conexão direta
