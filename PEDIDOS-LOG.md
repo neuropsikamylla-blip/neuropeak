@@ -11597,3 +11597,33 @@ Não publicar.
 Não converter os pilotos.
 
 Pare após apresentar o plano operacional completo.
+
+## 04/08/2026 21:37
+O plano operacional está aprovado, mas não execute ainda nenhuma alteração.
+
+Primeiro precisamos confirmar o backup do banco.
+
+Vou verificar no painel do Supabase:
+
+- plano atual do projeto;
+- existência de backups automáticos;
+- data e horário do último backup;
+- disponibilidade de restauração;
+- existência de PITR.
+
+Até eu trazer essas informações:
+
+- não execute db push;
+- não execute SQL;
+- não publique;
+- não faça backfill;
+- não converta os pilotos.
+
+Também mantenha como referência correta:
+
+- CHECK de difficulty entre 1 e 13;
+- banco antes do código;
+- reaplicação imediata das três CHECK após o db push;
+- parada obrigatória se o prisma migrate diff mostrar qualquer DROP ou ALTER COLUMN inesperado.
+
+Quando eu enviar a evidência do backup, seguimos o roteiro passo a passo, com validação entre cada etapa.

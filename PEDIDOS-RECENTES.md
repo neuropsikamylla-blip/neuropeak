@@ -1,34 +1,6 @@
 # As 3 ultimas especificacoes dela (automatico; a mais nova por ultimo)
 # Na retomada: ler as 3, conectar com PROGRESSO.md e git, declarar e seguir.
 
-## 04/08/2026 21:24
-Pode concluir a implementação da T1 sem tocar no banco de produção.
-
-Apenas corrija a modelagem de tutorialSource antes da entrega:
-
-- não utilizar String livre;
-- criar enum explícito, por exemplo:
-  BACKFILL
-  PATIENT;
-- tutorialSource permanece opcional;
-- o backfill grava BACKFILL;
-- a conclusão real pela rota grava PATIENT;
-- se um registro originalmente preenchido pelo backfill for posteriormente concluído pelo paciente, a origem deve mudar para PATIENT.
-
-O rollback do backfill só poderá limpar registros cuja origem ainda seja BACKFILL.
-
-Sobre o backup do Supabase: não presuma que existe. Na futura etapa de produção, primeiro verifique e apresente evidência concreta de:
-
-- qual mecanismo de backup está disponível;
-- quando foi gerado o último backup;
-- se ele inclui o banco relevante;
-- como seria feita a restauração;
-- se há necessidade de exportação lógica adicional antes do db push.
-
-Não executar nenhuma ação no banco agora.
-
-Conclua a T1 com prisma validate, prisma generate, TypeScript, suíte completa, build e revisão do diff. Depois pare para minha validação.
-
 ## 04/08/2026 21:26
 <task-notification>
 <task-id>bf148lt2j</task-id>
@@ -89,3 +61,33 @@ Não publicar.
 Não converter os pilotos.
 
 Pare após apresentar o plano operacional completo.
+
+## 04/08/2026 21:37
+O plano operacional está aprovado, mas não execute ainda nenhuma alteração.
+
+Primeiro precisamos confirmar o backup do banco.
+
+Vou verificar no painel do Supabase:
+
+- plano atual do projeto;
+- existência de backups automáticos;
+- data e horário do último backup;
+- disponibilidade de restauração;
+- existência de PITR.
+
+Até eu trazer essas informações:
+
+- não execute db push;
+- não execute SQL;
+- não publique;
+- não faça backfill;
+- não converta os pilotos.
+
+Também mantenha como referência correta:
+
+- CHECK de difficulty entre 1 e 13;
+- banco antes do código;
+- reaplicação imediata das três CHECK após o db push;
+- parada obrigatória se o prisma migrate diff mostrar qualquer DROP ou ALTER COLUMN inesperado.
+
+Quando eu enviar a evidência do backup, seguimos o roteiro passo a passo, com validação entre cada etapa.

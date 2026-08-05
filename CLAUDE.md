@@ -113,7 +113,7 @@ theme CLINICAL/COLORFUL/GAMIFIED), `Session` (score/accuracy/reactionTime/diffic
 `TrainingPlan`, `ExerciseConfig` (`@@unique[patientId,exerciseId]`), `Achievement`, `Alert`,
 `LicenseCode`, `PasswordResetToken`, `TherapeuticSession` (Mundo Interior). Quase todos os filhos de
 `Patient` são `onDelete: Cascade`; `Patient.therapist` é `Restrict`. As 3 CHECK de `Session`
-(score 0-100, accuracy 0-1, difficulty 1-10) foram aplicadas por SQL direto, **não** estão no schema
+(score 0-100, accuracy 0-1, difficulty **1-13**) foram aplicadas por SQL direto, **não** estão no schema
 (reaplicar após `db push` — ver `RUNBOOK-OPERACIONAL.md`).
 
 ## Bibliotecas de conhecimento (somente leitura)
