@@ -1,304 +1,6 @@
 # As 3 ultimas especificacoes dela (automatico; a mais nova por ultimo)
 # Na retomada: ler as 3, conectar com PROGRESSO.md e git, declarar e seguir.
 
-## 04/08/2026 20:32
-A análise está aprovada. Vamos consolidar as decisões antes de implementar.
-
-==================================================
-DECISÕES — TUTORIAL E ENTRADA NO EXERCÍCIO
-==================================================
-
-1. MEMÓRIA DO TUTORIAL
-
-A informação de que o tutorial foi concluído deve ser armazenada no banco, por:
-
-- paciente;
-- exercício.
-
-Não usar localStorage como fonte principal.
-
-Motivo:
-
-- o paciente pode trocar de dispositivo;
-- pode treinar parte em casa e parte na clínica;
-- o terapeuta precisa ter um estado consistente;
-- a experiência não pode depender do navegador utilizado.
-
-O localStorage poderá existir apenas como apoio técnico temporário, nunca como fonte de verdade.
-
-Antes de implementar, analisar a modelagem mínima necessária e o impacto sobre banco, API e compatibilidade.
-
-==================================================
-2. PRIMEIRA UTILIZAÇÃO
-==================================================
-
-Na primeira vez que o paciente abrir determinado exercício:
-
-- apresentar o tutorial automaticamente;
-- o tutorial deve ser obrigatório antes do treino real;
-- ao concluir o tutorial, retornar para a tela de preparação ou oferecer “Começar treino”.
-
-O tutorial não pode:
-
-- contar como tentativa clínica;
-- alterar nível;
-- alterar progressão;
-- registrar pontuação;
-- interferir nas métricas do exercício;
-- ser contabilizado como parte da dose prescrita.
-
-==================================================
-3. UTILIZAÇÕES SEGUINTES
-==================================================
-
-Depois que o tutorial daquele exercício já tiver sido concluído, o paciente deve encontrar uma tela de preparação simples:
-
-NOME DO EXERCÍCIO
-
-Nível atual, quando aplicável.
-
-[ Começar ]
-
-[ Como funciona ]
-
-“Começar” inicia imediatamente o treino real.
-
-“Como funciona” abre novamente o tutorial completo por escolha do paciente.
-
-O tutorial nunca deve reaparecer automaticamente depois de concluído, salvo se:
-
-- o terapeuta futuramente redefinir esse estado;
-- houver uma mudança incompatível na mecânica do exercício;
-- existir uma nova versão do tutorial que exija reapresentação.
-
-Não implementar ainda redefinição pelo terapeuta, mas deixar a arquitetura preparada para isso.
-
-==================================================
-4. ESTRUTURA GLOBAL DO TUTORIAL
-==================================================
-
-Todos os exercícios deverão seguir um único fluxo:
-
-1. Demonstração
-2. Sua vez
-3. Validação
-4. Conclusão
-
-DEMONSTRAÇÃO
-
-- o sistema executa um exemplo real;
-- utiliza os mesmos componentes e regras visuais do exercício;
-- não usar animação meramente ilustrativa que diverge do jogo;
-- texto mínimo;
-- sem explicações longas.
-
-SUA VEZ
-
-- o paciente realiza uma única tentativa guiada;
-- dificuldade inicial simples;
-- objetivo apenas de confirmar compreensão;
-- não representa o nível clínico do paciente.
-
-VALIDAÇÃO
-
-Se acertar:
-
-“Você entendeu como funciona.”
-
-[ Começar treino ]
-
-Se errar:
-
-- apresentar orientação curta;
-- repetir somente a tentativa guiada;
-- não reiniciar todo o tutorial;
-- não registrar o erro como desempenho clínico;
-- não reduzir nível.
-
-==================================================
-5. PADRÃO DE ETAPAS
-==================================================
-
-O tutorial global deverá ter uma única sequência lógica.
-
-Os exercícios que hoje possuem duas ou três etapas precisam ser auditados.
-
-Não reduzir mecanicamente todos para “um slide”.
-
-A regra correta é:
-
-- uma demonstração contínua;
-- uma tentativa guiada;
-- uma conclusão.
-
-Caso a mecânica realmente possua decisões distintas, elas devem ocorrer dentro dessa mesma demonstração, sem obrigar o paciente a atravessar vários tutoriais separados.
-
-Não manter tutoriais repetitivos apenas porque foram implementados historicamente em mais de uma etapa.
-
-==================================================
-6. TELA TEXTUAL DE INSTRUÇÕES
-==================================================
-
-A tela atual com:
-
-- lista numerada;
-- cenário funcional;
-- estratégias;
-- botão “Iniciar”;
-
-não deve continuar como etapa obrigatória antes de todo treino.
-
-Evitar a sequência atual:
-
-instruções textuais
-→ tutorial interativo
-→ treino.
-
-Isso duplica explicações e aumenta a carga cognitiva antes da tarefa.
-
-A futura tela “Como funciona” poderá reunir:
-
-- tutorial demonstrativo;
-- explicação textual opcional;
-- cenário funcional;
-- estratégias.
-
-Mas o paciente não deve ser obrigado a ler essas informações em todas as sessões.
-
-==================================================
-7. RESULTADO E PERCEPÇÃO DE EVOLUÇÃO
-==================================================
-
-A tela final precisa comunicar evolução sem utilizar comparação punitiva.
-
-Quando houver subida de nível:
-
-“Você avançou para o nível X.”
-
-Quando mantiver o nível:
-
-“Treino concluído. Você manteve seu nível.”
-
-Quando a sessão tiver maior dificuldade ou eventual redução adaptativa:
-
-“Treino concluído. Hoje esta atividade exigiu mais esforço.”
-
-Não usar:
-
-- “você piorou”;
-- “você regrediu”;
-- “seu desempenho caiu” como mensagem principal ao paciente;
-- mensagens que incentivem competição com sessões anteriores.
-
-A informação técnica completa permanece disponível ao terapeuta.
-
-A comunicação ao paciente deve reforçar:
-
-- conclusão;
-- esforço;
-- continuidade;
-- progressão quando existente.
-
-==================================================
-8. TELA DE PREPARAÇÃO
-==================================================
-
-Padronizar uma tela global antes do início de cada exercício.
-
-Mostrar somente o necessário:
-
-- nome oficial do exercício;
-- nível atual, quando aplicável;
-- botão “Começar”;
-- botão “Como funciona”.
-
-Não mostrar excesso de métricas antes do treino.
-
-Não mostrar recorde como elemento principal.
-
-Não mostrar carga, fadiga, protocolo clínico ou dados destinados ao terapeuta.
-
-==================================================
-9. FRAMEWORK GLOBAL
-==================================================
-
-Não corrigir os 34 exercícios individualmente antes de definir o framework.
-
-Primeiro criar uma arquitetura reutilizável que controle:
-
-- tela de preparação;
-- estado de tutorial concluído;
-- demonstração;
-- tentativa guiada;
-- validação;
-- conclusão;
-- início do treino;
-- reabertura voluntária do tutorial.
-
-Cada exercício deverá fornecer apenas sua lógica específica, por exemplo:
-
-- demonstração real;
-- tentativa guiada;
-- regra de validação;
-- mensagens específicas estritamente necessárias.
-
-Não permitir que cada exercício volte a inventar seu próprio fluxo.
-
-==================================================
-10. IMPLEMENTAÇÃO EM FASES
-==================================================
-
-Antes do código, apresentar uma proposta em fases:
-
-FASE T1
-- modelagem do estado “tutorial concluído”;
-- contrato global;
-- tela de preparação;
-- nenhuma conversão dos exercícios ainda.
-
-FASE T2
-- implementar o framework;
-- converter 1 ou 2 exercícios-piloto representativos;
-- validar experiência e persistência.
-
-Sugestão de pilotos:
-- um exercício simples e visual;
-- um exercício auditivo ou operacionalmente complexo.
-
-FASE T3
-- converter os exercícios restantes em lotes seguros;
-- auditar os tutoriais com 2 ou 3 etapas;
-- garantir réplica real da mecânica.
-
-FASE T4
-- padronizar tela de resultado e comunicação de evolução.
-
-Não iniciar todas as fases de uma vez.
-
-==================================================
-11. ANÁLISE OBRIGATÓRIA ANTES DO CÓDIGO
-==================================================
-
-Antes de implementar, responder:
-
-1. Onde e como armazenar tutorial concluído por paciente e exercício.
-2. Se já existe entidade ou tabela adequada que possa ser estendida.
-3. Se será necessária migration.
-4. Quais APIs precisarão ler e gravar esse estado.
-5. Como versionar o tutorial para reapresentá-lo após mudança relevante de mecânica.
-6. Como garantir que o tutorial não altere progressão nem métricas.
-7. Quais componentes atuais podem ser reutilizados.
-8. Quais tutoriais não são réplicas reais da mecânica.
-9. Quais exercícios possuem 1, 2 ou 3 etapas.
-10. Quais dois exercícios são os melhores pilotos e por quê.
-11. Quais arquivos seriam alterados na Fase T1.
-12. Quais testes serão necessários.
-13. Quais decisões clínicas ainda dependem da minha validação.
-
-Não implementar ainda.
-
-Criar um documento arquitetônico novo, preservar os documentos anteriores e parar para minha validação.
-
 ## 04/08/2026 20:52
 A análise está aprovada, com as seguintes decisões.
 
@@ -700,3 +402,286 @@ Também liste claramente as outras decisões clínicas pendentes mencionadas no 
 Não implementar.
 Não publicar.
 Pare após a proposta detalhada da Fase T1.
+
+## 04/08/2026 21:09
+A proposta da Fase T1 está aprovada. Seguem as decisões finais para os pontos pendentes.
+
+==================================================
+1. EXERCÍCIOS COM MECÂNICA REFORMULADA
+==================================================
+
+Aprovo a estratégia de versionamento diferenciado.
+
+Para exercícios cuja mecânica foi significativamente reformulada — inicialmente:
+
+- Vigilância;
+- Agentes Focus;
+- Informação em Foco;
+
+a versão atual do tutorial deverá nascer como versão 2.
+
+No backfill:
+
+- pacientes com histórico recebem tutorialVersion = 1;
+- portanto, deverão visualizar uma vez o novo tutorial da versão 2;
+- isso é intencional, porque o histórico anterior não comprova conhecimento da mecânica atual.
+
+Não reapresentar tutorial por mera alteração estética ou textual.
+
+Antes de incluir outros exercícios nessa lista, comprovar que houve mudança real em:
+
+- regra de resposta;
+- estímulo-alvo;
+- interação;
+- sequência operacional;
+- mecânica central.
+
+==================================================
+2. READY SCREEN DO SPAN
+==================================================
+
+Remover da tela de preparação qualquer antecipação do comprimento da sequência, incluindo textos como:
+
+“5 dígitos”.
+
+Isso já foi retirado do exercício porque fornece pista indevida sobre a quantidade de elementos.
+
+A tela de preparação do Span pode mostrar:
+
+- nome do exercício;
+- nível atual, se necessário;
+- Começar;
+- Como funciona.
+
+Não mostrar:
+
+- quantidade de dígitos da próxima sequência;
+- tamanho previsto;
+- qualquer pista sobre a unidade que será apresentada.
+
+No tutorial guiado, utilizar 2 dígitos apenas como micro-unidade didática, sem apresentar isso como nível clínico.
+
+==================================================
+3. UPDATEDAT DO EXERCISECONFIG
+==================================================
+
+Aceito que `updatedAt` seja alterado quando o tutorial for concluído, desde que seja comprovado que esse campo não é utilizado atualmente para:
+
+- inferir treino recente;
+- calcular progressão;
+- bloquear exercício;
+- produzir histórico clínico;
+- ordenar tentativas;
+- identificar última execução.
+
+Antes da migration, faça uma busca completa pelos usos de `ExerciseConfig.updatedAt`.
+
+Se alguma lógica clínica depender dele, pare e apresente o conflito antes de implementar.
+
+A fonte para execução recente continua sendo `lastAttemptAt`, que a rota do tutorial não poderá alterar.
+
+==================================================
+4. CONFIG CRIADA PELO PLANO, SEM TENTATIVAS
+==================================================
+
+Se existir ExerciseConfig porque o terapeuta adicionou o exercício ao plano, mas:
+
+`totalAttempts = 0`
+
+o paciente deverá visualizar o tutorial obrigatório na primeira execução.
+
+A mera existência do ExerciseConfig não significa que o exercício já foi realizado.
+
+A regra é:
+
+- histórico real de execução anterior → tutorial conhecido no backfill;
+- configuração sem execução → tutorial obrigatório.
+
+==================================================
+5. ESCOPO DOS 15 EXERCÍCIOS SEM TUTORIAL
+==================================================
+
+Não criar os 15 tutoriais nesta fase.
+
+Ordem aprovada:
+
+FASE T1
+- schema;
+- migration;
+- backfill;
+- rota específica;
+- contrato global;
+- leitura do estado;
+- tela de preparação;
+- nenhum exercício convertido.
+
+FASE T2
+- pilotos:
+  - Conecta Números;
+  - Span Numérico Auditivo Direto.
+
+FASE T3
+- conversão dos demais em lotes separados por complexidade.
+
+Sugestão de organização futura:
+
+Lote simples visual:
+- mecânicas com resposta única e feedback imediato.
+
+Lote sequencial/memória:
+- spans, matrizes, sequências e memória operacional.
+
+Lote contínuo:
+- exercícios CONTINUOUS_TIMED.
+
+Lote planejamento/funcional:
+- Restaurante, Supermercado, Estacionamento, Ordem da História e similares.
+
+Lote especial:
+- tutoriais próprios e mecânicas reformuladas.
+
+Não fechar agora a composição exata dos lotes T3.
+
+==================================================
+6. VIGILÂNCIA, AGENTES FOCUS E INFORMAÇÃO EM FOCO
+==================================================
+
+Esses três exercícios não devem ser convertidos automaticamente depois dos pilotos.
+
+Primeiro:
+
+1. concluir e validar T1;
+2. implementar os dois pilotos na T2;
+3. validar a experiência real;
+4. auditar individualmente esses tutoriais;
+5. só então escrever a especificação de conversão.
+
+Preservar integralmente as decisões clínicas de cada mecânica.
+
+Em Vigilância, não introduzir pistas que revelem o alvo durante o treino real.
+
+==================================================
+7. COMUNICAÇÃO QUANDO HOUVER REDUÇÃO DE NÍVEL
+==================================================
+
+Quando ocorrer redução adaptativa real, a mensagem ao paciente deverá ser neutra:
+
+“Treino concluído. Hoje esta atividade exigiu mais esforço.”
+
+Pode haver uma segunda frase curta:
+
+“Continue praticando no seu ritmo.”
+
+Não informar na mensagem principal:
+
+- que o nível caiu;
+- que houve regressão;
+- que o paciente piorou;
+- comparação negativa com a sessão anterior.
+
+O dado técnico da alteração de nível permanece disponível ao terapeuta.
+
+Não esconder do terapeuta o que ocorreu.
+
+==================================================
+8. CENÁRIO FUNCIONAL E ESTRATÉGIAS
+==================================================
+
+Esses conteúdos não aparecem automaticamente antes do treino.
+
+Dentro de “Como funciona”, organizar em divulgação progressiva:
+
+1. Tutorial
+2. Por que este treino?
+3. Estratégias úteis
+
+“Por que este treino?” apresenta o cenário funcional de maneira breve.
+
+“Estratégias úteis” fica recolhido por padrão e deve conter apenas estratégias permitidas.
+
+Não criar texto longo nem transformar “Como funciona” em uma aula obrigatória.
+
+O paciente deve conseguir rever apenas o tutorial sem precisar atravessar todo o conteúdo textual.
+
+==================================================
+9. REDEFINIÇÃO DO TUTORIAL PELO TERAPEUTA
+==================================================
+
+Não implementar agora.
+
+Registrar como funcionalidade futura na área de:
+
+Evolução/histórico do paciente → exercício específico.
+
+A ação será exclusiva do terapeuta e deverá:
+
+- mostrar a versão concluída;
+- mostrar a versão atual;
+- permitir “Solicitar tutorial novamente”;
+- exigir confirmação;
+- não apagar histórico;
+- não alterar nível;
+- não alterar tentativas;
+- não afetar progressão;
+- não apagar a data anterior de execução clínica.
+
+Não colocar essa ação dentro da prescrição rotineira.
+
+==================================================
+10. FASE T1 AUTORIZADA
+==================================================
+
+Pode iniciar exclusivamente a Fase T1.
+
+Escopo:
+
+- adicionar `tutorialCompletedAt DateTime?`;
+- adicionar `tutorialVersion Int?`;
+- criar migration e backfill aprovados;
+- criar catálogo explícito de versões;
+- criar contrato TypeScript do framework;
+- criar rota específica de conclusão;
+- incluir os campos na leitura já existente do paciente;
+- criar lógica pura para decidir:
+  - tutorial obrigatório;
+  - tutorial já concluído;
+  - versão desatualizada;
+- criar a tela global de preparação, ainda sem converter os exercícios;
+- testes correspondentes.
+
+A rota de tutorial não poderá tocar:
+
+- Session;
+- currentDifficulty;
+- lastAttemptAt;
+- totalAttempts;
+- progressão;
+- achievements;
+- alertas;
+- métricas;
+- histórico clínico;
+- dose.
+
+Antes de disparar o código, apresente:
+
+1. arquivos exatos que serão alterados;
+2. SQL exato da migration e do backfill;
+3. resultado da busca sobre usos de `ExerciseConfig.updatedAt`;
+4. testes de aceite;
+5. estratégia de rollback.
+
+Depois implemente a T1 em lote isolado.
+
+Ao final:
+
+- revisar o diff;
+- rodar migration em ambiente seguro;
+- rodar TypeScript;
+- rodar suíte completa;
+- rodar build;
+- provar o backfill;
+- provar que a rota não toca campos clínicos;
+- provar compatibilidade dos pacientes atuais;
+- não converter ainda Conecta Números nem Span;
+- não publicar automaticamente;
+- parar para minha validação.
