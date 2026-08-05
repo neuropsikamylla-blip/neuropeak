@@ -1,49 +1,6 @@
 # As 3 ultimas especificacoes dela (automatico; a mais nova por ultimo)
 # Na retomada: ler as 3, conectar com PROGRESSO.md e git, declarar e seguir.
 
-## 05/08/2026 12:54
-A correção ficou melhor e considero a direção aprovada.
-Antes de encerrarmos a Fase 1, quero fazer uma última revisão exclusivamente de UX e linguagem clínica.
-Não quero alterar nenhuma regra, cálculo, alerta, fórmula ou lógica do motor.
-Quero revisar apenas a forma como essas informações chegam ao terapeuta.
-Objetivo
-A tela deve responder rapidamente:
-"Existe algo neste plano que merece minha atenção?"
-Ela não deve parecer um relatório do algoritmo.
-Revise toda a nomenclatura procurando termos excessivamente técnicos, por exemplo:
-estimativa
-calculada
-referência
-basal
-parâmetros
-composição
-heurística
-algoritmo
-Sempre que possível, substitua por uma linguagem mais natural para um terapeuta.
-Também quero revisar a hierarquia visual.
-A informação mais importante deve aparecer primeiro.
-O restante deve aparecer apenas quando realmente ajudar a tomada de decisão.
-Pergunte continuamente durante a revisão:
-"Isso ajuda o terapeuta a decidir algo?"
-Se a resposta for não, essa informação deve ir para "Ver detalhes" ou deixar de aparecer.
-Faça uma análise completa da camada de apresentação.
-Quero que você percorra todas as telas da revisão do plano procurando:
-informações redundantes;
-informações excessivamente técnicas;
-informações que descrevem o funcionamento do sistema em vez de ajudar a decisão clínica;
-textos longos;
-repetições;
-títulos pouco intuitivos;
-oportunidades de simplificar.
-Não implemente nenhuma funcionalidade nova.
-Não altere o núcleo.
-Não altere cálculos.
-Não altere validações.
-Não altere banco.
-Não altere API.
-Quero apenas uma revisão de UX e linguagem clínica.
-Ao final, apresente todas as sugestões antes de implementar qualquer alteração.
-
 ## 05/08/2026 12:58
 Concordo com a maior parte da análise, mas quero alguns ajustes antes da implementação.
 Aprovo
@@ -96,3 +53,24 @@ Depois implemente todas essas alterações em um único lote, sem alterar o núc
 <status>completed</status>
 <summary>Background command "Vigiar o disparo" completed (exit code 0)</summary>
 </task-notification>
+
+## 05/08/2026 13:07
+A direção está aprovada.
+Mas quero acrescentar um princípio que deve orientar toda essa revisão.
+Não quero substituir linguagem técnica por linguagem simplificada.
+Quero substituir linguagem do sistema por linguagem clínica.
+Existe uma diferença importante.
+Por exemplo:
+"janela de planejamento" → é linguagem do motor → deve sair.
+"planejamento prolongado" → é conceito clínico → deve permanecer.
+Da mesma forma:
+"referência basal", "modelo de execução", "heurística", "parâmetros" → são conceitos internos do sistema.
+"memória operacional", "planejamento", "atenção seletiva", "fadiga", "flexibilidade cognitiva" → são conceitos clínicos e podem permanecer.
+Quero que toda a revisão siga esse critério.
+Outra orientação:
+Antes de remover qualquer informação da interface, pergunte:
+Isso é uma informação do motor ou uma informação clínica?
+Se for apenas do motor, ela deve desaparecer da interface.
+Se for uma informação clínica que ajuda o terapeuta a interpretar o plano, ela deve permanecer, mesmo que utilize terminologia técnica da Neuropsicologia.
+Quero preservar a identidade de uma plataforma clínica, e não transformar a interface em uma linguagem excessivamente simplificada.
+Pode concluir a implementação seguindo esse princípio.

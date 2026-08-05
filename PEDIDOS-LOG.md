@@ -12506,3 +12506,24 @@ Depois implemente todas essas alterações em um único lote, sem alterar o núc
 <status>completed</status>
 <summary>Background command "Vigiar o disparo" completed (exit code 0)</summary>
 </task-notification>
+
+## 05/08/2026 13:07
+A direção está aprovada.
+Mas quero acrescentar um princípio que deve orientar toda essa revisão.
+Não quero substituir linguagem técnica por linguagem simplificada.
+Quero substituir linguagem do sistema por linguagem clínica.
+Existe uma diferença importante.
+Por exemplo:
+"janela de planejamento" → é linguagem do motor → deve sair.
+"planejamento prolongado" → é conceito clínico → deve permanecer.
+Da mesma forma:
+"referência basal", "modelo de execução", "heurística", "parâmetros" → são conceitos internos do sistema.
+"memória operacional", "planejamento", "atenção seletiva", "fadiga", "flexibilidade cognitiva" → são conceitos clínicos e podem permanecer.
+Quero que toda a revisão siga esse critério.
+Outra orientação:
+Antes de remover qualquer informação da interface, pergunte:
+Isso é uma informação do motor ou uma informação clínica?
+Se for apenas do motor, ela deve desaparecer da interface.
+Se for uma informação clínica que ajuda o terapeuta a interpretar o plano, ela deve permanecer, mesmo que utilize terminologia técnica da Neuropsicologia.
+Quero preservar a identidade de uma plataforma clínica, e não transformar a interface em uma linguagem excessivamente simplificada.
+Pode concluir a implementação seguindo esse princípio.
