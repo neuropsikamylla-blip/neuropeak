@@ -1,29 +1,6 @@
 # As 3 ultimas especificacoes dela (automatico; a mais nova por ultimo)
 # Na retomada: ler as 3, conectar com PROGRESSO.md e git, declarar e seguir.
 
-## 05/08/2026 07:53
-Vamos congelar a implementação por enquanto.
-
-Quero validar visualmente a Fase 1 antes de iniciarmos a T1 e qualquer alteração de banco.
-
-Quero revisar principalmente:
-
-- plano pequeno e bem equilibrado;
-- plano focal em memória operacional;
-- plano focal em planejamento;
-- plano com os 34 exercícios;
-- sessão muito acima da duração prevista.
-
-Enquanto isso, não implemente nenhuma nova funcionalidade.
-
-Também não quero iniciar ainda a Fase 2 (tutorial/T1).
-
-Aguarde meu retorno após a validação visual da v2.73.0.
-
-Caso eu encontre algum ponto de UX ou linguagem clínica, faremos pequenos ajustes sobre esta versão antes de seguir para o banco.
-
-Fique apenas disponível para correções da Fase 1, se forem necessárias.
-
 ## 05/08/2026 11:47
 Encontrei um terceiro caminho, que acredito representar melhor a arquitetura que acabamos de aprovar.
 
@@ -122,3 +99,47 @@ Não altere banco.
 Não altere API.
 Quero apenas uma revisão de UX e linguagem clínica.
 Ao final, apresente todas as sugestões antes de implementar qualquer alteração.
+
+## 05/08/2026 12:58
+Concordo com a maior parte da análise, mas quero alguns ajustes antes da implementação.
+Aprovo
+Remover termos excessivamente técnicos quando eles não ajudam na decisão clínica.
+Remover descrições do algoritmo da interface.
+Simplificar textos longos.
+Remover redundâncias.
+Confirmar visualmente quando não houver nenhum insight (por exemplo: "Nada a revisar neste plano.").
+Não concordo com algumas substituições
+Evite trocar precisão clínica por linguagem excessivamente informal.
+Por exemplo:
+"...é bastante para uma sessão deste tamanho."
+Não gosto dessa redação.
+Prefiro manter linguagem profissional e objetiva.
+Outro exemplo:
+"6 exercícios exigem planejamento demorado."
+Também não gosto.
+"Planejamento prolongado" é um conceito mais técnico e mais correto do que "demorado".
+O problema não era o termo "planejamento", e sim "janela de planejamento", que é linguagem interna do sistema.
+Sobre os detalhes da estimativa
+Também não quero frases muito narrativas.
+Em vez de:
+"Este plano deve levar entre..."
+Prefiro algo mais objetivo, por exemplo:
+Tempo previsto para este plano
+Faixa esperada para esta meta
+Sem transformar isso em um texto explicativo.
+Sobre a hierarquia
+Concordo em colocar primeiro o estado da sessão.
+Também concordo em exibir uma confirmação discreta quando não houver nenhum insight.
+Sobre carga e interferência
+Quero remover definitivamente da interface qualquer escala interna que não tenha significado clínico direto.
+Isso inclui:
+carga numérica;
+interferência numérica;
+qualquer outra métrica interna semelhante.
+Se essas informações forem necessárias para o motor, permanecem apenas internamente.
+Nos detalhes do exercício quero mostrar apenas informações que realmente auxiliem a interpretação clínica do terapeuta.
+Antes de implementar
+Revise novamente toda a tela perguntando, para cada informação:
+"Se eu remover isto, o terapeuta perde capacidade de tomar alguma decisão clínica?"
+Se a resposta for não, essa informação provavelmente não deve aparecer.
+Depois implemente todas essas alterações em um único lote, sem alterar o núcleo, apenas a camada de apresentação.
