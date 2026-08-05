@@ -13108,3 +13108,27 @@ Não faça qualquer correção de dados automaticamente.
 Primeiro restaure produção. Depois apresente a auditoria e um plano de reparação separado.
 
 Pode implementar e publicar o hotfix agora, sem nova espera para validação.
+
+## 05/08/2026 15:57
+Confirmei o hotfix em produção.
+
+- os exercícios do plano reapareceram;
+- o plano não estava apagado;
+- a tela voltou a carregar corretamente.
+
+Pode agora preparar a auditoria dos registros afetados desde a v2.73.0.
+
+Quero apenas:
+
+1. identificar quais sessões foram gravadas enquanto o ExerciseConfig falhava;
+2. identificar pacientes e exercícios potencialmente afetados;
+3. comparar Sessions com:
+   - currentDifficulty;
+   - lastAttemptAt;
+   - totalAttempts;
+4. propor uma reconstrução segura desses campos a partir do histórico existente;
+5. mostrar exatamente quais dados seriam alterados;
+6. não executar nenhuma correção automática;
+7. não iniciar ainda a T1 do tutorial.
+
+Apresente primeiro o diagnóstico e o plano de reparação.

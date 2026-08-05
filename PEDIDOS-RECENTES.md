@@ -1,55 +1,6 @@
 # As 3 ultimas especificacoes dela (automatico; a mais nova por ultimo)
 # Na retomada: ler as 3, conectar com PROGRESSO.md e git, declarar e seguir.
 
-## 05/08/2026 15:30
-Consegui reproduzir novamente e agora há evidência visual.
-
-Fluxo:
-
-1. Adicionei 2 exercícios:
-   - Span Numérico Auditivo Direto;
-   - Span Numérico Auditivo Inverso.
-
-2. Antes de salvar:
-   - os dois aparecem selecionados;
-   - o painel mostra Total: 2;
-   - a análise do plano é gerada normalmente.
-
-3. Cliquei em Salvar plano.
-4. O sistema mostrou: “Plano salvo com sucesso!”
-5. Saí da página.
-6. Entrei novamente no mesmo paciente e na montagem do plano.
-
-Resultado:
-
-- os exercícios não aparecem selecionados;
-- o painel mostra Total: 0;
-- aparece “Nenhum exercício ainda”.
-
-Portanto, não é o problema de Total maior que zero com cartões invisíveis.
-
-O estado está chegando vazio quando a tela é reaberta.
-
-Quero que você investigue agora com base nessa reprodução concreta:
-
-1. Capture o payload exato enviado no PATCH ao salvar esses dois exercícios.
-2. Capture a resposta do PATCH.
-3. Consulte imediatamente o registro persistido após o salvamento.
-4. Confirme o valor real do campo exercises no plano salvo.
-5. Reabra a tela e capture o GET /api/patients/[id]?config=true.
-6. Confirme quantos trainingPlans vêm na resposta.
-7. Confirme qual plano foi escolhido pela interface.
-8. Confirme o valor de exercises desse plano.
-9. Verifique especialmente o `take: 1` sem `orderBy`, porque o sistema pode estar carregando outro plano ativo, antigo ou vazio.
-10. Verifique também se o GET falha e o `.catch(() => {})` transforma a falha em estado vazio.
-
-Quero a causa raiz comprovada com o plano real.
-
-Não iniciar T1.
-Não tocar no banco.
-Não publicar correção por hipótese.
-Pare após apresentar a causa e a correção mínima proposta.[Image #63] [Image #64]
-
 ## 05/08/2026 15:37
 Temos a evidência que faltava.
 
@@ -173,3 +124,27 @@ Não faça qualquer correção de dados automaticamente.
 Primeiro restaure produção. Depois apresente a auditoria e um plano de reparação separado.
 
 Pode implementar e publicar o hotfix agora, sem nova espera para validação.
+
+## 05/08/2026 15:57
+Confirmei o hotfix em produção.
+
+- os exercícios do plano reapareceram;
+- o plano não estava apagado;
+- a tela voltou a carregar corretamente.
+
+Pode agora preparar a auditoria dos registros afetados desde a v2.73.0.
+
+Quero apenas:
+
+1. identificar quais sessões foram gravadas enquanto o ExerciseConfig falhava;
+2. identificar pacientes e exercícios potencialmente afetados;
+3. comparar Sessions com:
+   - currentDifficulty;
+   - lastAttemptAt;
+   - totalAttempts;
+4. propor uma reconstrução segura desses campos a partir do histórico existente;
+5. mostrar exatamente quais dados seriam alterados;
+6. não executar nenhuma correção automática;
+7. não iniciar ainda a T1 do tutorial.
+
+Apresente primeiro o diagnóstico e o plano de reparação.
