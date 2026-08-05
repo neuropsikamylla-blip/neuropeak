@@ -1,57 +1,6 @@
 # As 3 ultimas especificacoes dela (automatico; a mais nova por ultimo)
 # Na retomada: ler as 3, conectar com PROGRESSO.md e git, declarar e seguir.
 
-## 05/08/2026 16:39
-Autorizo executar somente as consultas prévias da seção 1.
-
-Todas devem ser estritamente SELECT.
-
-Não executar ainda:
-
-- CREATE TYPE;
-- ALTER TABLE;
-- UPDATE;
-- BEGIN/COMMIT relacionados à alteração;
-- backfill;
-- alteração no schema.prisma;
-- publicação.
-
-Antes da execução, faça dois ajustes no critério operacional:
-
-1. As contagens atuais não precisam obrigatoriamente ser idênticas às contagens do backup de 16:32.
-
-O backup representa o estado do banco naquele horário. Caso tenha ocorrido uso legítimo depois disso, as contagens podem ter aumentado.
-
-Portanto:
-
-- apresente as contagens do backup;
-- apresente as contagens atuais;
-- explique qualquer diferença;
-- trate apenas redução inesperada ou inconsistência estrutural como sinal de parada.
-
-2. O backup de 16:32 não deve ser descrito como ponto de retorno sem ressalva.
-
-Uma restauração integral desse arquivo apagaria qualquer dado criado depois das 16:32.
-
-Antes da alteração efetiva do schema, confirme se houve novas gravações desde o backup.
-
-Se houve, gere e valide um novo pg_dump imediatamente anterior à alteração.
-
-Agora execute somente as consultas prévias e apresente:
-
-- existência do enum;
-- existência das três colunas;
-- CHECKs atuais de Session;
-- limite de difficulty;
-- FKs;
-- índices;
-- defaults relevantes;
-- contagens atuais;
-- timestamp da Session mais recente;
-- timestamp da alteração mais recente em TrainingPlan e ExerciseConfig, quando disponível.
-
-Depois pare para minha validação.
-
 ## 05/08/2026 16:41
 Autorizo executar somente a transação da seção 2.
 
@@ -141,3 +90,80 @@ Depois apresente:
 - a estratégia de rollback seletivo usando tutorialSource = BACKFILL.
 
 Pare para minha autorização antes de qualquer escrita.
+
+## 05/08/2026 17:08
+Autorizo executar o backfill, mas somente com o SQL completo e com validação dentro da mesma transação.
+
+O filtro deve ser restritivo:
+
+- totalAttempts > 0;
+- tutorialCompletedAt IS NULL;
+- tutorialVersion IS NULL;
+- tutorialSource IS NULL.
+
+Execute em uma sessão transacional controlada:
+
+BEGIN;
+
+WITH atualizados AS (
+  UPDATE "ExerciseConfig"
+  SET
+    "tutorialCompletedAt" = COALESCE("lastAttemptAt", "createdAt"),
+    "tutorialVersion" = 1,
+    "tutorialSource" = 'BACKFILL'::"TutorialSource"
+  WHERE "totalAttempts" > 0
+    AND "tutorialCompletedAt" IS NULL
+    AND "tutorialVersion" IS NULL
+    AND "tutorialSource" IS NULL
+  RETURNING
+    id,
+    "patientId",
+    "exerciseId",
+    "totalAttempts",
+    "currentDifficulty",
+    "lastAttemptAt",
+    "tutorialCompletedAt",
+    "tutorialVersion",
+    "tutorialSource"
+)
+SELECT count(*) AS linhas_alteradas
+FROM atualizados;
+
+O resultado obrigatório é:
+
+linhas_alteradas = 16
+
+Antes do COMMIT, ainda dentro da mesma transação, executar as verificações:
+
+1. marcados com tutorialSource = BACKFILL: 16;
+2. registros com totalAttempts = 0 e tutorialCompletedAt preenchido: 0;
+3. datas diferentes de COALESCE(lastAttemptAt, createdAt): 0;
+4. BACKFILL com tutorialVersion diferente de 1: 0;
+5. contagem de Session: 33;
+6. soma de currentDifficulty idêntica à prévia;
+7. soma de totalAttempts idêntica à prévia;
+8. max(lastAttemptAt) idêntico à prévia;
+9. nenhuma linha com tutorialSource = PATIENT;
+10. nenhuma tabela além de ExerciseConfig alterada.
+
+Se o número de linhas não for exatamente 16 ou qualquer verificação divergir:
+
+ROLLBACK;
+
+e parar.
+
+Somente se todas as verificações estiverem conformes:
+
+COMMIT;
+
+Depois do COMMIT, repetir as verificações em uma nova consulta e apresentar as evidências.
+
+Não alterar ainda:
+
+- schema.prisma;
+- Prisma Client;
+- rota de tutorial;
+- código de produção;
+- publicação.
+
+Pare após validar o backfill.
