@@ -12898,3 +12898,20 @@ Quero evidências, não hipóteses.
 Se possível, execute o fluxo completo em ambiente de desenvolvimento e identifique o primeiro ponto em que o estado diverge do esperado.
 
 Não corrija nada antes de localizar exatamente a origem do problema.
+
+## 05/08/2026 15:05
+Vou coletar as três evidências solicitadas.
+
+1. Contador da tela:
+[INFORMAR SE MOSTRA TOTAL 0 OU TOTAL MAIOR QUE ZERO]
+
+2. Console:
+[INFORMAR SE EXISTE ERRO VERMELHO E ENVIAR O TRECHO/PRINT]
+
+3. Requisição GET /api/patients/[id]?config=true:
+- status: [VALOR]
+- trainingPlans retornado: [SIM/NÃO]
+- exercises dentro do plano: [LISTA PRESENTE / LISTA VAZIA]
+- quantidade de planos ativos retornados: [VALOR]
+
+Aguarde essas evidências antes de corrigir. Não iniciar T1.

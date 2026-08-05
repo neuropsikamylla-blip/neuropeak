@@ -1,67 +1,6 @@
 # As 3 ultimas especificacoes dela (automatico; a mais nova por ultimo)
 # Na retomada: ler as 3, conectar com PROGRESSO.md e git, declarar e seguir.
 
-## 05/08/2026 13:49
-O cronograma está aprovado, com duas decisões adicionais.
-
-1. MODALIDADE CONFIGURÁVEL
-
-O tutorial deve acompanhar a modalidade prescrita para aquele exercício.
-
-A demonstração e a tentativa guiada precisam reproduzir:
-
-- os mesmos estímulos;
-- a mesma forma de resposta;
-- a mesma lógica de interação;
-- as mesmas regras relevantes;
-
-da modalidade que o paciente realmente executará.
-
-Não utilizar tutorial visual genérico quando a modalidade prescrita exigir outra forma de interação.
-
-Quando duas modalidades diferirem apenas em aparência, a estrutura do tutorial pode ser compartilhada, mas o conteúdo demonstrativo deve refletir a modalidade ativa.
-
-2. CONVIVÊNCIA DURANTE A TRANSIÇÃO
-
-Aprovo a convivência temporária dos dois formatos.
-
-Durante a conversão em lotes:
-
-- exercício convertido utiliza o novo framework;
-- exercício ainda não convertido mantém o tutorial atual;
-- nenhum exercício pode ficar sem fluxo de entrada;
-- a publicação de um lote não pode alterar o comportamento dos exercícios dos lotes seguintes.
-
-O novo framework só passa a controlar um exercício depois que:
-
-- demonstração;
-- tentativa guiada;
-- validação;
-- persistência;
-- acesso posterior por “Começar” e “Como funciona”;
-
-estiverem completos e testados para aquele exercício.
-
-A divisão aprovada é:
-
-- T1.0 — backup, banco e implantação da fundação;
-- T1.1 — framework + Conecta Números + Span Numérico Auditivo Direto;
-- T1.2 — grupo visual simples;
-- T1.3 e T1.4 — fusão dos tutoriais com múltiplas etapas;
-- T1.5 — criação dos tutoriais inexistentes;
-- T1.6 — Span Inverso e auditoria dos casos auditivos;
-- T1.7 — cinco tutoriais próprios, com Vigilância por último.
-
-Antes de iniciar T1.0:
-
-- conclua e publique os ajustes finais da Fase 1;
-- confirme a versão publicada;
-- não misture alterações da Fase 1 com banco ou tutorial.
-
-Depois disso, iniciar T1.0 pelo backup validado, conforme o procedimento já aprovado.
-
-Não iniciar conversão de exercícios antes da fundação estar aplicada e validada.
-
 ## 05/08/2026 13:51
 <task-notification>
 <task-id>bsqei3n3a</task-id>
@@ -115,3 +54,20 @@ Quero evidências, não hipóteses.
 Se possível, execute o fluxo completo em ambiente de desenvolvimento e identifique o primeiro ponto em que o estado diverge do esperado.
 
 Não corrija nada antes de localizar exatamente a origem do problema.
+
+## 05/08/2026 15:05
+Vou coletar as três evidências solicitadas.
+
+1. Contador da tela:
+[INFORMAR SE MOSTRA TOTAL 0 OU TOTAL MAIOR QUE ZERO]
+
+2. Console:
+[INFORMAR SE EXISTE ERRO VERMELHO E ENVIAR O TRECHO/PRINT]
+
+3. Requisição GET /api/patients/[id]?config=true:
+- status: [VALOR]
+- trainingPlans retornado: [SIM/NÃO]
+- exercises dentro do plano: [LISTA PRESENTE / LISTA VAZIA]
+- quantidade de planos ativos retornados: [VALOR]
+
+Aguarde essas evidências antes de corrigir. Não iniciar T1.
