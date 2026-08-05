@@ -13482,3 +13482,54 @@ Não corrigir essas divergências durante a T1.
 Criar apenas um registro futuro de auditoria de schema, sem iniciar agora.
 
 Depois de apresentar todo o roteiro e os SQLs exatos, pare. Não execute nada até minha autorização explícita.
+
+## 05/08/2026 16:39
+Autorizo executar somente as consultas prévias da seção 1.
+
+Todas devem ser estritamente SELECT.
+
+Não executar ainda:
+
+- CREATE TYPE;
+- ALTER TABLE;
+- UPDATE;
+- BEGIN/COMMIT relacionados à alteração;
+- backfill;
+- alteração no schema.prisma;
+- publicação.
+
+Antes da execução, faça dois ajustes no critério operacional:
+
+1. As contagens atuais não precisam obrigatoriamente ser idênticas às contagens do backup de 16:32.
+
+O backup representa o estado do banco naquele horário. Caso tenha ocorrido uso legítimo depois disso, as contagens podem ter aumentado.
+
+Portanto:
+
+- apresente as contagens do backup;
+- apresente as contagens atuais;
+- explique qualquer diferença;
+- trate apenas redução inesperada ou inconsistência estrutural como sinal de parada.
+
+2. O backup de 16:32 não deve ser descrito como ponto de retorno sem ressalva.
+
+Uma restauração integral desse arquivo apagaria qualquer dado criado depois das 16:32.
+
+Antes da alteração efetiva do schema, confirme se houve novas gravações desde o backup.
+
+Se houve, gere e valide um novo pg_dump imediatamente anterior à alteração.
+
+Agora execute somente as consultas prévias e apresente:
+
+- existência do enum;
+- existência das três colunas;
+- CHECKs atuais de Session;
+- limite de difficulty;
+- FKs;
+- índices;
+- defaults relevantes;
+- contagens atuais;
+- timestamp da Session mais recente;
+- timestamp da alteração mais recente em TrainingPlan e ExerciseConfig, quando disponível.
+
+Depois pare para minha validação.
