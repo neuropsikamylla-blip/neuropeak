@@ -1,24 +1,6 @@
 # As 3 ultimas especificacoes dela (automatico; a mais nova por ultimo)
 # Na retomada: ler as 3, conectar com PROGRESSO.md e git, declarar e seguir.
 
-## 05/08/2026 16:24
-Prefiro executar a auditoria pelo terminal utilizando a DATABASE_URL já configurada no projeto.
-
-Crie um script temporário de diagnóstico (somente leitura), sem modificar nenhum dado.
-
-Requisitos:
-
-- utilizar Prisma;
-- executar exatamente as três consultas de auditoria;
-- somente SELECT;
-- nenhuma escrita;
-- nenhum UPDATE, INSERT, DELETE, ALTER, CREATE ou DROP;
-- imprimir os resultados de forma organizada no terminal;
-- não depender do SQL Editor do Supabase;
-- após a auditoria, deixar o script fora do código de produção (ou em scripts/diagnostics).
-
-Execute o script localmente e me apresente os resultados.
-
 ## 05/08/2026 16:27
 Mantenha o script versionado em scripts/diagnostics/.
 
@@ -64,3 +46,49 @@ Comece pelo T1.0, seguindo o procedimento operacional já aprovado:
 Não executar db push, backfill ou publicação antes de concluir e apresentar a validação do backup.
 
 Depois da minha validação, seguimos para a implantação controlada da fundação da T1.
+
+## 05/08/2026 16:35
+Backup validado e aprovado.
+
+Pode seguir para a próxima etapa da T1.0, ainda de forma controlada.
+
+Primeiro execute apenas:
+
+prisma migrate diff --script
+
+Quero ver o SQL exato que será aplicado ao banco antes de qualquer alteração.
+
+O resultado esperado é exclusivamente:
+
+- criação do enum TutorialSource;
+- adição de tutorialCompletedAt como coluna opcional;
+- adição de tutorialVersion como coluna opcional;
+- adição de tutorialSource como coluna opcional.
+
+Pare imediatamente se aparecer qualquer:
+
+- DROP;
+- ALTER COLUMN;
+- mudança de tipo;
+- NOT NULL em coluna existente;
+- remoção de constraint;
+- alteração em tabela diferente de ExerciseConfig;
+- qualquer operação não prevista.
+
+Depois de apresentar o diff, não execute ainda o db push.
+
+Também apresente, antes da aplicação:
+
+1. o SQL exato para reaplicar as três CHECK de Session;
+2. confirmação de que difficulty será 1–13;
+3. consultas para verificar as constraints antes e depois;
+4. ordem exata:
+   - aplicar schema;
+   - reaplicar CHECK;
+   - validar constraints;
+   - executar backfill separadamente;
+5. plano de interrupção caso alguma etapa falhe.
+
+Não iniciar conversão de exercícios.
+Não publicar ainda.
+Pare após apresentar o diff e o roteiro final de implantação.
