@@ -1,169 +1,36 @@
 # As 3 ultimas especificacoes dela (automatico; a mais nova por ultimo)
 # Na retomada: ler as 3, conectar com PROGRESSO.md e git, declarar e seguir.
 
-## 05/08/2026 16:41
-Autorizo executar somente a transação da seção 2.
+## O QUE MUDOU
 
-Escopo autorizado:
+**1. `/Users/kamyllahonorio/neuropeak/PROGRESSO.md`** — 66 linhas acrescentadas, 0 removidas.
 
-BEGIN;
+Não existia bloco "EM ANDAMENTO" da T1.0 no arquivo (verificado por `grep -n "EM ANDAMENTO\|T1\.0"`): os três blocos "EM ANDAMENTO" presentes são históricos de outras entregas, e o único registro da T1.0 era o parágrafo "TUDO PARADO, aguardando evidência de backup" (linhas 178-188), que descrevia o estado anterior. Registrei então uma seção nova no topo, na posição cronológica que o arquivo usa (mais recente primeiro), imediatamente antes da seção do incidente de 05/ago, no mesmo estilo (`## EMOJI TÍTULO (data)` + subseções `###` + negrito denso + datas absolutas):
 
-CREATE TYPE "TutorialSource" AS ENUM ('BACKFILL', 'PATIENT');
+`## 🗄️ T1.0 — BANCO ALTERADO E BACKFILL CONCLUÍDO (05/ago/2026) — CÓDIGO AINDA NÃO`, com:
+- as **duas transações** (seção 2 do roteiro: enum `TutorialSource` BACKFILL(1)/PATIENT(2) + três colunas nuláveis sem default; e o backfill com o filtro dos quatro critérios), contexto de backup validado e o registro de que **não houve `db push`**;
+- o **resultado sintetizado**: 16 de 82 linhas, 66 intocadas com `totalAttempts = 0`, distribuição 12/4, todas as datas de `lastAttemptAt`, menor `totalAttempts` = 1; **12/12 verificações conformes repetidas em nova conexão**, com os invariantes clínicos citados em linha corrida (33 Session, soma 117, soma 34, `max(lastAttemptAt)` 03/08/2026 16:47:52.308, 82 ExerciseConfig) e as demais tabelas 4/1/5/8/25/1 — a tabela original **não** foi copiada;
+- a **lição de método** com as duas tentativas abortadas (dobra de expressão constante no planner; `CREATE TEMP TABLE ... ON COMMIT DROP` fora do `BEGIN`), ambas com ROLLBACK e zero dado alterado, fechando com a regra: trava dentro de transação nunca pode ser expressão constante;
+- o **estado atual** explícito: banco tem enum e campos, `schema.prisma` **não** tem e segue na forma travada por `lib/schema-banco-alinhado.test.ts` (hotfix de 05/ago) — assimetria deliberada e oposta à que causou o incidente; nada publicado;
+- o **próximo passo NÃO autorizado por ela**, em 5 itens numerados: schema → rota preservada em `docs/t1-pausada/exercise-tutorial-route.ts.txt` → `CAMPOS_NO_BANCO` no teste → `prisma generate` / `prisma validate` / `npx tsc --noEmit` / `npm run test` / `npm run build` → publicar e smoke test.
 
-ALTER TABLE "ExerciseConfig"
-  ADD COLUMN "tutorialCompletedAt" TIMESTAMP(3),
-  ADD COLUMN "tutorialVersion" INTEGER,
-  ADD COLUMN "tutorialSource" "TutorialSource";
+**2. `/Users/kamyllahonorio/neuropeak/docs/operacao/T1.0-backfill-executado-2026-08-05.sql`** — 62 linhas de comentário acrescentadas no topo, 0 removidas, 0 alteradas.
 
-COMMIT;
+Cabeçalho em comentários SQL, antes do `\set ON_ERROR_STOP on`, com os blocos: aviso de que é registro histórico e não deve ser reexecutado (o filtro é idempotente e devolveria 0, abortando na primeira trava); O QUE FEZ (finalidade clínica, filtro dos quatro critérios, valores gravados); QUANDO/ONDE (05/ago/2026, produção Supabase, conexão direta 5432, backup validado, precedido da transação de schema do roteiro); RESULTADO (16 de 82, 12/12 conformes em nova conexão); POR QUE AS TRAVAS SÃO `1/(CASE ...)` (divergência ⇒ divisão por zero ⇒ ROLLBACK automático, sem depender de alguém ler a saída; e a explicação de por que a forma constante `ELSE (1/0)` não funciona); POR QUE OS LITERAIS (117, 34, 33, 82 e as contagens das demais tabelas são a fotografia medida imediatamente antes — comparar o banco com ele mesmo dentro da transação não provaria nada; e a tabela temporária que guardava essa fotografia não sobrevivia à transação).
 
-Regras:
+## COMO PROVEI
 
-- não executar db push;
-- não executar backfill ainda;
-- não alterar nenhuma outra tabela;
-- não alterar constraints, índices, defaults ou FKs;
-- não publicar código ainda;
-- se qualquer comando falhar, executar ROLLBACK e parar;
-- se aparecer qualquer efeito fora de ExerciseConfig, parar imediatamente.
+- Integridade do SQL executável: `diff &lt;(git show HEAD:docs/operacao/T1.0-backfill-executado-2026-08-05.sql) &lt;(tail -n +63 docs/operacao/T1.0-backfill-executado-2026-08-05.sql)` → **exit 0**, byte a byte idêntico da linha 63 em diante.
+- `git diff --numstat` → `66 0 PROGRESSO.md` e `62 0 docs/operacao/T1.0-backfill-executado-2026-08-05.sql` — **zero deleções nos dois arquivos**.
+- `git status --short` → apenas esses dois arquivos modificados. (Os `PEDIDOS-*.md` que apareciam sujos no início já haviam sido recolhidos pelo checkpoint automático `3bc14ba`; o arquivo SQL, que estava `??` no snapshot inicial, já está versionado em HEAD.)
 
-Após a transação, executar apenas as verificações pós-schema previstas:
+## O QUE NÃO FIZ
 
-1. confirmar que o enum existe com apenas BACKFILL e PATIENT;
-2. confirmar que as três colunas existem e são opcionais;
-3. confirmar que nenhuma outra coluna de ExerciseConfig foi alterada;
-4. confirmar que as três CHECK de Session continuam intactas;
-5. confirmar difficulty entre 1 e 13;
-6. confirmar que FKs, índices e defaults verificados anteriormente continuam presentes;
-7. confirmar que as contagens das tabelas não mudaram.
-
-Depois pare e apresente as evidências.
-
-Não executar o backfill até nova autorização explícita.
-
-## 05/08/2026 16:47
-Autorizo executar apenas a prévia do backfill da seção 4.
-
-Nesta etapa, executar somente consultas SELECT para informar:
-
-1. quantidade total de ExerciseConfig;
-2. quantidade com totalAttempts > 0;
-3. quantidade com totalAttempts = 0;
-4. quantidade elegível para o backfill:
-   - totalAttempts > 0;
-   - tutorialCompletedAt IS NULL;
-5. quantidade já preenchida nos novos campos;
-6. distribuição dos elegíveis por:
-   - tutorialCompletedAt que viria de lastAttemptAt;
-   - tutorialCompletedAt que precisaria usar createdAt;
-7. quantidade de registros que receberiam:
-   - tutorialVersion = 1;
-   - tutorialSource = BACKFILL;
-8. confirmação de que nenhum registro com totalAttempts = 0 seria atingido.
-
-Apresente também uma amostra técnica das linhas elegíveis, sem nomes ou dados pessoais, contendo apenas:
-
-- id técnico;
-- patientId;
-- exerciseId;
-- totalAttempts;
-- lastAttemptAt;
-- createdAt;
-- tutorialCompletedAt proposto;
-- tutorialVersion proposto;
-- tutorialSource proposto.
-
-Não executar ainda:
-
-- UPDATE;
-- backfill;
-- alteração no schema.prisma;
-- prisma generate;
-- restauração da rota;
-- publicação.
-
-Depois apresente:
-
-- o número exato de linhas que seriam alteradas;
-- o SQL final do backfill;
-- as consultas de verificação pós-backfill;
-- a estratégia de rollback seletivo usando tutorialSource = BACKFILL.
-
-Pare para minha autorização antes de qualquer escrita.
-
-## 05/08/2026 17:08
-Autorizo executar o backfill, mas somente com o SQL completo e com validação dentro da mesma transação.
-
-O filtro deve ser restritivo:
-
-- totalAttempts > 0;
-- tutorialCompletedAt IS NULL;
-- tutorialVersion IS NULL;
-- tutorialSource IS NULL.
-
-Execute em uma sessão transacional controlada:
-
-BEGIN;
-
-WITH atualizados AS (
-  UPDATE "ExerciseConfig"
-  SET
-    "tutorialCompletedAt" = COALESCE("lastAttemptAt", "createdAt"),
-    "tutorialVersion" = 1,
-    "tutorialSource" = 'BACKFILL'::"TutorialSource"
-  WHERE "totalAttempts" > 0
-    AND "tutorialCompletedAt" IS NULL
-    AND "tutorialVersion" IS NULL
-    AND "tutorialSource" IS NULL
-  RETURNING
-    id,
-    "patientId",
-    "exerciseId",
-    "totalAttempts",
-    "currentDifficulty",
-    "lastAttemptAt",
-    "tutorialCompletedAt",
-    "tutorialVersion",
-    "tutorialSource"
-)
-SELECT count(*) AS linhas_alteradas
-FROM atualizados;
-
-O resultado obrigatório é:
-
-linhas_alteradas = 16
-
-Antes do COMMIT, ainda dentro da mesma transação, executar as verificações:
-
-1. marcados com tutorialSource = BACKFILL: 16;
-2. registros com totalAttempts = 0 e tutorialCompletedAt preenchido: 0;
-3. datas diferentes de COALESCE(lastAttemptAt, createdAt): 0;
-4. BACKFILL com tutorialVersion diferente de 1: 0;
-5. contagem de Session: 33;
-6. soma de currentDifficulty idêntica à prévia;
-7. soma de totalAttempts idêntica à prévia;
-8. max(lastAttemptAt) idêntico à prévia;
-9. nenhuma linha com tutorialSource = PATIENT;
-10. nenhuma tabela além de ExerciseConfig alterada.
-
-Se o número de linhas não for exatamente 16 ou qualquer verificação divergir:
-
-ROLLBACK;
-
-e parar.
-
-Somente se todas as verificações estiverem conformes:
-
-COMMIT;
-
-Depois do COMMIT, repetir as verificações em uma nova consulta e apresentar as evidências.
-
-Não alterar ainda:
-
-- schema.prisma;
-- Prisma Client;
-- rota de tutorial;
-- código de produção;
-- publicação.
-
-Pare após validar o backfill.
+- **Não commitei e não dei push** — commit é do VP.
+- **Não executei nada no banco**, nem consulta de leitura; todos os números do relatório vieram do despacho.
+- **Não alterei o SQL em si**, nem espaçamento — só acrescentei comentários no topo.
+- **Não toquei** em `prisma/schema.prisma`, `lib/schema-banco-alinhado.test.ts`, `docs/t1-pausada/` nem em qualquer outro arquivo.
+- **Não rodei** `npm run test`, `tsc` ou `build`: a mudança é exclusivamente de documentação e não afeta código; portanto o status desses gates permanece o da última medição registrada, não uma verificação minha desta sessão.
+- Não editei o parágrafo antigo "TUDO PARADO, aguardando evidência de backup" (linhas 178-188) — é registro histórico do estado de 04/ago e a seção nova o supera explicitamente. Se o VP preferir uma nota de superação ali, é um ajuste de uma linha.</result>
+<usage><subagent_tokens>46806</subagent_tokens><tool_uses>13</tool_uses><duration_ms>154064</duration_ms></usage>
+</task-notification>
