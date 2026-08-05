@@ -13272,3 +13272,23 @@ Depois disso, encerre oficialmente o incidente e pare.
 Não execute nenhum UPDATE.
 Não proponha reparação.
 Não iniciar ainda a T1 até eu autorizar o próximo passo.
+
+## 05/08/2026 16:30
+Incidente encerrado e validado.
+
+Produção está funcionando na v2.75.1, não houve sessões afetadas e não há reparação de dados a executar.
+
+Pode retomar oficialmente a T1 do framework de tutorial.
+
+Comece pelo T1.0, seguindo o procedimento operacional já aprovado:
+
+1. instalar as ferramentas PostgreSQL necessárias;
+2. gerar um pg_dump completo em formato custom;
+3. validar a integridade do arquivo;
+4. restaurar o backup em ambiente de teste, porque o backfill é alteração de nível 2;
+5. conferir as contagens;
+6. apresentar as evidências antes de qualquer alteração no banco de produção.
+
+Não executar db push, backfill ou publicação antes de concluir e apresentar a validação do backup.
+
+Depois da minha validação, seguimos para a implantação controlada da fundação da T1.

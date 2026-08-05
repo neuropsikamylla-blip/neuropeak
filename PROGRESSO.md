@@ -3,6 +3,109 @@
 > Checkpoint de contexto para continuidade entre sessões. Atualizado automaticamente.
 > 👉 Visão geral e handoff para o próximo Claude: **`ESTADO-DO-PROJETO.md`** (leia primeiro).
 
+## 🚨 INCIDENTE CRÍTICO DE PRODUÇÃO — DETECTADO, CORRIGIDO E ENCERRADO (05/ago/2026)
+
+**Commits:** hotfix = `0c0c410` (v2.75.1) · auditoria = `c0ccc09` · consultas = `9241295` · script = `05be550`.
+
+### Como apareceu
+
+Ela relatou que **criava um plano, adicionava exercícios, salvava com mensagem de sucesso**, saía da página e,
+**ao voltar, todos os exercícios tinham desaparecido**. O painel mostrava **"Total: 0"** e
+**"Nenhum exercício ainda"**.
+
+### Causa raiz
+
+O **`schema.prisma`** declarava três campos em **`ExerciseConfig`** — **`tutorialCompletedAt`**,
+**`tutorialVersion`** e **`tutorialSource`** — mais o **enum `TutorialSource`**, que **o banco nunca recebeu**.
+A decisão de **não tocar no banco sem backup estava correta**; o que faltou perceber é que o **Prisma Client é
+GERADO a partir do schema** e passa a **pedir todas as colunas do modelo em cada consulta**, inclusive no
+**`RETURNING` de um upsert**. **Toda chamada que tocasse `ExerciseConfig` quebrava com erro 500.**
+
+### 🧠 LIÇÃO CENTRAL
+
+**ALTERAR O `schema.prisma` JÁ É ALTERAR O COMPORTAMENTO EM PRODUÇÃO, mesmo sem rodar `db push`.
+Schema e banco precisam andar juntos.**
+
+### Janela
+
+Da **v2.73.0** (04/ago 23:46, commit `831d8eb`) até a **v2.75.1** (05/ago 15:51, commit `0c0c410`) —
+**cerca de 16 horas**, atravessando as versões **2.73.0, 2.73.1, 2.74.0 e 2.75.0**.
+
+### Impacto potencial — três frentes
+
+- **Terapeuta:** abria o plano e via **"nenhum exercício"**, porque o **`.catch(() => {})`** transformava o
+  **500 em estado vazio** — os **dados sempre estiveram no banco**;
+- **Paciente:** carregava o treino **sempre no nível 1** e **sem o bloqueio de "já fez hoje"**, pelo mesmo
+  **catch silencioso**;
+- **`POST /api/sessions`:** **gravava a `Session`** e **falhava no upsert seguinte**, devolvendo **500 ao final
+  do exercício** e deixando a **progressão sem atualizar**.
+
+### Investigação
+
+O VP percorreu o fluxo inteiro e **eliminou com teste executado, um a um**: **`buildPlanExercises`**,
+**validação Zod**, **gravação com `JSON.stringify`**, **`parsePlanExercises`**, o **wrapper de erro da API**,
+**duplicação de criadores de plano**, o **diff do lote da dose** e o **cache do navegador**. **Todos corretos.**
+A causa só apareceu quando **ela abriu a URL da API diretamente** e recebeu **`{"error":"Erro interno do
+servidor"}`** — o **500 que o catch escondia**.
+
+### Hotfix (`0c0c410`, v2.75.1)
+
+- os **três campos e o enum saíram do schema**, **realinhando o client com o banco**;
+- a rota **`app/api/exercise-tutorial`**, que dependia deles e **não era chamada por ninguém**, foi
+  **preservada em `docs/t1-pausada/`** e **volta quando o banco receber os campos**;
+- **`lib/tutorial/` permaneceu intacta** por ser **lógica pura sem Prisma** — **nada da T1 se perdeu**;
+- os **dois `.catch` silenciosos viraram estado de erro visível com botão "Tentar novamente"**, nas telas do
+  **terapeuta** e do **paciente**.
+
+### Proteção contra repetição
+
+**`schema-banco-alinhado.test.ts`** trava o modelo **`ExerciseConfig`** na **forma que o banco tem** e **proíbe
+catch vazio nas duas telas**. Se alguém **acrescentar campo ao schema sem aplicar no banco**, o **teste falha
+antes do deploy**.
+
+### Provas do hotfix
+
+`prisma validate` exit 0 · `prisma generate` exit 0 · `tsc` exit 0 · `vitest` **512/512 em 41 arquivos** ·
+`build` exit 0. **Publicação confirmada:** `/api/version` devolveu **appVersion 2.75.1** e buildId
+**`dpl_C2LjyasQLYCuxaGtGciRur152L1t`**; `/api/health` devolveu **ok true**. **Ela confirmou visualmente** que os
+**exercícios do plano reapareceram** e que o **plano nunca esteve apagado**.
+
+### ✅ Auditoria dos dados — ZERO SESSÕES AFETADAS
+
+Executada por **script somente leitura** em **`scripts/diagnostics/incidente-2026-08-05.mjs`**. A **janela do
+incidente não teve nenhuma sessão**: a **última sessão do banco é de 03/08/2026 16:47 UTC**, quase **dois dias
+antes do início da janela**. O banco tem **33 sessões no total**, **6 delas desde 1º de agosto**. E a **prova
+definitiva de sincronia**: **`ExerciseConfig.lastAttemptAt` mais recente é exatamente 03/08/2026 16:47 UTC**,
+**idêntico à última `Session`** — **nenhum registro ficou dessincronizado**.
+
+**Conclusões da auditoria, explicitamente:**
+
+- a auditoria encontrou **ZERO sessões afetadas**;
+- **NÃO HÁ reparação de dados a executar**;
+- **`Session` e `ExerciseConfig` estavam SINCRONIZADOS**;
+- a **T1 pode ser retomada após o procedimento de backup**.
+
+### ⚠️ Observação honesta
+
+O sistema esteve **degradado por 16 horas com potencial de dano clínico real**, e o **dano não se materializou
+apenas porque ninguém treinou nesse intervalo**. Foi **sorte de calendário, não proteção do sistema**. O que
+evita a repetição é o **teste de alinhamento schema-banco** e o **fim dos catch silenciosos**.
+
+### Script de diagnóstico
+
+Mantido **versionado em `scripts/diagnostics/`**, **fora do código de produção**, com **trava que recusa
+qualquer consulta que não comece com `SELECT` ou `WITH`**. O **cabeçalho documenta** finalidade, data, caráter
+**somente leitura**, como executar, e o aviso de que a **saída traz IDs técnicos e não deve ser compartilhada
+publicamente**. **Verificado:** **nenhum `patientId`, credencial ou URL de banco no arquivo**; **`.env.local`
+coberto por `.env*` no gitignore e jamais commitado**.
+
+### 📌 Estado atual
+
+**INCIDENTE OFICIALMENTE ENCERRADO.** A **T1 do framework de tutorial continua PARADA**, aguardando
+**autorização dela** para o próximo passo, que é o **T1.0 — começando pelo backup validado**, conforme
+**`docs/operacao/backup-procedimento.md`**.
+
+
 ## 🎓 FASE T1 DO FRAMEWORK DE TUTORIAL CONCLUÍDA EM CÓDIGO (04/ago/2026) — NADA NO BANCO, NADA PUBLICADO
 
 **Commits:** implementação = `4999292` · plano operacional = `04e0f24` · correção do CLAUDE.md = `dba3321`.
