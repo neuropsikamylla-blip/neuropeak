@@ -13205,3 +13205,26 @@ Regras obrigatórias:
 - minha aprovação explícita do SQL final.
 
 Pode preparar agora as consultas SELECT e apresentá-las antes da execução.
+
+## 05/08/2026 16:17
+Vamos usar o caminho (a): executarei as consultas pelo SQL Editor do Supabase.
+
+Antes disso, corrija a consulta 2 para tratar ExerciseConfig ausente.
+
+Onde está:
+
+c."totalAttempts" + count(*) AS attempts_proposto
+
+utilize:
+
+COALESCE(c."totalAttempts", 0) + count(*) AS attempts_proposto
+
+E, para facilitar a leitura, apresente também:
+
+COALESCE(c."totalAttempts", 0) AS attempts_base
+
+Mantenha `attempts_atual` como o valor real do banco, inclusive NULL quando a configuração não existir.
+
+Depois me devolva as três consultas finais completas e prontas para copiar, sem nenhuma instrução de escrita.
+
+Não executar UPDATE, INSERT, DELETE ou qualquer alteração.
