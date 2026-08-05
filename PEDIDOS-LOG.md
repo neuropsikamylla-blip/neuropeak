@@ -13573,3 +13573,53 @@ Após a transação, executar apenas as verificações pós-schema previstas:
 Depois pare e apresente as evidências.
 
 Não executar o backfill até nova autorização explícita.
+
+## 05/08/2026 16:47
+Autorizo executar apenas a prévia do backfill da seção 4.
+
+Nesta etapa, executar somente consultas SELECT para informar:
+
+1. quantidade total de ExerciseConfig;
+2. quantidade com totalAttempts > 0;
+3. quantidade com totalAttempts = 0;
+4. quantidade elegível para o backfill:
+   - totalAttempts > 0;
+   - tutorialCompletedAt IS NULL;
+5. quantidade já preenchida nos novos campos;
+6. distribuição dos elegíveis por:
+   - tutorialCompletedAt que viria de lastAttemptAt;
+   - tutorialCompletedAt que precisaria usar createdAt;
+7. quantidade de registros que receberiam:
+   - tutorialVersion = 1;
+   - tutorialSource = BACKFILL;
+8. confirmação de que nenhum registro com totalAttempts = 0 seria atingido.
+
+Apresente também uma amostra técnica das linhas elegíveis, sem nomes ou dados pessoais, contendo apenas:
+
+- id técnico;
+- patientId;
+- exerciseId;
+- totalAttempts;
+- lastAttemptAt;
+- createdAt;
+- tutorialCompletedAt proposto;
+- tutorialVersion proposto;
+- tutorialSource proposto.
+
+Não executar ainda:
+
+- UPDATE;
+- backfill;
+- alteração no schema.prisma;
+- prisma generate;
+- restauração da rota;
+- publicação.
+
+Depois apresente:
+
+- o número exato de linhas que seriam alteradas;
+- o SQL final do backfill;
+- as consultas de verificação pós-backfill;
+- a estratégia de rollback seletivo usando tutorialSource = BACKFILL.
+
+Pare para minha autorização antes de qualquer escrita.
