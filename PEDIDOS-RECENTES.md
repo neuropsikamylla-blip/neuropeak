@@ -1,62 +1,6 @@
 # As 3 ultimas especificacoes dela (automatico; a mais nova por ultimo)
 # Na retomada: ler as 3, conectar com PROGRESSO.md e git, declarar e seguir.
 
-## 05/08/2026 11:47
-Encontrei um terceiro caminho, que acredito representar melhor a arquitetura que acabamos de aprovar.
-
-Não quero implementar nem a opção (a) nem a (b).
-
-O problema não é apenas a forma de exibir.
-
-O problema é tentar resumir uma estimativa em um único número quando o próprio motor trabalha com uma faixa.
-
-Quero que o cabeçalho reflita a filosofia aprovada.
-
-Em vez de:
-
-Sessão de 40 min
-Estimativa: aproximadamente 35 min
-Dentro da faixa esperada (36–44)
-
-ou
-
-Sessão de 40 min
-Estimativa: aproximadamente 40 min
-Dentro da faixa esperada
-
-quero uma proposta de apresentação mais coerente com a arquitetura.
-
-Exemplo de direção:
-
-SESSÃO PRESCRITA
-
-Meta da sessão
-40 minutos
-
-Estimativa atual
-Dentro da faixa esperada
-
-ou
-
-Estimativa atual
-Acima da faixa esperada
-
-ou
-
-Estimativa atual
-Abaixo da faixa esperada
-
-Caso o terapeuta queira detalhes, eles podem aparecer em "Ver detalhes", incluindo a faixa calculada pelo motor.
-
-A tela principal não precisa transformar uma estimativa em um número único se isso gerar falsa precisão ou contradição.
-
-Analise essa alternativa.
-
-Se concordar que ela representa melhor a arquitetura aprovada, implemente essa solução em vez das opções (a) ou (b).
-
-Não iniciar nenhuma outra fase.
-Continue apenas corrigindo a Fase 1.
-
 ## 05/08/2026 12:54
 A correção ficou melhor e considero a direção aprovada.
 Antes de encerrarmos a Fase 1, quero fazer uma última revisão exclusivamente de UX e linguagem clínica.
@@ -143,3 +87,12 @@ Revise novamente toda a tela perguntando, para cada informação:
 "Se eu remover isto, o terapeuta perde capacidade de tomar alguma decisão clínica?"
 Se a resposta for não, essa informação provavelmente não deve aparecer.
 Depois implemente todas essas alterações em um único lote, sem alterar o núcleo, apenas a camada de apresentação.
+
+## 05/08/2026 13:01
+<task-notification>
+<task-id>bha3mg5ec</task-id>
+<tool-use-id>toolu_0157VU11btofAqcfZzPDYepU</tool-use-id>
+<output-file>/private/tmp/claude-501/-Users-kamyllahonorio-neuropeak/3e6ecf11-e4e5-471f-bbf9-4595faa53598/tasks/bha3mg5ec.output</output-file>
+<status>completed</status>
+<summary>Background command "Vigiar o disparo" completed (exit code 0)</summary>
+</task-notification>
