@@ -12739,3 +12739,47 @@ A próxima etapa será a T1 do framework de tutorial, conforme a arquitetura já
 <status>completed</status>
 <summary>Background command "Vigiar o disparo" completed (exit code 0)</summary>
 </task-notification>
+
+## 05/08/2026 13:41
+Vamos iniciar oficialmente a T1 do framework de tutorial.
+
+A Fase 1 está encerrada e congelada.
+
+A partir deste ponto, toda a energia do projeto passa para a padronização dos tutoriais.
+
+Objetivo da T1:
+
+- estabelecer um único framework de tutorial para todos os exercícios;
+- tutorial exibido apenas na primeira utilização de cada exercício;
+- demonstração utilizando exatamente a mesma mecânica do exercício real;
+- primeira tentativa guiada;
+- nenhuma interferência em nível, progresso, pontuação ou métricas clínicas;
+- nenhuma alteração na mecânica dos exercícios nesta etapa.
+
+Todos os exercícios existentes terão seus tutoriais substituídos pelo novo padrão.
+
+Não quero manter ou adaptar os tutoriais atuais. Eles passam a servir apenas como referência de conteúdo quando necessário.
+
+Quero um único padrão de experiência para toda a plataforma.
+
+Como o sistema já está em uso clínico, quero concluir essa padronização antes de voltar a evoluir exercícios individualmente.
+
+Antes de iniciar qualquer implementação, apresente o planejamento completo da T1.
+
+Quero:
+
+1. listar os 34 exercícios;
+
+2. indicar quais possuem características especiais que exigirão adaptações no framework (auditivos, temporizados, contínuos, múltiplas etapas etc.);
+
+3. estimar o esforço de conversão por grupo;
+
+4. propor a ordem de implementação mais segura;
+
+5. dividir a implementação em lotes (T1.1, T1.2, T1.3...), para que cada lote possa ser revisado, testado e publicado sem deixar o sistema inconsistente.
+
+Não quero implementar todos os 34 exercícios em uma única entrega.
+
+Quero um único framework, mas uma implantação incremental.
+
+Após eu aprovar o cronograma, iniciamos imediatamente a implementação da T1.

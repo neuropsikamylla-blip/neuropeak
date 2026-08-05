@@ -1,30 +1,6 @@
 # As 3 ultimas especificacoes dela (automatico; a mais nova por ultimo)
 # Na retomada: ler as 3, conectar com PROGRESSO.md e git, declarar e seguir.
 
-## 05/08/2026 13:29
-Acho que chegamos muito próximos do resultado que eu esperava.
-Antes de encerrar definitivamente a Fase 1, quero apenas uma última revisão de acabamento da interface.
-Não quero alterar nenhuma regra, cálculo ou lógica.
-Quero apenas revisar o texto final.
-Revise todos os insights procurando:
-repetições entre título e descrição;
-frases que apenas repetem o título;
-textos que podem ser mais naturais sem perder precisão clínica;
-títulos ou descrições que ainda soem como linguagem do sistema.
-Por exemplo:
-Planejamento prolongado
-"6 exercícios exigem planejamento prolongado."
-O título e a descrição dizem praticamente a mesma coisa.
-A descrição deve complementar o título, trazendo contexto clínico, e não apenas repetir a expressão.
-Faça essa revisão em todos os insights.
-Também faça uma última leitura da tela inteira procurando pequenas redundâncias, desalinhamentos de linguagem ou detalhes de UX que ainda possam ser refinados.
-Não implemente nenhuma funcionalidade nova.
-Não altere cálculos.
-Não altere validações.
-Não altere o núcleo.
-Quero apenas um polimento final da apresentação.
-Se, após essa revisão, você considerar que não existe mais nenhum ajuste relevante de UX ou linguagem clínica, apresente a proposta e encerramos oficialmente a Fase 1.
-
 ## 05/08/2026 13:36
 Vamos encerrar oficialmente a Fase 1.
 
@@ -203,3 +179,47 @@ A próxima etapa será a T1 do framework de tutorial, conforme a arquitetura já
 <status>completed</status>
 <summary>Background command "Vigiar o disparo" completed (exit code 0)</summary>
 </task-notification>
+
+## 05/08/2026 13:41
+Vamos iniciar oficialmente a T1 do framework de tutorial.
+
+A Fase 1 está encerrada e congelada.
+
+A partir deste ponto, toda a energia do projeto passa para a padronização dos tutoriais.
+
+Objetivo da T1:
+
+- estabelecer um único framework de tutorial para todos os exercícios;
+- tutorial exibido apenas na primeira utilização de cada exercício;
+- demonstração utilizando exatamente a mesma mecânica do exercício real;
+- primeira tentativa guiada;
+- nenhuma interferência em nível, progresso, pontuação ou métricas clínicas;
+- nenhuma alteração na mecânica dos exercícios nesta etapa.
+
+Todos os exercícios existentes terão seus tutoriais substituídos pelo novo padrão.
+
+Não quero manter ou adaptar os tutoriais atuais. Eles passam a servir apenas como referência de conteúdo quando necessário.
+
+Quero um único padrão de experiência para toda a plataforma.
+
+Como o sistema já está em uso clínico, quero concluir essa padronização antes de voltar a evoluir exercícios individualmente.
+
+Antes de iniciar qualquer implementação, apresente o planejamento completo da T1.
+
+Quero:
+
+1. listar os 34 exercícios;
+
+2. indicar quais possuem características especiais que exigirão adaptações no framework (auditivos, temporizados, contínuos, múltiplas etapas etc.);
+
+3. estimar o esforço de conversão por grupo;
+
+4. propor a ordem de implementação mais segura;
+
+5. dividir a implementação em lotes (T1.1, T1.2, T1.3...), para que cada lote possa ser revisado, testado e publicado sem deixar o sistema inconsistente.
+
+Não quero implementar todos os 34 exercícios em uma única entrega.
+
+Quero um único framework, mas uma implantação incremental.
+
+Após eu aprovar o cronograma, iniciamos imediatamente a implementação da T1.
