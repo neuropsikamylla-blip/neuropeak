@@ -11748,3 +11748,22 @@ clínica**) · **T4** (tela de resultado e comunicação de evolução).
 - Não alterei o conteúdo dos blocos já existentes do PROGRESSO.md.</result>
 <usage><subagent_tokens>28362</subagent_tokens><tool_uses>5</tool_uses><duration_ms>92307</duration_ms></usage>
 </task-notification>
+
+## 04/08/2026 21:40
+Antes de qualquer prisma db push, vamos criar um procedimento formal de backup do banco.
+Confirmamos que o projeto está no Supabase Free, sem backups automáticos nem Point-in-Time Recovery (PITR). Portanto, não podemos presumir que exista uma forma de restauração caso algo dê errado.
+Quero que você prepare o procedimento operacional completo, sem executar nada.
+Analise e informe:
+Qual é a forma mais segura de gerar um backup lógico completo deste banco PostgreSQL (preferencialmente pg_dump ou método oficial do Supabase).
+Quais credenciais serão necessárias.
+Como localizar essas credenciais dentro do Supabase.
+O comando completo para gerar o backup.
+Como validar que o backup foi criado corretamente.
+Como restaurar integralmente esse backup, caso seja necessário.
+Quais limitações esse tipo de backup possui em relação aos backups automáticos do plano Pro.
+Se existe algum risco específico por utilizarmos prisma db push em vez de migrations.
+Se esse procedimento passa a ser obrigatório antes de qualquer alteração futura de schema.
+Não execute nenhum comando.
+Não acesse o banco.
+Não faça db push.
+Apenas produza o documento operacional para validação.
