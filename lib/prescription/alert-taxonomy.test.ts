@@ -71,9 +71,12 @@ describe("assistente clínico da revisão do plano", () => {
 
   it("mantém a duração somente no cabeçalho, sem cartão de alerta", () => {
     const presentation = presentPlan(plan(allIds));
-    expect(presentation.prescribedLabel).toBe("Sessão de 40 min");
-    expect(presentation.estimateLabel).toMatch(/^Estimativa: aproximadamente \d+ min$/);
-    expect(presentation.stateLabel).toBe("Acima da faixa esperada (36–44 min)");
+    expect(presentation.targetLabel).toBe("40 minutos");
+    // O cabeçalho não traz número de estimativa: o motor calcula uma FAIXA, e reduzi-la a um
+    // ponto produzia falsa precisão e contradizia o estado. A faixa fica em "Ver detalhes".
+    expect(presentation.stateLabel).toBe("Acima da faixa esperada");
+    expect(presentation.estimateDetail).toContain("Faixa calculada:");
+    expect(presentation.estimateDetail).toContain("Faixa esperada para a meta: 36–44 min");
     expect(presentation.alerts.some((alert) => alert.code.startsWith("SESSION_"))).toBe(false);
   });
 
@@ -84,7 +87,8 @@ describe("assistente clínico da revisão do plano", () => {
       "certo-ou-errado",
     ], 30));
     expect(presentation.state).toBe("DENTRO");
-    expect(presentation.stateLabel).toBe("Dentro da faixa esperada (27–33 min)");
+    expect(presentation.stateLabel).toBe("Dentro da faixa esperada");
+    expect(presentation.estimateDetail).toContain("Faixa esperada para a meta: 27–33 min");
     expect(presentation.alerts).toEqual([]);
   });
 

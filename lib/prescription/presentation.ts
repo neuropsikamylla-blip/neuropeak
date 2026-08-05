@@ -799,7 +799,10 @@ export interface PlanPresentation {
   prescribedMinutes: number;
   prescribedLabel: string;
   durationRange: MinutesRange;
-  estimateLabel: string;
+  /** Rótulo da meta, ex.: "40 minutos". */
+  targetLabel: string;
+  /** Faixa calculada e faixa esperada — só para "Ver detalhes". */
+  estimateDetail: string;
   durationEstimateIncomplete: boolean;
   state: SessionDurationState;
   stateLabel: string;
@@ -820,11 +823,24 @@ function approximateSessionDuration(range: MinutesRange): string {
   return numberText(Math.round((range[0] + range[1]) / 2));
 }
 
-function sessionStateLabel(state: SessionDurationState, targetMinutes: TargetMinutes): string {
-  const range = expectedRange(targetMinutes);
-  if (state === "ABAIXO") return `Abaixo da faixa esperada (${range})`;
-  if (state === "DENTRO") return `Dentro da faixa esperada (${range})`;
-  return `Acima da faixa esperada (${range})`;
+/**
+ * Estado sem número. A estimativa do motor é uma FAIXA; reduzi-la a um ponto na tela
+ * principal produzia falsa precisão e chegou a contradizer o próprio estado — um plano
+ * de [30, 40] exibia "aproximadamente 35 min" ao lado de "dentro de 36–44". A faixa
+ * calculada continua disponível em `estimateDetail`, para "Ver detalhes".
+ */
+function sessionStateLabel(state: SessionDurationState): string {
+  if (state === "ABAIXO") return "Abaixo da faixa esperada";
+  if (state === "DENTRO") return "Dentro da faixa esperada";
+  return "Acima da faixa esperada";
+}
+
+/** Detalhe sob demanda: a faixa que o motor calculou e a faixa esperada para a meta. */
+function sessionEstimateDetail(range: MinutesRange, targetMinutes: TargetMinutes, incomplete: boolean): string {
+  const calculada = incomplete
+    ? "Estimativa incompleta — parte dos exercícios não tem base para cálculo."
+    : `Faixa calculada: ${formatMinutesRange(range)}.`;
+  return `${calculada} Faixa esperada para a meta: ${expectedRange(targetMinutes)}.`;
 }
 
 function planPresentation(plan: SessionPrescription, prescribedMinutes: number, hasUndefinedParameter: boolean): PlanPresentation {
@@ -845,15 +861,14 @@ function planPresentation(plan: SessionPrescription, prescribedMinutes: number, 
   return {
     prescribedMinutes,
     prescribedLabel: `Sessão de ${numberText(prescribedMinutes)} min`,
+    targetLabel: `${numberText(prescribedMinutes)} minutos`,
     durationRange: interpreted.durationRange,
-    estimateLabel: empty
-      ? "Estimativa: 0 min"
-      : durationEstimateIncomplete
-        ? `Estimativa incompleta: aproximadamente ${approximateSessionDuration(interpreted.durationRange)} min`
-        : `Estimativa: aproximadamente ${approximateSessionDuration(interpreted.durationRange)} min`,
+    estimateDetail: empty
+      ? "Nenhum exercício selecionado."
+      : sessionEstimateDetail(interpreted.durationRange, plan.targetMinutes, durationEstimateIncomplete),
     durationEstimateIncomplete,
     state,
-    stateLabel: sessionStateLabel(state, plan.targetMinutes),
+    stateLabel: sessionStateLabel(state),
     fatigueText: formatFatigueSummary(interpreted.fatigueSummary),
     interferenceText: formatInterferenceSummary(interpreted.interferenceSummary),
     alerts,

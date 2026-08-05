@@ -12354,3 +12354,59 @@ Aguarde meu retorno após a validação visual da v2.73.0.
 Caso eu encontre algum ponto de UX ou linguagem clínica, faremos pequenos ajustes sobre esta versão antes de seguir para o banco.
 
 Fique apenas disponível para correções da Fase 1, se forem necessárias.
+
+## 05/08/2026 11:47
+Encontrei um terceiro caminho, que acredito representar melhor a arquitetura que acabamos de aprovar.
+
+Não quero implementar nem a opção (a) nem a (b).
+
+O problema não é apenas a forma de exibir.
+
+O problema é tentar resumir uma estimativa em um único número quando o próprio motor trabalha com uma faixa.
+
+Quero que o cabeçalho reflita a filosofia aprovada.
+
+Em vez de:
+
+Sessão de 40 min
+Estimativa: aproximadamente 35 min
+Dentro da faixa esperada (36–44)
+
+ou
+
+Sessão de 40 min
+Estimativa: aproximadamente 40 min
+Dentro da faixa esperada
+
+quero uma proposta de apresentação mais coerente com a arquitetura.
+
+Exemplo de direção:
+
+SESSÃO PRESCRITA
+
+Meta da sessão
+40 minutos
+
+Estimativa atual
+Dentro da faixa esperada
+
+ou
+
+Estimativa atual
+Acima da faixa esperada
+
+ou
+
+Estimativa atual
+Abaixo da faixa esperada
+
+Caso o terapeuta queira detalhes, eles podem aparecer em "Ver detalhes", incluindo a faixa calculada pelo motor.
+
+A tela principal não precisa transformar uma estimativa em um número único se isso gerar falsa precisão ou contradição.
+
+Analise essa alternativa.
+
+Se concordar que ela representa melhor a arquitetura aprovada, implemente essa solução em vez das opções (a) ou (b).
+
+Não iniciar nenhuma outra fase.
+Continue apenas corrigindo a Fase 1.

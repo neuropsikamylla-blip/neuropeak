@@ -130,8 +130,8 @@ describe("apresentação consultiva da prescrição", () => {
   it("apresenta plano vazio como abaixo, sem alertas confusos", () => {
     const plan = presentPlan({ targetMinutes: 30, exercises: [] });
     expect(plan.durationRange).toEqual([0, 0]);
-    expect(plan.estimateLabel).toBe("Estimativa: 0 min");
-    expect(plan.stateLabel).toBe("Abaixo da faixa esperada (27–33 min)");
+    expect(plan.estimateDetail).toBe("Nenhum exercício selecionado.");
+    expect(plan.stateLabel).toBe("Abaixo da faixa esperada");
     expect(plan.alerts).toEqual([]);
     expect(plan.emptyGuidance).toBe(PRESENTATION_TEXTS.emptyGuidance);
   });
@@ -167,13 +167,25 @@ describe("apresentação consultiva da prescrição", () => {
     expect(JSON.stringify(PRESENTATION_TEXTS)).not.toMatch(/carga basal/i);
   });
 
-  it("resume a duração da sessão em três linhas de cabeçalho", () => {
+  it("resume a duração como meta e estado, sem número de estimativa", () => {
     const plan = presentLegacyPlan(["tempo-reacao", "letras-sequencia", "certo-ou-errado"], 20);
-    expect([plan.prescribedLabel, plan.estimateLabel, plan.stateLabel]).toEqual([
-      "Sessão de 20 min",
-      "Estimativa: aproximadamente 21 min",
-      "Dentro da faixa esperada (18–22 min)",
-    ]);
+    expect([plan.targetLabel, plan.stateLabel]).toEqual(["20 minutos", "Dentro da faixa esperada"]);
+    // Nenhum número de estimativa no que o cabeçalho exibe.
+    expect(plan.stateLabel).not.toMatch(/\d/);
+    // A faixa calculada existe, mas só sob demanda.
+    expect(plan.estimateDetail).toMatch(/Faixa calculada: .+ min\./);
+  });
+
+  it("o estado nunca contradiz a faixa, porque não há ponto único no cabeçalho", () => {
+    // Caso que motivou a correção: faixa [30, 40] com meta 40 exibia "aproximadamente 35 min"
+    // ao lado de "dentro de 36–44".
+    const plan = presentPlan({
+      targetMinutes: 40,
+      exercises: ["torre-hanoi", "labirinto", "estacionamento-logico"].map((exerciseId, index) => ({ exerciseId, order: index + 1 })),
+    });
+    expect(plan.stateLabel).toBe("Dentro da faixa esperada");
+    expect(plan.stateLabel).not.toMatch(/\d/);
+    expect(plan.estimateDetail).toContain("Faixa calculada: 30–40 min");
   });
 
   it("abre envelope antigo com duração contínua salva sem converter o formato", () => {
@@ -184,7 +196,8 @@ describe("apresentação consultiva da prescrição", () => {
 
     expect(plan.prescribedMinutes).toBe(45);
     expect(plan.legacyMarker).toBeUndefined();
-    expect(currentDuration.stateLabel).toContain("40,5–49,5 min");
+    // A faixa esperada migrou do rótulo de estado para os detalhes.
+    expect(currentDuration.estimateDetail).toContain("40,5–49,5 min");
     expect(raw).toEqual(before);
   });
 

@@ -176,14 +176,27 @@ export function PrescriptionSummary({ presentation }: { presentation: PlanPresen
           Resumo da sessão
         </h4>
         <div className="space-y-3 rounded-2xl border border-white/10 bg-white/5 px-4 py-4">
-          <div>
-            <p className="text-lg font-bold text-slate-100 tabular-nums">{presentation.prescribedLabel}</p>
-            <p className="mt-1 text-sm font-medium text-slate-200 tabular-nums" title={PRESENTATION_TEXTS.estimateTooltip}>
-              {presentation.estimateLabel}
-            </p>
-            <p className={`mt-1 text-sm tabular-nums ${stateClasses[presentation.state]}`}>
-              {presentation.stateLabel}
-            </p>
+          <div className="space-y-3">
+            <div>
+              <p className="text-xs uppercase tracking-wide text-slate-400">Meta da sessão</p>
+              <p className="mt-0.5 text-lg font-bold text-slate-100 tabular-nums">{presentation.targetLabel}</p>
+            </div>
+            <div>
+              <p className="text-xs uppercase tracking-wide text-slate-400">Estimativa atual</p>
+              <p className={`mt-0.5 text-base font-semibold ${stateClasses[presentation.state]}`}>
+                {presentation.stateLabel}
+              </p>
+            </div>
+            {/* A faixa calculada fica sob demanda: a estimativa é um intervalo, e reduzi-la a um
+                número na tela principal produzia falsa precisão. */}
+            <details className="text-xs text-slate-400">
+              <summary className="w-fit cursor-pointer select-none text-blue-300 hover:text-blue-200">
+                Ver detalhes da estimativa
+              </summary>
+              <p className="mt-1.5 leading-relaxed" title={PRESENTATION_TEXTS.estimateTooltip}>
+                {presentation.estimateDetail}
+              </p>
+            </details>
           </div>
 
           {presentation.legacyMarker && (
