@@ -157,12 +157,50 @@ convertido usa o fluxo novo; quem não foi mantém o atual. **Não há estado in
 ⚠️ **Isso exige que o framework conviva com os dois formatos durante a transição** — requisito de
 projeto do T1.1, não detalhe de implementação.
 
+## 5.1 Decisões dela — 05/ago/2026
+
+### Modalidade configurável — o tutorial acompanha a modalidade prescrita
+
+A demonstração e a tentativa guiada reproduzem **os mesmos estímulos · a mesma forma de resposta · a
+mesma lógica de interação · as mesmas regras relevantes** da modalidade que o paciente **realmente
+executará**.
+
+⛔ **Proibido tutorial visual genérico** quando a modalidade prescrita exigir outra forma de
+interação.
+
+Quando duas modalidades diferirem **apenas em aparência**, a **estrutura** do tutorial pode ser
+compartilhada — mas o **conteúdo demonstrativo reflete a modalidade ativa**.
+
+⚠️ Requisito de projeto do T1.1: o framework recebe a modalidade prescrita e a repassa à
+demonstração e à micro-unidade. Vale para Compra Multifuncional · Restaurante · Supermercado ·
+Agentes Focus · Caminhos para a Meta.
+
+### Convivência dos dois formatos — aprovada
+
+- exercício convertido usa o **novo** framework;
+- exercício não convertido mantém o tutorial **atual**;
+- ⛔ **nenhum exercício pode ficar sem fluxo de entrada**;
+- ⛔ **a publicação de um lote não pode alterar o comportamento dos exercícios dos lotes seguintes**.
+
+**O framework só assume um exercício depois que estiverem completos e testados, para aquele
+exercício:** demonstração · tentativa guiada · validação · persistência · acesso posterior por
+"Começar" e "Como funciona".
+
+### Ordem de execução exigida
+
+1. **concluir e publicar os ajustes finais da Fase 1**;
+2. **confirmar a versão publicada**;
+3. ⛔ **não misturar alterações da Fase 1 com banco ou tutorial**;
+4. iniciar o **T1.0 pelo backup validado**;
+5. ⛔ **nenhuma conversão de exercício antes da fundação aplicada e validada**.
+
 ## 6. Decisões pendentes antes do T1.1
 
-1. **Tutorial acompanha a modalidade prescrita** (5 exercícios) ou é sempre visual?
-2. **Micro-unidade dos `PLANNING_WINDOW`** — desafio reduzido, ou só a primeira jogada?
-3. **Pacientes atuais:** confirmado o backfill por `totalAttempts > 0`?
-4. **Backup:** procedimento aprovado, mas **não executado**. É o bloqueio do T1.0.
+1. **Micro-unidade dos `PLANNING_WINDOW`** — desafio reduzido, ou só a primeira jogada?
+2. **Pacientes atuais:** confirmado o backfill por `totalAttempts > 0`?
+3. **Backup:** procedimento aprovado, mas **não executado**. É o bloqueio do T1.0.
+
+> Resolvidas em 05/ago: modalidade do tutorial e convivência dos formatos — ver 5.1.
 
 ## 7. O que este documento NÃO faz
 
