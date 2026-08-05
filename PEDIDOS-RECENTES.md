@@ -1,43 +1,6 @@
 # As 3 ultimas especificacoes dela (automatico; a mais nova por ultimo)
 # Na retomada: ler as 3, conectar com PROGRESSO.md e git, declarar e seguir.
 
-## 04/08/2026 21:45
-A análise está aprovada.
-Antes de registrar essa política como regra permanente, faça dois ajustes.
-1. Justificativa da ferramenta
-Não afirme que o pg_dump é superior à Supabase CLI.
-A recomendação deve ser baseada em critérios arquitetônicos.
-Adote como justificativa:
-pg_dump é a ferramenta oficial do PostgreSQL;
-independe do fornecedor;
-é amplamente documentada;
-funciona mesmo que o banco deixe de estar hospedado no Supabase;
-fornece um procedimento estável e de longo prazo para o projeto.
-Evite desqualificar a Supabase CLI. Apenas explique por que pg_dump será o padrão adotado.
-2. Política permanente de backup
-Não exigir restauração completa de teste para absolutamente toda alteração de schema.
-Diferencie dois cenários.
-Alterações aditivas de baixo risco, por exemplo:
-novas colunas opcionais;
-novos índices;
-novos enums;
-novas tabelas sem migração de dados.
-Nesses casos, exigir obrigatoriamente:
-backup lógico imediatamente anterior;
-validação da integridade do arquivo gerado.
-Alterações destrutivas ou migrações de dados, por exemplo:
-DROP;
-ALTER COLUMN;
-remoção de colunas;
-conversão de tipos;
-updates em massa;
-migração de dados existentes.
-Nesses casos, manter obrigatória:
-geração do backup;
-restauração de teste do backup antes da alteração em produção.
-Atualize o procedimento operacional, o RUNBOOK e o CLAUDE.md com essa distinção.
-Não executar nenhuma alteração no banco ainda.
-
 ## 04/08/2026 21:57
 A política está aprovada.
 Peço apenas um refinamento na classificação de risco.
@@ -194,3 +157,68 @@ Não tocar no banco.
 Não interromper a T1 já aprovada.
 Não iniciar implementação.
 Pare após apresentar a análise.
+
+## 04/08/2026 22:05
+Mais uma decisão arquitetônica.
+
+A revisão do plano não deve ser um relatório do motor de prescrição.
+
+Ela deve funcionar como um assistente clínico para o terapeuta.
+
+O motor pode calcular dezenas ou centenas de regras internamente, mas a interface deve exibir apenas aquelas que realmente possam modificar uma decisão clínica.
+
+Princípios:
+
+1. O objetivo da tela é responder apenas:
+
+"Existe algo neste plano que merece minha atenção antes de salvar?"
+
+2. Informações redundantes ou puramente técnicas não devem aparecer.
+
+Exemplos:
+
+- carga basal 11 / referência 10;
+- repetição da estimativa em texto;
+- valores internos do algoritmo;
+- escalas que não possuem significado clínico direto.
+
+3. O sistema deve evitar produzir muitos avisos.
+
+Quando praticamente todo plano gera uma longa lista de observações, o terapeuta deixa de diferenciá-las por importância.
+
+4. Sempre que possível, vários alertas relacionados devem ser sintetizados em um único insight clínico.
+
+Exemplo:
+
+Em vez de:
+
+- fadiga alta em sequência;
+- muitas atividades de fadiga alta;
+- carga elevada para a duração;
+
+o sistema pode produzir uma única observação clínica relacionada à intensidade global do plano.
+
+5. As observações devem priorizar:
+
+- composição cognitiva;
+- concentração excessiva de um mesmo processo;
+- ausência de domínios importantes;
+- sobreposição relevante de construtos;
+- duração muito distante da meta;
+- conflitos realmente capazes de justificar revisão.
+
+6. A interface deve privilegiar qualidade de insight e não quantidade de alertas.
+
+Prefiro receber cinco observações realmente úteis do que vinte regras produzidas pelo algoritmo.
+
+Antes de qualquer implementação, analise:
+
+- quais alertas atuais podem ser fundidos;
+- quais são redundantes;
+- quais representam apenas cálculo interno;
+- quais efetivamente ajudam um terapeuta experiente a revisar um plano;
+- proponha uma hierarquia de importância para essas observações.
+
+Não implementar.
+
+Apenas analisar e documentar.
