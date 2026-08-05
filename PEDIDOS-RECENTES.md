@@ -1,23 +1,6 @@
 # As 3 ultimas especificacoes dela (automatico; a mais nova por ultimo)
 # Na retomada: ler as 3, conectar com PROGRESSO.md e git, declarar e seguir.
 
-## O QUE MUDOU
-
-**1. `/Users/kamyllahonorio/neuropeak/PROGRESSO.md`** — 66 linhas acrescentadas, 0 removidas.
-
-Não existia bloco "EM ANDAMENTO" da T1.0 no arquivo (verificado por `grep -n "EM ANDAMENTO\|T1\.0"`): os três blocos "EM ANDAMENTO" presentes são históricos de outras entregas, e o único registro da T1.0 era o parágrafo "TUDO PARADO, aguardando evidência de backup" (linhas 178-188), que descrevia o estado anterior. Registrei então uma seção nova no topo, na posição cronológica que o arquivo usa (mais recente primeiro), imediatamente antes da seção do incidente de 05/ago, no mesmo estilo (`## EMOJI TÍTULO (data)` + subseções `###` + negrito denso + datas absolutas):
-
-`## 🗄️ T1.0 — BANCO ALTERADO E BACKFILL CONCLUÍDO (05/ago/2026) — CÓDIGO AINDA NÃO`, com:
-- as **duas transações** (seção 2 do roteiro: enum `TutorialSource` BACKFILL(1)/PATIENT(2) + três colunas nuláveis sem default; e o backfill com o filtro dos quatro critérios), contexto de backup validado e o registro de que **não houve `db push`**;
-- o **resultado sintetizado**: 16 de 82 linhas, 66 intocadas com `totalAttempts = 0`, distribuição 12/4, todas as datas de `lastAttemptAt`, menor `totalAttempts` = 1; **12/12 verificações conformes repetidas em nova conexão**, com os invariantes clínicos citados em linha corrida (33 Session, soma 117, soma 34, `max(lastAttemptAt)` 03/08/2026 16:47:52.308, 82 ExerciseConfig) e as demais tabelas 4/1/5/8/25/1 — a tabela original **não** foi copiada;
-- a **lição de método** com as duas tentativas abortadas (dobra de expressão constante no planner; `CREATE TEMP TABLE ... ON COMMIT DROP` fora do `BEGIN`), ambas com ROLLBACK e zero dado alterado, fechando com a regra: trava dentro de transação nunca pode ser expressão constante;
-- o **estado atual** explícito: banco tem enum e campos, `schema.prisma` **não** tem e segue na forma travada por `lib/schema-banco-alinhado.test.ts` (hotfix de 05/ago) — assimetria deliberada e oposta à que causou o incidente; nada publicado;
-- o **próximo passo NÃO autorizado por ela**, em 5 itens numerados: schema → rota preservada em `docs/t1-pausada/exercise-tutorial-route.ts.txt` → `CAMPOS_NO_BANCO` no teste → `prisma generate` / `prisma validate` / `npx tsc --noEmit` / `npm run test` / `npm run build` → publicar e smoke test.
-
-**2. `/Users/kamyllahonorio/neuropeak/docs/operacao/T1.0-backfill-executado-2026-08-05.sql`** — 62 linhas de comentário acrescentadas no topo, 0 removidas, 0 alteradas.
-
-Cabeçalho em comentários SQL, antes do `\set ON_ERROR_STOP on`, com os blocos: aviso de que é registro histórico e não deve ser reexecutado (o filtro é idempotente e devolveria 0, abortando na primeira trava); O QUE FEZ (finalidade clínica, filtro dos quatro critérios, valores gravados); QUANDO/ONDE (05/ago/2026, produção Supabase, conexão direta 5432, backup validado, precedido da transação de schema do roteiro); RESULTADO (16 de 82, 12/12 conformes em nova conexão); POR QUE AS TRAVAS SÃO `1/(CASE ...)` (divergência ⇒ divisão por zero ⇒ ROLLBACK automático, sem depender de alguém ler a saída; e a explicação de por que a forma constante `ELSE (1/0)` não funciona); POR QUE OS LITERAIS (117, 34, 33, 82 e as contagens das demais tabelas são a fotografia medida imediatamente antes — comparar o banco com ele mesmo dentro da transação não provaria nada; e a tabela temporária que guardava essa fotografia não sobrevivia à transação).
-
 ## COMO PROVEI
 
 - Integridade do SQL executável: `diff &lt;(git show HEAD:docs/operacao/T1.0-backfill-executado-2026-08-05.sql) &lt;(tail -n +63 docs/operacao/T1.0-backfill-executado-2026-08-05.sql)` → **exit 0**, byte a byte idêntico da linha 63 em diante.
@@ -34,3 +17,109 @@ Cabeçalho em comentários SQL, antes do `\set ON_ERROR_STOP on`, com os blocos:
 - Não editei o parágrafo antigo "TUDO PARADO, aguardando evidência de backup" (linhas 178-188) — é registro histórico do estado de 04/ago e a seção nova o supera explicitamente. Se o VP preferir uma nota de superação ali, é um ajuste de uma linha.</result>
 <usage><subagent_tokens>46806</subagent_tokens><tool_uses>13</tool_uses><duration_ms>154064</duration_ms></usage>
 </task-notification>
+
+## 05/08/2026 17:38
+Autorizo iniciar a próxima etapa da T1.0: alinhar o código ao banco já preparado.
+
+O banco de produção já possui:
+
+- enum TutorialSource com BACKFILL e PATIENT;
+- tutorialCompletedAt;
+- tutorialVersion;
+- tutorialSource;
+- backfill validado em 16 registros.
+
+Agora o objetivo é fazer o código refletir exatamente essa estrutura, sem alterar novamente o banco.
+
+Escopo autorizado:
+
+1. Recolocar no schema.prisma:
+
+enum TutorialSource {
+  BACKFILL
+  PATIENT
+}
+
+No modelo ExerciseConfig:
+
+tutorialCompletedAt DateTime?
+tutorialVersion     Int?
+tutorialSource      TutorialSource?
+
+2. Restaurar app/api/exercise-tutorial/route.ts a partir da versão preservada em docs/t1-pausada/.
+
+3. Confirmar que a rota:
+
+- grava tutorialCompletedAt;
+- grava tutorialVersion;
+- grava tutorialSource = PATIENT;
+- sobrescreve BACKFILL por PATIENT quando o paciente conclui o tutorial;
+- não altera currentDifficulty;
+- não altera lastAttemptAt;
+- não altera totalAttempts;
+- não cria Session;
+- não altera progressão;
+- não altera achievements;
+- não altera alertas;
+- não altera métricas clínicas.
+
+4. Atualizar schema-banco-alinhado.test.ts.
+
+O teste não deve mais proibir os campos.
+
+Agora ele deve exigir que o schema contenha exatamente:
+
+- tutorialCompletedAt;
+- tutorialVersion;
+- tutorialSource;
+- enum TutorialSource com BACKFILL e PATIENT.
+
+Também deve continuar protegendo contra novos campos de ExerciseConfig adicionados ao schema sem implantação prévia no banco.
+
+5. Confirmar que o endpoint GET do paciente continua retornando os novos campos por meio do include já existente, sem alterar desnecessariamente a rota.
+
+6. Executar:
+
+- prisma validate;
+- prisma generate;
+- TypeScript;
+- suíte completa;
+- build.
+
+7. Testes obrigatórios:
+
+- Prisma Client reconhece os três campos e o enum;
+- GET /api/patients/[id]?config=true retorna 200;
+- plano do terapeuta continua carregando;
+- nível real continua carregando;
+- bloqueio diário continua funcionando;
+- POST /api/sessions continua atualizando ExerciseConfig;
+- rota do tutorial grava PATIENT;
+- registro BACKFILL vira PATIENT após conclusão real;
+- a rota do tutorial não toca campos clínicos;
+- os 16 registros BACKFILL continuam intactos;
+- os 66 registros com totalAttempts = 0 continuam sem tutorialCompletedAt;
+- nenhum dado do banco é alterado durante os testes locais.
+
+8. Depois dos gates:
+
+- fazer bump de versão;
+- publicar na Vercel;
+- confirmar appVersion, buildId, health e commit;
+- executar smoke test autenticado da leitura do plano e da rota de tutorial;
+- registrar no PROGRESSO.md.
+
+Não executar:
+
+- db push;
+- SQL;
+- novo backfill;
+- conversão de exercícios;
+- alteração de mecânica;
+- publicação parcial.
+
+Se surgir qualquer divergência entre schema e banco, pare antes do deploy.
+
+Ao final, apresente as provas e pare para minha validação.
+
+Depois dessa etapa, iniciaremos a conversão dos tutoriais dos 34 exercícios em lotes.
