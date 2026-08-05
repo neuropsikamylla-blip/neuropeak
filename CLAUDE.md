@@ -116,6 +116,15 @@ theme CLINICAL/COLORFUL/GAMIFIED), `Session` (score/accuracy/reactionTime/diffic
 (score 0-100, accuracy 0-1, difficulty **1-13**) foram aplicadas por SQL direto, **não** estão no schema
 (reaplicar após `db push` — ver `RUNBOOK-OPERACIONAL.md`).
 
+> ⛔ **Backup obrigatório antes de alterar o banco.** O projeto está no **Supabase Free**, **sem
+> backup automático e sem PITR** — não há de onde restaurar. Ferramenta padrão: **`pg_dump`** em
+> formato `custom`, pela conexão **direta (porta 5432)**, escolhida por ser oficial do PostgreSQL e
+> **independente do fornecedor**.
+> **Nível 1** (coluna opcional, índice, enum, tabela nova sem migração): backup **+** validação do
+> arquivo. **Nível 2** (`DROP`, `ALTER COLUMN`, conversão de tipo, `UPDATE`/`DELETE` em massa,
+> migração de dados): backup **+** validação **+** **restauração de teste**. Na dúvida, nível 2.
+> Procedimento: `docs/operacao/backup-procedimento.md`.
+
 ## Bibliotecas de conhecimento (somente leitura)
 
 `lib/exercise-science.ts` (embasamento neurocientífico + refs APA), `lib/exercise-functional.ts`

@@ -11767,3 +11767,40 @@ Não execute nenhum comando.
 Não acesse o banco.
 Não faça db push.
 Apenas produza o documento operacional para validação.
+
+## 04/08/2026 21:45
+A análise está aprovada.
+Antes de registrar essa política como regra permanente, faça dois ajustes.
+1. Justificativa da ferramenta
+Não afirme que o pg_dump é superior à Supabase CLI.
+A recomendação deve ser baseada em critérios arquitetônicos.
+Adote como justificativa:
+pg_dump é a ferramenta oficial do PostgreSQL;
+independe do fornecedor;
+é amplamente documentada;
+funciona mesmo que o banco deixe de estar hospedado no Supabase;
+fornece um procedimento estável e de longo prazo para o projeto.
+Evite desqualificar a Supabase CLI. Apenas explique por que pg_dump será o padrão adotado.
+2. Política permanente de backup
+Não exigir restauração completa de teste para absolutamente toda alteração de schema.
+Diferencie dois cenários.
+Alterações aditivas de baixo risco, por exemplo:
+novas colunas opcionais;
+novos índices;
+novos enums;
+novas tabelas sem migração de dados.
+Nesses casos, exigir obrigatoriamente:
+backup lógico imediatamente anterior;
+validação da integridade do arquivo gerado.
+Alterações destrutivas ou migrações de dados, por exemplo:
+DROP;
+ALTER COLUMN;
+remoção de colunas;
+conversão de tipos;
+updates em massa;
+migração de dados existentes.
+Nesses casos, manter obrigatória:
+geração do backup;
+restauração de teste do backup antes da alteração em produção.
+Atualize o procedimento operacional, o RUNBOOK e o CLAUDE.md com essa distinção.
+Não executar nenhuma alteração no banco ainda.

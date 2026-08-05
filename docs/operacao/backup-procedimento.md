@@ -74,38 +74,55 @@ passo de instalação.
 | Dependência externa | nenhuma | pode exigir Docker | — | Docker sempre |
 | Estabilidade do comando | **alta** | muda entre versões do CLI | — | alta |
 
-### 4.2 Por que descartei cada alternativa
+### 4.2 Por que `pg_dump` é o padrão — critérios arquitetônicos
 
-**Dashboard Free — descartado, é inseguro.** No plano Free não existe download do banco; o que há é
-exportar CSV tabela a tabela no Table Editor. Isso **perde schema, constraints, índices, tipos e
-relações**, e não garante consistência entre tabelas exportadas em momentos diferentes. **Não é
-backup** — é planilha.
+A escolha **não** é sobre qual ferramenta é melhor. Todas as opções acima cumprem o papel a que se
+propõem, e a Supabase CLI é uma ferramenta oficial e competente. A escolha é sobre qual delas dá ao
+projeto um **procedimento estável de longo prazo**.
 
-**Supabase CLI — descartado por instabilidade e acoplamento.** `supabase db dump` é um wrapper sobre
-o próprio `pg_dump`, então não faz nada que o original não faça. Em compensação: gera **SQL puro**
-(sem restauração seletiva), exige `supabase login` e `supabase link` — dois passos a mais que podem
-falhar —, e **em várias versões depende de Docker** para executar o dump. O comportamento mudou entre
-versões do CLI, o que é ruim justamente para um procedimento que precisa durar anos.
+| Critério arquitetônico | Por que decide |
+|---|---|
+| **Ferramenta oficial do PostgreSQL** | mantida pelo mesmo projeto que mantém o banco; o formato do dump acompanha o próprio PostgreSQL |
+| **Independe do fornecedor** | não pressupõe Supabase, conta, projeto vinculado nem API de terceiro |
+| **Amplamente documentada** | documentação oficial estável há décadas, com material abundante fora da documentação do fornecedor |
+| **Sobrevive à troca de hospedagem** | se o banco sair do Supabase — outro provedor, servidor próprio — **o procedimento continua idêntico** |
+| **Estável no tempo** | as opções de linha de comando praticamente não mudam entre versões; um procedimento escrito hoje segue válido daqui a anos |
 
-**Docker — descartado pelo custo desproporcional.** Resolveria elegantemente o casamento de versão
-(basta trocar a tag da imagem), mas exige instalar o Docker Desktop, que é uma dependência pesada,
-com atualizações próprias e interface própria, para rodar **um comando ocasional**. O problema que
-ele resolve tem solução mais barata (ver abaixo).
+**O critério decisivo é a independência de fornecedor.** Um procedimento de backup é justamente o
+que precisa funcionar quando algo sai do esperado — inclusive a relação com o provedor. Ancorar a
+recuperação do dado clínico numa ferramenta específica de um fornecedor cria uma dependência no
+ponto do sistema onde ela é menos aceitável.
 
-### 4.3 ✅ Padrão do projeto: `pg_dump` instalado via Homebrew
+**Consequência prática:** este documento continua válido sem reescrita se o projeto migrar de
+hospedagem. Só mudam host, porta e credencial.
 
-**É o caminho com menos camadas entre o comando e o banco.** Ferramenta oficial do PostgreSQL, sem
-wrapper, sem container, sem login, sem link. Menos peças significa menos coisas que podem quebrar
-daqui a seis meses, quando este procedimento for usado de novo.
+### 4.3 Sobre as demais opções
 
-**A objeção do casamento de versão se resolve numa linha:** instalar a **versão mais alta disponível**
-(`postgresql@18`). Um `pg_dump` **mais novo** que o servidor funciona normalmente — o que falha é o
-contrário, cliente antigo contra servidor novo. Instalando a mais recente, o procedimento continua
-válido mesmo quando o Supabase atualizar o PostgreSQL, sem reinstalar nada.
+**Supabase CLI** — ferramenta oficial do fornecedor, adequada para quem trabalha inteiramente dentro
+do ecossistema. Não é o padrão aqui apenas pelo critério de independência acima. Permanece uma
+alternativa legítima caso a equipe prefira, desde que se mantenha a validação do arquivo gerado.
 
-**Ganho decisivo para manutenção:** o formato `custom` permite `pg_restore --list` (validar sem
-restaurar), restauração seletiva de uma tabela e restauração paralela. O SQL puro do CLI não permite
-nenhum dos três.
+**Docker** — resolveria bem o casamento de versão entre cliente e servidor, bastando trocar a tag da
+imagem. Não é o padrão porque exige instalar e manter o Docker Desktop para um comando ocasional.
+Continua sendo uma boa saída se, no futuro, a versão do servidor passar da mais alta disponível no
+Homebrew.
+
+**Exportação pelo Dashboard (Free)** — o que o plano Free oferece é exportar CSV por tabela, no Table
+Editor. Isso serve para inspecionar dados, mas **não constitui backup**: não preserva schema,
+constraints, índices, tipos nem relações, e não garante consistência entre tabelas exportadas em
+momentos diferentes. Não pode ser usado como fonte de restauração.
+
+### 4.4 ✅ Padrão do projeto
+
+**`pg_dump` em formato `custom`, pela conexão direta (porta 5432), com o cliente PostgreSQL instalado
+via Homebrew na versão mais alta disponível.**
+
+O formato `custom` acrescenta três capacidades que o procedimento usa: validar o arquivo sem
+restaurar (`pg_restore --list`), restaurar uma tabela isolada e restaurar em paralelo.
+
+**Sobre a versão:** instalar a mais alta (`postgresql@18`) resolve o casamento de versão de forma
+duradoura — um `pg_dump` mais novo que o servidor funciona; o inverso é que falha. Assim o
+procedimento sobrevive às atualizações do PostgreSQL no provedor sem exigir reinstalação.
 
 ## 5. Procedimento padrão — reutilizável em toda alteração de schema
 
@@ -261,29 +278,68 @@ psql -d neuropeak_teste -c 'SELECT count(*) FROM "ExerciseConfig";'
 **Recomendação de médio prazo:** migrar para `prisma migrate`. Não agora — é mudança de processo, e
 esta operação já tem risco suficiente.
 
-## 10. Isto passa a ser obrigatório?
+## 10. Política permanente de backup — dois níveis de risco
 
-**Sim, e a resposta é sem ressalva enquanto o projeto estiver no Free.**
+**Sim, o backup passa a ser obrigatório** enquanto o projeto não tiver backup automático. Mas a
+exigência é **proporcional ao risco da alteração**: exigir restauração de teste para acrescentar uma
+coluna opcional tornaria a regra pesada a ponto de ser contornada — e regra contornada não protege
+ninguém.
 
-**Backup obrigatório antes de:** qualquer `prisma db push` · qualquer SQL de `ALTER`, `DROP`,
-`UPDATE` ou `DELETE` em massa · backfill · reaplicação de constraints · qualquer alteração de schema.
+### 10.1 Nível 1 — alterações aditivas de baixo risco
 
-**Não é necessário para:** deploy de código sem mudança de schema · leitura · uso normal da
-aplicação.
+**O que é:** novas colunas **opcionais** · novos índices · novos enums · novas tabelas **sem migração
+de dados**.
 
-### 10.1 Regra proposta — para ela aprovar
+**Por que o risco é baixo:** nada existente é reescrito ou removido. Uma coluna opcional nasce `NULL`
+em todas as linhas; um índice não altera dado; uma tabela nova não toca as antigas. O pior caso
+realista é a alteração falhar e não ser aplicada.
 
-> **Nenhuma alteração de estrutura ou de dados em massa no banco de produção sem um backup lógico
-> gerado, validado por `pg_restore --list` e com data conhecida — enquanto não houver backup
-> automático.**
+**Obrigatório:**
 
-Se ela aprovar, isto entra no `RUNBOOK-OPERACIONAL.md` e no `CLAUDE.md` como regra permanente.
+- [x] **backup lógico imediatamente anterior** à alteração;
+- [x] **validação da integridade do arquivo** (`pg_restore --list` mostrando as tabelas esperadas).
 
-### 10.2 A alternativa que elimina o problema
+**Não obrigatório:** restauração de teste.
+
+> A **Fase T1** se enquadra aqui: três colunas opcionais e um enum novo, sem migração de dado.
+
+### 10.2 Nível 2 — alterações destrutivas ou com migração de dados
+
+**O que é:** `DROP` de tabela, coluna ou constraint · `ALTER COLUMN` · remoção de colunas · conversão
+de tipos · `UPDATE`/`DELETE` em massa · migração de dados existentes.
+
+**Por que o risco é alto:** dado existente é reescrito ou eliminado. Um erro aqui **não se percebe
+imediatamente** e pode ser irreversível — e, sem backup automático, irreversível é literal.
+
+**Obrigatório:**
+
+- [x] **backup lógico imediatamente anterior**;
+- [x] **validação da integridade do arquivo**;
+- [x] **restauração de teste em banco local**, com contagens conferidas contra produção **antes** de
+      tocar em produção.
+
+> ⚠️ O **backfill da T1** é `UPDATE` em massa e se enquadra **aqui**, não no nível 1. Mesmo sendo
+> idempotente e tocando só colunas novas, é escrita em massa sobre linhas existentes.
+
+### 10.3 Como classificar quando houver dúvida
+
+**Na dúvida, nível 2.** E há um teste objetivo: rodar
+`prisma migrate diff --from-url … --to-schema-datamodel … --script` e ler o SQL gerado.
+
+- só `CREATE TABLE`, `CREATE INDEX`, `CREATE TYPE`, `ADD COLUMN` (nullable) → **nível 1**;
+- qualquer `DROP`, `ALTER COLUMN`, `NOT NULL` em coluna existente, ou `UPDATE`/`DELETE` → **nível 2**.
+
+### 10.4 Fora da política
+
+Deploy de código **sem** mudança de schema · leitura · uso normal da aplicação. Nada disso exige
+backup.
+
+### 10.5 A alternativa que dispensa a política
 
 **Supabase Pro** (~US$25/mês) traz backup diário automático e PITR de 7 dias. Considerando que o
-banco guarda **dado clínico de paciente** e que hoje **não há recuperação possível**, é decisão dela
-— mas o custo de perder o histórico de treino de um paciente não se mede em dólares.
+banco guarda **histórico clínico de pacientes reais** e que hoje **não existe recuperação possível**,
+é decisão dela — mas convém dizer com clareza: com backup manual, uma falha às 18h com dump das 14h
+**perde quatro horas de treino de paciente**, e isso não se recupera.
 
 ## 11. Ordem recomendada, quando ela autorizar
 
@@ -313,8 +369,8 @@ ALTERAÇÃO: ______________________     DATA: ____________
 [ ]  4. pg_dump rodado, exit 0                           (5.2)
 [ ]  5. Arquivo existe e tem tamanho plausível           (6)
 [ ]  6. pg_restore --list mostra as 5 tabelas            (6)
-[ ]  7. Restauração de TESTE em banco local              (7.2)  ← sem isto, não é backup
-[ ]  8. Contagens do teste batem com produção            (7.2)
+[ ]  7. NÍVEL 2 apenas: restauração de TESTE local       (7.2)
+[ ]  8. NÍVEL 2 apenas: contagens do teste batem          (7.2)
      ─────────── só agora a alteração pode começar ───────────
 [ ]  9. Constraints ANTES registradas
 [ ] 10. prisma migrate diff --script conferido
@@ -328,8 +384,11 @@ ALTERAÇÃO: ______________________     DATA: ____________
 BACKUP: ~/backups-neuropeak/____________________________
 ```
 
-⚠️ **Os passos 7 e 8 são os que separam um arquivo de um backup.** Pular é aceitar não saber se a
-rede existe.
+**Classificar antes de começar:** NÍVEL 1 (aditivo — coluna opcional, índice, enum, tabela nova) ou
+NÍVEL 2 (destrutivo ou migração de dados). Ver seção 10. **Na dúvida, nível 2.**
+
+⚠️ **Nos de nível 2, os passos 7 e 8 são o que separa um arquivo de um backup.** Pular é aceitar não
+saber se a rede existe.
 
 ⚠️ **O passo 12 é o mais esquecível e o mais caro.** Sem as CHECK, o banco aceita `score = 500` e
 `accuracy = 7` em silêncio. O teto de `difficulty` é **13**, não 10.

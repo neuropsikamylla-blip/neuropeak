@@ -4,6 +4,41 @@
 
 ---
 
+## ⛔ POLÍTICA DE BACKUP — obrigatória antes de alterar o banco
+
+> Vigente enquanto o projeto estiver no **Supabase Free**, que **não tem backup automático nem PITR**.
+> **Não existe de onde restaurar** se algo der errado.
+>
+> Procedimento completo: [`docs/operacao/backup-procedimento.md`](docs/operacao/backup-procedimento.md).
+
+**Ferramenta padrão: `pg_dump`** em formato `custom`, pela conexão **direta (porta 5432)**. Escolhida
+por ser a ferramenta oficial do PostgreSQL, **independente do fornecedor** — o procedimento continua
+idêntico se o banco sair do Supabase.
+
+### Nível 1 — aditivo, baixo risco
+
+Novas colunas **opcionais** · novos índices · novos enums · novas tabelas **sem migração de dados**.
+
+**Obrigatório:** backup lógico imediatamente anterior **+** validação do arquivo (`pg_restore --list`).
+
+### Nível 2 — destrutivo ou migração de dados
+
+`DROP` · `ALTER COLUMN` · remoção de colunas · conversão de tipos · `UPDATE`/`DELETE` em massa ·
+migração de dados existentes.
+
+**Obrigatório:** backup **+** validação **+** **restauração de teste em banco local**, com contagens
+conferidas contra produção **antes** de tocar em produção.
+
+### Como classificar
+
+Rodar `prisma migrate diff --script` e ler o SQL. Só `CREATE`/`ADD COLUMN` nullable → nível 1.
+Qualquer `DROP`, `ALTER COLUMN`, `NOT NULL` em coluna existente, `UPDATE` ou `DELETE` → **nível 2**.
+**Na dúvida, nível 2.**
+
+**Fora da política:** deploy de código sem mudança de schema · leitura · uso normal.
+
+---
+
 ## SEC-08 — Rotacionar `NEXTAUTH_SECRET` — ✅ EXECUTADO (2026-05-30)
 
 **Por quê:** o secret antigo era fraco/previsível (`...change-in-production-2024`). Com ele, dava pra forjar sessões de qualquer usuário.

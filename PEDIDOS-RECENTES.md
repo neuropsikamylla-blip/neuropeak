@@ -1,15 +1,6 @@
 # As 3 ultimas especificacoes dela (automatico; a mais nova por ultimo)
 # Na retomada: ler as 3, conectar com PROGRESSO.md e git, declarar e seguir.
 
-## COMO PROVEI
-
-- `wc -l PROGRESSO.md` (antes) → **1428 linhas**; `git log --oneline -3` → exit 0, confirmou os três hashes do despacho no topo: `dba3321`, `04e0f24`, `4999292`.
-- `ls` dos artefatos citados → exit 0: existem `app/api/exercise-tutorial/route.ts`, `components/exercises/PreparationScreen.tsx`, `docs/scripts/backfill-tutorial.sql`, `docs/exercicios/{01,02,03}*.md`, `docs/operacao/T1-plano-implantacao.md` e `lib/tutorial/{types.ts,state.ts,versions.ts}` (+ três arquivos de teste: `contracts.test.ts`, `state.test.ts`, `versions.test.ts`).
-- `git status --porcelain` → exit 0, saída única `M PROGRESSO.md`. `git diff --stat` → `1 file changed, 88 insertions(+)`, **zero deleções**.
-- Posição do bloco: a edição ancorou no título `## ⏱️ DURAÇÃO CONTÍNUA...` (antiga linha 6), o que garante inserção antes de todos os blocos existentes.
-
-**Não reverifiquei os fatos técnicos do despacho** (contagem 471/471, ausência de `onComplete`, os quatro guardas estáticos, o teto 1-13). Foram transcritos como reportados pelo VP; o status de verificação independente deles é **DESCONHECIDO** neste despacho.
-
 ## O QUE NÃO FIZ
 
 - Não commitei nem dei push — a árvore fica com `PROGRESSO.md` modificado, pronto para o VP commitar.
@@ -37,3 +28,40 @@ Não execute nenhum comando.
 Não acesse o banco.
 Não faça db push.
 Apenas produza o documento operacional para validação.
+
+## 04/08/2026 21:45
+A análise está aprovada.
+Antes de registrar essa política como regra permanente, faça dois ajustes.
+1. Justificativa da ferramenta
+Não afirme que o pg_dump é superior à Supabase CLI.
+A recomendação deve ser baseada em critérios arquitetônicos.
+Adote como justificativa:
+pg_dump é a ferramenta oficial do PostgreSQL;
+independe do fornecedor;
+é amplamente documentada;
+funciona mesmo que o banco deixe de estar hospedado no Supabase;
+fornece um procedimento estável e de longo prazo para o projeto.
+Evite desqualificar a Supabase CLI. Apenas explique por que pg_dump será o padrão adotado.
+2. Política permanente de backup
+Não exigir restauração completa de teste para absolutamente toda alteração de schema.
+Diferencie dois cenários.
+Alterações aditivas de baixo risco, por exemplo:
+novas colunas opcionais;
+novos índices;
+novos enums;
+novas tabelas sem migração de dados.
+Nesses casos, exigir obrigatoriamente:
+backup lógico imediatamente anterior;
+validação da integridade do arquivo gerado.
+Alterações destrutivas ou migrações de dados, por exemplo:
+DROP;
+ALTER COLUMN;
+remoção de colunas;
+conversão de tipos;
+updates em massa;
+migração de dados existentes.
+Nesses casos, manter obrigatória:
+geração do backup;
+restauração de teste do backup antes da alteração em produção.
+Atualize o procedimento operacional, o RUNBOOK e o CLAUDE.md com essa distinção.
+Não executar nenhuma alteração no banco ainda.
