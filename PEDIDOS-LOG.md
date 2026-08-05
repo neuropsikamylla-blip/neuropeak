@@ -11508,3 +11508,31 @@ Pode prosseguir agora somente com a implementação da T1 sem tocar no banco de 
 <status>completed</status>
 <summary>Background command "Vigiar o disparo" completed (exit code 0)</summary>
 </task-notification>
+
+## 04/08/2026 21:24
+Pode concluir a implementação da T1 sem tocar no banco de produção.
+
+Apenas corrija a modelagem de tutorialSource antes da entrega:
+
+- não utilizar String livre;
+- criar enum explícito, por exemplo:
+  BACKFILL
+  PATIENT;
+- tutorialSource permanece opcional;
+- o backfill grava BACKFILL;
+- a conclusão real pela rota grava PATIENT;
+- se um registro originalmente preenchido pelo backfill for posteriormente concluído pelo paciente, a origem deve mudar para PATIENT.
+
+O rollback do backfill só poderá limpar registros cuja origem ainda seja BACKFILL.
+
+Sobre o backup do Supabase: não presuma que existe. Na futura etapa de produção, primeiro verifique e apresente evidência concreta de:
+
+- qual mecanismo de backup está disponível;
+- quando foi gerado o último backup;
+- se ele inclui o banco relevante;
+- como seria feita a restauração;
+- se há necessidade de exportação lógica adicional antes do db push.
+
+Não executar nenhuma ação no banco agora.
+
+Conclua a T1 com prisma validate, prisma generate, TypeScript, suíte completa, build e revisão do diff. Depois pare para minha validação.
