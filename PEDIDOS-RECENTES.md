@@ -1,54 +1,6 @@
 # As 3 ultimas especificacoes dela (automatico; a mais nova por ultimo)
 # Na retomada: ler as 3, conectar com PROGRESSO.md e git, declarar e seguir.
 
-## 04/08/2026 20:05
-Finalizamos uma etapa importante da arquitetura da prescrição.
-
-Antes de abrir qualquer nova fase estrutural, quero voltar o foco para aquilo que realmente determina a qualidade clínica da plataforma: os exercícios.
-
-A partir deste momento, vamos trabalhar exercício por exercício.
-
-O objetivo não é apenas corrigir bugs.
-
-Quero revisar profundamente:
-
-- objetivo cognitivo;
-- validade clínica do treino;
-- mecânica;
-- progressão;
-- adaptação de dificuldade;
-- feedback ao paciente;
-- tutorial;
-- interface;
-- motivação ao longo das sessões;
-- sensação de evolução;
-- métricas registradas;
-- quais indicadores realmente importam para o terapeuta;
-- quais dados serão usados futuramente na evolução clínica.
-
-A cada exercício quero seguir este fluxo:
-
-1. análise do exercício atual;
-2. identificar limitações clínicas e de UX;
-3. propor melhorias;
-4. validar a arquitetura antes de qualquer código;
-5. implementar;
-6. testar;
-7. publicar;
-8. passar para o próximo exercício.
-
-Não abrir novas frentes arquitetônicas em paralelo.
-
-Vamos evoluir um exercício por vez, até que os 34 estejam no padrão clínico e de experiência que buscamos.
-
-Primeiro exercício da próxima etapa: Tutorial e experiência inicial de execução.
-
-Não implementar ainda.
-
-Quero primeiro uma análise completa do fluxo atual do tutorial, da entrada do paciente no exercício, do início da sessão e da experiência de primeira utilização, tomando como referência também as observações que fizemos sobre o Cogmed.
-
-Ao final, apresente apenas a análise e aguarde minha validação.
-
 ## 04/08/2026 20:32
 A análise está aprovada. Vamos consolidar as decisões antes de implementar.
 
@@ -348,6 +300,207 @@ Não implementar ainda.
 Criar um documento arquitetônico novo, preservar os documentos anteriores e parar para minha validação.
 
 ## 04/08/2026 20:52
+A análise está aprovada, com as seguintes decisões.
+
+==================================================
+1. MODELAGEM E ROTA
+==================================================
+
+Aprovo utilizar ExerciseConfig, que já possui a granularidade correta por paciente e exercício.
+
+Adicionar futuramente:
+
+- tutorialCompletedAt;
+- tutorialVersion.
+
+Aprovo uma rota específica para conclusão do tutorial.
+
+Não utilizar /api/sessions para registrar tutorial.
+
+A rota do tutorial não poderá tocar:
+
+- Session;
+- currentDifficulty;
+- lastAttemptAt;
+- totalAttempts;
+- progressão;
+- achievements;
+- alertas;
+- métricas clínicas;
+- dose realizada.
+
+A separação deve ser garantida por arquitetura e testes.
+
+==================================================
+2. PACIENTES ATUAIS
+==================================================
+
+Pacientes que já possuem histórico real naquele exercício não devem ser obrigados a rever automaticamente o tutorial após a migration.
+
+Na transição inicial:
+
+- se o paciente já tiver totalAttempts > 0 ou evidência equivalente de execução real naquele exercício, considerar o tutorial conhecido;
+- se nunca tiver executado o exercício, tutorial obrigatório no primeiro acesso;
+- todos continuam podendo acessar “Como funciona” voluntariamente.
+
+Essa inferência pelo histórico será utilizada somente na transição inicial.
+
+Depois da migration, a fonte de verdade passa a ser:
+
+- tutorialCompletedAt;
+- tutorialVersion.
+
+Não continuar inferindo indefinidamente pelo número de tentativas.
+
+Documentar claramente como será feito o backfill, sem alterar:
+
+- tentativas;
+- níveis;
+- progresso;
+- datas de treino;
+- sessões anteriores.
+
+==================================================
+3. VERSIONAMENTO
+==================================================
+
+Cada tutorial terá uma versão explícita.
+
+O tutorial será considerado concluído quando:
+
+tutorialVersion concluída pelo paciente
+=
+versão atual exigida pelo exercício.
+
+Uma alteração apenas visual ou textual não deve obrigar reapresentação.
+
+Somente uma mudança relevante da mecânica, da regra de resposta ou da forma de interação poderá aumentar a versão obrigatória.
+
+Não criar aumento automático de versão por deploy.
+
+A versão deverá ser definida explicitamente no catálogo ou contrato do tutorial.
+
+==================================================
+4. EXERCÍCIOS CONTINUOUS_TIMED
+==================================================
+
+Para exercícios cronometrados, “Sua vez” não significa executar o protocolo completo.
+
+Utilizar uma micro-unidade guiada representativa da mecânica.
+
+Exemplos:
+
+- Vigilância: sequência curta contendo um alvo;
+- Informação em Foco: uma questão completa;
+- Tempo de Reação: poucos estímulos;
+- Rastreamento de Objetos: uma rodada curta;
+- Cores e Palavras: pequeno bloco de respostas.
+
+A unidade guiada deve apenas confirmar que o paciente compreendeu:
+
+- qual estímulo observar;
+- qual resposta emitir;
+- quando responder;
+- quando não responder, quando aplicável.
+
+Ela não deve:
+
+- usar a duração clínica do protocolo;
+- consumir a dose prescrita;
+- alterar nível;
+- contar como tentativa;
+- registrar precisão ou tempo de reação;
+- entrar no histórico clínico;
+- afetar progressão.
+
+Se houver erro, repetir somente essa micro-unidade com uma orientação curta.
+
+Não reiniciar toda a demonstração.
+
+==================================================
+5. EXERCÍCIOS SEM TUTORIAL
+==================================================
+
+Registrar explicitamente que 15 exercícios ainda não possuem tutorial.
+
+Não criar os 15 de uma vez.
+
+Primeiro implementar e validar o framework e os dois pilotos.
+
+Após validação, converter os exercícios restantes em lotes, respeitando a mecânica específica de cada um.
+
+Não transformar tutorial em animação genérica.
+
+O tutorial deve reproduzir a regra real do exercício.
+
+==================================================
+6. TUTORIAIS FORA DO CONTRATO
+==================================================
+
+Os cinco tutoriais próprios — Agentes Focus, Informação em Foco, Vigilância, Cores e Palavras e Padrões com Rotação — devem ser auditados individualmente antes da conversão.
+
+Não substituir automaticamente sua lógica pelo framework.
+
+Em especial, preservar as decisões clínicas da Vigilância:
+
+- o alvo é apresentado conforme a regra definida;
+- não introduzir pistas durante o treino;
+- não repetir informação que descaracterize o construto.
+
+O framework deve controlar o fluxo global, mas permitir que cada exercício forneça sua demonstração real e sua unidade guiada específica.
+
+==================================================
+7. PILOTOS
+==================================================
+
+Aprovo os dois pilotos:
+
+1. Conecta Números
+- caso visual simples;
+- já compartilha componentes com o jogo;
+- valida o fluxo global com menor risco.
+
+2. Span Numérico Auditivo Direto
+- caso auditivo;
+- atualmente sem tutorial;
+- valida estímulo sonoro, repetição guiada e ausência de apoio visual indevido.
+
+Os pilotos precisam provar:
+
+- primeira utilização obrigatória;
+- acesso seguinte direto à tela de preparação;
+- botão “Como funciona”;
+- persistência entre dispositivos;
+- versionamento;
+- tutorial sem impacto clínico;
+- repetição apenas da tentativa guiada em caso de erro.
+
+==================================================
+8. PRÓXIMA ENTREGA
+==================================================
+
+Ainda não implementar.
+
+Atualize o documento arquitetônico com estas decisões e apresente:
+
+1. schema exato proposto;
+2. estratégia de migration e backfill;
+3. contrato TypeScript do framework;
+4. formato da versão do tutorial;
+5. contrato da micro-unidade guiada;
+6. fluxo completo do Conecta Números;
+7. fluxo completo do Span Numérico Auditivo Direto;
+8. arquivos previstos para a Fase T1;
+9. testes obrigatórios da Fase T1;
+10. riscos que ainda dependem da minha decisão.
+
+Também liste claramente as outras decisões clínicas pendentes mencionadas no documento que não apareceram no resumo da resposta.
+
+Não implementar.
+Não publicar.
+Pare após a proposta detalhada da Fase T1.
+
+## 04/08/2026 21:02
 A análise está aprovada, com as seguintes decisões.
 
 ==================================================
