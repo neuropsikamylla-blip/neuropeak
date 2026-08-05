@@ -1,4 +1,4 @@
-import { readFileSync, readdirSync } from "node:fs";
+import { existsSync, readFileSync, readdirSync } from "node:fs";
 import { resolve } from "node:path";
 import { describe, expect, it } from "vitest";
 
@@ -25,8 +25,15 @@ describe("guardas estáticos do framework de tutorial", () => {
     );
   });
 
-  it("impede a rota de tocar caminhos clínicos e de progressão", () => {
-    expect(source("app/api/exercise-tutorial/route.ts")).not.toMatch(
+  // A rota está PAUSADA desde o hotfix de 05/ago/2026: ela depende de colunas que o banco
+  // ainda não tem, e o Prisma Client gerado com elas derrubava toda consulta a ExerciseConfig.
+  // O arquivo foi preservado em docs/t1-pausada/ e volta quando o banco receber os campos.
+  it("mantém a rota fora de app/api enquanto o banco não tem os campos", () => {
+    expect(existsSync(resolve(process.cwd(), "app/api/exercise-tutorial/route.ts"))).toBe(false);
+  });
+
+  it("o arquivo preservado continua sem tocar caminhos clínicos e de progressão", () => {
+    expect(source("docs/t1-pausada/exercise-tutorial-route.ts.txt")).not.toMatch(
       /session\.create|currentDifficulty|lastAttemptAt|totalAttempts|achievement|alert/i,
     );
   });

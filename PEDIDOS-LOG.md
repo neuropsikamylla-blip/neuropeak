@@ -13030,3 +13030,81 @@ Não iniciar T1.
 Não executar db push.
 Não tocar no banco antes de provar a causa.
 Pare para minha validação antes de publicar.
+
+## 05/08/2026 15:45
+A causa raiz está validada.
+
+Autorize a correção emergencial imediata em produção.
+
+Prioridade absoluta: restaurar o funcionamento do plano do terapeuta e do treino do paciente.
+
+Implemente somente o hotfix mínimo:
+
+1. Reverter temporariamente do schema.prisma:
+   - tutorialCompletedAt;
+   - tutorialVersion;
+   - tutorialSource;
+   - enum TutorialSource.
+
+2. Remover temporariamente app/api/exercise-tutorial/route.ts, pois depende desses campos e ainda não está em uso.
+
+3. Preservar os arquivos de lógica pura da T1 que não dependem do Prisma, para que o trabalho não seja perdido.
+
+4. Substituir os .catch(() => {}) silenciosos:
+   - na tela de plano do terapeuta;
+   - na tela de treino do paciente.
+
+Quando o carregamento falhar, mostrar estado de erro explícito e opção de tentar novamente.
+
+Nunca transformar erro de API em:
+- plano vazio;
+- nível 1;
+- ausência de bloqueio diário;
+- estado inicial aparentemente válido.
+
+5. Não executar db push.
+6. Não executar SQL.
+7. Não alterar dados existentes.
+8. Não iniciar tutorial.
+9. Não modificar progressão além do necessário para restaurar o comportamento anterior.
+
+Testes obrigatórios:
+
+- GET /api/patients/[id]?config=true retorna 200;
+- plano salvo reaparece após sair e voltar;
+- exercícios e settings permanecem;
+- nível real do paciente é carregado;
+- bloqueio de exercício já realizado no dia funciona;
+- POST /api/sessions conclui sem 500;
+- ExerciseConfig atualiza novamente:
+  - currentDifficulty;
+  - lastAttemptAt;
+  - totalAttempts;
+- Session continua sendo gravada;
+- erro de carregamento gera mensagem visível, nunca estado vazio;
+- TypeScript;
+- suíte completa;
+- build.
+
+Depois:
+
+1. fazer bump de versão de hotfix;
+2. publicar imediatamente na Vercel;
+3. confirmar appVersion, buildId, health e commit;
+4. testar o paciente usado na reprodução;
+5. confirmar que os exercícios salvos reapareceram;
+6. confirmar que os dados do plano nunca foram apagados;
+7. registrar o incidente e a causa no PROGRESSO.md.
+
+Também faça uma auditoria dos registros criados desde a v2.73.0 para identificar:
+
+- sessões gravadas antes do erro no upsert;
+- ExerciseConfig que não foi atualizado;
+- pacientes potencialmente afetados;
+- possibilidade de reconstruir totalAttempts, lastAttemptAt e currentDifficulty a partir das Sessions já salvas.
+
+Não faça qualquer correção de dados automaticamente.
+
+Primeiro restaure produção. Depois apresente a auditoria e um plano de reparação separado.
+
+Pode implementar e publicar o hotfix agora, sem nova espera para validação.

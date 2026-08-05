@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect, useMemo } from "react";
+import { useState, useEffect, useMemo, useCallback } from "react";
 import { useRouter, useParams } from "next/navigation";
 import { Button } from "@/components/ui/button";
 import { useToast } from "@/components/ui/use-toast";
@@ -32,6 +32,9 @@ export default function PlanoPage() {
 
   const [loading, setLoading] = useState(false);
   const [loadingPlan, setLoadingPlan] = useState(true);
+  // Falha de carregamento NUNCA pode virar "plano vazio": o terapeuta leria como se os
+  // exercícios tivessem sumido. Incidente de 05/ago/2026 — ver PROGRESSO.md.
+  const [loadError, setLoadError] = useState(false);
   const [patientName, setPatientName] = useState("");
   const [hasPlan, setHasPlan] = useState(false);
   const [selectedExercises, setSelectedExercises] = useState<string[]>([]);
@@ -48,9 +51,14 @@ export default function PlanoPage() {
   const [difficulty, setDifficulty] = useState<DifficultyFilter>("todas");
   const { panels, togglePanel } = usePanelPreference();
 
-  useEffect(() => {
+  const carregarPlano = useCallback(() => {
+    setLoadError(false);
+    setLoadingPlan(true);
     fetch(`/api/patients/${patientId}?config=true`)
-      .then(r => r.json())
+      .then(r => {
+        if (!r.ok) throw new Error(`Falha ao carregar o plano (${r.status})`);
+        return r.json();
+      })
       .then(data => {
         setPatientName(data.patient?.name ?? "");
         const plan = data.patient?.trainingPlans?.[0];
@@ -69,9 +77,11 @@ export default function PlanoPage() {
         cfgs.forEach(c => { levels[c.exerciseId] = c.currentDifficulty; });
         setExerciseLevels(levels);
       })
-      .catch(() => {})
+      .catch(() => setLoadError(true))
       .finally(() => setLoadingPlan(false));
   }, [patientId]);
+
+  useEffect(() => { carregarPlano(); }, [carregarPlano]);
 
   function toggleExercise(exerciseId: string) {
     if (selectedExercises.includes(exerciseId)) {
@@ -193,6 +203,18 @@ export default function PlanoPage() {
     return (
       <div className="flex items-center justify-center min-h-[40vh]">
         <Loader2 className="w-7 h-7 animate-spin text-blue-500" />
+      </div>
+    );
+  }
+
+  if (loadError) {
+    return (
+      <div className="flex min-h-[40vh] flex-col items-center justify-center gap-3 text-center">
+        <p className="text-base font-semibold text-slate-100">Não foi possível carregar o plano</p>
+        <p className="max-w-md text-sm text-slate-400">
+          Os dados do paciente não foram alterados. Tente novamente; se o erro continuar, avise o suporte.
+        </p>
+        <Button onClick={carregarPlano} className="mt-1">Tentar novamente</Button>
       </div>
     );
   }

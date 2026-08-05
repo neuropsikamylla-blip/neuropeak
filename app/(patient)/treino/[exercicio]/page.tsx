@@ -386,6 +386,9 @@ export default function ExercicioPage() {
   const [difficulty, setDifficulty] = useState(1);
   const [exerciseSettings, setExerciseSettings] = useState<Record<string, unknown> | undefined>();
   const [loading, setLoading] = useState(true);
+  // Falha de carregamento NUNCA pode virar treino em nível 1 sem bloqueio diário: o paciente
+  // treinaria na dificuldade errada sem ninguém perceber. Incidente de 05/ago/2026.
+  const [loadError, setLoadError] = useState(false);
   const [theme, setTheme] = useState<Theme>("CLINICAL");
   const [blockedToday, setBlockedToday] = useState(false);
   const [patientAge, setPatientAge] = useState<number | undefined>();
@@ -408,7 +411,10 @@ export default function ExercicioPage() {
     setTheme((user.theme ?? "CLINICAL") as Theme);
 
     fetch(`/api/patients/${user.patientId}?config=true`)
-      .then((r) => r.json())
+      .then((r) => {
+        if (!r.ok) throw new Error(`Falha ao carregar os dados do treino (${r.status})`);
+        return r.json();
+      })
       .then((data) => {
         // Calculate patient age from birthDate if available
         const dob = data.patient?.birthDate;
@@ -469,7 +475,7 @@ export default function ExercicioPage() {
         }
         // No config = first time doing exercise, start at difficulty 1 (default)
       })
-      .catch(() => {})
+      .catch(() => setLoadError(true))
       .finally(() => setLoading(false));
   }, [session, exerciseId]);
 
@@ -583,6 +589,23 @@ export default function ExercicioPage() {
     return (
       <div className="min-h-screen flex items-center justify-center">
         <Loader2 className="w-8 h-8 animate-spin text-blue-600" />
+      </div>
+    );
+  }
+
+  if (loadError) {
+    return (
+      <div className="min-h-screen flex flex-col items-center justify-center gap-3 p-6 text-center">
+        <p className="text-lg font-semibold">Não foi possível carregar seu treino</p>
+        <p className="max-w-sm text-sm opacity-70">
+          Seus dados não foram alterados. Verifique a conexão e tente de novo.
+        </p>
+        <button
+          onClick={() => window.location.reload()}
+          className="mt-2 rounded-xl bg-blue-600 px-5 py-2.5 text-sm font-semibold text-white active:scale-95"
+        >
+          Tentar novamente
+        </button>
       </div>
     );
   }
