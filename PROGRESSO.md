@@ -3,6 +3,72 @@
 > Checkpoint de contexto para continuidade entre sessões. Atualizado automaticamente.
 > 👉 Visão geral e handoff para o próximo Claude: **`ESTADO-DO-PROJETO.md`** (leia primeiro).
 
+## 🗄️ T1.0 — BANCO ALTERADO E BACKFILL CONCLUÍDO (05/ago/2026) — CÓDIGO AINDA NÃO
+
+**Roteiro:** `docs/operacao/T1.0-roteiro-implantacao.sql` · **SQL do backfill como rodou:**
+`docs/operacao/T1.0-backfill-executado-2026-08-05.sql`. **Banco de PRODUÇÃO (Supabase), conexão direta
+(5432), backup validado antes** (`~/backups-neuropeak/neuropeak-20260805-163204.dump`, `pg_restore --list`
+exit 0 + restauração de teste com 8/8 contagens idênticas). **Nenhum `db push`** — todo o DDL foi **SQL manual**,
+porque o `migrate diff` mostrava `DROP` de FK, de índice e de `DEFAULT` alheios à T1.
+
+### Duas transações, cada uma com autorização explícita dela
+
+1. **Seção 2 do roteiro — schema do banco.** Criado o **enum `TutorialSource`** com **`BACKFILL` (1)** e
+   **`PATIENT` (2)**, e acrescentadas a **`ExerciseConfig`** três colunas **nuláveis e sem default**:
+   **`tutorialCompletedAt` `TIMESTAMP(3)`**, **`tutorialVersion` `INTEGER`** e
+   **`tutorialSource` `"TutorialSource"`**.
+2. **Backfill (esta etapa).** `UPDATE "ExerciseConfig"` marcando como **tutorial já concluído** apenas quem
+   **comprovadamente já treinou**. Filtro restritivo de **quatro critérios**: **`totalAttempts > 0`** **E** os
+   **três campos de tutorial `IS NULL`**. Gravados **`tutorialCompletedAt = COALESCE(lastAttemptAt, createdAt)`**,
+   **`tutorialVersion = 1`** e **`tutorialSource = 'BACKFILL'`**.
+
+### Resultado — 16 linhas, 12/12 verificações conformes
+
+**16 linhas alteradas de 82**; as outras **66 têm `totalAttempts = 0` e ficaram intocadas**. Distribuição:
+**12 exercícios de um paciente e 4 de outro**; **todas as 16 datas vieram de `lastAttemptAt`** (nenhuma de
+`createdAt`); **menor `totalAttempts` entre os marcados = 1**.
+
+As **12 verificações pós-`COMMIT`** foram **repetidas em nova conexão** e deram **todas CONFORME**: **16
+marcados como `BACKFILL`**; **zero** linhas com `totalAttempts = 0` e data preenchida; **zero** datas fora de
+`COALESCE(lastAttemptAt, createdAt)`; **zero** `BACKFILL` com versão diferente de 1; **zero** linhas `PATIENT`.
+**Dado clínico intacto:** **33 `Session`**, **soma de `currentDifficulty` = 117**, **soma de `totalAttempts` = 34**,
+**`max(lastAttemptAt)` = 03/08/2026 16:47:52.308** e **82 `ExerciseConfig`**, todos idênticos ao valor medido antes
+do backfill. **Demais tabelas sem alteração de contagem:** **Patient 4 · User 1 · Achievement 5 · Alert 8 ·
+TrainingPlan 25 · TherapeuticSession 1**.
+
+### 🧠 Lição de método — trava de validação nunca pode ser expressão constante
+
+**Duas tentativas abortaram antes de acertar, ambas com ROLLBACK e zero dado alterado (confirmado por consulta):**
+
+- **1ª:** as travas eram `CASE WHEN <ok> THEN 'OK' ELSE (1/0)::text END`. O **PostgreSQL dobra expressões
+  constantes em tempo de planejamento**, então o **`1/0` explodiu antes de o `CASE` decidir**, mesmo com a
+  condição verdadeira.
+- **2ª:** a trava passou a ser **`1/(CASE WHEN <ok> THEN 1 ELSE 0 END)`** — **o divisor depende do valor medido**,
+  logo **só é avaliado em execução**; o padrão foi **validado nos dois sentidos antes do uso**. Mas a fotografia
+  das demais tabelas usava **`CREATE TEMP TABLE ... ON COMMIT DROP` fora do `BEGIN`**: o **autocommit encerrou e a
+  dropou**, e a **última verificação falhou por tabela inexistente**.
+- **3ª:** **temporária substituída por literais medidos imediatamente antes**. **`COMMIT`, 12/12 conformes.**
+
+**REGRA: trava de validação dentro de transação nunca pode ser expressão constante — o divisor precisa depender
+de um valor medido, senão o planner a avalia antes da hora.**
+
+### 📌 Estado atual — banco à frente do código, DE PROPÓSITO
+
+O **banco já tem o enum e os três campos**; o **`schema.prisma` NÃO os tem** e **permanece na forma travada
+pelo teste `lib/schema-banco-alinhado.test.ts`**, criado no **hotfix do incidente de 05/ago**. Essa assimetria é
+**deliberada e segura** (o Prisma Client não pede coluna que não declara) e é o **oposto do que causou o
+incidente**. **Nada foi publicado nesta etapa.**
+
+### ⏭️ PRÓXIMO PASSO — ela ainda NÃO autorizou
+
+Recolocar no código o que o banco já tem, nesta ordem: **(1)** devolver os **três campos + o enum
+`TutorialSource`** ao **`schema.prisma`**; **(2)** restaurar a **rota de tutorial**, preservada em
+**`docs/t1-pausada/exercise-tutorial-route.ts.txt`**; **(3)** atualizar **`CAMPOS_NO_BANCO`** em
+**`lib/schema-banco-alinhado.test.ts`** (o teste passa a exigir os campos, em vez de proibi-los); **(4)** provar
+com **`prisma generate`**, **`prisma validate`**, **`npx tsc --noEmit`**, **`npm run test`** e **`npm run build`**;
+**(5)** **publicar** e fazer **smoke test**. **Só depois** vem a **Fase T2** com os dois pilotos.
+
+
 ## 🚨 INCIDENTE CRÍTICO DE PRODUÇÃO — DETECTADO, CORRIGIDO E ENCERRADO (05/ago/2026)
 
 **Commits:** hotfix = `0c0c410` (v2.75.1) · auditoria = `c0ccc09` · consultas = `9241295` · script = `05be550`.
