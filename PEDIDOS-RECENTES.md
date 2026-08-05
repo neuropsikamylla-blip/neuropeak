@@ -1,52 +1,6 @@
 # As 3 ultimas especificacoes dela (automatico; a mais nova por ultimo)
 # Na retomada: ler as 3, conectar com PROGRESSO.md e git, declarar e seguir.
 
-## 05/08/2026 15:37
-Temos a evidência que faltava.
-
-Ao abrir diretamente:
-
-GET /api/patients/cmpq1brmw000196enmgs7z6d4?config=true
-
-a resposta foi:
-
-{"error":"Erro interno do servidor"}
-
-Portanto, o problema não deve ser tratado como perda de persistência até prova em contrário.
-
-A tela está recebendo erro 500 e provavelmente o `.catch(() => {})` está convertendo a falha em estado vazio, fazendo parecer que os exercícios desapareceram.
-
-Agora investigue prioritariamente a causa do 500.
-
-Quero:
-
-1. localizar o erro real nos logs da Vercel para essa chamada;
-2. identificar a exceção original e o stack trace;
-3. reproduzir o GET localmente com esse patientId;
-4. verificar qual parte do include de `?config=true` falha;
-5. confirmar se a falha foi introduzida pela v2.75.0 ou se já existia antes;
-6. verificar especialmente incompatibilidade entre:
-   - schema Prisma atual;
-   - banco ainda sem os campos da T1;
-   - `exerciseConfigs: includeConfig`;
-   - enum/tutorial fields ainda não aplicados;
-   - qualquer select/include que agora espere coluna inexistente.
-
-Não corrija por hipótese.
-
-Depois de localizar a causa:
-
-- proponha a correção mínima;
-- preserve os exercícios já salvos;
-- remova o `.catch(() => {})` silencioso ou substitua por tratamento visível de erro;
-- adicione teste de regressão para GET com `config=true`;
-- adicione teste de UX para impedir que erro de API apareça como plano vazio.
-
-Não iniciar T1.
-Não executar db push.
-Não tocar no banco antes de provar a causa.
-Pare para minha validação antes de publicar.
-
 ## 05/08/2026 15:45
 A causa raiz está validada.
 
@@ -148,3 +102,76 @@ Quero apenas:
 7. não iniciar ainda a T1 do tutorial.
 
 Apresente primeiro o diagnóstico e o plano de reparação.
+
+## 05/08/2026 16:15
+Autorizo executar apenas as três consultas de diagnóstico, em modo estritamente somente leitura, pelo SQL Editor do Supabase.
+
+Objetivo:
+
+- identificar quantas Sessions foram criadas durante a janela do incidente;
+- identificar quais pacientes e exercícios foram afetados;
+- comparar essas Sessions com os respectivos ExerciseConfig;
+- calcular apenas os valores que seriam candidatos à reparação.
+
+Regras obrigatórias:
+
+1. Executar somente comandos SELECT.
+
+2. Não executar:
+- UPDATE;
+- INSERT;
+- DELETE;
+- UPSERT;
+- ALTER;
+- CREATE;
+- DROP;
+- TRUNCATE;
+- DO blocks;
+- funções que produzam escrita;
+- tabelas temporárias persistentes;
+- qualquer correção automática.
+
+3. Antes de executar, mostre as três consultas SQL completas para revisão.
+
+4. Utilizar como janela exata do incidente:
+- início: 04/08/2026 às 23:46;
+- fim: 05/08/2026 às 15:51;
+- confirmar antes qual timezone está armazenado no banco e converter corretamente para UTC, se necessário.
+
+5. A saída deve informar, sem expor dados pessoais desnecessários:
+- quantidade total de Sessions na janela;
+- quantidade de pacientes afetados;
+- quantidade de exercícios afetados;
+- patientId e exerciseId apenas quando necessários para o reparo;
+- total de sessões por paciente e exercício;
+- estado atual do ExerciseConfig;
+- totalAttempts atual;
+- lastAttemptAt atual;
+- currentDifficulty atual;
+- valor proposto de totalAttempts;
+- valor proposto de lastAttemptAt;
+- metadata disponível para reconstrução de currentDifficulty;
+- existência ou ausência de ExerciseConfig.
+
+6. Para currentDifficulty:
+- não propor inferência genérica;
+- usar somente metadata explícito, como meta.nextLevel ou meta.endedLevel, quando houver garantia de qual campo representa o valor que deveria ter sido persistido;
+- nos demais exercícios, marcar como “não reconstruir automaticamente”.
+
+7. Não mostrar nomes, e-mails ou outros dados identificáveis na resposta. Use apenas IDs técnicos e contagens.
+
+8. Depois das consultas, apresente:
+- os resultados agregados;
+- a lista exata de registros potencialmente reparáveis;
+- quais campos podem ser reconstruídos com segurança;
+- quais devem permanecer intocados;
+- o SQL de reparação apenas como proposta, sem executar.
+
+9. A T1 continua parada.
+
+10. Nenhuma escrita poderá ocorrer antes de:
+- backup lógico validado;
+- restauração de teste;
+- minha aprovação explícita do SQL final.
+
+Pode preparar agora as consultas SELECT e apresentá-las antes da execução.
