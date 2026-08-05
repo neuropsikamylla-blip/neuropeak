@@ -1,15 +1,6 @@
 # As 3 ultimas especificacoes dela (automatico; a mais nova por ultimo)
 # Na retomada: ler as 3, conectar com PROGRESSO.md e git, declarar e seguir.
 
-## 05/08/2026 13:51
-<task-notification>
-<task-id>bsqei3n3a</task-id>
-<tool-use-id>toolu_01Tj5g48PY35CMMu5AznMGqB</tool-use-id>
-<output-file>/private/tmp/claude-501/-Users-kamyllahonorio-neuropeak/3e6ecf11-e4e5-471f-bbf9-4595faa53598/tasks/bsqei3n3a.output</output-file>
-<status>completed</status>
-<summary>Background command "Disparar o encerramento da Fase 1" completed (exit code 0)</summary>
-</task-notification>
-
 ## 05/08/2026 13:57
 Pare imediatamente a implementação da T1.
 
@@ -71,3 +62,23 @@ Vou coletar as três evidências solicitadas.
 - quantidade de planos ativos retornados: [VALOR]
 
 Aguarde essas evidências antes de corrigir. Não iniciar T1.
+
+## 05/08/2026 15:27
+Coletei as evidências:
+
+1. Contador da tela:
+- Total: [VALOR]
+- Os cartões aparecem? [SIM/NÃO]
+
+2. Console:
+- Há erro vermelho? [SIM/NÃO]
+- Mensagem: [TRECHO, SE HOUVER]
+
+3. GET /api/patients/[id]?config=true:
+- Status: [VALOR]
+- Quantidade de trainingPlans: [VALOR]
+- Campo exercises do primeiro plano: [LISTA / [] / AUSENTE]
+
+Não corrigi nem salvei novamente o plano.
+Pode localizar a causa raiz e propor a correção mínima.
+Não iniciar T1 ainda.
