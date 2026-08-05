@@ -90,6 +90,13 @@ model Session {
   metadata     String?
 }
 
+/// Origem do registro de tutorial concluído. Existe para o rollback do backfill
+/// poder limpar apenas o que foi inferido, sem apagar conclusões reais do paciente.
+enum TutorialSource {
+  BACKFILL
+  PATIENT
+}
+
 model ExerciseConfig {
   id                String    @id @default(cuid())
   patientId         String
@@ -98,6 +105,13 @@ model ExerciseConfig {
   currentDifficulty Int       @default(1)
   totalAttempts     Int       @default(0)
   lastAttemptAt     DateTime?
+  /// Quando o tutorial deste exercício foi concluído. `null` = nunca.
+  tutorialCompletedAt DateTime?
+  /// Versão concluída, comparada com TUTORIAL_VERSIONS[exerciseId].
+  tutorialVersion     Int?
+  /// Origem: "BACKFILL" (inferido do histórico) ou "PATIENT" (concluiu de fato).
+  /// Existe para o rollback do backfill não apagar conclusões reais.
+  tutorialSource      TutorialSource?
   createdAt         DateTime  @default(now())
   updatedAt         DateTime  @updatedAt
 
