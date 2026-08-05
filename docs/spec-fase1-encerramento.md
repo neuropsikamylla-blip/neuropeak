@@ -109,7 +109,13 @@ flexibilidade cognitiva · fadiga · interferência.
 **Saem:** carga basal · referência interna · janela de planejamento · parâmetros · heurística ·
 regra interna · indicador interno.
 
-⛔ **Não simplificar conceito clínico correto para popularizar a linguagem.**
+⛔ **Não simplificar conceito clínico correto para popularizar a linguagem.** O público é formado
+por psicólogos e neuropsicólogos: a terminologia da Neuropsicologia e da Psicologia Cognitiva é o
+vocabulário deles, não um obstáculo.
+
+⚠️ **Regra permanente da plataforma, agora no `CLAUDE.md`:** se uma informação não puder ser
+traduzida para um conceito clínico compreensível pelo terapeuta, **ela não aparece na interface** —
+permanece apenas internamente.
 
 ⚠️ Os 8 títulos internos (`Regra interna do plano`, `Indicador interno do plano`) pertencem a alertas
 ocultos e **hoje não vazam** — confirmado em 7 cenários. **Manter ocultos**; se for trivial, dar-lhes

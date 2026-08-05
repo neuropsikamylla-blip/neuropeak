@@ -142,6 +142,26 @@ tipo), `lib/item-domains.ts`, `lib/tts.ts` (áudio pré-gerado de `data/tts-mani
 `SUPABASE_SERVICE_ROLE_KEY`, `ADMIN_EMAIL`, `NEXT_PUBLIC_ADMIN_EMAIL`, `ADMIN_SECRET`, `CRON_SECRET`,
 `REGISTRATION_CODE`, `GMAIL_USER`, `GMAIL_APP_PASSWORD`.
 
+## Princípio de linguagem da interface — permanente
+
+**A interface usa linguagem técnica da Neuropsicologia. Nunca linguagem técnica do software.**
+
+O público é formado por psicólogos e neuropsicólogos. A terminologia clínica correta **permanece** e
+**não se simplifica** para popularizar:
+
+memória operacional · controle inibitório · atenção seletiva · atenção alternada · flexibilidade
+cognitiva · planejamento · velocidade de processamento · fadiga · interferência · processos
+cognitivos.
+
+Termos que pertencem ao funcionamento interno do software ou do algoritmo **desaparecem
+completamente da interface**:
+
+carga basal · referência interna · parâmetros do motor · regra interna · indicador interno ·
+heurística · janela de planejamento · faixa calculada.
+
+⚠️ **Se uma informação não puder ser traduzida para um conceito clínico compreensível pelo terapeuta,
+ela não deve aparecer na interface** — permanece apenas internamente, para o motor e para relatórios.
+
 ## Convenções
 
 - Componentes PascalCase `.tsx`; Server Components por padrão, `"use client"` só quando necessário.
