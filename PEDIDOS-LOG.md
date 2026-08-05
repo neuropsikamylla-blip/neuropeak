@@ -11804,3 +11804,28 @@ geração do backup;
 restauração de teste do backup antes da alteração em produção.
 Atualize o procedimento operacional, o RUNBOOK e o CLAUDE.md com essa distinção.
 Não executar nenhuma alteração no banco ainda.
+
+## 04/08/2026 21:57
+A política está aprovada.
+Peço apenas um refinamento na classificação de risco.
+Não classifique genericamente "enum" como alteração de baixo risco.
+A classificação deve considerar o impacto real da alteração, e não apenas o tipo do objeto.
+Exemplos:
+Nível 1 (aditivo)
+nova coluna opcional;
+novo índice;
+nova tabela;
+novo enum ainda não utilizado;
+nova coluna utilizando um enum recém-criado, sem conversão de dados existentes.
+Nível 2 (estrutural ou migração)
+alteração de enum existente;
+conversão de coluna existente para enum;
+alteração de tipo de coluna;
+DROP;
+ALTER COLUMN;
+remoção de colunas;
+UPDATE ou DELETE em massa;
+qualquer migração de dados existentes.
+A regra permanente deve continuar baseada na leitura do SQL gerado (prisma migrate diff --script) e, principalmente, no impacto efetivo da alteração.
+O objetivo é evitar que, no futuro, alguém interprete "enum = baixo risco" como uma regra geral quando isso só é verdadeiro para enums novos e sem migração de dados.
+Depois desse ajuste, considero a política operacional consolidada.

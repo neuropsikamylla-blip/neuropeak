@@ -1,15 +1,6 @@
 # As 3 ultimas especificacoes dela (automatico; a mais nova por ultimo)
 # Na retomada: ler as 3, conectar com PROGRESSO.md e git, declarar e seguir.
 
-## O QUE NÃO FIZ
-
-- Não commitei nem dei push — a árvore fica com `PROGRESSO.md` modificado, pronto para o VP commitar.
-- Não toquei em nenhum outro arquivo (nem `CLAUDE.md`, nem `ESTADO-DO-PROJETO.md`, nem docs).
-- Não executei `db push`, SQL, backfill, publicação, `prisma`, `tsc`, `vitest` nem `build` — nada que toque banco ou produção.
-- Não alterei o conteúdo dos blocos já existentes do PROGRESSO.md.</result>
-<usage><subagent_tokens>28362</subagent_tokens><tool_uses>5</tool_uses><duration_ms>92307</duration_ms></usage>
-</task-notification>
-
 ## 04/08/2026 21:40
 Antes de qualquer prisma db push, vamos criar um procedimento formal de backup do banco.
 Confirmamos que o projeto está no Supabase Free, sem backups automáticos nem Point-in-Time Recovery (PITR). Portanto, não podemos presumir que exista uma forma de restauração caso algo dê errado.
@@ -65,3 +56,28 @@ geração do backup;
 restauração de teste do backup antes da alteração em produção.
 Atualize o procedimento operacional, o RUNBOOK e o CLAUDE.md com essa distinção.
 Não executar nenhuma alteração no banco ainda.
+
+## 04/08/2026 21:57
+A política está aprovada.
+Peço apenas um refinamento na classificação de risco.
+Não classifique genericamente "enum" como alteração de baixo risco.
+A classificação deve considerar o impacto real da alteração, e não apenas o tipo do objeto.
+Exemplos:
+Nível 1 (aditivo)
+nova coluna opcional;
+novo índice;
+nova tabela;
+novo enum ainda não utilizado;
+nova coluna utilizando um enum recém-criado, sem conversão de dados existentes.
+Nível 2 (estrutural ou migração)
+alteração de enum existente;
+conversão de coluna existente para enum;
+alteração de tipo de coluna;
+DROP;
+ALTER COLUMN;
+remoção de colunas;
+UPDATE ou DELETE em massa;
+qualquer migração de dados existentes.
+A regra permanente deve continuar baseada na leitura do SQL gerado (prisma migrate diff --script) e, principalmente, no impacto efetivo da alteração.
+O objetivo é evitar que, no futuro, alguém interprete "enum = baixo risco" como uma regra geral quando isso só é verdadeiro para enums novos e sem migração de dados.
+Depois desse ajuste, considero a política operacional consolidada.

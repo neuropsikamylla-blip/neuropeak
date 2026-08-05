@@ -120,9 +120,13 @@ theme CLINICAL/COLORFUL/GAMIFIED), `Session` (score/accuracy/reactionTime/diffic
 > backup automático e sem PITR** — não há de onde restaurar. Ferramenta padrão: **`pg_dump`** em
 > formato `custom`, pela conexão **direta (porta 5432)**, escolhida por ser oficial do PostgreSQL e
 > **independente do fornecedor**.
-> **Nível 1** (coluna opcional, índice, enum, tabela nova sem migração): backup **+** validação do
-> arquivo. **Nível 2** (`DROP`, `ALTER COLUMN`, conversão de tipo, `UPDATE`/`DELETE` em massa,
-> migração de dados): backup **+** validação **+** **restauração de teste**. Na dúvida, nível 2.
+> **Classifique pelo IMPACTO, não pelo tipo do objeto:** a alteração reescreve, converte ou remove
+> dado que já existe? Não → **nível 1**; sim ou talvez → **nível 2**.
+> **Nível 1** (coluna opcional, índice, tabela nova, **enum novo ainda sem uso**, coluna nova usando
+> enum recém-criado sem conversão): backup **+** validação do arquivo.
+> **Nível 2** (**alteração de enum existente**, **conversão de coluna para enum**, `DROP`,
+> `ALTER COLUMN`, mudança de tipo, `UPDATE`/`DELETE` em massa, migração de dados): backup **+**
+> validação **+** **restauração de teste**. Na dúvida, nível 2.
 > Procedimento: `docs/operacao/backup-procedimento.md`.
 
 ## Bibliotecas de conhecimento (somente leitura)

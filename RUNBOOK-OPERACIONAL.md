@@ -15,25 +15,37 @@
 por ser a ferramenta oficial do PostgreSQL, **independente do fornecedor** — o procedimento continua
 idêntico se o banco sair do Supabase.
 
-### Nível 1 — aditivo, baixo risco
+### O princípio: classificar pelo IMPACTO, não pelo tipo do objeto
 
-Novas colunas **opcionais** · novos índices · novos enums · novas tabelas **sem migração de dados**.
+> Esta alteração reescreve, converte ou remove **dado que já existe**?
+> **Não** → nível 1. **Sim, ou talvez** → nível 2.
+
+### Nível 1 — aditivo
+
+Nova coluna **opcional** · novo índice · nova tabela · **novo enum ainda não utilizado** · nova coluna
+usando enum recém-criado **sem conversão de dados**.
 
 **Obrigatório:** backup lógico imediatamente anterior **+** validação do arquivo (`pg_restore --list`).
 
-### Nível 2 — destrutivo ou migração de dados
+### Nível 2 — estrutural ou migração de dados
 
-`DROP` · `ALTER COLUMN` · remoção de colunas · conversão de tipos · `UPDATE`/`DELETE` em massa ·
-migração de dados existentes.
+**Alteração de enum existente** · **conversão de coluna existente para enum** · alteração de tipo de
+coluna · `DROP` · `ALTER COLUMN` · remoção de colunas · `UPDATE`/`DELETE` em massa · qualquer migração
+de dados existentes.
 
 **Obrigatório:** backup **+** validação **+** **restauração de teste em banco local**, com contagens
 conferidas contra produção **antes** de tocar em produção.
 
+⚠️ **Enum novo é nível 1; enum existente é nível 2.** No PostgreSQL, mexer num valor de enum em uso
+exige recriar o tipo e reescrever as colunas que o usam — é migração de dados, ainda que o comando
+pareça pequeno.
+
 ### Como classificar
 
-Rodar `prisma migrate diff --script` e ler o SQL. Só `CREATE`/`ADD COLUMN` nullable → nível 1.
-Qualquer `DROP`, `ALTER COLUMN`, `NOT NULL` em coluna existente, `UPDATE` ou `DELETE` → **nível 2**.
-**Na dúvida, nível 2.**
+Rodar `prisma migrate diff --script` e ler o SQL, classificando pelo **efeito**: `CREATE TABLE/INDEX`,
+`CREATE TYPE` de enum novo sem uso e `ADD COLUMN` nullable → nível 1. `ALTER TYPE` em enum existente,
+`ALTER COLUMN`, `DROP`, `SET NOT NULL`, `UPDATE`, `DELETE` → **nível 2**.
+**Se o SQL parecer aditivo mas converter ou remover dado existente, é nível 2. Na dúvida, nível 2.**
 
 **Fora da política:** deploy de código sem mudança de schema · leitura · uso normal.
 

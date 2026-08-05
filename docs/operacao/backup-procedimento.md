@@ -285,14 +285,27 @@ exigência é **proporcional ao risco da alteração**: exigir restauração de 
 coluna opcional tornaria a regra pesada a ponto de ser contornada — e regra contornada não protege
 ninguém.
 
-### 10.1 Nível 1 — alterações aditivas de baixo risco
+### 10.1 O princípio: classificar pelo IMPACTO, não pelo tipo do objeto
 
-**O que é:** novas colunas **opcionais** · novos índices · novos enums · novas tabelas **sem migração
-de dados**.
+⚠️ **O nível não se decide pelo nome do objeto alterado.** O mesmo tipo de objeto pode ser aditivo ou
+destrutivo conforme o que a alteração faz com o dado que já existe.
+
+**A pergunta que classifica é sempre a mesma:**
+
+> Esta alteração reescreve, converte ou remove **dado que já existe**?
+> **Não** → nível 1. **Sim, ou talvez** → nível 2.
+
+### 10.2 Nível 1 — aditivo
+
+- nova coluna **opcional**;
+- novo índice;
+- nova tabela;
+- **novo enum ainda não utilizado**;
+- nova coluna usando um enum recém-criado, **sem conversão de dados existentes**.
 
 **Por que o risco é baixo:** nada existente é reescrito ou removido. Uma coluna opcional nasce `NULL`
-em todas as linhas; um índice não altera dado; uma tabela nova não toca as antigas. O pior caso
-realista é a alteração falhar e não ser aplicada.
+em todas as linhas; um índice não altera dado; uma tabela nova não toca as antigas; um enum sem uso é
+apenas um tipo declarado. O pior caso realista é a alteração falhar e não ser aplicada.
 
 **Obrigatório:**
 
@@ -301,15 +314,24 @@ realista é a alteração falhar e não ser aplicada.
 
 **Não obrigatório:** restauração de teste.
 
-> A **Fase T1** se enquadra aqui: três colunas opcionais e um enum novo, sem migração de dado.
+### 10.3 Nível 2 — estrutural ou migração de dados
 
-### 10.2 Nível 2 — alterações destrutivas ou com migração de dados
+- **alteração de enum existente** (acrescentar, remover ou renomear valor);
+- **conversão de coluna existente para enum**;
+- alteração de tipo de coluna;
+- `DROP` de tabela, coluna ou constraint;
+- `ALTER COLUMN`;
+- remoção de colunas;
+- `UPDATE` ou `DELETE` em massa;
+- **qualquer migração de dados existentes**.
 
-**O que é:** `DROP` de tabela, coluna ou constraint · `ALTER COLUMN` · remoção de colunas · conversão
-de tipos · `UPDATE`/`DELETE` em massa · migração de dados existentes.
+**Por que o risco é alto:** dado existente é reescrito, convertido ou eliminado. Um erro aqui **não se
+percebe imediatamente** e pode ser irreversível — e, sem backup automático, irreversível é literal.
 
-**Por que o risco é alto:** dado existente é reescrito ou eliminado. Um erro aqui **não se percebe
-imediatamente** e pode ser irreversível — e, sem backup automático, irreversível é literal.
+⚠️ **Por que enum existente é nível 2, embora enum novo seja nível 1:** no PostgreSQL, **remover ou
+renomear um valor de enum em uso exige recriar o tipo** e reescrever toda coluna que o utiliza — é
+migração de dados, ainda que o comando pareça pequeno. É exatamente o caso em que "enum = baixo
+risco" seria uma leitura perigosa.
 
 **Obrigatório:**
 
@@ -318,23 +340,45 @@ imediatamente** e pode ser irreversível — e, sem backup automático, irrevers
 - [x] **restauração de teste em banco local**, com contagens conferidas contra produção **antes** de
       tocar em produção.
 
-> ⚠️ O **backfill da T1** é `UPDATE` em massa e se enquadra **aqui**, não no nível 1. Mesmo sendo
-> idempotente e tocando só colunas novas, é escrita em massa sobre linhas existentes.
+### 10.4 Como classificar na prática
 
-### 10.3 Como classificar quando houver dúvida
+Rodar `prisma migrate diff --from-url … --to-schema-datamodel … --script` e **ler o SQL gerado** —
+mas classificando pelo **efeito**, não pela palavra-chave:
 
-**Na dúvida, nível 2.** E há um teste objetivo: rodar
-`prisma migrate diff --from-url … --to-schema-datamodel … --script` e ler o SQL gerado.
+| SQL gerado | Nível |
+|---|---|
+| `CREATE TABLE` · `CREATE INDEX` | 1 |
+| `CREATE TYPE` de enum **novo, ainda sem uso** | 1 |
+| `ADD COLUMN` nullable, inclusive usando enum recém-criado | 1 |
+| `ALTER TYPE … ADD VALUE` · qualquer mudança em enum **existente** | **2** |
+| `ALTER COLUMN … TYPE` · conversão para enum | **2** |
+| `DROP` de qualquer natureza | **2** |
+| `SET NOT NULL` em coluna existente | **2** |
+| `UPDATE` · `DELETE` | **2** |
 
-- só `CREATE TABLE`, `CREATE INDEX`, `CREATE TYPE`, `ADD COLUMN` (nullable) → **nível 1**;
-- qualquer `DROP`, `ALTER COLUMN`, `NOT NULL` em coluna existente, ou `UPDATE`/`DELETE` → **nível 2**.
+⚠️ **Se o SQL parecer aditivo mas a alteração converter, reescrever ou remover dado existente, é
+nível 2.** O SQL é evidência; o impacto é o critério.
 
-### 10.4 Fora da política
+**Na dúvida, nível 2.**
+
+### 10.5 Aplicação à Fase T1
+
+| Parte | Nível | Por quê |
+|---|---|---|
+| Três colunas opcionais | **1** | nada existente é tocado |
+| `CREATE TYPE TutorialSource` | **1** | enum **novo**, ainda sem uso |
+| `tutorialSource` usando o enum novo | **1** | coluna nova, **sem conversão** de dado |
+| **Backfill** (`UPDATE` em massa) | **2** | escreve em massa sobre linhas existentes |
+
+**Consequência:** a restauração de teste **é obrigatória** antes do backfill, ainda que não seja
+exigida para a parte do schema.
+
+### 10.6 Fora da política
 
 Deploy de código **sem** mudança de schema · leitura · uso normal da aplicação. Nada disso exige
 backup.
 
-### 10.5 A alternativa que dispensa a política
+### 10.7 A alternativa que dispensa a política
 
 **Supabase Pro** (~US$25/mês) traz backup diário automático e PITR de 7 dias. Considerando que o
 banco guarda **histórico clínico de pacientes reais** e que hoje **não existe recuperação possível**,
