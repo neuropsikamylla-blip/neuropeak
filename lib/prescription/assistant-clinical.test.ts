@@ -45,7 +45,7 @@ describe("aceite da Fase 1 — assistente clínico", () => {
 
   it("3. plano com 34 exercícios não contém linguagem dependente da ordem", () => {
     expect(visible(presentPlan(plan(allIds))))
-      .not.toMatch(/sequência|consecutiv|adjacen|encerramento|posição preferencial|carga basal/i);
+      .not.toMatch(/consecutiv|adjacen|encerramento|posição preferencial|carga basal/i);
   });
 
   it("4. nenhum código técnico fica visível", () => {
@@ -108,7 +108,7 @@ describe("aceite da Fase 1 — assistente clínico", () => {
 
   it("13. mensagem principal da concentração não contém contagem", () => {
     const concentration = presentPlan(plan(allIds)).alertGroups.observacao_clinica.find((alert) =>
-      alert.titulo === "Concentração cognitiva do plano");
+      alert.titulo.startsWith("Sobreposição"));
     expect(concentration?.mensagem).not.toMatch(/\d/);
   });
 

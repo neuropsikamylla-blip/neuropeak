@@ -22,7 +22,7 @@ describe("divulgação progressiva dos insights", () => {
   it("mantém os pares cognitivos apenas nos detalhes", () => {
     const presentation = presentPlan(completePlan());
     const concentration = presentation.alertGroups.observacao_clinica.find((alert) =>
-      alert.titulo === "Concentração cognitiva do plano");
+      alert.titulo.startsWith("Sobreposição"));
 
     expect(concentration?.dadoPrincipal).toBeUndefined();
     expect(concentration?.mensagem).not.toMatch(/\d/);

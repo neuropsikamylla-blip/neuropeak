@@ -69,7 +69,7 @@ describe("aceite da Fase 1 — linguagem clínica e UX", () => {
       "Tempo previsto para este plano: 30–40 min. Faixa esperada para esta meta: 36–44 min.",
     );
     expect(presentPlan(plan(EXERCISE_CATALOG.map(({ exerciseId }) => exerciseId))).alertGroups.revisao_plano[0].mensagem)
-      .toContain("A demanda total está acima do previsto para esta duração.");
+      .toContain("a demanda total está acima do previsto para uma sessão de 40 minutos.");
     expect(PRESENTATION_TEXTS).toEqual({
       alertsTooltip: "Pontos para considerar antes de salvar. Não impedem o salvamento.",
       legacyMarker: "Este plano usa uma configuração anterior.",
@@ -136,7 +136,7 @@ describe("aceite da Fase 1 — linguagem clínica e UX", () => {
     );
     expect(complete.alerts).toContainEqual(expect.objectContaining({
       titulo: "Planejamento prolongado",
-      mensagem: "6 exercícios exigem planejamento prolongado.",
+      mensagem: "6 exercícios do plano exigem raciocínio sustentado até a solução.",
     }));
   });
 });

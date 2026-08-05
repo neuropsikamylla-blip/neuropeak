@@ -90,10 +90,6 @@ function AlertArticle({ alert }: { alert: PresentedAlert }) {
   );
 }
 
-function EmptyGroup() {
-  return <p className="text-sm text-slate-400">Nada a revisar aqui.</p>;
-}
-
 function LimitedGroup({
   severity,
   alerts,
@@ -113,7 +109,7 @@ function LimitedGroup({
         {info.label}
       </h4>
       <div className="mt-3 space-y-2.5">
-        {alerts.length === 0 ? <EmptyGroup /> : limited.initial.map((alert, index) => (
+        {limited.initial.map((alert, index) => (
           <AlertArticle key={`${alert.code}-${index}`} alert={alert} />
         ))}
         {limited.hiddenCount > 0 && (
@@ -142,26 +138,24 @@ function InformationGroup({ alerts }: { alerts: readonly PresentedAlert[] }) {
         {info.label}
       </h4>
       <div className="mt-3">
-        {alerts.length === 0 ? <EmptyGroup /> : (
-          <details className="group/info rounded-xl border border-white/10 bg-[#07162D]/60 px-3.5 py-3.5">
-            <summary className="cursor-pointer list-none marker:content-none">
-              <span className="flex items-center justify-between gap-3">
-                <span>
-                  <span className="block text-sm text-slate-400">
-                    {alerts.length} {alerts.length === 1 ? "item agrupado" : "itens agrupados"}
-                  </span>
-                </span>
-                <span className="flex items-center gap-1.5 text-sm font-semibold text-blue-300">
-                  Ver detalhes
-                  <ChevronDown className="h-4 w-4 transition-transform group-open/info:rotate-180" />
+        <details className="group/info rounded-xl border border-white/10 bg-[#07162D]/60 px-3.5 py-3.5">
+          <summary className="cursor-pointer list-none marker:content-none">
+            <span className="flex items-center justify-between gap-3">
+              <span>
+                <span className="block text-sm text-slate-400">
+                  {alerts.length} {alerts.length === 1 ? "item agrupado" : "itens agrupados"}
                 </span>
               </span>
-            </summary>
-            <div className="mt-3 space-y-2.5 border-t border-white/10 pt-3">
-              {alerts.map((alert, index) => <AlertArticle key={`${alert.code}-${index}`} alert={alert} />)}
-            </div>
-          </details>
-        )}
+              <span className="flex items-center gap-1.5 text-sm font-semibold text-blue-300">
+                Ver detalhes
+                <ChevronDown className="h-4 w-4 transition-transform group-open/info:rotate-180" />
+              </span>
+            </span>
+          </summary>
+          <div className="mt-3 space-y-2.5 border-t border-white/10 pt-3">
+            {alerts.map((alert, index) => <AlertArticle key={`${alert.code}-${index}`} alert={alert} />)}
+          </div>
+        </details>
       </div>
     </section>
   );

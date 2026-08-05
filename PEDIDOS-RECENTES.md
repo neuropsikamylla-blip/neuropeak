@@ -1,15 +1,6 @@
 # As 3 ultimas especificacoes dela (automatico; a mais nova por ultimo)
 # Na retomada: ler as 3, conectar com PROGRESSO.md e git, declarar e seguir.
 
-## 05/08/2026 13:38
-<task-notification>
-<task-id>b6xeh7fz3</task-id>
-<tool-use-id>toolu_01JGcxk7Ww6Jedh16opU6ycZ</tool-use-id>
-<output-file>/private/tmp/claude-501/-Users-kamyllahonorio-neuropeak/3e6ecf11-e4e5-471f-bbf9-4595faa53598/tasks/b6xeh7fz3.output</output-file>
-<status>completed</status>
-<summary>Background command "Vigiar o disparo" completed (exit code 0)</summary>
-</task-notification>
-
 ## 05/08/2026 13:41
 Vamos iniciar oficialmente a T1 do framework de tutorial.
 
@@ -114,3 +105,12 @@ Antes de iniciar T1.0:
 Depois disso, iniciar T1.0 pelo backup validado, conforme o procedimento já aprovado.
 
 Não iniciar conversão de exercícios antes da fundação estar aplicada e validada.
+
+## 05/08/2026 13:51
+<task-notification>
+<task-id>bsqei3n3a</task-id>
+<tool-use-id>toolu_01Tj5g48PY35CMMu5AznMGqB</tool-use-id>
+<output-file>/private/tmp/claude-501/-Users-kamyllahonorio-neuropeak/3e6ecf11-e4e5-471f-bbf9-4595faa53598/tasks/bsqei3n3a.output</output-file>
+<status>completed</status>
+<summary>Background command "Disparar o encerramento da Fase 1" completed (exit code 0)</summary>
+</task-notification>

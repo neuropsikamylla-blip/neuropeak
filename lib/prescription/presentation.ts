@@ -25,7 +25,7 @@ export type VisualSeverity = "revisao_plano" | "observacao_clinica" | "informaca
 export const EXECUTION_MODEL_LABELS: Readonly<Record<ExecutionModel, string>> = {
   CONTINUOUS_TIMED: "Por tempo",
   CLOSED_PROTOCOL: "Por protocolo",
-  PLANNING_WINDOW: "Janela de planejamento",
+  PLANNING_WINDOW: "Planejamento prolongado",
   FIXED_HIGH_FATIGUE: "Duração fixa",
 };
 
@@ -233,23 +233,17 @@ const expectedRange = (target: TargetMinutes) => {
 const highCount = (context: AlertCopyContext, key: "fatigue" | "interference") =>
   context.exercises.filter((exercise) => exercise.definition[key] === "ALTA").length;
 
-const OVERLAP_COMPLEMENT = "Essa concentração pode ser intencional em um plano focal. Caso o objetivo seja maior variedade, considere intercalar outro tipo de atividade.";
+const FOCAL_PLAN_TEXT = "Essa concentração pode ser intencional em um plano focal.";
+const OVERLAP_SUGGESTION = "O terapeuta pode manter essa concentração conforme o objetivo clínico.";
 
 function definitionsForAlert(context: AlertCopyContext): readonly ExerciseDefinition[] {
+  if (context.alert.code === "COGNITIVE_CONCENTRATION" && context.alert.exerciseIds.length === 0) {
+    return context.exercises.map((exercise) => exercise.definition);
+  }
   return context.alert.exerciseIds.flatMap((id) => {
     const definition = context.exercises.find((exercise) => exercise.definition.exerciseId === id)?.definition;
     return definition ? [definition] : [];
   });
-}
-
-function declaredReason(context: AlertCopyContext): string {
-  const definitions = definitionsForAlert(context);
-  for (const definition of definitions) {
-    const otherIds = new Set(definitions.filter((candidate) => candidate !== definition).map((candidate) => candidate.exerciseId));
-    const match = definition.sessionEligibility.badCombinations.find((combination) => otherIds.has(combination.exerciseId));
-    if (match) return match.reason.toLocaleLowerCase("pt-BR");
-  }
-  return "";
 }
 
 function cognitiveSignatures(definition: ExerciseDefinition): readonly string[] {
@@ -266,67 +260,45 @@ function sharedCognitiveProcesses(definitions: readonly ExerciseDefinition[]): r
   );
 }
 
-function declaredObservation(context: AlertCopyContext): { titulo: string; mensagem: string } {
-  const definitions = definitionsForAlert(context);
-  const reason = declaredReason(context);
-  const shared = sharedCognitiveProcesses(definitions);
-  const normalizedShared = shared.join(" ").toLocaleLowerCase("pt-BR");
+interface OverlapCopy {
+  titulo: string;
+  mensagem: string;
+}
 
-  if (/cor.+resposta|mapeamentos?.*cor/.test(reason)) {
-    return {
-      titulo: "Mapeamento cor–resposta semelhante",
-      mensagem: "Ambas as atividades utilizam mapeamentos entre cor e resposta.",
-    };
-  }
-  if (/(troca.*inibi|inibi.*troca)/.test(reason)) {
-    return {
-      titulo: "Sobreposição executiva",
-      mensagem: "Há alta sobreposição de controle inibitório e alternância de regras.",
-    };
-  }
-  if (normalizedShared.includes("memória operacional verbal")) {
-    return {
-      titulo: "Concentração de treino verbal",
-      mensagem: "Há concentração de treino verbal nesta sessão.",
-    };
-  }
-  if (normalizedShared.includes("planejamento")) {
-    return {
-      titulo: "Sobreposição em planejamento",
-      mensagem: "Os exercícios recrutam processos de planejamento semelhantes.",
-    };
-  }
-  if (normalizedShared.includes("busca e rastreamento visual")) {
-    return {
-      titulo: "Concentração de busca visual",
-      mensagem: "Os exercícios recrutam processos de busca e rastreamento visual semelhantes.",
-    };
-  }
-  if (normalizedShared.includes("visuoespacial")) {
-    return {
-      titulo: "Sobreposição visuoespacial",
-      mensagem: "Os exercícios recrutam processos visuoespaciais semelhantes.",
-    };
-  }
-  if (definitions.length >= 2 && definitions.every((definition) =>
-    /controle|flexibilidade|planejamento|organização|resolução|raciocínio|atualização/.test(
-      definition.mechanicalPrimary.toLocaleLowerCase("pt-BR"),
-    ))) {
-    return {
-      titulo: "Sobreposição executiva",
-      mensagem: "Os exercícios recrutam processos executivos semelhantes.",
-    };
-  }
-  if (shared.length > 0) {
-    return {
-      titulo: `Concentração em ${shared[0].toLocaleLowerCase("pt-BR")}`,
-      mensagem: `Os exercícios recrutam ${shared[0].toLocaleLowerCase("pt-BR")} em comum.`,
-    };
-  }
+const APPROVED_OVERLAP_COPY: Readonly<Record<string, OverlapCopy>> = {
+  "estacionamento-logico|torre-hanoi": {
+    titulo: "Sobreposição em planejamento",
+    mensagem: `Estacionamento Lógico e Jogo das Torres recrutam processos de planejamento semelhantes. ${FOCAL_PLAN_TEXT}`,
+  },
+  "semaforo|stroop-task": {
+    titulo: "Sobreposição em controle inibitório",
+    mensagem: `Cores e Palavras e Semáforo recrutam controle inibitório e associações entre estímulo e resposta semelhantes. ${FOCAL_PLAN_TEXT}`,
+  },
+  "letras-sequencia|span-numerico": {
+    titulo: "Sobreposição de processos cognitivos",
+    mensagem: `Span Numérico Auditivo Direto e Letras em Sequência recrutam processos verbais e de memória operacional semelhantes. ${FOCAL_PLAN_TEXT}`,
+  },
+};
+
+function overlapCopy(definitions: readonly ExerciseDefinition[]): OverlapCopy {
+  const approved = APPROVED_OVERLAP_COPY[definitions.map(({ exerciseId }) => exerciseId).sort().join("|")];
+  if (approved) return approved;
+
+  const shared = sharedCognitiveProcesses(definitions);
+  const primaryProcess = shared[0]?.toLocaleLowerCase("pt-BR");
+  const subject = definitions.length <= 2
+    ? namesText(definitions.map(({ officialName }) => officialName))
+    : "Os exercícios listados nos detalhes";
+  const processes = primaryProcess ? `processos de ${primaryProcess}` : "processos cognitivos";
   return {
-    titulo: "Processos cognitivos semelhantes",
-    mensagem: "Os exercícios recrutam processos cognitivos semelhantes.",
+    titulo: primaryProcess ? `Sobreposição em ${primaryProcess}` : "Sobreposição de processos cognitivos",
+    mensagem: `${subject} recrutam ${processes} semelhantes. ${FOCAL_PLAN_TEXT}`,
   };
+}
+
+function declaredObservation(context: AlertCopyContext): OverlapCopy {
+  const definitions = definitionsForAlert(context);
+  return overlapCopy(definitions);
 }
 
 /** Configuração exaustiva: o `satisfies` faz um novo AlertCode falhar no typecheck até receber texto. */
@@ -351,12 +323,12 @@ export const ALERT_PRESENTATION_CONFIG = {
     sugestao: () => "Considere revisar as atividades ou as doses do plano.",
   },
   LOAD_AT_CAP: {
-    titulo: "Indicador interno do plano",
-    mensagem: () => "Esta regra permanece disponível apenas para análise interna.",
+    titulo: "Informação não exibida",
+    mensagem: () => "Esta ocorrência não é exibida na revisão do plano.",
   },
   LOAD_OVER_CAP: {
-    titulo: "Indicador interno do plano",
-    mensagem: () => "Esta regra permanece disponível apenas para análise interna.",
+    titulo: "Informação não exibida",
+    mensagem: () => "Esta ocorrência não é exibida na revisão do plano.",
   },
   HIGH_FATIGUE_COUNT: {
     titulo: "Muitas atividades de fadiga alta",
@@ -364,15 +336,15 @@ export const ALERT_PRESENTATION_CONFIG = {
     sugestao: () => "Considere reduzir a quantidade ou intercalar atividades menos fatigantes.",
   },
   HIGH_FATIGUE_POSITION: {
-    titulo: "Regra interna do plano",
+    titulo: "Informação não exibida",
     mensagem: () => "Esta ocorrência não é exibida na revisão do plano.",
   },
   HIGH_FATIGUE_ADJACENT: {
-    titulo: "Regra interna do plano",
+    titulo: "Informação não exibida",
     mensagem: () => "Esta ocorrência não é exibida na revisão do plano.",
   },
   HIGH_INTERFERENCE_ADJACENT: {
-    titulo: "Regra interna do plano",
+    titulo: "Informação não exibida",
     mensagem: () => "Esta ocorrência não é exibida na revisão do plano.",
   },
   AUDITORY_ONLY_ADJACENT: {
@@ -381,34 +353,34 @@ export const ALERT_PRESENTATION_CONFIG = {
     sugestao: () => "Considere intercalar uma atividade com outro canal de apresentação.",
   },
   COGNITIVE_CONCENTRATION: {
-    titulo: "Concentração cognitiva do plano",
-    mensagem: () => "Vários exercícios recrutam processos semelhantes.",
-    sugestao: () => OVERLAP_COMPLEMENT,
+    titulo: (c) => declaredObservation(c).titulo,
+    mensagem: (c) => declaredObservation(c).mensagem,
+    sugestao: () => OVERLAP_SUGGESTION,
   },
   PLANNING_WINDOW_COUNT: {
     titulo: "Planejamento prolongado",
-    mensagem: (c) => `${c.exercises.filter((exercise) => exercise.definition.executionModel === "PLANNING_WINDOW").length} exercícios exigem planejamento prolongado.`,
+    mensagem: (c) => `${c.exercises.filter((exercise) => exercise.definition.executionModel === "PLANNING_WINDOW").length} exercícios do plano exigem raciocínio sustentado até a solução.`,
   },
   PLANNING_WINDOW_ADJACENT: {
-    titulo: "Regra interna do plano",
+    titulo: "Informação não exibida",
     mensagem: () => "Esta ocorrência não é exibida na revisão do plano.",
   },
   OPEN_POSITION_NOT_ELIGIBLE: {
-    titulo: "Regra interna do plano",
+    titulo: "Informação não exibida",
     mensagem: () => "Esta ocorrência não é exibida na revisão do plano.",
   },
   CLOSE_POSITION_NOT_ELIGIBLE: {
-    titulo: "Regra interna do plano",
+    titulo: "Informação não exibida",
     mensagem: () => "Esta ocorrência não é exibida na revisão do plano.",
   },
   OUTSIDE_BEST_POSITION: {
-    titulo: "Regra interna do plano",
+    titulo: "Informação não exibida",
     mensagem: () => "Esta ocorrência não é exibida na revisão do plano.",
   },
   DECLARED_BAD_COMBINATION: {
     titulo: (c) => declaredObservation(c).titulo,
     mensagem: (c) => declaredObservation(c).mensagem,
-    sugestao: () => OVERLAP_COMPLEMENT,
+    sugestao: () => OVERLAP_SUGGESTION,
   },
 } satisfies Record<AlertCode, AlertCopy>;
 
@@ -511,10 +483,7 @@ export function groupAlerts(alerts: readonly PresentedAlert[]): AlertGroups {
 function exerciseNames(ids: readonly string[], context: AlertContext): readonly string[] {
   return ids.map((id) => context.exercises.find((exercise) =>
     exercise.definition.exerciseId === id)?.definition.officialName,
-  ).filter((name): name is string => Boolean(name))
-    // Nomes com esses termos não entram no painel de insights, pois a varredura visual desta fase
-    // precisa permanecer inequívoca quanto à liberdade de ordem do paciente.
-    .filter((name) => !/sequência|consecutiv|adjacen|encerramento|posição preferencial/i.test(name));
+  ).filter((name): name is string => Boolean(name));
 }
 
 function intensityInsight(alerts: readonly PrescriptionAlert[], context: AlertContext): PresentedAlert | undefined {
@@ -528,8 +497,8 @@ function intensityInsight(alerts: readonly PrescriptionAlert[], context: AlertCo
 
   const exerciseCount = context.exercises.length;
   const fatigueText = highFatigueCount === 1
-    ? `1 dos ${exerciseCount} exercícios é potencialmente fatigante para a duração escolhida.`
-    : `${highFatigueCount} dos ${exerciseCount} exercícios são potencialmente fatigantes para a duração escolhida.`;
+    ? `1 dos ${exerciseCount} exercícios é potencialmente fatigante`
+    : `${highFatigueCount} dos ${exerciseCount} exercícios são potencialmente fatigantes`;
   const mentionsLoad = Boolean(
     loadOver
     && context.loadReference !== undefined
@@ -543,7 +512,9 @@ function intensityInsight(alerts: readonly PrescriptionAlert[], context: AlertCo
   return {
     code: fatigueAlert?.code ?? loadOver?.code ?? "HIGH_FATIGUE_COUNT",
     titulo: "Plano de demanda elevada",
-    mensagem: `${fatigueText}${mentionsLoad ? " A demanda total está acima do previsto para esta duração." : ""}`,
+    mensagem: `${fatigueText}${mentionsLoad
+      ? `, e a demanda total está acima do previsto para uma sessão de ${numberText(context.targetMinutes)} minutos.`
+      : "."}`,
     occurrenceCount: Math.max(1, represented.length),
     expansionLabel: ids.length > 0 ? "Ver exercícios" : "Ver detalhes",
     gravidadeVisual: "revisao_plano",
@@ -552,29 +523,13 @@ function intensityInsight(alerts: readonly PrescriptionAlert[], context: AlertCo
   };
 }
 
-const PLANNING_PAIR_IDS = ["estacionamento-logico", "torre-hanoi"] as const;
-const PLANNING_PAIR_TEXT = "Estacionamento Lógico e Jogo das Torres recrutam processos de planejamento semelhantes. Essa concentração pode ser intencional em um plano focal.";
-
-function isPlanningPair(alert: PrescriptionAlert): boolean {
-  return PLANNING_PAIR_IDS.every((id) => alert.exerciseIds.includes(id));
-}
-
 function concentrationOccurrence(alert: PrescriptionAlert, context: AlertContext): PresentedAlertOccurrence {
-  const names = exerciseNames(alert.exerciseIds, context);
-  if (isPlanningPair(alert)) {
-    return { mensagem: PLANNING_PAIR_TEXT, exercicios: names };
-  }
-  if (alert.code === "AUDITORY_ONLY_ADJACENT") {
-    return {
-      mensagem: `${namesText(names)} concentram atividades no canal auditivo.`,
-      exercicios: names,
-    };
-  }
-  if (alert.code === "DECLARED_BAD_COMBINATION") {
-    const observation = declaredObservation({ ...context, alert, exerciseNames: names });
-    return { mensagem: observation.mensagem, exercicios: names };
-  }
-  return { mensagem: "Vários exercícios recrutam processos semelhantes.", exercicios: names };
+  const ids = alert.code === "COGNITIVE_CONCENTRATION" && alert.exerciseIds.length === 0
+    ? context.exercises.map((exercise) => exercise.definition.exerciseId)
+    : alert.exerciseIds;
+  const names = exerciseNames(ids, context);
+  const observation = declaredObservation({ ...context, alert, exerciseNames: names });
+  return { mensagem: observation.mensagem, exercicios: names };
 }
 
 function concentrationInsight(alerts: readonly PrescriptionAlert[], context: AlertContext): PresentedAlert | undefined {
@@ -585,19 +540,25 @@ function concentrationInsight(alerts: readonly PrescriptionAlert[], context: Ale
   ].includes(alert.code));
   if (matching.length === 0) return undefined;
 
-  const declared = matching.filter((alert) => alert.code === "DECLARED_BAD_COMBINATION");
-  const planningPair = declared.find(isPlanningPair);
-  const pairIsTheOnlyFinding = matching.length === 1 && Boolean(planningPair);
-  const ids = [...new Set(matching.flatMap((alert) => alert.exerciseIds))];
+  const ids = [...new Set(matching.flatMap((alert) =>
+    alert.code === "COGNITIVE_CONCENTRATION" && alert.exerciseIds.length === 0
+      ? context.exercises.map((exercise) => exercise.definition.exerciseId)
+      : alert.exerciseIds,
+  ))];
   const occurrences = matching.map((alert) => concentrationOccurrence(alert, context));
+  const definitions = matching.some((alert) => alert.code === "COGNITIVE_CONCENTRATION" && alert.exerciseIds.length === 0)
+    ? context.exercises.map((exercise) => exercise.definition)
+    : ids.flatMap((id) => {
+      const definition = context.exercises.find((exercise) => exercise.definition.exerciseId === id)?.definition;
+      return definition ? [definition] : [];
+    });
+  const copy = overlapCopy(definitions);
 
   return {
     code: matching[0].code,
-    titulo: pairIsTheOnlyFinding ? "Concentração de planejamento" : "Concentração cognitiva do plano",
-    mensagem: pairIsTheOnlyFinding ? PLANNING_PAIR_TEXT : "Vários exercícios recrutam processos semelhantes.",
-    sugestao: pairIsTheOnlyFinding
-      ? "Caso o objetivo seja maior variedade, considere intercalar outro tipo de atividade."
-      : OVERLAP_COMPLEMENT,
+    titulo: copy.titulo,
+    mensagem: copy.mensagem,
+    sugestao: OVERLAP_SUGGESTION,
     occurrenceCount: matching.length,
     expansionLabel: "Ver detalhes",
     gravidadeVisual: "observacao_clinica",
@@ -614,7 +575,7 @@ function planningInsight(alerts: readonly PrescriptionAlert[], context: AlertCon
   return {
     code: planningAlert.code,
     titulo: "Planejamento prolongado",
-    mensagem: `${planning.length} exercícios exigem planejamento prolongado.`,
+    mensagem: `${planning.length} exercícios do plano exigem raciocínio sustentado até a solução.`,
     occurrenceCount: 1,
     expansionLabel: "Ver exercícios",
     gravidadeVisual: "observacao_clinica",

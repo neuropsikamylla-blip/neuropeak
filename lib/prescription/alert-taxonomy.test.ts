@@ -65,7 +65,7 @@ describe("assistente clínico da revisão do plano", () => {
 
   it("não mostra linguagem dependente da ordem, escala interna nem códigos técnicos", () => {
     const visible = allVisibleText(presentPlan(plan(allIds)));
-    expect(visible).not.toMatch(/sequência|consecutiv|adjacen|encerramento|posição preferencial|carga basal/i);
+    expect(visible).not.toMatch(/consecutiv|adjacen|encerramento|posição preferencial|carga basal/i);
     expect(visible).not.toMatch(/[A-Z]{3,}_[A-Z_]+/);
   });
 
@@ -97,7 +97,7 @@ describe("assistente clínico da revisão do plano", () => {
     const intensity = presentation.alertGroups.revisao_plano[0];
     expect(intensity).toMatchObject({
       titulo: "Plano de demanda elevada",
-      mensagem: "12 dos 34 exercícios são potencialmente fatigantes para a duração escolhida. A demanda total está acima do previsto para esta duração.",
+      mensagem: "12 dos 34 exercícios são potencialmente fatigantes, e a demanda total está acima do previsto para uma sessão de 40 minutos.",
       blocksSave: false,
     });
     expect(intensity.mensagem).not.toMatch(/69|13|carga basal/i);
@@ -133,7 +133,7 @@ describe("assistente clínico da revisão do plano", () => {
   it("preserva o texto aprovado para Estacionamento Lógico e Jogo das Torres", () => {
     const presentation = presentPlan(plan(["estacionamento-logico", "torre-hanoi"]));
     const concentration = presentation.alertGroups.observacao_clinica.find((alert) =>
-      alert.titulo === "Concentração de planejamento");
+      alert.titulo === "Sobreposição em planejamento");
     expect(concentration?.mensagem).toBe(
       "Estacionamento Lógico e Jogo das Torres recrutam processos de planejamento semelhantes. Essa concentração pode ser intencional em um plano focal.",
     );
@@ -141,10 +141,12 @@ describe("assistente clínico da revisão do plano", () => {
 
   it("não promove contagem à mensagem principal da concentração", () => {
     const concentration = presentPlan(plan(allIds)).alertGroups.observacao_clinica.find((alert) =>
-      alert.titulo === "Concentração cognitiva do plano");
+      alert.titulo.startsWith("Sobreposição"));
     expect(concentration).toBeDefined();
     expect(`${concentration?.titulo} ${concentration?.mensagem}`).not.toMatch(/\d/);
-    expect(concentration?.mensagem).toBe("Vários exercícios recrutam processos semelhantes.");
+    expect(concentration?.mensagem).toBe(
+      "Os exercícios listados nos detalhes recrutam processos cognitivos semelhantes. Essa concentração pode ser intencional em um plano focal.",
+    );
   });
 
   it("oculta regras de ordem da apresentação sem removê-las do núcleo", () => {

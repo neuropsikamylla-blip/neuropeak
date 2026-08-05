@@ -87,7 +87,7 @@ describe("apresentação consultiva da prescrição", () => {
     expect(EXECUTION_MODEL_LABELS).toEqual({
       CONTINUOUS_TIMED: "Por tempo",
       CLOSED_PROTOCOL: "Por protocolo",
-      PLANNING_WINDOW: "Janela de planejamento",
+      PLANNING_WINDOW: "Planejamento prolongado",
       FIXED_HIGH_FATIGUE: "Duração fixa",
     });
   });
