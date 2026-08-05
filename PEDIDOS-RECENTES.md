@@ -1,30 +1,6 @@
 # As 3 ultimas especificacoes dela (automatico; a mais nova por ultimo)
 # Na retomada: ler as 3, conectar com PROGRESSO.md e git, declarar e seguir.
 
-## 05/08/2026 15:57
-Confirmei o hotfix em produção.
-
-- os exercícios do plano reapareceram;
-- o plano não estava apagado;
-- a tela voltou a carregar corretamente.
-
-Pode agora preparar a auditoria dos registros afetados desde a v2.73.0.
-
-Quero apenas:
-
-1. identificar quais sessões foram gravadas enquanto o ExerciseConfig falhava;
-2. identificar pacientes e exercícios potencialmente afetados;
-3. comparar Sessions com:
-   - currentDifficulty;
-   - lastAttemptAt;
-   - totalAttempts;
-4. propor uma reconstrução segura desses campos a partir do histórico existente;
-5. mostrar exatamente quais dados seriam alterados;
-6. não executar nenhuma correção automática;
-7. não iniciar ainda a T1 do tutorial.
-
-Apresente primeiro o diagnóstico e o plano de reparação.
-
 ## 05/08/2026 16:15
 Autorizo executar apenas as três consultas de diagnóstico, em modo estritamente somente leitura, pelo SQL Editor do Supabase.
 
@@ -120,3 +96,21 @@ Mantenha `attempts_atual` como o valor real do banco, inclusive NULL quando a co
 Depois me devolva as três consultas finais completas e prontas para copiar, sem nenhuma instrução de escrita.
 
 Não executar UPDATE, INSERT, DELETE ou qualquer alteração.
+
+## 05/08/2026 16:24
+Prefiro executar a auditoria pelo terminal utilizando a DATABASE_URL já configurada no projeto.
+
+Crie um script temporário de diagnóstico (somente leitura), sem modificar nenhum dado.
+
+Requisitos:
+
+- utilizar Prisma;
+- executar exatamente as três consultas de auditoria;
+- somente SELECT;
+- nenhuma escrita;
+- nenhum UPDATE, INSERT, DELETE, ALTER, CREATE ou DROP;
+- imprimir os resultados de forma organizada no terminal;
+- não depender do SQL Editor do Supabase;
+- após a auditoria, deixar o script fora do código de produção (ou em scripts/diagnostics).
+
+Execute o script localmente e me apresente os resultados.

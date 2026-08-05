@@ -13228,3 +13228,21 @@ Mantenha `attempts_atual` como o valor real do banco, inclusive NULL quando a co
 Depois me devolva as três consultas finais completas e prontas para copiar, sem nenhuma instrução de escrita.
 
 Não executar UPDATE, INSERT, DELETE ou qualquer alteração.
+
+## 05/08/2026 16:24
+Prefiro executar a auditoria pelo terminal utilizando a DATABASE_URL já configurada no projeto.
+
+Crie um script temporário de diagnóstico (somente leitura), sem modificar nenhum dado.
+
+Requisitos:
+
+- utilizar Prisma;
+- executar exatamente as três consultas de auditoria;
+- somente SELECT;
+- nenhuma escrita;
+- nenhum UPDATE, INSERT, DELETE, ALTER, CREATE ou DROP;
+- imprimir os resultados de forma organizada no terminal;
+- não depender do SQL Editor do Supabase;
+- após a auditoria, deixar o script fora do código de produção (ou em scripts/diagnostics).
+
+Execute o script localmente e me apresente os resultados.
