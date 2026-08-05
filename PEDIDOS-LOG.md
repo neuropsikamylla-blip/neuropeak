@@ -12536,3 +12536,27 @@ Pode concluir a implementação seguindo esse princípio.
 <status>completed</status>
 <summary>Background command "Disparar isolado" completed (exit code 0)</summary>
 </task-notification>
+
+## 05/08/2026 13:29
+Acho que chegamos muito próximos do resultado que eu esperava.
+Antes de encerrar definitivamente a Fase 1, quero apenas uma última revisão de acabamento da interface.
+Não quero alterar nenhuma regra, cálculo ou lógica.
+Quero apenas revisar o texto final.
+Revise todos os insights procurando:
+repetições entre título e descrição;
+frases que apenas repetem o título;
+textos que podem ser mais naturais sem perder precisão clínica;
+títulos ou descrições que ainda soem como linguagem do sistema.
+Por exemplo:
+Planejamento prolongado
+"6 exercícios exigem planejamento prolongado."
+O título e a descrição dizem praticamente a mesma coisa.
+A descrição deve complementar o título, trazendo contexto clínico, e não apenas repetir a expressão.
+Faça essa revisão em todos os insights.
+Também faça uma última leitura da tela inteira procurando pequenas redundâncias, desalinhamentos de linguagem ou detalhes de UX que ainda possam ser refinados.
+Não implemente nenhuma funcionalidade nova.
+Não altere cálculos.
+Não altere validações.
+Não altere o núcleo.
+Quero apenas um polimento final da apresentação.
+Se, após essa revisão, você considerar que não existe mais nenhum ajuste relevante de UX ou linguagem clínica, apresente a proposta e encerramos oficialmente a Fase 1.
