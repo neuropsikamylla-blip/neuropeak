@@ -11437,3 +11437,65 @@ Ao final:
 - não converter ainda Conecta Números nem Span;
 - não publicar automaticamente;
 - parar para minha validação.
+
+## 04/08/2026 21:14
+Não execute ainda o db push nem o backfill no banco de produção.
+
+Implemente a Fase T1 com:
+
+- alteração do schema;
+- rota específica;
+- contratos e lógica pura;
+- catálogo de versões;
+- PreparationScreen;
+- SQL de backfill documentado;
+- testes.
+
+Nesta etapa, execute apenas verificações que não alterem produção:
+
+- prisma validate;
+- prisma generate;
+- TypeScript;
+- suíte completa;
+- build;
+- testes unitários da lógica de backfill com dados simulados;
+- revisão do diff.
+
+Não aplique schema no banco.
+Não execute SQL no banco.
+Não publique.
+
+Quero primeiro validar todo o código da T1.
+
+Depois criaremos uma etapa separada e controlada para aplicação em produção, com:
+
+1. backup confirmado;
+2. verificação do estado atual do banco;
+3. aplicação apenas dos dois campos opcionais;
+4. reaplicação das três CHECK de Session;
+5. conferência das constraints;
+6. execução separada do backfill;
+7. contagem antes e depois;
+8. prova de que totalAttempts = 0 ficou intacto;
+9. prova de que lastAttemptAt, currentDifficulty, totalAttempts e sessões não mudaram;
+10. smoke test da leitura e da rota.
+
+Também revise a estratégia de rollback.
+
+Não considerar como rollback seguro simplesmente remover as colunas via db push.
+
+O SQL:
+
+UPDATE "ExerciseConfig"
+SET "tutorialCompletedAt" = NULL,
+    "tutorialVersion" = NULL
+WHERE "tutorialCompletedAt" IS NOT NULL;
+
+não é aceitável como rollback genérico depois que o sistema estiver em uso, porque apagaria também conclusões reais de tutorial feitas após a implantação.
+
+Proponha uma estratégia segura para distinguir:
+
+- registros preenchidos pelo backfill;
+- registros concluídos realmente pelo paciente após a publicação.
+
+Pode prosseguir agora somente com a implementação da T1 sem tocar no banco de produção.
