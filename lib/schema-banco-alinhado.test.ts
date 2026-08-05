@@ -17,9 +17,13 @@ import { describe, expect, it } from "vitest";
  * A lição: **alterar o `schema.prisma` já é alterar o comportamento em produção**, mesmo sem rodar
  * `db push`. Schema e banco precisam andar juntos.
  *
- * Este teste trava o modelo `ExerciseConfig` na forma que o banco tem hoje. Quando o banco receber
- * os campos (fase T1.0, depois do backup validado), atualize a lista **junto** com o `db push` —
- * nunca antes.
+ * Em 05/ago/2026 o banco recebeu, por SQL manual e em transação verificada, o enum `TutorialSource`
+ * e as três colunas — e o backfill de 16 registros. Só então esta lista passou a incluí-las.
+ *
+ * ⚠️ **A ordem importa, e é sempre esta: primeiro o banco, depois esta lista, depois o schema.**
+ * Acrescentar um campo aqui antes de a coluna existir em produção reproduz o incidente. A
+ * igualdade exata abaixo é justamente o que impede um campo novo de entrar no schema sem que
+ * alguém tenha, deliberadamente, atualizado este arquivo.
  */
 const CAMPOS_NO_BANCO = [
   "id",
@@ -31,10 +35,18 @@ const CAMPOS_NO_BANCO = [
   "lastAttemptAt",
   "createdAt",
   "updatedAt",
+  // Implantados em produção em 05/ago/2026 (T1.0).
+  "tutorialCompletedAt",
+  "tutorialVersion",
+  "tutorialSource",
 ] as const;
 
+function lerSchema(): string {
+  return readFileSync(resolve(process.cwd(), "prisma/schema.prisma"), "utf8");
+}
+
 function modelo(nome: string): string {
-  const schema = readFileSync(resolve(process.cwd(), "prisma/schema.prisma"), "utf8");
+  const schema = lerSchema();
   const inicio = schema.indexOf(`model ${nome} {`);
   expect(inicio, `modelo ${nome} não encontrado no schema`).toBeGreaterThan(-1);
   return schema.slice(inicio, schema.indexOf("\n}", inicio));
@@ -46,25 +58,45 @@ function camposDeclarados(corpoDoModelo: string): string[] {
     .split("\n")
     .slice(1)
     .map((linha) => linha.trim())
-    .filter((linha) => linha.length > 0 && !linha.startsWith("//") && !linha.startsWith("@@"))
+    .filter(
+      (linha) =>
+        linha.length > 0 &&
+        !linha.startsWith("//") &&
+        !linha.startsWith("///") &&
+        !linha.startsWith("@@"),
+    )
     .map((linha) => linha.split(/\s+/)[0]);
 }
 
 describe("schema Prisma alinhado com o banco de produção", () => {
   it("ExerciseConfig declara exatamente os campos que existem no banco", () => {
+    // Igualdade exata nos dois sentidos: campo a mais reproduz o incidente (o Client pede coluna
+    // inexistente); campo a menos deixa dado do banco invisível ao código.
     expect(camposDeclarados(modelo("ExerciseConfig")).sort()).toEqual([...CAMPOS_NO_BANCO].sort());
   });
 
-  it("não há campos de tutorial no schema enquanto o banco não os tiver", () => {
+  it("os três campos de tutorial estão declarados, e todos nuláveis", () => {
     const corpo = modelo("ExerciseConfig");
-    expect(corpo).not.toContain("tutorialCompletedAt");
-    expect(corpo).not.toContain("tutorialVersion");
-    expect(corpo).not.toContain("tutorialSource");
+    // Nulável é obrigatório: 66 dos 82 registros não têm tutorial, e NOT NULL exigiria um default
+    // que inventaria um estado — "concluído em" não pode ter data para quem nunca concluiu.
+    expect(corpo).toMatch(/tutorialCompletedAt\s+DateTime\?/);
+    expect(corpo).toMatch(/tutorialVersion\s+Int\?/);
+    expect(corpo).toMatch(/tutorialSource\s+TutorialSource\?/);
   });
 
-  it("o enum TutorialSource não existe no schema", () => {
-    const schema = readFileSync(resolve(process.cwd(), "prisma/schema.prisma"), "utf8");
-    expect(schema).not.toContain("enum TutorialSource");
+  it("o enum TutorialSource existe com exatamente BACKFILL e PATIENT", () => {
+    const schema = lerSchema();
+    const inicio = schema.indexOf("enum TutorialSource {");
+    expect(inicio, "enum TutorialSource não encontrado no schema").toBeGreaterThan(-1);
+    const valores = schema
+      .slice(inicio, schema.indexOf("\n}", inicio))
+      .split("\n")
+      .slice(1)
+      .map((linha) => linha.trim())
+      .filter((linha) => linha.length > 0 && !linha.startsWith("//"));
+    // A ordem é a do banco (BACKFILL = 1, PATIENT = 2) e não deve ser trocada: o Postgres guarda
+    // a posição, e reordenar o enum no schema não reordena o tipo já criado em produção.
+    expect(valores).toEqual(["BACKFILL", "PATIENT"]);
   });
 });
 
@@ -85,5 +117,40 @@ describe("falha de carregamento nunca vira estado vazio", () => {
     expect(fonte).toContain("r.ok");
     expect(fonte).toContain("setLoadError");
     expect(fonte).toMatch(/Tentar novamente/);
+  });
+});
+
+describe("rota do tutorial não toca dado clínico", () => {
+  const rota = "app/api/exercise-tutorial/route.ts";
+
+  it("grava apenas os três campos de tutorial", () => {
+    const fonte = readFileSync(resolve(process.cwd(), rota), "utf8");
+    expect(fonte).toContain("tutorialCompletedAt");
+    expect(fonte).toContain("tutorialVersion");
+    expect(fonte).toMatch(/tutorialSource:\s*"PATIENT"/);
+  });
+
+  it("não escreve em currentDifficulty, totalAttempts nem lastAttemptAt", () => {
+    const fonte = readFileSync(resolve(process.cwd(), rota), "utf8");
+    // Escrita seria `campo:` num objeto create/update. A rota nem menciona esses campos.
+    expect(fonte).not.toMatch(/currentDifficulty\s*:/);
+    expect(fonte).not.toMatch(/totalAttempts\s*:/);
+    expect(fonte).not.toMatch(/lastAttemptAt\s*:/);
+  });
+
+  it("não cria Session nem dispara progressão, conquistas ou alertas", () => {
+    const fonte = readFileSync(resolve(process.cwd(), rota), "utf8");
+    expect(fonte).not.toMatch(/prisma\.session\./);
+    expect(fonte).not.toMatch(/prisma\.achievement\./);
+    expect(fonte).not.toMatch(/prisma\.alert\./);
+    expect(fonte).not.toMatch(/calculate\w*Progression|calculateNewDifficulty/);
+  });
+
+  it("exige sessão de PATIENT e usa o patientId da sessão, nunca do corpo", () => {
+    const fonte = readFileSync(resolve(process.cwd(), rota), "utf8");
+    expect(fonte).toMatch(/user\.role !== "PATIENT"/);
+    expect(fonte).toMatch(/patientId:\s*user\.patientId/);
+    // O corpo aceita só exerciseId e version — `.strict()` recusa qualquer outro campo.
+    expect(fonte).toContain(".strict()");
   });
 });

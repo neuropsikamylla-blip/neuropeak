@@ -101,7 +101,23 @@ model ExerciseConfig {
   createdAt         DateTime  @default(now())
   updatedAt         DateTime  @updatedAt
 
+  // Tutorial do exercício. Aplicados ao banco de produção por SQL manual em 05/ago/2026
+  // (docs/operacao/T1.0-roteiro-implantacao.sql). Nulável em todos os três: quem nunca
+  // viu o tutorial não tem registro, e o nulo é a ausência — não um estado inventado.
+  tutorialCompletedAt DateTime?
+  tutorialVersion     Int?
+  tutorialSource      TutorialSource?
+
   @@unique([patientId, exerciseId])
+}
+
+/// Origem do registro de tutorial concluído.
+/// BACKFILL — marcado pela migração de 05/ago/2026 para quem já treinava antes do framework
+///            existir; presume o tutorial como visto, para não obrigar ninguém a revê-lo.
+/// PATIENT  — o paciente concluiu o tutorial de fato. Sobrescreve BACKFILL.
+enum TutorialSource {
+  BACKFILL
+  PATIENT
 }
 
 model Achievement {

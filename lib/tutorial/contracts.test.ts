@@ -25,16 +25,23 @@ describe("guardas estáticos do framework de tutorial", () => {
     );
   });
 
-  // A rota está PAUSADA desde o hotfix de 05/ago/2026: ela depende de colunas que o banco
-  // ainda não tem, e o Prisma Client gerado com elas derrubava toda consulta a ExerciseConfig.
-  // O arquivo foi preservado em docs/t1-pausada/ e volta quando o banco receber os campos.
-  it("mantém a rota fora de app/api enquanto o banco não tem os campos", () => {
-    expect(existsSync(resolve(process.cwd(), "app/api/exercise-tutorial/route.ts"))).toBe(false);
+  // A rota ficou PAUSADA entre o hotfix de 05/ago/2026 e a implantação da T1.0 no mesmo dia:
+  // dependia de colunas que o banco não tinha, e o Prisma Client gerado com elas derrubava toda
+  // consulta a ExerciseConfig. Com as colunas aplicadas em produção, a rota voltou de
+  // docs/t1-pausada/ — restaurada byte a byte.
+  it("a rota está ativa em app/api, agora que o banco tem os campos", () => {
+    expect(existsSync(resolve(process.cwd(), "app/api/exercise-tutorial/route.ts"))).toBe(true);
   });
 
-  it("o arquivo preservado continua sem tocar caminhos clínicos e de progressão", () => {
-    expect(source("docs/t1-pausada/exercise-tutorial-route.ts.txt")).not.toMatch(
+  it("a rota ativa não toca caminhos clínicos e de progressão", () => {
+    expect(source("app/api/exercise-tutorial/route.ts")).not.toMatch(
       /session\.create|currentDifficulty|lastAttemptAt|totalAttempts|achievement|alert/i,
+    );
+  });
+
+  it("a rota ativa é idêntica à versão preservada — restauração, não reescrita", () => {
+    expect(source("app/api/exercise-tutorial/route.ts")).toBe(
+      source("docs/t1-pausada/exercise-tutorial-route.ts.txt"),
     );
   });
 
