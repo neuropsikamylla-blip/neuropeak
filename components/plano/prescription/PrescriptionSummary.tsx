@@ -91,7 +91,7 @@ function AlertArticle({ alert }: { alert: PresentedAlert }) {
 }
 
 function EmptyGroup() {
-  return <p className="text-sm text-slate-400">Nenhum apontamento neste grupo.</p>;
+  return <p className="text-sm text-slate-400">Nada a revisar aqui.</p>;
 }
 
 function LimitedGroup({
@@ -147,8 +147,7 @@ function InformationGroup({ alerts }: { alerts: readonly PresentedAlert[] }) {
             <summary className="cursor-pointer list-none marker:content-none">
               <span className="flex items-center justify-between gap-3">
                 <span>
-                  <span className="block text-base font-semibold text-slate-100">Informações do plano</span>
-                  <span className="mt-1 block text-sm text-slate-400">
+                  <span className="block text-sm text-slate-400">
                     {alerts.length} {alerts.length === 1 ? "item agrupado" : "itens agrupados"}
                   </span>
                 </span>
@@ -178,22 +177,20 @@ export function PrescriptionSummary({ presentation }: { presentation: PlanPresen
         <div className="space-y-3 rounded-2xl border border-white/10 bg-white/5 px-4 py-4">
           <div className="space-y-3">
             <div>
-              <p className="text-xs uppercase tracking-wide text-slate-400">Meta da sessão</p>
-              <p className="mt-0.5 text-lg font-bold text-slate-100 tabular-nums">{presentation.targetLabel}</p>
-            </div>
-            <div>
-              <p className="text-xs uppercase tracking-wide text-slate-400">Estimativa atual</p>
+              <p className="text-xs uppercase tracking-wide text-slate-400">Tempo previsto</p>
               <p className={`mt-0.5 text-base font-semibold ${stateClasses[presentation.state]}`}>
                 {presentation.stateLabel}
               </p>
             </div>
-            {/* A faixa calculada fica sob demanda: a estimativa é um intervalo, e reduzi-la a um
-                número na tela principal produzia falsa precisão. */}
+            <div>
+              <p className="text-xs uppercase tracking-wide text-slate-400">Meta da sessão</p>
+              <p className="mt-0.5 text-lg font-bold text-slate-100 tabular-nums">{presentation.targetLabel}</p>
+            </div>
             <details className="text-xs text-slate-400">
               <summary className="w-fit cursor-pointer select-none text-blue-300 hover:text-blue-200">
-                Ver detalhes da estimativa
+                Ver tempo detalhado
               </summary>
-              <p className="mt-1.5 leading-relaxed" title={PRESENTATION_TEXTS.estimateTooltip}>
+              <p className="mt-1.5 leading-relaxed">
                 {presentation.estimateDetail}
               </p>
             </details>
@@ -228,7 +225,7 @@ export function PrescriptionSummary({ presentation }: { presentation: PlanPresen
         )}
         {presentation.alerts.length === 0 && !presentation.empty && (
           <p className="rounded-xl border border-white/10 bg-white/[0.03] px-3.5 py-3 text-sm text-slate-300">
-            Nenhum ponto de atenção identificado para este plano.
+            Nada a revisar neste plano.
           </p>
         )}
       </section>

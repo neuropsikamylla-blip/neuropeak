@@ -1,50 +1,6 @@
 # As 3 ultimas especificacoes dela (automatico; a mais nova por ultimo)
 # Na retomada: ler as 3, conectar com PROGRESSO.md e git, declarar e seguir.
 
-## 05/08/2026 12:58
-Concordo com a maior parte da análise, mas quero alguns ajustes antes da implementação.
-Aprovo
-Remover termos excessivamente técnicos quando eles não ajudam na decisão clínica.
-Remover descrições do algoritmo da interface.
-Simplificar textos longos.
-Remover redundâncias.
-Confirmar visualmente quando não houver nenhum insight (por exemplo: "Nada a revisar neste plano.").
-Não concordo com algumas substituições
-Evite trocar precisão clínica por linguagem excessivamente informal.
-Por exemplo:
-"...é bastante para uma sessão deste tamanho."
-Não gosto dessa redação.
-Prefiro manter linguagem profissional e objetiva.
-Outro exemplo:
-"6 exercícios exigem planejamento demorado."
-Também não gosto.
-"Planejamento prolongado" é um conceito mais técnico e mais correto do que "demorado".
-O problema não era o termo "planejamento", e sim "janela de planejamento", que é linguagem interna do sistema.
-Sobre os detalhes da estimativa
-Também não quero frases muito narrativas.
-Em vez de:
-"Este plano deve levar entre..."
-Prefiro algo mais objetivo, por exemplo:
-Tempo previsto para este plano
-Faixa esperada para esta meta
-Sem transformar isso em um texto explicativo.
-Sobre a hierarquia
-Concordo em colocar primeiro o estado da sessão.
-Também concordo em exibir uma confirmação discreta quando não houver nenhum insight.
-Sobre carga e interferência
-Quero remover definitivamente da interface qualquer escala interna que não tenha significado clínico direto.
-Isso inclui:
-carga numérica;
-interferência numérica;
-qualquer outra métrica interna semelhante.
-Se essas informações forem necessárias para o motor, permanecem apenas internamente.
-Nos detalhes do exercício quero mostrar apenas informações que realmente auxiliem a interpretação clínica do terapeuta.
-Antes de implementar
-Revise novamente toda a tela perguntando, para cada informação:
-"Se eu remover isto, o terapeuta perde capacidade de tomar alguma decisão clínica?"
-Se a resposta for não, essa informação provavelmente não deve aparecer.
-Depois implemente todas essas alterações em um único lote, sem alterar o núcleo, apenas a camada de apresentação.
-
 ## 05/08/2026 13:01
 <task-notification>
 <task-id>bha3mg5ec</task-id>
@@ -74,3 +30,12 @@ Se for apenas do motor, ela deve desaparecer da interface.
 Se for uma informação clínica que ajuda o terapeuta a interpretar o plano, ela deve permanecer, mesmo que utilize terminologia técnica da Neuropsicologia.
 Quero preservar a identidade de uma plataforma clínica, e não transformar a interface em uma linguagem excessivamente simplificada.
 Pode concluir a implementação seguindo esse princípio.
+
+## 05/08/2026 13:08
+<task-notification>
+<task-id>b7gjhjmj9</task-id>
+<tool-use-id>toolu_01XXjfR4nKVPVmaK7tKRD8rf</tool-use-id>
+<output-file>/private/tmp/claude-501/-Users-kamyllahonorio-neuropeak/3e6ecf11-e4e5-471f-bbf9-4595faa53598/tasks/b7gjhjmj9.output</output-file>
+<status>completed</status>
+<summary>Background command "Disparar isolado" completed (exit code 0)</summary>
+</task-notification>

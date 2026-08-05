@@ -37,11 +37,10 @@ export const SESSION_STATE_LABELS: Readonly<Record<SessionDurationState, string>
 };
 
 export const PRESENTATION_TEXTS = {
-  estimateTooltip: "Estimativa aproximada a partir da dose, modalidade e transições entre exercícios.",
-  alertsTooltip: "Observações consultivas para apoiar a revisão da composição. Não impedem salvar.",
-  legacyMarker: "Alguns parâmetros não puderam ser determinados.",
-  legacyTooltip: "O plano foi interpretado sem alterar os dados salvos. Confira os parâmetros indicados.",
-  emptyGuidance: "Adicione exercícios para consultar a estimativa e a composição do plano.",
+  alertsTooltip: "Pontos para considerar antes de salvar. Não impedem o salvamento.",
+  legacyMarker: "Este plano usa uma configuração anterior.",
+  legacyTooltip: "Os dados salvos não foram alterados.",
+  emptyGuidance: "Adicione exercícios para ver o tempo previsto do plano.",
 } as const;
 
 export const PROTOCOL_GUIDANCE_TEXTS: Readonly<Record<ProtocolName, string>> = {
@@ -349,7 +348,7 @@ export const ALERT_PRESENTATION_CONFIG = {
   SESSION_SAFE_MAX_EXCEEDED: {
     titulo: "Duração estimada acima da sessão prescrita",
     mensagem: (c) => `A duração estimada ultrapassa ${targetDurationBounds(c.targetMinutes).maximum} min para a sessão prescrita.`,
-    sugestao: () => "Considere revisar a composição ou as doses do plano.",
+    sugestao: () => "Considere revisar as atividades ou as doses do plano.",
   },
   LOAD_AT_CAP: {
     titulo: "Indicador interno do plano",
@@ -365,15 +364,15 @@ export const ALERT_PRESENTATION_CONFIG = {
     sugestao: () => "Considere reduzir a quantidade ou intercalar atividades menos fatigantes.",
   },
   HIGH_FATIGUE_POSITION: {
-    titulo: "Regra interna de composição",
+    titulo: "Regra interna do plano",
     mensagem: () => "Esta ocorrência não é exibida na revisão do plano.",
   },
   HIGH_FATIGUE_ADJACENT: {
-    titulo: "Regra interna de composição",
+    titulo: "Regra interna do plano",
     mensagem: () => "Esta ocorrência não é exibida na revisão do plano.",
   },
   HIGH_INTERFERENCE_ADJACENT: {
-    titulo: "Regra interna de composição",
+    titulo: "Regra interna do plano",
     mensagem: () => "Esta ocorrência não é exibida na revisão do plano.",
   },
   AUDITORY_ONLY_ADJACENT: {
@@ -388,22 +387,22 @@ export const ALERT_PRESENTATION_CONFIG = {
   },
   PLANNING_WINDOW_COUNT: {
     titulo: "Planejamento prolongado",
-    mensagem: (c) => `${c.exercises.filter((exercise) => exercise.definition.executionModel === "PLANNING_WINDOW").length} exercícios exigem janelas de planejamento.`,
+    mensagem: (c) => `${c.exercises.filter((exercise) => exercise.definition.executionModel === "PLANNING_WINDOW").length} exercícios exigem planejamento prolongado.`,
   },
   PLANNING_WINDOW_ADJACENT: {
-    titulo: "Regra interna de composição",
+    titulo: "Regra interna do plano",
     mensagem: () => "Esta ocorrência não é exibida na revisão do plano.",
   },
   OPEN_POSITION_NOT_ELIGIBLE: {
-    titulo: "Regra interna de composição",
+    titulo: "Regra interna do plano",
     mensagem: () => "Esta ocorrência não é exibida na revisão do plano.",
   },
   CLOSE_POSITION_NOT_ELIGIBLE: {
-    titulo: "Regra interna de composição",
+    titulo: "Regra interna do plano",
     mensagem: () => "Esta ocorrência não é exibida na revisão do plano.",
   },
   OUTSIDE_BEST_POSITION: {
-    titulo: "Regra interna de composição",
+    titulo: "Regra interna do plano",
     mensagem: () => "Esta ocorrência não é exibida na revisão do plano.",
   },
   DECLARED_BAD_COMBINATION: {
@@ -544,7 +543,7 @@ function intensityInsight(alerts: readonly PrescriptionAlert[], context: AlertCo
   return {
     code: fatigueAlert?.code ?? loadOver?.code ?? "HIGH_FATIGUE_COUNT",
     titulo: "Plano de demanda elevada",
-    mensagem: `${fatigueText}${mentionsLoad ? " A carga do plano está acima da referência clínica para esta duração." : ""}`,
+    mensagem: `${fatigueText}${mentionsLoad ? " A demanda total está acima do previsto para esta duração." : ""}`,
     occurrenceCount: Math.max(1, represented.length),
     expansionLabel: ids.length > 0 ? "Ver exercícios" : "Ver detalhes",
     gravidadeVisual: "revisao_plano",
@@ -615,7 +614,7 @@ function planningInsight(alerts: readonly PrescriptionAlert[], context: AlertCon
   return {
     code: planningAlert.code,
     titulo: "Planejamento prolongado",
-    mensagem: `${planning.length} exercícios exigem janelas de planejamento.`,
+    mensagem: `${planning.length} exercícios exigem planejamento prolongado.`,
     occurrenceCount: 1,
     expansionLabel: "Ver exercícios",
     gravidadeVisual: "observacao_clinica",
@@ -712,10 +711,13 @@ function cognitiveProfileLabel(definition: ExerciseDefinition): string {
   const primary = readableCognitiveProfile(definition.mechanicalPrimary);
   if (definition.associatedCognitiveProfiles.length === 0) return primary;
   const associated = definition.associatedCognitiveProfiles
+    .slice(0, 2)
     .map(readableCognitiveProfile)
     .map((label) => `${label[0].toLocaleLowerCase("pt-BR")}${label.slice(1)}`)
-    .join(", ");
-  return `${primary} · também recruta: ${associated}`;
+    // Separador " · " e não vírgula: os próprios nomes de perfil contêm vírgula
+    // ("Linguagem, Leitura e Processamento Auditivo"), o que tornaria a lista ambígua.
+    .join(" · ");
+  return `${primary} · também: ${associated}`;
 }
 
 function resolvedExercise(definition: ExerciseDefinition, prescription: ExercisePrescription): ResolvedExercisePrescription {
@@ -801,7 +803,7 @@ export interface PlanPresentation {
   durationRange: MinutesRange;
   /** Rótulo da meta, ex.: "40 minutos". */
   targetLabel: string;
-  /** Faixa calculada e faixa esperada — só para "Ver detalhes". */
+  /** Tempo previsto e faixa esperada — só para "Ver tempo detalhado". */
   estimateDetail: string;
   durationEstimateIncomplete: boolean;
   state: SessionDurationState;
@@ -827,7 +829,7 @@ function approximateSessionDuration(range: MinutesRange): string {
  * Estado sem número. A estimativa do motor é uma FAIXA; reduzi-la a um ponto na tela
  * principal produzia falsa precisão e chegou a contradizer o próprio estado — um plano
  * de [30, 40] exibia "aproximadamente 35 min" ao lado de "dentro de 36–44". A faixa
- * calculada continua disponível em `estimateDetail`, para "Ver detalhes".
+ * previsto continua disponível em `estimateDetail`, para "Ver tempo detalhado".
  */
 function sessionStateLabel(state: SessionDurationState): string {
   if (state === "ABAIXO") return "Abaixo da faixa esperada";
@@ -835,12 +837,12 @@ function sessionStateLabel(state: SessionDurationState): string {
   return "Acima da faixa esperada";
 }
 
-/** Detalhe sob demanda: a faixa que o motor calculou e a faixa esperada para a meta. */
+/** Detalhe sob demanda: o tempo previsto e a faixa esperada para a meta. */
 function sessionEstimateDetail(range: MinutesRange, targetMinutes: TargetMinutes, incomplete: boolean): string {
   const calculada = incomplete
     ? "Estimativa incompleta — parte dos exercícios não tem base para cálculo."
-    : `Faixa calculada: ${formatMinutesRange(range)}.`;
-  return `${calculada} Faixa esperada para a meta: ${expectedRange(targetMinutes)}.`;
+    : `Tempo previsto para este plano: ${formatMinutesRange(range)}.`;
+  return `${calculada} Faixa esperada para esta meta: ${expectedRange(targetMinutes)}.`;
 }
 
 function planPresentation(plan: SessionPrescription, prescribedMinutes: number, hasUndefinedParameter: boolean): PlanPresentation {

@@ -68,17 +68,17 @@ describe("aceite da Fase 1 — assistente clínico", () => {
     expect(presentation.alerts).toHaveLength(0);
   });
 
-  it("8. intensidade cita fadiga e carga apenas com referência válida e excedida", () => {
+  it("8. intensidade cita fadiga e demanda apenas com referência válida e excedida", () => {
     const intensity = presentPlan(plan(allIds)).alertGroups.revisao_plano[0];
     expect(intensity.mensagem).toMatch(/fatigantes/);
-    expect(intensity.mensagem).toMatch(/carga do plano.*referência clínica/);
+    expect(intensity.mensagem).toMatch(/demanda total.*acima do previsto/);
     expect(intensity.mensagem).not.toMatch(/69|13/);
   });
 
-  it("9. duração sem referência não menciona carga", () => {
+  it("9. duração sem referência não menciona demanda total", () => {
     const presentation = presentPlan(plan(allIds, 35));
     expect(presentation.alertGroups.revisao_plano[0].mensagem).toMatch(/fatigantes/);
-    expect(visible(presentation)).not.toMatch(/carga/i);
+    expect(visible(presentation)).not.toMatch(/demanda total/i);
   });
 
   it("10. salvar permanece permitido e nenhum insight bloqueia", () => {

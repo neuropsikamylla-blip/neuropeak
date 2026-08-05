@@ -75,8 +75,8 @@ describe("assistente clínico da revisão do plano", () => {
     // O cabeçalho não traz número de estimativa: o motor calcula uma FAIXA, e reduzi-la a um
     // ponto produzia falsa precisão e contradizia o estado. A faixa fica em "Ver detalhes".
     expect(presentation.stateLabel).toBe("Acima da faixa esperada");
-    expect(presentation.estimateDetail).toContain("Faixa calculada:");
-    expect(presentation.estimateDetail).toContain("Faixa esperada para a meta: 36–44 min");
+    expect(presentation.estimateDetail).toContain("Tempo previsto para este plano:");
+    expect(presentation.estimateDetail).toContain("Faixa esperada para esta meta: 36–44 min");
     expect(presentation.alerts.some((alert) => alert.code.startsWith("SESSION_"))).toBe(false);
   });
 
@@ -88,7 +88,7 @@ describe("assistente clínico da revisão do plano", () => {
     ], 30));
     expect(presentation.state).toBe("DENTRO");
     expect(presentation.stateLabel).toBe("Dentro da faixa esperada");
-    expect(presentation.estimateDetail).toContain("Faixa esperada para a meta: 27–33 min");
+    expect(presentation.estimateDetail).toContain("Faixa esperada para esta meta: 27–33 min");
     expect(presentation.alerts).toEqual([]);
   });
 
@@ -97,16 +97,16 @@ describe("assistente clínico da revisão do plano", () => {
     const intensity = presentation.alertGroups.revisao_plano[0];
     expect(intensity).toMatchObject({
       titulo: "Plano de demanda elevada",
-      mensagem: "12 dos 34 exercícios são potencialmente fatigantes para a duração escolhida. A carga do plano está acima da referência clínica para esta duração.",
+      mensagem: "12 dos 34 exercícios são potencialmente fatigantes para a duração escolhida. A demanda total está acima do previsto para esta duração.",
       blocksSave: false,
     });
     expect(intensity.mensagem).not.toMatch(/69|13|carga basal/i);
   });
 
-  it("não menciona carga quando a duração não tem referência clínica", () => {
+  it("não menciona demanda total quando a duração não tem referência", () => {
     const presentation = presentPlan(plan(allIds, 35));
     expect(presentation.alertGroups.revisao_plano[0].mensagem).toMatch(/12 dos 34 exercícios.*fatigantes/);
-    expect(allVisibleText(presentation)).not.toMatch(/carga|referência clínica/i);
+    expect(allVisibleText(presentation)).not.toMatch(/demanda total/i);
   });
 
   it("mantém salvamento consultivo e não bloqueante", () => {

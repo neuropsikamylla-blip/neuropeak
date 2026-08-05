@@ -172,8 +172,8 @@ describe("apresentação consultiva da prescrição", () => {
     expect([plan.targetLabel, plan.stateLabel]).toEqual(["20 minutos", "Dentro da faixa esperada"]);
     // Nenhum número de estimativa no que o cabeçalho exibe.
     expect(plan.stateLabel).not.toMatch(/\d/);
-    // A faixa calculada existe, mas só sob demanda.
-    expect(plan.estimateDetail).toMatch(/Faixa calculada: .+ min\./);
+    // O tempo previsto existe, mas só sob demanda.
+    expect(plan.estimateDetail).toMatch(/Tempo previsto para este plano: .+ min\./);
   });
 
   it("o estado nunca contradiz a faixa, porque não há ponto único no cabeçalho", () => {
@@ -185,7 +185,7 @@ describe("apresentação consultiva da prescrição", () => {
     });
     expect(plan.stateLabel).toBe("Dentro da faixa esperada");
     expect(plan.stateLabel).not.toMatch(/\d/);
-    expect(plan.estimateDetail).toContain("Faixa calculada: 30–40 min");
+    expect(plan.estimateDetail).toContain("Tempo previsto para este plano: 30–40 min");
   });
 
   it("abre envelope antigo com duração contínua salva sem converter o formato", () => {
@@ -243,7 +243,7 @@ describe("apresentação consultiva da prescrição", () => {
   it("marca discretamente parâmetro legado que não pôde ser determinado", () => {
     const plan = presentLegacyPlan(["tempo-reacao", "id-desconhecido"], 30);
     expect(plan.legacyMarker).toEqual({
-      label: "Alguns parâmetros não puderam ser determinados.",
+      label: "Este plano usa uma configuração anterior.",
       tooltip: PRESENTATION_TEXTS.legacyTooltip,
     });
     expect(plan.exercises).toHaveLength(1);
