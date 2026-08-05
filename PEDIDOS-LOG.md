@@ -13533,3 +13533,43 @@ Agora execute somente as consultas prévias e apresente:
 - timestamp da alteração mais recente em TrainingPlan e ExerciseConfig, quando disponível.
 
 Depois pare para minha validação.
+
+## 05/08/2026 16:41
+Autorizo executar somente a transação da seção 2.
+
+Escopo autorizado:
+
+BEGIN;
+
+CREATE TYPE "TutorialSource" AS ENUM ('BACKFILL', 'PATIENT');
+
+ALTER TABLE "ExerciseConfig"
+  ADD COLUMN "tutorialCompletedAt" TIMESTAMP(3),
+  ADD COLUMN "tutorialVersion" INTEGER,
+  ADD COLUMN "tutorialSource" "TutorialSource";
+
+COMMIT;
+
+Regras:
+
+- não executar db push;
+- não executar backfill ainda;
+- não alterar nenhuma outra tabela;
+- não alterar constraints, índices, defaults ou FKs;
+- não publicar código ainda;
+- se qualquer comando falhar, executar ROLLBACK e parar;
+- se aparecer qualquer efeito fora de ExerciseConfig, parar imediatamente.
+
+Após a transação, executar apenas as verificações pós-schema previstas:
+
+1. confirmar que o enum existe com apenas BACKFILL e PATIENT;
+2. confirmar que as três colunas existem e são opcionais;
+3. confirmar que nenhuma outra coluna de ExerciseConfig foi alterada;
+4. confirmar que as três CHECK de Session continuam intactas;
+5. confirmar difficulty entre 1 e 13;
+6. confirmar que FKs, índices e defaults verificados anteriormente continuam presentes;
+7. confirmar que as contagens das tabelas não mudaram.
+
+Depois pare e apresente as evidências.
+
+Não executar o backfill até nova autorização explícita.

@@ -1,52 +1,6 @@
 # As 3 ultimas especificacoes dela (automatico; a mais nova por ultimo)
 # Na retomada: ler as 3, conectar com PROGRESSO.md e git, declarar e seguir.
 
-## 05/08/2026 16:35
-Backup validado e aprovado.
-
-Pode seguir para a próxima etapa da T1.0, ainda de forma controlada.
-
-Primeiro execute apenas:
-
-prisma migrate diff --script
-
-Quero ver o SQL exato que será aplicado ao banco antes de qualquer alteração.
-
-O resultado esperado é exclusivamente:
-
-- criação do enum TutorialSource;
-- adição de tutorialCompletedAt como coluna opcional;
-- adição de tutorialVersion como coluna opcional;
-- adição de tutorialSource como coluna opcional.
-
-Pare imediatamente se aparecer qualquer:
-
-- DROP;
-- ALTER COLUMN;
-- mudança de tipo;
-- NOT NULL em coluna existente;
-- remoção de constraint;
-- alteração em tabela diferente de ExerciseConfig;
-- qualquer operação não prevista.
-
-Depois de apresentar o diff, não execute ainda o db push.
-
-Também apresente, antes da aplicação:
-
-1. o SQL exato para reaplicar as três CHECK de Session;
-2. confirmação de que difficulty será 1–13;
-3. consultas para verificar as constraints antes e depois;
-4. ordem exata:
-   - aplicar schema;
-   - reaplicar CHECK;
-   - validar constraints;
-   - executar backfill separadamente;
-5. plano de interrupção caso alguma etapa falhe.
-
-Não iniciar conversão de exercícios.
-Não publicar ainda.
-Pare após apresentar o diff e o roteiro final de implantação.
-
 ## 05/08/2026 16:37
 Sim. Prepare o roteiro completo usando SQL manual e não use prisma db push.
 
@@ -241,3 +195,43 @@ Agora execute somente as consultas prévias e apresente:
 - timestamp da alteração mais recente em TrainingPlan e ExerciseConfig, quando disponível.
 
 Depois pare para minha validação.
+
+## 05/08/2026 16:41
+Autorizo executar somente a transação da seção 2.
+
+Escopo autorizado:
+
+BEGIN;
+
+CREATE TYPE "TutorialSource" AS ENUM ('BACKFILL', 'PATIENT');
+
+ALTER TABLE "ExerciseConfig"
+  ADD COLUMN "tutorialCompletedAt" TIMESTAMP(3),
+  ADD COLUMN "tutorialVersion" INTEGER,
+  ADD COLUMN "tutorialSource" "TutorialSource";
+
+COMMIT;
+
+Regras:
+
+- não executar db push;
+- não executar backfill ainda;
+- não alterar nenhuma outra tabela;
+- não alterar constraints, índices, defaults ou FKs;
+- não publicar código ainda;
+- se qualquer comando falhar, executar ROLLBACK e parar;
+- se aparecer qualquer efeito fora de ExerciseConfig, parar imediatamente.
+
+Após a transação, executar apenas as verificações pós-schema previstas:
+
+1. confirmar que o enum existe com apenas BACKFILL e PATIENT;
+2. confirmar que as três colunas existem e são opcionais;
+3. confirmar que nenhuma outra coluna de ExerciseConfig foi alterada;
+4. confirmar que as três CHECK de Session continuam intactas;
+5. confirmar difficulty entre 1 e 13;
+6. confirmar que FKs, índices e defaults verificados anteriormente continuam presentes;
+7. confirmar que as contagens das tabelas não mudaram.
+
+Depois pare e apresente as evidências.
+
+Não executar o backfill até nova autorização explícita.
