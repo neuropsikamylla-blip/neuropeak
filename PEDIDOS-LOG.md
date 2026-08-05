@@ -12935,3 +12935,52 @@ Coletei as evidências:
 Não corrigi nem salvei novamente o plano.
 Pode localizar a causa raiz e propor a correção mínima.
 Não iniciar T1 ainda.
+
+## 05/08/2026 15:30
+Consegui reproduzir novamente e agora há evidência visual.
+
+Fluxo:
+
+1. Adicionei 2 exercícios:
+   - Span Numérico Auditivo Direto;
+   - Span Numérico Auditivo Inverso.
+
+2. Antes de salvar:
+   - os dois aparecem selecionados;
+   - o painel mostra Total: 2;
+   - a análise do plano é gerada normalmente.
+
+3. Cliquei em Salvar plano.
+4. O sistema mostrou: “Plano salvo com sucesso!”
+5. Saí da página.
+6. Entrei novamente no mesmo paciente e na montagem do plano.
+
+Resultado:
+
+- os exercícios não aparecem selecionados;
+- o painel mostra Total: 0;
+- aparece “Nenhum exercício ainda”.
+
+Portanto, não é o problema de Total maior que zero com cartões invisíveis.
+
+O estado está chegando vazio quando a tela é reaberta.
+
+Quero que você investigue agora com base nessa reprodução concreta:
+
+1. Capture o payload exato enviado no PATCH ao salvar esses dois exercícios.
+2. Capture a resposta do PATCH.
+3. Consulte imediatamente o registro persistido após o salvamento.
+4. Confirme o valor real do campo exercises no plano salvo.
+5. Reabra a tela e capture o GET /api/patients/[id]?config=true.
+6. Confirme quantos trainingPlans vêm na resposta.
+7. Confirme qual plano foi escolhido pela interface.
+8. Confirme o valor de exercises desse plano.
+9. Verifique especialmente o `take: 1` sem `orderBy`, porque o sistema pode estar carregando outro plano ativo, antigo ou vazio.
+10. Verifique também se o GET falha e o `.catch(() => {})` transforma a falha em estado vazio.
+
+Quero a causa raiz comprovada com o plano real.
+
+Não iniciar T1.
+Não tocar no banco.
+Não publicar correção por hipótese.
+Pare após apresentar a causa e a correção mínima proposta.[Image #63] [Image #64]

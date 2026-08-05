@@ -1,51 +1,6 @@
 # As 3 ultimas especificacoes dela (automatico; a mais nova por ultimo)
 # Na retomada: ler as 3, conectar com PROGRESSO.md e git, declarar e seguir.
 
-## 05/08/2026 13:57
-Pare imediatamente a implementação da T1.
-
-Encontramos um bug funcional que bloqueia o uso clínico.
-
-Comportamento observado:
-
-- crio um plano;
-- adiciono exercícios;
-- salvo;
-- tudo parece correto;
-- saio da página;
-- volto para analisar o mesmo plano;
-- todos os exercícios desapareceram.
-
-Não implemente nenhuma correção ainda.
-
-Primeiro faça uma investigação completa e apresente evidências.
-
-Quero descobrir exatamente onde ocorre a perda dos exercícios.
-
-Analise todo o fluxo:
-
-1. criação do plano;
-2. salvamento;
-3. persistência das relações TrainingPlan ↔ exercícios;
-4. update do plano;
-5. leitura do plano na tela de análise;
-6. carregamento após recarregar a página.
-
-Para cada etapa informe:
-
-- qual função executa;
-- qual API é chamada;
-- qual SQL/Prisma é executado;
-- quais tabelas são alteradas;
-- onde os exercícios ainda existem;
-- em que momento desaparecem.
-
-Quero evidências, não hipóteses.
-
-Se possível, execute o fluxo completo em ambiente de desenvolvimento e identifique o primeiro ponto em que o estado diverge do esperado.
-
-Não corrija nada antes de localizar exatamente a origem do problema.
-
 ## 05/08/2026 15:05
 Vou coletar as três evidências solicitadas.
 
@@ -82,3 +37,52 @@ Coletei as evidências:
 Não corrigi nem salvei novamente o plano.
 Pode localizar a causa raiz e propor a correção mínima.
 Não iniciar T1 ainda.
+
+## 05/08/2026 15:30
+Consegui reproduzir novamente e agora há evidência visual.
+
+Fluxo:
+
+1. Adicionei 2 exercícios:
+   - Span Numérico Auditivo Direto;
+   - Span Numérico Auditivo Inverso.
+
+2. Antes de salvar:
+   - os dois aparecem selecionados;
+   - o painel mostra Total: 2;
+   - a análise do plano é gerada normalmente.
+
+3. Cliquei em Salvar plano.
+4. O sistema mostrou: “Plano salvo com sucesso!”
+5. Saí da página.
+6. Entrei novamente no mesmo paciente e na montagem do plano.
+
+Resultado:
+
+- os exercícios não aparecem selecionados;
+- o painel mostra Total: 0;
+- aparece “Nenhum exercício ainda”.
+
+Portanto, não é o problema de Total maior que zero com cartões invisíveis.
+
+O estado está chegando vazio quando a tela é reaberta.
+
+Quero que você investigue agora com base nessa reprodução concreta:
+
+1. Capture o payload exato enviado no PATCH ao salvar esses dois exercícios.
+2. Capture a resposta do PATCH.
+3. Consulte imediatamente o registro persistido após o salvamento.
+4. Confirme o valor real do campo exercises no plano salvo.
+5. Reabra a tela e capture o GET /api/patients/[id]?config=true.
+6. Confirme quantos trainingPlans vêm na resposta.
+7. Confirme qual plano foi escolhido pela interface.
+8. Confirme o valor de exercises desse plano.
+9. Verifique especialmente o `take: 1` sem `orderBy`, porque o sistema pode estar carregando outro plano ativo, antigo ou vazio.
+10. Verifique também se o GET falha e o `.catch(() => {})` transforma a falha em estado vazio.
+
+Quero a causa raiz comprovada com o plano real.
+
+Não iniciar T1.
+Não tocar no banco.
+Não publicar correção por hipótese.
+Pare após apresentar a causa e a correção mínima proposta.[Image #63] [Image #64]
