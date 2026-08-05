@@ -12331,3 +12331,26 @@ Depois implemente, publique e pare para minha validação visual.
 <status>completed</status>
 <summary>Background command "Disparar a Fase 1 isolado" completed (exit code 0)</summary>
 </task-notification>
+
+## 05/08/2026 07:53
+Vamos congelar a implementação por enquanto.
+
+Quero validar visualmente a Fase 1 antes de iniciarmos a T1 e qualquer alteração de banco.
+
+Quero revisar principalmente:
+
+- plano pequeno e bem equilibrado;
+- plano focal em memória operacional;
+- plano focal em planejamento;
+- plano com os 34 exercícios;
+- sessão muito acima da duração prevista.
+
+Enquanto isso, não implemente nenhuma nova funcionalidade.
+
+Também não quero iniciar ainda a Fase 2 (tutorial/T1).
+
+Aguarde meu retorno após a validação visual da v2.73.0.
+
+Caso eu encontre algum ponto de UX ou linguagem clínica, faremos pequenos ajustes sobre esta versão antes de seguir para o banco.
+
+Fique apenas disponível para correções da Fase 1, se forem necessárias.
