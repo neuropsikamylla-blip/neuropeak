@@ -13246,3 +13246,29 @@ Requisitos:
 - após a auditoria, deixar o script fora do código de produção (ou em scripts/diagnostics).
 
 Execute o script localmente e me apresente os resultados.
+
+## 05/08/2026 16:27
+Mantenha o script versionado em scripts/diagnostics/.
+
+Antes de encerrar:
+
+1. Remova qualquer patientId ou dado específico eventualmente embutido no script.
+2. Mantenha apenas a janela do incidente e consultas genéricas.
+3. Confirme que nenhuma credencial, URL de banco ou conteúdo do .env foi gravado no arquivo ou no commit.
+4. Adicione no cabeçalho:
+   - finalidade;
+   - data do incidente;
+   - caráter somente leitura;
+   - como executar;
+   - que a saída pode conter IDs técnicos e não deve ser compartilhada publicamente.
+5. Registre no PROGRESSO.md que:
+   - a auditoria encontrou zero sessões afetadas;
+   - não há reparação de dados a executar;
+   - Sessions e ExerciseConfig estavam sincronizados;
+   - a T1 pode ser retomada após o procedimento de backup.
+
+Depois disso, encerre oficialmente o incidente e pare.
+
+Não execute nenhum UPDATE.
+Não proponha reparação.
+Não iniciar ainda a T1 até eu autorizar o próximo passo.

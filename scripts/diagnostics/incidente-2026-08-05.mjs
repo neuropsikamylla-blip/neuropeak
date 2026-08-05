@@ -1,14 +1,37 @@
 /**
- * Auditoria do incidente de 05/ago/2026 — SOMENTE LEITURA.
+ * AUDITORIA DO INCIDENTE DE 05/ago/2026 — DIAGNÓSTICO SOMENTE LEITURA
  *
- * Executa as três consultas de diagnóstico de docs/operacao/incidente-2026-08-05-consultas.sql
- * contra o banco configurado em DATABASE_URL.
+ * FINALIDADE
+ *   Medir o alcance do incidente em que o `schema.prisma` declarava três campos de tutorial que o
+ *   banco não tinha. O Prisma Client, gerado a partir do schema, passou a pedir colunas
+ *   inexistentes, e toda consulta a `ExerciseConfig` quebrava com erro 500 — inclusive o `upsert`
+ *   que atualiza a progressão ao fim de cada sessão.
  *
- * ⛔ Nenhum UPDATE, INSERT, DELETE, ALTER, CREATE, DROP ou TRUNCATE.
- *    Há uma trava de segurança abaixo que recusa executar qualquer coisa que não comece com
- *    SELECT ou WITH.
+ * DATA DO INCIDENTE
+ *   Início: v2.73.0 — 04/08/2026 23:46 (Brasília) = 05/08/2026 02:46 UTC
+ *   Fim:    v2.75.1 — 05/08/2026 15:51 (Brasília) = 05/08/2026 18:51 UTC
+ *   Duração aproximada: 16 horas.
  *
- * Uso:  node scripts/diagnostics/incidente-2026-08-05.mjs
+ * CARÁTER SOMENTE LEITURA
+ *   Executa apenas SELECT. Não há UPDATE, INSERT, DELETE, ALTER, CREATE, DROP nem TRUNCATE.
+ *   A função `exigirSomenteLeitura` recusa qualquer consulta que não comece com SELECT ou WITH,
+ *   ou que contenha comando de escrita — é a última barreira antes do banco.
+ *
+ * COMO EXECUTAR
+ *   node scripts/diagnostics/incidente-2026-08-05.mjs
+ *
+ *   Lê DATABASE_URL de `.env.local` (padrão do projeto) ou de `.env`, com o ambiente como reserva.
+ *   Nenhuma credencial é impressa em nenhum momento.
+ *
+ * ⚠️ SOBRE A SAÍDA
+ *   As consultas 2 e 3 imprimem `patientId` e `exerciseId` — identificadores técnicos necessários
+ *   para localizar registros a reparar. NÃO compartilhe a saída publicamente, em capturas de tela
+ *   ou em canais abertos. Nomes, e-mails e dados clínicos nunca são consultados.
+ *
+ * RESULTADO DA EXECUÇÃO DE 05/ago/2026
+ *   Zero sessões na janela. Nenhum paciente treinou durante o incidente, e `Session` e
+ *   `ExerciseConfig` permaneceram sincronizados. Nenhuma reparação foi necessária.
+ *   O script fica versionado para auditorias futuras do mesmo tipo.
  */
 import { readFileSync } from "node:fs";
 import { PrismaClient } from "@prisma/client";
