@@ -12984,3 +12984,49 @@ Não iniciar T1.
 Não tocar no banco.
 Não publicar correção por hipótese.
 Pare após apresentar a causa e a correção mínima proposta.[Image #63] [Image #64]
+
+## 05/08/2026 15:37
+Temos a evidência que faltava.
+
+Ao abrir diretamente:
+
+GET /api/patients/cmpq1brmw000196enmgs7z6d4?config=true
+
+a resposta foi:
+
+{"error":"Erro interno do servidor"}
+
+Portanto, o problema não deve ser tratado como perda de persistência até prova em contrário.
+
+A tela está recebendo erro 500 e provavelmente o `.catch(() => {})` está convertendo a falha em estado vazio, fazendo parecer que os exercícios desapareceram.
+
+Agora investigue prioritariamente a causa do 500.
+
+Quero:
+
+1. localizar o erro real nos logs da Vercel para essa chamada;
+2. identificar a exceção original e o stack trace;
+3. reproduzir o GET localmente com esse patientId;
+4. verificar qual parte do include de `?config=true` falha;
+5. confirmar se a falha foi introduzida pela v2.75.0 ou se já existia antes;
+6. verificar especialmente incompatibilidade entre:
+   - schema Prisma atual;
+   - banco ainda sem os campos da T1;
+   - `exerciseConfigs: includeConfig`;
+   - enum/tutorial fields ainda não aplicados;
+   - qualquer select/include que agora espere coluna inexistente.
+
+Não corrija por hipótese.
+
+Depois de localizar a causa:
+
+- proponha a correção mínima;
+- preserve os exercícios já salvos;
+- remova o `.catch(() => {})` silencioso ou substitua por tratamento visível de erro;
+- adicione teste de regressão para GET com `config=true`;
+- adicione teste de UX para impedir que erro de API apareça como plano vazio.
+
+Não iniciar T1.
+Não executar db push.
+Não tocar no banco antes de provar a causa.
+Pare para minha validação antes de publicar.
