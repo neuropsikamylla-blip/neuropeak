@@ -61,11 +61,13 @@ const CuboCorsi            = dynamic(() => import("@/components/exercises/memory
 const EstacionamentoLogico = dynamic(() => import("@/components/exercises/executive/EstacionamentoLogico").then(m => ({ default: m.EstacionamentoLogico })), { loading: ExerciseLoader, ssr: false });
 
 const EXERCISE_INSTRUCTIONS: Record<string, string[]> = {
+  // Preparação da T1: diz o que acontece, como responder e o que é preciso para ouvir. Nada de
+  // estratégia, dica de memorização ou orientação terapêutica — isso não pertence à preparação.
   "span-numerico": [
     "Você vai OUVIR uma sequência de números (eles não aparecem na tela).",
     "As bolinhas indicam quantos números foram falados.",
     "Depois, toque os números no teclado na MESMA ordem em que ouviu.",
-    "Use fones ou aumente o volume e evite distrações.",
+    "Use fones ou aumente o volume antes de começar.",
   ],
   "matriz-espacial": [
     "Células de uma grade serão iluminadas em sequência.",

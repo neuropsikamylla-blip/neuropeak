@@ -3,20 +3,32 @@
 import { useEffect, useRef, useState } from "react";
 import {
   Beads,
+  MIN_LEVEL,
   NumberPad,
+  digitsForLevel,
 } from "@/components/exercises/memory/SpanNumerico";
 import { playDigitSequence } from "@/lib/tutorial/span-playback";
 import type { GuidedAttemptProps, TutorialDefinition } from "@/lib/tutorial/types";
 
-const DEMONSTRATION_SEQUENCE = [3, 7];
-const GUIDED_SEQUENCE_LENGTH = 2;
+/**
+ * A menor unidade válida da mecânica do Span, PERGUNTADA à própria escada clínica — não escrita
+ * à mão. Hoje resolve para 2 dígitos (nível 1); se a escada mudar, isto muda junto, e a tentativa
+ * guiada continua sendo o menor degrau em que a tarefa ainda é a tarefa.
+ */
+const SMALLEST_VALID_UNIT = digitsForLevel(MIN_LEVEL);
 const AUTO_ENTRY_DELAY_MS = 450;
 
+/** Sequência da demonstração: a menor unidade, com dígitos distintos e estáveis a cada exibição. */
+const DEMONSTRATION_SEQUENCE = Array.from({ length: SMALLEST_VALID_UNIT }, (_, i) => 3 + i * 4);
+
 function createGuidedSequence(): number[] {
-  const first = 1 + Math.floor(Math.random() * 9);
-  let second = 1 + Math.floor(Math.random() * 9);
-  while (second === first) second = 1 + Math.floor(Math.random() * 9);
-  return [first, second].slice(0, GUIDED_SEQUENCE_LENGTH);
+  const sequence: number[] = [];
+  while (sequence.length < SMALLEST_VALID_UNIT) {
+    const candidate = 1 + Math.floor(Math.random() * 9);
+    // Sem repetir o anterior: dígito repetido em seguida confunde a escuta sem treinar nada.
+    if (candidate !== sequence[sequence.length - 1]) sequence.push(candidate);
+  }
+  return sequence;
 }
 
 function wait(ms: number): Promise<void> {
@@ -140,13 +152,13 @@ function GuidedAttempt({ onOutcome }: GuidedAttemptProps) {
   }, []);
 
   function handleKey(digit: number) {
-    if (listening || enteredRef.current.length >= GUIDED_SEQUENCE_LENGTH) return;
+    if (listening || enteredRef.current.length >= SMALLEST_VALID_UNIT) return;
 
     const next = [...enteredRef.current, digit];
     enteredRef.current = next;
     setFilled(next.length);
 
-    if (next.length === GUIDED_SEQUENCE_LENGTH) {
+    if (next.length === SMALLEST_VALID_UNIT) {
       const expected = sequenceRef.current;
       const isCorrect = expected.every((value, index) => value === next[index]);
       onOutcome(isCorrect ? "correct" : "incorrect");
@@ -155,7 +167,7 @@ function GuidedAttempt({ onOutcome }: GuidedAttemptProps) {
 
   return (
     <SpanBoard
-      total={GUIDED_SEQUENCE_LENGTH}
+      total={SMALLEST_VALID_UNIT}
       filled={filled}
       active={active}
       flashKey={flashKey}
@@ -171,4 +183,5 @@ export const spanNumericoTutorial: TutorialDefinition = {
   Demonstration,
   GuidedAttempt,
   retryHint: "Ouça novamente e responda quando o teclado estiver disponível.",
+  smallestValidUnit: SMALLEST_VALID_UNIT,
 };

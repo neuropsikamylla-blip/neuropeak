@@ -19,9 +19,15 @@
  * ⚠️ O PIN NUNCA É IMPRESSO AQUI. Ele aparece na ficha do paciente no próprio sistema, como em
  *    qualquer outro paciente — que é o caminho normal e não expõe credencial em log ou terminal.
  *
+ * ⛔ DECISÃO CONGELADA DA T1 (05/ago/2026) — NÃO CRIAR PACIENTE TÉCNICO NAS PRÓXIMAS CONVERSÕES
+ *    Este script existe para a conversão de referência do Span Direto, e não deve ser reusado
+ *    como rotina. Nas conversões seguintes, use um paciente de teste JÁ EXISTENTE. Criar outro
+ *    exige autorização explícita dela, pedida na hora — nunca presumida a partir desta.
+ *    Por isso a criação exige a confirmação abaixo; sem ela, o script apenas informa o estado.
+ *
  * USO
- *   node scripts/diagnostics/paciente-teste-t1.mjs            cria (ou informa que já existe)
- *   node scripts/diagnostics/paciente-teste-t1.mjs --estado   só consulta, não escreve
+ *   node scripts/diagnostics/paciente-teste-t1.mjs --estado   só consulta, não escreve (padrão)
+ *   node scripts/diagnostics/paciente-teste-t1.mjs --criar-com-autorizacao   cria
  *   node scripts/diagnostics/paciente-teste-t1.mjs --remover  apaga o paciente de teste
  */
 import { readFileSync } from "node:fs";
@@ -110,6 +116,11 @@ try {
   } else if (existente) {
     console.log("O paciente de teste JÁ EXISTE — nada foi criado.\n");
     await mostrarEstado(existente);
+  } else if (modo !== "--criar-com-autorizacao") {
+    console.log("O paciente de teste não existe, e NADA foi criado.\n");
+    console.log("  Decisão congelada da T1: não criar paciente técnico nas próximas conversões.");
+    console.log("  Use um paciente de teste já existente. Criar outro exige autorização");
+    console.log("  explícita dela, pedida na hora — e então rode com --criar-com-autorizacao.");
   } else {
     const terapeuta = await prisma.user.findFirst({ select: { id: true, patientLicenses: true } });
     if (!terapeuta) throw new Error("nenhum terapeuta cadastrado");

@@ -1,6 +1,7 @@
 "use client";
 
 import { useState } from "react";
+import { Check, RotateCcw } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import type { TutorialDefinition, GuidedOutcome } from "@/lib/tutorial/types";
 import type { Theme } from "@/types";
@@ -19,6 +20,7 @@ const themeStyles: Record<Theme, {
   heading: string;
   text: string;
   button: string;
+  icon: string;
 }> = {
   CLINICAL: {
     screen: "bg-[#061326]",
@@ -26,6 +28,7 @@ const themeStyles: Record<Theme, {
     heading: "text-slate-100",
     text: "text-slate-300",
     button: "bg-indigo-600 hover:bg-indigo-700 text-white",
+    icon: "text-indigo-300",
   },
   COLORFUL: {
     screen: "bg-gradient-to-br from-teal-50 via-white to-cyan-50",
@@ -33,6 +36,7 @@ const themeStyles: Record<Theme, {
     heading: "text-teal-800",
     text: "text-slate-700",
     button: "bg-gradient-to-r from-teal-600 to-cyan-600 text-white",
+    icon: "text-teal-600",
   },
   GAMIFIED: {
     screen: "bg-gray-950",
@@ -40,6 +44,7 @@ const themeStyles: Record<Theme, {
     heading: "text-cyan-400 uppercase tracking-wider",
     text: "text-gray-300",
     button: "bg-gradient-to-r from-cyan-500 to-blue-600 text-white",
+    icon: "text-cyan-400",
   },
 };
 
@@ -81,8 +86,8 @@ export function TutorialRunner({ definition, theme, onFinish }: TutorialRunnerPr
 
         {phase === "feedback" && outcome === "incorrect" && (
           <div className="text-center">
-            <p className="mb-3 text-5xl" aria-hidden>❌</p>
-            <h2 className={`${styles.heading} mb-2 text-xl font-bold`}>Vamos tentar mais uma vez</h2>
+            <RotateCcw className={`${styles.icon} mx-auto mb-3 h-8 w-8`} aria-hidden />
+            <h2 className={`${styles.heading} mb-2 text-xl font-bold`}>Vamos repetir a tentativa</h2>
             <p className={`${styles.text} mb-6 text-sm`}>{definition.retryHint}</p>
             <Button className={`${styles.button} h-12 w-full font-semibold`} onClick={retryGuidedAttempt}>
               Repetir tentativa
@@ -92,9 +97,9 @@ export function TutorialRunner({ definition, theme, onFinish }: TutorialRunnerPr
 
         {phase === "feedback" && outcome === "correct" && (
           <div className="text-center">
-            <p className="mb-3 text-5xl" aria-hidden>✅</p>
-            <h2 className={`${styles.heading} mb-2 text-xl font-bold`}>Muito bem!</h2>
-            <p className={`${styles.text} mb-6 text-sm`}>Você concluiu a tentativa guiada.</p>
+            <Check className={`${styles.icon} mx-auto mb-3 h-8 w-8`} aria-hidden />
+            <h2 className={`${styles.heading} mb-2 text-xl font-bold`}>Tentativa concluída</h2>
+            <p className={`${styles.text} mb-6 text-sm`}>Você respondeu na ordem correta.</p>
             <Button className={`${styles.button} h-12 w-full font-semibold`} onClick={() => setPhase("confirm")}>
               Seguir
             </Button>
@@ -103,8 +108,7 @@ export function TutorialRunner({ definition, theme, onFinish }: TutorialRunnerPr
 
         {phase === "confirm" && (
           <div className="text-center">
-            <p className="mb-3 text-5xl" aria-hidden>🎧</p>
-            <h2 className={`${styles.heading} mb-2 text-xl font-bold`}>Tudo pronto</h2>
+            <h2 className={`${styles.heading} mb-2 text-xl font-bold`}>Tutorial concluído</h2>
             <p className={`${styles.text} mb-6 text-sm`}>Confirme para iniciar o treino.</p>
             <Button className={`${styles.button} h-12 w-full font-semibold`} onClick={onFinish}>
               Iniciar treino

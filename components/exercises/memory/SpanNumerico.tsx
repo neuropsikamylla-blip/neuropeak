@@ -54,8 +54,10 @@ type Phase = "ready" | "listen" | "flip" | "input" | "feedback";
 
 // Teto elevado no épico Cogmed (15/jul): nível 9 = 10 dígitos (antes parava em 8).
 const MAX_LEVEL = 9;
-const digitsForLevel = (lv: number) => lv + 1; // N1=2, N2=3 … N9=10
-const clampLevel = (lv: number) => Math.max(1, Math.min(MAX_LEVEL, lv));
+/** Piso da escada clínica. O tutorial deriva daqui a menor unidade válida — nunca de um número solto. */
+export const MIN_LEVEL = 1;
+export const digitsForLevel = (lv: number) => lv + 1; // N1=2, N2=3 … N9=10
+const clampLevel = (lv: number) => Math.max(MIN_LEVEL, Math.min(MAX_LEVEL, lv));
 
 // Nível inicial automático a partir do progresso salvo do paciente (difficulty 1–10).
 // Fator 0.7 mantido de propósito: começa um pouco abaixo do teto alcançado e o motor
