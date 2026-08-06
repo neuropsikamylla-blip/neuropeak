@@ -93,15 +93,30 @@ Máquina de estados:
 
 ```
 "listening"  → toca a sequência com playDigitSequence (bolinhas preenchem, tecla acende)
-"answering"  → zera as bolinhas; para CADA dígito da sequência:
-                 a) cursor vai até `[data-digit="<n>"]`   (~450 ms, phase "moving")
-                 b) phase "pressing" + pressedKey = n     (~180 ms)  ← o clique
-                 c) solta (pressedKey = -1) e a bolinha correspondente preenche
-                 d) pequena pausa antes do próximo
-"done"       → só depois do ÚLTIMO clique, chama onDone()
+"answering"  → zera as bolinhas; para CADA dígito da sequência, NESTA ORDEM ESTRITA:
+                 a) DESLOCA  — cursor vai até `[data-digit="<n>"]`  (~450 ms, phase "moving")
+                 b) PRESSIONA— phase "pressing" + pressedKey = n    (~180 ms)
+                 c) FEEDBACK — a tecla mostra scale(0.95), o mesmo do treino
+                 d) SOLTA    — pressedKey = -1, cursor volta a "moving" (~140 ms)
+                 e) SÓ ENTÃO a bolinha correspondente preenche
+                 f) pequena pausa antes do próximo dígito
+"done"       → só depois do ÚLTIMO clique completo, chama onDone()
 ```
 
-- O teclado fica **visível e aparentemente disponível** na fase de resposta, mas `interactive={false}`:
+> ⚠️ **Regra dela (05/ago/2026), item 2 — a ordem acima é obrigatória e não pode ser encurtada.**
+> O cursor **não** pode apenas passar por cima da tecla, e a bolinha **não** pode preencher antes de
+> o gesto de clique terminar. Soltar e preencher são passos **separados**, nesta ordem: o
+> preenchimento é consequência visível do clique, e precisa ser lido como tal.
+
+### Bloqueio de interação — regra dela, item 1
+
+**Durante toda a resposta demonstrada, o teclado não pode aceitar clique real do paciente.** A
+interação só é liberada quando começa a tentativa guiada. Não basta `interactive={false}` desabilitar
+o `onClick`: garanta também que o container da fase de resposta tenha **`pointer-events: none`**, de
+modo que nenhum toque atinja as teclas — nem por acidente, nem por dupla ativação enquanto o cursor
+anima. O paciente deve ver o teclado, entender que ele existe, e não conseguir agir sobre ele ainda.
+
+- O teclado fica **visível** na fase de resposta, mas `interactive={false}` **e** bloqueado a toques:
   quem clica é a demonstração, não o paciente.
 - Envolver o `SpanBoard` num container com `ref` e `position: relative`, e montar o `DemoPointer`
   dentro dele.
@@ -126,7 +141,10 @@ Vitest com `environment: node` — **não importar `.tsx`**; usar verificação 
 5. A demonstração percorre **todos** os dígitos antes de `onDone` — nada de terminar no primeiro.
 6. A demonstração usa `smallestValidUnit`/`SMALLEST_VALID_UNIT`, nunca um literal.
 7. O efeito continua com `onDoneRef.current()` e array de dependências vazio.
-8. `Demonstration` mantém `interactive={false}` na fase de resposta.
+8. `Demonstration` mantém `interactive={false}` na fase de resposta **e** bloqueia toques com
+    `pointer-events: none` no container — o paciente não consegue clicar antes da guiada.
+11. A ordem do gesto é estrita: soltar e preencher a bolinha são passos separados, e o
+    preenchimento vem **depois** do soltar (regra dela, item 2).
 9. Nenhum termo clínico proibido (`onComplete`, `score`, `accuracy`, `useTimedProgress`, `lib/adaptive`).
 10. Toda a suíte continua verde — **549/549 é o piso**.
 
