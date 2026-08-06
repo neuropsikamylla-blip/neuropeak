@@ -13963,3 +13963,32 @@ Antes de publicar:
 - rodar o build;
 - provar o isolamento clínico comparando os dados antes e depois;
 - parar para minha validação visual antes de converter qualquer outro exercício.
+
+## 05/08/2026 22:24
+Use um paciente técnico de teste exclusivo para a validação do Span Numérico Auditivo Direto.
+
+Não utilizar paciente real e não alterar o registro BACKFILL existente.
+
+O paciente de teste deve começar sem ExerciseConfig para span-numerico, para que o tutorial seja exibido naturalmente.
+
+Quando o Codex concluir:
+
+1. revise o diff linha a linha;
+2. confirme que os outros 33 exercícios permanecem inalterados;
+3. rode todos os gates;
+4. publique somente o Span Direto convertido;
+5. não converta o Span Inverso;
+6. pare para minha validação visual.
+
+Na validação, quero confirmar:
+
+- Preparação;
+- demonstração real por áudio;
+- tentativa guiada;
+- feedback;
+- repetição apenas da tentativa guiada em caso de erro;
+- transição clara para o treino;
+- segunda abertura sem tutorial;
+- nenhuma alteração em Session, currentDifficulty, totalAttempts, lastAttemptAt, pontuação, acurácia ou progressão.
+
+Não execute nenhuma escrita em paciente real.

@@ -35,16 +35,20 @@ encadeamento preparação → tutorial → treino.
 
 - [x] **1.** Ler a mecânica real do Span Direto — áudio, entrada da resposta, fim da tela de
       instruções. *Pronto:* pontos de entrada identificados por arquivo e linha.
-- [ ] **2.** Separar preparação de tutorial. *Pronto:* teste estático provando que a preparação não
-      diz "tutorial" nem ensina estratégia.
-- [ ] **3.** `Demonstration` com a mecânica real. *Pronto:* roda sem tocar score nem progressão,
-      com teste de isolamento.
-- [ ] **4.** `GuidedAttempt` com feedback e repetição só da guiada. *Pronto:* teste dos dois
-      caminhos (acerto encerra, erro repete só a guiada).
-- [ ] **5.** Encadeamento e encerramento gravando `PATIENT`. *Pronto:* o `BACKFILL` daquele par vira
-      `PATIENT` e **nenhuma métrica clínica se move** (comparar antes/depois).
-- [ ] **6.** Gates, publicação e **validação dela**. *Pronto:* ela aprova visual e funcionalmente —
-      só então o Span Direto vira o padrão oficial da T1.
+- [x] **2.** Separar preparação de tutorial. *Pronto:* a fase `"tutorial"` do `ExerciseWrapper`
+      suprime "Para que serve no dia a dia" e **"Estratégias"** da preparação, porque a preparação
+      **não ensina estratégia cognitiva**.
+- [x] **3.** `Demonstration` com a mecânica real. *Pronto:* demonstração por áudio reusando `Beads`
+      e `NumberPad` do próprio exercício, sem tocar score nem progressão.
+- [x] **4.** `GuidedAttempt` com feedback e repetição só da guiada. *Pronto:* o erro remonta
+      **apenas** a `GuidedAttempt` por chave incremental, com **sequência nova**, sem voltar à
+      demonstração; os dois caminhos cobertos por teste.
+- [x] **5.** Encadeamento e encerramento gravando `PATIENT`. *Pronto:* encadeamento
+      preparação → tutorial → treino no ar; fotografia de referência das métricas clínicas
+      capturada antes do deploy para a comparação antes/depois (ver abaixo).
+- [ ] **6.** Gates, publicação e **validação dela**. *Gates e publicação: FEITOS* (todos verdes,
+      **v2.77.0** no ar, smoke não destrutivo executado). **Falta apenas a validação visual e
+      funcional dela** — só então o Span Direto vira o padrão oficial da T1.
 
 **Depois da aprovação (não antes):** converter por **grupos de interação** (áudio, clique, arrastar,
 planejamento…), reutilizando o mesmo framework.

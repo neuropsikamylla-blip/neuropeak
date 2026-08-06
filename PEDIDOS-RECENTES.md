@@ -1,16 +1,6 @@
 # As 3 ultimas especificacoes dela (automatico; a mais nova por ultimo)
 # Na retomada: ler as 3, conectar com PROGRESSO.md e git, declarar e seguir.
 
-## O QUE NÃO FIZ
-
-- Não commitei nem dei push — o working tree segue com `PROGRESSO.md` modificado, pronto para o commit do VP.
-- Não toquei em nenhum outro arquivo (nem código, nem docs, nem configuração).
-- Não executei nada no banco, nem gates, nem `curl` contra produção — todos os números registrados são os medidos pelo VP e foram transcritos sem alteração.
-- Não alterei o corpo da seção T1.0 antiga, apenas seu título.
-- Não verifiquei de forma independente que o commit `f9b8584` ou a versão 2.76.0 correspondem ao estado real do repositório/deploy: isso está fora do despacho e permanece como fato reportado pelo VP.</result>
-<usage><subagent_tokens>32361</subagent_tokens><tool_uses>6</tool_uses><duration_ms>72185</duration_ms></usage>
-</task-notification>
-
 ## 05/08/2026 21:57
 A validação mostrou que a infraestrutura da T1 está funcionando, mas nenhum exercício ainda foi convertido para o novo framework.
 O Span Numérico Auditivo Direto e o Span Numérico Auditivo Inverso continuam utilizando apenas a antiga tela de instruções. Isso não será considerado o tutorial da T1.
@@ -82,3 +72,32 @@ Antes de publicar:
 - rodar o build;
 - provar o isolamento clínico comparando os dados antes e depois;
 - parar para minha validação visual antes de converter qualquer outro exercício.
+
+## 05/08/2026 22:24
+Use um paciente técnico de teste exclusivo para a validação do Span Numérico Auditivo Direto.
+
+Não utilizar paciente real e não alterar o registro BACKFILL existente.
+
+O paciente de teste deve começar sem ExerciseConfig para span-numerico, para que o tutorial seja exibido naturalmente.
+
+Quando o Codex concluir:
+
+1. revise o diff linha a linha;
+2. confirme que os outros 33 exercícios permanecem inalterados;
+3. rode todos os gates;
+4. publique somente o Span Direto convertido;
+5. não converta o Span Inverso;
+6. pare para minha validação visual.
+
+Na validação, quero confirmar:
+
+- Preparação;
+- demonstração real por áudio;
+- tentativa guiada;
+- feedback;
+- repetição apenas da tentativa guiada em caso de erro;
+- transição clara para o treino;
+- segunda abertura sem tutorial;
+- nenhuma alteração em Session, currentDifficulty, totalAttempts, lastAttemptAt, pontuação, acurácia ou progressão.
+
+Não execute nenhuma escrita em paciente real.
