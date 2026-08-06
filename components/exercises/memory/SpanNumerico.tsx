@@ -7,6 +7,11 @@ import { calculateExerciseScore } from "@/lib/scoring";
 import { useTimedProgress } from "@/components/exercises/useExerciseEngine";
 import { ExerciseProgressBar } from "@/components/exercises/ExerciseProgressBar";
 import { classifyTrial, nextLevelPerTrial } from "@/lib/adaptive-trial";
+import {
+  SPAN_AUDIO_SRC,
+  SPAN_INITIAL_DELAY_MS,
+  spanGapMs,
+} from "@/lib/tutorial/span-playback";
 import type { ExerciseResult, Theme } from "@/types";
 
 // ── Tipos ───────────────────────────────────────────────────────────────────────
@@ -76,7 +81,7 @@ const CARD_STYLE: React.CSSProperties = {
 
 // ── Painel de números 3×3 (1-9, sem 0) — estilo referência, paleta clara ─────────
 // flashKey: tecla ACESA enquanto a voz fala o número (apresentação audiovisual).
-function NumberPad({ interactive, flashKey, onKey }: {
+export function NumberPad({ interactive, flashKey, onKey }: {
   interactive: boolean; flashKey: number; onKey: (n: number) => void;
 }) {
   return (
@@ -134,7 +139,7 @@ function BrainListening({ pulsing }: { pulsing: boolean }) {
 
 // ── Bolinhas (quantidade de itens) ──────────────────────────────────────────────
 
-function Beads({ total, filled, active, flipped = false, flipping = false }: {
+export function Beads({ total, filled, active, flipped = false, flipping = false }: {
   total: number; filled: number; active: number;
   flipped?: boolean;   // inverso (pós-virada): a fileira fica girada (início vira fim)
   flipping?: boolean;  // anima a virada agora (dica sutil, sem números)
@@ -208,15 +213,15 @@ export function SpanNumerico({ difficulty, onComplete, reverse = false, settings
 
   const playSequence = useCallback(async (seq: number[], myId: number) => {
     // Mais tempo entre os números — e NUNCA mais rápido nos spans longos (6,7,8 dígitos).
-    const gap = seq.length >= 6 ? 1000 : 850; // intervalo entre números (ms)
+    const gap = spanGapMs(seq.length); // intervalo entre números (ms)
     // pequena pausa antes de começar
-    await new Promise<void>(r => setTimeout(r, 500));
+    await new Promise<void>(r => setTimeout(r, SPAN_INITIAL_DELAY_MS));
     for (let i = 0; i < seq.length; i++) {
       if (seqIdRef.current !== myId) return;
       setActiveBead(i);
       setFlashKey(seq[i]);          // a TECLA do número falado ACENDE no painel
       await new Promise<void>((resolve) => {
-        const a = new Audio(`/exercises/audio/numeros/${seq[i]}.m4a`);
+        const a = new Audio(SPAN_AUDIO_SRC(seq[i]));
         audioRef.current = a;
         a.onended = () => resolve();
         a.onerror = () => resolve();
@@ -432,12 +437,13 @@ function ReadyScreen({ title, reverse, level, onStart }: {
         <p className="text-sm mb-1" style={{ color: "#5C7A94" }}>
           {reverse ? "Ouça os números e toque na ordem INVERSA." : "Ouça os números e toque na MESMA ordem."}
         </p>
-        <p className="text-xs mb-5" style={{ color: "#8FA9C0" }}>
-          Você começa no nível {level} ({digitsForLevel(level)} dígitos) — onde parou da última vez.
-        </p>
-
+        {reverse && (
+          <p className="text-xs mb-5" style={{ color: "#8FA9C0" }}>
+            Você começa no nível {level} ({digitsForLevel(level)} dígitos) — onde parou da última vez.
+          </p>
+        )}
         <button onClick={onStart}
-          className="w-full rounded-2xl font-bold text-white text-sm flex items-center justify-center py-3.5 active:scale-95"
+          className={`w-full rounded-2xl font-bold text-white text-sm flex items-center justify-center py-3.5 active:scale-95 ${reverse ? "" : "mt-5"}`}
           style={{ background: "linear-gradient(135deg,#4F8FEA,#3B79D9)", boxShadow: "0 4px 20px rgba(79,143,234,0.45)" }}>
           Começar →
         </button>

@@ -6,10 +6,13 @@ import { Button } from "@/components/ui/button";
 import { ScoreDisplay } from "@/components/gamification/ScoreDisplay";
 import { formatDuration, formatReactionTime } from "@/lib/utils";
 import { EXERCISE_FUNCTIONAL } from "@/lib/exercise-functional";
+import { tutorialRequired, type TutorialState } from "@/lib/tutorial/state";
+import type { TutorialDefinition } from "@/lib/tutorial/types";
 import type { ExerciseResult, Theme } from "@/types";
+import { TutorialRunner } from "@/components/exercises/tutorial/TutorialRunner";
 import { CheckCircle2, XCircle, Clock, Target, Zap, Lightbulb, Maximize2, Minimize2 } from "lucide-react";
 
-type Phase = "instructions" | "exercise" | "results";
+type Phase = "instructions" | "tutorial" | "exercise" | "results";
 
 const ProgressContext = createContext<(pct: number) => void>(() => {});
 export const useExerciseProgress = () => useContext(ProgressContext);
@@ -26,6 +29,9 @@ interface ExerciseWrapperProps {
   sessionTotal?: number;
   /** Oculta o widget de progresso no canto (exercícios com layout próprio). */
   hideProgress?: boolean;
+  tutorial?: TutorialDefinition;
+  tutorialState?: TutorialState;
+  onTutorialDone?: () => void;
   children: (onComplete: (result: ExerciseResult) => void) => React.ReactNode;
   onFinish: (result: ExerciseResult) => void;
 }
@@ -39,10 +45,29 @@ export function ExerciseWrapper({
   sessionCompleted = 0,
   sessionTotal,
   hideProgress = false,
+  tutorial,
+  tutorialState,
+  onTutorialDone,
   children,
   onFinish,
 }: ExerciseWrapperProps) {
-  const [phase, setPhase] = useState<Phase>(instructions.length === 0 ? "exercise" : "instructions");
+  // `tutorialState === undefined` significa "ainda carregando", não "não precisa": nesse caso o
+  // tutorial NÃO aparece. Melhor pular indevidamente do que repetir para quem já concluiu.
+  const needsTutorial = tutorial !== undefined
+    && tutorialState !== undefined
+    && tutorialRequired(tutorialState, tutorial.version);
+
+  // ⚠️ ARMADILHA PARA OS PRÓXIMOS LOTES DA T1: este estado inicial é avaliado UMA única vez, e
+  // `tutorialState` chega depois (vem de fetch). Num exercício SEM tela de instruções, a fase
+  // inicial seria "exercise" e o tutorial nunca apareceria. Hoje não morde — o único exercício com
+  // tutorial (span-numerico) tem 4 instruções, então entra por "instructions" e a decisão acontece
+  // em `leaveInstructions()`, quando o estado já chegou. Ao converter um exercício sem instruções,
+  // trate a espera explicitamente aqui. Há teste travando esta expectativa.
+  const [phase, setPhase] = useState<Phase>(
+    instructions.length === 0
+      ? needsTutorial ? "tutorial" : "exercise"
+      : "instructions",
+  );
   const [result, setResult] = useState<ExerciseResult | null>(null);
   const [isFullscreen, setIsFullscreen] = useState(false);
 
@@ -86,6 +111,15 @@ export function ExerciseWrapper({
 
   function handleFinish() {
     if (result) onFinish(result);
+  }
+
+  function leaveInstructions() {
+    setPhase(needsTutorial ? "tutorial" : "exercise");
+  }
+
+  function finishTutorial() {
+    onTutorialDone?.();
+    setPhase("exercise");
   }
 
   const themeStyles = {
@@ -132,7 +166,7 @@ export function ExerciseWrapper({
             <h1 className={`${s.title} mb-2`}>{title}</h1>
             <p className={`${s.text} text-sm mb-4 opacity-70`}>Leia as instruções antes de começar</p>
 
-            {functional && (
+            {functional && !tutorial && (
               <div className={`rounded-xl p-4 mb-5 ${theme === "GAMIFIED" ? "bg-cyan-900/30 border border-cyan-500/20" : theme === "COLORFUL" ? "bg-teal-50 border border-teal-200" : "bg-indigo-500/10 border border-indigo-400/20"}`}>
                 <p className={`text-xs font-bold uppercase tracking-wide mb-1 ${theme === "GAMIFIED" ? "text-cyan-400" : theme === "COLORFUL" ? "text-teal-600" : "text-indigo-300"}`}>
                   Para que serve no dia a dia
@@ -152,7 +186,7 @@ export function ExerciseWrapper({
               ))}
             </div>
 
-            {functional && (
+            {functional && !tutorial && (
               <div className={`rounded-xl p-4 mb-5 ${theme === "GAMIFIED" ? "bg-gray-700/50" : theme === "COLORFUL" ? "bg-yellow-50 border border-yellow-200" : "bg-white/5 border border-white/10"}`}>
                 <p className={`text-xs font-bold uppercase tracking-wide mb-2 ${theme === "GAMIFIED" ? "text-yellow-400" : theme === "COLORFUL" ? "text-yellow-700" : "text-slate-300"}`}>
                   Estratégias
@@ -170,10 +204,22 @@ export function ExerciseWrapper({
 
             <Button
               className={`w-full h-12 text-base ${s.btn}`}
-              onClick={() => setPhase("exercise")}
+              onClick={leaveInstructions}
             >
               {theme === "GAMIFIED" ? "INICIAR MISSÃO" : theme === "COLORFUL" ? "Vamos lá! 🚀" : "Iniciar"}
             </Button>
+          </motion.div>
+        )}
+
+        {phase === "tutorial" && tutorial && (
+          <motion.div
+            key="tutorial"
+            className="w-full"
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+          >
+            <TutorialRunner definition={tutorial} theme={theme} onFinish={finishTutorial} />
           </motion.div>
         )}
 
