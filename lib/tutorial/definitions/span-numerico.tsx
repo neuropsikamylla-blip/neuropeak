@@ -7,6 +7,7 @@ import {
   NumberPad,
   digitsForLevel,
 } from "@/components/exercises/memory/SpanNumerico";
+import { DemoPointer } from "@/components/exercises/tutorial/DemoPointer";
 import { playDigitSequence } from "@/lib/tutorial/span-playback";
 import type { GuidedAttemptProps, TutorialDefinition } from "@/lib/tutorial/types";
 
@@ -16,10 +17,16 @@ import type { GuidedAttemptProps, TutorialDefinition } from "@/lib/tutorial/type
  * guiada continua sendo o menor degrau em que a tarefa ainda é a tarefa.
  */
 const SMALLEST_VALID_UNIT = digitsForLevel(MIN_LEVEL);
-const AUTO_ENTRY_DELAY_MS = 450;
+const POINTER_MOVE_MS = 450;
+const POINTER_PRESS_MS = 180;
+const POINTER_RELEASE_MS = 140;
+const BETWEEN_DIGITS_MS = 220;
 
 /** Sequência da demonstração: a menor unidade, com dígitos distintos e estáveis a cada exibição. */
-const DEMONSTRATION_SEQUENCE = Array.from({ length: SMALLEST_VALID_UNIT }, (_, i) => 3 + i * 4);
+const DEMONSTRATION_SEQUENCE = Array.from(
+  { length: SMALLEST_VALID_UNIT },
+  (_, index) => ((index + 1) % 9) + 1,
+);
 
 function createGuidedSequence(): number[] {
   const sequence: number[] = [];
@@ -31,8 +38,26 @@ function createGuidedSequence(): number[] {
   return sequence;
 }
 
-function wait(ms: number): Promise<void> {
-  return new Promise((resolve) => setTimeout(resolve, ms));
+function wait(ms: number, isCancelled: () => boolean): Promise<boolean> {
+  return new Promise((resolve) => {
+    if (isCancelled()) {
+      resolve(false);
+      return;
+    }
+
+    let settled = false;
+    const finish = (completed: boolean) => {
+      if (settled) return;
+      settled = true;
+      window.clearTimeout(timeoutId);
+      window.clearInterval(cancelCheck);
+      resolve(completed);
+    };
+    const timeoutId = window.setTimeout(() => finish(!isCancelled()), ms);
+    const cancelCheck = window.setInterval(() => {
+      if (isCancelled()) finish(false);
+    }, 25);
+  });
 }
 
 function SpanBoard({
@@ -42,6 +67,7 @@ function SpanBoard({
   flashKey,
   interactive,
   onKey,
+  pressedKey,
 }: {
   total: number;
   filled: number;
@@ -49,16 +75,29 @@ function SpanBoard({
   flashKey: number;
   interactive: boolean;
   onKey: (digit: number) => void;
+  pressedKey?: number;
 }) {
   return (
     <div className="flex flex-col items-center gap-5 rounded-2xl bg-[#EAF2F9] p-5">
       <Beads total={total} filled={filled} active={active} />
-      <NumberPad interactive={interactive} flashKey={flashKey} onKey={onKey} />
+      <NumberPad
+        interactive={interactive}
+        flashKey={flashKey}
+        onKey={onKey}
+        pressedKey={pressedKey}
+      />
     </div>
   );
 }
 
 function Demonstration({ onDone }: { onDone: () => void }) {
+  const containerRef = useRef<HTMLDivElement>(null);
+  const [demonstrationPhase, setDemonstrationPhase] = useState<"listening" | "answering" | "done">(
+    "listening",
+  );
+  const [pointerPhase, setPointerPhase] = useState<"moving" | "pressing">("moving");
+  const [targetSelector, setTargetSelector] = useState<string | null>(null);
+  const [pressedKey, setPressedKey] = useState(-1);
   const [active, setActive] = useState(-1);
   const [flashKey, setFlashKey] = useState(-1);
   const [filled, setFilled] = useState(0);
@@ -87,17 +126,33 @@ function Demonstration({ onDone }: { onDone: () => void }) {
       });
       if (cancelled) return;
 
+      setDemonstrationPhase("answering");
       setFilled(0);
       for (let index = 0; index < DEMONSTRATION_SEQUENCE.length; index++) {
         if (cancelled) return;
-        setFlashKey(DEMONSTRATION_SEQUENCE[index]);
+        const digit = DEMONSTRATION_SEQUENCE[index];
+
+        setTargetSelector(`[data-digit="${digit}"]`);
+        setPointerPhase("moving");
+        if (!await wait(POINTER_MOVE_MS, () => cancelled)) return;
+
+        setPointerPhase("pressing");
+        setPressedKey(digit);
+        if (!await wait(POINTER_PRESS_MS, () => cancelled)) return;
+
+        setPressedKey(-1);
+        setPointerPhase("moving");
+        if (!await wait(POINTER_RELEASE_MS, () => cancelled)) return;
+
         setFilled(index + 1);
-        await wait(AUTO_ENTRY_DELAY_MS);
-        setFlashKey(-1);
-        await wait(AUTO_ENTRY_DELAY_MS);
+        if (!await wait(BETWEEN_DIGITS_MS, () => cancelled)) return;
       }
 
-      if (!cancelled) onDoneRef.current();
+      if (!cancelled) {
+        setTargetSelector(null);
+        setDemonstrationPhase("done");
+        onDoneRef.current();
+      }
     }
 
     void run();
@@ -105,14 +160,25 @@ function Demonstration({ onDone }: { onDone: () => void }) {
   }, []);
 
   return (
-    <SpanBoard
-      total={DEMONSTRATION_SEQUENCE.length}
-      filled={filled}
-      active={active}
-      flashKey={flashKey}
-      interactive={false}
-      onKey={() => {}}
-    />
+    <div
+      ref={containerRef}
+      className={`relative ${demonstrationPhase === "answering" ? "pointer-events-none" : ""}`}
+    >
+      <SpanBoard
+        total={DEMONSTRATION_SEQUENCE.length}
+        filled={filled}
+        active={active}
+        flashKey={flashKey}
+        interactive={false}
+        onKey={() => {}}
+        pressedKey={pressedKey}
+      />
+      <DemoPointer
+        containerRef={containerRef}
+        targetSelector={demonstrationPhase === "answering" ? targetSelector : null}
+        phase={pointerPhase}
+      />
+    </div>
   );
 }
 

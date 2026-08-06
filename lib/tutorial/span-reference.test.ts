@@ -111,6 +111,104 @@ describe("a demonstração nunca reinicia sozinha", () => {
   });
 });
 
+describe("demonstração completa da resposta do Span Direto", () => {
+  const numberPadSource = () => source("components/exercises/memory/SpanNumerico.tsx");
+  const definitionSource = () => source("lib/tutorial/definitions/span-numerico.tsx");
+  const pointerSource = () => source("components/exercises/tutorial/DemoPointer.tsx");
+
+  it("permite pressionar uma tecla por código e identifica cada dígito", () => {
+    const span = numberPadSource();
+
+    expect(span).toMatch(/pressedKey\s*=\s*-1/);
+    expect(span).toMatch(/pressedKey\?:\s*number/);
+    expect(span).toMatch(/data-digit=\{n\}/);
+  });
+
+  it("reproduz exatamente a escala do clique real sem misturar o estado aceso", () => {
+    const span = numberPadSource();
+
+    expect(span).toMatch(/active:scale-95/);
+    expect(span).toMatch(/pressedKey\s*===\s*n\s*\?\s*["']scale\(0\.95\)["']/);
+    expect(span).toMatch(/pressedKey\s*===\s*n[\s\S]*lit\s*\?\s*["']scale\(1\.04\)["']/);
+  });
+
+  it("mantém as chamadas do teclado do treino sem a prop de demonstração", () => {
+    const span = numberPadSource();
+
+    expect(span).toMatch(
+      /<NumberPad interactive=\{false\} flashKey=\{flashKey\} onKey=\{\(\) => \{\}\} \/>/,
+    );
+    expect(span).toMatch(/<NumberPad interactive flashKey=\{-1\} onKey=\{handleKey\} \/>/);
+  });
+
+  it("usa um cursor de interface, decorativo e incapaz de interceptar o toque", () => {
+    const pointer = pointerSource();
+    const emoji = /[\u{1F300}-\u{1FAFF}\u{2600}-\u{27BF}\u{2B00}-\u{2BFF}\u{FE0F}]/u;
+
+    expect(pointer).not.toMatch(emoji);
+    expect(pointer).toMatch(/MousePointer2/);
+    expect(pointer).toMatch(/aria-hidden=["']true["']/);
+    expect(pointer).toMatch(/pointer-events-none/);
+    expect(pointer).toMatch(/pointerEvents:\s*["']none["']/);
+    expect(pointer).toMatch(/getBoundingClientRect\(\)/);
+    expect(pointer).toMatch(/addEventListener\(["']resize["']/);
+  });
+
+  it("percorre todos os dígitos e só então conclui", () => {
+    const definition = definitionSource();
+    const demonstration = definition.slice(
+      definition.indexOf("function Demonstration"),
+      definition.indexOf("function GuidedAttempt"),
+    );
+    const loop = demonstration.indexOf(
+      "for (let index = 0; index < DEMONSTRATION_SEQUENCE.length; index++)",
+    );
+    const done = demonstration.indexOf("onDoneRef.current()");
+
+    expect(loop).toBeGreaterThanOrEqual(0);
+    expect(done).toBeGreaterThan(loop);
+    expect(demonstration).toMatch(/setDemonstrationPhase\(["']done["']\)/);
+  });
+
+  it("deriva a quantidade de dígitos da menor unidade válida", () => {
+    const definition = definitionSource();
+
+    expect(definition).toMatch(/SMALLEST_VALID_UNIT\s*=\s*digitsForLevel\(MIN_LEVEL\)/);
+    expect(definition).toMatch(/length:\s*SMALLEST_VALID_UNIT/);
+    expect(definition).not.toMatch(/SMALLEST_VALID_UNIT\s*=\s*\d/);
+  });
+
+  it("preserva o ref de conclusão e o efeito de execução única", () => {
+    const definition = definitionSource();
+    const demonstration = definition.slice(
+      definition.indexOf("function Demonstration"),
+      definition.indexOf("function GuidedAttempt"),
+    );
+
+    expect(demonstration).toMatch(/onDoneRef\.current\(\)/);
+    expect(demonstration).toMatch(/\}, \[\]\);/);
+  });
+
+  it("bloqueia toda interação real durante a resposta demonstrada", () => {
+    const definition = definitionSource();
+
+    expect(definition).toMatch(/demonstrationPhase\s*===\s*["']answering["'][\s\S]*pointer-events-none/);
+    expect(definition).toMatch(/interactive=\{false\}/);
+  });
+
+  it("solta a tecla antes de preencher a bolinha, em passos separados", () => {
+    const definition = definitionSource();
+
+    expect(definition).toMatch(
+      /setPressedKey\(-1\);[\s\S]*?await wait\(POINTER_RELEASE_MS, \(\) => cancelled\)[\s\S]*?setFilled\(index \+ 1\);/,
+    );
+  });
+
+  it("não acopla a demonstração a contratos clínicos proibidos", () => {
+    expect(definitionSource()).not.toMatch(forbiddenClinicalTerms);
+  });
+});
+
 describe("o Span Inverso e os demais exercícios seguem intocados", () => {
   it("o Inverso não conhece tutorial nem foi convertido", () => {
     const inverso = source("components/exercises/memory/SpanNumericoInverso.tsx");
@@ -155,6 +253,7 @@ describe("T1 congelada — 1. paciente técnico não se cria por rotina", () => 
 describe("T1 congelada — 2. sem emoji no framework do tutorial", () => {
   const arquivosDoFramework = [
     "components/exercises/tutorial/TutorialRunner.tsx",
+    "components/exercises/tutorial/DemoPointer.tsx",
     "lib/tutorial/definitions/span-numerico.tsx",
     "lib/tutorial/span-playback.ts",
     "lib/tutorial/types.ts",

@@ -83,8 +83,10 @@ const CARD_STYLE: React.CSSProperties = {
 
 // ── Painel de números 3×3 (1-9, sem 0) — estilo referência, paleta clara ─────────
 // flashKey: tecla ACESA enquanto a voz fala o número (apresentação audiovisual).
-export function NumberPad({ interactive, flashKey, onKey }: {
+export function NumberPad({ interactive, flashKey, onKey, pressedKey = -1 }: {
   interactive: boolean; flashKey: number; onKey: (n: number) => void;
+  /** Tecla exibida como pressionada por código — reproduz o mesmo efeito de `active:scale-95`. */
+  pressedKey?: number;
 }) {
   return (
     <div className="grid grid-cols-3 gap-4 w-full max-w-[380px] rounded-3xl p-5"
@@ -93,7 +95,7 @@ export function NumberPad({ interactive, flashKey, onKey }: {
       {[1, 2, 3, 4, 5, 6, 7, 8, 9].map(n => {
         const lit = flashKey === n;
         return (
-          <button key={n} onClick={interactive ? () => onKey(n) : undefined}
+          <button key={n} data-digit={n} onClick={interactive ? () => onKey(n) : undefined}
             className="h-20 sm:h-24 rounded-2xl font-medium text-4xl transition-all duration-150 active:scale-95"
             style={{
               background: lit ? "#4F8FEA" : "#FFFFFF",
@@ -102,7 +104,7 @@ export function NumberPad({ interactive, flashKey, onKey }: {
                 ? "0 0 24px rgba(79,143,234,0.55), 0 6px 14px rgba(100,140,180,0.25)"
                 : "0 6px 14px rgba(100,140,180,0.20), inset 0 1px 0 rgba(255,255,255,0.9)",
               cursor: interactive ? "pointer" : "default",
-              transform: lit ? "scale(1.04)" : undefined,
+              transform: pressedKey === n ? "scale(0.95)" : lit ? "scale(1.04)" : undefined,
             }}>
             {n}
           </button>
