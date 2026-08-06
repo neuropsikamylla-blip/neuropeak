@@ -1,18 +1,6 @@
 # As 3 ultimas especificacoes dela (automatico; a mais nova por ultimo)
 # Na retomada: ler as 3, conectar com PROGRESSO.md e git, declarar e seguir.
 
-## 05/08/2026 23:11
-A causa raiz ficou comprovada.
-Não quero criar outro paciente e não quero usar a estratégia de limpar o patientCode.
-Faça a correção mínima:
-corrija o script paciente-teste-t1.mjs para reutilizar o gerador oficial de patientCode;
-atualize apenas o patientCode do paciente técnico já existente para um código válido no formato oficial da aplicação;
-mantenha o mesmo id, o mesmo PIN e todos os demais dados exatamente como estão;
-não altere nenhum dado clínico;
-depois execute um teste completo de login usando esse mesmo paciente e comprove que a autenticação passou;
-somente depois voltamos à validação do tutorial do Span Direto.
-Não crie um novo paciente. Não altere a T1. Não publique nenhuma outra mudança além dessa correção.
-
 ## 05/08/2026 23:17
 A validação visual revelou um defeito importante na demonstração do Span Direto.
 
@@ -65,3 +53,12 @@ A interação deve permanecer bloqueada até o início da tentativa guiada.
 Não quero que o cursor apenas passe por cima da tecla ou que a bolinha preencha antes do clique visual terminar.
 
 Depois conclua a implementação, rode os gates e pare para minha validação visual sem publicar.
+
+## 05/08/2026 23:34
+<task-notification>
+<task-id>bp49hut7h</task-id>
+<tool-use-id>toolu_01Q3Bub3PRuKGxoHsYCEPKrg</tool-use-id>
+<output-file>/private/tmp/claude-501/-Users-kamyllahonorio-neuropeak/3e6ecf11-e4e5-471f-bbf9-4595faa53598/tasks/bp49hut7h.output</output-file>
+<status>completed</status>
+<summary>Background command "Redisparar o Codex com a spec completa" completed (exit code 0)</summary>
+</task-notification>
