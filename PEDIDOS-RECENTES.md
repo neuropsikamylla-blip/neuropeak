@@ -1,103 +1,34 @@
 # As 3 ultimas especificacoes dela (automatico; a mais nova por ultimo)
 # Na retomada: ler as 3, conectar com PROGRESSO.md e git, declarar e seguir.
 
-## 05/08/2026 21:57
-A validação mostrou que a infraestrutura da T1 está funcionando, mas nenhum exercício ainda foi convertido para o novo framework.
-O Span Numérico Auditivo Direto e o Span Numérico Auditivo Inverso continuam utilizando apenas a antiga tela de instruções. Isso não será considerado o tutorial da T1.
-A partir deste momento vamos mudar a estratégia.
-Não vamos converter os 34 exercícios ainda.
-Primeiro vamos construir e validar o padrão definitivo do framework utilizando apenas um exercício.
-O Span Numérico Auditivo Direto será o exercício de referência da T1.
-Quero que ele represente exatamente como deverá funcionar o tutorial de todos os demais exercícios.
-O fluxo deverá ser:
-Preparação
-informações essenciais para iniciar;
-apenas explicar a interação;
-não ensinar estratégias cognitivas.
-↓
-Tutorial
-demonstração utilizando exatamente a mecânica real;
-tentativa guiada;
-feedback;
-possibilidade de repetir apenas a tentativa guiada em caso de erro;
-encerramento do tutorial.
-↓
-Treino
-início da primeira tentativa clínica;
-sem qualquer influência do tutorial em Session, currentDifficulty, totalAttempts, lastAttemptAt, pontuação ou qualquer métrica clínica.
-Além disso:
-a preparação deixa de ser chamada de tutorial;
-preparação e tutorial passam a ser duas etapas diferentes;
-toda a arquitetura criada para esse exercício deverá ser reutilizada pelos demais.
-Ainda não converter o Span Inverso nem qualquer outro exercício.
-Quero primeiro validar visualmente e funcionalmente o Span Direto.
-Depois de aprovado, ele passa a ser o padrão oficial da T1 e então converteremos os exercícios por grupos de interação (áudio, clique, arrastar, planejamento etc.), reutilizando o mesmo framework.
+## O QUE MUDOU
 
-## 05/08/2026 22:03
-Continue exatamente do bloco EM ANDAMENTO registrado no PROGRESSO.md e da especificação:
+Único arquivo tocado: **`/Users/kamyllahonorio/neuropeak/PROGRESSO.md`** — só dentro do bloco `## 🚧 EM ANDAMENTO — T1` (linhas 36–136). Nenhum outro arquivo, nenhum gate, nenhum acesso ao banco.
 
-docs/T1-SPAN-DIRETO-EXERCICIO-DE-REFERENCIA.md
+**1. Lista de passos (linhas 36–51):**
+- Passos **2, 3, 4 e 5** marcados `[x]`, cada um com o *Pronto* reescrito para o que de fato foi entregue: supressão de "Para que serve no dia a dia" e "Estratégias" na preparação (2); demonstração por áudio reusando `Beads`/`NumberPad` (3); repetição remontando **apenas** a `GuidedAttempt` por chave incremental com sequência nova (4); encadeamento preparação → tutorial → treino no ar mais a fotografia de referência capturada antes do deploy (5).
+- Passo **6** permanece `[ ]`, agora com o estado partido: *"Gates e publicação: FEITOS* (todos verdes, **v2.77.0** no ar, smoke não destrutivo executado). **Falta apenas a validação visual e funcional dela**".
 
-Não reabra decisões já aprovadas.
+**2. Nova subseção `### O que foi entregue (v2.77.0)`** (linhas 59–136), inserida dentro do próprio bloco EM ANDAMENTO, logo após "Estado ao abrir o bloco" e antes de `## ✅ T1.0`. Abre com versão, os três commits (`7a475a4`, `75644d7`, `a14724d`), origem no Codex `gpt-5.6-sol` high, spec `docs/specs/T1-span-direto-tutorial-SPEC.md`, revisão linha a linha do VP e o lab `t1span` removido. Contém seis subseções `####`, no estilo de negrito denso do arquivo:
+- **Arquitetura entregue (reutilizável pelos demais)** — `span-playback.ts` como fonte única da cadência (500/850/1000 ms) importada também pelo treino; `definitions/span-numerico.tsx` reusando os componentes reais, guiada fixa em 2 dígitos como piso da mecânica; `TutorialRunner.tsx` (`demo → guiada → feedback → confirmação`); fase `"tutorial"` opcional no `ExerciseWrapper`; `ReadyScreen` do Direto sem antecipar comprimento, Inverso preservado por `reverse &amp;&amp;`.
+- **Dois consertos do VP após a colheita** — o `onDone` recriado que faria a voz falar por cima de si mesma (corrigido com ref, com teste) e a armadilha da fase inicial avaliada uma única vez versus `tutorialState` por fetch, com o aviso explícito para exercícios sem tela de instruções.
+- **Provas** — gates (`tsc` exit 0, **vitest 535/535** contra 517, `build` exit 0, lint sem warning novo além do pré-existente em `PadroesRotacao.tsx`), isolamento dos outros 33 (só `SpanNumerico.tsx` tocado entre os 48 componentes), deploy (`2.77.0`, buildId `dpl_2nN4Z18YizXY3pKDZy6mGfNRzo5D`) e o smoke não destrutivo com os cinco códigos.
+- **Paciente técnico de teste** — script idempotente, código `COGZD3DRU`, 0 `ExerciseConfig`/0 `Session`, PIN não impresso, licença `-1` não decrementada.
+- **Fotografia de referência** — os onze números literais, com a instrução de reexecutar com `--comparar` após a validação dela.
+- **⏭️ PRÓXIMO PASSO — parado, aguardando ELA** — os oito pontos da validação e a trava explícita do Span Inverso.
 
-Implemente somente o Span Numérico Auditivo Direto como exercício de referência da T1.
+## COMO PROVEI
 
-O fluxo obrigatório é:
+- `git status --porcelain` → exit 0, saída ` M PROGRESSO.md` — nenhum outro arquivo tocado.
+- `git diff --stat` → `PROGRESSO.md | 79 ++++`, 1 file changed.
+- Releitura do arquivo (linhas 30–61 e 108–143): checkboxes 2–5 em `[x]`, 6 em `[ ]` com o texto novo; subseção fechando em 136 e `## ✅ T1.0` intacto em 138.
+- **Alerta que preciso registrar:** eu **não** executei nenhum commit, mas o **hook de checkpoint automático do ambiente** commitou a primeira edição sozinho — `git log --oneline -3` mostra `3ce6448 checkpoint automatico (salvamento de seguranca)` acima de `a14724d`. A segunda edição (a subseção inteira) segue **não commitada** na árvore de trabalho. O VP decide se refaz esse commit com mensagem descritiva (`git reset --soft` é destrutivo de histórico e não toquei nisso).
 
-Preparação
-→ demonstração com a mecânica real de áudio
-→ tentativa guiada
-→ feedback e repetição em caso de erro
-→ confirmação de conclusão
-→ treino clínico real
+## O QUE NÃO FIZ
 
-Regras:
-
-- não converter o Span Inverso;
-- não converter nenhum outro exercício;
-- não alterar a mecânica clínica ou a progressão do Span nesta etapa;
-- não criar Session durante o tutorial;
-- não alterar currentDifficulty, totalAttempts, lastAttemptAt, pontuação, acurácia ou métricas clínicas;
-- não exibir os números escritos durante a apresentação auditiva;
-- a tentativa guiada deve usar dificuldade abaixo da clínica;
-- ao concluir, gravar tutorialSource = PATIENT;
-- segunda abertura deve pular o tutorial automaticamente.
-
-Antes de publicar:
-
-- revisar o diff;
-- rodar prisma validate e generate;
-- rodar TypeScript;
-- rodar a suíte completa;
-- rodar o build;
-- provar o isolamento clínico comparando os dados antes e depois;
-- parar para minha validação visual antes de converter qualquer outro exercício.
-
-## 05/08/2026 22:24
-Use um paciente técnico de teste exclusivo para a validação do Span Numérico Auditivo Direto.
-
-Não utilizar paciente real e não alterar o registro BACKFILL existente.
-
-O paciente de teste deve começar sem ExerciseConfig para span-numerico, para que o tutorial seja exibido naturalmente.
-
-Quando o Codex concluir:
-
-1. revise o diff linha a linha;
-2. confirme que os outros 33 exercícios permanecem inalterados;
-3. rode todos os gates;
-4. publique somente o Span Direto convertido;
-5. não converta o Span Inverso;
-6. pare para minha validação visual.
-
-Na validação, quero confirmar:
-
-- Preparação;
-- demonstração real por áudio;
-- tentativa guiada;
-- feedback;
-- repetição apenas da tentativa guiada em caso de erro;
-- transição clara para o treino;
-- segunda abertura sem tutorial;
-- nenhuma alteração em Session, currentDifficulty, totalAttempts, lastAttemptAt, pontuação, acurácia ou progressão.
-
-Não execute nenhuma escrita em paciente real.
+- Não commitei nem dei push (o commit `3ce6448` é do hook automático dela, não meu).
+- Não rodei gates (`test`, `build`, `tsc`, `lint`), nem os scripts `paciente-teste-t1.mjs` / `isolamento-tutorial.mjs`, nem nada contra o banco — todos os números vieram do despacho e foram transcritos como recebidos, sem verificação independente.
+- Não toquei em `CLAUDE.md`, `ESTADO-DO-PROJETO.md`, memória, docs, código ou configuração.
+- Não alterei o texto histórico do bloco ("Estado ao abrir o bloco: nenhum passo iniciado" segue como registro da abertura — a nova subseção o supera; se o VP quiser, esse parágrafo pode ser reescrito).</result>
+<usage><subagent_tokens>36375</subagent_tokens><tool_uses>9</tool_uses><duration_ms>132410</duration_ms></usage>
+</task-notification>
