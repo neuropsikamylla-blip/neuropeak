@@ -43,9 +43,13 @@ encadeamento preparação → tutorial → treino.
 - [x] **4.** `GuidedAttempt` com feedback e repetição só da guiada. *Pronto:* o erro remonta
       **apenas** a `GuidedAttempt` por chave incremental, com **sequência nova**, sem voltar à
       demonstração; os dois caminhos cobertos por teste.
-- [x] **5.** Encadeamento e encerramento gravando `PATIENT`. *Pronto:* encadeamento
-      preparação → tutorial → treino no ar; fotografia de referência das métricas clínicas
-      capturada antes do deploy para a comparação antes/depois (ver abaixo).
+- [~] **5.** Encadeamento e encerramento gravando `PATIENT`. *Código pronto e no ar* (encadeamento
+      preparação → tutorial → treino; fotografia de referência capturada antes do deploy).
+      ⚠️ **O critério de pronto ainda NÃO foi cumprido:** ele exige que o registro daquele par
+      vire `PATIENT` **e** que nenhuma métrica clínica se mova — e isso só se mede **depois** que
+      alguém concluir um tutorial de verdade. Enquanto ninguém concluir, o status é DESCONHECIDO,
+      não "feito". A prova sai junto com a validação dela, rodando
+      `isolamento-tutorial.mjs --comparar`.
 - [ ] **6.** Gates, publicação e **validação dela**. *Gates e publicação: FEITOS* (todos verdes,
       **v2.77.0** no ar, smoke não destrutivo executado). **Falta apenas a validação visual e
       funcional dela** — só então o Span Direto vira o padrão oficial da T1.
@@ -55,6 +59,85 @@ planejamento…), reutilizando o mesmo framework.
 
 **Estado ao abrir o bloco:** nenhum passo iniciado. A janela de 05/ago fechou em ~90% logo após
 publicar a v2.76.0; a construção começa na janela seguinte, pelo passo 1.
+
+### O que foi entregue (v2.77.0)
+
+**v2.77.0, commits `7a475a4` (conversão), `75644d7` (paciente de teste), `a14724d` (bump).**
+Origem: **Codex `gpt-5.6-sol`, esforço high**, spec em
+`docs/specs/T1-span-direto-tutorial-SPEC.md`, **revisado linha a linha pelo VP**; lab `t1span` já
+removido.
+
+#### Arquitetura entregue (reutilizável pelos demais)
+
+- **`lib/tutorial/span-playback.ts`** — **fonte única** da cadência (**500 ms** inicial, **850 ms**
+  entre dígitos, **1000 ms** a partir de **6**). O **treino passa a importá-la**, de modo que
+  tutorial e treino **não possam divergir**.
+- **`lib/tutorial/definitions/span-numerico.tsx`** — demonstração e tentativa guiada **reusando
+  `Beads` e `NumberPad` do próprio exercício** (mecânica real, não imitação). A guiada é fixa em
+  **2 dígitos (nível 1)**, o **piso da mecânica**: abaixo do clínico para quem está acima do piso,
+  igual para quem começa — **não existe menor que ainda seja uma sequência**.
+- **`components/exercises/tutorial/TutorialRunner.tsx`** — a máquina
+  **`demo → guiada → feedback → confirmação`**. A repetição remonta **apenas** a `GuidedAttempt` por
+  chave incremental, com **sequência nova**, **sem voltar à demonstração**.
+- **`ExerciseWrapper`** — fase **`"tutorial"`** entre preparação e treino, com props **opcionais**;
+  suprime os blocos "Para que serve no dia a dia" e **"Estratégias"** da preparação quando há
+  tutorial, porque a preparação **não ensina estratégia cognitiva**.
+- **`ReadyScreen` do Span Direto** deixa de antecipar o comprimento da sequência; o **Inverso
+  preserva o texto antigo**, protegido por `reverse &&` — **não foi convertido**.
+
+#### Dois consertos do VP após a colheita
+
+1. O efeito da demonstração dependia de `onDone`; um callback recriado pelo pai **reiniciaria a
+   demonstração com a voz falando por cima de si mesma**. Corrigido com **ref**; há **teste
+   travando**.
+2. **Armadilha documentada para os próximos lotes:** a fase inicial do `ExerciseWrapper` é avaliada
+   **uma única vez** e `tutorialState` chega por **fetch depois**. Num exercício **sem tela de
+   instruções**, o tutorial **nunca apareceria**. Hoje **não morde** (o Span tem 4 instruções e
+   decide em `leaveInstructions()`), mas **ao converter um exercício sem instruções é preciso tratar
+   a espera explicitamente**. **Comentado no código e travado por teste.**
+
+#### Provas
+
+- **Gates:** `prisma validate` **OK** · `generate` **OK** · `tsc --noEmit` **exit 0** ·
+  **vitest 535/535** (eram **517**; **18 testes novos**) · `build` **exit 0** · `lint` **sem warning
+  novo** (o único é **pré-existente** em `PadroesRotacao.tsx`).
+- **Os outros 33 exercícios intactos:** dos **48 componentes de exercício** do repositório, **só
+  `SpanNumerico.tsx` foi tocado**. Sem as props novas, `needsTutorial` é `false`, `!tutorial` é
+  `true` (blocos funcionais seguem aparecendo) e a fase `"tutorial"` é **inalcançável**.
+- **Deploy:** **`appVersion 2.77.0`**, buildId **`dpl_2nN4Z18YizXY3pKDZy6mGfNRzo5D`**, health
+  **`{"ok": true}`**.
+- **Smoke não destrutivo:** `POST /api/exercise-tutorial` sem sessão → **401** ·
+  `GET /api/patients/x?config=true` → **401** · `/treino/span-numerico` → **307** · `/api/health` →
+  **200** · **áudio dos dígitos servido em produção** (`/exercises/audio/numeros/{1,5,9}.m4a` →
+  **200**).
+
+#### Paciente técnico de teste
+
+Criado por **`scripts/diagnostics/paciente-teste-t1.mjs`** (**idempotente**, com `--estado` e
+`--remover`): **código de acesso `COGZD3DRU`**, tema **CLINICAL**, **0 `ExerciseConfig`** e
+**0 `Session`** — por isso o **tutorial aparece naturalmente na primeira abertura**. **O PIN não é
+impresso em lugar nenhum**; está na **ficha do paciente no sistema**. **Não toca em paciente real**
+nem no registro **`BACKFILL`** existente. A licença do terapeuta é **`-1` (ilimitada)** e **não foi
+decrementada**.
+
+#### Fotografia de referência para a prova de isolamento
+
+Capturada **imediatamente antes do deploy**, por **`scripts/diagnostics/isolamento-tutorial.mjs`**:
+**`totalExerciseConfig 82` · `totalSession 33` · `totalAchievement 5` · `totalAlert 8` ·
+`somaCurrentDifficulty 117` · `somaTotalAttempts 34` ·
+`maxLastAttemptAt 2026-08-03T16:47:52.308Z` · `somaScore 2376,515878793786` ·
+`somaAccuracy 22,499144` · `comBackfill 16` · `comPatient 0`**.
+**Após a validação dela**, rodar o script de novo e comparar com **`--comparar`** para provar que
+**nenhuma métrica clínica se moveu** e que o registro do paciente de teste **passou a `PATIENT`**.
+
+#### ⏭️ PRÓXIMO PASSO — parado, aguardando ELA
+
+**Validação visual e funcional de oito pontos:** preparação · demonstração real por áudio ·
+tentativa guiada · feedback · repetição **apenas** da guiada em caso de erro · transição clara para
+o treino · **segunda abertura sem tutorial** · **nenhuma alteração em métrica clínica**.
+**Só após a aprovação** o Span Direto vira o **padrão oficial da T1** e começa a conversão por
+**grupos de interação** (áudio, clique, arrastar, planejamento). **O Span Inverso não foi convertido
+e não deve ser antes disso.**
 
 ## ✅ T1.0 — CÓDIGO REALINHADO AO BANCO E PUBLICADO (05/ago/2026) — `f9b8584`, v2.76.0
 
