@@ -14104,3 +14104,37 @@ não altere nenhum dado clínico;
 depois execute um teste completo de login usando esse mesmo paciente e comprove que a autenticação passou;
 somente depois voltamos à validação do tutorial do Span Direto.
 Não crie um novo paciente. Não altere a T1. Não publique nenhuma outra mudança além dessa correção.
+
+## 05/08/2026 23:17
+A validação visual revelou um defeito importante na demonstração do Span Direto.
+
+Hoje a demonstração apenas reproduz os números por áudio e logo avança. Isso demonstra o estímulo, mas não demonstra como o paciente deve responder.
+
+A demonstração precisa reproduzir a tarefa inteira, como no Cogmed:
+
+Exemplo:
+
+1. o sistema fala 2;
+2. o sistema fala 3;
+3. o teclado fica disponível;
+4. uma seta/cursor visual se desloca até o número 2 e simula o clique;
+5. depois se desloca até o número 3 e simula o clique;
+6. somente após os dois cliques a demonstração termina;
+7. aparece “Agora é sua vez”;
+8. inicia a tentativa guiada com uma nova sequência.
+
+Regras:
+
+- usar o mesmo teclado do exercício real;
+- a seta deve ser discreta, clara e animada;
+- o número clicado deve receber exatamente o mesmo feedback visual do treino real;
+- não exibir a sequência escrita durante a escuta;
+- os números só ficam visíveis porque fazem parte do teclado real;
+- a demonstração deve executar a resposta automaticamente;
+- a tentativa guiada continua sendo respondida pelo paciente;
+- não criar Session;
+- não alterar nenhuma métrica clínica;
+- não converter o Span Inverso;
+- não alterar a progressão clínica.
+
+Antes de publicar, apresente o fluxo visual implementado e pare para nova validação.
