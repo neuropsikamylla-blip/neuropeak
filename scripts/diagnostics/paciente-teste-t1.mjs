@@ -28,9 +28,11 @@
  * USO
  *   node scripts/diagnostics/paciente-teste-t1.mjs --estado   só consulta, não escreve (padrão)
  *   node scripts/diagnostics/paciente-teste-t1.mjs --criar-com-autorizacao   cria
+ *   node scripts/diagnostics/paciente-teste-t1.mjs --corrigir-codigo  conserta só o patientCode
  *   node scripts/diagnostics/paciente-teste-t1.mjs --remover  apaga o paciente de teste
  */
 import { readFileSync } from "node:fs";
+import { randomInt } from "node:crypto";
 
 for (const arquivo of [".env.local", ".env"]) {
   try {
@@ -57,20 +59,36 @@ const bcrypt = (await import("bcryptjs")).default;
 
 const prisma = new PrismaClient();
 
-/** Mesmo formato da aplicação: 6 dígitos. Reimplementado porque o script é .mjs e lib/ é TS. */
+/**
+ * ⚠️ LIÇÃO DE 05/ago/2026: a primeira versão deste script INVENTOU o formato do código
+ * (`COG` + 6 caracteres alfanuméricos) e o paciente técnico ficou impossível de autenticar. O
+ * provider `patient-pin` (`lib/auth.ts`) só trata o texto como código quando ele casa
+ * `/^COG\d{4,6}$/`; qualquer outro formato é tratado como id (cuid), não encontra ninguém e
+ * devolve "ID de paciente ou PIN incorretos" — antes mesmo de olhar o PIN.
+ *
+ * Estas funções agora replicam FIELMENTE `generatePin` e `generatePatientCode` de `lib/utils.ts`
+ * (o script é .mjs e não importa TypeScript), e o código gerado é conferido contra o mesmo regex
+ * do login antes de ser usado. Se divergir, o script para em vez de gravar credencial inútil.
+ */
+const REGEX_DO_LOGIN = /^COG\d{4,6}$/; // cópia literal de lib/auth.ts
+
+/** Igual a generatePin(): CSPRNG, 6 dígitos (100000–999999). */
 function gerarPin() {
-  return String(Math.floor(100000 + Math.random() * 900000));
+  return randomInt(100000, 1000000).toString();
 }
 
-/** Mesmo formato da aplicação: COG + 6 caracteres. Repete até não colidir. */
+/** Igual a generatePatientCode(): CSPRNG, 5 dígitos (10000–99999) prefixados com COG. */
+function gerarCodigo() {
+  return `COG${randomInt(10000, 100000).toString()}`;
+}
+
+/** Repete até não colidir. Recusa qualquer código que o login não saberia interpretar. */
 async function gerarCodigoUnico() {
-  const alfabeto = "ABCDEFGHJKLMNPQRSTUVWXYZ23456789";
   for (let tentativa = 0; tentativa < 40; tentativa++) {
-    let sufixo = "";
-    for (let i = 0; i < 6; i++) {
-      sufixo += alfabeto[Math.floor(Math.random() * alfabeto.length)];
+    const codigo = gerarCodigo();
+    if (!REGEX_DO_LOGIN.test(codigo)) {
+      throw new Error(`código "${codigo}" não casa o regex do login — geração abortada`);
     }
-    const codigo = `COG${sufixo}`;
     const existe = await prisma.patient.findUnique({ where: { patientCode: codigo } });
     if (!existe) return codigo;
   }
@@ -106,6 +124,36 @@ try {
       // Os filhos de Patient são onDelete: Cascade — configs e sessions do teste vão junto.
       await prisma.patient.delete({ where: { id: existente.id } });
       console.log(`Paciente de teste removido (id ${existente.id}).`);
+    }
+  } else if (modo === "--corrigir-codigo") {
+    // Conserta APENAS o patientCode de um paciente técnico cujo código não casa o regex do login.
+    // Não toca em pin, pinPlain, id, nome, tema nem em nada clínico.
+    if (!existente) throw new Error("o paciente de teste não existe");
+    if (REGEX_DO_LOGIN.test(existente.patientCode ?? "")) {
+      console.log(`Nada a corrigir: ${existente.patientCode} já é um código válido.`);
+    } else {
+      const novo = await gerarCodigoUnico();
+      const antes = await prisma.patient.findUnique({ where: { id: existente.id } });
+      const depois = await prisma.patient.update({
+        where: { id: existente.id },
+        data: { patientCode: novo },
+      });
+
+      // Prova de que só o código mudou: todo o resto tem de bater campo a campo.
+      const intactos = Object.keys(antes).filter((campo) => campo !== "patientCode" && campo !== "updatedAt");
+      const divergentes = intactos.filter(
+        (campo) => String(antes[campo]) !== String(depois[campo]),
+      );
+
+      console.log("PATIENTCODE CORRIGIDO\n");
+      console.log(`  id ............ ${depois.id} (inalterado)`);
+      console.log(`  código antes .. ${existente.patientCode}  → casa o regex do login: false`);
+      console.log(`  código agora .. ${depois.patientCode}  → casa o regex do login: ${REGEX_DO_LOGIN.test(depois.patientCode)}`);
+      console.log(`  pin (hash) .... ${antes.pin === depois.pin ? "INALTERADO" : "*** MUDOU ***"}`);
+      console.log(`  pinPlain ...... ${antes.pinPlain === depois.pinPlain ? "INALTERADO" : "*** MUDOU ***"}`);
+      console.log(`  demais campos . ${divergentes.length === 0 ? "todos inalterados" : `*** DIVERGEM: ${divergentes.join(", ")} ***`}`);
+      console.log(`  (updatedAt muda por definição: é carimbo automático do Prisma)`);
+      if (divergentes.length > 0) process.exitCode = 1;
     }
   } else if (modo === "--estado") {
     if (!existente) console.log("O paciente de teste ainda não existe.");

@@ -226,3 +226,31 @@ describe("T1 congelada — 4. a guiada deriva da mecânica, não de um número",
     // que é exatamente o ponto: a unidade acompanha a mecânica, e a mudança não passa calada.
   });
 });
+
+describe("credencial do paciente técnico — regressão de 05/ago/2026", () => {
+  // A primeira versão do script inventou o formato do código (COG + 6 alfanuméricos) e o paciente
+  // ficou impossível de autenticar: o provider só trata como código o que casa /^COG\d{4,6}$/, e
+  // qualquer outra coisa vira busca por id — que não acha ninguém e devolve "PIN incorreto" sem
+  // sequer comparar o PIN.
+  it("o script gera código no formato que o provider reconhece", () => {
+    const script = source("scripts/diagnostics/paciente-teste-t1.mjs");
+
+    // Mesmo gerador da aplicação: 5 dígitos por CSPRNG, prefixados com COG.
+    expect(script).toMatch(/randomInt\(10000, 100000\)/);
+    expect(script).toMatch(/`COG\$\{randomInt\(10000, 100000\)\.toString\(\)\}`/);
+    // Nada de alfabeto com letras.
+    expect(script).not.toMatch(/ABCDEFGHJKLMNPQRSTUVWXYZ/);
+    // E confere o resultado contra o regex do login antes de usar — fail-closed.
+    expect(script).toMatch(/REGEX_DO_LOGIN\s*=\s*\/\^COG\\d\{4,6\}\$\//);
+    expect(script).toMatch(/não casa o regex do login — geração abortada/);
+  });
+
+  it("o regex copiado no script é idêntico ao do provider", () => {
+    const auth = source("lib/auth.ts");
+    const script = source("scripts/diagnostics/paciente-teste-t1.mjs");
+    const extrair = (fonte: string) => fonte.match(/\/\^COG\\d\{4,6\}\$\//)?.[0];
+
+    expect(extrair(auth)).toBeDefined();
+    expect(extrair(script)).toBe(extrair(auth));
+  });
+});
