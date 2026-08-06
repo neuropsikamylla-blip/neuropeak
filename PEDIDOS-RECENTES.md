@@ -1,13 +1,6 @@
 # As 3 ultimas especificacoes dela (automatico; a mais nova por ultimo)
 # Na retomada: ler as 3, conectar com PROGRESSO.md e git, declarar e seguir.
 
-## COMO PROVEI
-
-- `grep -n "^## " PROGRESSO.md | head -4` (exit 0): confirma a nova seção na linha 6, a antiga na 95 com o título ajustado, e a ordem cronológica preservada (incidente 05/ago na 161, fase T1 de 04/ago na 264).
-- `git diff --stat PROGRESSO.md` (exit 0): `1 file changed, 90 insertions(+), 1 deletion(-)` — nenhum outro arquivo alterado.
-- `git diff -U0 PROGRESSO.md | grep "^-"`: a **única** linha removida é o título antigo. Prova de que o corpo da seção antiga ficou intacto.
-- `git status --porcelain`: apenas ` M PROGRESSO.md`.
-
 ## O QUE NÃO FIZ
 
 - Não commitei nem dei push — o working tree segue com `PROGRESSO.md` modificado, pronto para o commit do VP.
@@ -49,3 +42,43 @@ toda a arquitetura criada para esse exercício deverá ser reutilizada pelos dem
 Ainda não converter o Span Inverso nem qualquer outro exercício.
 Quero primeiro validar visualmente e funcionalmente o Span Direto.
 Depois de aprovado, ele passa a ser o padrão oficial da T1 e então converteremos os exercícios por grupos de interação (áudio, clique, arrastar, planejamento etc.), reutilizando o mesmo framework.
+
+## 05/08/2026 22:03
+Continue exatamente do bloco EM ANDAMENTO registrado no PROGRESSO.md e da especificação:
+
+docs/T1-SPAN-DIRETO-EXERCICIO-DE-REFERENCIA.md
+
+Não reabra decisões já aprovadas.
+
+Implemente somente o Span Numérico Auditivo Direto como exercício de referência da T1.
+
+O fluxo obrigatório é:
+
+Preparação
+→ demonstração com a mecânica real de áudio
+→ tentativa guiada
+→ feedback e repetição em caso de erro
+→ confirmação de conclusão
+→ treino clínico real
+
+Regras:
+
+- não converter o Span Inverso;
+- não converter nenhum outro exercício;
+- não alterar a mecânica clínica ou a progressão do Span nesta etapa;
+- não criar Session durante o tutorial;
+- não alterar currentDifficulty, totalAttempts, lastAttemptAt, pontuação, acurácia ou métricas clínicas;
+- não exibir os números escritos durante a apresentação auditiva;
+- a tentativa guiada deve usar dificuldade abaixo da clínica;
+- ao concluir, gravar tutorialSource = PATIENT;
+- segunda abertura deve pular o tutorial automaticamente.
+
+Antes de publicar:
+
+- revisar o diff;
+- rodar prisma validate e generate;
+- rodar TypeScript;
+- rodar a suíte completa;
+- rodar o build;
+- provar o isolamento clínico comparando os dados antes e depois;
+- parar para minha validação visual antes de converter qualquer outro exercício.

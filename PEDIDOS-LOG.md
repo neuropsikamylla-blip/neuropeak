@@ -13923,3 +13923,43 @@ toda a arquitetura criada para esse exercício deverá ser reutilizada pelos dem
 Ainda não converter o Span Inverso nem qualquer outro exercício.
 Quero primeiro validar visualmente e funcionalmente o Span Direto.
 Depois de aprovado, ele passa a ser o padrão oficial da T1 e então converteremos os exercícios por grupos de interação (áudio, clique, arrastar, planejamento etc.), reutilizando o mesmo framework.
+
+## 05/08/2026 22:03
+Continue exatamente do bloco EM ANDAMENTO registrado no PROGRESSO.md e da especificação:
+
+docs/T1-SPAN-DIRETO-EXERCICIO-DE-REFERENCIA.md
+
+Não reabra decisões já aprovadas.
+
+Implemente somente o Span Numérico Auditivo Direto como exercício de referência da T1.
+
+O fluxo obrigatório é:
+
+Preparação
+→ demonstração com a mecânica real de áudio
+→ tentativa guiada
+→ feedback e repetição em caso de erro
+→ confirmação de conclusão
+→ treino clínico real
+
+Regras:
+
+- não converter o Span Inverso;
+- não converter nenhum outro exercício;
+- não alterar a mecânica clínica ou a progressão do Span nesta etapa;
+- não criar Session durante o tutorial;
+- não alterar currentDifficulty, totalAttempts, lastAttemptAt, pontuação, acurácia ou métricas clínicas;
+- não exibir os números escritos durante a apresentação auditiva;
+- a tentativa guiada deve usar dificuldade abaixo da clínica;
+- ao concluir, gravar tutorialSource = PATIENT;
+- segunda abertura deve pular o tutorial automaticamente.
+
+Antes de publicar:
+
+- revisar o diff;
+- rodar prisma validate e generate;
+- rodar TypeScript;
+- rodar a suíte completa;
+- rodar o build;
+- provar o isolamento clínico comparando os dados antes e depois;
+- parar para minha validação visual antes de converter qualquer outro exercício.
