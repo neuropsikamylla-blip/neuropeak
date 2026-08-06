@@ -142,11 +142,11 @@ Vitest com `environment: node` — **não importar `.tsx`**; usar verificação 
 6. A demonstração usa `smallestValidUnit`/`SMALLEST_VALID_UNIT`, nunca um literal.
 7. O efeito continua com `onDoneRef.current()` e array de dependências vazio.
 8. `Demonstration` mantém `interactive={false}` na fase de resposta **e** bloqueia toques com
-    `pointer-events: none` no container — o paciente não consegue clicar antes da guiada.
-11. A ordem do gesto é estrita: soltar e preencher a bolinha são passos separados, e o
-    preenchimento vem **depois** do soltar (regra dela, item 2).
-9. Nenhum termo clínico proibido (`onComplete`, `score`, `accuracy`, `useTimedProgress`, `lib/adaptive`).
-10. Toda a suíte continua verde — **549/549 é o piso**.
+   `pointer-events: none` no container — o paciente não consegue clicar antes da guiada.
+9. A ordem do gesto é estrita: soltar e preencher a bolinha são passos separados, e o preenchimento
+   vem **depois** do soltar (regra dela, item 2).
+10. Nenhum termo clínico proibido (`onComplete`, `score`, `accuracy`, `useTimedProgress`, `lib/adaptive`).
+11. Toda a suíte continua verde — **549/549 é o piso**.
 
 ## 5. Gates
 
