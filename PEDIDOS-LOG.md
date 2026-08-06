@@ -14138,3 +14138,22 @@ Regras:
 - não alterar a progressão clínica.
 
 Antes de publicar, apresente o fluxo visual implementado e pare para nova validação.
+
+## 05/08/2026 23:21
+O desenho está aprovado.
+
+Acrescente apenas duas regras antes da implementação final:
+
+1. Durante a resposta demonstrada, o teclado não pode aceitar cliques reais do paciente.
+A interação deve permanecer bloqueada até o início da tentativa guiada.
+
+2. O cursor deve indicar claramente o pressionar e o soltar:
+- desloca até a tecla;
+- pressiona;
+- a tecla recebe o mesmo feedback visual do treino;
+- solta;
+- só então a bolinha correspondente é preenchida.
+
+Não quero que o cursor apenas passe por cima da tecla ou que a bolinha preencha antes do clique visual terminar.
+
+Depois conclua a implementação, rode os gates e pare para minha validação visual sem publicar.

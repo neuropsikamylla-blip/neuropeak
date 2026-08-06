@@ -1,42 +1,6 @@
 # As 3 ultimas especificacoes dela (automatico; a mais nova por ultimo)
 # Na retomada: ler as 3, conectar com PROGRESSO.md e git, declarar e seguir.
 
-## 05/08/2026 23:07
-Pare a validação do tutorial.
-
-O paciente técnico COGZD3DRU existe e aparece no painel, mas o login retorna:
-
-“ID de paciente ou PIN incorretos.”
-
-Investigue exclusivamente a credencial desse paciente de teste.
-
-Quero evidência objetiva:
-
-1. Confirmar que o código COGZD3DRU existe no banco de produção.
-2. Confirmar qual campo é usado no login:
-   - patientCode;
-   - userId;
-   - outro identificador.
-3. Comparar o fluxo de criação manual de paciente com o script paciente-teste-t1.mjs.
-4. Verificar se o PIN exibido no painel corresponde ao hash salvo no banco.
-5. Testar o bcrypt.compare com:
-   - PIN exibido;
-   - hash armazenado.
-6. Confirmar se o script gravou pin e pinPlain nos campos corretos.
-7. Verificar se há normalização de código ou PIN no endpoint de login.
-8. Identificar o primeiro ponto exato em que a autenticação falha.
-
-Não crie outro paciente.
-Não altere tutorial.
-Não publique correção por hipótese.
-
-Se o problema estiver apenas no PIN do paciente técnico, proponha a correção mínima:
-- gerar novo PIN pelo fluxo oficial da aplicação;
-- manter o mesmo paciente e o mesmo código;
-- não alterar nenhum dado clínico.
-
-Pare após apresentar a causa raiz.
-
 ## 05/08/2026 23:11
 A causa raiz ficou comprovada.
 Não quero criar outro paciente e não quero usar a estratégia de limpar o patientCode.
@@ -82,3 +46,22 @@ Regras:
 - não alterar a progressão clínica.
 
 Antes de publicar, apresente o fluxo visual implementado e pare para nova validação.
+
+## 05/08/2026 23:21
+O desenho está aprovado.
+
+Acrescente apenas duas regras antes da implementação final:
+
+1. Durante a resposta demonstrada, o teclado não pode aceitar cliques reais do paciente.
+A interação deve permanecer bloqueada até o início da tentativa guiada.
+
+2. O cursor deve indicar claramente o pressionar e o soltar:
+- desloca até a tecla;
+- pressiona;
+- a tecla recebe o mesmo feedback visual do treino;
+- solta;
+- só então a bolinha correspondente é preenchida.
+
+Não quero que o cursor apenas passe por cima da tecla ou que a bolinha preencha antes do clique visual terminar.
+
+Depois conclua a implementação, rode os gates e pare para minha validação visual sem publicar.
