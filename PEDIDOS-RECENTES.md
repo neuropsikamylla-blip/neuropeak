@@ -1,15 +1,6 @@
 # As 3 ultimas especificacoes dela (automatico; a mais nova por ultimo)
 # Na retomada: ler as 3, conectar com PROGRESSO.md e git, declarar e seguir.
 
-## O QUE NÃO FIZ
-
-- Não commitei nem dei push (o commit `3ce6448` é do hook automático dela, não meu).
-- Não rodei gates (`test`, `build`, `tsc`, `lint`), nem os scripts `paciente-teste-t1.mjs` / `isolamento-tutorial.mjs`, nem nada contra o banco — todos os números vieram do despacho e foram transcritos como recebidos, sem verificação independente.
-- Não toquei em `CLAUDE.md`, `ESTADO-DO-PROJETO.md`, memória, docs, código ou configuração.
-- Não alterei o texto histórico do bloco ("Estado ao abrir o bloco: nenhum passo iniciado" segue como registro da abertura — a nova subseção o supera; se o VP quiser, esse parágrafo pode ser reescrito).</result>
-<usage><subagent_tokens>36375</subagent_tokens><tool_uses>9</tool_uses><duration_ms>132410</duration_ms></usage>
-</task-notification>
-
 ## 05/08/2026 22:45
 Ótimo.
 Antes da validação visual, quero congelar quatro decisões da T1:
@@ -67,3 +58,15 @@ Se o problema estiver apenas no PIN do paciente técnico, proponha a correção 
 - não alterar nenhum dado clínico.
 
 Pare após apresentar a causa raiz.
+
+## 05/08/2026 23:11
+A causa raiz ficou comprovada.
+Não quero criar outro paciente e não quero usar a estratégia de limpar o patientCode.
+Faça a correção mínima:
+corrija o script paciente-teste-t1.mjs para reutilizar o gerador oficial de patientCode;
+atualize apenas o patientCode do paciente técnico já existente para um código válido no formato oficial da aplicação;
+mantenha o mesmo id, o mesmo PIN e todos os demais dados exatamente como estão;
+não altere nenhum dado clínico;
+depois execute um teste completo de login usando esse mesmo paciente e comprove que a autenticação passou;
+somente depois voltamos à validação do tutorial do Span Direto.
+Não crie um novo paciente. Não altere a T1. Não publique nenhuma outra mudança além dessa correção.

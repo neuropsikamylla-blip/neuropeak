@@ -14092,3 +14092,15 @@ Se o problema estiver apenas no PIN do paciente técnico, proponha a correção 
 - não alterar nenhum dado clínico.
 
 Pare após apresentar a causa raiz.
+
+## 05/08/2026 23:11
+A causa raiz ficou comprovada.
+Não quero criar outro paciente e não quero usar a estratégia de limpar o patientCode.
+Faça a correção mínima:
+corrija o script paciente-teste-t1.mjs para reutilizar o gerador oficial de patientCode;
+atualize apenas o patientCode do paciente técnico já existente para um código válido no formato oficial da aplicação;
+mantenha o mesmo id, o mesmo PIN e todos os demais dados exatamente como estão;
+não altere nenhum dado clínico;
+depois execute um teste completo de login usando esse mesmo paciente e comprove que a autenticação passou;
+somente depois voltamos à validação do tutorial do Span Direto.
+Não crie um novo paciente. Não altere a T1. Não publique nenhuma outra mudança além dessa correção.
