@@ -3,6 +3,55 @@
 > Checkpoint de contexto para continuidade entre sessões. Atualizado automaticamente.
 > 👉 Visão geral e handoff para o próximo Claude: **`ESTADO-DO-PROJETO.md`** (leia primeiro).
 
+## 🚧 EM ANDAMENTO — T1: Span Direto como exercício de referência (aberto 05/ago/2026)
+
+**Spec dela:** `docs/T1-SPAN-DIRETO-EXERCICIO-DE-REFERENCIA.md` (fluxo nas palavras dela).
+
+**A estratégia mudou.** Não converter os 34 exercícios agora. Construir e validar o **padrão
+definitivo** em **um** exercício: o **Span Numérico Auditivo Direto**. ⛔ **Nada além dele** — nem o
+Span Inverso — até a validação visual e funcional dela.
+
+**O que a validação dela mostrou:** a infraestrutura da T1 funciona (v2.76.0), mas **nenhum
+exercício foi convertido**. Span Direto e Inverso seguem na antiga tela de instruções, e **isso não
+é o tutorial da T1**.
+
+**Fluxo exigido:** PREPARAÇÃO (só o essencial para interagir; **nunca** estratégia cognitiva) →
+TUTORIAL (demonstração com a **mecânica real** · tentativa guiada · feedback · repetir **apenas a
+tentativa guiada** em caso de erro · encerramento) → TREINO (primeira tentativa clínica).
+**A preparação deixa de se chamar tutorial**; são **duas etapas diferentes**; e a arquitetura criada
+aqui **será reutilizada pelos demais**.
+
+**Isolamento clínico inegociável:** o tutorial não influencia `Session`, `currentDifficulty`,
+`totalAttempts`, `lastAttemptAt`, pontuação ou qualquer métrica clínica. Já travado no servidor
+(rota + testes); **falta a mesma garantia no cliente**.
+
+**A fundação já existe** — falta o conteúdo e a ligação, não a base: `lib/tutorial/types.ts` já
+exige `Demonstration`/`GuidedAttempt`/`retryHint`; `state.ts` decide por versão; `versions.ts` tem
+os 34 (`span-numerico` = 1); rota, colunas e backfill no ar; `PreparationScreen.tsx` e
+`TutorialBase.tsx` existem. **Não existem:** o `TutorialDefinition` concreto do Span e o
+encadeamento preparação → tutorial → treino.
+
+**Passos (cada um termina com prova rodada e commit):**
+
+- [ ] **1.** Ler a mecânica real do Span Direto — áudio, entrada da resposta, fim da tela de
+      instruções. *Pronto:* pontos de entrada identificados por arquivo e linha.
+- [ ] **2.** Separar preparação de tutorial. *Pronto:* teste estático provando que a preparação não
+      diz "tutorial" nem ensina estratégia.
+- [ ] **3.** `Demonstration` com a mecânica real. *Pronto:* roda sem tocar score nem progressão,
+      com teste de isolamento.
+- [ ] **4.** `GuidedAttempt` com feedback e repetição só da guiada. *Pronto:* teste dos dois
+      caminhos (acerto encerra, erro repete só a guiada).
+- [ ] **5.** Encadeamento e encerramento gravando `PATIENT`. *Pronto:* o `BACKFILL` daquele par vira
+      `PATIENT` e **nenhuma métrica clínica se move** (comparar antes/depois).
+- [ ] **6.** Gates, publicação e **validação dela**. *Pronto:* ela aprova visual e funcionalmente —
+      só então o Span Direto vira o padrão oficial da T1.
+
+**Depois da aprovação (não antes):** converter por **grupos de interação** (áudio, clique, arrastar,
+planejamento…), reutilizando o mesmo framework.
+
+**Estado ao abrir o bloco:** nenhum passo iniciado. A janela de 05/ago fechou em ~90% logo após
+publicar a v2.76.0; a construção começa na janela seguinte, pelo passo 1.
+
 ## ✅ T1.0 — CÓDIGO REALINHADO AO BANCO E PUBLICADO (05/ago/2026) — `f9b8584`, v2.76.0
 
 **Publicado na Vercel.** Esta seção **supera** a seção seguinte (banco alterado, código pendente): o
