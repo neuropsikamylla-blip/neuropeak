@@ -33,7 +33,7 @@ encadeamento preparação → tutorial → treino.
 
 **Passos (cada um termina com prova rodada e commit):**
 
-- [ ] **1.** Ler a mecânica real do Span Direto — áudio, entrada da resposta, fim da tela de
+- [x] **1.** Ler a mecânica real do Span Direto — áudio, entrada da resposta, fim da tela de
       instruções. *Pronto:* pontos de entrada identificados por arquivo e linha.
 - [ ] **2.** Separar preparação de tutorial. *Pronto:* teste estático provando que a preparação não
       diz "tutorial" nem ensina estratégia.
