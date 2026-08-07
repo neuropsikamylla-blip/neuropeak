@@ -1,5 +1,14 @@
 # T1 — plano de conversão dos 34 exercícios
 
+> ⚠️ **SUPERADO EM 07/ago/2026 pelo agrupamento por FAMÍLIA DE MECÂNICA.**
+> Ver `docs/T1-FAMILIAS-DE-MECANICA.md`.
+>
+> Os "lotes por interação" abaixo agrupavam por gesto genérico, e isso se mostrou errado ao
+> verificar o código: o lote 2 juntava `desafio-supermercado` (seleção sem ordem) e `antes-depois`
+> (sem áudio) com exercícios de sequência — mecânicas de tutorial diferentes. No modelo de validação
+> por representante, esse agrupamento faria ela aprovar um exercício que não representa os demais.
+> O Lote 0 e o Lote 1 permanecem válidos e concluídos.
+
 > Autorizado por ela em **07/ago/2026**, com o Span Direto aprovado como exercício de referência.
 > Regras que toda conversão deve cumprir: `docs/T1-REGRAS-GLOBAIS.md`.
 
