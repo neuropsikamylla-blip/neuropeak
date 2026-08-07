@@ -1,21 +1,6 @@
 # As 3 ultimas especificacoes dela (automatico; a mais nova por ultimo)
 # Na retomada: ler as 3, conectar com PROGRESSO.md e git, declarar e seguir.
 
-## 07/08/2026 16:15
-Pode seguir exatamente nesse modelo.
-Família 1 já está aprovada pelo padrão do Span, então converta os exercícios restantes dessa família sem nova validação.
-Depois, para cada nova família:
-converta todos os exercícios da família;
-escolha um representante;
-pare apenas para eu validar esse representante;
-se estiver aprovado, considere toda a família aprovada e siga para a próxima.
-Não quero checkpoints exercício por exercício.
-Só pare fora desse fluxo se surgir:
-incompatibilidade real de mecânica;
-necessidade de exceção ao framework;
-ou alteração arquitetural nova.
-Pode seguir.
-
 ## 07/08/2026 16:33
 <task-notification>
 <task-id>bn5pv57fm</task-id>
@@ -41,3 +26,12 @@ padroes-rotacao.
 Converta os quatro utilizando uma única fábrica para essa mecânica, sem alterar a mecânica clínica.
 Depois publique e pare apenas para eu validar o matriz-espacial como representante da Família 2.
 Não preciso validar os outros três se forem realmente a mesma mecânica de tutorial.
+
+## 07/08/2026 17:07
+<task-notification>
+<task-id>bf08d1pw6</task-id>
+<tool-use-id>toolu_011suVkTzCMFCoLUCLEFEAPz</tool-use-id>
+<output-file>/private/tmp/claude-501/-Users-kamyllahonorio-neuropeak/3e6ecf11-e4e5-471f-bbf9-4595faa53598/tasks/bf08d1pw6.output</output-file>
+<status>completed</status>
+<summary>Background command "Disparar o Codex para a Família 2" completed (exit code 0)</summary>
+</task-notification>
