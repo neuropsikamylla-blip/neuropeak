@@ -29,6 +29,12 @@ import {
   matrizEspacialTutorial,
   padroesRotacaoTutorial,
 } from "@/lib/tutorial/definitions/sequencia-espacial";
+import {
+  desafioSupermercadoTutorial,
+  jogoMemoriaTutorial,
+  listaDistracaoTutorial,
+  restauranteOrdemTutorial,
+} from "@/lib/tutorial/definitions/conjunto-selecao";
 import type { TutorialDefinition } from "@/lib/tutorial/types";
 import type { TutorialState } from "@/lib/tutorial/state";
 
@@ -47,6 +53,10 @@ const TUTORIAIS_POR_EXERCICIO: Readonly<Record<string, TutorialDefinition>> = Ob
   "matriz-espacial-inversa": matrizEspacialInversaTutorial,
   "cubo-corsi": cuboCorsiTutorial,
   "padroes-rotacao": padroesRotacaoTutorial,
+  "desafio-supermercado": desafioSupermercadoTutorial,
+  "lista-distracao": listaDistracaoTutorial,
+  "jogo-memoria": jogoMemoriaTutorial,
+  "restaurante-ordem": restauranteOrdemTutorial,
 });
 
 function ExerciseLoader() {

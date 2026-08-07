@@ -18,8 +18,8 @@ interface RestauranteOrdemProps {
 }
 
 // ── Itens (foto: /exercises/restaurante/<id>.png) ─────────────────────────────────
-interface Item { id: string; n: string; art: string; }
-const ITEMS: Item[] = [
+export interface RestauranteItem { id: string; n: string; art: string; }
+const ITEMS: RestauranteItem[] = [
   { id: "agua", n: "Água", art: "uma" }, { id: "agua-coco", n: "Água de coco", art: "uma" },
   { id: "refrigerante", n: "Refrigerante", art: "um" }, { id: "suco-laranja", n: "Suco", art: "um" },
   { id: "vitamina", n: "Vitamina", art: "uma" }, { id: "arroz-feijao", n: "Arroz e feijão", art: "um" },
@@ -43,7 +43,8 @@ const CLEAR_IDS = [
   "sopa", "lasanha", "risoto-cogumelo", "nuggets", "mousse", "pudim", "bolo", "pizza", "hamburguer",
   "frango-batata", "bife-legumes", "omelete", "sorvete", "tapioca", "pao-queijo",
 ];
-const CLEAR: Item[] = CLEAR_IDS.map((id) => ITEM_MAP.get(id)!).filter(Boolean);
+const CLEAR: RestauranteItem[] = CLEAR_IDS.map((id) => ITEM_MAP.get(id)!).filter(Boolean);
+export const RESTAURANTE_TUTORIAL_CHOICES = CLEAR.slice(0, 5);
 
 const IMG_V = "?v=3";
 const photo = (id: string) => `/exercises/restaurante/${id}.png${IMG_V}`;
@@ -125,7 +126,11 @@ const R_LEVELS: Record<number, RLevel> = {
   10: { group: "B", items: 3, order: true,       update: false, mesas: 2 }, // 2 mesas em sequência
 };
 const MAX_LEVEL = 10;
+export const RESTAURANTE_ORDEM_MIN_LEVEL = 1;
 const levelOf = (d: number): number => Math.max(1, Math.min(MAX_LEVEL, Math.round(d) || 1));
+export function restauranteOrdemItemsForLevel(level: number): number {
+  return R_LEVELS[levelOf(level)].items;
+}
 const memoSecsFor = (n: number): number => Math.max(7, Math.round(4 + n * 1.5)); // tempo escala com o pedido
 const distractorsFor = (n: number): number => Math.min(7, Math.max(3, n + 2));
 
@@ -134,9 +139,9 @@ function shuffle<T>(a: T[]): T[] { const r = [...a]; for (let i = r.length - 1; 
 function joinList(parts: string[]): string {
   return parts.length <= 1 ? (parts[0] ?? "") : parts.slice(0, -1).join(", ") + " e " + parts[parts.length - 1];
 }
-function uniqById(arr: Item[]): Item[] { const s = new Set<string>(); const o: Item[] = []; for (const x of arr) if (!s.has(x.id)) { s.add(x.id); o.push(x); } return o; }
-function defArt(it: Item): string { return it.art === "uma" ? "a" : it.art === "uns" ? "os" : "o"; }
-function pelo(it: Item): string { const d = defArt(it); return d === "a" ? "pela" : d === "os" ? "pelos" : "pelo"; }
+function uniqById(arr: RestauranteItem[]): RestauranteItem[] { const s = new Set<string>(); const o: RestauranteItem[] = []; for (const x of arr) if (!s.has(x.id)) { s.add(x.id); o.push(x); } return o; }
+function defArt(it: RestauranteItem): string { return it.art === "uma" ? "a" : it.art === "uns" ? "os" : "o"; }
+function pelo(it: RestauranteItem): string { const d = defArt(it); return d === "a" ? "pela" : d === "os" ? "pelos" : "pelo"; }
 function sameMultiset(a: string[], b: string[]): boolean {
   if (a.length !== b.length) return false;
   const sa = [...a].sort(), sb = [...b].sort();
@@ -145,16 +150,16 @@ function sameMultiset(a: string[], b: string[]): boolean {
 
 // ── Geração da rodada ────────────────────────────────────────────────────────────
 type UpdKind = "swap" | "add" | "remove";
-interface UpdInfo { kind: UpdKind; oldItem?: Item; newItem?: Item; }
-interface Mesa { scene: Scene; order: Item[]; finalOrder: Item[]; update?: UpdInfo; }
-interface Round { mesas: Mesa[]; called: number; keys: Item[]; orderRequired: boolean; }
+interface UpdInfo { kind: UpdKind; oldItem?: RestauranteItem; newItem?: RestauranteItem; }
+interface Mesa { scene: Scene; order: RestauranteItem[]; finalOrder: RestauranteItem[]; update?: UpdInfo; }
+interface Round { mesas: Mesa[]; called: number; keys: RestauranteItem[]; orderRequired: boolean; }
 
 function buildRound(level: number): Round {
   const sp = R_LEVELS[level];
   const orderRequired = sp.order === true ? true : sp.order === "as_vezes" ? Math.random() < 0.5 : false;
   const pool = shuffle(CLEAR);
   let pi = 0;
-  const take = (k: number) => { const out: Item[] = []; while (out.length < k && pi < pool.length) out.push(pool[pi++]); return out; };
+  const take = (k: number) => { const out: RestauranteItem[] = []; while (out.length < k && pi < pool.length) out.push(pool[pi++]); return out; };
 
   const mesas: Mesa[] = [];
   for (let m = 0; m < sp.mesas; m++) {
@@ -210,7 +215,7 @@ function orderSpeech(mesa: Mesa, mesaNum: number): string {
 }
 
 // ── Validação ──────────────────────────────────────────────────────────────────────
-function validate(placed: Item[], mesa: Mesa, orderRequired: boolean): { ok: boolean; msg: string } {
+function validate(placed: RestauranteItem[], mesa: Mesa, orderRequired: boolean): { ok: boolean; msg: string } {
   const exp = mesa.finalOrder.map((i) => i.id);
   const got = placed.map((i) => i.id);
   const expSet = new Set(exp), gotSet = new Set(got);
@@ -269,7 +274,7 @@ function setAmbienceMuted(muted: boolean) {
 
 // ── Plaquinha do pedido (dinâmica, sobre a cena) ──────────────────────────────────
 function OrderCard({ mesaNum, scene, items, numbered, hideItems }: {
-  mesaNum: number; scene: Scene; items: Item[]; numbered: boolean; hideItems: boolean;
+  mesaNum: number; scene: Scene; items: RestauranteItem[]; numbered: boolean; hideItems: boolean;
 }) {
   const rel = relText(scene.rel, scene.names);
   return (
@@ -300,7 +305,7 @@ function OrderCard({ mesaNum, scene, items, numbered, hideItems }: {
 }
 
 // ── Bandeja — vagas numeradas (quando exige ordem) ou simples ─────────────────────
-function Tray({ items, slots, numbered }: { items: Item[]; slots: number; numbered: boolean }) {
+function Tray({ items, slots, numbered }: { items: RestauranteItem[]; slots: number; numbered: boolean }) {
   const n = Math.max(slots, items.length, 1);
   const sz = n >= 4 ? { item: 64, gap: 8 } : n === 3 ? { item: 78, gap: 10 } : { item: 104, gap: 14 };
   const Handle = ({ side }: { side: "left" | "right" }) => (
@@ -353,6 +358,68 @@ function Tray({ items, slots, numbered }: { items: Item[]; slots: number; number
   );
 }
 
+export function RestauranteOrdemBoard({
+  choices,
+  selectedItems,
+  slots,
+  numbered = false,
+  interactive,
+  onChoice,
+  pressedChoice,
+}: {
+  choices: RestauranteItem[];
+  selectedItems: RestauranteItem[];
+  slots: number;
+  numbered?: boolean;
+  interactive: boolean;
+  onChoice: (item: RestauranteItem) => void;
+  pressedChoice?: RestauranteItem;
+}) {
+  const full = selectedItems.length >= slots;
+  return (
+    <div className="space-y-3">
+      <Tray items={selectedItems} slots={slots} numbered={numbered} />
+      <div style={{ fontSize: 12.5, fontWeight: 800, color: "#E1CDA3", textAlign: "center", textTransform: "uppercase", letterSpacing: 1 }}>Itens disponíveis</div>
+      <div style={{ display: "grid", gridTemplateColumns: `repeat(${Math.min(choices.length, 5)}, 1fr)`, gap: 10 }}>
+        {choices.map((item, index) => {
+          const selected = selectedItems.some((selectedItem) => selectedItem.id === item.id);
+          return (
+            <motion.button
+              key={`${item.id}-${index}`}
+              data-choice={item.id}
+              onClick={() => onChoice(item)}
+              disabled={!interactive || (full && !selected)}
+              animate={{ scale: pressedChoice?.id === item.id ? 0.95 : 1 }}
+              whileTap={interactive ? { scale: 0.93 } : {}}
+              style={{
+                borderRadius: 16,
+                cursor: interactive && (!full || selected) ? "pointer" : "default",
+                padding: "8px 6px 7px",
+                display: "flex",
+                flexDirection: "column",
+                alignItems: "center",
+                justifyContent: "center",
+                gap: 4,
+                opacity: full && !selected ? 0.5 : 1,
+                background: "#F7EEDD",
+                border: selected ? "2px solid #D4AF37" : "1.5px solid #e6d9bf",
+                boxShadow: selected ? "0 0 0 3px rgba(212,175,55,0.25), 0 6px 12px rgba(26,10,8,0.4)" : "0 6px 12px rgba(26,10,8,0.35)",
+                transition: "all .2s",
+              }}
+            >
+              <span style={{ position: "relative", width: "100%", maxWidth: 76, aspectRatio: "1 / 1" }}>
+                <ItemImg id={item.id} size={76} />
+                {selected && <span style={{ position: "absolute", top: -2, right: -2, minWidth: 20, height: 20, padding: "0 4px", borderRadius: 10, background: "#E57218", color: "#fff", fontSize: 11.5, fontWeight: 900, display: "flex", alignItems: "center", justifyContent: "center" }}>✓</span>}
+              </span>
+              <span style={{ fontSize: 11.5, fontWeight: 800, color: "#4A1A12", textAlign: "center", lineHeight: 1.1 }}>{item.n}</span>
+            </motion.button>
+          );
+        })}
+      </div>
+    </div>
+  );
+}
+
 type Phase = "ready" | "salao" | "update" | "bancada" | "feedback";
 
 // ── Componente principal ────────────────────────────────────────────────────────
@@ -370,7 +437,7 @@ export function RestauranteOrdem({ difficulty, onComplete }: RestauranteOrdemPro
   const [salaoReady, setSalaoReady] = useState(false);
   const [memoIdx, setMemoIdx] = useState(0);
   const [memoLeft, setMemoLeft] = useState(0);
-  const [tray, setTray] = useState<Item[]>([]);
+  const [tray, setTray] = useState<RestauranteItem[]>([]);
   const [trial, setTrial] = useState(0);
   const [feedback, setFeedback] = useState<{ ok: boolean; msg: string } | null>(null);
   const [musicOn, setMusicOn] = useState(true);
@@ -385,7 +452,7 @@ export function RestauranteOrdem({ difficulty, onComplete }: RestauranteOrdemPro
   const levelRef = useRef(startLevel);
   const streakRef = useRef(0);
   const roundRef = useRef<Round | null>(null);
-  const trayRef = useRef<Item[]>([]);
+  const trayRef = useRef<RestauranteItem[]>([]);
 
   const startRound = useCallback(() => {
     runRef.current++;
@@ -496,7 +563,7 @@ export function RestauranteOrdem({ difficulty, onComplete }: RestauranteOrdemPro
     else { setTrial(nextTrial); startRound(); }
   }
 
-  function placeItem(it: Item) {
+  function placeItem(it: RestauranteItem) {
     if (phase !== "bancada") return;
     const r = roundRef.current; if (!r) return;
     const cap = r.mesas[r.called].finalOrder.length;
@@ -667,7 +734,6 @@ export function RestauranteOrdem({ difficulty, onComplete }: RestauranteOrdemPro
 
   // ── BANCADA DO GARÇOM (balcão de madeira + cabeçalho verde) ──
   if (phase === "bancada" && r && mesa) {
-    const full = tray.length >= cap;
     return (
       <div style={{ position: "fixed", inset: 0, display: "flex", flexDirection: "column", overflow: "hidden", paddingBottom: 40,
         backgroundColor: "#2D100C", backgroundImage: "radial-gradient(120% 95% at 50% 42%, rgba(45,16,12,0.34) 0%, rgba(40,16,11,0.5) 55%, rgba(28,12,8,0.66) 100%), url(/exercises/restaurante/fundo-blur.jpg)",
@@ -696,28 +762,14 @@ export function RestauranteOrdem({ difficulty, onComplete }: RestauranteOrdemPro
             Lembre o pedido da {joinList(mesa.scene.names)}{r.orderRequired ? ", na ordem certa," : ""} e monte a bandeja.
           </p>
 
-          <Tray items={tray} slots={cap} numbered={r.orderRequired} />
-
-          <div style={{ fontSize: 12.5, fontWeight: 800, color: "#E1CDA3", textAlign: "center", textTransform: "uppercase", letterSpacing: 1 }}>Itens disponíveis</div>
-          <div style={{ display: "grid", gridTemplateColumns: `repeat(${Math.min(r.keys.length, 5)}, 1fr)`, gap: 10 }}>
-            {r.keys.map((it, i) => {
-              const placed = tray.filter((x) => x.id === it.id).length;
-              const sel = placed > 0;
-              return (
-                <motion.button key={`${it.id}-${i}`} onClick={() => placeItem(it)} disabled={full && !sel} whileTap={{ scale: 0.93 }}
-                  style={{ borderRadius: 16, cursor: full && !sel ? "default" : "pointer", padding: "8px 6px 7px",
-                    display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", gap: 4, opacity: full && !sel ? 0.5 : 1,
-                    background: "#F7EEDD", border: sel ? "2px solid #D4AF37" : "1.5px solid #e6d9bf",
-                    boxShadow: sel ? "0 0 0 3px rgba(212,175,55,0.25), 0 6px 12px rgba(26,10,8,0.4)" : "0 6px 12px rgba(26,10,8,0.35)", transition: "all .2s" }}>
-                  <span style={{ position: "relative", width: "100%", maxWidth: 76, aspectRatio: "1 / 1" }}>
-                    <ItemImg id={it.id} size={76} />
-                    {placed > 0 && <span style={{ position: "absolute", top: -2, right: -2, minWidth: 20, height: 20, padding: "0 4px", borderRadius: 10, background: "#E57218", color: "#fff", fontSize: 11.5, fontWeight: 900, display: "flex", alignItems: "center", justifyContent: "center" }}>✓</span>}
-                  </span>
-                  <span style={{ fontSize: 11.5, fontWeight: 800, color: "#4A1A12", textAlign: "center", lineHeight: 1.1 }}>{it.n}</span>
-                </motion.button>
-              );
-            })}
-          </div>
+          <RestauranteOrdemBoard
+            choices={r.keys}
+            selectedItems={tray}
+            slots={cap}
+            numbered={r.orderRequired}
+            interactive
+            onChoice={placeItem}
+          />
         </div>
 
         {/* barra inferior: Limpar + Entregar */}

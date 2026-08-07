@@ -9,7 +9,6 @@ import { VoicePicker } from "@/components/exercises/VoicePicker";
 import { PresentationConfig, type PresMode } from "@/components/exercises/PresentationConfig";
 import { useTimedProgress } from "@/components/exercises/useExerciseEngine";
 import { ExerciseProgressBar } from "@/components/exercises/ExerciseProgressBar";
-import { TutorialBase } from "@/components/exercises/TutorialBase";
 import type { ExerciseResult, Theme } from "@/types";
 
 // ── Types ─────────────────────────────────────────────────────────────────────
@@ -20,7 +19,7 @@ export interface DesafioSupermercadoProps {
   onComplete: (result: ExerciseResult) => void;
 }
 
-interface Product { id: string; name: string; }
+export interface Product { id: string; name: string; }
 
 // ── Catálogo realista (fotos em /public/exercises/produtos) ─────────────────────
 // Agrupado por categoria: gera listas VARIADAS (1 item de categorias diferentes) e,
@@ -176,12 +175,16 @@ const LEVELS: LevelConfig[] = [
   /* 12 */ { lists: 2, count: 4, order: "reverse", extra: 16, memSec: 14, similar: true  },
 ];
 const MAX_LEVEL = 12;
+export const DESAFIO_SUPERMERCADO_MIN_LEVEL = 1;
 
 function clampLevel(difficulty: number): number {
   return Math.min(MAX_LEVEL, Math.max(1, Math.round(difficulty)));
 }
 function levelConfig(level: number): LevelConfig {
   return LEVELS[level - 1] ?? LEVELS[0];
+}
+export function desafioSupermercadoItemsForLevel(level: number): number {
+  return levelConfig(level).count;
 }
 function memorizeSeconds(level: number, mode: "leitura" | "auditivo"): number {
   const base = levelConfig(level).memSec;
@@ -314,10 +317,12 @@ function StoreBg() {
 // Prateleira que SE AJUSTA À ÁREA: escolhe colunas + tamanho de célula que
 // fazem TODOS os produtos caberem sem rolar (muitos pacientes não entendem que
 // precisam descer a tela). Mede o contêiner e calcula a melhor grade.
-function WoodShelf({
-  products, cartIds, onToggle, showLabels,
+export function DesafioSupermercadoBoard({
+  products, cartIds, onToggle, showLabels, interactive = true, pressedChoice,
 }: {
   products: Product[]; cartIds: string[]; onToggle: (id: string) => void; showLabels: boolean;
+  interactive?: boolean;
+  pressedChoice?: string;
 }) {
   const wrapRef = useRef<HTMLDivElement>(null);
   const [box, setBox] = useState({ w: 0, h: 0 });
@@ -380,7 +385,8 @@ function WoodShelf({
               {rowItems.map(p => {
                 const inCart = cartIds.includes(p.id);
                 return (
-                  <motion.button key={p.id} onClick={() => onToggle(p.id)} whileTap={{ scale: 0.9 }}
+                  <motion.button key={p.id} data-choice={p.id} onClick={() => onToggle(p.id)} disabled={!interactive} whileTap={interactive ? { scale: 0.9 } : {}}
+                    animate={{ scale: pressedChoice === p.id ? 0.95 : 1 }}
                     style={{
                       position: "relative", cursor: "pointer", background: "transparent", border: "none",
                       padding: 0, width: cell, height: cell, flexShrink: 0,
@@ -487,127 +493,15 @@ function Hud({ level, mode, progressPct }: {
   );
 }
 
-// ── Tutorial ─────────────────────────────────────────────────────────────────────
-
-const TUT_LIST: Product[]  = [{ id: "pao", name: "Pão" }, { id: "leite", name: "Leite" }];
-const TUT_SHELF: Product[] = [
-  { id: "pao", name: "Pão" }, { id: "leite", name: "Leite" }, { id: "cookies", name: "Cookies" },
-  { id: "morango", name: "Morango" }, { id: "donut", name: "Donut" }, { id: "sabonete", name: "Sabonete" },
-  { id: "melancia", name: "Melancia" }, { id: "shampoo", name: "Shampoo" },
-];
-
-function TutMemorizeStep({ mode, onDone }: { mode: "leitura" | "auditivo"; onDone: () => void }) {
-  const [countdown, setCountdown] = useState(5);
-  useEffect(() => {
-    if (mode === "auditivo") speakMemo([TUT_LIST], [""]);
-    const iv = setInterval(() => {
-      setCountdown(p => { if (p <= 1) { clearInterval(iv); onDone(); return 0; } return p - 1; });
-    }, 1000);
-    return () => { clearInterval(iv); cancelTTS(); };
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, []);
-  return (
-    <div className="rounded-xl p-4 space-y-3 bg-emerald-50 border border-emerald-200">
-      <div className="flex justify-between items-center">
-        <p className="text-sm font-bold text-gray-800">{mode === "auditivo" ? "🔊 Ouça os itens:" : "📋 Memorize a lista:"}</p>
-        <div className="flex items-center gap-2">
-          <span className="text-xs text-emerald-600 font-mono">{countdown}s</span>
-          <button onClick={onDone} className="text-xs px-2 py-0.5 rounded-lg font-bold bg-emerald-500 text-white">Pronto →</button>
-        </div>
-      </div>
-      <div className="grid grid-cols-2 gap-3">
-        {TUT_LIST.map(p => (
-          <div key={p.id} className="flex flex-col items-center gap-2 p-3 rounded-xl border-2 border-emerald-200 bg-white">
-            <ProductImg id={p.id} size={70} />
-            {mode === "leitura" && <span className="text-sm font-bold text-center text-gray-800">{p.name}</span>}
-            {mode === "auditivo" && <span className="text-xl">🔊</span>}
-          </div>
-        ))}
-      </div>
-    </div>
-  );
-}
-
-function TutShelfStep({ mode, onDone }: { mode: "leitura" | "auditivo"; onDone: () => void }) {
-  const [cart, setCart] = useState<string[]>([]);
-  const doneRef = useRef(false);
-  function tap(id: string) {
-    if (doneRef.current) return;
-    setCart(prev => {
-      const next = prev.includes(id) ? prev.filter(x => x !== id) : [...prev, id];
-      if (next.includes("pao") && next.includes("leite") && !doneRef.current) { doneRef.current = true; setTimeout(onDone, 700); }
-      return next;
-    });
-  }
-  return (
-    <div className="space-y-2">
-      <p className="text-xs text-gray-700">{mode === "auditivo" ? "Toque nos produtos que você ouviu." : "Toque nos produtos que estavam na lista."}</p>
-      <div className="grid grid-cols-4 gap-1.5">
-        {TUT_SHELF.map(p => {
-          const inCart = cart.includes(p.id);
-          return (
-            <button key={p.id} onClick={() => tap(p.id)}
-              className={`flex flex-col items-center gap-1 p-2 rounded-lg border-2 transition-all active:scale-95 relative ${inCart ? "border-emerald-400 bg-emerald-50" : "border-gray-200 bg-white"}`}>
-              <ProductImg id={p.id} size={50} />
-              {mode === "leitura" && <span className={`text-[9px] text-center font-semibold leading-tight ${inCart ? "text-emerald-700" : "text-gray-700"}`}>{p.name}</span>}
-              {inCart && <div className="absolute top-1 right-1 w-4 h-4 rounded-full bg-emerald-500 flex items-center justify-center text-[9px] font-bold text-white">✓</div>}
-            </button>
-          );
-        })}
-      </div>
-      {cart.length > 0 && (
-        <div className="flex items-center gap-2 p-2 rounded-xl bg-emerald-50 border border-emerald-200">
-          <span className="text-sm">🛒</span>
-          <div className="flex gap-1">{cart.map(id => <ProductImg key={id} id={id} size={30} />)}</div>
-        </div>
-      )}
-    </div>
-  );
-}
-
-function TutVariationsStep({ onDone }: { onDone: () => void }) {
-  const Row = ({ emoji, title, text }: { emoji: string; title: string; text: string }) => (
-    <div className="flex items-start gap-3 p-2.5 rounded-xl bg-white border border-emerald-100">
-      <span className="text-2xl leading-none">{emoji}</span>
-      <div>
-        <p className="text-sm font-bold text-gray-800">{title}</p>
-        <p className="text-xs text-gray-500 leading-snug">{text}</p>
-      </div>
-    </div>
-  );
-  return (
-    <div className="space-y-2.5">
-      <p className="text-xs text-gray-600">Conforme você acerta, o jogo evolui. Fique atento à instrução de cada rodada:</p>
-      <Row emoji="👩👵" title="Duas listas (mãe e avó)" text="Memorize as DUAS, mas compre só a lista que for pedida." />
-      <Row emoji="➡️" title="Na ordem da lista" text="Em alguns níveis, pegue os itens na MESMA ordem da lista." />
-      <Row emoji="↩️" title="De trás para frente" text="Em outros, compre na ordem INVERSA — do último ao primeiro." />
-      <button onClick={onDone} className="w-full mt-1 h-10 rounded-xl font-bold bg-emerald-500 text-white">Entendi →</button>
-    </div>
-  );
-}
-
-function SupermercadoTutorial({ theme, mode, onDone }: { theme: Theme; mode: "leitura" | "auditivo"; onDone: () => void }) {
-  const steps = [
-    { instruction: mode === "auditivo" ? "Você vai OUVIR uma lista de compras. Memorize os itens pelo som!" : "Uma lista de compras vai aparecer. Memorize bem os produtos!",
-      content: (done: () => void) => <TutMemorizeStep mode={mode} onDone={done} /> },
-    { instruction: "Toque nos produtos da prateleira para colocá-los no carrinho. Depois confirme!",
-      content: (done: () => void) => <TutShelfStep mode={mode} onDone={done} /> },
-    { instruction: "Por último, as variações que vão aparecer conforme você avança:",
-      content: (done: () => void) => <TutVariationsStep onDone={done} /> },
-  ];
-  return <TutorialBase theme={theme} title="Supermercado" steps={steps} onDone={onDone} />;
-}
-
 // ── Main component ────────────────────────────────────────────────────────────────
 
 
-export function DesafioSupermercado({ difficulty, theme, onComplete }: DesafioSupermercadoProps) {
+export function DesafioSupermercado({ difficulty, onComplete }: DesafioSupermercadoProps) {
   // Modo de apresentação (escolhido na tela "Configurar atividade", antes de iniciar).
   const [presMode, setPresMode] = useState<PresMode | null>(null);
   const displayMode: "leitura" | "auditivo" = presMode === "audio_only" ? "auditivo" : "leitura";
   const mode = displayMode;                                  // controla esconder/mostrar texto
   const speakOn = presMode === "visual_audio" || presMode === "audio_only";  // controla a fala
-  const [showTutorial, setShowTutorial] = useState(true);
   const { begin, isTimeUp, elapsedSec, finish, progressPct } = useTimedProgress();
 
   const startLevel = useMemo(() => clampLevel(difficulty), [difficulty]);
@@ -663,12 +557,12 @@ export function DesafioSupermercado({ difficulty, theme, onComplete }: DesafioSu
   useEffect(() => { setSessionLevel(startLevel); histRef.current = []; }, [startLevel]);
 
   useEffect(() => {
-    if (!showTutorial) { begin(); initTrial(startLevel); }
+    if (presMode !== null) { begin(); initTrial(startLevel); }
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [showTutorial]);
+  }, [presMode]);
 
   useEffect(() => {
-    if (phase !== "memorizing" || showTutorial || memoLists.length === 0) return;
+    if (phase !== "memorizing" || memoLists.length === 0) return;
     const total = memorizeSeconds(sessionLevel, speakOn ? "auditivo" : "leitura");
     setCountdown(total);
     if (speakOn) { setAudioPlaying(true); speakMemo(memoLists, labels, () => setAudioPlaying(false)); }
@@ -678,7 +572,7 @@ export function DesafioSupermercado({ difficulty, theme, onComplete }: DesafioSu
     }, 1000);
     return () => { clearTimer(); cancelTTS(); };
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [phase, trial, showTutorial]);
+  }, [phase, trial]);
 
   function toggleProduct(id: string) {
     if (phase !== "shopping") return;
@@ -753,10 +647,6 @@ export function DesafioSupermercado({ difficulty, theme, onComplete }: DesafioSu
         onChoose={(m) => setPresMode(m)}
       />
     );
-  }
-
-  if (showTutorial) {
-    return <SupermercadoTutorial theme={theme} mode={mode} onDone={() => setShowTutorial(false)} />;
   }
 
   const memorizeTotal = memorizeSeconds(sessionLevel, speakOn ? "auditivo" : "leitura");
@@ -866,7 +756,7 @@ export function DesafioSupermercado({ difficulty, theme, onComplete }: DesafioSu
               <div style={{ flex: 1, display: "flex", flexDirection: "row", overflow: "hidden", gap: 12, minHeight: 0 }}>
               {/* prateleira — cabe tudo sem rolar */}
               <div style={{ flex: 1, minWidth: 0, minHeight: 0, overflow: "hidden", display: "flex" }}>
-                <WoodShelf products={shelfProducts} cartIds={cartIds} onToggle={toggleProduct} showLabels={mode === "leitura"} />
+                <DesafioSupermercadoBoard products={shelfProducts} cartIds={cartIds} onToggle={toggleProduct} showLabels={mode === "leitura"} />
               </div>
 
               {/* painel do carrinho */}

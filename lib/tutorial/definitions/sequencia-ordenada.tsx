@@ -2,6 +2,7 @@
 
 import { useEffect, useRef, useState, type ComponentType } from "react";
 import { DemoPointer } from "@/components/exercises/tutorial/DemoPointer";
+import { compararRespostaDaFamilia } from "@/lib/tutorial/comparadores";
 import type { GuidedAttemptProps, TutorialDefinition } from "@/lib/tutorial/types";
 
 export interface SequencePresentationHooks<T> {
@@ -40,6 +41,12 @@ export interface FamiliaSequenciaConfig<T> {
   targetSelectorFor: (item: T) => string;
   /** Transforma a sequência apresentada na resposta que deve ser demonstrada e validada. */
   transformarResposta?: (sequencia: T[]) => T[];
+  /**
+   * Como comparar a resposta dada com a esperada. O padrão é POSICIONAL — a resposta certa é a
+   * mesma sequência, na mesma ordem. Famílias em que a resposta não tem ordem (seleção de um
+   * conjunto) fornecem sua própria comparação.
+   */
+  compararResposta?: (esperada: T[], dada: T[]) => boolean;
 }
 
 // Todos os tempos pedagógicos calibrados vivem uma vez só, na fábrica da família.
@@ -84,6 +91,7 @@ function respostaEsperada<T>(
   const copia = [...sequencia];
   return transformarResposta ? transformarResposta(copia) : copia;
 }
+
 
 /** Apresentação visual compartilhada pelas sequências espaciais. */
 export async function presentVisualSequence<T>(
@@ -269,7 +277,7 @@ function criarGuidedAttempt<T>(config: FamiliaSequenciaConfig<T>) {
           sequenceRef.current,
           config.transformarResposta,
         );
-        const isCorrect = expected.every((value, index) => value === next[index]);
+        const isCorrect = compararRespostaDaFamilia(config, expected, next);
         onOutcome(isCorrect ? "correct" : "incorrect");
       }
     }

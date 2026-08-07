@@ -356,10 +356,14 @@ describe("o Span Inverso continua na fábrica compartilhada", () => {
 
     expect(convertidos.sort()).toEqual([
       "cubo-corsi",
+      "desafio-supermercado",
+      "jogo-memoria",
       "letras-sequencia",
+      "lista-distracao",
       "matriz-espacial",
       "matriz-espacial-inversa",
       "padroes-rotacao",
+      "restaurante-ordem",
       "sequencia-itens",
       "span-numerico",
       "span-numerico-inverso",
@@ -585,6 +589,7 @@ describe("T1 congelada — 2. sem emoji no framework do tutorial", () => {
     "lib/tutorial/definitions/letras-sequencia.tsx",
     "lib/tutorial/definitions/sequencia-itens.tsx",
     "lib/tutorial/definitions/sequencia-espacial.tsx",
+    "lib/tutorial/definitions/conjunto-selecao.tsx",
     "lib/tutorial/definitions/sequencia-ordenada.tsx",
     "lib/tutorial/definitions/span-numerico.tsx",
     "lib/tutorial/speech-playback.ts",

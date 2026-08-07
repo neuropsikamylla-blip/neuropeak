@@ -28,9 +28,14 @@ const LD_LEVELS: Record<number, LDLevel> = {
   9:  { count: 7, order: true,  tasks: 3, distractors: 6, memMs: 4400 },
   10: { count: 8, order: true,  tasks: 3, distractors: 7, memMs: 4800 },
 };
+export const LISTA_DISTRACAO_MIN_LEVEL = 1;
+export function listaDistracaoItemsForLevel(level: number): number {
+  return LD_LEVELS[levelOf(level)].count;
+}
 const levelOf = (d: number): number => Math.min(10, Math.max(1, Math.round(d)));
 
-const WORDS = ["maçã", "pão", "leite", "chave", "copo", "flor", "bola", "livro", "sapato", "cadeira", "caneta", "peixe", "queijo", "meia"];
+export const LISTA_DISTRACAO_WORDS = ["maçã", "pão", "leite", "chave", "copo", "flor", "bola", "livro", "sapato", "cadeira", "caneta", "peixe", "queijo", "meia"];
+const WORDS = LISTA_DISTRACAO_WORDS;
 
 function shuffle<T>(a: T[]): T[] { const r = [...a]; for (let i = r.length - 1; i > 0; i--) { const j = Math.floor(Math.random() * (i + 1)); [r[i], r[j]] = [r[j], r[i]]; } return r; }
 
@@ -62,6 +67,55 @@ function makeDistract(): Distract {
 }
 
 type Phase = "ready" | "memorize" | "distract" | "recall" | "feedback";
+
+export function ListaDistracaoBoard({
+  choices,
+  selectedItems,
+  interactive,
+  onChoice,
+  activeChoice,
+  pressedChoice,
+}: {
+  choices: string[];
+  selectedItems: string[];
+  interactive: boolean;
+  onChoice: (word: string) => void;
+  activeChoice?: string;
+  pressedChoice?: string;
+}) {
+  return (
+    <div className="flex w-full flex-col items-center gap-4">
+      <div className="flex gap-2 flex-wrap justify-center min-h-[36px]">
+        {selectedItems.map((word, index) => (
+          <span key={`${word}-${index}`} className="px-3 py-1.5 rounded-lg text-sm font-bold text-white" style={{ background: "rgba(34,211,197,0.2)", border: "1px solid rgba(34,211,197,0.4)" }}>{word}</span>
+        ))}
+      </div>
+      <div className="grid grid-cols-3 gap-2 w-full">
+        {choices.map((word, index) => {
+          const selected = selectedItems.includes(word);
+          const active = activeChoice === word;
+          return (
+            <button
+              key={`${word}-${index}`}
+              data-choice={word}
+              onClick={() => onChoice(word)}
+              disabled={!interactive || selected}
+              className="py-3 rounded-xl text-sm font-bold text-white active:scale-95 disabled:opacity-25"
+              style={{
+                background: active ? "rgba(34,211,197,0.2)" : "rgba(255,255,255,0.05)",
+                border: active ? "2px solid #5eead4" : "1.5px solid rgba(34,211,197,0.3)",
+                transform: pressedChoice === word ? "scale(0.95)" : undefined,
+                transition: "transform 120ms ease",
+              }}
+            >
+              {word}
+            </button>
+          );
+        })}
+      </div>
+    </div>
+  );
+}
 
 export function ListaDistracao({ difficulty, onComplete }: ListaDistracaoProps) {
   const { begin: startTimer, isTimeUp, elapsedSec, finish: finishTimer, progressPct } = useTimedProgress();
@@ -276,21 +330,12 @@ export function ListaDistracao({ difficulty, onComplete }: ListaDistracaoProps) 
             <p className="text-sm font-semibold text-center text-white">
               3️⃣ {spec.order ? "Toque os itens NA ORDEM da lista" : "Toque os itens que estavam na lista"}
             </p>
-            <div className="flex gap-2 flex-wrap justify-center min-h-[36px]">
-              {picked.map((w, i) => (
-                <span key={i} className="px-3 py-1.5 rounded-lg text-sm font-bold text-white" style={{ background: "rgba(34,211,197,0.2)", border: "1px solid rgba(34,211,197,0.4)" }}>{w}</span>
-              ))}
-            </div>
-            <div className="grid grid-cols-3 gap-2 w-full">
-              {keys.map((w, i) => {
-                const used = picked.includes(w);
-                return (
-                  <button key={`${w}-${i}`} onClick={() => pickWord(w)} disabled={used}
-                    className="py-3 rounded-xl text-sm font-bold text-white active:scale-95 disabled:opacity-25"
-                    style={{ background: "rgba(255,255,255,0.05)", border: "1.5px solid rgba(34,211,197,0.3)" }}>{w}</button>
-                );
-              })}
-            </div>
+            <ListaDistracaoBoard
+              choices={keys}
+              selectedItems={picked}
+              interactive
+              onChoice={pickWord}
+            />
           </div>
         )}
 
