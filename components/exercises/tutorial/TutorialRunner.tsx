@@ -14,6 +14,8 @@ type TutorialPhase = "intro" | "demo" | "handoff" | "guided" | "feedback";
  * esta pausa a resposta do paciente desaparece no mesmo instante em que é dada.
  */
 const GUIDED_SETTLE_MS = 900;
+/** Regra 1: usado quando a definição não fornece um texto próprio para a demonstração. */
+const DEMONSTRATION_HINT_PADRAO = "Observe como funciona a atividade.";
 /** Fade entre telas. Sem ele uma etapa aparece por cima da outra, sem começo nem fim. */
 const SCREEN_FADE_S = 0.32;
 type TutorialStage = "demonstration" | "guided";
@@ -188,7 +190,7 @@ export function TutorialRunner({ definition, theme, onFinish }: TutorialRunnerPr
             <StageLabel stage="demonstration" theme={theme} />
             <h2 className={`${styles.heading} mb-1 text-xl font-bold`}>Observe como responder</h2>
             <p className={`${styles.text} mb-6 text-sm`}>
-              Observe como funciona a atividade.
+              {definition.demonstrationHint ?? DEMONSTRATION_HINT_PADRAO}
             </p>
             <Button
               className={`${styles.button} h-12 w-full font-semibold`}
@@ -212,9 +214,7 @@ export function TutorialRunner({ definition, theme, onFinish }: TutorialRunnerPr
           <div>
             <StageLabel stage="guided" theme={theme} />
             <h2 className={`${styles.heading} mb-1 text-xl font-bold`}>Agora é sua vez</h2>
-            <p className={`${styles.text} mb-6 text-sm`}>
-              Ouça a sequência e clique nos números na mesma ordem.
-            </p>
+            <p className={`${styles.text} mb-6 text-sm`}>{definition.guidedInstruction}</p>
             <Button
               className={`${styles.button} h-12 w-full font-semibold`}
               onClick={() => setPhase("guided")}
@@ -228,7 +228,7 @@ export function TutorialRunner({ definition, theme, onFinish }: TutorialRunnerPr
           <div>
             <StageLabel stage="guided" theme={theme} />
             <h2 className={`${styles.heading} mb-1 text-xl font-bold`}>Ouça e responda</h2>
-            <p className={`${styles.text} mb-5 text-sm`}>Clique nos números na ordem em que ouviu.</p>
+            <p className={`${styles.text} mb-5 text-sm`}>{definition.guidedInstruction}</p>
             <definition.GuidedAttempt key={guidedKey} onOutcome={handleOutcome} />
           </div>
         )}

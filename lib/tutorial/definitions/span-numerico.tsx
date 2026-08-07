@@ -96,7 +96,16 @@ function SpanBoard({
   );
 }
 
-function Demonstration({ onDone }: { onDone: () => void }) {
+/**
+ * Ordem em que a resposta deve ser dada. No Inverso, de trás para a frente — é a única diferença
+ * de mecânica entre os dois exercícios, e por isso a única coisa que a fábrica parametriza.
+ */
+function respostaEsperada(sequencia: number[], reverse: boolean): number[] {
+  return reverse ? [...sequencia].reverse() : sequencia;
+}
+
+function criarDemonstration(reverse: boolean) {
+  return function Demonstration({ onDone }: { onDone: () => void }) {
   const containerRef = useRef<HTMLDivElement>(null);
   const [demonstrationPhase, setDemonstrationPhase] = useState<"listening" | "answering" | "done">(
     "listening",
@@ -137,15 +146,17 @@ function Demonstration({ onDone }: { onDone: () => void }) {
 
       setDemonstrationPhase("answering");
       setFilled(0);
+      // A demonstração responde na ordem REAL do exercício: no Inverso, do último ao primeiro.
+      const ordemDaResposta = respostaEsperada(DEMONSTRATION_SEQUENCE, reverse);
       if (!await wait(POST_LISTENING_PAUSE_MS, () => cancelled)) return;
 
       setTargetSelector("[data-demo-pointer-start]");
       setPointerPhase("locating");
       if (!await wait(POINTER_ENTRY_PULSE_MS, () => cancelled)) return;
 
-      for (let index = 0; index < DEMONSTRATION_SEQUENCE.length; index++) {
+      for (let index = 0; index < ordemDaResposta.length; index++) {
         if (cancelled) return;
-        const digit = DEMONSTRATION_SEQUENCE[index];
+        const digit = ordemDaResposta[index];
 
         setTargetSelector(`[data-digit="${digit}"]`);
         setPointerPhase("moving");
@@ -204,9 +215,11 @@ function Demonstration({ onDone }: { onDone: () => void }) {
       />
     </div>
   );
+  };
 }
 
-function GuidedAttempt({ onOutcome }: GuidedAttemptProps) {
+function criarGuidedAttempt(reverse: boolean) {
+  return function GuidedAttempt({ onOutcome }: GuidedAttemptProps) {
   const sequenceRef = useRef<number[]>(createGuidedSequence());
   const enteredRef = useRef<number[]>([]);
   const [listening, setListening] = useState(true);
@@ -249,7 +262,8 @@ function GuidedAttempt({ onOutcome }: GuidedAttemptProps) {
     setFilled(next.length);
 
     if (next.length === SMALLEST_VALID_UNIT) {
-      const expected = sequenceRef.current;
+      // No Inverso, a resposta correta é a sequência de trás para a frente.
+      const expected = respostaEsperada(sequenceRef.current, reverse);
       const isCorrect = expected.every((value, index) => value === next[index]);
       onOutcome(isCorrect ? "correct" : "incorrect");
     }
@@ -265,13 +279,45 @@ function GuidedAttempt({ onOutcome }: GuidedAttemptProps) {
       onKey={handleKey}
     />
   );
+  };
 }
 
-export const spanNumericoTutorial: TutorialDefinition = {
+/**
+ * Fábrica das definições da família Span.
+ *
+ * Direto e Inverso compartilham TODA a apresentação — mesmo áudio, mesma cadência, mesmo painel
+ * de números, mesmo cursor, mesmo ritmo. A única diferença é a ordem da resposta, e é só isso que se
+ * parametriza. É este o padrão que os lotes seguintes devem seguir: uma fábrica por família de
+ * mecânica, nunca um arquivo copiado por exercício (regra 7).
+ */
+function criarTutorialSpan({
+  exerciseId,
+  reverse,
+  guidedInstruction,
+}: {
+  exerciseId: string;
+  reverse: boolean;
+  guidedInstruction: string;
+}): TutorialDefinition {
+  return {
+    exerciseId,
+    version: 1,
+    Demonstration: criarDemonstration(reverse),
+    GuidedAttempt: criarGuidedAttempt(reverse),
+    retryHint: "Ouça novamente e responda quando os números ficarem disponíveis.",
+    guidedInstruction,
+    smallestValidUnit: SMALLEST_VALID_UNIT,
+  };
+}
+
+export const spanNumericoTutorial = criarTutorialSpan({
   exerciseId: "span-numerico",
-  version: 1,
-  Demonstration,
-  GuidedAttempt,
-  retryHint: "Ouça novamente e responda quando o teclado estiver disponível.",
-  smallestValidUnit: SMALLEST_VALID_UNIT,
-};
+  reverse: false,
+  guidedInstruction: "Ouça a sequência e clique nos números na mesma ordem.",
+});
+
+export const spanNumericoInversoTutorial = criarTutorialSpan({
+  exerciseId: "span-numerico-inverso",
+  reverse: true,
+  guidedInstruction: "Ouça a sequência e clique nos números na ordem inversa.",
+});

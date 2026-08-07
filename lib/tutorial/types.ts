@@ -13,6 +13,23 @@ export interface TutorialDefinition {
   GuidedAttempt: ComponentType<GuidedAttemptProps>;
   retryHint: string;
   /**
+   * Regra 4 da T1: o texto da tentativa guiada, com o VERBO do gesto real deste exercício
+   * (clique · arraste · selecione · digite · responda).
+   *
+   * É obrigatório e vive na definição, não no runner: o gesto muda de exercício para exercício, e
+   * um texto genérico no runner seria exatamente a fórmula proibida ("use o teclado", "toque na
+   * tela"). O runner mantém o selo e o título — só a instrução é de quem conhece a mecânica.
+   */
+  guidedInstruction: string;
+
+  /**
+   * Regra 1 da T1: texto da demonstração. Omitir usa o padrão do framework
+   * ("Observe como funciona a atividade."). Só preencha quando a mecânica realmente exigir, e
+   * seguindo o mesmo padrão de linguagem — imperativo, uma frase, sem estratégia cognitiva.
+   */
+  demonstrationHint?: string;
+
+  /**
    * A menor unidade válida da mecânica clínica DESTE exercício — a carga em que a tarefa ainda
    * existe como tarefa, um degrau abaixo do qual ela deixaria de ser o exercício.
    *

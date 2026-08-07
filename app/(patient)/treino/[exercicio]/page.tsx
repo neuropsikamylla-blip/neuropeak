@@ -17,8 +17,23 @@ import { pullGamification, mergePet } from "@/lib/gamification-sync";
 import { PetCelebration } from "@/components/patient/PetCelebration";
 import { PetCreature } from "@/components/patient/PetCreature";
 import { XpFlash, type XpFlashData } from "@/components/patient/skilltree/XpFlash";
-import { spanNumericoTutorial } from "@/lib/tutorial/definitions/span-numerico";
+import {
+  spanNumericoInversoTutorial,
+  spanNumericoTutorial,
+} from "@/lib/tutorial/definitions/span-numerico";
+import type { TutorialDefinition } from "@/lib/tutorial/types";
 import type { TutorialState } from "@/lib/tutorial/state";
+
+/**
+ * Registro dos tutoriais da T1 — a cada lote de conversão, uma linha aqui.
+ *
+ * É o único lugar que liga exercício e tutorial. Um exercício sem entrada simplesmente não tem
+ * tutorial ainda, e o fluxo antigo (preparação direto ao treino) continua valendo para ele.
+ */
+const TUTORIAIS_POR_EXERCICIO: Readonly<Record<string, TutorialDefinition>> = Object.freeze({
+  "span-numerico": spanNumericoTutorial,
+  "span-numerico-inverso": spanNumericoInversoTutorial,
+});
 
 function ExerciseLoader() {
   return <div className="min-h-screen flex items-center justify-center"><Loader2 className="w-8 h-8 animate-spin text-blue-500" /></div>;
@@ -399,6 +414,7 @@ export default function ExercicioPage() {
   const [sessionTotal, setSessionTotal] = useState<number | undefined>();
   const [sessionCompleted, setSessionCompleted] = useState(0);
   const [tutorialState, setTutorialState] = useState<TutorialState | undefined>();
+  const tutorialAtual = TUTORIAIS_POR_EXERCICIO[exerciseId];
   const [petCele, setPetCele] = useState<{ kind: PetKind; before: number; after: number; name?: string; accessory?: AccessoryId; xpGained?: number; color?: PetColorId } | null>(null);
   const [xpFlash, setXpFlash] = useState<XpFlashData | null>(null);
   const completedRef = useRef(false);     // sessão concluída (não conta como abandono)
@@ -470,7 +486,7 @@ export default function ExercicioPage() {
             c.exerciseId === exerciseId
         );
 
-        if (exerciseId === "span-numerico") {
+        if (TUTORIAIS_POR_EXERCICIO[exerciseId]) {
           setTutorialState({
             completedAt: config?.tutorialCompletedAt
               ? new Date(config.tutorialCompletedAt)
@@ -586,12 +602,13 @@ export default function ExercicioPage() {
   }
 
   function handleTutorialDone() {
+    if (!tutorialAtual) return;
     void fetch("/api/exercise-tutorial", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({
-        exerciseId: spanNumericoTutorial.exerciseId,
-        version: spanNumericoTutorial.version,
+        exerciseId: tutorialAtual.exerciseId,
+        version: tutorialAtual.version,
       }),
     }).then((response) => {
       if (!response.ok) {
@@ -729,8 +746,8 @@ export default function ExercicioPage() {
       sessionCompleted={sessionCompleted}
       sessionTotal={sessionTotal}
       hideProgress={HIDE_PROGRESS_WIDGET.has(exerciseId)}
-      {...(exerciseId === "span-numerico" ? {
-        tutorial: spanNumericoTutorial,
+      {...(tutorialAtual ? {
+        tutorial: tutorialAtual,
         tutorialState,
         onTutorialDone: handleTutorialDone,
       } : {})}

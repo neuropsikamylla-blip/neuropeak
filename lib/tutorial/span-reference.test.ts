@@ -190,14 +190,14 @@ describe("integração do tutorial de referência", () => {
     expect(wrapper).toMatch(/tutorialState\s*!==\s*undefined/);
   });
 
-  it("passa a definição apenas para o Span Direto", () => {
+  it("liga exercício e tutorial por um registro único, não por condicional espalhada", () => {
     const page = source("app/(patient)/treino/[exercicio]/page.tsx");
-    const tutorialProps = page.match(/tutorial:\s*spanNumericoTutorial/g) ?? [];
 
-    expect(tutorialProps).toHaveLength(1);
-    expect(page).toMatch(
-      /exerciseId\s*===\s*["']span-numerico["']\s*\?\s*\{\s*tutorial:\s*spanNumericoTutorial/,
-    );
+    // Um só ponto de ligação: a cada lote, uma linha no registro. Condicional por exerciseId
+    // espalhada pelo arquivo seria insustentável em 34 conversões.
+    expect(page).toMatch(/const TUTORIAIS_POR_EXERCICIO: Readonly<Record<string, TutorialDefinition>>/);
+    expect(page.match(/tutorial:\s*tutorialAtual/g) ?? []).toHaveLength(1);
+    expect(page).not.toMatch(/exerciseId\s*===\s*["']span-numerico["']\s*\?/);
   });
 
   it("mantém a preparação do Span sem rótulo indevido ou estratégia cognitiva", () => {
@@ -269,7 +269,7 @@ describe("demonstração completa da resposta do Span Direto", () => {
       definition.indexOf("function GuidedAttempt"),
     );
     const loop = demonstration.indexOf(
-      "for (let index = 0; index < DEMONSTRATION_SEQUENCE.length; index++)",
+      "for (let index = 0; index < ordemDaResposta.length; index++)",
     );
     const done = demonstration.indexOf("onDoneRef.current()");
 
@@ -318,10 +318,16 @@ describe("demonstração completa da resposta do Span Direto", () => {
 });
 
 describe("o Span Inverso e os demais exercícios seguem intocados", () => {
-  it("o Inverso não conhece tutorial nem foi convertido", () => {
+  it("o Inverso reusa a fábrica, sem componente de tutorial próprio", () => {
+    // Regra 7: o Inverso não ganhou arquivo de tutorial — ele sai da mesma fábrica do Direto,
+    // parametrizada só pela ordem da resposta. O componente do exercício segue sem saber de nada.
     const inverso = source("components/exercises/memory/SpanNumericoInverso.tsx");
+    const definicao = source("lib/tutorial/definitions/span-numerico.tsx");
 
     expect(inverso).not.toMatch(/tutorial/i);
+    expect(definicao).toMatch(/function criarTutorialSpan\(/);
+    expect(definicao).toMatch(/export const spanNumericoInversoTutorial = criarTutorialSpan\(/);
+    expect(definicao).toMatch(/reverse: true/);
   });
 
   it("a preparação do Inverso preserva a antecipação de nível que sempre teve", () => {
@@ -334,11 +340,16 @@ describe("o Span Inverso e os demais exercícios seguem intocados", () => {
     expect(readyScreen).toMatch(/digitsForLevel\(level\)/);
   });
 
-  it("nenhum outro exercício recebe tutorial nesta etapa", () => {
+  it("o registro cobre exatamente os exercícios já convertidos", () => {
     const page = source("app/(patient)/treino/[exercicio]/page.tsx");
-    const definicoesImportadas = page.match(/from "@\/lib\/tutorial\/definitions\/[^"]+"/g) ?? [];
+    const registro = page.slice(
+      page.indexOf("const TUTORIAIS_POR_EXERCICIO"),
+      page.indexOf("});", page.indexOf("const TUTORIAIS_POR_EXERCICIO")),
+    );
+    const convertidos = (registro.match(/"([a-z-]+)":/g) ?? []).map((m) => m.slice(1, -2));
 
-    expect(definicoesImportadas).toEqual(['from "@/lib/tutorial/definitions/span-numerico"']);
+    // Lote 1: Span Direto (referência) e Span Inverso. Cada lote acrescenta aqui.
+    expect(convertidos.sort()).toEqual(["span-numerico", "span-numerico-inverso"]);
   });
 });
 
@@ -467,9 +478,17 @@ describe("ajustes finos da 2ª validação (06/ago/2026)", () => {
 
   it("nenhum texto menciona teclado ou toque — o paciente responde clicando", () => {
     // O paciente usa mouse hoje e tela no futuro; "teclado" está errado nos dois casos.
+    // O runner não traz mais a instrução: pela regra 4 ela vem da definição, com o verbo do
+    // gesto real daquele exercício. Aqui verificamos os dois lados.
+    const definicao = source("lib/tutorial/definitions/span-numerico.tsx");
+
     expect(runner()).not.toMatch(/teclado/i);
     expect(runner()).not.toMatch(/\bToque\b/);
-    expect(runner()).toMatch(/clique nos números/i);
+    expect(runner()).toMatch(/\{definition\.guidedInstruction\}/);
+
+    expect(definicao).not.toMatch(/teclado/i);
+    expect(definicao).toMatch(/clique nos números na mesma ordem/i);
+    expect(definicao).toMatch(/clique nos números na ordem inversa/i);
   });
 
   it("o encerramento é UMA tela só, chamada Tutorial concluído", () => {
