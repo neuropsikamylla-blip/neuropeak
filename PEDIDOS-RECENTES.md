@@ -1,16 +1,6 @@
 # As 3 ultimas especificacoes dela (automatico; a mais nova por ultimo)
 # Na retomada: ler as 3, conectar com PROGRESSO.md e git, declarar e seguir.
 
-## 07/08/2026 11:00
-function finishTutorial() {
-  onTutorialDone?.();
-
-  if (!isTutorialReview) onTutorialDone?.();
-
-  setIsTutorialReview(false);
-  setPhase("exercise");
-}
-
 ## 07/08/2026 11:17
 O aval não é apenas para o Span Inverso.
 A garantia de que:
@@ -54,3 +44,18 @@ ou aparecer uma nova família de interação que ainda não exista.
 Se a família utilizar exatamente o mesmo comportamento já aprovado, pode converter todos os exercícios daquela família sem novas aprovações intermediárias.
 O objetivo continua sendo exatamente o mesmo:
 um único framework, uma única experiência, reutilização máxima e zero divergência entre exercícios.
+
+## 07/08/2026 16:15
+Pode seguir exatamente nesse modelo.
+Família 1 já está aprovada pelo padrão do Span, então converta os exercícios restantes dessa família sem nova validação.
+Depois, para cada nova família:
+converta todos os exercícios da família;
+escolha um representante;
+pare apenas para eu validar esse representante;
+se estiver aprovado, considere toda a família aprovada e siga para a próxima.
+Não quero checkpoints exercício por exercício.
+Só pare fora desse fluxo se surgir:
+incompatibilidade real de mecânica;
+necessidade de exceção ao framework;
+ou alteração arquitetural nova.
+Pode seguir.
