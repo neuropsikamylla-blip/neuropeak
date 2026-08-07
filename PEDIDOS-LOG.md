@@ -14537,3 +14537,20 @@ Pode seguir.
 <status>completed</status>
 <summary>Background command "Disparar o Codex para a Família 1" completed (exit code 0)</summary>
 </task-notification>
+
+## 07/08/2026 16:47
+Pode seguir para a Família 2 e usar matriz-espacial como representante para minha validação.
+Antes, corrija apenas um ponto global que ficou na Família 1:
+o fallback de 1200 ms do speechSynthesis não pode liberar o estímulo visual simplesmente porque o onstart não disparou. Isso pode fazer o visual aparecer antes da fala e violar nossa regra global de sincronismo.
+A regra permanece:
+o visual nunca pode antecipar o áudio.
+Se onstart falhar, trate como falha/degradação de áudio de forma segura, mas não use um timeout que possa transformar o visual no evento principal antes da voz.
+Trave isso por teste para que futuras famílias com áudio não repitam o problema.
+Feito isso, siga direto para a Família 2:
+matriz-espacial;
+matriz-espacial-inversa;
+cubo-corsi;
+padroes-rotacao.
+Converta os quatro utilizando uma única fábrica para essa mecânica, sem alterar a mecânica clínica.
+Depois publique e pare apenas para eu validar o matriz-espacial como representante da Família 2.
+Não preciso validar os outros três se forem realmente a mesma mecânica de tutorial.
