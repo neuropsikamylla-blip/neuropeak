@@ -1,12 +1,11 @@
 "use client";
 
-import { useState, useEffect, useCallback, useRef } from "react";
+import { useState, useEffect, useCallback } from "react";
 import { motion } from "framer-motion";
 import { LayoutGrid, Pointer } from "lucide-react";
 import { calculateExerciseScore } from "@/lib/scoring";
 import { useTimedProgress } from "@/components/exercises/useExerciseEngine";
 import { ExerciseProgressBar } from "@/components/exercises/ExerciseProgressBar";
-import { TutorialBase } from "@/components/exercises/TutorialBase";
 import { classifyTrial, nextLevelPerTrial } from "@/lib/adaptive-trial";
 import type { ExerciseResult, Theme } from "@/types";
 
@@ -19,11 +18,10 @@ interface MatrizEspacialProps {
 
 type Phase = "showing" | "recall" | "feedback";
 
-const MIN_SEQ = 2;
-const MAX_SEQ = 9;
+export const MATRIZ_ESPACIAL_MIN_DIFFICULTY = 1;
 // Grade cresce com a dificuldade: mais blocos pra brilhar nos níveis altos.
 // Fácil 4×4 · Médio 5×5 · Difícil 6×6.
-function gridSizeFor(d: number): number {
+export function matrizEspacialGridSizeFor(d: number): number {
   if (d <= 4) return 4;
   if (d <= 7) return 5;
   return 6;
@@ -33,9 +31,11 @@ function gridSizeFor(d: number): number {
 const REVERSE_MODE = (difficulty: number) => difficulty >= 6;
 
 // Ponto de partida: dificuldade 1 → 2 células, dificuldade 5 → 4, dificuldade 10 → 6
-function initialSeq(difficulty: number) {
+export function matrizEspacialSequenceLengthFor(difficulty: number) {
   return Math.min(Math.max(2, Math.floor(difficulty * 0.5) + 1), 5);
 }
+const MIN_SEQ = matrizEspacialSequenceLengthFor(MATRIZ_ESPACIAL_MIN_DIFFICULTY);
+const MAX_SEQ = 9;
 
 // ── Som de feedback (Web Audio, sem arquivos) ──────────────────────────────────
 // Tons FIXOS (não variam por posição) para preservar a natureza visuoespacial
@@ -64,156 +64,78 @@ const soundTap     = () => beep(659, 110, "sine", 0.06);          // toque do pa
 const soundCorrect = () => { beep(659, 120, "sine", 0.08); setTimeout(() => beep(988, 220, "sine", 0.08), 120); }; // acerto
 const soundWrong   = () => beep(160, 260, "square", 0.06);        // erro
 
-// Tutorial cells: indices in a 4x4 grid
-const TSEQ_DIRECT = [4, 12]; // cells 5 and 13 (0-indexed: 4 and 12)
-const TSEQ_INVERSE = [2, 9]; // cells 3 and 10 (0-indexed: 2 and 9)
-
-function MatrizTutorialGrid({
+export function MatrizEspacialGrid({
   theme,
-  seq,
-  expectedOrder,
-  onDone,
-  showOnly,
+  gridSize,
+  activeCell,
+  selectedCells,
+  interactive,
+  onCellClick,
+  pressedCell,
+  cellStyleFor,
 }: {
-  theme: Theme;
-  seq: number[];
-  expectedOrder: number[];
-  onDone: () => void;
-  showOnly?: boolean;
+  theme?: Theme;
+  gridSize: number;
+  activeCell: number | null;
+  selectedCells: number[];
+  interactive: boolean;
+  onCellClick: (idx: number) => void;
+  /** Célula exibida como pressionada por código; ausente não altera o treino. */
+  pressedCell?: number;
+  cellStyleFor?: (idx: number) => React.CSSProperties;
 }) {
   const isGamified = theme === "GAMIFIED";
   const isColorful = theme === "COLORFUL";
 
-  const [activeCell, setActiveCell] = useState<number | null>(null);
-  const [clicked, setClicked] = useState<number[]>([]);
-  const [flash, setFlash] = useState<"green" | "red" | null>(null);
-  const [showDone, setShowDone] = useState(false);
-  const done = useRef(false);
-
-  useEffect(() => {
-    if (!showOnly) return;
-    let cancelled = false;
-    async function run() {
-      for (const cell of seq) {
-        if (cancelled) return;
-        await new Promise<void>((r) => setTimeout(r, 400));
-        if (cancelled) return;
-        setActiveCell(cell);
-        soundLight();
-        await new Promise<void>((r) => setTimeout(r, 600));
-        if (cancelled) return;
-        setActiveCell(null);
-      }
-      await new Promise<void>((r) => setTimeout(r, 300));
-      if (!cancelled) { setShowDone(true); onDone(); }
-    }
-    run();
-    return () => { cancelled = true; };
-  // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, []);
-
-  function handleClick(idx: number) {
-    if (done.current || showOnly) return;
-    const next = clicked.length;
-    if (idx === expectedOrder[next]) {
-      const newClicked = [...clicked, idx];
-      setClicked(newClicked);
-      setFlash("green");
-      setTimeout(() => setFlash(null), 300);
-      if (newClicked.length === expectedOrder.length) {
-        done.current = true;
-        setTimeout(onDone, 400);
-      }
-    } else {
-      setFlash("red");
-      setTimeout(() => { setFlash(null); setClicked([]); }, 400);
-    }
-  }
-
-  function cellStyleFor(idx: number): React.CSSProperties {
-    const isActive = activeCell === idx;
-    const isClicked = clicked.includes(idx);
-    const isSeqCell = seq.includes(idx);
-
-    if (isActive || (showOnly && isSeqCell && showDone)) {
+  function defaultCellStyle(idx: number): React.CSSProperties {
+    if (activeCell === idx) {
       return isGamified
         ? { background: "#06b6d4", border: "2px solid #67e8f9", borderRadius: 10 }
         : isColorful
-        ? { background: "#14b8a6", border: "2px solid #5eead4", borderRadius: 10 }
-        : { background: "#3b82f6", border: "2px solid #93c5fd", borderRadius: 10 };
+          ? { background: "#14b8a6", border: "2px solid #5eead4", borderRadius: 10 }
+          : { background: "#3b82f6", border: "2px solid #93c5fd", borderRadius: 10 };
     }
-    if (isClicked && flash === "green") return { background: "#4ade80", border: "2px solid #16a34a", borderRadius: 10 };
-    if (isClicked) return isGamified
-      ? { background: "#0e7490", border: "2px solid #06b6d4", borderRadius: 10 }
-      : { background: "#93c5fd", border: "2px solid #3b82f6", borderRadius: 10 };
+    if (selectedCells.includes(idx)) {
+      return isGamified
+        ? { background: "#0e7490", border: "2px solid #06b6d4", borderRadius: 10 }
+        : { background: "#93c5fd", border: "2px solid #3b82f6", borderRadius: 10 };
+    }
     return isGamified
       ? { background: "rgba(255,255,255,0.1)", border: "2px solid rgba(255,255,255,0.25)", borderRadius: 10 }
       : isColorful
-      ? { background: "#d4f7f0", border: "2px solid #7fe0d2", borderRadius: 10 }
-      : { background: "#e7ecf3", border: "2px solid #aebfd5", borderRadius: 10 };
+        ? { background: "#d4f7f0", border: "2px solid #7fe0d2", borderRadius: 10 }
+        : { background: "#e7ecf3", border: "2px solid #aebfd5", borderRadius: 10 };
   }
-
-  const ringStyle: React.CSSProperties = flash === "green"
-    ? { outline: "3px solid #4ade80", outlineOffset: 2 }
-    : flash === "red"
-    ? { outline: "3px solid #f87171", outlineOffset: 2 }
-    : {};
 
   return (
     <div
-      className="grid gap-2 mx-auto rounded-xl w-full"
-      style={{ gridTemplateColumns: "repeat(4, 1fr)", maxWidth: "300px", ...ringStyle }}
+      className="grid gap-2.5 mx-auto rounded-xl w-full"
+      style={{ gridTemplateColumns: `repeat(${gridSize}, 1fr)`, maxWidth: 400 }}
     >
-      {Array.from({ length: 16 }).map((_, idx) => (
-        <button
+      {Array.from({ length: gridSize * gridSize }).map((_, idx) => (
+        <motion.button
           key={idx}
-          onClick={() => handleClick(idx)}
-          disabled={showOnly || done.current}
+          data-cell={idx}
+          onClick={() => onCellClick(idx)}
+          disabled={!interactive || selectedCells.includes(idx)}
           className="aspect-square transition-colors"
-          style={cellStyleFor(idx)}
+          style={cellStyleFor ? cellStyleFor(idx) : defaultCellStyle(idx)}
+          whileTap={interactive ? { scale: 0.9 } : {}}
+          animate={pressedCell === idx
+            ? { scale: 0.9 }
+            : activeCell === idx
+              ? { scale: [1, 1.22, 1] }
+              : { scale: 1 }}
+          transition={{ duration: 0.28, ease: "easeOut" }}
         />
       ))}
     </div>
   );
 }
 
-function MatrizEspacialTutorial({ theme, reverse, onDone }: { theme: Theme; reverse: boolean; onDone: () => void }) {
-  const seq = reverse ? TSEQ_INVERSE : TSEQ_DIRECT;
-  const answerOrder = reverse ? [...seq].reverse() : seq;
-
-  const steps = [
-    {
-      instruction: reverse
-        ? "1) Observe com atenção: as células vão ACENDER uma de cada vez, com um som. Guarde a ORDEM em que acendem."
-        : "1) Observe com atenção: as células vão ACENDER uma de cada vez, com um som. Guarde a ORDEM em que acendem.",
-      content: (onStepDone: () => void) => (
-        <MatrizTutorialGrid theme={theme} seq={seq} expectedOrder={answerOrder} onDone={onStepDone} showOnly />
-      ),
-    },
-    {
-      instruction: reverse
-        ? "2) Agora repita na ORDEM CONTRÁRIA: toque da ÚLTIMA célula que acendeu para a PRIMEIRA."
-        : "2) Agora é a sua vez: TOQUE as mesmas células, na MESMA ordem em que acenderam.",
-      content: (onStepDone: () => void) => (
-        <MatrizTutorialGrid theme={theme} seq={seq} expectedOrder={answerOrder} onDone={onStepDone} />
-      ),
-    },
-  ];
-
-  return (
-    <TutorialBase
-      theme={theme}
-      title={reverse ? "Matriz Espacial Inversa" : "Matriz Espacial"}
-      steps={steps}
-      onDone={onDone}
-    />
-  );
-}
-
 export function MatrizEspacial({ difficulty, theme, onComplete, alwaysReverse }: MatrizEspacialProps) {
   const reverse = alwaysReverse ?? REVERSE_MODE(difficulty);
-  const [showTutorial, setShowTutorial] = useState(true);
-  const [seqLength, setSeqLength] = useState(initialSeq(difficulty));
+  const [seqLength, setSeqLength] = useState(matrizEspacialSequenceLengthFor(difficulty));
   const [phase, setPhase] = useState<Phase>("showing");
   const [sequence, setSequence] = useState<number[]>([]);
   const [activeCell, setActiveCell] = useState<number | null>(null);
@@ -223,9 +145,11 @@ export function MatrizEspacial({ difficulty, theme, onComplete, alwaysReverse }:
   const [feedbackData, setFeedbackData] = useState<{ correct: boolean; userSeq: number[] } | null>(null);
   const { begin, isTimeUp, elapsedSec, finish, progressPct } = useTimedProgress();
 
+  useEffect(() => { begin(); }, [begin]);
+
   const isGamified = theme === "GAMIFIED";
   const isColorful = theme === "COLORFUL";
-  const grid = gridSizeFor(difficulty);
+  const grid = matrizEspacialGridSizeFor(difficulty);
 
   const generateSeq = useCallback((len: number) => {
     const cells = new Set<number>();
@@ -253,11 +177,10 @@ export function MatrizEspacial({ difficulty, theme, onComplete, alwaysReverse }:
 
   // eslint-disable-next-line react-hooks/exhaustive-deps
   useEffect(() => {
-    if (showTutorial) return;
     const seq = generateSeq(seqLength);
     setSequence(seq);
     showSequence(seq);
-  }, [trial, showTutorial]);
+  }, [trial]);
 
   function handleCellClick(idx: number) {
     if (phase !== "recall" || userSeq.includes(idx)) return;
@@ -309,10 +232,6 @@ export function MatrizEspacial({ difficulty, theme, onComplete, alwaysReverse }:
         setTrial(nextTrial);
       }
     }, 1800);
-  }
-
-  if (showTutorial) {
-    return <MatrizEspacialTutorial theme={theme} reverse={reverse} onDone={() => { begin(); setShowTutorial(false); }} />;
   }
 
   // ─── Design system (visual premium clean — mockup da Kamylla) ─────────
@@ -422,23 +341,15 @@ export function MatrizEspacial({ difficulty, theme, onComplete, alwaysReverse }:
 
         {/* Painel interno + grade (cresce com a dificuldade) */}
         <div style={{ background: innerPanel, border: `1px solid ${innerBorder}`, borderRadius: 18, padding: 16 }}>
-          <div
-            className="grid gap-2.5 mx-auto w-full"
-            style={{ gridTemplateColumns: `repeat(${grid}, 1fr)`, maxWidth: 400 }}
-          >
-            {Array.from({ length: grid * grid }).map((_, idx) => (
-              <motion.button
-                key={idx}
-                onClick={() => handleCellClick(idx)}
-                disabled={phase !== "recall" || userSeq.includes(idx)}
-                className="aspect-square transition-colors"
-                style={cellStyleFor(idx)}
-                whileTap={phase === "recall" ? { scale: 0.9 } : {}}
-                animate={activeCell === idx ? { scale: [1, 1.22, 1] } : {}}
-                transition={{ duration: 0.28, ease: "easeOut" }}
-              />
-            ))}
-          </div>
+          <MatrizEspacialGrid
+            theme={theme}
+            gridSize={grid}
+            activeCell={activeCell}
+            selectedCells={userSeq}
+            interactive={phase === "recall"}
+            onCellClick={handleCellClick}
+            cellStyleFor={cellStyleFor}
+          />
         </div>
 
         {/* Indicador discreto de quantas células já foram tocadas (durante a recuperação) */}

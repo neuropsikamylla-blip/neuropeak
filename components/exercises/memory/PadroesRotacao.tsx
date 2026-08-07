@@ -28,10 +28,14 @@ const LEVELS: Record<number, MLevel> = {
   9:  { grid: 6, kMin: 6, kMax: 6, rots: [90, 180, 270],showMs: 1700, delayMs: 700 },
   10: { grid: 6, kMin: 6, kMax: 7, rots: [90, 180, 270],showMs: 1500, delayMs: 900 },
 };
+export const PADROES_ROTACAO_MIN_LEVEL = 1;
+export const padroesRotacaoGridForLevel = (level: number): number => LEVELS[level].grid;
+export const padroesRotacaoPositionsForLevel = (level: number): number => LEVELS[level].kMin;
+export const padroesRotacaoDegreesForLevel = (level: number): number[] => LEVELS[level].rots;
 const levelOf = (d: number): number => Math.min(10, Math.max(1, Math.round(d)));
 
 // Rotação horária de (linha, coluna) numa matriz N×N — índice 0.
-function rotatePos(r: number, c: number, N: number, deg: number): [number, number] {
+export function rotatePos(r: number, c: number, N: number, deg: number): [number, number] {
   if (deg === 90) return [c, N - 1 - r];          // 90° horário
   if (deg === 180) return [N - 1 - r, N - 1 - c]; // 180°
   return [N - 1 - c, r];                           // 270° horário
@@ -69,7 +73,7 @@ const soundTap     = () => beep(659, 110, "sine", 0.06);   // toque do paciente
 const soundCorrect = () => { beep(659, 120, "sine", 0.08); setTimeout(() => beep(988, 220, "sine", 0.08), 120); };
 const soundWrong   = () => beep(160, 260, "square", 0.06);
 
-type Phase = "tutorial" | "ready" | "show" | "rotating" | "delay" | "input" | "feedback";
+type Phase = "ready" | "show" | "rotating" | "delay" | "input" | "feedback";
 
 const TEAL = "#22d3c5";
 
@@ -86,11 +90,13 @@ function EdgeMarker({ edge }: { edge: "top" | "right" | "bottom" | "left" }) {
 }
 
 // ── Matriz ───────────────────────────────────────────────────────────────────────
-function Matrix({
-  N, cellPx, lit, picked, expected, phase, edge, onTap,
+export function PadroesRotacaoGrid({
+  N, cellPx, lit, picked, expected, phase, edge, onTap, pressedCell,
 }: {
   N: number; cellPx: number; lit: Set<string>; picked: Set<string>; expected: Set<string>;
   phase: Phase; edge: "top" | "right" | "bottom" | "left"; onTap: (r: number, c: number) => void;
+  /** Célula exibida como pressionada por código; ausente não altera o treino. */
+  pressedCell?: number;
 }) {
   return (
     <div style={{ position: "relative", padding: 12 }}>
@@ -100,7 +106,8 @@ function Matrix({
         {Array.from({ length: N * N }).map((_, i) => {
           const r = Math.floor(i / N), c = i % N, key = cellKey(r, c);
           const isLit = phase === "show" && lit.has(key);
-          const isPicked = (phase === "input" || phase === "feedback") && picked.has(key);
+          const isPressed = pressedCell === i;
+          const isPicked = ((phase === "input" || phase === "feedback") && picked.has(key)) || isPressed;
           const isExpected = phase === "feedback" && expected.has(key);
           let bg = "rgba(255,255,255,0.05)", border = "rgba(148,163,184,0.18)";
           if (isLit) { bg = TEAL; border = TEAL; }
@@ -109,62 +116,11 @@ function Matrix({
           else if (phase === "feedback" && isPicked) { bg = "rgba(248,113,113,0.45)"; border = "#f87171"; }
           else if (isPicked) { bg = "rgba(34,211,197,0.5)"; border = TEAL; }
           return (
-            <button key={key} onClick={() => onTap(r, c)} disabled={phase !== "input"}
+            <button key={key} data-cell={i} onClick={() => onTap(r, c)} disabled={phase !== "input"}
               style={{ width: cellPx, height: cellPx, background: bg, border: `1.5px solid ${border}`, borderRadius: 10,
                 transition: "background .15s, border-color .15s", cursor: phase === "input" ? "pointer" : "default" }} />
           );
         })}
-      </div>
-    </div>
-  );
-}
-
-// ── Tutorial (demonstração animada) ──────────────────────────────────────────────
-function TutorialDemo({ onDone }: { onDone: () => void }) {
-  const N = 3;
-  const demoOrig = new Set(["0,0", "1,2"]);
-  const demoRot = new Set(["0,2", "2,1"]); // rotação 90° horário de (0,0)->(0,2) e (1,2)->(2,1)
-  const [step, setStep] = useState(0); // 0 mostra, 1 gira, 2 resultado
-  const runRef = useRef(0);
-
-  const play = useCallback(async () => {
-    const my = ++runRef.current;
-    setStep(0); await sleep(1500); if (runRef.current !== my) return;
-    setStep(1); await sleep(1500); if (runRef.current !== my) return;
-    setStep(2);
-  }, []);
-  useEffect(() => { play(); return () => { runRef.current++; }; }, [play]);
-
-  return (
-    <div className="min-h-screen w-full flex items-center justify-center p-4" style={{ background: "#020617" }}>
-      <div className="w-full max-w-md rounded-3xl p-6" style={CARD}>
-        <h2 className="text-lg font-bold text-white text-center mb-1">Como jogar: Matriz com Rotações</h2>
-        <ol className="text-xs space-y-1 mb-4 mx-auto max-w-xs" style={{ color: "rgba(148,163,184,0.85)" }}>
-          <li>1. Observe as posições acesas na matriz.</li>
-          <li>2. Memorize o padrão.</li>
-          <li>3. A matriz vai girar como um tabuleiro.</li>
-          <li>4. Marque onde os pontos ficam depois da rotação.</li>
-        </ol>
-        <div className="flex justify-center my-3" style={{ minHeight: 150 }}>
-          {step === 1 ? (
-            <motion.div key="d-rot" initial={{ rotate: 0 }} animate={{ rotate: 90 }} transition={{ duration: 1.2, ease: [0.45, 0, 0.2, 1] }}>
-              <Matrix N={N} cellPx={42} lit={new Set()} picked={new Set()} expected={new Set()} phase="rotating" edge="top" onTap={() => {}} />
-            </motion.div>
-          ) : step === 2 ? (
-            <Matrix N={N} cellPx={42} lit={new Set()} picked={demoRot} expected={demoRot} phase="feedback" edge="right" onTap={() => {}} />
-          ) : (
-            <Matrix N={N} cellPx={42} lit={demoOrig} picked={new Set()} expected={new Set()} phase="show" edge="top" onTap={() => {}} />
-          )}
-        </div>
-        <p className="text-center text-sm font-semibold mb-4" style={{ color: TEAL, minHeight: 20 }}>
-          {step === 0 ? "👀 Memorize as posições" : step === 1 ? "🔄 O tabuleiro gira 90° ↻" : "✅ Os pontos ficam aqui"}
-        </p>
-        <div className="flex gap-2">
-          <button onClick={play} className="flex-1 rounded-2xl font-bold text-sm py-3 active:scale-95"
-            style={{ background: "rgba(34,211,197,0.12)", border: "1px solid rgba(34,211,197,0.4)", color: TEAL }}>↻ Repetir</button>
-          <button onClick={onDone} className="flex-1 rounded-2xl font-bold text-white text-sm py-3 active:scale-95"
-            style={{ background: "linear-gradient(135deg,#0d9488,#0891b2)", boxShadow: "0 4px 20px rgba(13,148,136,0.5)" }}>Começar →</button>
-        </div>
       </div>
     </div>
   );
@@ -194,7 +150,7 @@ export function PadroesRotacao({ difficulty, onComplete }: PadroesRotacaoProps) 
     const ro = new ResizeObserver(compute); ro.observe(el); roRef.current = ro;
   }, []);
 
-  const [phase, setPhase] = useState<Phase>("tutorial");
+  const [phase, setPhase] = useState<Phase>("ready");
   const [lit, setLit] = useState<Set<string>>(new Set());
   const [picked, setPicked] = useState<Set<string>>(new Set());
   const [deg, setDeg] = useState<number>(90);
@@ -318,14 +274,17 @@ export function PadroesRotacao({ difficulty, onComplete }: PadroesRotacaoProps) 
   }
   function confirmInput() { if (phase === "input" && picked.size > 0) submit(picked); }
 
-  useEffect(() => () => { runRef.current++; }, []);
-
   function begin() {
     correctRef.current = 0; hitRef.current = 0; wrongRef.current = 0; omRef.current = 0; expTotalRef.current = 0; totalRef.current = 0;
     rtsRef.current = []; startTime.current = Date.now(); startTimer(); startRound();
   }
 
-  if (phase === "tutorial") return <TutorialDemo onDone={begin} />;
+  useEffect(() => {
+    begin();
+    return () => { runRef.current++; };
+  // O treino começa ao ser montado pelo ExerciseWrapper, após o tutorial compartilhado.
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
 
   // cellPx preenche a largura medida, com um teto por tamanho de grade.
   const GAP = 6, GRID_PAD = 6, MATRIX_PAD = 12;
@@ -369,12 +328,12 @@ export function PadroesRotacao({ difficulty, onComplete }: PadroesRotacaoProps) 
           {phase === "rotating" ? (
             // tabuleiro INTEIRO girando (vazio) — o marcador torna a rotação visível
             <motion.div key="rot" initial={{ rotate: 0 }} animate={{ rotate: deg }} transition={{ duration: rotSec, ease: [0.45, 0, 0.2, 1] }}>
-              <Matrix N={N} cellPx={cellPx} lit={new Set()} picked={new Set()} expected={new Set()}
+              <PadroesRotacaoGrid N={N} cellPx={cellPx} lit={new Set()} picked={new Set()} expected={new Set()}
                 phase="rotating" edge="top" onTap={() => {}} />
             </motion.div>
           ) : (
             // tabuleiro estático (upright) — marcador já na nova borda após a rotação
-            <Matrix N={N} cellPx={cellPx} lit={lit} picked={picked} expected={expectedRef.current}
+            <PadroesRotacaoGrid N={N} cellPx={cellPx} lit={lit} picked={picked} expected={expectedRef.current}
               phase={phase} edge={edge} onTap={toggle} />
           )}
         </div>

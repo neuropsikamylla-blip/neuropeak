@@ -20,6 +20,7 @@ export interface BoardProps<T> {
   enteredItems: T[];
   pressedChoice?: T;
   highlightedIndex?: number;
+  presenting?: boolean;
 }
 
 export interface FamiliaSequenciaConfig<T> {
@@ -37,10 +38,11 @@ export interface FamiliaSequenciaConfig<T> {
   Board: ComponentType<BoardProps<T>>;
   /** Seletor CSS do alvo, para o DemoPointer encontrar. */
   targetSelectorFor: (item: T) => string;
-  reverse?: boolean;
+  /** Transforma a sequência apresentada na resposta que deve ser demonstrada e validada. */
+  transformarResposta?: (sequencia: T[]) => T[];
 }
 
-// Os oito tempos pedagógicos calibrados vivem uma vez só, na fábrica da família.
+// Todos os tempos pedagógicos calibrados vivem uma vez só, na fábrica da família.
 const POST_LISTENING_PAUSE_MS = 1000;
 const POINTER_ENTRY_PULSE_MS = 500;
 const POINTER_MOVE_MS = 650;
@@ -49,6 +51,9 @@ const POINTER_PRESS_MS = 420;
 const POINTER_RELEASE_MS = 260;
 const BETWEEN_DIGITS_MS = 520;
 const FINAL_PAUSE_MS = 800;
+const VISUAL_ITEM_ON_MS = 1500;
+const VISUAL_ITEM_GAP_MS = 500;
+const VISUAL_SETTLE_MS = 1200;
 
 function wait(ms: number, isCancelled: () => boolean): Promise<boolean> {
   return new Promise((resolve) => {
@@ -72,8 +77,29 @@ function wait(ms: number, isCancelled: () => boolean): Promise<boolean> {
   });
 }
 
-function respostaEsperada<T>(sequencia: T[], reverse: boolean): T[] {
-  return reverse ? [...sequencia].reverse() : sequencia;
+function respostaEsperada<T>(
+  sequencia: T[],
+  transformarResposta?: (sequencia: T[]) => T[],
+): T[] {
+  const copia = [...sequencia];
+  return transformarResposta ? transformarResposta(copia) : copia;
+}
+
+/** Apresentação visual compartilhada pelas sequências espaciais. */
+export async function presentVisualSequence<T>(
+  itens: T[],
+  hooks: SequencePresentationHooks<T>,
+): Promise<void> {
+  for (let index = 0; index < itens.length; index++) {
+    if (hooks.isCancelled()) return;
+    const item = itens[index];
+    hooks.onItemStart(item, index);
+    if (!await wait(VISUAL_ITEM_ON_MS, hooks.isCancelled)) return;
+    hooks.onItemEnd(item, index);
+    if (index < itens.length - 1
+      && !await wait(VISUAL_ITEM_GAP_MS, hooks.isCancelled)) return;
+  }
+  await wait(VISUAL_SETTLE_MS, hooks.isCancelled);
 }
 
 function criarDemonstration<T>(config: FamiliaSequenciaConfig<T>) {
@@ -118,7 +144,7 @@ function criarDemonstration<T>(config: FamiliaSequenciaConfig<T>) {
         setFilled(0);
         const ordemDaResposta = respostaEsperada(
           config.demonstrationItems,
-          config.reverse ?? false,
+          config.transformarResposta,
         );
         if (!await wait(POST_LISTENING_PAUSE_MS, () => cancelled)) return;
 
@@ -179,6 +205,7 @@ function criarDemonstration<T>(config: FamiliaSequenciaConfig<T>) {
           enteredItems={enteredItems}
           pressedChoice={pressedChoice}
           highlightedIndex={highlightedIndex}
+          presenting={demonstrationPhase === "listening"}
         />
         <DemoPointer
           containerRef={containerRef}
@@ -238,7 +265,10 @@ function criarGuidedAttempt<T>(config: FamiliaSequenciaConfig<T>) {
       setFilled(next.length);
 
       if (next.length === config.smallestValidUnit) {
-        const expected = respostaEsperada(sequenceRef.current, config.reverse ?? false);
+        const expected = respostaEsperada(
+          sequenceRef.current,
+          config.transformarResposta,
+        );
         const isCorrect = expected.every((value, index) => value === next[index]);
         onOutcome(isCorrect ? "correct" : "incorrect");
       }
@@ -253,6 +283,7 @@ function criarGuidedAttempt<T>(config: FamiliaSequenciaConfig<T>) {
         interactive={!listening}
         onChoice={handleChoice}
         enteredItems={enteredItems}
+        presenting={listening}
       />
     );
   };

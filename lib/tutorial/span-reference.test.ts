@@ -320,7 +320,7 @@ describe("demonstração completa da resposta do Span Direto", () => {
   });
 });
 
-describe("o Span Inverso e os demais exercícios seguem intocados", () => {
+describe("o Span Inverso continua na fábrica compartilhada", () => {
   it("o Inverso reusa a fábrica, sem componente de tutorial próprio", () => {
     // Regra 7: o Inverso não ganhou arquivo de tutorial — ele sai da mesma fábrica do Direto,
     // parametrizada só pela ordem da resposta. O componente do exercício segue sem saber de nada.
@@ -331,7 +331,9 @@ describe("o Span Inverso e os demais exercícios seguem intocados", () => {
     expect(definicao).toMatch(/function criarTutorialSpan\(/);
     expect(definicao).toMatch(/criarTutorialSequenciaOrdenada\(/);
     expect(definicao).toMatch(/export const spanNumericoInversoTutorial = criarTutorialSpan\(/);
-    expect(definicao).toMatch(/reverse: true/);
+    expect(definicao).toMatch(
+      /transformarResposta: \(sequencia\) => sequencia\.reverse\(\)/,
+    );
   });
 
   it("a preparação do Inverso preserva a antecipação de nível que sempre teve", () => {
@@ -353,7 +355,11 @@ describe("o Span Inverso e os demais exercícios seguem intocados", () => {
     const convertidos = (registro.match(/"([a-z-]+)":/g) ?? []).map((m) => m.slice(1, -2));
 
     expect(convertidos.sort()).toEqual([
+      "cubo-corsi",
       "letras-sequencia",
+      "matriz-espacial",
+      "matriz-espacial-inversa",
+      "padroes-rotacao",
       "sequencia-itens",
       "span-numerico",
       "span-numerico-inverso",
@@ -437,6 +443,125 @@ describe("Família 1 — letras e itens usam a fábrica aprovada", () => {
   });
 });
 
+describe("Família 2 — sequência espacial usa uma definição única", () => {
+  const family = () => source("lib/tutorial/definitions/sequencia-ordenada.tsx");
+  const spatial = () => source("lib/tutorial/definitions/sequencia-espacial.tsx");
+  const matrix = () => source("components/exercises/memory/MatrizEspacial.tsx");
+  const inverse = () => source("components/exercises/memory/MatrizEspacialInversa.tsx");
+  const cube = () => source("components/exercises/memory/CuboCorsi.tsx");
+  const rotation = () => source("components/exercises/memory/PadroesRotacao.tsx");
+
+  it("converte os quatro pela mesma fábrica, sem tutorial próprio", () => {
+    expect(spatial().match(/criarTutorialSequenciaOrdenada(?:<\w+>)?\(\{/g) ?? []).toHaveLength(4);
+    expect(spatial()).not.toMatch(/function criarTutorialSequenciaEspacial/);
+    for (const exercise of [matrix(), inverse(), cube(), rotation()]) {
+      expect(exercise).not.toMatch(/TutorialBase|function \w*Tutorial|<TutorialDemo/);
+    }
+  });
+
+  it("mantém todas as constantes de ritmo somente na fábrica compartilhada", () => {
+    const constants = [
+      "POST_LISTENING_PAUSE_MS",
+      "POINTER_ENTRY_PULSE_MS",
+      "POINTER_MOVE_MS",
+      "POINTER_AIM_MS",
+      "POINTER_PRESS_MS",
+      "POINTER_RELEASE_MS",
+      "BETWEEN_DIGITS_MS",
+      "FINAL_PAUSE_MS",
+      "VISUAL_ITEM_ON_MS",
+      "VISUAL_ITEM_GAP_MS",
+      "VISUAL_SETTLE_MS",
+    ];
+
+    for (const constant of constants) {
+      expect(family()).toMatch(new RegExp(`const ${constant} =`));
+      expect(spatial()).not.toContain(constant);
+    }
+  });
+
+  it("parametriza qualquer transformação da resposta", () => {
+    expect(family()).toMatch(
+      /transformarResposta\?: \(sequencia: T\[\]\) => T\[\]/,
+    );
+    expect(spatial()).toMatch(
+      /matrizEspacialInversaTutorial[\s\S]*transformarResposta: \(sequencia\) => sequencia\.reverse\(\)/,
+    );
+    expect(spatial()).toMatch(
+      /padroesRotacaoTutorial[\s\S]*transformarResposta: transformarRotacao/,
+    );
+  });
+
+  it("demonstra os cliques na resposta já transformada", () => {
+    const demonstration = family().slice(
+      family().indexOf("function criarDemonstration"),
+      family().indexOf("function criarGuidedAttempt"),
+    );
+
+    expect(demonstration).toMatch(
+      /ordemDaResposta = respostaEsperada\([\s\S]*config\.transformarResposta/,
+    );
+    expect(demonstration).toMatch(
+      /for \(let index = 0; index < ordemDaResposta\.length; index\+\+\)[\s\S]*const item = ordemDaResposta\[index\]/,
+    );
+  });
+
+  it("importa do exercício a mesma rotação usada no treino", () => {
+    expect(spatial()).toMatch(
+      /from "@\/components\/exercises\/memory\/PadroesRotacao"/,
+    );
+    expect(spatial()).toMatch(/const \[rotatedRow, rotatedColumn\] = rotatePos\(/);
+    expect(rotation()).toMatch(/export function rotatePos\(/);
+  });
+
+  it("expõe alvos e pressão opcional nas três superfícies reais", () => {
+    for (const exercise of [matrix(), cube(), rotation()]) {
+      expect(exercise).toMatch(/pressedCell\?: number/);
+      expect(exercise).toMatch(/data-cell=\{/);
+    }
+    expect(spatial()).toMatch(/targetSelectorFor: \(cell(?:: number)?\) => `\[data-cell=/);
+  });
+
+  it("mantém o treino sem fornecer a prop exclusiva da demonstração", () => {
+    const matrixTrainingCall = matrix().slice(matrix().lastIndexOf("<MatrizEspacialGrid"));
+    const cubeTrainingCall = cube().slice(cube().lastIndexOf("<IsoCube"));
+    const rotationTrainingCall = rotation().slice(rotation().lastIndexOf("<PadroesRotacaoGrid"));
+
+    expect(matrixTrainingCall).not.toMatch(/pressedCell/);
+    expect(cubeTrainingCall).not.toMatch(/pressedCell/);
+    expect(rotationTrainingCall).not.toMatch(/pressedCell/);
+  });
+
+  it("usa exatamente as quatro instruções guiadas de clique", () => {
+    expect(spatial()).toContain("Observe as posições e clique nelas na mesma ordem.");
+    expect(spatial()).toContain("Observe as posições e clique nelas na ordem inversa.");
+    expect(spatial()).toContain("Observe os cubos e clique neles na mesma ordem.");
+    expect(spatial()).toContain("Observe o padrão e clique nas posições após a rotação.");
+    expect(spatial()).not.toMatch(/teclado|toque/i);
+  });
+
+  it("deriva as menores unidades das escadas dos exercícios", () => {
+    expect(spatial()).toMatch(
+      /matrizEspacialSequenceLengthFor\(\s*MATRIZ_ESPACIAL_MIN_DIFFICULTY/,
+    );
+    expect(spatial()).toMatch(
+      /cuboCorsiSequenceLength\(\s*CUBO_CORSI_MIN_DIFFICULTY/,
+    );
+    expect(spatial()).toMatch(
+      /padroesRotacaoPositionsForLevel\(\s*PADROES_ROTACAO_MIN_LEVEL/,
+    );
+  });
+
+  it("mede cada alvo 3D transformado pela geometria real do navegador", () => {
+    const pointer = source("components/exercises/tutorial/DemoPointer.tsx");
+
+    expect(cube()).toMatch(/perspective: size \* 1\.9/);
+    expect(cube()).toMatch(/transformStyle: "preserve-3d"/);
+    expect(cube()).toMatch(/data-cell=\{idx\}/);
+    expect(pointer).toMatch(/target\.getBoundingClientRect\(\)/);
+  });
+});
+
 // ─────────────────────────────────────────────────────────────────────────────
 // As quatro decisões congeladas da T1 em 05/ago/2026. Cada uma vira teste para
 // que nenhuma conversão futura possa desfazê-la por descuido.
@@ -459,6 +584,7 @@ describe("T1 congelada — 2. sem emoji no framework do tutorial", () => {
     "components/exercises/tutorial/DemoPointer.tsx",
     "lib/tutorial/definitions/letras-sequencia.tsx",
     "lib/tutorial/definitions/sequencia-itens.tsx",
+    "lib/tutorial/definitions/sequencia-espacial.tsx",
     "lib/tutorial/definitions/sequencia-ordenada.tsx",
     "lib/tutorial/definitions/span-numerico.tsx",
     "lib/tutorial/speech-playback.ts",

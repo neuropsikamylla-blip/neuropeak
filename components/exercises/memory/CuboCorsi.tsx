@@ -4,7 +4,6 @@ import { useState, useRef, useCallback, useEffect } from "react";
 import { calculateExerciseScore } from "@/lib/scoring";
 import { useTimedProgress } from "@/components/exercises/useExerciseEngine";
 import { ExerciseProgressBar } from "@/components/exercises/ExerciseProgressBar";
-import { TutorialBase } from "@/components/exercises/TutorialBase";
 import { classifyTrial, nextLevelPerTrial } from "@/lib/adaptive-trial";
 import type { ExerciseResult, Theme } from "@/types";
 
@@ -71,11 +70,13 @@ function faceCss(name: string, h: number): string {
 const FACE_BASE: Record<string, number | null> = { top: 0, front: 4, right: 8, leftbk: null, bottom: null, back: null };
 const FACE_COLOR: Record<string, Face> = { top: "top", front: "left", right: "right" };
 
-function IsoCube({
-  states, interactive, onTile, size = 360, poseFace,
+export function IsoCube({
+  states, interactive, onTile, size = 360, poseFace, pressedCell,
 }: {
   states: BState[]; interactive: boolean; onTile: (i: number) => void; size?: number;
   poseFace?: Face | null;
+  /** Célula exibida como pressionada por código; ausente não altera o treino. */
+  pressedCell?: number;
 }) {
   const litIdx = states.findIndex(s => s === "lit");
   const derivedFace: Face | null = litIdx >= 0 ? FACE_OF[litIdx] : null;
@@ -97,10 +98,11 @@ function IsoCube({
         {[0,1,2,3].map(i => {
           if (!active) return <div key={i} style={{ borderRadius: r, background: "#EAF2FA" }} />;
           const idx = (base as number) + i;
-          const st = states[idx] ?? "idle";
+          const st = pressedCell === idx ? "tapped" : (states[idx] ?? "idle");
           const fc = FACE_COLOR[name];
           return (
             <div key={i}
+              data-cell={idx}
               onPointerDown={interactive ? (e) => { e.preventDefault(); onTile(idx); } : undefined}
               style={{
                 borderRadius: r,
@@ -146,6 +148,37 @@ function IsoCube({
   );
 }
 
+export const CUBO_CORSI_CELL_COUNT = 12;
+
+export function CuboCorsiBoard({
+  activeCell,
+  selectedCells,
+  pressedCell,
+  interactive,
+  onCellClick,
+}: {
+  activeCell?: number;
+  selectedCells: number[];
+  /** Célula exibida como pressionada por código; ausente não altera o treino. */
+  pressedCell?: number;
+  interactive: boolean;
+  onCellClick: (idx: number) => void;
+}) {
+  const states: BState[] = Array(CUBO_CORSI_CELL_COUNT).fill("idle");
+  selectedCells.forEach((idx) => { states[idx] = "tapped"; });
+  if (activeCell !== undefined) states[activeCell] = "lit";
+
+  return (
+    <IsoCube
+      states={states}
+      interactive={interactive}
+      onTile={onCellClick}
+      pressedCell={pressedCell}
+      size={420}
+    />
+  );
+}
+
 // ── Áudio ─────────────────────────────────────────────────────────────────────
 let _ac: AudioContext | null = null;
 function beep(hz: number, ms = 150, vol = 0.07) {
@@ -173,9 +206,10 @@ const sndWrong   = () => beep(180, 300, 0.05);
 // decorrido (0→100%). A dificuldade sobe +1 a cada 2 acertos SEGUIDOS.
 const TARGET_MS  = 7 * 60 * 1000;  // duração-alvo da sessão
 const MAX_ROUNDS = 80;             // trava de segurança (normalmente não atingida)
-const N_TILES    = 12;
+const N_TILES    = CUBO_CORSI_CELL_COUNT;
 
-function seqLen(d: number): number {
+export const CUBO_CORSI_MIN_DIFFICULTY = 1;
+export function cuboCorsiSequenceLength(d: number): number {
   if (d <= 1) return 2; if (d <= 3) return 3; if (d <= 5) return 4;
   if (d <= 6) return 5; if (d <= 7) return 6; if (d <= 8) return 7;
   if (d <= 9) return 8; return 9;
@@ -192,139 +226,15 @@ function randSeq(len: number): number[] {
   return arr;
 }
 
-// ── Tutorial ──────────────────────────────────────────────────────────────────
-// Demo: uma peça de cada face (topo, esquerda, direita) + uma extra do topo.
-const DEMO_SEQ = [0, 4, 8, 3]; // topo · esquerda · direita · topo
-
-function TutorialDemoWatch({ onDone }: { onDone: () => void }) {
-  const [states, setStates] = useState<BState[]>(Array(N_TILES).fill("idle"));
-  const [pose, setPose] = useState<Face | null>(null);
-  const cancelRef = useRef(false);
-  const timers = useRef<ReturnType<typeof setTimeout>[]>([]);
-
-  useEffect(() => {
-    (async () => {
-      const sleep = (ms: number) => new Promise<void>((res, rej) => {
-        if (cancelRef.current) { rej(); return; }
-        const t = setTimeout(() => cancelRef.current ? rej() : res(), ms);
-        timers.current.push(t);
-      });
-      try {
-        await sleep(400);
-        // Mesmo ciclo do jogo: VIRA primeiro → peça PISCA de frente → volta.
-        for (const idx of DEMO_SEQ) {
-          if (cancelRef.current) return;
-          setPose(FACE_OF[idx]);
-          await sleep(TURN_MS + 120);
-          setStates(prev => prev.map((_, j) => j === idx ? "lit" : "idle"));
-          sndFlash();
-          await sleep(850);
-          setStates(Array(N_TILES).fill("idle"));
-          setPose(null);
-          await sleep(TURN_MS + 200);
-        }
-        if (!cancelRef.current) onDone();
-      } catch { /* cancelado */ }
-    })();
-    return () => { cancelRef.current = true; timers.current.forEach(clearTimeout); };
-  // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, []);
-
-  return (
-    <div>
-      <p className="text-xs text-center font-semibold mb-2" style={{ color: "#1D4ED8" }}>
-        O quadrado dourado acende — memorize a ordem!
-      </p>
-      <IsoCube states={states} interactive={false} onTile={() => {}} size={380} poseFace={pose} />
-    </div>
-  );
-}
-
-function TutorialDemoInput({ onDone }: { onDone: () => void }) {
-  const [states, setStates] = useState<BState[]>(Array(N_TILES).fill("idle"));
-  const [input, setInput] = useState<number[]>([]);
-  const [finished, setFinished] = useState(false);
-  const timers = useRef<ReturnType<typeof setTimeout>[]>([]);
-
-  const handleTap = (idx: number) => {
-    if (finished) return;
-    sndTap();
-    setStates(prev => prev.map((s, j) => j === idx ? "tapped" : s));
-    const t = setTimeout(() => setStates(prev => prev.map((s, j) => j === idx && s === "tapped" ? "idle" : s)), 180);
-    timers.current.push(t);
-    const ni = [...input, idx];
-    setInput(ni);
-    if (ni.length === DEMO_SEQ.length) {
-      setFinished(true);
-      const rs: BState[] = Array(N_TILES).fill("idle");
-      ni.forEach((tap, i) => {
-        const exp = DEMO_SEQ[i];
-        if (tap === exp) { rs[exp] = "correct"; }
-        else {
-          if (rs[exp] !== "correct") rs[exp] = "wrong";
-          if (rs[tap] !== "correct") rs[tap] = "wrong";
-        }
-      });
-      ni.every((tap, i) => tap === DEMO_SEQ[i]) ? sndCorrect() : sndWrong();
-      setStates(rs);
-      const t2 = setTimeout(onDone, 1800);
-      timers.current.push(t2);
-    }
-  };
-
-  useEffect(() => () => { timers.current.forEach(clearTimeout); }, []);
-
-  return (
-    <div>
-      <p className="text-xs text-center mb-2" style={{ color: "#475569" }}>
-        Toque na mesma ordem &nbsp;
-        <span style={{ color: "#46C66A", fontWeight: 600 }}>verde = certo</span>
-        &nbsp;/&nbsp;
-        <span style={{ color: "#F26257", fontWeight: 600 }}>vermelho = errado</span>
-      </p>
-      <IsoCube states={states} interactive={!finished} onTile={handleTap} size={300} />
-      <div className="flex gap-1.5 justify-center mt-2">
-        {DEMO_SEQ.map((_, i) => (
-          <div key={i} style={{
-            width: 10, height: 10, borderRadius: "50%",
-            backgroundColor: i < input.length ? "#4AAED9" : "#D6EAF8",
-            transition: "background-color 0.2s",
-          }} />
-        ))}
-      </div>
-    </div>
-  );
-}
-
-function CuboCorsiTutorial({ onDone }: { onDone: () => void }) {
-  return (
-    <TutorialBase
-      theme="CLINICAL"
-      title="Cubos"
-      steps={[
-        {
-          instruction: "Um quadrado dourado acende de cada vez — no topo, na lateral esquerda ou na lateral direita do cubo. O cubo se inclina de leve para mostrar melhor a peça que acendeu. Memorize a sequência!",
-          content: (next) => <TutorialDemoWatch key="w" onDone={next} />,
-        },
-        {
-          instruction: "Toque os quadrados na mesma ordem em que acenderam. Verde = acertou, Vermelho = errou.",
-          content: (next) => <TutorialDemoInput key="i" onDone={next} />,
-        },
-      ]}
-      onDone={onDone}
-    />
-  );
-}
-
 // ── Componente principal ──────────────────────────────────────────────────────
 interface Props { difficulty: number; theme: Theme; onComplete: (r: ExerciseResult) => void; }
-type Phase = "tutorial" | "watch" | "input" | "result" | "between";
+type Phase = "watch" | "input" | "result" | "between";
 
 export function CuboCorsi({ difficulty, theme: _theme, onComplete }: Props) {
   // Barra por TEMPO ATIVO (pausa quando o paciente não interage) — hook padrão.
   const { begin, isTimeUp, elapsedSec, finish, progressPct } = useTimedProgress(TARGET_MS);
 
-  const [phase, setPhase]      = useState<Phase>("tutorial");
+  const [phase, setPhase]      = useState<Phase>("watch");
   const [round, setRound]      = useState(0);
   const [sequence, setSeq]     = useState<number[]>([]);
   const [tileStates, setTS]    = useState<BState[]>(Array(N_TILES).fill("idle"));
@@ -360,7 +270,7 @@ export function CuboCorsi({ difficulty, theme: _theme, onComplete }: Props) {
   const startRound = useCallback(async (r: number) => {
     cancelRef.current = false;
     const d = curDiffRef.current;       // dificuldade ATUAL (sobe durante a sessão)
-    const seq = randSeq(seqLen(d));
+    const seq = randSeq(cuboCorsiSequenceLength(d));
     setSeq(seq);
     setInput([]);
     setTS(Array(N_TILES).fill("idle"));
@@ -455,11 +365,13 @@ export function CuboCorsi({ difficulty, theme: _theme, onComplete }: Props) {
     }
   }, [phase, inputSoFar, sequence, round, evaluateSequence]);
 
-  useEffect(() => () => clearAll(), []);
-
-  if (phase === "tutorial") {
-    return <CuboCorsiTutorial onDone={() => { begin(); startRound(0); }} />;
-  }
+  useEffect(() => {
+    begin();
+    void startRound(0);
+    return () => clearAll();
+  // O treino começa ao ser montado pelo ExerciseWrapper, após o tutorial compartilhado.
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
 
   const resultOk = phase === "result" && inputSoFar.every((t, i) => t === sequence[i]);
   const label = phase === "watch"  ? "Observe a sequência..."

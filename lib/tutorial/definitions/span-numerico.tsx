@@ -72,11 +72,11 @@ function presentSpan(itens: number[], hooks: {
 
 function criarTutorialSpan({
   exerciseId,
-  reverse,
+  transformarResposta,
   guidedInstruction,
 }: {
   exerciseId: string;
-  reverse: boolean;
+  transformarResposta?: (sequencia: number[]) => number[];
   guidedInstruction: string;
 }) {
   return criarTutorialSequenciaOrdenada({
@@ -90,18 +90,17 @@ function criarTutorialSpan({
     present: presentSpan,
     Board: SpanBoard,
     targetSelectorFor: (digit) => `[data-digit="${digit}"]`,
-    reverse,
+    transformarResposta,
   });
 }
 
 export const spanNumericoTutorial = criarTutorialSpan({
   exerciseId: "span-numerico",
-  reverse: false,
   guidedInstruction: "Ouça a sequência e clique nos números na mesma ordem.",
 });
 
 export const spanNumericoInversoTutorial = criarTutorialSpan({
   exerciseId: "span-numerico-inverso",
-  reverse: true,
+  transformarResposta: (sequencia) => sequencia.reverse(),
   guidedInstruction: "Ouça a sequência e clique nos números na ordem inversa.",
 });
