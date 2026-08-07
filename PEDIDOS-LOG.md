@@ -14593,3 +14593,19 @@ appVersion;
 buildId;
 resultado dos gates;
 qual exercício será o representante para validação da Família 3.
+
+## 07/08/2026 18:51
+Continue exatamente do bloco EM ANDAMENTO.
+A Família 2 está aprovada.
+Inicie a Família 3.
+Antes de escrever código, confirme se a mecânica "memorizar conjunto → selecionar (sem ordem)" pode reutilizar o framework aprovado ou se realmente exige uma nova fábrica.
+Só crie uma nova fábrica se isso for inevitável.
+O objetivo continua sendo manter um único framework de tutorial para todos os 34 exercícios.
+Se conseguir adaptar a mecânica apenas parametrizando o framework existente, faça isso.
+Se encontrar uma incompatibilidade arquitetural real, pare, documente a incompatibilidade, explique por que ela existe e proponha a solução antes de implementar.
+Fora isso, conclua toda a Família 3, publique, rode todos os gates e me entregue apenas:
+exercícios convertidos;
+appVersion;
+buildId;
+resultado dos gates;
+exercício representante para validação.
