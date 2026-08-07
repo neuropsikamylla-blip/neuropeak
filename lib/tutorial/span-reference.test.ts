@@ -1,4 +1,4 @@
-import { readFileSync } from "node:fs";
+import { readFileSync, readdirSync } from "node:fs";
 import { resolve } from "node:path";
 import { describe, expect, it } from "vitest";
 import { spanGapMs } from "./span-playback";
@@ -549,12 +549,82 @@ describe("sincronismo entre voz e estímulo visual", () => {
   });
 });
 
-describe("texto da demonstração aprovado por ela", () => {
-  it("usa a redação definida em 07/ago/2026", () => {
+describe("texto da demonstração", () => {
+  // A redação "Observe como ouvir a sequência e responder corretamente" foi pedida para o Span e
+  // durou algumas horas: no mesmo dia a regra global 1 fixou um texto ÚNICO para os 34, e o texto
+  // específico do Span deixou de existir. Quem manda aqui é a regra global.
+  it("usa o texto padrão do framework, não uma redação por exercício", () => {
     const runner = source("components/exercises/tutorial/TutorialRunner.tsx");
 
     expect(runner).toMatch(/Observe como responder/);
-    expect(runner).toMatch(/Observe como ouvir a sequência e responder corretamente\./);
+    expect(runner).toMatch(/Observe como funciona a atividade\./);
     expect(runner).not.toMatch(/tarefa sendo feita do início ao fim/);
+  });
+});
+
+// ─────────────────────────────────────────────────────────────────────────────
+// LOTE 0 — as nove regras globais da T1 (07/ago/2026). Valem para os 34.
+// ─────────────────────────────────────────────────────────────────────────────
+
+describe("T1 global — 1 e 5: linguagem padrão", () => {
+  const runner = () => source("components/exercises/tutorial/TutorialRunner.tsx");
+
+  it("demonstração usa o selo, o título e o texto padrão", () => {
+    expect(runner()).toMatch(/DEMONSTRAÇÃO/);
+    expect(runner()).toMatch(/Observe como responder/);
+    expect(runner()).toMatch(/Observe como funciona a atividade\./);
+  });
+
+  it("guiada usa o selo e o título padrão", () => {
+    expect(runner()).toMatch(/SUA VEZ/);
+    expect(runner()).toMatch(/Agora é sua vez/);
+  });
+
+  it("encerramento é sempre Tutorial concluído, com a mensagem padrão", () => {
+    expect(runner()).toMatch(/Tutorial concluído/);
+    expect(runner()).toMatch(/Agora começa o treino\./);
+    expect(runner()).not.toMatch(/Demonstração concluída|Tentativa concluída/);
+  });
+});
+
+describe("T1 global — 8: tutorial sempre disponível, nunca obrigatório", () => {
+  const wrapper = () => source("components/exercises/ExerciseWrapper.tsx");
+
+  it("a preparação oferece rever o tutorial quando ele não roda automaticamente", () => {
+    expect(wrapper()).toMatch(/Ver tutorial novamente/);
+    expect(wrapper()).toMatch(/tutorial && tutorialState !== undefined && !needsTutorial/);
+  });
+
+  it("rever o tutorial NÃO grava nada", () => {
+    // A revisão não pode chamar onTutorialDone: é ele que dispara o POST que grava
+    // tutorialCompletedAt, tutorialVersion e tutorialSource.
+    expect(wrapper()).toMatch(/function reviewTutorial\(\)[\s\S]*?setIsTutorialReview\(true\)/);
+    expect(wrapper()).toMatch(/if \(!isTutorialReview\) onTutorialDone\?\.\(\)/);
+  });
+
+  it("a primeira conclusão continua gravando", () => {
+    expect(wrapper()).toMatch(/function leaveInstructions\(\)[\s\S]*?setIsTutorialReview\(false\)/);
+  });
+
+  it("a revisão executa o tutorial completo e devolve ao treino", () => {
+    // reviewTutorial vai para a MESMA fase do caminho automático — mesmo runner, mesmo fluxo.
+    expect(wrapper()).toMatch(/function reviewTutorial\(\)[\s\S]*?setPhase\("tutorial"\)/);
+    expect(wrapper()).toMatch(/function finishTutorial\(\)[\s\S]*?setPhase\("exercise"\)/);
+  });
+});
+
+describe("T1 global — 7: um só padrão visual para todos", () => {
+  it("o runner e o cursor são compartilhados, não copiados por exercício", () => {
+    // Se alguém criar um segundo runner ou cursor para um exercício específico, este teste acusa:
+    // a regra 7 exige UM padrão visual, e cópias por exercício são justamente como ele se perde.
+    const arquivos = readdirSync(resolve(process.cwd(), "components/exercises"), {
+      recursive: true,
+    }) as string[];
+
+    const runners = arquivos.filter((f) => /Runner.*\.tsx$/.test(String(f)));
+    const pointers = arquivos.filter((f) => /Pointer.*\.tsx$/.test(String(f)));
+
+    expect(runners.map(String).sort()).toEqual(["tutorial/TutorialRunner.tsx"]);
+    expect(pointers.map(String).sort()).toEqual(["tutorial/DemoPointer.tsx"]);
   });
 });

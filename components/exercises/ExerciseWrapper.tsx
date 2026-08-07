@@ -70,6 +70,9 @@ export function ExerciseWrapper({
   );
   const [result, setResult] = useState<ExerciseResult | null>(null);
   const [isFullscreen, setIsFullscreen] = useState(false);
+  // Distingue o tutorial automático da primeira vez de uma REVISÃO pedida pelo paciente.
+  // É esta bandeira que impede a revisão de gravar qualquer coisa.
+  const [isTutorialReview, setIsTutorialReview] = useState(false);
 
   // Progresso interno do exercício atual (0-100), reportado via useExerciseProgress().
   const [innerPct, setInnerPct] = useState(0);
@@ -114,11 +117,27 @@ export function ExerciseWrapper({
   }
 
   function leaveInstructions() {
+    // Primeira vez: o tutorial é automático e, ao terminar, fica registrado.
+    setIsTutorialReview(false);
     setPhase(needsTutorial ? "tutorial" : "exercise");
   }
 
+  /**
+   * "Ver tutorial novamente" — o tutorial como manual interativo.
+   *
+   * A diferença para o caminho automático é inteira: aqui NADA é gravado. Não chama
+   * `onTutorialDone`, logo não há POST, e `tutorialCompletedAt`, `tutorialVersion` e
+   * `tutorialSource` permanecem exatamente como estavam. Rever é consulta, não conclusão.
+   */
+  function reviewTutorial() {
+    setIsTutorialReview(true);
+    setPhase("tutorial");
+  }
+
   function finishTutorial() {
-    onTutorialDone?.();
+    // Só a PRIMEIRA conclusão registra. A revisão sai em silêncio, sem tocar em dado nenhum.
+    if (!isTutorialReview) onTutorialDone?.();
+    setIsTutorialReview(false);
     setPhase("exercise");
   }
 
@@ -208,6 +227,28 @@ export function ExerciseWrapper({
             >
               {theme === "GAMIFIED" ? "INICIAR MISSÃO" : theme === "COLORFUL" ? "Vamos lá! 🚀" : "Iniciar"}
             </Button>
+
+            {/*
+              Regra 8 da T1: o tutorial é um manual interativo — sempre disponível, nunca
+              obrigatório depois da primeira conclusão. A opção só aparece quando o tutorial NÃO
+              vai rodar automaticamente: na primeira vez ele já vem em seguida, e oferecer "ver de
+              novo" antes de ter visto uma vez não faria sentido.
+            */}
+            {tutorial && tutorialState !== undefined && !needsTutorial && (
+              <Button
+                variant="outline"
+                onClick={reviewTutorial}
+                className={`mt-3 w-full h-12 text-base ${
+                  theme === "GAMIFIED"
+                    ? "border-cyan-500/40 bg-transparent text-cyan-300 hover:bg-cyan-950/40"
+                    : theme === "COLORFUL"
+                      ? "border-teal-300 bg-white text-teal-700 hover:bg-teal-50"
+                      : "border-indigo-300/40 bg-transparent text-indigo-200 hover:bg-white/5"
+                }`}
+              >
+                Ver tutorial novamente
+              </Button>
+            )}
           </motion.div>
         )}
 

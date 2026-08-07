@@ -188,7 +188,7 @@ export function TutorialRunner({ definition, theme, onFinish }: TutorialRunnerPr
             <StageLabel stage="demonstration" theme={theme} />
             <h2 className={`${styles.heading} mb-1 text-xl font-bold`}>Observe como responder</h2>
             <p className={`${styles.text} mb-6 text-sm`}>
-              Observe como ouvir a sequência e responder corretamente.
+              Observe como funciona a atividade.
             </p>
             <Button
               className={`${styles.button} h-12 w-full font-semibold`}
@@ -256,7 +256,7 @@ export function TutorialRunner({ definition, theme, onFinish }: TutorialRunnerPr
             <Check className={`${styles.icon} mx-auto mb-3 h-8 w-8`} aria-hidden />
             <h2 className={`${styles.heading} mb-2 text-xl font-bold`}>Tutorial concluído</h2>
             <p className={`${styles.text} mb-6 text-sm`}>
-              Você respondeu na ordem correta. Agora começa o treino.
+              Você já sabe como funciona este exercício. Agora começa o treino.
             </p>
             <Button className={`${styles.button} h-12 w-full font-semibold`} onClick={onFinish}>
               Iniciar treino
