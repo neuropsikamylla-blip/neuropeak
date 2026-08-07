@@ -3,7 +3,56 @@
 > Checkpoint de contexto para continuidade entre sessões. Atualizado automaticamente.
 > 👉 Visão geral e handoff para o próximo Claude: **`ESTADO-DO-PROJETO.md`** (leia primeiro).
 
-## 🚧 EM ANDAMENTO — T1: Span Direto como exercício de referência (aberto 05/ago/2026)
+## 🚧 EM ANDAMENTO — T1: conversão dos 34 por família (atualizado 07/ago/2026)
+
+**Modelo dela:** valida-se **uma vez por família**. Ela aprova **um representante** e a família
+inteira fica aprovada. Sem checkpoints exercício por exercício.
+
+**Regras:** `docs/T1-REGRAS-GLOBAIS.md` (as dez) · **Famílias:** `docs/T1-FAMILIAS-DE-MECANICA.md`
+
+### Estado — 8 de 34 convertidos · v2.82.0 no ar
+
+| família | exercícios | estado |
+|---|---|---|
+| **Framework (Lote 0)** | — | ✅ aprovado |
+| **1 — sequência → reproduzir na ordem** | span-numerico, span-numerico-inverso, letras-sequencia, sequencia-itens | ✅ **aprovada** |
+| **2 — sequência espacial → tocar células** | matriz-espacial, matriz-espacial-inversa, cubo-corsi, padroes-rotacao | ✅ **aprovada** (07/ago) |
+| **3 — memorizar conjunto → selecionar** | desafio-supermercado, lista-distracao, jogo-memoria, restaurante-ordem | ⏭️ **PRÓXIMA** |
+| 4 — estímulo contínuo → responder na hora | vigilancia, nback, tempo-reacao, semaforo, certo-ou-errado, mot, dual-task | pendente |
+| 5 — escolha entre alternativas | stroop-task, task-switching, identificacao-simbolos, deductive-grid, informacao-em-foco, corrida-tempo, trilha-visual, focus-agents | pendente |
+| 6 — arrastar e posicionar | ordem-historia, torre-hanoi, labirinto, estacionamento-logico | ⚠️ risco arquitetural |
+| 7 — composição e entrada numérica | compra-multifuncional, antes-depois, investigadores-sociais | pendente |
+
+### ⏭️ PRÓXIMO PASSO — Família 3, autorizada e não iniciada
+
+Ela autorizou em 07/ago; **não comecei** porque a janela chegou a 90% e a regra 16 proíbe iniciar
+tarefa nova. Nada ficou pela metade.
+
+**O que muda nesta família:** é a primeira em que a resposta **não tem ordem**. O paciente
+seleciona um conjunto, não reproduz uma sequência. A demonstração precisa ensinar *quais* itens
+escolher, não *em que sequência* — e a fábrica `criarTutorialSequenciaOrdenada` pressupõe ordem.
+**Avaliar primeiro** se ela serve com uma transformação, ou se cabe uma fábrica irmã para seleção.
+Se não couber sem alterar o framework aprovado, é **incompatibilidade arquitetural**: documentar em
+`docs/T1-INCOMPATIBILIDADES.md`, explicar, propor e **aguardar a decisão dela** — nunca improvisar.
+
+**Instrução dela, verbatim, para esta família:** manter exatamente o framework aprovado — identidade
+visual, ritmo, transições, textos, cursor, demonstração completa, tentativa guiada, encerramento,
+botão "Ver tutorial novamente" e isolamento clínico. Adaptar **apenas** a mecânica específica.
+
+**Ao concluir, informar só:** exercícios convertidos · appVersion · buildId · resultado dos gates ·
+qual será o representante da Família 3.
+
+### Como retomar
+
+1. ler `docs/T1-REGRAS-GLOBAIS.md` e `docs/T1-FAMILIAS-DE-MECANICA.md`;
+2. examinar a mecânica de resposta dos quatro da Família 3;
+3. decidir fábrica reusada × fábrica irmã (ver acima);
+4. spec em `docs/specs/`, disparar Codex `gpt-5.6-sol high`, colher, revisar linha a linha;
+5. gates completos, publicar, parar para validação do representante.
+
+**Paciente técnico de teste:** `COG25062` (0 ExerciseConfig, 0 Session).
+
+## 🗄️ HISTÓRICO — T1: Span Direto como exercício de referência (aberto 05/ago/2026, concluído)
 
 **Spec dela:** `docs/T1-SPAN-DIRETO-EXERCICIO-DE-REFERENCIA.md` (fluxo nas palavras dela).
 
