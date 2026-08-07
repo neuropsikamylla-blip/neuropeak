@@ -1,27 +1,6 @@
 # As 3 ultimas especificacoes dela (automatico; a mais nova por ultimo)
 # Na retomada: ler as 3, conectar com PROGRESSO.md e git, declarar e seguir.
 
-## 07/08/2026 11:17
-O aval não é apenas para o Span Inverso.
-A garantia de que:
-primeira conclusão grava exatamente uma vez;
-revisão grava zero vezes;
-tutorialCompletedAt não muda na revisão;
-tutorialVersion não muda na revisão;
-tutorialSource não muda na revisão;
-é uma regra global da T1 e deve valer para todos os 34 exercícios, não apenas para o Span.
-Portanto:
-mantenha completionRecordFor() como regra única do framework;
-nenhum exercício pode implementar lógica própria de gravação de tutorial;
-todos os 34 devem usar o mesmo caminho do ExerciseWrapper;
-adicione um teste global que falhe se qualquer exercício introduzir chamada própria para onTutorialDone, POST de tutorial ou lógica paralela de conclusão;
-a revisão de tutorial deve ser sempre somente leitura em todos os exercícios;
-a primeira conclusão deve registrar uma única vez em todos os exercícios;
-essa regra deve entrar em docs/T1-REGRAS-GLOBAIS.md.
-Depois disso, não quero mais parar exercício por exercício para revalidar essa regra.
-Pode seguir com a conversão dos demais 33 exercícios por lotes, todos herdando o mesmo framework já aprovado.
-Só pare se algum exercício tiver uma incompatibilidade real de mecânica com o framework ou exigir exceção arquitetural.
-
 ## 07/08/2026 16:11
 A direção está correta.
 A regra 10 aprovada passa a valer para todos os exercícios e concordo com a estratégia de reutilizar o framework.
@@ -59,3 +38,12 @@ incompatibilidade real de mecânica;
 necessidade de exceção ao framework;
 ou alteração arquitetural nova.
 Pode seguir.
+
+## 07/08/2026 16:33
+<task-notification>
+<task-id>bn5pv57fm</task-id>
+<tool-use-id>toolu_011oQxVir92y1To5S2LJPdkG</tool-use-id>
+<output-file>/private/tmp/claude-501/-Users-kamyllahonorio-neuropeak/3e6ecf11-e4e5-471f-bbf9-4595faa53598/tasks/bn5pv57fm.output</output-file>
+<status>completed</status>
+<summary>Background command "Disparar o Codex para a Família 1" completed (exit code 0)</summary>
+</task-notification>
