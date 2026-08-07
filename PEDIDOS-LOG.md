@@ -14255,3 +14255,6 @@ Depois:
 - confirme appVersion, buildId e health;
 - não converta nenhum outro exercício;
 - pare para minha segunda validação visual do Span Direto.
+
+## 06/08/2026 21:09
+me avisa quando encerrar
