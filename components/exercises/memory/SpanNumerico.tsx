@@ -143,10 +143,19 @@ function BrainListening({ pulsing }: { pulsing: boolean }) {
 
 // ── Bolinhas (quantidade de itens) ──────────────────────────────────────────────
 
-export function Beads({ total, filled, active, flipped = false, flipping = false }: {
+export function Beads({
+  total,
+  filled,
+  active,
+  flipped = false,
+  flipping = false,
+  highlighted = -1,
+}: {
   total: number; filled: number; active: number;
   flipped?: boolean;   // inverso (pós-virada): a fileira fica girada (início vira fim)
   flipping?: boolean;  // anima a virada agora (dica sutil, sem números)
+  /** Realce visual opcional da consequência de uma ação demonstrada. */
+  highlighted?: number;
 }) {
   return (
     <motion.div className="flex flex-wrap items-center justify-center gap-3"
@@ -167,7 +176,11 @@ export function Beads({ total, filled, active, flipped = false, flipping = false
               outline: i === 0 ? "2px solid rgba(59,121,217,0.75)" : undefined,
               outlineOffset: 2,
             }}
-            animate={isActive ? { scale: [1, 1.5, 1] } : { scale: 1 }}
+            animate={isActive
+              ? { scale: [1, 1.5, 1] }
+              : i === highlighted
+                ? { scale: [1, 1.35, 1] }
+                : { scale: 1 }}
             transition={{ duration: 0.5 }} />
         );
       })}

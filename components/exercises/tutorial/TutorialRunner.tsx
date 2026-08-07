@@ -6,7 +6,8 @@ import { Button } from "@/components/ui/button";
 import type { TutorialDefinition, GuidedOutcome } from "@/lib/tutorial/types";
 import type { Theme } from "@/types";
 
-type TutorialPhase = "demo" | "guided" | "feedback" | "confirm";
+type TutorialPhase = "intro" | "demo" | "handoff" | "guided" | "feedback" | "confirm";
+type TutorialStage = "demonstration" | "guided";
 
 interface TutorialRunnerProps {
   definition: TutorialDefinition;
@@ -48,11 +49,87 @@ const themeStyles: Record<Theme, {
   },
 };
 
+const stageStyles: Record<Theme, Record<TutorialStage, {
+  label: "DEMONSTRAÇÃO" | "SUA VEZ";
+  border: string;
+  accentColor: string;
+  rule: string;
+  labelText: string;
+}>> = {
+  CLINICAL: {
+    demonstration: {
+      label: "DEMONSTRAÇÃO",
+      border: "border-t-[#4F8FEA]",
+      accentColor: "#4F8FEA",
+      rule: "bg-[#4F8FEA]",
+      labelText: "text-blue-300",
+    },
+    guided: {
+      label: "SUA VEZ",
+      border: "border-t-teal-400",
+      accentColor: "#2DD4BF",
+      rule: "bg-teal-400",
+      labelText: "text-teal-300",
+    },
+  },
+  COLORFUL: {
+    demonstration: {
+      label: "DEMONSTRAÇÃO",
+      border: "border-t-[#4F8FEA]",
+      accentColor: "#4F8FEA",
+      rule: "bg-[#4F8FEA]",
+      labelText: "text-[#356FBE]",
+    },
+    guided: {
+      label: "SUA VEZ",
+      border: "border-t-teal-600",
+      accentColor: "#0D9488",
+      rule: "bg-teal-600",
+      labelText: "text-teal-700",
+    },
+  },
+  GAMIFIED: {
+    demonstration: {
+      label: "DEMONSTRAÇÃO",
+      border: "border-t-[#4F8FEA]",
+      accentColor: "#4F8FEA",
+      rule: "bg-[#4F8FEA]",
+      labelText: "text-blue-300",
+    },
+    guided: {
+      label: "SUA VEZ",
+      border: "border-t-teal-400",
+      accentColor: "#2DD4BF",
+      rule: "bg-teal-400",
+      labelText: "text-teal-300",
+    },
+  },
+};
+
+function StageLabel({ stage, theme }: { stage: TutorialStage; theme: Theme }) {
+  const stageStyle = stageStyles[theme][stage];
+
+  return (
+    <div className="mb-4 flex items-center gap-2" aria-label={`Etapa: ${stageStyle.label}`}>
+      <span className={`${stageStyle.rule} h-0.5 w-6 rounded-full`} aria-hidden />
+      <span className={`${stageStyle.labelText} text-[11px] font-bold tracking-[0.16em]`}>
+        {stageStyle.label}
+      </span>
+    </div>
+  );
+}
+
 export function TutorialRunner({ definition, theme, onFinish }: TutorialRunnerProps) {
-  const [phase, setPhase] = useState<TutorialPhase>("demo");
+  const [phase, setPhase] = useState<TutorialPhase>("intro");
   const [outcome, setOutcome] = useState<GuidedOutcome | null>(null);
   const [guidedKey, setGuidedKey] = useState(0);
   const styles = themeStyles[theme];
+  const stage: TutorialStage | null = phase === "intro" || phase === "demo"
+    ? "demonstration"
+    : phase === "confirm"
+      ? null
+      : "guided";
+  const stageBorder = stage ? stageStyles[theme][stage].border : "border-t-transparent";
 
   function handleOutcome(nextOutcome: GuidedOutcome) {
     setOutcome(nextOutcome);
@@ -67,25 +144,66 @@ export function TutorialRunner({ definition, theme, onFinish }: TutorialRunnerPr
 
   return (
     <section className={`${styles.screen} min-h-screen p-4 flex items-center justify-center`}>
-      <div className={`${styles.card} w-full max-w-xl rounded-2xl p-6`}>
+      <div
+        className={`${styles.card} ${stageBorder} w-full max-w-xl rounded-2xl border-t-4 p-6`}
+        style={{
+          borderTopColor: stage ? stageStyles[theme][stage].accentColor : "transparent",
+          borderTopWidth: stage ? 4 : 0,
+        }}
+      >
+        {phase === "intro" && (
+          <div>
+            <StageLabel stage="demonstration" theme={theme} />
+            <h2 className={`${styles.heading} mb-1 text-xl font-bold`}>Observe como responder</h2>
+            <p className={`${styles.text} mb-6 text-sm`}>
+              Você vai ver a tarefa sendo feita do início ao fim.
+            </p>
+            <Button
+              className={`${styles.button} h-12 w-full font-semibold`}
+              onClick={() => setPhase("demo")}
+            >
+              Ver demonstração
+            </Button>
+          </div>
+        )}
+
         {phase === "demo" && (
           <div>
+            <StageLabel stage="demonstration" theme={theme} />
             <h2 className={`${styles.heading} mb-1 text-xl font-bold`}>Veja como funciona</h2>
             <p className={`${styles.text} mb-5 text-sm`}>Observe uma sequência completa.</p>
-            <definition.Demonstration onDone={() => setPhase("guided")} />
+            <definition.Demonstration onDone={() => setPhase("handoff")} />
+          </div>
+        )}
+
+        {phase === "handoff" && (
+          <div>
+            <StageLabel stage="guided" theme={theme} />
+            <h2 className={`${styles.heading} mb-1 text-xl font-bold`}>Agora é sua vez</h2>
+            <p className={`${styles.text} mb-6 text-sm`}>
+              Ouça a sequência e responda no teclado.
+            </p>
+            <Button
+              className={`${styles.button} h-12 w-full font-semibold`}
+              onClick={() => setPhase("guided")}
+            >
+              Começar
+            </Button>
           </div>
         )}
 
         {phase === "guided" && (
           <div>
-            <h2 className={`${styles.heading} mb-1 text-xl font-bold`}>Agora é sua vez</h2>
-            <p className={`${styles.text} mb-5 text-sm`}>Ouça e responda no teclado.</p>
+            <StageLabel stage="guided" theme={theme} />
+            <h2 className={`${styles.heading} mb-1 text-xl font-bold`}>Ouça e responda</h2>
+            <p className={`${styles.text} mb-5 text-sm`}>Toque os números na ordem em que ouviu.</p>
             <definition.GuidedAttempt key={guidedKey} onOutcome={handleOutcome} />
           </div>
         )}
 
         {phase === "feedback" && outcome === "incorrect" && (
           <div className="text-center">
+            <StageLabel stage="guided" theme={theme} />
             <RotateCcw className={`${styles.icon} mx-auto mb-3 h-8 w-8`} aria-hidden />
             <h2 className={`${styles.heading} mb-2 text-xl font-bold`}>Vamos repetir a tentativa</h2>
             <p className={`${styles.text} mb-6 text-sm`}>{definition.retryHint}</p>
@@ -97,6 +215,7 @@ export function TutorialRunner({ definition, theme, onFinish }: TutorialRunnerPr
 
         {phase === "feedback" && outcome === "correct" && (
           <div className="text-center">
+            <StageLabel stage="guided" theme={theme} />
             <Check className={`${styles.icon} mx-auto mb-3 h-8 w-8`} aria-hidden />
             <h2 className={`${styles.heading} mb-2 text-xl font-bold`}>Tentativa concluída</h2>
             <p className={`${styles.text} mb-6 text-sm`}>Você respondeu na ordem correta.</p>

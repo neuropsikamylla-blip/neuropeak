@@ -17,10 +17,14 @@ import type { GuidedAttemptProps, TutorialDefinition } from "@/lib/tutorial/type
  * guiada continua sendo o menor degrau em que a tarefa ainda é a tarefa.
  */
 const SMALLEST_VALID_UNIT = digitsForLevel(MIN_LEVEL);
-const POINTER_MOVE_MS = 450;
-const POINTER_PRESS_MS = 180;
-const POINTER_RELEASE_MS = 140;
-const BETWEEN_DIGITS_MS = 220;
+const POST_LISTENING_PAUSE_MS = 1000;
+const POINTER_ENTRY_PULSE_MS = 500;
+const POINTER_MOVE_MS = 650;
+const POINTER_AIM_MS = 220;
+const POINTER_PRESS_MS = 420;
+const POINTER_RELEASE_MS = 260;
+const BETWEEN_DIGITS_MS = 520;
+const FINAL_PAUSE_MS = 800;
 
 /** Sequência da demonstração: a menor unidade, com dígitos distintos e estáveis a cada exibição. */
 const DEMONSTRATION_SEQUENCE = Array.from(
@@ -68,6 +72,7 @@ function SpanBoard({
   interactive,
   onKey,
   pressedKey,
+  highlightedBead,
 }: {
   total: number;
   filled: number;
@@ -76,10 +81,11 @@ function SpanBoard({
   interactive: boolean;
   onKey: (digit: number) => void;
   pressedKey?: number;
+  highlightedBead?: number;
 }) {
   return (
     <div className="flex flex-col items-center gap-5 rounded-2xl bg-[#EAF2F9] p-5">
-      <Beads total={total} filled={filled} active={active} />
+      <Beads total={total} filled={filled} active={active} highlighted={highlightedBead} />
       <NumberPad
         interactive={interactive}
         flashKey={flashKey}
@@ -95,12 +101,15 @@ function Demonstration({ onDone }: { onDone: () => void }) {
   const [demonstrationPhase, setDemonstrationPhase] = useState<"listening" | "answering" | "done">(
     "listening",
   );
-  const [pointerPhase, setPointerPhase] = useState<"moving" | "pressing">("moving");
+  const [pointerPhase, setPointerPhase] = useState<"locating" | "moving" | "pressing">(
+    "locating",
+  );
   const [targetSelector, setTargetSelector] = useState<string | null>(null);
   const [pressedKey, setPressedKey] = useState(-1);
   const [active, setActive] = useState(-1);
   const [flashKey, setFlashKey] = useState(-1);
   const [filled, setFilled] = useState(0);
+  const [highlightedBead, setHighlightedBead] = useState(-1);
 
   // O efeito roda UMA vez e nunca reage a onDone. Se dependesse dele, um callback recriado pelo
   // pai reiniciaria a demonstração do zero — com a voz falando por cima de si mesma. O ref mantém
@@ -128,6 +137,12 @@ function Demonstration({ onDone }: { onDone: () => void }) {
 
       setDemonstrationPhase("answering");
       setFilled(0);
+      if (!await wait(POST_LISTENING_PAUSE_MS, () => cancelled)) return;
+
+      setTargetSelector("[data-demo-pointer-start]");
+      setPointerPhase("locating");
+      if (!await wait(POINTER_ENTRY_PULSE_MS, () => cancelled)) return;
+
       for (let index = 0; index < DEMONSTRATION_SEQUENCE.length; index++) {
         if (cancelled) return;
         const digit = DEMONSTRATION_SEQUENCE[index];
@@ -135,6 +150,7 @@ function Demonstration({ onDone }: { onDone: () => void }) {
         setTargetSelector(`[data-digit="${digit}"]`);
         setPointerPhase("moving");
         if (!await wait(POINTER_MOVE_MS, () => cancelled)) return;
+        if (!await wait(POINTER_AIM_MS, () => cancelled)) return;
 
         setPointerPhase("pressing");
         setPressedKey(digit);
@@ -145,14 +161,14 @@ function Demonstration({ onDone }: { onDone: () => void }) {
         if (!await wait(POINTER_RELEASE_MS, () => cancelled)) return;
 
         setFilled(index + 1);
+        setHighlightedBead(index);
         if (!await wait(BETWEEN_DIGITS_MS, () => cancelled)) return;
+        setHighlightedBead(-1);
       }
 
-      if (!cancelled) {
-        setTargetSelector(null);
-        setDemonstrationPhase("done");
-        onDoneRef.current();
-      }
+      if (!await wait(FINAL_PAUSE_MS, () => cancelled)) return;
+      setDemonstrationPhase("done");
+      onDoneRef.current();
     }
 
     void run();
@@ -164,6 +180,11 @@ function Demonstration({ onDone }: { onDone: () => void }) {
       ref={containerRef}
       className={`relative ${demonstrationPhase === "answering" ? "pointer-events-none" : ""}`}
     >
+      <span
+        data-demo-pointer-start
+        aria-hidden="true"
+        className="pointer-events-none absolute bottom-12 left-12 h-px w-px"
+      />
       <SpanBoard
         total={DEMONSTRATION_SEQUENCE.length}
         filled={filled}
@@ -172,11 +193,14 @@ function Demonstration({ onDone }: { onDone: () => void }) {
         interactive={false}
         onKey={() => {}}
         pressedKey={pressedKey}
+        highlightedBead={highlightedBead}
       />
       <DemoPointer
         containerRef={containerRef}
         targetSelector={demonstrationPhase === "answering" ? targetSelector : null}
         phase={pointerPhase}
+        moveDurationMs={POINTER_MOVE_MS}
+        entryPulseDurationMs={POINTER_ENTRY_PULSE_MS}
       />
     </div>
   );

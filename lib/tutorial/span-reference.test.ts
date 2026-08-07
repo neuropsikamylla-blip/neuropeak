@@ -56,10 +56,118 @@ describe("isolamento do tutorial do Span", () => {
 
   it("repete somente a tentativa guiada com uma chave incremental", () => {
     const runner = source("components/exercises/tutorial/TutorialRunner.tsx");
+    const retryStart = runner.indexOf("function retryGuidedAttempt");
+    const retry = runner.slice(
+      retryStart,
+      runner.indexOf("\n  return (", retryStart),
+    );
 
     expect(runner).toMatch(/setGuidedKey\(\(key\)\s*=>\s*key\s*\+\s*1\)/);
     expect(runner).toMatch(/GuidedAttempt key=\{guidedKey\}/);
-    expect(runner).not.toMatch(/setPhase\("demo"\)/);
+    expect(retry).not.toMatch(/setPhase\("demo"\)/);
+  });
+});
+
+describe("ritmo e identidade das etapas do tutorial", () => {
+  const runnerSource = () => source("components/exercises/tutorial/TutorialRunner.tsx");
+  const definitionSource = () => source("lib/tutorial/definitions/span-numerico.tsx");
+  const pointerSource = () => source("components/exercises/tutorial/DemoPointer.tsx");
+
+  it("declara todos os tempos pedagógicos como constantes nomeadas", () => {
+    const definition = definitionSource();
+
+    expect(definition).toMatch(/const POST_LISTENING_PAUSE_MS = 1000;/);
+    expect(definition).toMatch(/const POINTER_ENTRY_PULSE_MS = 500;/);
+    expect(definition).toMatch(/const POINTER_MOVE_MS = 650;/);
+    expect(definition).toMatch(/const POINTER_AIM_MS = 220;/);
+    expect(definition).toMatch(/const POINTER_PRESS_MS = 420;/);
+    expect(definition).toMatch(/const POINTER_RELEASE_MS = 260;/);
+    expect(definition).toMatch(/const BETWEEN_DIGITS_MS = 520;/);
+    expect(definition).toMatch(/const FINAL_PAUSE_MS = 800;/);
+  });
+
+  it("começa na intro e passa por demo e handoff antes da guiada", () => {
+    const runner = runnerSource();
+    const intro = runner.indexOf('useState<TutorialPhase>("intro")');
+    const demo = runner.indexOf('onClick={() => setPhase("demo")}');
+    const handoff = runner.indexOf('onDone={() => setPhase("handoff")}');
+    const guided = runner.indexOf('onClick={() => setPhase("guided")}');
+
+    expect(intro).toBeGreaterThanOrEqual(0);
+    expect(demo).toBeGreaterThan(intro);
+    expect(handoff).toBeGreaterThan(demo);
+    expect(guided).toBeGreaterThan(handoff);
+  });
+
+  it("só monta GuidedAttempt dentro da fase guided", () => {
+    const runner = runnerSource();
+    const handoffBlock = runner.slice(
+      runner.indexOf('{phase === "handoff"'),
+      runner.indexOf('{phase === "guided"'),
+    );
+    const guidedBlocks = runner.match(/<definition\.GuidedAttempt/g) ?? [];
+
+    expect(handoffBlock).not.toMatch(/GuidedAttempt/);
+    expect(guidedBlocks).toHaveLength(1);
+    expect(runner).toMatch(
+      /phase === "guided"[\s\S]*?<definition\.GuidedAttempt key=\{guidedKey\}/,
+    );
+  });
+
+  it("declara selo e acento azul ou teal para as duas etapas nos três temas", () => {
+    const runner = runnerSource();
+    const stages = runner.slice(
+      runner.indexOf("const stageStyles"),
+      runner.indexOf("function StageLabel"),
+    );
+
+    expect(runner).toMatch(/type TutorialStage = "demonstration" \| "guided"/);
+    expect(stages.match(/label: "DEMONSTRAÇÃO",/g)).toHaveLength(3);
+    expect(stages.match(/label: "SUA VEZ",/g)).toHaveLength(3);
+    expect(stages.match(/accentColor: "#4F8FEA"/g)).toHaveLength(3);
+    expect(stages).toMatch(/accentColor: "#0D9488"/);
+    expect(stages).toMatch(/accentColor: "#2DD4BF"/);
+    expect(runner).toMatch(/border-t-4/);
+  });
+
+  it("usa cursor de 44 px com preenchimento, contorno, halo e ripple", () => {
+    const pointer = pointerSource();
+
+    expect(pointer).toMatch(/const POINTER_SIZE = 44;/);
+    expect(pointer).toMatch(/const HALO_SIZE = POINTER_SIZE \* 2;/);
+    expect(pointer).toMatch(/fill="#FFFFFF"/);
+    expect(pointer).toMatch(/text-\[#1F3D5C\]/);
+    expect(pointer).toMatch(/drop-shadow-/);
+    expect(pointer).toMatch(/phase === "locating"/);
+    expect(pointer).toMatch(/RIPPLE_DURATION_MS = 400/);
+  });
+
+  it("mantém o cursor montado e troca somente o seletor entre os dígitos", () => {
+    const definition = definitionSource();
+    const demonstration = definition.slice(
+      definition.indexOf("function Demonstration"),
+      definition.indexOf("function GuidedAttempt"),
+    );
+
+    expect(demonstration.match(/<DemoPointer/g)).toHaveLength(1);
+    expect(demonstration).toMatch(/setTargetSelector\(`\[data-digit="\$\{digit\}"\]`\)/);
+    expect(demonstration).not.toMatch(/setTargetSelector\(null\)/);
+  });
+
+  it("preserva a ordem deslocar, mirar, pressionar, soltar, pausar e preencher", () => {
+    const definition = definitionSource();
+
+    expect(definition).toMatch(
+      /setTargetSelector[\s\S]*?wait\(POINTER_MOVE_MS[\s\S]*?wait\(POINTER_AIM_MS[\s\S]*?setPressedKey\(digit\)[\s\S]*?wait\(POINTER_PRESS_MS[\s\S]*?setPressedKey\(-1\)[\s\S]*?wait\(POINTER_RELEASE_MS[\s\S]*?setFilled\(index \+ 1\)[\s\S]*?wait\(BETWEEN_DIGITS_MS/,
+    );
+  });
+
+  it("realça a bolinha como consequência sem tornar a prop obrigatória no treino", () => {
+    const span = source("components/exercises/memory/SpanNumerico.tsx");
+
+    expect(span).toMatch(/highlighted\?: number/);
+    expect(span).toMatch(/i === highlighted[\s\S]*?scale: \[1, 1\.35, 1\]/);
+    expect(span).toMatch(/<Beads total=\{digits\} filled=\{entered\.length\} active=\{-1\} flipped=\{reverse\} \/>/);
   });
 });
 
