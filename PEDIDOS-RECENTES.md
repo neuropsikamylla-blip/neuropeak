@@ -1,34 +1,6 @@
 # As 3 ultimas especificacoes dela (automatico; a mais nova por ultimo)
 # Na retomada: ler as 3, conectar com PROGRESSO.md e git, declarar e seguir.
 
-## 06/08/2026 21:03
-O desenho está aprovado em princípio.
-
-Antes de publicar, faça uma última revisão do ritmo para garantir que a demonstração pareça humana, não excessivamente lenta.
-
-Quero preservar:
-
-- pausa clara antes da demonstração;
-- cursor visível e fácil de localizar;
-- deslocamento natural;
-- pressionar perceptível;
-- soltar perceptível;
-- bolinha preenchendo somente depois;
-- pausa entre os dígitos;
-- transição explícita para “Agora é sua vez”.
-
-Mas não quero que a soma dos tempos deixe a demonstração artificialmente longa.
-
-Use os valores atuais como teto inicial e ajuste, se necessário, para que o fluxo pareça uma pessoa ensinando de forma calma e clara.
-
-Depois:
-
-- rode os gates;
-- publique;
-- confirme appVersion, buildId e health;
-- não converta nenhum outro exercício;
-- pare para minha segunda validação visual do Span Direto.
-
 ## 06/08/2026 21:13
 <task-notification>
 <task-id>bsm4ghaja</task-id>
@@ -79,3 +51,39 @@ tela "Tutorial concluído";
 início do treino real.
 Não quero aumentar muito.
 É apenas para que cada etapa tenha começo, meio e fim, sem parecer que uma tela atropela a outra.
+
+## 07/08/2026 10:12
+Estamos praticamente aprovando o Span Direto como exercício de referência.
+Restaram apenas dois ajustes antes de replicarmos o framework para os demais exercícios.
+1. Texto da demonstração
+Hoje:
+“Você vai ver a tarefa sendo feita do início ao fim.”
+Substitua por:
+“Observe como ouvir a sequência e responder corretamente.”
+Manter:
+DEMONSTRAÇÃO
+Observe como responder
+2. Sincronismo entre áudio e estímulo visual
+Há um defeito perceptível: a indicação visual da tecla/número acontece antes da voz terminar de falar o dígito.
+Isso precisa ser corrigido.
+Durante a fase de escuta, para cada dígito, a ordem deve ser:
+iniciar o áudio do número;
+o feedback visual correspondente deve acompanhar o momento da fala, nunca antecipá-la;
+concluir o áudio;
+respeitar a pausa da cadência;
+somente então avançar para o próximo dígito.
+Quero que áudio e feedback visual sejam percebidos como um único evento sincronizado.
+Não quero a tecla acendendo antes da voz.
+Os demais textos ficam aprovados:
+SUA VEZ
+Agora é sua vez
+“Ouça a sequência e clique nos números na mesma ordem.”
+E no encerramento:
+Tutorial concluído
+“Você respondeu na ordem correta. Agora começa o treino.”
+Depois desses dois ajustes:
+rode os gates;
+publique;
+pare para uma última validação do Span Direto.
+Se estiver correto, considero o Span Direto oficialmente aprovado como padrão da T1 e autorizo imediatamente a conversão dos outros 33 exercícios para o mesmo framework, adaptando apenas a mecânica específica de cada exercício.
+Não iniciar a conversão dos demais antes dessa última validação.

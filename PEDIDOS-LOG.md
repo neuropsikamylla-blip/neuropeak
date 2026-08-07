@@ -14309,3 +14309,39 @@ tela "Tutorial concluído";
 início do treino real.
 Não quero aumentar muito.
 É apenas para que cada etapa tenha começo, meio e fim, sem parecer que uma tela atropela a outra.
+
+## 07/08/2026 10:12
+Estamos praticamente aprovando o Span Direto como exercício de referência.
+Restaram apenas dois ajustes antes de replicarmos o framework para os demais exercícios.
+1. Texto da demonstração
+Hoje:
+“Você vai ver a tarefa sendo feita do início ao fim.”
+Substitua por:
+“Observe como ouvir a sequência e responder corretamente.”
+Manter:
+DEMONSTRAÇÃO
+Observe como responder
+2. Sincronismo entre áudio e estímulo visual
+Há um defeito perceptível: a indicação visual da tecla/número acontece antes da voz terminar de falar o dígito.
+Isso precisa ser corrigido.
+Durante a fase de escuta, para cada dígito, a ordem deve ser:
+iniciar o áudio do número;
+o feedback visual correspondente deve acompanhar o momento da fala, nunca antecipá-la;
+concluir o áudio;
+respeitar a pausa da cadência;
+somente então avançar para o próximo dígito.
+Quero que áudio e feedback visual sejam percebidos como um único evento sincronizado.
+Não quero a tecla acendendo antes da voz.
+Os demais textos ficam aprovados:
+SUA VEZ
+Agora é sua vez
+“Ouça a sequência e clique nos números na mesma ordem.”
+E no encerramento:
+Tutorial concluído
+“Você respondeu na ordem correta. Agora começa o treino.”
+Depois desses dois ajustes:
+rode os gates;
+publique;
+pare para uma última validação do Span Direto.
+Se estiver correto, considero o Span Direto oficialmente aprovado como padrão da T1 e autorizo imediatamente a conversão dos outros 33 exercícios para o mesmo framework, adaptando apenas a mecânica específica de cada exercício.
+Não iniciar a conversão dos demais antes dessa última validação.
