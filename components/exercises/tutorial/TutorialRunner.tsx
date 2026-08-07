@@ -188,7 +188,7 @@ export function TutorialRunner({ definition, theme, onFinish }: TutorialRunnerPr
             <StageLabel stage="demonstration" theme={theme} />
             <h2 className={`${styles.heading} mb-1 text-xl font-bold`}>Observe como responder</h2>
             <p className={`${styles.text} mb-6 text-sm`}>
-              Você vai ver a tarefa sendo feita do início ao fim.
+              Observe como ouvir a sequência e responder corretamente.
             </p>
             <Button
               className={`${styles.button} h-12 w-full font-semibold`}

@@ -504,3 +504,57 @@ describe("ajustes finos da 2ª validação (06/ago/2026)", () => {
     expect(runner()).toMatch(/key=\{`\$\{phase\}-\$\{outcome \?\? ""\}`\}/);
   });
 });
+
+describe("sincronismo entre voz e estímulo visual", () => {
+  const playback = () => source("lib/tutorial/span-playback.ts");
+
+  it("o aviso visual sai no instante em que a voz começa, não antes do play", () => {
+    // Defeito real corrigido em 07/ago/2026: onDigitStart era chamado antes de o áudio existir,
+    // então a tecla acendia e a voz vinha depois. O sinal certo é `playing` — reprodução audível.
+    expect(playback()).toMatch(/audio\.onplaying = announce;/);
+    expect(playback()).toMatch(/onAudibleStart/);
+    // onDigitStart só pode ser chamado DENTRO da chamada de reprodução, como callback.
+    expect(playback()).toMatch(
+      /await playDigitAudio\([\s\S]{0,120}?hooks\.onDigitStart\(digit, index\)/,
+    );
+  });
+
+  it("nenhum onDigitStart acontece antes de tocar o áudio", () => {
+    const corpo = playback().slice(playback().indexOf("export async function playDigitSequence"));
+    const posDigitStart = corpo.indexOf("hooks.onDigitStart");
+    const posPlay = corpo.indexOf("await playDigitAudio");
+    // Se onDigitStart aparecesse antes da chamada de reprodução, o defeito teria voltado.
+    expect(posPlay).toBeGreaterThan(-1);
+    expect(posDigitStart).toBeGreaterThan(posPlay);
+  });
+
+  it("o áudio é preparado antes da apresentação, para a fala não sair atrasada", () => {
+    expect(playback()).toMatch(/prepareSequenceAudio/);
+    expect(playback()).toMatch(/preload = "auto"/);
+    expect(playback()).toMatch(/oncanplaythrough/);
+  });
+
+  it("falha de áudio ainda produz o estímulo visual", () => {
+    // Sem voz, o exercício degrada mas não fica mudo E cego ao mesmo tempo.
+    expect(playback()).toMatch(/audio\.onerror = \(\) => \{ announce\(\); finish\(\); \};/);
+    expect(playback()).toMatch(/\.catch\(\(\) => \{ announce\(\); finish\(\); \}\)/);
+  });
+
+  it("a cadência e a ordem dos passos seguem intactas", () => {
+    const corpo = playback().slice(playback().indexOf("export async function playDigitSequence"));
+    expect(corpo).toMatch(/wait\(SPAN_INITIAL_DELAY_MS\)/);
+    expect(corpo).toMatch(/const gap = spanGapMs\(seq\.length\)/);
+    // onDigitEnd depois da reprodução, e o intervalo depois dele.
+    expect(corpo).toMatch(/hooks\.onDigitEnd\(digit, index\);[\s\S]{0,60}await wait\(gap\)/);
+  });
+});
+
+describe("texto da demonstração aprovado por ela", () => {
+  it("usa a redação definida em 07/ago/2026", () => {
+    const runner = source("components/exercises/tutorial/TutorialRunner.tsx");
+
+    expect(runner).toMatch(/Observe como responder/);
+    expect(runner).toMatch(/Observe como ouvir a sequência e responder corretamente\./);
+    expect(runner).not.toMatch(/tarefa sendo feita do início ao fim/);
+  });
+});
