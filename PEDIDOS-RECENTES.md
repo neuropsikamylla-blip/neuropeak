@@ -1,15 +1,6 @@
 # As 3 ultimas especificacoes dela (automatico; a mais nova por ultimo)
 # Na retomada: ler as 3, conectar com PROGRESSO.md e git, declarar e seguir.
 
-## 05/08/2026 23:34
-<task-notification>
-<task-id>bp49hut7h</task-id>
-<tool-use-id>toolu_01Q3Bub3PRuKGxoHsYCEPKrg</tool-use-id>
-<output-file>/private/tmp/claude-501/-Users-kamyllahonorio-neuropeak/3e6ecf11-e4e5-471f-bbf9-4595faa53598/tasks/bp49hut7h.output</output-file>
-<status>completed</status>
-<summary>Background command "Redisparar o Codex com a spec completa" completed (exit code 0)</summary>
-</task-notification>
-
 ## 06/08/2026 20:59
 A primeira validação visual do Span Numérico Auditivo Direto mostrou que a arquitetura da T1 está funcionando, porém a experiência ainda não está pronta para servir como padrão dos 34 exercícios.
 Não quero converter nenhum outro exercício neste momento.
@@ -98,3 +89,12 @@ Depois:
 - confirme appVersion, buildId e health;
 - não converta nenhum outro exercício;
 - pare para minha segunda validação visual do Span Direto.
+
+## 06/08/2026 21:13
+<task-notification>
+<task-id>bsm4ghaja</task-id>
+<tool-use-id>toolu_01DWgbK6oPq7h8jZxxUNAWfz</tool-use-id>
+<output-file>/private/tmp/claude-501/-Users-kamyllahonorio-neuropeak/3e6ecf11-e4e5-471f-bbf9-4595faa53598/tasks/bsm4ghaja.output</output-file>
+<status>completed</status>
+<summary>Background command "Disparar o Codex com a spec de ritmo" completed (exit code 0)</summary>
+</task-notification>
