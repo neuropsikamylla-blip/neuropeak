@@ -14227,3 +14227,31 @@ O framework ainda não está pronto para ser replicado.
 Primeiro quero que essa experiência fique realmente natural.
 Depois faço uma segunda validação visual.
 Somente quando eu aprovar o Span Direto ele passa a ser o padrão definitivo da T1.
+
+## 06/08/2026 21:03
+O desenho está aprovado em princípio.
+
+Antes de publicar, faça uma última revisão do ritmo para garantir que a demonstração pareça humana, não excessivamente lenta.
+
+Quero preservar:
+
+- pausa clara antes da demonstração;
+- cursor visível e fácil de localizar;
+- deslocamento natural;
+- pressionar perceptível;
+- soltar perceptível;
+- bolinha preenchendo somente depois;
+- pausa entre os dígitos;
+- transição explícita para “Agora é sua vez”.
+
+Mas não quero que a soma dos tempos deixe a demonstração artificialmente longa.
+
+Use os valores atuais como teto inicial e ajuste, se necessário, para que o fluxo pareça uma pessoa ensinando de forma calma e clara.
+
+Depois:
+
+- rode os gates;
+- publique;
+- confirme appVersion, buildId e health;
+- não converta nenhum outro exercício;
+- pare para minha segunda validação visual do Span Direto.
