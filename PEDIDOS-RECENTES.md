@@ -1,42 +1,6 @@
 # As 3 ultimas especificacoes dela (automatico; a mais nova por ultimo)
 # Na retomada: ler as 3, conectar com PROGRESSO.md e git, declarar e seguir.
 
-## 07/08/2026 10:12
-Estamos praticamente aprovando o Span Direto como exercício de referência.
-Restaram apenas dois ajustes antes de replicarmos o framework para os demais exercícios.
-1. Texto da demonstração
-Hoje:
-“Você vai ver a tarefa sendo feita do início ao fim.”
-Substitua por:
-“Observe como ouvir a sequência e responder corretamente.”
-Manter:
-DEMONSTRAÇÃO
-Observe como responder
-2. Sincronismo entre áudio e estímulo visual
-Há um defeito perceptível: a indicação visual da tecla/número acontece antes da voz terminar de falar o dígito.
-Isso precisa ser corrigido.
-Durante a fase de escuta, para cada dígito, a ordem deve ser:
-iniciar o áudio do número;
-o feedback visual correspondente deve acompanhar o momento da fala, nunca antecipá-la;
-concluir o áudio;
-respeitar a pausa da cadência;
-somente então avançar para o próximo dígito.
-Quero que áudio e feedback visual sejam percebidos como um único evento sincronizado.
-Não quero a tecla acendendo antes da voz.
-Os demais textos ficam aprovados:
-SUA VEZ
-Agora é sua vez
-“Ouça a sequência e clique nos números na mesma ordem.”
-E no encerramento:
-Tutorial concluído
-“Você respondeu na ordem correta. Agora começa o treino.”
-Depois desses dois ajustes:
-rode os gates;
-publique;
-pare para uma última validação do Span Direto.
-Se estiver correto, considero o Span Direto oficialmente aprovado como padrão da T1 e autorizo imediatamente a conversão dos outros 33 exercícios para o mesmo framework, adaptando apenas a mecânica específica de cada exercício.
-Não iniciar a conversão dos demais antes dessa última validação.
-
 ## 07/08/2026 10:48
 Além dos ajustes específicos do Span Direto, quero congelar algumas decisões de UX que passam a valer para todos os 34 exercícios.
 Estas regras fazem parte do framework da T1 e não apenas do Span.
@@ -160,3 +124,24 @@ function finishTutorial() {
   setIsTutorialReview(false);
   setPhase("exercise");
 }
+
+## 07/08/2026 11:17
+O aval não é apenas para o Span Inverso.
+A garantia de que:
+primeira conclusão grava exatamente uma vez;
+revisão grava zero vezes;
+tutorialCompletedAt não muda na revisão;
+tutorialVersion não muda na revisão;
+tutorialSource não muda na revisão;
+é uma regra global da T1 e deve valer para todos os 34 exercícios, não apenas para o Span.
+Portanto:
+mantenha completionRecordFor() como regra única do framework;
+nenhum exercício pode implementar lógica própria de gravação de tutorial;
+todos os 34 devem usar o mesmo caminho do ExerciseWrapper;
+adicione um teste global que falhe se qualquer exercício introduzir chamada própria para onTutorialDone, POST de tutorial ou lógica paralela de conclusão;
+a revisão de tutorial deve ser sempre somente leitura em todos os exercícios;
+a primeira conclusão deve registrar uma única vez em todos os exercícios;
+essa regra deve entrar em docs/T1-REGRAS-GLOBAIS.md.
+Depois disso, não quero mais parar exercício por exercício para revalidar essa regra.
+Pode seguir com a conversão dos demais 33 exercícios por lotes, todos herdando o mesmo framework já aprovado.
+Só pare se algum exercício tiver uma incompatibilidade real de mecânica com o framework ou exigir exceção arquitetural.

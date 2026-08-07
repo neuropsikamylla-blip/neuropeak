@@ -14469,3 +14469,24 @@ function finishTutorial() {
   setIsTutorialReview(false);
   setPhase("exercise");
 }
+
+## 07/08/2026 11:17
+O aval não é apenas para o Span Inverso.
+A garantia de que:
+primeira conclusão grava exatamente uma vez;
+revisão grava zero vezes;
+tutorialCompletedAt não muda na revisão;
+tutorialVersion não muda na revisão;
+tutorialSource não muda na revisão;
+é uma regra global da T1 e deve valer para todos os 34 exercícios, não apenas para o Span.
+Portanto:
+mantenha completionRecordFor() como regra única do framework;
+nenhum exercício pode implementar lógica própria de gravação de tutorial;
+todos os 34 devem usar o mesmo caminho do ExerciseWrapper;
+adicione um teste global que falhe se qualquer exercício introduzir chamada própria para onTutorialDone, POST de tutorial ou lógica paralela de conclusão;
+a revisão de tutorial deve ser sempre somente leitura em todos os exercícios;
+a primeira conclusão deve registrar uma única vez em todos os exercícios;
+essa regra deve entrar em docs/T1-REGRAS-GLOBAIS.md.
+Depois disso, não quero mais parar exercício por exercício para revalidar essa regra.
+Pode seguir com a conversão dos demais 33 exercícios por lotes, todos herdando o mesmo framework já aprovado.
+Só pare se algum exercício tiver uma incompatibilidade real de mecânica com o framework ou exigir exceção arquitetural.
