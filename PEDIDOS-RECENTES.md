@@ -1,15 +1,6 @@
 # As 3 ultimas especificacoes dela (automatico; a mais nova por ultimo)
 # Na retomada: ler as 3, conectar com PROGRESSO.md e git, declarar e seguir.
 
-## 07/08/2026 16:33
-<task-notification>
-<task-id>bn5pv57fm</task-id>
-<tool-use-id>toolu_011oQxVir92y1To5S2LJPdkG</tool-use-id>
-<output-file>/private/tmp/claude-501/-Users-kamyllahonorio-neuropeak/3e6ecf11-e4e5-471f-bbf9-4595faa53598/tasks/bn5pv57fm.output</output-file>
-<status>completed</status>
-<summary>Background command "Disparar o Codex para a Família 1" completed (exit code 0)</summary>
-</task-notification>
-
 ## 07/08/2026 16:47
 Pode seguir para a Família 2 e usar matriz-espacial como representante para minha validação.
 Antes, corrija apenas um ponto global que ficou na Família 1:
@@ -35,3 +26,33 @@ Não preciso validar os outros três se forem realmente a mesma mecânica de tut
 <status>completed</status>
 <summary>Background command "Disparar o Codex para a Família 2" completed (exit code 0)</summary>
 </task-notification>
+
+## 07/08/2026 18:46
+Família 2 aprovada. Pode seguir para a Família 3.
+A partir deste ponto, mantenha exatamente o framework aprovado no Span e na Família 2.
+Não altere:
+identidade visual;
+ritmo;
+transições;
+textos;
+cursor;
+demonstração completa;
+tentativa guiada;
+encerramento;
+botão "Ver tutorial novamente";
+regras de isolamento clínico.
+Nesta família, adapte apenas a mecânica específica do exercício.
+A demonstração deve ensinar exatamente como resolver aquele exercício, preservando integralmente o padrão da T1.
+Só interrompa a conversão se encontrar uma incompatibilidade arquitetural real, isto é, um caso em que o framework aprovado não consiga representar corretamente a mecânica do exercício sem precisar ser alterado.
+Se isso acontecer:
+não implemente uma solução improvisada;
+documente a incompatibilidade;
+explique por que ela existe;
+proponha uma solução;
+aguarde minha decisão.
+Caso contrário, conclua toda a Família 3, publique e me informe apenas:
+exercícios convertidos;
+appVersion;
+buildId;
+resultado dos gates;
+qual exercício será o representante para validação da Família 3.
