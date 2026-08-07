@@ -1,12 +1,21 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useRef, useState } from "react";
+import { AnimatePresence, motion } from "framer-motion";
 import { Check, RotateCcw } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import type { TutorialDefinition, GuidedOutcome } from "@/lib/tutorial/types";
 import type { Theme } from "@/types";
 
-type TutorialPhase = "intro" | "demo" | "handoff" | "guided" | "feedback" | "confirm";
+type TutorialPhase = "intro" | "demo" | "handoff" | "guided" | "feedback";
+
+/**
+ * Respiro entre o último clique e a troca de tela. Cada etapa precisa de começo, meio e fim: sem
+ * esta pausa a resposta do paciente desaparece no mesmo instante em que é dada.
+ */
+const GUIDED_SETTLE_MS = 900;
+/** Fade entre telas. Sem ele uma etapa aparece por cima da outra, sem começo nem fim. */
+const SCREEN_FADE_S = 0.32;
 type TutorialStage = "demonstration" | "guided";
 
 interface TutorialRunnerProps {
@@ -123,20 +132,35 @@ export function TutorialRunner({ definition, theme, onFinish }: TutorialRunnerPr
   const [phase, setPhase] = useState<TutorialPhase>("intro");
   const [outcome, setOutcome] = useState<GuidedOutcome | null>(null);
   const [guidedKey, setGuidedKey] = useState(0);
+  const settleTimer = useRef<number | null>(null);
+
+  // Desmontar no meio do respiro não pode deixar timer órfão trocando fase de um componente morto.
+  useEffect(() => () => {
+    if (settleTimer.current !== null) window.clearTimeout(settleTimer.current);
+  }, []);
   const styles = themeStyles[theme];
   const stage: TutorialStage | null = phase === "intro" || phase === "demo"
     ? "demonstration"
-    : phase === "confirm"
-      ? null
-      : "guided";
+    : "guided";
   const stageBorder = stage ? stageStyles[theme][stage].border : "border-t-transparent";
 
+  // Respiro entre o último clique do paciente e a troca de tela. Sem ele, a resposta some no
+  // instante em que é dada e o paciente não chega a ver o que fez — a tela seguinte atropela a
+  // anterior. Aqui a tentativa guiada permanece visível, com as marcas preenchidas, antes de sair.
   function handleOutcome(nextOutcome: GuidedOutcome) {
-    setOutcome(nextOutcome);
-    setPhase("feedback");
+    if (settleTimer.current !== null) return; // ignora respostas repetidas durante o respiro
+    settleTimer.current = window.setTimeout(() => {
+      settleTimer.current = null;
+      setOutcome(nextOutcome);
+      setPhase("feedback");
+    }, GUIDED_SETTLE_MS);
   }
 
   function retryGuidedAttempt() {
+    if (settleTimer.current !== null) {
+      window.clearTimeout(settleTimer.current);
+      settleTimer.current = null;
+    }
     setGuidedKey((key) => key + 1);
     setOutcome(null);
     setPhase("guided");
@@ -151,6 +175,14 @@ export function TutorialRunner({ definition, theme, onFinish }: TutorialRunnerPr
           borderTopWidth: stage ? 4 : 0,
         }}
       >
+        <AnimatePresence mode="wait">
+        <motion.div
+          key={`${phase}-${outcome ?? ""}`}
+          initial={{ opacity: 0, y: 8 }}
+          animate={{ opacity: 1, y: 0 }}
+          exit={{ opacity: 0, y: -8 }}
+          transition={{ duration: SCREEN_FADE_S, ease: "easeInOut" }}
+        >
         {phase === "intro" && (
           <div>
             <StageLabel stage="demonstration" theme={theme} />
@@ -181,7 +213,7 @@ export function TutorialRunner({ definition, theme, onFinish }: TutorialRunnerPr
             <StageLabel stage="guided" theme={theme} />
             <h2 className={`${styles.heading} mb-1 text-xl font-bold`}>Agora é sua vez</h2>
             <p className={`${styles.text} mb-6 text-sm`}>
-              Ouça a sequência e responda no teclado.
+              Ouça a sequência e clique nos números na mesma ordem.
             </p>
             <Button
               className={`${styles.button} h-12 w-full font-semibold`}
@@ -196,7 +228,7 @@ export function TutorialRunner({ definition, theme, onFinish }: TutorialRunnerPr
           <div>
             <StageLabel stage="guided" theme={theme} />
             <h2 className={`${styles.heading} mb-1 text-xl font-bold`}>Ouça e responda</h2>
-            <p className={`${styles.text} mb-5 text-sm`}>Toque os números na ordem em que ouviu.</p>
+            <p className={`${styles.text} mb-5 text-sm`}>Clique nos números na ordem em que ouviu.</p>
             <definition.GuidedAttempt key={guidedKey} onOutcome={handleOutcome} />
           </div>
         )}
@@ -213,27 +245,26 @@ export function TutorialRunner({ definition, theme, onFinish }: TutorialRunnerPr
           </div>
         )}
 
+        {/*
+          Tela ÚNICA de encerramento. Antes eram duas em sequência, com um botão intermediário que
+          só levava a uma repetição da mesma informação. E o nome certo é tutorial, não tentativa:
+          o paciente ainda não estava treinando — ele acabou de concluir o tutorial.
+        */}
         {phase === "feedback" && outcome === "correct" && (
           <div className="text-center">
             <StageLabel stage="guided" theme={theme} />
             <Check className={`${styles.icon} mx-auto mb-3 h-8 w-8`} aria-hidden />
-            <h2 className={`${styles.heading} mb-2 text-xl font-bold`}>Tentativa concluída</h2>
-            <p className={`${styles.text} mb-6 text-sm`}>Você respondeu na ordem correta.</p>
-            <Button className={`${styles.button} h-12 w-full font-semibold`} onClick={() => setPhase("confirm")}>
-              Seguir
-            </Button>
-          </div>
-        )}
-
-        {phase === "confirm" && (
-          <div className="text-center">
             <h2 className={`${styles.heading} mb-2 text-xl font-bold`}>Tutorial concluído</h2>
-            <p className={`${styles.text} mb-6 text-sm`}>Confirme para iniciar o treino.</p>
+            <p className={`${styles.text} mb-6 text-sm`}>
+              Você respondeu na ordem correta. Agora começa o treino.
+            </p>
             <Button className={`${styles.button} h-12 w-full font-semibold`} onClick={onFinish}>
               Iniciar treino
             </Button>
           </div>
         )}
+        </motion.div>
+        </AnimatePresence>
       </div>
     </section>
   );

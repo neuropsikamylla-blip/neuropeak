@@ -461,3 +461,46 @@ describe("credencial do paciente técnico — regressão de 05/ago/2026", () => 
     expect(extrair(script)).toBe(extrair(auth));
   });
 });
+
+describe("ajustes finos da 2ª validação (06/ago/2026)", () => {
+  const runner = () => source("components/exercises/tutorial/TutorialRunner.tsx");
+
+  it("nenhum texto menciona teclado ou toque — o paciente responde clicando", () => {
+    // O paciente usa mouse hoje e tela no futuro; "teclado" está errado nos dois casos.
+    expect(runner()).not.toMatch(/teclado/i);
+    expect(runner()).not.toMatch(/\bToque\b/);
+    expect(runner()).toMatch(/clique nos números/i);
+  });
+
+  it("o encerramento é UMA tela só, chamada Tutorial concluído", () => {
+    // Antes eram duas em sequência: "Tentativa concluída" com botão "Seguir" e depois
+    // "Tutorial concluído" — o paciente clicava para ver a mesma informação de novo.
+    expect(runner()).not.toMatch(/Tentativa concluída/);
+    expect(runner()).not.toMatch(/"confirm"/);
+    const ocorrencias = runner().match(/Tutorial concluído/g) ?? [];
+    expect(ocorrencias).toHaveLength(1);
+  });
+
+  it("o botão de encerramento leva direto ao treino", () => {
+    expect(runner()).toMatch(/onClick=\{onFinish\}[\s\S]{0,120}Iniciar treino/);
+  });
+
+  it("há respiro entre o último clique e a troca de tela", () => {
+    expect(runner()).toMatch(/const GUIDED_SETTLE_MS = 900;/);
+    // A troca de fase acontece DENTRO do timer, não na chamada direta.
+    expect(runner()).toMatch(
+      /settleTimer\.current = window\.setTimeout\([\s\S]*?setPhase\("feedback"\)[\s\S]*?GUIDED_SETTLE_MS/,
+    );
+  });
+
+  it("o respiro não deixa timer órfão ao desmontar nem ao repetir", () => {
+    expect(runner()).toMatch(/useEffect\(\(\) => \(\) => \{[\s\S]*?clearTimeout\(settleTimer\.current\)/);
+    expect(runner()).toMatch(/function retryGuidedAttempt\(\)[\s\S]*?clearTimeout\(settleTimer\.current\)/);
+  });
+
+  it("as telas trocam com transição, não instantaneamente", () => {
+    expect(runner()).toMatch(/const SCREEN_FADE_S = 0\.32;/);
+    expect(runner()).toMatch(/AnimatePresence mode="wait"/);
+    expect(runner()).toMatch(/key=\{`\$\{phase\}-\$\{outcome \?\? ""\}`\}/);
+  });
+});
