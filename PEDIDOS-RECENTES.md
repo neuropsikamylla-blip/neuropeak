@@ -1,48 +1,6 @@
 # As 3 ultimas especificacoes dela (automatico; a mais nova por ultimo)
 # Na retomada: ler as 3, conectar com PROGRESSO.md e git, declarar e seguir.
 
-## 06/08/2026 21:42
-A segunda validação visual ficou muito melhor.
-O fluxo agora está natural e muito mais próximo do que eu esperava.
-Encontrei apenas alguns ajustes finos antes de aprovar o Span Direto como exercício de referência da T1.
-1. Texto da tentativa guiada
-Hoje aparece:
-SUA VEZ
-Agora é sua vez
-Ouça a sequência e responda no teclado.
-Esse texto não está correto.
-O paciente não responde no teclado.
-Ele responde clicando com o mouse (ou tocando na tela, futuramente).
-Quero substituir por algo neutro, por exemplo:
-Ouça a sequência e clique nos números na mesma ordem.
-Ou outra redação equivalente, mas sem mencionar teclado.
-2. Encerramento da tentativa guiada
-Hoje, logo após clicar no último número, a tela muda imediatamente para:
-Tentativa concluída
-A transição ficou rápida demais.
-Quero um pequeno respiro.
-Após o último clique:
-manter a confirmação visual por um instante;
-depois mostrar a tela seguinte.
-Além disso, prefiro mudar o texto.
-Em vez de:
-Tentativa concluída
-usar:
-Tutorial concluído
-Porque o paciente ainda não estava treinando.
-Ele acabou de concluir o tutorial.
-3. Espaçamento
-Ainda sinto que algumas telas mudam rapidamente uma para outra.
-Não é um problema de lógica.
-É um problema de ritmo visual.
-Quero aumentar levemente o espaçamento temporal entre:
-último clique;
-confirmação;
-tela "Tutorial concluído";
-início do treino real.
-Não quero aumentar muito.
-É apenas para que cada etapa tenha começo, meio e fim, sem parecer que uma tela atropela a outra.
-
 ## 07/08/2026 10:12
 Estamos praticamente aprovando o Span Direto como exercício de referência.
 Restaram apenas dois ajustes antes de replicarmos o framework para os demais exercícios.
@@ -192,3 +150,13 @@ adaptar apenas o conteúdo da preparação, demonstração e tentativa guiada à
 Cada exercício convertido deve cumprir integralmente as 9 regras globais acima.
 Se algum exercício tiver uma mecânica que realmente não possa ser representada pelo framework atual sem exceção, não invente solução silenciosamente: registre o caso, explique a incompatibilidade e proponha a adaptação antes de alterar o padrão global.
 Faça por lotes de interação, com testes e gates completos ao final de cada lote, até concluir os 34 exercícios.
+
+## 07/08/2026 11:00
+function finishTutorial() {
+  onTutorialDone?.();
+
+  if (!isTutorialReview) onTutorialDone?.();
+
+  setIsTutorialReview(false);
+  setPhase("exercise");
+}

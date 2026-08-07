@@ -14459,3 +14459,13 @@ adaptar apenas o conteúdo da preparação, demonstração e tentativa guiada à
 Cada exercício convertido deve cumprir integralmente as 9 regras globais acima.
 Se algum exercício tiver uma mecânica que realmente não possa ser representada pelo framework atual sem exceção, não invente solução silenciosamente: registre o caso, explique a incompatibilidade e proponha a adaptação antes de alterar o padrão global.
 Faça por lotes de interação, com testes e gates completos ao final de cada lote, até concluir os 34 exercícios.
+
+## 07/08/2026 11:00
+function finishTutorial() {
+  onTutorialDone?.();
+
+  if (!isTutorialReview) onTutorialDone?.();
+
+  setIsTutorialReview(false);
+  setPhase("exercise");
+}
