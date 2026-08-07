@@ -109,6 +109,44 @@ estatísticas clínicas · `achievements` · planos · **`tutorialCompletedAt`**
 
 **O tutorial é um manual interativo: sempre disponível, nunca obrigatório após a primeira conclusão.**
 
+## 10. A gravação do tutorial tem UM caminho só — vale para os 34
+
+A garantia da regra 8 **não é do Span**: é do framework. Em **todos** os 34 exercícios:
+
+- a **primeira conclusão** grava **exatamente uma vez**;
+- a **revisão** grava **zero vezes**;
+- a revisão **não altera** `tutorialCompletedAt`, `tutorialVersion` nem `tutorialSource`;
+- **a revisão é sempre somente leitura.**
+
+### Como isso é garantido, e não apenas prometido
+
+**`completionRecordFor()` (`lib/tutorial/state.ts`) é a regra única do framework.** Ela devolve
+`null` na revisão — sem registro não há requisição, e sem requisição não há escrita. O
+`ExerciseWrapper` apenas obedece ao que ela devolve.
+
+⛔ **Nenhum exercício pode implementar lógica própria de gravação de tutorial.** Todos os 34 usam o
+mesmo caminho do `ExerciseWrapper`.
+
+Quatro arquivos — e só eles — participam da gravação:
+
+| arquivo | papel |
+|---|---|
+| `app/(patient)/treino/[exercicio]/page.tsx` | dispara o POST, **uma vez**, no caminho automático |
+| `app/api/exercise-tutorial/route.ts` | a rota que grava |
+| `components/exercises/ExerciseWrapper.tsx` | decide chamar, obedecendo a `completionRecordFor` |
+| `lib/tutorial/state.ts` | a regra |
+
+`lib/tutorial/gravacao-unica.test.ts` **falha** se qualquer exercício introduzir chamada própria a
+`onTutorialDone`, POST de tutorial, manipulação de `tutorialCompletedAt`/`tutorialSource`, ou uma
+decisão paralela de conclusão. Vale para exercícios que **ainda serão convertidos**: um exercício
+novo que tente gravar por conta própria falha no lote em que for criado.
+
+> Se este teste falhar, a correção **nunca** é relaxar o teste — é usar o caminho do
+> `ExerciseWrapper`, como os outros 33.
+
+**Verificado por injeção:** com um exercício infrator inserido de propósito, dois testes falham;
+removido, a suíte volta ao verde.
+
 ## Conversão dos 34 — o que NÃO se faz
 
 ⛔ alterar mecânica clínica · progressão · dificuldade · pontuação ou métricas
