@@ -599,7 +599,30 @@ describe("T1 global — 8: tutorial sempre disponível, nunca obrigatório", () 
     // A revisão não pode chamar onTutorialDone: é ele que dispara o POST que grava
     // tutorialCompletedAt, tutorialVersion e tutorialSource.
     expect(wrapper()).toMatch(/function reviewTutorial\(\)[\s\S]*?setIsTutorialReview\(true\)/);
-    expect(wrapper()).toMatch(/if \(!isTutorialReview\) onTutorialDone\?\.\(\)/);
+    expect(wrapper()).toMatch(/completionRecordFor\(isTutorialReview, tutorial\.version\)/);
+  });
+
+  it("onTutorialDone é chamado UMA vez, e sempre sob a condição", () => {
+    /*
+     * Este teste nasceu de um quase-acidente: bastava acrescentar uma chamada solta
+     *
+     *     onTutorialDone?.();
+     *     if (!isTutorialReview) onTutorialDone?.();
+     *
+     * para a revisão voltar a gravar e a primeira conclusão disparar o POST duas vezes — e o teste
+     * anterior continuaria passando, porque a linha condicional segue lá. Provar que o certo existe
+     * não é o mesmo que provar que o errado não existe.
+     */
+    const chamadas = wrapper().match(/onTutorialDone\?\.\(\)/g) ?? [];
+    expect(chamadas).toHaveLength(1);
+
+    // E a única chamada tem de estar sob a guarda do registro, não solta no corpo da função.
+    const corpo = wrapper().slice(
+      wrapper().indexOf("function finishTutorial"),
+      wrapper().indexOf("const themeStyles"),
+    );
+    expect(corpo).toMatch(/if \(registro !== null\) onTutorialDone\?\.\(\);/);
+    expect(corpo).not.toMatch(/^\s*onTutorialDone\?\.\(\);/m);
   });
 
   it("a primeira conclusão continua gravando", () => {

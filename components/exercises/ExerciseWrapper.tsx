@@ -6,7 +6,7 @@ import { Button } from "@/components/ui/button";
 import { ScoreDisplay } from "@/components/gamification/ScoreDisplay";
 import { formatDuration, formatReactionTime } from "@/lib/utils";
 import { EXERCISE_FUNCTIONAL } from "@/lib/exercise-functional";
-import { tutorialRequired, type TutorialState } from "@/lib/tutorial/state";
+import { completionRecordFor, tutorialRequired, type TutorialState } from "@/lib/tutorial/state";
 import type { TutorialDefinition } from "@/lib/tutorial/types";
 import type { ExerciseResult, Theme } from "@/types";
 import { TutorialRunner } from "@/components/exercises/tutorial/TutorialRunner";
@@ -135,8 +135,11 @@ export function ExerciseWrapper({
   }
 
   function finishTutorial() {
-    // Só a PRIMEIRA conclusão registra. A revisão sai em silêncio, sem tocar em dado nenhum.
-    if (!isTutorialReview) onTutorialDone?.();
+    // A decisão de registrar mora em `completionRecordFor`, testada isoladamente: `null` na
+    // revisão significa não gravar nada. Aqui só obedecemos ao que ela devolve — nunca chame
+    // `onTutorialDone` fora desta guarda, ou a revisão volta a gravar.
+    const registro = tutorial ? completionRecordFor(isTutorialReview, tutorial.version) : null;
+    if (registro !== null) onTutorialDone?.();
     setIsTutorialReview(false);
     setPhase("exercise");
   }
