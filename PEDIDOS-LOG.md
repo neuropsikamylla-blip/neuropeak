@@ -14490,3 +14490,26 @@ essa regra deve entrar em docs/T1-REGRAS-GLOBAIS.md.
 Depois disso, não quero mais parar exercício por exercício para revalidar essa regra.
 Pode seguir com a conversão dos demais 33 exercícios por lotes, todos herdando o mesmo framework já aprovado.
 Só pare se algum exercício tiver uma incompatibilidade real de mecânica com o framework ou exigir exceção arquitetural.
+
+## 07/08/2026 16:11
+A direção está correta.
+A regra 10 aprovada passa a valer para todos os exercícios e concordo com a estratégia de reutilizar o framework.
+Também concordo com a criação de uma fábrica por família de mecânica, em vez de copiar código por exercício.
+Porém, quero ajustar o plano de execução.
+Não quero mais validação exercício por exercício.
+Mas também não quero converter todos os lotes sem checkpoints.
+O que quero validar é uma vez por família de mecânica.
+Fluxo daqui para frente:
+Framework → aprovado ✅
+Família Span → aprovada ✅
+Próxima família → converter todos os exercícios daquela família → eu valido apenas um representante.
+Se aprovada, toda a família fica automaticamente aprovada.
+Só então seguir para a próxima família.
+Não preciso validar novamente cada exercício quando eles compartilham exatamente a mesma mecânica de tutorial.
+Só quero parar se:
+surgir uma incompatibilidade arquitetural;
+algum exercício exigir exceção ao framework;
+ou aparecer uma nova família de interação que ainda não exista.
+Se a família utilizar exatamente o mesmo comportamento já aprovado, pode converter todos os exercícios daquela família sem novas aprovações intermediárias.
+O objetivo continua sendo exatamente o mesmo:
+um único framework, uma única experiência, reutilização máxima e zero divergência entre exercícios.
