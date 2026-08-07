@@ -5,7 +5,12 @@ export interface SpeechPlaybackHooks {
 }
 
 export const SPEECH_INITIAL_DELAY_MS = 500;
-export const SPEECH_ONSTART_GUARD_MS = 1200;
+/**
+ * Tempo com o sintetizador COMPROVADAMENTE parado (`speaking === false`) a partir do qual
+ * concluímos que não haverá voz. Não é um prazo para liberar o visual: é o ponto em que a ausência
+ * de áudio deixa de ser espera e passa a ser falha. Enquanto a fala puder começar, nada é liberado.
+ */
+export const SPEECH_SILENCE_TIMEOUT_MS = 2500;
 
 export function speechGapMs(sequenceLength: number): number {
   return sequenceLength >= 6 ? 1000 : 850;
@@ -44,7 +49,10 @@ function wait(ms: number, isCancelled: () => boolean): Promise<boolean> {
 
 /**
  * Fala um item e só anuncia o estímulo visual quando a síntese realmente começa.
- * A guarda cobre navegadores que não entregam `onstart`; falha de voz também preserva o visual.
+ *
+ * O resgate para navegadores que não entregam `onstart` observa `speechSynthesis.speaking`, ou
+ * seja, o estado real da fala — nunca o tempo decorrido. Falha comprovada de voz ainda preserva o
+ * estímulo visual, mas só depois de o silêncio deixar de ser espera.
  */
 function speakItem(
   texto: string,
@@ -83,7 +91,7 @@ function speakItem(
     const finish = () => {
       if (settled) return;
       settled = true;
-      if (onstartGuard !== undefined) window.clearTimeout(onstartGuard);
+      if (onstartGuard !== undefined) window.clearInterval(onstartGuard);
       if (cancelCheck !== undefined) window.clearInterval(cancelCheck);
       utterance.onstart = null;
       utterance.onend = null;
@@ -113,8 +121,39 @@ function speakItem(
         // Implementações síncronas degradadas podem encerrar no próprio `speak` sem `onstart`.
         announce();
       } else {
-        // Alguns navegadores omitem `onstart`; após o limite, o estímulo visual degrada sem sumir.
-        onstartGuard = window.setTimeout(announce, SPEECH_ONSTART_GUARD_MS);
+        /*
+         * REGRA GLOBAL 3 — o visual NUNCA antecipa o áudio.
+         *
+         * A versão anterior liberava o estímulo por TEMPO DECORRIDO: se `onstart` não viesse em
+         * 1200 ms, o visual aparecia. Isso trocava "a voz começou" por "já esperei bastante" — e
+         * numa síntese lenta o visual apareceria ANTES da fala, exatamente o que a regra proíbe.
+         *
+         * O critério correto é o estado real do sintetizador. `speechSynthesis.speaking` fica
+         * verdadeiro assim que a fala é audível, mesmo nos navegadores que omitem `onstart`:
+         *
+         *   - `speaking === true`  → a voz JÁ saiu. Anunciar é seguro (e é o caminho de resgate).
+         *   - `speaking === false` → a fala ainda pode começar. NÃO anunciar, por mais que demore.
+         *
+         * Só depois de `SPEECH_SILENCE_TIMEOUT_MS` com o sintetizador comprovadamente parado
+         * concluímos que não haverá áudio, e aí o visual sai como degradação — nunca antes.
+         */
+        const inicio = performance.now();
+        onstartGuard = window.setInterval(() => {
+          if (announced || settled) {
+            window.clearInterval(onstartGuard);
+            return;
+          }
+          if (window.speechSynthesis.speaking) {
+            announce(); // a voz está audível agora — não estamos antecipando nada
+            window.clearInterval(onstartGuard);
+            return;
+          }
+          if (performance.now() - inicio >= SPEECH_SILENCE_TIMEOUT_MS) {
+            // Silêncio prolongado com o sintetizador parado: não haverá voz. Degrada para visual.
+            announce();
+            window.clearInterval(onstartGuard);
+          }
+        }, 40);
       }
     } catch {
       announce();
