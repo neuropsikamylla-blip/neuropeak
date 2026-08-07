@@ -7,6 +7,7 @@ import { calculateExerciseScore } from "@/lib/scoring";
 import { useTimedProgress } from "@/components/exercises/useExerciseEngine";
 import { ExerciseProgressBar } from "@/components/exercises/ExerciseProgressBar";
 import { classifyTrial, nextLevelPerTrial } from "@/lib/adaptive-trial";
+import type { BoardProps } from "@/lib/tutorial/definitions/sequencia-ordenada";
 import type { ExerciseResult, Theme } from "@/types";
 
 interface LetrasSequenciaProps {
@@ -29,10 +30,16 @@ const LS_LEVELS: Record<number, LSLevel> = {
   9:  { count: 7, reverse: true,  audio: false, syllable: true,  showMs: 700 },
   10: { count: 8, reverse: true,  audio: false, syllable: true,  showMs: 600 },
 };
+export const LETRAS_SEQUENCIA_MIN_LEVEL = 1;
+export const letrasSequenciaItemsForLevel = (level: number): number => LS_LEVELS[level].count;
 const levelOf = (d: number): number => Math.min(10, Math.max(1, Math.round(d)));
 
-const LETTERS = ["B", "F", "M", "R", "T", "L", "P", "S", "C", "V", "G", "D"];
+export const LETTERS = ["B", "F", "M", "R", "T", "L", "P", "S", "C", "V", "G", "D"];
 const SYLLABLES = ["BA", "ME", "TO", "LI", "PA", "RU", "CO", "FE", "NA", "DI", "SO", "VE"];
+export const LETRAS_TUTORIAL_CHOICES = LETTERS.slice(
+  0,
+  letrasSequenciaItemsForLevel(LETRAS_SEQUENCIA_MIN_LEVEL) + 2,
+);
 
 function shuffle<T>(a: T[]): T[] { const r = [...a]; for (let i = r.length - 1; i > 0; i--) { const j = Math.floor(Math.random() * (i + 1)); [r[i], r[j]] = [r[j], r[i]]; } return r; }
 function sample<T>(pool: T[], n: number): T[] { return shuffle(pool).slice(0, n); }
@@ -52,6 +59,78 @@ function speak(text: string): Promise<void> {
 }
 
 type Phase = "ready" | "show" | "input" | "feedback";
+
+export interface LetrasSequenciaBoardProps extends BoardProps<string> {
+  choices?: string[];
+  /** Opção exibida como pressionada por código; ausente não altera o treino. */
+  pressedChoice?: string;
+}
+
+/** Painel real de resposta, compartilhado pelo treino e pelo tutorial. */
+export function LetrasSequenciaBoard({
+  total,
+  filled,
+  activeIndex,
+  activeChoice,
+  interactive,
+  onChoice,
+  enteredItems,
+  pressedChoice,
+  highlightedIndex,
+  choices = LETRAS_TUTORIAL_CHOICES,
+}: LetrasSequenciaBoardProps) {
+  return (
+    <div className="flex flex-col items-center gap-4">
+      <div className="flex gap-2 flex-wrap justify-center min-h-[40px]">
+        {Array.from({ length: total }).map((_, i) => (
+          <div
+            key={i}
+            className="w-10 h-12 rounded-xl flex items-center justify-center font-black text-xl border transition-transform"
+            style={{
+              background: "rgba(255,255,255,0.04)",
+              borderColor: i === activeIndex
+                ? "rgba(165,180,252,0.9)"
+                : "rgba(99,102,241,0.3)",
+              color: "#e0e7ff",
+              opacity: i < filled ? 1 : undefined,
+              transform: i === highlightedIndex ? "scale(1.12)" : undefined,
+            }}
+          >
+            {enteredItems[i] ?? ""}
+          </div>
+        ))}
+      </div>
+      <div className="grid grid-cols-4 gap-2.5 w-full mt-1">
+        {choices.map((choice, i) => {
+          const used = enteredItems.filter((item) => item === choice).length
+            >= choices.filter((item) => item === choice).length;
+          const active = activeChoice === choice;
+          return (
+            <button
+              key={`${choice}-${i}`}
+              data-choice={choice}
+              onClick={interactive ? () => onChoice(choice) : undefined}
+              disabled={used}
+              className="h-16 rounded-2xl font-black text-2xl active:scale-95 transition-transform disabled:opacity-30"
+              style={{
+                background: active ? "#4F46E5" : "rgba(255,255,255,0.05)",
+                border: "1.5px solid rgba(99,102,241,0.35)",
+                color: "#e0e7ff",
+                transform: pressedChoice === choice
+                  ? "scale(0.95)"
+                  : active
+                    ? "scale(1.04)"
+                    : undefined,
+              }}
+            >
+              {choice}
+            </button>
+          );
+        })}
+      </div>
+    </div>
+  );
+}
 
 export function LetrasSequencia({ difficulty, onComplete }: LetrasSequenciaProps) {
   const { begin: startTimer, isTimeUp, elapsedSec, finish: finishTimer, progressPct } = useTimedProgress();
@@ -268,26 +347,15 @@ export function LetrasSequencia({ difficulty, onComplete }: LetrasSequenciaProps
             <p className="text-sm font-semibold text-center text-white">
               Toque {spec.reverse ? "na ordem INVERSA" : "na MESMA ordem"}
             </p>
-            <div className="flex gap-2 flex-wrap justify-center min-h-[40px]">
-              {Array.from({ length: spec.count }).map((_, i) => (
-                <div key={i} className="w-10 h-12 rounded-xl flex items-center justify-center font-black text-xl border"
-                  style={{ background: "rgba(255,255,255,0.04)", borderColor: "rgba(99,102,241,0.3)", color: "#e0e7ff" }}>
-                  {entered[i] ?? ""}
-                </div>
-              ))}
-            </div>
-            <div className="grid grid-cols-4 gap-2.5 w-full mt-1">
-              {keys.map((k, i) => {
-                const used = entered.filter((e) => e === k).length >= keys.filter((x) => x === k).length;
-                return (
-                  <button key={`${k}-${i}`} onClick={() => handleKey(k)} disabled={used}
-                    className="h-16 rounded-2xl font-black text-2xl active:scale-95 transition-transform disabled:opacity-30"
-                    style={{ background: "rgba(255,255,255,0.05)", border: "1.5px solid rgba(99,102,241,0.35)", color: "#e0e7ff" }}>
-                    {k}
-                  </button>
-                );
-              })}
-            </div>
+            <LetrasSequenciaBoard
+              total={spec.count}
+              filled={entered.length}
+              activeIndex={-1}
+              interactive
+              onChoice={handleKey}
+              enteredItems={entered}
+              choices={keys}
+            />
           </div>
         )}
 

@@ -21,6 +21,8 @@ import {
   spanNumericoInversoTutorial,
   spanNumericoTutorial,
 } from "@/lib/tutorial/definitions/span-numerico";
+import { letrasSequenciaTutorial } from "@/lib/tutorial/definitions/letras-sequencia";
+import { sequenciaItensTutorial } from "@/lib/tutorial/definitions/sequencia-itens";
 import type { TutorialDefinition } from "@/lib/tutorial/types";
 import type { TutorialState } from "@/lib/tutorial/state";
 
@@ -33,6 +35,8 @@ import type { TutorialState } from "@/lib/tutorial/state";
 const TUTORIAIS_POR_EXERCICIO: Readonly<Record<string, TutorialDefinition>> = Object.freeze({
   "span-numerico": spanNumericoTutorial,
   "span-numerico-inverso": spanNumericoInversoTutorial,
+  "letras-sequencia": letrasSequenciaTutorial,
+  "sequencia-itens": sequenciaItensTutorial,
 });
 
 function ExerciseLoader() {

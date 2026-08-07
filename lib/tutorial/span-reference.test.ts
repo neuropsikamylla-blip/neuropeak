@@ -40,9 +40,11 @@ describe("isolamento do tutorial do Span", () => {
 
   it("mantém a definição fora dos contratos clínicos e deriva a guiada da mecânica", () => {
     const definition = source("lib/tutorial/definitions/span-numerico.tsx");
+    const family = source("lib/tutorial/definitions/sequencia-ordenada.tsx");
 
     expect(definition).not.toMatch(forbiddenClinicalTerms);
-    expect(definition).toMatch(/total=\{SMALLEST_VALID_UNIT\}/);
+    expect(family).not.toMatch(forbiddenClinicalTerms);
+    expect(family).toMatch(/total=\{config\.smallestValidUnit\}/);
   });
 
   it("não imprime a sequência na fase de escuta", () => {
@@ -70,7 +72,7 @@ describe("isolamento do tutorial do Span", () => {
 
 describe("ritmo e identidade das etapas do tutorial", () => {
   const runnerSource = () => source("components/exercises/tutorial/TutorialRunner.tsx");
-  const definitionSource = () => source("lib/tutorial/definitions/span-numerico.tsx");
+  const definitionSource = () => source("lib/tutorial/definitions/sequencia-ordenada.tsx");
   const pointerSource = () => source("components/exercises/tutorial/DemoPointer.tsx");
 
   it("declara todos os tempos pedagógicos como constantes nomeadas", () => {
@@ -146,11 +148,11 @@ describe("ritmo e identidade das etapas do tutorial", () => {
     const definition = definitionSource();
     const demonstration = definition.slice(
       definition.indexOf("function Demonstration"),
-      definition.indexOf("function GuidedAttempt"),
+      definition.indexOf("function criarGuidedAttempt"),
     );
 
     expect(demonstration.match(/<DemoPointer/g)).toHaveLength(1);
-    expect(demonstration).toMatch(/setTargetSelector\(`\[data-digit="\$\{digit\}"\]`\)/);
+    expect(demonstration).toMatch(/setTargetSelector\(config\.targetSelectorFor\(item\)\)/);
     expect(demonstration).not.toMatch(/setTargetSelector\(null\)/);
   });
 
@@ -158,7 +160,7 @@ describe("ritmo e identidade das etapas do tutorial", () => {
     const definition = definitionSource();
 
     expect(definition).toMatch(
-      /setTargetSelector[\s\S]*?wait\(POINTER_MOVE_MS[\s\S]*?wait\(POINTER_AIM_MS[\s\S]*?setPressedKey\(digit\)[\s\S]*?wait\(POINTER_PRESS_MS[\s\S]*?setPressedKey\(-1\)[\s\S]*?wait\(POINTER_RELEASE_MS[\s\S]*?setFilled\(index \+ 1\)[\s\S]*?wait\(BETWEEN_DIGITS_MS/,
+      /setTargetSelector[\s\S]*?wait\(POINTER_MOVE_MS[\s\S]*?wait\(POINTER_AIM_MS[\s\S]*?setPressedChoice\(item\)[\s\S]*?wait\(POINTER_PRESS_MS[\s\S]*?setPressedChoice\(undefined\)[\s\S]*?wait\(POINTER_RELEASE_MS[\s\S]*?setFilled\(index \+ 1\)[\s\S]*?wait\(BETWEEN_DIGITS_MS/,
     );
   });
 
@@ -212,7 +214,7 @@ describe("a demonstração nunca reinicia sozinha", () => {
   // Se o efeito dependesse de `onDone`, um callback recriado pelo pai remontaria a demonstração e
   // a voz falaria por cima de si mesma. O ref mantém o callback atual sem virar dependência.
   it("o efeito da demonstração não depende do callback do pai", () => {
-    const definition = source("lib/tutorial/definitions/span-numerico.tsx");
+    const definition = source("lib/tutorial/definitions/sequencia-ordenada.tsx");
 
     expect(definition).toMatch(/onDoneRef\.current\(\)/);
     expect(definition).not.toMatch(/\}, \[onDone\]\)/);
@@ -221,7 +223,8 @@ describe("a demonstração nunca reinicia sozinha", () => {
 
 describe("demonstração completa da resposta do Span Direto", () => {
   const numberPadSource = () => source("components/exercises/memory/SpanNumerico.tsx");
-  const definitionSource = () => source("lib/tutorial/definitions/span-numerico.tsx");
+  const definitionSource = () => source("lib/tutorial/definitions/sequencia-ordenada.tsx");
+  const spanDefinitionSource = () => source("lib/tutorial/definitions/span-numerico.tsx");
   const pointerSource = () => source("components/exercises/tutorial/DemoPointer.tsx");
 
   it("permite pressionar uma tecla por código e identifica cada dígito", () => {
@@ -266,7 +269,7 @@ describe("demonstração completa da resposta do Span Direto", () => {
     const definition = definitionSource();
     const demonstration = definition.slice(
       definition.indexOf("function Demonstration"),
-      definition.indexOf("function GuidedAttempt"),
+      definition.indexOf("function criarGuidedAttempt"),
     );
     const loop = demonstration.indexOf(
       "for (let index = 0; index < ordemDaResposta.length; index++)",
@@ -279,7 +282,7 @@ describe("demonstração completa da resposta do Span Direto", () => {
   });
 
   it("deriva a quantidade de dígitos da menor unidade válida", () => {
-    const definition = definitionSource();
+    const definition = spanDefinitionSource();
 
     expect(definition).toMatch(/SMALLEST_VALID_UNIT\s*=\s*digitsForLevel\(MIN_LEVEL\)/);
     expect(definition).toMatch(/length:\s*SMALLEST_VALID_UNIT/);
@@ -290,7 +293,7 @@ describe("demonstração completa da resposta do Span Direto", () => {
     const definition = definitionSource();
     const demonstration = definition.slice(
       definition.indexOf("function Demonstration"),
-      definition.indexOf("function GuidedAttempt"),
+      definition.indexOf("function criarGuidedAttempt"),
     );
 
     expect(demonstration).toMatch(/onDoneRef\.current\(\)/);
@@ -308,7 +311,7 @@ describe("demonstração completa da resposta do Span Direto", () => {
     const definition = definitionSource();
 
     expect(definition).toMatch(
-      /setPressedKey\(-1\);[\s\S]*?await wait\(POINTER_RELEASE_MS, \(\) => cancelled\)[\s\S]*?setFilled\(index \+ 1\);/,
+      /setPressedChoice\(undefined\);[\s\S]*?await wait\(POINTER_RELEASE_MS, \(\) => cancelled\)[\s\S]*?setFilled\(index \+ 1\);/,
     );
   });
 
@@ -326,6 +329,7 @@ describe("o Span Inverso e os demais exercícios seguem intocados", () => {
 
     expect(inverso).not.toMatch(/tutorial/i);
     expect(definicao).toMatch(/function criarTutorialSpan\(/);
+    expect(definicao).toMatch(/criarTutorialSequenciaOrdenada\(/);
     expect(definicao).toMatch(/export const spanNumericoInversoTutorial = criarTutorialSpan\(/);
     expect(definicao).toMatch(/reverse: true/);
   });
@@ -348,8 +352,88 @@ describe("o Span Inverso e os demais exercícios seguem intocados", () => {
     );
     const convertidos = (registro.match(/"([a-z-]+)":/g) ?? []).map((m) => m.slice(1, -2));
 
-    // Lote 1: Span Direto (referência) e Span Inverso. Cada lote acrescenta aqui.
-    expect(convertidos.sort()).toEqual(["span-numerico", "span-numerico-inverso"]);
+    expect(convertidos.sort()).toEqual([
+      "letras-sequencia",
+      "sequencia-itens",
+      "span-numerico",
+      "span-numerico-inverso",
+    ]);
+  });
+});
+
+describe("Família 1 — letras e itens usam a fábrica aprovada", () => {
+  const family = () => source("lib/tutorial/definitions/sequencia-ordenada.tsx");
+  const lettersDefinition = () => source("lib/tutorial/definitions/letras-sequencia.tsx");
+  const itemsDefinition = () => source("lib/tutorial/definitions/sequencia-itens.tsx");
+
+  it("mantém uma única fábrica, sem componente de tutorial por exercício", () => {
+    expect(family()).toMatch(/export function criarTutorialSequenciaOrdenada<T>/);
+    for (const definition of [lettersDefinition(), itemsDefinition()]) {
+      expect(definition).toMatch(/criarTutorialSequenciaOrdenada\(/);
+      expect(definition).not.toMatch(/useEffect|useState|DemoPointer|function Demonstration/);
+    }
+  });
+
+  it("mantém as oito constantes de ritmo somente na fábrica", () => {
+    const constants = [
+      "POST_LISTENING_PAUSE_MS",
+      "POINTER_ENTRY_PULSE_MS",
+      "POINTER_MOVE_MS",
+      "POINTER_AIM_MS",
+      "POINTER_PRESS_MS",
+      "POINTER_RELEASE_MS",
+      "BETWEEN_DIGITS_MS",
+      "FINAL_PAUSE_MS",
+    ];
+
+    for (const constant of constants) {
+      expect(family()).toMatch(new RegExp(`const ${constant} =`));
+      expect(lettersDefinition()).not.toContain(constant);
+      expect(itemsDefinition()).not.toContain(constant);
+    }
+  });
+
+  it("usa clique nas duas instruções e não menciona teclado nem toque", () => {
+    expect(lettersDefinition()).toMatch(
+      /guidedInstruction: "Ouça a sequência e clique nas letras na mesma ordem\."/,
+    );
+    expect(itemsDefinition()).toMatch(
+      /guidedInstruction: "Ouça a sequência e clique nos itens na mesma ordem\."/,
+    );
+    expect(`${lettersDefinition()}${itemsDefinition()}`).not.toMatch(/teclado|toque/i);
+  });
+
+  it("deriva as menores unidades das escadas clínicas", () => {
+    expect(lettersDefinition()).toMatch(
+      /letrasSequenciaItemsForLevel\(LETRAS_SEQUENCIA_MIN_LEVEL\)/,
+    );
+    expect(itemsDefinition()).toMatch(
+      /sequenciaItensForLevel\(SEQUENCIA_ITENS_MIN_LEVEL\)/,
+    );
+  });
+
+  it("os painéis reais expõem data-choice e pressão opcional", () => {
+    const boardContract = family();
+    const letters = source("components/exercises/memory/LetrasSequencia.tsx");
+    const items = source("components/exercises/memory/SequenciaItens.tsx");
+
+    expect(boardContract).toMatch(/pressedChoice\?: T/);
+    expect(letters).toMatch(/export function LetrasSequenciaBoard/);
+    expect(letters).toMatch(/data-choice=\{choice\}/);
+    expect(letters).toMatch(/pressedChoice === choice[\s\S]*?scale\(0\.95\)/);
+    expect(items).toMatch(/export function SequenciaItensBoard/);
+    expect(items).toMatch(/data-choice=\{choice\.n\}/);
+    expect(items).toMatch(/pressedChoice\?\.e === choice\.e[\s\S]*?scale\(0\.95\)/);
+  });
+
+  it("o treino reutiliza os painéis sem fornecer props de tutorial", () => {
+    const letters = source("components/exercises/memory/LetrasSequencia.tsx");
+    const items = source("components/exercises/memory/SequenciaItens.tsx");
+    const lettersCall = letters.slice(letters.lastIndexOf("<LetrasSequenciaBoard"));
+    const itemsCall = items.slice(items.lastIndexOf("<SequenciaItensBoard"));
+
+    expect(lettersCall).not.toMatch(/pressedChoice|activeChoice|highlightedIndex/);
+    expect(itemsCall).not.toMatch(/pressedChoice|activeChoice|highlightedIndex/);
   });
 });
 
@@ -373,7 +457,11 @@ describe("T1 congelada — 2. sem emoji no framework do tutorial", () => {
   const arquivosDoFramework = [
     "components/exercises/tutorial/TutorialRunner.tsx",
     "components/exercises/tutorial/DemoPointer.tsx",
+    "lib/tutorial/definitions/letras-sequencia.tsx",
+    "lib/tutorial/definitions/sequencia-itens.tsx",
+    "lib/tutorial/definitions/sequencia-ordenada.tsx",
     "lib/tutorial/definitions/span-numerico.tsx",
+    "lib/tutorial/speech-playback.ts",
     "lib/tutorial/span-playback.ts",
     "lib/tutorial/types.ts",
     "lib/tutorial/state.ts",

@@ -8,6 +8,7 @@ import { useTimedProgress } from "@/components/exercises/useExerciseEngine";
 import { ExerciseProgressBar } from "@/components/exercises/ExerciseProgressBar";
 import { ItemVisual } from "@/components/exercises/ItemVisual";
 import { classifyTrial, nextLevelPerTrial } from "@/lib/adaptive-trial";
+import type { BoardProps } from "@/lib/tutorial/definitions/sequencia-ordenada";
 import type { ExerciseResult, Theme } from "@/types";
 
 interface SequenciaItensProps {
@@ -17,8 +18,8 @@ interface SequenciaItensProps {
 }
 
 // ── Itens (figura + nome para áudio) ─────────────────────────────────────────
-interface Item { e: string; n: string; g: "animal" | "objeto"; }
-const ITEMS: Item[] = [
+export interface Item { e: string; n: string; g: "animal" | "objeto"; }
+export const ITEMS: Item[] = [
   { e: "🐱", n: "gato", g: "animal" }, { e: "🐶", n: "cachorro", g: "animal" },
   { e: "🐟", n: "peixe", g: "animal" }, { e: "🐦", n: "pássaro", g: "animal" },
   { e: "🐰", n: "coelho", g: "animal" }, { e: "🐸", n: "sapo", g: "animal" },
@@ -42,6 +43,13 @@ const SI_LEVELS: Record<number, SILevel> = {
   9:  { count: 6, audio: false, similar: true,  distractors: 5, showMs: 650 },
   10: { count: 7, audio: false, similar: true,  distractors: 6, showMs: 550 },
 };
+export const SEQUENCIA_ITENS_MIN_LEVEL = 1;
+export const sequenciaItensForLevel = (level: number): number => SI_LEVELS[level].count;
+export const SEQUENCIA_ITENS_TUTORIAL_CHOICES = ITEMS.slice(
+  0,
+  sequenciaItensForLevel(SEQUENCIA_ITENS_MIN_LEVEL)
+    + SI_LEVELS[SEQUENCIA_ITENS_MIN_LEVEL].distractors,
+);
 const levelOf = (d: number): number => Math.min(10, Math.max(1, Math.round(d)));
 
 function shuffle<T>(a: T[]): T[] { const r = [...a]; for (let i = r.length - 1; i > 0; i--) { const j = Math.floor(Math.random() * (i + 1)); [r[i], r[j]] = [r[j], r[i]]; } return r; }
@@ -59,6 +67,77 @@ function speak(text: string): Promise<void> {
 }
 
 type Phase = "ready" | "show" | "input" | "feedback";
+
+export interface SequenciaItensBoardProps extends BoardProps<Item> {
+  choices?: Item[];
+  /** Opção exibida como pressionada por código; ausente não altera o treino. */
+  pressedChoice?: Item;
+}
+
+/** Painel real de resposta, compartilhado pelo treino e pelo tutorial. */
+export function SequenciaItensBoard({
+  total,
+  filled,
+  activeIndex,
+  activeChoice,
+  interactive,
+  onChoice,
+  enteredItems,
+  pressedChoice,
+  highlightedIndex,
+  choices = SEQUENCIA_ITENS_TUTORIAL_CHOICES,
+}: SequenciaItensBoardProps) {
+  return (
+    <div className="flex flex-col items-center gap-4">
+      <div className="flex gap-2 flex-wrap justify-center min-h-[44px]">
+        {Array.from({ length: total }).map((_, i) => (
+          <div
+            key={i}
+            className="w-11 h-11 rounded-xl flex items-center justify-center text-2xl border transition-transform"
+            style={{
+              background: "rgba(255,255,255,0.04)",
+              borderColor: i === activeIndex
+                ? "rgba(165,180,252,0.9)"
+                : "rgba(99,102,241,0.3)",
+              opacity: i < filled ? 1 : undefined,
+              transform: i === highlightedIndex ? "scale(1.12)" : undefined,
+            }}
+          >
+            {enteredItems[i] && (
+              <ItemVisual name={enteredItems[i].n} emoji={enteredItems[i].e} size={34} />
+            )}
+          </div>
+        ))}
+      </div>
+      <div className="grid grid-cols-4 gap-2.5 w-full mt-1">
+        {choices.map((choice, i) => {
+          const used = enteredItems.some((item) => item.e === choice.e);
+          const active = activeChoice?.e === choice.e;
+          return (
+            <button
+              key={`${choice.e}-${i}`}
+              data-choice={choice.n}
+              onClick={interactive ? () => onChoice(choice) : undefined}
+              disabled={used}
+              className="h-16 rounded-2xl text-3xl active:scale-95 transition-transform disabled:opacity-25 flex items-center justify-center"
+              style={{
+                background: active ? "#4F46E5" : "rgba(255,255,255,0.05)",
+                border: "1.5px solid rgba(99,102,241,0.35)",
+                transform: pressedChoice?.e === choice.e
+                  ? "scale(0.95)"
+                  : active
+                    ? "scale(1.04)"
+                    : undefined,
+              }}
+            >
+              <ItemVisual name={choice.n} emoji={choice.e} size={46} />
+            </button>
+          );
+        })}
+      </div>
+    </div>
+  );
+}
 
 export function SequenciaItens({ difficulty, onComplete }: SequenciaItensProps) {
   const { begin: startTimer, isTimeUp, elapsedSec, finish: finishTimer, progressPct } = useTimedProgress();
@@ -241,22 +320,15 @@ export function SequenciaItens({ difficulty, onComplete }: SequenciaItensProps) 
         {phase === "input" && (
           <div className="flex flex-col items-center gap-4">
             <p className="text-sm font-semibold text-center text-white">Toque na MESMA ordem</p>
-            <div className="flex gap-2 flex-wrap justify-center min-h-[44px]">
-              {Array.from({ length: spec.count }).map((_, i) => (
-                <div key={i} className="w-11 h-11 rounded-xl flex items-center justify-center text-2xl border"
-                  style={{ background: "rgba(255,255,255,0.04)", borderColor: "rgba(99,102,241,0.3)" }}>{entered[i] && <ItemVisual name={entered[i].n} emoji={entered[i].e} size={34} />}</div>
-              ))}
-            </div>
-            <div className="grid grid-cols-4 gap-2.5 w-full mt-1">
-              {keys.map((it, i) => {
-                const used = entered.filter((e) => e.e === it.e).length >= 1;
-                return (
-                  <button key={`${it.e}-${i}`} onClick={() => handleKey(it)} disabled={used}
-                    className="h-16 rounded-2xl text-3xl active:scale-95 transition-transform disabled:opacity-25 flex items-center justify-center"
-                    style={{ background: "rgba(255,255,255,0.05)", border: "1.5px solid rgba(99,102,241,0.35)" }}><ItemVisual name={it.n} emoji={it.e} size={46} /></button>
-                );
-              })}
-            </div>
+            <SequenciaItensBoard
+              total={spec.count}
+              filled={entered.length}
+              activeIndex={-1}
+              interactive
+              onChoice={handleKey}
+              enteredItems={entered}
+              choices={keys}
+            />
           </div>
         )}
 
