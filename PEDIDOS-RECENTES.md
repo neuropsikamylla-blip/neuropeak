@@ -1,15 +1,6 @@
 # As 3 ultimas especificacoes dela (automatico; a mais nova por ultimo)
 # Na retomada: ler as 3, conectar com PROGRESSO.md e git, declarar e seguir.
 
-## 07/08/2026 17:07
-<task-notification>
-<task-id>bf08d1pw6</task-id>
-<tool-use-id>toolu_011suVkTzCMFCoLUCLEFEAPz</tool-use-id>
-<output-file>/private/tmp/claude-501/-Users-kamyllahonorio-neuropeak/3e6ecf11-e4e5-471f-bbf9-4595faa53598/tasks/bf08d1pw6.output</output-file>
-<status>completed</status>
-<summary>Background command "Disparar o Codex para a Família 2" completed (exit code 0)</summary>
-</task-notification>
-
 ## 07/08/2026 18:46
 Família 2 aprovada. Pode seguir para a Família 3.
 A partir deste ponto, mantenha exatamente o framework aprovado no Span e na Família 2.
@@ -55,3 +46,12 @@ appVersion;
 buildId;
 resultado dos gates;
 exercício representante para validação.
+
+## 07/08/2026 19:09
+<task-notification>
+<task-id>brh59kehl</task-id>
+<tool-use-id>toolu_01DqAQZKHd2Fqd54HBqdfBCW</tool-use-id>
+<output-file>/private/tmp/claude-501/-Users-kamyllahonorio-neuropeak/3e6ecf11-e4e5-471f-bbf9-4595faa53598/tasks/brh59kehl.output</output-file>
+<status>completed</status>
+<summary>Background command "Disparar o Codex para a Família 3" completed (exit code 0)</summary>
+</task-notification>
