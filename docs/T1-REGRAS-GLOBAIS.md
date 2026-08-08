@@ -191,6 +191,17 @@ Família 4, onde o modo 3 não é usado.
 > **O modo explicativo é reserva, não meta.** Só entra quando a animação realmente não acrescenta
 > compreensão. Forçá-lo para "usar os três modos" é reduzir aprendizado por simetria.
 
+### O modo é POR EXERCÍCIO, nunca por família
+
+Validado por ela em **07/ago/2026**, ao ver o Semáforo: *"a demonstração tornou o entendimento mais
+artificial do que necessário"*. Ele saiu de **contínua** para **explicativo**, e a Família 4 deixou
+de ter um modo único.
+
+⛔ **Nem sempre "exercício temporizado = demonstração contínua".** Ser temporizado não implica que
+animar ensine: a regra do Semáforo — verde clique, vermelho não clique — se enuncia melhor do que se
+demonstra. Cada exercício se avalia **individualmente** pela pergunta única, mesmo dentro de uma
+família já convertida.
+
 ## Conversão dos 34 — o que NÃO se faz
 
 ⛔ alterar mecânica clínica · progressão · dificuldade · pontuação ou métricas

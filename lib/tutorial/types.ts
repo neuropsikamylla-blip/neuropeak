@@ -18,8 +18,14 @@ export interface TutorialDefinition {
    */
   modo?: "completa" | "continua" | "explicativo";
 
-  /** Modo "explicativo": a regra da atividade, em uma ou duas frases claras. */
-  explicacao?: string;
+  /**
+   * Modo "explicativo": a regra da atividade, uma frase por linha.
+   *
+   * São LINHAS, não um parágrafo: a regra costuma ter casos ("quando X, faça"; "quando Y, não
+   * faça"), e lê-los separados é justamente o que torna a explicação clara. O framework acrescenta
+   * sozinho a abertura e o aviso da etapa seguinte — a definição fornece só as regras.
+   */
+  explicacao?: string[];
 
   Demonstration: ComponentType<{ onDone: () => void }>;
   GuidedAttempt: ComponentType<GuidedAttemptProps>;

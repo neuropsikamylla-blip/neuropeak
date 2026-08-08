@@ -198,7 +198,7 @@ export function TutorialRunner({ definition, theme, onFinish }: TutorialRunnerPr
               className={`${styles.button} h-12 w-full font-semibold`}
               onClick={() => setPhase("demo")}
             >
-              Ver demonstração
+              {modo === "explicativo" ? "Ver explicação" : "Ver demonstração"}
             </Button>
           </div>
         )}
@@ -209,7 +209,16 @@ export function TutorialRunner({ definition, theme, onFinish }: TutorialRunnerPr
             <h2 className={`${styles.heading} mb-1 text-xl font-bold`}>Veja como funciona</h2>
             {modo === "explicativo" ? (
               <>
-                <p className={`${styles.text} mb-6 text-sm`}>{definition.explicacao}</p>
+                {/* Abertura padrão (regra 1), as regras da atividade, e o aviso da etapa seguinte. */}
+                <p className={`${styles.text} mb-3 text-sm`}>
+                  {definition.demonstrationHint ?? DEMONSTRATION_HINT_PADRAO}
+                </p>
+                {(definition.explicacao ?? []).map((linha) => (
+                  <p key={linha} className={`${styles.text} mb-2 text-sm`}>{linha}</p>
+                ))}
+                <p className={`${styles.text} mb-6 mt-4 text-sm`}>
+                  Na próxima etapa você fará uma tentativa guiada.
+                </p>
                 <Button
                   className={`${styles.button} h-12 w-full font-semibold`}
                   onClick={() => setPhase("handoff")}

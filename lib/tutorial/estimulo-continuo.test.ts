@@ -33,7 +33,10 @@ describe("Regra 11 — três modos oficiais", () => {
     );
     const beforeElse = explanatoryBranch.slice(0, explanatoryBranch.indexOf(") : ("));
 
-    expect(beforeElse).toMatch(/\{definition\.explicacao\}/);
+    // A explicação é um ARRAY de linhas: a regra costuma ter casos ("quando X, faça"; "quando Y,
+    // não faça"), e lê-los separados é justamente o que torna a explicação clara.
+    expect(beforeElse).toMatch(/\(definition\.explicacao \?\? \[\]\)\.map/);
+    expect(beforeElse).toMatch(/Na próxima etapa você fará uma tentativa guiada\./);
     expect(beforeElse).not.toMatch(/definition\.Demonstration/);
     expect(explanatoryBranch).toMatch(/onClick=\{\(\) => setPhase\("handoff"\)\}/);
   });
@@ -110,12 +113,22 @@ describe("Família 4 — estímulo contínuo", () => {
     expect(definition()).not.toMatch(/teclado|toque/i);
   });
 
-  it("classifica seis como contínuos e certo-ou-errado como completo", () => {
-    expect(definition().match(/modo: "continua"/g) ?? []).toHaveLength(6);
+  it("o modo é escolhido POR EXERCÍCIO, não pela família", () => {
+    // Validação dela de 07/ago/2026: o semaforo saiu de contínua para explicativo porque a
+    // demonstração animada tornou o entendimento mais artificial. A família deixou de ter um modo
+    // único — e é exatamente isso que este teste protege.
+    const semaforo = definition().slice(definition().indexOf('exerciseId: "semaforo"'));
+    expect(semaforo).toMatch(/modo: "explicativo"/);
+    expect(semaforo).toMatch(/Quando aparecer o sinal verde, clique\./);
+    expect(semaforo).toMatch(/Quando aparecer o sinal vermelho, não clique\./);
+
     const certoOuErrado = definition().slice(
       definition().indexOf("export const certoOuErradoTutorial"),
     );
     expect(certoOuErrado).toMatch(/modo: "completa"/);
+
+    // Os cinco restantes seguem em contínua, cada um por mérito próprio.
+    expect(definition().match(/modo: "continua"/g) ?? []).toHaveLength(5);
   });
 
   it("registra os sete e chega aos 19 convertidos", () => {

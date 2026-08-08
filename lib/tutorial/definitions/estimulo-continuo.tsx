@@ -21,7 +21,10 @@ interface PainelEstimuloProps<T extends EstimuloBase> {
 interface FamiliaEstimuloConfig<T extends EstimuloBase> {
   exerciseId: string;
   version: number;
-  modo: "completa" | "continua";
+  /** Regra 11: o modo é POR EXERCÍCIO, não por família — inclusive "explicativo". */
+  modo: "completa" | "continua" | "explicativo";
+  /** Linhas da regra, quando o modo é "explicativo". */
+  explicacao?: string[];
   guidedInstruction: string;
   retryHint: string;
   smallestValidUnit: number;
@@ -223,6 +226,7 @@ function criarTutorialEstimuloContinuo<T extends EstimuloBase>(
     exerciseId: config.exerciseId,
     version: config.version,
     modo: config.modo,
+    explicacao: config.explicacao,
     Demonstration: criarDemonstration(config),
     GuidedAttempt: criarGuidedAttempt(config),
     retryHint: config.retryHint,
@@ -506,7 +510,14 @@ const semaforoDemo: readonly SemaforoStimulus[] = [
 export const semaforoTutorial = criarTutorialEstimuloContinuo<SemaforoStimulus>({
   exerciseId: "semaforo",
   version: 1,
-  modo: "continua",
+  // Validado por ela em 07/ago/2026: a demonstração animada tornou o entendimento MAIS artificial,
+  // não menos. A regra do semáforo é simples o bastante para se enunciar — e enunciá-la ensina
+  // melhor do que animá-la. Critério: a demonstração aumenta a compreensão? Aqui, não.
+  modo: "explicativo",
+  explicacao: [
+    "Quando aparecer o sinal verde, clique.",
+    "Quando aparecer o sinal vermelho, não clique.",
+  ],
   guidedInstruction: "Clique em avançar somente quando o sinal abrir.",
   retryHint: "Espere o sinal verde e clique em avançar.",
   smallestValidUnit: ONE_RESPONSE,
