@@ -1,37 +1,6 @@
 # As 3 ultimas especificacoes dela (automatico; a mais nova por ultimo)
 # Na retomada: ler as 3, conectar com PROGRESSO.md e git, declarar e seguir.
 
-## 07/08/2026 22:46
-A validação da Família 4 mostrou um ajuste importante na arquitetura.
-O Semáforo não ficou melhor com demonstração contínua.
-A regra dele é extremamente simples e a demonstração tornou o entendimento mais artificial do que necessário.
-Quero alterar o critério do framework.
-O critério não é mais:
-"Exercício temporizado = demonstração contínua."
-O critério passa a ser:
-"A demonstração realmente aumenta a compreensão da mecânica?"
-Se a resposta for não, prefiro um tutorial explicativo.
-No caso do Semáforo, quero remover completamente a demonstração animada.
-Fluxo:
-Preparação
-↓
-Explicação simples
-Exemplo:
-DEMONSTRAÇÃO
-Observe como funciona a atividade.
-Quando aparecer o sinal verde, clique.
-Quando aparecer o sinal vermelho, não clique.
-Na próxima etapa você fará uma tentativa guiada.
-↓
-Tentativa guiada
-↓
-Treino
-A tentativa guiada continua existindo normalmente.
-A demonstração animada deve ser removida apenas deste exercício.
-Antes de alterar os demais exercícios da Família 4, quero reavaliar cada um individualmente usando este critério.
-Não quero que uma família inteira utilize obrigatoriamente o mesmo modo de tutorial.
-Quero escolher o modo que ensina melhor cada exercício.
-
 ## 07/08/2026 22:58
 Fazendo um ajuste na regra.
 Percebi que, quando a mecânica é simples e pode ser compreendida apenas pela explicação, a tentativa guiada também se torna desnecessária.
@@ -120,3 +89,6 @@ Dual Task
 MOT
 Vigilância (mantemos assim por enquanto, podendo ser reavaliado após validação visual).
 Importante: se houver qualquer dúvida sobre qual fluxo utilizar, prefiro o Fluxo 1 (demonstração). O Fluxo 2 deve ser utilizado apenas quando houver segurança de que a explicação, sozinha, é suficiente para que um paciente que nunca viu o exercício compreenda completamente a atividade.
+
+## 08/08/2026 14:15
+eu gostaria de fechar por enquanto  e depois retornar

@@ -14814,3 +14814,6 @@ Dual Task
 MOT
 Vigilância (mantemos assim por enquanto, podendo ser reavaliado após validação visual).
 Importante: se houver qualquer dúvida sobre qual fluxo utilizar, prefiro o Fluxo 1 (demonstração). O Fluxo 2 deve ser utilizado apenas quando houver segurança de que a explicação, sozinha, é suficiente para que um paciente que nunca viu o exercício compreenda completamente a atividade.
+
+## 08/08/2026 14:15
+eu gostaria de fechar por enquanto  e depois retornar
