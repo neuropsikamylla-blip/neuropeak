@@ -69,17 +69,26 @@ resposta quando ela vier**. O paciente não pode errar por lentidão enquanto ap
 
 ## 4. Os sete exercícios — modo por exercício
 
-O critério é **pedagógico**: animar só onde animar ensina.
+**Critério dela (revisto em 07/ago/2026):** *"A demonstração realmente ajuda o paciente a
+compreender a mecânica?"* — **não** "é difícil de explicar a regra".
 
-| exercício | modo | por quê |
+> ⚠️ A classificação anterior estava errada e foi refeita. Eu havia mandado `nback` e `dual-task`
+> para o modo explicativo porque suas regras se enunciam bem em texto. Critério errado: a pergunta
+> não é se dá para explicar, é se **ver ajuda a entender**.
+
+| exercício | modo | a demonstração ajuda a compreender? |
 |---|---|---|
-| `semaforo` | **contínua** | go/no-go clássico: o *quando* é a tarefa |
-| `vigilancia` | **contínua** | responder ao alvo entre não-alvos |
-| `tempo-reacao` | **contínua** | reagir ao sinal, inibir antes dele |
-| `nback` | **explicativo** | a regra ("igual ao de N atrás") se enuncia melhor do que se anima |
-| `dual-task` | **explicativo** | duas tarefas simultâneas; animar confunde mais que esclarece |
-| `mot` | **contínua** | rastrear alvos entre distratores exige ver o movimento |
-| `certo-ou-errado` | **explicativo** | julgar se a operação está certa — a regra é verbal |
+| `semaforo` | **contínua** | sim — o *quando* é a tarefa |
+| `vigilancia` | **contínua** | sim — distinguir alvo de não-alvo |
+| `tempo-reacao` | **contínua** | sim — reagir ao sinal e inibir antes dele |
+| `mot` | **contínua** | sim — rastrear exige ver o movimento |
+| `nback` | **contínua** | **sim, muito** — compara `seq[length - n]`, uma relação entre momentos no tempo. Abstrata em texto, concreta ao ver: é onde a demonstração mais ensina |
+| `dual-task` | **contínua** | **sim** — dois painéis simultâneos ("Divida sua atenção entre as duas tarefas"). Ver o sistema responder a um enquanto o outro corre mostra o que texto nenhum transmite |
+| `certo-ou-errado` | **completa** | sim, modestamente — mostra onde ficam as opções e que se escolhe uma. A mecânica não é temporizada no sentido das demais |
+
+**O modo explicativo NÃO é usado nesta família.** Aplicando o critério com honestidade, os sete
+ganham com demonstração. O modo 3 continua disponível para famílias em que a animação realmente não
+acrescente — forçá-lo aqui seria reduzir aprendizado para justificar a existência do modo.
 
 > Se ao implementar algum se mostrar melhor noutro modo, **registre a troca e a razão** no commit.
 
@@ -90,7 +99,7 @@ O critério é **pedagógico**: animar só onde animar ensina.
 | `semaforo` | Clique em avançar somente quando o sinal abrir. |
 | `vigilancia` | Clique quando a pipa alvo aparecer. |
 | `tempo-reacao` | Clique assim que o sinal aparecer. |
-| `nback` | Clique quando o item for igual ao de duas posições atrás. |
+| `nback` | Clique quando a letra for igual à de duas posições atrás. |
 | `dual-task` | Responda às duas tarefas conforme elas aparecerem. |
 | `mot` | Clique nos alvos que você seguiu. |
 | `certo-ou-errado` | Clique em certo ou errado conforme a operação. |
