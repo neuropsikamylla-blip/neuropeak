@@ -197,6 +197,17 @@ Quando **uma explicação curta é suficiente** para o paciente compreender comp
 > Ela quer **validar visualmente antes de decidir** — a classificação acima é ponto de partida, não
 > decisão final.
 
+### Como isso aparece no código
+
+| regra | valor de `modo` na definição |
+|---|---|
+| modo 1 — Demonstração completa | `"completa"` (padrão) ou `"continua"` |
+| modo 2 — Explicação | `"explicativo"` + `explicacao: string[]` |
+
+No modo 2 o botão da explicação chama **`onFinish` diretamente** — o mesmo do encerramento do modo
+1. É isso que preserva a **regra 10**: a conclusão continua sendo registrada **uma única vez**, pelo
+caminho único, mesmo sem passar por `handoff`, `guided` e `feedback`.
+
 ### O que NÃO muda
 
 Preparação · identidade visual · transições · textos · "Tutorial concluído" · botão "Ver tutorial

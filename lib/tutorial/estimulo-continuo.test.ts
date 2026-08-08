@@ -2,6 +2,11 @@ import { readFileSync } from "node:fs";
 import { resolve } from "node:path";
 import { describe, expect, it } from "vitest";
 
+/** Remove comentários antes de verificar texto de interface: o paciente não lê comentários. */
+function semComentarios(fonte: string): string {
+  return fonte.replace(/\/\*[\s\S]*?\*\//g, "").replace(/^\s*\/\/.*$/gm, "");
+}
+
 function source(file: string): string {
   return readFileSync(resolve(process.cwd(), file), "utf8");
 }
@@ -27,22 +32,43 @@ describe("Regra 11 — três modos oficiais", () => {
   });
 
   it("no explicativo exibe a explicação e não monta Demonstration", () => {
-    const explanatoryBranch = runner().slice(
-      runner().indexOf('modo === "explicativo"'),
-      runner().indexOf('phase === "handoff"'),
+    const blocoDemo = runner().slice(
+      runner().indexOf('{phase === "demo" && ('),
+      runner().indexOf('{phase === "handoff" && ('),
     );
+    const explanatoryBranch = blocoDemo.slice(blocoDemo.indexOf('modo === "explicativo"'));
     const beforeElse = explanatoryBranch.slice(0, explanatoryBranch.indexOf(") : ("));
 
     // A explicação é um ARRAY de linhas: a regra costuma ter casos ("quando X, faça"; "quando Y,
     // não faça"), e lê-los separados é justamente o que torna a explicação clara.
     expect(beforeElse).toMatch(/\(definition\.explicacao \?\? \[\]\)\.map/);
-    expect(beforeElse).toMatch(/Na próxima etapa você fará uma tentativa guiada\./);
+    expect(beforeElse).toMatch(/Agora começa o treino\./);
     expect(beforeElse).not.toMatch(/definition\.Demonstration/);
-    expect(explanatoryBranch).toMatch(/onClick=\{\(\) => setPhase\("handoff"\)\}/);
+    // Regra 11 revisada: o modo Explicação vai direto ao treino, sem passar pelo handoff.
+    expect(beforeElse).toMatch(/onClick=\{onFinish\}/);
+    expect(beforeElse).not.toMatch(/setPhase\("handoff"\)/);
   });
 
-  it("o explicativo conserva handoff, guided e feedback obrigatórios", () => {
-    expect(runner()).toMatch(/onClick=\{\(\) => setPhase\("handoff"\)\}/);
+  it("o modo Explicação NÃO tem tentativa guiada — regra 11 revisada em 07/ago/2026", () => {
+    /*
+     * Este teste substitui um que exigia o contrário ("o explicativo conserva handoff, guided e
+     * feedback obrigatórios"). Ela revogou aquela exigência: quando a mecânica se compreende só
+     * pela explicação, a guiada vira complexidade sem retorno. A troca é de REGRA, não
+     * afrouxamento — o teste novo é tão restritivo quanto o antigo, no sentido oposto.
+     */
+    const blocoDemo = runner().slice(
+      runner().indexOf('{phase === "demo" && ('),
+      runner().indexOf('{phase === "handoff" && ('),
+    );
+    const explicativo = blocoDemo.slice(
+      blocoDemo.indexOf('modo === "explicativo"'),
+      blocoDemo.indexOf(") : ("),
+    );
+    expect(explicativo).toMatch(/onClick=\{onFinish\}/);
+    expect(explicativo).toMatch(/Iniciar treino/);
+    expect(semComentarios(explicativo)).not.toMatch(/tentativa guiada/);
+
+    // O modo Demonstração continua com o fluxo completo — a revogação não o alcança.
     expect(runner()).toMatch(/phase === "handoff"[\s\S]*setPhase\("guided"\)/);
     expect(runner()).toMatch(/phase === "guided"[\s\S]*definition\.GuidedAttempt/);
     expect(runner()).toMatch(/setPhase\("feedback"\)/);
@@ -122,13 +148,23 @@ describe("Família 4 — estímulo contínuo", () => {
     expect(semaforo).toMatch(/Quando aparecer o sinal verde, clique\./);
     expect(semaforo).toMatch(/Quando aparecer o sinal vermelho, não clique\./);
 
-    const certoOuErrado = definition().slice(
-      definition().indexOf("export const certoOuErradoTutorial"),
-    );
-    expect(certoOuErrado).toMatch(/modo: "completa"/);
 
-    // Os cinco restantes seguem em contínua, cada um por mérito próprio.
-    expect(definition().match(/modo: "continua"/g) ?? []).toHaveLength(5);
+    // Classificação dela de 07/ago/2026, por exercício e não por família:
+    //   Explicação  — Semáforo, Tempo de Reação, Certo ou Errado
+    //   Demonstração — N-Back, Dual Task, MOT, Vigilância
+    const modoDe = (exerciseId: string) => {
+      const trecho = definition().slice(definition().indexOf(`exerciseId: "${exerciseId}"`));
+      return trecho.slice(0, trecho.indexOf("guidedInstruction")).match(/modo: "(\w+)"/)?.[1];
+    };
+
+    expect(modoDe("semaforo")).toBe("explicativo");
+    expect(modoDe("tempo-reacao")).toBe("explicativo");
+    expect(modoDe("certo-ou-errado")).toBe("explicativo");
+
+    expect(modoDe("nback")).toBe("continua");
+    expect(modoDe("dual-task")).toBe("continua");
+    expect(modoDe("mot")).toBe("continua");
+    expect(modoDe("vigilancia")).toBe("continua");
   });
 
   it("registra os sete e chega aos 19 convertidos", () => {

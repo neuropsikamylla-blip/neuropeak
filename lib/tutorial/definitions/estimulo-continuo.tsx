@@ -555,7 +555,13 @@ const tempoReacaoDemo: readonly BalloonStimulus[] = [
 export const tempoReacaoTutorial = criarTutorialEstimuloContinuo<BalloonStimulus>({
   exerciseId: "tempo-reacao",
   version: 1,
-  modo: "continua",
+  // Classificação dela (07/ago/2026): a regra é tão simples quanto a do Semáforo — a demonstração
+  // não aumenta a compreensão, então explicação e treino.
+  modo: "explicativo",
+  explicacao: [
+    "Quando o sinal aparecer, clique o mais rápido possível.",
+    "Antes do sinal, não clique.",
+  ],
   guidedInstruction: "Clique assim que o sinal aparecer.",
   retryHint: "Espere o balão verde e clique nele.",
   smallestValidUnit: ONE_RESPONSE,
@@ -649,7 +655,14 @@ const certoOuErradoGuided: readonly CertoErradoStimulus[] = [
 export const certoOuErradoTutorial = criarTutorialEstimuloContinuo<CertoErradoStimulus>({
   exerciseId: "certo-ou-errado",
   version: 1,
-  modo: "completa",
+  // Classificação dela (07/ago/2026): a mecânica é auto-evidente na tela; ver a resposta ser dada
+  // não acrescenta compreensão.
+  modo: "explicativo",
+  explicacao: [
+    "Veja a operação que aparecer na tela.",
+    "Clique em CERTO se o resultado estiver correto.",
+    "Clique em ERRADO se o resultado estiver incorreto.",
+  ],
   guidedInstruction: "Clique em certo ou errado conforme a operação.",
   retryHint: "Leia a situação e clique em certo ou errado.",
   smallestValidUnit: ONE_RESPONSE,

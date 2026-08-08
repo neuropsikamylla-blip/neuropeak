@@ -206,7 +206,11 @@ export function TutorialRunner({ definition, theme, onFinish }: TutorialRunnerPr
         {phase === "demo" && (
           <div>
             <StageLabel stage="demonstration" theme={theme} />
-            <h2 className={`${styles.heading} mb-1 text-xl font-bold`}>Veja como funciona</h2>
+            {/* O modo Explicação não tem título próprio: a abertura padrão já cumpre esse papel,
+                e um "Veja como funciona" acima dela seria a mesma frase duas vezes. */}
+            {modo !== "explicativo" && (
+              <h2 className={`${styles.heading} mb-1 text-xl font-bold`}>Veja como funciona</h2>
+            )}
             {modo === "explicativo" ? (
               <>
                 {/* Abertura padrão (regra 1), as regras da atividade, e o aviso da etapa seguinte. */}
@@ -217,13 +221,22 @@ export function TutorialRunner({ definition, theme, onFinish }: TutorialRunnerPr
                   <p key={linha} className={`${styles.text} mb-2 text-sm`}>{linha}</p>
                 ))}
                 <p className={`${styles.text} mb-6 mt-4 text-sm`}>
-                  Na próxima etapa você fará uma tentativa guiada.
+                  Agora começa o treino.
                 </p>
+                {/*
+                  Regra 11 revisada (07/ago/2026): no modo Explicação NÃO há tentativa guiada. Quando
+                  a explicação basta para compreender a atividade, a guiada vira complexidade sem
+                  retorno — e o treino começa aqui.
+
+                  ATENÇÃO: `onFinish` é o MESMO do encerramento do modo Demonstração, então a conclusão
+                  continua sendo registrada uma única vez, pelo caminho único da regra 10. Não
+                  chame nada além disto aqui.
+                */}
                 <Button
                   className={`${styles.button} h-12 w-full font-semibold`}
-                  onClick={() => setPhase("handoff")}
+                  onClick={onFinish}
                 >
-                  Continuar
+                  Iniciar treino
                 </Button>
               </>
             ) : (
