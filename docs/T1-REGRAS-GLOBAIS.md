@@ -172,8 +172,24 @@ uma vez, com feedback e possibilidade de repetir.
 O restante do framework permanece **exatamente igual**: preparação · identidade visual · transições ·
 textos · "Tutorial concluído" · botão "Ver tutorial novamente" · isolamento clínico · regra 10.
 
-> **O critério de escolha é pedagógico, não técnico:** ensinar a atividade da forma mais clara
-> possível. Animação que não esclarece é ruído — e o modo 3 existe para não forçá-la.
+### O critério de escolha — e o que ele NÃO é
+
+**A pergunta é uma só:** *"A demonstração realmente ajuda o paciente a compreender a mecânica?"*
+
+- **Sim** → demonstração (modo 1 ou 2).
+- **Não** → tutorial explicativo (modo 3).
+
+⛔ **A pergunta NÃO é "a regra é fácil de explicar em texto".** Foi o erro que cometi ao classificar
+a Família 4: mandei `nback` e `dual-task` para o modo explicativo porque suas regras se enunciam bem
+— quando são justamente os casos em que **ver** ensina mais que ler. O `nback` compara uma relação
+entre momentos no tempo; o `dual-task` mostra o que "dividir a atenção" significa na prática.
+
+⛔ **Não distribuir os três modos de forma equilibrada.** Eles não são uma cota. Uma família inteira
+em demonstração contínua, ou inteira em completa, é **perfeitamente aceitável** — e é o caso da
+Família 4, onde o modo 3 não é usado.
+
+> **O modo explicativo é reserva, não meta.** Só entra quando a animação realmente não acrescenta
+> compreensão. Forçá-lo para "usar os três modos" é reduzir aprendizado por simetria.
 
 ## Conversão dos 34 — o que NÃO se faz
 
