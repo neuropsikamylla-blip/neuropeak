@@ -14769,3 +14769,6 @@ Essa passa a ser a regra do framework.
 Nunca escolher o modo por família.
 Nunca escolher o modo porque o exercício é contínuo.
 Sempre escolher o modo que proporciona maior compreensão ao paciente com a menor complexidade possível.
+
+## 08/08/2026 13:46
+retorne o que estava fazendo
