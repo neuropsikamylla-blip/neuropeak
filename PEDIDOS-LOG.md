@@ -14660,3 +14660,16 @@ textos;
 tutorial concluído;
 possibilidade de rever o tutorial.
 Não quero forçar demonstração animada onde ela não melhora o aprendizado. O objetivo é ensinar a atividade da forma mais clara possível.
+
+## 07/08/2026 22:08
+Antes de implementar a Família 4, quero apenas uma mudança na classificação dos modos.
+Não quero que o modo seja definido apenas pela dificuldade de explicar a regra.
+Quero que o critério seja:
+"A demonstração realmente ajuda o paciente a compreender a mecânica?"
+Se a resposta for sim, prefiro demonstração.
+Se a resposta for não, prefiro tutorial explicativo.
+Por isso, revise especialmente:
+N-Back
+Dual Task
+Antes de convertê-los para o modo explicativo.
+Não quero reduzir demonstrações onde elas agregam aprendizado. O modo explicativo deve ser reservado apenas para exercícios em que a animação realmente não acrescenta compreensão.

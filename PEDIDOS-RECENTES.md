@@ -1,15 +1,6 @@
 # As 3 ultimas especificacoes dela (automatico; a mais nova por ultimo)
 # Na retomada: ler as 3, conectar com PROGRESSO.md e git, declarar e seguir.
 
-## 07/08/2026 19:09
-<task-notification>
-<task-id>brh59kehl</task-id>
-<tool-use-id>toolu_01DqAQZKHd2Fqd54HBqdfBCW</tool-use-id>
-<output-file>/private/tmp/claude-501/-Users-kamyllahonorio-neuropeak/3e6ecf11-e4e5-471f-bbf9-4595faa53598/tasks/brh59kehl.output</output-file>
-<status>completed</status>
-<summary>Background command "Disparar o Codex para a Família 3" completed (exit code 0)</summary>
-</task-notification>
-
 ## 07/08/2026 21:51
 Vou validar apenas o representante da Família 3 (desafio-supermercado).
 Não inicie a Família 4 até minha aprovação.
@@ -48,3 +39,16 @@ textos;
 tutorial concluído;
 possibilidade de rever o tutorial.
 Não quero forçar demonstração animada onde ela não melhora o aprendizado. O objetivo é ensinar a atividade da forma mais clara possível.
+
+## 07/08/2026 22:08
+Antes de implementar a Família 4, quero apenas uma mudança na classificação dos modos.
+Não quero que o modo seja definido apenas pela dificuldade de explicar a regra.
+Quero que o critério seja:
+"A demonstração realmente ajuda o paciente a compreender a mecânica?"
+Se a resposta for sim, prefiro demonstração.
+Se a resposta for não, prefiro tutorial explicativo.
+Por isso, revise especialmente:
+N-Back
+Dual Task
+Antes de convertê-los para o modo explicativo.
+Não quero reduzir demonstrações onde elas agregam aprendizado. O modo explicativo deve ser reservado apenas para exercícios em que a animação realmente não acrescenta compreensão.
