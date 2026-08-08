@@ -14638,3 +14638,25 @@ Se eu aprovar o representante, considere toda a Família 3 aprovada e só então
 
 ## 07/08/2026 21:53
 Família 3 aprovada. Pode seguir para a Família 4.
+
+## 07/08/2026 22:02
+Quero acrescentar uma decisão arquitetural da T1.
+Nem todo exercício precisa obrigatoriamente possuir uma demonstração animada.
+O objetivo da T1 é ensinar a mecânica da atividade, não obrigatoriamente mostrar uma animação.
+Portanto, o framework passa a suportar três modos oficiais:
+Modo 1 — Demonstração completa
+O sistema executa toda a atividade antes da tentativa guiada.
+Modo 2 — Demonstração contínua
+O sistema demonstra quando agir e quando não agir em tarefas temporizadas.
+Modo 3 — Tutorial explicativo
+Não existe demonstração animada.
+Existe apenas uma explicação clara da regra da atividade, seguida da tentativa guiada.
+A tentativa guiada continua obrigatória.
+O restante do framework permanece exatamente igual:
+preparação;
+identidade visual;
+transições;
+textos;
+tutorial concluído;
+possibilidade de rever o tutorial.
+Não quero forçar demonstração animada onde ela não melhora o aprendizado. O objetivo é ensinar a atividade da forma mais clara possível.

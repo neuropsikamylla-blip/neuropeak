@@ -1,22 +1,6 @@
 # As 3 ultimas especificacoes dela (automatico; a mais nova por ultimo)
 # Na retomada: ler as 3, conectar com PROGRESSO.md e git, declarar e seguir.
 
-## 07/08/2026 18:51
-Continue exatamente do bloco EM ANDAMENTO.
-A Família 2 está aprovada.
-Inicie a Família 3.
-Antes de escrever código, confirme se a mecânica "memorizar conjunto → selecionar (sem ordem)" pode reutilizar o framework aprovado ou se realmente exige uma nova fábrica.
-Só crie uma nova fábrica se isso for inevitável.
-O objetivo continua sendo manter um único framework de tutorial para todos os 34 exercícios.
-Se conseguir adaptar a mecânica apenas parametrizando o framework existente, faça isso.
-Se encontrar uma incompatibilidade arquitetural real, pare, documente a incompatibilidade, explique por que ela existe e proponha a solução antes de implementar.
-Fora isso, conclua toda a Família 3, publique, rode todos os gates e me entregue apenas:
-exercícios convertidos;
-appVersion;
-buildId;
-resultado dos gates;
-exercício representante para validação.
-
 ## 07/08/2026 19:09
 <task-notification>
 <task-id>brh59kehl</task-id>
@@ -42,3 +26,25 @@ transições;
 encerramento;
 possibilidade de rever o tutorial.
 Se eu aprovar o representante, considere toda a Família 3 aprovada e só então prossiga para a Família 4.
+
+## 07/08/2026 22:02
+Quero acrescentar uma decisão arquitetural da T1.
+Nem todo exercício precisa obrigatoriamente possuir uma demonstração animada.
+O objetivo da T1 é ensinar a mecânica da atividade, não obrigatoriamente mostrar uma animação.
+Portanto, o framework passa a suportar três modos oficiais:
+Modo 1 — Demonstração completa
+O sistema executa toda a atividade antes da tentativa guiada.
+Modo 2 — Demonstração contínua
+O sistema demonstra quando agir e quando não agir em tarefas temporizadas.
+Modo 3 — Tutorial explicativo
+Não existe demonstração animada.
+Existe apenas uma explicação clara da regra da atividade, seguida da tentativa guiada.
+A tentativa guiada continua obrigatória.
+O restante do framework permanece exatamente igual:
+preparação;
+identidade visual;
+transições;
+textos;
+tutorial concluído;
+possibilidade de rever o tutorial.
+Não quero forçar demonstração animada onde ela não melhora o aprendizado. O objetivo é ensinar a atividade da forma mais clara possível.
