@@ -169,10 +169,13 @@ export function NBack({ difficulty, theme, onComplete }: NBackProps) {
   }, [begin, isTimeUp, finish, elapsedSec, difficulty, sleep, waitAnswer, onComplete]);
 
   useEffect(() => {
+    // O lint alerta com razão: `timersRef.current` pode ter mudado quando a limpeza roda. Copiar a
+    // referência do array aqui garante que limpamos exatamente os timers que este efeito criou.
+    const timers = timersRef.current;
     void run();
     return () => {
       cancelRef.current = true;
-      timersRef.current.forEach(clearTimeout);
+      timers.forEach(clearTimeout);
       if (answerTimerRef.current) clearTimeout(answerTimerRef.current);
     };
     // O treino começa uma vez ao montar, como antes começava uma vez ao sair do tutorial legado.

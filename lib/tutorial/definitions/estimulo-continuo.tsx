@@ -170,7 +170,9 @@ function criarGuidedAttempt<T extends EstimuloBase>(config: FamiliaEstimuloConfi
         setIndex((current) => Math.min(current + 1, config.guidedStimuli.length - 1));
       }, DELIBERATE_WAIT_MS);
       return () => window.clearTimeout(timer);
-    }, [stimulus, config.guidedStimuli.length]);
+      // `config` é fixo por definição de tutorial — só o estímulo atual precisa disparar o efeito.
+      // eslint-disable-next-line react-hooks/exhaustive-deps
+    }, [stimulus]);
 
     if (!stimulus) return null;
 
