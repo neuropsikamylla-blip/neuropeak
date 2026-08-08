@@ -14772,3 +14772,45 @@ Sempre escolher o modo que proporciona maior compreensão ao paciente com a meno
 
 ## 08/08/2026 13:46
 retorne o que estava fazendo
+
+## 08/08/2026 14:00
+Aprovado.
+Quero apenas consolidar a regra para que ela passe a valer para todo o framework da T1.
+Fluxo 1 — Demonstração
+Usar quando assistir à execução da atividade aumenta significativamente a compreensão da mecânica.
+Fluxo:
+Preparação
+↓
+Demonstração
+↓
+Tentativa guiada
+↓
+Treino
+Fluxo 2 — Explicação
+Usar quando a mecânica pode ser compreendida completamente apenas pela explicação.
+Fluxo:
+Preparação
+↓
+Explicação
+↓
+Treino
+Sem demonstração.
+Sem tentativa guiada.
+O critério para escolher entre os dois fluxos nunca será o tipo de exercício, nem o fato de ser contínuo ou não.
+A única pergunta é:
+A demonstração realmente ajuda o paciente a compreender melhor a mecânica?
+Se sim:
+→ Demonstração + tentativa guiada.
+Se não:
+→ Apenas explicação e início do treino.
+No momento, minha classificação fica:
+Explicação
+Semáforo
+Tempo de Reação
+Certo ou Errado
+Demonstração
+N-Back
+Dual Task
+MOT
+Vigilância (mantemos assim por enquanto, podendo ser reavaliado após validação visual).
+Importante: se houver qualquer dúvida sobre qual fluxo utilizar, prefiro o Fluxo 1 (demonstração). O Fluxo 2 deve ser utilizado apenas quando houver segurança de que a explicação, sozinha, é suficiente para que um paciente que nunca viu o exercício compreenda completamente a atividade.
