@@ -141,6 +141,8 @@ export function TutorialRunner({ definition, theme, onFinish }: TutorialRunnerPr
     if (settleTimer.current !== null) window.clearTimeout(settleTimer.current);
   }, []);
   const styles = themeStyles[theme];
+  // Regra 11: omitir o modo preserva, sem alteração, o fluxo aprovado das Famílias 1 a 3.
+  const modo = definition.modo ?? "completa";
   const stage: TutorialStage | null = phase === "intro" || phase === "demo"
     ? "demonstration"
     : "guided";
@@ -205,8 +207,22 @@ export function TutorialRunner({ definition, theme, onFinish }: TutorialRunnerPr
           <div>
             <StageLabel stage="demonstration" theme={theme} />
             <h2 className={`${styles.heading} mb-1 text-xl font-bold`}>Veja como funciona</h2>
-            <p className={`${styles.text} mb-5 text-sm`}>Observe uma sequência completa.</p>
-            <definition.Demonstration onDone={() => setPhase("handoff")} />
+            {modo === "explicativo" ? (
+              <>
+                <p className={`${styles.text} mb-6 text-sm`}>{definition.explicacao}</p>
+                <Button
+                  className={`${styles.button} h-12 w-full font-semibold`}
+                  onClick={() => setPhase("handoff")}
+                >
+                  Continuar
+                </Button>
+              </>
+            ) : (
+              <>
+                <p className={`${styles.text} mb-5 text-sm`}>Observe uma sequência completa.</p>
+                <definition.Demonstration onDone={() => setPhase("handoff")} />
+              </>
+            )}
           </div>
         )}
 

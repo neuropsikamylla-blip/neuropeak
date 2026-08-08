@@ -4,7 +4,6 @@ import { useState, useRef, useEffect, useCallback } from "react";
 import { calculateExerciseScore } from "@/lib/scoring";
 import { useTimedProgress } from "@/components/exercises/useExerciseEngine";
 import { ExerciseProgressBar } from "@/components/exercises/ExerciseProgressBar";
-import { TutorialBase } from "@/components/exercises/TutorialBase";
 import type { ExerciseResult, Theme } from "@/types";
 
 interface NBackProps {
@@ -50,63 +49,13 @@ function genBlock(n: number) {
   return { seq, match };
 }
 
-// ── Tutorial ──────────────────────────────────────────────────────────────────
-// Conteúdo estático: libera o botão "Próximo" do TutorialBase ao montar.
-function StepReady({ onReady, children }: { onReady: () => void; children: React.ReactNode }) {
-  useEffect(() => { onReady(); }, [onReady]);
-  return <>{children}</>;
-}
-
-function NBackTutorial({ theme, onDone }: { theme: Theme; onDone: () => void }) {
-  return (
-    <TutorialBase
-      theme={theme}
-      title="N-Back — Memória Operacional"
-      steps={[
-        {
-          instruction:
-            "As letras aparecem uma de cada vez. No 1-back, você compara a letra de AGORA com a IMEDIATAMENTE anterior. No 2-back, com a de 2 atrás, e assim por diante.",
-          content: (next) => (
-            <StepReady onReady={next}>
-              <div className="text-center py-2">
-                <div className="flex justify-center items-center gap-3 mb-4">
-                  <div className="w-16 h-16 rounded-2xl flex items-center justify-center text-2xl font-bold bg-slate-100 text-slate-400 border-2 border-slate-200">B</div>
-                  <span className="text-slate-400">→</span>
-                  <div className="w-16 h-16 rounded-2xl flex items-center justify-center text-2xl font-bold bg-blue-50 text-blue-700 border-4 border-blue-400">B</div>
-                </div>
-                <p className="text-sm text-slate-600">No <strong>1-back</strong>: a letra de agora (<strong>B</strong>) é igual à anterior (<strong>B</strong>) → responda <strong className="text-green-600">IGUAL</strong>.</p>
-              </div>
-            </StepReady>
-          ),
-        },
-        {
-          instruction:
-            "A CADA letra você precisa responder: IGUAL ou DIFERENTE. Se não responder a tempo, conta como erro. Acertando bem, o nível sobe (2-back, 3-back...).",
-          content: (next) => (
-            <StepReady onReady={next}>
-              <div className="text-center py-2">
-                <div className="flex justify-center gap-3 mb-4">
-                  <span className="px-5 py-2.5 rounded-xl bg-green-500 text-white text-sm font-bold">IGUAL</span>
-                  <span className="px-5 py-2.5 rounded-xl bg-rose-500 text-white text-sm font-bold">DIFERENTE</span>
-                </div>
-                <p className="text-sm text-slate-600">Responda sempre, em todas as letras. É um treino de atenção e memória de trabalho.</p>
-              </div>
-            </StepReady>
-          ),
-        },
-      ]}
-      onDone={onDone}
-    />
-  );
-}
-
 // ── Componente principal ──────────────────────────────────────────────────────
-type Phase = "tutorial" | "prime" | "stim" | "feedback" | "between";
+type Phase = "prime" | "stim" | "feedback" | "between";
 
 export function NBack({ difficulty, theme, onComplete }: NBackProps) {
   const { begin, isTimeUp, elapsedSec, finish, progressPct } = useTimedProgress();
 
-  const [phase, setPhase]   = useState<Phase>("tutorial");
+  const [phase, setPhase]   = useState<Phase>("between");
   const [letter, setLetter] = useState("");
   const [nLevel, setNLevel] = useState(initialN(difficulty));
   const [fb, setFb]         = useState<null | "ok" | "no" | "slow">(null);
@@ -219,11 +168,16 @@ export function NBack({ difficulty, theme, onComplete }: NBackProps) {
     } catch { /* cancelado */ }
   }, [begin, isTimeUp, finish, elapsedSec, difficulty, sleep, waitAnswer, onComplete]);
 
-  useEffect(() => () => { cancelRef.current = true; timersRef.current.forEach(clearTimeout); }, []);
-
-  if (phase === "tutorial") {
-    return <NBackTutorial theme={theme} onDone={() => { setPhase("between"); run(); }} />;
-  }
+  useEffect(() => {
+    void run();
+    return () => {
+      cancelRef.current = true;
+      timersRef.current.forEach(clearTimeout);
+      if (answerTimerRef.current) clearTimeout(answerTimerRef.current);
+    };
+    // O treino começa uma vez ao montar, como antes começava uma vez ao sair do tutorial legado.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
 
   // ── Estilos por tema ─────────────────────────────────────────────
   const isG = theme === "GAMIFIED";

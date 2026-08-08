@@ -33,12 +33,10 @@ interface Kite { pos: number; isAlvo: boolean }
 
 export function Vigilancia({ difficulty, theme, onComplete }: Props) {
   const isG = theme === "GAMIFIED";
-  const [stage, setStage] = useState<"tutorial" | "bloco">("tutorial");
   // Sessão por TEMPO (~8 min), como Estacionamento e Torre — não por nº de blocos.
   const { begin, finish: finishTimer, progressPct } = useTimedProgress(8 * 60 * 1000);
   const tempoAcabouRef = useRef(false);
   const [fase, setFase] = useState<Fase>("fixacao");
-  const [tutStep, setTutStep] = useState(0);
 
   const nivelRef = useRef(nivelDe(difficulty));
   const estadoRef = useRef<AdaptState>(estadoInicial(DEGRAU_CONFORTAVEL));
@@ -87,7 +85,7 @@ export function Vigilancia({ difficulty, theme, onComplete }: Props) {
     medir();
     const ro = new ResizeObserver(medir); ro.observe(el);
     return () => ro.disconnect();
-  }, [stage, tentativa]);
+  }, [tentativa]);
 
   useEffect(() => { tempoAcabouRef.current = progressPct >= 100; }, [progressPct]);
 
@@ -172,10 +170,17 @@ export function Vigilancia({ difficulty, theme, onComplete }: Props) {
     setPar(parById(nvv.pairId));
     arranjoRef.current = nvv.arranjo; setFundoArq(fundoById(nvv.fundo).arquivo);
     tentativaRef.current = 1; setTentativa(1);
-    setStage("bloco");
     begin();                       // cronômetro da sessão (só conta com o paciente ativo)
     iniciarTentativa();
   }, [iniciarTentativa, begin]);
+
+  useEffect(() => {
+    iniciarBloco();
+    return () => {
+      clearTimers();
+      blocoNumRef.current = 0;
+    };
+  }, [iniciarBloco]);
 
   useEffect(() => { proximoBlocoRef.current = iniciarBloco; }, [iniciarBloco]);
 
@@ -207,54 +212,6 @@ export function Vigilancia({ difficulty, theme, onComplete }: Props) {
   const bg = isG ? "bg-[#061326]" : "bg-slate-100";
   const txt = isG ? "text-white" : "text-slate-800";
   const sub = isG ? "text-white/60" : "text-slate-500";
-
-  // ── Tutorial curto (mostra o alvo 1× · NÃO se repete no jogo) ────────────────
-  if (stage === "tutorial") {
-    const comum = imgPipa(par.A.arquivo);
-    const dif = imgPipa(par.B.arquivo);
-    const TELAS = [
-      {
-        t: "Vigilância",
-        d: "Todas as pipas são iguais — menos UMA. Repare como a pipa diferente destoa do grupo.",
-        node: (
-          <div className="flex items-end justify-center gap-3 my-6">
-            <div className="flex flex-col items-center gap-1 opacity-70">
-              <img src={comum} alt="" style={{ width: 68, height: 102, objectFit: "contain" }} />
-              <span className={`text-[11px] ${sub}`}>iguais</span>
-            </div>
-            <div className="flex flex-col items-center gap-1">
-              <div className="rounded-2xl p-1" style={{ boxShadow: "0 0 0 3px #22c55e" }}>
-                <img src={dif} alt="pipa diferente" style={{ width: 84, height: 126, objectFit: "contain" }} />
-              </div>
-              <span className="text-[11px] font-bold text-green-600">diferente</span>
-            </div>
-          </div>
-        ),
-      },
-      {
-        t: "Como jogar",
-        d: "As pipas aparecem por um instante e somem. Depois, clique na REGIÃO onde estava a pipa diferente — não precisa acertar em cima.",
-        node: null,
-      },
-    ];
-    const tela = TELAS[tutStep];
-    return (
-      <div className={`min-h-screen flex items-center justify-center ${bg}`}>
-        <div className="max-w-md mx-auto px-6 py-10 text-center">
-          <h2 className={`text-2xl font-black ${txt}`}>{tela.t}</h2>
-          {tela.node}
-          <p className={`text-base mt-3 leading-relaxed ${sub}`}>{tela.d}</p>
-          <div className="flex items-center justify-center gap-1.5 my-6">
-            {TELAS.map((_, i) => <span key={i} className={`h-2 rounded-full transition-all ${i === tutStep ? "w-6 bg-sky-500" : "w-2 " + (isG ? "bg-white/20" : "bg-slate-300")}`} />)}
-          </div>
-          <button onClick={() => tutStep < TELAS.length - 1 ? setTutStep(tutStep + 1) : iniciarBloco()}
-            className="w-full h-12 rounded-full font-black text-white bg-sky-600 active:bg-sky-700">
-            {tutStep < TELAS.length - 1 ? "Continuar" : "START"}
-          </button>
-        </div>
-      </div>
-    );
-  }
 
   // ── BLOCO em andamento ──────────────────────────────────────────────────────
   const alvoImg = imgPipa(par[alvoVarRef.current].arquivo);

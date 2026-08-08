@@ -6,7 +6,6 @@ import { Brain, Hash, AlertTriangle } from "lucide-react";
 import { calculateExerciseScore } from "@/lib/scoring";
 import { useTimedProgress } from "@/components/exercises/useExerciseEngine";
 import { ExerciseProgressBar } from "@/components/exercises/ExerciseProgressBar";
-import { TutorialBase } from "@/components/exercises/TutorialBase";
 import type { ExerciseResult, Theme } from "@/types";
 
 interface DualTaskProps {
@@ -184,49 +183,10 @@ function InstrucaoBloco({ spec, idx, theme, alterada }: { spec: LevelSpec; idx: 
   );
 }
 
-// ── Tutorial ──────────────────────────────────────────────────────────────
-function DualTaskTutorial({ theme, spec, onDone }: { theme: Theme; spec: LevelSpec; onDone: () => void }) {
-  const steps = [
-    { instruction: "SUPERIOR: toque somente no TRIÂNGULO VERDE. Ignore qualquer outra forma ou cor.",
-      content: (done: () => void) => <TutShape theme={theme} onDone={done} /> },
-    { instruction: spec.nback === 1
-        ? "INFERIOR: toque em IGUAL quando o número for igual ao ANTERIOR."
-        : "INFERIOR: toque em IGUAL quando o número for igual ao de DUAS posições atrás.",
-      content: (done: () => void) => <TutDigit theme={theme} spec={spec} onDone={done} /> },
-  ];
-  return <TutorialBase theme={theme} title="Dupla Tarefa" steps={steps} onDone={onDone} />;
-}
-function TutShape({ theme, onDone }: { theme: Theme; onDone: () => void }) {
-  useEffect(() => { const t = setTimeout(onDone, 3400); return () => clearTimeout(t); }, []); // eslint-disable-line react-hooks/exhaustive-deps
-  const sub = theme === "GAMIFIED" ? "text-gray-400" : "text-gray-500";
-  return (
-    <div className="flex flex-col items-center gap-3">
-      <div className="flex gap-4 items-end justify-center flex-wrap">
-        <div className="flex flex-col items-center gap-1"><ShapeSvg color="green" kind="triangle" size={54} /><span className="text-xs font-bold text-green-600">✓ TOQUE</span></div>
-        <div className="flex flex-col items-center gap-1"><ShapeSvg color="green" kind="square" size={54} /><span className={`text-xs ${sub}`}>ignore</span></div>
-        <div className="flex flex-col items-center gap-1"><ShapeSvg color="blue" kind="triangle" size={54} /><span className={`text-xs ${sub}`}>ignore</span></div>
-        <div className="flex flex-col items-center gap-1"><ShapeSvg color="red" kind="circle" size={54} /><span className={`text-xs ${sub}`}>ignore</span></div>
-      </div>
-      <p className={`text-xs text-center ${sub}`}>Só vale quando <b>forma E cor</b> baterem: o <b className="text-green-600">TRIÂNGULO VERDE</b>.</p>
-    </div>
-  );
-}
-function TutDigit({ theme, spec, onDone }: { theme: Theme; spec: LevelSpec; onDone: () => void }) {
-  useEffect(() => { const t = setTimeout(onDone, 3200); return () => clearTimeout(t); }, []); // eslint-disable-line react-hooks/exhaustive-deps
-  const sub = theme === "GAMIFIED" ? "text-gray-400" : "text-gray-500";
-  return (
-    <div className="flex flex-col items-center gap-3">
-      <p className={`text-sm text-center font-semibold ${theme === "GAMIFIED" ? "text-white" : "text-gray-800"}`}>N-back {spec.nback}</p>
-      <p className={`text-xs text-center ${sub}`}>Toque em IGUAL quando o número for igual ao <b>{bottomStrong(spec.nback)}</b>.</p>
-    </div>
-  );
-}
-
 // ── Main component ─────────────────────────────────────────────────────────
 export function DualTask({ difficulty, theme, onComplete }: DualTaskProps) {
   const spec = levelOf(difficulty);
   const nback = spec.nback;
-  const [showTutorial, setShowTutorial] = useState(true);
   const { begin, isTimeUp, elapsedSec, finish, progressPct } = useTimedProgress();
 
   const [shapes] = useState<ShapeTrial[]>(() => buildShapeSequence(spec, TOTAL_SHAPES));
@@ -260,6 +220,11 @@ export function DualTask({ difficulty, theme, onComplete }: DualTaskProps) {
   const advanceShapeRef = useRef<(() => void) | null>(null);
   const digitIdxRef = useRef(0);
   const digitWindowRef = useRef<number[]>([]);
+
+  useEffect(() => {
+    startTime.current = Date.now();
+    begin();
+  }, [begin]);
 
   const finishSession = useCallback(() => {
     if (allDoneRef.current) return;
@@ -314,7 +279,6 @@ export function DualTask({ difficulty, theme, onComplete }: DualTaskProps) {
 
   // Loop da tarefa visual
   useEffect(() => {
-    if (showTutorial) return;
     function scheduleNextShape() {
       if (allDoneRef.current) return;
       const idx = shapeIdxRef.current;
@@ -355,11 +319,10 @@ export function DualTask({ difficulty, theme, onComplete }: DualTaskProps) {
     shapeTimerRef.current = setTimeout(scheduleNextShape, 500);
     return () => { if (shapeTimerRef.current) clearTimeout(shapeTimerRef.current); };
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [showTutorial]);
+  }, []);
 
   // Loop da tarefa numérica (n-back)
   useEffect(() => {
-    if (showTutorial) return;
     function scheduleNextDigit() {
       if (allDoneRef.current) return;
       const idx = digitIdxRef.current;
@@ -384,7 +347,7 @@ export function DualTask({ difficulty, theme, onComplete }: DualTaskProps) {
     const t = setTimeout(scheduleNextDigit, 700);
     return () => { clearTimeout(t); if (digitTimerRef.current) clearTimeout(digitTimerRef.current); };
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [showTutorial]);
+  }, []);
 
   function handleShapeTap() {
     if (shapePhaseRef.current !== "show" || shapeRespondedRef.current || allDoneRef.current) return;
@@ -415,11 +378,6 @@ export function DualTask({ difficulty, theme, onComplete }: DualTaskProps) {
     digitResults.current.push({ isMatch, tapped: true, rt: Date.now() - digitShownAt.current });
     setDigitFeedback(isMatch ? "hit" : "fa");
     setTimeout(() => setDigitFeedback(null), 420);
-  }
-
-  if (showTutorial) {
-    return <DualTaskTutorial theme={theme} spec={spec}
-      onDone={() => { startTime.current = Date.now(); begin(); setShowTutorial(false); }} />;
   }
 
   const currentShape = shapeIdx >= 0 && shapeIdx < TOTAL_SHAPES ? shapes[shapeIdx] : null;

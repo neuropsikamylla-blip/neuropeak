@@ -5,7 +5,6 @@ import { motion, AnimatePresence } from "framer-motion";
 import { calculateExerciseScore } from "@/lib/scoring";
 import { useTimedProgress } from "@/components/exercises/useExerciseEngine";
 import { ExerciseProgressBar } from "@/components/exercises/ExerciseProgressBar";
-import { TutorialBase } from "@/components/exercises/TutorialBase";
 import type { ExerciseResult, Theme } from "@/types";
 
 interface SemaforoProps {
@@ -102,119 +101,6 @@ function TrafficLight({ activeColor, isTarget, isBlinking }: TrafficLightProps) 
   );
 }
 
-// ─── Tutorial ─────────────────────────────────────────────────────────────────
-
-function SemaforoTutorial({ theme, onDone }: { theme: Theme; onDone: () => void }) {
-  const steps = [
-    {
-      instruction: "Quando o semáforo piscar e acender VERDE → toque AVANÇAR!",
-      content: (onStepDone: () => void) => (
-        <TutorialStepGreen onDone={onStepDone} />
-      ),
-    },
-    {
-      instruction: "Quando acender VERMELHO (ou amarelo) → toque PARAR!",
-      content: (onStepDone: () => void) => (
-        <TutorialStepRed onDone={onStepDone} />
-      ),
-    },
-  ];
-
-  return <TutorialBase theme={theme} title="Semáforo" steps={steps} onDone={onDone} />;
-}
-
-function TutorialStepGreen({ onDone }: { onDone: () => void }) {
-  const [tapped, setTapped] = useState(false);
-  const doneTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
-
-  useEffect(() => () => {
-    if (doneTimer.current) clearTimeout(doneTimer.current);
-  }, []);
-
-  function handleAdvance() {
-    if (tapped) return;
-    setTapped(true);
-    if (doneTimer.current) clearTimeout(doneTimer.current);
-    doneTimer.current = setTimeout(onDone, 500);
-  }
-
-  function handleStop() {
-    // wrong button — do nothing, let user try again
-  }
-
-  return (
-    <div className="flex flex-col items-center gap-4">
-      <div className="flex justify-center">
-        <TrafficLight activeColor="green" isTarget={true} isBlinking={false} />
-      </div>
-      {!tapped ? (
-        <div className="flex gap-3 w-full">
-          <button
-            onClick={handleAdvance}
-            className="flex-1 py-3 rounded-2xl font-bold text-base bg-green-500 text-white active:scale-95 transition-transform"
-          >
-            🟢 AVANÇAR
-          </button>
-          <button
-            onClick={handleStop}
-            className="flex-1 py-3 rounded-2xl font-bold text-base bg-blue-900 text-white active:scale-95 transition-transform opacity-50"
-          >
-            🔴 PARAR
-          </button>
-        </div>
-      ) : (
-        <p className="text-green-500 font-bold text-base">Perfeito! ✓</p>
-      )}
-    </div>
-  );
-}
-
-function TutorialStepRed({ onDone }: { onDone: () => void }) {
-  const [tapped, setTapped] = useState(false);
-  const doneTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
-
-  useEffect(() => () => {
-    if (doneTimer.current) clearTimeout(doneTimer.current);
-  }, []);
-
-  function handleStop() {
-    if (tapped) return;
-    setTapped(true);
-    if (doneTimer.current) clearTimeout(doneTimer.current);
-    doneTimer.current = setTimeout(onDone, 500);
-  }
-
-  function handleAdvance() {
-    // wrong button — ignore
-  }
-
-  return (
-    <div className="flex flex-col items-center gap-4">
-      <div className="flex justify-center">
-        <TrafficLight activeColor="red" isTarget={true} isBlinking={false} />
-      </div>
-      {!tapped ? (
-        <div className="flex gap-3 w-full">
-          <button
-            onClick={handleAdvance}
-            className="flex-1 py-3 rounded-2xl font-bold text-base bg-green-500 text-white active:scale-95 transition-transform opacity-50"
-          >
-            🟢 AVANÇAR
-          </button>
-          <button
-            onClick={handleStop}
-            className="flex-1 py-3 rounded-2xl font-bold text-base bg-blue-900 text-white active:scale-95 transition-transform"
-          >
-            🔴 PARAR
-          </button>
-        </div>
-      ) : (
-        <p className="text-green-500 font-bold text-base">Ótimo! ✓</p>
-      )}
-    </div>
-  );
-}
-
 // ─── Main exercise ─────────────────────────────────────────────────────────────
 
 type Phase = "idle" | "blinking" | "active" | "feedback";
@@ -228,7 +114,6 @@ interface RoundState {
 const SESSION_MS = 5 * 60 * 1000;   // 5 min (era 7)
 
 export function Semaforo({ difficulty, theme, onComplete }: SemaforoProps) {
-  const [showTutorial, setShowTutorial] = useState(true);
   const { begin, isTimeUp, elapsedSec, finish: finishProgress, progressPct } = useTimedProgress(SESSION_MS);
 
   const [started, setStarted] = useState(false);
@@ -373,11 +258,6 @@ export function Semaforo({ difficulty, theme, onComplete }: SemaforoProps) {
     startTime.current = Date.now();
     begin();
     startRound();
-  }
-
-  // ─── Tutorial gate ────────────────────────────────────────────────────────
-  if (showTutorial) {
-    return <SemaforoTutorial theme={theme} onDone={() => setShowTutorial(false)} />;
   }
 
   // ─── Build per-slot data ──────────────────────────────────────────────────

@@ -9,6 +9,18 @@ export interface GuidedAttemptProps {
 export interface TutorialDefinition {
   exerciseId: string;
   version: number;
+
+  /**
+   * Regra 11 — como este tutorial ensina.
+   *  "completa"    (padrão) o sistema executa a atividade toda antes da guiada
+   *  "continua"    demonstra QUANDO agir e QUANDO NÃO agir, em tarefas temporizadas
+   *  "explicativo" sem demonstração animada; explica a regra e vai para a guiada
+   */
+  modo?: "completa" | "continua" | "explicativo";
+
+  /** Modo "explicativo": a regra da atividade, em uma ou duas frases claras. */
+  explicacao?: string;
+
   Demonstration: ComponentType<{ onDone: () => void }>;
   GuidedAttempt: ComponentType<GuidedAttemptProps>;
   retryHint: string;

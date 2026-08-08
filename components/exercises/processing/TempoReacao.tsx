@@ -5,7 +5,6 @@ import { motion, AnimatePresence } from "framer-motion";
 import { calculateExerciseScore } from "@/lib/scoring";
 import { useTimedProgress } from "@/components/exercises/useExerciseEngine";
 import { ExerciseProgressBar } from "@/components/exercises/ExerciseProgressBar";
-import { TutorialBase } from "@/components/exercises/TutorialBase";
 import type { ExerciseResult, Theme } from "@/types";
 
 interface TempoReacaoProps {
@@ -38,7 +37,6 @@ const DISTRACTOR_COLORS = ["#dc2626", "#2563eb", "#9333ea", "#ea580c", "#f59e0b"
 // distratores "difíceis" — tons AZUL-ESVERDEADOS (teal), parecidos mas NÃO são o verde-alvo.
 // Treinam discriminação fina de cor; entram na fase de alternância. (pedido da Kamylla)
 const NEAR_GREEN_COLORS = ["#14b8a6", "#2dd4bf", "#0d9488", "#5eead4", "#10b981"];
-const TEAL_SAMPLE = "#2dd4bf"; // amostra usada no tutorial para mostrar o que NÃO vale
 
 function distractorCount(difficulty: number) {
   // 0 distractors at diff 1-2, then grows progressively
@@ -107,103 +105,7 @@ function BalloonShape({ color, size = 70 }: { color: string; size?: number }) {
   );
 }
 
-function TempoReacaoTutorial({ theme, onDone }: { theme: Theme; onDone: () => void }) {
-  const steps = [
-    {
-      instruction: "Toque APENAS no VERDE. Cuidado: os AZUL-ESVERDEADOS parecem, mas NÃO valem!",
-      content: (onStepDone: () => void) => <TempoReacaoShowStep theme={theme} onDone={onStepDone} />,
-    },
-    {
-      instruction: "Agora experimente! Um balão verde vai cair.",
-      content: (onStepDone: () => void) => <TempoReacaoTapStep theme={theme} onDone={onStepDone} />,
-    },
-  ];
-
-  return <TutorialBase theme={theme} title="Reflexos" steps={steps} onDone={onDone} />;
-}
-
-function TempoReacaoShowStep({ theme, onDone }: { theme: Theme; onDone: () => void }) {
-  useEffect(() => {
-    const t = setTimeout(onDone, 2500);
-    return () => clearTimeout(t);
-  // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, []);
-
-  return (
-    <div className="flex flex-col items-center gap-2">
-      <div className="flex gap-4 justify-center items-end">
-        <div className="flex flex-col items-center">
-          <BalloonShape color={TEAL_SAMPLE} size={55} />
-          <p className="text-xs mt-1" style={{ color: TEAL_SAMPLE }}>NÃO</p>
-        </div>
-        <div className="flex flex-col items-center">
-          <div className="ring-4 ring-green-400 rounded-full">
-            <BalloonShape color={GREEN} size={65} />
-          </div>
-          <p className="text-xs text-green-600 font-bold mt-1">✓ TOQUE!</p>
-        </div>
-        <div className="flex flex-col items-center">
-          <BalloonShape color="#dc2626" size={55} />
-          <p className="text-xs text-red-500 mt-1">NÃO</p>
-        </div>
-      </div>
-      <p className={`text-xs text-center mt-2 ${theme === "GAMIFIED" ? "text-gray-400" : "text-gray-500"}`}>
-        Só vale ESTE verde. O azul-esverdeado (à esquerda) parece, mas <b>não conta</b>.
-      </p>
-    </div>
-  );
-}
-
-function TempoReacaoTapStep({ theme, onDone }: { theme: Theme; onDone: () => void }) {
-  const [tapped, setTapped] = useState(false);
-  const [missed, setMissed] = useState(false);
-  const [key, setKey] = useState(0);
-
-  function handleTap() {
-    if (tapped) return;
-    setTapped(true);
-    setTimeout(onDone, 500);
-  }
-
-  function handleMiss() {
-    if (tapped) return;
-    setMissed(true);
-    setTimeout(() => { setMissed(false); setKey((k) => k + 1); }, 800);
-  }
-
-  return (
-    <div className="relative overflow-hidden rounded-xl" style={{ height: 200 }}>
-      <AnimatePresence mode="wait">
-        {!tapped && (
-          <motion.div
-            key={key}
-            initial={{ y: -80 }}
-            animate={{ y: 180 }}
-            transition={{ duration: 2.0, ease: "linear" }}
-            onAnimationComplete={handleMiss}
-            style={{ position: "absolute", left: "50%", transform: "translateX(-50%)", cursor: "pointer" }}
-            onClick={handleTap}
-          >
-            <BalloonShape color={GREEN} size={70} />
-          </motion.div>
-        )}
-      </AnimatePresence>
-      {tapped && (
-        <div className="absolute inset-0 flex items-center justify-center">
-          <p className="text-green-500 font-bold text-lg">Ótimo! ✓</p>
-        </div>
-      )}
-      {missed && !tapped && (
-        <div className="absolute inset-0 flex items-center justify-center">
-          <p className="text-orange-500 text-sm font-medium">Ops! Mais rápido!</p>
-        </div>
-      )}
-    </div>
-  );
-}
-
 export function TempoReacao({ difficulty, theme, onComplete }: TempoReacaoProps) {
-  const [showTutorial, setShowTutorial] = useState(true);
   const { begin, isTimeUp, elapsedSec, finish, progressPct } = useTimedProgress(SESSION_MS);
 
   const [started, setStarted] = useState(false);
@@ -341,10 +243,6 @@ export function TempoReacao({ difficulty, theme, onComplete }: TempoReacaoProps)
         nextSpawnTimer.current = setTimeout(spawnBatch, 700);
       }
     }
-  }
-
-  if (showTutorial) {
-    return <TempoReacaoTutorial theme={theme} onDone={() => setShowTutorial(false)} />;
   }
 
   const bg =

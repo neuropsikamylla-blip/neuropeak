@@ -5,7 +5,6 @@ import { motion, AnimatePresence } from "framer-motion";
 import { calculateExerciseScore } from "@/lib/scoring";
 import { useTimedProgress } from "@/components/exercises/useExerciseEngine";
 import { ExerciseProgressBar } from "@/components/exercises/ExerciseProgressBar";
-import { TutorialBase } from "@/components/exercises/TutorialBase";
 import type { ExerciseResult, Theme } from "@/types";
 
 interface CertoOuErradoProps {
@@ -502,165 +501,6 @@ function weightedPickIndex(
   return pool[pool.length - 1];
 }
 
-// ─── Tutorial sub-component ───────────────────────────────────────────────────
-
-const TUTORIAL_SCENARIO: Scenario = {
-  text: "Lavar as mãos antes de comer",
-  emoji: "🤲",
-  answer: "certo",
-  explanation: "Higiene básica que previne doenças.",
-  hardness: 1,
-};
-
-function TutorialInteractiveStep({
-  theme,
-  onDone,
-}: {
-  theme: Theme;
-  onDone: () => void;
-}) {
-  const [picked, setPicked] = useState<"certo" | "errado" | null>(null);
-
-  const isCorrect = picked === TUTORIAL_SCENARIO.answer;
-
-  function handlePick(choice: "certo" | "errado") {
-    if (picked !== null) return;
-    setPicked(choice);
-    setTimeout(onDone, 1600);
-  }
-
-  const scenarioBg = {
-    CLINICAL: "bg-gray-50 border border-gray-200",
-    COLORFUL: "bg-purple-50 border border-purple-200",
-    GAMIFIED: "bg-gray-700/60 border border-cyan-500/20",
-  }[theme];
-
-  const scenarioText = {
-    CLINICAL: "text-gray-800",
-    COLORFUL: "text-purple-900",
-    GAMIFIED: "text-gray-100",
-  }[theme];
-
-  const explanationBg = isCorrect
-    ? "bg-green-50 border border-green-200"
-    : "bg-red-50 border border-red-200";
-
-  const explanationText = isCorrect ? "text-green-800" : "text-red-800";
-
-  return (
-    <div className="flex flex-col gap-3">
-      {/* Scenario card */}
-      <div className={`rounded-xl p-4 text-center ${scenarioBg}`}>
-        <div className="text-4xl mb-2">{TUTORIAL_SCENARIO.emoji}</div>
-        <p className={`text-sm font-medium leading-snug ${scenarioText}`}>
-          {TUTORIAL_SCENARIO.text}
-        </p>
-      </div>
-
-      {/* Buttons */}
-      {picked === null && (
-        <div className="flex gap-3">
-          <button
-            onClick={() => handlePick("certo")}
-            className="flex-1 py-3 rounded-xl font-bold text-white bg-green-500 active:scale-95 transition-transform text-sm"
-          >
-            ✅ CERTO
-          </button>
-          <button
-            onClick={() => handlePick("errado")}
-            className="flex-1 py-3 rounded-xl font-bold text-white bg-red-500 active:scale-95 transition-transform text-sm"
-          >
-            ❌ ERRADO
-          </button>
-        </div>
-      )}
-
-      {/* Feedback */}
-      {picked !== null && (
-        <motion.div
-          initial={{ opacity: 0, y: 6 }}
-          animate={{ opacity: 1, y: 0 }}
-          className={`rounded-xl p-3 ${explanationBg}`}
-        >
-          <p className={`text-xs font-bold mb-0.5 ${explanationText}`}>
-            {isCorrect ? "Correto! ✓" : "Incorreto ✗"}
-          </p>
-          <p className={`text-xs ${explanationText}`}>
-            {TUTORIAL_SCENARIO.explanation}
-          </p>
-        </motion.div>
-      )}
-    </div>
-  );
-}
-
-function CertoIntroStep({
-  theme,
-  onDone,
-}: {
-  theme: Theme;
-  onDone: () => void;
-}) {
-  useEffect(() => {
-    const t = setTimeout(onDone, 2500);
-    return () => clearTimeout(t);
-  }, [onDone]);
-
-  return (
-    <div className="flex flex-col items-center gap-3">
-      <div className="text-5xl">🤔</div>
-      <div className="flex gap-3 w-full">
-        <div className="flex-1 rounded-xl py-3 text-center font-bold text-white bg-green-500 text-sm opacity-90">
-          ✅ CERTO
-        </div>
-        <div className="flex-1 rounded-xl py-3 text-center font-bold text-white bg-red-500 text-sm opacity-90">
-          ❌ ERRADO
-        </div>
-      </div>
-      <p
-        className={`text-xs text-center ${
-          theme === "GAMIFIED" ? "text-gray-400" : "text-gray-500"
-        }`}
-      >
-        Toque no botão correto o mais rápido possível!
-      </p>
-    </div>
-  );
-}
-
-function CertoOuErradoTutorial({
-  theme,
-  onDone,
-}: {
-  theme: Theme;
-  onDone: () => void;
-}) {
-  const steps = [
-    {
-      instruction:
-        "Uma situação do dia a dia será mostrada. Você decide: é CERTO ou ERRADO?",
-      content: (onStepDone: () => void) => (
-        <CertoIntroStep theme={theme} onDone={onStepDone} />
-      ),
-    },
-    {
-      instruction: "Experimente! Toque na resposta que você acha correta.",
-      content: (onStepDone: () => void) => (
-        <TutorialInteractiveStep theme={theme} onDone={onStepDone} />
-      ),
-    },
-  ];
-
-  return (
-    <TutorialBase
-      theme={theme}
-      title="Certo ou Errado"
-      steps={steps}
-      onDone={onDone}
-    />
-  );
-}
-
 // ─── Main component ───────────────────────────────────────────────────────────
 
 export function CertoOuErrado({
@@ -669,7 +509,6 @@ export function CertoOuErrado({
   onComplete,
   patientAge,
 }: CertoOuErradoProps) {
-  const [showTutorial, setShowTutorial] = useState(true);
   const { begin, isTimeUp, elapsedSec, finish, progressPct } = useTimedProgress();
 
   const SCENARIO_POOL = useMemo(() => getScenarioPool(patientAge), [patientAge]);
@@ -778,16 +617,6 @@ export function CertoOuErrado({
     startTime.current = Date.now();
     begin();
     pickNextScenario();
-  }
-
-  // ── Tutorial gate ───────────────────────────────────────────────────────────
-  if (showTutorial) {
-    return (
-      <CertoOuErradoTutorial
-        theme={theme}
-        onDone={() => setShowTutorial(false)}
-      />
-    );
   }
 
   // ── Theme tokens ────────────────────────────────────────────────────────────

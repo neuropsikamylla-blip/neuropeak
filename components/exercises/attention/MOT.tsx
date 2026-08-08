@@ -5,7 +5,6 @@ import { motion, AnimatePresence } from "framer-motion";
 import { calculateExerciseScore } from "@/lib/scoring";
 import { useTimedProgress } from "@/components/exercises/useExerciseEngine";
 import { ExerciseProgressBar } from "@/components/exercises/ExerciseProgressBar";
-import { TutorialBase } from "@/components/exercises/TutorialBase";
 import type { ExerciseResult, Theme } from "@/types";
 
 interface MOTProps {
@@ -117,83 +116,9 @@ function stepAll(balls: Ball[], W: number, H: number): Ball[] {
   return bs;
 }
 
-// ── Tutorial (1 etapa: explica tudo numa tela só, com demo em loop) ─────────
-
-const DEMO_BALLS = [
-  { x: 46, y: 40, isTarget: true,  mx: 30, my: 22 },
-  { x: 150, y: 58, isTarget: true,  mx: -26, my: 30 },
-  { x: 96, y: 96, isTarget: false, mx: 34, my: -24 },
-  { x: 178, y: 104, isTarget: false, mx: -30, my: -20 },
-];
-
-function MOTDemo({ onReady }: { onReady: () => void }) {
-  const [pi, setPi] = useState(0); // 0 = memorize (dourado) · 1 = mover (cinza) · 2 = revelar (verde)
-  useEffect(() => {
-    onReady();  // libera o botão "COMEÇAR" logo
-    const id = setInterval(() => setPi(p => (p + 1) % 3), 1700);
-    return () => clearInterval(id);
-  }, []); // eslint-disable-line react-hooks/exhaustive-deps
-  const moving = pi === 1;
-
-  const steps = [
-    { n: "1", icon: "⭐", txt: "Memorize as bolas douradas — são os alvos." },
-    { n: "2", icon: "👁️", txt: "Todas ficam cinzas e se movem. Siga os alvos com os olhos." },
-    { n: "3", icon: "🎯", txt: "Quando pararem, toque nas que eram douradas." },
-  ];
-
-  return (
-    <div className="flex flex-col items-center gap-3">
-      {/* Mini-arena da demo */}
-      <div className="relative w-[224px] h-[150px] rounded-xl overflow-hidden bg-slate-100 border border-gray-300">
-        {DEMO_BALLS.map((b, i) => {
-          const gold = pi === 0 && b.isTarget;
-          const green = pi === 2 && b.isTarget;
-          return (
-            <motion.div key={i}
-              animate={moving ? { x: [0, b.mx, 0], y: [0, b.my, 0] } : { x: 0, y: 0 }}
-              transition={moving ? { duration: 1.6, repeat: Infinity, ease: "easeInOut" } : { duration: 0.3 }}
-              style={{ position: "absolute", left: b.x - 17, top: b.y - 17, width: 34, height: 34 }}
-              className={`rounded-full border-2 flex items-center justify-center text-xs font-bold ${
-                green ? "bg-green-400 border-green-600 text-white" :
-                gold ? "bg-yellow-400 border-yellow-300 text-yellow-900 animate-pulse" :
-                "bg-gray-300 border-gray-400"
-              }`}>
-              {gold ? "★" : green ? "✓" : ""}
-            </motion.div>
-          );
-        })}
-      </div>
-      {/* 3 passos — o passo atual fica destacado */}
-      <div className="w-full flex flex-col gap-1.5">
-        {steps.map((s, i) => (
-          <div key={s.n} className={`flex items-center gap-2 rounded-lg px-2.5 py-1.5 transition-colors ${
-            i === pi ? "bg-blue-50" : ""
-          }`}>
-            <span className={`w-5 h-5 rounded-full flex items-center justify-center text-[11px] font-black flex-shrink-0 ${
-              i === pi ? "bg-blue-500 text-white" : "bg-gray-200 text-gray-500"
-            }`}>{s.n}</span>
-            <span className="text-xs text-gray-700 leading-tight">{s.icon} {s.txt}</span>
-          </div>
-        ))}
-      </div>
-    </div>
-  );
-}
-
-function MOTTutorial({ theme, onDone }: { theme: Theme; onDone: () => void }) {
-  const steps = [
-    {
-      instruction: "Algumas bolas são alvos (douradas). Depois todas se misturam e se movem — sua missão é não perder os alvos de vista.",
-      content: (done: () => void) => <MOTDemo onReady={done} />,
-    },
-  ];
-  return <TutorialBase theme={theme} title="Rastreamento de Objetos" steps={steps} onDone={onDone} />;
-}
-
 // ── Main component ─────────────────────────────────────────────────────────
 
 export function MOT({ difficulty, theme, onComplete }: MOTProps) {
-  const [showTutorial, setShowTutorial] = useState(true);
   const { begin, isTimeUp, elapsedSec, finish, progressPct } = useTimedProgress();
 
   // Nível ADAPTATIVO dentro da sessão. Começa a partir da dificuldade salva do
@@ -305,13 +230,12 @@ export function MOT({ difficulty, theme, onComplete }: MOTProps) {
   }, [stopRaf]);
 
   useEffect(() => {
-    if (!showTutorial) {
-      startTime.current = Date.now();
-      startRound(0);
-    }
+    startTime.current = Date.now();
+    begin();
+    startRound(0);
     return () => { stopRaf(); stopTimer(); };
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [showTutorial]);
+  }, []);
 
   function handleBallTap(id: number) {
     if (phase !== "identify") return;
@@ -376,10 +300,6 @@ export function MOT({ difficulty, theme, onComplete }: MOTProps) {
       setRound(nextRound);
       startRound(nextRound);
     }, 1500);
-  }
-
-  if (showTutorial) {
-    return <MOTTutorial theme={theme} onDone={() => { startTime.current = Date.now(); begin(); setShowTutorial(false); }} />;
   }
 
   const pal = {

@@ -35,6 +35,15 @@ import {
   listaDistracaoTutorial,
   restauranteOrdemTutorial,
 } from "@/lib/tutorial/definitions/conjunto-selecao";
+import {
+  certoOuErradoTutorial,
+  dualTaskTutorial,
+  motTutorial,
+  nbackTutorial,
+  semaforoTutorial,
+  tempoReacaoTutorial,
+  vigilanciaTutorial,
+} from "@/lib/tutorial/definitions/estimulo-continuo";
 import type { TutorialDefinition } from "@/lib/tutorial/types";
 import type { TutorialState } from "@/lib/tutorial/state";
 
@@ -57,6 +66,13 @@ const TUTORIAIS_POR_EXERCICIO: Readonly<Record<string, TutorialDefinition>> = Ob
   "lista-distracao": listaDistracaoTutorial,
   "jogo-memoria": jogoMemoriaTutorial,
   "restaurante-ordem": restauranteOrdemTutorial,
+  "semaforo": semaforoTutorial,
+  "vigilancia": vigilanciaTutorial,
+  "tempo-reacao": tempoReacaoTutorial,
+  "nback": nbackTutorial,
+  "dual-task": dualTaskTutorial,
+  "mot": motTutorial,
+  "certo-ou-errado": certoOuErradoTutorial,
 });
 
 function ExerciseLoader() {

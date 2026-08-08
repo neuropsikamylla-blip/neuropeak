@@ -62,6 +62,21 @@ const VISUAL_ITEM_ON_MS = 1500;
 const VISUAL_ITEM_GAP_MS = 500;
 const VISUAL_SETTLE_MS = 1200;
 
+/**
+ * Ritmo já calibrado pelo tutorial de referência. Famílias temporizadas reutilizam estes valores;
+ * somente a espera deliberada de um não-alvo pode acrescentar um intervalo próprio.
+ */
+export const RITMO_TUTORIAL_APROVADO = Object.freeze({
+  pointerEntryPulseMs: POINTER_ENTRY_PULSE_MS,
+  pointerMoveMs: POINTER_MOVE_MS,
+  pointerAimMs: POINTER_AIM_MS,
+  pointerPressMs: POINTER_PRESS_MS,
+  pointerReleaseMs: POINTER_RELEASE_MS,
+  betweenStimuliMs: VISUAL_ITEM_GAP_MS,
+  stimulusOnMs: VISUAL_ITEM_ON_MS,
+  finalPauseMs: FINAL_PAUSE_MS,
+});
+
 function wait(ms: number, isCancelled: () => boolean): Promise<boolean> {
   return new Promise((resolve) => {
     if (isCancelled()) {
