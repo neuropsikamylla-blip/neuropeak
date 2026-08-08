@@ -152,63 +152,73 @@ novo que tente gravar por conta própria falha no lote em que for criado.
 **Verificado por injeção:** com um exercício infrator inserido de propósito, dois testes falham;
 removido, a suíte volta ao verde.
 
-## 11. DOIS modos oficiais de tutorial
+## 11. DOIS fluxos de tutorial — regra consolidada
 
-> ⚠️ **REVISADA em 07/ago/2026, ao fim da validação da Família 4.** Substitui integralmente a versão
-> de três modos, e **revoga** a exigência anterior de que a tentativa guiada fosse obrigatória em
-> todos os casos.
+> Consolidada por ela em **08/ago/2026**. Vale para **todo o framework da T1**, nos 34 exercícios.
+> Substitui a versão de três modos e **revoga** a exigência de tentativa guiada em todos os casos.
 
 ### A pergunta única
 
-> **A demonstração realmente aumenta a compreensão da mecânica?**
+> **A demonstração realmente ajuda o paciente a compreender melhor a mecânica?**
 
-| resposta | modo | fluxo |
-|---|---|---|
-| **Sim** | **1 — Demonstração completa** | preparação → **demonstração** → **tentativa guiada** → treino |
-| **Não** | **2 — Explicação** | preparação → **explicação** → treino |
+### Fluxo 1 — Demonstração
 
-### Modo 1 — Demonstração completa
+Quando **assistir à execução da atividade aumenta significativamente** a compreensão da mecânica.
 
-Quando **assistir à tarefa aumenta significativamente** a compreensão da mecânica. A demonstração
-executa a tarefa inteira, e a tentativa guiada vem em seguida.
+```
+Preparação → Demonstração → Tentativa guiada → Treino
+```
 
-### Modo 2 — Explicação
+### Fluxo 2 — Explicação
 
-Quando **uma explicação curta é suficiente** para o paciente compreender completamente a atividade.
+Quando a mecânica pode ser compreendida **completamente apenas pela explicação**.
 
-⛔ **Sem demonstração. E TAMBÉM sem tentativa guiada.**
+```
+Preparação → Explicação → Treino
+```
 
-> Razão dela: *"quando a mecânica é simples e pode ser compreendida apenas pela explicação, a
-> tentativa guiada também se torna desnecessária."* Ensinar da forma **mais simples possível** —
-> uma etapa que não acrescenta compreensão é complexidade sem retorno.
+⛔ **Sem demonstração. Sem tentativa guiada.**
 
-### As três proibições
+### O DESEMPATE — na dúvida, Fluxo 1
 
-⛔ **Nunca** escolher o modo **por família**.
-⛔ **Nunca** escolher o modo porque o exercício é **contínuo/temporizado**.
-✅ **Sempre** escolher o modo que dá **maior compreensão com a menor complexidade possível**.
+> **Havendo qualquer dúvida sobre qual fluxo usar, o Fluxo 1 vence.**
+>
+> O Fluxo 2 só se usa quando há **segurança** de que a explicação, sozinha, basta para que um
+> paciente **que nunca viu o exercício** compreenda completamente a atividade.
 
-### Classificação dela — sujeita à validação visual
+Isso está **codificado, não só escrito**: em `TutorialRunner`, `definition.modo ?? "completa"`. Uma
+definição que **não declara nada** cai em demonstração. Escolher o Fluxo 2 exige um ato deliberado —
+declarar `modo: "explicativo"` e escrever as linhas da regra.
 
-| modo 2 — Explicação | modo 1 — Demonstração |
+### O critério NUNCA é
+
+⛔ o **tipo** do exercício
+⛔ o fato de ser **contínuo** ou não
+⛔ a **família** a que pertence
+⛔ "a regra é fácil de explicar em texto"
+
+✅ **Sempre** e somente: a demonstração ajuda a compreender melhor?
+
+### Classificação vigente (08/ago/2026)
+
+| Fluxo 2 — Explicação | Fluxo 1 — Demonstração |
 |---|---|
-| Semáforo · Tempo de Reação · Certo ou Errado | N-Back · Dual Task · MOT · Vigilância |
+| Semáforo · Tempo de Reação · Certo ou Errado | N-Back · Dual Task · MOT · **Vigilância** |
 
-> Ela quer **validar visualmente antes de decidir** — a classificação acima é ponto de partida, não
-> decisão final.
+> **Vigilância** fica em demonstração **por enquanto**, podendo ser reavaliada após validação visual.
 
 ### Como isso aparece no código
 
-| regra | valor de `modo` na definição |
+| fluxo | valor de `modo` na definição |
 |---|---|
-| modo 1 — Demonstração completa | `"completa"` (padrão) ou `"continua"` |
-| modo 2 — Explicação | `"explicativo"` + `explicacao: string[]` |
+| 1 — Demonstração | `"completa"` (padrão) ou `"continua"` |
+| 2 — Explicação | `"explicativo"` + `explicacao: string[]` |
 
-No modo 2 o botão da explicação chama **`onFinish` diretamente** — o mesmo do encerramento do modo
-1. É isso que preserva a **regra 10**: a conclusão continua sendo registrada **uma única vez**, pelo
-caminho único, mesmo sem passar por `handoff`, `guided` e `feedback`.
+No Fluxo 2 o botão chama **`onFinish` diretamente** — o mesmo do encerramento do Fluxo 1. É isso que
+preserva a **regra 10**: a conclusão é registrada **uma única vez**, pelo caminho único, mesmo sem
+passar por `handoff`, `guided` e `feedback`.
 
-### O que NÃO muda
+### O que NÃO muda em nenhum dos dois
 
 Preparação · identidade visual · transições · textos · "Tutorial concluído" · botão "Ver tutorial
 novamente" · isolamento clínico · regra 10.

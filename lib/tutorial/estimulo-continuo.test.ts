@@ -203,3 +203,38 @@ describe("Família 4 — estímulo contínuo", () => {
     }
   });
 });
+
+describe("regra 11 consolidada — na dúvida, Fluxo 1", () => {
+  const runner = () =>
+    readFileSync(resolve(process.cwd(), "components/exercises/tutorial/TutorialRunner.tsx"), "utf8");
+
+  it("o padrão do framework é DEMONSTRAÇÃO — o desempate está no código", () => {
+    /*
+     * Ela consolidou em 08/ago/2026: havendo dúvida sobre qual fluxo usar, vence o Fluxo 1. O
+     * Fluxo 2 exige SEGURANÇA de que a explicação sozinha basta para quem nunca viu o exercício.
+     *
+     * Isto não é só documentação: uma definição que não declara `modo` cai em demonstração. Optar
+     * pela explicação é um ato deliberado, nunca um descuido.
+     */
+    expect(runner()).toMatch(/definition\.modo \?\? "completa"/);
+  });
+
+  it("nenhuma definição cai em explicação por omissão", () => {
+    const definicoes = [
+      "lib/tutorial/definitions/span-numerico.tsx",
+      "lib/tutorial/definitions/letras-sequencia.tsx",
+      "lib/tutorial/definitions/sequencia-itens.tsx",
+      "lib/tutorial/definitions/sequencia-espacial.tsx",
+      "lib/tutorial/definitions/conjunto-selecao.tsx",
+      "lib/tutorial/definitions/estimulo-continuo.tsx",
+    ];
+
+    for (const caminho of definicoes) {
+      const fonte = readFileSync(resolve(process.cwd(), caminho), "utf8");
+      // Onde há "explicativo", há explicação escrita: o fluxo 2 nunca fica pela metade.
+      const explicativos = (fonte.match(/modo: "explicativo"/g) ?? []).length;
+      const explicacoes = (fonte.match(/explicacao: \[/g) ?? []).length;
+      expect(explicacoes).toBe(explicativos);
+    }
+  });
+});
