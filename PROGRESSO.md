@@ -10,7 +10,7 @@ inteira fica aprovada. Sem checkpoints exercício por exercício.
 
 **Regras:** `docs/T1-REGRAS-GLOBAIS.md` (as dez) · **Famílias:** `docs/T1-FAMILIAS-DE-MECANICA.md`
 
-### Estado — 12 de 34 convertidos · v2.83.0 no ar
+### Estado — 19 de 34 convertidos · v2.84.2 no ar
 
 ⏸️ **A Família 4 está PARADA por incompatibilidade arquitetural real**, documentada em
 `docs/T1-INCOMPATIBILIDADES.md`. Nada foi implementado. **Aguarda decisão dela** sobre três pontos
@@ -25,12 +25,44 @@ sem conceito de inibição.
 | **1 — sequência → reproduzir na ordem** | span-numerico, span-numerico-inverso, letras-sequencia, sequencia-itens | ✅ **aprovada** |
 | **2 — sequência espacial → tocar células** | matriz-espacial, matriz-espacial-inversa, cubo-corsi, padroes-rotacao | ✅ **aprovada** (07/ago) |
 | **3 — memorizar conjunto → selecionar** | desafio-supermercado, lista-distracao, jogo-memoria, restaurante-ordem | ✅ **aprovada** (07/ago) |
-| 4 — estímulo contínuo → responder na hora | vigilancia, nback, tempo-reacao, semaforo, certo-ou-errado, mot, dual-task | ⏸️ **PARADA — incompatibilidade** |
+| 4 — estímulo contínuo → responder na hora | vigilancia, nback, tempo-reacao, semaforo, certo-ou-errado, mot, dual-task | ✅ convertida (v2.84.x) — **modos a revisar** |
 | 5 — escolha entre alternativas | stroop-task, task-switching, identificacao-simbolos, deductive-grid, informacao-em-foco, corrida-tempo, trilha-visual, focus-agents | pendente |
 | 6 — arrastar e posicionar | ordem-historia, torre-hanoi, labirinto, estacionamento-logico | ⚠️ risco arquitetural |
 | 7 — composição e entrada numérica | compra-multifuncional, antes-depois, investigadores-sociais | pendente |
 
-### ⏭️ PRÓXIMO PASSO — Família 3, autorizada e não iniciada
+### ⏭️ PRÓXIMO PASSO — regra 11 revisada, NÃO implementada
+
+Ela revisou a regra 11 em 07/ago/2026, ao fim da validação da Família 4. **Nada foi implementado**:
+a janela chegou a 95% e a regra 16 proíbe começar. Nada ficou pela metade.
+
+**A mudança:** de três modos para **DOIS**, e o modo 2 passa a **dispensar também a tentativa
+guiada** — o que **revoga** a exigência anterior de que ela fosse obrigatória em todos os casos.
+
+| resposta à pergunta única | modo | fluxo |
+|---|---|---|
+| a demonstração aumenta a compreensão? **Sim** | 1 — Demonstração completa | preparação → demonstração → guiada → treino |
+| **Não** | 2 — Explicação | preparação → explicação → **treino** |
+
+**Classificação dela (a validar visualmente):**
+- **Explicação:** Semáforo · Tempo de Reação · Certo ou Errado
+- **Demonstração:** N-Back · Dual Task · MOT · Vigilância
+
+**⚠️ Discrepância a resolver no início da próxima sessão:** a v2.84.2 já pôs o **Semáforo** em
+explicativo, **mas ele ainda passa pela tentativa guiada** — o código foi escrito sob a regra
+antiga. Pela regra nova, o Semáforo deve ir da explicação **direto ao treino**.
+
+**O que implementar:**
+1. `TutorialRunner`: no modo explicação, `onFinish()` direto — sem `handoff`, sem `guided`, sem
+   `feedback`. ⚠️ O registro da conclusão (regra 10) tem de continuar acontecendo **uma vez**;
+2. atualizar os testes que hoje exigem a guiada nos três modos — eles travam a regra REVOGADA;
+3. `tempo-reacao` e `certo-ou-errado` → modo explicação, com as linhas da regra;
+4. `vigilancia` volta a demonstração (ela a classificou assim);
+5. gates completos, publicar, e ela valida visualmente antes de decidir em definitivo.
+
+**Regra nova, permanente:** nunca escolher o modo por família · nunca porque o exercício é contínuo ·
+sempre o que dá maior compreensão com a menor complexidade.
+
+### 🗄️ Histórico — Família 3, concluída e aprovada
 
 Ela autorizou em 07/ago; **não comecei** porque a janela chegou a 90% e a regra 16 proíbe iniciar
 tarefa nova. Nada ficou pela metade.

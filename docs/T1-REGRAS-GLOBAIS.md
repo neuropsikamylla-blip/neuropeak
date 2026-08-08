@@ -30,9 +30,9 @@ linguagem** — verbo no imperativo, uma frase, sem estratégia cognitiva.
 início ao fim. **Nunca** mostra apenas o estímulo: precisa demonstrar **como responder**, com a
 resposta sendo executada.
 
-> ⚠️ Reconciliado em 07/ago/2026 com a **regra 11**: o **modo 3** não tem demonstração animada, e
-> nesse caso esta regra não se aplica — o que a substitui é a explicação clara da regra da
-> atividade. O que **nunca** se dispensa é a **tentativa guiada**.
+> ⚠️ Reconciliado com a **regra 11 revisada** (07/ago/2026): no **modo 2 — Explicação** não há
+> demonstração animada **nem tentativa guiada**; o que ensina é a explicação, e o treino começa em
+> seguida. Esta regra vale apenas para o **modo 1**.
 
 ## 3. Sincronismo entre áudio e visual
 
@@ -152,55 +152,55 @@ novo que tente gravar por conta própria falha no lote em que for criado.
 **Verificado por injeção:** com um exercício infrator inserido de propósito, dois testes falham;
 removido, a suíte volta ao verde.
 
-## 11. Três modos oficiais de tutorial
+## 11. DOIS modos oficiais de tutorial
 
-> Decisão dela, **07/ago/2026**: *"Nem todo exercício precisa obrigatoriamente possuir uma
-> demonstração animada. O objetivo da T1 é ensinar a mecânica da atividade, não obrigatoriamente
-> mostrar uma animação."*
+> ⚠️ **REVISADA em 07/ago/2026, ao fim da validação da Família 4.** Substitui integralmente a versão
+> de três modos, e **revoga** a exigência anterior de que a tentativa guiada fosse obrigatória em
+> todos os casos.
 
-| modo | o que faz | quando usar |
+### A pergunta única
+
+> **A demonstração realmente aumenta a compreensão da mecânica?**
+
+| resposta | modo | fluxo |
 |---|---|---|
-| **1 — Demonstração completa** | o sistema executa toda a atividade antes da guiada | a tarefa se ensina **fazendo**: reproduzir sequência, selecionar conjunto |
-| **2 — Demonstração contínua** | o sistema demonstra **quando agir e quando não agir** | tarefas **temporizadas**, em que o *quando* é o que se aprende |
-| **3 — Tutorial explicativo** | **sem** demonstração animada — explica a regra com clareza | quando animar **não melhora** o aprendizado |
+| **Sim** | **1 — Demonstração completa** | preparação → **demonstração** → **tentativa guiada** → treino |
+| **Não** | **2 — Explicação** | preparação → **explicação** → treino |
 
-### O que vale para os três
+### Modo 1 — Demonstração completa
 
-⛔ **A tentativa guiada continua OBRIGATÓRIA.** Nenhum modo dispensa o paciente de fazer a tarefa
-uma vez, com feedback e possibilidade de repetir.
+Quando **assistir à tarefa aumenta significativamente** a compreensão da mecânica. A demonstração
+executa a tarefa inteira, e a tentativa guiada vem em seguida.
 
-O restante do framework permanece **exatamente igual**: preparação · identidade visual · transições ·
-textos · "Tutorial concluído" · botão "Ver tutorial novamente" · isolamento clínico · regra 10.
+### Modo 2 — Explicação
 
-### O critério de escolha — e o que ele NÃO é
+Quando **uma explicação curta é suficiente** para o paciente compreender completamente a atividade.
 
-**A pergunta é uma só:** *"A demonstração realmente ajuda o paciente a compreender a mecânica?"*
+⛔ **Sem demonstração. E TAMBÉM sem tentativa guiada.**
 
-- **Sim** → demonstração (modo 1 ou 2).
-- **Não** → tutorial explicativo (modo 3).
+> Razão dela: *"quando a mecânica é simples e pode ser compreendida apenas pela explicação, a
+> tentativa guiada também se torna desnecessária."* Ensinar da forma **mais simples possível** —
+> uma etapa que não acrescenta compreensão é complexidade sem retorno.
 
-⛔ **A pergunta NÃO é "a regra é fácil de explicar em texto".** Foi o erro que cometi ao classificar
-a Família 4: mandei `nback` e `dual-task` para o modo explicativo porque suas regras se enunciam bem
-— quando são justamente os casos em que **ver** ensina mais que ler. O `nback` compara uma relação
-entre momentos no tempo; o `dual-task` mostra o que "dividir a atenção" significa na prática.
+### As três proibições
 
-⛔ **Não distribuir os três modos de forma equilibrada.** Eles não são uma cota. Uma família inteira
-em demonstração contínua, ou inteira em completa, é **perfeitamente aceitável** — e é o caso da
-Família 4, onde o modo 3 não é usado.
+⛔ **Nunca** escolher o modo **por família**.
+⛔ **Nunca** escolher o modo porque o exercício é **contínuo/temporizado**.
+✅ **Sempre** escolher o modo que dá **maior compreensão com a menor complexidade possível**.
 
-> **O modo explicativo é reserva, não meta.** Só entra quando a animação realmente não acrescenta
-> compreensão. Forçá-lo para "usar os três modos" é reduzir aprendizado por simetria.
+### Classificação dela — sujeita à validação visual
 
-### O modo é POR EXERCÍCIO, nunca por família
+| modo 2 — Explicação | modo 1 — Demonstração |
+|---|---|
+| Semáforo · Tempo de Reação · Certo ou Errado | N-Back · Dual Task · MOT · Vigilância |
 
-Validado por ela em **07/ago/2026**, ao ver o Semáforo: *"a demonstração tornou o entendimento mais
-artificial do que necessário"*. Ele saiu de **contínua** para **explicativo**, e a Família 4 deixou
-de ter um modo único.
+> Ela quer **validar visualmente antes de decidir** — a classificação acima é ponto de partida, não
+> decisão final.
 
-⛔ **Nem sempre "exercício temporizado = demonstração contínua".** Ser temporizado não implica que
-animar ensine: a regra do Semáforo — verde clique, vermelho não clique — se enuncia melhor do que se
-demonstra. Cada exercício se avalia **individualmente** pela pergunta única, mesmo dentro de uma
-família já convertida.
+### O que NÃO muda
+
+Preparação · identidade visual · transições · textos · "Tutorial concluído" · botão "Ver tutorial
+novamente" · isolamento clínico · regra 10.
 
 ## Conversão dos 34 — o que NÃO se faz
 
