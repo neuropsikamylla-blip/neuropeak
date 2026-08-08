@@ -14673,3 +14673,12 @@ N-Back
 Dual Task
 Antes de convertê-los para o modo explicativo.
 Não quero reduzir demonstrações onde elas agregam aprendizado. O modo explicativo deve ser reservado apenas para exercícios em que a animação realmente não acrescenta compreensão.
+
+## 07/08/2026 22:12
+O modo explicativo não precisa ser usado em todas as famílias.
+Ele existe para quando realmente fizer sentido.
+Não quero distribuir os três modos de forma equilibrada.
+Quero utilizar o modo que melhor ensina cada exercício.
+Se uma família inteira ficar em demonstração contínua ou demonstração completa, isso é perfeitamente aceitável.
+O modo explicativo deve ser utilizado apenas quando uma demonstração realmente não acrescentar compreensão ao paciente.
+Não quero forçar o uso dos três modos apenas porque eles existem.
