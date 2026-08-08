@@ -14618,3 +14618,20 @@ exercício representante para validação.
 <status>completed</status>
 <summary>Background command "Disparar o Codex para a Família 3" completed (exit code 0)</summary>
 </task-notification>
+
+## 07/08/2026 21:51
+Vou validar apenas o representante da Família 3 (desafio-supermercado).
+Não inicie a Família 4 até minha aprovação.
+Quero validar se a mecânica "memorizar conjunto → selecionar (sem ordem)" realmente ficou equivalente ao padrão aprovado do Span.
+Vou observar principalmente:
+demonstração completa;
+sincronismo entre áudio e visual;
+ritmo;
+cursor;
+clique;
+tentativa guiada;
+textos;
+transições;
+encerramento;
+possibilidade de rever o tutorial.
+Se eu aprovar o representante, considere toda a Família 3 aprovada e só então prossiga para a Família 4.

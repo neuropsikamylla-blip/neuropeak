@@ -1,36 +1,6 @@
 # As 3 ultimas especificacoes dela (automatico; a mais nova por ultimo)
 # Na retomada: ler as 3, conectar com PROGRESSO.md e git, declarar e seguir.
 
-## 07/08/2026 18:46
-Família 2 aprovada. Pode seguir para a Família 3.
-A partir deste ponto, mantenha exatamente o framework aprovado no Span e na Família 2.
-Não altere:
-identidade visual;
-ritmo;
-transições;
-textos;
-cursor;
-demonstração completa;
-tentativa guiada;
-encerramento;
-botão "Ver tutorial novamente";
-regras de isolamento clínico.
-Nesta família, adapte apenas a mecânica específica do exercício.
-A demonstração deve ensinar exatamente como resolver aquele exercício, preservando integralmente o padrão da T1.
-Só interrompa a conversão se encontrar uma incompatibilidade arquitetural real, isto é, um caso em que o framework aprovado não consiga representar corretamente a mecânica do exercício sem precisar ser alterado.
-Se isso acontecer:
-não implemente uma solução improvisada;
-documente a incompatibilidade;
-explique por que ela existe;
-proponha uma solução;
-aguarde minha decisão.
-Caso contrário, conclua toda a Família 3, publique e me informe apenas:
-exercícios convertidos;
-appVersion;
-buildId;
-resultado dos gates;
-qual exercício será o representante para validação da Família 3.
-
 ## 07/08/2026 18:51
 Continue exatamente do bloco EM ANDAMENTO.
 A Família 2 está aprovada.
@@ -55,3 +25,20 @@ exercício representante para validação.
 <status>completed</status>
 <summary>Background command "Disparar o Codex para a Família 3" completed (exit code 0)</summary>
 </task-notification>
+
+## 07/08/2026 21:51
+Vou validar apenas o representante da Família 3 (desafio-supermercado).
+Não inicie a Família 4 até minha aprovação.
+Quero validar se a mecânica "memorizar conjunto → selecionar (sem ordem)" realmente ficou equivalente ao padrão aprovado do Span.
+Vou observar principalmente:
+demonstração completa;
+sincronismo entre áudio e visual;
+ritmo;
+cursor;
+clique;
+tentativa guiada;
+textos;
+transições;
+encerramento;
+possibilidade de rever o tutorial.
+Se eu aprovar o representante, considere toda a Família 3 aprovada e só então prossiga para a Família 4.
