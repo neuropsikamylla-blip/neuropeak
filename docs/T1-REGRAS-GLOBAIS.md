@@ -147,6 +147,29 @@ novo que tente gravar por conta própria falha no lote em que for criado.
 **Verificado por injeção:** com um exercício infrator inserido de propósito, dois testes falham;
 removido, a suíte volta ao verde.
 
+## 11. Três modos oficiais de tutorial
+
+> Decisão dela, **07/ago/2026**: *"Nem todo exercício precisa obrigatoriamente possuir uma
+> demonstração animada. O objetivo da T1 é ensinar a mecânica da atividade, não obrigatoriamente
+> mostrar uma animação."*
+
+| modo | o que faz | quando usar |
+|---|---|---|
+| **1 — Demonstração completa** | o sistema executa toda a atividade antes da guiada | a tarefa se ensina **fazendo**: reproduzir sequência, selecionar conjunto |
+| **2 — Demonstração contínua** | o sistema demonstra **quando agir e quando não agir** | tarefas **temporizadas**, em que o *quando* é o que se aprende |
+| **3 — Tutorial explicativo** | **sem** demonstração animada — explica a regra com clareza | quando animar **não melhora** o aprendizado |
+
+### O que vale para os três
+
+⛔ **A tentativa guiada continua OBRIGATÓRIA.** Nenhum modo dispensa o paciente de fazer a tarefa
+uma vez, com feedback e possibilidade de repetir.
+
+O restante do framework permanece **exatamente igual**: preparação · identidade visual · transições ·
+textos · "Tutorial concluído" · botão "Ver tutorial novamente" · isolamento clínico · regra 10.
+
+> **O critério de escolha é pedagógico, não técnico:** ensinar a atividade da forma mais clara
+> possível. Animação que não esclarece é ruído — e o modo 3 existe para não forçá-la.
+
 ## Conversão dos 34 — o que NÃO se faz
 
 ⛔ alterar mecânica clínica · progressão · dificuldade · pontuação ou métricas

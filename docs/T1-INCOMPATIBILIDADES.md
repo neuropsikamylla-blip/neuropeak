@@ -7,7 +7,19 @@ Registrados, explicados e propostos — **nunca resolvidos em silêncio**.
 
 ## 1. Família 4 — estímulo contínuo → responder no momento certo
 
-**Status:** ⏸️ **PARADO, aguardando decisão dela.** Nada implementado.
+**Status:** ✅ **RESOLVIDO em 07/ago/2026** pela decisão dos **três modos** (regra global 11).
+
+> Ela criou o **modo 2 — demonstração contínua**, que demonstra *quando agir e quando não agir* em
+> tarefas temporizadas, e o **modo 3 — tutorial explicativo**, sem demonstração animada. Isso cobre
+> exatamente a lacuna descrita abaixo, e vai além da minha proposta: eu havia proposto animar a
+> inibição em todos os casos; ela permitiu **não animar** onde a animação não ensina.
+>
+> As três dúvidas pedagógicas que eu havia levantado ficam respondidas: **(1)** a inibição É
+> demonstrada, no modo 2; **(2)** a demonstração desta família precisa de alvo **e** não-alvo, logo
+> não se limita a `smallestValidUnit`; **(3)** a guiada do tutorial **não** tem relógio — "o
+> tutorial ensina, não mede" (regra 6).
+
+**Registro histórico da análise, mantido abaixo.**
 **Data:** 07/ago/2026 · **Exercícios:** `vigilancia` · `nback` · `tempo-reacao` · `semaforo` ·
 `certo-ou-errado` · `mot` · `dual-task`
 
