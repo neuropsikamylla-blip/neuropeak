@@ -10,15 +10,22 @@ inteira fica aprovada. Sem checkpoints exercício por exercício.
 
 **Regras:** `docs/T1-REGRAS-GLOBAIS.md` (as dez) · **Famílias:** `docs/T1-FAMILIAS-DE-MECANICA.md`
 
-### Estado — 8 de 34 convertidos · v2.82.0 no ar
+### Estado — 12 de 34 convertidos · v2.83.0 no ar
+
+⏸️ **A Família 4 está PARADA por incompatibilidade arquitetural real**, documentada em
+`docs/T1-INCOMPATIBILIDADES.md`. Nada foi implementado. **Aguarda decisão dela** sobre três pontos
+pedagógicos: como mostrar a inibição (exige elemento visual novo), quantos estímulos a demonstração
+precisa, e se a tentativa guiada tem relógio. Resumo: a resposta desta família é travada no tempo e,
+em vários exercícios, a resposta CERTA é não agir — e o framework aprovado clica em todos os itens,
+sem conceito de inibição.
 
 | família | exercícios | estado |
 |---|---|---|
 | **Framework (Lote 0)** | — | ✅ aprovado |
 | **1 — sequência → reproduzir na ordem** | span-numerico, span-numerico-inverso, letras-sequencia, sequencia-itens | ✅ **aprovada** |
 | **2 — sequência espacial → tocar células** | matriz-espacial, matriz-espacial-inversa, cubo-corsi, padroes-rotacao | ✅ **aprovada** (07/ago) |
-| **3 — memorizar conjunto → selecionar** | desafio-supermercado, lista-distracao, jogo-memoria, restaurante-ordem | ⏭️ **PRÓXIMA** |
-| 4 — estímulo contínuo → responder na hora | vigilancia, nback, tempo-reacao, semaforo, certo-ou-errado, mot, dual-task | pendente |
+| **3 — memorizar conjunto → selecionar** | desafio-supermercado, lista-distracao, jogo-memoria, restaurante-ordem | ✅ **aprovada** (07/ago) |
+| 4 — estímulo contínuo → responder na hora | vigilancia, nback, tempo-reacao, semaforo, certo-ou-errado, mot, dual-task | ⏸️ **PARADA — incompatibilidade** |
 | 5 — escolha entre alternativas | stroop-task, task-switching, identificacao-simbolos, deductive-grid, informacao-em-foco, corrida-tempo, trilha-visual, focus-agents | pendente |
 | 6 — arrastar e posicionar | ordem-historia, torre-hanoi, labirinto, estacionamento-logico | ⚠️ risco arquitetural |
 | 7 — composição e entrada numérica | compra-multifuncional, antes-depois, investigadores-sociais | pendente |
