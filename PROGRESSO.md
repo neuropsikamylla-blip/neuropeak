@@ -10,7 +10,7 @@ inteira fica aprovada. Sem checkpoints exercício por exercício.
 
 **Regras:** `docs/T1-REGRAS-GLOBAIS.md` (as dez) · **Famílias:** `docs/T1-FAMILIAS-DE-MECANICA.md`
 
-### Estado — 19 de 34 convertidos · v2.84.2 no ar
+### Estado — 19 de 34 convertidos · v2.85.0 no ar
 
 ⏸️ **A Família 4 está PARADA por incompatibilidade arquitetural real**, documentada em
 `docs/T1-INCOMPATIBILIDADES.md`. Nada foi implementado. **Aguarda decisão dela** sobre três pontos
@@ -30,37 +30,47 @@ sem conceito de inibição.
 | 6 — arrastar e posicionar | ordem-historia, torre-hanoi, labirinto, estacionamento-logico | ⚠️ risco arquitetural |
 | 7 — composição e entrada numérica | compra-multifuncional, antes-depois, investigadores-sociais | pendente |
 
-### ⏭️ PRÓXIMO PASSO — regra 11 revisada, NÃO implementada
+### ✅ Regra 11 consolidada e implementada (08/ago/2026) — v2.85.0 no ar
 
-Ela revisou a regra 11 em 07/ago/2026, ao fim da validação da Família 4. **Nada foi implementado**:
-a janela chegou a 95% e a regra 16 proíbe começar. Nada ficou pela metade.
+**DOIS fluxos**, e a pergunta é única: *a demonstração ajuda o paciente a compreender melhor a
+mecânica?*
 
-**A mudança:** de três modos para **DOIS**, e o modo 2 passa a **dispensar também a tentativa
-guiada** — o que **revoga** a exigência anterior de que ela fosse obrigatória em todos os casos.
+- **Fluxo 1 — Demonstração:** preparação → demonstração → tentativa guiada → treino
+- **Fluxo 2 — Explicação:** preparação → explicação → treino (**sem** demonstração, **sem** guiada)
 
-| resposta à pergunta única | modo | fluxo |
+**⚖️ DESEMPATE — na dúvida, Fluxo 1.** O Fluxo 2 só com segurança de que a explicação sozinha basta
+para quem **nunca viu** o exercício. **Codificado**, não só escrito: `definition.modo ?? "completa"`
+faz quem não declara nada cair em demonstração; optar pela explicação é ato deliberado. Dois testes
+travam isso.
+
+**O critério NUNCA é:** tipo de exercício · ser contínuo · a família · "a regra é fácil de explicar
+em texto" (este foi erro meu na Família 4, corrigido por ela).
+
+| Fluxo 2 — Explicação | Fluxo 1 — Demonstração |
+|---|---|
+| Semáforo · Tempo de Reação · Certo ou Errado | N-Back · Dual Task · MOT · **Vigilância** |
+
+> **Vigilância** fica em demonstração por enquanto, **podendo ser reavaliada** após validação visual.
+
+**Regra 10 preservada no fluxo novo:** no Fluxo 2 o botão chama `onFinish` — o MESMO do encerramento
+do Fluxo 1 —, então a conclusão é registrada **uma única vez** mesmo sem passar por `handoff`,
+`guided` e `feedback`. Está comentado no ponto exato do `TutorialRunner`.
+
+### ⏭️ PRÓXIMO PASSO — validação dela, ou Família 5
+
+**Aguardando:** validação visual do **Semáforo** (fluxo novo mais curto: preparação → explicação →
+treino), com o paciente técnico `COG25062`. Ou o aval para seguir sem ela.
+
+**Depois, faltam 15 exercícios em três famílias:**
+
+| família | exercícios | observação |
 |---|---|---|
-| a demonstração aumenta a compreensão? **Sim** | 1 — Demonstração completa | preparação → demonstração → guiada → treino |
-| **Não** | 2 — Explicação | preparação → explicação → **treino** |
+| **5 — escolha entre alternativas** | stroop-task, task-switching, identificacao-simbolos, deductive-grid, informacao-em-foco, corrida-tempo, trilha-visual, focus-agents | 8 — a maior; avaliar o fluxo **por exercício** |
+| **6 — arrastar e posicionar** | ordem-historia, torre-hanoi, labirinto, estacionamento-logico | ⚠️ **RISCO**: o `DemoPointer` demonstra clique, **não arrasto**. Exige gesto novo (pressiona → move mantendo pressionado → solta). Se não couber, registrar em `docs/T1-INCOMPATIBILIDADES.md` e **perguntar antes** |
+| **7 — composição e entrada numérica** | compra-multifuncional, antes-depois, investigadores-sociais | 3 |
 
-**Classificação dela (a validar visualmente):**
-- **Explicação:** Semáforo · Tempo de Reação · Certo ou Errado
-- **Demonstração:** N-Back · Dual Task · MOT · Vigilância
-
-**⚠️ Discrepância a resolver no início da próxima sessão:** a v2.84.2 já pôs o **Semáforo** em
-explicativo, **mas ele ainda passa pela tentativa guiada** — o código foi escrito sob a regra
-antiga. Pela regra nova, o Semáforo deve ir da explicação **direto ao treino**.
-
-**O que implementar:**
-1. `TutorialRunner`: no modo explicação, `onFinish()` direto — sem `handoff`, sem `guided`, sem
-   `feedback`. ⚠️ O registro da conclusão (regra 10) tem de continuar acontecendo **uma vez**;
-2. atualizar os testes que hoje exigem a guiada nos três modos — eles travam a regra REVOGADA;
-3. `tempo-reacao` e `certo-ou-errado` → modo explicação, com as linhas da regra;
-4. `vigilancia` volta a demonstração (ela a classificou assim);
-5. gates completos, publicar, e ela valida visualmente antes de decidir em definitivo.
-
-**Regra nova, permanente:** nunca escolher o modo por família · nunca porque o exercício é contínuo ·
-sempre o que dá maior compreensão com a menor complexidade.
+⚠️ **Ao converter, avaliar o fluxo exercício a exercício** — nunca aplicar um fluxo à família
+inteira. Foi o erro que ela corrigiu duas vezes na Família 4.
 
 ### 🗄️ Histórico — Família 3, concluída e aprovada
 
