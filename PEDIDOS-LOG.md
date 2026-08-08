@@ -14691,3 +14691,34 @@ Não quero forçar o uso dos três modos apenas porque eles existem.
 <status>completed</status>
 <summary>Background command "Redisparar com a classificação corrigida" completed (exit code 0)</summary>
 </task-notification>
+
+## 07/08/2026 22:46
+A validação da Família 4 mostrou um ajuste importante na arquitetura.
+O Semáforo não ficou melhor com demonstração contínua.
+A regra dele é extremamente simples e a demonstração tornou o entendimento mais artificial do que necessário.
+Quero alterar o critério do framework.
+O critério não é mais:
+"Exercício temporizado = demonstração contínua."
+O critério passa a ser:
+"A demonstração realmente aumenta a compreensão da mecânica?"
+Se a resposta for não, prefiro um tutorial explicativo.
+No caso do Semáforo, quero remover completamente a demonstração animada.
+Fluxo:
+Preparação
+↓
+Explicação simples
+Exemplo:
+DEMONSTRAÇÃO
+Observe como funciona a atividade.
+Quando aparecer o sinal verde, clique.
+Quando aparecer o sinal vermelho, não clique.
+Na próxima etapa você fará uma tentativa guiada.
+↓
+Tentativa guiada
+↓
+Treino
+A tentativa guiada continua existindo normalmente.
+A demonstração animada deve ser removida apenas deste exercício.
+Antes de alterar os demais exercícios da Família 4, quero reavaliar cada um individualmente usando este critério.
+Não quero que uma família inteira utilize obrigatoriamente o mesmo modo de tutorial.
+Quero escolher o modo que ensina melhor cada exercício.
