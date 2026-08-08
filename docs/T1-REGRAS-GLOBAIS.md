@@ -24,10 +24,15 @@ Tudo abaixo existe para servir a esta frase.
 Um exercício pode adaptar o texto se a mecânica exigir, mas **seguindo exatamente este padrão de
 linguagem** — verbo no imperativo, uma frase, sem estratégia cognitiva.
 
-## 2. Demonstração sempre completa
+## 2. Quando há demonstração, ela é completa
 
-A demonstração executa a tarefa **inteira**, do início ao fim. **Nunca** mostra apenas o estímulo:
-precisa demonstrar **como responder**, com a resposta sendo executada.
+**Onde existe demonstração animada** (modos 1 e 2 da regra 11), ela executa a tarefa **inteira**, do
+início ao fim. **Nunca** mostra apenas o estímulo: precisa demonstrar **como responder**, com a
+resposta sendo executada.
+
+> ⚠️ Reconciliado em 07/ago/2026 com a **regra 11**: o **modo 3** não tem demonstração animada, e
+> nesse caso esta regra não se aplica — o que a substitui é a explicação clara da regra da
+> atividade. O que **nunca** se dispensa é a **tentativa guiada**.
 
 ## 3. Sincronismo entre áudio e visual
 
