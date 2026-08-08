@@ -14817,3 +14817,6 @@ Importante: se houver qualquer dúvida sobre qual fluxo utilizar, prefiro o Flux
 
 ## 08/08/2026 14:15
 eu gostaria de fechar por enquanto  e depois retornar
+
+## 08/08/2026 14:17
+ls
