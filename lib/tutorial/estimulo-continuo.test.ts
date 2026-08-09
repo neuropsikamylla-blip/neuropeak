@@ -145,8 +145,17 @@ describe("Família 4 — estímulo contínuo", () => {
     // único — e é exatamente isso que este teste protege.
     const semaforo = definition().slice(definition().indexOf('exerciseId: "semaforo"'));
     expect(semaforo).toMatch(/modo: "explicativo"/);
-    expect(semaforo).toMatch(/Quando aparecer o sinal verde, clique\./);
-    expect(semaforo).toMatch(/Quando aparecer o sinal vermelho, não clique\./);
+    // Corrigido em 09/ago/2026, na validação dela. O texto anterior — "clique" / "não clique" —
+    // descrevia uma mecânica que o exercício não tem: existem DOIS botões e sempre se responde em
+    // um deles. E omitia o amarelo, que sai em 10% dos sinais e também pede PARAR, de modo que o
+    // paciente podia encontrar no treino uma cor que o tutorial nunca lhe apresentou.
+    expect(semaforo).toMatch(/Quando o sinal abrir em verde, clique em AVANÇAR\./);
+    expect(semaforo).toMatch(/Quando estiver vermelho ou amarelo, clique em PARAR\./);
+    // A regra ensinada precisa cobrir as três cores que o sorteio produz.
+    const explicacaoDoSemaforo = semaforo.slice(0, semaforo.indexOf("guidedInstruction"));
+    for (const cor of ["verde", "vermelho", "amarelo"]) {
+      expect(explicacaoDoSemaforo).toContain(cor);
+    }
 
 
     // Classificação dela de 07/ago/2026, por exercício e não por família:

@@ -116,17 +116,22 @@ describe("ritmo e identidade das etapas do tutorial", () => {
     );
   });
 
-  it("declara selo e acento azul ou teal para as duas etapas nos três temas", () => {
+  it("declara selo e acento azul ou teal para as três etapas nos três temas", () => {
     const runner = runnerSource();
     const stages = runner.slice(
       runner.indexOf("const stageStyles"),
       runner.indexOf("function StageLabel"),
     );
 
-    expect(runner).toMatch(/type TutorialStage = "demonstration" \| "guided"/);
+    // A etapa `explanation` entrou em 09/ago/2026: no Fluxo 2 o paciente lê a regra, e anunciar
+    // aquela tela como DEMONSTRAÇÃO descrevia algo que não acontece ali. Ela divide o azul com a
+    // demonstração de propósito — é a mesma posição no fluxo, a de aprender antes de fazer —,
+    // e por isso o acento #4F8FEA passa a aparecer seis vezes, duas em cada tema.
+    expect(runner).toMatch(/type TutorialStage = "demonstration" \| "explanation" \| "guided"/);
     expect(stages.match(/label: "DEMONSTRAÇÃO",/g)).toHaveLength(3);
+    expect(stages.match(/label: "EXPLICAÇÃO",/g)).toHaveLength(3);
     expect(stages.match(/label: "SUA VEZ",/g)).toHaveLength(3);
-    expect(stages.match(/accentColor: "#4F8FEA"/g)).toHaveLength(3);
+    expect(stages.match(/accentColor: "#4F8FEA"/g)).toHaveLength(6);
     expect(stages).toMatch(/accentColor: "#0D9488"/);
     expect(stages).toMatch(/accentColor: "#2DD4BF"/);
     expect(runner).toMatch(/border-t-4/);

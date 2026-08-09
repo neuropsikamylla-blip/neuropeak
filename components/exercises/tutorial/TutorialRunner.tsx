@@ -16,9 +16,15 @@ type TutorialPhase = "intro" | "demo" | "handoff" | "guided" | "feedback";
 const GUIDED_SETTLE_MS = 900;
 /** Regra 1: usado quando a definição não fornece um texto próprio para a demonstração. */
 const DEMONSTRATION_HINT_PADRAO = "Observe como funciona a atividade.";
+/**
+ * O equivalente para o Fluxo 2. No modo Explicação o paciente LÊ a regra — mandá-lo "observar"
+ * descreve uma tela que não existe ali. Corrigido em 09/ago/2026, quando ela viu o Semáforo
+ * anunciando "DEMONSTRAÇÃO / Observe como funciona" numa tela que só tinha texto.
+ */
+const EXPLICACAO_HINT_PADRAO = "Leia como funciona a atividade.";
 /** Fade entre telas. Sem ele uma etapa aparece por cima da outra, sem começo nem fim. */
 const SCREEN_FADE_S = 0.32;
-type TutorialStage = "demonstration" | "guided";
+type TutorialStage = "demonstration" | "explanation" | "guided";
 
 interface TutorialRunnerProps {
   definition: TutorialDefinition;
@@ -61,7 +67,7 @@ const themeStyles: Record<Theme, {
 };
 
 const stageStyles: Record<Theme, Record<TutorialStage, {
-  label: "DEMONSTRAÇÃO" | "SUA VEZ";
+  label: "DEMONSTRAÇÃO" | "EXPLICAÇÃO" | "SUA VEZ";
   border: string;
   accentColor: string;
   rule: string;
@@ -70,6 +76,13 @@ const stageStyles: Record<Theme, Record<TutorialStage, {
   CLINICAL: {
     demonstration: {
       label: "DEMONSTRAÇÃO",
+      border: "border-t-[#4F8FEA]",
+      accentColor: "#4F8FEA",
+      rule: "bg-[#4F8FEA]",
+      labelText: "text-blue-300",
+    },
+    explanation: {
+      label: "EXPLICAÇÃO",
       border: "border-t-[#4F8FEA]",
       accentColor: "#4F8FEA",
       rule: "bg-[#4F8FEA]",
@@ -91,6 +104,13 @@ const stageStyles: Record<Theme, Record<TutorialStage, {
       rule: "bg-[#4F8FEA]",
       labelText: "text-[#356FBE]",
     },
+    explanation: {
+      label: "EXPLICAÇÃO",
+      border: "border-t-[#4F8FEA]",
+      accentColor: "#4F8FEA",
+      rule: "bg-[#4F8FEA]",
+      labelText: "text-[#356FBE]",
+    },
     guided: {
       label: "SUA VEZ",
       border: "border-t-teal-600",
@@ -102,6 +122,13 @@ const stageStyles: Record<Theme, Record<TutorialStage, {
   GAMIFIED: {
     demonstration: {
       label: "DEMONSTRAÇÃO",
+      border: "border-t-[#4F8FEA]",
+      accentColor: "#4F8FEA",
+      rule: "bg-[#4F8FEA]",
+      labelText: "text-blue-300",
+    },
+    explanation: {
+      label: "EXPLICAÇÃO",
       border: "border-t-[#4F8FEA]",
       accentColor: "#4F8FEA",
       rule: "bg-[#4F8FEA]",
@@ -143,8 +170,14 @@ export function TutorialRunner({ definition, theme, onFinish }: TutorialRunnerPr
   const styles = themeStyles[theme];
   // Regra 11: omitir o modo preserva, sem alteração, o fluxo aprovado das Famílias 1 a 3.
   const modo = definition.modo ?? "completa";
+  // O crachá da etapa segue o MODO, não apenas a fase. No Fluxo 2 as fases `intro` e `demo`
+  // mostram texto para ler, então anunciá-las como DEMONSTRAÇÃO descreve algo que não acontece.
+  const etapaDeAprendizado: TutorialStage = modo === "explicativo" ? "explanation" : "demonstration";
+  /** Abertura da etapa de aprendizado, na linguagem do modo: observar (Fluxo 1) ou ler (Fluxo 2). */
+  const aberturaDaEtapa = definition.demonstrationHint
+    ?? (modo === "explicativo" ? EXPLICACAO_HINT_PADRAO : DEMONSTRATION_HINT_PADRAO);
   const stage: TutorialStage | null = phase === "intro" || phase === "demo"
-    ? "demonstration"
+    ? etapaDeAprendizado
     : "guided";
   const stageBorder = stage ? stageStyles[theme][stage].border : "border-t-transparent";
 
@@ -189,10 +222,12 @@ export function TutorialRunner({ definition, theme, onFinish }: TutorialRunnerPr
         >
         {phase === "intro" && (
           <div>
-            <StageLabel stage="demonstration" theme={theme} />
-            <h2 className={`${styles.heading} mb-1 text-xl font-bold`}>Observe como responder</h2>
+            <StageLabel stage={etapaDeAprendizado} theme={theme} />
+            <h2 className={`${styles.heading} mb-1 text-xl font-bold`}>
+              {modo === "explicativo" ? "Leia como responder" : "Observe como responder"}
+            </h2>
             <p className={`${styles.text} mb-6 text-sm`}>
-              {definition.demonstrationHint ?? DEMONSTRATION_HINT_PADRAO}
+              {aberturaDaEtapa}
             </p>
             <Button
               className={`${styles.button} h-12 w-full font-semibold`}
@@ -205,7 +240,7 @@ export function TutorialRunner({ definition, theme, onFinish }: TutorialRunnerPr
 
         {phase === "demo" && (
           <div>
-            <StageLabel stage="demonstration" theme={theme} />
+            <StageLabel stage={etapaDeAprendizado} theme={theme} />
             {/* O modo Explicação não tem título próprio: a abertura padrão já cumpre esse papel,
                 e um "Veja como funciona" acima dela seria a mesma frase duas vezes. */}
             {modo !== "explicativo" && (
@@ -215,7 +250,7 @@ export function TutorialRunner({ definition, theme, onFinish }: TutorialRunnerPr
               <>
                 {/* Abertura padrão (regra 1), as regras da atividade, e o aviso da etapa seguinte. */}
                 <p className={`${styles.text} mb-3 text-sm`}>
-                  {definition.demonstrationHint ?? DEMONSTRATION_HINT_PADRAO}
+                  {aberturaDaEtapa}
                 </p>
                 {(definition.explicacao ?? []).map((linha) => (
                   <p key={linha} className={`${styles.text} mb-2 text-sm`}>{linha}</p>

@@ -364,27 +364,39 @@ export function Semaforo({ difficulty, theme, onComplete }: SemaforoProps) {
               </AnimatePresence>
             </div>
 
-            {/* Action buttons — a posição inverte ao longo da sessão (flex-row-reverse) */}
+            {/*
+              Botões sem dica de cor — decisão dela em 09/ago/2026.
+
+              Antes: AVANÇAR era verde com 🟢 e PARAR azul com 🔴. O verde do botão repetia o verde
+              do sinal, e isso deixava o paciente responder por emparelhamento de cor em vez de
+              aplicar a regra — justamente o que o exercício mede. Pior, era assimétrico: só o
+              AVANÇAR dava a dica, então quem respondia por cor acertava o verde e hesitava no
+              vermelho, produzindo um dado que parecia controle inibitório e era artefato do botão.
+
+              Agora os dois são idênticos e a palavra é a única informação. A cor segue distinguindo
+              APENAS ativo de inativo, que é estado da interface, não resposta certa. A posição já
+              invertia pelo mesmo motivo (`swapped`); a cor era a incoerência que faltava fechar.
+            */}
             <div className={`flex gap-4 w-full max-w-xs ${swapped ? "flex-row-reverse" : ""}`}>
               <button
                 onPointerDown={onPressAdvance}
                 className={`flex-1 py-5 rounded-2xl font-bold text-base transition-transform active:scale-95 select-none ${
                   phase === "active"
-                    ? "bg-green-500 text-white shadow-lg shadow-green-900/50"
-                    : "bg-green-900 text-green-700 cursor-not-allowed"
+                    ? "bg-slate-600 text-white shadow-lg shadow-slate-900/50"
+                    : "bg-slate-800 text-slate-600 cursor-not-allowed"
                 }`}
               >
-                🟢{"\n"}AVANÇAR
+                AVANÇAR
               </button>
               <button
                 onPointerDown={onPressStop}
                 className={`flex-1 py-5 rounded-2xl font-bold text-base transition-transform active:scale-95 select-none ${
                   phase === "active"
-                    ? "bg-blue-900 text-white shadow-lg shadow-blue-950/60"
-                    : "bg-blue-950 text-blue-800 cursor-not-allowed"
+                    ? "bg-slate-600 text-white shadow-lg shadow-slate-900/50"
+                    : "bg-slate-800 text-slate-600 cursor-not-allowed"
                 }`}
               >
-                🔴{"\n"}PARAR
+                PARAR
               </button>
             </div>
           </>

@@ -100,8 +100,16 @@ tutorial (automático)           [Iniciar treino] → treino
 treino
 ```
 
-"Ver tutorial novamente" executa o tutorial **completo** (demonstração + tentativa guiada) e, ao
+"Ver tutorial novamente" executa **o mesmo fluxo que o exercício tem na primeira vez** e, ao
 terminar, o treino começa normalmente.
+
+> 📌 **Atualizado pela regra 11 (08/ago/2026).** Esta linha dizia "o tutorial completo
+> (demonstração + tentativa guiada)", o que era verdade quando só existia um fluxo. Hoje o fluxo
+> vem de `definition.modo`, e rever respeita esse modo: um exercício em `modo: "explicativo"`
+> — o Semáforo, por exemplo — mostra **explicação**, sem demonstração e sem tentativa guiada.
+> O `TutorialRunner` lê `definition.modo ?? "completa"` num ponto só, e a revisão não passa por
+> caminho diferente. **Não "corrigir" o código para bater com a frase antiga:** o código está
+> certo, era a frase que tinha envelhecido.
 
 ### O que rever o tutorial NUNCA pode fazer
 

@@ -514,9 +514,16 @@ export const semaforoTutorial = criarTutorialEstimuloContinuo<SemaforoStimulus>(
   // não menos. A regra do semáforo é simples o bastante para se enunciar — e enunciá-la ensina
   // melhor do que animá-la. Critério: a demonstração aumenta a compreensão? Aqui, não.
   modo: "explicativo",
+  // Corrigido em 09/ago/2026, na validação dela. O texto anterior dizia "clique" e "não clique",
+  // mas o exercício tem DOIS botões e sempre se responde em algum — e omitia o amarelo, que sai em
+  // 10% dos sinais (`Semaforo.tsx`, sorteio: verde 45%, vermelho 45%, amarelo 10%). O paciente
+  // podia encontrar no treino uma cor que o tutorial nunca lhe apresentou.
+  // "Clique" é o verbo único destes textos: os sete aprovados usam ele, e um teste barra os
+  // sinônimos ligados a tela ou a teclas, para o vocabulário não variar entre exercícios.
+  // (Este comentário evita de propósito as palavras barradas: a checagem varre o arquivo todo.)
   explicacao: [
-    "Quando aparecer o sinal verde, clique.",
-    "Quando aparecer o sinal vermelho, não clique.",
+    "Quando o sinal abrir em verde, clique em AVANÇAR.",
+    "Quando estiver vermelho ou amarelo, clique em PARAR.",
   ],
   guidedInstruction: "Clique em avançar somente quando o sinal abrir.",
   retryHint: "Espere o sinal verde e clique em avançar.",
