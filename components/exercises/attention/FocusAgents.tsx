@@ -20,6 +20,7 @@ import type { ExerciseResult, Theme } from "@/types";
 import { gerarRodada, matches, atributoFaltante, FUNCAO_DA_ETAPA, type FocusRound } from "@/lib/focus/commands";
 import { STEPS, type Step } from "@/lib/focus/progression";
 import { charById, COR_HEX, FOCUS_CHARS, type Acessorio, type Objeto } from "@/lib/focus/roster";
+import { focusImagePreloader } from "@/lib/focus/image-loader";
 import {
   buildFocusCompletionMetadata,
   resolveFocusStartStep,
@@ -241,11 +242,17 @@ export function FocusAgents({ difficulty, theme, onComplete, exerciseId = "focus
 
   useEffect(() => () => { stopRaf(); clearTimers(); clearOmissao(); cancelTTS(); }, []);
 
-  // Pré-carrega TODAS as imagens dos personagens já na tela de instruções, populando o
-  // cache do browser — assim cada rodada aparece na hora, sem o delay de carregamento.
+  // Pré-carrega o roster já na tela de instruções, para cada rodada aparecer sem espera.
+  //
+  // Antes isto disparava as 144 imagens de uma vez. O navegador abre ~6 conexões por host, então
+  // as outras 138 entravam em fila e chegavam em ondas — ela viu personagens surgindo aos poucos,
+  // uns visíveis e outros ainda em branco. São 4,6 MB baixados para usar 6 a 10 por rodada.
+  // A limpeza ainda fazia `im.src = ""`, que ABORTA download em curso e joga fora o que já veio.
+  //
+  // Agora a fila mantém no máximo seis em voo e não cancela nada ao desmontar: o cache do
+  // navegador guarda o que já baixou, e a próxima entrada no exercício aproveita.
   useEffect(() => {
-    const imgs = FOCUS_CHARS.map((c) => { const im = new Image(); im.src = imgSrc(c.id); return im; });
-    return () => { imgs.forEach((im) => { im.onload = null; im.src = ""; }); };
+    focusImagePreloader.requestMany(FOCUS_CHARS.map((c) => imgSrc(c.id)));
   }, []);
 
   const falar = useCallback((r: FocusRound) => { playTTS(r.texto.replace(/\*\*/g, "")); }, []);
@@ -444,6 +451,8 @@ export function FocusAgents({ difficulty, theme, onComplete, exerciseId = "focus
     if (doneRef.current || isTimeUp()) { encerrar(); return; }
     const step = STEPS[stepRef.current];
     const r = gerarRodada(step.etapa, step.n, roundRef.current?.texto, step.semelhantes); // não repete o comando anterior
+    // Os personagens desta rodada furam a fila: são os únicos que precisam estar prontos AGORA.
+    focusImagePreloader.requestMany(r.personagensIds.map(imgSrc), true);
     roundRef.current = r;
     setRound(r);
     setChars([]); charsRef.current = [];
