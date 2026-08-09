@@ -109,3 +109,49 @@ que é exatamente o que estes exercícios treinam.
 Pode pertencer à **Família 5** (escolha entre alternativas), não à 4: a resposta é escolher entre
 duas opções, e o tempo age como pressão, não como critério. Sugiro reclassificá-lo — o que reduz a
 Família 4 a seis exercícios. Também é decisão dela.
+
+---
+
+## 2. Focus Agentes — regra nova introduzida no meio da progressão
+
+**Status:** ⏸️ **AGUARDA DECISÃO DELA.** Nada implementado.
+**Data:** 09/ago/2026 · **Exercício:** `focus-agents` (Família 5)
+**Decisão dela nesta data:** o tutorial inicial cobre **apenas a cena parada**; a queda fica aqui
+registrada para ser decidida à parte. O tutorial da mecânica inicial pode ser construído.
+
+### O que o framework não representa
+
+O tutorial ensina **uma vez, no começo**. O Focus Agentes muda a regra **no meio da progressão**,
+e o paciente descobre a mudança perdendo ponto.
+
+Três estados, não dois (`lib/focus/progression.ts:69` e `FocusAgents.tsx:286`):
+
+| estado | quando | consequência de não agir |
+|---|---|---|
+| parado (`vel: 0`) | 5 primeiros degraus | nenhuma |
+| deriva | degrau 6+ | nenhuma — rebatem nas bordas e **nunca somem** |
+| **queda** | nível 2+ | o alvo **sai pela base** e conta **omissão** |
+
+A queda não acrescenta só movimento: acrescenta **uma forma nova de errar**. Até ali, errar era
+clicar no personagem errado. A partir dali, *não clicar a tempo* também é erro — e a única
+sinalização hoje é o feedback depois do prejuízo: "Passou! Toque mais rápido."
+
+### Por que não dá para resolver no tutorial inicial
+
+Na primeira vez que o paciente abre o exercício a cena está **parada**. Demonstrar queda ali ensina
+uma mecânica que ele só encontrará muito depois, e que pode nem alcançar. Ensinar cedo demais é tão
+ruim quanto não ensinar: quando a queda chegar, a demonstração já terá sido esquecida.
+
+### As saídas, e o que cada uma custa
+
+1. **Aviso no momento da introdução** — uma tela curta quando o nível 2 começa: "agora eles caem; se
+   o alvo sair por baixo, conta como erro". É **capacidade nova do framework** (ensino em dois
+   momentos) e vale para todo exercício com progressão, não só este. Merece desenho próprio.
+2. **Tutorial inicial cobrindo as duas fases** — ensina tudo cedo. Rejeitada por ela em 09/ago:
+   apresenta na primeira vez uma mecânica distante e o paciente chega lá sem lembrar.
+3. **Não ensinar** — o que existe hoje. O paciente aprende a regra perdendo ponto.
+
+### Parentesco com a Família 4
+
+É a mesma família de problema: **tempo** e **não agir**. Lá, a resposta certa às vezes é não agir;
+aqui, não agir a tempo vira erro. Se a saída 1 for adotada, convém olhar as duas juntas.
