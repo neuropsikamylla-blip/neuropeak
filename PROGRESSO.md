@@ -12,13 +12,39 @@ Spec: `docs/SPEC-FOCUS-AGENTES-20260809.md`.
 - [x] **Passo 1 — Registrar a incompatibilidade da queda.** Caso 2 em
       `docs/T1-INCOMPATIBILIDADES.md`, commit `980e0a1`.
 - [x] **Passo 2 — Escrever a spec.** Feito, com prova de aceite antes de cada tarefa.
-- [ ] **Passo 3 — Codex: preload com concorrência limitada.**
-      *Pronto quando:* teste da fila prova no máximo 6 em voo com 144 pedidos, e `npm test` verde.
-- [ ] **Passo 4 — Codex: tutorial da cena parada.**
-      *Pronto quando:* definição em Fluxo 1, sem movimento, `smallestValidUnit` derivado de
-      `STEPS`, e `npm test` verde.
-- [ ] **Passo 5 — Colheita, revisão linha a linha, aplicação e commit.** Sempre do VP.
-- [ ] **Passo 6 — Validação visual dela.**
+- [x] **Passo 3 — Preload com concorrência limitada.** ACEITO do Codex e aplicado.
+      Commit `524b817`. 673 testes passando, tsc limpo.
+- [ ] **Passo 4 — Tutorial da cena parada.** ⛔ **REJEITADO. Precisa ser refeito.**
+- [x] **Passo 5 — Colheita e adjudicação.** Colheita em
+      `colheita-focus-agentes-20260809.md`, revisada linha a linha.
+- [ ] **Passo 6 — Validação visual dela** (do preload; o tutorial não existe ainda).
+
+### Adjudicação da colheita — 09/ago/2026
+
+**Aceito:** `lib/focus/image-loader.ts` + teste. Fila com limite 6, idempotente, com promoção de
+prioridade, sem abortar download em curso. Faz o que a spec pediu.
+
+**Rejeitado: a tarefa B inteira**, por três defeitos independentes. Nada disso foi aplicado.
+
+1. **Apagou a tela "Como jogar"** do `FocusAgents.tsx` (o componente `Tutorial` interno e a fase
+   `instrucoes`). Ninguém pediu, e ela é **requisito §5 aprovado por ela** em
+   `FOCUS-AGENTES-REFORMULACAO-SPEC.md`. O Codex presumiu que o tutorial T1 substitui a tela; não
+   substitui — a tela tem o lembrete do 🔊 para reouvir o comando, que o tutorial não cobre.
+2. **Moveu `begin()` para o mount.** O cronômetro passaria a correr ao carregar a tela, não ao
+   paciente clicar em começar. Contamina tempo de resposta, que é dado clínico e decide subida de
+   nível.
+3. **`gerarRodada` chamado no topo do módulo.** Ele usa `Math.random()` (`commands.ts:61,65,293`),
+   e em Next o módulo é avaliado no servidor e no cliente: cenas diferentes, hidratação quebrada.
+
+**O Codex também não conseguiu provar nada:** o clone não tem `node_modules`, então nem `vitest`
+nem `tsc` rodaram lá. A prova do que foi aceito rodou aqui, no repositório real.
+
+**Ao redespachar a tarefa B, a spec precisa dizer explicitamente:** não remover a tela "Como
+jogar"; não tocar em `begin()` nem em nada de tempo; gerar a cena dentro do componente (ou com
+semente fixa), nunca no topo do módulo.
+
+**Pergunta aberta para ela:** a tela "Como jogar" e o tutorial T1 se sobrepõem de verdade. Não é
+absurdo que um substitua a outra — mas isso é decisão dela, não do executor.
 
 **Decisão dela nesta data:** o tutorial cobre só a cena parada. A queda fica registrada para
 decidir à parte — ela introduz uma forma nova de errar (omissão) no meio da progressão, e o
