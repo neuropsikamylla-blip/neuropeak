@@ -3,6 +3,27 @@
 > Checkpoint de contexto para continuidade entre sessões. Atualizado automaticamente.
 > 👉 Visão geral e handoff para o próximo Claude: **`ESTADO-DO-PROJETO.md`** (leia primeiro).
 
+## 🚧 EM ANDAMENTO — Focus Agentes (09/ago/2026)
+
+Aberto na validação dela. Dois trabalhos, despachados ao Codex em `gpt-5.6-terra` `high`
+(classe: trabalho estruturado e testável com prova de aceite escrita antes).
+Spec: `docs/SPEC-FOCUS-AGENTES-20260809.md`.
+
+- [x] **Passo 1 — Registrar a incompatibilidade da queda.** Caso 2 em
+      `docs/T1-INCOMPATIBILIDADES.md`, commit `980e0a1`.
+- [x] **Passo 2 — Escrever a spec.** Feito, com prova de aceite antes de cada tarefa.
+- [ ] **Passo 3 — Codex: preload com concorrência limitada.**
+      *Pronto quando:* teste da fila prova no máximo 6 em voo com 144 pedidos, e `npm test` verde.
+- [ ] **Passo 4 — Codex: tutorial da cena parada.**
+      *Pronto quando:* definição em Fluxo 1, sem movimento, `smallestValidUnit` derivado de
+      `STEPS`, e `npm test` verde.
+- [ ] **Passo 5 — Colheita, revisão linha a linha, aplicação e commit.** Sempre do VP.
+- [ ] **Passo 6 — Validação visual dela.**
+
+**Decisão dela nesta data:** o tutorial cobre só a cena parada. A queda fica registrada para
+decidir à parte — ela introduz uma forma nova de errar (omissão) no meio da progressão, e o
+framework só ensina uma vez, no começo.
+
 ## 🚧 EM ANDAMENTO — T1: conversão dos 34 por família (atualizado 07/ago/2026)
 
 **Modelo dela:** valida-se **uma vez por família**. Ela aprova **um representante** e a família
