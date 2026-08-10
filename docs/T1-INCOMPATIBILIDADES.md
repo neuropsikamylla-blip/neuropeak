@@ -114,10 +114,35 @@ Família 4 a seis exercícios. Também é decisão dela.
 
 ## 2. Focus Agentes — regra nova introduzida no meio da progressão
 
-**Status:** ⏸️ **AGUARDA DECISÃO DELA.** Nada implementado.
+**Status:** ✅ **FECHADO em 10/ago/2026 — a incompatibilidade descrita abaixo não existe.**
 **Data:** 09/ago/2026 · **Exercício:** `focus-agents` (Família 5)
-**Decisão dela nesta data:** o tutorial inicial cobre **apenas a cena parada**; a queda fica aqui
-registrada para ser decidida à parte. O tutorial da mecânica inicial pode ser construído.
+
+> ### ⚠️ Correção de 10/ago/2026 — leia antes do texto original
+>
+> **A queda não existe no exercício.** `FocusAgents.tsx:359` fixa `const cai = false`, com o
+> comentário de que a queda em linha foi removida a pedido dela e a dificuldade passou a subir por
+> nº de personagens, semelhança dos distratores, velocidade e etapa do comando. O ramo de queda
+> permanece no arquivo como código morto, e é isso que me enganou: eu li o ramo e supus que ele
+> rodava.
+>
+> **"Cena parada" também estava errado.** `vel: 0` nos degraus iniciais é o **índice** do array
+> `VEL_LEVE`, cujo valor é `0.4` px/frame (~24 px/s). Os personagens **derivam desde o degrau 1**.
+> A cena nunca está parada em momento nenhum do exercício.
+>
+> **O que de fato existe é omissão por TEMPO, desde o degrau 1.** A rodada expira
+> (`FocusAgents.tsx:417-424`) e registra omissão com a mensagem "Acabou o tempo!". Isso muda a
+> natureza do problema por inteiro: **não é uma regra nova introduzida no meio da progressão** —
+> é regra do exercício desde a primeira rodada. Logo, cabe no tutorial inicial como qualquer outra
+> mecânica, e o framework não precisa de capacidade nova nenhuma.
+>
+> **A tabela de três estados abaixo está errada** e fica apenas como registro do raciocínio.
+>
+> **O que sobra, e não é incompatibilidade:** decidir se a preparação diz ao paciente que a rodada
+> tem tempo. É escolha de texto, tratada na fatia 3 do tutorial do Focus. A regra 6 continua
+> valendo — a tentativa guiada **não** tem relógio, porque o tutorial ensina e não mede.
+>
+> **Método:** este caso foi escrito a partir da leitura do ramo de código, sem conferir se ele
+> executa. Ler o ramo não prova que ele roda — a condição que o governa é que prova.
 
 ### O que o framework não representa
 
