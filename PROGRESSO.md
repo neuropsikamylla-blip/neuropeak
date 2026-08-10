@@ -3,6 +3,31 @@
 > Checkpoint de contexto para continuidade entre sessões. Atualizado automaticamente.
 > 👉 Visão geral e handoff para o próximo Claude: **`ESTADO-DO-PROJETO.md`** (leia primeiro).
 
+## SESSÃO DE 10/ago/2026 — validação dela no Focus Agentes
+
+Ela entrou no exercício e validou. **Aprovado no geral** ("de resto parece tudo certo"), com dois
+ajustes pedidos e já feitos, e uma confirmação importante.
+
+- **Carregamento das imagens:** "melhorou, mas ainda dá para notar". A fila com limite 6 (commit
+  `524b817`) resolveu em parte. Ela decidiu **parar aqui** e reavaliar com uso real — a medição
+  das três rotas restantes está registrada mais abaixo, e o cache longo cobre da segunda visita
+  em diante.
+- **Título da tela:** "Como jogar" → **"Como realizar o exercício"**. É atividade clínica, e o
+  título precisa dizer isso ao paciente.
+- **Comando de lateralidade encurtado**, commit `7e7c615`:
+  `Toque no roxo com a bola de basquete no lado direito da imagem` (62 caracteres)
+  → `Toque no roxo com a bola de basquete à direita` (46).
+
+  ⚠️ **RISCO ASSUMIDO POR ELA, não descuido.** Sem "da imagem", o texto deixa de distinguir a
+  direita DA FIGURA da direita de QUEM OLHA. Eu levantei a ambiguidade, ela viu o aviso e optou
+  pelo texto curto. Está comentado em `lib/focus/roster.ts`, no próprio `LADO_LABEL`.
+  **Não reintroduzir "da imagem" sem falar com ela** — e, se a etapa de lateralidade der
+  resultado estranho, esta é a primeira hipótese a investigar.
+
+Nota operacional: o servidor de desenvolvimento passou a noite parado e a primeira navegação
+gerou um `prisma:error ... Closed` — conexão velha expirando, aconteceu uma vez só, não é defeito
+do código. Se reaparecer com frequência, aí sim investigar o pool.
+
 ## 🚧 EM ANDAMENTO — Focus Agentes (09/ago/2026)
 
 Aberto na validação dela. Dois trabalhos, despachados ao Codex em `gpt-5.6-terra` `high`
