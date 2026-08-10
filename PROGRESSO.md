@@ -28,23 +28,72 @@ Nota operacional: o servidor de desenvolvimento passou a noite parado e a primei
 gerou um `prisma:error ... Closed` — conexão velha expirando, aconteceu uma vez só, não é defeito
 do código. Se reaparecer com frequência, aí sim investigar o pool.
 
-## 🚧 EM ANDAMENTO — Focus Agentes (09/ago/2026)
+## 🚧 EM ANDAMENTO — Focus Agentes: tutorial T1 (10/ago/2026)
 
-Aberto na validação dela. Dois trabalhos, despachados ao Codex em `gpt-5.6-terra` `high`
-(classe: trabalho estruturado e testável com prova de aceite escrita antes).
-Spec: `docs/SPEC-FOCUS-AGENTES-20260809.md`.
+O Passo 4 da rodada de 09/ago (tutorial da cena parada) foi rejeitado e está sendo refeito. Antes de
+redespachar, três achados mudaram o desenho, e ela decidiu três pontos.
 
-- [x] **Passo 1 — Registrar a incompatibilidade da queda.** Caso 2 em
-      `docs/T1-INCOMPATIBILIDADES.md`, commit `980e0a1`.
-- [x] **Passo 2 — Escrever a spec.** Feito, com prova de aceite antes de cada tarefa.
-- [x] **Passo 3 — Preload com concorrência limitada.** ACEITO do Codex e aplicado.
-      Commit `524b817`. 673 testes passando, tsc limpo.
-- [ ] **Passo 4 — Tutorial da cena parada.** ⛔ **REJEITADO. Precisa ser refeito.**
-- [x] **Passo 5 — Colheita e adjudicação.** Colheita em
-      `colheita-focus-agentes-20260809.md`, revisada linha a linha.
-- [ ] **Passo 6 — Validação visual dela** (do preload; o tutorial não existe ainda).
+### Achados que mudaram o desenho (10/ago)
 
-### Peso das imagens do Focus Agentes — medido e PARADO por decisão dela
+1. **A tela "Como realizar o exercício" ensinava duas coisas que não existem.** (a) "nos níveis
+   seguintes passam a cair de cima" — a queda foi REMOVIDA do exercício: `FocusAgents.tsx:359` fixa
+   `const cai = false`, com o comentário de que a dificuldade sobe por nº de personagens, semelhança,
+   velocidade e etapa. (b) "Use o 🔊 para ouvir o comando de novo" — não existe botão de som na tela;
+   o único `playTTS` dispara sozinho e só no modo auditivo.
+2. **Correção de um argumento meu de 09/ago.** Na adjudicação eu rejeitei a tarefa B do Codex citando,
+   entre os motivos, que a tela tinha "o lembrete do 🔊 para reouvir o comando, que o tutorial não
+   cobre". O lembrete existe; o botão, não. Os outros dois motivos da rejeição (mover `begin()` e
+   gerar a cena no topo do módulo) continuam válidos.
+3. **A cena nunca esteve "parada".** `vel: 0` nos degraus iniciais é o ÍNDICE do array `VEL_LEVE`,
+   cujo valor é 0,4 px/frame (~24 px/s): os personagens derivam devagar desde o degrau 1. A expressão
+   "cena parada" na spec de 09/ago e no caso 2 de `docs/T1-INCOMPATIBILIDADES.md` estava errada. E o
+   caso 2 descreve uma queda que o código não tem mais — o que existe é omissão POR TEMPO, desde o
+   degrau 1 ("Acabou o tempo!"), não uma regra nova introduzida no meio da progressão. O caso 2
+   precisa ser reescrito ou fechado.
+4. **Trava arquitetural:** `focus-agents` tem `instructions: []` em
+   `app/(patient)/treino/[exercicio]/page.tsx:339`, e o `ExerciseWrapper` decide a fase inicial no
+   primeiro render, antes de `tutorialState` chegar do fetch. Sem tratar, o tutorial NUNCA apareceria.
+   A armadilha está comentada em `ExerciseWrapper.tsx:60-65` prevendo exatamente este caso, e o Focus
+   é o primeiro exercício a mordê-la. Dar instruções de preparação ao exercício resolve pelo caminho
+   normal, sem tocar na peça compartilhada dos 34.
+
+### Decisões dela (10/ago)
+
+| pergunta | decisão |
+|---|---|
+| composição das telas | **Migrar a tela interna para a preparação**: os bullets (corrigidos) viram `instructions`; o comando de exemplo e a grade com o alvo destacado viram a demonstração do tutorial. Fica preparação → tutorial → treino, igual aos outros 19 |
+| movimento na demonstração | **Com a deriva real** — réplica fiel; o ponteiro persegue o alvo até onde ele estiver |
+| bullet do 🔊 | **Remover o texto** — o comando some de propósito quando a rodada começa, e um botão de reouvir contrariaria o princípio "sem dica após a instrução" |
+
+### Plano em três fatias (cada uma termina com prova e commit)
+
+- [ ] **Fatia 1 — `DemoPointer` com perseguição opcional.** Prop nova opcional (default =
+      comportamento atual, byte-idêntico para os 19 tutoriais já aprovados) que re-mede o alvo
+      enquanto ele se move. **Pronto quando:** existe teste provando que sem a prop nada muda e que a
+      posição perseguida é o centro do alvo; `npm run test` verde e `npx tsc --noEmit` limpo.
+- [ ] **Fatia 2 — cena do Focus extraída para funções puras.** Layout inicial em grade e passo de
+      deriva saem de dentro do componente para `lib/focus/scene.ts`, com o exercício passando a
+      usá-las. Refactor sem mudança de comportamento. **Pronto quando:** as funções têm teste próprio
+      (hoje não têm nenhum), o exercício continua idêntico na tela, `npm run test` verde e `tsc` limpo.
+- [ ] **Fatia 3 — a `TutorialDefinition` e a troca de telas, num commit só.** Definição do
+      `focus-agents` (Fluxo 1, demonstração com deriva + tentativa guiada), migração dos bullets para
+      `instructions`, remoção da fase interna `instrucoes`, registro em `versions.ts` e no mapa
+      `TUTORIAIS_POR_EXERCICIO`. **Pronto quando:** a lista de aceite da spec passa inteira,
+      `npm run test` verde e `tsc` limpo.
+- [ ] **Fatia 4 — validação visual dela**, em produção, com o paciente técnico `COG25062`.
+
+Nota sobre o `begin()`: mover o cronômetro para o mount era defeito enquanto a leitura das instruções
+acontecia DENTRO do componente. Com as instruções na preparação do framework, o componente só monta
+depois de "Iniciar treino" e do tutorial — então `begin()` no mount passa a ser o lugar certo. O
+motivo da rejeição de 09/ago desaparece por causa da mudança de arquitetura, não por mudança de
+opinião.
+
+### 🗄️ Histórico da rodada de 09/ago — medição das imagens e adjudicação
+
+Registros fechados, guardados aqui porque contêm decisão dela (parar a otimização das imagens) e o
+motivo de cada rejeição da colheita.
+
+#### Peso das imagens do Focus Agentes — medido e PARADO por decisão dela
 
 Depois da fila, ela reportou: "melhorou, mas ainda dá para notar". Medi as três rotas nos 144
 arquivos reais, em vez de estimar. **Decisão dela em 09/ago: parar aqui e reavaliar com uso real.**
@@ -73,7 +122,7 @@ o movimento. Se for feita, merece spec e prova próprias.
 **Atenuante que pesou na decisão:** o `next.config.js` já dá cache longo aos assets de treino, então
 o download só acontece na primeira vez do paciente naquele exercício.
 
-### Adjudicação da colheita — 09/ago/2026
+#### Adjudicação da colheita — 09/ago/2026
 
 **Aceito:** `lib/focus/image-loader.ts` + teste. Fila com limite 6, idempotente, com promoção de
 prioridade, sem abortar download em curso. Faz o que a spec pediu.
@@ -103,6 +152,12 @@ absurdo que um substitua a outra — mas isso é decisão dela, não do executor
 **Decisão dela nesta data:** o tutorial cobre só a cena parada. A queda fica registrada para
 decidir à parte — ela introduz uma forma nova de errar (omissão) no meio da progressão, e o
 framework só ensina uma vez, no começo.
+
+**Correção em 10/ago:** um dos motivos acima estava errado. O item 1 cita "o lembrete do 🔊 para
+reouvir o comando" — o lembrete existe no texto da tela, mas o **botão não existe** no exercício:
+não há controle de som algum ali, e o único `playTTS` dispara sozinho e só no modo auditivo. Os
+outros dois motivos da rejeição (mover `begin()` e gerar a cena no topo do módulo) continuam
+válidos.
 
 ## 🚧 EM ANDAMENTO — T1: conversão dos 34 por família (atualizado 07/ago/2026)
 
