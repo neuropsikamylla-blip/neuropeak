@@ -1,24 +1,6 @@
 # As 3 ultimas especificacoes dela (automatico; a mais nova por ultimo)
 # Na retomada: ler as 3, conectar com PROGRESSO.md e git, declarar e seguir.
 
-## 10/08/2026 14:02
-<task-notification>
-<task-id>ad6d5cfeebe334da2</task-id>
-<tool-use-id>toolu_01GaQCe8HudyhPStebRmHF3a</tool-use-id>
-<output-file>/private/tmp/claude-501/-Users-kamyllahonorio-neuropeak/96bb9a4b-9318-45ec-b426-399a26293ad5/tasks/ad6d5cfeebe334da2.output</output-file>
-<status>completed</status>
-<summary>Agent "Baseline de prova e bloco EM ANDAMENTO" finished</summary>
-<note>A task-notification fires each time this agent stops with no live background children of its own. The user can send it another message and resume it, so the same task-id may notify more than once.</note>
-<result>## O QUE MUDOU
-
-`/Users/kamyllahonorio/neuropeak/PROGRESSO.md`, único arquivo tocado (o `PEDIDOS-LOG.md` modificado é do gancho, anterior a mim):
-
-- **Linhas 31–89:** bloco novo `## 🚧 EM ANDAMENTO — Focus Agentes: tutorial T1 (10/ago/2026)` — 4 achados, tabela das 3 decisões dela, 4 fatias em checkbox, nota sobre o `begin()`. Sem `---` final, conforme sua confirmação.
-- **Linhas 91–160:** as duas subseções voltaram, reinseridas do backup literal, sob o cabeçalho novo `### 🗄️ Histórico da rodada de 09/ago — medição das imagens e adjudicação` mais duas linhas explicando que são registros fechados guardados pela decisão dela e pelo motivo de cada rejeição.
-- **Linhas 156–160:** a nota `**Correção em 10/ago:**` ao final da adjudicação, logo depois do parágrafo "Decisão dela nesta data".
-
-Sobre o nível dos títulos: rebaixei as duas de `###` para `####`, para que fiquem *dentro* do cabeçalho `###`, e não irmãs dele. A verificação confirmou que esse é exatamente o padrão já usado no documento — existe um `### 🗄️ Histórico — Família 3, concluída e aprovada` com `#### Arquitetura entregue`, `#### Provas`, `#### Paciente técnico de teste` aninhados.
-
 ## COMO PROVEI
 
 Verificação por script Python comparando o arquivo atual contra a cópia pré-edição e contra o backup do trecho (`exit 0`):
@@ -47,4 +29,13 @@ Baseline de prova desta rodada, com exit code lido por `$?` (não por `PIPESTATU
 
 Backups no scratchpad, caso queira reverter qualquer coisa em um gesto: `/private/tmp/claude-501/-Users-kamyllahonorio-neuropeak/96bb9a4b-9318-45ec-b426-399a26293ad5/scratchpad/PROGRESSO.md.bak-20260810` (arquivo inteiro pré-edição) e `.../bloco-removido-09ago.md` (as 76 linhas originais do bloco de 09/ago).</result>
 <usage><subagent_tokens>46639</subagent_tokens><tool_uses>6</tool_uses><duration_ms>88496</duration_ms></usage>
+</task-notification>
+
+## 10/08/2026 15:58
+<task-notification>
+<task-id>b8p3s9ih3</task-id>
+<tool-use-id>toolu_01FACTmdvN57zfs7Jc9XHfTi</tool-use-id>
+<output-file>/private/tmp/claude-501/-Users-kamyllahonorio-neuropeak/96bb9a4b-9318-45ec-b426-399a26293ad5/tasks/b8p3s9ih3.output</output-file>
+<status>completed</status>
+<summary>Background command "Dispara o Codex nas fatias 1 e 2" completed (exit code 0)</summary>
 </task-notification>
