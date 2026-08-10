@@ -82,6 +82,30 @@ redespachar, três achados mudaram o desenho, e ela decidiu três pontos.
       `npm run test` verde e `tsc` limpo.
 - [ ] **Fatia 4 — validação visual dela**, em produção, com o paciente técnico `COG25062`.
 
+### ⛳ PRÓXIMO PASSO NA VOLTA — colheita armazenada, ANALISAR antes de qualquer tarefa nova
+
+A janela de 10/ago fechou a 95% com o Codex já entregue e **não analisado**. Regra 17: a revisão
+linha a linha é a do ciclo normal, apenas adiada — **nada se aplica sem ela**.
+
+| item | onde |
+|---|---|
+| colheita completa (diff + os 4 arquivos novos anexados) | `colheita-focus-tut-f1f2-20260810.md`, 630 linhas |
+| spec que gerou o trabalho | `docs/SPEC-FOCUS-TUTORIAL-F1F2-20260810.md` |
+| lab, **mantido de propósito** até a aplicação | `focus-tut-f1f2` (remover com `lab.sh remover focus-tut-f1f2` só depois de aplicar) |
+| linha no registro de roteamento, resultado ainda em branco | `~/codex-lab/registro-roteamento.md`, linha 14 |
+
+Disparo: `gpt-5.6-terra` `high`, exit 0. Tocou `DemoPointer.tsx` e `FocusAgents.tsx`; criou
+`lib/focus/scene.ts` + teste e `lib/tutorial/pointer-tracking.ts` + teste. **O placar dele não é
+evidência** — o lab não tem `node_modules`, então nada foi provado lá. A prova é aqui, no
+repositório real, contra o baseline medido antes de mexer: **673 testes em 47 arquivos, exit 0**, e
+`tsc --noEmit` exit 0.
+
+⚠️ Ao revisar, conferir especificamente: (a) que sem a prop nova o `DemoPointer` não agenda
+`requestAnimationFrame` — são 19 tutoriais aprovados dependendo disso; (b) que o `FocusAgents`
+continua **idêntico na tela**, porque ela validou este exercício em 10/ago e mudança em coisa
+aprovada exige verificação visual; (c) que a aleatoriedade da cena é injetada, e não chamada no
+topo do módulo — foi um dos três defeitos da rodada anterior.
+
 Nota sobre o `begin()`: mover o cronômetro para o mount era defeito enquanto a leitura das instruções
 acontecia DENTRO do componente. Com as instruções na preparação do framework, o componente só monta
 depois de "Iniciar treino" e do tutorial — então `begin()` no mount passa a ser o lugar certo. O
