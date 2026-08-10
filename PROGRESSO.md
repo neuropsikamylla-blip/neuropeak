@@ -19,6 +19,35 @@ Spec: `docs/SPEC-FOCUS-AGENTES-20260809.md`.
       `colheita-focus-agentes-20260809.md`, revisada linha a linha.
 - [ ] **Passo 6 — Validação visual dela** (do preload; o tutorial não existe ainda).
 
+### Peso das imagens do Focus Agentes — medido e PARADO por decisão dela
+
+Depois da fila, ela reportou: "melhorou, mas ainda dá para notar". Medi as três rotas nos 144
+arquivos reais, em vez de estimar. **Decisão dela em 09/ago: parar aqui e reavaliar com uso real.**
+
+| rota | resultado medido |
+|---|---|
+| hoje, 360×540 PNG | 4,26 MB |
+| tudo para WebP | 4,94 MB — **16% PIOR** |
+| menor formato de cada arquivo | 3,56 MB (−17%), ao custo de manter dois formatos |
+| 224×336 em WebP | 2,38 MB (−44%), perdendo nitidez em tela 3x |
+
+**Converter formato não resolve:** o WebP só ganhou em **9 dos 144** arquivos. PNG comprime melhor
+área plana com transparência, que é o caso da maioria destes personagens. Eu havia projetado
+"~2,2 MB" a partir de uma amostra em que escolhi as três maiores imagens — projeção errada,
+corrigida pela medição completa. **Não repetir essa estimativa.**
+
+**Cuidado ao remedir:** `canvas.toDataURL("image/png")` gera PNG sem otimização e deu 7,34 MB para
+o mesmo conteúdo reduzido — número falso, artefato da ferramenta. Serve para comparar WebP com
+WebP, não para julgar PNG.
+
+**O que de fato pesa:** as imagens são 360×540 e aparecem a 112×168. A rota tecnicamente correta é
+`next/image`, que serve tamanho e formato por aparelho. Não foi feita porque o componente anima
+manipulando os nós direto (`nodes.current`, `style.transform`), e trocar tem risco real de quebrar
+o movimento. Se for feita, merece spec e prova próprias.
+
+**Atenuante que pesou na decisão:** o `next.config.js` já dá cache longo aos assets de treino, então
+o download só acontece na primeira vez do paciente naquele exercício.
+
 ### Adjudicação da colheita — 09/ago/2026
 
 **Aceito:** `lib/focus/image-loader.ts` + teste. Fila com limite 6, idempotente, com promoção de
