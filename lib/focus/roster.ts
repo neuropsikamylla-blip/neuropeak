@@ -86,6 +86,14 @@ export const OBJ_LABEL: Record<Objeto, string> = {
   balao: "balão", guarda_chuva: "guarda-chuva", pipa: "pipa",
   skate: "skate", bola_basquete: "bola de basquete", bola_futebol: "bola de futebol",
 };
+// Decisão dela em 10/ago/2026: encurtar para "à direita" / "à esquerda". O comando com
+// lateralidade ficava longo demais na tela ("Toque no roxo com a bola de basquete no lado
+// direito da imagem").
+//
+// RISCO ASSUMIDO, não descuido: sem "da imagem" o texto não distingue mais a direita DA FIGURA
+// da direita de QUEM OLHA. Ela foi avisada e optou pelo texto curto. Não reintroduzir "da
+// imagem" sem falar com ela — e, se a etapa de lateralidade apresentar resultado estranho,
+// esta é a primeira hipótese a investigar.
 export const LADO_LABEL: Record<Lado, string> = {
-  direito: "lado direito da imagem", esquerdo: "lado esquerdo da imagem",
+  direito: "à direita", esquerdo: "à esquerda",
 };

@@ -132,7 +132,9 @@ function Tutorial({ onStart }: { onStart: () => void }) {
   return (
     <div className="fixed inset-0 z-50 flex flex-col items-center justify-center px-5 py-8 overflow-y-auto"
       style={{ background: ARENA_BG }}>
-      <h2 className="font-black text-2xl mb-1 text-center" style={{ color: TXT }}>Como jogar</h2>
+      {/* "Como realizar o exercício", e não "Como jogar": decisão dela em 10/ago/2026. É uma
+          atividade clínica, e o nome da tela precisa dizer isso ao paciente. */}
+      <h2 className="font-black text-2xl mb-1 text-center" style={{ color: TXT }}>Como realizar o exercício</h2>
       <p className="text-sm mb-4 text-center" style={{ color: TXT_SUAVE }}>Encontre o personagem indicado.</p>
 
       {/* Comando de exemplo */}

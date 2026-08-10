@@ -94,7 +94,7 @@ function textoDe(k: Criterio, etapa: Etapa): string {
   }
   if (k.objeto && k.lado) {
     const cor = k.cor ? `${COR_LABEL[k.cor]} ` : "";
-    return `Toque no ${cor}com a ${OBJ_LABEL[k.objeto]} no ${LADO_LABEL[k.lado]}`;
+    return `Toque no ${cor}com a ${OBJ_LABEL[k.objeto]} ${LADO_LABEL[k.lado]}`;
   }
 
   const complemento: string[] = [];
@@ -131,7 +131,7 @@ export function atributoFaltante(k: Criterio, escolhido: FocusChar | null): stri
     if (falta) return `A cor estava certa, mas faltava ${ACC_LABEL[falta]}.`;
   }
   if (k.objeto && escolhido.objeto !== k.objeto) return `O alvo estava com ${OBJ_LABEL[k.objeto]}.`;
-  if (k.lado && escolhido.ladoObjeto !== k.lado) return `O alvo estava com a bola no ${LADO_LABEL[k.lado]}.`;
+  if (k.lado && escolhido.ladoObjeto !== k.lado) return `O alvo estava com a bola ${LADO_LABEL[k.lado]}.`;
   if (k.semAcessorio && escolhido.acessorios.length) return "O alvo não usava nenhum acessório.";
   if (k.semAcessorios && k.semAcessorios.some((a) => escolhido.acessorios.includes(a))) {
     return `Esse tinha ${ACC_LABEL[k.semAcessorios[0]]} — o alvo não podia ter.`;
