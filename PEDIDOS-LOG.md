@@ -15104,3 +15104,6 @@ nao tem nenhum exercicio
 
 ## 11/08/2026 16:55
 [Image #1] [Image #2] acho que no tutorial os personagens podem ser menores para ficar mais uniforme no quadradinho ficar mais bonitinho... e essa linha verde esta bem larga ne?
+
+## 11/08/2026 17:02
+eu apaguei o paciente que vc tinha falado
