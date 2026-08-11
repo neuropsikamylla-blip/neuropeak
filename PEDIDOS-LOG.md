@@ -15107,3 +15107,6 @@ nao tem nenhum exercicio
 
 ## 11/08/2026 17:02
 eu apaguei o paciente que vc tinha falado
+
+## 11/08/2026 17:17
+ficou bom sim! só acho que o cursor não precisa iniciar em cima do personagem que precisa marcar ele pode iniciar no neutro sabe?

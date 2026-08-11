@@ -1,60 +1,6 @@
 # As 3 ultimas especificacoes dela (automatico; a mais nova por ultimo)
 # Na retomada: ler as 3, conectar com PROGRESSO.md e git, declarar e seguir.
 
-## COMO PROVEI
-
-### 1. Provas obrigatórias
-
-| Comando | Exit | Resultado |
-|---|---|---|
-| `npm run test` | **0** | **699 passed (699)** em **50 arquivos** |
-| `npx tsc --noEmit` | **2** | **2 erros TS18047** (acima) |
-| `npm run lint` | **0** | **0 errors, 10 warnings** |
-| `npm run build` | **1** | **Failed to compile** (mesmo erro) |
-
-**Delta de testes: +14 (685 → 699), +1 arquivo (49 → 50).** Origem exata, medida:
-- 13 do `lib/tutorial/focus-agents.test.ts` novo (contei os 13 no reporter verbose).
-- **+1** de `lib/tutorial/span-reference.test.ts` (96 testes hoje): a entrada `"lib/tutorial/definitions/focus-agents.tsx"` no array `arquivosDoFramework` do `it.each` de emoji gera um caso a mais. Confirmado por `diff` contra `fbd0e00` — as duas únicas linhas alteradas no arquivo são essa e `"focus-agents"` (esta dentro de um array de asserção, não gera teste).
-- `estimulo-continuo.test.ts` foi alterado, mas só em número/rótulo de teste existente e numa entrada de array dentro de `for` — 0 testes novos. Fecha 13+1=14.
-
-`npm run lint` e `npm run build` reportam exatamente as mesmas 10 warnings, nenhuma nova em `focus-agents.tsx`.
-
-### 2. Verificações pontuais — todas CONFIRMADAS
-
-**(a)** Tudo bate, com as linhas:
-- `data-tutorial-ok` no botão do `CommandCard`: **linha 95**.
-- Ordem dos alvos na `run()`: `setTargetSelector("[data-tutorial-ok]")` na **linha 258**, `setTargetSelector(\`[data-focus-character="${target.uid}"]\`)` na **linha 269**. Mesmo fluxo sequencial com `await` entre elas (253-280): a ordem é de execução, não só de texto.
-- `DemoPointer` **fora** de `showScene`: renderizado nas **linhas 312-321**, dentro de `{scene &amp;&amp; (...)}`. Os blocos `{scene &amp;&amp; showScene &amp;&amp; (...)}` terminam na linha 308.
-- `data-demo-pointer-start`: **exatamente 1 atributo JSX**, na **linha 294** (`&lt;span data-demo-pointer-start …&gt;`, filho direto da arena). A outra das 2 ocorrências textuais é a **linha 216**, `useState("[data-demo-pointer-start]")` — o seletor entre colchetes, esperado. `grep -nE "&lt;[^&gt;]*data-demo-pointer-start"` retorna só a 294. Não sobrou nenhum dentro do `MovingCharacters`.
-
-**(b)** Nenhum comentário JSX em posição inválida. Existem exatamente 3, todos em posição de *children*: **177** (dentro de `&lt;button&gt;`), **292-293** e **309-311** (dentro do `&lt;div&gt;` da arena). A prova forte é o tsc: 2 erros, ambos `TS18047`, zero `TS1xxx` — um `{/* */}` fora de elemento seria erro de parse e o compilador nem chegaria à checagem semântica.
-
-**(c)** `components/exercises/attention/FocusAgents.tsx`: `grep -n "function Tutorial\|const DEMO\|instrucoes"` retorna **exit 1, zero linhas** — os três sumiram. `begin()` na **linha 164**, dentro de `useEffect(() =&gt; { begin(); }, [begin])` (163-165), com `begin` vindo de `useTimedProgress()` (linha 131).
-
-**(d)** `lib/tutorial/definitions/focus-agents.tsx` está na lista `arquivosDoFramework` do teste "T1 congelada — 2. sem emoji no framework do tutorial" (**`lib/tutorial/span-reference.test.ts:607`**) e o caso passa:
-```
-✓ lib/tutorial/span-reference.test.ts &gt; T1 congelada — 2. sem emoji no framework do tutorial &gt; lib/tutorial/definitions/focus-agents.tsx não contém emoji
-```
-
-### 3. Prova por injeção — o teste prova ausência
-
-| Estado | Comando | Exit | Saída decisiva |
-|---|---|---|---|
-| 1. `setTargetSelector("[data-tutorial-ok]");` removida | `npx vitest run lib/tutorial/focus-agents.test.ts -t "demonstra o clique no OK…"` | **1** | `AssertionError: expected -1 to be greater than -1` |
-| 2. Restaurado; `z-10` → `z-30` no `CommandCard` | mesmo comando | **1** | `AssertionError: expected '"use client";…' not to match /absolute inset-0 z-30/` |
-| 3. Tudo restaurado | mesmo comando | **0** | `Tests 13 passed (13)` |
-
-O teste falha pelos dois motivos independentes — não é asserção decorativa.
-
-**Restauração verificada por hash**, não por leitura:
-- `lib/tutorial/definitions/focus-agents.tsx` = `e163de13a45477d4877ac66c391131fa0bca5333e14564f000b9555f6d1a2cdb` — idêntico ao backup pré-injeção e ao conteúdo em `HEAD`.
-- `lib/tutorial/focus-agents.test.ts` = `a1611df4dff18451c4dc82231e996eee78f3ceadc765a0617075ff15b4db8deb` — intocado.
-- `git status --porcelain` **vazio**; `git stash list` vazio; suíte completa re-rodada no estado final: **exit 0, 699/699, 50 arquivos**.
-
-Backups em `/private/tmp/claude-501/-Users-kamyllahonorio-neuropeak/96bb9a4b-9318-45ec-b426-399a26293ad5/scratchpad/orig/`; logs de cada prova em `.../scratchpad/{test,tsc,lint,build,inj1,inj2,inj3}.log`.
-
----
-
 ## O QUE NÃO FIZ
 
 - **Não commitei e não dei push.** O commit `8f8356c` é do hook de checkpoint automático dela, disparado às 16:00:51 — está no `git reflog` como `commit:` sem autoria minha, e o VP decide o que fazer com ele.
@@ -67,3 +13,6 @@ Backups em `/private/tmp/claude-501/-Users-kamyllahonorio-neuropeak/96bb9a4b-931
 
 ## 11/08/2026 16:55
 [Image #1] [Image #2] acho que no tutorial os personagens podem ser menores para ficar mais uniforme no quadradinho ficar mais bonitinho... e essa linha verde esta bem larga ne?
+
+## 11/08/2026 17:17
+ficou bom sim! só acho que o cursor não precisa iniciar em cima do personagem que precisa marcar ele pode iniciar no neutro sabe?
