@@ -79,12 +79,16 @@ redespachar, três achados mudaram o desenho, e ela decidiu três pontos.
       (hoje não têm nenhum), o exercício continua idêntico na tela, `npm run test` verde e `tsc` limpo.
       **FEITA (11/ago):** aplicada do lab `focus-tut-f1f2`, diff revisado linha a linha, com três
       consertos do VP. Provas na seção abaixo.
-- [ ] **Fatia 3 — a `TutorialDefinition` e a troca de telas, num commit só.** Definição do
+- [x] **Fatia 3 — a `TutorialDefinition` e a troca de telas, num commit só.** Definição do
       `focus-agents` (Fluxo 1, demonstração com deriva + tentativa guiada), migração dos bullets para
       `instructions`, remoção da fase interna `instrucoes`, registro em `versions.ts` e no mapa
       `TUTORIAIS_POR_EXERCICIO`. **Pronto quando:** a lista de aceite da spec passa inteira,
       `npm run test` verde e `tsc` limpo.
-- [ ] **Fatia 4 — validação visual dela**, em produção, com o paciente técnico `COG25062`.
+      **FEITA (11/ago):** aplicada do lab `focus-tut-f3`, diff revisado linha a linha, com **dois
+      consertos do VP**; commit `20d27af`, **v2.86.0**. Provas na seção abaixo.
+- [ ] **Fatia 4 — validação visual dela**, em produção, com o paciente técnico `COG25062`. **É o
+      próximo passo, em aberto.** É ela que resolve o único item que segue DESCONHECIDO por evidência
+      direta (ver o fim da seção da fatia 3).
 
 ### ✅ Fatias 1 e 2 — aplicadas e provadas (11/ago/2026)
 
@@ -162,6 +166,91 @@ acontecia DENTRO do componente. Com as instruções na preparação do framework
 depois de "Iniciar treino" e do tutorial — então `begin()` no mount passa a ser o lugar certo. O
 motivo da rejeição de 09/ago desaparece por causa da mudança de arquitetura, não por mudança de
 opinião.
+
+### ✅ Fatia 3 — aplicada e provada (11/ago/2026)
+
+Colheita de 11/ago (`gpt-5.6-sol` `high`, lab `focus-tut-f3`) revisada linha a linha e **ACEITA com
+dois consertos do VP**. Origem: `colheita-focus-tut-f3-20260811.md`. Commit `20d27af`, **v2.86.0**.
+
+#### O que entrou
+
+- **A tela interna do componente virou a tela de preparação do framework**, com os **cinco textos
+  aprovados por ela** (os da seção acima, "Decisões dela (11/ago)"). O `focus-agents` deixou de ter
+  `instructions: []` — que era a trava arquitetural do achado 4 de 10/ago.
+- **O tutorial T1 passou a existir**: `lib/tutorial/definitions/focus-agents.tsx`, Fluxo 1, com
+  demonstração **na deriva real** (o ponteiro persegue o personagem enquanto ele se move, que é o
+  que as fatias 1 e 2 existiram para permitir) e tentativa guiada.
+- **O modo auditivo recebe a preparação, mas NÃO o tutorial.** Lá o comando é falado; um tutorial
+  com o cartão escrito na tela ensinaria a tarefa errada. `focus-agents-auditivo` ganha os mesmos
+  cinco textos e fica fora do mapa `TUTORIAIS_POR_EXERCICIO`.
+
+#### Os quatro bullets antigos foram TODOS descartados
+
+Não é que dois estivessem errados: **os quatro descreviam algo que não existe no exercício de hoje**.
+Fica escrito com o motivo de cada um, porque é o tipo de coisa que volta se não ficar registrada.
+
+| bullet antigo | por que foi descartado |
+|---|---|
+| "Leia o comando (cor + acessório) que aparece antes e **fica no topo**." | O comando **não fica no topo** — foi removido da tela de busca a pedido dela, para não dar dica durante a execução (princípio "sem dica após a instrução"). |
+| "No começo eles ficam espalhados; **nos níveis seguintes passam a cair de cima**." | A **queda foi removida** do exercício: `const cai = false`. A dificuldade sobe por nº de personagens, semelhança, velocidade e etapa. |
+| "Toque só no que corresponde — com a evolução, aparecem mais personagens e **a queda acelera**." | Cita a queda de novo, que não existe mais. |
+| "**Use o 🔊** para ouvir o comando de novo." | **Não existe botão de som** na tela; o único `playTTS` dispara sozinho e só no modo auditivo. |
+
+#### Os dois consertos do VP
+
+1. **A demonstração pulava o clique no OK.** O cartão sumia sozinho e o botão ficava com aparência de
+   ativo sem responder — enquanto no exercício real **nada acontece até o paciente clicar no OK**.
+   A **regra 2 da T1** manda a demonstração executar a tarefa INTEIRA, e o OK é o primeiro gesto dela.
+   O roteiro passou a mirar `[data-tutorial-ok]` antes de `[data-focus-character=…]`, e o cartão desceu
+   para `z-10` para o cursor (`z-20`) aparecer sobre ele. Teste novo trava a **ordem por posição**, e
+   foi **provado por injeção nos dois motivos independentes**: removida a linha do alvo do OK, falha
+   (`expected -1 to be greater than -1`); devolvido o `z-30` no cartão, falha
+   (`not to match /absolute inset-0 z-30/`); restaurado, 13/13 passam.
+2. **Erro de tipo que SÓ o `build` pegou:** `scene` possivelmente nula dentro da função assíncrona do
+   roteiro. A causa é que uma **declaração de função não herda o estreitamento** do escopo externo —
+   o guard `if (!scene) return;` estava no `useEffect`, o uso estava dentro de `async function run()`.
+   Corrigido capturando a cena numa `const` antes do `run()`.
+
+#### ⚠️ LIÇÃO DE MÉTODO — teste e lint NÃO bastam quando entra componente React novo
+
+**`npm run test` e `npm run lint` passaram com o código quebrado**: 699 testes verdes, exit 0, e lint
+exit 0, sobre um arquivo que **não compilava**. O Vitest transpila sem checar tipos e o ESLint não
+type-checa. Quando entra componente React novo, **`npx tsc --noEmit` e `npm run build` são
+obrigatórios** — foi o `build` que pegou, e só ele.
+
+Pior: o commit **`8f8356c`, feito pelo hook de checkpoint automático**, chegou a capturar o código que
+não compilava. Foi corrigido em `20d27af`, mas **o episódio mostra que o checkpoint automático não é
+prova de nada — ele salva, não valida.** Nunca ler "está commitado" como "está provado".
+
+#### Divergência do emoji — para ela arbitrar quando quiser
+
+O cartão do tutorial usa **ícone desenhado** onde o exercício usa **👁**. Duas regras dela colidiram:
+a congelada **"sem emoji no framework do tutorial"** (travada em `lib/tutorial/span-reference.test.ts`)
+contra **"tutorial = réplica perfeita"**. **A congelada venceu.** Fica registrado que **o Codex fez
+essa escolha sem declarar** — a decisão em si estava certa, mas decisão de desenho se declara.
+
+#### A prova, no repositório real
+
+| comando | exit | resultado |
+|---|---|---|
+| `npm run test` | 0 | **699 testes em 50 arquivos** (baseline antes de mexer: 685 em 49) |
+| `npx tsc --noEmit` | 0 | saída vazia |
+| `npm run build` | 0 | compila |
+| `npm run lint` | 0 | **0 errors, 10 warnings** (as mesmas 10 de antes; nenhuma nasceu aqui) |
+
+**Delta de +14 testes explicado, não estimado:** **13** do arquivo novo `lib/tutorial/focus-agents.test.ts`
+e **1** do `it.each` da guarda de emoji em `span-reference.test.ts`, que ganhou uma entrada na lista de
+arquivos do framework. (O `estimulo-continuo.test.ts` também mudou — contagem 19→20 e uma entrada de
+array dentro de um `for` —, mas isso não cria teste novo.)
+
+#### O que continua DESCONHECIDO por evidência direta
+
+- **O comportamento visual em navegador:** o cursor partir do canto, subir até o OK, o clique aparecer
+  sobre o cartão e o ponteiro acompanhar o personagem em deriva. Nada disso foi visto em tela — o que
+  se provou foi a estrutura do código e a ordem no roteiro, por leitura e por injeção. **É a fatia 4.**
+- **Ressalva do gerente sobre o empilhamento:** o `z-10` do cartão contra o `z-20` do cursor foi
+  confirmado **só por leitura de classe**. Sobreposição real depende de contexto de empilhamento, e
+  **isso só a tela mostra**.
 
 ### 🗄️ Histórico da rodada de 09/ago — medição das imagens e adjudicação
 
