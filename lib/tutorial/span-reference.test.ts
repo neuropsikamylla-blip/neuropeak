@@ -904,3 +904,23 @@ describe("T1 global — 7: um só padrão visual para todos", () => {
     expect(pointers.map(String).sort()).toEqual(["tutorial/DemoPointer.tsx"]);
   });
 });
+
+describe("T1 congelada — 4. os títulos das etapas valem para os 34", () => {
+  const runner = () => source("components/exercises/tutorial/TutorialRunner.tsx");
+
+  it('a tentativa guiada se chama "Agora é sua vez", nunca "Ouça e responda"', () => {
+    // Este teste nasce de um defeito real, encontrado por ela em 11/ago/2026 na Vigilância: o
+    // título mandava OUVIR uma tarefa puramente visual. O texto era herança do Span Auditivo, o
+    // exercício de referência do framework, e vazou para os 20 tutoriais quando os visuais foram
+    // convertidos. Não havia teste — por isso ninguém viu.
+    expect(runner()).toContain("Agora é sua vez");
+    expect(runner()).not.toMatch(/Ouça e responda/);
+  });
+
+  it("os títulos das outras etapas seguem a regra 1 e a regra 5", () => {
+    expect(runner()).toContain("Veja como funciona");
+    expect(runner()).toContain("Tutorial concluído");
+    // Regra 5: o que terminou foi o tutorial inteiro, não uma de suas partes.
+    expect(runner()).not.toMatch(/Demonstração concluída|Tentativa concluída/);
+  });
+});

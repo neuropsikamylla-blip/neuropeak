@@ -300,7 +300,13 @@ export function TutorialRunner({ definition, theme, onFinish }: TutorialRunnerPr
         {phase === "guided" && (
           <div>
             <StageLabel stage="guided" theme={theme} />
-            <h2 className={`${styles.heading} mb-1 text-xl font-bold`}>Ouça e responda</h2>
+            {/* Regra 4 da T1: o título da tentativa guiada é "Agora é sua vez", para os 34.
+                Antes mandava o paciente ESCUTAR — texto herdado do Span Auditivo, que foi o
+                exercício de referência do framework. Ao converter os visuais, veio junto, e a
+                Vigilância passou a mandar ouvir uma tarefa que só se olha. Ela viu em 11/ago/2026.
+                O teste da regra 4 varre este arquivo inteiro: não reintroduza a frase antiga nem
+                em comentário. */}
+            <h2 className={`${styles.heading} mb-1 text-xl font-bold`}>Agora é sua vez</h2>
             <p className={`${styles.text} mb-5 text-sm`}>{definition.guidedInstruction}</p>
             <definition.GuidedAttempt key={guidedKey} onOutcome={handleOutcome} />
           </div>
