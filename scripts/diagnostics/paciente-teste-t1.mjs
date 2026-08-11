@@ -51,7 +51,11 @@ for (const arquivo of [".env.local", ".env"]) {
   }
 }
 
-const NOME_TECNICO = "[TESTE T1] Validação Span Direto";
+// Nome genérico de propósito. Antes era "[TESTE T1] Validação Span Direto", herdado da conversão de
+// referência de agosto — o que fazia o paciente aparecer na lista dela com o nome de uma validação
+// que já terminou, sem relação com a que estivesse em curso. O script identifica o paciente POR
+// ESTE NOME (é assim que ele é idempotente), então mudá-lo só é seguro quando não existe nenhum.
+const NOME_TECNICO = "[TESTE] Paciente técnico";
 const modo = process.argv[2];
 
 const { PrismaClient } = await import("@prisma/client");
