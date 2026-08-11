@@ -176,14 +176,14 @@ describe("Família 4 — estímulo contínuo", () => {
     expect(modoDe("vigilancia")).toBe("continua");
   });
 
-  it("registra os sete e chega aos 19 convertidos", () => {
+  it("registra os sete e preserva os 20 convertidos", () => {
     const page = source("app/(patient)/treino/[exercicio]/page.tsx");
     const register = page.slice(
       page.indexOf("const TUTORIAIS_POR_EXERCICIO"),
       page.indexOf("});", page.indexOf("const TUTORIAIS_POR_EXERCICIO")),
     );
     const converted = register.match(/(?:"[a-z-]+"|[a-z]+):\s*[a-zA-Z]+Tutorial/g) ?? [];
-    expect(converted).toHaveLength(19);
+    expect(converted).toHaveLength(20);
     for (const exerciseId of [
       "semaforo",
       "vigilancia",
@@ -236,6 +236,7 @@ describe("regra 11 consolidada — na dúvida, Fluxo 1", () => {
       "lib/tutorial/definitions/sequencia-espacial.tsx",
       "lib/tutorial/definitions/conjunto-selecao.tsx",
       "lib/tutorial/definitions/estimulo-continuo.tsx",
+      "lib/tutorial/definitions/focus-agents.tsx",
     ];
 
     for (const caminho of definicoes) {

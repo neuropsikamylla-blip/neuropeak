@@ -5,9 +5,9 @@
 // FOCUS-AGENTES-REFORMULACAO-SPEC.md. Fundação em lib/focus/*.
 //  • personagens ESPALHADOS pela tela (grade 2D, nunca em linha), com DERIVA LEVE
 //    que dá sensação de vida; rebatem na borda (não escapam); mais personagens sobe com a dificuldade
-//  • comando é ANUNCIADO antes de cada rodada E fica visível no topo
+//  • comando é ANUNCIADO antes de cada rodada e some durante a busca
 //  • etapas 1–5 por escada de 1 variável/passo · adaptativo por BLOCO de 8
-//  • imagens em proporção 2:3 (não amassam) · tutorial demonstrativo
+//  • imagens em proporção 2:3 (não amassam) · tutorial demonstrativo no framework
 // ─────────────────────────────────────────────────────────────────────────────
 
 import { useState, useRef, useEffect, useCallback, useLayoutEffect } from "react";
@@ -125,68 +125,13 @@ function AnuncioComando({ round, onOk }: { round: FocusRound; onOk: () => void }
   );
 }
 
-// ── Tutorial demonstrativo (grade com o ALVO destacado — como antes) ─────────
-const DEMO = [
-  { id: "azul_fone", alvo: true }, { id: "vermelho_base", alvo: false }, { id: "verde_oculos", alvo: false },
-  { id: "roxo_bone", alvo: false }, { id: "amarelo_coroa", alvo: false }, { id: "laranja_base", alvo: false },
-];
-function Tutorial({ onStart }: { onStart: () => void }) {
-  return (
-    <div className="fixed inset-0 z-50 flex flex-col items-center justify-center px-5 py-8 overflow-y-auto"
-      style={{ background: ARENA_BG }}>
-      {/* "Como realizar o exercício", e não "Como jogar": decisão dela em 10/ago/2026. É uma
-          atividade clínica, e o nome da tela precisa dizer isso ao paciente. */}
-      <h2 className="font-black text-2xl mb-1 text-center" style={{ color: TXT }}>Como realizar o exercício</h2>
-      <p className="text-sm mb-4 text-center" style={{ color: TXT_SUAVE }}>Encontre o personagem indicado.</p>
-
-      {/* Comando de exemplo */}
-      <div className="w-full max-w-xs rounded-2xl px-3 py-2.5 flex items-center gap-3 mb-4"
-        style={{ background: "#FFFFFF", border: `1.5px solid ${ARENA_BORDA}` }}>
-        <span className="w-6 h-6 rounded-full border-2" style={{ background: COR_HEX.azul, borderColor: ARENA_BORDA }} />
-        <span className="text-xl">🎧</span>
-        <p className="font-bold text-sm" style={{ color: TXT }}>Toque no azul com fone</p>
-      </div>
-
-      {/* Grade demo — o ALVO fica destacado com ✓ verde */}
-      <div className="w-full max-w-xs grid grid-cols-3 gap-2 mb-5">
-        {DEMO.map((d) => (
-          <div key={d.id} className="relative flex items-end justify-center" style={{ height: 116 }}>
-            {/* eslint-disable-next-line @next/next/no-img-element */}
-            <img src={imgSrc(d.id)} alt="" draggable={false}
-              style={{ width: 68, height: 102, objectFit: "contain",
-                filter: d.alvo ? "drop-shadow(0 0 8px rgba(74,222,128,.95)) drop-shadow(0 0 16px rgba(74,222,128,.7))" : "drop-shadow(0 2px 4px rgba(0,0,0,.5))" }} />
-            {d.alvo && <div className="absolute -top-1 right-2 w-6 h-6 rounded-full bg-green-500 flex items-center justify-center text-white text-xs font-black shadow-lg">✓</div>}
-          </div>
-        ))}
-      </div>
-
-      <div className="w-full max-w-xs rounded-2xl px-4 py-3 mb-6 space-y-1.5"
-        style={{ background: "#FFFFFF", border: `1px solid ${ARENA_BORDA}` }}>
-        {[
-          "Leia o comando (cor + acessório) que aparece antes e fica no topo.",
-          "No começo eles ficam espalhados; nos níveis seguintes passam a cair de cima.",
-          "Toque só no que corresponde — com a evolução, aparecem mais personagens e a queda acelera.",
-          "Use o 🔊 para ouvir o comando de novo.",
-        ].map((b, i) => (
-          <p key={i} className="text-xs leading-relaxed" style={{ color: TXT_SUAVE }}>• {b}</p>
-        ))}
-      </div>
-
-      <button onClick={onStart}
-        className="w-full max-w-xs h-12 rounded-full font-bold text-white text-base active:scale-95 transition-transform"
-        style={{ background: "linear-gradient(135deg,#2563eb,#7c3aed)" }}>Começar! 🚀</button>
-    </div>
-  );
-}
-
-
 // ── Componente principal ─────────────────────────────────────────────────────
 export function FocusAgents({ difficulty, theme, onComplete, exerciseId = "focus-agents", settings }: FocusAgentsProps) {
   const auditivo = exerciseId === "focus-agents-auditivo";
   const { begin, isTimeUp, elapsedSec, finish, progressPct } = useTimedProgress();
 
-  type Fase = "instrucoes" | "comando" | "jogando" | "feedback";
-  const [fase, setFase] = useState<Fase>("instrucoes");
+  type Fase = "comando" | "jogando" | "feedback";
+  const [fase, setFase] = useState<Fase>("comando");
   const [round, setRound] = useState<FocusRound | null>(null);
   const [chars, setChars] = useState<LiveChar[]>([]);
   const [fb, setFb] = useState<{ ok: boolean; msg: string; alvoUid: string | null } | null>(null);
@@ -215,9 +160,13 @@ export function FocusAgents({ difficulty, theme, onComplete, exerciseId = "focus
   const clearOmissao = () => { if (omissaoRef.current) { clearTimeout(omissaoRef.current); omissaoRef.current = null; } };
   const stopRaf = () => { if (rafRef.current) { cancelAnimationFrame(rafRef.current); rafRef.current = null; } };
 
+  useEffect(() => {
+    begin();
+  }, [begin]);
+
   useEffect(() => () => { stopRaf(); clearTimers(); clearOmissao(); cancelTTS(); }, []);
 
-  // Pré-carrega o roster já na tela de instruções, para cada rodada aparecer sem espera.
+  // Pré-carrega o roster na montagem, para cada rodada aparecer sem espera.
   //
   // Antes isto disparava as 144 imagens de uma vez. O navegador abre ~6 conexões por host, então
   // as outras 138 entravam em fila e chegavam em ondas — ela viu personagens surgindo aos poucos,
@@ -496,10 +445,6 @@ export function FocusAgents({ difficulty, theme, onComplete, exerciseId = "focus
   }, [fase, novaRodada]);
 
   // ── render ─────────────────────────────────────────────────────────────────
-  if (fase === "instrucoes") {
-    return <Tutorial onStart={() => { begin(); setFase("comando"); }} />;
-  }
-
   return (
     <div className="fixed inset-0 flex flex-col" style={{ background: ARENA_BG }}>
       {/* Só a barra de progresso no topo — SEM o comando visível durante a busca

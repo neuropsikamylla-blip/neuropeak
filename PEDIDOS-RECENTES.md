@@ -1,30 +1,6 @@
 # As 3 ultimas especificacoes dela (automatico; a mais nova por ultimo)
 # Na retomada: ler as 3, conectar com PROGRESSO.md e git, declarar e seguir.
 
-## 2. Os três consertos, com a linha citada
-
-**(a) DemoPointer — CONFIRMADO.** `/Users/kamyllahonorio/neuropeak/components/exercises/tutorial/DemoPointer.tsx:83`:
-```
-transitionDurationMs: pointerMoveDuration(moveDurationMs, trackTarget &amp;&amp; hasMeasuredTarget),
-```
-
-**(b) FocusAgents — CONFIRMADO.** `/Users/kamyllahonorio/neuropeak/components/exercises/attention/FocusAgents.tsx:348-349`:
-```
-live = montarCenaEspalhada(r.personagensIds, alvoIds, W, H, step.vel)
-  .map((c) =&gt; ({ ...c, uid: `c${uidSeq.current++}` }));
-```
-`uidSeq` continua no outro ramo (linha 340, ramo `cai`). Varri `uid:` no componente e em `lib/focus/`: só existem **dois** pontos de atribuição no componente (340 e 349), ambos por `uidSeq.current++`. O terceiro ponto é `lib/focus/scene.ts:94` (`uid: \`c${index}\``), que é **descartado** pelo `.map` acima — a numeração contínua da sessão é preservada.
-
-**(c) Teste dos 7 tutoriais aprovados — PROVADO POR INJEÇÃO.**
-- Estado limpo: `npx vitest run lib/tutorial/pointer-tracking.test.ts` → **exit 0**, 6 testes passando.
-- Renomeei `lib/tutorial/definitions/span-numerico.tsx` → `span-numerico-INJECAO.tsx`. Mesmo comando → **exit 1**:
-```
-FAIL  lib/tutorial/pointer-tracking.test.ts &gt; DemoPointer com perseguição opcional &gt; não habilita perseguição nos tutoriais já aprovados
-AssertionError: expected [ 'conjunto-selecao.tsx', …(6) ] to include 'span-numerico.tsx'
- ❯ lib/tutorial/pointer-tracking.test.ts:80:55
-```
-- **Rename desfeito**, com `trap` de restauração como rede. A pasta voltou aos 7 arquivos e `git status --porcelain` saiu **vazio** (repositório intacto).
-
 ## 3. Equivalência medida: `montarCenaEspalhada` × implementação antiga
 
 **0 divergências, tolerância zero, em 5 configurações.**
@@ -61,4 +37,13 @@ Nada no repositório. Nenhum arquivo do projeto foi criado, editado ou removido;
 **O QUE NÃO FIZ**
 Não commitei nem dei push (os commits presentes são do hook automático, anteriores à minha entrada). Não corrigi nada — a única edição foi no meu script de scratchpad, que faltava injetar `CHAR_H`. Não toquei em PROGRESSO.md. Não deixei o script no repositório. Não medi equivalência de `separarPersonagens`, `passoDeriva` nem `bobOffset`, nem validei visualmente o tutorial em navegador — está fora do que foi despachado, e portanto o comportamento visual em tela permanece DESCONHECIDO por evidência direta (só por equivalência numérica da geração de cena).</result>
 <usage><subagent_tokens>54378</subagent_tokens><tool_uses>30</tool_uses><duration_ms>348795</duration_ms></usage>
+</task-notification>
+
+## 11/08/2026 15:55
+<task-notification>
+<task-id>bfrug2kw5</task-id>
+<tool-use-id>toolu_01WsHQ1NR8ZezbFKQe8V88Vk</tool-use-id>
+<output-file>/private/tmp/claude-501/-Users-kamyllahonorio-neuropeak/96bb9a4b-9318-45ec-b426-399a26293ad5/tasks/bfrug2kw5.output</output-file>
+<status>completed</status>
+<summary>Background command "Dispara o Codex na fatia 3" completed (exit code 0)</summary>
 </task-notification>

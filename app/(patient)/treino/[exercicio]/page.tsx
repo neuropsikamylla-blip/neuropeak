@@ -44,6 +44,7 @@ import {
   tempoReacaoTutorial,
   vigilanciaTutorial,
 } from "@/lib/tutorial/definitions/estimulo-continuo";
+import { focusAgentsTutorial } from "@/lib/tutorial/definitions/focus-agents";
 import type { TutorialDefinition } from "@/lib/tutorial/types";
 import type { TutorialState } from "@/lib/tutorial/state";
 
@@ -73,6 +74,7 @@ const TUTORIAIS_POR_EXERCICIO: Readonly<Record<string, TutorialDefinition>> = Ob
   "dual-task": dualTaskTutorial,
   "mot": motTutorial,
   "certo-ou-errado": certoOuErradoTutorial,
+  "focus-agents": focusAgentsTutorial,
 });
 
 function ExerciseLoader() {
@@ -336,8 +338,20 @@ const EXERCISE_INSTRUCTIONS: Record<string, string[]> = {
     "Use eliminação: se souber que Bruno=Verde, marque NÃO para Ana e Carla.",
     "Confirme quando tiver certeza de todas as células!",
   ],
-  "focus-agents": [],
-  "focus-agents-auditivo": [],
+  "focus-agents": [
+    "Antes de cada rodada aparece um comando. Leia com calma e toque em OK.",
+    "O comando some quando a busca começa — guarde-o na memória.",
+    "Encontre o personagem que corresponde e clique nele.",
+    "A rodada tem tempo: se ele acabar antes de você achar, ela passa e vem a próxima.",
+    "Conforme você acerta, aparecem mais personagens e os parecidos aumentam.",
+  ],
+  "focus-agents-auditivo": [
+    "Antes de cada rodada aparece um comando. Leia com calma e toque em OK.",
+    "O comando some quando a busca começa — guarde-o na memória.",
+    "Encontre o personagem que corresponde e clique nele.",
+    "A rodada tem tempo: se ele acabar antes de você achar, ela passa e vem a próxima.",
+    "Conforme você acerta, aparecem mais personagens e os parecidos aumentam.",
+  ],
   "cubo-corsi": [
     "Um cubo 3D com 8 blocos aparecerá na tela.",
     "Alguns blocos vão acender em sequência — observe bem a ordem!",
