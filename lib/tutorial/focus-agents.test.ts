@@ -72,6 +72,24 @@ describe("Focus Agentes — tutorial T1", () => {
     expect(fonte).not.toMatch(/absolute inset-0 z-30/);
   });
 
+  it("o cursor passa pelo ponto neutro antes de procurar o personagem", () => {
+    // Validação dela em 11/ago: "o cursor não precisa iniciar em cima do personagem que precisa
+    // marcar, ele pode iniciar no neutro". A causa era estrutural, não estética — o botão OK some
+    // junto com o cartão, o cursor fica sem alvo e reaparece na posição final, pulando o
+    // deslocamento. Sem passar pelo neutro, a demonstração deixa de mostrar a busca.
+    const fonte = definition();
+    const miraOk = fonte.indexOf('setTargetSelector("[data-tutorial-ok]")');
+    const voltaAoNeutro = fonte.indexOf(
+      'setTargetSelector("[data-demo-pointer-start]")',
+      miraOk,
+    );
+    const miraPersonagem = fonte.indexOf("setTargetSelector(`[data-focus-character=");
+
+    // A ordem é o que importa: OK → neutro → personagem.
+    expect(voltaAoNeutro).toBeGreaterThan(miraOk);
+    expect(miraPersonagem).toBeGreaterThan(voltaAoNeutro);
+  });
+
   it("move a cena na demonstração e acompanha o alvo", () => {
     expect(definition()).toMatch(/\bpassoDeriva\b/);
     expect(definition()).toMatch(/\btrackTarget\b/);

@@ -295,6 +295,11 @@ function Demonstration({ onDone }: { onDone: () => void }) {
       setPointerPhase("pressing");
       if (!await wait(RITMO_TUTORIAL_APROVADO.pointerPressMs, () => cancelled)) return;
       setShowScene(true);
+      // De volta ao ponto neutro ANTES de procurar. Sem isto o cursor reaparecia já em cima do
+      // alvo: o botão OK deixa de existir quando o cartão sai, o cursor fica sem alvo e some, e
+      // volta direto na posição final — o deslocamento até o personagem, que é o que a
+      // demonstração precisa mostrar, simplesmente não acontecia. Ela viu em 11/ago.
+      setTargetSelector("[data-demo-pointer-start]");
       setPointerPhase("locating");
       if (!await wait(SCENE_ENTRY_PAUSE_MS, () => cancelled)) return;
       const target = cena.characters.find((character) => character.id === cena.round.alvoId);
