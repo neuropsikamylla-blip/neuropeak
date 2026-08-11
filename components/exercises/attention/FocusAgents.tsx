@@ -22,6 +22,16 @@ import { STEPS, type Step } from "@/lib/focus/progression";
 import { charById, COR_HEX, FOCUS_CHARS, type Acessorio, type Objeto } from "@/lib/focus/roster";
 import { focusImagePreloader } from "@/lib/focus/image-loader";
 import {
+  CHAR_H,
+  CHAR_W,
+  MARGIN,
+  bobOffset,
+  montarCenaEspalhada,
+  passoDeriva,
+  separarPersonagens,
+  type LiveChar,
+} from "@/lib/focus/scene";
+import {
   buildFocusCompletionMetadata,
   resolveFocusStartStep,
   type PorFuncao,
@@ -53,13 +63,9 @@ const ARENA_BORDA = "#DDE3EC";
 const TXT = "#0f2038";        // texto principal sobre o claro
 const TXT_SUAVE = "#5b6b82";
 
-const CHAR_W = 112;                       // ~30% maior que os 86 de antes (§2)
-const CHAR_H = Math.round(CHAR_W / 0.667); // ≈168 — proporção da arte, não amassa
 const TOUCH_PAD = 10;                     // área de toque um pouco maior (§11)
 
-const VEL_LEVE = [0.4, 0.8, 1.3, 1.9]; // px/frame — deriva; mais movimento conforme a dificuldade sobe
 const VEL_QUEDA = [1.5, 2.2, 3.0, 3.8];    // px/frame — queda do nível 2+ (sobe com a progressão)
-const MARGIN = 6;                          // margem interna da arena (não cola na borda)
 
 const ACC_EMOJI: Record<Acessorio, string> = {
   bone: "🧢", fone: "🎧", oculos: "👓", oculos_escuro: "🕶️", chapeu: "🎩",
@@ -69,10 +75,6 @@ const OBJ_EMOJI: Record<Objeto, string> = {
   balao: "🎈", guarda_chuva: "☂️", pipa: "🪁", skate: "🛹",
   bola_basquete: "🏀", bola_futebol: "⚽",
 };
-
-// bx/by = posição-base (render via left/top); x/y = posição viva; vx/vy = deriva leve;
-// ph = fase do "bob" (flutuação suave que dá vida sem deslocar de fato).
-interface LiveChar { uid: string; id: string; isTarget: boolean; hit?: boolean; bx: number; by: number; x: number; y: number; vx: number; vy: number; ph: number; }
 
 const rnd = (a: number, b: number) => a + Math.random() * (b - a);
 const shuffle = <T,>(a: T[]): T[] => { const b = [...a]; for (let i = b.length - 1; i > 0; i--) { const j = Math.floor(Math.random() * (i + 1)); [b[i], b[j]] = [b[j], b[i]]; } return b; };
@@ -177,35 +179,6 @@ function Tutorial({ onStart }: { onStart: () => void }) {
   );
 }
 
-
-// Personagem NÃO pode cobrir personagem: quando o alvo fica atrás de outro, o paciente
-// ou espera passar (o tempo de detecção infla) ou toca no de cima (conta erro) — e o
-// tempo de detecção decide a subida de nível. Empurra pelo eixo de MENOR penetração;
-// na queda só no eixo horizontal, para não bagunçar o ritmo da descida.
-function separarPersonagens(lista: LiveChar[], W: number, H: number, cai: boolean) {
-  const MIN_DX = CHAR_W * 0.80, MIN_DY = CHAR_H * 0.58;
-  for (let i = 0; i < lista.length; i++) {
-    for (let j = i + 1; j < lista.length; j++) {
-      const a = lista[i], b = lista[j];
-      const dx = b.x - a.x, dy = b.y - a.y;
-      const penX = MIN_DX - Math.abs(dx), penY = MIN_DY - Math.abs(dy);
-      if (penX <= 0 || penY <= 0) continue;                   // não se cobrem
-      if (cai || penX / MIN_DX <= penY / MIN_DY) {
-        const s = ((dx >= 0 ? 1 : -1) * Math.max(penX, 1)) / 2;
-        a.x -= s; b.x += s;
-      } else {
-        const s = ((dy >= 0 ? 1 : -1) * penY) / 2;
-        a.y -= s; b.y += s;
-      }
-      a.x = Math.max(MARGIN, Math.min(W - CHAR_W - MARGIN, a.x));
-      b.x = Math.max(MARGIN, Math.min(W - CHAR_W - MARGIN, b.x));
-      if (!cai) {
-        a.y = Math.max(MARGIN, Math.min(H - CHAR_H - MARGIN, a.y));
-        b.y = Math.max(MARGIN, Math.min(H - CHAR_H - MARGIN, b.y));
-      }
-    }
-  }
-}
 
 // ── Componente principal ─────────────────────────────────────────────────────
 export function FocusAgents({ difficulty, theme, onComplete, exerciseId = "focus-agents", settings }: FocusAgentsProps) {
@@ -321,19 +294,11 @@ export function FocusAgents({ difficulty, theme, onComplete, exerciseId = "focus
           return;
         }
       } else {
-        const maxX = W - CHAR_W - MARGIN, maxY = H - CHAR_H - MARGIN;
-        for (const c of charsRef.current) {
-          c.x += c.vx; c.y += c.vy;
-          if (c.x < MARGIN) { c.x = MARGIN; c.vx = Math.abs(c.vx); }
-          else if (c.x > maxX) { c.x = maxX; c.vx = -Math.abs(c.vx); }
-          if (c.y < MARGIN) { c.y = MARGIN; c.vy = Math.abs(c.vy); }
-          else if (c.y > maxY) { c.y = maxY; c.vy = -Math.abs(c.vy); }
-        }
-        separarPersonagens(charsRef.current, W, H, false);
+        passoDeriva(charsRef.current, W, H);
         for (const c of charsRef.current) {
           const node = nodes.current.get(c.uid);
           if (node) {
-            const bob = Math.sin(f * 0.045 + c.ph) * 3;
+            const bob = bobOffset(f, c.ph);
             node.style.transform = `translate(${c.x - c.bx}px, ${c.y - c.by + bob}px)`;
           }
         }
@@ -352,7 +317,6 @@ export function FocusAgents({ difficulty, theme, onComplete, exerciseId = "focus
     const W = dims.current.w, H = dims.current.h;
     const alvoIds = r.alvoIds?.length ? r.alvoIds : [r.alvoId];
     tocadosRef.current = new Set();
-    const n = r.personagensIds.length;
     // SEMPRE espalhado pela tela em 2D (pedido da Kamylla): ativa a busca visual.
     // A queda em linha (concentrada numa faixa) foi removida — a dificuldade sobe
     // por nº de personagens, semelhança dos distratores, velocidade e etapa do comando.
@@ -377,23 +341,12 @@ export function FocusAgents({ difficulty, theme, onComplete, exerciseId = "focus
           bx: x, by: y, x, y, vx: 0, vy: vq * rnd(0.92, 1.1), ph: 0 };
       });
     } else {
-      // ESPALHADO: grade embaralhada + deriva leve (1 personagem por célula, com jitter).
-      const vBase = VEL_LEVE[step.vel];
-      // cols/rows balanceados para ESPALHAR em 2D (várias linhas, não uma faixa só)
-      const cols = Math.max(2, Math.round(Math.sqrt(n * (W / Math.max(1, H)) / 1.4)));
-      const rows = Math.max(2, Math.ceil(n / cols));
-      const cells = shuffle(Array.from({ length: cols * rows }, (_, i) => i)).slice(0, n);
-      const cellW = W / cols, cellH = H / rows;
-      live = r.personagensIds.map((id, i) => {
-        const cell = cells[i];
-        const cx = (cell % cols) * cellW, cy = Math.floor(cell / cols) * cellH;
-        const x = Math.max(MARGIN, Math.min(W - CHAR_W - MARGIN, cx + rnd(4, Math.max(6, cellW - CHAR_W - 4))));
-        const y = Math.max(MARGIN, Math.min(H - CHAR_H - MARGIN, cy + rnd(4, Math.max(6, cellH - CHAR_H - 4))));
-        const ang = rnd(0, Math.PI * 2);
-        const sp = vBase * rnd(0.7, 1.2);
-        return { uid: `c${uidSeq.current++}`, id, isTarget: alvoIds.includes(id),
-          bx: x, by: y, x, y, vx: Math.cos(ang) * sp, vy: Math.sin(ang) * sp, ph: rnd(0, Math.PI * 2) };
-      });
+      // O uid precisa ser único NO TEMPO, não só dentro da rodada: ele é a chave da lista no React
+      // e a chave do mapa de nós que a animação usa. `montarCenaEspalhada` numera a partir do zero
+      // (é função pura e determinística, e assim precisa ser), então a numeração contínua da sessão
+      // é reposta aqui, como sempre foi.
+      live = montarCenaEspalhada(r.personagensIds, alvoIds, W, H, step.vel)
+        .map((c) => ({ ...c, uid: `c${uidSeq.current++}` }));
     }
 
     charsRef.current = live;

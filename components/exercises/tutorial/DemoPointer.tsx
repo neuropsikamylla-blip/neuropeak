@@ -1,8 +1,13 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { motion } from "framer-motion";
 import { MousePointer2 } from "lucide-react";
+import {
+  centerRelativeToContainer,
+  pointerMoveDuration,
+  shouldUpdatePointerPosition,
+} from "@/lib/tutorial/pointer-tracking";
 
 interface DemoPointerProps {
   /** Container que embrulha o alvo; o cursor é posicionado em relação a ele. */
@@ -15,11 +20,13 @@ interface DemoPointerProps {
   moveDurationMs: number;
   /** Duração do pulso inicial de localização, definida pela demonstração. */
   entryPulseDurationMs: number;
+  trackTarget?: boolean;
 }
 
-interface PointerPosition {
+interface PointerState {
   x: number;
   y: number;
+  transitionDurationMs: number;
 }
 
 const POINTER_SIZE = 44;
@@ -33,35 +40,70 @@ export function DemoPointer({
   phase,
   moveDurationMs,
   entryPulseDurationMs,
+  trackTarget = false,
 }: DemoPointerProps) {
-  const [position, setPosition] = useState<PointerPosition | null>(null);
+  const [position, setPosition] = useState<PointerState | null>(null);
+  const positionRef = useRef<PointerState | null>(null);
 
   useEffect(() => {
+    let animationFrameId: number | null = null;
+    let hasMeasuredTarget = false;
+
     function measureTarget() {
       const container = containerRef.current;
       if (!container || !targetSelector) {
-        setPosition(null);
+        if (positionRef.current !== null) {
+          positionRef.current = null;
+          setPosition(null);
+        }
         return;
       }
 
       const target = container.querySelector<HTMLElement>(targetSelector);
       if (!target) {
-        setPosition(null);
+        if (positionRef.current !== null) {
+          positionRef.current = null;
+          setPosition(null);
+        }
         return;
       }
 
       const containerRect = container.getBoundingClientRect();
       const targetRect = target.getBoundingClientRect();
-      setPosition({
-        x: targetRect.left - containerRect.left + targetRect.width / 2,
-        y: targetRect.top - containerRect.top + targetRect.height / 2,
-      });
+      const nextPosition = centerRelativeToContainer(containerRect, targetRect);
+      if (!shouldUpdatePointerPosition(positionRef.current, nextPosition)) {
+        hasMeasuredTarget = true;
+        return;
+      }
+      // A duração curta é do SEGUIMENTO, e seguimento só existe com `trackTarget`. Sem a prop, a
+      // segunda medição de um mesmo alvo só acontece em `resize` — e ali os 19 tutoriais já
+      // aprovados esperam o deslocamento no ritmo normal, não um salto.
+      const nextState = {
+        ...nextPosition,
+        transitionDurationMs: pointerMoveDuration(moveDurationMs, trackTarget && hasMeasuredTarget),
+      };
+      positionRef.current = nextState;
+      setPosition(nextState);
+      hasMeasuredTarget = true;
     }
 
     measureTarget();
     window.addEventListener("resize", measureTarget);
-    return () => window.removeEventListener("resize", measureTarget);
-  }, [containerRef, targetSelector]);
+    if (trackTarget) {
+      if (targetSelector) {
+        const track = () => {
+          measureTarget();
+          animationFrameId = requestAnimationFrame(track);
+        };
+        animationFrameId = requestAnimationFrame(track);
+      }
+    }
+
+    return () => {
+      window.removeEventListener("resize", measureTarget);
+      if (animationFrameId !== null) cancelAnimationFrame(animationFrameId);
+    };
+  }, [containerRef, moveDurationMs, targetSelector, trackTarget]);
 
   if (!targetSelector || !position) return null;
 
@@ -83,8 +125,8 @@ export function DemoPointer({
         opacity: 1,
       }}
       transition={{
-        x: { duration: moveDurationMs / 1000, ease: "easeInOut" },
-        y: { duration: moveDurationMs / 1000, ease: "easeInOut" },
+        x: { duration: position.transitionDurationMs / 1000, ease: "easeInOut" },
+        y: { duration: position.transitionDurationMs / 1000, ease: "easeInOut" },
         scale: { duration: POINTER_SCALE_TRANSITION_MS / 1000, ease: "easeInOut" },
       }}
     >
