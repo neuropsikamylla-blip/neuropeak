@@ -249,6 +249,11 @@ function Demonstration({ onDone }: { onDone: () => void }) {
   useEffect(() => {
     if (!scene) return;
     let cancelled = false;
+    // A cena é capturada aqui de propósito. O `if (!scene) return` acima não vale dentro de `run`:
+    // uma declaração de função não herda o estreitamento de tipo do escopo que a cerca, e o
+    // compilador continua vendo `scene` como possivelmente nula lá dentro. Capturar também deixa o
+    // roteiro imune a uma troca de cena no meio da execução.
+    const cena = scene;
 
     async function run() {
       // O OK é o PRIMEIRO gesto da tarefa real: sem ele a cena não aparece, e a preparação diz ao
@@ -264,7 +269,7 @@ function Demonstration({ onDone }: { onDone: () => void }) {
       setShowScene(true);
       setPointerPhase("locating");
       if (!await wait(SCENE_ENTRY_PAUSE_MS, () => cancelled)) return;
-      const target = scene.characters.find((character) => character.id === scene.round.alvoId);
+      const target = cena.characters.find((character) => character.id === cena.round.alvoId);
       if (!target) return;
       setTargetSelector(`[data-focus-character="${target.uid}"]`);
       setPointerPhase("moving");
