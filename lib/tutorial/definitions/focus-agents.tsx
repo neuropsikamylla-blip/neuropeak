@@ -20,6 +20,8 @@ import type { GuidedAttemptProps, TutorialDefinition } from "@/lib/tutorial/type
 const IMG_BASE = "/exercises/agentes-personagens";
 const IMG_VERSION = "?v=2";
 const SCENE_HEIGHT = 480;
+// Fator de encolhimento da cena do tutorial. Ver montarCenaDoTutorial.
+const SCENE_SCALE = 0.7;
 const MAX_SCENE_ATTEMPTS = 20;
 const COMMAND_PAUSE_MS = 1800;
 const SCENE_ENTRY_PAUSE_MS = 500;
@@ -145,8 +147,21 @@ function MovingCharacters({
     };
   }, [characters, height, width]);
 
+  // A cena é montada numa área ampliada e o conjunto inteiro é encolhido aqui. Escalar por CSS, e
+  // não reduzir CHAR_W/CHAR_H, mantém a geometria idêntica à do exercício — posições, distâncias e
+  // deriva continuam saindo das mesmas funções, sem uma segunda régua de tamanhos.
+  // O cursor fica FORA deste elemento de propósito: ele mede a caixa real do alvo, que já vem
+  // escalada, então aponta para o lugar certo sem precisar saber da escala.
   return (
-    <>
+    <div
+      className="absolute left-0 top-0"
+      style={{
+        width,
+        height,
+        transform: `scale(${SCENE_SCALE})`,
+        transformOrigin: "0 0",
+      }}
+    >
       {characters.map((character) => (
         <button
           key={character.uid}
@@ -170,8 +185,6 @@ function MovingCharacters({
             cursor: interactive ? "pointer" : "default",
             touchAction: "manipulation",
             zIndex: hitId === character.id ? 20 : 10,
-            boxShadow: hitId === character.id ? "0 0 0 4px #22c55e" : undefined,
-            borderRadius: hitId === character.id ? 16 : undefined,
           }}
         >
           {/* eslint-disable-next-line @next/next/no-img-element */}
@@ -186,12 +199,17 @@ function MovingCharacters({
               display: "block",
               userSelect: "none",
               pointerEvents: "none",
-              filter: "drop-shadow(0 3px 6px rgba(0,0,0,.45))",
+              // O acerto acende o personagem com o MESMO brilho verde do exercício. Antes era uma
+              // moldura retangular, que no exercício só aparece num caso raro (comando de dois
+              // alvos) — o tutorial estava ensinando um sinal que o paciente quase nunca veria.
+              filter: hitId === character.id
+                ? "drop-shadow(0 0 10px rgba(74,222,128,.95)) drop-shadow(0 0 20px rgba(74,222,128,.8))"
+                : "drop-shadow(0 3px 6px rgba(0,0,0,.45))",
             }}
           />
         </button>
       ))}
-    </>
+    </div>
   );
 }
 
@@ -203,6 +221,39 @@ function CorrectFeedback({ visible }: { visible: boolean }) {
       Correto!
     </div>
   );
+}
+
+/**
+ * Monta a cena do tutorial dentro da caixa recebida.
+ *
+ * A caixa do tutorial é bem menor que a tela cheia do exercício. Com o personagem no mesmo tamanho
+ * em pixels dos dois lados, ele ocupa uma fatia MAIOR da caixa — foi o que ela viu na validação de
+ * 11/ago ("podem ser menores para ficar mais uniforme"). Montar numa área ampliada e encolher o
+ * conjunto por CSS preserva a proporção entre personagem e arena, que é o que faz o tutorial
+ * parecer o treino em vez de uma versão apertada dele.
+ *
+ * Vive fora dos componentes para que a demonstração e a tentativa guiada não possam divergir — mas
+ * é só CHAMADA lá dentro: gerar cena no escopo do módulo quebraria a hidratação.
+ */
+function montarCenaDoTutorial(arena: HTMLDivElement): TutorialScene {
+  const width = arena.clientWidth / SCENE_SCALE;
+  const height = arena.clientHeight / SCENE_SCALE;
+
+  let round = gerarRodada(STEPS[0].etapa, STEPS[0].n, undefined, STEPS[0].semelhantes);
+  // Reamostra até haver um distrator que compartilhe atributo com o alvo: é o que faz a
+  // demonstração mostrar discriminação, e não um acerto óbvio. Com teto, nunca em laço aberto.
+  for (let attempt = 1; attempt < MAX_SCENE_ATTEMPTS && !hasSimilarDistractor(round); attempt++) {
+    round = gerarRodada(STEPS[0].etapa, STEPS[0].n, undefined, STEPS[0].semelhantes);
+  }
+
+  const characters = montarCenaEspalhada(
+    round.personagensIds,
+    [round.alvoId],
+    width,
+    height,
+    STEPS[0].vel,
+  );
+  return { round, characters, width, height };
 }
 
 function Demonstration({ onDone }: { onDone: () => void }) {
@@ -220,30 +271,7 @@ function Demonstration({ onDone }: { onDone: () => void }) {
   useEffect(() => {
     const arena = arenaRef.current;
     if (!arena) return;
-    const width = arena.clientWidth;
-    const height = arena.clientHeight;
-    let round = gerarRodada(
-      STEPS[0].etapa,
-      STEPS[0].n,
-      undefined,
-      STEPS[0].semelhantes,
-    );
-    for (let attempt = 1; attempt < MAX_SCENE_ATTEMPTS && !hasSimilarDistractor(round); attempt++) {
-      round = gerarRodada(
-        STEPS[0].etapa,
-        STEPS[0].n,
-        undefined,
-        STEPS[0].semelhantes,
-      );
-    }
-    const characters = montarCenaEspalhada(
-      round.personagensIds,
-      [round.alvoId],
-      width,
-      height,
-      STEPS[0].vel,
-    );
-    setScene({ round, characters, width, height });
+    setScene(montarCenaDoTutorial(arena));
   }, []);
 
   useEffect(() => {
@@ -338,30 +366,7 @@ function GuidedAttempt({ onOutcome }: GuidedAttemptProps) {
   useEffect(() => {
     const arena = arenaRef.current;
     if (!arena) return;
-    const width = arena.clientWidth;
-    const height = arena.clientHeight;
-    let round = gerarRodada(
-      STEPS[0].etapa,
-      STEPS[0].n,
-      undefined,
-      STEPS[0].semelhantes,
-    );
-    for (let attempt = 1; attempt < MAX_SCENE_ATTEMPTS && !hasSimilarDistractor(round); attempt++) {
-      round = gerarRodada(
-        STEPS[0].etapa,
-        STEPS[0].n,
-        undefined,
-        STEPS[0].semelhantes,
-      );
-    }
-    const characters = montarCenaEspalhada(
-      round.personagensIds,
-      [round.alvoId],
-      width,
-      height,
-      STEPS[0].vel,
-    );
-    setScene({ round, characters, width, height });
+    setScene(montarCenaDoTutorial(arena));
   }, []);
 
   function handleSelect(character: LiveChar) {

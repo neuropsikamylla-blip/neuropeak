@@ -77,6 +77,37 @@ describe("Focus Agentes — tutorial T1", () => {
     expect(definition()).toMatch(/\btrackTarget\b/);
   });
 
+  it("sinaliza o acerto com o mesmo brilho do exercício, não com moldura", () => {
+    // Validação dela em 11/ago. A moldura retangular verde só aparece no exercício num caso raro
+    // (comando de dois alvos); o sinal que o paciente vê de verdade é o personagem acender. O
+    // tutorial estava ensinando o sinal errado.
+    const brilhoDoExercicio = /drop-shadow\(0 0 10px rgba\(74,222,128,\.95\)\)/;
+    expect(definition()).toMatch(brilhoDoExercicio);
+    expect(source("components/exercises/attention/FocusAgents.tsx")).toMatch(brilhoDoExercicio);
+    expect(definition()).not.toMatch(/boxShadow:.*22c55e/);
+  });
+
+  it("encolhe a cena sem criar uma segunda régua de tamanhos", () => {
+    // Também de 11/ago: os personagens ocupavam fatia grande demais da caixa do tutorial. A cena é
+    // montada numa área ampliada e escalada por CSS — assim a proporção personagem/arena fica igual
+    // à do treino. O que NÃO pode acontecer é o tutorial redefinir o tamanho do personagem: aí
+    // passariam a existir dois tamanhos e eles divergiriam na primeira mudança.
+    const fonte = definition();
+    expect(fonte).toMatch(/transform: `scale\(\$\{SCENE_SCALE\}\)`/);
+    expect(fonte).toMatch(/clientWidth \/ SCENE_SCALE/);
+    expect(fonte).toMatch(/clientHeight \/ SCENE_SCALE/);
+    expect(fonte).not.toMatch(/(CHAR_W|CHAR_H)\s*\*/);
+    expect(fonte).not.toMatch(/const CHAR_[WH]\s*=/);
+  });
+
+  it("monta a cena num lugar só, para as duas telas não divergirem", () => {
+    // A demonstração e a tentativa guiada precisam da MESMA cena. Enquanto o bloco estava
+    // duplicado, bastava alguém corrigir um lado para o tutorial passar a ensinar outra coisa.
+    const fonte = definition();
+    expect(fonte.match(/montarCenaDoTutorial\(arena\)/g) ?? []).toHaveLength(2);
+    expect(fonte.match(/gerarRodada\(/g) ?? []).toHaveLength(2);
+  });
+
   it("não mede desempenho na tentativa guiada", () => {
     expect(definition()).not.toMatch(
       /Date\.now|performance\.now|reactionTime|score|accuracy|omiss/i,
