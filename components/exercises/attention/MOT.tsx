@@ -158,6 +158,7 @@ export function MOT({ difficulty, theme, onComplete }: MOTProps) {
   // REAIS (px) da arena — a física roda nessas coordenadas, então o clamp coincide
   // com a borda visível e a bola nunca ultrapassa (nem no celular, nem no desktop).
   const stageWrapRef = useRef<HTMLDivElement>(null);
+  const contentRef = useRef<HTMLDivElement>(null);
   const [dims, setDims] = useState(() => ({ w: 320, h: Math.round(320 * ASPECT) }));
   const dimsRef = useRef(dims);
   dimsRef.current = dims;
@@ -166,11 +167,23 @@ export function MOT({ difficulty, theme, onComplete }: MOTProps) {
     // do clientWidth de um wrapper que pode vir travado num valor pequeno.
     const compute = () => {
       const availW = Math.min(MAX_W, window.innerWidth - PAD_X);
-      const availH = Math.max(360, window.innerHeight - RESERVED_H);
-      // maior arena que cabe na LARGURA e na ALTURA da tela, mantendo a proporção;
-      // piso generoso (não fica minúscula) sem nunca estourar a largura disponível
-      let w = Math.min(availW, Math.floor(availH / ASPECT));
-      w = Math.min(availW, Math.max(Math.min(availW, 560), w));
+
+      // Quanto a tela gasta com o que NÃO é arena: cabeçalho, rótulo da fase, botão de confirmar,
+      // textos e espaçamentos. Isto era um número fixo (RESERVED_H) e estava MENOR que a realidade
+      // — daí o botão de confirmar cair abaixo da dobra e o paciente precisar rolar a página para
+      // responder (ela relatou em 11/ago/2026). Medir em vez de supor também protege contra a
+      // próxima mudança de layout: se um elemento entrar ou sair, a conta se ajusta sozinha.
+      const conteudo = contentRef.current;
+      const arena = stageWrapRef.current;
+      const cromo = conteudo && arena
+        ? conteudo.getBoundingClientRect().height - arena.getBoundingClientRect().height
+        : RESERVED_H;
+
+      const availH = Math.max(240, window.innerHeight - cromo);
+      // A ALTURA manda: a arena precisa caber na tela inteira, sem rolagem. Não há piso de largura
+      // aqui de propósito — um piso faria a arena estourar de novo em tela baixa, que é justamente
+      // o defeito que estamos corrigindo.
+      const w = Math.max(320, Math.min(availW, Math.floor(availH / ASPECT)));
       setDims({ w, h: Math.round(w * ASPECT) });
     };
     compute();
@@ -319,7 +332,7 @@ export function MOT({ difficulty, theme, onComplete }: MOTProps) {
 
   return (
     <div className={`min-h-screen overflow-y-auto ${pal.bg}`}>
-      <div className="max-w-[1480px] mx-auto px-4 py-5 flex flex-col items-center gap-4">
+      <div ref={contentRef} className="max-w-[1480px] mx-auto px-4 py-5 flex flex-col items-center gap-4">
 
         {/* Header */}
         <div style={{ width: dims.w, maxWidth: "100%" }} className={`rounded-2xl p-4 ${pal.card}`}>
