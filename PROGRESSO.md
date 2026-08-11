@@ -67,14 +67,18 @@ redespachar, três achados mudaram o desenho, e ela decidiu três pontos.
 
 ### Plano em três fatias (cada uma termina com prova e commit)
 
-- [ ] **Fatia 1 — `DemoPointer` com perseguição opcional.** Prop nova opcional (default =
+- [x] **Fatia 1 — `DemoPointer` com perseguição opcional.** Prop nova opcional (default =
       comportamento atual, byte-idêntico para os 19 tutoriais já aprovados) que re-mede o alvo
       enquanto ele se move. **Pronto quando:** existe teste provando que sem a prop nada muda e que a
       posição perseguida é o centro do alvo; `npm run test` verde e `npx tsc --noEmit` limpo.
-- [ ] **Fatia 2 — cena do Focus extraída para funções puras.** Layout inicial em grade e passo de
+      **FEITA (11/ago):** aplicada do lab `focus-tut-f1f2`, diff revisado linha a linha, com três
+      consertos do VP. Provas na seção abaixo.
+- [x] **Fatia 2 — cena do Focus extraída para funções puras.** Layout inicial em grade e passo de
       deriva saem de dentro do componente para `lib/focus/scene.ts`, com o exercício passando a
       usá-las. Refactor sem mudança de comportamento. **Pronto quando:** as funções têm teste próprio
       (hoje não têm nenhum), o exercício continua idêntico na tela, `npm run test` verde e `tsc` limpo.
+      **FEITA (11/ago):** aplicada do lab `focus-tut-f1f2`, diff revisado linha a linha, com três
+      consertos do VP. Provas na seção abaixo.
 - [ ] **Fatia 3 — a `TutorialDefinition` e a troca de telas, num commit só.** Definição do
       `focus-agents` (Fluxo 1, demonstração com deriva + tentativa guiada), migração dos bullets para
       `instructions`, remoção da fase interna `instrucoes`, registro em `versions.ts` e no mapa
@@ -82,29 +86,76 @@ redespachar, três achados mudaram o desenho, e ela decidiu três pontos.
       `npm run test` verde e `tsc` limpo.
 - [ ] **Fatia 4 — validação visual dela**, em produção, com o paciente técnico `COG25062`.
 
-### ⛳ PRÓXIMO PASSO NA VOLTA — colheita armazenada, ANALISAR antes de qualquer tarefa nova
+### ✅ Fatias 1 e 2 — aplicadas e provadas (11/ago/2026)
 
-A janela de 10/ago fechou a 95% com o Codex já entregue e **não analisado**. Regra 17: a revisão
-linha a linha é a do ciclo normal, apenas adiada — **nada se aplica sem ela**.
+Colheita de 10/ago (`gpt-5.6-terra` `high`, lab `focus-tut-f1f2`) revisada linha a linha e
+**ACEITA**. Origem: `colheita-focus-tut-f1f2-20260810.md` (630 linhas) e
+`docs/SPEC-FOCUS-TUTORIAL-F1F2-20260810.md`. O **lab `focus-tut-f1f2` fica mantido até o fim da
+fatia 3** (remover com `lab.sh remover focus-tut-f1f2` só depois disso).
 
-| item | onde |
-|---|---|
-| colheita completa (diff + os 4 arquivos novos anexados) | `colheita-focus-tut-f1f2-20260810.md`, 630 linhas |
-| spec que gerou o trabalho | `docs/SPEC-FOCUS-TUTORIAL-F1F2-20260810.md` |
-| lab, **mantido de propósito** até a aplicação | `focus-tut-f1f2` (remover com `lab.sh remover focus-tut-f1f2` só depois de aplicar) |
-| linha no registro de roteamento, resultado ainda em branco | `~/codex-lab/registro-roteamento.md`, linha 14 |
+#### Os três consertos do VP sobre a entrega do Codex
 
-Disparo: `gpt-5.6-terra` `high`, exit 0. Tocou `DemoPointer.tsx` e `FocusAgents.tsx`; criou
-`lib/focus/scene.ts` + teste e `lib/tutorial/pointer-tracking.ts` + teste. **O placar dele não é
-evidência** — o lab não tem `node_modules`, então nada foi provado lá. A prova é aqui, no
-repositório real, contra o baseline medido antes de mexer: **673 testes em 47 arquivos, exit 0**, e
-`tsc --noEmit` exit 0.
+O Codex acertou o essencial; estes são ajustes, não reescrita.
 
-⚠️ Ao revisar, conferir especificamente: (a) que sem a prop nova o `DemoPointer` não agenda
-`requestAnimationFrame` — são 19 tutoriais aprovados dependendo disso; (b) que o `FocusAgents`
-continua **idêntico na tela**, porque ela validou este exercício em 10/ago e mudança em coisa
-aprovada exige verificação visual; (c) que a aleatoriedade da cena é injetada, e não chamada no
-topo do módulo — foi um dos três defeitos da rodada anterior.
+1. **A duração curta do ponteiro vazava para os 19 tutoriais aprovados.** A segunda medição de um
+   alvo usava 120 ms mesmo sem perseguição, o que num `resize` faria o ponteiro **saltar** em vez de
+   deslocar. Agora a duração curta exige `trackTarget`.
+2. **O `uid` do personagem deixou de ser único no tempo.** A função pura numera do zero a cada
+   rodada — e deve mesmo, para ser determinística —, mas esse número é a chave da lista no React e do
+   mapa de nós da animação. A numeração contínua foi reposta no componente.
+3. **Um teste do VP deixava armadilha:** proibia a prop nova em toda a pasta
+   `lib/tutorial/definitions/`, inclusive no tutorial do Focus, que existe justamente para usá-la.
+   Virou lista explícita dos 7 arquivos aprovados, e falha também se algum deles sumir da pasta.
+
+#### A prova, no repositório real
+
+| comando | exit | resultado |
+|---|---|---|
+| `npm run test` | 0 | **685 testes em 49 arquivos** (baseline antes de mexer: 673 em 47) |
+| `npx tsc --noEmit` | 0 | saída vazia |
+| `npm run lint` | 0 | **0 errors, 10 warnings** |
+
+⚠️ **O `CLAUDE.md` diz "5 warnings" e está defasado** — o número real hoje é **10**, e **nenhum deles
+nasceu nesta rodada**: os 2 de `FocusAgents.tsx` foram provados **pré-existentes** rodando o eslint
+com a config do projeto sobre a versão de `106c7db` (mesmos 2 warnings, nas linhas 344 e 426, que
+hoje são 309 e 379 porque o arquivo encolheu 47 linhas); `DemoPointer.tsx` não emite nenhum; os
+outros 8 estão em arquivos que esta rodada não tocou.
+
+O teste dos 7 tutoriais aprovados foi provado **por injeção**, que é a regra da casa: renomeando
+`span-numerico.tsx` o teste falha (exit 1, `expected [...] to include 'span-numerico.tsx'`) e volta a
+passar ao desfazer.
+
+#### Equivalência da cena — medida, não suposta
+
+`montarCenaEspalhada` comparada contra a implementação antiga **recortada de
+`git show 106c7db:components/exercises/attention/FocusAgents.tsx`** (recorte do texto do próprio git,
+não transcrição à mão), alimentando as duas com a **mesma sequência determinística** no lugar de
+`Math.random`: **tolerância zero, 5 configurações** (7/9/11 personagens; arenas de 480×320 a
+1600×400; índices de velocidade 0 a 3), **450 campos comparados, 0 divergências**, com **controle
+negativo** confirmando que a comparação não é vacuamente verdadeira (sementes diferentes divergem).
+É isto que sustenta "o exercício continua idêntico na tela".
+
+#### O que continua DESCONHECIDO
+
+- **O comportamento visual em navegador.** Só a validação dela resolve — é a fatia 4.
+- **A equivalência de `separarPersonagens`, `passoDeriva` e `bobOffset` não foi medida** — apenas a
+  de `montarCenaEspalhada`.
+
+### Decisões dela (11/ago)
+
+**A preparação avisa sobre o tempo, sem dramatizar.**
+
+**Achado novo:** os quatro bullets da tela atual têm problema, **não dois** — o achado 1 de 10/ago
+está incompleto. Além da queda e do 🔊, o primeiro bullet afirma que o comando "fica no topo", e ele
+**não fica**: foi removido da tela de busca a pedido dela, para não dar dica durante a execução.
+
+Os cinco textos aprovados por ela, a serem usados como `instructions` do `focus-agents` na fatia 3:
+
+1. Antes de cada rodada aparece um comando. Leia com calma e toque em OK.
+2. O comando some quando a busca começa — guarde-o na memória.
+3. Encontre o personagem que corresponde e clique nele.
+4. A rodada tem tempo: se ele acabar antes de você achar, ela passa e vem a próxima.
+5. Conforme você acerta, aparecem mais personagens e os parecidos aumentam.
 
 Nota sobre o `begin()`: mover o cronômetro para o mount era defeito enquanto a leitura das instruções
 acontecia DENTRO do componente. Com as instruções na preparação do framework, o componente só monta
