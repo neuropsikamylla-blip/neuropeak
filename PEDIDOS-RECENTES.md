@@ -1,14 +1,6 @@
 # As 3 ultimas especificacoes dela (automatico; a mais nova por ultimo)
 # Na retomada: ler as 3, conectar com PROGRESSO.md e git, declarar e seguir.
 
-## O QUE MUDOU
-
-Nada. Nenhuma alteração permanente foi feita por mim. As duas edições de injeção foram desfeitas e verificadas por hash SHA-256.
-
-**Ressalva importante, que não é obra minha:** o hook de checkpoint automático dela commitou sozinho às **16:00:51**, criando `8f8356c checkpoint automatico (salvamento de seguranca)` com os 9 arquivos da fatia 3 (incl. `colheita-focus-tut-f3-20260811.md`). Não fui eu — `git reflog` não tem nenhum commit meu. Verifiquei que esse commit capturou o estado **original correto**, anterior às minhas injeções: `git show HEAD:lib/tutorial/definitions/focus-agents.tsx | shasum -a 256` = `e163de13…`, idêntico ao backup que tirei antes de tocar em qualquer coisa. **Nenhuma injeção vazou para o histórico.** Mas fica o alerta: o commit `8f8356c` contém código que não compila.
-
----
-
 ## COMO PROVEI
 
 ### 1. Provas obrigatórias
@@ -72,3 +64,6 @@ Backups em `/private/tmp/claude-501/-Users-kamyllahonorio-neuropeak/96bb9a4b-931
 - Não investiguei se o mesmo padrão `function run()` sem narrowing existe em outras definitions do framework — fora do despacho.</result>
 <usage><subagent_tokens>62357</subagent_tokens><tool_uses>32</tool_uses><duration_ms>356152</duration_ms></usage>
 </task-notification>
+
+## 11/08/2026 16:55
+[Image #1] [Image #2] acho que no tutorial os personagens podem ser menores para ficar mais uniforme no quadradinho ficar mais bonitinho... e essa linha verde esta bem larga ne?

@@ -15101,3 +15101,6 @@ COG25062 nao tenho esse paciente
 
 ## 11/08/2026 16:53
 nao tem nenhum exercicio
+
+## 11/08/2026 16:55
+[Image #1] [Image #2] acho que no tutorial os personagens podem ser menores para ficar mais uniforme no quadradinho ficar mais bonitinho... e essa linha verde esta bem larga ne?
