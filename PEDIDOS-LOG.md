@@ -14883,3 +14883,91 @@ Backups no scratchpad, caso queira reverter qualquer coisa em um gesto: `/privat
 
 ## 11/08/2026 15:12
 continuar
+
+## 11/08/2026 15:21
+<task-notification>
+<task-id>a6f9a4a25b0ae46c1</task-id>
+<tool-use-id>toolu_011KiYi7b1qAoN2RMzHSPhXn</tool-use-id>
+<output-file>/private/tmp/claude-501/-Users-kamyllahonorio-neuropeak/96bb9a4b-9318-45ec-b426-399a26293ad5/tasks/a6f9a4a25b0ae46c1.output</output-file>
+<status>completed</status>
+<summary>Agent "Prova das fatias 1 e 2" finished</summary>
+<note>A task-notification fires each time this agent stops with no live background children of its own. The user can send it another message and resume it, so the same task-id may notify more than once.</note>
+<result>Prova concluída. Nenhuma divergência encontrada.
+
+## 1. Provas obrigatórias
+
+| Comando | Exit code | Resultado |
+|---|---|---|
+| `npm run test` | **0** | **685 testes passando em 49 arquivos** (0 falhas) |
+| `npx tsc --noEmit` | **0** | saída vazia |
+| `npm run lint` | **0** | **10 warnings, 0 errors** |
+
+**Contra o baseline de ontem (673 testes / 47 arquivos):** subiu **+12 testes e +2 arquivos**. A conta fecha exatamente com os arquivos novos: `lib/focus/scene.test.ts` = 6 testes, `lib/tutorial/pointer-tracking.test.ts` = 6 testes (rodados isoladamente, ambos exit 0). Arquivos de teste rastreados pelo git: 49.
+
+**Sobre o lint — o número 5 do CLAUDE.md está defasado, e não houve regressão nesta rodada.** Provei, não supus:
+- Os únicos componentes tocados desde `106c7db` são `FocusAgents.tsx` e `DemoPointer.tsx` (`git diff --stat 106c7db..HEAD`).
+- `DemoPointer.tsx` não aparece na saída do lint: 0 warnings.
+- Os 2 warnings de `FocusAgents.tsx` (linhas 309 e 379, `missing dependency: 'registra'`) **já existiam antes**: rodei `npx eslint` com a config do projeto sobre a cópia da versão de `106c7db` (fora do repo) e ele emitiu os mesmos 2 warnings, nas linhas 344 e 426 — as mesmas posições, deslocadas porque o arquivo encolheu 47 linhas.
+- Os outros 8 warnings estão em arquivos não tocados (AssetImage, Vigilancia ×2, EstacionamentoLogico, Labirinto, CaminhosMeta, MatrizEspacial, PadroesRotacao).
+
+## 2. Os três consertos, com a linha citada
+
+**(a) DemoPointer — CONFIRMADO.** `/Users/kamyllahonorio/neuropeak/components/exercises/tutorial/DemoPointer.tsx:83`:
+```
+transitionDurationMs: pointerMoveDuration(moveDurationMs, trackTarget &amp;&amp; hasMeasuredTarget),
+```
+
+**(b) FocusAgents — CONFIRMADO.** `/Users/kamyllahonorio/neuropeak/components/exercises/attention/FocusAgents.tsx:348-349`:
+```
+live = montarCenaEspalhada(r.personagensIds, alvoIds, W, H, step.vel)
+  .map((c) =&gt; ({ ...c, uid: `c${uidSeq.current++}` }));
+```
+`uidSeq` continua no outro ramo (linha 340, ramo `cai`). Varri `uid:` no componente e em `lib/focus/`: só existem **dois** pontos de atribuição no componente (340 e 349), ambos por `uidSeq.current++`. O terceiro ponto é `lib/focus/scene.ts:94` (`uid: \`c${index}\``), que é **descartado** pelo `.map` acima — a numeração contínua da sessão é preservada.
+
+**(c) Teste dos 7 tutoriais aprovados — PROVADO POR INJEÇÃO.**
+- Estado limpo: `npx vitest run lib/tutorial/pointer-tracking.test.ts` → **exit 0**, 6 testes passando.
+- Renomeei `lib/tutorial/definitions/span-numerico.tsx` → `span-numerico-INJECAO.tsx`. Mesmo comando → **exit 1**:
+```
+FAIL  lib/tutorial/pointer-tracking.test.ts &gt; DemoPointer com perseguição opcional &gt; não habilita perseguição nos tutoriais já aprovados
+AssertionError: expected [ 'conjunto-selecao.tsx', …(6) ] to include 'span-numerico.tsx'
+ ❯ lib/tutorial/pointer-tracking.test.ts:80:55
+```
+- **Rename desfeito**, com `trap` de restauração como rede. A pasta voltou aos 7 arquivos e `git status --porcelain` saiu **vazio** (repositório intacto).
+
+## 3. Equivalência medida: `montarCenaEspalhada` × implementação antiga
+
+**0 divergências, tolerância zero, em 5 configurações.**
+
+Método (script temporário em `/private/tmp/claude-501/-Users-kamyllahonorio-neuropeak/96bb9a4b-9318-45ec-b426-399a26293ad5/scratchpad/equiv.js`, fora do repositório): o bloco antigo **não foi transcrito à mão** — é recortado do texto de `git show 106c7db:components/exercises/attention/FocusAgents.tsx` e avaliado com `new Function`, recebendo os helpers `rnd`/`shuffle` verbatim das linhas 77-78 do arquivo antigo. Antes de comparar, o script aborta se `CHAR_W`/`CHAR_H`/`MARGIN`/`VEL_LEVE` divergirem (são iguais). Ambas as implementações recebem a **mesma** sequência determinística (xorshift32; `Math.random` é substituído no antigo, injetado por parâmetro no novo). Comparei `id, isTarget, bx, by, x, y, vx, vy, ph` **e o `uid`** (replicando o `.map` do componente).
+
+| Configuração | Resultado |
+|---|---|
+| 7 personagens / 900×600 / vel 0 | OK — 70 campos idênticos |
+| 9 personagens / 1200×700 / vel 2 | OK — 90 campos idênticos |
+| 11 personagens / 700×900 / vel 3 | OK — 110 campos idênticos |
+| 11 personagens / 480×320 (arena mínima) / vel 1 | OK — 110 campos idênticos |
+| 7 personagens / 1600×400 (faixa larga) / vel 3 | OK — 70 campos idênticos |
+
+450 campos comparados, `TOTAL DE DIVERGENCIAS: 0`, exit 0. Incluí **controle negativo**: duas sementes diferentes divergem, como esperado — a comparação não é vacuamente verdadeira.
+
+Uma amostra, para o registro (config 1, personagem 0) — antigo e novo bit a bit iguais:
+`bx=757.0384411849082, by=215.63258178904653, vx=-0.0645244091502285, vy=-0.3341986006690152, ph=6.207932321344954`.
+
+## Ponto que exige sua decisão (não corrigi nada)
+
+**O trabalho já está commitado** — não por mim. `git log` mostra `bdfac1e` e `51f8fff` ("checkpoint automatico (salvamento de seguranca)") sobre `122bd03`, e a árvore está limpa. Foi o hook de checkpoint automático. Registro porque o despacho dizia "não commite" e o estado do repositório pode surpreender você: as mudanças não estão mais pendentes.
+
+Uma nota de escopo, não defeito: a equivalência que medi cobre `montarCenaEspalhada`. As outras funções extraídas para `lib/focus/scene.ts` (`separarPersonagens`, `passoDeriva`, `bobOffset`) não foram comparadas contra a versão antiga — não estavam no despacho. Se quiser essa cobertura, é um passo curto a mais.
+
+---
+
+**O QUE MUDOU**
+Nada no repositório. Nenhum arquivo do projeto foi criado, editado ou removido; `git status --porcelain` saiu vazio ao final. O rename de `span-numerico.tsx` foi temporário e desfeito. Tudo que escrevi vive no scratchpad: `equiv.js`, `old-FocusAgents.tsx`, `compiled/scene.js`, `test-out.txt`, `lint-out.txt`, `inj.txt`.
+
+**COMO PROVEI**
+`npm run test` exit 0 (685/685, 49 arquivos); `npx tsc --noEmit` exit 0 sem saída; `npm run lint` exit 0 (10 warnings, 0 errors), com os 2 warnings do FocusAgents provados pré-existentes por execução do eslint sobre a versão de `106c7db`. Consertos (a) e (b) verificados por leitura das linhas 83 e 348-349, com varredura completa de `uid:`. Conserto (c) provado por injeção: exit 0 limpo → exit 1 com o arquivo renomeado (erro literal transcrito acima) → exit 0 e árvore limpa após restaurar. Equivalência provada por script comparando a função extraída com o bloco recortado do git, mesma sequência determinística, tolerância 0, 5 configurações, 450 campos, 0 divergências, com controle negativo.
+
+**O QUE NÃO FIZ**
+Não commitei nem dei push (os commits presentes são do hook automático, anteriores à minha entrada). Não corrigi nada — a única edição foi no meu script de scratchpad, que faltava injetar `CHAR_H`. Não toquei em PROGRESSO.md. Não deixei o script no repositório. Não medi equivalência de `separarPersonagens`, `passoDeriva` nem `bobOffset`, nem validei visualmente o tutorial em navegador — está fora do que foi despachado, e portanto o comportamento visual em tela permanece DESCONHECIDO por evidência direta (só por equivalência numérica da geração de cena).</result>
+<usage><subagent_tokens>54378</subagent_tokens><tool_uses>30</tool_uses><duration_ms>348795</duration_ms></usage>
+</task-notification>
