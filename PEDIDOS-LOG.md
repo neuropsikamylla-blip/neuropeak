@@ -15098,3 +15098,6 @@ o que faço agora?
 
 ## 11/08/2026 16:38
 COG25062 nao tenho esse paciente
+
+## 11/08/2026 16:53
+nao tem nenhum exercicio
