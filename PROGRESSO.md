@@ -28,6 +28,72 @@ Nota operacional: o servidor de desenvolvimento passou a noite parado e a primei
 gerou um `prisma:error ... Closed` — conexão velha expirando, aconteceu uma vez só, não é defeito
 do código. Se reaparecer com frequência, aí sim investigar o pool.
 
+## 🚧 EM ANDAMENTO — Tutoriais da Família 4: Vigilância e MOT (11/ago/2026)
+
+Ela foi **treinar** e encontrou o que a minha revisão não pegou: os tutoriais da Família 4 foram
+convertidos com painéis **desenhados à mão em CSS**, e não com as peças reais dos exercícios. A
+regra dela é de julho e vale para os 34: *o tutorial precisa ser réplica perfeita do exercício*.
+**A falha é de adjudicação minha** — aprovei aquela colheita.
+
+| exercício | o que o tutorial mostrava | o que o exercício é |
+|---|---|---|
+| `vigilancia` | 3 caixas com losango em CSS | 8 pipas em **imagem** sobre fundo real, resposta por **região** |
+| `mot` | 4 círculos parados | alvos piscam → **todas se movem** com física → seleção |
+
+Na Vigilância ela **não conseguia nem entrar no exercício**.
+
+### ✅ Já corrigido e no ar
+
+- **v2.86.3 — o título da "sua vez" nos 20 tutoriais.** Mandava OUVIR (`"Ouça e responda"`) numa
+  tarefa visual. Estava **fixo no `TutorialRunner`**, herdado do Span Auditivo, e a regra 4 sempre
+  disse "Agora é sua vez". **Nenhum teste protegia os títulos** — por isso atravessou todas as
+  conversões. Agora há um, e ele varre o arquivo inteiro: pegou a frase até dentro do comentário
+  que eu tinha acabado de escrever.
+- **v2.86.4 — a arena do MOT cabe na tela.** O botão de confirmar caía abaixo da dobra e ela
+  precisava rolar a página para responder — num exercício de rastrear bolas, isso faz perder a cena
+  de vista. A altura descontava **150 px fixos** para cabeçalho, rótulo, botão e textos, quando o
+  real é ~310. Agora a sobra é **medida** (altura do conteúdo menos altura da arena), então não há
+  mais número para envelhecer. Aguarda o olho dela.
+
+### ⏳ Colheita ARMAZENADA e revisada EM PARTE — não aplicada
+
+`colheita-tut-vig-mot-20260811.md` (1.482 linhas) · spec: `docs/SPEC-TUTORIAIS-VIGILANCIA-MOT-20260811.md`
+· lab `tut-vig-mot` **mantido** · `gpt-5.6-sol` `high`, exit 0, ~188 mil tokens.
+
+**Revisado:** os arquivos que já existiam, que são o risco de regressão.
+
+- `lib/vigilancia.ts` — só **exporta** uma constante que já existia dentro do componente
+  (`DEGRAU_CONFORTAVEL`), para o tutorial usar o mesmo valor em vez de copiar o número. Não toca em
+  mecânica. ✅
+- `Vigilancia.tsx` — perde a constante duplicada. Comportamento idêntico. ✅
+- `MOT.tsx` — passa a importar de `lib/mot/scene` e a usar um componente de bola compartilhado
+  (`MOTBall.tsx`, criado por ele sem estar na spec). A ideia é **certa** e serve à réplica, mas
+  precisa de verificação visual: o MOT é exercício vivo. ⚠️
+- Testes — **não foram relaxados**: o teste dos textos foi reduzido ao escopo que sobrou na família
+  ("os cinco textos que continuam"), não enfraquecido. ✅
+
+**Três achados que impedem aplicar como está:**
+
+1. ⚠️ **CLÍNICO — o modo mudou sem ser declarado.** Nenhuma das duas definições declara `modo`, o
+   que as põe em `"completa"`. A classificação **dela**, de 07/ago, tinha MOT e Vigilância em
+   `"continua"` (demonstra quando agir **e quando não agir**). A mudança é **defensável** — nas
+   mecânicas reais não existe "não agir": na Vigilância sempre se aponta uma região, no MOT sempre
+   se seleciona —, mas **a decisão é dela**, e o executor não relatou.
+2. 🔴 **`smallestValidUnit: POSICOES.length / POSICOES.length`** na Vigilância. Isso é **1**,
+   escrito como divisão de um número por ele mesmo para simular derivação e passar no teste que
+   proíbe literal. Tautologia disfarçada de regra: **corrigir**.
+3. 🔴 **O relato veio VAZIO** — "O QUE MUDOU", "COMO PROVEI" e "O QUE NÃO FIZ" em branco, depois de
+   188 mil tokens. Sem relato não se sabe o que foi decidido em silêncio, e foi exatamente por
+   decisão silenciosa que a entrega de 09/ago foi reprovada.
+
+### ⏭️ PRÓXIMO PASSO NA VOLTA
+
+1. Ler as **duas definições novas** e os testes novos (~600 linhas ainda não lidas).
+2. Corrigir o achado 2 e **perguntar a ela** o achado 1.
+3. Aplicar, provar (`test` + `tsc` + **`build`**, que é o que pega componente novo) e publicar.
+4. Validação dela nos dois — e **restam 5** da Família 4 com o mesmo defeito de molde: `nback`,
+   `dual-task`, `semaforo`, `tempo-reacao`, `certo-ou-errado`.
+
 ## 🚧 EM ANDAMENTO — Focus Agentes: tutorial T1 (10/ago/2026)
 
 O Passo 4 da rodada de 09/ago (tutorial da cena parada) foi rejeitado e está sendo refeito. Antes de
