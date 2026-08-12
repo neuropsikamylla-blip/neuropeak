@@ -10,6 +10,7 @@
 
 // ── §17 Escada de exposição (ms) — do mais lento (fácil) ao mais rápido ──────
 export const EXPO_STEPS = [1800, 1600, 1400, 1250, 1100, 960, 840, 730, 630, 540, 460, 390, 330, 280, 240];
+export const DEGRAU_CONFORTAVEL = 4;
 export const clampDegrau = (d: number) => Math.max(0, Math.min(EXPO_STEPS.length - 1, d));
 export const tempoDoDegrau = (d: number) => EXPO_STEPS[clampDegrau(d)];
 

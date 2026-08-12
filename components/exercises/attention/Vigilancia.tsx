@@ -17,6 +17,7 @@ import type { ExerciseResult, Theme } from "@/types";
 import {
   tempoDoDegrau, gerarCentros, classificarToque, gerarSequenciaPosicoes,
   adaptar, estadoInicial, avaliarBloco, BLOCO_TENTATIVAS, POSICOES,
+  DEGRAU_CONFORTAVEL,
   type AdaptState, type Arranjo, type Tolerancia, type Ponto, type Classificacao,
 } from "@/lib/vigilancia";
 import { NIVEIS, parById, fundoById, imgPipa, imgFundo, TODAS_IMAGENS, type Par } from "@/lib/vigilancia-dados";
@@ -26,8 +27,6 @@ interface Props { difficulty: number; theme: Theme; onComplete: (result: Exercis
 const rnd = (a: number, b: number) => a + Math.random() * (b - a);
 const shuffle = <T,>(a: T[]): T[] => { const b = [...a]; for (let i = b.length - 1; i > 0; i--) { const j = Math.floor(Math.random() * (i + 1)); [b[i], b[j]] = [b[j], b[i]]; } return b; };
 const nivelDe = (d: number) => Math.max(1, Math.min(NIVEIS.length, Math.round(d)));
-const DEGRAU_CONFORTAVEL = 4; // 1100 ms
-
 type Fase = "fixacao" | "exposicao" | "resposta" | "feedback";
 interface Kite { pos: number; isAlvo: boolean }
 

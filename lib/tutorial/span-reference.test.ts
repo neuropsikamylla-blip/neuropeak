@@ -370,6 +370,7 @@ describe("o Span Inverso continua na fábrica compartilhada", () => {
       "lista-distracao",
       "matriz-espacial",
       "matriz-espacial-inversa",
+      "mot",
       "nback",
       "padroes-rotacao",
       "restaurante-ordem",
@@ -378,6 +379,7 @@ describe("o Span Inverso continua na fábrica compartilhada", () => {
       "span-numerico",
       "span-numerico-inverso",
       "tempo-reacao",
+      "vigilancia",
     ]);
   });
 });
@@ -603,8 +605,10 @@ describe("T1 congelada — 2. sem emoji no framework do tutorial", () => {
     "lib/tutorial/definitions/conjunto-selecao.tsx",
     "lib/tutorial/definitions/estimulo-continuo.tsx",
     "lib/tutorial/definitions/focus-agents.tsx",
+    "lib/tutorial/definitions/mot.tsx",
     "lib/tutorial/definitions/sequencia-ordenada.tsx",
     "lib/tutorial/definitions/span-numerico.tsx",
+    "lib/tutorial/definitions/vigilancia.tsx",
     "lib/tutorial/speech-playback.ts",
     "lib/tutorial/span-playback.ts",
     "lib/tutorial/types.ts",

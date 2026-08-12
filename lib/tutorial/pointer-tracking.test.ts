@@ -72,6 +72,7 @@ describe("DemoPointer com perseguição opcional", () => {
       "sequencia-itens.tsx",
       "sequencia-ordenada.tsx",
       "span-numerico.tsx",
+      "vigilancia.tsx",
     ];
     const definitionsDirectory = resolve(process.cwd(), "lib/tutorial/definitions");
 

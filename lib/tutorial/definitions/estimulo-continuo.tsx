@@ -279,46 +279,6 @@ function SemaforoBoard({ stimulus, interactive, pressed, hitIds, onAction }: Pai
   );
 }
 
-interface PipaStimulus extends EstimuloBase {
-  targetPosition: number | null;
-}
-
-function Pipa({ different }: { different: boolean }) {
-  return (
-    <span className="relative block h-16 w-12">
-      <span
-        className={`absolute left-2 top-2 h-9 w-9 rotate-45 border-2 ${
-          different ? "border-indigo-700 bg-indigo-300" : "border-sky-700 bg-sky-300"
-        }`}
-      />
-      <span className="absolute bottom-0 left-6 h-5 w-px rotate-12 bg-slate-500" />
-    </span>
-  );
-}
-
-function VigilanciaBoard({ stimulus, interactive, pressed, hitIds, onAction }: PainelEstimuloProps<PipaStimulus>) {
-  return (
-    <div className="rounded-2xl border border-sky-200 bg-sky-50 p-4">
-      <div className="mb-3 grid grid-cols-3 gap-3">
-        {[0, 1, 2].map((position) => (
-          <button
-            key={position}
-            data-action={position === stimulus.targetPosition ? "kite" : undefined}
-            type="button"
-            onClick={() => interactive && onAction(position === stimulus.targetPosition ? "kite" : "other")}
-            className={`flex min-h-24 items-center justify-center rounded-xl border bg-white ${pressed && position === stimulus.targetPosition ? "scale-95" : ""}`}
-          >
-            <Pipa different={position === stimulus.targetPosition} />
-          </button>
-        ))}
-      </div>
-      <div className="h-6 text-center text-xs font-bold text-emerald-700">
-        {hitIds.has(stimulus.id) ? "Alvo encontrado" : ""}
-      </div>
-    </div>
-  );
-}
-
 interface BalloonStimulus extends EstimuloBase {
   color: "green" | "red";
 }
@@ -419,56 +379,6 @@ function DualTaskBoard({ stimulus, interactive, pressed, hitIds, onAction }: Pai
   );
 }
 
-interface MotStimulus extends EstimuloBase {
-  stage: "memorize" | "track" | "identify";
-  action: string;
-  focusBall: number | null;
-}
-
-const MOT_BALLS = [
-  { id: 0, target: true, start: [12, 18], end: [62, 58] },
-  { id: 1, target: true, start: [68, 16], end: [22, 62] },
-  { id: 2, target: false, start: [18, 64], end: [70, 20] },
-  { id: 3, target: false, start: [70, 65], end: [42, 14] },
-] as const;
-
-function MotBoard({ stimulus, interactive, pressed, hitIds, onAction }: PainelEstimuloProps<MotStimulus>) {
-  return (
-    <div>
-      <div className="mb-2 text-center text-xs font-medium text-slate-600">
-        {stimulus.stage === "memorize" ? "Observe os alvos claros." : stimulus.stage === "track" ? "Acompanhe o movimento." : "Selecione os alvos."}
-      </div>
-      <div className="relative h-64 overflow-hidden rounded-2xl border-2 border-slate-200 bg-slate-50">
-        {MOT_BALLS.map((ball) => {
-          const position = stimulus.stage === "memorize" ? ball.start : ball.end;
-          const action = `ball-${ball.id}`;
-          const selected = [...hitIds].some((id) => id.endsWith(action));
-          return (
-            <button
-              key={ball.id}
-              data-action={action}
-              type="button"
-              onClick={() => interactive && onAction(action)}
-              className={`absolute flex h-12 w-12 items-center justify-center rounded-full border-2 font-bold transition-all ${
-                stimulus.stage === "memorize" && ball.target
-                  ? "border-amber-500 bg-amber-300"
-                  : selected ? "border-emerald-600 bg-emerald-300" : "border-slate-500 bg-slate-300"
-              } ${pressed && stimulus.action === action ? "scale-90" : ""}`}
-              style={{
-                left: `${position[0]}%`,
-                top: `${position[1]}%`,
-                transitionDuration: `${RITMO_TUTORIAL_APROVADO.stimulusOnMs}ms`,
-              }}
-            >
-              {selected ? "OK" : ""}
-            </button>
-          );
-        })}
-      </div>
-    </div>
-  );
-}
-
 interface CertoErradoStimulus extends EstimuloBase {
   statement: string;
   answer: "certo" | "errado";
@@ -500,7 +410,6 @@ function CertoOuErradoBoard({ stimulus, interactive, pressed, hitIds, onAction }
 
 const ONE_RESPONSE = 1;
 const TWO_TASK_RESPONSES = 2;
-const MOT_MINIMUM_TARGETS = MOT_BALLS.filter((ball) => ball.target).length;
 
 const semaforoDemo: readonly SemaforoStimulus[] = [
   { id: "semaforo-red", color: "red", isTarget: false },
@@ -533,25 +442,6 @@ export const semaforoTutorial = criarTutorialEstimuloContinuo<SemaforoStimulus>(
   Board: SemaforoBoard,
   expectedActionFor: () => "advance",
   targetSelectorFor: () => '[data-action="advance"]',
-});
-
-const vigilanciaDemo: readonly PipaStimulus[] = [
-  { id: "vigilancia-common", targetPosition: null, isTarget: false },
-  { id: "vigilancia-target", targetPosition: 1, isTarget: true },
-];
-
-export const vigilanciaTutorial = criarTutorialEstimuloContinuo<PipaStimulus>({
-  exerciseId: "vigilancia",
-  version: 2,
-  modo: "continua",
-  guidedInstruction: "Clique quando a pipa alvo aparecer.",
-  retryHint: "Espere a pipa diferente aparecer e clique nela.",
-  smallestValidUnit: ONE_RESPONSE,
-  demonstrationStimuli: vigilanciaDemo,
-  guidedStimuli: vigilanciaDemo,
-  Board: VigilanciaBoard,
-  expectedActionFor: () => "kite",
-  targetSelectorFor: () => '[data-action="kite"]',
 });
 
 const tempoReacaoDemo: readonly BalloonStimulus[] = [
@@ -616,28 +506,6 @@ export const dualTaskTutorial = criarTutorialEstimuloContinuo<DualStimulus>({
   demonstrationStimuli: dualTaskDemo,
   guidedStimuli: dualTaskDemo,
   Board: DualTaskBoard,
-  expectedActionFor: (stimulus) => stimulus.action,
-  targetSelectorFor: (stimulus) => `[data-action="${stimulus.action}"]`,
-});
-
-const motDemo: readonly MotStimulus[] = [
-  { id: "mot-memorize", stage: "memorize", action: "none", focusBall: null, isTarget: false },
-  { id: "mot-track", stage: "track", action: "none", focusBall: null, isTarget: false },
-  { id: "mot-ball-3", stage: "identify", action: "ball-3", focusBall: 3, isTarget: false },
-  { id: "mot-ball-0", stage: "identify", action: "ball-0", focusBall: 0, isTarget: true },
-  { id: "mot-ball-1", stage: "identify", action: "ball-1", focusBall: 1, isTarget: true },
-];
-
-export const motTutorial = criarTutorialEstimuloContinuo<MotStimulus>({
-  exerciseId: "mot",
-  version: 1,
-  modo: "continua",
-  guidedInstruction: "Clique nos alvos que você seguiu.",
-  retryHint: "Acompanhe os alvos durante o movimento e clique neles ao final.",
-  smallestValidUnit: MOT_MINIMUM_TARGETS,
-  demonstrationStimuli: motDemo,
-  guidedStimuli: motDemo,
-  Board: MotBoard,
   expectedActionFor: (stimulus) => stimulus.action,
   targetSelectorFor: (stimulus) => `[data-action="${stimulus.action}"]`,
 });

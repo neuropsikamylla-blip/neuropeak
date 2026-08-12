@@ -5,6 +5,15 @@ import { motion, AnimatePresence } from "framer-motion";
 import { calculateExerciseScore } from "@/lib/scoring";
 import { useTimedProgress } from "@/components/exercises/useExerciseEngine";
 import { ExerciseProgressBar } from "@/components/exercises/ExerciseProgressBar";
+import { MOTBall } from "@/components/exercises/attention/MOTBall";
+import {
+  ASPECT,
+  randomBalls,
+  stepAll,
+  targetsForLevel,
+  trackDuration,
+  type Ball,
+} from "@/lib/mot/scene";
 import type { ExerciseResult, Theme } from "@/types";
 
 interface MOTProps {
@@ -17,104 +26,13 @@ interface MOTProps {
 // A cada 3 rodadas PERFEITAS seguidas sobe 1 nível. Alterna: +1 alvo, +velocidade,
 // +1 alvo, +velocidade... (começa com 2 alvos). Velocidade sobe suave (nada absurdo).
 
-const BALL_RADIUS = 22;  // bolas um pouco menores → mais espaço LIVRE entre elas (não ficam "juntinhas")
 const MAX_W = 1440;      // arena GRANDE no desktop; adapta ao espaço no tablet/celular
-const ASPECT = 0.66;     // altura = largura × 0.66 (arena ampla — bolas se espalham em 2D)
 const RESERVED_H = 150;  // altura reservada p/ header + rótulo + botão; o resto vira arena (era 240 — desperdiçava altura)
 const PAD_X = 72;        // padding lateral acumulado (wrapper + container) descontado da largura da janela
-const MAX_TARGETS = 6;
 // A arena usa COORDENADAS REAIS em px (medidas da tela), sem escala CSS — assim o
 // clamp da física é exatamente a borda visível e a bola nunca ultrapassa o quadro.
 
-function targetsForLevel(level: number): number {
-  return Math.min(MAX_TARGETS, 2 + Math.ceil(level / 2)); // +1 alvo nos níveis ímpares
-}
-function speedStepForLevel(level: number): number {
-  return Math.floor(level / 2);                             // +velocidade nos níveis pares
-}
-function ballSpeed(level: number): number {
-  return Math.min(3.0, 1.25 + speedStepForLevel(level) * 0.28); // px/frame, incremento gentil
-}
-function totalBalls(level: number): number {
-  const k = targetsForLevel(level);
-  return k + Math.min(6, k + 2); // distratores moderados (não lota o quadro)
-}
-function trackDuration(level: number): number {
-  return 3500 + Math.min(1800, level * 140); // acompanha um pouco mais a cada nível
-}
-
-interface Ball {
-  id: number;
-  x: number;
-  y: number;
-  vx: number;
-  vy: number;
-  isTarget: boolean;
-}
-
 type Phase = "memorize" | "track" | "identify";
-
-function randomBalls(level: number, round: number, W: number, H: number): Ball[] {
-  const n = totalBalls(level);
-  const k = targetsForLevel(level);
-  const speed = ballSpeed(level);
-  const R = BALL_RADIUS;
-  const balls: Ball[] = [];
-  const pos: { x: number; y: number }[] = [];
-
-  for (let i = 0; i < n; i++) {
-    let x = R, y = R, ok = false, tries = 0;
-    do {
-      x = R + Math.random() * (W - 2 * R);
-      y = R + Math.random() * (H - 2 * R);
-      ok = pos.every(p => Math.hypot(p.x - x, p.y - y) >= Math.max(R * 3, 78)); // nascem bem separadas, nunca coladas
-      tries++;
-    } while (!ok && tries < 300);
-    pos.push({ x, y });
-
-    const angle = Math.random() * Math.PI * 2;
-    const s = (0.8 + Math.random() * 0.4) * speed;
-    void round;
-    balls.push({ id: i, x, y, vx: Math.cos(angle) * s, vy: Math.sin(angle) * s, isTarget: i < k });
-  }
-  return balls;
-}
-
-// Um passo da física para TODAS as bolas: rebate nas paredes (nunca cortam a
-// borda) E colide entre si (nunca param uma atrás/em cima da outra).
-function stepAll(balls: Ball[], W: number, H: number): Ball[] {
-  const R = BALL_RADIUS;
-  const bs = balls.map(b => {
-    let x = b.x + b.vx, y = b.y + b.vy, vx = b.vx, vy = b.vy;
-    if (x - R < 0)     { x = R;     vx = Math.abs(vx); }
-    if (x + R > W)     { x = W - R; vx = -Math.abs(vx); }
-    if (y - R < 0)     { y = R;     vy = Math.abs(vy); }
-    if (y + R > H)     { y = H - R; vy = -Math.abs(vy); }
-    return { ...b, x, y, vx, vy };
-  });
-  // colisão bola-a-bola (separa + troca elástica de velocidade, massas iguais)
-  for (let i = 0; i < bs.length; i++) {
-    for (let j = i + 1; j < bs.length; j++) {
-      const a = bs[i], c = bs[j];
-      const dx = c.x - a.x, dy = c.y - a.y;
-      const dist = Math.hypot(dx, dy) || 0.001;
-      const minD = 2 * R;
-      if (dist < minD) {
-        const nx = dx / dist, ny = dy / dist;
-        const push = (minD - dist) / 2 + 0.5;
-        a.x -= nx * push; a.y -= ny * push;
-        c.x += nx * push; c.y += ny * push;
-        const va = a.vx * nx + a.vy * ny, vc = c.vx * nx + c.vy * ny;
-        const dv = vc - va;
-        a.vx += dv * nx; a.vy += dv * ny;
-        c.vx -= dv * nx; c.vy -= dv * ny;
-        a.x = Math.max(R, Math.min(W - R, a.x)); a.y = Math.max(R, Math.min(H - R, a.y));
-        c.x = Math.max(R, Math.min(W - R, c.x)); c.y = Math.max(R, Math.min(H - R, c.y));
-      }
-    }
-  }
-  return bs;
-}
 
 // ── Main component ─────────────────────────────────────────────────────────
 
@@ -359,41 +277,22 @@ export function MOT({ difficulty, theme, onComplete }: MOTProps) {
         <div ref={stageWrapRef} className="w-full flex justify-center">
         <div className={`relative rounded-2xl overflow-hidden ${pal.area}`}
           style={{ width: dims.w, height: dims.h }}>
-          {balls.map(ball => {
-            const isSelected = selected.has(ball.id);
-            const showGold = phase === "memorize" && ball.isTarget;
-            const showReveal = phase === "identify" && roundScore !== null && ball.isTarget;
-
-            return (
-              <div key={ball.id}
+          {balls.map(ball => (
+              <MOTBall key={ball.id}
                 ref={node => {
                   if (node) ballNodes.current.set(ball.id, node);
                   else ballNodes.current.delete(ball.id);
                 }}
-                style={{
-                  position: "absolute",
-                  // clamp defensivo: mesmo se a arena mudar de tamanho, a base nunca sai do quadro
-                  left: Math.min(Math.max(0, ball.x - BALL_RADIUS), dims.w - BALL_RADIUS * 2),
-                  top: Math.min(Math.max(0, ball.y - BALL_RADIUS), dims.h - BALL_RADIUS * 2),
-                  width: BALL_RADIUS * 2,
-                  height: BALL_RADIUS * 2,
-                  // Durante "track" o transform e controlado pelo rAF (omitido
-                  // aqui para o React nao sobrescrever). Nas demais fases a base
-                  // left/top ja e a posicao real, entao zeramos o transform.
-                  ...(phase === "track" ? {} : { transform: "translate(0px, 0px)" }),
-                  transition: phase === "identify" ? "none" : undefined,
-                }}
-                className={`rounded-full border-2 flex items-center justify-center text-xs font-bold cursor-pointer select-none ${
-                  showReveal ? "bg-green-400 border-green-600" :
-                  showGold ? "bg-yellow-400 border-yellow-300 animate-pulse" :
-                  isSelected ? "bg-blue-400 border-blue-600" :
-                  theme === "GAMIFIED" ? "bg-gray-400 border-gray-500" : "bg-gray-300 border-gray-400"
-                }`}
-                onClick={() => handleBallTap(ball.id)}>
-                {isSelected && phase === "identify" ? "✓" : ""}
-              </div>
-            );
-          })}
+                ball={ball}
+                phase={phase}
+                selected={selected.has(ball.id)}
+                revealTarget={phase === "identify" && roundScore !== null && ball.isTarget}
+                gamified={theme === "GAMIFIED"}
+                arenaWidth={dims.w}
+                arenaHeight={dims.h}
+                onClick={() => handleBallTap(ball.id)}
+              />
+          ))}
         </div>
         </div>
 

@@ -78,11 +78,9 @@ describe("Regra 11 — três modos oficiais", () => {
 describe("Família 4 — estímulo contínuo", () => {
   const continuousDemos = [
     "semaforoDemo",
-    "vigilanciaDemo",
     "tempoReacaoDemo",
     "nbackDemo",
     "dualTaskDemo",
-    "motDemo",
   ];
 
   it.each(continuousDemos)("%s contém alvo e não-alvo", (name) => {
@@ -125,14 +123,12 @@ describe("Família 4 — estímulo contínuo", () => {
     expect(guided).toMatch(/Um alvo não possui timeout/);
   });
 
-  it("usa os sete textos aprovados e não menciona teclado nem toque", () => {
+  it("usa os cinco textos que continuam nesta família e não menciona teclado nem toque", () => {
     const instructions = [
       "Clique em avançar somente quando o sinal abrir.",
-      "Clique quando a pipa alvo aparecer.",
       "Clique assim que o sinal aparecer.",
       "Clique quando a letra for igual à de duas posições atrás.",
       "Responda às duas tarefas conforme elas aparecerem.",
-      "Clique nos alvos que você seguiu.",
       "Clique em certo ou errado conforme a operação.",
     ];
     for (const instruction of instructions) expect(definition()).toContain(instruction);
@@ -158,9 +154,7 @@ describe("Família 4 — estímulo contínuo", () => {
     }
 
 
-    // Classificação dela de 07/ago/2026, por exercício e não por família:
-    //   Explicação  — Semáforo, Tempo de Reação, Certo ou Errado
-    //   Demonstração — N-Back, Dual Task, MOT, Vigilância
+    // Classificação dela de 07/ago/2026 para os exercícios que continuam nesta família.
     const modoDe = (exerciseId: string) => {
       const trecho = definition().slice(definition().indexOf(`exerciseId: "${exerciseId}"`));
       return trecho.slice(0, trecho.indexOf("guidedInstruction")).match(/modo: "(\w+)"/)?.[1];
@@ -172,24 +166,23 @@ describe("Família 4 — estímulo contínuo", () => {
 
     expect(modoDe("nback")).toBe("continua");
     expect(modoDe("dual-task")).toBe("continua");
-    // A Vigilância saiu do mapa (12/ago): a definição continua no arquivo, mas não é usada por
-    // ninguém. Quando voltar, será um tutorial novo, e o modo é decisão dela na hora.
   });
 
-  it("registra os cinco que continuam e preserva os 18 convertidos", () => {
+  it("registra os sete e preserva os 20 convertidos", () => {
     const page = source("app/(patient)/treino/[exercicio]/page.tsx");
     const register = page.slice(
       page.indexOf("const TUTORIAIS_POR_EXERCICIO"),
       page.indexOf("});", page.indexOf("const TUTORIAIS_POR_EXERCICIO")),
     );
     const converted = register.match(/(?:"[a-z-]+"|[a-z]+):\s*[a-zA-Z]+Tutorial/g) ?? [];
-    // 19, e não 20: a Vigilância saiu do mapa em 12/ago/2026 — ver o comentário no page.tsx.
-    expect(converted).toHaveLength(18);
+    expect(converted).toHaveLength(20);
     for (const exerciseId of [
       "semaforo",
+      "vigilancia",
       "tempo-reacao",
       "nback",
       "dual-task",
+      "mot",
       "certo-ou-errado",
     ]) {
       expect(register).toContain(exerciseId);
@@ -236,6 +229,8 @@ describe("regra 11 consolidada — na dúvida, Fluxo 1", () => {
       "lib/tutorial/definitions/conjunto-selecao.tsx",
       "lib/tutorial/definitions/estimulo-continuo.tsx",
       "lib/tutorial/definitions/focus-agents.tsx",
+      "lib/tutorial/definitions/mot.tsx",
+      "lib/tutorial/definitions/vigilancia.tsx",
     ];
 
     for (const caminho of definicoes) {
