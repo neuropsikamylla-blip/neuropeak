@@ -15116,3 +15116,6 @@ Olha preciso dizer que fui treinar e percebi que temos varios bugs nos exercicio
 
 ## 11/08/2026 20:46
 vou ja te falar de outro erro de outro exercicio tutorial do rastreando objetos [Image #5] [Image #6] ainda que consegui ir pro exercicio ele nao esta compativel com o exercicio e o exercicio ficou com o espaço amplo porem a pessoa tem de descer a tela para confirmar o espaço precisa ocupar a tela e sem precisar descer [Image #7] [Image #8]
+
+## 11/08/2026 21:03
+arruma ambos
