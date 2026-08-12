@@ -15134,3 +15134,6 @@ arruma ambos
 
 ## 12/08/2026 15:19
 agora verifica todos os outros tutoriais precisamos fechar isso logo, pois estamos presos em resolver isso sendo que precisamos ir melhroar os exercicios! o que falta dos tutoriais?
+
+## 12/08/2026 15:42
+Vigilnacia voce pode repetir o exercicio nao? igual digitos, igual agente focus
