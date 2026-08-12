@@ -303,39 +303,6 @@ function TempoReacaoBoard({ stimulus, interactive, pressed, hitIds, onAction }: 
   );
 }
 
-interface NBackStimulus extends EstimuloBase {
-  history: readonly string[];
-  letter: string;
-  priming?: boolean;
-}
-
-function NBackBoard({ stimulus, interactive, pressed, hitIds, onAction }: PainelEstimuloProps<NBackStimulus>) {
-  return (
-    <div className="rounded-2xl border border-indigo-200 bg-indigo-50 p-4 text-center">
-      <div className="mb-3 flex items-center justify-center gap-2 text-sm text-slate-500">
-        {stimulus.history.map((letter, index) => (
-          <span key={`${letter}-${index}`} className="rounded-lg border bg-white px-3 py-2">{letter}</span>
-        ))}
-      </div>
-      <div className="mx-auto mb-3 flex h-24 w-24 items-center justify-center rounded-2xl border-4 border-indigo-400 bg-white text-5xl font-bold text-indigo-800">
-        {stimulus.letter}
-      </div>
-      <p className="mb-3 min-h-5 text-xs text-slate-600">
-        {stimulus.priming ? "Observe a letra." : "É igual à de duas posições atrás?"}
-      </p>
-      <button
-        data-action="same"
-        type="button"
-        onClick={() => interactive && onAction("same")}
-        className={`w-full rounded-xl bg-emerald-600 py-3 font-bold text-white ${pressed ? "scale-95" : ""}`}
-      >
-        IGUAL
-        <HitMark visible={hitIds.has(stimulus.id)} />
-      </button>
-    </div>
-  );
-}
-
 type ShapeKind = "circle" | "triangle";
 interface DualStimulus extends EstimuloBase {
   shape: ShapeKind;
@@ -467,27 +434,6 @@ export const tempoReacaoTutorial = criarTutorialEstimuloContinuo<BalloonStimulus
   Board: TempoReacaoBoard,
   expectedActionFor: () => "balloon",
   targetSelectorFor: () => '[data-action="balloon"]',
-});
-
-const nbackDemo: readonly NBackStimulus[] = [
-  { id: "nback-prime-a", history: [], letter: "A", priming: true, isTarget: false },
-  { id: "nback-prime-b", history: ["A"], letter: "B", priming: true, isTarget: false },
-  { id: "nback-different", history: ["A", "B"], letter: "C", isTarget: false },
-  { id: "nback-same", history: ["B", "C"], letter: "B", isTarget: true },
-];
-
-export const nbackTutorial = criarTutorialEstimuloContinuo<NBackStimulus>({
-  exerciseId: "nback",
-  version: 1,
-  modo: "continua",
-  guidedInstruction: "Clique quando a letra for igual à de duas posições atrás.",
-  retryHint: "Compare a letra atual com a de duas posições atrás e clique quando forem iguais.",
-  smallestValidUnit: ONE_RESPONSE,
-  demonstrationStimuli: nbackDemo,
-  guidedStimuli: nbackDemo,
-  Board: NBackBoard,
-  expectedActionFor: () => "same",
-  targetSelectorFor: () => '[data-action="same"]',
 });
 
 const dualTaskDemo: readonly DualStimulus[] = [

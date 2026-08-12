@@ -39,11 +39,13 @@ describe("aceite da Fase 1 — assistente clínico", () => {
     expect(cards(presentPlan(plan(["deductive-grid", "matriz-espacial", "certo-ou-errado"], 30)))).toHaveLength(0);
   });
 
-  it("2. plano com 34 exercícios tem no máximo cinco insights", () => {
+  // O N‑Back foi aposentado em 12/ago/2026 por decisão dela.
+  it("2. plano com 33 exercícios tem no máximo cinco insights", () => {
     expect(cards(presentPlan(plan(allIds))).length).toBeLessThanOrEqual(5);
   });
 
-  it("3. plano com 34 exercícios não contém linguagem dependente da ordem", () => {
+  // O N‑Back foi aposentado em 12/ago/2026 por decisão dela.
+  it("3. plano com 33 exercícios não contém linguagem dependente da ordem", () => {
     expect(visible(presentPlan(plan(allIds))))
       .not.toMatch(/consecutiv|adjacen|encerramento|posição preferencial|carga basal/i);
   });
@@ -52,8 +54,8 @@ describe("aceite da Fase 1 — assistente clínico", () => {
     expect(visible(presentPlan(plan(allIds)))).not.toMatch(/[A-Z]{3,}_[A-Z_]+/);
   });
 
-  it("5. o núcleo continua devolvendo 66 ocorrências", () => {
-    expect(interpretPlan(plan(allIds)).alerts).toHaveLength(66);
+  it("5. o núcleo continua devolvendo 60 ocorrências", () => {
+    expect(interpretPlan(plan(allIds)).alerts).toHaveLength(60);
   });
 
   it("6. a duração da sessão aparece uma vez, no cabeçalho", () => {

@@ -94,7 +94,8 @@ describe("aceite da Fase 1 — ajustes finais", () => {
   it("3. apresenta demanda elevada em uma frase, com a meta real uma única vez", () => {
     const message = presentPlan(plan(allIds, 30)).alertGroups.revisao_plano[0].mensagem;
     expect(message).toBe(
-      "12 dos 34 exercícios são potencialmente fatigantes, e a demanda total está acima do previsto para uma sessão de 30 minutos.",
+      // O N‑Back foi aposentado em 12/ago/2026 por decisão dela.
+      "11 dos 33 exercícios são potencialmente fatigantes, e a demanda total está acima do previsto para uma sessão de 30 minutos.",
     );
     expect(message.match(/30 minutos/g)).toHaveLength(1);
     expect(message.match(/\./g)).toHaveLength(1);
@@ -102,7 +103,8 @@ describe("aceite da Fase 1 — ajustes finais", () => {
 
   it("4. omite demanda total sem referência válida", () => {
     const message = presentPlan(plan(allIds, 35)).alertGroups.revisao_plano[0].mensagem;
-    expect(message).toBe("12 dos 34 exercícios são potencialmente fatigantes.");
+    // O N‑Back foi aposentado em 12/ago/2026 por decisão dela.
+    expect(message).toBe("11 dos 33 exercícios são potencialmente fatigantes.");
     expect(message).not.toMatch(/demanda total/i);
   });
 
@@ -148,9 +150,10 @@ describe("aceite da Fase 1 — ajustes finais", () => {
     expect(titles).not.toMatch(/Mapeamento cor–resposta|Concentração de treino verbal|Concentração de busca visual|Sobreposição executiva|Concentração cognitiva|Processos cognitivos semelhantes/i);
   });
 
-  it("8. faz todo título da varredura dos 34 combinados dois a dois começar com Sobreposição", () => {
+  // O N‑Back foi aposentado em 12/ago/2026 por decisão dela.
+  it("8. faz todo título da varredura dos 33 combinados dois a dois começar com Sobreposição", () => {
     const titles = pairPresentations().flatMap(overlapAlerts).map(({ titulo }) => titulo);
-    expect(allIds).toHaveLength(34);
+    expect(allIds).toHaveLength(33);
     expect(titles.length).toBeGreaterThan(0);
     expect(titles.every((title) => title.startsWith("Sobreposição"))).toBe(true);
   });
@@ -181,8 +184,8 @@ describe("aceite da Fase 1 — ajustes finais", () => {
     expect(visible).not.toMatch(/carga basal|referência interna|janela de planejamento|parâmetros|heurística|regra interna|indicador interno/i);
   });
 
-  it("12. preserva as 66 ocorrências produzidas pelo núcleo", () => {
-    expect(interpretPlan(plan(allIds)).alerts).toHaveLength(66);
+  it("12. preserva as 60 ocorrências produzidas pelo núcleo", () => {
+    expect(interpretPlan(plan(allIds)).alerts).toHaveLength(60);
   });
 
   it("13. mantém canSave verdadeiro", () => {

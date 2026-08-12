@@ -32,15 +32,6 @@ export const EXERCISE_FUNCTIONAL: Record<string, ExerciseFunctional> = {
     ],
     dailyTip: "Ao guardar objetos, olhe para eles e diga o nome em voz alta. Isso ativa memória visual e verbal ao mesmo tempo.",
   },
-  "nback": {
-    scenario: "Acompanhar uma conversa longa e perceber quando o mesmo assunto já foi mencionado antes, sem perder o fio.",
-    strategies: [
-      "Repita mentalmente o estímulo atual enquanto aguarda o próximo.",
-      "Use um 'ancorinha' — uma imagem ou palavra associada ao estímulo atual.",
-      "Não tente antecipar; foque em comparar o atual com o que veio antes.",
-    ],
-    dailyTip: "Em conversas ou consultas, não hesite em perguntar: 'Você pode repetir?' ou 'Isso foi dito antes?' — manter o contexto é uma habilidade treinável.",
-  },
   "trilha-visual": {
     scenario: "Seguir a sequência numerada de uma receita, de um manual de montagem ou das etapas de um procedimento médico.",
     strategies: [

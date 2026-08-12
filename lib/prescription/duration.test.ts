@@ -14,10 +14,10 @@ describe("duração da composição", () => {
     const continuous = exercise("tempo-reacao"); // 5 + 0,5
     const closed = exercise("letras-sequencia"); // 6 + 1
     const planning = exercise("ordem-historia"); // 9 + 3
-    const fixed = exercise("nback"); // 7,5 + 0
+    const fixed = exercise("dual-task"); // 6 + 0
     expect(calculateDuration([continuous])).toEqual([5, 5.5]);
     expect(calculateDuration([continuous, closed])).toEqual([11.5, 13.5]);
-    expect(calculateDuration([continuous, closed, planning, fixed, continuous])).toEqual([34.5, 41.5]);
+    expect(calculateDuration([continuous, closed, planning, fixed, continuous])).toEqual([33, 40]);
   });
 
   it("aplica modalidade antes das margens", () => {
@@ -59,9 +59,9 @@ describe("duração da composição", () => {
     expect(duration.every(Number.isFinite)).toBe(true);
   });
 
-  it("identifica taxa constante exatamente nos 19 exercícios catalogados", () => {
+  it("identifica taxa constante exatamente nos 18 exercícios catalogados", () => {
     const dose = { kind: "legacyCustom", unitCount: 1, sourceKey: "trials" } as const;
-    expect(EXERCISE_CATALOG.filter((definition) => legacyDoseMinutes(definition, dose).minutes).length).toBe(19);
+    expect(EXERCISE_CATALOG.filter((definition) => legacyDoseMinutes(definition, dose).minutes).length).toBe(18);
   });
 
   it("modalidade recalcula duração sem alterar carga basal", () => {

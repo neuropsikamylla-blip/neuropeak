@@ -46,14 +46,15 @@ describe("assistente clínico da revisão do plano", () => {
     expect(Object.values(presentation.alertGroups).flat()).toEqual([]);
   });
 
-  it("reduz o plano de 34 exercícios a no máximo cinco insights e mantém 66 ocorrências no núcleo", () => {
+  // O N‑Back foi aposentado em 12/ago/2026 por decisão dela.
+  it("reduz o plano de 33 exercícios a no máximo cinco insights e mantém 60 ocorrências no núcleo", () => {
     const completePlan = plan(allIds);
     const core = interpretPlan(completePlan);
     const presentation = presentPlan(completePlan);
     const insights = Object.values(presentation.alertGroups).flat();
 
-    expect(core.alerts).toHaveLength(66);
-    expect(presentation.exercises).toHaveLength(34);
+    expect(core.alerts).toHaveLength(60);
+    expect(presentation.exercises).toHaveLength(33);
     expect(insights).toHaveLength(3);
     expect(insights.length).toBeLessThanOrEqual(5);
     expect(firstLevelAlertCardCounts(presentation.alertGroups)).toEqual({
@@ -97,7 +98,8 @@ describe("assistente clínico da revisão do plano", () => {
     const intensity = presentation.alertGroups.revisao_plano[0];
     expect(intensity).toMatchObject({
       titulo: "Plano de demanda elevada",
-      mensagem: "12 dos 34 exercícios são potencialmente fatigantes, e a demanda total está acima do previsto para uma sessão de 40 minutos.",
+      // O N‑Back foi aposentado em 12/ago/2026 por decisão dela.
+      mensagem: "11 dos 33 exercícios são potencialmente fatigantes, e a demanda total está acima do previsto para uma sessão de 40 minutos.",
       blocksSave: false,
     });
     expect(intensity.mensagem).not.toMatch(/69|13|carga basal/i);
@@ -105,7 +107,8 @@ describe("assistente clínico da revisão do plano", () => {
 
   it("não menciona demanda total quando a duração não tem referência", () => {
     const presentation = presentPlan(plan(allIds, 35));
-    expect(presentation.alertGroups.revisao_plano[0].mensagem).toMatch(/12 dos 34 exercícios.*fatigantes/);
+    // O N‑Back foi aposentado em 12/ago/2026 por decisão dela.
+    expect(presentation.alertGroups.revisao_plano[0].mensagem).toMatch(/11 dos 33 exercícios.*fatigantes/);
     expect(allVisibleText(presentation)).not.toMatch(/demanda total/i);
   });
 

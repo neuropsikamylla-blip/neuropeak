@@ -26,7 +26,6 @@ export const EXERCISE_META: Record<string, ExerciseMeta> = {
   "lista-distracao": { type: "verbal", difficulty: "dificil", secondary: ["Memória Operacional", "Controle Inibitório"] },
   "restaurante-ordem": { type: "visual", difficulty: "medio", secondary: ["Memória Operacional", "Atenção Seletiva"] },
   "restaurante-ordem-auditivo": { type: "auditiva", difficulty: "medio", secondary: ["Memória Operacional", "Atenção Seletiva"] },
-  "nback": { type: "visual", difficulty: "dificil", secondary: ["Memória Operacional", "Atenção Sustentada"] },
   "padroes-rotacao": { type: "espacial", difficulty: "dificil", secondary: ["Memória Visuoespacial", "Rotação Mental"] },
   "cubo-corsi": { type: "espacial", difficulty: "medio", secondary: ["Memória Visuoespacial", "Atenção Visual"] },
   // Atenção

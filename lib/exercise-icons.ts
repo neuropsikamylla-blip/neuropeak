@@ -40,7 +40,6 @@ export const EXERCISE_ICON_IDS = new Set<string>([
   "deductive-grid",
   "estacionamento-logico",
   // memória — novos
-  "nback",
   "cubo-corsi",
   // funcional / supermercado
   "desafio-supermercado",

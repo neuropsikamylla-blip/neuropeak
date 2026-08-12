@@ -26,8 +26,8 @@ describe("divulgação progressiva dos insights", () => {
 
     expect(concentration?.dadoPrincipal).toBeUndefined();
     expect(concentration?.mensagem).not.toMatch(/\d/);
-    expect(concentration?.ocorrencias).toHaveLength(41);
-    expect(concentration?.occurrenceCount).toBe(41);
+    expect(concentration?.ocorrencias).toHaveLength(38);
+    expect(concentration?.occurrenceCount).toBe(38);
     expect(concentration?.expansionLabel).toBe("Ver detalhes");
   });
 
@@ -42,12 +42,12 @@ describe("divulgação progressiva dos insights", () => {
     expect(observations.initial).toHaveLength(2);
   });
 
-  it("mantém três cartões de primeiro nível e 66 ocorrências no núcleo", () => {
+  it("mantém três cartões de primeiro nível e 60 ocorrências no núcleo", () => {
     const plan = completePlan();
     const core = interpretPlan(plan);
     const presentation = presentPlan(plan);
 
-    expect(core.alerts).toHaveLength(66);
+    expect(core.alerts).toHaveLength(60);
     expect(firstLevelAlertCardCounts(presentation.alertGroups)).toEqual({
       revisao_plano: 1,
       observacao_clinica: 2,
@@ -58,7 +58,7 @@ describe("divulgação progressiva dos insights", () => {
   it("expande a intensidade pelos exercícios de fadiga alta, sem expor a escala", () => {
     const intensity = presentPlan(completePlan()).alertGroups.revisao_plano[0];
     expect(intensity.expansionLabel).toBe("Ver exercícios");
-    expect(intensity.exercicios).toHaveLength(12);
+    expect(intensity.exercicios).toHaveLength(11);
     expect(intensity).not.toHaveProperty("dadoPrincipal");
   });
 

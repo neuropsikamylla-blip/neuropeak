@@ -423,14 +423,6 @@ export const EXERCISE_DEFINITIONS = {
     estimatedMinutes: 7,
     icon: "🔎",
   },
-  "nback": {
-    id: "nback",
-    name: "N-Back",
-    domain: "memory" as Domain,
-    description: "Decida se a letra atual é igual à de N posições atrás — memória operacional",
-    estimatedMinutes: 7,
-    icon: "🧠",
-  },
   "estacionamento-logico": {
     id: "estacionamento-logico",
     name: "Estacionamento Lógico",

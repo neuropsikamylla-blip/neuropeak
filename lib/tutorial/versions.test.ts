@@ -3,11 +3,12 @@ import { EXERCISE_CATALOG } from "@/lib/prescription/catalog";
 import { TUTORIAL_VERSIONS, tutorialVersionFor } from "./versions";
 
 describe("catálogo de versões de tutorial", () => {
-  it("cobre exatamente os 34 exercícios canônicos", () => {
+  // O N‑Back foi aposentado em 12/ago/2026 por decisão dela.
+  it("cobre exatamente os 33 exercícios canônicos", () => {
     const canonicalIds = EXERCISE_CATALOG.map(({ exerciseId }) => exerciseId).sort();
     const versionedIds = Object.keys(TUTORIAL_VERSIONS).sort();
 
-    expect(canonicalIds).toHaveLength(34);
+    expect(canonicalIds).toHaveLength(33);
     expect(versionedIds).toEqual(canonicalIds);
   });
 

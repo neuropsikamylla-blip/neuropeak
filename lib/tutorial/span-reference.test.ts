@@ -201,7 +201,7 @@ describe("integração do tutorial de referência", () => {
     const page = source("app/(patient)/treino/[exercicio]/page.tsx");
 
     // Um só ponto de ligação: a cada lote, uma linha no registro. Condicional por exerciseId
-    // espalhada pelo arquivo seria insustentável em 34 conversões.
+    // O N‑Back foi aposentado em 12/ago/2026 por decisão dela; a cobertura agora tem 33 conversões.
     expect(page).toMatch(/const TUTORIAIS_POR_EXERCICIO: Readonly<Record<string, TutorialDefinition>>/);
     expect(page.match(/tutorial:\s*tutorialAtual/g) ?? []).toHaveLength(1);
     expect(page).not.toMatch(/exerciseId\s*===\s*["']span-numerico["']\s*\?/);
@@ -371,7 +371,6 @@ describe("o Span Inverso continua na fábrica compartilhada", () => {
       "matriz-espacial",
       "matriz-espacial-inversa",
       "mot",
-      "nback",
       "padroes-rotacao",
       "restaurante-ordem",
       "semaforo",
@@ -806,7 +805,8 @@ describe("sincronismo entre voz e estímulo visual", () => {
 
 describe("texto da demonstração", () => {
   // A redação "Observe como ouvir a sequência e responder corretamente" foi pedida para o Span e
-  // durou algumas horas: no mesmo dia a regra global 1 fixou um texto ÚNICO para os 34, e o texto
+  // O N‑Back foi aposentado em 12/ago/2026 por decisão dela.
+  // durou algumas horas: no mesmo dia a regra global 1 fixou um texto ÚNICO para os 33, e o texto
   // específico do Span deixou de existir. Quem manda aqui é a regra global.
   it("usa o texto padrão do framework, não uma redação por exercício", () => {
     const runner = source("components/exercises/tutorial/TutorialRunner.tsx");
@@ -818,7 +818,8 @@ describe("texto da demonstração", () => {
 });
 
 // ─────────────────────────────────────────────────────────────────────────────
-// LOTE 0 — as nove regras globais da T1 (07/ago/2026). Valem para os 34.
+// O N‑Back foi aposentado em 12/ago/2026 por decisão dela.
+// LOTE 0 — as nove regras globais da T1 (07/ago/2026). Valem para os 33.
 // ─────────────────────────────────────────────────────────────────────────────
 
 describe("T1 global — 1 e 5: linguagem padrão", () => {
@@ -907,7 +908,8 @@ describe("T1 global — 7: um só padrão visual para todos", () => {
   });
 });
 
-describe("T1 congelada — 4. os títulos das etapas valem para os 34", () => {
+// O N‑Back foi aposentado em 12/ago/2026 por decisão dela.
+describe("T1 congelada — 4. os títulos das etapas valem para os 33", () => {
   const runner = () => source("components/exercises/tutorial/TutorialRunner.tsx");
 
   it('a tentativa guiada se chama "Agora é sua vez", nunca "Ouça e responda"', () => {

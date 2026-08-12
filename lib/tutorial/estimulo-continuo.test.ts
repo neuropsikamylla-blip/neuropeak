@@ -79,7 +79,6 @@ describe("Família 4 — estímulo contínuo", () => {
   const continuousDemos = [
     "semaforoDemo",
     "tempoReacaoDemo",
-    "nbackDemo",
     "dualTaskDemo",
   ];
 
@@ -123,11 +122,10 @@ describe("Família 4 — estímulo contínuo", () => {
     expect(guided).toMatch(/Um alvo não possui timeout/);
   });
 
-  it("usa os cinco textos que continuam nesta família e não menciona teclado nem toque", () => {
+  it("usa os quatro textos que continuam nesta família e não menciona teclado nem toque", () => {
     const instructions = [
       "Clique em avançar somente quando o sinal abrir.",
       "Clique assim que o sinal aparecer.",
-      "Clique quando a letra for igual à de duas posições atrás.",
       "Responda às duas tarefas conforme elas aparecerem.",
       "Clique em certo ou errado conforme a operação.",
     ];
@@ -164,23 +162,21 @@ describe("Família 4 — estímulo contínuo", () => {
     expect(modoDe("tempo-reacao")).toBe("explicativo");
     expect(modoDe("certo-ou-errado")).toBe("explicativo");
 
-    expect(modoDe("nback")).toBe("continua");
     expect(modoDe("dual-task")).toBe("continua");
   });
 
-  it("registra os sete e preserva os 20 convertidos", () => {
+  it("registra os seis e preserva os 19 convertidos", () => {
     const page = source("app/(patient)/treino/[exercicio]/page.tsx");
     const register = page.slice(
       page.indexOf("const TUTORIAIS_POR_EXERCICIO"),
       page.indexOf("});", page.indexOf("const TUTORIAIS_POR_EXERCICIO")),
     );
     const converted = register.match(/(?:"[a-z-]+"|[a-z]+):\s*[a-zA-Z]+Tutorial/g) ?? [];
-    expect(converted).toHaveLength(20);
+    expect(converted).toHaveLength(19);
     for (const exerciseId of [
       "semaforo",
       "vigilancia",
       "tempo-reacao",
-      "nback",
       "dual-task",
       "mot",
       "certo-ou-errado",
@@ -189,12 +185,11 @@ describe("Família 4 — estímulo contínuo", () => {
     }
   });
 
-  it("remove os tutoriais legados dos sete exercícios convertidos", () => {
+  it("remove os tutoriais legados dos seis exercícios convertidos", () => {
     const exercises = [
       "components/exercises/processing/Semaforo.tsx",
       "components/exercises/attention/Vigilancia.tsx",
       "components/exercises/processing/TempoReacao.tsx",
-      "components/exercises/memory/NBack.tsx",
       "components/exercises/attention/DualTask.tsx",
       "components/exercises/attention/MOT.tsx",
       "components/exercises/processing/CertoOuErrado.tsx",

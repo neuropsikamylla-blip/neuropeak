@@ -27,7 +27,6 @@ export const TUTORIAL_VERSIONS: Readonly<Record<string, number>> = Object.freeze
   "lista-distracao": 1,
   "restaurante-ordem": 1,
   "desafio-supermercado": 1,
-  nback: 1,
   "cubo-corsi": 1,
   vigilancia: 2,
   "identificacao-simbolos": 1,

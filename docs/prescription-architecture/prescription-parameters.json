@@ -359,10 +359,6 @@
         {
           "exercise": "Span Numérico Auditivo Direto",
           "reason": "Interferência de regra direta/inversa."
-        },
-        {
-          "exercise": "N-Back",
-          "reason": "Sobrecarga atualização e memória verbal."
         }
       ]
     },
@@ -1093,10 +1089,6 @@
       "canClose": false,
       "bestPosition": "início, após breve checagem motora",
       "badCombinations": [
-        {
-          "exercise": "N-Back",
-          "reason": "Atualização contínua e prazo acumulam fadiga intensa."
-        },
         {
           "exercise": "Rastreamento de Objetos",
           "reason": "Atenção dividida consecutiva compromete tolerância."
@@ -2367,10 +2359,6 @@
       "bestPosition": "início ou meio",
       "badCombinations": [
         {
-          "exercise": "N-Back",
-          "reason": "Manutenção e atualização acumulam fadiga."
-        },
-        {
           "exercise": "Restaurante",
           "reason": "Listas sob distratores sofrem interferência proativa."
         }
@@ -2607,96 +2595,6 @@
         }
       }
     }
-  },
-  {
-    "exerciseId": "nback",
-    "officialName": "N-Back",
-    "prescriptionParameterStatus": "FINAL_PARAMETERS",
-    "executionModel": {
-      "value": "FIXED_HIGH_FATIGUE",
-      "justification": "Cada bloco tem preparação e 14 estímulos contínuos; progressão exige blocos completos e longa exposição fatiga atualização."
-    },
-    "minimumValidUnit": {
-      "value": "bloco",
-      "justification": "A sequência completa sob o mesmo N é necessária para decidir progressão."
-    },
-    "terminationPolicy": {
-      "atLimit": "termina o bloco",
-      "midUnit": "Se o limite chegar durante os 14 estímulos, conclui o bloco; interrupção real invalida o parcial."
-    },
-    "protocols": {
-      "BRIEF": {
-        "unitCount": 1,
-        "estimatedDuration": "~2,5 min",
-        "clinicalValidity": "Manutenção/aquecimento; insuficiente para progressão. Confirma regra e tolerância; progressão exige mais de um bloco."
-      },
-      "STANDARD": {
-        "unitCount": 3,
-        "estimatedDuration": "~7,5 min",
-        "clinicalValidity": "Três blocos permitem consistência e regra de progressão. Sustenta progressão somente com unidades completas; não permite concluir transferência além da mecânica."
-      },
-      "EXTENDED": {
-        "unitCount": 4,
-        "estimatedDuration": "~10 min",
-        "clinicalValidity": "Aumenta estabilidade ou variedade da observação. Teto curto limita fadiga de atualização e omissões tardias."
-      }
-    },
-    "baselineCognitiveLoad": {
-      "value": 3,
-      "justification": "Cada estímulo exige atualizar a janela, comparar e responder sob prazo, sem pausa durante o bloco."
-    },
-    "loadModifiers": [
-      {
-        "dimension": "quantidade de estímulos",
-        "effect": "Cada bloco mantém 14 itens ativos."
-      },
-      {
-        "dimension": "memória exigida",
-        "effect": "1-back a 4-back amplia distância e itens intervenientes."
-      },
-      {
-        "dimension": "interferência",
-        "effect": "Letras intervenientes competem com a referência."
-      },
-      {
-        "dimension": "semelhança dos distratores",
-        "effect": "Repetições próximas aumentam competição serial, com coincidências acidentais controladas."
-      }
-    ],
-    "clinicalDuration": {
-      "minimumUseful": "2,5 min",
-      "standard": "7,5 min",
-      "maximumRecommended": "10 min",
-      "justification": "Um bloco confirma regra, três permitem progressão e quatro limitam queda por fadiga."
-    },
-    "fatigue": {
-      "level": "ALTA",
-      "explanation": "Atualização, comparação e resposta temporizada em cada estímulo, sem pausa no bloco, favorecem omissões e queda rápida de qualidade."
-    },
-    "interference": {
-      "level": "ALTA",
-      "explanation": "Itens intervenientes precisam ser mantidos e descartados sem perder a referência."
-    },
-    "resumptionAfterInterruption": {
-      "strategy": "um nível abaixo",
-      "rationale": "Sobrecarga pede novo bloco um N abaixo; interrupção externa repete bloco integral no mesmo N."
-    },
-    "sessionEligibility": {
-      "canOpen": true,
-      "canClose": false,
-      "bestPosition": "início",
-      "badCombinations": [
-        {
-          "exercise": "Dupla Tarefa",
-          "reason": "Atualização contínua e prazo acumulam fadiga intensa."
-        },
-        {
-          "exercise": "Lista com Distração",
-          "reason": "Interferência verbal altera manutenção e descarte."
-        }
-      ]
-    },
-    "modality": "não se aplica"
   },
   {
     "exerciseId": "cubo-corsi",

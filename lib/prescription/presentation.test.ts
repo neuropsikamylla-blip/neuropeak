@@ -250,10 +250,14 @@ describe("apresentação consultiva da prescrição", () => {
     expect(presentLegacyPlan([{ id: "tempo-reacao", settings: { protocol: "desconhecido" } }], 30).legacyMarker).toBeDefined();
   });
 
-  it("apresenta o protocolo padrão de todos os 34 exercícios em texto legível", () => {
+  // O N‑Back foi aposentado em 12/ago/2026 por decisão dela.
+  it("apresenta o protocolo padrão de todos os 33 exercícios em texto legível", () => {
     const labels = EXERCISE_CATALOG.map((definition) => presentCatalogExercise(definition.exerciseId)?.protocolLabel);
-    expect(labels).toHaveLength(34);
-    expect(labels.filter((label) => label?.startsWith("Protocolo padrão: "))).toHaveLength(33);
+    expect(labels).toHaveLength(33);
+    // 32, e não 33: `antes-depois` responde "Configuração provisória", não protocolo padrão.
+    // O total caiu de 34 para 33 com a aposentadoria, e este derivado caiu junto — ajustar um
+    // sem o outro foi o que quebrou aqui.
+    expect(labels.filter((label) => label?.startsWith("Protocolo padrão: "))).toHaveLength(32);
     expect(presentCatalogExercise("antes-depois")?.protocolLabel).toBe("Configuração provisória");
     expect(presentCatalogExercise("span-numerico")?.protocolLabel).toBe("Protocolo padrão: 8 séries · ~6 min");
     expect(presentCatalogExercise("restaurante-ordem")?.protocolLabel).toBe("Protocolo padrão: 5 rodadas · ~10 min");
@@ -297,9 +301,10 @@ describe("apresentação consultiva da prescrição", () => {
     expect(ADAPTIVE_VALIDITY_NOTE).not.toContain("insuficiente para progressão");
   });
 
-  it("apresenta o perfil cognitivo de todos os 34 exercícios em texto legível", () => {
+  // O N‑Back foi aposentado em 12/ago/2026 por decisão dela.
+  it("apresenta o perfil cognitivo de todos os 33 exercícios em texto legível", () => {
     const labels = EXERCISE_CATALOG.map((definition) => presentCatalogExercise(definition.exerciseId)?.cognitiveProfileLabel);
-    expect(labels).toHaveLength(34);
+    expect(labels).toHaveLength(33);
     expect(labels.every((label) => Boolean(label?.trim()))).toBe(true);
     expect(labels.join(" ")).not.toMatch(/[A-Z]{3,}_[A-Z_]+/);
   });

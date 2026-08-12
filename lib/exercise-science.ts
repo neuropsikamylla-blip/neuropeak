@@ -204,21 +204,6 @@ export const EXERCISE_SCIENCE: Record<string, ExerciseScience> = {
     ],
   },
 
-  "nback": {
-    exerciseId: "nback",
-    neuroanatomy:
-      "Rede de memória operacional fronto-parietal: CPFDL bilateral (BA 9/46), córtex parietal posterior (BA 7/40) e gânglios da base. Meta-análise de neuroimagem de Rottschy et al. (2012) com 189 estudos confirmou rede robusta ativada pelo N-Back, com escalada de ativação proporcional ao nível N.",
-    trainingEffects:
-      "N-Back é o paradigma de treino de memória operacional mais estudado: meta-análise de Soveri et al. (2017) com 66 estudos mostra melhora de 0,3–0,5 DP em memória operacional e atenção. Efeitos de transferência far-transfer controversos (Melby-Lervåg et al., 2016) mas near-transfer consistentes. Ganhos maiores com protocolos adaptativos ≥ 4 semanas.",
-    clinicalRelevance:
-      "N-Back adaptativo é componente de intervenções cognitivas em TDA/H, esquizofrenia, CCL e pós-TCE. Protocolo dual N-Back (auditivo + visual simultâneo) mostra resultados superiores em tarefas de raciocínio fluido. Normas de desempenho por nível N disponíveis para comparação clínica (Jaeggi et al., 2010; revisado 2022).",
-    references: [
-      "Soveri, A., et al. (2017). Working memory training revisited: A multi-level meta-analysis of n-back training studies. Psychonomic Bulletin & Review, 24(4), 1077–1096.",
-      "Rottschy, C., et al. (2012). Modelling neural correlates of working memory: A coordinate-based meta-analysis. NeuroImage, 60(1), 830–846.",
-      "Melby-Lervåg, M., Redick, T. S., & Hulme, C. (2016). Working memory training does not improve performance on measures of intelligence or other measures of 'far transfer'. Perspectives on Psychological Science, 11(4), 512–534.",
-    ],
-  },
-
   "labirinto": {
     exerciseId: "labirinto",
     neuroanatomy:

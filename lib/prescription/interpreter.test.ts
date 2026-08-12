@@ -19,7 +19,7 @@ describe("interpretador", () => {
     const examples = [
       { targetMinutes: 20 as const, ids: ["tempo-reacao", "letras-sequencia", "certo-ou-errado"], duration: [19, 22], load: 4, fatigue: { BAIXA: 1, MODERADA: 2, ALTA: 0 } },
       { targetMinutes: 30 as const, ids: ["deductive-grid", "matriz-espacial", "certo-ou-errado"], duration: [27, 32.5], load: 4, fatigue: { BAIXA: 2, MODERADA: 0, ALTA: 1 } },
-      { targetMinutes: 40 as const, ids: ["nback", "semaforo", "ordem-historia", "identificacao-simbolos", "certo-ou-errado"], duration: [36.5, 43], load: 9, fatigue: { BAIXA: 1, MODERADA: 3, ALTA: 1 } },
+      { targetMinutes: 40 as const, ids: ["task-switching", "semaforo", "ordem-historia", "identificacao-simbolos", "certo-ou-errado"], duration: [36, 43.5], load: 9, fatigue: { BAIXA: 1, MODERADA: 3, ALTA: 1 } },
     ];
     for (const example of examples) {
       const result = interpretPlan({ targetMinutes: example.targetMinutes, exercises: example.ids.map((exerciseId, index) => ({ exerciseId, order: index + 1 })) });

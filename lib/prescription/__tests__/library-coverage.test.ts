@@ -15,8 +15,9 @@ describe("cobertura de prescrição da biblioteca de exercícios", () => {
     .flatMap((domain) => DOMAIN_EXERCISES[domain])
     .filter((id) => Boolean(EXERCISE_DEFINITIONS[id as keyof typeof EXERCISE_DEFINITIONS]));
 
-  it("mostra os 34 exercícios canônicos", () => {
-    expect(new Set(visibleIds).size).toBe(34);
+  // O N‑Back foi aposentado em 12/ago/2026 por decisão dela.
+  it("mostra os 33 exercícios canônicos", () => {
+    expect(new Set(visibleIds).size).toBe(33);
   });
 
   it("todo exercício visível tem parâmetros de prescrição", () => {

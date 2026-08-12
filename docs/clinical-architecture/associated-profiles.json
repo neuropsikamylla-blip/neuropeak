@@ -506,24 +506,6 @@
     "profileStatus": "FINALIZED_PROFILE"
   },
   {
-    "exerciseId": "nback",
-    "officialName": "N-Back",
-    "catalogDomain": "Memória",
-    "catalogSubdomain": "Memória Operacional",
-    "mechanicalPrimary": "Atualização e Manipulação Mental",
-    "associatedCognitiveProfiles": [
-      "Memória Operacional Verbal",
-      "Atenção Sustentada",
-      "Monitoramento Executivo e Manutenção de Meta",
-      "Tempo de Reação"
-    ],
-    "functionalClinicalTags": [],
-    "instrumentalDemands": [
-      "reconhecimento visual de letras e rótulos dos botões; leitura; uso de mouse ou toque; velocidade e coordenação motora suficientes para responder na janela. Ler letras é requisito, não treino de linguagem"
-    ],
-    "profileStatus": "FINALIZED_PROFILE"
-  },
-  {
     "exerciseId": "cubo-corsi",
     "officialName": "Cubos",
     "catalogDomain": "Memória",

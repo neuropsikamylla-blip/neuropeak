@@ -42,12 +42,11 @@ registrado aqui.
 | 26 | `lista-distracao` | Lista com Distração | Memória | Memória Operacional | não | ACTIVE |
 | 27 | `restaurante-ordem` | Restaurante | Memória | Memória Operacional | **sim** | ACTIVE |
 | 28 | `desafio-supermercado` | Supermercado | Memória | Memória Operacional | **sim** | ACTIVE |
-| 29 | `nback` | N-Back | Memória | Memória Operacional | não | ACTIVE |
-| 30 | `cubo-corsi` | Cubos | Memória | Memória Visuoespacial | não | ACTIVE |
-| 31 | `vigilancia` | Vigilância | Atenção | Atenção Sustentada | não | ACTIVE |
-| 32 | `identificacao-simbolos` | Identificação de Símbolos | Velocidade de Processamento | Busca Visual Rápida | não | ACTIVE |
-| 33 | `estacionamento-logico` | Estacionamento Lógico | Funções Executivas | Planejamento | não | ACTIVE |
-| 34 | `investigadores-sociais` | Investigadores da Situação Social | Desenvolvimento Funcional | Cognição Social | não | ACTIVE |
+| 29 | `cubo-corsi` | Cubos | Memória | Memória Visuoespacial | não | ACTIVE |
+| 30 | `vigilancia` | Vigilância | Atenção | Atenção Sustentada | não | ACTIVE |
+| 31 | `identificacao-simbolos` | Identificação de Símbolos | Velocidade de Processamento | Busca Visual Rápida | não | ACTIVE |
+| 32 | `estacionamento-logico` | Estacionamento Lógico | Funções Executivas | Planejamento | não | ACTIVE |
+| 33 | `investigadores-sociais` | Investigadores da Situação Social | Desenvolvimento Funcional | Cognição Social | não | ACTIVE |
 
 ## Modalidades
 

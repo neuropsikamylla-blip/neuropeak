@@ -6,9 +6,10 @@ import { describe, expect, it } from "vitest";
  * REGRA GLOBAL 10 DA T1 — a gravação do tutorial tem UM caminho só.
  *
  * Congelada por ela em 07/ago/2026, ao elevar a garantia da regra 8 de "vale para o Span" para
- * "vale para os 34". A motivação é direta: se cada exercício puder gravar do seu jeito, a promessa
+ * "vale para os 33". O N‑Back foi aposentado em 12/ago/2026 por decisão dela. A motivação é direta:
+ * se cada exercício puder gravar do seu jeito, a promessa
  * de que rever o tutorial não altera dado clínico deixa de ser verificável — passaria a depender de
- * 34 implementações estarem todas corretas, para sempre.
+ * 33 implementações estarem todas corretas, para sempre.
  *
  * Estes testes valem para TODOS os exercícios, inclusive os que ainda serão convertidos. Um
  * exercício novo que tente gravar por conta própria falha aqui, no lote em que for criado.
@@ -50,7 +51,8 @@ describe("T1 global — 10: a gravação do tutorial tem um caminho único", () 
       .filter((f) => MARCAS_DE_GRAVACAO.test(fonte(f)));
 
     // Se este teste falhar, um exercício está tentando gravar por conta própria. A correção nunca
-    // é relaxar o teste: é usar o caminho do ExerciseWrapper, como os outros 33.
+    // O N‑Back foi aposentado em 12/ago/2026 por decisão dela.
+    // Isto não é relaxar o teste: é usar o caminho do ExerciseWrapper, como os outros 33.
     expect(infratores).toEqual([]);
   });
 

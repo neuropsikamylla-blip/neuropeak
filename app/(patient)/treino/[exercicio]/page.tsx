@@ -38,7 +38,6 @@ import {
 import {
   certoOuErradoTutorial,
   dualTaskTutorial,
-  nbackTutorial,
   semaforoTutorial,
   tempoReacaoTutorial,
 } from "@/lib/tutorial/definitions/estimulo-continuo";
@@ -70,7 +69,6 @@ const TUTORIAIS_POR_EXERCICIO: Readonly<Record<string, TutorialDefinition>> = Ob
   "semaforo": semaforoTutorial,
   "vigilancia": vigilanciaTutorial,
   "tempo-reacao": tempoReacaoTutorial,
-  "nback": nbackTutorial,
   "dual-task": dualTaskTutorial,
   "mot": motTutorial,
   "certo-ou-errado": certoOuErradoTutorial,
@@ -86,7 +84,6 @@ const MatrizEspacial      = dynamic(() => import("@/components/exercises/memory/
 const JogoMemoria         = dynamic(() => import("@/components/exercises/memory/JogoMemoria").then(m => ({ default: m.JogoMemoria })), { loading: ExerciseLoader, ssr: false });
 const SpanNumericoInverso = dynamic(() => import("@/components/exercises/memory/SpanNumericoInverso").then(m => ({ default: m.SpanNumericoInverso })), { loading: ExerciseLoader, ssr: false });
 const MatrizEspacialInversa = dynamic(() => import("@/components/exercises/memory/MatrizEspacialInversa").then(m => ({ default: m.MatrizEspacialInversa })), { loading: ExerciseLoader, ssr: false });
-const NBack               = dynamic(() => import("@/components/exercises/memory/NBack").then(m => ({ default: m.NBack })), { loading: ExerciseLoader, ssr: false });
 const TrilhaVisual        = dynamic(() => import("@/components/exercises/attention/TrilhaVisual").then(m => ({ default: m.TrilhaVisual })), { loading: ExerciseLoader, ssr: false });
 const StroopTask          = dynamic(() => import("@/components/exercises/executive/StroopTask").then(m => ({ default: m.StroopTask })), { loading: ExerciseLoader, ssr: false });
 const Vigilancia          = dynamic(() => import("@/components/exercises/attention/Vigilancia").then(m => ({ default: m.Vigilancia })), { loading: ExerciseLoader, ssr: false });
@@ -191,12 +188,6 @@ const EXERCISE_INSTRUCTIONS: Record<string, string[]> = {
     "Após a sequência, clique nas células em ORDEM INVERSA.",
     "Se acendeu posição A → B → C, clique C → B → A.",
     "Este exercício treina memória operacional visuoespacial.",
-  ],
-  "nback": [
-    "Uma letra será exibida por vez na tela.",
-    "Você deve responder se a letra ATUAL é igual à de N posições atrás.",
-    "Exemplo (2-back): A B C A → a 4ª letra (A) é igual à 2ª (B)? NÃO.",
-    "Responda SIM ou NÃO antes que a próxima letra apareça.",
   ],
   "ordem-historia": [
     "Você verá as cenas de uma história — mas fora de ordem!",
@@ -748,7 +739,6 @@ export default function ExercicioPage() {
       case "jogo-memoria": return <JogoMemoria {...props} />;
       case "span-numerico-inverso": return <SpanNumericoInverso {...props} settings={exerciseSettings} />;
       case "matriz-espacial-inversa": return <MatrizEspacialInversa {...props} />;
-      case "nback": return <NBack {...props} />;
       case "ordem-historia": return <OrdemHistoria {...props} settings={exerciseSettings as { unlockIntruso?: boolean; unlockFalta?: boolean } | undefined} />;
       case "certo-ou-errado": return <CertoOuErrado {...props} patientAge={patientAge} />;
       case "antes-depois": return <CaminhosMeta {...props} settings={exerciseSettings} />;
@@ -787,7 +777,7 @@ export default function ExercicioPage() {
   // Exercícios que gerenciam o próprio layout (sem barra de progresso no canto)
   // Exercícios com barra de progresso própria (por tempo) no layout
   const HIDE_PROGRESS_WIDGET = new Set([
-    "estacionamento-logico", "cubo-corsi", "matriz-espacial", "matriz-espacial-inversa", "nback", "jogo-memoria", "sequencia-itens", "lista-distracao", "letras-sequencia", "padroes-rotacao", "torre-hanoi", "tempo-reacao", "semaforo", "certo-ou-errado", "stroop-task", "identificacao-simbolos", "trilha-visual", "informacao-em-foco", "caca-item-barato", "corrida-tempo", "mudanca-regras", "labirinto", "vigilancia", "atencao-dividida", "focus-agents", "mot", "dual-task", "desafio-orcamento", "compra-multifuncional", "investigadores-sociais", "ordem-historia", "desafio-cidade", "antes-depois", "restaurante-ordem", "desafio-supermercado", "task-switching", "deductive-grid", "span-numerico", "span-numerico-inverso",
+    "estacionamento-logico", "cubo-corsi", "matriz-espacial", "matriz-espacial-inversa", "jogo-memoria", "sequencia-itens", "lista-distracao", "letras-sequencia", "padroes-rotacao", "torre-hanoi", "tempo-reacao", "semaforo", "certo-ou-errado", "stroop-task", "identificacao-simbolos", "trilha-visual", "informacao-em-foco", "caca-item-barato", "corrida-tempo", "mudanca-regras", "labirinto", "vigilancia", "atencao-dividida", "focus-agents", "mot", "dual-task", "desafio-orcamento", "compra-multifuncional", "investigadores-sociais", "ordem-historia", "desafio-cidade", "antes-depois", "restaurante-ordem", "desafio-supermercado", "task-switching", "deductive-grid", "span-numerico", "span-numerico-inverso",
   ]);
 
   return (
