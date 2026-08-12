@@ -15140,3 +15140,6 @@ Vigilnacia voce pode repetir o exercicio nao? igual digitos, igual agente focus
 
 ## 12/08/2026 15:54
 N-back está ok , mas o exercicio em sí não está legal... retire ele pode ser? pode retirar ele totalmetne
+
+## 12/08/2026 16:54
+o N-back ja foi retirado da lista de exercicios?
