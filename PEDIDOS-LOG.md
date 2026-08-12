@@ -15128,3 +15128,6 @@ arruma ambos
 <status>completed</status>
 <summary>Background command "Dispara o Codex nos dois tutoriais" completed (exit code 0)</summary>
 </task-notification>
+
+## 12/08/2026 13:50
+[Image #9] vc concorda que nao é assim o exercicio? tanto que nem consigo avançar para o exercicio, tire esse tutorial do vigilancia esta completamente errado. O exercicio não é assim, nao quero nenhum tutorial que não seja igual ao que é feito!
