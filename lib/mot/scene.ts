@@ -133,3 +133,25 @@ export function stepAll(balls: Ball[], width: number, height: number): Ball[] {
   }
   return next;
 }
+
+/**
+ * Fração da arena disponível que o nível usa.
+ *
+ * Pedido dela em 12/ago/2026, treinando: *"quando estiver pouca assim, o quadrado o espaço precisa
+ * ser menor; com a progressão da dificuldade vai aumentando o espaçamento e as bolas precisam
+ * aumentar quantidade e espalhar mais pelo quadrado"*.
+ *
+ * O motivo é clínico, não estético: poucas bolas numa área enorme ficam distantes umas das outras e
+ * o rastreamento perde a dificuldade — o olho acompanha objetos isolados sem esforço. A carga vem
+ * de duas coisas ao mesmo tempo, e elas precisam crescer juntas: **quantidade** (já em
+ * `totalBalls`) e **área a varrer**. Área grande com poucas bolas é espaço vazio, não é treino.
+ *
+ * Começa em 55% e chega a 100% — nunca passa disso, porque o teto é o que cabe na tela do paciente.
+ */
+export const ARENA_SCALE_MIN = 0.55;
+const ARENA_SCALE_FULL_LEVEL = 10;
+
+export function arenaScaleForLevel(level: number): number {
+  const progresso = Math.max(0, Math.min(1, level / ARENA_SCALE_FULL_LEVEL));
+  return ARENA_SCALE_MIN + (1 - ARENA_SCALE_MIN) * progresso;
+}

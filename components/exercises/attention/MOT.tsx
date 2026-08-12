@@ -8,6 +8,7 @@ import { ExerciseProgressBar } from "@/components/exercises/ExerciseProgressBar"
 import { MOTBall } from "@/components/exercises/attention/MOTBall";
 import {
   ASPECT,
+  arenaScaleForLevel,
   randomBalls,
   stepAll,
   targetsForLevel,
@@ -80,6 +81,17 @@ export function MOT({ difficulty, theme, onComplete }: MOTProps) {
   const [dims, setDims] = useState(() => ({ w: 320, h: Math.round(320 * ASPECT) }));
   const dimsRef = useRef(dims);
   dimsRef.current = dims;
+
+  // A ARENA EFETIVA da rodada: o quadro não é sempre o maior que cabe na tela. Ele começa menor e
+  // cresce com o nível, junto com a quantidade de bolas (pedido dela, 12/ago/2026). `dims` continua
+  // sendo o teto — o que cabe no aparelho —, e isto é a fatia dele que o nível usa.
+  //
+  // A física precisa correr NESTAS medidas, não nas do teto: é o clamp de `stepAll` que mantém a
+  // bola dentro do quadro visível, e usar o teto faria a bola sumir na área que não está desenhada.
+  const escala = arenaScaleForLevel(level);
+  const arena = { w: Math.round(dims.w * escala), h: Math.round(dims.h * escala) };
+  const arenaRef = useRef(arena);
+  arenaRef.current = arena;
   useLayoutEffect(() => {
     // Mede o VIEWPORT direto (window.innerWidth/innerHeight) — robusto: não depende
     // do clientWidth de um wrapper que pode vir travado num valor pequeno.
@@ -119,7 +131,7 @@ export function MOT({ difficulty, theme, onComplete }: MOTProps) {
   }, []);
 
   const startRound = useCallback((r: number) => {
-    const newBalls = randomBalls(levelRef.current, r, dimsRef.current.w, dimsRef.current.h);
+    const newBalls = randomBalls(levelRef.current, r, arenaRef.current.w, arenaRef.current.h);
     // A base renderizada (left/top) e `newBalls`; a fisica viva parte da mesma
     // referencia. Durante o track o transform e aplicado como delta sobre ela.
     ballsRef.current = newBalls;
@@ -138,7 +150,7 @@ export function MOT({ difficulty, theme, onComplete }: MOTProps) {
 
       function animate() {
         // Avanca a fisica no ref (paredes + colisao entre bolas) sem render.
-        ballsRef.current = stepAll(ballsRef.current, dimsRef.current.w, dimsRef.current.h);
+        ballsRef.current = stepAll(ballsRef.current, arenaRef.current.w, arenaRef.current.h);
         for (const ball of ballsRef.current) {
           const node = ballNodes.current.get(ball.id);
           const b0 = base.get(ball.id);
@@ -276,7 +288,7 @@ export function MOT({ difficulty, theme, onComplete }: MOTProps) {
         {/* Ball area — coordenadas REAIS em px (sem escala CSS); a bola nunca passa da borda */}
         <div ref={stageWrapRef} className="w-full flex justify-center">
         <div className={`relative rounded-2xl overflow-hidden ${pal.area}`}
-          style={{ width: dims.w, height: dims.h }}>
+          style={{ width: arena.w, height: arena.h }}>
           {balls.map(ball => (
               <MOTBall key={ball.id}
                 ref={node => {
@@ -288,8 +300,8 @@ export function MOT({ difficulty, theme, onComplete }: MOTProps) {
                 selected={selected.has(ball.id)}
                 revealTarget={phase === "identify" && roundScore !== null && ball.isTarget}
                 gamified={theme === "GAMIFIED"}
-                arenaWidth={dims.w}
-                arenaHeight={dims.h}
+                arenaWidth={arena.w}
+                arenaHeight={arena.h}
                 onClick={() => handleBallTap(ball.id)}
               />
           ))}

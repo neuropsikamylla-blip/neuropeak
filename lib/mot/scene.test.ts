@@ -2,7 +2,9 @@ import { readFileSync } from "node:fs";
 import { resolve } from "node:path";
 import { describe, expect, it } from "vitest";
 import {
+  ARENA_SCALE_MIN,
   BALL_RADIUS,
+  arenaScaleForLevel,
   randomBalls,
   stepAll,
   targetsForLevel,
@@ -141,5 +143,30 @@ describe("cena do MOT", () => {
     expect(exercise).not.toMatch(/function targetsForLevel|function speedStepForLevel/);
     expect(exercise).not.toMatch(/function randomBalls|function stepAll/);
     expect(exercise).not.toMatch(/const BALL_RADIUS|const ASPECT|const MAX_TARGETS/);
+  });
+});
+
+describe("a área cresce com o nível", () => {
+  it("começa reduzida, chega ao máximo e nunca passa dele", () => {
+    // Regra dela (12/ago): pouca bola, espaço menor; mais bolas, mais espaço. Área grande com
+    // poucas bolas deixa o rastreamento fácil demais — o olho segue objetos isolados sem esforço.
+    expect(arenaScaleForLevel(0)).toBe(ARENA_SCALE_MIN);
+    expect(arenaScaleForLevel(10)).toBe(1);
+    expect(arenaScaleForLevel(99)).toBe(1);
+    expect(arenaScaleForLevel(-5)).toBe(ARENA_SCALE_MIN);
+  });
+
+  it("é monotônica: nível maior nunca dá área menor", () => {
+    for (let level = 0; level < 12; level++) {
+      expect(arenaScaleForLevel(level + 1)).toBeGreaterThanOrEqual(arenaScaleForLevel(level));
+    }
+  });
+
+  it("área e quantidade crescem juntas — nenhuma das duas sozinha", () => {
+    // Se um dia alguém fizer a área crescer sem a quantidade (ou vice-versa), a carga desanda: é
+    // exatamente o estado que ela viu na tela, com 6 bolas espalhadas num quadro enorme.
+    const areaSobe = arenaScaleForLevel(8) > arenaScaleForLevel(0);
+    const bolasSobem = totalBalls(8) > totalBalls(0);
+    expect(areaSobe && bolasSobem).toBe(true);
   });
 });
