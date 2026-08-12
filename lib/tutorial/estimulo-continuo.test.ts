@@ -172,25 +172,24 @@ describe("Família 4 — estímulo contínuo", () => {
 
     expect(modoDe("nback")).toBe("continua");
     expect(modoDe("dual-task")).toBe("continua");
-    expect(modoDe("mot")).toBe("continua");
-    expect(modoDe("vigilancia")).toBe("continua");
+    // A Vigilância saiu do mapa (12/ago): a definição continua no arquivo, mas não é usada por
+    // ninguém. Quando voltar, será um tutorial novo, e o modo é decisão dela na hora.
   });
 
-  it("registra os sete e preserva os 20 convertidos", () => {
+  it("registra os cinco que continuam e preserva os 18 convertidos", () => {
     const page = source("app/(patient)/treino/[exercicio]/page.tsx");
     const register = page.slice(
       page.indexOf("const TUTORIAIS_POR_EXERCICIO"),
       page.indexOf("});", page.indexOf("const TUTORIAIS_POR_EXERCICIO")),
     );
     const converted = register.match(/(?:"[a-z-]+"|[a-z]+):\s*[a-zA-Z]+Tutorial/g) ?? [];
-    expect(converted).toHaveLength(20);
+    // 19, e não 20: a Vigilância saiu do mapa em 12/ago/2026 — ver o comentário no page.tsx.
+    expect(converted).toHaveLength(18);
     for (const exerciseId of [
       "semaforo",
-      "vigilancia",
       "tempo-reacao",
       "nback",
       "dual-task",
-      "mot",
       "certo-ou-errado",
     ]) {
       expect(register).toContain(exerciseId);

@@ -370,7 +370,6 @@ describe("o Span Inverso continua na fábrica compartilhada", () => {
       "lista-distracao",
       "matriz-espacial",
       "matriz-espacial-inversa",
-      "mot",
       "nback",
       "padroes-rotacao",
       "restaurante-ordem",
@@ -379,7 +378,6 @@ describe("o Span Inverso continua na fábrica compartilhada", () => {
       "span-numerico",
       "span-numerico-inverso",
       "tempo-reacao",
-      "vigilancia",
     ]);
   });
 });

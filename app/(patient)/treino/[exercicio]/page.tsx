@@ -38,11 +38,9 @@ import {
 import {
   certoOuErradoTutorial,
   dualTaskTutorial,
-  motTutorial,
   nbackTutorial,
   semaforoTutorial,
   tempoReacaoTutorial,
-  vigilanciaTutorial,
 } from "@/lib/tutorial/definitions/estimulo-continuo";
 import { focusAgentsTutorial } from "@/lib/tutorial/definitions/focus-agents";
 import type { TutorialDefinition } from "@/lib/tutorial/types";
@@ -68,11 +66,16 @@ const TUTORIAIS_POR_EXERCICIO: Readonly<Record<string, TutorialDefinition>> = Ob
   "jogo-memoria": jogoMemoriaTutorial,
   "restaurante-ordem": restauranteOrdemTutorial,
   "semaforo": semaforoTutorial,
-  "vigilancia": vigilanciaTutorial,
+  // A Vigilância está FORA do mapa por decisão dela em 12/ago/2026: o tutorial mostrava três
+  // caixas com um losango em CSS, enquanto o exercício tem 8 pipas em imagem sobre fundo real e
+  // resposta por região — e ele a impedia de entrar no exercício. Sem tutorial, o paciente vai
+  // direto da preparação para o treino. Só volta quando existir um tutorial que seja o exercício.
   "tempo-reacao": tempoReacaoTutorial,
   "nback": nbackTutorial,
   "dual-task": dualTaskTutorial,
-  "mot": motTutorial,
+  // O MOT saiu do mapa pelo MESMO motivo da Vigilância (12/ago/2026): o tutorial mostrava quatro
+  // círculos parados, quando o exercício memoriza alvos, move TODAS as bolas com física e só
+  // então pede a seleção. Volta quando o tutorial for o exercício.
   "certo-ou-errado": certoOuErradoTutorial,
   "focus-agents": focusAgentsTutorial,
 });
