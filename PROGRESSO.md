@@ -28,6 +28,93 @@ Nota operacional: o servidor de desenvolvimento passou a noite parado e a primei
 gerou um `prisma:error ... Closed` — conexão velha expirando, aconteceu uma vez só, não é defeito
 do código. Se reaparecer com frequência, aí sim investigar o pool.
 
+## SESSÃO DE 12/ago/2026 — ela foi TREINAR, e o treino achou o que a revisão não achou
+
+Dia inteiro de correção guiada pelo uso real. **Sete versões publicadas.** O padrão de todos os
+achados é o mesmo: ela abriu os exercícios como paciente e esbarrou no que nenhum teste meu pegava.
+
+| versão | o que entrou |
+|---|---|
+| 2.86.1 | Focus: personagens menores (proporção igual à do treino) e brilho verde no lugar da moldura |
+| 2.86.2 | Focus: o cursor volta ao ponto neutro antes de procurar |
+| 2.86.3 | **Os 20 tutoriais** param de mandar OUVIR uma tarefa visual |
+| 2.86.4 | MOT: a arena cabe na tela, sem rolar para confirmar |
+| 2.87.0 | Tutoriais falsos da Vigilância e do MOT REMOVIDOS |
+| 2.88.0 | Os dois voltam, agora usando o exercício real |
+| 2.89.0 | MOT: a área cresce junto com a quantidade de bolas |
+| 2.90.0 | **N-Back aposentado** — os 34 canônicos viram 33 |
+
+### A regra dela, dita nesta sessão e que vale para os 34
+
+> **"não quero nenhum tutorial que não seja igual ao que é feito"**
+
+E, sobre como fazer: *"Vigilância você pode repetir o exercício não? igual dígitos, igual agente
+focus"*. É o modelo: o tutorial **roda o exercício**, com as peças reais.
+
+### Os defeitos encontrados, e a origem de cada um
+
+1. **Título errado nos 20 tutoriais.** A tela da "sua vez" mandava ESCUTAR, texto herdado do Span
+   Auditivo. A regra 4 sempre disse "Agora é sua vez". **Nenhum teste protegia os títulos** — por
+   isso atravessou todas as conversões. Agora há um, e ele varre o arquivo inteiro: pegou a frase
+   até dentro do comentário que eu tinha acabado de escrever.
+2. **Tutoriais da Família 4 desenhados à mão.** Vigilância mostrava 3 caixas com losango em CSS
+   (o exercício tem 8 pipas em imagem, resposta por região) e **impedia de entrar no exercício**;
+   MOT mostrava 4 círculos parados (o exercício move todas as bolas com física).
+   **A falha é de adjudicação minha:** aprovei aquela colheita, com a regra da réplica escrita
+   desde julho.
+3. **MOT com rolagem.** A altura descontava 150 px fixos para cabeçalho, rótulo e botão; o real é
+   ~310. Agora a sobra é **medida**, não suposta.
+4. **MOT sem escada de área.** Poucas bolas num quadro enorme = rastreamento fácil. A arena passou a
+   ser 55%→100% do teto, crescendo junto com a quantidade.
+
+### Auditoria dos tutoriais — o estrago era menor que o susto
+
+Dos 20: **13 réplicas reais** (usam o componente do exercício) · **3 só texto** (modo explicação,
+não desenham nada) · **2 falsos** (Vigilância e MOT, já refeitos) · **2 que restavam**.
+**Falta um: `dual-task`.**
+
+### N-Back aposentado (12/ago)
+
+*"o exercício em si não está legal… pode retirar ele totalmente"*. Ela escolheu **aposentar e apagar
+o código**, e dispensou o backup completo do banco.
+
+- **Dados:** 8 planos limpos, 8 itens removidos, zero sobrando. **Nenhuma sessão existia** — nenhum
+  histórico clínico se perdeu. Cópia dos planos salva na Área de Trabalho dela antes de alterar.
+- **Código:** fora do catálogo, taxonomia, switch, metadados, ícones, ciência, versões e documentos
+  de arquitetura. `NBack.tsx` apagado. **Os 34 canônicos viraram 33.**
+- ⚠️ **O Dual Task NÃO foi tocado** — ele cita "nback" por ter uma sub-tarefa própria desse tipo, e
+  ela determinou explicitamente que ele fica. `lib/exercise-retirement.test.ts` varre o projeto e
+  exige que a única menção restante seja a dele.
+
+### Auditoria da Vigilância — entregue para ela repensar a progressão
+
+`docs/auditoria-vigilancia-20260812.md`: as 8 posições, os 3 arranjos, os 15 degraus de exposição,
+os 8 pares de pipas com ΔE medido, os 4 fundos, a escada de 10 níveis e como se sobe.
+
+**Achado clínico para ela decidir:** além de atenção sustentada e seletiva, a tarefa exige **memória
+visuoespacial de curtíssimo prazo** — a pipa some antes da resposta, então é preciso reter *onde*
+ela estava. Isso **não está registrado** na descrição clínica.
+
+**Sete limites da progressão atual** listados no documento. Os dois maiores: a quantidade de pipas
+nunca muda (8 do nível 1 ao 10), e **a velocidade não é herdada entre blocos** — todo bloco recomeça
+em 1100 ms, então os degraus rápidos quase nunca são alcançados de fato.
+
+### ⏭️ PRÓXIMO PASSO
+
+1. **Validação dela** dos tutoriais novos da Vigilância e do MOT (v2.88.0+).
+2. **Tutorial do `dual-task`** — o último falso. Depois disso os tutoriais estão fechados.
+3. **Repensar a progressão da Vigilância** — ela vai decidir a partir da auditoria.
+4. **Os bugs dos exercícios** que ela encontrou treinando e ainda não listou.
+
+### 🧹 Pendências operacionais
+
+- **Quatro labs não removidos:** `focus-tut-f1f2`, `focus-tut-f3`, `tut-vig-mot`, `aposentar-nback`.
+  Apagar é destrutivo e não faço sem ela mandar.
+- **Paciente técnico ativo:** `[TESTE] Paciente técnico`, código `COG15132`. Removível com
+  `node scripts/diagnostics/paciente-teste-t1.mjs --remover`.
+- **`CLAUDE.md` defasado:** declara v2.67.0 e "5 warnings"; o real é v2.90.0 e 10 warnings (nenhum
+  novo — provado rodando o eslint sobre a versão antiga).
+
 ## 🚧 EM ANDAMENTO — Tutoriais da Família 4: Vigilância e MOT (11/ago/2026)
 
 Ela foi **treinar** e encontrou o que a minha revisão não pegou: os tutoriais da Família 4 foram
