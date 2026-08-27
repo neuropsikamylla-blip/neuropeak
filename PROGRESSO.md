@@ -27,8 +27,32 @@ Achado principal: não são 33 problemas soltos, são 3 defeitos estruturais + 1
 - [x] **Passo 5 — MOT corrigido e provado por injeção** (v2.90.1). O sorteio da rodada 0
       espera a medição assentada. Revertido o arquivo ao estado antigo, o teste falha;
       restaurado, passa. `tsc` 0 · `test` 742/742 · `build` 0. ✅
-- [ ] **Passo 6 — migrar os exercícios ao palco, em lotes por família**, com verificação
-      VISUAL de cada lote (regra dela: mudança em coisa aprovada se confere com os olhos).
+- [x] **Passo 6 — migração COMPLETA** (v2.91.0 → v2.94.0). 33 arquivos no palco. O único
+      `min-h-screen` que resta no projeto é o do `ExerciseWrapper`, dono legítimo da altura.
+      - **Lote A** (v2.91.0) — 6 cards centralizados; 4 das 8 capturas dela.
+      - **Lote D1** (v2.92.0) — 13 exercícios. O palco ganhou `backgroundClassName`, porque
+        muitos pintam o fundo com classe de tema, não com cor.
+      - **Lote E** (v2.93.0) — `TutorialBase`, `TutorialRunner` e `PreparationScreen` (as de
+        maior alcance, presentes em muitos exercícios) + os 3 de fundo dinâmico.
+      - **Lote F** (v2.94.0) — os 8 últimos, incluindo MOT e Labirinto, que mediam a janela.
+      - **Não migrados de propósito (5):** `focus-agents`, `AntesDepois`, `OrdemHistoria`,
+        `RestauranteOrdem`, `DesafioSupermercado` — todos `fixed inset-0`, já corretos.
+
+### Os três erros que a revisão do diff pegou, e o Codex não
+
+1. **Lote A** — apagou o `rootBg` do Jogo da Memória (três gradientes, um por tema do
+   paciente) e pôs `#ffffff` fixo. Restaurado; há teste travando, provado por injeção.
+2. **Lote E** — o palco ROLA onde o container antigo CORTAVA: os blobs decorativos do
+   `TutorialBase` dariam barra de rolagem horizontal. O corte foi para dentro de cada fundo.
+3. **Lote F** — trocou as deps de um `useEffect` do Labirinto por `[showTutorial]`, variável
+   que mora em outro componente: **erro de compilação TS2304, tela branca em produção**. Ele
+   relatou "`npx tsc --noEmit`: passou". Não passou — rodando aqui, o erro sai na linha 443.
+
+⚠️ **PENDENTE — verificação visual dela, e publicação.** `main` local em **v2.94.0**;
+produção segue na **2.90.0**. Provas rodadas aqui a cada lote: `tsc` 0 · `test` 749/749 ·
+`build` 0. O HTML renderizado foi conferido no dev server (árvore do palco, largura e fundo
+de cada tela); **ninguém viu as telas com os olhos ainda** — a extensão do Chrome não estava
+conectada nesta sessão.
 
 ## SESSÃO DE 10/ago/2026 — validação dela no Focus Agentes
 
