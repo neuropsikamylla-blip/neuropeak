@@ -15143,3 +15143,6 @@ N-back está ok , mas o exercicio em sí não está legal... retire ele pode ser
 
 ## 12/08/2026 16:54
 o N-back ja foi retirado da lista de exercicios?
+
+## 27/08/2026 15:58
+eu acho que precisamos auditar todos os exercicios( queria que a distribuição deles na tela fosse centralizada e espaçada em tamanho para ficar algo elegante e bonito da forma que está não está bacana.. segue exemplos: [Image #1] [Image #2] [Image #3] [Image #4] [Image #5] [Image #6] [Image #7] [Image #8] alguns exemplos! para vc entender

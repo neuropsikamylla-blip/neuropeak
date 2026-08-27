@@ -3,6 +3,31 @@
 > Checkpoint de contexto para continuidade entre sessões. Atualizado automaticamente.
 > 👉 Visão geral e handoff para o próximo Claude: **`ESTADO-DO-PROJETO.md`** (leia primeiro).
 
+## 🚧 EM ANDAMENTO — Auditoria de layout dos 33 exercícios (27/ago/2026)
+
+Pedido dela: *"precisamos auditar todos os exercícios — queria que a distribuição deles na tela
+fosse centralizada e espaçada em tamanho, para ficar algo elegante e bonito"*, com 8 capturas.
+
+Auditoria escrita em **`docs/auditoria-layout/AUDITORIA-LAYOUT-2026-08-27.md`**.
+Achado principal: não são 33 problemas soltos, são 3 defeitos estruturais + 1 bug funcional.
+
+- [x] **Passo 1 — auditar os 35 arquivos de exercício.** Pronto: `min-h-screen` empilhado em 2
+      camadas (28 arquivos), 12 larguras máximas diferentes, 3 dialetos de layout.
+      *Critério de pronto:* tabela por família, com nome de arquivo e linha. ✅
+- [x] **Passo 2 — achar a causa do MOT (bolas no canto).** Pronto: corrida entre a medição da
+      tela (`useLayoutEffect` → `setDims`) e o sorteio das bolas (`useEffect` → `startRound(0)`),
+      em `MOT.tsx:175`. A primeira rodada nasce numa arena de 176×116px. *Critério:* linha
+      exata identificada e mecanismo explicado. ✅
+- [ ] **Passo 3 — decisões dela** (largura do palco; mexer ou não nos fundos aprovados).
+      *Critério de pronto:* respostas registradas neste bloco.
+- [ ] **Passo 4 — padrão único de palco** (`ExerciseStage`): um componente que centraliza,
+      define a largura por classe de conteúdo e elimina o `min-h-screen` duplo.
+      *Critério:* componente + teste que prova a ausência do `min-h-screen` duplicado.
+- [ ] **Passo 5 — teste que trava o bug do MOT**, depois a correção.
+      *Critério:* teste vermelho antes, verde depois.
+- [ ] **Passo 6 — migrar os exercícios ao palco, em lotes por família**, com verificação
+      VISUAL de cada lote (regra dela: mudança em coisa aprovada se confere com os olhos).
+
 ## SESSÃO DE 10/ago/2026 — validação dela no Focus Agentes
 
 Ela entrou no exercício e validou. **Aprovado no geral** ("de resto parece tudo certo"), com dois
