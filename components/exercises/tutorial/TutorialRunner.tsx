@@ -4,6 +4,7 @@ import { useEffect, useRef, useState } from "react";
 import { AnimatePresence, motion } from "framer-motion";
 import { Check, RotateCcw } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import { ExerciseStage } from "@/components/exercises/ExerciseStage";
 import type { TutorialDefinition, GuidedOutcome } from "@/lib/tutorial/types";
 import type { Theme } from "@/types";
 
@@ -204,9 +205,9 @@ export function TutorialRunner({ definition, theme, onFinish }: TutorialRunnerPr
   }
 
   return (
-    <section className={`${styles.screen} min-h-screen p-4 flex items-center justify-center`}>
+    <ExerciseStage width="compacto" backgroundClassName={styles.screen}>
       <div
-        className={`${styles.card} ${stageBorder} w-full max-w-xl rounded-2xl border-t-4 p-6`}
+        className={`${styles.card} ${stageBorder} w-full rounded-2xl border-t-4 p-6`}
         style={{
           borderTopColor: stage ? stageStyles[theme][stage].accentColor : "transparent",
           borderTopWidth: stage ? 4 : 0,
@@ -345,6 +346,6 @@ export function TutorialRunner({ definition, theme, onFinish }: TutorialRunnerPr
         </motion.div>
         </AnimatePresence>
       </div>
-    </section>
+    </ExerciseStage>
   );
 }

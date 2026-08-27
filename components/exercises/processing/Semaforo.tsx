@@ -5,6 +5,7 @@ import { motion, AnimatePresence } from "framer-motion";
 import { calculateExerciseScore } from "@/lib/scoring";
 import { useTimedProgress } from "@/components/exercises/useExerciseEngine";
 import { ExerciseProgressBar } from "@/components/exercises/ExerciseProgressBar";
+import { ExerciseStage } from "@/components/exercises/ExerciseStage";
 import type { ExerciseResult, Theme } from "@/types";
 
 interface SemaforoProps {
@@ -292,11 +293,11 @@ export function Semaforo({ difficulty, theme, onComplete }: SemaforoProps) {
       : feedback === "wrong"
       ? "!bg-red-900"
       : "";
+  const backgroundClassName = `bg-gray-900 transition-colors duration-150 ${flashClass}`;
 
   return (
-    <div
-      className={`min-h-screen flex flex-col bg-gray-900 transition-colors duration-150 ${flashClass}`}
-    >
+    <ExerciseStage width="compacto" backgroundClassName={backgroundClassName}>
+      <div className="flex flex-col">
       {/* Header */}
       <div className="bg-gray-800 border-b border-gray-700 px-4 pt-4 pb-3">
         <div className="flex justify-between items-center mb-2">
@@ -402,6 +403,7 @@ export function Semaforo({ difficulty, theme, onComplete }: SemaforoProps) {
           </>
         )}
       </div>
-    </div>
+      </div>
+    </ExerciseStage>
   );
 }

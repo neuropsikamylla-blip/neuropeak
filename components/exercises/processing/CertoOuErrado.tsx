@@ -5,6 +5,7 @@ import { motion, AnimatePresence } from "framer-motion";
 import { calculateExerciseScore } from "@/lib/scoring";
 import { useTimedProgress } from "@/components/exercises/useExerciseEngine";
 import { ExerciseProgressBar } from "@/components/exercises/ExerciseProgressBar";
+import { ExerciseStage } from "@/components/exercises/ExerciseStage";
 import type { ExerciseResult, Theme } from "@/types";
 
 interface CertoOuErradoProps {
@@ -620,12 +621,13 @@ export function CertoOuErrado({
   }
 
   // ── Theme tokens ────────────────────────────────────────────────────────────
-  const bg =
+  const bg = `transition-colors ${
     theme === "GAMIFIED"
       ? "bg-gray-950"
       : theme === "COLORFUL"
       ? "bg-gradient-to-b from-purple-50 to-pink-100"
-      : "bg-gray-100";
+      : "bg-gray-100"
+  }`;
 
   const cardClass =
     theme === "GAMIFIED"
@@ -680,7 +682,8 @@ export function CertoOuErrado({
 
   // ── Render ──────────────────────────────────────────────────────────────────
   return (
-    <div className={`min-h-screen flex flex-col p-3 transition-colors ${bg}`}>
+    <ExerciseStage width="compacto" backgroundClassName={bg}>
+      <div className="flex flex-col p-3">
       {/* ── Header / progress ── */}
       <div className={`rounded-2xl p-3 mb-3 ${cardClass}`}>
         <div className="flex justify-between items-center mb-2">
@@ -807,6 +810,7 @@ export function CertoOuErrado({
           </AnimatePresence>
         )}
       </div>
-    </div>
+      </div>
+    </ExerciseStage>
   );
 }

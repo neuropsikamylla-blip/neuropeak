@@ -51,6 +51,9 @@ describe("palco padrão dos exercícios", () => {
       ["Trilha Visual", "components/exercises/attention/TrilhaVisual.tsx", "medio"],
       ["Mudança de Regras", "components/exercises/executive/MudancaRegras.tsx", "medio"],
       ["Busca Rápida", "components/exercises/processing/CorridaContraOTempo.tsx", "amplo"],
+      ["Semáforo", "components/exercises/processing/Semaforo.tsx", "compacto"],
+      ["Tempo de Reação", "components/exercises/processing/TempoReacao.tsx", "compacto"],
+      ["Certo ou Errado", "components/exercises/processing/CertoOuErrado.tsx", "compacto"],
     ] as const;
 
     for (const [name, file, width] of exercises) {
@@ -61,6 +64,49 @@ describe("palco padrão dos exercícios", () => {
       expect(exercise, `${name}: deve usar ExerciseStage`).toContain("ExerciseStage");
       expect(exercise, `${name}: deve usar a largura ${width}`).toContain(`width="${width}"`);
     }
+  });
+
+  it("mantém as telas compartilhadas dentro do palco, sem uma viewport extra", () => {
+    // O defeito real: tutorial e preparação somavam uma viewport dentro do wrapper. Por isso,
+    // toda tela de exercício rolava e mostrava no topo uma faixa do fundo do tema.
+    const sharedScreens = [
+      ["TutorialBase", "components/exercises/TutorialBase.tsx"],
+      ["TutorialRunner", "components/exercises/tutorial/TutorialRunner.tsx"],
+      ["PreparationScreen", "components/exercises/PreparationScreen.tsx"],
+    ] as const;
+
+    for (const [name, file] of sharedScreens) {
+      const screen = source(file);
+
+      expect(screen.match(/min-h-screen/g) ?? [], `${name}: min-h-screen não deve reaparecer`).toHaveLength(0);
+      expect(screen, `${name}: deve usar ExerciseStage`).toContain("ExerciseStage");
+      expect(screen, `${name}: deve usar a largura compacta`).toContain('width="compacto"');
+    }
+  });
+
+  it("mantém o flash dinâmico como classe variável no palco", () => {
+    // O fundo inteiro é o feedback clínico: uma cor literal em `background` não reage à rodada.
+    const dynamicBackgrounds = [
+      ["Semáforo", "components/exercises/processing/Semaforo.tsx", "backgroundClassName"],
+      ["Tempo de Reação", "components/exercises/processing/TempoReacao.tsx", "bg"],
+      ["Certo ou Errado", "components/exercises/processing/CertoOuErrado.tsx", "bg"],
+    ] as const;
+
+    for (const [name, file, variable] of dynamicBackgrounds) {
+      const exercise = source(file);
+
+      expect(exercise, `${name}: deve passar a classe variável ao palco`)
+        .toContain(`backgroundClassName={${variable}}`);
+      expect(exercise, `${name}: não pode trocar o flash por uma cor literal`)
+        .not.toMatch(/<ExerciseStage[^>]*\bbackground\s*=\s*["']#/);
+    }
+
+    const semaforo = source("components/exercises/processing/Semaforo.tsx");
+    const tempoReacao = source("components/exercises/processing/TempoReacao.tsx");
+    expect(semaforo, "Semáforo: a classe de flash precisa continuar no fundo do palco")
+      .toMatch(/const backgroundClassName = `bg-gray-900 transition-colors duration-150 \$\{flashClass\}`/);
+    expect(tempoReacao, "Tempo de Reação: o flash de erro precisa continuar compondo o fundo")
+      .toMatch(/const bg = `[\s\S]*\$\{missFlash \? "!bg-red-200" : ""\}`/);
   });
 
   it("não inicia a rodada zero antes da medição da arena", () => {
@@ -98,6 +144,20 @@ describe("palco padrão dos exercícios", () => {
       expect(src, `${nome}: rootBg sumiu do arquivo`).toMatch(/const rootBg/);
       expect(src, `${nome}: o palco tem de receber o rootBg, não uma cor literal`)
         .toContain("background={rootBg.background as string}");
+    }
+  });
+
+  it("os fundos decorativos do tutorial cortam o próprio transbordo", () => {
+    // O container antigo do TutorialBase tinha overflow-hidden e cortava os blobs que saem da
+    // borda (-top-8 -right-8 w-64 h-64). O palco ROLA em vez de cortar, então sem isto a tela
+    // de tutorial ganha uma barra de rolagem horizontal por causa de um enfeite.
+    const base = source("components/exercises/TutorialBase.tsx");
+    for (const nome of ["TechBg", "BeigeBg", "ColorfulBg"]) {
+      const inicio = base.indexOf(`function ${nome}()`);
+      expect(inicio, `${nome}: o fundo decorativo sumiu do arquivo`).toBeGreaterThan(-1);
+      // a PRIMEIRA div depois da assinatura é a raiz do fundo — é ela que tem de cortar
+      const raiz = base.slice(inicio).match(/<div className="([^"]*)"/)?.[1] ?? "";
+      expect(raiz, `${nome}: a raiz do fundo precisa de overflow-hidden`).toContain("overflow-hidden");
     }
   });
 });

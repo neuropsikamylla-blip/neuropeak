@@ -1,6 +1,7 @@
 "use client";
 import { useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
+import { ExerciseStage } from "@/components/exercises/ExerciseStage";
 import type { Theme } from "@/types";
 
 interface TutorialStep {
@@ -61,7 +62,7 @@ function TechBg() {
 
 function BeigeBg() {
   return (
-    <div className="absolute inset-0">
+    <div className="absolute inset-0 overflow-hidden">
       <div className="absolute inset-0" style={{
         background: "linear-gradient(160deg, #ede8df 0%, #e4ddd0 55%, #dbd4c5 100%)"
       }} />
@@ -75,7 +76,7 @@ function BeigeBg() {
 
 function ColorfulBg() {
   return (
-    <div className="absolute inset-0">
+    <div className="absolute inset-0 overflow-hidden">
       <div className="absolute inset-0" style={{
         background: "linear-gradient(135deg, #e6fffb 0%, #d7f7f4 55%, #e0f7ff 100%)"
       }} />
@@ -120,14 +121,14 @@ export function TutorialBase({ theme, title, steps, onDone }: TutorialBaseProps)
     : { background: "linear-gradient(135deg, #1a2744 0%, #2a4a8a 100%)", boxShadow: "0 4px 20px rgba(26,39,68,0.4)" };
 
   return (
-    <div className="relative min-h-screen flex items-center justify-center p-4 overflow-hidden">
+    <ExerciseStage width="compacto">
       {isGamified ? <TechBg /> : isColorful ? <ColorfulBg /> : <BeigeBg />}
       <motion.div
         initial={{ opacity: 0, y: 20, scale: 0.98 }}
         animate={{ opacity: 1, y: 0, scale: 1 }}
         transition={{ duration: 0.3 }}
         style={cardStyle}
-        className="w-full max-w-md p-6 relative"
+        className="w-full p-6 relative"
       >
         <div className="mb-5">
           <span className="text-xs font-semibold tracking-widest uppercase" style={{ color: subColor }}>
@@ -171,6 +172,6 @@ export function TutorialBase({ theme, title, steps, onDone }: TutorialBaseProps)
           )}
         </AnimatePresence>
       </motion.div>
-    </div>
+    </ExerciseStage>
   );
 }

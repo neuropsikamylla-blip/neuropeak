@@ -5,6 +5,7 @@ import { motion, AnimatePresence } from "framer-motion";
 import { calculateExerciseScore } from "@/lib/scoring";
 import { useTimedProgress } from "@/components/exercises/useExerciseEngine";
 import { ExerciseProgressBar } from "@/components/exercises/ExerciseProgressBar";
+import { ExerciseStage } from "@/components/exercises/ExerciseStage";
 import type { ExerciseResult, Theme } from "@/types";
 
 interface TempoReacaoProps {
@@ -245,10 +246,11 @@ export function TempoReacao({ difficulty, theme, onComplete }: TempoReacaoProps)
     }
   }
 
-  const bg =
+  const bg = `transition-colors ${
     theme === "GAMIFIED" ? "bg-gray-950" :
     theme === "COLORFUL" ? "bg-gradient-to-b from-sky-100 to-blue-200" :
-    "bg-gray-100";
+    "bg-gray-100"
+  } ${missFlash ? "!bg-red-200" : ""}`;
 
   const cardClass =
     theme === "GAMIFIED" ? "bg-gray-800 border border-cyan-500/30" : "bg-white shadow-md";
@@ -261,7 +263,8 @@ export function TempoReacao({ difficulty, theme, onComplete }: TempoReacaoProps)
   const subClass = theme === "GAMIFIED" ? "text-gray-400" : "text-gray-500";
 
   return (
-    <div className={`min-h-screen flex flex-col p-3 transition-colors ${bg} ${missFlash ? "!bg-red-200" : ""}`}>
+    <ExerciseStage width="compacto" backgroundClassName={bg}>
+      <div className="flex flex-col p-3">
       {/* Header card */}
       <div className={`rounded-2xl p-3 mb-3 ${cardClass}`}>
         <div className="flex justify-between items-center mb-2">
@@ -369,6 +372,7 @@ export function TempoReacao({ difficulty, theme, onComplete }: TempoReacaoProps)
           ))}
         </AnimatePresence>
       </div>
-    </div>
+      </div>
+    </ExerciseStage>
   );
 }

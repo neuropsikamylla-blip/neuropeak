@@ -2,6 +2,7 @@
 
 import { useSession } from "next-auth/react";
 import { Button } from "@/components/ui/button";
+import { ExerciseStage } from "@/components/exercises/ExerciseStage";
 import type { Theme } from "@/types";
 
 interface PreparationScreenProps {
@@ -56,8 +57,8 @@ export function PreparationScreen({
   const styles = themeStyles[theme];
 
   return (
-    <section className={`${styles.screen} min-h-screen p-4 flex items-center justify-center`}>
-      <div className={`${styles.card} w-full max-w-md rounded-2xl p-8 text-center`}>
+    <ExerciseStage width="compacto" backgroundClassName={styles.screen}>
+      <div className={`${styles.card} w-full rounded-2xl p-8 text-center`}>
         <h1 className={`${styles.title} text-2xl font-bold`}>{title}</h1>
         {levelLabel && <p className={`${styles.level} mt-3 text-sm font-medium`}>{levelLabel}</p>}
         <div className="mt-8 space-y-3">
@@ -73,6 +74,6 @@ export function PreparationScreen({
           </Button>
         </div>
       </div>
-    </section>
+    </ExerciseStage>
   );
 }
