@@ -79,6 +79,7 @@ export function MOT({ difficulty, theme, onComplete }: MOTProps) {
   const stageWrapRef = useRef<HTMLDivElement>(null);
   const contentRef = useRef<HTMLDivElement>(null);
   const [dims, setDims] = useState(() => ({ w: 320, h: Math.round(320 * ASPECT) }));
+  const [hasMeasured, setHasMeasured] = useState(false);
   const dimsRef = useRef(dims);
   dimsRef.current = dims;
 
@@ -118,7 +119,10 @@ export function MOT({ difficulty, theme, onComplete }: MOTProps) {
     };
     compute();
     window.addEventListener("resize", compute);
-    const t = setTimeout(compute, 120); // re-mede após o layout assentar
+    // A rodada 0 só nasce na medição ASSENTADA. A primeira passada acontece antes de as
+    // fontes estabilizarem a altura do cabeçalho, e uma arena que muda DEPOIS do sorteio
+    // devolve o mesmo defeito das bolas amontoadas — só que em escala menor, difícil de ver.
+    const t = setTimeout(() => { compute(); setHasMeasured(true); }, 120);
     return () => { window.removeEventListener("resize", compute); clearTimeout(t); };
   }, []);
 
@@ -175,10 +179,14 @@ export function MOT({ difficulty, theme, onComplete }: MOTProps) {
   useEffect(() => {
     startTime.current = Date.now();
     begin();
-    startRound(0);
     return () => { stopRaf(); stopTimer(); };
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
+
+  useEffect(() => {
+    if (!hasMeasured) return;
+    startRound(0);
+  }, [hasMeasured, startRound]);
 
   function handleBallTap(id: number) {
     if (phase !== "identify") return;
