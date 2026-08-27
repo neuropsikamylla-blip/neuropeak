@@ -82,3 +82,58 @@ desenho e funciona. **Não migrar.**
   exercícios migrados (a lição de `licao-teste-prova-ausencia`: contar ocorrências, não só
   procurar presença).
 - `npx tsc --noEmit` limpo e `npm run test` verde a cada lote.
+
+---
+
+## Mapa da migração (levantado em 27/ago/2026, para os lotes)
+
+Fundo exato que cada exercício pinta hoje e **precisa continuar pintando** (decisão dela:
+preservar). `pal.bg` / `s.bg` / `bg` são variáveis de tema já existentes no próprio arquivo.
+
+| classe | exercício | fundo a preservar |
+|---|---|---|
+| compacto | Span Numérico | `#F4F9FD` / `#EAF2F9` / `#E3EDF6` |
+| compacto | Span Numérico Inverso | (delega ao Span) |
+| compacto | Letras Sequência | `#020617` |
+| compacto | Lista c/ Distração | `#020617` |
+| compacto | Sequência de Itens | `#020617` |
+| compacto | Stroop | (sem fundo próprio) |
+| compacto | Semáforo | `bg-gray-900` + **flash dinâmico** ⚠️ |
+| compacto | Tempo de Reação | variável `bg` **dinâmica** ⚠️ |
+| compacto | Certo ou Errado | variável `bg` **dinâmica** ⚠️ |
+| compacto | Identificação de Símbolos | `bgClass` (tema) |
+| compacto | Task Switching | `pal.bg` |
+| compacto | Desafio Orçamento | `pal.bg` |
+| compacto | Sequência Temporal | `#fff` (sem `min-h-screen`) |
+| médio | Matriz Espacial (+ inversa) | `#14b8a6` / `#0e7490` / `#06b6d4` |
+| médio | Padrões com Rotação | `#020617` |
+| médio | Jogo da Memória | `#ffffff` |
+| médio | Cubo Corsi | `#F4F7FB` (CSS inline) |
+| médio | Torre de Hanói | `#F3F4F6` |
+| médio | Grade Dedutiva | `rootBg` (bege) |
+| médio | Estacionamento | `#ECEAE4` / `#2C3444` |
+| médio | Mudança de Regras | `pal.bg` |
+| médio | Trilha Visual | `#ffffff` |
+| médio | Ordem da História | `#f4f1fb` (sem `min-h-screen`) |
+| médio | Investigadores Sociais | `rootBg` |
+| médio | Caça Item | `pal.bg` |
+| médio | Vigilância | `#1e293b` / var `bg` |
+| médio | Dupla Tarefa | `pal.bg` |
+| médio | Restaurante | `#F7EEDD` (sem `min-h-screen`) |
+| amplo | MOT | `pal.bg` |
+| amplo | Labirinto | (sem fundo próprio) |
+| amplo | Supermercado | `#e8e0d0` (sem `min-h-screen`) |
+| amplo | Compra Multifuncional | `rootBg` (aquarelas) |
+| amplo | Informação em Foco | `s.bg` |
+| amplo | Busca Rápida | `#F3F4F6` / `#EEF6FF` |
+| amplo | Desafio Cidade | `palRootBg(theme)` |
+
+### ⚠️ Risco conhecido: os três de fundo dinâmico
+
+**Semáforo, Tempo de Reação e Certo ou Errado usam o fundo da tela inteira como feedback** —
+ele pisca a cada resposta. O `background` do palco recebe uma string CSS, o que não cobre uma
+classe Tailwind que troca no meio da rodada.
+
+Antes de migrar esses três, o palco precisa de uma prop `backgroundClassName?: string`
+aplicada no mesmo `div` do `background`. **Não migrar os três sem isso** — o flash de feedback
+sumiria, e é sinal clínico, não enfeite.
