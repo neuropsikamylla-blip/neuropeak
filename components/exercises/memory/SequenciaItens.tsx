@@ -6,6 +6,7 @@ import { Eye, Headphones } from "lucide-react";
 import { calculateExerciseScore } from "@/lib/scoring";
 import { useTimedProgress } from "@/components/exercises/useExerciseEngine";
 import { ExerciseProgressBar } from "@/components/exercises/ExerciseProgressBar";
+import { ExerciseStage } from "@/components/exercises/ExerciseStage";
 import { ItemVisual } from "@/components/exercises/ItemVisual";
 import { classifyTrial, nextLevelPerTrial } from "@/lib/adaptive-trial";
 import type { BoardProps } from "@/lib/tutorial/definitions/sequencia-ordenada";
@@ -261,8 +262,8 @@ export function SequenciaItens({ difficulty, onComplete }: SequenciaItensProps) 
 
   if (phase === "ready") {
     return (
-      <div className="min-h-screen w-full flex items-center justify-center p-4" style={{ background: "#020617" }}>
-        <div className="w-full max-w-lg rounded-3xl p-6 text-center" style={CARD}>
+      <ExerciseStage width="compacto" background="#020617">
+        <div className="w-full rounded-3xl p-6 text-center" style={CARD}>
           <div className="mx-auto mb-4 w-20 h-20 rounded-full flex items-center justify-center"
             style={{ background: "radial-gradient(circle at 38% 32%, rgba(99,102,241,0.5), rgba(30,27,75,0.9))", border: "1px solid rgba(129,140,248,0.5)" }}>
             {spec.audio ? <Headphones size={40} color="#c7d2fe" /> : <Eye size={40} color="#c7d2fe" />}
@@ -277,13 +278,13 @@ export function SequenciaItens({ difficulty, onComplete }: SequenciaItensProps) 
           <button onClick={begin} className="w-full rounded-2xl font-bold text-white text-sm py-3.5 active:scale-95"
             style={{ background: "linear-gradient(135deg,#7c3aed,#4f46e5)", boxShadow: "0 4px 20px rgba(124,58,237,0.5)" }}>Começar →</button>
         </div>
-      </div>
+      </ExerciseStage>
     );
   }
 
   return (
-    <div className="min-h-screen w-full flex items-center justify-center p-4" style={{ background: "#020617" }}>
-      <div className="w-full max-w-lg rounded-3xl p-6 space-y-4" style={CARD}>
+    <ExerciseStage width="compacto" background="#020617">
+      <div className="w-full rounded-3xl p-6 space-y-4" style={CARD}>
         <div>
           <p className="text-sm font-bold text-white leading-tight">Sequência de Itens</p>
           <p className="text-xs mt-1" style={{ color: "rgba(148,163,184,0.7)" }}>
@@ -354,7 +355,7 @@ export function SequenciaItens({ difficulty, onComplete }: SequenciaItensProps) 
         )}
 
       </div>
-    </div>
+    </ExerciseStage>
   );
 }
 

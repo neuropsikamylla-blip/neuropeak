@@ -5,6 +5,7 @@ import { motion, AnimatePresence } from "framer-motion";
 import { calculateExerciseScore } from "@/lib/scoring";
 import { useTimedProgress } from "@/components/exercises/useExerciseEngine";
 import { ExerciseProgressBar } from "@/components/exercises/ExerciseProgressBar";
+import { ExerciseStage } from "@/components/exercises/ExerciseStage";
 import { TutorialBase } from "@/components/exercises/TutorialBase";
 import type { ExerciseResult, Theme } from "@/types";
 
@@ -490,8 +491,8 @@ export function CacaItemBarato({ difficulty, theme, onComplete }: Props) {
   const cols = currentRound.products.length === 1 ? "grid-cols-1" : currentRound.products.length === 2 ? "grid-cols-2" : "grid-cols-3";
 
   return (
-    <div className={`min-h-screen flex flex-col items-center p-4 pt-6 ${pal.bg}`}>
-      <div className={`w-full max-w-2xl rounded-2xl p-4 ${pal.card}`}>
+    <ExerciseStage width="medio" backgroundClassName={pal.bg}>
+      <div className={`w-full rounded-2xl p-4 ${pal.card}`}>
 
         {/* Header */}
         <div className="flex justify-between items-center mb-1">
@@ -574,6 +575,6 @@ export function CacaItemBarato({ difficulty, theme, onComplete }: Props) {
           </motion.div>
         </AnimatePresence>
       </div>
-    </div>
+    </ExerciseStage>
   );
 }

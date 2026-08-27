@@ -5,6 +5,7 @@ import { motion, AnimatePresence } from "framer-motion";
 import { calculateExerciseScore } from "@/lib/scoring";
 import { useTimedProgress } from "@/components/exercises/useExerciseEngine";
 import { ExerciseProgressBar } from "@/components/exercises/ExerciseProgressBar";
+import { ExerciseStage } from "@/components/exercises/ExerciseStage";
 import { TutorialBase } from "@/components/exercises/TutorialBase";
 import type { ExerciseResult, Theme } from "@/types";
 
@@ -343,8 +344,8 @@ export function TaskSwitching({ difficulty, theme, onComplete }: TaskSwitchingPr
     (theme === "GAMIFIED" ? "text-purple-400" : "text-purple-600");
 
   return (
-    <div className={`min-h-screen overflow-y-auto ${pal.bg}`}>
-      <div className="max-w-md mx-auto px-4 py-5 flex flex-col items-center gap-4">
+    <ExerciseStage width="compacto" backgroundClassName={pal.bg}>
+      <div className="flex flex-col items-center gap-4">
 
         {/* Header */}
         <div className={`w-full rounded-2xl p-4 ${pal.card}`}>
@@ -419,6 +420,6 @@ export function TaskSwitching({ difficulty, theme, onComplete }: TaskSwitchingPr
           </div>
         )}
       </div>
-    </div>
+    </ExerciseStage>
   );
 }

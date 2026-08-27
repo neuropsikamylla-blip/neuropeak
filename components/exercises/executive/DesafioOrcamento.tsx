@@ -5,6 +5,7 @@ import { motion, AnimatePresence } from "framer-motion";
 import { calculateExerciseScore } from "@/lib/scoring";
 import { useTimedProgress } from "@/components/exercises/useExerciseEngine";
 import { ExerciseProgressBar } from "@/components/exercises/ExerciseProgressBar";
+import { ExerciseStage } from "@/components/exercises/ExerciseStage";
 import { TutorialBase } from "@/components/exercises/TutorialBase";
 import { ItemSvg } from "@/components/exercises/ItemSvg";
 import type { ExerciseResult, Theme } from "@/types";
@@ -290,8 +291,8 @@ export function DesafioOrcamento({ difficulty, theme, onComplete }: Props) {
   };
 
   return (
-    <div className={`min-h-screen overflow-y-auto ${pal.bg}`}>
-      <div className="max-w-md mx-auto px-3 py-4">
+    <ExerciseStage width="compacto" backgroundClassName={pal.bg}>
+      <div>
         <div className={`rounded-2xl p-4 ${pal.card}`}>
 
           <div className="flex justify-between items-center mb-2">
@@ -362,6 +363,6 @@ export function DesafioOrcamento({ difficulty, theme, onComplete }: Props) {
           </AnimatePresence>
         </div>
       </div>
-    </div>
+    </ExerciseStage>
   );
 }

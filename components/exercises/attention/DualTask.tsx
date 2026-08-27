@@ -6,6 +6,7 @@ import { Brain, Hash, AlertTriangle } from "lucide-react";
 import { calculateExerciseScore } from "@/lib/scoring";
 import { useTimedProgress } from "@/components/exercises/useExerciseEngine";
 import { ExerciseProgressBar } from "@/components/exercises/ExerciseProgressBar";
+import { ExerciseStage } from "@/components/exercises/ExerciseStage";
 import type { ExerciseResult, Theme } from "@/types";
 
 interface DualTaskProps {
@@ -398,8 +399,8 @@ export function DualTask({ difficulty, theme, onComplete }: DualTaskProps) {
   };
 
   return (
-    <div className={`min-h-screen overflow-y-auto ${pal.bg}`}>
-      <div className="max-w-[760px] mx-auto px-4 py-5 flex flex-col gap-4">
+    <ExerciseStage width="medio" backgroundClassName={pal.bg}>
+      <div className="flex flex-col gap-4">
         {/* Header */}
         <div>
           <div className="flex justify-between items-baseline mb-2">
@@ -476,6 +477,6 @@ export function DualTask({ difficulty, theme, onComplete }: DualTaskProps) {
           <Brain size={16} /> Divida sua atenção entre as duas tarefas!
         </p>
       </div>
-    </div>
+    </ExerciseStage>
   );
 }

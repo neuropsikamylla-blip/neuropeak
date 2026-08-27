@@ -5,6 +5,7 @@ import { motion, AnimatePresence } from "framer-motion";
 import { calculateExerciseScore } from "@/lib/scoring";
 import { useTimedProgress } from "@/components/exercises/useExerciseEngine";
 import { ExerciseProgressBar } from "@/components/exercises/ExerciseProgressBar";
+import { ExerciseStage } from "@/components/exercises/ExerciseStage";
 import type { ExerciseResult, Theme } from "@/types";
 
 interface StroopTaskProps {
@@ -250,10 +251,10 @@ function TutorialStep({
   const isCorrect = selected === expected;
 
   return (
-    <div className="min-h-screen flex flex-col items-center justify-center p-4">
+    <ExerciseStage width="compacto">
       <GlassBg />
 
-      <div className="w-full max-w-xl rounded-3xl p-6 space-y-5" style={CARD_STYLE}>
+      <div className="w-full rounded-3xl p-6 space-y-5" style={CARD_STYLE}>
         {/* Header */}
         <div className="text-center space-y-1">
           <span
@@ -419,7 +420,7 @@ function TutorialStep({
           </AnimatePresence>
         )}
       </div>
-    </div>
+    </ExerciseStage>
   );
 }
 
@@ -558,10 +559,10 @@ export function StroopTask({ difficulty, theme, onComplete }: StroopTaskProps) {
   const correctCount = results.filter((r) => r.correct).length;
 
   return (
-    <div className="min-h-screen flex flex-col items-center justify-center p-4">
+    <ExerciseStage width="compacto">
       <GlassBg />
 
-      <div className="w-full max-w-xl rounded-3xl p-6 space-y-5" style={CARD_STYLE}>
+      <div className="w-full rounded-3xl p-6 space-y-5" style={CARD_STYLE}>
 
         {/* Score + ritmo + speed */}
         <div className="flex justify-between items-center gap-2">
@@ -669,6 +670,6 @@ export function StroopTask({ difficulty, theme, onComplete }: StroopTaskProps) {
           </div>
         </div>
       </div>
-    </div>
+    </ExerciseStage>
   );
 }

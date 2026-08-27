@@ -23,27 +23,43 @@ describe("palco padrão dos exercícios", () => {
 
   it("cobre o wrapper com um palco absoluto rolável", () => {
     // Impede que trocar o palco por fluxo normal devolva a rolagem de 32px e a faixa no topo.
-    expect(stage).toContain('className="absolute inset-0 overflow-auto"');
+    // Sem aspas na comparação: o palco ganhou `backgroundClassName` no lote D1 e o className
+    // virou template string. O que precisa ser protegido é o posicionamento, não a sintaxe.
+    expect(stage).toContain("absolute inset-0 overflow-auto");
+    expect(stage, "o palco não pode virar fixed nem relative").not.toMatch(/className=\{?[`"]fixed inset-0/);
   });
 
   it("mantém os exercícios migrados centralizados no palco", () => {
     // Impede que a tela volte a ficar colada no topo e que a faixa de fundo do tema reapareça nas bordas.
     const exercises = [
-      ["Padrões com Rotação", "components/exercises/memory/PadroesRotacao.tsx"],
-      ["Cubo Corsi", "components/exercises/memory/CuboCorsi.tsx"],
-      ["Torre de Hanói", "components/exercises/executive/TorreHanoi.tsx"],
-      ["Grade Dedutiva", "components/exercises/executive/DeductiveGrid.tsx"],
-      ["Jogo da Memória", "components/exercises/memory/JogoMemoria.tsx"],
-      ["Matriz Espacial", "components/exercises/memory/MatrizEspacial.tsx"],
+      ["Padrões com Rotação", "components/exercises/memory/PadroesRotacao.tsx", "medio"],
+      ["Cubo Corsi", "components/exercises/memory/CuboCorsi.tsx", "medio"],
+      ["Torre de Hanói", "components/exercises/executive/TorreHanoi.tsx", "medio"],
+      ["Grade Dedutiva", "components/exercises/executive/DeductiveGrid.tsx", "medio"],
+      ["Jogo da Memória", "components/exercises/memory/JogoMemoria.tsx", "medio"],
+      ["Matriz Espacial", "components/exercises/memory/MatrizEspacial.tsx", "medio"],
+      ["Span Numérico", "components/exercises/memory/SpanNumerico.tsx", "compacto"],
+      ["Letras Sequência", "components/exercises/memory/LetrasSequencia.tsx", "compacto"],
+      ["Lista c/ Distração", "components/exercises/memory/ListaDistracao.tsx", "compacto"],
+      ["Sequência de Itens", "components/exercises/memory/SequenciaItens.tsx", "compacto"],
+      ["Stroop", "components/exercises/executive/StroopTask.tsx", "compacto"],
+      ["Task Switching", "components/exercises/executive/TaskSwitching.tsx", "compacto"],
+      ["Desafio Orçamento", "components/exercises/executive/DesafioOrcamento.tsx", "compacto"],
+      ["Identificação de Símbolos", "components/exercises/processing/IdentificacaoSimbolos.tsx", "compacto"],
+      ["Caça Item", "components/exercises/attention/CacaItemBarato.tsx", "medio"],
+      ["Dupla Tarefa", "components/exercises/attention/DualTask.tsx", "medio"],
+      ["Trilha Visual", "components/exercises/attention/TrilhaVisual.tsx", "medio"],
+      ["Mudança de Regras", "components/exercises/executive/MudancaRegras.tsx", "medio"],
+      ["Busca Rápida", "components/exercises/processing/CorridaContraOTempo.tsx", "amplo"],
     ] as const;
 
-    for (const [name, file] of exercises) {
+    for (const [name, file, width] of exercises) {
       const exercise = source(file);
 
       expect(exercise.match(/min-h-screen/g) ?? [], `${name}: min-h-screen não deve reaparecer`).toHaveLength(0);
       expect(exercise.match(/minHeight:\s*["']100vh["']/g) ?? [], `${name}: minHeight 100vh não deve reaparecer`).toHaveLength(0);
       expect(exercise, `${name}: deve usar ExerciseStage`).toContain("ExerciseStage");
-      expect(exercise, `${name}: deve usar a largura média`).toContain('width="medio"');
+      expect(exercise, `${name}: deve usar a largura ${width}`).toContain(`width="${width}"`);
     }
   });
 

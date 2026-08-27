@@ -5,6 +5,7 @@ import { motion, AnimatePresence } from "framer-motion";
 import { calculateExerciseScore } from "@/lib/scoring";
 import { useTimedProgress } from "@/components/exercises/useExerciseEngine";
 import { ExerciseProgressBar } from "@/components/exercises/ExerciseProgressBar";
+import { ExerciseStage } from "@/components/exercises/ExerciseStage";
 import { TutorialBase } from "@/components/exercises/TutorialBase";
 import { ItemSvg } from "@/components/exercises/ItemSvg";
 import type { ExerciseResult, Theme } from "@/types";
@@ -671,8 +672,8 @@ export function MudancaRegras({ difficulty, theme, onComplete }: Props) {
   const gridCols = scenario.items.length === 4 ? "grid-cols-2" : "grid-cols-3";
 
   return (
-    <div className={`min-h-screen flex flex-col p-4 pt-5 ${pal.bg}`}>
-      <div className="w-full max-w-2xl mx-auto space-y-4">
+    <ExerciseStage width="medio" backgroundClassName={pal.bg}>
+      <div className="space-y-4">
 
         {/* Header */}
         <div className="flex justify-between items-center">
@@ -770,6 +771,6 @@ export function MudancaRegras({ difficulty, theme, onComplete }: Props) {
         </AnimatePresence>
 
       </div>
-    </div>
+    </ExerciseStage>
   );
 }

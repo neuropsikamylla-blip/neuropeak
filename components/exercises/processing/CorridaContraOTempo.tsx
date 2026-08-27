@@ -5,6 +5,7 @@ import { motion, AnimatePresence } from "framer-motion";
 import { Timer, Target, Ban, Check, Zap, Crosshair, MousePointerClick, Eye } from "lucide-react";
 import { calculateExerciseScore } from "@/lib/scoring";
 import { useTimedProgress } from "@/components/exercises/useExerciseEngine";
+import { ExerciseStage } from "@/components/exercises/ExerciseStage";
 import { TutorialBase } from "@/components/exercises/TutorialBase";
 import type { ExerciseResult, Theme } from "@/types";
 import {
@@ -289,8 +290,8 @@ export function CorridaContraOTempo({ difficulty, theme, onComplete }: Props) {
   const ruleVerb = mode === "exclusion" ? "Toque em tudo que NÃO é" : "Toque apenas em";
 
   return (
-    <div className="min-h-screen flex flex-col items-center p-4 pt-6" style={{ background: "#F3F4F6" }}>
-      <div className="w-full max-w-2xl rounded-3xl bg-white p-5 sm:p-6" style={{ boxShadow: "0 12px 40px rgba(15,23,42,.10)", border: "1px solid #EEF0F4" }}>
+    <ExerciseStage width="amplo" background="#F3F4F6">
+      <div className="w-full rounded-3xl bg-white p-5 sm:p-6" style={{ boxShadow: "0 12px 40px rgba(15,23,42,.10)", border: "1px solid #EEF0F4" }}>
 
         {/* Topo: título + timer + acertos */}
         <div className="flex items-center justify-between">
@@ -435,6 +436,6 @@ export function CorridaContraOTempo({ difficulty, theme, onComplete }: Props) {
           })()}
         </AnimatePresence>
       </div>
-    </div>
+    </ExerciseStage>
   );
 }

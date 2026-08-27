@@ -13,14 +13,16 @@ export { LARGURAS_PALCO, type StageWidth };
 export function ExerciseStage({
   width,
   background,
+  backgroundClassName,
   children,
 }: {
   width: StageWidth;
   background?: string;
+  backgroundClassName?: string;
   children: React.ReactNode;
 }) {
   return (
-    <div className="absolute inset-0 overflow-auto" style={background ? { background } : undefined}>
+    <div className={`absolute inset-0 overflow-auto ${backgroundClassName ?? ""}`} style={background ? { background } : undefined}>
       <div className="min-h-full flex items-center justify-center p-4 sm:p-6">
         <div className="w-full" style={{ maxWidth: LARGURAS_PALCO[width] }}>
           {children}

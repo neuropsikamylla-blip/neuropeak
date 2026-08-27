@@ -6,6 +6,7 @@ import { calculateExerciseScore } from "@/lib/scoring";
 import { shuffle } from "@/lib/utils";
 import { useTimedProgress } from "@/components/exercises/useExerciseEngine";
 import { ExerciseProgressBar } from "@/components/exercises/ExerciseProgressBar";
+import { ExerciseStage } from "@/components/exercises/ExerciseStage";
 import { TutorialBase } from "@/components/exercises/TutorialBase";
 import type { ExerciseResult, Theme } from "@/types";
 
@@ -173,8 +174,8 @@ export function IdentificacaoSimbolos({ difficulty, theme, onComplete }: Identif
   const cols = Math.min(Math.ceil(Math.sqrt(options.length + 1)), 6);
 
   return (
-    <div className={`min-h-screen flex flex-col items-center justify-center p-4 ${bgClass}`}>
-      <div className={`w-full max-w-lg rounded-2xl p-6 ${theme === "GAMIFIED" ? "bg-gray-800 border border-cyan-500/30" : "bg-white shadow-lg"}`}>
+    <ExerciseStage width="compacto" backgroundClassName={bgClass}>
+      <div className={`w-full rounded-2xl p-6 ${theme === "GAMIFIED" ? "bg-gray-800 border border-cyan-500/30" : "bg-white shadow-lg"}`}>
         <div className="flex justify-between items-center mb-3">
           <div>
             <h2 className={`font-bold ${theme === "GAMIFIED" ? "text-cyan-400" : "text-gray-900"}`}>
@@ -232,6 +233,6 @@ export function IdentificacaoSimbolos({ difficulty, theme, onComplete }: Identif
           </p>
         )}
       </div>
-    </div>
+    </ExerciseStage>
   );
 }

@@ -6,6 +6,7 @@ import { Headphones } from "lucide-react";
 import { calculateExerciseScore } from "@/lib/scoring";
 import { useTimedProgress } from "@/components/exercises/useExerciseEngine";
 import { ExerciseProgressBar } from "@/components/exercises/ExerciseProgressBar";
+import { ExerciseStage } from "@/components/exercises/ExerciseStage";
 import { classifyTrial, nextLevelPerTrial } from "@/lib/adaptive-trial";
 import {
   SPAN_AUDIO_SRC,
@@ -383,10 +384,10 @@ export function SpanNumerico({ difficulty, onComplete, reverse = false, settings
 
   // ── Render do jogo ─────────────────────────────────────────────────────────────
   return (
-    <div className="min-h-screen w-full flex flex-col items-center justify-center p-4" style={{ background: "#F4F9FD" }}>
+    <ExerciseStage width="compacto" background="#F4F9FD">
       <GlassBg />
 
-      <div className="w-full max-w-lg rounded-3xl p-6 space-y-5" style={CARD_STYLE}>
+      <div className="w-full rounded-3xl p-6 space-y-5" style={CARD_STYLE}>
 
         {/* Header — SEM nível/dígitos/tentativas/pontos (decisão da Kamylla, 16/jul:
             "N dígitos" antecipa o tamanho da sequência e o resto distrai; a barra
@@ -436,7 +437,7 @@ export function SpanNumerico({ difficulty, onComplete, reverse = false, settings
         )}
 
       </div>
-    </div>
+    </ExerciseStage>
   );
 }
 
@@ -446,9 +447,9 @@ function ReadyScreen({ title, reverse, level, onStart }: {
   title: string; reverse: boolean; level: number; onStart: () => void;
 }) {
   return (
-    <div className="min-h-screen w-full flex flex-col items-center justify-center p-4" style={{ background: "#F4F9FD" }}>
+    <ExerciseStage width="compacto" background="#F4F9FD">
       <GlassBg />
-      <div className="w-full max-w-lg rounded-3xl p-6 text-center" style={CARD_STYLE}>
+      <div className="w-full rounded-3xl p-6 text-center" style={CARD_STYLE}>
         <div className="mx-auto mb-4"><BrainListening pulsing={false} /></div>
         <h2 className="text-lg font-bold mb-1" style={{ color: "#3B5A75" }}>{title}</h2>
         <p className="text-sm mb-1" style={{ color: "#5C7A94" }}>
@@ -465,6 +466,6 @@ function ReadyScreen({ title, reverse, level, onStart }: {
           Começar →
         </button>
       </div>
-    </div>
+    </ExerciseStage>
   );
 }

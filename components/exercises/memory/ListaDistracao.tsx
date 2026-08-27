@@ -6,6 +6,7 @@ import { ListChecks } from "lucide-react";
 import { calculateExerciseScore } from "@/lib/scoring";
 import { useTimedProgress } from "@/components/exercises/useExerciseEngine";
 import { ExerciseProgressBar } from "@/components/exercises/ExerciseProgressBar";
+import { ExerciseStage } from "@/components/exercises/ExerciseStage";
 import type { ExerciseResult, Theme } from "@/types";
 
 interface ListaDistracaoProps {
@@ -237,8 +238,8 @@ export function ListaDistracao({ difficulty, onComplete }: ListaDistracaoProps) 
 
   if (phase === "ready") {
     return (
-      <div className="min-h-screen w-full flex items-center justify-center p-4" style={{ background: "#020617" }}>
-        <div className="w-full max-w-lg rounded-3xl p-6 text-center" style={CARD}>
+      <ExerciseStage width="compacto" background="#020617">
+        <div className="w-full rounded-3xl p-6 text-center" style={CARD}>
           <div className="mx-auto mb-4 w-20 h-20 rounded-full flex items-center justify-center"
             style={{ background: "radial-gradient(circle at 38% 32%, rgba(34,211,197,0.4), rgba(15,40,60,0.9))", border: "1px solid rgba(34,211,197,0.5)" }}>
             <ListChecks size={40} color="#5eead4" />
@@ -253,13 +254,13 @@ export function ListaDistracao({ difficulty, onComplete }: ListaDistracaoProps) 
           <button onClick={begin} className="w-full rounded-2xl font-bold text-white text-sm py-3.5 active:scale-95"
             style={{ background: "linear-gradient(135deg,#0d9488,#0891b2)", boxShadow: "0 4px 20px rgba(13,148,136,0.5)" }}>Começar →</button>
         </div>
-      </div>
+      </ExerciseStage>
     );
   }
 
   return (
-    <div className="min-h-screen w-full flex items-center justify-center p-4" style={{ background: "#020617" }}>
-      <div className="w-full max-w-lg rounded-3xl p-6 space-y-4" style={CARD}>
+    <ExerciseStage width="compacto" background="#020617">
+      <div className="w-full rounded-3xl p-6 space-y-4" style={CARD}>
         <div>
           <p className="text-sm font-bold text-white leading-tight">Lista com Distração</p>
           <p className="text-xs mt-1" style={{ color: "rgba(148,163,184,0.7)" }}>
@@ -354,7 +355,7 @@ export function ListaDistracao({ difficulty, onComplete }: ListaDistracaoProps) 
         )}
 
       </div>
-    </div>
+    </ExerciseStage>
   );
 }
 

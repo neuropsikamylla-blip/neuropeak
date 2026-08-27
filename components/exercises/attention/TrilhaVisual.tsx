@@ -7,6 +7,7 @@ import { calculateExerciseScore } from "@/lib/scoring";
 import { shuffle } from "@/lib/utils";
 import { useTimedProgress } from "@/components/exercises/useExerciseEngine";
 import { ExerciseProgressBar } from "@/components/exercises/ExerciseProgressBar";
+import { ExerciseStage } from "@/components/exercises/ExerciseStage";
 import { TutorialBase } from "@/components/exercises/TutorialBase";
 import type { ExerciseResult, Theme } from "@/types";
 
@@ -292,8 +293,8 @@ export function TrilhaVisual({ difficulty, theme, onComplete }: TrilhaVisualProp
 
 
   return (
-    <div className="min-h-screen flex flex-col items-center p-4 pt-6" style={rootStyle}>
-      <div className="w-full max-w-2xl p-5 sm:p-6" style={cardStyle}>
+    <ExerciseStage width="medio" background={rootStyle.background}>
+      <div className="w-full p-5 sm:p-6" style={cardStyle}>
 
         {/* Topo: ícone de números + título + badge */}
         <div className="flex items-center justify-between gap-2 mb-3.5">
@@ -369,6 +370,6 @@ export function TrilhaVisual({ difficulty, theme, onComplete }: TrilhaVisualProp
           </div>
         </div>
       </div>
-    </div>
+    </ExerciseStage>
   );
 }
