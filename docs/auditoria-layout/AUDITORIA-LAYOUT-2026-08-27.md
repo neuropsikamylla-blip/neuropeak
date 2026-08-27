@@ -79,3 +79,50 @@ sorteio. Vale para a primeira rodada de toda sessão.
 - Contagens desta auditoria conferidas em 27/ago/2026, sobre `main` em `113b41f`, v2.90.0.
 - ⚠️ **Ainda não rodei nada em navegador.** As capturas são a evidência visual; a leitura de
   código é a evidência da causa. O bug do MOT ainda não tem teste que o trave.
+
+---
+
+## Achado tardio (27/ago, na verificação do lote A) — `TutorialBase` tem o mesmo defeito
+
+`components/exercises/TutorialBase.tsx:123`
+
+```tsx
+<div className="relative min-h-screen flex items-center justify-center p-4 overflow-hidden">
+```
+
+É o **mesmo `min-h-screen` empilhado** do defeito 1, na tela de tutorial. Como Torre de Hanói
+e Grade Dedutiva abrem pelo tutorial, foi por ali que apareceu: ao pedir a tela desses dois,
+quem renderiza é o `TutorialBase`, e ele soma uma viewport inteira dentro do wrapper igual
+aos exercícios faziam.
+
+Não estava na contagem original porque a auditoria varreu `components/exercises/*/` — e o
+`TutorialBase` mora um nível acima, na raiz de `components/exercises/`. **Entra no lote D.**
+
+## Evidência de renderização do lote A (não só de código)
+
+Servidor de desenvolvimento com uma página de preview temporária (não versionada, já
+removida), pedindo o HTML de cada exercício:
+
+```
+padroes-rotacao   palco=SIM  max-width:960px  background:#020617
+cubo-corsi        palco=SIM  max-width:960px  background:#F4F7FB
+jogo-memoria      palco=SIM  max-width:960px  background:linear-gradient(160deg, #ede8df…
+matriz-espacial   palco=SIM  max-width:960px  background:linear-gradient(160deg, #fbfcff…
+torre-hanoi       (abre pelo TutorialBase — ver achado acima)
+deductive-grid    (abre pelo TutorialBase — ver achado acima)
+```
+
+Árvore renderizada, conferida no HTML:
+
+```html
+<div class="absolute inset-0 overflow-auto" style="background:#020617">
+  <div class="min-h-full flex items-center justify-center p-4 sm:p-6">
+    <div class="w-full" style="max-width:960px"> … </div>
+```
+
+Os únicos `min-h-screen` que restam na página vêm do layout raiz do app e do próprio
+`ExerciseWrapper` — **nenhum do exercício**. É o estado desejado.
+
+⚠️ **Isto não substitui olhar a tela.** A extensão do Chrome não estava conectada nesta
+sessão, então ninguém *viu* as seis telas rodando. O que está provado é a árvore que o
+servidor produz, não a aparência final.
