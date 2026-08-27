@@ -126,3 +126,28 @@ Os únicos `min-h-screen` que restam na página vêm do layout raiz do app e do 
 ⚠️ **Isto não substitui olhar a tela.** A extensão do Chrome não estava conectada nesta
 sessão, então ninguém *viu* as seis telas rodando. O que está provado é a árvore que o
 servidor produz, não a aparência final.
+
+---
+
+## Correção da própria auditoria (27/ago, ao preparar o último lote)
+
+Cinco exercícios que a auditoria classificou como "família C — CSS inline próprio" estão, na
+verdade, **corretos como estão**. Eles usam `position: fixed; inset: 0` com
+`flex: 1; overflow-y: auto` centralizado dentro:
+
+`AntesDepois` · `OrdemHistoria` · `RestauranteOrdem` · `DesafioSupermercado` · `FocusAgents`
+
+`fixed` sai do fluxo, então **não somam altura ao wrapper** — o defeito 1 não os atinge. São
+tela cheia por desenho, com o conteúdo já centrado. **Não migrar.** São um segundo padrão
+válido, num dialeto diferente do palco, e trocar por trocar só criaria risco de regressão.
+
+Isso reduz o que falta de 14 arquivos para 8.
+
+## Contagem final do trabalho
+
+| situação | quantos |
+|---|---|
+| migrados ao palco | 19 exercícios (lotes A e D1) |
+| já corretos em tela cheia própria, não migrar | 5 |
+| telas compartilhadas + fundo dinâmico (lote E) | 6 arquivos |
+| restantes (lote F) | 8 arquivos |
