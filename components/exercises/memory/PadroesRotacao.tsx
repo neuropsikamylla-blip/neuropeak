@@ -6,6 +6,7 @@ import { RotateCw } from "lucide-react";
 import { calculateExerciseScore } from "@/lib/scoring";
 import { useTimedProgress } from "@/components/exercises/useExerciseEngine";
 import { ExerciseProgressBar } from "@/components/exercises/ExerciseProgressBar";
+import { ExerciseStage } from "@/components/exercises/ExerciseStage";
 import type { ExerciseResult, Theme } from "@/types";
 
 interface PadroesRotacaoProps {
@@ -301,8 +302,8 @@ export function PadroesRotacao({ difficulty, onComplete }: PadroesRotacaoProps) 
     : feedback === "correct" ? "Correto!" : "Quase lá";
 
   return (
-    <div className="min-h-screen w-full flex items-center justify-center p-4" style={{ background: "#020617" }}>
-      <div className="w-full max-w-lg rounded-3xl p-6 space-y-4" style={CARD}>
+    <ExerciseStage width="medio" background="#020617">
+      <div className="w-full rounded-3xl p-6 space-y-4" style={CARD}>
         <div className="flex items-center justify-between">
           <div>
             <p className="text-sm font-bold text-white leading-tight">Matriz com Rotações</p>
@@ -347,7 +348,7 @@ export function PadroesRotacao({ difficulty, onComplete }: PadroesRotacaoProps) 
         )}
 
       </div>
-    </div>
+    </ExerciseStage>
   );
 }
 

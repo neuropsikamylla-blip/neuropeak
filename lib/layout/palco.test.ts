@@ -26,6 +26,27 @@ describe("palco padrão dos exercícios", () => {
     expect(stage).toContain('className="absolute inset-0 overflow-auto"');
   });
 
+  it("mantém os exercícios migrados centralizados no palco", () => {
+    // Impede que a tela volte a ficar colada no topo e que a faixa de fundo do tema reapareça nas bordas.
+    const exercises = [
+      ["Padrões com Rotação", "components/exercises/memory/PadroesRotacao.tsx"],
+      ["Cubo Corsi", "components/exercises/memory/CuboCorsi.tsx"],
+      ["Torre de Hanói", "components/exercises/executive/TorreHanoi.tsx"],
+      ["Grade Dedutiva", "components/exercises/executive/DeductiveGrid.tsx"],
+      ["Jogo da Memória", "components/exercises/memory/JogoMemoria.tsx"],
+      ["Matriz Espacial", "components/exercises/memory/MatrizEspacial.tsx"],
+    ] as const;
+
+    for (const [name, file] of exercises) {
+      const exercise = source(file);
+
+      expect(exercise.match(/min-h-screen/g) ?? [], `${name}: min-h-screen não deve reaparecer`).toHaveLength(0);
+      expect(exercise.match(/minHeight:\s*["']100vh["']/g) ?? [], `${name}: minHeight 100vh não deve reaparecer`).toHaveLength(0);
+      expect(exercise, `${name}: deve usar ExerciseStage`).toContain("ExerciseStage");
+      expect(exercise, `${name}: deve usar a largura média`).toContain('width="medio"');
+    }
+  });
+
   it("não inicia a rodada zero antes da medição da arena", () => {
     // Impede as bolas da primeira rodada de nascerem amontoadas no canto superior esquerdo
     // ao sortear com as dimensões iniciais de 320px antes de a tela ser medida.
@@ -44,5 +65,23 @@ describe("palco padrão dos exercícios", () => {
     expect(mot).toContain("setTimeout(() => { compute(); setHasMeasured(true); }, 120)");
     // E o sinal existe UMA vez só: dois pontos de liberação trazem o sorteio adiantado de volta.
     expect(mot.match(/setHasMeasured\(true\)/g) ?? []).toHaveLength(1);
+  });
+
+  it("os exercícios com fundo por tema não trocam o gradiente por uma cor fixa", () => {
+    // Regressão real, pega na revisão do lote A (27/ago/2026): a migração ao palco apagou o
+    // rootBg do Jogo da Memória — três gradientes, um por tema do paciente — e passou um
+    // "#ffffff" fixo. O exercício perdia o tema. Vale para todo arquivo que define rootBg.
+    const comTema = [
+      ["Jogo da Memória", "components/exercises/memory/JogoMemoria.tsx"],
+      ["Matriz Espacial", "components/exercises/memory/MatrizEspacial.tsx"],
+      ["Grade Dedutiva", "components/exercises/executive/DeductiveGrid.tsx"],
+    ] as const;
+
+    for (const [nome, file] of comTema) {
+      const src = source(file);
+      expect(src, `${nome}: rootBg sumiu do arquivo`).toMatch(/const rootBg/);
+      expect(src, `${nome}: o palco tem de receber o rootBg, não uma cor literal`)
+        .toContain("background={rootBg.background as string}");
+    }
   });
 });

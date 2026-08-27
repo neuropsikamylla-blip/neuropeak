@@ -6,6 +6,7 @@ import { calculateExerciseScore } from "@/lib/scoring";
 import { useTimedProgress } from "@/components/exercises/useExerciseEngine";
 import { ExerciseProgressBar } from "@/components/exercises/ExerciseProgressBar";
 import { TutorialBase } from "@/components/exercises/TutorialBase";
+import { ExerciseStage } from "@/components/exercises/ExerciseStage";
 import type { ExerciseResult, Theme } from "@/types";
 
 interface DeductiveGridProps {
@@ -626,8 +627,8 @@ export function DeductiveGrid({ difficulty, theme, onComplete }: DeductiveGridPr
   const headCls = isExpert ? "text-[9px]" : "text-[11px]";
 
   return (
-    <div className="min-h-screen overflow-y-auto" style={rootBg}>
-      <div className="max-w-sm mx-auto px-4 py-5 flex flex-col gap-4">
+    <ExerciseStage width="medio" background={rootBg.background as string}>
+      <div className="px-4 py-5 flex flex-col gap-4">
 
         {/* Header */}
         <div className="p-4" style={cardStyle}>
@@ -721,6 +722,6 @@ export function DeductiveGrid({ difficulty, theme, onComplete }: DeductiveGridPr
           Toque: 1x = ✓ (SIM), 2x = ✗ (NÃO), 3x = apaga
         </p>
       </div>
-    </div>
+    </ExerciseStage>
   );
 }

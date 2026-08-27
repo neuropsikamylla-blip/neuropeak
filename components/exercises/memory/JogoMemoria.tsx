@@ -5,6 +5,7 @@ import { motion, AnimatePresence } from "framer-motion";
 import { calculateExerciseScore } from "@/lib/scoring";
 import { useTimedProgress } from "@/components/exercises/useExerciseEngine";
 import { ExerciseProgressBar } from "@/components/exercises/ExerciseProgressBar";
+import { ExerciseStage } from "@/components/exercises/ExerciseStage";
 import type { ExerciseResult, Theme } from "@/types";
 import { MEMORY_ITEMS, MemorySymbol } from "./MemorySymbol";
 
@@ -259,6 +260,8 @@ export function JogoMemoria({ difficulty, theme, onComplete }: JogoMemoriaProps)
   }, [gamePhase, locked, cards, flipped, matchedCount, errors, pairCount]);
 
   // ─── Design system styles ────────────────────────────────────────────
+  // Fundo da tela por TEMA — três gradientes distintos, não um branco só. O Codex apagou
+  // isto na migração ao palco (27/ago/2026) e o Jogo da Memória perdia o tema do paciente.
   const rootBg: React.CSSProperties = isGamified
     ? { background: "linear-gradient(145deg, #0a1628 0%, #0d2244 45%, #132a52 70%, #081020 100%)" }
     : isColorful
@@ -275,8 +278,8 @@ export function JogoMemoria({ difficulty, theme, onComplete }: JogoMemoriaProps)
   const budget = errorBudget(pairCount);
 
   return (
-    <div className="min-h-screen flex flex-col items-center p-4 pt-6" style={rootBg}>
-      <div className="w-full max-w-2xl p-5" style={cardStyle}>
+    <ExerciseStage width="medio" background={rootBg.background as string}>
+      <div className="w-full p-5" style={cardStyle}>
         <div className="flex justify-between items-center mb-3">
           <div>
             <h2 style={{ fontWeight: 700, fontSize: 15, color: titleColor }}>🃏 Jogo da Memória</h2>
@@ -316,6 +319,6 @@ export function JogoMemoria({ difficulty, theme, onComplete }: JogoMemoriaProps)
           </p>
         )}
       </div>
-    </div>
+    </ExerciseStage>
   );
 }

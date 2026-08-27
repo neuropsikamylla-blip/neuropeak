@@ -6,6 +6,7 @@ import { Trophy, Check, X } from "lucide-react";
 import { calculateExerciseScore } from "@/lib/scoring";
 import { useTimedProgress } from "@/components/exercises/useExerciseEngine";
 import { TutorialBase } from "@/components/exercises/TutorialBase";
+import { ExerciseStage } from "@/components/exercises/ExerciseStage";
 import type { ExerciseResult, Theme } from "@/types";
 
 interface TorreHanoiProps {
@@ -350,8 +351,8 @@ export function TorreHanoi({ difficulty, theme, onComplete }: TorreHanoiProps) {
   const LABELS = ["Origem", "Auxiliar", "Destino"];
 
   return (
-    <div className="min-h-screen flex flex-col items-center p-4 pt-6" style={{ background: "#F3F4F6" }}>
-      <div className="w-full max-w-2xl rounded-3xl bg-white p-6 sm:p-7"
+    <ExerciseStage width="medio" background="#F3F4F6">
+      <div className="w-full rounded-3xl bg-white p-6 sm:p-7"
         style={{ boxShadow: "0 12px 40px rgba(15,23,42,.10)", border: "1px solid #EEF0F4" }}>
 
         {/* Título + nível + indicadores */}
@@ -448,7 +449,7 @@ export function TorreHanoi({ difficulty, theme, onComplete }: TorreHanoiProps) {
           )}
         </AnimatePresence>
       </div>
-    </div>
+    </ExerciseStage>
   );
 }
 

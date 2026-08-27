@@ -6,6 +6,7 @@ import { LayoutGrid, Pointer } from "lucide-react";
 import { calculateExerciseScore } from "@/lib/scoring";
 import { useTimedProgress } from "@/components/exercises/useExerciseEngine";
 import { ExerciseProgressBar } from "@/components/exercises/ExerciseProgressBar";
+import { ExerciseStage } from "@/components/exercises/ExerciseStage";
 import { classifyTrial, nextLevelPerTrial } from "@/lib/adaptive-trial";
 import type { ExerciseResult, Theme } from "@/types";
 
@@ -307,10 +308,10 @@ export function MatrizEspacial({ difficulty, theme, onComplete, alwaysReverse }:
     : (feedbackData?.correct ? "Correto!" : "Quase lá — observe de novo");
 
   return (
-    <div className="min-h-screen flex flex-col items-center p-4 pt-6" style={rootBg}>
+    <ExerciseStage width="medio" background={rootBg.background as string}>
 
       {/* Card do exercício */}
-      <div className="w-full max-w-lg p-6" style={cardStyle}>
+      <div className="w-full p-6" style={cardStyle}>
 
         {/* Topo: ícone de grade + título + badge */}
         <div className="flex items-center justify-between gap-2 mb-3.5">
@@ -368,6 +369,6 @@ export function MatrizEspacial({ difficulty, theme, onComplete, alwaysReverse }:
         )}
 
       </div>
-    </div>
+    </ExerciseStage>
   );
 }

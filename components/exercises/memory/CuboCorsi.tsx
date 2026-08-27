@@ -4,6 +4,7 @@ import { useState, useRef, useCallback, useEffect } from "react";
 import { calculateExerciseScore } from "@/lib/scoring";
 import { useTimedProgress } from "@/components/exercises/useExerciseEngine";
 import { ExerciseProgressBar } from "@/components/exercises/ExerciseProgressBar";
+import { ExerciseStage } from "@/components/exercises/ExerciseStage";
 import { classifyTrial, nextLevelPerTrial } from "@/lib/adaptive-trial";
 import type { ExerciseResult, Theme } from "@/types";
 
@@ -387,8 +388,8 @@ export function CuboCorsi({ difficulty, theme: _theme, onComplete }: Props) {
   };
 
   return (
-    <div style={{ background: "#F4F7FB", minHeight: "100vh" }}>
-      <div style={{ maxWidth: 500, margin: "0 auto", padding: "18px 14px 32px" }}>
+    <ExerciseStage width="medio" background="#F4F7FB">
+      <div style={{ padding: "18px 14px 32px" }}>
 
         {/* Barra de progresso (tempo ativo) */}
         <ExerciseProgressBar progressPct={progressPct} />
@@ -440,6 +441,6 @@ export function CuboCorsi({ difficulty, theme: _theme, onComplete }: Props) {
         </p>
 
       </div>
-    </div>
+    </ExerciseStage>
   );
 }
