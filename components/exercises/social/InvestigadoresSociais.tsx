@@ -13,6 +13,7 @@ import { motion, AnimatePresence } from "framer-motion";
 import { calculateExerciseScore } from "@/lib/scoring";
 import { useTimedProgress } from "@/components/exercises/useExerciseEngine";
 import { TutorialBase } from "@/components/exercises/TutorialBase";
+import { ExerciseStage } from "@/components/exercises/ExerciseStage";
 import type { ExerciseResult, Theme } from "@/types";
 import { AssetImage } from "@/components/assets/AssetImage";
 import { socialStyles } from "./socialTheme";
@@ -225,8 +226,8 @@ export function InvestigadoresSociais({ difficulty, theme, onComplete }: Props) 
   // ── Config ──
   if (stage === "config") {
     return (
-      <div className="min-h-screen overflow-y-auto" style={rootBg}>
-        <div className="max-w-2xl mx-auto px-4 py-6">
+      <ExerciseStage width="medio" background={rootBg.background as string}>
+        <div>
           <div className="p-5" style={card}>
             <h2 className={`font-bold text-lg ${pal.title}`}>🕵️ Investigadores da Situação Social</h2>
             <p className={`text-sm mb-4 ${pal.sub}`}>Observe a cena, leia as pistas sociais e responda como um investigador. O feedback aparece depois que você confirma.</p>
@@ -242,7 +243,7 @@ export function InvestigadoresSociais({ difficulty, theme, onComplete }: Props) 
             <button onClick={() => setStage("tutorial")} className="w-full h-12 font-bold" style={btn}>Continuar</button>
           </div>
         </div>
-      </div>
+      </ExerciseStage>
     );
   }
 
@@ -270,8 +271,8 @@ export function InvestigadoresSociais({ difficulty, theme, onComplete }: Props) 
   if (!item) return null;
 
   return (
-    <div className="min-h-screen overflow-y-auto" style={rootBg}>
-      <div className="max-w-2xl mx-auto px-4 py-4">
+    <ExerciseStage width="medio" background={rootBg.background as string}>
+      <div>
         <div className="p-5" style={card}>
           <StoryHeader story={story} theme={theme}
             right={<span className={`text-xs font-semibold ${pal.sub}`}>Caso {storyIdx + 1}/{poolRef.current.length}</span>} />
@@ -281,6 +282,6 @@ export function InvestigadoresSociais({ difficulty, theme, onComplete }: Props) 
           </AnimatePresence>
         </div>
       </div>
-    </div>
+    </ExerciseStage>
   );
 }

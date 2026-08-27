@@ -5,6 +5,7 @@ import { motion, AnimatePresence } from "framer-motion";
 import { calculateExerciseScore } from "@/lib/scoring";
 import { useTimedProgress } from "@/components/exercises/useExerciseEngine";
 import { ExerciseProgressBar } from "@/components/exercises/ExerciseProgressBar";
+import { ExerciseStage } from "@/components/exercises/ExerciseStage";
 import { MOTBall } from "@/components/exercises/attention/MOTBall";
 import {
   ASPECT,
@@ -94,10 +95,10 @@ export function MOT({ difficulty, theme, onComplete }: MOTProps) {
   const arenaRef = useRef(arena);
   arenaRef.current = arena;
   useLayoutEffect(() => {
-    // Mede o VIEWPORT direto (window.innerWidth/innerHeight) — robusto: não depende
-    // do clientWidth de um wrapper que pode vir travado num valor pequeno.
+    // Mede a largura real do conteúdo do palco. A altura continua vindo da janela para
+    // garantir que a arena caiba na tela.
     const compute = () => {
-      const availW = Math.min(MAX_W, window.innerWidth - PAD_X);
+      const availW = Math.min(MAX_W, contentRef.current?.clientWidth ?? window.innerWidth - PAD_X);
 
       // Quanto a tela gasta com o que NÃO é arena: cabeçalho, rótulo da fase, botão de confirmar,
       // textos e espaçamentos. Isto era um número fixo (RESERVED_H) e estava MENOR que a realidade
@@ -269,8 +270,8 @@ export function MOT({ difficulty, theme, onComplete }: MOTProps) {
     "🎯 Toque nos alvos e confirme!";
 
   return (
-    <div className={`min-h-screen overflow-y-auto ${pal.bg}`}>
-      <div ref={contentRef} className="max-w-[1480px] mx-auto px-4 py-5 flex flex-col items-center gap-4">
+    <ExerciseStage width="amplo" backgroundClassName={pal.bg}>
+      <div ref={contentRef} className="flex flex-col items-center gap-4">
 
         {/* Header */}
         <div style={{ width: dims.w, maxWidth: "100%" }} className={`rounded-2xl p-4 ${pal.card}`}>
@@ -344,6 +345,6 @@ export function MOT({ difficulty, theme, onComplete }: MOTProps) {
           Selecione exatamente {k} bola{k > 1 ? "s" : ""} alvo
         </p>
       </div>
-    </div>
+    </ExerciseStage>
   );
 }

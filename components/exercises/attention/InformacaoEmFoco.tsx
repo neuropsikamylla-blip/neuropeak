@@ -14,6 +14,7 @@ import { motion, AnimatePresence } from "framer-motion";
 import { HelpCircle, Lightbulb, Check, X, Volume2, Search } from "lucide-react";
 import { calculateExerciseScore } from "@/lib/scoring";
 import { useTimedProgress } from "@/components/exercises/useExerciseEngine";
+import { ExerciseStage } from "@/components/exercises/ExerciseStage";
 import { playTTS, cancelTTS } from "@/lib/tts";
 import type { ExerciseResult, Theme } from "@/types";
 import {
@@ -182,8 +183,8 @@ const PASSOS = [
 function Tutorial({ theme, onStart }: { theme: Theme; onStart: () => void }) {
   const s = styles(theme);
   return (
-    <div className={`min-h-screen overflow-y-auto ${s.bg}`}>
-      <div className="max-w-[760px] mx-auto px-4 py-8">
+    <ExerciseStage width="amplo" backgroundClassName={s.bg}>
+      <div>
         <h2 className={`text-2xl font-black text-center ${s.title}`}>Como jogar: Informação em Foco</h2>
         <p className={`text-center text-sm mt-1 mb-5 ${s.sub}`}>Leia, confira e escolha.</p>
         <div className={`rounded-2xl border p-4 mb-5 ${s.card}`}>
@@ -217,7 +218,7 @@ function Tutorial({ theme, onStart }: { theme: Theme; onStart: () => void }) {
         </div>
         <button onClick={onStart} className={`w-full h-12 rounded-full font-bold ${s.btn}`}>Começar exercício</button>
       </div>
-    </div>
+    </ExerciseStage>
   );
 }
 
@@ -337,8 +338,8 @@ export function InformacaoEmFoco({ difficulty, theme, onComplete }: Props) {
     const primeira = rs.filter((r) => r.primeira).length;
     const pistas = rs.filter((r) => r.usouPista).length;
     return (
-      <div className={`min-h-screen overflow-y-auto ${s.bg}`}>
-        <div className="max-w-[560px] mx-auto px-4 py-10 text-center">
+      <ExerciseStage width="amplo" backgroundClassName={s.bg}>
+        <div className="text-center">
           <h2 className={`text-2xl font-black ${s.title}`}>Atividade concluída</h2>
           <div className={`rounded-2xl border p-6 mt-5 space-y-2 ${s.card} ${s.cardTxt}`}>
             <p className="text-lg">Você concluiu <b>{rs.length}</b> questões.</p>
@@ -346,15 +347,16 @@ export function InformacaoEmFoco({ difficulty, theme, onComplete }: Props) {
             {pistas > 0 && <p className={s.sub}>Usou pistas em {pistas} {pistas === 1 ? "questão" : "questões"}.</p>}
           </div>
         </div>
-      </div>
+      </ExerciseStage>
     );
   }
 
   if (!questao) return null;
 
   return (
-    <div className={`min-h-screen overflow-y-auto ${s.bg}`}>
-      <div className="max-w-[1120px] mx-auto px-4 py-5 flex flex-col gap-4">
+    <>
+      <ExerciseStage width="amplo" backgroundClassName={s.bg}>
+        <div className="flex flex-col gap-4">
         {/* Header */}
         <div>
           <div className="flex justify-between items-baseline">
@@ -448,10 +450,11 @@ export function InformacaoEmFoco({ difficulty, theme, onComplete }: Props) {
             {isTimeUp() ? "Ver resultado" : "Continuar"}
           </button>
         )}
-      </div>
+        </div>
+      </ExerciseStage>
 
       {/* Ampliação da embalagem: não responde, não avança, não revela nada (§11) */}
       {ampliado && <ModalEmbalagem p={ampliado} theme={theme} onFechar={() => setAmpliado(null)} />}
-    </div>
+    </>
   );
 }

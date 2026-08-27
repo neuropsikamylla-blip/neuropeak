@@ -3,6 +3,7 @@
 import { useState, useEffect, useCallback, useRef } from "react";
 import { useTimedProgress } from "@/components/exercises/useExerciseEngine";
 import { ExerciseProgressBar } from "@/components/exercises/ExerciseProgressBar";
+import { ExerciseStage } from "@/components/exercises/ExerciseStage";
 import { TutorialBase } from "@/components/exercises/TutorialBase";
 import type { ExerciseResult, Theme } from "@/types";
 
@@ -438,6 +439,9 @@ function TutorialShowStep({ theme, onDone }: { theme: Theme; onDone: () => void 
   useEffect(() => {
     const t = setTimeout(onDone, 2500);
     return () => clearTimeout(t);
+    // Deps vazias de propósito: este passo do tutorial roda UMA vez e se encerra sozinho em
+    // 2,5s. O Codex tentou pôr `showTutorial` aqui (27/ago/2026) — variável que mora em
+    // `Labirinto`, não neste componente: era erro de compilação e tela branca em produção.
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
@@ -680,17 +684,18 @@ export function Labirinto({ difficulty, theme, onComplete }: LabirintoProps) {
   timeLimitRef.current = timeLimit;
 
   // ── Container size ──────────────────────────────────────────────────────
-  const [windowWidth, setWindowWidth] = useState(
-    typeof window !== "undefined" ? window.innerWidth : 375
-  );
+  const mazeWrapRef = useRef<HTMLDivElement>(null);
+  const [containerWidth, setContainerWidth] = useState(375);
   useEffect(() => {
-    function onResize() {
-      setWindowWidth(window.innerWidth);
-    }
-    window.addEventListener("resize", onResize);
-    return () => window.removeEventListener("resize", onResize);
+    const container = mazeWrapRef.current;
+    if (!container) return;
+    const measure = () => setContainerWidth(container.clientWidth);
+    measure();
+    const observer = new ResizeObserver(measure);
+    observer.observe(container);
+    return () => observer.disconnect();
   }, []);
-  const containerPx = Math.min(windowWidth - 24, 600); // teto ampliado (era 480) — maior no tablet/desktop
+  const containerPx = Math.min(containerWidth - 24, 600); // teto ampliado (era 480) — maior no tablet/desktop
 
   // ── Timer ───────────────────────────────────────────────────────────────
   useEffect(() => {
@@ -921,10 +926,8 @@ export function Labirinto({ difficulty, theme, onComplete }: LabirintoProps) {
   const moveColor = moves > moveLimit ? "#ef4444" : moveRatio >= 0.85 ? "#f97316" : "#34d399";
 
   return (
-    <div
-      className="min-h-screen flex flex-col items-center p-4 pt-4"
-      style={{ background: pal.pageBg }}
-    >
+    <ExerciseStage width="amplo" background={pal.pageBg}>
+      <div className="flex flex-col items-center">
       {/* Header */}
       <div
         className="w-full max-w-[600px] rounded-2xl px-4 py-3 mb-4"
@@ -967,6 +970,10 @@ export function Labirinto({ difficulty, theme, onComplete }: LabirintoProps) {
 
       {/* Maze */}
       <div
+        ref={mazeWrapRef}
+        className="w-full flex justify-center"
+      >
+        <div
         className="relative"
         style={{ touchAction: "none" }}
         onTouchStart={onTouchStart}
@@ -1032,6 +1039,7 @@ export function Labirinto({ difficulty, theme, onComplete }: LabirintoProps) {
             </div>
           );
         })()}
+        </div>
       </div>
 
       {/* D-pad controls */}
@@ -1067,6 +1075,7 @@ export function Labirinto({ difficulty, theme, onComplete }: LabirintoProps) {
       >
         Toque na célula ao lado · swipe · ↑↓←→ · WASD
       </p>
-    </div>
+      </div>
+    </ExerciseStage>
   );
 }

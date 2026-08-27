@@ -5,6 +5,7 @@ import { motion, AnimatePresence } from "framer-motion";
 import { calculateExerciseScore } from "@/lib/scoring";
 import { useTimedProgress } from "@/components/exercises/useExerciseEngine";
 import { ExerciseProgressBar } from "@/components/exercises/ExerciseProgressBar";
+import { ExerciseStage } from "@/components/exercises/ExerciseStage";
 import type { ExerciseResult, Theme } from "@/types";
 
 // ─── Tipos ────────────────────────────────────────────────────────────────────
@@ -1102,8 +1103,8 @@ export function DesafioCidade({ difficulty, theme, onComplete }: {
   );
 
   return (
-    <div className="min-h-screen overflow-y-auto p-4" style={palRootBg(theme)}>
-      <div className="w-full max-w-md mx-auto p-5 my-4" style={palCardStyle(theme)}>
+    <ExerciseStage width="amplo" background={palRootBg(theme).background as string}>
+      <div className="w-full p-5" style={palCardStyle(theme)}>
         <ProgressBar />
 
         <AnimatePresence mode="wait">
@@ -1141,6 +1142,6 @@ export function DesafioCidade({ difficulty, theme, onComplete }: {
           )}
         </AnimatePresence>
       </div>
-    </div>
+    </ExerciseStage>
   );
 }

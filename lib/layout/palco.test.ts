@@ -54,6 +54,14 @@ describe("palco padrão dos exercícios", () => {
       ["Semáforo", "components/exercises/processing/Semaforo.tsx", "compacto"],
       ["Tempo de Reação", "components/exercises/processing/TempoReacao.tsx", "compacto"],
       ["Certo ou Errado", "components/exercises/processing/CertoOuErrado.tsx", "compacto"],
+      ["Informação em Foco", "components/exercises/attention/InformacaoEmFoco.tsx", "amplo"],
+      ["Compra Multifuncional", "components/exercises/executive/CompraMultifuncional.tsx", "amplo"],
+      ["Desafio Cidade", "components/exercises/executive/DesafioCidade.tsx", "amplo"],
+      ["Estacionamento Lógico", "components/exercises/executive/EstacionamentoLogico.tsx", "medio"],
+      ["Vigilância", "components/exercises/attention/Vigilancia.tsx", "medio"],
+      ["Investigadores Sociais", "components/exercises/social/InvestigadoresSociais.tsx", "medio"],
+      ["MOT", "components/exercises/attention/MOT.tsx", "amplo"],
+      ["Labirinto", "components/exercises/executive/Labirinto.tsx", "amplo"],
     ] as const;
 
     for (const [name, file, width] of exercises) {
@@ -127,6 +135,22 @@ describe("palco padrão dos exercícios", () => {
     expect(mot).toContain("setTimeout(() => { compute(); setHasMeasured(true); }, 120)");
     // E o sinal existe UMA vez só: dois pontos de liberação trazem o sorteio adiantado de volta.
     expect(mot.match(/setHasMeasured\(true\)/g) ?? []).toHaveLength(1);
+  });
+
+  it("mede a largura da arena do MOT pelo conteúdo do palco", () => {
+    // A janela pode ser mais larga que o palco amplo; usá-la faria a arena transbordar.
+    const mot = source("components/exercises/attention/MOT.tsx");
+    expect(mot).toContain("contentRef.current?.clientWidth ?? window.innerWidth - PAD_X");
+    expect(mot).not.toContain("const availW = Math.min(MAX_W, window.innerWidth - PAD_X)");
+  });
+
+  it("mede a largura do Labirinto pelo contêiner do palco", () => {
+    // O teto de 600px permanece, mas a largura de partida não pode mais ser a janela.
+    const labirinto = source("components/exercises/executive/Labirinto.tsx");
+    expect(labirinto).toContain("const mazeWrapRef = useRef<HTMLDivElement>(null)");
+    expect(labirinto).toContain("setContainerWidth(container.clientWidth)");
+    expect(labirinto).toContain("const containerPx = Math.min(containerWidth - 24, 600)");
+    expect(labirinto).not.toContain("window.innerWidth");
   });
 
   it("os exercícios com fundo por tema não trocam o gradiente por uma cor fixa", () => {

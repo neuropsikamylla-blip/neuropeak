@@ -13,6 +13,7 @@ import { useState, useRef, useCallback, useEffect, useLayoutEffect } from "react
 import { motion, AnimatePresence } from "framer-motion";
 import { useTimedProgress } from "@/components/exercises/useExerciseEngine";
 import { calculateExerciseScore } from "@/lib/scoring";
+import { ExerciseStage } from "@/components/exercises/ExerciseStage";
 import type { ExerciseResult, Theme } from "@/types";
 import {
   tempoDoDegrau, gerarCentros, classificarToque, gerarSequenciaPosicoes,
@@ -218,7 +219,8 @@ export function Vigilancia({ difficulty, theme, onComplete }: Props) {
   const cx = dims.w / 2, cy = dims.h / 2;
 
   return (
-    <div className={`min-h-screen flex flex-col ${bg}`}>
+    <ExerciseStage width="medio" backgroundClassName={bg}>
+      <div className="min-h-full flex flex-col">
       {/* Barra superior mínima (§28): nome, nível e a LINHA DE PROGRESSÃO por tempo */}
       <div className="flex-shrink-0 px-4 py-3">
         <div className="flex items-center justify-between mb-2">
@@ -290,6 +292,7 @@ export function Vigilancia({ difficulty, theme, onComplete }: Props) {
           );
         })()}
       </div>
-    </div>
+      </div>
+    </ExerciseStage>
   );
 }

@@ -19,6 +19,7 @@ import { motion, AnimatePresence } from "framer-motion";
 import { calculateExerciseScore } from "@/lib/scoring";
 import { useTimedProgress } from "@/components/exercises/useExerciseEngine";
 import { TutorialBase } from "@/components/exercises/TutorialBase";
+import { ExerciseStage } from "@/components/exercises/ExerciseStage";
 import type { ExerciseResult, Theme } from "@/types";
 import {
   buildMissao, verificarNumerica, verificarSelecao, feedbackNumerica, feedbackSelecao,
@@ -554,8 +555,8 @@ export function CompraMultifuncional({ difficulty, theme, onComplete }: Props) {
       </button>
     );
     return (
-      <div className="min-h-screen overflow-y-auto" style={rootBg}>
-        <div className="max-w-2xl mx-auto px-4 py-6">
+      <ExerciseStage width="amplo" background={rootBg.background as string}>
+        <div>
           <div className="p-5" style={cardStyle}>
             <h2 className={`font-bold text-lg ${pal.title}`}>🛒 Compra Multifuncional</h2>
             <p className={`text-sm mb-4 ${pal.sub}`}>Missões de matemática numa situação de compra. Escolha o tema e o foco.</p>
@@ -573,7 +574,7 @@ export function CompraMultifuncional({ difficulty, theme, onComplete }: Props) {
             <button onClick={() => setStage("tutorial")} className="w-full h-12 font-bold" style={btnStyle}>Continuar</button>
           </div>
         </div>
-      </div>
+      </ExerciseStage>
     );
   }
 
@@ -601,8 +602,8 @@ export function CompraMultifuncional({ difficulty, theme, onComplete }: Props) {
   const progresso = passo / totalEtapas;
 
   return (
-    <div className="min-h-screen overflow-y-auto" style={rootBg}>
-      <div className="max-w-[1180px] mx-auto px-4 py-4">
+    <ExerciseStage width="amplo" background={rootBg.background as string}>
+      <div>
         {/* Header */}
         <div className="flex items-center gap-3 mb-4">
           <div className="flex-shrink-0 w-12 h-12 rounded-full flex items-center justify-center text-2xl"
@@ -638,6 +639,6 @@ export function CompraMultifuncional({ difficulty, theme, onComplete }: Props) {
           </div>
         </div>
       </div>
-    </div>
+    </ExerciseStage>
   );
 }

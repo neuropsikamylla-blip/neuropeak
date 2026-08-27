@@ -4,6 +4,7 @@ import { useState, useRef, useCallback, useLayoutEffect, useMemo, useEffect } fr
 import { calculateExerciseScore } from "@/lib/scoring";
 import { useTimedProgress } from "@/components/exercises/useExerciseEngine";
 import { ExerciseProgressBar } from "@/components/exercises/ExerciseProgressBar";
+import { ExerciseStage } from "@/components/exercises/ExerciseStage";
 import { assignCarImages, ALL_CAR_IMAGES } from "@/lib/parking-cars";
 import { PARKING_LEVELS, PLAY_LEVELS } from "@/lib/parking-levels";
 import type { Level } from "@/types/parking";
@@ -51,6 +52,7 @@ const BORDER   = 11;   // curb thickness px (meio-fio amarelo/preto)
 const PARKING_BG = "/exercises/Carros/parking-bg.jpg"; // foto do estacionamento (fundo)
 const EXIT_ROW = 2;    // target car row (0-indexed, from bottom)
 const CORRIDOR = 26;   // exit corridor width px (outside board)
+const GAME_BACKGROUND = `#23262e linear-gradient(rgba(8,10,16,0.28), rgba(8,10,16,0.4)), url(${PARKING_BG}) center / cover`;
 
 // ── Types ─────────────────────────────────────────────────────────────────────
 interface Car {
@@ -578,7 +580,7 @@ export function EstacionamentoLogico({ difficulty, theme: _theme, onComplete }: 
   // ── Tutorial concluído ────────────────────────────────────────────────────
   if (won && tutorial) {
     return (
-      <div className="min-h-screen flex items-center justify-center px-8" style={{ background: "#ECEAE4" }}>
+      <ExerciseStage width="medio" background="#ECEAE4">
         <div className="w-full max-w-xs text-center">
           <p className="text-2xl font-light mb-3" style={{ color: "#2E9E4F" }}>Muito bem! 🎉</p>
           <p className="text-sm mb-8" style={{ color: "#6B7384" }}>
@@ -592,7 +594,7 @@ export function EstacionamentoLogico({ difficulty, theme: _theme, onComplete }: 
             Começar
           </button>
         </div>
-      </div>
+      </ExerciseStage>
     );
   }
 
@@ -605,7 +607,7 @@ export function EstacionamentoLogico({ difficulty, theme: _theme, onComplete }: 
     // 2+ a mais → treino rígido: tem que refazer.
     const headColor = perfect ? "#2E9E4F" : oneOver ? "#B45309" : "#3A4050";
     return (
-      <div className="min-h-screen flex items-center justify-center px-8" style={{ background: "#ECEAE4" }}>
+      <ExerciseStage width="medio" background="#ECEAE4">
         <div className="w-full max-w-xs text-center">
           <p className="text-2xl font-light mb-8" style={{ color: headColor }}>
             {perfect ? "Perfeito!" : oneOver ? "Quase perfeito!" : "Quase lá"}
@@ -675,7 +677,7 @@ export function EstacionamentoLogico({ difficulty, theme: _theme, onComplete }: 
             </>
           )}
         </div>
-      </div>
+      </ExerciseStage>
     );
   }
 
@@ -698,14 +700,11 @@ export function EstacionamentoLogico({ difficulty, theme: _theme, onComplete }: 
 
   // ── Game screen ───────────────────────────────────────────────────────────
   return (
-    <div
+    <ExerciseStage width="medio" background={GAME_BACKGROUND}>
+      <div
       ref={wrapRef}
-      className="min-h-screen flex flex-col items-center"
+      className="w-full flex flex-col items-center"
       style={{
-        backgroundImage: `linear-gradient(rgba(8,10,16,0.28), rgba(8,10,16,0.4)), url(${PARKING_BG})`,
-        backgroundSize: "cover",
-        backgroundPosition: "center",
-        backgroundColor: "#23262e",
         // Sem seleção de texto/realce ao arrastar (evita o tabuleiro "ficar azul").
         userSelect: "none",
         WebkitUserSelect: "none",
@@ -812,6 +811,7 @@ export function EstacionamentoLogico({ difficulty, theme: _theme, onComplete }: 
           </div>
         </div>
       </div>
-    </div>
+      </div>
+    </ExerciseStage>
   );
 }
