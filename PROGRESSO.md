@@ -18,13 +18,15 @@ Achado principal: não são 33 problemas soltos, são 3 defeitos estruturais + 1
       tela (`useLayoutEffect` → `setDims`) e o sorteio das bolas (`useEffect` → `startRound(0)`),
       em `MOT.tsx:175`. A primeira rodada nasce numa arena de 176×116px. *Critério:* linha
       exata identificada e mecanismo explicado. ✅
-- [ ] **Passo 3 — decisões dela** (largura do palco; mexer ou não nos fundos aprovados).
-      *Critério de pronto:* respostas registradas neste bloco.
-- [ ] **Passo 4 — padrão único de palco** (`ExerciseStage`): um componente que centraliza,
-      define a largura por classe de conteúdo e elimina o `min-h-screen` duplo.
-      *Critério:* componente + teste que prova a ausência do `min-h-screen` duplicado.
-- [ ] **Passo 5 — teste que trava o bug do MOT**, depois a correção.
-      *Critério:* teste vermelho antes, verde depois.
+- [x] **Passo 3 — decisões dela.** Pronto (27/ago): **três larguras por tipo de peça** —
+      compacto 640 / médio 960 / amplo 1280 — e **os fundos próprios ficam como estão**,
+      corrigindo só o vazamento do tema nas bordas. Spec: `docs/auditoria-layout/PADRAO-PALCO-SPEC.md`.
+- [x] **Passo 4 — `ExerciseStage` criado** (v2.90.1, commit `30b7370`). `absolute inset-0` +
+      `min-h-full`: sai do fluxo, o wrapper mede exatos 100vh, acaba a rolagem de 32px e a
+      faixa do tema nas bordas. Larguras em `lib/layout/palco.ts`. ✅
+- [x] **Passo 5 — MOT corrigido e provado por injeção** (v2.90.1). O sorteio da rodada 0
+      espera a medição assentada. Revertido o arquivo ao estado antigo, o teste falha;
+      restaurado, passa. `tsc` 0 · `test` 742/742 · `build` 0. ✅
 - [ ] **Passo 6 — migrar os exercícios ao palco, em lotes por família**, com verificação
       VISUAL de cada lote (regra dela: mudança em coisa aprovada se confere com os olhos).
 
