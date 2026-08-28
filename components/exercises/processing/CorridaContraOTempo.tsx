@@ -289,8 +289,11 @@ export function CorridaContraOTempo({ difficulty, theme, onComplete }: Props) {
   const collected = hitsRef.current;
   const ruleVerb = mode === "exclusion" ? "Toque em tudo que NÃO é" : "Toque apenas em";
 
+  // MÉDIO, não amplo: a grade nunca passa de 690px (o teto é 3 ou 4 colunas de 230px), então
+  // um palco de 1280 deixava um card branco enorme em volta de uma grade pequena. Classificar
+  // este exercício como "amplo" foi erro meu na migração de 27/ago/2026.
   return (
-    <ExerciseStage width="amplo" background="#F3F4F6">
+    <ExerciseStage width="medio" background="#F3F4F6">
       <div className="w-full rounded-3xl bg-white p-5 sm:p-6" style={{ boxShadow: "0 12px 40px rgba(15,23,42,.10)", border: "1px solid #EEF0F4" }}>
 
         {/* Topo: título + timer + acertos */}
@@ -352,8 +355,20 @@ export function CorridaContraOTempo({ difficulty, theme, onComplete }: Props) {
                 <div className="h-full rounded-full" style={{ width: `${timerRatio * 100}%`, background: barColor, transition: "width .3s linear" }} />
               </div>
 
-              {/* Grid */}
-              <div className="grid gap-2.5" style={{ gridTemplateColumns: `repeat(${spec.cols}, minmax(0,1fr))` }}>
+              {/* Grid.
+                  O item é quadrado (aspect-ratio 1/1), então a LARGURA da grade decide a
+                  altura dela. Sem teto, num palco de 1280px cada item virava um quadrado de
+                  ~400px e as fileiras de baixo saíam da tela — ela pegou isso em 28/ago:
+                  "imagens gigantes e que se não rolar nem vejo outras... inviável".
+                  Dois tetos, o menor manda:
+                    · 230px por coluna — o tamanho do item no tutorial, que ela aprovou;
+                    · o que couber em 56vh de altura, contando as fileiras desta rodada.
+                  Assim a grade cabe na tela em qualquer nível, com 3, 4 ou 5 colunas. */}
+              <div className="grid gap-2.5 mx-auto" style={{
+                gridTemplateColumns: `repeat(${spec.cols}, minmax(0,1fr))`,
+                maxWidth: `min(${spec.cols * 230}px, calc(56vh * ${(spec.cols / Math.max(1, Math.ceil(items.length / spec.cols))).toFixed(3)}))`,
+                width: "100%",
+              }}>
                 {items.map(item => {
                   const isFlash = flash?.id === item.id;
                   const border = item.collected ? "#22C55E" : isFlash ? (flash!.ok ? "#22C55E" : "#EF4444") : "#E2E8F0";

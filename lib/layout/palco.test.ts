@@ -58,7 +58,7 @@ describe("palco padrão dos exercícios", () => {
       ["Dupla Tarefa", "components/exercises/attention/DualTask.tsx", "medio"],
       ["Trilha Visual", "components/exercises/attention/TrilhaVisual.tsx", "medio"],
       ["Mudança de Regras", "components/exercises/executive/MudancaRegras.tsx", "medio"],
-      ["Busca Rápida", "components/exercises/processing/CorridaContraOTempo.tsx", "amplo"],
+      ["Busca Rápida", "components/exercises/processing/CorridaContraOTempo.tsx", "medio"],
       ["Semáforo", "components/exercises/processing/Semaforo.tsx", "compacto"],
       ["Tempo de Reação", "components/exercises/processing/TempoReacao.tsx", "compacto"],
       ["Certo ou Errado", "components/exercises/processing/CertoOuErrado.tsx", "compacto"],
