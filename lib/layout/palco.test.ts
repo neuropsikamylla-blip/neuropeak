@@ -184,4 +184,30 @@ describe("palco padrão dos exercícios", () => {
       expect(raiz, `${nome}: a raiz do fundo precisa de overflow-hidden`).toContain("overflow-hidden");
     }
   });
+
+  it("o cubo do Corsi não volta a vazar nem a achatar", () => {
+    // Dois defeitos que ela pegou em 28/ago/2026 olhando a tela, com o Cogmed como referência:
+    // (1) a face tinha borderRadius, o que abria um vão em cada quina do cubo — e como o cubo é
+    // oco, via-se através dele ("quando vira parece que fica transparente");
+    // (2) a virada de 80% achatava o cubo numa placa, e o paciente perdia a noção de proporção
+    // e de onde a peça estava. A virada de 55% mantém as três faces visíveis.
+    const cubo = source("components/exercises/memory/CuboCorsi.tsx");
+
+    // a FACE não pode ter borderRadius (a célula pode, e deve)
+    const faceDecl = cubo.slice(cubo.indexOf("const renderFace"), cubo.indexOf("[0,1,2,3].map"));
+    expect(faceDecl, "borderRadius voltou à face: as quinas abrem e o cubo vaza")
+      .not.toMatch(/borderRadius:\s*Math\.round\(S \* 0\.1\)/);
+
+    // a virada fica em 55% — as três poses juntas
+    expect(cubo).toContain('case "top":   return "rotateX(-61deg) rotateY(-17deg)"');
+    expect(cubo).toContain('case "left":  return "rotateX(-12deg) rotateY(-17deg)"');
+    expect(cubo).toContain('case "right": return "rotateX(-12deg) rotateY(-67deg)"');
+
+    // as três faces têm tons distintos — é o degrau que dá volume ao cubo
+    const tons = ["#FFFFFF", "#EDF4FC", "#D8E7F6"];
+    for (const tom of tons) {
+      expect(cubo, `o tom ${tom} sumiu: sem os três degraus o cubo volta a parecer chapado`)
+        .toContain(tom);
+    }
+  });
 });

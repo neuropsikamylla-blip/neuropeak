@@ -19,10 +19,15 @@ type BState = "idle" | "lit" | "tapped" | "correct" | "wrong";
 // Índices 0-11 → face do jogo (TOPO 0-3 · ESQUERDA 4-7 · DIREITA 8-11)
 const FACE_OF: Face[] = ["top","top","top","top","left","left","left","left","right","right","right","right"];
 
+// Três tons, como luz vindo de cima: o topo recebe, a frente fica no meio, a lateral
+// direita fica na sombra. Antes os três eram quase o mesmo branco (#FCFEFF/#F7FBFF/#F2F8FD)
+// e o cubo parecia chapado — ela comparou com o Cogmed em 28/ago/2026, onde a lateral é
+// nitidamente mais azulada, e é isso que dá volume. Paleta clara dela, só com o degrau
+// aprofundado; a peça acesa (#4F8FEA) segue contrastando com as três.
 const IDLE: Record<Face, string> = {
-  top:   "#FCFEFF",   // topo — placa quase branca (paleta da Kamylla: placas #F7FBFF)
-  left:  "#F7FBFF",   // esquerda — placa
-  right: "#F2F8FD",   // direita — placa levemente sombreada (leitura 3D)
+  top:   "#FFFFFF",   // topo — recebe a luz
+  left:  "#EDF4FC",   // frente — meia-luz
+  right: "#D8E7F6",   // lateral — sombra (é ela que faz o cubo ter volume)
 };
 const ACTIVE: Record<Exclude<BState, "idle">, string> = {
   lit:     "#4F8FEA",   // luz ativa (paleta da Kamylla)
@@ -45,13 +50,18 @@ const TURN_MS = 1100;
 // vê a face acesa "chapada", de cara). ISO quando nada aceso.
 // Geometria: ESQUERDA do jogo = face "front" (normal +Z → 0°); DIREITA = face "right"
 // (normal +X → rotateY(-90°)); TOPO = face "top" (normal -Y → rotateX(-90°)).
-// Virada de ~80% do caminho até a frente (pedido da Kamylla): a face acesa fica
-// quase de frente, mantendo um resto de perspectiva 3D. pose = ISO + 0.8·(frente − ISO).
+// Virada de 55% do caminho até a frente. pose = ISO + 0.55·(frente − ISO).
+//
+// ERA 80% (escolha dela em julho) e ela mesma pediu a revisão em 28/ago/2026, vendo o
+// resultado: a 80° o cubo ACHATA — vira uma placa fina, e o paciente perde a noção de
+// proporção e de onde a peça está no espaço. Foi a comparação com o Cogmed que fechou a
+// questão: lá o cubo nunca perde as três faces. A 55% a face acesa ainda fica em destaque,
+// e o cubo continua legível como cubo. NÃO subir de volta sem falar com ela.
 function cubePose(face: Face | null): string {
   switch (face) {
-    case "top":   return "rotateX(-77deg) rotateY(-8deg)";
-    case "left":  return "rotateX(-5deg) rotateY(-8deg)";
-    case "right": return "rotateX(-5deg) rotateY(-80deg)";
+    case "top":   return "rotateX(-61deg) rotateY(-17deg)";
+    case "left":  return "rotateX(-12deg) rotateY(-17deg)";
+    case "right": return "rotateX(-12deg) rotateY(-67deg)";
     default:      return "rotateX(-26deg) rotateY(-38deg)";
   }
 }
@@ -93,7 +103,11 @@ export function IsoCube({
       <div key={name} style={{
         position: "absolute", width: S, height: S, transform: faceCss(name, S / 2),
         display: "grid", gridTemplateColumns: "1fr 1fr", gridTemplateRows: "1fr 1fr",
-        gap, padding: gap, boxSizing: "border-box", borderRadius: Math.round(S * 0.1),
+        gap, padding: gap, boxSizing: "border-box",
+        // SEM borderRadius na face — de propósito (28/ago/2026). Com a face arredondada,
+        // cada quina do cubo ficava com um vão, e por ele se via o vazio de dentro: o cubo
+        // "ficava transparente" na virada (relato dela, com capturas). O arredondamento
+        // vive nas CÉLULAS, que é onde ele sempre foi visual e nunca abriu buraco.
         background: "#9EBEDD", backfaceVisibility: "hidden",   // estrutura (paleta da Kamylla)
       }}>
         {[0,1,2,3].map(i => {
