@@ -420,16 +420,13 @@ export function SpanNumerico({ difficulty, onComplete, reverse = false, settings
         {/* ── FASE: feedback ────────────────────────────────────────────── */}
         {phase === "feedback" && (
           <div className="flex flex-col items-center gap-3 py-5">
-            <motion.div initial={{ scale: 0.6, opacity: 0 }} animate={{ scale: 1, opacity: 1 }}
-              className="text-5xl">{feedback === "correct" ? "✅" : erroLeve ? "🟡" : "❌"}</motion.div>
-            <p className="text-2xl font-black" style={{ color: feedback === "correct" ? "#16A34A" : erroLeve ? "#D97706" : "#DC2626" }}>
-              {feedback === "correct" ? "Correto" : erroLeve ? "Quase!" : "Incorreto"}
-            </p>
-            {feedback === "incorrect" && erroLeve && (
-              <p className="text-xs" style={{ color: "#B45309" }}>
-                Só um detalhe escapou — o nível continua o mesmo.
-              </p>
+            {feedback === "correct" && (
+              <motion.div initial={{ scale: 0.6, opacity: 0 }} animate={{ scale: 1, opacity: 1 }}
+                className="text-5xl">✅</motion.div>
             )}
+            <p className="text-2xl font-black" style={{ color: feedback === "correct" ? "#16A34A" : "#2C6B84" }}>
+              {feedback === "correct" ? "Correto" : "Era esta a sequência"}
+            </p>
             {/* A sequência correta NÃO é exibida no erro (decisão clínica da
                 Kamylla, 15/jul — fiel ao método: o exercício segue adiante e o
                 nível se ajusta sozinho). */}

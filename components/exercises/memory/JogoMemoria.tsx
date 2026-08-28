@@ -274,6 +274,7 @@ export function JogoMemoria({ difficulty, theme, onComplete }: JogoMemoriaProps)
 
   const titleColor = isGamified ? "#ffffff" : "#1a2744";
   const labelColor = isGamified ? "rgba(255,255,255,0.7)" : "#5a4a3a";
+  const instructionColor = gamePhase === "feedback" && !roundCorrect ? "#2C6B84" : labelColor;
 
   const budget = errorBudget(pairCount);
 
@@ -296,10 +297,10 @@ export function JogoMemoria({ difficulty, theme, onComplete }: JogoMemoriaProps)
         <ExerciseProgressBar progressPct={progressPct} theme={theme} />
 
         {/* Instrução */}
-        <p style={{ fontSize: 13, textAlign: "center", marginBottom: 12, color: labelColor }}>
+        <p style={{ fontSize: 13, textAlign: "center", marginBottom: 12, color: instructionColor }}>
           {gamePhase === "memorize" && `Memorize as posições! (${countdown}s)`}
           {gamePhase === "playing" && `Encontre os ${pairCount} pares`}
-          {gamePhase === "feedback" && (roundCorrect ? "Correto! ✅" : "Incorreto ❌")}
+          {gamePhase === "feedback" && (roundCorrect ? "Correto! ✅" : "Era este o par")}
         </p>
 
         {/* Grid */}

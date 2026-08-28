@@ -63,7 +63,6 @@ function beep(freq: number, durMs = 180, type: OscillatorType = "sine", gain = 0
 const soundLight   = () => beep(523, 200, "sine", 0.08);          // célula acende (apresentação)
 const soundTap     = () => beep(659, 110, "sine", 0.06);          // toque do paciente
 const soundCorrect = () => { beep(659, 120, "sine", 0.08); setTimeout(() => beep(988, 220, "sine", 0.08), 120); }; // acerto
-const soundWrong   = () => beep(160, 260, "square", 0.06);        // erro
 
 export function MatrizEspacialGrid({
   theme,
@@ -198,7 +197,7 @@ export function MatrizEspacial({ difficulty, theme, onComplete, alwaysReverse }:
     // GRAVE → −1. Treina na borda da capacidade.
     const verdict = classifyTrial(expected, newSeq);
     const correct = verdict === "correta";
-    if (correct) soundCorrect(); else soundWrong();
+    if (correct) soundCorrect();
 
     setFeedbackData({ correct, userSeq: newSeq });
     setPhase("feedback");
@@ -270,7 +269,7 @@ export function MatrizEspacial({ difficulty, theme, onComplete, alwaysReverse }:
         return { background: "linear-gradient(150deg,#86efac,#22c55e)", border: "2px solid #16a34a", borderRadius: R, boxShadow: "0 0 16px rgba(34,197,94,0.5)" };
       }
       if (isInSeq) return { background: "linear-gradient(150deg,#fcd34d,#f59e0b)", border: "2px solid #d97706", borderRadius: R };
-      if (isUserSelected) return { background: "linear-gradient(150deg,#fca5a5,#ef4444)", border: "2px solid #dc2626", borderRadius: R };
+      if (isUserSelected) return { background: "rgba(169,183,198,0.45)", border: "2px solid #A9B7C6", borderRadius: R };
     }
 
     if (isActive) {
@@ -305,7 +304,8 @@ export function MatrizEspacial({ difficulty, theme, onComplete, alwaysReverse }:
   const instruction =
     phase === "showing" ? (reverse ? "Observe a sequência — depois toque ao contrário" : "Observe a sequência...")
     : phase === "recall" ? (reverse ? `Toque as ${seqLength} células em ORDEM INVERSA` : `Toque as ${seqLength} células na mesma ordem`)
-    : (feedbackData?.correct ? "Correto!" : "Quase lá — observe de novo");
+    : (feedbackData?.correct ? "Correto!" : "Eram estas as posições");
+  const instructionColor = phase === "feedback" && !feedbackData?.correct ? "#2C6B84" : stripText;
 
   return (
     <ExerciseStage width="medio" background={rootBg.background as string}>
@@ -337,7 +337,7 @@ export function MatrizEspacial({ difficulty, theme, onComplete, alwaysReverse }:
         {/* Faixa de instrução */}
         <div style={{ display: "flex", alignItems: "center", justifyContent: "center", gap: 8, background: stripBg, borderRadius: 12, padding: "10px 14px", marginBottom: 16 }}>
           <Pointer size={15} color={accent} strokeWidth={2.3} style={{ flexShrink: 0 }} />
-          <span style={{ fontSize: 13, fontWeight: 600, color: stripText, textAlign: "center" }}>{instruction}</span>
+          <span style={{ fontSize: 13, fontWeight: 600, color: instructionColor, textAlign: "center" }}>{instruction}</span>
         </div>
 
         {/* Painel interno + grade (cresce com a dificuldade) */}

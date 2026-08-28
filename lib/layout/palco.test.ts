@@ -244,6 +244,28 @@ describe("palco padrão dos exercícios", () => {
     expect(avaliacao, "o som de erro voltou").not.toContain("sndWrong()");
   });
 
+  it("os sete exercícios de memória mostram o conteúdo sem anunciar erro", () => {
+    const exercises = [
+      ["Span Numérico", "components/exercises/memory/SpanNumerico.tsx"],
+      ["Letras Sequência", "components/exercises/memory/LetrasSequencia.tsx"],
+      ["Sequência de Itens", "components/exercises/memory/SequenciaItens.tsx"],
+      ["Lista com Distração", "components/exercises/memory/ListaDistracao.tsx"],
+      ["Matriz Espacial", "components/exercises/memory/MatrizEspacial.tsx"],
+      ["Padrões com Rotação", "components/exercises/memory/PadroesRotacao.tsx"],
+      ["Jogo da Memória", "components/exercises/memory/JogoMemoria.tsx"],
+    ] as const;
+    const mensagensProibidas = ["Incorreto", "Quase!", "Quase lá", "❌", "🟡"];
+
+    for (const [name, file] of exercises) {
+      const exercise = codigo(file);
+
+      for (const mensagem of mensagensProibidas) {
+        expect(exercise, `${name}: a mensagem ${mensagem} não pode voltar`).not.toContain(mensagem);
+      }
+      expect(exercise, `${name}: o acerto precisa continuar sendo comemorado`).toContain("Correto");
+    }
+  });
+
   it("a Vigilância não volta a abrir com a arena vazia", () => {
     // Regressão real da migração ao palco, que ela pegou usando (28/ago/2026): a Vigilância
     // abria só com o título e a barra, e o campo de pipas não existia. A arena é `flex-1`, e

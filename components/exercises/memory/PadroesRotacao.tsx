@@ -72,7 +72,6 @@ function beep(freq: number, durMs = 180, type: OscillatorType = "sine", gain = 0
 const soundLight   = () => beep(523, 200, "sine", 0.08);   // célula pisca (apresentação)
 const soundTap     = () => beep(659, 110, "sine", 0.06);   // toque do paciente
 const soundCorrect = () => { beep(659, 120, "sine", 0.08); setTimeout(() => beep(988, 220, "sine", 0.08), 120); };
-const soundWrong   = () => beep(160, 260, "square", 0.06);
 
 type Phase = "ready" | "show" | "rotating" | "delay" | "input" | "feedback";
 
@@ -114,7 +113,7 @@ export function PadroesRotacaoGrid({
           if (isLit) { bg = TEAL; border = TEAL; }
           else if (phase === "feedback" && isExpected && isPicked) { bg = "rgba(74,222,128,0.55)"; border = "#4ade80"; }
           else if (phase === "feedback" && isExpected) { bg = "rgba(74,222,128,0.2)"; border = "#4ade80"; }
-          else if (phase === "feedback" && isPicked) { bg = "rgba(248,113,113,0.45)"; border = "#f87171"; }
+          else if (phase === "feedback" && isPicked) { bg = "rgba(169,183,198,0.45)"; border = "#A9B7C6"; }
           else if (isPicked) { bg = "rgba(34,211,197,0.5)"; border = TEAL; }
           return (
             <button key={key} data-cell={i} onClick={() => onTap(r, c)} disabled={phase !== "input"}
@@ -254,7 +253,7 @@ export function PadroesRotacao({ difficulty, onComplete }: PadroesRotacaoProps) 
     if (exact) correctRef.current++;
     hitRef.current += hits; wrongRef.current += wrong; omRef.current += om; expTotalRef.current += expected.size;
     rtsRef.current.push(Date.now() - inputAt.current);
-    if (exact) soundCorrect(); else soundWrong();
+    if (exact) soundCorrect();
     setFeedback(exact ? "correct" : "incorrect");
     setPhase("feedback");
     totalRef.current++;
@@ -299,7 +298,7 @@ export function PadroesRotacao({ difficulty, onComplete }: PadroesRotacaoProps) 
     : phase === "rotating" ? "Observe a rotação"
     : phase === "delay" ? "Prepare-se…"
     : phase === "input" ? `Marque as posições corretas (${picked.size}/${kRef.current})`
-    : feedback === "correct" ? "Correto!" : "Quase lá";
+    : feedback === "correct" ? "Correto!" : "Eram estas as posições";
 
   return (
     <ExerciseStage width="medio" background="#020617">
@@ -321,7 +320,7 @@ export function PadroesRotacao({ difficulty, onComplete }: PadroesRotacaoProps) 
 
         <ExerciseProgressBar progressPct={progressPct} theme="GAMIFIED" />
 
-        <p className="text-sm font-semibold text-center" style={{ color: TEAL, minHeight: 22 }}>
+        <p className="text-sm font-semibold text-center" style={{ color: phase === "feedback" && feedback === "incorrect" ? "#2C6B84" : TEAL, minHeight: 22 }}>
           {phase === "show" ? "👀 " : phase === "rotating" ? "🔄 " : ""}{instruction}
         </p>
 

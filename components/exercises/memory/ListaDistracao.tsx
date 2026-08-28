@@ -343,8 +343,10 @@ export function ListaDistracao({ difficulty, onComplete }: ListaDistracaoProps) 
         {/* Feedback */}
         {phase === "feedback" && (
           <div className="flex flex-col items-center gap-3 py-5">
-            <motion.div initial={{ scale: 0.6, opacity: 0 }} animate={{ scale: 1, opacity: 1 }} className="text-5xl">{feedback === "correct" ? "✅" : "❌"}</motion.div>
-            <p className="text-2xl font-black" style={{ color: feedback === "correct" ? "#4ade80" : "#f87171" }}>{feedback === "correct" ? "Correto" : "Incorreto"}</p>
+            {feedback === "correct" && (
+              <motion.div initial={{ scale: 0.6, opacity: 0 }} animate={{ scale: 1, opacity: 1 }} className="text-5xl">✅</motion.div>
+            )}
+            <p className="text-2xl font-black" style={{ color: feedback === "correct" ? "#4ade80" : "#2C6B84" }}>{feedback === "correct" ? "Correto" : "Era esta a lista"}</p>
             {feedback === "incorrect" && (
               <div className="text-center text-sm space-y-1 mt-1">
                 <p style={{ color: "rgba(148,163,184,0.85)" }}>Lista: <span className="font-bold text-white">{list.join(" — ")}</span></p>
