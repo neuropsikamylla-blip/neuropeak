@@ -1,9 +1,6 @@
 # As 3 ultimas especificacoes dela (automatico; a mais nova por ultimo)
 # Na retomada: ler as 3, conectar com PROGRESSO.md e git, declarar e seguir.
 
-## 27/08/2026 15:58
-eu acho que precisamos auditar todos os exercicios( queria que a distribuição deles na tela fosse centralizada e espaçada em tamanho para ficar algo elegante e bonito da forma que está não está bacana.. segue exemplos: [Image #1] [Image #2] [Image #3] [Image #4] [Image #5] [Image #6] [Image #7] [Image #8] alguns exemplos! para vc entender
-
 ## 27/08/2026 20:51
 <task-notification>
 <task-type>artifact-watch-lifecycle</task-type>
@@ -13,3 +10,6 @@ eu acho que precisamos auditar todos os exercicios( queria que a distribuição 
 
 ## 28/08/2026 09:35
 eu preciso que não tenha nenhum erro, se não tiver vamos para o local para eu aprovar
+
+## 28/08/2026 10:56
+[Image #10] (uma observação sobre o cubo) quando ele vira parece que fica transparente [Image #11] as bordas ta vendo? eu acho que o cubo precisa se manter para o paciente entender a questao de proporçao e onde realmente esta faz sentindo? nao tinha reparado antes... no cogmed o cubo fica certinho olha: segui a sequencia do cubos do cogmed para voce ver [Image #12] [Image #13] [Image #14] [Image #15] [Image #16] [Image #17] [Image #18] [Image #19] deu para ver?

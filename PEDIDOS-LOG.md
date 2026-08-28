@@ -15159,3 +15159,6 @@ eu preciso que não tenha nenhum erro, se não tiver vamos para o local para eu 
 
 ## 28/08/2026 10:15
 onde abro?
+
+## 28/08/2026 10:56
+[Image #10] (uma observação sobre o cubo) quando ele vira parece que fica transparente [Image #11] as bordas ta vendo? eu acho que o cubo precisa se manter para o paciente entender a questao de proporçao e onde realmente esta faz sentindo? nao tinha reparado antes... no cogmed o cubo fica certinho olha: segui a sequencia do cubos do cogmed para voce ver [Image #12] [Image #13] [Image #14] [Image #15] [Image #16] [Image #17] [Image #18] [Image #19] deu para ver?
