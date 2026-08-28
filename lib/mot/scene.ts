@@ -16,7 +16,10 @@ export function ballSpeed(level: number): number {
 
 export function totalBalls(level: number): number {
   const targets = targetsForLevel(level);
-  return targets + Math.min(6, targets + 2);
+  // Distratores: eram no máximo 6 e o quadro ficava vazio demais. Ela pediu em 28/ago/2026
+  // "o retângulo pode ser maior, ter mais bolas para gerar confusão" — a carga do MOT vem da
+  // densidade de distratores, não só do número de alvos. Teto em 10.
+  return targets + Math.min(14, targets * 2 + 2);
 }
 
 export function trackDuration(level: number): number {
@@ -148,8 +151,8 @@ export function stepAll(balls: Ball[], width: number, height: number): Ball[] {
  *
  * Começa em 55% e chega a 100% — nunca passa disso, porque o teto é o que cabe na tela do paciente.
  */
-export const ARENA_SCALE_MIN = 0.55;
-const ARENA_SCALE_FULL_LEVEL = 10;
+export const ARENA_SCALE_MIN = 0.75;
+const ARENA_SCALE_FULL_LEVEL = 6;
 
 export function arenaScaleForLevel(level: number): number {
   const progresso = Math.max(0, Math.min(1, level / ARENA_SCALE_FULL_LEVEL));
