@@ -151,3 +151,43 @@ Isso reduz o que falta de 14 arquivos para 8.
 | já corretos em tela cheia própria, não migrar | 5 |
 | telas compartilhadas + fundo dinâmico (lote E) | 6 arquivos |
 | restantes (lote F) | 8 arquivos |
+
+---
+
+# Verificação de execução — 28/ago/2026
+
+As 36 telas foram **executadas de verdade** num Chrome headless (o do sistema, dirigido por
+`puppeteer-core` instalado fora do projeto), não apenas conferidas por leitura de código.
+Cada tela: carregada, esperada assentar 2,6s, e observada quanto a erro de página, erro de
+console, requisição falhada, tela vazia e rolagem da página.
+
+```
+36/36 sem erro          rolagem vertical: 0px em todas
+                        rolagem horizontal: 0px em todas
+```
+
+A rolagem zero é a prova direta de que o **defeito 1 morreu**: era exatamente ela — os 32px
+de sobra — o sintoma do `min-h-screen` empilhado.
+
+Provas de bancada no mesmo dia: `npx tsc --noEmit` exit 0 · `npm run lint` 0 erros
+(9 warnings pré-existentes, nenhum novo) · `npm run test` 749/749 · `npm run build` exit 0.
+
+## Dois achados ADJACENTES — fora do escopo desta tarefa, decisão dela
+
+**1. "Como jogar" sobreviveu em 13 telas.** Em 10/ago/2026 ela pediu a troca por *"Como
+realizar o exercício"* — "é atividade clínica, e o título precisa dizer isso ao paciente".
+A troca entrou só no `TutorialRunner` (os tutoriais T1). O texto antigo continua em:
+
+- `components/exercises/TutorialBase.tsx:138` — serve **12 exercícios**
+- `components/exercises/attention/InformacaoEmFoco.tsx:188`
+
+Correção de duas linhas, mas é mudança de conteúdo, não de layout. **Não fiz sem ela pedir.**
+
+**2. A base dos pinos do tutorial da Torre de Hanói transborda.** Cada base tem `maxW + 16`
+= 156px fixos (`TorreHanoi.tsx:73,90`), e três delas não cabem no painel — as bases se
+encostam e formam uma faixa marrom contínua que atravessa os dois painéis.
+
+**Não é regressão da migração**, e isto foi medido, não deduzido: forçando o card de volta à
+largura antiga (`max-w-md`, 448px) num navegador, o transbordo fica **pior** — os discos
+saem dos painéis. O card maior do palco melhorou o sintoma sem curá-lo. A cura é a base
+deixar de ser fixa em 156px, e isso é conserto do tutorial do Hanói, não desta tarefa.
