@@ -219,8 +219,8 @@ export function Vigilancia({ difficulty, theme, onComplete }: Props) {
   const cx = dims.w / 2, cy = dims.h / 2;
 
   return (
-    <ExerciseStage width="medio" backgroundClassName={bg}>
-      <div className="min-h-full flex flex-col">
+    <ExerciseStage width="medio" backgroundClassName={bg} fill>
+      <div className="h-full flex flex-col">
       {/* Barra superior mínima (§28): nome, nível e a LINHA DE PROGRESSÃO por tempo */}
       <div className="flex-shrink-0 px-4 py-3">
         <div className="flex items-center justify-between mb-2">

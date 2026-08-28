@@ -16,7 +16,7 @@ function codigo(file: string): string {
 }
 
 describe("palco padrão dos exercícios", () => {
-  const stage = source("components/exercises/ExerciseStage.tsx");
+  const stage = codigo("components/exercises/ExerciseStage.tsx");
 
   it("não volta a somar uma viewport inteira dentro do wrapper", () => {
     // Impede a rolagem extra de 32px e a faixa do fundo do tema nas bordas, causadas por
@@ -73,7 +73,7 @@ describe("palco padrão dos exercícios", () => {
     ] as const;
 
     for (const [name, file, width] of exercises) {
-      const exercise = source(file);
+      const exercise = codigo(file);
 
       expect(exercise.match(/min-h-screen/g) ?? [], `${name}: min-h-screen não deve reaparecer`).toHaveLength(0);
       expect(exercise.match(/minHeight:\s*["']100vh["']/g) ?? [], `${name}: minHeight 100vh não deve reaparecer`).toHaveLength(0);
@@ -109,7 +109,7 @@ describe("palco padrão dos exercícios", () => {
     ] as const;
 
     for (const [name, file, variable] of dynamicBackgrounds) {
-      const exercise = source(file);
+      const exercise = codigo(file);
 
       expect(exercise, `${name}: deve passar a classe variável ao palco`)
         .toContain(`backgroundClassName={${variable}}`);
@@ -128,7 +128,7 @@ describe("palco padrão dos exercícios", () => {
   it("não inicia a rodada zero antes da medição da arena", () => {
     // Impede as bolas da primeira rodada de nascerem amontoadas no canto superior esquerdo
     // ao sortear com as dimensões iniciais de 320px antes de a tela ser medida.
-    const mot = source("components/exercises/attention/MOT.tsx");
+    const mot = codigo("components/exercises/attention/MOT.tsx");
     const initialRoundInEmptyEffect =
       /useEffect\s*\(\s*\(\)\s*=>\s*\{[\s\S]*?\bstartRound\s*\(\s*0\s*\)[\s\S]*?\}\s*,\s*\[\s*\]\s*\)/g;
 
@@ -139,7 +139,7 @@ describe("palco padrão dos exercícios", () => {
     // Impede uma variante mais sutil do mesmo defeito: se o sinal de "já medi" for dado na
     // primeira medição, a arena ainda pode mudar depois (fontes assentando a altura do
     // cabeçalho) e as bolas ficam de novo fora do quadro desenhado — só que discretamente.
-    const mot = source("components/exercises/attention/MOT.tsx");
+    const mot = codigo("components/exercises/attention/MOT.tsx");
     expect(mot).toContain("setTimeout(() => { compute(); setHasMeasured(true); }, 120)");
     // E o sinal existe UMA vez só: dois pontos de liberação trazem o sorteio adiantado de volta.
     expect(mot.match(/setHasMeasured\(true\)/g) ?? []).toHaveLength(1);
@@ -147,14 +147,14 @@ describe("palco padrão dos exercícios", () => {
 
   it("mede a largura da arena do MOT pelo conteúdo do palco", () => {
     // A janela pode ser mais larga que o palco amplo; usá-la faria a arena transbordar.
-    const mot = source("components/exercises/attention/MOT.tsx");
+    const mot = codigo("components/exercises/attention/MOT.tsx");
     expect(mot).toContain("contentRef.current?.clientWidth ?? window.innerWidth - PAD_X");
     expect(mot).not.toContain("const availW = Math.min(MAX_W, window.innerWidth - PAD_X)");
   });
 
   it("mede a largura do Labirinto pelo contêiner do palco", () => {
     // O teto de 600px permanece, mas a largura de partida não pode mais ser a janela.
-    const labirinto = source("components/exercises/executive/Labirinto.tsx");
+    const labirinto = codigo("components/exercises/executive/Labirinto.tsx");
     expect(labirinto).toContain("const mazeWrapRef = useRef<HTMLDivElement>(null)");
     expect(labirinto).toContain("setContainerWidth(container.clientWidth)");
     expect(labirinto).toContain("const containerPx = Math.min(containerWidth - 24, 600)");
@@ -172,7 +172,7 @@ describe("palco padrão dos exercícios", () => {
     ] as const;
 
     for (const [nome, file] of comTema) {
-      const src = source(file);
+      const src = codigo(file);
       expect(src, `${nome}: rootBg sumiu do arquivo`).toMatch(/const rootBg/);
       expect(src, `${nome}: o palco tem de receber o rootBg, não uma cor literal`)
         .toContain("background={rootBg.background as string}");
@@ -183,7 +183,7 @@ describe("palco padrão dos exercícios", () => {
     // O container antigo do TutorialBase tinha overflow-hidden e cortava os blobs que saem da
     // borda (-top-8 -right-8 w-64 h-64). O palco ROLA em vez de cortar, então sem isto a tela
     // de tutorial ganha uma barra de rolagem horizontal por causa de um enfeite.
-    const base = source("components/exercises/TutorialBase.tsx");
+    const base = codigo("components/exercises/TutorialBase.tsx");
     for (const nome of ["TechBg", "BeigeBg", "ColorfulBg"]) {
       const inicio = base.indexOf(`function ${nome}()`);
       expect(inicio, `${nome}: o fundo decorativo sumiu do arquivo`).toBeGreaterThan(-1);
@@ -199,7 +199,7 @@ describe("palco padrão dos exercícios", () => {
     // oco, via-se através dele ("quando vira parece que fica transparente");
     // (2) a virada de 80% achatava o cubo numa placa, e o paciente perdia a noção de proporção
     // e de onde a peça estava. A virada de 55% mantém as três faces visíveis.
-    const cubo = source("components/exercises/memory/CuboCorsi.tsx");
+    const cubo = codigo("components/exercises/memory/CuboCorsi.tsx");
 
     // a FACE não pode ter borderRadius (a célula pode, e deve)
     const faceDecl = cubo.slice(cubo.indexOf("const renderFace"), cubo.indexOf("[0,1,2,3].map"));
@@ -236,5 +236,22 @@ describe("palco padrão dos exercícios", () => {
     // e o estado que mostra a resposta certa continua existindo
     expect(cubo, 'o estado de revisão sumiu — sem ele o paciente não vê onde era')
       .toContain('review:  "#2C6B84"');
+  });
+
+  it("a Vigilância não volta a abrir com a arena vazia", () => {
+    // Regressão real da migração ao palco, que ela pegou usando (28/ago/2026): a Vigilância
+    // abria só com o título e a barra, e o campo de pipas não existia. A arena é `flex-1`, e
+    // quem lhe dava altura era o `min-h-screen` que a migração removeu — sem altura no pai,
+    // `flex-1` resolve para ZERO. A prop `fill` do palco é o que devolve essa altura.
+    const vig = codigo("components/exercises/attention/Vigilancia.tsx");
+    expect(vig, "a Vigilância precisa de `fill` — sem ele a arena colapsa a zero")
+      .toMatch(/<ExerciseStage[^>]*\sfill\b/);
+    expect(vig, "o container da arena precisa de h-full para o flex-1 ter de onde crescer")
+      .toContain('className="h-full flex flex-col"');
+
+    // e o palco precisa continuar oferecendo a prop
+    const palco = codigo("components/exercises/ExerciseStage.tsx");
+    expect(palco, "a prop fill sumiu do palco").toContain("fill = false");
+    expect(palco, "fill precisa aplicar h-full nas duas camadas").toMatch(/fill \? "h-full" : ""[\s\S]{0,220}fill \? "h-full" : ""/);
   });
 });
