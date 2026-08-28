@@ -3,27 +3,47 @@
 > Checkpoint de contexto para continuidade entre sessões. Atualizado automaticamente.
 > 👉 Visão geral e handoff para o próximo Claude: **`ESTADO-DO-PROJETO.md`** (leia primeiro).
 
-## 🚧 EM ANDAMENTO — Cubo Corsi: o cubo precisa ser SÓLIDO (28/ago/2026)
+## 🚧 EM ANDAMENTO — Sessão de uso dela (28/ago/2026)
 
-Pedido dela, olhando a sala de revisão local: *"quando ele vira parece que fica transparente…
-as bordas, tá vendo? eu acho que o cubo precisa se manter para o paciente entender a questão
-de proporção e onde realmente está"*. Mandou 8 capturas do Cogmed como referência: lá o cubo
-é sólido em toda a rotação.
+Ela abriu a sala de revisão local e foi achando coisa. Tudo que segue veio do uso real.
 
-**É clínico, não estético.** Se o cubo vaza, o paciente perde a referência de qual face a peça
-acendeu — que é justamente o que o exercício treina.
+### Feito e verificado com os olhos
 
-- [x] **Passo 1 — causa encontrada.** `CuboCorsi.tsx:96` põe `borderRadius: S*0.1` (≈19px) na
-      FACE inteira, não só nas células. Cada quina do cubo fica com um vão, e como o cubo é
-      oco (6 planos, sem miolo), por esse vão se vê o vazio e as faces de trás. São os arcos
-      que ela circulou nas quinas. ✅
-- [ ] **Passo 2 — fechar as quinas:** arredondamento sai da face, fica só nas células.
-      *Critério:* captura do cubo em ISO e nas 3 poses, sem nenhum vão.
-- [ ] **Passo 3 — miolo opaco**, se sobrar fresta de subpixel na virada.
-      *Critério:* captura no MEIO da rotação (o pior momento), sem vazamento.
-- [ ] **Passo 4 — leitura de volume:** conferir se os três tons de face (`IDLE`) seguram a
-      noção de profundidade como no Cogmed. *Critério:* comparação lado a lado com a referência.
-- [ ] **Passo 5 — teste que trava a regressão** + aprovação dela.
+- [x] **Cubo Corsi: vazava nas quinas** (v2.95.0). `borderRadius` estava na FACE, não só nas
+      células — cada quina abria um vão e, como o cubo é oco, via-se através. Saiu da face.
+- [x] **Cubo Corsi: achatava ao virar** (v2.95.0). A virada de 80% (escolha dela em julho) foi
+      revista por ela mesma vendo o resultado: agora **55%**, e o cubo continua cubo. Mais o
+      sombreamento por face (#FFFFFF / #EDF4FC / #D8E7F6), que é o que dá volume.
+- [x] **Vigilância abria vazia** (v2.96.1) — **regressão da minha migração**. A arena é
+      `flex-1` e quem lhe dava altura era o `min-h-screen` removido; media 0px. O palco ganhou
+      a prop `fill`. Medi os outros 8 migrados com `flex-1`: só a Vigilância tinha colapsado.
+- [x] **MOT: quadro maior e mais denso** (v2.97.0). Área de 55%→75% inicial, cheia no nível 6;
+      distratores de no máximo 6 para até 14. Nível 3 passa de 10 para 14 bolas.
+- [x] **Cubo Corsi: mensagem de erro fora, erro visível** (v2.96.0 + v2.97.1).
+
+### A regra do erro, como ela fechou
+
+> "eu quis dizer MENSAGEM de ERRO. **é importante mostrar o ERRO**... mas aquela MENSAGEM
+> ERRO (igual do cubos) não quero.. tirando supermercado e restaurante que é mais lúdico."
+
+O que sai é a **palavra**, não a informação. O modelo é o Cubo Corsi:
+`review #2C6B84` = "era aqui" · `wrongTap #A9B7C6` = "você tocou" · rótulo nomeia o
+conteúdo ("Era esta a sequência"), nunca o resultado. Sem "Quase!", sem som ao errar.
+**Supermercado e Restaurante ficam como estão.**
+
+- [ ] **Aplicar nos 7 de memória** (Span Numérico + inverso, Letras, Sequência de Itens, Lista
+      com Distração, Matriz Espacial, Padrões com Rotação, Jogo da Memória). Spec em
+      `docs/specs-codex/spec-erro-sem-mensagem-20260828.md`, despachada ao Codex.
+      *Critério:* teste varrendo os 7 + verificação visual de pelo menos dois.
+- [ ] **Decidir depois** o alcance nos outros 7 que anunciam erro (Semáforo, Stroop,
+      Identificação de Símbolos, Estacionamento, Desafio Cidade, Desafio Orçamento, Sequência
+      Temporal) — nesses a resposta certa nem sempre é uma posição na tela.
+
+### ⚠️ Lição operacional desta sessão
+
+**Não rodar `npm run build` com o dev server no ar.** Os dois compartilham o `.next`, o build
+o reescreve e o servidor dela cai com `MODULE_NOT_FOUND`. Aconteceu hoje, no meio do teste
+dela ("vc tirou do ar"). Com dev no ar, provar com `tsc` + `test` e deixar o build para depois.
 
 ## 🚧 EM ANDAMENTO — Auditoria de layout dos 33 exercícios (27/ago/2026)
 
