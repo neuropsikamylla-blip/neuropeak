@@ -15156,3 +15156,6 @@ eu acho que precisamos auditar todos os exercicios( queria que a distribuição 
 
 ## 28/08/2026 09:35
 eu preciso que não tenha nenhum erro, se não tiver vamos para o local para eu aprovar
+
+## 28/08/2026 10:15
+onde abro?
