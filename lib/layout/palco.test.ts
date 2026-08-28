@@ -233,9 +233,15 @@ describe("palco padrão dos exercícios", () => {
       expect(cubo.match(new RegExp(vermelho, "g")) ?? [], `${vermelho} voltou ao cubo`)
         .toHaveLength(0);
     }
-    // e o estado que mostra a resposta certa continua existindo
-    expect(cubo, 'o estado de revisão sumiu — sem ele o paciente não vê onde era')
-      .toContain('review:  "#2C6B84"');
+    // A tela precisa dizer DUAS coisas, sem escrever nenhuma palavra sobre errar
+    // (ela esclareceu em 28/ago: mostrar o erro é importante; o que sai é a MENSAGEM):
+    expect(cubo, 'o "era aqui" sumiu — sem ele o paciente não vê onde era')
+      .toContain('review:   "#2C6B84"');
+    expect(cubo, 'o "você tocou" sumiu — sem ele o paciente não vê o próprio erro')
+      .toContain('wrongTap: "#A9B7C6"');
+    // e errar não toca som (decisão dela)
+    const avaliacao = cubo.slice(cubo.indexOf("const evaluateSequence"), cubo.indexOf("curDiffRef.current = nextLevelPerTrial"));
+    expect(avaliacao, "o som de erro voltou").not.toContain("sndWrong()");
   });
 
   it("a Vigilância não volta a abrir com a arena vazia", () => {

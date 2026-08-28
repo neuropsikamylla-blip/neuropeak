@@ -14,7 +14,7 @@ import type { ExerciseResult, Theme } from "@/types";
 // trazer aquela face de frente. Na reprodução fica na vista isométrica estável.
 
 type Face = "top" | "left" | "right";
-type BState = "idle" | "lit" | "tapped" | "correct" | "review";
+type BState = "idle" | "lit" | "tapped" | "correct" | "review" | "wrongTap";
 
 // Índices 0-11 → face do jogo (TOPO 0-3 · ESQUERDA 4-7 · DIREITA 8-11)
 const FACE_OF: Face[] = ["top","top","top","top","left","left","left","left","right","right","right","right"];
@@ -33,16 +33,20 @@ const ACTIVE: Record<Exclude<BState, "idle">, string> = {
   lit:     "#4F8FEA",   // luz ativa (paleta da Kamylla)
   tapped:  "#BBD4F7",
   correct: "#46C66A",
-  // "era aqui" — a sequência certa mostrada depois de um erro. NÃO é vermelho de propósito
-  // (pedido dela, 28/ago/2026, com o Cogmed como referência): errar não recebe carimbo, o
-  // paciente só vê onde era e segue. Azul-petróleo, da mesma família do aceso, mais fundo.
-  review:  "#2C6B84",
+  // COMO O ERRO APARECE (regra dela, 28/ago/2026, esclarecida por ela mesma): mostrar o erro
+  // É importante — o que sai é a MENSAGEM de erro, não a informação. Então a tela diz duas
+  // coisas ao mesmo tempo, sem escrever nenhuma palavra sobre errar:
+  //   review   = "era aqui"    (azul-petróleo, da família do aceso)
+  //   wrongTap = "você tocou"  (cinza neutro — não é alarme, é registro)
+  review:   "#2C6B84",
+  wrongTap: "#A9B7C6",
 };
 function cellColor(st: BState, face: Face) { return st === "idle" ? IDLE[face] : ACTIVE[st]; }
 function cellStroke(st: BState): string {
   if (st === "lit")     return "#3B79D9";
   if (st === "correct") return "#2E9E4F";
-  if (st === "review")  return "#1F5266";
+  if (st === "review")   return "#1F5266";
+  if (st === "wrongTap") return "#7D8C9E";
   return "#82A9CF";     // bordas mais escuras (paleta da Kamylla)
 }
 
@@ -323,18 +327,26 @@ export function CuboCorsi({ difficulty, theme: _theme, onComplete }: Props) {
     const allOk = verdict === "correta";
     const nr = r + 1;
 
-    // COMO O ERRO APARECE (regra dela, 28/ago/2026): sem carimbo no que o paciente errou.
-    // Acertou tudo → a sequência inteira em verde. Errou → a sequência CERTA aparece em
-    // "review" ("era aqui"), e o toque errado não é marcado de forma nenhuma. O paciente vê
-    // onde era e segue para a próxima — que é como o Cogmed faz.
+    // Acertou tudo → a sequência inteira em verde. Errou → o paciente vê AS DUAS coisas: o
+    // que ele tocou fora do lugar (cinza) e onde era (azul-petróleo). Quando a mesma célula
+    // é as duas, "era aqui" vence — é a informação que ensina.
     const rs: BState[] = Array(N_TILES).fill("idle");
-    for (const exp of seq) rs[exp] = allOk ? "correct" : "review";
+    if (allOk) {
+      for (const exp of seq) rs[exp] = "correct";
+    } else {
+      for (let i = 0; i < seq.length; i++) {
+        const tocou = userInput[i];
+        if (tocou !== undefined && tocou !== seq[i]) rs[tocou] = "wrongTap";
+      }
+      for (const exp of seq) rs[exp] = "review";   // "era aqui" tem prioridade
+    }
     setTS(rs);
     setPhase("result");
     rtsRef.current.push((Date.now() - inputStartRef.current) / seq.length);
 
     // Motor por tentativa: correta sobe 1; erro leve mantém; erro grave desce 1.
-    if (allOk) { correctRef.current++; sndCorrect(); } else { errorsRef.current++; sndWrong(); }
+    // Sem som ao errar (decisão dela, 28/ago/2026): errar não recebe sinal nenhum.
+    if (allOk) { correctRef.current++; sndCorrect(); } else { errorsRef.current++; }
     curDiffRef.current = nextLevelPerTrial(curDiffRef.current, verdict, 1, 10);
     maxDiffRef.current = Math.max(maxDiffRef.current, curDiffRef.current);
 
