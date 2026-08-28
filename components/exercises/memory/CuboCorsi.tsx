@@ -14,7 +14,7 @@ import type { ExerciseResult, Theme } from "@/types";
 // trazer aquela face de frente. Na reprodução fica na vista isométrica estável.
 
 type Face = "top" | "left" | "right";
-type BState = "idle" | "lit" | "tapped" | "correct" | "wrong";
+type BState = "idle" | "lit" | "tapped" | "correct" | "review";
 
 // Índices 0-11 → face do jogo (TOPO 0-3 · ESQUERDA 4-7 · DIREITA 8-11)
 const FACE_OF: Face[] = ["top","top","top","top","left","left","left","left","right","right","right","right"];
@@ -33,13 +33,16 @@ const ACTIVE: Record<Exclude<BState, "idle">, string> = {
   lit:     "#4F8FEA",   // luz ativa (paleta da Kamylla)
   tapped:  "#BBD4F7",
   correct: "#46C66A",
-  wrong:   "#F26257",
+  // "era aqui" — a sequência certa mostrada depois de um erro. NÃO é vermelho de propósito
+  // (pedido dela, 28/ago/2026, com o Cogmed como referência): errar não recebe carimbo, o
+  // paciente só vê onde era e segue. Azul-petróleo, da mesma família do aceso, mais fundo.
+  review:  "#2C6B84",
 };
 function cellColor(st: BState, face: Face) { return st === "idle" ? IDLE[face] : ACTIVE[st]; }
 function cellStroke(st: BState): string {
   if (st === "lit")     return "#3B79D9";
   if (st === "correct") return "#2E9E4F";
-  if (st === "wrong")   return "#C73B30";
+  if (st === "review")  return "#1F5266";
   return "#82A9CF";     // bordas mais escuras (paleta da Kamylla)
 }
 
@@ -320,15 +323,12 @@ export function CuboCorsi({ difficulty, theme: _theme, onComplete }: Props) {
     const allOk = verdict === "correta";
     const nr = r + 1;
 
+    // COMO O ERRO APARECE (regra dela, 28/ago/2026): sem carimbo no que o paciente errou.
+    // Acertou tudo → a sequência inteira em verde. Errou → a sequência CERTA aparece em
+    // "review" ("era aqui"), e o toque errado não é marcado de forma nenhuma. O paciente vê
+    // onde era e segue para a próxima — que é como o Cogmed faz.
     const rs: BState[] = Array(N_TILES).fill("idle");
-    for (let i = 0; i < seq.length; i++) {
-      const exp = seq[i], act = userInput[i];
-      if (act === exp) { rs[exp] = "correct"; }
-      else {
-        if (rs[exp] !== "correct") rs[exp] = "wrong";
-        if (act !== undefined && rs[act] !== "correct") rs[act] = "wrong";
-      }
-    }
+    for (const exp of seq) rs[exp] = allOk ? "correct" : "review";
     setTS(rs);
     setPhase("result");
     rtsRef.current.push((Date.now() - inputStartRef.current) / seq.length);
@@ -391,13 +391,16 @@ export function CuboCorsi({ difficulty, theme: _theme, onComplete }: Props) {
   const resultOk = phase === "result" && inputSoFar.every((t, i) => t === sequence[i]);
   const label = phase === "watch"  ? "Observe a sequência..."
     : phase === "input"  ? `Toque os ${sequence.length} quadrados na ordem`
-    : phase === "result" ? (resultOk ? "Correto! ✓" : "Veja onde errou")
+    // Errar não recebe anúncio (regra dela, 28/ago/2026): o paciente vê a sequência certa
+    // reaparecer e segue. "Veja onde errou" e o vermelho saíram daqui de propósito.
+    : phase === "result" ? (resultOk ? "Correto! ✓" : "Era esta a sequência")
     : "";
-  const labelColor = phase === "result" ? (resultOk ? "#22C55E" : "#EF4444") : "#1D4ED8";
+  const labelColor = phase === "result" ? (resultOk ? "#22C55E" : "#2C6B84") : "#1D4ED8";
 
+  // Os pontinhos também não carimbam erro: acertou tudo → verde; errou → o tom de revisão,
+  // o mesmo do cubo. Nunca vermelho posição a posição.
   const dotColor = (i: number) => {
-    if (phase === "result" && i < inputSoFar.length)
-      return inputSoFar[i] === sequence[i] ? "#46C66A" : "#F26257";
+    if (phase === "result") return resultOk ? "#46C66A" : "#2C6B84";
     return i < inputSoFar.length ? "#4AAED9" : "#D6EAF8";
   };
 
@@ -414,20 +417,6 @@ export function CuboCorsi({ difficulty, theme: _theme, onComplete }: Props) {
           color: labelColor, marginBottom: 8, minHeight: 22,
           transition: "color 0.25s",
         }}>{label}</p>
-
-        {/* Legenda do resultado incorreto */}
-        {phase === "result" && !resultOk && (
-          <div style={{ display: "flex", gap: 16, justifyContent: "center", marginBottom: 6 }}>
-            <span style={{ fontSize: 11, color: "#64748B", display: "flex", alignItems: "center", gap: 4 }}>
-              <span style={{ display: "inline-block", width: 9, height: 9, borderRadius: 2, backgroundColor: "#46C66A" }} />
-              certo
-            </span>
-            <span style={{ fontSize: 11, color: "#64748B", display: "flex", alignItems: "center", gap: 4 }}>
-              <span style={{ display: "inline-block", width: 9, height: 9, borderRadius: 2, backgroundColor: "#F26257" }} />
-              errado
-            </span>
-          </div>
-        )}
 
         {/* Cubo 3D — gira para apresentar de frente a face da peça que acende */}
         <IsoCube

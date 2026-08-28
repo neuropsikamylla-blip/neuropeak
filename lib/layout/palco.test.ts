@@ -7,6 +7,14 @@ function source(file: string): string {
   return readFileSync(resolve(process.cwd(), file), "utf8");
 }
 
+/** O arquivo SEM comentários. Um teste que varre o texto cru acusa a própria explicação do
+ *  conserto — aconteceu neste projeto em 12/ago/2026. O que precisa ser provado é o código. */
+function codigo(file: string): string {
+  return source(file)
+    .replace(/\/\*[\s\S]*?\*\//g, "")
+    .split("\n").map(l => l.replace(/\/\/.*$/, "")).join("\n");
+}
+
 describe("palco padrão dos exercícios", () => {
   const stage = source("components/exercises/ExerciseStage.tsx");
 
@@ -209,5 +217,24 @@ describe("palco padrão dos exercícios", () => {
       expect(cubo, `o tom ${tom} sumiu: sem os três degraus o cubo volta a parecer chapado`)
         .toContain(tom);
     }
+  });
+
+  it("o Cubo Corsi não carimba o erro do paciente", () => {
+    // Regra dela, 28/ago/2026, olhando o Cogmed: "quando erra, não aparece nenhuma mensagem
+    // de erro, só mostra onde era o correto e vai para o próximo". Antes o cubo pintava de
+    // vermelho o que o paciente errou, anunciava "Veja onde errou" e ainda trazia uma legenda
+    // "certo / errado". Nada disso pode voltar.
+    const cubo = codigo("components/exercises/memory/CuboCorsi.tsx");
+
+    expect(cubo, 'o anúncio de erro voltou').not.toContain("Veja onde errou");
+    expect(cubo, 'a legenda certo/errado voltou').not.toMatch(/>\s*errado\s*</);
+    // os vermelhos de erro deste exercício, contados: nenhum pode reaparecer
+    for (const vermelho of ["#F26257", "#C73B30", "#EF4444"]) {
+      expect(cubo.match(new RegExp(vermelho, "g")) ?? [], `${vermelho} voltou ao cubo`)
+        .toHaveLength(0);
+    }
+    // e o estado que mostra a resposta certa continua existindo
+    expect(cubo, 'o estado de revisão sumiu — sem ele o paciente não vê onde era')
+      .toContain('review:  "#2C6B84"');
   });
 });
