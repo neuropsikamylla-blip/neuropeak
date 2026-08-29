@@ -1,8 +1,9 @@
 "use client";
 
 import { useState, useEffect, useRef, useCallback } from "react";
+import { useRouter } from "next/navigation";
 import { motion, AnimatePresence } from "framer-motion";
-import { Brain, Hash, AlertTriangle } from "lucide-react";
+import { ArrowLeft, Hash, Clock, AlertTriangle, Sparkles } from "lucide-react";
 import { calculateExerciseScore } from "@/lib/scoring";
 import { useTimedProgress } from "@/components/exercises/useExerciseEngine";
 import { ExerciseProgressBar } from "@/components/exercises/ExerciseProgressBar";
@@ -133,17 +134,16 @@ function buildDigitSequence(length: number, nback: 1 | 2): number[] {
 }
 
 // ── Render de forma (círculo / quadrado / triângulo / losango) ───────────────
-function ShapeSvg({ color, kind, size = 90 }: { color: ShapeColor; kind: ShapeKind; size?: number }) {
+function ShapeSvg({ color, kind, size = 90 }: { color: ShapeColor; kind: ShapeKind; size?: number | string }) {
   const fill = COLOR_HEX[color];
-  const c = size / 2, r = size * 0.42;
   const stroke = "rgba(0,0,0,0.12)";
   if (kind === "circle")
-    return <svg width={size} height={size} viewBox={`0 0 ${size} ${size}`}><circle cx={c} cy={c} r={r} fill={fill} stroke={stroke} strokeWidth={2} /></svg>;
+    return <svg width={size} height={size} viewBox="0 0 100 100"><circle cx={50} cy={50} r={42} fill={fill} stroke={stroke} strokeWidth={2} /></svg>;
   if (kind === "square")
-    return <svg width={size} height={size} viewBox={`0 0 ${size} ${size}`}><rect x={size * 0.12} y={size * 0.12} width={size * 0.76} height={size * 0.76} rx={size * 0.08} fill={fill} stroke={stroke} strokeWidth={2} /></svg>;
+    return <svg width={size} height={size} viewBox="0 0 100 100"><rect x={12} y={12} width={76} height={76} rx={8} fill={fill} stroke={stroke} strokeWidth={2} /></svg>;
   if (kind === "diamond")
-    return <svg width={size} height={size} viewBox={`0 0 ${size} ${size}`}><polygon points={`${c},${size * 0.08} ${size * 0.92},${c} ${c},${size * 0.92} ${size * 0.08},${c}`} fill={fill} stroke={stroke} strokeWidth={2} strokeLinejoin="round" /></svg>;
-  return <svg width={size} height={size} viewBox={`0 0 ${size} ${size}`}><polygon points={`${c},${size * 0.12} ${size * 0.9},${size * 0.86} ${size * 0.1},${size * 0.86}`} fill={fill} stroke={stroke} strokeWidth={2} strokeLinejoin="round" /></svg>;
+    return <svg width={size} height={size} viewBox="0 0 100 100"><polygon points="50,8 92,50 50,92 8,50" fill={fill} stroke={stroke} strokeWidth={2} strokeLinejoin="round" /></svg>;
+  return <svg width={size} height={size} viewBox="0 0 100 100"><polygon points="50,12 90,86 10,86" fill={fill} stroke={stroke} strokeWidth={2} strokeLinejoin="round" /></svg>;
 }
 
 // Texto da regra ativa (usado no bloco de instruções e no aviso de mudança).
@@ -155,37 +155,37 @@ function bottomStrong(nback: 1 | 2): string {
   return nback === 1 ? "ANTERIOR" : "de DUAS posições atrás";
 }
 
-// ── Bloco de instruções "Em cima / Embaixo" ──────────────────────────────────
 function InstrucaoBloco({ spec, idx, theme, alterada }: { spec: LevelSpec; idx: number; theme: Theme; alterada: boolean }) {
   const isG = theme === "GAMIFIED";
   const t = targetOf(spec, idx);
-  const box = isG ? "bg-gray-800/80 border-gray-700" : "bg-slate-100 border-slate-200";
-  const label = isG ? "text-gray-400" : "text-slate-500";
-  const txt = isG ? "text-gray-100" : "text-slate-700";
+  const panel = isG ? "bg-[#0F1622] border-white/[0.08]" : "bg-[#F7F9FC] border-[#E5E9F0]";
+  const text = isG ? "text-[#E5E7EB]" : "text-[#0F172A]";
+  const muted = isG ? "text-[#9CA3AF]" : "text-[#64748B]";
   return (
-    <div className={`rounded-2xl border px-5 py-4 transition-all ${box} ${alterada ? "ring-2 ring-amber-400" : ""}`}>
-      <div className="flex items-start gap-3 mb-3">
-        <span className="flex-shrink-0 mt-0.5"><ShapeSvg color={t.color} kind={t.kind} size={26} /></span>
-        <p className={`text-sm sm:text-[15px] leading-snug ${txt}`}>
-          <span className={`font-bold ${label}`}>Em cima:</span>{" "}
-          toque somente no <b style={{ color: COLOR_HEX[t.color] }}>{KIND_LABEL[t.kind]} {COLOR_LABEL[t.color]}</b>.
+    <div className={`rounded-2xl border px-4 py-3 sm:px-5 sm:py-4 space-y-2 sm:space-y-2.5 shadow-[0_1px_2px_rgba(15,23,42,0.04)] transition-all ${panel} ${alterada ? "ring-1 ring-amber-300" : ""}`}>
+      <div className="flex items-start gap-3 min-w-0">
+        <span className="flex-shrink-0 mt-0.5"><ShapeSvg color={t.color} kind={t.kind} size={18} /></span>
+        <p className={`min-w-0 text-[13px] sm:text-sm leading-snug ${text}`}>
+          Toque somente no <b style={{ color: COLOR_HEX[t.color] }}>{KIND_LABEL[t.kind].toLowerCase()} {COLOR_LABEL[t.color].toLowerCase()}</b>.
         </p>
       </div>
-      <div className="flex items-start gap-3">
-        <span className={`flex-shrink-0 mt-0.5 ${isG ? "text-blue-300" : "text-blue-500"}`}><Hash size={22} strokeWidth={2.5} /></span>
-        <p className={`text-sm sm:text-[15px] leading-snug ${txt}`}>
-          <span className={`font-bold ${label}`}>Embaixo:</span>{" "}
-          toque em <b style={{ color: isG ? "#93c5fd" : "#2563eb" }}>IGUAL</b>{" "}
-          quando o número for igual ao <b className={txt}>{bottomStrong(spec.nback)}</b>.
+      <div className="flex items-start gap-3 min-w-0">
+        <span className={`flex-shrink-0 mt-0.5 ${isG ? "text-blue-400" : "text-[#2563EB]"}`}><Hash size={18} strokeWidth={2.5} /></span>
+        <p className={`min-w-0 text-[13px] sm:text-sm leading-snug ${text}`}>
+          Toque em <b className={isG ? "text-blue-400" : "text-[#2563EB]"}>IGUAL</b> quando o número for igual ao <b>{bottomStrong(spec.nback).toLowerCase()}</b>.
         </p>
       </div>
-      <p className={`text-[11px] mt-3 ${label}`}>Ritmo: <b>{spec.speedLabel}</b> — fica mais rápido conforme você evolui.</p>
+      <div className="flex items-start gap-3 min-w-0">
+        <span className={`flex-shrink-0 mt-0.5 ${muted}`}><Clock size={18} /></span>
+        <p className={`min-w-0 text-[13px] sm:text-sm leading-snug ${text}`}>Ritmo: <b>{spec.speedLabel}</b>.</p>
+      </div>
     </div>
   );
 }
 
 // ── Main component ─────────────────────────────────────────────────────────
 export function DualTask({ difficulty, theme, onComplete }: DualTaskProps) {
+  const router = useRouter();
   const spec = levelOf(difficulty);
   const nback = spec.nback;
   const { begin, isTimeUp, elapsedSec, finish, progressPct } = useTimedProgress();
@@ -388,94 +388,98 @@ export function DualTask({ difficulty, theme, onComplete }: DualTaskProps) {
 
   const isG = theme === "GAMIFIED";
   const pal = {
-    bg: isG ? "bg-gray-950" : theme === "COLORFUL" ? "bg-gradient-to-br from-fuchsia-50 to-pink-50" : "bg-slate-50",
-    title: isG ? "text-white" : "text-slate-900",
-    sub: isG ? "text-gray-400" : "text-slate-500",
-    panel: isG ? "bg-gray-900 border border-gray-800" : "bg-white border border-slate-200",
-    panelLabel: isG ? "text-gray-400" : "text-slate-400",
-    arena: isG ? "bg-gray-800/60 border-gray-700" : "bg-slate-50 border-slate-200",
-    digitBox: isG ? "bg-gray-800 border-gray-700 text-white" : "bg-white border-slate-200 text-slate-900",
-    eqBtn: isG ? "bg-blue-600 active:bg-blue-500" : "bg-blue-600 active:bg-blue-700",
+    bg: isG ? "bg-gray-950" : theme === "COLORFUL" ? "bg-gradient-to-br from-fuchsia-50 to-pink-50" : "bg-white",
+    title: isG ? "text-[#E5E7EB]" : "text-[#0F172A]",
+    sub: isG ? "text-[#9CA3AF]" : "text-[#64748B]",
+    // Fundo do painel principal — o MESMO tom do bloco de instruções, para os dois
+    // pousarem sobre o branco como blocos irmãos. Fundo e borda vivem em chaves
+    // separadas de propósito: duas classes de background no mesmo elemento se
+    // decidiriam pela ordem do CSS gerado, não pela ordem da string.
+    arena: isG ? "bg-[#0F1622]" : "bg-[#F7F9FC]",
+    border: isG ? "border-white/[0.08]" : "border-[#E5E9F0]",
+    divider: isG ? "bg-white/[0.08]" : "bg-[#E9EDF3]",
+    // Só borda e fundo; a COR DO TEXTO fica fora, senão o feedback a substitui e o
+    // dígito some no tema escuro.
+    digitBox: isG ? "bg-gray-900 border-white/[0.08]" : "bg-white border-[#E5E9F0]",
+    digitText: isG ? "text-[#E5E7EB]" : "text-[#0F172A]",
+    chip: isG
+      ? "border-blue-400/30 bg-blue-500/10 text-blue-300"
+      : "border-[#DBEAFE] bg-[#EFF6FF] text-[#2563EB]",
+    eqBtn: isG ? "bg-[#3B82F6] active:bg-blue-500" : "bg-[#2563EB] active:bg-blue-700",
   };
 
   return (
-    <ExerciseStage width="medio" backgroundClassName={pal.bg}>
-      <div className="flex flex-col gap-4">
-        {/* Header */}
-        <div>
-          <div className="flex justify-between items-baseline mb-2">
-            <h2 className={`font-black text-xl ${pal.title}`}>Dupla Tarefa</h2>
-            <span className={`text-sm font-semibold ${pal.sub}`}>Nível {Math.round(difficulty)}</span>
+    <ExerciseStage width="medio" backgroundClassName={pal.bg} fill>
+      <div className="h-full flex flex-col gap-3 sm:gap-4">
+        <header className="shrink-0 flex flex-wrap items-center gap-2 sm:gap-3">
+          <button type="button" aria-label="Voltar" onClick={() => router.push("/inicio")}
+            className={`h-10 w-10 shrink-0 rounded-xl border flex items-center justify-center transition-colors ${isG ? "border-white/[0.08] text-[#E5E7EB] bg-gray-900" : "border-[#E5E9F0] bg-white text-[#0F172A]"}`}>
+            <ArrowLeft size={18} />
+          </button>
+          <h2 className={`min-w-0 text-lg sm:text-xl font-bold tracking-tight ${pal.title}`}>Dupla Tarefa</h2>
+          <span className={`rounded-full border px-2.5 py-0.5 text-xs font-semibold ${pal.chip}`}>Nível {Math.round(difficulty)}</span>
+          <div className="order-last flex w-full min-w-0 items-center gap-2 sm:order-none sm:ml-auto sm:w-auto sm:max-w-[360px] sm:flex-1">
+            <p className={`shrink-0 whitespace-nowrap text-xs ${pal.sub}`}>Seu progresso</p>
+            {/* A barra canônica traz `marginBottom: 14` embutido; compensado aqui para o
+                cabeçalho ficar compacto, sem reescrever a peça compartilhada. */}
+            <div style={{ marginBottom: -14 }} className="min-w-0 flex-1"><ExerciseProgressBar progressPct={progressPct} theme={theme} /></div>
           </div>
-          <ExerciseProgressBar progressPct={progressPct} theme={theme} />
-        </div>
+        </header>
 
-        {/* Bloco de instruções */}
-        <InstrucaoBloco spec={spec} idx={shapeIdx >= 0 ? shapeIdx : 0} theme={theme} alterada={ruleAlert !== null} />
+        <div className="shrink-0"><InstrucaoBloco spec={spec} idx={shapeIdx >= 0 ? shapeIdx : 0} theme={theme} alterada={ruleAlert !== null} /></div>
 
-        {/* Painel SUPERIOR — tarefa visual */}
-        <div className={`rounded-2xl p-4 relative ${pal.panel}`}>
-          <p className={`text-[11px] font-bold tracking-widest ${pal.panelLabel}`}>SUPERIOR</p>
-          <div
-            className={`mt-2 w-full flex items-center justify-center rounded-2xl border-2 cursor-pointer transition-colors ${
-              displayState === "fb-hit" ? "border-green-500 bg-green-500/10" :
-              displayState === "fb-fa" ? "border-red-500 bg-red-500/10" :
-              displayState === "fb-miss" ? "border-amber-500 bg-amber-500/10" : pal.arena
-            }`}
-            style={{ height: 300 }} onPointerDown={handleShapeTap}>
+        <main className={`relative flex flex-1 min-h-0 flex-col overflow-hidden rounded-2xl border shadow-[0_1px_2px_rgba(15,23,42,0.04)] ${pal.border} ${pal.arena}`}>
+          <div onPointerDown={handleShapeTap}
+            className={`flex flex-1 min-h-[150px] sm:min-h-[220px] items-center justify-center px-4 py-5 sm:py-8 cursor-pointer transition-colors ${
+              displayState === "fb-hit" ? "bg-[rgba(22,163,74,0.07)]" : displayState === "fb-fa" ? "bg-[rgba(239,68,68,0.07)]" : displayState === "fb-miss" ? "bg-[rgba(245,158,11,0.07)]" : "bg-transparent"
+            }`}>
             <AnimatePresence mode="wait">
               {displayState === "shape" && currentShape && (
-                <motion.div key={`shape-${shapeIdx}`} initial={{ scale: 0.6, opacity: 0 }} animate={{ scale: 1, opacity: 1 }} exit={{ scale: 0.6, opacity: 0 }}>
-                  <ShapeSvg color={currentShape.color} kind={currentShape.kind} size={140} />
+                <motion.div key={`shape-${shapeIdx}`} initial={{ scale: 0.6, opacity: 0 }} animate={{ scale: 1, opacity: 1 }} exit={{ scale: 0.6, opacity: 0 }} style={{ width: "min(52%, 190px)", height: "min(72%, 190px)" }}>
+                  <ShapeSvg color={currentShape.color} kind={currentShape.kind} size="100%" />
                 </motion.div>
               )}
               {displayState.startsWith("fb-") && (
-                <motion.span key={displayState} initial={{ scale: 0 }} animate={{ scale: 1 }} exit={{ scale: 0 }}
-                  className={`text-6xl font-black ${displayState === "fb-hit" ? "text-green-500" : displayState === "fb-fa" ? "text-red-500" : "text-amber-500"}`}>
+                <motion.span key={displayState} initial={{ scale: 0 }} animate={{ scale: 1 }} exit={{ scale: 0 }} style={{ fontSize: "clamp(38px, 9vh, 64px)" }}
+                  className={`font-black ${displayState === "fb-hit" ? "text-green-500" : displayState === "fb-fa" ? "text-red-500" : "text-amber-500"}`}>
                   {displayState === "fb-hit" ? "✓" : displayState === "fb-fa" ? "✕" : "⏱"}
                 </motion.span>
               )}
             </AnimatePresence>
           </div>
 
-          {/* Aviso de MUDANÇA DE REGRA (block-alt) — texto + ícone, sem piscar */}
-          <AnimatePresence>
-            {ruleAlert && (
-              <motion.div initial={{ opacity: 0, y: -8 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0 }}
-                className="absolute left-1/2 -translate-x-1/2 top-2 z-20 flex items-center gap-2 px-4 py-2 rounded-xl shadow-lg"
-                style={{ background: "#f59e0b", color: "#1f2937", border: "2px solid #d97706" }}>
-                <AlertTriangle size={20} strokeWidth={2.5} />
-                <span className="text-sm font-black">REGRA ALTERADA — agora toque no {ruleAlert}</span>
-              </motion.div>
-            )}
-          </AnimatePresence>
-        </div>
+          <div className={`mx-auto h-px w-[92%] ${pal.divider}`} />
 
-        {/* Painel INFERIOR — tarefa numérica n-back */}
-        <div className={`rounded-2xl p-4 ${pal.panel}`}>
-          <p className={`text-[11px] font-bold tracking-widest ${pal.panelLabel}`}>INFERIOR — N-back {nback}</p>
-          <div className="mt-2 flex items-center justify-center gap-6">
-            <div className="flex flex-col items-center gap-1">
-              <p className={`text-[11px] ${pal.sub}`}>Atual</p>
+          <section className="flex flex-col items-center gap-2 px-4 py-4 sm:gap-3 sm:py-6">
+            <p className={`text-center text-[11px] sm:text-xs ${pal.sub}`}>Número atual</p>
+            <div className="flex items-center justify-center gap-3 sm:gap-4">
               <AnimatePresence mode="wait">
-                <motion.div key={digitKey} initial={{ scale: 0.6, opacity: 0 }} animate={{ scale: 1, opacity: 1 }}
-                  className={`w-24 h-24 rounded-2xl flex items-center justify-center font-black text-5xl border-2 ${
-                    digitFeedback === "hit" ? "border-green-500 bg-green-500/15" :
-                    digitFeedback === "fa" ? "border-red-500 bg-red-500/15" : pal.digitBox
+                <motion.div key={digitKey} initial={{ scale: 0.6, opacity: 0 }} animate={{ scale: 1, opacity: 1 }} style={{ fontSize: "clamp(30px, 7vw, 44px)" }}
+                  className={`flex h-[clamp(64px,18vw,88px)] w-[clamp(64px,18vw,88px)] items-center justify-center rounded-2xl border font-black tabular-nums shadow-[0_1px_3px_rgba(15,23,42,0.06)] ${pal.digitText} ${
+                    digitFeedback === "hit" ? "border-[#16A34A] bg-[rgba(22,163,74,0.08)]" : digitFeedback === "fa" ? "border-[#EF4444] bg-[rgba(239,68,68,0.08)]" : pal.digitBox
                   }`}>
                   {currentDigit ?? "—"}
                 </motion.div>
               </AnimatePresence>
+              <button type="button" onPointerDown={handleEqualTap}
+                className={`h-[clamp(64px,18vw,88px)] w-[clamp(120px,34vw,190px)] rounded-2xl font-black text-base sm:text-lg tracking-wide text-white transition-colors shadow-[0_1px_3px_rgba(37,99,235,0.25)] ${pal.eqBtn} ${equalPressed ? "opacity-50" : ""}`}
+                style={{ touchAction: "none" }}>IGUAL</button>
             </div>
-            <button onPointerDown={handleEqualTap}
-              className={`px-8 py-6 rounded-2xl font-black text-lg text-white transition-colors ${pal.eqBtn} ${equalPressed ? "opacity-50" : ""}`}
-              style={{ touchAction: "none" }}>IGUAL</button>
-          </div>
-        </div>
+          </section>
 
-        <p className={`text-sm text-center flex items-center justify-center gap-2 ${pal.sub}`}>
-          <Brain size={16} /> Divida sua atenção entre as duas tarefas!
-        </p>
+          <AnimatePresence>
+            {ruleAlert && (
+              <motion.div initial={{ opacity: 0, y: -8 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0 }}
+                className="absolute top-2 left-1/2 z-20 flex -translate-x-1/2 items-center gap-2 rounded-full px-3 py-1.5 text-xs font-bold"
+                style={{ background: "#FEF3C7", color: "#92400E", border: "1px solid #FCD34D" }}>
+                <AlertTriangle size={16} />
+                <span>REGRA ALTERADA — agora toque no {ruleAlert}</span>
+              </motion.div>
+            )}
+          </AnimatePresence>
+        </main>
+
+        <p className={`shrink-0 flex items-center justify-center gap-2 text-center text-[11px] sm:text-xs ${pal.sub}`}><Sparkles size={14} /> Mantenha o foco nas duas tarefas.</p>
       </div>
     </ExerciseStage>
   );
