@@ -3,6 +3,43 @@
 > Checkpoint de contexto para continuidade entre sessões. Atualizado automaticamente.
 > 👉 Visão geral e handoff para o próximo Claude: **`ESTADO-DO-PROJETO.md`** (leia primeiro).
 
+## 🚧 EM ANDAMENTO — Dupla Tarefa: reconstrução da interface (29/ago/2026)
+
+Pedido dela com mockup anexado (desktop + celular), nas palavras dela: *"Quero que você recrie a
+tela 'Dupla Tarefa' seguindo exatamente esta nova direção de layout. A prioridade é deixar a
+interface mais elegante, integrada, limpa e responsiva"* e *"Não altere a lógica do exercício.
+Quero apenas uma melhoria substancial de UI/UX e responsividade."*
+
+**O que a tela vira:** cabeçalho compacto (voltar + título + chip de nível + progresso), faixa de
+instruções em 3 linhas com ícone, **um** painel integrado (estímulo em cima, divisória finíssima,
+"Número atual" + card do número + botão IGUAL lado a lado embaixo) e rodapé de uma linha. Saem os
+rótulos **"SUPERIOR"**, **"INFERIOR"**, **"Em cima"**, **"Embaixo"** e **"N-back"** do texto visível.
+
+- [x] **Passo 1 — spec escrita e commitada.** `docs/specs-codex/spec-dupla-tarefa-ui-20260829.md`,
+      commit `3ff263a`. *Critério:* seção 0 congela a lógica (LEVELS, geradores, loops, handlers,
+      `onComplete`) e as seções 2 a 7 descrevem o visual medida a medida. ✅
+- [ ] **Passo 2 — Codex `gpt-5.6-terra` (esforço high)** rodando no lab descartável
+      `dupla-tarefa-ui`. *Critério:* colheita gerada com
+      `bash ~/codex-lab/lab.sh colher dupla-tarefa-ui`.
+- [ ] **Passo 3 — revisão linha a linha da colheita pelo VP** e aplicação no repo vivo.
+      *Critério:* `git diff` toca só `components/exercises/attention/DualTask.tsx` e não altera
+      nenhuma função da seção 0 da spec.
+- [ ] **Passo 4 — prova.** `npx tsc --noEmit` exit 0 + `npm run test` verde + grep provando zero
+      ocorrência de SUPERIOR / INFERIOR / "Em cima" / "Embaixo" / N-back em texto de interface.
+      *Critério:* os três comandos com saída registrada. ⚠️ **NÃO rodar `npm run build`** — o dev
+      server dela pode estar no ar (lição de 28/ago).
+- [ ] **Passo 5 — bump de versão** em `package.json` (patch/minor conforme o caso), commit
+      descritivo e push para a `main` (produção Vercel). *Critério:* `/api/version` responde a
+      versão nova.
+- [ ] **Passo 6 — verificação visual dela em produção**, desktop e celular. *Critério:* ela
+      confirma com os olhos nos dois formatos.
+
+### Roteamento (regra 8)
+
+29/ago/2026 — **Dupla Tarefa (reconstrução de UI)** — **Codex `gpt-5.6-terra`, esforço high** —
+motivo: reescrita de camada visual com spec escrita antes e lógica congelada, classe "código
+estruturado e testável" da tabela.
+
 ## 🚧 EM ANDAMENTO — Sessão de uso dela (28/ago/2026)
 
 Ela abriu a sala de revisão local e foi achando coisa. Tudo que segue veio do uso real.
