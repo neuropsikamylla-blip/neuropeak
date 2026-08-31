@@ -3,94 +3,42 @@
 > Checkpoint de contexto para continuidade entre sessões. Atualizado automaticamente.
 > 👉 Visão geral e handoff para o próximo Claude: **`ESTADO-DO-PROJETO.md`** (leia primeiro).
 
-## 🚧 EM ANDAMENTO — Dupla Tarefa: reconstrução da interface (29/ago/2026, estado em 31/ago)
+## 🚧 EM ANDAMENTO — Dupla Tarefa: reconstrução da interface (29/ago/2026)
 
 Pedido dela com mockup anexado (desktop + celular), nas palavras dela: *"Quero que você recrie a
 tela 'Dupla Tarefa' seguindo exatamente esta nova direção de layout. A prioridade é deixar a
 interface mais elegante, integrada, limpa e responsiva"* e *"Não altere a lógica do exercício.
 Quero apenas uma melhoria substancial de UI/UX e responsividade."*
 
-**O que a tela virou:** cabeçalho compacto (voltar + título + chip de nível + progresso), faixa de
-instruções com ícone, **um** painel integrado (estímulo em cima, divisória finíssima,
-"Número atual" + card do número + botão IGUAL lado a lado embaixo) e rodapé de uma linha. Saíram os
+**O que a tela vira:** cabeçalho compacto (voltar + título + chip de nível + progresso), faixa de
+instruções em 3 linhas com ícone, **um** painel integrado (estímulo em cima, divisória finíssima,
+"Número atual" + card do número + botão IGUAL lado a lado embaixo) e rodapé de uma linha. Saem os
 rótulos **"SUPERIOR"**, **"INFERIOR"**, **"Em cima"**, **"Embaixo"** e **"N-back"** do texto visível.
 
 - [x] **Passo 1 — spec escrita e commitada.** `docs/specs-codex/spec-dupla-tarefa-ui-20260829.md`,
       commit `3ff263a`. *Critério:* seção 0 congela a lógica (LEVELS, geradores, loops, handlers,
       `onComplete`) e as seções 2 a 7 descrevem o visual medida a medida. ✅
-- [x] **Passo 2 — Codex `gpt-5.6-terra` (esforço high)** rodou no lab descartável
-      `dupla-tarefa-ui`. Colheita gerada, revisada linha a linha pelo VP e o lab já foi removido. ✅
-- [x] **Passo 3 — revisão + aplicação no repo vivo.** Commit `37a47fa` (v2.98.2), tocando
-      `components/exercises/attention/DualTask.tsx` (+ `package.json` e os logs de pedidos).
-      Na revisão o VP achou e consertou **4 defeitos da colheita**: ✅
-      1. o painel principal recebia **duas classes de background em disputa** no mesmo elemento
-         (`bg-white` e `bg-[#F6F8FB]`);
-      2. o feedback do dígito **substituía o `pal.digitBox` inteiro** e levava junto a cor do
-         texto — o número sumiria no tema escuro;
-      3. **"Seu progresso" estava empilhado sobre a barra**, e no mockup dela fica ao lado;
-      4. o **chip de nível tinha cor clara fixa** nos três temas.
-- [x] **Passo 3a — v2.98.3: as formas ganharam acabamento (variante E).** Veio do uso dela:
-      *"o desenho esta com baixa qualidade não é um detalhe é a qualidade do desenho como um
-      todo"*. O agente `diretor` produziu **6 variantes** numa página de comparação e ela escolheu
-      a **E**. O que mudou: ✅
-      - **saiu o contorno preto de fora** — entra um filete da própria família de cor (−10 L*),
-        recortado por `clipPath`;
-      - **vértices arredondados** por arco tangente de raio 8 nas quatro formas;
-      - **correção de PESO ÓTICO**: medida a área preenchida, o triângulo tinha **54,4** de
-        "tinta" contra **75,6** do quadrado (**39% de dispersão**). Não é estética: dos níveis 8
-        a 10 o alvo **alterna a cada bloco** justamente entre TRIÂNGULO VERDE e QUADRADO AZUL
-        (`blockTarget`), então a saliência do alvo mudava onde a regra alterna — e essa acurácia
-        alimenta a engine adaptativa. Agora a dispersão é de **12%**.
-      - **Limite clínico respeitado:** o degradê anda só no eixo **L\*** do CIELAB (±3), matiz e
-        croma preservados; desvio máximo **ΔE₀₀ 3,02** contra **ΔE₀₀ 19,7** do par de cores mais
-        próximo do exercício. Commit `23ac56a`.
-      - ⚠️ **Pendência não medida:** o custo do filtro de sombra (`feDropShadow`) num elemento que
-        o framer-motion **reanima a cada 1,6–2,6 s**.
-- [x] **Passo 3b — v2.98.4: saiu a linha "Ritmo" das instruções.** Decisão dela vendo a tela:
-      *"reloginho (Ritmo: moderado) isso nao precisa aparecer"*. As instruções ficaram em **duas
-      linhas**. O campo `speedLabel` **continua na tabela `LEVELS`** (documenta o degrau de cada
-      nível); saiu só o texto de tela, o ícone `Clock` e a constante `muted`. Commit `db66428`. ✅
-- [x] **Passo 4 — prova rodada em 31/ago/2026.** ✅
-      - `npx tsc --noEmit` → **exit 0** (sem pipe, exit code capturado direto).
-      - `npm run test` → **exit 0**, `Test Files 55 passed (55)` · `Tests 753 passed (753)`.
-      - `grep -n "SUPERIOR\|INFERIOR\|Em cima\|Embaixo\|N-back" components/exercises/attention/DualTask.tsx`
-        → **exit 1, nenhuma linha** (os cinco rótulos não existem mais no arquivo).
-      - `npm run build` **não foi rodado** de propósito: o dev server dela está no ar na porta 3000
-        (lição de 28/ago).
-- [ ] **Passo 5 — bump + commit: PARCIAL.** Os commits existem (**v2.98.2**, **v2.98.3**,
-      **v2.98.4**; `package.json` em `2.98.4`), mas **nada foi publicado**.
-      `git log --oneline origin/main..HEAD | wc -l` → **42 commits locais não publicados** (medido
-      em 31/ago 16:20; o número sobe sozinho a cada checkpoint automático), indo desde a auditoria
-      de layout / migração ao palco (v2.90, commit `e281113`) até a v2.98.4 (`db66428`).
-      **O push aguarda decisão dela.**
-- [ ] **Passo 6 — verificação visual dela**, desktop e celular. *Critério:* ela confirma com os
-      olhos nos dois formatos. **PENDENTE.**
-
-### Decisões abertas com ela
-
-1. **Publicar ou não.** São 42 commits locais nunca publicados, de v2.90 a v2.98.4. A produção
-   está atrás de **toda a migração ao palco**, Cubo Corsi, MOT, Vigilância, os 7 de memória e a
-   Busca Rápida.
-2. **O botão de voltar.** Foi introduzido na v2.98.2 a pedido dela (estava no mockup). **Nenhum
-   outro exercício tem um durante a execução.** Ele leva a `/inicio` e **descarta a sessão sem
-   salvar**: um toque acidental no meio do treino perde o exercício. Falta decidir se ganha
-   confirmação, se sai, ou se fica como está.
-   ⚠️ **Medido em 31/ago 16:22, depois de escrito este bloco:** a árvore de trabalho já tem o
-   botão **removido** (junto com `useRouter` e `ArrowLeft`) — edição **ainda não commitada**,
-   feita em paralelo. Se esse trabalho for commitado, o item 2 já está resolvido por remoção.
-3. **O amarelo com 1,82:1 de contraste** contra o fundo claro — dívida **preexistente**, não
-   introduzida nesta tarefa, achada na medição do diretor. Num exercício que depende de **nomear a
-   cor**, merece tarefa própria.
+- [ ] **Passo 2 — Codex `gpt-5.6-terra` (esforço high)** rodando no lab descartável
+      `dupla-tarefa-ui`. *Critério:* colheita gerada com
+      `bash ~/codex-lab/lab.sh colher dupla-tarefa-ui`.
+- [ ] **Passo 3 — revisão linha a linha da colheita pelo VP** e aplicação no repo vivo.
+      *Critério:* `git diff` toca só `components/exercises/attention/DualTask.tsx` e não altera
+      nenhuma função da seção 0 da spec.
+- [ ] **Passo 4 — prova.** `npx tsc --noEmit` exit 0 + `npm run test` verde + grep provando zero
+      ocorrência de SUPERIOR / INFERIOR / "Em cima" / "Embaixo" / N-back em texto de interface.
+      *Critério:* os três comandos com saída registrada. ⚠️ **NÃO rodar `npm run build`** — o dev
+      server dela pode estar no ar (lição de 28/ago).
+- [ ] **Passo 5 — bump de versão** em `package.json` (patch/minor conforme o caso), commit
+      descritivo e push para a `main` (produção Vercel). *Critério:* `/api/version` responde a
+      versão nova.
+- [ ] **Passo 6 — verificação visual dela em produção**, desktop e celular. *Critério:* ela
+      confirma com os olhos nos dois formatos.
 
 ### Roteamento (regra 8)
 
 29/ago/2026 — **Dupla Tarefa (reconstrução de UI)** — **Codex `gpt-5.6-terra`, esforço high** —
 motivo: reescrita de camada visual com spec escrita antes e lógica congelada, classe "código
 estruturado e testável" da tabela.
-
-30-31/ago/2026 — **Dupla Tarefa (acabamento das formas, variante E)** — **agente `diretor`
-(Opus 5, xhigh)** — motivo: decisão de desenho com limite clínico (cor, peso ótico e ΔE), classe
-que não se delega ao lab.
 
 ## 🚧 EM ANDAMENTO — Sessão de uso dela (28/ago/2026)
 

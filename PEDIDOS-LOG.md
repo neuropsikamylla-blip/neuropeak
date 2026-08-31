@@ -15410,3 +15410,6 @@ deu tudo certo?
 
 ## 31/08/2026 16:18
 o que preciso fazer?
+
+## 31/08/2026 16:19
+[Image #3] tirei esse rologio, nao precisa avisar é treino e tire o botao voltar
