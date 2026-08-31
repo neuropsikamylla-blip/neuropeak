@@ -15398,3 +15398,6 @@ A chave `cor-forma` no `id` é obrigatória: o estímulo grande e o ícone de 18
 - **Não mexi em nada clínico:** mesma paleta, mesmas 4 formas, mesma taxonomia, mesma lógica de alvo e distrator.</result>
 <usage><subagent_tokens>166360</subagent_tokens><tool_uses>61</tool_uses><duration_ms>1610661</duration_ms></usage>
 </task-notification>
+
+## 31/08/2026 11:26
+pode seguir : E — 2.5D + peso ótico corrigido

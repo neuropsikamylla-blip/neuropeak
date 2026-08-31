@@ -134,16 +134,70 @@ function buildDigitSequence(length: number, nback: 1 | 2): number[] {
 }
 
 // ── Render de forma (círculo / quadrado / triângulo / losango) ───────────────
+//
+// Silhuetas com os vértices arredondados por ARCO TANGENTE de raio 8 — o mesmo
+// `rx=8` que o quadrado já usava, agora nas quatro formas. Em cada vértice V com
+// vizinhos A e B: pontos de tangência a `r / tan(θ/2)` de V sobre cada aresta, e o
+// canto vira `L T1` + `A r r 0 0 1 T2` (varredura 1 porque os vértices estão em
+// ordem horária na tela). Como o arco RETRAI a ponta em `r/sen(θ/2) − r`, o polígono
+// foi reexpandido até a silhueta MEDIDA bater na caixa alvo — por isso os números
+// vêm resolvidos, e não recalculados em tempo de execução.
+//
+// PESO ÓTICO: medida a área preenchida, o triângulo tinha 54,4 de "tinta" contra
+// 75,6 do quadrado — 39% de dispersão. Isso não é estética: dos níveis 8 a 10 o alvo
+// alterna a cada bloco entre TRIÂNGULO VERDE e QUADRADO AZUL (`blockTarget`), então a
+// saliência do alvo mudava justamente onde a regra alterna, e essa acurácia alimenta
+// a engine adaptativa. Corrigido a 50% (dispersão de 12%): equalizar 100% pela área
+// faz triângulo e losango PARECEREM maiores, porque tamanho percebido também depende
+// da extensão da peça.
+const SHAPE_PATH: Record<ShapeKind, string> = {
+  circle:   "M 9.036 50 A 40.964 40.964 0 1 0 90.964 50 A 40.964 40.964 0 1 0 9.036 50 Z",
+  square:   "M 13.211 21.211 A 8 8 0 0 1 21.211 13.211 L 78.789 13.211 A 8 8 0 0 1 86.789 21.211 L 86.789 78.789 A 8 8 0 0 1 78.789 86.789 L 21.211 86.789 A 8 8 0 0 1 13.211 78.789 Z",
+  triangle: "M 42.995 13.649 A 8 8 0 0 1 57.005 13.649 L 92.852 78.621 A 8 8 0 0 1 85.847 90.486 L 14.153 90.486 A 8 8 0 0 1 7.148 78.621 Z",
+  diamond:  "M 44.343 7.843 A 8 8 0 0 1 55.657 7.843 L 92.157 44.343 A 8 8 0 0 1 92.157 55.657 L 55.657 92.157 A 8 8 0 0 1 44.343 92.157 L 7.843 55.657 A 8 8 0 0 1 7.843 44.343 Z",
+};
+
+// Degradê de BAIXA amplitude: anda só no eixo L* do CIELAB (±3), com matiz e croma
+// preservados (desvio de matiz medido < 0,2°). A tarefa é de discriminação por
+// CONJUNÇÃO forma+cor, então a cor não pode escorregar: o desvio máximo em relação à
+// cor canônica é ΔE₀₀ 3,02, contra ΔE₀₀ 19,7 do par de cores mais próximo do
+// exercício (vermelho↔laranja) — 15% da distância, e num eixo que não é o eixo pelo
+// qual se nomeia a cor. `edge` é o filete da própria família (−10 L*), que substitui
+// o contorno preto translúcido de antes.
+const SHAPE_SHADE: Record<ShapeColor, { top: string; bottom: string; edge: string }> = {
+  green  : { top: "#25ab51", bottom: "#009b43", edge: "#008639" },
+  red    : { top: "#f94d4b", bottom: "#e53a3d", edge: "#cf212d" },
+  blue   : { top: "#356af4", bottom: "#0a5ce2", edge: "#004cc1" },
+  yellow : { top: "#f3bb1a", bottom: "#e0ab00", edge: "#c99900" },
+  orange : { top: "#ff7d29", bottom: "#ef6b09", edge: "#d45c00" },
+};
+
 function ShapeSvg({ color, kind, size = 90 }: { color: ShapeColor; kind: ShapeKind; size?: number | string }) {
-  const fill = COLOR_HEX[color];
-  const stroke = "rgba(0,0,0,0.12)";
-  if (kind === "circle")
-    return <svg width={size} height={size} viewBox="0 0 100 100"><circle cx={50} cy={50} r={42} fill={fill} stroke={stroke} strokeWidth={2} /></svg>;
-  if (kind === "square")
-    return <svg width={size} height={size} viewBox="0 0 100 100"><rect x={12} y={12} width={76} height={76} rx={8} fill={fill} stroke={stroke} strokeWidth={2} /></svg>;
-  if (kind === "diamond")
-    return <svg width={size} height={size} viewBox="0 0 100 100"><polygon points="50,8 92,50 50,92 8,50" fill={fill} stroke={stroke} strokeWidth={2} strokeLinejoin="round" /></svg>;
-  return <svg width={size} height={size} viewBox="0 0 100 100"><polygon points="50,12 90,86 10,86" fill={fill} stroke={stroke} strokeWidth={2} strokeLinejoin="round" /></svg>;
+  const d = SHAPE_PATH[kind];
+  const s = SHAPE_SHADE[color];
+  // A chave PRECISA ser cor+forma: o estímulo grande e o ícone de 18px podem coexistir
+  // com a mesma cor e forma, e aí o id repete — inofensivo, porque a chave determina
+  // integralmente o conteúdo das defs. Encurtar a chave faria duas cores dividirem o
+  // mesmo degradê.
+  const uid = `${color}-${kind}`;
+  return (
+    <svg width={size} height={size} viewBox="0 0 100 100" style={{ overflow: "visible" }}>
+      <defs>
+        <linearGradient id={`sg-${uid}`} x1="0" y1="0" x2="0" y2="1">
+          <stop offset="0" stopColor={s.top} />
+          <stop offset="1" stopColor={s.bottom} />
+        </linearGradient>
+        <filter id={`sf-${uid}`} x="-40%" y="-40%" width="180%" height="180%">
+          <feDropShadow dx="0" dy="1.6" stdDeviation="1.6" floodColor="#0F172A" floodOpacity="0.18" />
+        </filter>
+        <clipPath id={`sc-${uid}`}><path d={d} /></clipPath>
+      </defs>
+      <path d={d} fill={`url(#sg-${uid})`} filter={`url(#sf-${uid})`} />
+      <g clipPath={`url(#sc-${uid})`}>
+        <path d={d} fill="none" stroke={s.edge} strokeWidth={2} opacity={0.5} />
+      </g>
+    </svg>
+  );
 }
 
 // Texto da regra ativa (usado no bloco de instruções e no aviso de mudança).
