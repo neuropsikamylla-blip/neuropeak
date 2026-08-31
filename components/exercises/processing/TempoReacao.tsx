@@ -111,13 +111,13 @@ export function TempoReacao({ difficulty, theme, onComplete }: TempoReacaoProps)
 
   const [started, setStarted] = useState(false);
   const [balloons, setBalloons] = useState<Balloon[]>([]);
-  const [results, setResults] = useState<{ correct: boolean; rt: number | null }[]>([]);
+  const [results, setResults] = useState<{ correct: boolean; rt: number | null; omitted: boolean }[]>([]);
   const [wrongId, setWrongId] = useState<number | null>(null); // balloon id that was wrong-clicked
   const [missFlash, setMissFlash] = useState(false);
 
   const startedRef = useRef(false);
   const resolvedIds = useRef(new Set<number>());
-  const resultsRef = useRef<{ correct: boolean; rt: number | null }[]>([]);
+  const resultsRef = useRef<{ correct: boolean; rt: number | null; omitted: boolean }[]>([]);
   const doneRef = useRef(false);
   const startTime = useRef(Date.now());
   const nextSpawnTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
@@ -127,10 +127,10 @@ export function TempoReacao({ difficulty, theme, onComplete }: TempoReacaoProps)
 
   const nd = distractorCount(difficulty);
 
-  const recordResult = useCallback((correct: boolean, rt: number | null) => {
+  const recordResult = useCallback((correct: boolean, rt: number | null, omitted: boolean = false) => {
     if (doneRef.current) return;
 
-    const newResults = [...resultsRef.current, { correct, rt }];
+    const newResults = [...resultsRef.current, { correct, rt, omitted }];
     resultsRef.current = newResults;
     setResults(newResults);
 
@@ -154,7 +154,7 @@ export function TempoReacao({ difficulty, theme, onComplete }: TempoReacaoProps)
           reactionTime: avgRT,
           difficulty,
           duration: dur,
-          metadata: { trials: newResults.length, avgRT, correct: hits.length },
+          metadata: { trials: newResults.length, avgRT, correct: hits.length, omissions: newResults.filter((r) => r.omitted).length },
         });
       }, 1500);
     }
@@ -237,9 +237,7 @@ export function TempoReacao({ difficulty, theme, onComplete }: TempoReacaoProps)
 
     if (balloon.isTarget && started && !doneRef.current) {
       pendingTargetsRef.current = Math.max(0, pendingTargetsRef.current - 1);
-      setMissFlash(true);
-      setTimeout(() => setMissFlash(false), 350);
-      recordResult(false, null);
+      recordResult(false, null, true);
       if (pendingTargetsRef.current <= 0) {
         nextSpawnTimer.current = setTimeout(spawnBatch, 700);
       }

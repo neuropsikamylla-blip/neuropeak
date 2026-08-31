@@ -237,7 +237,7 @@ export function FocusAgents({ difficulty, theme, onComplete, exerciseId = "focus
         if (alvoSaiu && !respondidoRef.current && !doneRef.current) {
           respondidoRef.current = true; stopRaf();
           registra(false, null, true);
-          setFb({ ok: false, msg: "Passou! Toque mais rápido.", alvoUid: null });
+          setFb(null);
           setFase("feedback");
           timers.current.push(setTimeout(proximaRef.current, 1250));
           return;
@@ -320,7 +320,7 @@ export function FocusAgents({ difficulty, theme, onComplete, exerciseId = "focus
         if (respondidoRef.current || doneRef.current) return;
         respondidoRef.current = true; stopRaf();
         registra(false, null, true);
-        setFb({ ok: false, msg: "Acabou o tempo!", alvoUid: charsRef.current.find((c) => c.id === r.alvoId)?.uid ?? null });
+        setFb(null);
         setFase("feedback");
         timers.current.push(setTimeout(proximaRef.current, 1450));
       }, tempoMs);

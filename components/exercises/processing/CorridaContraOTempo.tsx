@@ -145,7 +145,7 @@ function profileOf(avgCorrect: number, precision: number) {
   return { label: "Lento e impreciso", tip: "Leia a regra com calma e processe a categoria antes de começar a busca." };
 }
 
-type Phase = "ready" | "loading" | "playing" | "roundfb" | "summary";
+type Phase = "ready" | "loading" | "playing" | "roundfb" | "roundpause" | "summary";
 
 export function CorridaContraOTempo({ difficulty, theme, onComplete }: Props) {
   const [showTutorial, setShowTutorial] = useState(true);
@@ -207,7 +207,7 @@ export function CorridaContraOTempo({ difficulty, theme, onComplete }: Props) {
     setPhase("playing");
   }
 
-  function endRound() {
+  function endRound(porTempo: boolean) {
     if (endedRef.current) return;
     endedRef.current = true;
     if (timerRef.current) clearInterval(timerRef.current);
@@ -229,7 +229,7 @@ export function CorridaContraOTempo({ difficulty, theme, onComplete }: Props) {
     a.rounds++; if (good) a.roundsOk++;
 
     setLastRound({ hits, total, errors });
-    setPhase("roundfb");
+    setPhase(porTempo ? "roundpause" : "roundfb");
     const timeUp = isTimeUp();
     setTimeout(() => {
       if (timeUp) { setPhase("summary"); }
@@ -242,7 +242,7 @@ export function CorridaContraOTempo({ difficulty, theme, onComplete }: Props) {
     timerRef.current = setInterval(() => {
       setTimeLeft(t => {
         const nt = t - 1;
-        if (nt <= 0) { clearInterval(timerRef.current!); endRound(); return 0; }
+        if (nt <= 0) { clearInterval(timerRef.current!); endRound(true); return 0; }
         return nt;
       });
     }, 1000);
@@ -260,7 +260,7 @@ export function CorridaContraOTempo({ difficulty, theme, onComplete }: Props) {
       correctTimesRef.current.push(now);
       setFlash({ id: item.id, ok: true });
       setTimeout(() => setFlash(f => f?.id === item.id ? null : f), 260);
-      if (hitsRef.current >= totalRef.current) endRound();
+      if (hitsRef.current >= totalRef.current) endRound(false);
     } else {
       // Penalidade cognitiva: erro impulsivo tira tempo.
       errRef.current++;
@@ -269,7 +269,7 @@ export function CorridaContraOTempo({ difficulty, theme, onComplete }: Props) {
       setPenalty(p => p + 1); setTimeout(() => setPenalty(p => Math.max(0, p - 1)), 700);
       setTimeLeft(t => {
         const nt = t - 2;
-        if (nt <= 0) { if (timerRef.current) clearInterval(timerRef.current); endRound(); return 0; }
+        if (nt <= 0) { if (timerRef.current) clearInterval(timerRef.current); endRound(true); return 0; }
         return nt;
       });
     }
@@ -395,8 +395,15 @@ export function CorridaContraOTempo({ difficulty, theme, onComplete }: Props) {
             </motion.div>
           )}
 
-          {phase === "roundfb" && lastRound && (
-            <motion.div key={`fb-${round}`} initial={{ opacity: 0, scale: 0.94 }} animate={{ opacity: 1, scale: 1 }} className="text-center py-10">
+          {/* A rodada que acaba POR TEMPO passa por "roundpause": mesma pausa de 1100 ms, sem
+              dizer quantos alvos ficaram para trás (regra dela de 31/ago — o app não comenta o
+              que o paciente deixou de fazer). O bloco é o MESMO, apenas invisível: se a pausa não
+              ocupasse a altura do painel, o card colapsaria para o título e voltaria a cada
+              rodada, e quase toda rodada termina por tempo. `visibility` preserva a caixa e ainda
+              tira o conteúdo da árvore de acessibilidade. */}
+          {(phase === "roundfb" || phase === "roundpause") && lastRound && (
+            <motion.div key={`fb-${round}`} initial={{ opacity: 0, scale: 0.94 }} animate={{ opacity: 1, scale: 1 }} className="text-center py-10"
+              aria-hidden={phase === "roundpause"} style={phase === "roundpause" ? { visibility: "hidden" } : undefined}>
               <div className="mx-auto mb-2 flex items-center justify-center rounded-full" style={{ width: 46, height: 46, background: lastRound.hits >= lastRound.total * 0.75 ? "#DDF7EF" : "#FEF3C7" }}>
                 {lastRound.hits >= lastRound.total * 0.75 ? <Check size={24} color="#047857" strokeWidth={3} /> : <MousePointerClick size={22} color="#B45309" />}
               </div>
