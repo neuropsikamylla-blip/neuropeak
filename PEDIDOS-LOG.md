@@ -15592,3 +15592,6 @@ Sua decisão: o botão fica o puzzle inteiro, sem corte. O custo é o tempo corr
 Minha decisão 1: os movimentos zeram no reinício, mas o puzzle deixa de poder ser feito "no mínimo". Sem isso, recomeçar sempre que errasse o primeiro movimento viraria a estratégia dominante — sai de graça, o contador volta a zero, e o exercício deixa de medir planejamento para medir persistência. Com a regra, o reinício tem preço, que é o que você quis dizer com "vai ser contabilizado".
 
 Minha decisão 2: o reinício é registrado como categoria própria, não somado aos erros. Você vai ver "reinícios" e "puzzles com reinício" separados no acompanhamento. Insisti nisso porque perceber o próprio engano e recomeçar é monitoramento — os dois pacientes terminam sem o mínimo, mas o que percebeu está fazendo algo melhor, e essa diferença some se virar tudo "erro". vc tem razao... eu preciso que tenha a ver com flexibilidade e planejamento.. mas a galera vem reclamando que as vezes tem 70 movimentos ate finalizar para iniciar de novo..
+
+## 31/08/2026 19:44
+sim
