@@ -1,20 +1,6 @@
 # As 3 ultimas especificacoes dela (automatico; a mais nova por ultimo)
 # Na retomada: ler as 3, conectar com PROGRESSO.md e git, declarar e seguir.
 
-## 31/08/2026 16:32
-<task-notification>
-<task-id>aaadbc92b4118e1d3</task-id>
-<tool-use-id>toolu_019w1NTB68PFmkdZo9NYQwfn</tool-use-id>
-<output-file>/private/tmp/claude-501/-Users-kamyllahonorio-neuropeak/9e4c2936-1fb4-4a9c-a53a-3ad1aad1cf37/tasks/aaadbc92b4118e1d3.output</output-file>
-<status>completed</status>
-<summary>Agent "Varrer avisos de omissão nos exercícios" finished</summary>
-<note>A task-notification fires each time this agent stops with no live background children of its own. The user can send it another message and resume it, so the same task-id may notify more than once.</note>
-<result>## O QUE MUDOU
-
-Um único arquivo criado, nenhum componente tocado:
-
-- `/Users/kamyllahonorio/neuropeak/docs/auditoria-aviso-omissao/AUDITORIA-AVISO-OMISSAO-2026-08-31.md` (271 linhas): regra no topo com as palavras dela, método de enumeração, tabela de achados ordenada por classificação, e a seção "O que NÃO é achado" com 6 subseções de falsos positivos descartados.
-
 ## COMO PROVEI
 
 - Enumeração: `find components/exercises -name "*.tsx" | wc -l` → **55**; `ls -1 lib/tutorial/definitions/*.tsx` → **10**. **65 arquivos varridos** (mais os `.ts` de `executive/caminhos-meta/` e grep de strings de aviso em `lib/**` e `data/**`, sem ocorrência). Exit 0 em todos os comandos.
@@ -45,4 +31,13 @@ Onde fiquei em dúvida:
 - Não decidi a fronteira dos casos AMBÍGUOS (Tempo de Reação e Semáforo): registrei e devolvi a decisão.
 - Não investiguei se o bug de acurácia do Semáforo aparece nos relatórios do terapeuta — está fora do despacho.</result>
 <usage><subagent_tokens>115868</subagent_tokens><tool_uses>76</tool_uses><duration_ms>516601</duration_ms></usage>
+</task-notification>
+
+## 31/08/2026 16:41
+<task-notification>
+<task-id>bzk1tefa4</task-id>
+<tool-use-id>toolu_012KDxKfpneuNVDeG2sat5jG</tool-use-id>
+<output-file>/private/tmp/claude-501/-Users-kamyllahonorio-neuropeak/9e4c2936-1fb4-4a9c-a53a-3ad1aad1cf37/tasks/bzk1tefa4.output</output-file>
+<status>completed</status>
+<summary>Background command "Rodar o Codex" completed (exit code 0)</summary>
 </task-notification>
