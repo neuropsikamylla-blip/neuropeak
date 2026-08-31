@@ -1,14 +1,6 @@
 # As 3 ultimas especificacoes dela (automatico; a mais nova por ultimo)
 # Na retomada: ler as 3, conectar com PROGRESSO.md e git, declarar e seguir.
 
-## COMO PROVEI
-
-- `git diff --stat` → `PROGRESSO.md | 37 +++++++...` · **1 file changed, 37 insertions(+), 0 deletions** — exit 0. Zero deleções prova que nenhum bloco existente foi apagado ou reescrito.
-- `grep -c "^## 🚧 EM ANDAMENTO" PROGRESSO.md` → **6**; `git show HEAD:PROGRESSO.md | grep -c ...` → **5**. Os 5 blocos anteriores continuam lá, mais o novo.
-- `sed -n '1,8p' PROGRESSO.md` → cabeçalho intacto nas 4 linhas + linha em branco + o bloco novo. `sed -n '38,48p'` → a fronteira mostra o fim do roteamento seguido do bloco de 28/ago.
-- Verificação da referência do passo 1: `git log --oneline -3 3ff263a` → `3ff263a Spec do Codex: reconstruir a interface da Dupla Tarefa`, e `ls -la docs/specs-codex/spec-dupla-tarefa-ui-20260829.md` → arquivo existe (11835 bytes). O commit e a spec citados no bloco são reais.
-- `git status --short` → apenas ` M PROGRESSO.md`. Nada mais foi tocado.
-
 ## O QUE NÃO FIZ
 
 - **Não commitei e não dei push** — a mudança está no working tree, pronta para o commit do VP.
@@ -27,3 +19,6 @@
 <status>completed</status>
 <summary>Background command "Rodar Codex terra/high no lab" completed (exit code 0)</summary>
 </task-notification>
+
+## 31/08/2026 09:51
+gostei.. só achei a qualidade dos desenhos baixa...
