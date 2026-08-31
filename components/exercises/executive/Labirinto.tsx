@@ -994,7 +994,7 @@ export function Labirinto({ difficulty, theme, onComplete }: LabirintoProps) {
         {report && (() => {
           const el = effLabel(report.efficiency);
           const sc = mazeScore(report);
-          const rec = !report.solved ? "Tente planejar a rota antes de andar — observe o caminho inteiro."
+          const rec = !report.solved ? null
             : report.efficiency >= 0.85 ? "Ótimo planejamento! O próximo será mais difícil."
             : report.deadEnds >= 3 ? "Evite os becos: trace o caminho com o olho antes de mover."
             : report.efficiency < 0.6 ? "Muitos movimentos extras — planeje a rota mais curta."
@@ -1009,10 +1009,12 @@ export function Labirinto({ difficulty, theme, onComplete }: LabirintoProps) {
           return (
             <div className="absolute inset-0 flex items-center justify-center rounded-xl p-3" style={{ background: "rgba(8,12,24,0.92)", overflowY: "auto" }}>
               <div className="w-full max-w-[300px] text-left">
-                <p className="text-2xl font-black text-center" style={{ color: report.solved ? "#4ade80" : "#f87171" }}>
-                  {report.solved ? "🎉 Saída!" : "⏰ Tempo!"}
-                </p>
-                <div className="text-center my-2">
+                {report.solved && (
+                  <p className="text-2xl font-black text-center" style={{ color: "#4ade80" }}>
+                    🎉 Saída!
+                  </p>
+                )}
+                <div className={report.solved ? "text-center my-2" : "text-center mt-0 mb-2"}>
                   <div className="text-4xl font-black tabular-nums" style={{ color: el.color }}>{Math.round(report.efficiency * 100)}%</div>
                   <div className="text-xs font-bold" style={{ color: el.color }}>{el.txt}</div>
                 </div>
@@ -1029,9 +1031,11 @@ export function Labirinto({ difficulty, theme, onComplete }: LabirintoProps) {
                   <span className="text-xs" style={{ color: "#9ca3af" }}>Pontuação</span>
                   <span className="text-xl font-black tabular-nums" style={{ color: "#fbbf24" }}>{sc}</span>
                 </div>
-                <p className="text-[11px] text-center mt-2 mb-3" style={{ color: "#cbd5e1", lineHeight: 1.35 }}>{rec}</p>
+                {rec && <p className="text-[11px] text-center mt-2 mb-3" style={{ color: "#cbd5e1", lineHeight: 1.35 }}>{rec}</p>}
+                {/* Sem a frase de recomendação (caso do tempo esgotado), o botão herdaria o
+                    `mb-3` que ela dava e grudaria no bloco de pontuação. */}
                 <button onClick={advanceMaze}
-                  className="w-full py-3 rounded-xl font-bold text-sm"
+                  className={`w-full py-3 rounded-xl font-bold text-sm ${rec ? "" : "mt-3"}`}
                   style={{ background: "linear-gradient(135deg,#2563eb,#1d4ed8)", color: "#fff" }}>
                   {last ? "Ver resultado →" : "Próximo labirinto →"}
                 </button>
