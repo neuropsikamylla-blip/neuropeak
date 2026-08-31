@@ -1,9 +1,8 @@
 "use client";
 
 import { useState, useEffect, useRef, useCallback } from "react";
-import { useRouter } from "next/navigation";
 import { motion, AnimatePresence } from "framer-motion";
-import { ArrowLeft, Hash, AlertTriangle, Sparkles } from "lucide-react";
+import { Hash, AlertTriangle, Sparkles } from "lucide-react";
 import { calculateExerciseScore } from "@/lib/scoring";
 import { useTimedProgress } from "@/components/exercises/useExerciseEngine";
 import { ExerciseProgressBar } from "@/components/exercises/ExerciseProgressBar";
@@ -234,7 +233,6 @@ function InstrucaoBloco({ spec, idx, theme, alterada }: { spec: LevelSpec; idx: 
 
 // ── Main component ─────────────────────────────────────────────────────────
 export function DualTask({ difficulty, theme, onComplete }: DualTaskProps) {
-  const router = useRouter();
   const spec = levelOf(difficulty);
   const nback = spec.nback;
   const { begin, isTimeUp, elapsedSec, finish, progressPct } = useTimedProgress();
@@ -431,8 +429,14 @@ export function DualTask({ difficulty, theme, onComplete }: DualTaskProps) {
   }
 
   const currentShape = shapeIdx >= 0 && shapeIdx < TOTAL_SHAPES ? shapes[shapeIdx] : null;
+  // Decisão dela em 31/ago/2026, vendo a tela: "nao precisa avisar e' treino".
+  // A OMISSÃO (deixar o alvo passar) não recebe mais aviso nenhum — a arena
+  // simplesmente esvazia. `shapeFeedback === "miss"` continua sendo marcado, e o
+  // resultado da tentativa continua indo para `shapeResults` como sempre: o dado
+  // clínico da omissão está intacto, só o carimbo na cara dela é que saiu. Os
+  // feedbacks de acerto e de toque errado ficam, porque respondem a um gesto DELA.
   const displayState =
-    shapeFeedback === "hit" ? "fb-hit" : shapeFeedback === "fa" ? "fb-fa" : shapeFeedback === "miss" ? "fb-miss" :
+    shapeFeedback === "hit" ? "fb-hit" : shapeFeedback === "fa" ? "fb-fa" :
     (shapePhase === "show" && currentShape !== null) ? "shape" : "idle";
 
   const isG = theme === "GAMIFIED";
@@ -461,10 +465,6 @@ export function DualTask({ difficulty, theme, onComplete }: DualTaskProps) {
     <ExerciseStage width="medio" backgroundClassName={pal.bg} fill>
       <div className="h-full flex flex-col gap-3 sm:gap-4">
         <header className="shrink-0 flex flex-wrap items-center gap-2 sm:gap-3">
-          <button type="button" aria-label="Voltar" onClick={() => router.push("/inicio")}
-            className={`h-10 w-10 shrink-0 rounded-xl border flex items-center justify-center transition-colors ${isG ? "border-white/[0.08] text-[#E5E7EB] bg-gray-900" : "border-[#E5E9F0] bg-white text-[#0F172A]"}`}>
-            <ArrowLeft size={18} />
-          </button>
           <h2 className={`min-w-0 text-lg sm:text-xl font-bold tracking-tight ${pal.title}`}>Dupla Tarefa</h2>
           <span className={`rounded-full border px-2.5 py-0.5 text-xs font-semibold ${pal.chip}`}>Nível {Math.round(difficulty)}</span>
           <div className="order-last flex w-full min-w-0 items-center gap-2 sm:order-none sm:ml-auto sm:w-auto sm:max-w-[360px] sm:flex-1">
@@ -480,7 +480,7 @@ export function DualTask({ difficulty, theme, onComplete }: DualTaskProps) {
         <main className={`relative flex flex-1 min-h-0 flex-col overflow-hidden rounded-2xl border shadow-[0_1px_2px_rgba(15,23,42,0.04)] ${pal.border} ${pal.arena}`}>
           <div onPointerDown={handleShapeTap}
             className={`flex flex-1 min-h-[150px] sm:min-h-[220px] items-center justify-center px-4 py-5 sm:py-8 cursor-pointer transition-colors ${
-              displayState === "fb-hit" ? "bg-[rgba(22,163,74,0.07)]" : displayState === "fb-fa" ? "bg-[rgba(239,68,68,0.07)]" : displayState === "fb-miss" ? "bg-[rgba(245,158,11,0.07)]" : "bg-transparent"
+              displayState === "fb-hit" ? "bg-[rgba(22,163,74,0.07)]" : displayState === "fb-fa" ? "bg-[rgba(239,68,68,0.07)]" : "bg-transparent"
             }`}>
             <AnimatePresence mode="wait">
               {displayState === "shape" && currentShape && (
@@ -490,8 +490,8 @@ export function DualTask({ difficulty, theme, onComplete }: DualTaskProps) {
               )}
               {displayState.startsWith("fb-") && (
                 <motion.span key={displayState} initial={{ scale: 0 }} animate={{ scale: 1 }} exit={{ scale: 0 }} style={{ fontSize: "clamp(38px, 9vh, 64px)" }}
-                  className={`font-black ${displayState === "fb-hit" ? "text-green-500" : displayState === "fb-fa" ? "text-red-500" : "text-amber-500"}`}>
-                  {displayState === "fb-hit" ? "✓" : displayState === "fb-fa" ? "✕" : "⏱"}
+                  className={`font-black ${displayState === "fb-hit" ? "text-green-500" : "text-red-500"}`}>
+                  {displayState === "fb-hit" ? "✓" : "✕"}
                 </motion.span>
               )}
             </AnimatePresence>
