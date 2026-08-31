@@ -31,6 +31,11 @@ import { type ItemCompra } from "@/data/compra-itens";
 
 interface Props { difficulty: number; theme: Theme; onComplete: (result: ExerciseResult) => void; }
 
+interface EtapaResult {
+  firstTry: boolean;
+  omitted: boolean;
+}
+
 const MAX_LEVEL = 8;
 const START_LEVEL = (d: number) => Math.max(1, Math.min(MAX_LEVEL, Math.round(d * 0.8)));
 const money = (v: number) => `R$ ${v}`;
@@ -215,7 +220,7 @@ function Keypad({ value, unidade, onChange, theme, disabled }: {
 // ── Uma etapa jogável (numérica ou seleção) ───────────────────────────────────
 // Remonta a cada etapa (key no pai) → estado sempre fresco.
 function EtapaView({ etapa, theme, proceedLabel, onProceed, autoProceed, mostrarOpcoes }: {
-  etapa: Etapa; theme: Theme; proceedLabel: string; onProceed: (firstTry: boolean) => void; autoProceed?: boolean;
+  etapa: Etapa; theme: Theme; proceedLabel: string; onProceed: (result: EtapaResult) => void; autoProceed?: boolean;
   mostrarOpcoes?: boolean;  // opções de resposta rápida só nos níveis fáceis (apoio)
 }) {
   const { isG, btnStyle, pal } = styles(theme);
@@ -228,6 +233,7 @@ function EtapaView({ etapa, theme, proceedLabel, onProceed, autoProceed, mostrar
   const [done, setDone] = useState(false);
   const [correct, setCorrect] = useState(false);
   const firstTryRef = useRef(true);
+  const omittedRef = useRef(false);
   const autoDoneRef = useRef(false);
 
   // Opções de resposta rápida (só numéricas) — a correta + 2 vizinhas.
@@ -241,8 +247,8 @@ function EtapaView({ etapa, theme, proceedLabel, onProceed, autoProceed, mostrar
   useEffect(() => {
     if (!done || !correct || autoDoneRef.current) return;
     autoDoneRef.current = true;
-    if (autoProceed) { onProceed(true); return; }
-    const t = setTimeout(() => onProceed(firstTryRef.current && correct), 1050);
+    if (autoProceed) { onProceed({ firstTry: true, omitted: false }); return; }
+    const t = setTimeout(() => onProceed({ firstTry: firstTryRef.current && correct, omitted: false }), 1050);
     return () => clearTimeout(t);
   }, [done, correct, autoProceed, onProceed]);
 
@@ -266,18 +272,9 @@ function EtapaView({ etapa, theme, proceedLabel, onProceed, autoProceed, mostrar
 
   function onTimeUp() {
     if (stateRef.current.done) return;
-    // Confirma o que houver e explica o que faltou; sem retry após o tempo.
     firstTryRef.current = false;
-    if (etapa.dados.modo === "numeric") {
-      const ok = stateRef.current.answer !== "" && verificarNumerica(etapa.dados, Number(stateRef.current.answer));
-      setCorrect(ok);
-      setRevealed(feedbackNumerica(etapa.dados, ok, 3));
-    } else {
-      const ids = [...stateRef.current.selected];
-      const ok = verificarSelecao(etapa.dados, ids).correto;
-      setCorrect(ok);
-      setRevealed(feedbackSelecao(etapa.dados, ids, 4));
-    }
+    omittedRef.current = true;
+    setRevealed(null);
     setDone(true);
   }
 
@@ -421,7 +418,7 @@ function EtapaView({ etapa, theme, proceedLabel, onProceed, autoProceed, mostrar
       {/* Ações — ao acertar não há botão (avança sozinho); só aparece se o tempo esgotou sem acerto */}
       {done ? (
         (autoProceed || correct) ? null : (
-          <button onClick={() => onProceed(firstTryRef.current && correct)} className="w-full h-12 font-bold mt-3" style={btnStyle}>{proceedLabel}</button>
+          <button onClick={() => onProceed({ firstTry: firstTryRef.current && correct, omitted: omittedRef.current })} className="w-full h-12 font-bold mt-3" style={btnStyle}>{proceedLabel}</button>
         )
       ) : (
         <>
@@ -431,7 +428,7 @@ function EtapaView({ etapa, theme, proceedLabel, onProceed, autoProceed, mostrar
             {numeric ? (answer === "" ? "Digite a resposta" : "Confirmar") : (selected.size === 0 ? "Selecione itens" : "Confirmar compra")}
           </button>
           {!numeric && attempts >= 3 && (
-            <button onClick={() => { firstTryRef.current = false; onProceed(false); }}
+            <button onClick={() => { firstTryRef.current = false; onProceed({ firstTry: false, omitted: false }); }}
               className={`w-full mt-2 h-9 rounded-full font-semibold text-xs border-2 ${isG ? "border-white/25 text-white/70" : "border-slate-300 text-slate-500"}`}>
               Avançar assim mesmo
             </button>
@@ -486,7 +483,7 @@ export function CompraMultifuncional({ difficulty, theme, onComplete }: Props) {
   const levelRef = useRef(START_LEVEL(difficulty));
   const reachedRef = useRef(levelRef.current);
   const ultimoTemaRef = useRef<TemaKey | null>(null);   // p/ não repetir o tema em seguida no modo variado
-  const sessionResultsRef = useRef<boolean[]>([]);   // acerto de 1ª por etapa (sessão)
+  const sessionResultsRef = useRef<EtapaResult[]>([]);   // acerto de 1ª e omissão por etapa (sessão)
   const missionResultsRef = useRef<boolean[]>([]);   // acerto de 1ª por etapa (missão atual)
 
   // Etapa de exemplo do tutorial (réplica real do jogo: uma soma simples).
@@ -511,7 +508,7 @@ export function CompraMultifuncional({ difficulty, theme, onComplete }: Props) {
   function finishSession() {
     finish();
     const results = sessionResultsRef.current;
-    const acertos = results.filter(Boolean).length;
+    const acertos = results.filter((result) => result.firstTry).length;
     const accuracy = results.length ? acertos / results.length : 0;
     onComplete({
       exerciseId: "compra-multifuncional",
@@ -522,14 +519,14 @@ export function CompraMultifuncional({ difficulty, theme, onComplete }: Props) {
       duration: elapsedSec(),
       metadata: {
         etapas: results.length, acertosPrimeira: acertos, nivelAlcancado: reachedRef.current,
-        tema: temaCfg, foco,
+        tema: temaCfg, foco, omissions: results.filter((result) => result.omitted).length,
       },
     });
   }
 
-  const handleEtapaDone = useCallback((firstTry: boolean) => {
-    sessionResultsRef.current = [...sessionResultsRef.current, firstTry];
-    missionResultsRef.current = [...missionResultsRef.current, firstTry];
+  const handleEtapaDone = useCallback((result: EtapaResult) => {
+    sessionResultsRef.current = [...sessionResultsRef.current, result];
+    missionResultsRef.current = [...missionResultsRef.current, result.firstTry];
     if (isTimeUp()) { finishSession(); return; }
 
     const m = missao!;
