@@ -10,7 +10,7 @@ tela 'Dupla Tarefa' seguindo exatamente esta nova direção de layout. A priorid
 interface mais elegante, integrada, limpa e responsiva"* e *"Não altere a lógica do exercício.
 Quero apenas uma melhoria substancial de UI/UX e responsividade."*
 
-**O que a tela virou:** cabeçalho compacto (voltar + título + chip de nível + progresso), faixa de
+**O que a tela virou:** cabeçalho compacto (título + chip de nível + progresso), faixa de
 instruções com ícone, **um** painel integrado (estímulo em cima, divisória finíssima,
 "Número atual" + card do número + botão IGUAL lado a lado embaixo) e rodapé de uma linha. Saíram os
 rótulos **"SUPERIOR"**, **"INFERIOR"**, **"Em cima"**, **"Embaixo"** e **"N-back"** do texto visível.
@@ -50,6 +50,21 @@ rótulos **"SUPERIOR"**, **"INFERIOR"**, **"Em cima"**, **"Embaixo"** e **"N-bac
       *"reloginho (Ritmo: moderado) isso nao precisa aparecer"*. As instruções ficaram em **duas
       linhas**. O campo `speedLabel` **continua na tabela `LEVELS`** (documenta o degrau de cada
       nível); saiu só o texto de tela, o ícone `Clock` e a constante `muted`. Commit `db66428`. ✅
+- [x] **Passo 3c — v2.98.5: a omissão deixa de ser avisada, e o voltar sai.** Ela, vendo a tela:
+      *"tirei esse rologio, nao precisa avisar é treino e tire o botao voltar"*. O "relógio" desta
+      vez **não** era o "Ritmo" (esse já saíra na v2.98.4): era o **⏱ do feedback de OMISSÃO**, que
+      aparecia quando um triângulo verde passava sem ser tocado. Saiu o símbolo e saiu a tinta
+      âmbar do fundo — a arena esvazia e o exercício segue. ✅
+      - **O DADO NÃO SE PERDE:** a tentativa continua indo para `shapeResults` com `tapped:false` e
+        `omTop` continua contando as omissões no metadata da sessão — provado por diff, o bloco do
+        registro não foi tocado. **Sai o carimbo, nunca a medida.**
+      - Ficam o **✓ do acerto** e o **✕ do toque errado**, que respondem a um gesto DELA.
+      - **O botão de voltar saiu** com o `useRouter` e o `ArrowLeft`. Commit `dee21e1`.
+      - 📌 **Regra que vale além deste exercício:** *o app não comenta o que o paciente deixou de
+        fazer.* É a mesma regra do erro que ela fechou em 28/ago para os de memória (sai a
+        MENSAGEM, o erro continua visível), agora estendida ao **aviso passivo**. Registrada na
+        memória `principio-sem-dica-apos-instrucao`. **A varrer:** quais dos outros 32 exercícios
+        avisam omissão do mesmo jeito — levantamento oferecido a ela, ainda não autorizado.
 - [x] **Passo 4 — prova rodada em 31/ago/2026.** ✅
       - `npx tsc --noEmit` → **exit 0** (sem pipe, exit code capturado direto).
       - `npm run test` → **exit 0**, `Test Files 55 passed (55)` · `Tests 753 passed (753)`.
@@ -58,26 +73,22 @@ rótulos **"SUPERIOR"**, **"INFERIOR"**, **"Em cima"**, **"Embaixo"** e **"N-bac
       - `npm run build` **não foi rodado** de propósito: o dev server dela está no ar na porta 3000
         (lição de 28/ago).
 - [ ] **Passo 5 — bump + commit: PARCIAL.** Os commits existem (**v2.98.2**, **v2.98.3**,
-      **v2.98.4**; `package.json` em `2.98.4`), mas **nada foi publicado**.
+      **v2.98.4**, **v2.98.5**; `package.json` em `2.98.5`), mas **nada foi publicado**.
       `git log --oneline origin/main..HEAD | wc -l` → **42 commits locais não publicados** (medido
       em 31/ago 16:20; o número sobe sozinho a cada checkpoint automático), indo desde a auditoria
-      de layout / migração ao palco (v2.90, commit `e281113`) até a v2.98.4 (`db66428`).
+      de layout / migração ao palco (v2.90, commit `e281113`) até a v2.98.5 (`dee21e1`).
       **O push aguarda decisão dela.**
 - [ ] **Passo 6 — verificação visual dela**, desktop e celular. *Critério:* ela confirma com os
       olhos nos dois formatos. **PENDENTE.**
 
 ### Decisões abertas com ela
 
-1. **Publicar ou não.** São 42 commits locais nunca publicados, de v2.90 a v2.98.4. A produção
+1. **Publicar ou não.** São 40+ commits locais nunca publicados, de v2.90 a v2.98.5. A produção
    está atrás de **toda a migração ao palco**, Cubo Corsi, MOT, Vigilância, os 7 de memória e a
    Busca Rápida.
-2. **O botão de voltar.** Foi introduzido na v2.98.2 a pedido dela (estava no mockup). **Nenhum
-   outro exercício tem um durante a execução.** Ele leva a `/inicio` e **descarta a sessão sem
-   salvar**: um toque acidental no meio do treino perde o exercício. Falta decidir se ganha
-   confirmação, se sai, ou se fica como está.
-   ⚠️ **Medido em 31/ago 16:22, depois de escrito este bloco:** a árvore de trabalho já tem o
-   botão **removido** (junto com `useRouter` e `ArrowLeft`) — edição **ainda não commitada**,
-   feita em paralelo. Se esse trabalho for commitado, o item 2 já está resolvido por remoção.
+2. ~~**O botão de voltar.**~~ **FECHADO em 31/ago:** *"tire o botao voltar"*. Ele tinha entrado na
+   v2.98.2 porque estava no mockup, mas nenhum outro exercício tem saída durante a execução e um
+   toque acidental descartava a sessão sem salvar. Removido na v2.98.5 (`dee21e1`).
 3. **O amarelo com 1,82:1 de contraste** contra o fundo claro — dívida **preexistente**, não
    introduzida nesta tarefa, achada na medição do diretor. Num exercício que depende de **nomear a
    cor**, merece tarefa própria.
