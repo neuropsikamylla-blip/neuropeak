@@ -4,6 +4,7 @@ import { useState, useEffect, useRef } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { Trophy, Check, X } from "lucide-react";
 import { calculateExerciseScore } from "@/lib/scoring";
+import { julgarPuzzle } from "@/lib/torre-hanoi";
 import { useTimedProgress } from "@/components/exercises/useExerciseEngine";
 import { TutorialBase } from "@/components/exercises/TutorialBase";
 import { ExerciseStage } from "@/components/exercises/ExerciseStage";
@@ -17,6 +18,7 @@ interface TorreHanoiProps {
 
 const MIN_DISCS = 3;
 const MAX_DISCS = 8;
+const MAX_RESTARTS_PER_PUZZLE = 2;
 
 function initialDiscs(difficulty: number) {
   return Math.min(Math.max(MIN_DISCS, Math.floor(difficulty * 0.4) + 2), MAX_DISCS);
@@ -232,7 +234,7 @@ export function TorreHanoi({ difficulty, theme, onComplete }: TorreHanoiProps) {
 
   const [discCount, setDiscCount] = useState(initialDiscs(difficulty));
   const [puzzle, setPuzzle] = useState(0);
-  const [puzzleResults, setPuzzleResults] = useState<{ correct: boolean; discs: number }[]>([]);
+  const [puzzleResults, setPuzzleResults] = useState<{ correct: boolean; discs: number; restarts: number }[]>([]);
   const [lastWasOptimal, setLastWasOptimal] = useState(false);
 
   // Puzzle state
@@ -240,6 +242,7 @@ export function TorreHanoi({ difficulty, theme, onComplete }: TorreHanoiProps) {
   const [selected, setSelected] = useState<number | null>(null);
   const [moves, setMoves] = useState(0);
   const [won, setWon] = useState(false);
+  const [restartsThisPuzzle, setRestartsThisPuzzle] = useState(0);
 
   const puzzleStart = useRef<number>(Date.now());
 
@@ -260,7 +263,20 @@ export function TorreHanoi({ difficulty, theme, onComplete }: TorreHanoiProps) {
     setSelected(null);
     setMoves(0);
     setWon(false);
+    setRestartsThisPuzzle(0);
     puzzleStart.current = Date.now();
+  }
+
+  function restartPuzzle() {
+    // `moves === 0` também trava: reiniciar um tabuleiro intacto gastaria um dos dois usos
+    // e tiraria o "mínimo" do puzzle sem que nada tivesse sido feito.
+    if (won || moves === 0 || restartsThisPuzzle >= MAX_RESTARTS_PER_PUZZLE) return;
+
+    setPegs(initialPegs(discCount));
+    setSelected(null);
+    setMoves(0);
+    setWon(false);
+    setRestartsThisPuzzle((restarts) => restarts + 1);
   }
 
   function handlePegClick(pegIdx: number) {
@@ -294,11 +310,11 @@ export function TorreHanoi({ difficulty, theme, onComplete }: TorreHanoiProps) {
 
       if (newPegs[2].length === discCount) {
         setWon(true);
-        // "Correct" = used the minimum number of moves
-        const isOptimal = newMoves <= optimal;
+        // "Correct" = movimentos mínimos sem reiniciar o puzzle
+        const isOptimal = julgarPuzzle({ moves: newMoves, optimal, restarts: restartsThisPuzzle }).optimal;
         setLastWasOptimal(isOptimal);
 
-        const newPuzzleResults = [...puzzleResults, { correct: isOptimal, discs: discCount }];
+        const newPuzzleResults = [...puzzleResults, { correct: isOptimal, discs: discCount, restarts: restartsThisPuzzle }];
         setPuzzleResults(newPuzzleResults);
 
         // If optimal → increase disc count; if not → stay at same difficulty
@@ -313,6 +329,8 @@ export function TorreHanoi({ difficulty, theme, onComplete }: TorreHanoiProps) {
             const correctCount = newPuzzleResults.filter((r) => r.correct).length;
             const accuracy = correctCount / Math.max(1, newPuzzleResults.length);
             const maxDiscs = Math.max(...newPuzzleResults.map((r) => r.discs));
+            const restarts = newPuzzleResults.reduce((total, result) => total + result.restarts, 0);
+            const puzzlesComReinicio = newPuzzleResults.filter((result) => result.restarts > 0).length;
             const score = calculateExerciseScore("torre-hanoi", accuracy, undefined, maxDiscs);
             onComplete({
               exerciseId: "torre-hanoi",
@@ -321,7 +339,7 @@ export function TorreHanoi({ difficulty, theme, onComplete }: TorreHanoiProps) {
               accuracy,
               difficulty: maxDiscs,
               duration: elapsedSec(),
-              metadata: { puzzles: newPuzzleResults.length, maxDiscs, correct: correctCount },
+              metadata: { puzzles: newPuzzleResults.length, maxDiscs, correct: correctCount, restarts, puzzlesComReinicio },
             });
           } else {
             setPuzzle(nextPuzzle);
@@ -366,6 +384,24 @@ export function TorreHanoi({ difficulty, theme, onComplete }: TorreHanoiProps) {
             <Indicator label="Mínimo" value={optimal} />
           </div>
         </div>
+
+        {!won && (() => { const reiniciarBloqueado = moves === 0 || restartsThisPuzzle >= MAX_RESTARTS_PER_PUZZLE; return (
+          <div className="mt-3 flex justify-end">
+            <button
+              type="button"
+              onClick={restartPuzzle}
+              disabled={moves === 0 || restartsThisPuzzle >= MAX_RESTARTS_PER_PUZZLE}
+              className="rounded-xl px-3 py-2 text-sm font-semibold transition-colors disabled:cursor-not-allowed"
+              style={{
+                background: reiniciarBloqueado ? "#F8FAFC" : "#FFFFFF",
+                border: `1px solid ${reiniciarBloqueado ? "#E2E8F0" : "#CBD5E1"}`,
+                color: reiniciarBloqueado ? "#94A3B8" : "#475569",
+              }}
+            >
+              Reiniciar ({MAX_RESTARTS_PER_PUZZLE - restartsThisPuzzle})
+            </button>
+          </div>
+        ); })()}
 
         {/* Barra de progresso (visual do jogo) */}
         <div className="mt-4 h-2 rounded-full overflow-hidden" style={{ background: "#EEF2F7" }}>
