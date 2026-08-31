@@ -3,7 +3,7 @@
 import { useState, useEffect, useRef, useCallback } from "react";
 import { useRouter } from "next/navigation";
 import { motion, AnimatePresence } from "framer-motion";
-import { ArrowLeft, Hash, Clock, AlertTriangle, Sparkles } from "lucide-react";
+import { ArrowLeft, Hash, AlertTriangle, Sparkles } from "lucide-react";
 import { calculateExerciseScore } from "@/lib/scoring";
 import { useTimedProgress } from "@/components/exercises/useExerciseEngine";
 import { ExerciseProgressBar } from "@/components/exercises/ExerciseProgressBar";
@@ -214,7 +214,6 @@ function InstrucaoBloco({ spec, idx, theme, alterada }: { spec: LevelSpec; idx: 
   const t = targetOf(spec, idx);
   const panel = isG ? "bg-[#0F1622] border-white/[0.08]" : "bg-[#F7F9FC] border-[#E5E9F0]";
   const text = isG ? "text-[#E5E7EB]" : "text-[#0F172A]";
-  const muted = isG ? "text-[#9CA3AF]" : "text-[#64748B]";
   return (
     <div className={`rounded-2xl border px-4 py-3 sm:px-5 sm:py-4 space-y-2 sm:space-y-2.5 shadow-[0_1px_2px_rgba(15,23,42,0.04)] transition-all ${panel} ${alterada ? "ring-1 ring-amber-300" : ""}`}>
       <div className="flex items-start gap-3 min-w-0">
@@ -228,10 +227,6 @@ function InstrucaoBloco({ spec, idx, theme, alterada }: { spec: LevelSpec; idx: 
         <p className={`min-w-0 text-[13px] sm:text-sm leading-snug ${text}`}>
           Toque em <b className={isG ? "text-blue-400" : "text-[#2563EB]"}>IGUAL</b> quando o número for igual ao <b>{bottomStrong(spec.nback).toLowerCase()}</b>.
         </p>
-      </div>
-      <div className="flex items-start gap-3 min-w-0">
-        <span className={`flex-shrink-0 mt-0.5 ${muted}`}><Clock size={18} /></span>
-        <p className={`min-w-0 text-[13px] sm:text-sm leading-snug ${text}`}>Ritmo: <b>{spec.speedLabel}</b>.</p>
       </div>
     </div>
   );
