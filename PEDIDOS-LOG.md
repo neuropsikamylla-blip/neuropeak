@@ -15401,3 +15401,6 @@ A chave `cor-forma` no `id` é obrigatória: o estímulo grande e o ícone de 18
 
 ## 31/08/2026 11:26
 pode seguir : E — 2.5D + peso ótico corrigido
+
+## 31/08/2026 11:29
+reloginho (Ritmo: moderado) isso nao precisa aparecer.

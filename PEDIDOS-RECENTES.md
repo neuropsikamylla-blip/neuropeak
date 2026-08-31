@@ -1,21 +1,6 @@
 # As 3 ultimas especificacoes dela (automatico; a mais nova por ultimo)
 # Na retomada: ler as 3, conectar com PROGRESSO.md e git, declarar e seguir.
 
-## COMO PROVEI (comandos e resultados)
-
-| O que | Como | Resultado |
-|---|---|---|
-| CIEDE2000 correto | 6 casos da tabela de Sharma, `node check.js` | erro &lt; 0,0002 em todos |
-| Arco tangente correto | quadrado gerado × `&lt;rect rx=8&gt;` nativo, renderizados e medidos com PIL | 144×144 px nos dois, **0 pixels divergentes de 20.736** |
-| Arredondar não engorda a peça | área da silhueta amostrada × área do polígono cru | menor nas 3 formas (5706&lt;5776, 3458&lt;3528, 2792&lt;2960) |
-| Ajuste de caixa converge | `fitToBox` no triângulo, alvo 80×74 | 80,000×74,000 |
-| Ida e volta sRGB↔Lab | 5 cores | hexadecimal idêntico |
-| Degradê não desloca a cor | ΔE₀₀ por cor, matiz medido | desvio máx. 3,02 ΔE₀₀; matiz &lt; 0,2°; par mais próximo 19,7 |
-| A página desenha o que digo | Chrome headless 1× e 2×, 8 recortes inspecionados visualmente | conferido: variantes, 5 cores, 3 tamanhos, raios, peso ótico |
-| **O código entregue é a variante E** | duas páginas de layout idêntico (SVG da página × SVG do trecho), PNG contra PNG | **0 pixels divergentes de 180.400** |
-
-Um defeito meu apareceu e foi corrigido no caminho: o trecho de código estava emitindo a geometria de 100% em vez da recomendada — foi o teste pixel a pixel que pegou.
-
 ## O código, pronto para portar
 
 Substitui a `ShapeSvg` inteira (linhas 136–147 de `/Users/kamyllahonorio/neuropeak/components/exercises/attention/DualTask.tsx`).
@@ -77,3 +62,6 @@ A chave `cor-forma` no `id` é obrigatória: o estímulo grande e o ícone de 18
 - **Não mexi em nada clínico:** mesma paleta, mesmas 4 formas, mesma taxonomia, mesma lógica de alvo e distrator.</result>
 <usage><subagent_tokens>166360</subagent_tokens><tool_uses>61</tool_uses><duration_ms>1610661</duration_ms></usage>
 </task-notification>
+
+## 31/08/2026 11:29
+reloginho (Ritmo: moderado) isso nao precisa aparecer.
