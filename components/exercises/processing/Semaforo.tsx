@@ -3,6 +3,7 @@
 import { useState, useRef, useCallback, useEffect } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { calculateExerciseScore } from "@/lib/scoring";
+import { judgeSemaforo, type SemaforoResponse } from "@/lib/semaforo";
 import { useTimedProgress } from "@/components/exercises/useExerciseEngine";
 import { ExerciseProgressBar } from "@/components/exercises/ExerciseProgressBar";
 import { ExerciseStage } from "@/components/exercises/ExerciseStage";
@@ -112,6 +113,12 @@ interface RoundState {
   distractors: [LightColor, LightColor];
 }
 
+interface TrialResult {
+  correct: boolean;
+  rt: number | null;
+  omitted: boolean;
+}
+
 const SESSION_MS = 5 * 60 * 1000;   // 5 min (era 7)
 
 export function Semaforo({ difficulty, theme, onComplete }: SemaforoProps) {
@@ -120,14 +127,14 @@ export function Semaforo({ difficulty, theme, onComplete }: SemaforoProps) {
   const [started, setStarted] = useState(false);
   const [phase, setPhase] = useState<Phase>("idle");
   const [round, setRound] = useState<RoundState | null>(null);
-  const [results, setResults] = useState<{ correct: boolean; rt: number | null }[]>([]);
+  const [results, setResults] = useState<TrialResult[]>([]);
   const [feedback, setFeedback] = useState<"correct" | "wrong" | null>(null);
   // Posição dos botões troca ao longo da sessão (o paciente não pode responder no
   // automático — precisa LER o botão). Começa fixo; passa a alternar após algumas rodadas.
   const [swapped, setSwapped] = useState(false);
   const roundCountRef = useRef(0);
 
-  const resultsRef = useRef<{ correct: boolean; rt: number | null }[]>([]);
+  const resultsRef = useRef<TrialResult[]>([]);
   const doneRef = useRef(false);
   const roundActiveAt = useRef<number>(0);
   const blinkTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
@@ -149,7 +156,7 @@ export function Semaforo({ difficulty, theme, onComplete }: SemaforoProps) {
 
   // ─── Finish game ──────────────────────────────────────────────────────────
   const finishGame = useCallback(
-    (finalResults: { correct: boolean; rt: number | null }[]) => {
+    (finalResults: TrialResult[]) => {
       if (doneRef.current) return;
       doneRef.current = true;
       finishProgress();
@@ -172,7 +179,12 @@ export function Semaforo({ difficulty, theme, onComplete }: SemaforoProps) {
           reactionTime: avgRT,
           difficulty,
           duration: dur,
-          metadata: { trials: finalResults.length, avgRT, correct: hits.length },
+          metadata: {
+            trials: finalResults.length,
+            avgRT,
+            correct: hits.length,
+            omissions: finalResults.filter((r) => r.omitted).length,
+          },
         });
       }, 1200);
     },
@@ -206,7 +218,7 @@ export function Semaforo({ difficulty, theme, onComplete }: SemaforoProps) {
       activeTimer.current = setTimeout(() => {
         if (!respondedRef.current && !doneRef.current) {
           respondedRef.current = true;
-          handleResponse(false, newRound);
+          handleResponse("none", newRound);
         }
       }, onMs);
     }, BLINK_DURATION + 100);
@@ -215,18 +227,17 @@ export function Semaforo({ difficulty, theme, onComplete }: SemaforoProps) {
 
   // ─── Handle a button press ────────────────────────────────────────────────
   const handleResponse = useCallback(
-    (pressedAdvance: boolean, currentRound: RoundState) => {
+    (response: SemaforoResponse, currentRound: RoundState) => {
       if (activeTimer.current) clearTimeout(activeTimer.current);
 
       const rt = roundActiveAt.current ? Date.now() - roundActiveAt.current : null;
-      const shouldAdvance = isGoSignal(currentRound.targetColor);
-      const correct = pressedAdvance === shouldAdvance;
+      const { correct, omitted } = judgeSemaforo(isGoSignal(currentRound.targetColor), response);
 
-      const newResults = [...resultsRef.current, { correct, rt: correct ? rt : null }];
+      const newResults = [...resultsRef.current, { correct, rt: correct ? rt : null, omitted }];
       resultsRef.current = newResults;
       setResults(newResults);
 
-      setFeedback(correct ? "correct" : "wrong");
+      setFeedback(response === "none" ? null : correct ? "correct" : "wrong");
       setPhase("feedback");
 
       if (feedbackTimer.current) clearTimeout(feedbackTimer.current);
@@ -245,13 +256,13 @@ export function Semaforo({ difficulty, theme, onComplete }: SemaforoProps) {
   function onPressAdvance() {
     if (phase !== "active" || respondedRef.current || !round) return;
     respondedRef.current = true;
-    handleResponse(true, round);
+    handleResponse("advance", round);
   }
 
   function onPressStop() {
     if (phase !== "active" || respondedRef.current || !round) return;
     respondedRef.current = true;
-    handleResponse(false, round);
+    handleResponse("stop", round);
   }
 
   function start() {
