@@ -15282,3 +15282,119 @@ abre o que preciso verificar
 
 ## 31/08/2026 09:51
 gostei.. só achei a qualidade dos desenhos baixa...
+
+## 31/08/2026 10:23
+<task-notification>
+<task-id>a595e0f0b81dc40c0</task-id>
+<tool-use-id>toolu_01SnFNgM4K6PSZd6B5tgRddB</tool-use-id>
+<output-file>/private/tmp/claude-501/-Users-kamyllahonorio-neuropeak/9e4c2936-1fb4-4a9c-a53a-3ad1aad1cf37/tasks/a595e0f0b81dc40c0.output</output-file>
+<status>completed</status>
+<summary>Agent "Variantes de desenho das formas" finished</summary>
+<note>A task-notification fires each time this agent stops with no live background children of its own. The user can send it another message and resume it, so the same task-id may notify more than once.</note>
+<result>A página está pronta e verificada. Segue o relatório.
+
+---
+
+## O QUE MUDOU (arquivo por arquivo)
+
+Nenhum arquivo do projeto foi tocado — `git status --porcelain` em `/Users/kamyllahonorio/neuropeak` saiu vazio antes e depois.
+
+Escritos apenas no scratchpad:
+
+- **`/private/tmp/claude-501/-Users-kamyllahonorio-neuropeak/9e4c2936-1fb4-4a9c-a53a-3ad1aad1cf37/scratchpad/formas-comparacao.html`** — a entrega. 158 KB, autocontido (zero recurso externo, zero bitmap, zero JavaScript), 15.022 px de altura. Seções: (1) as 6 variantes com as 4 formas em fundo claro `#F7F9FC` e escuro `#0F1622`; (2) as 5 cores no triângulo, por variante; (3) a recomendada a 90/140/190 px; (4) calibração do raio de canto (0/6/8/10/14); (5) calibração do peso ótico (0%/50%/100%); (6) medidas (geometria, ΔE₀₀ do degradê, contraste, controle de geometria); (7) o código pronto para portar.
+- `geom.js`, `build.js`, `check.js`, `check2.js`, `nums.js`, `nums2.js` (mesma pasta) — insumos: biblioteca de cor/geometria, gerador da página e as verificações. `full5.png`, `diff.png`, `p-ref.png`, `p-snip.png` e os recortes são as evidências visuais.
+
+## Recomendação: variante **E — 2.5D + peso ótico corrigido**
+
+**Por quê.** Ela resolve as três coisas que estão erradas hoje, e cada uma delas é mensurável:
+
+1. **O contorno.** `rgba(0,0,0,0.12)` a 2 unidades vira 3,8 px de preto translúcido a 190 px. Preto misturado na borda de uma peça colorida é o que dá o aspecto "vetor cru". Some, e no lugar entra um filete de 1 unidade da própria família de cor (−10 L*), a meia opacidade — que agrega definição no tema claro e praticamente desaparece no escuro (é por isso que ele não pode ser escuro demais: o azul escurecido cai para 2,42:1 contra o fundo `#0F1622`).
+2. **As pontas de faca.** Vértices arredondados por arco tangente com raio 8 — que não é número inventado: é o mesmo `rx=8` que o quadrado já usa hoje, agora estendido às quatro formas. A linha de calibração mostra o limite clínico: em 14 o losango começa a virar quadrado girado.
+3. **O peso ótico — o ponto que não é estético.** Medido pela raiz da área preenchida ("tinta"), hoje o triângulo tem **54,4** contra **75,6** do quadrado: 39% de dispersão. E os níveis 8–10 alternam o alvo a cada 12 tentativas exatamente entre **triângulo verde** e **quadrado azul** (`blockTarget`, linha 72 do DualTask.tsx) — ou seja, a saliência do alvo muda de bloco em bloco justamente onde a regra alterna, e essa acurácia alimenta a engine adaptativa. A variante E leva a dispersão a **12%** mexendo quase nada no que já está bom: círculo e quadrado encolhem 2%, o triângulo cresce de 80×74 para 88×81 e o losango de 84 para 89.
+
+**Amplitude do volume, medida:** o degradê anda só no eixo L* do CIELAB (±3), com matiz e croma preservados — desvio de matiz medido &lt; 0,2°. ΔE₀₀ de topo a base: 4,34 a 5,82; desvio máximo em relação à cor canônica: **3,02**. O par de cores mais próximo do exercício é vermelho↔laranja a **ΔE₀₀ 19,7**. O degradê representa 15% dessa distância, num eixo (claro-escuro) que não é o eixo pelo qual se nomeia a cor. A restrição 1 está respeitada com folga.
+
+**Onde cada variante rejeitada falha:**
+- **A (hoje)** — borda preta suja, pontas de faca, triângulo com 53% da tinta do quadrado.
+- **B (só tirar o contorno)** — limpa a borda e não faz mais nada: ponta viva e desequilíbrio de peso intactos. É correção parcial.
+- **C (arco tangente, chapada)** — silhueta certa, mas totalmente plana: a peça não assenta no fundo claro. É a opção conservadora se ela rejeitar qualquer volume; não falha em nada clínico.
+- **D (C + volume)** — bonita, mas mantém o triângulo 20% mais leve que o quadrado (60,2 contra 75,6): é E sem a correção que importa.
+- **Equalização a 100%** (na seção 5, não virou variante) — com a mesma área, triângulo e losango passam a *parecer* maiores, porque tamanho percebido não é só área, a extensão da peça também conta; e o quadrado cai para 67 de caixa. Corrigir pela metade foi decisão tomada olhando a renderização, não no papel.
+- **F (volume marcado)** — está lá só para marcar o teto: brilho radial e degradê triplo viram plástico e violam "nada infantil".
+
+## COMO PROVEI (comandos e resultados)
+
+| O que | Como | Resultado |
+|---|---|---|
+| CIEDE2000 correto | 6 casos da tabela de Sharma, `node check.js` | erro &lt; 0,0002 em todos |
+| Arco tangente correto | quadrado gerado × `&lt;rect rx=8&gt;` nativo, renderizados e medidos com PIL | 144×144 px nos dois, **0 pixels divergentes de 20.736** |
+| Arredondar não engorda a peça | área da silhueta amostrada × área do polígono cru | menor nas 3 formas (5706&lt;5776, 3458&lt;3528, 2792&lt;2960) |
+| Ajuste de caixa converge | `fitToBox` no triângulo, alvo 80×74 | 80,000×74,000 |
+| Ida e volta sRGB↔Lab | 5 cores | hexadecimal idêntico |
+| Degradê não desloca a cor | ΔE₀₀ por cor, matiz medido | desvio máx. 3,02 ΔE₀₀; matiz &lt; 0,2°; par mais próximo 19,7 |
+| A página desenha o que digo | Chrome headless 1× e 2×, 8 recortes inspecionados visualmente | conferido: variantes, 5 cores, 3 tamanhos, raios, peso ótico |
+| **O código entregue é a variante E** | duas páginas de layout idêntico (SVG da página × SVG do trecho), PNG contra PNG | **0 pixels divergentes de 180.400** |
+
+Um defeito meu apareceu e foi corrigido no caminho: o trecho de código estava emitindo a geometria de 100% em vez da recomendada — foi o teste pixel a pixel que pegou.
+
+## O código, pronto para portar
+
+Substitui a `ShapeSvg` inteira (linhas 136–147 de `/Users/kamyllahonorio/neuropeak/components/exercises/attention/DualTask.tsx`).
+
+**Como os cantos foram calculados.** Para cada vértice `V` com vizinhos `A` e `B`: `û = norm(A−V)`, `ŵ = norm(B−V)`, ângulo interno `θ = acos(û·ŵ)`. Os pontos de tangência ficam a `d = r / tan(θ/2)` de `V` sobre cada aresta, e o canto vira `L T1` + `A r r 0 0 1 T2` (varredura 1 porque os vértices estão em ordem horária na tela). O arco **retrai** a ponta em `r/sen(θ/2) − r` — 8 unidades no ápice do triângulo, 3,3 nas pontas do losango. Por isso o polígono matemático foi **reexpandido** até a silhueta medida bater na caixa alvo; os vértices calculados caem fora da silhueta visível, e é por isso que o `d` final vai como constante em vez de ser recalculado em tempo de execução.
+
+```tsx
+// Silhuetas com vértices arredondados por arco tangente (raio 8) e peso ótico corrigido.
+const SHAPE_PATH: Record&lt;ShapeKind, string&gt; = {
+  circle:   "M 9.036 50 A 40.964 40.964 0 1 0 90.964 50 A 40.964 40.964 0 1 0 9.036 50 Z",
+  square:   "M 13.211 21.211 A 8 8 0 0 1 21.211 13.211 L 78.789 13.211 A 8 8 0 0 1 86.789 21.211 L 86.789 78.789 A 8 8 0 0 1 78.789 86.789 L 21.211 86.789 A 8 8 0 0 1 13.211 78.789 Z",
+  triangle: "M 42.995 13.649 A 8 8 0 0 1 57.005 13.649 L 92.852 78.621 A 8 8 0 0 1 85.847 90.486 L 14.153 90.486 A 8 8 0 0 1 7.148 78.621 Z",
+  diamond:  "M 44.343 7.843 A 8 8 0 0 1 55.657 7.843 L 92.157 44.343 A 8 8 0 0 1 92.157 55.657 L 55.657 92.157 A 8 8 0 0 1 44.343 92.157 L 7.843 55.657 A 8 8 0 0 1 7.843 44.343 Z",
+};
+
+// Degradê de baixa amplitude: apenas o eixo L* do CIELAB (±3), matiz e croma preservados.
+const SHAPE_SHADE: Record&lt;ShapeColor, { top: string; bottom: string; edge: string }&gt; = {
+  green  : { top: "#25ab51", bottom: "#009b43", edge: "#008639" },
+  red    : { top: "#f94d4b", bottom: "#e53a3d", edge: "#cf212d" },
+  blue   : { top: "#356af4", bottom: "#0a5ce2", edge: "#004cc1" },
+  yellow : { top: "#f3bb1a", bottom: "#e0ab00", edge: "#c99900" },
+  orange : { top: "#ff7d29", bottom: "#ef6b09", edge: "#d45c00" },
+};
+
+function ShapeSvg({ color, kind, size = 90 }: { color: ShapeColor; kind: ShapeKind; size?: number | string }) {
+  const d = SHAPE_PATH[kind];
+  const s = SHAPE_SHADE[color];
+  const uid = `${color}-${kind}`;
+  return (
+    &lt;svg width={size} height={size} viewBox="0 0 100 100" style={{ overflow: "visible" }}&gt;
+      &lt;defs&gt;
+        &lt;linearGradient id={`sg-${uid}`} x1="0" y1="0" x2="0" y2="1"&gt;
+          &lt;stop offset="0" stopColor={s.top} /&gt;
+          &lt;stop offset="1" stopColor={s.bottom} /&gt;
+        &lt;/linearGradient&gt;
+        &lt;filter id={`sf-${uid}`} x="-40%" y="-40%" width="180%" height="180%"&gt;
+          &lt;feDropShadow dx="0" dy="1.6" stdDeviation="1.6" floodColor="#0F172A" floodOpacity="0.18" /&gt;
+        &lt;/filter&gt;
+        &lt;clipPath id={`sc-${uid}`}&gt;&lt;path d={d} /&gt;&lt;/clipPath&gt;
+      &lt;/defs&gt;
+      &lt;path d={d} fill={`url(#sg-${uid})`} filter={`url(#sf-${uid})`} /&gt;
+      &lt;g clipPath={`url(#sc-${uid})`}&gt;
+        &lt;path d={d} fill="none" stroke={s.edge} strokeWidth={2} opacity={0.5} /&gt;
+      &lt;/g&gt;
+    &lt;/svg&gt;
+  );
+}
+```
+
+A chave `cor-forma` no `id` é obrigatória: o estímulo grande e o ícone de 18 px podem coexistir com a mesma cor e forma, e aí o `id` repete — o que é inofensivo porque a chave determina integralmente o conteúdo das definições. Encurtar a chave (só a forma, por exemplo) quebraria: duas cores compartilhariam o mesmo degradê.
+
+## O QUE NÃO FIZ (limites e dúvidas)
+
+- **Não apliquei nada no projeto.** `DualTask.tsx` está intocado, nada foi commitado, nada foi enviado. O despacho pedia a página; a integração é decisão dela.
+- **Comportamento em produção: DESCONHECIDO.** Não rodei `npm run build`, `lint`, `test` nem tsc, porque não integrei. Em particular, **não medi o custo do `filter` com desfoque** num elemento que o framer-motion anima (`scale`/`opacity`) a cada 1,6–2,6 s; num único SVG pequeno é provável que seja irrelevante, mas provável não é medido. Se ela quiser risco zero de desempenho, a variante C (sem filtro) entrega 90% do ganho.
+- **A avaliação visual foi minha, em Chrome headless no macOS**, a 1× e 2×. Não vi em aparelho real, nem no monitor dela, nem no tema GAMIFIED em uso, nem em movimento (a forma fica ~2 s e entra com `scale 0.6→1`). Volume sutil em peça animada pode ler diferente do que em imagem parada.
+- **A correção de peso ótico a 50% é julgamento de desenho**, apoiado na medida de área e na leitura das renderizações — não é resultado de teste com paciente. A página mostra 0%, 50% e 100% justamente para ela discordar com os três à vista.
+- **Não tratei acessibilidade.** A tabela de contraste registra um dado que já existe e não foi introduzido por mim: o **amarelo tem 1,82:1 contra o fundo claro**. Para um exercício que depende de nomear cor, isso merece uma tarefa própria — não mexi na paleta porque estava fora do despacho.
+- **Não mexi em nada clínico:** mesma paleta, mesmas 4 formas, mesma taxonomia, mesma lógica de alvo e distrator.</result>
+<usage><subagent_tokens>166360</subagent_tokens><tool_uses>61</tool_uses><duration_ms>1610661</duration_ms></usage>
+</task-notification>
