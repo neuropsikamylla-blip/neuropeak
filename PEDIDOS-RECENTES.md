@@ -1,65 +1,48 @@
 # As 3 ultimas especificacoes dela (automatico; a mais nova por ultimo)
 # Na retomada: ler as 3, conectar com PROGRESSO.md e git, declarar e seguir.
 
-## 31/08/2026 16:22
+## 31/08/2026 16:32
 <task-notification>
-<task-id>ad328334874006e34</task-id>
-<tool-use-id>toolu_016gc4Yf11v58A6qCBARZ3oi</tool-use-id>
-<output-file>/private/tmp/claude-501/-Users-kamyllahonorio-neuropeak/9e4c2936-1fb4-4a9c-a53a-3ad1aad1cf37/tasks/ad328334874006e34.output</output-file>
+<task-id>aaadbc92b4118e1d3</task-id>
+<tool-use-id>toolu_019w1NTB68PFmkdZo9NYQwfn</tool-use-id>
+<output-file>/private/tmp/claude-501/-Users-kamyllahonorio-neuropeak/9e4c2936-1fb4-4a9c-a53a-3ad1aad1cf37/tasks/aaadbc92b4118e1d3.output</output-file>
 <status>completed</status>
-<summary>Agent "Atualizar PROGRESSO com evidência" finished</summary>
+<summary>Agent "Varrer avisos de omissão nos exercícios" finished</summary>
 <note>A task-notification fires each time this agent stops with no live background children of its own. The user can send it another message and resume it, so the same task-id may notify more than once.</note>
 <result>## O QUE MUDOU
 
-`/Users/kamyllahonorio/neuropeak/PROGRESSO.md` — só o bloco `## 🚧 EM ANDAMENTO — Dupla Tarefa` (linhas 6–42 do arquivo antigo) foi substituído. Nenhum outro bloco tocado: o diff começa na linha 3 do arquivo e termina antes de `## 🚧 EM ANDAMENTO — Sessão de uso dela (28/ago/2026)`, que aparece só como contexto (`git diff --stat`: 68 inserções, 19 remoções, 1 arquivo).
+Um único arquivo criado, nenhum componente tocado:
 
-Conteúdo: passos 2, 3 e 4 marcados concluídos (com os 4 defeitos da colheita nomeados um a um), dois sub-itens novos `3a` (v2.98.3, variante E, `23ac56a`) e `3b` (v2.98.4, saída do "Ritmo", `db66428`), passo 5 como PARCIAL com o número de commits medido, passo 6 PENDENTE, subseção `### Decisões abertas com ela` com os três itens, e uma linha nova de roteamento para o agente `diretor`.
-
-Backup datado antes de escrever: `/Users/kamyllahonorio/neuropeak/PROGRESSO.md.bak-20260831` (untracked — apague ou ignore como preferir).
+- `/Users/kamyllahonorio/neuropeak/docs/auditoria-aviso-omissao/AUDITORIA-AVISO-OMISSAO-2026-08-31.md` (271 linhas): regra no topo com as palavras dela, método de enumeração, tabela de achados ordenada por classificação, e a seção "O que NÃO é achado" com 6 subseções de falsos positivos descartados.
 
 ## COMO PROVEI
 
-```
-$ npx tsc --noEmit; echo "EXIT=$?"
-EXIT=0
-```
+- Enumeração: `find components/exercises -name "*.tsx" | wc -l` → **55**; `ls -1 lib/tutorial/definitions/*.tsx` → **10**. **65 arquivos varridos** (mais os `.ts` de `executive/caminhos-meta/` e grep de strings de aviso em `lib/**` e `data/**`, sem ocorrência). Exit 0 em todos os comandos.
+- Grep pelas pistas do despacho: **42 arquivos casaram**, **7 têm achado real** após leitura. O critério decisivo foi rastrear quem chama a função que pinta a tela (`grep -n "finishMaze("`, `grep -n "endRound()"`, etc.): se a única origem é `setTimeout`/`setInterval` sem gesto, é aviso passivo.
+- Commit modelo lido linha a linha (`git show dee21e1`) e memória `principio-sem-dica-apos-instrucao.md` lida; conferido `git show d4596fa --stat` para saber que Supermercado e Restaurante ficaram de fora por decisão dela.
+- Prova de não-alteração: `git status --short` → `?? docs/auditoria-aviso-omissao/` e nada mais, exit 0. Não rodei `tsc` nem testes porque nenhuma linha de código foi tocada — não haveria o que provar.
 
-```
-$ npm run test &gt; .../test.log 2&gt;&amp;1; echo "EXIT=$?"; tail -8 .../test.log
-EXIT=0
- RUN  v4.1.7 /Users/kamyllahonorio/neuropeak
+**Contagem: 5 AVISO PASSIVO, 2 AMBÍGUO, 0 reclassificados como feedback de ação entre os achados.**
 
- Test Files  55 passed (55)
-      Tests  753 passed (753)
-   Start at  16:19:49
-   Duration  15.72s (transform 2.24s, setup 0ms, import 3.75s, tests 25.11s, environment 3ms)
-```
-(rodei sem pipe justamente para capturar o exit code; a primeira tentativa com `| tail` devolveu `PIPESTATUS` vazio no zsh e foi descartada)
+Os 3 casos mais claros:
 
-```
-$ grep -n "SUPERIOR\|INFERIOR\|Em cima\|Embaixo\|N-back" components/exercises/attention/DualTask.tsx; echo "EXIT=$?"
-EXIT=1
-```
-(nenhuma linha; exit 1 = nada encontrado)
+1. **Focus Agentes** `components/exercises/attention/FocusAgents.tsx:323` — faixa vermelha "✗ Acabou o tempo!" **e** o alvo não tocado é ampliado enquanto os demais escurecem. Carimba a omissão e entrega a resposta. O irmão dele na linha 240 diz "✗ Passou! Toque mais rápido.", que ainda dá ordem de estratégia. Em ambos, `omissions` continua no metadata: remover o aviso não perde medida.
+2. **Labirinto** `components/exercises/executive/Labirinto.tsx:1013` — "⏰ Tempo!" em vermelho sobre a arena. `finishMaze(false)` tem uma única origem no arquivo, a linha 793 (`elapsed &gt;= timeLimit`); nenhuma ação do paciente leva a essa tela. `solved:false` sobrevive.
+3. **Compra Multifuncional** `components/exercises/executive/CompraMultifuncional.tsx:266` — quando o cronômetro zera, o app confirma "o que houver" e mostra "💡 Veja a conta" com a conta resolvida. Se ele não digitou nada, o app corrige uma resposta que ele não deu.
 
-```
-$ git log --oneline origin/main..HEAD | wc -l
-      42
-$ git log --oneline origin/main..HEAD | tail -3
-afe3bd6 Spec do Codex: palco padrao + correcao do MOT (fatia 1)
-e182a19 Spec do padrao de palco: 3 larguras, fundos preservados
-e281113 Auditoria de layout dos exercicios: 3 defeitos estruturais + 1 bug no MOT
-```
+Onde fiquei em dúvida:
 
-Fatos do despacho conferidos no código, não copiados: `speedLabel` segue nas 10 linhas de `LEVELS` (linhas 36–45), `Clock`/"Ritmo:" não existem mais como texto de tela (única ocorrência de "Ritmo" é comentário na linha 34), `feDropShadow` na linha 191 e `clipPath` nas 193/196, `blockTarget` definido na linha 72 e citado no comentário de peso ótico (linha 148), commits `37a47fa`/`23ac56a`/`db66428` existem e tocam os arquivos esperados.
-
-**Duas divergências em relação ao despacho, ambas medidas:**
-
-1. **43 → são 42 commits, não 41.** Entrou um `checkpoint automatico` (`32df1eb`) entre o seu levantamento e o meu. Registrei 42 no arquivo, com a data/hora da medição e a nota de que o número sobe sozinho a cada checkpoint.
-2. **O botão de voltar já não está mais no código.** O status inicial da árvore era limpo (só `M PEDIDOS-LOG.md`); ao final apareceu `M components/exercises/attention/DualTask.tsx` com uma edição que **eu não fiz** — alguém trabalhou em paralelo na mesma working tree, removendo o botão (`useRouter`, `ArrowLeft`, o `&lt;button&gt;` do header) **e** o feedback de omissão (`fb-miss`), com comentário citando *"nao precisa avisar e' treino"* datado de 31/ago. Não commitado. Não mexi nesse arquivo; anotei o fato como ⚠️ dentro do item 2 das decisões abertas, sem apagar a decisão original.
+- **Semáforo** (`processing/Semaforo.tsx:206`) — classifiquei AMBÍGUO por ser tarefa de TR, mas achei coisa pior que estética: o timeout chama `handleResponse(false, ...)` e `pressedAdvance:false` significa literalmente "apertou PARAR". Com sinal vermelho, **a omissão é contada como acerto e a tela mostra "✓ Certo!"**. Isso infla a acurácia e move a progressão — precisa de decisão dela independentemente do aviso.
+- **Tempo de Reação** (`processing/TempoReacao.tsx:233`) — AMBÍGUO. O flash vermelho da tela inteira é o **mesmo** do toque errado (linha 227): hoje o paciente não distingue "errei" de "deixei passar", e o metadata também não distingue.
+- **Busca Rápida** (`processing/CorridaContraOTempo.tsx:398`) — classifiquei AVISO PASSIVO, mas o mesmo painel também aparece quando ele coleta tudo antes do tempo, e aí é feedback de ação. Declarei o meio-termo no documento.
+- **Zona cinzenta que deixei sem decidir**: a linha "Itens omitidos: N" na tela de resultado final da Busca Rápida (`:420`). É a tela de resultados, não a execução — se a regra dela alcançar a tela final, é o único ponto do app que a violaria.
 
 ## O QUE NÃO FIZ
 
-Não commitei nem dei push (commit é do VP; a árvore está com 4 arquivos modificados, incluindo a edição concorrente do `DualTask.tsx`). Não rodei `npm run build` — o dev server na porta 3000. Não toquei em nenhum outro bloco do `PROGRESSO.md`, nem em `ESTADO-DO-PROJETO.md`, `PEDIDOS-*.md` ou código. Não verifiquei visualmente a tela (passo 6 é dela). Não medi o custo do `feDropShadow` nem o contraste do amarelo — ficaram registrados como pendências, não como fatos verificados por mim.</result>
-<usage><subagent_tokens>45065</subagent_tokens><tool_uses>17</tool_uses><duration_ms>179703</duration_ms></usage>
+- Não alterei nenhum componente de exercício, nem "de passagem".
+- Não commitei nada.
+- Não rodei `npm run build` (dev server dela na porta 3000), nem `tsc`/testes — sem alteração de código, não havia o que provar.
+- Não decidi a fronteira dos casos AMBÍGUOS (Tempo de Reação e Semáforo): registrei e devolvi a decisão.
+- Não investiguei se o bug de acurácia do Semáforo aparece nos relatórios do terapeuta — está fora do despacho.</result>
+<usage><subagent_tokens>115868</subagent_tokens><tool_uses>76</tool_uses><duration_ms>516601</duration_ms></usage>
 </task-notification>
