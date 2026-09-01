@@ -3,7 +3,7 @@
 > Checkpoint de contexto para continuidade entre sessões. Atualizado automaticamente.
 > 👉 Visão geral e handoff para o próximo Claude: **`ESTADO-DO-PROJETO.md`** (leia primeiro).
 
-## ✅ CONCLUÍDO — Dupla Tarefa: reconstrução da interface (29-31/ago/2026)
+## 🚧 EM ANDAMENTO — Dupla Tarefa: reconstrução da interface (29/ago/2026, estado em 31/ago)
 
 Pedido dela com mockup anexado (desktop + celular), nas palavras dela: *"Quero que você recrie a
 tela 'Dupla Tarefa' seguindo exatamente esta nova direção de layout. A prioridade é deixar a
@@ -14,8 +14,6 @@ Quero apenas uma melhoria substancial de UI/UX e responsividade."*
 instruções com ícone, **um** painel integrado (estímulo em cima, divisória finíssima,
 "Número atual" + card do número + botão IGUAL lado a lado embaixo) e rodapé de uma linha. Saíram os
 rótulos **"SUPERIOR"**, **"INFERIOR"**, **"Em cima"**, **"Embaixo"** e **"N-back"** do texto visível.
-
-**Entregue nas versões v2.98.2 a v2.98.5** — commits `37a47fa`, `23ac56a`, `db66428`, `dee21e1`.
 
 - [x] **Passo 1 — spec escrita e commitada.** `docs/specs-codex/spec-dupla-tarefa-ui-20260829.md`,
       commit `3ff263a`. *Critério:* seção 0 congela a lógica (LEVELS, geradores, loops, handlers,
@@ -63,7 +61,10 @@ rótulos **"SUPERIOR"**, **"INFERIOR"**, **"Em cima"**, **"Embaixo"** e **"N-bac
       - Ficam o **✓ do acerto** e o **✕ do toque errado**, que respondem a um gesto DELA.
       - **O botão de voltar saiu** com o `useRouter` e o `ArrowLeft`. Commit `dee21e1`.
       - 📌 **Regra que vale além deste exercício:** *o app não comenta o que o paciente deixou de
-        fazer.* Virou tarefa própria — ver o bloco seguinte (auditoria + 6 pontos corrigidos).
+        fazer.* É a mesma regra do erro que ela fechou em 28/ago para os de memória (sai a
+        MENSAGEM, o erro continua visível), agora estendida ao **aviso passivo**. Registrada na
+        memória `principio-sem-dica-apos-instrucao`. **A varrer:** quais dos outros 32 exercícios
+        avisam omissão do mesmo jeito — levantamento oferecido a ela, ainda não autorizado.
 - [x] **Passo 4 — prova rodada em 31/ago/2026.** ✅
       - `npx tsc --noEmit` → **exit 0** (sem pipe, exit code capturado direto).
       - `npm run test` → **exit 0**, `Test Files 55 passed (55)` · `Tests 753 passed (753)`.
@@ -71,23 +72,26 @@ rótulos **"SUPERIOR"**, **"INFERIOR"**, **"Em cima"**, **"Embaixo"** e **"N-bac
         → **exit 1, nenhuma linha** (os cinco rótulos não existem mais no arquivo).
       - `npm run build` **não foi rodado** de propósito: o dev server dela está no ar na porta 3000
         (lição de 28/ago).
-- [x] **Passo 5 — bump + commits feitos.** **v2.98.2**, **v2.98.3**, **v2.98.4** e **v2.98.5**
-      commitadas (`37a47fa`, `23ac56a`, `db66428`, `dee21e1`). ✅ **Publicação segue pendente** —
-      está contabilizada nas *Pendências reais* do bloco das Torres, mais abaixo.
+- [ ] **Passo 5 — bump + commit: PARCIAL.** Os commits existem (**v2.98.2**, **v2.98.3**,
+      **v2.98.4**, **v2.98.5**; `package.json` em `2.98.5`), mas **nada foi publicado**.
+      `git log --oneline origin/main..HEAD | wc -l` → **42 commits locais não publicados** (medido
+      em 31/ago 16:20; o número sobe sozinho a cada checkpoint automático), indo desde a auditoria
+      de layout / migração ao palco (v2.90, commit `e281113`) até a v2.98.5 (`dee21e1`).
+      **O push aguarda decisão dela.**
 - [ ] **Passo 6 — verificação visual dela**, desktop e celular. *Critério:* ela confirma com os
-      olhos nos dois formatos. **PENDENTE — única pendência deste bloco.**
+      olhos nos dois formatos. **PENDENTE.**
 
 ### Decisões abertas com ela
 
-1. **Publicar ou não.** Segue aberta e cresceu: a contagem atual está nas *Pendências reais* do
-   bloco das Torres. A produção está atrás de **toda a migração ao palco**, Cubo Corsi, MOT,
-   Vigilância, os 7 de memória, a Busca Rápida, a Dupla Tarefa, os avisos de omissão e a Torre.
+1. **Publicar ou não.** São 40+ commits locais nunca publicados, de v2.90 a v2.98.5. A produção
+   está atrás de **toda a migração ao palco**, Cubo Corsi, MOT, Vigilância, os 7 de memória e a
+   Busca Rápida.
 2. ~~**O botão de voltar.**~~ **FECHADO em 31/ago:** *"tire o botao voltar"*. Ele tinha entrado na
    v2.98.2 porque estava no mockup, mas nenhum outro exercício tem saída durante a execução e um
    toque acidental descartava a sessão sem salvar. Removido na v2.98.5 (`dee21e1`).
 3. **O amarelo com 1,82:1 de contraste** contra o fundo claro — dívida **preexistente**, não
    introduzida nesta tarefa, achada na medição do diretor. Num exercício que depende de **nomear a
-   cor**, merece tarefa própria. **Segue aberta.**
+   cor**, merece tarefa própria.
 
 ### Roteamento (regra 8)
 
@@ -98,115 +102,6 @@ estruturado e testável" da tabela.
 30-31/ago/2026 — **Dupla Tarefa (acabamento das formas, variante E)** — **agente `diretor`
 (Opus 5, xhigh)** — motivo: decisão de desenho com limite clínico (cor, peso ótico e ΔE), classe
 que não se delega ao lab.
-
-## ✅ CONCLUÍDO — A regra do aviso passivo aplicada em 6 pontos (31/ago/2026)
-
-**A regra, nas palavras dela:** *"tirei esse rologio, nao precisa avisar é treino"* — **o app não
-comenta o que o paciente deixou de fazer.** É a irmã da regra do erro fechada em 28/ago (sai a
-MENSAGEM, o erro continua visível), agora estendida ao **aviso passivo**: sai o carimbo da omissão,
-**nunca a medida**. Registrada na memória `principio-sem-dica-apos-instrucao`.
-
-**Auditoria que originou o lote:** `docs/auditoria-aviso-omissao/AUDITORIA-AVISO-OMISSAO-2026-08-31.md`
-— **65 arquivos varridos**, commit `0d8ae6e`.
-
-- [x] **Semáforo — v2.99.0, commit `10a5050`. O mais grave, e não era estética.** ✅
-      O timeout chamava **o mesmo caminho do botão PARAR**. Consequência clínica: com **sinal
-      vermelho**, não fazer nada era contado como **ACERTO** e a tela ainda mostrava **"Certo!"**.
-      Com a distribuição de **45% verde / 45% vermelho / 10% amarelo**, um paciente **inerte**
-      acertaria **55% da sessão** — e esses falsos acertos entravam no **tempo médio de reação**
-      com o tempo cheio do timeout, contaminando a métrica.
-      Corrigido extraindo função pura em **`lib/semaforo.ts`** com teste próprio, e provado
-      **POR INJEÇÃO**: reintroduzido o bug, **3 testes quebram**.
-- [x] **Lote 1 — v2.99.1, commit `43b42b3`.** ✅
-      - **Focus Agentes, em dois pontos** — a faixa **"Acabou o tempo!"** ainda **AMPLIAVA o alvo
-        não tocado**, ou seja, apontava com o dedo o que ele deixou de fazer;
-      - **Busca Rápida** — saiu **só a origem por tempo**; coletar tudo continua mostrando o
-        fechamento (é resposta a um gesto dela, não a uma ausência);
-      - **Tempo de Reação** — o flash da omissão era **idêntico ao do toque errado**; além de sair
-        o aviso, **a omissão passou a ser medida**, o que não existia.
-- [x] **Labirinto — v2.99.2, commit `b1f42af`.** ✅ Saem o **"⏰ Tempo!"** e a frase
-      *"Tente planejar a rota antes de andar"*. **O painel e as métricas ficam.**
-- [x] **Compra Multifuncional — v2.99.3, commit `a777c5b`. O pior do lote.** ✅
-      O cronômetro **CONFIRMAVA uma resposta que o paciente não deu** e ainda **revelava a conta
-      resolvida**. Agora a etapa termina como **não respondida**, e a **omissão virou medida
-      própria**.
-
-## 🚧 EM ANDAMENTO — Jogo das Torres: reconfiguração completa (31/ago-01/set/2026)
-
-**Fonte da verdade:** `docs/torres/ESPEC-JOGO-DAS-TORRES-KAMYLLA-20260831.md` (**60 seções, escritas
-por ela**) e `docs/torres/PLANO-TECNICO-TORRES-20260831.md` (do VP). Commits `9d42f8e` e `c4dad50`.
-
-**Princípio dela que rege tudo:** *"o paciente precisa resolver o problema, e não jogar contra o
-placar"*.
-
-1. [x] **Fatia 1 — v3.1.0 (`9da4544`).** O **placar (contador de movimentos e mínimo) sai da
-        execução**; a tela de conclusão **informa em vez de cobrar**; **resolver** vira o sucesso;
-        progressão por **eficiência ≤ 1,40**; teto de **8 para 5 discos**; limite de reinícios cai.
-        ⚠️ **Conserto achado na revisão do VP:** a `accuracy` ia virar *"resolvidos ÷ total"* e
-        daria **100% em toda sessão** — e `accuracy` **alimenta a engine adaptativa**
-        (`lib/adaptive.ts:154`, **≥ 0,80 sobe de nível**), então a Torre **subiria de nível para
-        sempre** e ainda **dispararia sozinha a conquista de 100%**. Passou a ser a **proporção de
-        resolvidos com eficiência boa ou adequada** (`TorreHanoi.tsx`, `eficientes / total`).
-2. [x] **Fatia 3 — v3.1.1 (`c76c940`).** O **reinício vira evento** (com movimento e tempo),
-        **movimentos totais × os da solução final**, **latência até o primeiro movimento**,
-        **movimentos inválidos** com a mensagem dela, e **reversões** calculadas por **função pura
-        testada**.
-3. [x] **Fatia 4 — v3.2.0 (`70b5311`).** **Segunda tentativa opcional**, **uma só por problema**,
-        com comparação **sem elogio e sem crítica**. A **PRIMEIRA** tentativa é que alimenta
-        **progressão e acurácia** — a segunda acontece já sabendo que existe caminho melhor.
-4. [x] **Fatia 5 motor — v3.3.0 (`54739df`).** **`lib/torres/`** com **BFS exata sobre os 3^n
-        estados** e **banco de 40 problemas pré-validados** (**5 com 3 discos, 18 com 4, 12 com 5,
-        5 com 6** — os de 6 **todos na fase 6**; **nenhum com 7 ou 8**). **Prova que sustenta
-        tudo:** a BFS bate **exatamente com 2^n−1 de 1 a 6 discos** (`lib/torres/minimo.test.ts`).
-5. [x] **Fatia 5b — v3.4.0 (`de456f5`).** Os **problemas variados chegam à tela**. Vitória deixa
-        de ser *"haste 2 cheia"* e vira **igualdade com o alvo**; o **mínimo vem do problema**; a
-        progressão sobe de **FASE**; e a **tela de objetivo com miniatura** fica **visível** nos
-        alvos arbitrários (**seção 47 dela**: não pode virar jogo de memória).
-6. [x] **Fatia 6 — v3.5.0 (`88b60fd`).** Tabela **`ExerciseAttempt`**: o **abandono deixa de ser
-        invisível**. **MUDANÇA NO BANCO DE PRODUÇÃO com o rito cumprido** — backup em
-        `~/neuropeak-backups/neuropeak-20260901-003324.dump` (**313 KB**), validado com
-        `pg_restore --list` (**580 entradas**, as **7 tabelas do app** conferidas), classificado
-        **nível 1**, e as **3 CHECK de `Session`** conferidas **ANTES e DEPOIS** do push — **as três
-        sobreviveram**.
-7. [~] **Fatia 7 — v3.6.0 (`45e91f5`): PARCIAL.** Entregue o painel **"Tentativas iniciadas"**
-        (iniciados / concluídos / abandonados por exercício) na **aba de sessões do paciente**.
-        **NÃO entregue** o **detalhe por desafio da seção 56**: os dados **já são gravados desde a
-        fatia 3**, mas **não há UMA sessão de `torre-hanoi` no banco** — seria uma tela que
-        **ninguém pode conferir**, com layout que **ela não viu**. Fica para quando existirem dados
-        reais.
-
-### Pendências reais
-
-- **Verificação visual dela — nada disso ela viu ainda com os próprios olhos:** a **Dupla Tarefa**,
-  os **6 pontos de omissão**, o **Semáforo** e a **Torre inteira**.
-- **O detalhe por desafio da seção 56**, esperando **dados reais** de `torre-hanoi`.
-- **84 commits locais não publicados**, da **v2.90 à v3.6.0**.
-  Medido em **01/set/2026, 11:22 (-03)**: `git log --oneline origin/main..HEAD | wc -l` → **84**.
-  Re-medido às **11:26** do mesmo dia → **85**: o **checkpoint automático** commitou sozinho no
-  intervalo (`db27a91`). Ou seja, **o número sobe sozinho** e a contagem só vale com a hora ao lado.
-  **O push aguarda decisão dela.**
-- **A fila do lote 2 da auditoria de layout** e **o amarelo com 1,82:1 de contraste** — ambos
-  seguem **abertos**.
-
-### Provas do estado atual (01/set/2026, 11:22 -03)
-
-- `npx tsc --noEmit` → **exit 0** (rodado sem pipe, exit code capturado direto).
-- `npm run test` → **exit 0**, `Test Files 62 passed (62)` · `Tests 844 passed (844)`.
-- `package.json` em **3.6.0**; `lib/torres/` e `app/api/attempts/route.ts` presentes.
-- `npm run build` **não rodado** de propósito — o dev server dela está no ar na porta 3000.
-
-### Roteamento (regra 8)
-
-- **Codex `gpt-5.6-terra` (high)** — **fatias 1 e 3** das Torres e o **lote 1 dos avisos de
-  omissão**; classe "código estruturado e testável" com spec escrita antes.
-- **Codex `gpt-5.6-sol` (xhigh)** — **Compra Multifuncional** (aviso de omissão) e o **motor BFS**
-  das Torres; classe de raciocínio algorítmico com invariante a provar.
-- **Agente `diretor` (Opus 5, xhigh)** — **variantes de desenho das formas da Dupla Tarefa**;
-  decisão de desenho com limite clínico, que não vai ao lab.
-- ⚠️ **Três despachos em que o Codex FALHOU:** lab `torres-f4` (**erro de terminal**) e lab
-  `torres-f5b` (**voltou vazio duas vezes**). Isso ativou a **exceção 3 da regra 8** (Codex
-  indisponível, com erro comprovado na hora) e levou o **VP a codificar direto** as **fatias 4,
-  5b e o painel de tentativas** — **cada uma com a exceção declarada no próprio commit**.
 
 ## 🚧 EM ANDAMENTO — Sessão de uso dela (28/ago/2026)
 

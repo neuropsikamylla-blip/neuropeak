@@ -9,11 +9,16 @@ export type Fase = 1 | 2 | 3 | 4 | 5 | 6;
  */
 export function faseDaDificuldade(dificuldade: number): Fase {
   const d = Math.round(dificuldade);
-  if (d <= 1) return 1;
-  if (d <= 2) return 2;
-  if (d <= 4) return 3;
-  if (d <= 6) return 4;
-  if (d <= 8) return 5;
+  // Corrigido em 01/set/2026, depois de ela abrir o exercício e dizer "não entendi nada".
+  // O mapeamento anterior levava a dificuldade 3 — que é onde muita gente está — direto à fase
+  // 3, a das configurações embaralhadas e alvos arbitrários. A pessoa caía no meio do épico sem
+  // nunca ter visto a torre clássica. Agora sobe de duas em duas, e as fases 1 e 2 (aprender a
+  // regra e transferência simples) cobrem toda a faixa inicial.
+  if (d <= 2) return 1;
+  if (d <= 4) return 2;
+  if (d <= 6) return 3;
+  if (d <= 7) return 4;
+  if (d <= 9) return 5;
   return 6;
 }
 
