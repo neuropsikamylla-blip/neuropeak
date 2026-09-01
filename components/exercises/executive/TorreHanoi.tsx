@@ -5,6 +5,7 @@ import { motion, AnimatePresence } from "framer-motion";
 import { Check, X } from "lucide-react";
 import { calculateExerciseScore } from "@/lib/scoring";
 import { deveSubirDeNivel, eficiencia } from "@/lib/torre-hanoi";
+import { contarReversoes, type MovimentoTorre } from "@/lib/torres-registro";
 import { useTimedProgress } from "@/components/exercises/useExerciseEngine";
 import { TutorialBase } from "@/components/exercises/TutorialBase";
 import { ExerciseStage } from "@/components/exercises/ExerciseStage";
@@ -19,6 +20,24 @@ interface TorreHanoiProps {
 const MIN_DISCS = 3;
 // Seis discos voltam apenas nas fases avançadas, previstas para a fatia 5.
 const MAX_DISCS = 5;
+
+interface EventoReinicio {
+  movimento: number;
+  tempoMs: number;
+}
+
+interface ResultadoPuzzle {
+  correct: boolean;
+  discs: number;
+  restarts: number;
+  eficiencia: number;
+  movimentosTotais: number;
+  movimentosSolucao: number;
+  invalidos: number;
+  reversoes: number;
+  latenciaMs: number | null;
+  eventosReinicio: EventoReinicio[];
+}
 
 function initialDiscs(difficulty: number) {
   return Math.min(Math.max(MIN_DISCS, Math.floor(difficulty * 0.4) + 2), MAX_DISCS);
@@ -234,7 +253,7 @@ export function TorreHanoi({ difficulty, theme, onComplete }: TorreHanoiProps) {
 
   const [discCount, setDiscCount] = useState(initialDiscs(difficulty));
   const [puzzle, setPuzzle] = useState(0);
-  const [puzzleResults, setPuzzleResults] = useState<{ correct: boolean; discs: number; restarts: number; eficiencia: number }[]>([]);
+  const [puzzleResults, setPuzzleResults] = useState<ResultadoPuzzle[]>([]);
 
   // Puzzle state
   const [pegs, setPegs] = useState<State>(() => initialPegs(initialDiscs(difficulty)));
@@ -242,8 +261,17 @@ export function TorreHanoi({ difficulty, theme, onComplete }: TorreHanoiProps) {
   const [moves, setMoves] = useState(0);
   const [won, setWon] = useState(false);
   const [restartsThisPuzzle, setRestartsThisPuzzle] = useState(0);
+  const [movesBeforeRestarts, setMovesBeforeRestarts] = useState(0);
+  const [restartEvents, setRestartEvents] = useState<EventoReinicio[]>([]);
+  const [invalidMoves, setInvalidMoves] = useState(0);
+  const [movesThisAttempt, setMovesThisAttempt] = useState<MovimentoTorre[]>([]);
+  const [reversoesBeforeRestarts, setReversoesBeforeRestarts] = useState(0);
+  const [showInvalidMove, setShowInvalidMove] = useState(false);
 
   const puzzleStart = useRef<number>(Date.now());
+  // A latência pertence ao problema inteiro: um reinício não apaga o primeiro contato válido.
+  const firstValidMoveAt = useRef<number | null>(null);
+  const invalidMoveTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
 
   // Largura de cada torre (medida) → discos escalam pra caber em qualquer tela.
   const rowRef = useRef<HTMLDivElement>(null);
@@ -255,6 +283,10 @@ export function TorreHanoi({ difficulty, theme, onComplete }: TorreHanoiProps) {
     return () => window.removeEventListener("resize", measure);
   }, [showTutorial]);
 
+  useEffect(() => () => {
+    if (invalidMoveTimer.current !== null) clearTimeout(invalidMoveTimer.current);
+  }, []);
+
   const optimal = optimalMoves(discCount);
 
   function startNewPuzzle(nextDiscs: number) {
@@ -263,17 +295,41 @@ export function TorreHanoi({ difficulty, theme, onComplete }: TorreHanoiProps) {
     setMoves(0);
     setWon(false);
     setRestartsThisPuzzle(0);
+    setMovesBeforeRestarts(0);
+    setRestartEvents([]);
+    setInvalidMoves(0);
+    setMovesThisAttempt([]);
+    setReversoesBeforeRestarts(0);
+    setShowInvalidMove(false);
+    firstValidMoveAt.current = null;
     puzzleStart.current = Date.now();
   }
 
   function restartPuzzle() {
     if (won || moves === 0) return;
 
+    setMovesBeforeRestarts((total) => total + moves);
+    setRestartEvents((eventos) => [...eventos, {
+      movimento: moves,
+      tempoMs: Date.now() - puzzleStart.current,
+    }]);
+    setReversoesBeforeRestarts((total) => total + contarReversoes(movesThisAttempt));
     setPegs(initialPegs(discCount));
     setSelected(null);
     setMoves(0);
     setWon(false);
     setRestartsThisPuzzle((restarts) => restarts + 1);
+    setMovesThisAttempt([]);
+  }
+
+  function flashInvalidMove() {
+    setInvalidMoves((total) => total + 1);
+    setShowInvalidMove(true);
+    if (invalidMoveTimer.current !== null) clearTimeout(invalidMoveTimer.current);
+    invalidMoveTimer.current = setTimeout(() => {
+      setShowInvalidMove(false);
+      invalidMoveTimer.current = null;
+    }, 1200);
   }
 
   function handlePegClick(pegIdx: number) {
@@ -294,6 +350,7 @@ export function TorreHanoi({ difficulty, theme, onComplete }: TorreHanoiProps) {
 
       if (toPeg.length > 0 && toPeg[toPeg.length - 1] < disc) {
         setSelected(null);
+        flashInvalidMove();
         return;
       }
 
@@ -303,13 +360,29 @@ export function TorreHanoi({ difficulty, theme, onComplete }: TorreHanoiProps) {
       setPegs(newPegs);
       const newMoves = moves + 1;
       setMoves(newMoves);
+      const movimento: MovimentoTorre = { disco: disc, de: selected, para: pegIdx };
+      const newMovesThisAttempt = [...movesThisAttempt, movimento];
+      setMovesThisAttempt(newMovesThisAttempt);
+      const movedAt = Date.now();
+      if (firstValidMoveAt.current === null) firstValidMoveAt.current = movedAt;
       setSelected(null);
 
       if (newPegs[2].length === discCount) {
         setWon(true);
         const ef = eficiencia(newMoves, optimal);
 
-        const newPuzzleResults = [...puzzleResults, { correct: true, discs: discCount, restarts: restartsThisPuzzle, eficiencia: ef }];
+        const newPuzzleResults = [...puzzleResults, {
+          correct: true,
+          discs: discCount,
+          restarts: restartsThisPuzzle,
+          eficiencia: ef,
+          movimentosTotais: movesBeforeRestarts + newMoves,
+          movimentosSolucao: newMoves,
+          invalidos: invalidMoves,
+          reversoes: reversoesBeforeRestarts + contarReversoes(newMovesThisAttempt),
+          latenciaMs: firstValidMoveAt.current === null ? null : firstValidMoveAt.current - puzzleStart.current,
+          eventosReinicio: restartEvents,
+        }];
         setPuzzleResults(newPuzzleResults);
 
         // Resolver é sucesso; eficiência boa ou adequada define a progressão.
@@ -336,6 +409,20 @@ export function TorreHanoi({ difficulty, theme, onComplete }: TorreHanoiProps) {
             const restarts = newPuzzleResults.reduce((total, result) => total + result.restarts, 0);
             const puzzlesComReinicio = newPuzzleResults.filter((result) => result.restarts > 0).length;
             const eficienciaMedia = newPuzzleResults.reduce((total, result) => total + result.eficiencia, 0) / newPuzzleResults.length;
+            const movimentosTotais = newPuzzleResults.reduce((total, result) => total + result.movimentosTotais, 0);
+            const movimentosSolucao = newPuzzleResults.reduce((total, result) => total + result.movimentosSolucao, 0);
+            const invalidos = newPuzzleResults.reduce((total, result) => total + result.invalidos, 0);
+            const reversoes = newPuzzleResults.reduce((total, result) => total + result.reversoes, 0);
+            const latencias = newPuzzleResults
+              .map((result) => result.latenciaMs)
+              .filter((latencia): latencia is number => latencia !== null);
+            // `null` é intencional quando não há primeiro movimento válido, evitando NaN no JSON.
+            const latenciaMediaMs = latencias.length > 0
+              ? latencias.reduce((total, latencia) => total + latencia, 0) / latencias.length
+              : null;
+            const reinicios = newPuzzleResults
+              .map((result, index) => ({ puzzle: index + 1, discos: result.discs, eventos: result.eventosReinicio }))
+              .filter((result) => result.eventos.length > 0);
             const score = calculateExerciseScore("torre-hanoi", accuracy, undefined, maxDiscs);
             onComplete({
               exerciseId: "torre-hanoi",
@@ -344,7 +431,21 @@ export function TorreHanoi({ difficulty, theme, onComplete }: TorreHanoiProps) {
               accuracy,
               difficulty: maxDiscs,
               duration: elapsedSec(),
-              metadata: { puzzles: newPuzzleResults.length, maxDiscs, correct: correctCount, resolvidosComBoaEficiencia: eficientes, restarts, puzzlesComReinicio, eficienciaMedia },
+              metadata: {
+                puzzles: newPuzzleResults.length,
+                maxDiscs,
+                correct: correctCount,
+                resolvidosComBoaEficiencia: eficientes,
+                restarts,
+                puzzlesComReinicio,
+                eficienciaMedia,
+                movimentosTotais,
+                movimentosSolucao,
+                invalidos,
+                reversoes,
+                latenciaMediaMs,
+                reinicios,
+              },
             });
           } else {
             setPuzzle(nextPuzzle);
@@ -357,7 +458,7 @@ export function TorreHanoi({ difficulty, theme, onComplete }: TorreHanoiProps) {
   }
 
   if (showTutorial) {
-    return <TorreHanoiTutorial theme={theme} onDone={() => { begin(); setShowTutorial(false); }} />;
+    return <TorreHanoiTutorial theme={theme} onDone={() => { puzzleStart.current = Date.now(); begin(); setShowTutorial(false); }} />;
   }
 
   // Progresso VISUAL do jogo: quantos discos já chegaram ao destino.
@@ -408,6 +509,25 @@ export function TorreHanoi({ difficulty, theme, onComplete }: TorreHanoiProps) {
         {/* Barra de progresso (visual do jogo) */}
         <div className="mt-4 h-2 rounded-full overflow-hidden" style={{ background: "#EEF2F7" }}>
           <div className="h-full rounded-full" style={{ width: `${gameProgress}%`, background: "#1D4ED8", transition: "width .35s ease" }} />
+        </div>
+
+        {/* A linha do aviso ocupa altura FIXA, com ou sem mensagem: se ela entrasse e saísse do
+            fluxo, as torres seriam empurradas para baixo e puxadas de volta a cada movimento
+            inválido — e é justamente quem erra mais que veria a tela pular mais. */}
+        <div className="mt-3 h-5 flex items-center justify-center">
+          <AnimatePresence>
+            {showInvalidMove && (
+              <motion.p
+                className="text-center text-sm"
+                style={{ color: "#475569" }}
+                initial={{ opacity: 0 }}
+                animate={{ opacity: 1 }}
+                exit={{ opacity: 0 }}
+              >
+                Esse movimento não é permitido.
+              </motion.p>
+            )}
+          </AnimatePresence>
         </div>
 
 
