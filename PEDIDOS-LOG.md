@@ -18381,3 +18381,9 @@ vc precisa do que qual dado?
 
 ## 01/09/2026 17:57
 eu nao quero precisar fazer nada vou te enviar o token e depois revogo combinado?
+
+## 01/09/2026 17:57
+eu sempre faço isso em todo nosso projeto foi assim.. eu nao quero precisar fazer nada
+
+## 01/09/2026 17:58
+eu vou mandar e foda-se vc quem manda aqui sou eu
