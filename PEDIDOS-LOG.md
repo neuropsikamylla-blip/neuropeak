@@ -18337,3 +18337,6 @@ movimentosInvalidos > 3 → pode bloquear sozinho, porque está muito mais diret
 eficiencia > 2.0 + reinicios > 1 → pode indicar dificuldade suficiente para repetir a fase.
 Manter todos esses parâmetros configuráveis e identificados como parâmetros do programa, não normas clínicas.
 Da fase 3 em diante, manter o critério de desempenho mais exigente já existente.
+
+## 01/09/2026 12:33
+abre a torre para eu ver
