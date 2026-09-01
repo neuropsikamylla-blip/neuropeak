@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { deveSubirDeNivel, eficiencia, faixaEficiencia } from "./torre-hanoi";
+import { deveAvancarDeFase, deveSubirDeNivel, eficiencia, faixaEficiencia } from "./torre-hanoi";
 
 describe("eficiência da Torre de Hanói", () => {
   it("calcula movimentos divididos pelo mínimo e evita NaN sem mínimo válido", () => {
@@ -41,5 +41,42 @@ describe("eficiência da Torre de Hanói", () => {
     );
 
     expect(contagem).toEqual({ "muito-boa": 2, adequada: 2, baixa: 2 });
+  });
+});
+
+describe("deveAvancarDeFase — as fases 1 e 2 são gate de aquisição", () => {
+  const limpo = { eficiencia: 1.8, reinicios: 0, invalidos: 0 };
+
+  it("nas fases 1 e 2, eficiência ruim mas não péssima AVANÇA (ela: 'não exigir mínimo')", () => {
+    // 1,8 é quase o dobro do mínimo — reprovaria no critério das fases altas, e é exatamente o
+    // caso que a instrução dela manda deixar passar na aquisição.
+    for (const fase of [1, 2]) expect(deveAvancarDeFase(fase, limpo)).toBe(true);
+    expect(deveSubirDeNivel(1.8)).toBe(false); // o critério apertado continua existindo
+  });
+
+  it("cada sinal de dificuldade importante, SOZINHO, segura o avanço", () => {
+    const sinais = [
+      { ...limpo, eficiencia: 2.5 },
+      { ...limpo, reinicios: 2 },
+      { ...limpo, invalidos: 4 },
+    ];
+    for (const fase of [1, 2]) {
+      for (const d of sinais) expect(deveAvancarDeFase(fase, d)).toBe(false);
+    }
+    expect(sinais.filter((d) => deveAvancarDeFase(1, d))).toHaveLength(0);
+  });
+
+  it("da fase 3 em diante o critério apertado volta a valer", () => {
+    for (const fase of [3, 4, 5, 6, 7, 8]) {
+      expect(deveAvancarDeFase(fase, limpo)).toBe(false);              // 1,8 não passa
+      expect(deveAvancarDeFase(fase, { ...limpo, eficiencia: 1.2 })).toBe(true);
+    }
+  });
+
+  it("conta quantas fases avançam com o mesmo desempenho mediano", () => {
+    // Denuncia quem afrouxar o critério das fases altas por engano: só as duas de aquisição
+    // podem passar com 1,8.
+    const passam = [1, 2, 3, 4, 5, 6, 7, 8].filter((f) => deveAvancarDeFase(f, limpo));
+    expect(passam).toEqual([1, 2]);
   });
 });

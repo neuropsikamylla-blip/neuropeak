@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest";
 import { BANCO } from "./banco";
-import { faseDaDificuldade, proximoProblema, type Fase } from "./selecao";
+import { dificuldadeDaFase, faseDaDificuldade, proximoProblema, type Fase } from "./selecao";
 
 const FASES: Fase[] = [1, 2, 3, 4, 5, 6, 7, 8];
 
@@ -72,5 +72,15 @@ describe("proximoProblema", () => {
       expect(unico).toHaveLength(1);
       expect(proximoProblema(fase, [unico[0].id], [], () => 0).id).toBe(unico[0].id);
     }
+  });
+});
+
+describe("dificuldadeDaFase", () => {
+  it("faz a ida e volta nas OITO fases — é o que faz a fase sobreviver à sessão", () => {
+    // O bug de 01/set/2026: a Torre gravava o número de discos como dificuldade e relia isso
+    // como fase, fazendo o paciente REGREDIR a cada retomada. Este teste denuncia a volta dele.
+    const fases: Fase[] = [1, 2, 3, 4, 5, 6, 7, 8];
+    const idaEVolta = fases.map((f) => faseDaDificuldade(dificuldadeDaFase(f)));
+    expect(idaEVolta).toEqual(fases);
   });
 });

@@ -4,10 +4,10 @@ import { useState, useEffect, useRef } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { Check, X } from "lucide-react";
 import { calculateExerciseScore } from "@/lib/scoring";
-import { deveSubirDeNivel, eficiencia } from "@/lib/torre-hanoi";
+import { deveAvancarDeFase, deveSubirDeNivel, eficiencia } from "@/lib/torre-hanoi";
 import { contarReversoes, type MovimentoTorre } from "@/lib/torres-registro";
 import { BANCO, type Problema } from "@/lib/torres/banco";
-import { faseDaDificuldade, proximoProblema, type Fase } from "@/lib/torres/selecao";
+import { dificuldadeDaFase, faseDaDificuldade, proximoProblema, type Fase } from "@/lib/torres/selecao";
 import { useTimedProgress } from "@/components/exercises/useExerciseEngine";
 import { TutorialBase } from "@/components/exercises/TutorialBase";
 import { ExerciseStage } from "@/components/exercises/ExerciseStage";
@@ -527,7 +527,14 @@ export function TorreHanoi({ difficulty, theme, onComplete }: TorreHanoiProps) {
         // Resolver é sucesso; eficiência boa ou adequada define a progressão.
         // A progressão passa a subir de FASE (seção 14: o nível não é o número de discos). O
         // número de discos vem do problema sorteado dentro da fase.
-        const proxFase: Fase = deveSubirDeNivel(ef) ? (Math.min(6, fase + 1) as Fase) : fase;
+        // Nas fases 1 e 2 o critério é o GATE de aquisição (resolveu sem dificuldade importante,
+        // sem exigir o mínimo); da 3 em diante volta o critério de eficiência. São 8 fases.
+        const avanca = deveAvancarDeFase(fase, {
+          eficiencia: ef,
+          reinicios: restartsThisPuzzle,
+          invalidos: invalidMoves,
+        });
+        const proxFase: Fase = avanca ? (Math.min(8, fase + 1) as Fase) : fase;
 
         const nextPuzzle = puzzle + 1;
         const timeUp = isTimeUp();
@@ -578,7 +585,10 @@ export function TorreHanoi({ difficulty, theme, onComplete }: TorreHanoiProps) {
               domain: "executive",
               score,
               accuracy,
-              difficulty: maxDiscs,
+              // A FASE é o que precisa sobreviver à sessão. Enviar `maxDiscs` aqui fazia o
+              // paciente REGREDIR de fase a cada retomada (bug de 01/set/2026); `maxDiscs`
+              // continua no metadata, que é onde ele é informação clínica.
+              difficulty: dificuldadeDaFase(proxFase),
               duration: elapsedSec(),
               metadata: {
                 puzzles: resultados.length,

@@ -22,6 +22,22 @@ export function faseDaDificuldade(dificuldade: number): Fase {
 }
 
 /**
+ * Inverso de `faseDaDificuldade` — e ele existe para consertar um bug achado em 01/set/2026.
+ *
+ * A Torre enviava `difficulty: maxDiscs` (o número de DISCOS) no `onComplete`, e na sessão
+ * seguinte lia esse mesmo número como FASE. Quem chegava à fase 5 jogando problemas de 4 discos
+ * gravava `4` e voltava para a fase 2; quem chegava à fase 8 com 6 discos voltava para a 4. O
+ * progresso de fase não sobrevivia à sessão, e o paciente ficava preso justamente nas fases
+ * iniciais — o oposto do que ela pediu ao definir as fases 1 e 2 como gate de aquisição.
+ *
+ * Devolve, para cada fase, uma dificuldade que `faseDaDificuldade` traduz de volta na MESMA fase.
+ * A ida-e-volta é testada para as oito.
+ */
+export function dificuldadeDaFase(fase: Fase): number {
+  return [2, 4, 5, 6, 7, 8, 9, 10][fase - 1];
+}
+
+/**
  * Escolhe o próximo problema da fase.
  *
  * A aleatoriedade é INJETADA (`aleatorio`, no formato de `Math.random`) para o teste poder ser
