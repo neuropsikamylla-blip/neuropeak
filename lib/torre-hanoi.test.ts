@@ -54,16 +54,45 @@ describe("deveAvancarDeFase — as fases 1 e 2 são gate de aquisição", () => 
     expect(deveSubirDeNivel(1.8)).toBe(false); // o critério apertado continua existindo
   });
 
-  it("cada sinal de dificuldade importante, SOZINHO, segura o avanço", () => {
-    const sinais = [
-      { ...limpo, eficiencia: 2.5 },
-      { ...limpo, reinicios: 2 },
-      { ...limpo, invalidos: 4 },
-    ];
+  it("reinício sozinho NÃO segura: é autorregulação, não incompreensão da regra", () => {
+    // Ajuste dela em 01/set/2026. Reiniciar pode ser perceber que a estratégia não funciona —
+    // o oposto de não ter entendido as regras.
     for (const fase of [1, 2]) {
-      for (const d of sinais) expect(deveAvancarDeFase(fase, d)).toBe(false);
+      expect(deveAvancarDeFase(fase, { ...limpo, reinicios: 5 })).toBe(true);
     }
-    expect(sinais.filter((d) => deveAvancarDeFase(1, d))).toHaveLength(0);
+  });
+
+  it("eficiência baixa sozinha NÃO segura nas fases de aquisição", () => {
+    // "planejamento ainda imaturo... é justamente algo que o exercício deverá treinar nas fases
+    // seguintes" — e ela já tinha proibido exigir o mínimo aqui.
+    for (const fase of [1, 2]) {
+      expect(deveAvancarDeFase(fase, { ...limpo, eficiencia: 3.0 })).toBe(true);
+    }
+  });
+
+  it("os DOIS juntos seguram — dificuldade global", () => {
+    for (const fase of [1, 2]) {
+      expect(deveAvancarDeFase(fase, { eficiencia: 2.5, reinicios: 2, invalidos: 0 })).toBe(false);
+    }
+  });
+
+  it("movimento inválido em excesso segura SOZINHO: fala de aplicar a regra", () => {
+    for (const fase of [1, 2]) {
+      expect(deveAvancarDeFase(fase, { ...limpo, invalidos: 4 })).toBe(false);
+      expect(deveAvancarDeFase(fase, { ...limpo, invalidos: 3 })).toBe(true); // a borda passa
+    }
+  });
+
+  it("conta quais combinações passam no gate — denuncia quem inverter a assimetria", () => {
+    const casos = [
+      { nome: "limpo",                d: limpo,                                          passa: true },
+      { nome: "so reinicios",         d: { ...limpo, reinicios: 5 },                     passa: true },
+      { nome: "so eficiencia ruim",   d: { ...limpo, eficiencia: 3.0 },                  passa: true },
+      { nome: "so invalidos",         d: { ...limpo, invalidos: 4 },                     passa: false },
+      { nome: "eficiencia+reinicios", d: { eficiencia: 2.5, reinicios: 2, invalidos: 0 }, passa: false },
+    ];
+    expect(casos.filter((c) => deveAvancarDeFase(1, c.d)).map((c) => c.nome))
+      .toEqual(["limpo", "so reinicios", "so eficiencia ruim"]);
   });
 
   it("da fase 3 em diante o critério apertado volta a valer", () => {
