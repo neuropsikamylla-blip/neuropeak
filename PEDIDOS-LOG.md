@@ -15598,3 +15598,1606 @@ sim
 
 ## 31/08/2026 21:57
 É que quando o paciente olha la movimento minimo... 15 ai ele percebe que ja errou e que nao vai fazer nesse quantidade ele ja gostaria de reiniciar... talvez podemos deixar o movimento (minimo para nós) mas não fazer o paciente ter de refazer tudo... não sei o que vc acha ?
+
+## 31/08/2026 22:40
+# JOGO DAS TORRES — RECONFIGURAÇÃO COMPLETA
+
+## 1. OBJETIVO COGNITIVO DO EXERCÍCIO
+
+O Jogo das Torres será um exercício inspirado na Torre de Hanói, com foco principal em:
+
+* planejamento;
+* resolução de problemas;
+* flexibilidade cognitiva;
+* monitoramento da própria estratégia;
+* capacidade de corrigir uma estratégia ineficiente;
+* antecipação de consequências;
+* controle da impulsividade durante a resolução;
+* manutenção da meta ao longo de uma sequência de ações.
+
+O objetivo NÃO deve ser fazer o paciente simplesmente decorar a sequência da Torre de Hanói ou atingir obsessivamente o número mínimo de movimentos.
+
+O núcleo do exercício deve ser:
+
+**analisar → planejar → executar → monitorar → perceber inadequações → reorganizar a estratégia → alcançar a solução.**
+
+---
+
+# 2. PRINCÍPIO CENTRAL DA NOVA VERSÃO
+
+A dificuldade do jogo NÃO deve aumentar somente pela quantidade de discos.
+
+Hoje, se a progressão for apenas:
+
+3 discos → 4 discos → 5 discos → 6 discos...
+
+o paciente pode aprender progressivamente a lógica da Torre e começar a repetir estratégias já conhecidas.
+
+Isso continua treinando planejamento, mas diminui progressivamente a exigência de flexibilidade cognitiva.
+
+A nova progressão deve ocorrer em DUAS dimensões:
+
+### DIMENSÃO A — COMPLEXIDADE
+
+Aumentar a quantidade de discos.
+
+### DIMENSÃO B — NOVIDADE DO PROBLEMA
+
+Modificar:
+
+* configuração inicial;
+* haste de destino;
+* distribuição dos discos;
+* problema apresentado;
+* necessidade de reorganização estratégica.
+
+Assim, mesmo que o paciente já conheça a lógica da Torre, novos problemas exigirão que ele volte a analisar a situação.
+
+---
+
+# 3. O QUE O PACIENTE DEVE VER DURANTE A EXECUÇÃO
+
+Durante o jogo, NÃO mostrar:
+
+* número mínimo de movimentos;
+* percentual de eficiência;
+* quantidade “ideal” de movimentos;
+* mensagem dizendo que já ultrapassou o mínimo;
+* indicação de que a estratégia está errada;
+* comparação com desempenho ideal.
+
+Também sugiro NÃO mostrar permanentemente o contador de movimentos durante a execução.
+
+O paciente deve estar concentrado no problema, e não em um placar.
+
+### Tela durante a tarefa
+
+Exibir apenas:
+
+**Sua vez**
+
+[torres]
+
+Botões:
+
+**REINICIAR**
+
+Opcionalmente:
+
+**INSTRUÇÕES**
+
+Não colocar mensagens como:
+
+“Você ainda consegue fazer em 15 movimentos.”
+
+“Você ultrapassou o mínimo.”
+
+“Tente usar menos movimentos.”
+
+“Você está fazendo movimentos demais.”
+
+O sistema não deve perceber o erro pelo paciente.
+
+---
+
+# 4. BOTÃO REINICIAR
+
+Manter o botão **REINICIAR**.
+
+Esse botão é importante porque permite que o paciente perceba:
+
+“Minha estratégia não está funcionando. Preciso construir outra.”
+
+Isso pode representar monitoramento e flexibilidade cognitiva.
+
+Porém:
+
+### Ao clicar em REINICIAR
+
+NÃO apagar os dados daquela tentativa.
+
+O sistema deve registrar internamente:
+
+* que houve reinício;
+* em qual momento ocorreu;
+* quantidade de movimentos antes do reinício;
+* tempo transcorrido antes do reinício.
+
+Depois, a torre volta à configuração inicial daquele problema.
+
+O paciente não deve receber punição ou mensagem negativa.
+
+Pode aparecer apenas:
+
+**Vamos tentar novamente.**
+
+ou simplesmente reiniciar sem mensagem.
+
+---
+
+# 5. IMPORTANTE: FLEXIBILIDADE NÃO É SOMENTE REINICIAR
+
+O paciente também precisa poder corrigir sua estratégia SEM reiniciar.
+
+Exemplo:
+
+Ele percebe que colocou os discos de maneira inadequada.
+
+Em vez de começar tudo novamente, pode:
+
+* desfazer alguns movimentos;
+* reorganizar os discos;
+* construir outro caminho a partir do estado atual.
+
+Isso também deve ser considerado uma forma importante de resolução de problemas.
+
+Portanto, o exercício deve permitir naturalmente:
+
+### Estratégia A
+
+Perceber o problema e corrigir o caminho atual.
+
+### Estratégia B
+
+Perceber que a estratégia ficou muito ruim e decidir reiniciar.
+
+As duas formas são válidas.
+
+---
+
+# 6. O QUE A PRIMEIRA TENTATIVA TREINA
+
+A primeira tentativa deve ser considerada a tentativa mais espontânea.
+
+Ela trabalha principalmente:
+
+* análise do problema;
+* planejamento inicial;
+* antecipação;
+* organização sequencial;
+* execução;
+* monitoramento;
+* resolução de problemas.
+
+Por isso, antes da primeira tentativa, NÃO mostrar o mínimo teórico.
+
+---
+
+# 7. TELA DE CONCLUSÃO
+
+Quando o paciente resolver corretamente o problema:
+
+### Mostrar:
+
+**Muito bem!**
+
+**Você resolveu o desafio em X movimentos.**
+
+Depois:
+
+**O menor caminho possível era Y movimentos.**
+
+Então oferecer:
+
+**Quer tentar encontrar um caminho mais eficiente?**
+
+Botões:
+
+**TENTAR NOVAMENTE**
+
+**CONTINUAR**
+
+---
+
+# 8. POR QUE MOSTRAR O MÍNIMO SOMENTE DEPOIS
+
+Na primeira tentativa, queremos observar e treinar:
+
+“Como eu resolvo este problema?”
+
+Na segunda tentativa, depois de saber que existe uma solução mais curta, o treinamento passa a incluir:
+
+“Como eu posso reorganizar minha estratégia para encontrar uma solução melhor?”
+
+Isso permite trabalhar:
+
+* replanejamento;
+* comparação de estratégias;
+* aprendizagem a partir da experiência;
+* flexibilidade;
+* eficiência estratégica.
+
+Portanto:
+
+### PRIMEIRA TENTATIVA
+
+Resolver o problema.
+
+### SEGUNDA TENTATIVA
+
+Encontrar uma estratégia mais eficiente.
+
+---
+
+# 9. NÃO OBRIGAR O PACIENTE A ATINGIR O MÍNIMO
+
+O número mínimo de movimentos deve ser uma referência matemática e uma métrica interna.
+
+Não deve funcionar como critério rígido de sucesso.
+
+Exemplo:
+
+Se determinado problema possui:
+
+**Mínimo teórico: 15 movimentos**
+
+e o paciente resolve em:
+
+**17 movimentos**
+
+isso NÃO deve ser considerado fracasso.
+
+Ele conseguiu:
+
+* compreender o problema;
+* construir uma estratégia;
+* manter a meta;
+* resolver corretamente.
+
+A diferença foi apenas na eficiência da estratégia.
+
+---
+
+# 10. ÍNDICE DE EFICIÊNCIA
+
+O sistema pode calcular internamente:
+
+**Eficiência = movimentos realizados ÷ mínimo teórico**
+
+Exemplo:
+
+Mínimo = 15
+
+Paciente fez 15:
+
+15 ÷ 15 = **1,00**
+
+Paciente fez 18:
+
+18 ÷ 15 = **1,20**
+
+Paciente fez 21:
+
+21 ÷ 15 = **1,40**
+
+Paciente fez 30:
+
+30 ÷ 15 = **2,00**
+
+---
+
+# 11. FAIXAS INICIAIS DE EFICIÊNCIA
+
+Sugestão inicial:
+
+### Até 1,20
+
+Muito boa eficiência.
+
+Ou seja, até aproximadamente 20% acima do mínimo.
+
+### 1,21 a 1,40
+
+Eficiência adequada.
+
+### Acima de 1,40
+
+Baixa eficiência estratégica.
+
+IMPORTANTE:
+
+Essas faixas devem ser tratadas inicialmente como parâmetros do programa, NÃO como norma neuropsicológica.
+
+Posteriormente elas podem ser ajustadas com base nos dados reais de utilização.
+
+---
+
+# 12. PROGRESSÃO NÃO DEVE DEPENDER APENAS DO MÍNIMO
+
+NÃO usar:
+
+“Só passa de nível se fizer exatamente o mínimo.”
+
+Isso deixa o exercício excessivamente rígido e aproxima a tarefa de otimização matemática.
+
+A progressão deve considerar:
+
+* resolução correta;
+* eficiência;
+* quantidade de reinícios;
+* tempo;
+* estabilidade do desempenho;
+* desempenho em diferentes configurações.
+
+---
+
+# 13. SUGESTÃO DE REGRA DE PROGRESSÃO
+
+O sistema pode observar os últimos desafios realizados naquele nível.
+
+### SUBIR DE DIFICULDADE
+
+Quando houver:
+
+* resolução correta;
+* boa ou adequada eficiência;
+* poucos reinícios;
+* desempenho consistente em configurações diferentes.
+
+### MANTER NÍVEL
+
+Quando:
+
+* consegue resolver;
+* mas ainda utiliza muitos movimentos;
+* realiza muitos reinícios;
+* demonstra grande oscilação entre problemas.
+
+### REDUZIR COMPLEXIDADE
+
+Quando houver repetidamente:
+
+* abandono;
+* incapacidade de concluir;
+* excesso de reinícios;
+* tempo muito elevado;
+* dificuldade persistente em compreender a estratégia.
+
+---
+
+# 14. NÃO USAR SOMENTE QUANTIDADE DE DISCOS COMO NÍVEL
+
+Criar um sistema em que cada nível possua diferentes tipos de problema.
+
+Por exemplo:
+
+## NÍVEL 1
+
+3 discos.
+
+Configuração clássica.
+
+Esquerda → direita.
+
+Objetivo: aprender a lógica.
+
+---
+
+## NÍVEL 2
+
+3 discos.
+
+Diferentes destinos.
+
+Exemplo:
+
+Esquerda → centro.
+
+Centro → direita.
+
+Direita → esquerda.
+
+Começa a impedir automatização da resposta espacial.
+
+---
+
+## NÍVEL 3
+
+3 discos.
+
+Configurações iniciais diferentes.
+
+Exemplo:
+
+Alguns discos já distribuídos entre as hastes.
+
+Paciente precisa analisar o estado atual antes de agir.
+
+---
+
+## NÍVEL 4
+
+4 discos.
+
+Configuração clássica.
+
+---
+
+## NÍVEL 5
+
+4 discos.
+
+Destino variável.
+
+---
+
+## NÍVEL 6
+
+4 discos.
+
+Configuração inicial variável.
+
+---
+
+## NÍVEL 7
+
+4 discos.
+
+Problemas intermediários mais complexos.
+
+---
+
+## NÍVEL 8
+
+5 discos.
+
+Configuração clássica.
+
+---
+
+## NÍVEL 9
+
+5 discos.
+
+Destino variável.
+
+---
+
+## NÍVEL 10
+
+5 discos.
+
+Configuração inicial variável.
+
+---
+
+E assim sucessivamente.
+
+---
+
+# 15. VARIAÇÕES DE PROBLEMA
+
+Para realmente treinar resolução de problemas e flexibilidade, utilizar vários formatos.
+
+## TIPO A — TORRE CLÁSSICA
+
+Todos os discos começam em uma haste.
+
+Exemplo:
+
+Esquerda → direita.
+
+Treina principalmente:
+
+* planejamento;
+* sequenciamento;
+* antecipação.
+
+---
+
+# 16. TIPO B — DESTINO VARIÁVEL
+
+Manter a configuração inicial, mas mudar a haste-alvo.
+
+Exemplo:
+
+Agora organize todos os discos na haste CENTRAL.
+
+Em outro desafio:
+
+Organize todos os discos na haste ESQUERDA.
+
+Isso reduz automatização.
+
+---
+
+# 17. TIPO C — CONFIGURAÇÃO INICIAL VARIÁVEL
+
+O paciente não começa necessariamente com todos os discos organizados na mesma haste.
+
+Exemplo:
+
+Haste esquerda:
+
+discos 4 e 2.
+
+Haste central:
+
+discos 3 e 1.
+
+Objetivo:
+
+organizar todos na haste direita.
+
+Isso aumenta fortemente a necessidade de:
+
+* análise;
+* resolução de problemas;
+* planejamento a partir do estado atual.
+
+---
+
+# 18. TIPO D — CONFIGURAÇÃO-ALVO DIFERENTE
+
+Nem sempre o objetivo precisa ser uma torre completa em uma única haste.
+
+Pode ser apresentada visualmente uma configuração final que deve ser reproduzida.
+
+Exemplo:
+
+**“Organize os discos para ficar igual ao modelo.”**
+
+Mostrar a configuração-alvo em miniatura.
+
+Isso transforma o exercício em um problema de transformação de estados.
+
+---
+
+# 19. TIPO E — NOVO PROBLEMA APÓS APRENDIZAGEM
+
+Depois que o paciente resolve algumas Torres clássicas, apresentar uma configuração nova.
+
+Isso força:
+
+**“A estratégia que eu estava usando funciona aqui?”**
+
+Se não funcionar:
+
+**“Preciso construir uma estratégia diferente.”**
+
+É aqui que a flexibilidade cognitiva fica particularmente interessante.
+
+---
+
+# 20. O QUE NÃO MUDAR
+
+Manter as regras básicas da Torre:
+
+* mover apenas um disco por vez;
+* nunca colocar um disco maior sobre um menor.
+
+Essas regras devem permanecer constantes.
+
+Não precisamos ficar mudando regras artificialmente apenas para dizer que estamos trabalhando flexibilidade.
+
+A flexibilidade pode vir da necessidade de adaptar a estratégia a diferentes problemas.
+
+---
+
+# 21. INSTRUÇÃO INICIAL
+
+Sugestão:
+
+**Jogo das Torres**
+
+Seu objetivo é organizar os discos conforme o modelo indicado.
+
+Você pode mover apenas um disco por vez.
+
+Um disco maior nunca pode ser colocado sobre um disco menor.
+
+Observe o problema antes de começar e pense na melhor forma de chegar ao objetivo.
+
+Se perceber que sua estratégia não está funcionando, você pode reorganizar seus movimentos ou reiniciar o desafio.
+
+---
+
+# 22. EVITAR INSTRUÇÕES QUE ENTREGUEM A ESTRATÉGIA
+
+Não escrever:
+
+“Planeje três movimentos antes.”
+
+“Primeiro mova o menor disco.”
+
+“Use a haste central como apoio.”
+
+“Evite movimentar o disco maior.”
+
+Essas informações diminuem a necessidade de resolução de problemas.
+
+---
+
+# 23. FEEDBACK DURANTE A EXECUÇÃO
+
+O feedback deve ser mínimo.
+
+### Movimento válido
+
+Somente executar.
+
+Nenhuma mensagem necessária.
+
+### Movimento inválido
+
+Exemplo: colocar disco maior sobre menor.
+
+Mostrar:
+
+**Esse movimento não é permitido.**
+
+Não explicar qual movimento ele deveria realizar.
+
+---
+
+# 24. FEEDBACK APÓS RESOLUÇÃO
+
+Primeira conclusão:
+
+**Muito bem! Você resolveu o desafio em 19 movimentos.**
+
+**O menor caminho possível era 15 movimentos.**
+
+**Quer tentar encontrar um caminho mais eficiente?**
+
+[TENTAR NOVAMENTE]
+
+[CONTINUAR]
+
+---
+
+# 25. SEGUNDA TENTATIVA
+
+Se escolher tentar novamente:
+
+Não mostrar o contador mínimo durante a execução.
+
+Ele já sabe que existe uma solução mais eficiente.
+
+Pode aparecer apenas:
+
+**Tente encontrar uma estratégia mais eficiente.**
+
+Nada além disso.
+
+---
+
+# 26. APÓS A SEGUNDA TENTATIVA
+
+Exemplo:
+
+Primeira tentativa:
+
+19 movimentos.
+
+Segunda tentativa:
+
+16 movimentos.
+
+Mostrar:
+
+**Você encontrou um caminho mais eficiente.**
+
+**1ª tentativa: 19 movimentos**
+
+**2ª tentativa: 16 movimentos**
+
+Não precisa colocar:
+
+“Excelente!”
+
+“Perfeito!”
+
+“Você é muito bom!”
+
+A informação de melhora já funciona como feedback.
+
+---
+
+# 27. SE A SEGUNDA TENTATIVA FOR PIOR
+
+Exemplo:
+
+Primeira: 19.
+
+Segunda: 23.
+
+Não mostrar mensagem negativa.
+
+Mostrar:
+
+**1ª tentativa: 19 movimentos**
+
+**2ª tentativa: 23 movimentos**
+
+**Desafio concluído.**
+
+E seguir.
+
+---
+
+# 28. DADOS QUE DEVEM SER REGISTRADOS
+
+Cada tentativa deve gerar dados, MESMO QUE NÃO SEJA CONCLUÍDA.
+
+Registrar:
+
+* paciente;
+* exercício;
+* data;
+* horário;
+* nível;
+* número de discos;
+* tipo de problema;
+* configuração inicial;
+* configuração-alvo;
+* mínimo teórico;
+* número de movimentos;
+* movimentos válidos;
+* tentativas de movimentos inválidos;
+* tempo total;
+* latência até o primeiro movimento;
+* quantidade de reinícios;
+* movimento em que cada reinício aconteceu;
+* tempo em que cada reinício aconteceu;
+* se concluiu;
+* se abandonou;
+* eficiência;
+* número da tentativa daquele problema;
+* desempenho da tentativa anterior, se houver.
+
+---
+
+# 29. ABANDONO PRECISA SER REGISTRADO
+
+Hoje existe um problema importante:
+
+Se a sessão só é gravada quando o paciente termina, temos:
+
+**exercício nunca realizado**
+
+e
+
+**exercício iniciado e abandonado**
+
+como se fossem a mesma coisa.
+
+Isso precisa mudar.
+
+Quando o paciente iniciar o desafio, já criar um registro.
+
+Status possíveis:
+
+**INICIADO**
+
+**CONCLUÍDO**
+
+**REINICIADO**
+
+**ABANDONADO**
+
+**INTERROMPIDO**
+
+Assim você consegue saber se um determinado nível está fazendo pacientes desistirem.
+
+---
+
+# 30. REGISTRAR REINÍCIOS SEM APAGAR A TENTATIVA
+
+Exemplo:
+
+Paciente começa.
+
+Faz 9 movimentos.
+
+Reinicia.
+
+Faz 14.
+
+Reinicia novamente.
+
+Depois resolve em 18.
+
+O banco deve registrar:
+
+Tentativa/problema:
+
+* reinícios: 2;
+* primeiro reinício no movimento 9;
+* segundo reinício no movimento 14;
+* movimentos da tentativa final: 18;
+* movimentos totais realizados naquele problema;
+* tempo total.
+
+Isso é muito mais informativo do que registrar somente:
+
+“Resolveu em 18.”
+
+---
+
+# 31. DIFERENCIAR MOVIMENTOS DA TENTATIVA FINAL E MOVIMENTOS TOTAIS
+
+Guardar duas métricas:
+
+### MOVIMENTOS DA SOLUÇÃO FINAL
+
+Quantos movimentos foram necessários desde o último reinício até resolver.
+
+### MOVIMENTOS TOTAIS NO PROBLEMA
+
+Todos os movimentos feitos, incluindo tentativas anteriores.
+
+Exemplo:
+
+Tentativa 1: 9 movimentos → reiniciou.
+
+Tentativa 2: 14 → reiniciou.
+
+Tentativa 3: 18 → resolveu.
+
+Movimentos da solução final:
+
+**18**
+
+Movimentos totais:
+
+**41**
+
+Isso diferencia eficiência da solução final de esforço total para chegar à solução.
+
+---
+
+# 32. DADOS DE FLEXIBILIDADE
+
+Não criar um “escore de flexibilidade” simplista agora.
+
+Primeiro registrar os componentes comportamentais.
+
+Exemplos:
+
+* número de reinícios;
+* momento do reinício;
+* quantidade de movimentos após provável impasse;
+* correções sem reiniciar;
+* melhoria entre primeira e segunda tentativa;
+* desempenho diante de configuração nova;
+* desempenho quando muda o destino;
+* abandono.
+
+Depois, com dados acumulados, podemos construir indicadores mais robustos.
+
+---
+
+# 33. CORREÇÃO SEM REINÍCIO
+
+Seria interessante o sistema identificar quando o paciente:
+
+faz determinados movimentos;
+
+depois desfaz parte da sequência;
+
+e encontra uma solução diferente.
+
+Não precisa classificar automaticamente isso como “boa flexibilidade”.
+
+Mas pode registrar padrões de reversão.
+
+Exemplo:
+
+A → B
+
+B → C
+
+C → B
+
+Isso pode indicar reorganização da estratégia.
+
+Não precisa aparecer para o paciente.
+
+---
+
+# 34. LATÊNCIA ATÉ O PRIMEIRO MOVIMENTO
+
+Registrar:
+
+**tempo entre aparecer o problema e o primeiro movimento.**
+
+Essa informação pode ajudar a compreender comportamento de planejamento.
+
+Por exemplo:
+
+Paciente A:
+
+começa em 0,5 segundo.
+
+Paciente B:
+
+observa durante 9 segundos antes de agir.
+
+Isso NÃO significa automaticamente que B planejou melhor.
+
+Mas é uma variável interessante quando integrada ao restante do desempenho.
+
+---
+
+# 35. TEMPO
+
+Registrar tempo total, mas NÃO colocar cronômetro visível como padrão.
+
+Cronômetro visível introduz pressão e muda a natureza do exercício.
+
+Tempo fica como dado interno.
+
+---
+
+# 36. MOVIMENTOS INVÁLIDOS
+
+Se o paciente tentar colocar disco maior sobre menor:
+
+não permitir.
+
+Registrar internamente:
+
+**tentativa de movimento inválido +1**
+
+Mostrar apenas:
+
+**Esse movimento não é permitido.**
+
+---
+
+# 37. COMPLEXIDADE DOS DISCOS
+
+Sugestão de progressão inicial:
+
+### 3 discos
+
+Treino introdutório.
+
+Mínimo clássico: 7.
+
+### 4 discos
+
+Mínimo clássico: 15.
+
+### 5 discos
+
+Mínimo clássico: 31.
+
+### 6 discos
+
+Mínimo clássico: 63.
+
+### 7 discos
+
+Mínimo clássico: 127.
+
+Eu NÃO colocaria 7 discos como parte rotineira da progressão inicialmente.
+
+127 movimentos mínimos já transforma a tarefa em algo muito longo.
+
+6 discos também deve ser usado com cautela.
+
+O teto inicial do treinamento pode perfeitamente ficar em 5 ou 6 discos, porque a complexidade pode aumentar pelas configurações, e não somente pelo número de discos.
+
+---
+
+# 38. NÃO PRECISAMOS DE 7 OU 8 DISCOS PARA TER UM JOGO DIFÍCIL
+
+Esse é um ponto fundamental.
+
+Uma configuração nova com 4 ou 5 discos pode exigir mais resolução de problemas do que simplesmente colocar 7 discos na Torre clássica.
+
+Portanto:
+
+**mais discos ≠ necessariamente melhor treino cognitivo.**
+
+Prefiro:
+
+5 discos + configuração nova
+
+do que:
+
+7 discos + sequência repetitiva conhecida.
+
+---
+
+# 39. ESTRUTURA SUGERIDA DE FASES
+
+## FASE 1 — APRENDER A REGRA
+
+3 discos.
+
+Configuração clássica.
+
+Pouca variação.
+
+Objetivo:
+
+compreender o funcionamento.
+
+---
+
+## FASE 2 — PLANEJAMENTO
+
+4 discos.
+
+Configuração clássica.
+
+Destinos diferentes.
+
+Objetivo:
+
+planejamento sequencial.
+
+---
+
+## FASE 3 — RESOLUÇÃO DE PROBLEMAS
+
+4 discos.
+
+Configurações iniciais diferentes.
+
+Objetivos diferentes.
+
+Paciente precisa analisar cada situação.
+
+---
+
+## FASE 4 — FLEXIBILIDADE
+
+Alternar entre:
+
+* configuração clássica;
+* configuração parcial;
+* destino diferente;
+* modelo-alvo diferente.
+
+O paciente não sabe qual tipo virá.
+
+Precisa reanalisar o problema.
+
+---
+
+## FASE 5 — ALTA COMPLEXIDADE
+
+5 discos.
+
+Misturar diferentes estruturas de problema.
+
+---
+
+## FASE 6 — AVANÇADO
+
+5 a 6 discos.
+
+Problemas mais complexos.
+
+Não necessariamente usar mais discos.
+
+Podemos aumentar a dificuldade pela estrutura da configuração.
+
+---
+
+# 40. EXEMPLO DE SEQUÊNCIA DE UMA SESSÃO
+
+Desafio 1:
+
+4 discos.
+
+Esquerda → direita.
+
+---
+
+Desafio 2:
+
+4 discos.
+
+Direita → centro.
+
+---
+
+Desafio 3:
+
+4 discos.
+
+Configuração intermediária.
+
+Objetivo: direita.
+
+---
+
+Desafio 4:
+
+5 discos.
+
+Configuração clássica.
+
+---
+
+Desafio 5:
+
+4 discos.
+
+Configuração inicial totalmente diferente.
+
+Ou seja:
+
+a sessão não precisa apresentar simplesmente:
+
+4 → 4 → 4 → 5 → 5
+
+Ela pode variar a natureza cognitiva do problema.
+
+---
+
+# 41. EVITAR PADRÕES PREVISÍVEIS
+
+Não fazer sempre:
+
+esquerda → direita.
+
+Não apresentar sempre a mesma configuração.
+
+Não usar sempre a mesma sequência de dificuldade.
+
+Se o paciente percebe o padrão do programa, diminui a necessidade de adaptação.
+
+---
+
+# 42. BANCO DE PROBLEMAS
+
+Criar um banco de configurações previamente validadas.
+
+Cada problema precisa ter:
+
+* ID;
+* número de discos;
+* configuração inicial;
+* configuração-alvo;
+* mínimo de movimentos conhecido;
+* nível estimado de dificuldade;
+* tipo de problema;
+* categoria cognitiva predominante.
+
+Categorias:
+
+**P — Planejamento**
+
+**RP — Resolução de problemas**
+
+**F — Flexibilidade**
+
+**M — Mista**
+
+---
+
+# 43. NÃO GERAR CONFIGURAÇÕES TOTALMENTE ALEATÓRIAS SEM VALIDAÇÃO
+
+Evitar simplesmente espalhar discos aleatoriamente.
+
+Precisamos garantir:
+
+* que a configuração respeite as regras;
+* que exista solução;
+* que o mínimo seja calculável;
+* que a dificuldade seja coerente.
+
+Ideal:
+
+pré-calcular as configurações e o caminho mínimo.
+
+---
+
+# 44. INTERFACE
+
+Manter visual limpo.
+
+Na área do exercício:
+
+* três hastes;
+* discos;
+* instrução curta;
+* botão reiniciar.
+
+Evitar:
+
+* muitos números;
+* cronômetro;
+* barras;
+* pontuação;
+* estrelas;
+* medalhas;
+* mensagens excessivas.
+
+O raciocínio deve ser o protagonista.
+
+---
+
+# 45. TELA INICIAL DE CADA PROBLEMA
+
+Exemplo:
+
+**Organize os discos conforme o objetivo.**
+
+[configuração]
+
+**Objetivo**
+
+[imagem pequena da configuração final]
+
+**COMEÇAR**
+
+Isso funciona melhor para as configurações variáveis do que uma instrução longa.
+
+---
+
+# 46. DEPOIS DE CLICAR COMEÇAR
+
+Retirar o modelo inicial se não for necessário.
+
+Manter o objetivo disponível de forma discreta caso seja uma configuração-alvo específica.
+
+Se o objetivo for simplesmente:
+
+“Todos na haste direita”
+
+pode aparecer:
+
+**Objetivo: haste direita**
+
+---
+
+# 47. NÃO TRANSFORMAR O EXERCÍCIO EM JOGO DE MEMÓRIA
+
+Se a configuração-alvo for complexa, manter o modelo visível.
+
+Não esconder o objetivo para obrigar o paciente a memorizar.
+
+O foco é planejamento e resolução de problemas, não memória visual.
+
+---
+
+# 48. CRITÉRIO PRINCIPAL DE SUCESSO
+
+Primeiro:
+
+**RESOLVEU O PROBLEMA?**
+
+Depois:
+
+**COM QUE EFICIÊNCIA?**
+
+Depois:
+
+**COM QUE PADRÃO DE ESTRATÉGIA?**
+
+Não inverter essa ordem.
+
+---
+
+# 49. ORDEM DE INTERPRETAÇÃO
+
+### 1. Conclusão
+
+Conseguiu ou não.
+
+### 2. Eficiência
+
+Quantos movimentos utilizou em relação ao mínimo.
+
+### 3. Tempo
+
+Quanto tempo foi necessário.
+
+### 4. Autorregulação
+
+Reinícios, correções, movimentos inválidos.
+
+### 5. Adaptação
+
+Como se saiu quando o problema mudou.
+
+---
+
+# 50. O QUE É PARTICULARMENTE INTERESSANTE PARA FLEXIBILIDADE
+
+Comparar desempenho entre:
+
+**problema conhecido**
+
+versus
+
+**problema estruturalmente diferente.**
+
+Exemplo:
+
+Problema clássico:
+
+resolve em 17.
+
+Depois:
+
+nova configuração com a mesma quantidade de discos.
+
+Se o desempenho despenca muito, isso pode indicar dificuldade de transferir a estratégia para uma nova situação.
+
+Para TREINO, isso é exatamente o que queremos estimular:
+
+“não repetir mecanicamente; analisar novamente.”
+
+---
+
+# 51. SEGUNDA TENTATIVA COMO TREINO DE REPLANEJAMENTO
+
+Quando o paciente aceita tentar novamente após receber o resultado, comparar:
+
+Tentativa 1:
+
+23 movimentos.
+
+Tentativa 2:
+
+17 movimentos.
+
+O ganho entre tentativas representa aprendizagem e reorganização estratégica.
+
+Registrar:
+
+**melhora absoluta = 6 movimentos**
+
+e
+
+**melhora percentual.**
+
+Não mostrar necessariamente o percentual ao paciente.
+
+---
+
+# 52. EVITAR REPETIÇÕES INFINITAS
+
+Não deixar o paciente refazer indefinidamente até atingir o mínimo.
+
+Sugestão:
+
+máximo de **uma segunda tentativa voluntária** do mesmo problema.
+
+Depois disso, seguir.
+
+Caso contrário, começa a ocorrer aprendizagem específica daquela configuração e perde-se parte do objetivo de flexibilidade.
+
+---
+
+# 53. SE O PACIENTE NÃO CONSEGUIR RESOLVER
+
+Não deixá-lo indefinidamente na mesma tarefa.
+
+Podemos definir limites internos de segurança, por exemplo:
+
+* tempo excessivo;
+* quantidade extrema de movimentos;
+* muitos reinícios.
+
+Ao atingir o limite, oferecer:
+
+**Quer continuar tentando ou passar para outro desafio?**
+
+Evitar:
+
+“Você não conseguiu.”
+
+---
+
+# 54. AJUDA
+
+Idealmente não colocar botão de “Dica” inicialmente.
+
+Uma dica sobre o movimento correto interfere diretamente na resolução de problemas.
+
+Se futuramente existir ajuda, ela deveria ser estratégica e não entregar a resposta.
+
+Exemplo:
+
+**“Observe novamente onde você precisa chegar antes de realizar o próximo movimento.”**
+
+Mas eu começaria SEM dica.
+
+---
+
+# 55. RELATÓRIO DO PROFISSIONAL
+
+Para cada sessão, mostrar:
+
+### TORRES
+
+Desafios iniciados: X
+
+Concluídos: X
+
+Abandonados: X
+
+Reinícios: X
+
+Tempo médio por problema: X
+
+Eficiência média: X
+
+Movimentos inválidos: X
+
+Segundas tentativas realizadas: X
+
+Melhora média na segunda tentativa: X
+
+---
+
+# 56. DETALHE POR DESAFIO
+
+Exemplo:
+
+### Desafio 04
+
+5 discos
+
+Tipo: configuração variável
+
+Mínimo: 22 movimentos
+
+Primeira tentativa:
+
+27 movimentos
+
+Eficiência: 1,23
+
+Tempo: 2m18s
+
+Reinícios: 1
+
+Movimentos inválidos: 2
+
+Concluído: sim
+
+Segunda tentativa:
+
+23 movimentos
+
+Eficiência: 1,05
+
+Melhora: 4 movimentos
+
+---
+
+# 57. NÃO APRESENTAR AO PROFISSIONAL CONCLUSÕES AUTOMÁTICAS COMO
+
+“Paciente possui baixa flexibilidade.”
+
+“Paciente apresenta déficit de planejamento.”
+
+“Paciente é impulsivo.”
+
+O sistema deve apresentar dados de desempenho.
+
+A interpretação clínica fica com o profissional.
+
+---
+
+# 58. RESUMO DA LÓGICA COGNITIVA
+
+O exercício passa a trabalhar:
+
+### PLANEJAMENTO
+
+“Como posso chegar ao objetivo?”
+
+↓
+
+### EXECUÇÃO
+
+“Vou testar meu plano.”
+
+↓
+
+### MONITORAMENTO
+
+“Isso está funcionando?”
+
+↓
+
+### DETECÇÃO DE PROBLEMA
+
+“Minha estratégia não está me aproximando da solução.”
+
+↓
+
+### FLEXIBILIDADE
+
+“Preciso modificar o caminho.”
+
+↓
+
+### REPLANEJAMENTO
+
+“Que outra estratégia posso utilizar?”
+
+↓
+
+### RESOLUÇÃO
+
+“Encontrei uma solução.”
+
+↓
+
+### OTIMIZAÇÃO
+
+“Consigo encontrar uma solução mais eficiente?”
+
+---
+
+# 59. O QUE EU CONSIDERO ESSENCIAL ALTERAR AGORA
+
+Prioridade 1:
+
+**Retirar o número mínimo durante a execução.**
+
+Prioridade 2:
+
+**Permitir Reiniciar sem apagar os dados anteriores.**
+
+Prioridade 3:
+
+**Registrar tentativas abandonadas.**
+
+Prioridade 4:
+
+**Não obrigar mínimo exato para progressão.**
+
+Prioridade 5:
+
+**Criar configurações diferentes, em vez de subir apenas o número de discos.**
+
+Prioridade 6:
+
+**Mostrar o mínimo somente depois da conclusão.**
+
+Prioridade 7:
+
+**Oferecer uma segunda tentativa opcional para replanejamento.**
+
+Prioridade 8:
+
+**Registrar desempenho completo no banco.**
+
+---
+
+# 60. CONCEITO FINAL DO EXERCÍCIO
+
+O Jogo das Torres não deve ensinar:
+
+**“Faça 15 movimentos.”**
+
+Ele deve treinar:
+
+**“Existe um problema. Analise a situação, construa um plano, execute, observe o resultado e, quando necessário, mude sua estratégia até encontrar uma solução.”**
+
+Essa é a lógica que permite que a atividade trabalhe de forma mais consistente:
+
+**PLANEJAMENTO + RESOLUÇÃO DE PROBLEMAS + FLEXIBILIDADE COGNITIVA.**
