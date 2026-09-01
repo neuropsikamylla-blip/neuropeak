@@ -131,7 +131,7 @@ MENSAGEM, o erro continua visível), agora estendida ao **aviso passivo**: sai o
       resolvida**. Agora a etapa termina como **não respondida**, e a **omissão virou medida
       própria**.
 
-## 🚧 EM ANDAMENTO — Jogo das Torres: reconfiguração completa (31/ago-01/set/2026)
+## ✅ CONCLUÍDO E APROVADO POR ELA — Jogo das Torres: reconfiguração completa (31/ago-01/set/2026)
 
 **Fonte da verdade:** `docs/torres/ESPEC-JOGO-DAS-TORRES-KAMYLLA-20260831.md` (**60 seções, escritas
 por ela**) e `docs/torres/PLANO-TECNICO-TORRES-20260831.md` (do VP). Commits `9d42f8e` e `c4dad50`.
@@ -175,24 +175,67 @@ placar"*.
         **ninguém pode conferir**, com layout que **ela não viu**. Fica para quando existirem dados
         reais.
 
+### Segunda rodada — a instrução completa dela e o que ela achou usando
+
+Em **01/set** ela mandou uma **instrução nova e completa, com 32 seções**, e mandou **PARAR de
+alterar** até eu **responder 7 perguntas** sobre a modelagem atual. Respondidas **com o código na
+mão**: o modelo **já era par de estados** (`inicial` + `alvo` em `lib/torres/tipos.ts`),
+**`targetPeg` não existia mais** em lugar nenhum, e o **mínimo já vinha da BFS**. Ela **confirmou o
+entendimento e liberou**.
+
+Depois disso — e **cada item veio do uso dela**:
+
+- **v3.6.1 (`0c60ac6`)** — **três defeitos que ela achou olhando**: o **mapeamento de dificuldade**
+  jogava a **dificuldade 3 direto na fase das configurações embaralhadas** (*"sinceramente não
+  entendi nada da torre"*); a **barra azul** subia e descia **sem significar nada** e ainda era
+  **placar**; e **"Origem / Auxiliar / Destino" MENTIAM** — a haste rotulada **"Destino" não era o
+  destino do problema**.
+- **v3.7.0 (`6a94ee9`)** — **objetivo sempre visível e sempre visual**, **rótulos por posição**
+  (**Esquerda / Central / Direita**) **em toda parte, inclusive no tutorial**; a **caixa do objetivo
+  foi para o canto superior direito**, **escolha visual dela**.
+- **v3.8.0 (`070277b`)** — **banco reorganizado nas 8 fases dela, 41 problemas**, **começando
+  clássico**. **Conserto meu:** o **Codex tinha posto seis transferências com destino variado já na
+  fase 1**, que é a **fase 3 na definição dela**.
+- **v3.9.0 (`83e2914`)** — **gate de aquisição nas fases 1 e 2** e o **BUG DE PERSISTÊNCIA**: a Torre
+  **gravava o número de discos como dificuldade** e **relia isso como fase**, fazendo o paciente
+  **REGREDIR de fase a cada retomada** (quem chegava à **fase 5 voltava para a 2**).
+  *(O hash `fa5f037`, de conteúdo e data idênticos, ficou fora da história atual — foi recriado 11
+  segundos depois como `83e2914`; o vivo é este.)*
+- **v3.9.1 (`8c6a6f1`)** — **ela ajustou a assimetria do gate**: **reinício** e **eficiência baixa**
+  **deixam de bloquear sozinhos** (**reinício é autorregulação, não incompreensão da regra**);
+  **movimento inválido bloqueia sozinho**; os **dois primeiros juntos** bloqueiam.
+- **v3.9.2 (`c0c4db4`)** — **hierarquia visual**: **configuração inicial em destaque**, **objetivo
+  menor na abertura** e **menor ainda durante a execução**.
+- **v3.9.3 (`8761a01`)** — ela **resolveu em 15 movimentos com mínimo 15** e o app **perguntou se
+  queria um caminho MENOR**. A oferta de segunda tentativa passou a aparecer **só quando
+  `movimentos > mínimo`**.
+
+**APROVADO POR ELA em 01/set/2026, testando na sala de revisão: *"até o momento gostei acho que está
+aprovado"*.**
+
 ### Pendências reais
 
-- **Verificação visual dela — nada disso ela viu ainda com os próprios olhos:** a **Dupla Tarefa**,
-  os **6 pontos de omissão**, o **Semáforo** e a **Torre inteira**.
+- **Verificação visual dela — o que ela ainda não viu com os próprios olhos:** a **Dupla Tarefa**,
+  os **6 pontos de omissão** e o **Semáforo**. **A Torre SAIU desta lista** — ela testou na sala de
+  revisão em **01/set** e **aprovou**.
 - **O detalhe por desafio da seção 56**, esperando **dados reais** de `torre-hanoi`.
-- **84 commits locais não publicados**, da **v2.90 à v3.6.0**.
-  Medido em **01/set/2026, 11:22 (-03)**: `git log --oneline origin/main..HEAD | wc -l` → **84**.
-  Re-medido às **11:26** do mesmo dia → **85**: o **checkpoint automático** commitou sozinho no
-  intervalo (`db27a91`). Ou seja, **o número sobe sozinho** e a contagem só vale com a hora ao lado.
+- **100 commits locais não publicados**, da **v2.90 à v3.9.3**.
+  Medido em **01/set/2026, 17:56 (-03)**: `git log --oneline origin/main..HEAD | wc -l` → **100**
+  (às **17:53** do mesmo dia eram **98** — os **checkpoints automáticos** commitam sozinhos no
+  intervalo). Ou seja, **o número sobe sozinho** e a contagem só vale com a hora ao lado.
   **O push aguarda decisão dela.**
 - **A fila do lote 2 da auditoria de layout** e **o amarelo com 1,82:1 de contraste** — ambos
   seguem **abertos**.
 
-### Provas do estado atual (01/set/2026, 11:22 -03)
+### Provas do estado atual (01/set/2026, 17:56 -03)
 
 - `npx tsc --noEmit` → **exit 0** (rodado sem pipe, exit code capturado direto).
-- `npm run test` → **exit 0**, `Test Files 62 passed (62)` · `Tests 844 passed (844)`.
-- `package.json` em **3.6.0**; `lib/torres/` e `app/api/attempts/route.ts` presentes.
+- `npm run test` → **exit 0**, `Test Files 62 passed (62)` · `Tests 861 passed (861)`
+  (eram **844** em 11:22 — **17 testes novos** na segunda rodada das Torres).
+- `package.json` em **3.9.3**; `lib/torres/` (`banco`, `estado`, `minimo`, `selecao`, `tipos`, com
+  testes) e `app/api/attempts/route.ts` presentes; **`banco.ts` com 41 problemas** distribuídos
+  **1 / 1 / 6 / 6 / 6 / 8 / 8 / 5** nas 8 fases; **nenhuma ocorrência de `targetPeg`** em
+  `lib/`, `components/` e `app/`.
 - `npm run build` **não rodado** de propósito — o dev server dela está no ar na porta 3000.
 
 ### Roteamento (regra 8)
@@ -203,10 +246,15 @@ placar"*.
   das Torres; classe de raciocínio algorítmico com invariante a provar.
 - **Agente `diretor` (Opus 5, xhigh)** — **variantes de desenho das formas da Dupla Tarefa**;
   decisão de desenho com limite clínico, que não vai ao lab.
-- ⚠️ **Três despachos em que o Codex FALHOU:** lab `torres-f4` (**erro de terminal**) e lab
-  `torres-f5b` (**voltou vazio duas vezes**). Isso ativou a **exceção 3 da regra 8** (Codex
-  indisponível, com erro comprovado na hora) e levou o **VP a codificar direto** as **fatias 4,
-  5b e o painel de tentativas** — **cada uma com a exceção declarada no próprio commit**.
+- ⚠️ **QUATRO despachos em que o Codex FALHOU nesta sessão:** lab `torres-f4` (**erro de
+  terminal**), lab `torres-f5b` (**voltou vazio duas vezes**) e lab `torres-gate` (**explorou o
+  repositório e terminou sem produzir arquivo nenhum**). Isso ativou a **exceção 3 da regra 8**
+  (Codex indisponível, **com erro comprovado na hora**) e levou o **VP a codificar direto** a
+  **fatia 4**, a **fatia 5b**, o **painel de tentativas**, o **gate** e o **ajuste do gate**.
+  **A exceção 3 está declarada no corpo de quatro commits** — `70b5311` (fatia 4), `de456f5`
+  (fatia 5b), `83e2914` (gate) e `8c6a6f1` (ajuste do gate). **Lacuna registrada:** o commit do
+  **painel de tentativas** (`45e91f5`) **não traz a linha `MOTOR:` do anúncio da regra 7**, embora
+  tenha sido feito direto na mesma janela de indisponibilidade.
 
 ## 🚧 EM ANDAMENTO — Sessão de uso dela (28/ago/2026)
 
