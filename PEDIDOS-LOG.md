@@ -18479,3 +18479,9 @@ entao manda essa bosta seu infeliz para eu fazer logo essa porra que era sua obr
 
 ## 01/09/2026 18:03
 [Image #16] onde esta essa porra que vc esta me orientando
+
+## 01/09/2026 18:04
+github.com
+
+## 01/09/2026 18:04
+HTTPS
