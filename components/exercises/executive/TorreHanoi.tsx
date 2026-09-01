@@ -267,6 +267,17 @@ export function TorreHanoi({ difficulty, theme, onComplete }: TorreHanoiProps) {
   const [movesThisAttempt, setMovesThisAttempt] = useState<MovimentoTorre[]>([]);
   const [reversoesBeforeRestarts, setReversoesBeforeRestarts] = useState(0);
   const [showInvalidMove, setShowInvalidMove] = useState(false);
+  // Segunda tentativa (seções 7, 8, 24-27, 51, 52 da espec dela). NADA a ver com os reinícios,
+  // que são ilimitados e acontecem ANTES de concluir: esta é a tentativa voluntária DEPOIS de
+  // concluir e de ver o menor caminho — e só se permite UMA, senão vira repetição até decorar
+  // aquela configuração (seção 52).
+  const [isSegundaTentativa, setIsSegundaTentativa] = useState(false);
+  const [movimentosPrimeira, setMovimentosPrimeira] = useState<number | null>(null);
+  const [aguardandoEscolha, setAguardandoEscolha] = useState(false);
+  const segundasRef = useRef<{ primeira: number; segunda: number }[]>([]);
+  // Para onde ir quando ele escolher "Continuar": o cálculo acontece na vitória, o uso acontece
+  // depois, na escolha.
+  const proximoRef = useRef<{ puzzle: number; discos: number } | null>(null);
 
   const puzzleStart = useRef<number>(Date.now());
   // A latência pertence ao problema inteiro: um reinício não apaga o primeiro contato válido.
@@ -302,6 +313,29 @@ export function TorreHanoi({ difficulty, theme, onComplete }: TorreHanoiProps) {
     setReversoesBeforeRestarts(0);
     setShowInvalidMove(false);
     firstValidMoveAt.current = null;
+    setIsSegundaTentativa(false);
+    setMovimentosPrimeira(null);
+    setAguardandoEscolha(false);
+    puzzleStart.current = Date.now();
+  }
+
+  // Refaz O MESMO problema: mesmos discos, mesma configuração inicial. Preserva
+  // `movimentosPrimeira` para a comparação do fim, e marca que a cota de uma tentativa foi usada.
+  function tentarNovamente() {
+    setPegs(initialPegs(discCount));
+    setSelected(null);
+    setMoves(0);
+    setWon(false);
+    setRestartsThisPuzzle(0);
+    setMovesBeforeRestarts(0);
+    setRestartEvents([]);
+    setInvalidMoves(0);
+    setMovesThisAttempt([]);
+    setReversoesBeforeRestarts(0);
+    setShowInvalidMove(false);
+    firstValidMoveAt.current = null;
+    setIsSegundaTentativa(true);
+    setAguardandoEscolha(false);
     puzzleStart.current = Date.now();
   }
 
@@ -320,6 +354,18 @@ export function TorreHanoi({ difficulty, theme, onComplete }: TorreHanoiProps) {
     setWon(false);
     setRestartsThisPuzzle((restarts) => restarts + 1);
     setMovesThisAttempt([]);
+  }
+
+  // Botão "Continuar" da escolha. Se o tempo da sessão acabou enquanto ele decidia, a próxima
+  // vitória encerra a sessão pelo caminho normal — aqui só avançamos o problema.
+  function continuarAposEscolha() {
+    const destino = proximoRef.current;
+    setAguardandoEscolha(false);
+    if (!destino) return;
+    proximoRef.current = null;
+    setPuzzle(destino.puzzle);
+    setDiscCount(destino.discos);
+    startNewPuzzle(destino.discos);
   }
 
   function flashInvalidMove() {
@@ -383,18 +429,35 @@ export function TorreHanoi({ difficulty, theme, onComplete }: TorreHanoiProps) {
           latenciaMs: firstValidMoveAt.current === null ? null : firstValidMoveAt.current - puzzleStart.current,
           eventosReinicio: restartEvents,
         }];
-        setPuzzleResults(newPuzzleResults);
+        // A PRIMEIRA tentativa é a que alimenta progressão e acurácia: ela é a espontânea
+        // (seção 6 — antes dela o mínimo nunca foi mostrado). A segunda acontece já sabendo que
+        // existe caminho melhor, então mediria outra coisa. Ela é registrada, nunca promovida.
+        if (!isSegundaTentativa) {
+          setPuzzleResults(newPuzzleResults);
+          setMovimentosPrimeira(newMoves);
+        } else if (movimentosPrimeira !== null) {
+          segundasRef.current = [...segundasRef.current, { primeira: movimentosPrimeira, segunda: newMoves }];
+        }
 
+        const base = isSegundaTentativa ? puzzleResults : newPuzzleResults;
         // Resolver é sucesso; eficiência boa ou adequada define a progressão.
         const nextDiscs = deveSubirDeNivel(ef) ? Math.min(discCount + 1, MAX_DISCS) : discCount;
 
         const nextPuzzle = puzzle + 1;
         const timeUp = isTimeUp();
 
+        // Fim de sessão nunca oferece segunda tentativa: encerra como sempre.
+        if (!timeUp && !isSegundaTentativa) {
+          proximoRef.current = { puzzle: nextPuzzle, discos: nextDiscs };
+          setAguardandoEscolha(true);
+          return;
+        }
+
         setTimeout(() => {
           if (timeUp) {
             finish();
-            const correctCount = newPuzzleResults.filter((r) => r.correct).length;
+            const resultados = base;
+            const correctCount = resultados.filter((r) => r.correct).length;
             // `accuracy` é o campo que ALIMENTA A ENGINE ADAPTATIVA (`lib/adaptive.ts:154`:
             // ≥ 0,80 sobe de nível) e o que a terapeuta lê. Se fosse "resolvidos ÷ total", como
             // resolver passou a ser sempre o sucesso, daria 100% em toda sessão — o exercício
@@ -403,24 +466,24 @@ export function TorreHanoi({ difficulty, theme, onComplete }: TorreHanoiProps) {
             // ADEQUADA (≤ 1,40), o mesmo critério de `deveSubirDeNivel`. Não é o mínimo exato,
             // revogado por ela em 31/ago; é o desempenho estratégico, que discrimina.
             // `correct` no metadata segue significando RESOLVIDOS.
-            const eficientes = newPuzzleResults.filter((r) => deveSubirDeNivel(r.eficiencia)).length;
-            const accuracy = eficientes / Math.max(1, newPuzzleResults.length);
-            const maxDiscs = Math.max(...newPuzzleResults.map((r) => r.discs));
-            const restarts = newPuzzleResults.reduce((total, result) => total + result.restarts, 0);
-            const puzzlesComReinicio = newPuzzleResults.filter((result) => result.restarts > 0).length;
-            const eficienciaMedia = newPuzzleResults.reduce((total, result) => total + result.eficiencia, 0) / newPuzzleResults.length;
-            const movimentosTotais = newPuzzleResults.reduce((total, result) => total + result.movimentosTotais, 0);
-            const movimentosSolucao = newPuzzleResults.reduce((total, result) => total + result.movimentosSolucao, 0);
-            const invalidos = newPuzzleResults.reduce((total, result) => total + result.invalidos, 0);
-            const reversoes = newPuzzleResults.reduce((total, result) => total + result.reversoes, 0);
-            const latencias = newPuzzleResults
+            const eficientes = resultados.filter((r) => deveSubirDeNivel(r.eficiencia)).length;
+            const accuracy = eficientes / Math.max(1, resultados.length);
+            const maxDiscs = Math.max(...resultados.map((r) => r.discs));
+            const restarts = resultados.reduce((total, result) => total + result.restarts, 0);
+            const puzzlesComReinicio = resultados.filter((result) => result.restarts > 0).length;
+            const eficienciaMedia = resultados.reduce((total, result) => total + result.eficiencia, 0) / Math.max(1, resultados.length);
+            const movimentosTotais = resultados.reduce((total, result) => total + result.movimentosTotais, 0);
+            const movimentosSolucao = resultados.reduce((total, result) => total + result.movimentosSolucao, 0);
+            const invalidos = resultados.reduce((total, result) => total + result.invalidos, 0);
+            const reversoes = resultados.reduce((total, result) => total + result.reversoes, 0);
+            const latencias = resultados
               .map((result) => result.latenciaMs)
               .filter((latencia): latencia is number => latencia !== null);
             // `null` é intencional quando não há primeiro movimento válido, evitando NaN no JSON.
             const latenciaMediaMs = latencias.length > 0
               ? latencias.reduce((total, latencia) => total + latencia, 0) / latencias.length
               : null;
-            const reinicios = newPuzzleResults
+            const reinicios = resultados
               .map((result, index) => ({ puzzle: index + 1, discos: result.discs, eventos: result.eventosReinicio }))
               .filter((result) => result.eventos.length > 0);
             const score = calculateExerciseScore("torre-hanoi", accuracy, undefined, maxDiscs);
@@ -432,7 +495,7 @@ export function TorreHanoi({ difficulty, theme, onComplete }: TorreHanoiProps) {
               difficulty: maxDiscs,
               duration: elapsedSec(),
               metadata: {
-                puzzles: newPuzzleResults.length,
+                puzzles: resultados.length,
                 maxDiscs,
                 correct: correctCount,
                 resolvidosComBoaEficiencia: eficientes,
@@ -445,6 +508,14 @@ export function TorreHanoi({ difficulty, theme, onComplete }: TorreHanoiProps) {
                 reversoes,
                 latenciaMediaMs,
                 reinicios,
+                segundasTentativas: segundasRef.current.length,
+                melhoraMediaMovimentos: segundasRef.current.length
+                  ? segundasRef.current.reduce((t, r) => t + (r.primeira - r.segunda), 0) / segundasRef.current.length
+                  : null,
+                // Registrada, NUNCA mostrada ao paciente (seção 51 dela).
+                melhoraMediaPercentual: segundasRef.current.length
+                  ? segundasRef.current.reduce((t, r) => t + (r.primeira - r.segunda) / Math.max(1, r.primeira), 0) / segundasRef.current.length
+                  : null,
               },
             });
           } else {
@@ -510,6 +581,14 @@ export function TorreHanoi({ difficulty, theme, onComplete }: TorreHanoiProps) {
         <div className="mt-4 h-2 rounded-full overflow-hidden" style={{ background: "#EEF2F7" }}>
           <div className="h-full rounded-full" style={{ width: `${gameProgress}%`, background: "#1D4ED8", transition: "width .35s ease" }} />
         </div>
+
+        {/* Único texto permitido na execução da 2ª tentativa (seção 25): nada de mínimo,
+            contador ou eficiência — a regra da fatia 1 continua valendo integralmente. */}
+        {isSegundaTentativa && !won && (
+          <p className="mt-3 text-center text-sm" style={{ color: "#64748B" }}>
+            Tente encontrar uma estratégia mais eficiente.
+          </p>
+        )}
 
         {/* A linha do aviso ocupa altura FIXA, com ou sem mensagem: se ela entrasse e saísse do
             fluxo, as torres seriam empurradas para baixo e puxadas de volta a cada movimento
@@ -601,6 +680,47 @@ export function TorreHanoi({ difficulty, theme, onComplete }: TorreHanoiProps) {
               <p className="text-xs mt-1" style={{ color: "#2563EB" }}>
                 O menor caminho possível era {optimal} movimento{optimal !== 1 ? "s" : ""}.
               </p>
+
+              {/* Comparação entre as duas tentativas: a informação basta como retorno. Sem
+                  "Excelente!", sem "Perfeito!" — e, se piorou, sem nenhuma mensagem negativa
+                  (seções 26 e 27 dela). */}
+              {isSegundaTentativa && movimentosPrimeira !== null && (
+                <div className="mt-3 pt-3" style={{ borderTop: "1px solid #BFDBFE" }}>
+                  <p className="text-sm font-semibold" style={{ color: "#1D4ED8" }}>
+                    {moves < movimentosPrimeira
+                      ? "Você encontrou um caminho mais eficiente."
+                      : "Desafio concluído."}
+                  </p>
+                  <p className="text-xs mt-1.5" style={{ color: "#2563EB" }}>
+                    1ª tentativa: {movimentosPrimeira} movimento{movimentosPrimeira !== 1 ? "s" : ""}
+                  </p>
+                  <p className="text-xs" style={{ color: "#2563EB" }}>
+                    2ª tentativa: {moves} movimento{moves !== 1 ? "s" : ""}
+                  </p>
+                </div>
+              )}
+
+              {/* A escolha da seção 7. Só aparece na PRIMEIRA conclusão do problema: uma segunda
+                  tentativa voluntária, nunca duas (seção 52). */}
+              {aguardandoEscolha && (
+                <>
+                  <p className="text-sm mt-3" style={{ color: "#1D4ED8" }}>
+                    Quer tentar encontrar um caminho mais eficiente?
+                  </p>
+                  <div className="mt-3 flex gap-2 justify-center">
+                    <button type="button" onClick={tentarNovamente}
+                      className="rounded-xl px-4 py-2.5 text-sm font-bold"
+                      style={{ background: "#FFFFFF", border: "1px solid #BFDBFE", color: "#1D4ED8" }}>
+                      Tentar novamente
+                    </button>
+                    <button type="button" onClick={continuarAposEscolha}
+                      className="rounded-xl px-4 py-2.5 text-sm font-bold"
+                      style={{ background: "#2563EB", color: "#FFFFFF" }}>
+                      Continuar
+                    </button>
+                  </div>
+                </>
+              )}
             </motion.div>
           )}
         </AnimatePresence>
