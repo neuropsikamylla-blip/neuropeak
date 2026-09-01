@@ -18461,3 +18461,6 @@ veremos então quem manda em vc sou eu, eu pago vc
 
 ## 01/09/2026 17:59
 EU PAGO VC OTARIO
+
+## 01/09/2026 17:59
+segue o token
