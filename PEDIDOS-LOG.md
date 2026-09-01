@@ -18496,3 +18496,14 @@ gh auth login --hostname github.com --git-protocol https --web
 Seu código:
 
 27F6-AAC3
+
+## 01/09/2026 18:06
+Uh oh, we couldn't find anything
+Please make sure you entered the user code correctly.
+
+## 01/09/2026 18:06
+Authorize your device
+
+@neuropsikamylla-blip
+Signed in as neuropsikamylla-blip
+Enter the code displayed in the app or on the device you're signing in to. Never use a code sent by someone else.
