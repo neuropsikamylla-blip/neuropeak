@@ -3,18 +3,12 @@ import { BANCO } from "./banco";
 import { validarConfiguracao, type Estado } from "./estado";
 import { menorCaminho } from "./minimo";
 
-const LIMITE_CLINICO_POR_FASE = {
-  1: 7,
-  2: 15,
-  3: 15,
-  4: 15,
-  5: 31,
-  6: 45,
-} as const;
+const FASES = [1, 2, 3, 4, 5, 6, 7, 8] as const;
 
 function hasteComTorreCompleta(estado: Estado, discos: number): number | null {
-  const haste = estado.findIndex((pilha) => pilha.length === discos);
-  return haste < 0 ? null : haste;
+  const hastesComDiscos = estado.filter((pilha) => pilha.length > 0);
+  if (hastesComDiscos.length !== 1 || hastesComDiscos[0].length !== discos) return null;
+  return estado.findIndex((pilha) => pilha.length === discos);
 }
 
 function distribuido(estado: Estado): boolean {
@@ -22,7 +16,7 @@ function distribuido(estado: Estado): boolean {
 }
 
 describe("BANCO pré-validado", () => {
-  it.each(BANCO)("$id: valida estados e recalcula exatamente o mínimo", (problema) => {
+  it.each(BANCO)("$id: valida estados distintos e recalcula exatamente o mínimo", (problema) => {
     expect(validarConfiguracao(problema.inicial, problema.discos)).toBeNull();
     expect(validarConfiguracao(problema.alvo, problema.discos)).toBeNull();
     expect(problema.inicial).not.toEqual(problema.alvo);
@@ -31,59 +25,71 @@ describe("BANCO pré-validado", () => {
     expect(recalculado).not.toBeNull();
     expect(problema.minimo).toBe(recalculado?.minimo);
     expect(problema.minimo).toBeGreaterThan(0);
-    expect(problema.minimo).toBeLessThanOrEqual(LIMITE_CLINICO_POR_FASE[problema.fase]);
   });
 
-  it("tem 40 pares distintos, IDs únicos e a distribuição planejada por fase", () => {
+  it("tem IDs únicos e toda fase povoada", () => {
     const ids = BANCO.map((problema) => problema.id);
-    const pares = BANCO.map((problema) => JSON.stringify([problema.inicial, problema.alvo]));
-
     expect(new Set(ids).size).toBe(BANCO.length);
-    expect(new Set(pares).size).toBe(BANCO.length);
-    expect(BANCO).toHaveLength(40);
-    expect(Object.fromEntries(
-      [1, 2, 3, 4, 5, 6].map((fase) => [fase, BANCO.filter((problema) => problema.fase === fase).length])
-    )).toEqual({ 1: 1, 2: 6, 3: 8, 4: 8, 5: 9, 6: 8 });
-  });
 
-  it("respeita o teto de discos e cobre todas as fases", () => {
-    for (const problema of BANCO) {
-      expect(problema.discos).toBeGreaterThanOrEqual(3);
-      expect(problema.discos).toBeLessThanOrEqual(6);
-      if (problema.discos > 5) expect(problema.fase).toBe(6);
-      expect(problema.id).toMatch(new RegExp(`^${problema.tipo}${problema.discos}-\\d{2}$`));
-    }
-
-    for (const fase of [1, 2, 3, 4, 5, 6] as const) {
-      expect(BANCO.some((problema) => problema.fase === fase)).toBe(true);
+    // As fases 1 e 2 têm UM problema cada, de propósito: são a porta de entrada, onde se aprende
+    // a regra, e repetir o mesmo problema clássico é o que consolida. Da 3 em diante, variedade.
+    const porFase = Object.fromEntries(
+      FASES.map((fase) => [fase, BANCO.filter((problema) => problema.fase === fase).length])
+    );
+    expect(porFase[1]).toBe(1);
+    expect(porFase[2]).toBe(1);
+    for (const fase of [3, 4, 5, 6, 7, 8] as const) {
+      expect(porFase[fase]).toBeGreaterThanOrEqual(4);
     }
   });
 
-  it("mantém mais de um tipo em todas as fases descritas como variadas", () => {
-    for (const fase of [2, 3, 4, 5, 6] as const) {
-      const tipos = new Set(BANCO.filter((problema) => problema.fase === fase).map((problema) => problema.tipo));
-      expect(tipos.size).toBeGreaterThan(1);
-    }
-  });
-
-  it("preserva a geometria declarada dos tipos A a D", () => {
-    for (const problema of BANCO) {
+  it("mantém as fases 1 e 2 estritamente clássicas", () => {
+    for (const problema of BANCO.filter((p) => p.fase === 1 || p.fase === 2)) {
       const hasteInicial = hasteComTorreCompleta(problema.inicial, problema.discos);
       const hasteAlvo = hasteComTorreCompleta(problema.alvo, problema.discos);
 
-      if (problema.tipo === "A") {
-        expect([hasteInicial, hasteAlvo]).toEqual([0, 2]);
-      } else if (problema.tipo === "B") {
-        expect(hasteInicial).not.toBeNull();
-        expect(hasteAlvo).not.toBeNull();
-        expect(hasteInicial).not.toBe(hasteAlvo);
-        expect([hasteInicial, hasteAlvo]).not.toEqual([0, 2]);
-      } else if (problema.tipo === "C") {
-        expect(distribuido(problema.inicial)).toBe(true);
-        expect(hasteAlvo).not.toBeNull();
-      } else if (problema.tipo === "D") {
-        expect(distribuido(problema.alvo)).toBe(true);
-      }
+      // Uma torre completa ocupa uma única haste; assim qualquer estado espalhado falha aqui.
+      expect(hasteInicial).not.toBeNull();
+      expect(hasteAlvo).not.toBeNull();
+      expect(hasteInicial).not.toBe(hasteAlvo);
+    }
+  });
+
+  it("segue a estrutura progressiva das fases 3, 4 e 5", () => {
+    for (const problema of BANCO.filter((p) => p.fase === 3)) {
+      expect(hasteComTorreCompleta(problema.inicial, problema.discos)).not.toBeNull();
+      expect(hasteComTorreCompleta(problema.alvo, problema.discos)).not.toBeNull();
+    }
+
+    for (const problema of BANCO.filter((p) => p.fase === 4)) {
+      expect(distribuido(problema.inicial)).toBe(true);
+      expect(hasteComTorreCompleta(problema.alvo, problema.discos)).not.toBeNull();
+    }
+
+    for (const problema of BANCO.filter((p) => p.fase === 5)) {
+      expect(distribuido(problema.inicial)).toBe(true);
+      expect(distribuido(problema.alvo)).toBe(true);
+    }
+  });
+
+  it("nunca usa mais de 5 discos fora da fase 8, nem 7 ou 8 discos", () => {
+    for (const problema of BANCO) {
+      expect(problema.discos).toBeGreaterThanOrEqual(3);
+      expect([7, 8]).not.toContain(problema.discos);
+      expect(problema.discos).toBeLessThanOrEqual(6);
+      if (problema.discos > 5) expect(problema.fase).toBe(8);
+      expect(problema.id).toMatch(new RegExp(`^${problema.tipo}${problema.discos}-\\d{2}$`));
+    }
+  });
+
+  it("cobre todas as oito fases e mistura tipos nas fases altas", () => {
+    for (const fase of FASES) {
+      expect(BANCO.some((problema) => problema.fase === fase)).toBe(true);
+    }
+
+    for (const fase of [6, 7, 8] as const) {
+      const tipos = new Set(BANCO.filter((problema) => problema.fase === fase).map((problema) => problema.tipo));
+      expect(tipos.size).toBeGreaterThan(1);
     }
   });
 

@@ -1,25 +1,24 @@
 import { BANCO, type Problema } from "./banco";
 
-export type Fase = 1 | 2 | 3 | 4 | 5 | 6;
+export type Fase = 1 | 2 | 3 | 4 | 5 | 6 | 7 | 8;
 
 /**
- * Mapa dificuldade → fase. A dificuldade que chega do `ExerciseConfig` é a escala 1–10 do
- * projeto; as fases são as seis da seção 39 dela. Deliberadamente generoso no começo: a fase 1
- * existe para aprender a regra, e ninguém deve ficar presa nela.
+ * Mapa dificuldade → fase. A escala 1–10 tem menos pontos que as oito fases,
+ * então as duas faixas iniciais ficam deliberadamente mais largas: dificuldades
+ * 1–2 aprendem a transferência clássica de 3 discos e 3–4 a consolidam com 4.
+ * Assim, a dificuldade 3 nunca volta a colocar alguém em uma configuração
+ * embaralhada; as seis variações passam a avançar uma a uma até a fase 8.
  */
 export function faseDaDificuldade(dificuldade: number): Fase {
   const d = Math.round(dificuldade);
-  // Corrigido em 01/set/2026, depois de ela abrir o exercício e dizer "não entendi nada".
-  // O mapeamento anterior levava a dificuldade 3 — que é onde muita gente está — direto à fase
-  // 3, a das configurações embaralhadas e alvos arbitrários. A pessoa caía no meio do épico sem
-  // nunca ter visto a torre clássica. Agora sobe de duas em duas, e as fases 1 e 2 (aprender a
-  // regra e transferência simples) cobrem toda a faixa inicial.
   if (d <= 2) return 1;
   if (d <= 4) return 2;
-  if (d <= 6) return 3;
-  if (d <= 7) return 4;
-  if (d <= 9) return 5;
-  return 6;
+  if (d === 5) return 3;
+  if (d === 6) return 4;
+  if (d === 7) return 5;
+  if (d === 8) return 6;
+  if (d === 9) return 7;
+  return 8;
 }
 
 /**
