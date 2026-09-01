@@ -1,28 +1,6 @@
 # As 3 ultimas especificacoes dela (automatico; a mais nova por ultimo)
 # Na retomada: ler as 3, conectar com PROGRESSO.md e git, declarar e seguir.
 
-## 01/09/2026 12:13
-A implementação está correta. Só quero acrescentar uma regra para as fases 1 e 2:
-elas são fases de aquisição/consolidação da regra, e não fases para permanência prolongada.
-Como existe apenas um problema possível dentro da estrutura clássica definida para cada uma:
-Fase 1 = 3 discos, esquerda → direita;
-Fase 2 = 4 discos, esquerda → direita;
-não quero que o paciente fique recebendo o mesmo problema indefinidamente entre sessões.
-O mesmo problema pode ser repetido quando necessário para aprender/consolidar a regra, mas depois de demonstrar domínio suficiente o sistema deve avançar para a fase seguinte, porque a repetição excessiva transforma a tarefa em reprodução de sequência conhecida em vez de planejamento.
-Sugestão de lógica:
-Fase 1
-primeira exposição: realiza normalmente;
-se concluir com compreensão das regras e sem dificuldade importante, pode avançar;
-se tiver dificuldade, repetir em outra oportunidade;
-não exigir mínimo de movimentos.
-Fase 2
-mesma lógica com 4 discos;
-usar como confirmação de que consegue aplicar a regra com maior demanda de planejamento;
-após desempenho funcional, avançar para a Fase 3.
-A partir da Fase 3, começa efetivamente a necessidade de adaptação porque o destino passa a variar.
-Portanto, não há problema em existir apenas um problema nas fases 1 e 2. O importante é que essas fases sejam tratadas como gates de aprendizagem, não como um banco de treino recorrente.
-Não mexer no restante da arquitetura.
-
 ## 01/09/2026 12:20
 A implementação ficou correta, inclusive a persistência das 8 fases. Quero apenas ajustar o gate das fases 1 e 2.
 Não quero que reinicios > 1, isoladamente, impeça progressão.
@@ -70,3 +48,23 @@ movimentosInvalidos > 3 → pode bloquear sozinho, porque está muito mais diret
 eficiencia > 2.0 + reinicios > 1 → pode indicar dificuldade suficiente para repetir a fase.
 Manter todos esses parâmetros configuráveis e identificados como parâmetros do programa, não normas clínicas.
 Da fase 3 em diante, manter o critério de desempenho mais exigente já existente.
+
+## 01/09/2026 12:40
+[Image #14] Na tela antes de começar, os dois blocos estão grandes demais: Configuração Inicial e Objetivo.
+Quero ajustar assim:
+1. Antes de começar
+manter a Configuração Inicial em destaque principal;
+deixar o Objetivo menor do que a Configuração Inicial;
+os dois continuam visíveis, mas não no mesmo peso visual;
+a ideia é que o paciente entenda: “isso é o estado de partida” e “isso é a referência para onde preciso chegar”.
+2. Depois que o jogo começar
+aí sim fazer como combinamos:
+o Objetivo deve ficar ainda menor;
+funcionar apenas como referência visual rápida;
+permanecer no canto superior direito;
+continuar clicável para ampliar;
+não competir visualmente com o tabuleiro principal.
+Resumindo:
+tela inicial: os dois aparecem, mas o Objetivo já deve ser menor que a Configuração Inicial;
+tela durante a execução: o Objetivo fica menor ainda, bem discreto, apenas como apoio visual.
+Não quero mudar lógica, só essa hierarquia visual.

@@ -75,20 +75,23 @@ type State = [Peg, Peg, Peg];
  * visível durante a execução: seção 47 dela, "não transformar o exercício em jogo de memória...
  * o foco é planejamento e resolução de problemas, não memória visual".
  */
-function MiniaturaAlvo({ alvo, discos }: { alvo: readonly (readonly number[])[]; discos: number }) {
-  const H = 44, W = 34, DH = 5;
+function MiniaturaAlvo({ alvo, discos, escala = 1 }: { alvo: readonly (readonly number[])[]; discos: number; escala?: number }) {
+  // `escala` existe para a hierarquia visual que ela pediu em 01/set/2026: na tela inicial o
+  // objetivo é MENOR que a configuração inicial (é referência, não o estado de partida); durante
+  // a execução fica menor ainda, só como apoio, sem competir com o tabuleiro.
+  const H = 44 * escala, W = 34 * escala, DH = 5 * escala;
   return (
-    <div className="flex items-end justify-center gap-1.5" aria-hidden>
+    <div className="flex items-end justify-center" style={{ gap: 6 * escala }} aria-hidden>
       {[0, 1, 2].map((haste) => (
         <div key={haste} className="relative flex flex-col-reverse items-center"
-          style={{ width: W, height: H, borderBottom: "2px solid #CBD5E1" }}>
-          <div className="absolute bottom-0" style={{ width: 2, height: H - 4, background: "#E2E8F0" }} />
+          style={{ width: W, height: H, borderBottom: `${Math.max(1.5, 2 * escala)}px solid #CBD5E1` }}>
+          <div className="absolute bottom-0" style={{ width: Math.max(1.5, 2 * escala), height: H - 4 * escala, background: "#E2E8F0" }} />
           {alvo[haste].map((disc) => (
             <div key={disc} className="relative rounded-sm"
               style={{
-                width: 8 + (disc / discos) * (W - 10),
+                width: 8 * escala + (disc / discos) * (W - 10 * escala),
                 height: DH,
-                marginBottom: 1,
+                marginBottom: Math.max(1, escala),
                 background: "#93C5FD",
               }} />
           ))}
@@ -644,17 +647,21 @@ export function TorreHanoi({ difficulty, theme, onComplete }: TorreHanoiProps) {
             Organize os discos conforme o objetivo.
           </h2>
 
-          {/* Os DOIS estados lado a lado, ambos visuais. Decisão dela em 01/set/2026: o objetivo
-              se mostra desenhado em TODOS os problemas, inclusive quando é torre completa —
-              "não depender apenas da frase". */}
-          <div className="mt-6 grid gap-6 sm:grid-cols-2">
-            <div>
+          {/* Os dois estados visuais, com PESOS DIFERENTES — hierarquia pedida por ela em
+              01/set/2026 vendo a tela: "manter a Configuração Inicial em destaque principal;
+              deixar o Objetivo menor... a ideia é que o paciente entenda: isso é o estado de
+              partida e isso é a referência para onde preciso chegar". Antes os dois ocupavam
+              metade da tela cada e competiam entre si. */}
+          <div className="mt-6 flex flex-col sm:flex-row sm:items-center gap-6">
+            <div className="sm:flex-1 sm:min-w-0">
               <p className="text-xs font-bold uppercase tracking-wide mb-3" style={{ color: "#94A3B8" }}>Configuração inicial</p>
               <HanoiPegsDisplay pegs={problema.inicial as State} theme={theme} selected={null} discCount={problema.discos} rotularHastes={false} />
             </div>
-            <div>
-              <p className="text-xs font-bold uppercase tracking-wide mb-3" style={{ color: "#94A3B8" }}>Objetivo</p>
-              <HanoiPegsDisplay pegs={problema.alvo as State} theme={theme} selected={null} discCount={problema.discos} rotularHastes={false} />
+
+            <div className="shrink-0 rounded-2xl px-4 py-3 mx-auto sm:mx-0"
+              style={{ background: "#F8FAFC", border: "1px solid #E2E8F0" }}>
+              <p className="text-[11px] font-bold uppercase tracking-wide mb-2 text-center" style={{ color: "#94A3B8" }}>Objetivo</p>
+              <MiniaturaAlvo alvo={problema.alvo} discos={problema.discos} escala={2.4} />
             </div>
           </div>
 
@@ -713,7 +720,7 @@ export function TorreHanoi({ difficulty, theme, onComplete }: TorreHanoiProps) {
             style={{ background: "#F8FAFC", border: "1px solid #E2E8F0" }}
             aria-label="Ampliar objetivo">
             <p className="text-[10px] font-bold uppercase tracking-wide mb-1.5" style={{ color: "#94A3B8" }}>Objetivo</p>
-            <MiniaturaAlvo alvo={problema.alvo} discos={problema.discos} />
+            <MiniaturaAlvo alvo={problema.alvo} discos={problema.discos} escala={0.85} />
             <p className="text-[10px] mt-1.5 text-center" style={{ color: "#2563EB" }}>Ampliar</p>
           </button>
         </div>

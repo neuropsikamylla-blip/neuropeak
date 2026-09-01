@@ -18340,3 +18340,23 @@ Da fase 3 em diante, manter o critério de desempenho mais exigente já existent
 
 ## 01/09/2026 12:33
 abre a torre para eu ver
+
+## 01/09/2026 12:40
+[Image #14] Na tela antes de começar, os dois blocos estão grandes demais: Configuração Inicial e Objetivo.
+Quero ajustar assim:
+1. Antes de começar
+manter a Configuração Inicial em destaque principal;
+deixar o Objetivo menor do que a Configuração Inicial;
+os dois continuam visíveis, mas não no mesmo peso visual;
+a ideia é que o paciente entenda: “isso é o estado de partida” e “isso é a referência para onde preciso chegar”.
+2. Depois que o jogo começar
+aí sim fazer como combinamos:
+o Objetivo deve ficar ainda menor;
+funcionar apenas como referência visual rápida;
+permanecer no canto superior direito;
+continuar clicável para ampliar;
+não competir visualmente com o tabuleiro principal.
+Resumindo:
+tela inicial: os dois aparecem, mas o Objetivo já deve ser menor que a Configuração Inicial;
+tela durante a execução: o Objetivo fica menor ainda, bem discreto, apenas como apoio visual.
+Não quero mudar lógica, só essa hierarquia visual.
