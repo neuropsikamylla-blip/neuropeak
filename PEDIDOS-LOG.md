@@ -15595,3 +15595,6 @@ Minha decisão 2: o reinício é registrado como categoria própria, não somado
 
 ## 31/08/2026 19:44
 sim
+
+## 31/08/2026 21:57
+É que quando o paciente olha la movimento minimo... 15 ai ele percebe que ja errou e que nao vai fazer nesse quantidade ele ja gostaria de reiniciar... talvez podemos deixar o movimento (minimo para nós) mas não fazer o paciente ter de refazer tudo... não sei o que vc acha ?
