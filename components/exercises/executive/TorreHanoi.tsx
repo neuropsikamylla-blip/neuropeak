@@ -4,7 +4,7 @@ import { useState, useEffect, useRef } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { Check, X } from "lucide-react";
 import { calculateExerciseScore } from "@/lib/scoring";
-import { deveAvancarDeFase, deveSubirDeNivel, eficiencia } from "@/lib/torre-hanoi";
+import { deveAvancarDeFase, deveSubirDeNivel, eficiencia, ofereceSegundaTentativa } from "@/lib/torre-hanoi";
 import { contarReversoes, type MovimentoTorre } from "@/lib/torres-registro";
 import { BANCO, type Problema } from "@/lib/torres/banco";
 import { dificuldadeDaFase, faseDaDificuldade, proximoProblema, type Fase } from "@/lib/torres/selecao";
@@ -542,7 +542,8 @@ export function TorreHanoi({ difficulty, theme, onComplete }: TorreHanoiProps) {
         const nextPuzzle = puzzle + 1;
         const timeUp = isTimeUp();
 
-        // Fim de sessão nunca oferece segunda tentativa: encerra como sempre.
+        // Fim de sessão nunca oferece segunda tentativa; solução ÓTIMA também não — não há
+        // caminho mais curto para procurar. Nesse caso a tela espera só o "Continuar".
         if (!timeUp && !isSegundaTentativa) {
           proximoRef.current = { puzzle: nextPuzzle, fase: proxFase };
           setAguardandoEscolha(true);
@@ -897,15 +898,19 @@ export function TorreHanoi({ difficulty, theme, onComplete }: TorreHanoiProps) {
                   tentativa voluntária, nunca duas (seção 52). */}
               {aguardandoEscolha && (
                 <>
-                  <p className="text-sm mt-3" style={{ color: "#1D4ED8" }}>
-                    Quer tentar encontrar um caminho mais eficiente?
-                  </p>
+                  {ofereceSegundaTentativa(moves, optimal) && (
+                    <p className="text-sm mt-3" style={{ color: "#1D4ED8" }}>
+                      Quer tentar encontrar um caminho mais eficiente?
+                    </p>
+                  )}
                   <div className="mt-3 flex gap-2 justify-center">
-                    <button type="button" onClick={tentarNovamente}
-                      className="rounded-xl px-4 py-2.5 text-sm font-bold"
-                      style={{ background: "#FFFFFF", border: "1px solid #BFDBFE", color: "#1D4ED8" }}>
-                      Tentar novamente
-                    </button>
+                    {ofereceSegundaTentativa(moves, optimal) && (
+                      <button type="button" onClick={tentarNovamente}
+                        className="rounded-xl px-4 py-2.5 text-sm font-bold"
+                        style={{ background: "#FFFFFF", border: "1px solid #BFDBFE", color: "#1D4ED8" }}>
+                        Tentar novamente
+                      </button>
+                    )}
                     <button type="button" onClick={continuarAposEscolha}
                       className="rounded-xl px-4 py-2.5 text-sm font-bold"
                       style={{ background: "#2563EB", color: "#FFFFFF" }}>

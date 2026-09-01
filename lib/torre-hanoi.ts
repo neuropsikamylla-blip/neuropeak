@@ -69,3 +69,18 @@ export function deveAvancarDeFase(fase: number, d: DesempenhoPuzzle): boolean {
   if (d.eficiencia > GATE_EFICIENCIA_ALTA && d.reinicios > GATE_REINICIOS_ALTOS) return false;
   return true;
 }
+
+/**
+ * A segunda tentativa só se oferece quando existe o que melhorar.
+ *
+ * Ela, em 01/set/2026, depois de resolver em 15 movimentos com mínimo 15: *"apareceu 'você quer
+ * tentar resolver em uma menor quantidade?'... acho que tem de aparecer somente se eu extrapolar
+ * o mínimo (que não aparece) mas que você sabe"*. Perguntar a quem já achou o caminho mais curto
+ * é pedir o impossível — e ainda sugere que o desempenho dele não bastou.
+ *
+ * O mínimo continua invisível durante a execução: quem sabe dele é o sistema, e é o sistema que
+ * decide se a pergunta faz sentido.
+ */
+export function ofereceSegundaTentativa(movimentos: number, minimo: number): boolean {
+  return movimentos > minimo;
+}

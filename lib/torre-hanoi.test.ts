@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { deveAvancarDeFase, deveSubirDeNivel, eficiencia, faixaEficiencia } from "./torre-hanoi";
+import { deveAvancarDeFase, deveSubirDeNivel, eficiencia, faixaEficiencia, ofereceSegundaTentativa } from "./torre-hanoi";
 
 describe("eficiência da Torre de Hanói", () => {
   it("calcula movimentos divididos pelo mínimo e evita NaN sem mínimo válido", () => {
@@ -107,5 +107,26 @@ describe("deveAvancarDeFase — as fases 1 e 2 são gate de aquisição", () => 
     // podem passar com 1,8.
     const passam = [1, 2, 3, 4, 5, 6, 7, 8].filter((f) => deveAvancarDeFase(f, limpo));
     expect(passam).toEqual([1, 2]);
+  });
+});
+
+describe("ofereceSegundaTentativa", () => {
+  it("NÃO oferece quando a solução já foi a mais curta", () => {
+    // O caso que ela pegou em 01/set/2026: resolveu em 15 com mínimo 15 e o app perguntou se
+    // queria tentar um caminho menor. Não existe caminho menor.
+    expect(ofereceSegundaTentativa(15, 15)).toBe(false);
+    expect(ofereceSegundaTentativa(7, 7)).toBe(false);
+  });
+
+  it("oferece sempre que houve movimento a mais, inclusive UM só", () => {
+    expect(ofereceSegundaTentativa(16, 15)).toBe(true);
+    expect(ofereceSegundaTentativa(31, 15)).toBe(true);
+  });
+
+  it("conta em que casos a pergunta aparece — nenhum deles com solução ótima", () => {
+    const casos = [[15, 15], [16, 15], [20, 15], [7, 7], [8, 7]] as const;
+    const oferecidos = casos.filter(([m, o]) => ofereceSegundaTentativa(m, o));
+    expect(oferecidos).toEqual([[16, 15], [20, 15], [8, 7]]);
+    expect(oferecidos.every(([m, o]) => m > o)).toBe(true);
   });
 });

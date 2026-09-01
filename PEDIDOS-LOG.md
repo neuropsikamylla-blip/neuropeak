@@ -18360,3 +18360,6 @@ Resumindo:
 tela inicial: os dois aparecem, mas o Objetivo já deve ser menor que a Configuração Inicial;
 tela durante a execução: o Objetivo fica menor ainda, bem discreto, apenas como apoio visual.
 Não quero mudar lógica, só essa hierarquia visual.
+
+## 01/09/2026 13:24
+apareceu uma mensagem vc resolveu em 15 movimentos (eu acho que era 15 o minimo ne?) ainda assim apareceu vc quer tentar resolver em uma menor quantidade ? ahco que tem de aparecer somente se eu extrapolar o minimo (que nao aparece) mas que vc sabe
