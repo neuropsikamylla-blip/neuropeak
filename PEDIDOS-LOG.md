@@ -18230,3 +18230,40 @@ initialState + goalState + BFS
 sem quebrar o que já funciona.
 
 Não avance para novas telas até esclarecer esses pontos.
+
+## 01/09/2026 11:54
+Confirmo o entendimento. O motor está correto e não precisa ser refeito.
+Sobre a dúvida do objetivo: o objetivo deve permanecer VISÍVEL durante toda a execução.
+Não quero que “Ver objetivo” seja necessário para revelar o alvo, porque isso adicionaria uma exigência de memória visual que não é o foco deste treino.
+Portanto:
+ANTES DE COMEÇAR
+Mostrar lado a lado ou de forma muito clara:
+CONFIGURAÇÃO INICIAL
+[visual do initialState]
+OBJETIVO
+[visual do goalState]
+DURANTE A EXECUÇÃO
+Manter uma miniatura compacta do goalState sempre visível, com o título:
+OBJETIVO
+A miniatura não deve ocupar muito espaço nem competir com as torres principais.
+Se houver necessidade de ampliar, a própria miniatura pode ser clicável ou pode haver:
+Ampliar objetivo
+Isso abre uma visualização maior temporariamente.
+Portanto:
+objetivo sempre visível;
+botão apenas para AMPLIAR;
+nunca esconder o objetivo como parte da dificuldade;
+não testar memória visual;
+não mostrar caminho, movimentos necessários ou proximidade da solução.
+Também confirmar as demais mudanças:
+reorganizar o banco para as 8 fases definidas;
+manter fase inicial realmente clássica;
+usar sempre os rótulos Esquerda / Central / Direita;
+mostrar o goalState visualmente em TODOS os problemas, inclusive quando for uma torre completa;
+manter removida a barra de progresso da solução;
+não alterar BFS, registro, segunda tentativa, abandono ou demais partes do motor que já estão corretas.
+A única diferença entre os níveis deve ser a estrutura do problema, não a disponibilidade do objetivo.
+E eu acrescentaria uma escolha visual: na tela que você me mostrou, não colocaria o objetivo no meio das três hastes, porque pode parecer uma quarta informação misturada ao tabuleiro. Eu colocaria uma pequena caixa no canto superior direito do card:
+OBJETIVO
+[miniatura das três hastes]
+Assim o paciente olha rapidamente para ela e volta ao tabuleiro principal. É muito mais limpo.

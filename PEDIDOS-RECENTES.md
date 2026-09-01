@@ -1,18 +1,6 @@
 # As 3 ultimas especificacoes dela (automatico; a mais nova por ultimo)
 # Na retomada: ler as 3, conectar com PROGRESSO.md e git, declarar e seguir.
 
-## O QUE NÃO FIZ
-
-- **Não commitei e não publiquei** — nem o PROGRESSO.md nem o `.bak`.
-- **Não rodei `npm run build`**.
-- **Não toquei** nos outros três blocos "EM ANDAMENTO" nem em nenhuma outra linha do arquivo.
-- **Duas observações onde a realidade se moveu ou merece nuance** (registradas no texto, não maquiadas):
-  1. **A contagem virou 85 durante a tarefa.** O checkpoint automático commitou sozinho (`db27a91 checkpoint automatico`) entre 11:22 e 11:26. Escrevi as duas medições com as respectivas horas — 84 às 11:22, 85 às 11:26 — em vez de fingir um número estável. A faixa "v2.90 → v3.6.0" confere: o commit não publicado mais antigo (`e281113`) carrega `package.json` em 2.90.0, e o primeiro bump da série é `30b7370 … — v2.90.1`.
-  2. **`lib/adaptive.ts:154` está dentro de `calculateFocusProgression`**, não da genérica `calculateProgression`. A linha e o limiar `&gt;= 0.80` são exatamente os que você citou, e o próprio comentário em `TorreHanoi.tsx:539` aponta para ela — então mantive a referência como estava, mas registro aqui que a função nomeada nesse ponto do arquivo é a do Focus.
-- Não verifiquei visualmente nada em navegador (fora do escopo e é justamente a pendência dela).</result>
-<usage><subagent_tokens>54512</subagent_tokens><tool_uses>25</tool_uses><duration_ms>303233</duration_ms></usage>
-</task-notification>
-
 ## 01/09/2026 11:28
 [Image #7] [Image #8] essa barra ... subindo e descendo (azul) nao entendi e nada a ver esse nome auxiliar e destino (acho que no maximo destino) foi isso que pedi das torres?
 
@@ -916,3 +904,40 @@ initialState + goalState + BFS
 sem quebrar o que já funciona.
 
 Não avance para novas telas até esclarecer esses pontos.
+
+## 01/09/2026 11:54
+Confirmo o entendimento. O motor está correto e não precisa ser refeito.
+Sobre a dúvida do objetivo: o objetivo deve permanecer VISÍVEL durante toda a execução.
+Não quero que “Ver objetivo” seja necessário para revelar o alvo, porque isso adicionaria uma exigência de memória visual que não é o foco deste treino.
+Portanto:
+ANTES DE COMEÇAR
+Mostrar lado a lado ou de forma muito clara:
+CONFIGURAÇÃO INICIAL
+[visual do initialState]
+OBJETIVO
+[visual do goalState]
+DURANTE A EXECUÇÃO
+Manter uma miniatura compacta do goalState sempre visível, com o título:
+OBJETIVO
+A miniatura não deve ocupar muito espaço nem competir com as torres principais.
+Se houver necessidade de ampliar, a própria miniatura pode ser clicável ou pode haver:
+Ampliar objetivo
+Isso abre uma visualização maior temporariamente.
+Portanto:
+objetivo sempre visível;
+botão apenas para AMPLIAR;
+nunca esconder o objetivo como parte da dificuldade;
+não testar memória visual;
+não mostrar caminho, movimentos necessários ou proximidade da solução.
+Também confirmar as demais mudanças:
+reorganizar o banco para as 8 fases definidas;
+manter fase inicial realmente clássica;
+usar sempre os rótulos Esquerda / Central / Direita;
+mostrar o goalState visualmente em TODOS os problemas, inclusive quando for uma torre completa;
+manter removida a barra de progresso da solução;
+não alterar BFS, registro, segunda tentativa, abandono ou demais partes do motor que já estão corretas.
+A única diferença entre os níveis deve ser a estrutura do problema, não a disponibilidade do objetivo.
+E eu acrescentaria uma escolha visual: na tela que você me mostrou, não colocaria o objetivo no meio das três hastes, porque pode parecer uma quarta informação misturada ao tabuleiro. Eu colocaria uma pequena caixa no canto superior direito do card:
+OBJETIVO
+[miniatura das três hastes]
+Assim o paciente olha rapidamente para ela e volta ao tabuleiro principal. É muito mais limpo.

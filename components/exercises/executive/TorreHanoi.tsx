@@ -105,6 +105,7 @@ function hasteUnicaDoAlvo(alvo: readonly (readonly number[])[]): 0 | 1 | 2 | nul
 }
 
 const NOME_HASTE = ["esquerda", "central", "direita"] as const;
+const POSICOES = ["Esquerda", "Central", "Direita"] as const;
 
 /** Cópia profunda das três pilhas — o estado do banco é congelado e nunca pode ser mutado. */
 function clonarEstado(e: readonly (readonly number[])[]): State {
@@ -189,7 +190,7 @@ function HanoiPegsDisplay({
               (tela de objetivo de cada problema) os nomes mentiriam, porque o destino varia. */}
           {rotularHastes && (
             <div className={`text-xs absolute -bottom-5 ${theme === "GAMIFIED" ? "text-gray-400" : "text-gray-500"}`}>
-              {pegIdx === 0 ? "Origem" : pegIdx === 1 ? "Aux" : "Destino"}
+              {POSICOES[pegIdx]}
             </div>
           )}
         </div>
@@ -201,7 +202,7 @@ function HanoiPegsDisplay({
 function TorreHanoiTutorial({ theme, onDone }: { theme: Theme; onDone: () => void }) {
   const steps = [
     {
-      instruction: "Objetivo: leve TODOS os discos para o pino da DIREITA (Destino). Regra: um disco MAIOR nunca pode ficar sobre um MENOR.",
+      instruction: "Objetivo: leve TODOS os discos para a haste da DIREITA. Regra: um disco MAIOR nunca pode ficar sobre um MENOR.",
       content: (onStepDone: () => void) => <HanoiRuleStep theme={theme} onDone={onStepDone} />,
     },
     {
@@ -217,11 +218,11 @@ function TorreHanoiTutorial({ theme, onDone }: { theme: Theme; onDone: () => voi
 // passo (só aceita o toque certo, destacando o pino). No 2º passo o disco GRANDE vai
 // direto ao Destino — ensinando na prática que o pino do meio é só um apoio.
 function HanoiTeachStep({ theme, onDone }: { theme: Theme; onDone: () => void }) {
-  const SOLUTION: [number, number][] = [[0, 1], [0, 2], [1, 2]]; // de → para (0=Origem,1=Aux,2=Destino)
+  const SOLUTION: [number, number][] = [[0, 1], [0, 2], [1, 2]]; // de → para (0=Esquerda, 1=Central, 2=Direita)
   const HINTS = [
-    "Passo 1 de 3 — tire o disco pequeno da frente: toque na Origem e depois no pino do meio.",
-    "Passo 2 de 3 — leve o disco grande DIRETO ao Destino: toque na Origem e depois no Destino.",
-    "Passo 3 de 3 — coloque o pequeno por cima: toque no pino do meio e depois no Destino.",
+    "Passo 1 de 3 — tire o disco pequeno da frente: toque na Esquerda e depois na Central.",
+    "Passo 2 de 3 — leve o disco grande DIRETO ao fim: toque na Esquerda e depois na Direita.",
+    "Passo 3 de 3 — coloque o pequeno por cima: toque na Central e depois na Direita.",
   ];
   const [pegs, setPegs] = useState<[number[], number[], number[]]>([[2, 1], [], []]);
   const [selected, setSelected] = useState<number | null>(null);
@@ -256,7 +257,7 @@ function HanoiTeachStep({ theme, onDone }: { theme: Theme; onDone: () => void })
       <HanoiPegsDisplay pegs={pegs} theme={theme} selected={selected} hint={hintPeg} discCount={2} onPegClick={tap} />
       <p className={`text-sm mt-8 text-center font-medium ${done ? "text-green-600" : subClass}`} style={{ minHeight: 40 }}>
         {done
-          ? "🎉 Você conseguiu! Viu como o disco grande foi DIRETO ao Destino? O pino do meio é só um apoio."
+          ? "🎉 Você conseguiu! Viu como o disco grande foi DIRETO à Direita? A haste do meio é só um apoio."
           : HINTS[step]}
       </p>
     </div>
@@ -318,6 +319,7 @@ export function TorreHanoi({ difficulty, theme, onComplete }: TorreHanoiProps) {
     return p;
   });
   const [mostrandoObjetivo, setMostrandoObjetivo] = useState(true);
+  const [objetivoAmpliado, setObjetivoAmpliado] = useState(false);
   const discCount = problema.discos;
   const [puzzle, setPuzzle] = useState(0);
   const [puzzleResults, setPuzzleResults] = useState<ResultadoPuzzle[]>([]);
@@ -624,7 +626,6 @@ export function TorreHanoi({ difficulty, theme, onComplete }: TorreHanoiProps) {
   // porque com configuração inicial e alvo variáveis o paciente PRECISA analisar a situação antes
   // de agir — é o "observe o problema antes de começar" da instrução dela (seção 21).
   if (!showTutorial && mostrandoObjetivo) {
-    const haste = hasteUnicaDoAlvo(problema.alvo);
     return (
       <ExerciseStage width="medio" background="#F3F4F6">
         <div className="w-full rounded-3xl bg-white p-6 sm:p-7 text-center"
@@ -633,19 +634,22 @@ export function TorreHanoi({ difficulty, theme, onComplete }: TorreHanoiProps) {
             Organize os discos conforme o objetivo.
           </h2>
 
-          <div className="mt-5">
-            <HanoiPegsDisplay pegs={problema.inicial as State} theme={theme} selected={null} discCount={problema.discos} rotularHastes={false} />
-          </div>
-
-          <p className="mt-5 text-xs font-bold uppercase tracking-wide" style={{ color: "#94A3B8" }}>Objetivo</p>
-          <div className="mt-2">
-            {haste !== null
-              ? <p className="text-sm font-semibold" style={{ color: "#1D4ED8" }}>Todos os discos na haste {NOME_HASTE[haste]}.</p>
-              : <MiniaturaAlvo alvo={problema.alvo} discos={problema.discos} />}
+          {/* Os DOIS estados lado a lado, ambos visuais. Decisão dela em 01/set/2026: o objetivo
+              se mostra desenhado em TODOS os problemas, inclusive quando é torre completa —
+              "não depender apenas da frase". */}
+          <div className="mt-6 grid gap-6 sm:grid-cols-2">
+            <div>
+              <p className="text-xs font-bold uppercase tracking-wide mb-3" style={{ color: "#94A3B8" }}>Configuração inicial</p>
+              <HanoiPegsDisplay pegs={problema.inicial as State} theme={theme} selected={null} discCount={problema.discos} rotularHastes={false} />
+            </div>
+            <div>
+              <p className="text-xs font-bold uppercase tracking-wide mb-3" style={{ color: "#94A3B8" }}>Objetivo</p>
+              <HanoiPegsDisplay pegs={problema.alvo as State} theme={theme} selected={null} discCount={problema.discos} rotularHastes={false} />
+            </div>
           </div>
 
           <button type="button" onClick={() => { setMostrandoObjetivo(false); puzzleStart.current = Date.now(); }}
-            className="mt-6 w-full rounded-xl py-3 font-bold text-sm"
+            className="mt-8 w-full rounded-xl py-3 font-bold text-sm"
             style={{ background: "#2563EB", color: "#FFFFFF" }}>
             Começar
           </button>
@@ -669,26 +673,39 @@ export function TorreHanoi({ difficulty, theme, onComplete }: TorreHanoiProps) {
     discCount <= 1 ? MAXW : MINW + ((disc - 1) / (discCount - 1)) * (MAXW - MINW);
   // O teto baixou para 5, mas a altura mínima preserva uma área confortável para tocar nas hastes.
   const towerH = Math.max(200, MAX_DISCS * (DISC_H + 4) + 26);
-  // "Origem / Auxiliar / Destino" saíram em 01/set/2026: com destino variável eles MENTIAM — a
-  // haste rotulada "Destino" não era o destino do problema. Nas palavras dela: "nada a ver esse
-  // nome auxiliar e destino (acho que no máximo destino)". Agora só a haste-alvo é marcada, e só
-  // quando o alvo é uma torre completa numa haste; nos alvos arbitrários quem diz é a miniatura.
-  const hasteAlvo = hasteUnicaDoAlvo(problema.alvo);
-  const rotuloDaHaste = (i: number) => (hasteAlvo !== null && i === hasteAlvo ? "Objetivo" : "");
+  // Rótulos por POSIÇÃO, nunca por papel. Decisão dela em 01/set/2026: "usar sempre os rótulos
+  // Esquerda / Central / Direita... porque agora qualquer haste pode exercer qualquer função".
+  // "Origem/Auxiliar/Destino" mentiam assim que o destino passou a variar — a haste rotulada
+  // "Destino" não era o destino do problema. Posição não tem como mentir.
+  const rotuloDaHaste = (i: number) => POSICOES[i];
 
   return (
     <ExerciseStage width="medio" background="#F3F4F6">
       <div className="w-full rounded-3xl bg-white p-6 sm:p-7"
         style={{ boxShadow: "0 12px 40px rgba(15,23,42,.10)", border: "1px solid #EEF0F4" }}>
 
-        {/* Título + nível */}
-        <div className="flex items-start">
+        {/* Título à esquerda, OBJETIVO no canto superior direito — escolha dela em 01/set/2026:
+            "não colocaria o objetivo no meio das três hastes, porque pode parecer uma quarta
+            informação misturada ao tabuleiro... uma pequena caixa no canto superior direito do
+            card. Assim o paciente olha rapidamente para ela e volta ao tabuleiro principal."
+            A miniatura fica SEMPRE visível: esconder o alvo transformaria o exercício em prova de
+            memória visual, que não é o foco. O botão só AMPLIA. */}
+        <div className="flex items-start justify-between gap-4">
           <div>
             <h2 className="font-bold tracking-tight" style={{ color: "#0F172A", fontSize: 22, lineHeight: 1.1 }}>Jogo das Torres</h2>
             {/* O nível passou a ser a FASE, não o número de discos — e a fase é mecânica interna, que
                 não vai para a tela. Sobra a informação neutra do problema em jogo. */}
             <p className="mt-1 text-sm font-medium" style={{ color: "#64748B" }}>{discCount} discos</p>
           </div>
+
+          <button type="button" onClick={() => setObjetivoAmpliado(true)}
+            className="shrink-0 rounded-xl px-3 py-2 text-left transition-colors"
+            style={{ background: "#F8FAFC", border: "1px solid #E2E8F0" }}
+            aria-label="Ampliar objetivo">
+            <p className="text-[10px] font-bold uppercase tracking-wide mb-1.5" style={{ color: "#94A3B8" }}>Objetivo</p>
+            <MiniaturaAlvo alvo={problema.alvo} discos={problema.discos} />
+            <p className="text-[10px] mt-1.5 text-center" style={{ color: "#2563EB" }}>Ampliar</p>
+          </button>
         </div>
 
         {!won && (() => { const reiniciarBloqueado = moves === 0; return (
@@ -714,22 +731,32 @@ export function TorreHanoi({ difficulty, theme, onComplete }: TorreHanoiProps) {
             e saem dela o tempo todo: a barra subia e descia sem querer dizer nada. Além disso era
             um placar, e placar durante a execução é justamente o que ela mandou tirar. */}
 
-        {/* O objetivo continua acessível durante a execução — é o enunciado do problema, não um
-            placar. Alvo em haste única vira uma linha; alvo arbitrário mantém a miniatura, para
-            o exercício não virar prova de memória (seção 47). */}
-        {(() => {
-          const haste = hasteUnicaDoAlvo(problema.alvo);
-          return haste !== null ? (
-            <p className="mt-2 text-center text-xs" style={{ color: "#94A3B8" }}>
-              Objetivo: haste {NOME_HASTE[haste]}
-            </p>
-          ) : (
-            <div className="mt-2">
-              <p className="text-center text-xs mb-1" style={{ color: "#94A3B8" }}>Objetivo</p>
-              <MiniaturaAlvo alvo={problema.alvo} discos={problema.discos} />
-            </div>
-          );
-        })()}
+        {/* Ampliação temporária do objetivo. Nunca é a ÚNICA forma de ver o alvo — a miniatura
+            do canto continua ali. Isto é conforto de leitura, não um recurso a ser gerenciado. */}
+        <AnimatePresence>
+          {objetivoAmpliado && (
+            <motion.div
+              className="fixed inset-0 z-50 flex items-center justify-center p-6"
+              style={{ background: "rgba(15,23,42,0.55)" }}
+              initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}
+              onClick={() => setObjetivoAmpliado(false)}
+            >
+              <motion.div className="rounded-3xl bg-white p-6 text-center"
+                style={{ boxShadow: "0 20px 60px rgba(15,23,42,.25)", maxWidth: 520, width: "100%" }}
+                initial={{ scale: 0.95 }} animate={{ scale: 1 }} exit={{ scale: 0.95 }}
+                onClick={(e) => e.stopPropagation()}
+              >
+                <p className="text-xs font-bold uppercase tracking-wide mb-4" style={{ color: "#94A3B8" }}>Objetivo</p>
+                <HanoiPegsDisplay pegs={problema.alvo as State} theme={theme} selected={null} discCount={problema.discos} rotularHastes={false} />
+                <button type="button" onClick={() => setObjetivoAmpliado(false)}
+                  className="mt-6 w-full rounded-xl py-3 font-bold text-sm"
+                  style={{ background: "#2563EB", color: "#FFFFFF" }}>
+                  Fechar
+                </button>
+              </motion.div>
+            </motion.div>
+          )}
+        </AnimatePresence>
 
         {/* Único texto permitido na execução da 2ª tentativa (seção 25): nada de mínimo,
             contador ou eficiência — a regra da fatia 1 continua valendo integralmente. */}
@@ -764,7 +791,7 @@ export function TorreHanoi({ difficulty, theme, onComplete }: TorreHanoiProps) {
           {pegs.map((peg, pegIdx) => {
             const isSel = selected === pegIdx;
             return (
-              <button key={pegIdx} onClick={() => handlePegClick(pegIdx)} aria-label={`Haste ${pegIdx + 1}${rotuloDaHaste(pegIdx) ? " — objetivo" : ""}`}
+              <button key={pegIdx} onClick={() => handlePegClick(pegIdx)} aria-label={`Haste ${POSICOES[pegIdx]}`}
                 className="relative flex-1 flex items-end justify-center border-0 bg-transparent cursor-pointer"
                 style={{ height: towerH, WebkitTapHighlightColor: "transparent", touchAction: "manipulation" }}>
                 {/* zona tocável: a coluna INTEIRA é clicável — deixa isso visível */}
@@ -799,9 +826,7 @@ export function TorreHanoi({ difficulty, theme, onComplete }: TorreHanoiProps) {
                 {/* base de madeira */}
                 <div className="absolute rounded-full" style={{ bottom: 0, width: "92%", height: 16, background: isSel ? "linear-gradient(180deg,#d19a3a,#9c6b1e)" : "linear-gradient(180deg,#9c6b3f,#6b4423)", boxShadow: "0 3px 8px rgba(15,23,42,.22)", transition: "background .15s" }} />
                 {/* rótulo */}
-                {rotuloDaHaste(pegIdx) && (
-                  <span className="absolute text-xs font-semibold" style={{ bottom: -24, color: "#2563EB" }}>{rotuloDaHaste(pegIdx)}</span>
-                )}
+                <span className="absolute text-xs font-semibold" style={{ bottom: -24, color: isSel ? "#B45309" : "#94A3B8" }}>{rotuloDaHaste(pegIdx)}</span>
               </button>
             );
           })}
