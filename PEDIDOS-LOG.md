@@ -18485,3 +18485,6 @@ github.com
 
 ## 01/09/2026 18:04
 HTTPS
+
+## 01/09/2026 18:04
+manda certinho para eu copiar e colar pq nao estou conseguindo
