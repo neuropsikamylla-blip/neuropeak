@@ -1,34 +1,6 @@
 # As 3 ultimas especificacoes dela (automatico; a mais nova por ultimo)
 # Na retomada: ler as 3, conectar com PROGRESSO.md e git, declarar e seguir.
 
-## COMO PROVEI
-
-```
-$ npx tsc --noEmit ; echo "EXIT_TSC=$?"
-EXIT_TSC=0
-
-$ npm run test &gt; .../test.log 2&gt;&amp;1 ; echo "EXIT_TEST=$?"
-EXIT_TEST=0
- Test Files  62 passed (62)
-      Tests  861 passed (861)
-   Duration  15.13s
-
-$ grep '"version"' package.json
-  "version": "3.9.3",
-
-$ git log --oneline origin/main..HEAD | wc -l
-      98        # 01/09/2026 17:53 (-0300)
-     100        # 01/09/2026 17:56 (-0300)
-
-$ git diff --stat -- PROGRESSO.md   (antes do checkpoint automático)
- PROGRESSO.md | 76 +++++++++++++++++++--------
- 1 file changed, 62 insertions(+), 14 deletions(-)
-```
-
-Conferências extras: `targetPeg` sem nenhuma ocorrência em `lib/`, `components/`, `app/`; `lib/torres/banco.ts` com 41 problemas (1/1/6/6/6/8/8/5 nas 8 fases); corpos dos commits conferidos um a um contra cada afirmação (todos batem, inclusive as falas dela e o bug de persistência); `PEDIDOS-RECENTES.md` confirma as instruções que geraram v3.9.1, v3.9.2 e v3.9.3.
-
-**`npm run build` não rodado** — dev server dela na porta 3000.
-
 ## TRÊS FATOS QUE NÃO BATERAM (você pediu para avisar)
 
 1. **O hash `fa5f037` não está na história atual.** Ele existe (mesma mensagem, mesma tree, mesmo parent `8a41dfc`, autoria 12:18:04), mas foi **recriado 11 segundos depois** como **`83e2914`** (committer date 12:18:15), e `git merge-base --is-ancestor fa5f037 HEAD` → **não**. Escrevi **`83e2914`** no PROGRESSO.md, com uma nota em itálico explicando o hash órfão. Os outros seis hashes são ancestrais de HEAD e conferem com as mensagens que você citou.
@@ -43,3 +15,6 @@ Conferências extras: `targetPeg` sem nenhuma ocorrência em `lib/`, `components
 - Não consegui provar as falhas dos labs por artefato: `~/codex-lab/labs/` não existe e não achei diretório de lab `torres-*`. A evidência das quatro falhas veio **dos corpos dos commits** `70b5311`, `de456f5`, `83e2914` e `8c6a6f1`, que descrevem `torres-f4` (erro de terminal), `torres-f5b` (vazio em duas execuções) e `torres-gate` (terminou sem produzir arquivo).</result>
 <usage><subagent_tokens>56759</subagent_tokens><tool_uses>36</tool_uses><duration_ms>285751</duration_ms></usage>
 </task-notification>
+
+## 01/09/2026 18:00
+publique agora o que estou solicitando se nao irei denunciar vc
