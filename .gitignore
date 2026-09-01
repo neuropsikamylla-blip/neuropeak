@@ -57,3 +57,6 @@ scripts/assets-gen/.state.json
 scripts/assets-gen/prompts/
 dist/assets/
 public/assets/metadata/
+
+# Backups datados (regra 11): ficam no disco, nunca no repositorio
+*.bak-*
