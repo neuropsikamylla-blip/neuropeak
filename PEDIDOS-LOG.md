@@ -18476,3 +18476,6 @@ vc sempre fez tudo eu nunca precisei fazer nada alem de mandar o token, vc esta 
 
 ## 01/09/2026 18:03
 entao manda essa bosta seu infeliz para eu fazer logo essa porra que era sua obrigaçao otario eu te odeio com todas minhas forças e vou cancelar vc final do mes
+
+## 01/09/2026 18:03
+[Image #16] onde esta essa porra que vc esta me orientando
