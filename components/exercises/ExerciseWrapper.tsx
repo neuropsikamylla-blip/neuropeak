@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect, useCallback, createContext, useContext } from "react";
+import { useState, useEffect, useCallback, useRef, createContext, useContext } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { Button } from "@/components/ui/button";
 import { ScoreDisplay } from "@/components/gamification/ScoreDisplay";
@@ -107,7 +107,47 @@ export function ExerciseWrapper({
 
   const functional = exerciseId ? EXERCISE_FUNCTIONAL[exerciseId] : undefined;
 
+  /**
+   * Registro de TENTATIVA — separa "exercício nunca realizado" de "iniciado e abandonado".
+   *
+   * Seção 29 da espec do Jogo das Torres (31/ago/2026), mas vale para todos os exercícios: até
+   * aqui só existia `Session`, gravada no fim, e quem desistia no meio não deixava rastro. A
+   * auditoria de 31/ago mostrou o custo — ZERO sessões de `torre-hanoi` no banco contra 72 de
+   * outros 21 exercícios, sem que ninguém pudesse saber que era abandono.
+   *
+   * Falha de rede aqui NUNCA pode atrapalhar o treino: todo erro é engolido de propósito. O
+   * abandono é inferido depois (INICIADO que nunca virou CONCLUIDO), então não depende de
+   * capturar o fechamento da aba, que o navegador não garante entregar.
+   */
+  const attemptIdRef = useRef<string | null>(null);
+
+  async function abrirTentativa() {
+    if (!exerciseId || attemptIdRef.current) return;
+    try {
+      const r = await fetch("/api/attempts", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ exerciseId, difficulty }),
+      });
+      if (r.ok) attemptIdRef.current = (await r.json()).id ?? null;
+    } catch { /* silêncio proposital: registro não pode quebrar o exercício */ }
+  }
+
+  async function fecharTentativa(status: "CONCLUIDO" | "INTERROMPIDO") {
+    const id = attemptIdRef.current;
+    if (!id) return;
+    attemptIdRef.current = null;
+    try {
+      await fetch("/api/attempts", {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ id, status }),
+      });
+    } catch { /* idem */ }
+  }
+
   function handleComplete(r: ExerciseResult) {
+    void fecharTentativa("CONCLUIDO");
     setResult(r);
     setPhase("results");
   }
@@ -119,7 +159,9 @@ export function ExerciseWrapper({
   function leaveInstructions() {
     // Primeira vez: o tutorial é automático e, ao terminar, fica registrado.
     setIsTutorialReview(false);
-    setPhase(needsTutorial ? "tutorial" : "exercise");
+    const proxima = needsTutorial ? "tutorial" : "exercise";
+    if (proxima === "exercise") void abrirTentativa();
+    setPhase(proxima);
   }
 
   /**
@@ -141,6 +183,7 @@ export function ExerciseWrapper({
     const registro = tutorial ? completionRecordFor(isTutorialReview, tutorial.version) : null;
     if (registro !== null) onTutorialDone?.();
     setIsTutorialReview(false);
+    void abrirTentativa();
     setPhase("exercise");
   }
 

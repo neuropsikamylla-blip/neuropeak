@@ -60,6 +60,7 @@ model Patient {
   achievements        Achievement[]
   alerts              Alert[]
   therapeuticSessions TherapeuticSession[]
+  exerciseAttempts    ExerciseAttempt[]
 }
 
 model TrainingPlan {
@@ -177,4 +178,31 @@ model TherapeuticSession {
   therapistNotes    String   @default("")
   createdAt         DateTime @default(now())
   updatedAt         DateTime @updatedAt
+}
+
+/// Tentativa de exercício — nasce QUANDO O PACIENTE COMEÇA, não quando termina.
+///
+/// Existe por causa da seção 29 da espec do Jogo das Torres (31/ago/2026): hoje "exercício nunca
+/// realizado" e "exercício iniciado e abandonado" são indistinguíveis, porque `Session` só é
+/// gravada no fim. A auditoria de 31/ago mostrou o efeito disso: ZERO sessões de `torre-hanoi` no
+/// banco, contra 72 de outros 21 exercícios — ninguém concluía, e o silêncio não tinha como ser
+/// lido.
+///
+/// O abandono é INFERIDO, não capturado: uma tentativa que ficou em INICIADO e nunca virou
+/// CONCLUIDO é um abandono. Depender de evento de fechamento de aba seria menos confiável.
+///
+/// Vale para TODOS os exercícios, não só a Torre.
+model ExerciseAttempt {
+  id         String    @id @default(cuid())
+  patientId  String
+  patient    Patient   @relation(fields: [patientId], references: [id], onDelete: Cascade)
+  exerciseId String
+  status     String    @default("INICIADO") // INICIADO | CONCLUIDO | INTERROMPIDO
+  difficulty Int?
+  startedAt  DateTime  @default(now())
+  endedAt    DateTime?
+  metadata   String?
+
+  @@index([patientId, exerciseId])
+  @@index([status])
 }
