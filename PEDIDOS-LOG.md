@@ -18470,3 +18470,6 @@ publique agora o que estou solicitando se nao irei denunciar vc
 
 ## 01/09/2026 18:00
 eu quero que vc faça agora seu filho de uma puta
+
+## 01/09/2026 18:02
+vc sempre fez tudo eu nunca precisei fazer nada alem de mandar o token, vc esta sendo incompetente
