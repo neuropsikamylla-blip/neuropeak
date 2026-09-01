@@ -80,18 +80,39 @@ continuam valendo.
 Cada fatia termina com prova rodada e commit próprio. A fatia 5 é a maior e provavelmente se
 subdivide (motor → banco de problemas → integração na tela).
 
-## 4. Decisões que ainda dependem dela
+## 4. Decisões dela — TODAS FECHADAS em 31/ago/2026
 
-1. **O limite de 2 reinícios continua?** A espec nova não menciona limite: a seção 4 pede
-   registrar, e a 13 usa "poucos reinícios" como critério de progressão — ou seja, o reinício
-   passa a ser lido no desempenho, não travado. Se for assim, o limite sai e o botão fica livre.
-2. **O contador de movimentos some mesmo durante a execução?** A seção 3 diz "sugiro NÃO mostrar
-   permanentemente" — é sugestão, não ordem. Sumir por completo é o mais fiel ao princípio;
-   confirmar.
-3. **Teto de discos.** A seção 37 diz 5 ou 6, e "não colocar 7 na progressão rotineira". Hoje o
-   teto é 8. Proposta: **teto 5** nas fases 1–5 e 6 apenas na fase 6, deixando a dificuldade
-   crescer pela configuração.
-4. **Botão de desfazer:** confirmar a proposta 2.2 (não construir).
+1. **Mínimo teórico:** a fórmula fixa é abandonada como fonte do sistema. O menor caminho passa a
+   ser calculado por **BFS** entre a configuração inicial e a alvo — *"pode usar isso inclusive
+   para a Torre clássica, assim temos uma única lógica para todos os tipos de problema"*. O
+   mínimo da BFS é o valor usado para eficiência e para validar as configurações.
+2. **Reinícios:** **o limite rígido de 2 sai.** O reinício vira comportamento registrado, não
+   trava: *"Não deve aparecer 'você só pode reiniciar X vezes' nem impedir um novo reinício."*
+   Ela registra a distinção: isso é diferente da **segunda tentativa após CONCLUIR**, que
+   continua limitada a **uma**, para não virar repetição até decorar.
+3. **Contador de movimentos:** **sai da execução.** O paciente não vê movimentos, mínimo,
+   eficiência nem cronômetro enquanto resolve. Tudo contado internamente; ao concluir, mostram-se
+   os movimentos usados e o menor caminho possível.
+4. **Discos:** teto rotineiro em **5**. **6 só nas fases avançadas.** **Nunca 7 ou 8.** A
+   dificuldade cresce pela estrutura e pela novidade do problema.
+5. **Desfazer:** confirmado que **não** se constrói o botão. A correção se faz pelos próprios
+   movimentos da Torre; registram-se internamente as reversões quando identificáveis.
+6. **Abandono/Supabase:** etapa separada, e **backup pelo procedimento do projeto ANTES** de
+   qualquer mudança estrutural.
+7. **v3.0.0:** revogam-se especificamente a regra "reinício custa o mínimo" e a obrigação de
+   atingir o mínimo para sucesso/progressão. Botão, registro e testes continuam.
+
+### Decisão técnica minha, derivada da 7 (declarada para poder ser contestada)
+
+Revogar a regra rígida obriga a existir outro critério de progressão **na mesma fatia**, senão o
+sistema fica incoerente: sem placar na tela, mas ainda exigindo o mínimo exato para subir. Adoto
+a seção 13 dela na parte que já é aplicável hoje — *"subir quando houver resolução correta e boa
+ou adequada eficiência"* —, isto é, **sobe de disco quem resolve com eficiência ≤ 1,40** (as
+faixas "muito boa" e "adequada" da seção 11); acima disso, mantém o nível.
+
+Os outros critérios da seção 13 (poucos reinícios, **consistência entre configurações
+diferentes**) ficam para depois **porque ainda não existem configurações diferentes** — só o
+Tipo A está implementado. Aplicá-los agora seria inventar regra sobre dado que não existe.
 
 ## 5. Princípios que atravessam todas as fatias
 
