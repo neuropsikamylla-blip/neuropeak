@@ -104,12 +104,22 @@ export const GET = withApiHandler(async (
     },
   });
 
+  // Tentativas (tabela ExerciseAttempt, 01/set/2026): é o que separa "nunca realizado" de
+  // "iniciado e abandonado". Abandono é INFERIDO — ficou em INICIADO e nunca virou CONCLUIDO.
+  const tentativas = patient
+    ? await prisma.exerciseAttempt.groupBy({
+        by: ["exerciseId", "status"],
+        where: { patientId: patient.id },
+        _count: { _all: true },
+      })
+    : [];
+
   if (!patient) return NextResponse.json({ error: "Not found" }, { status: 404 });
   if (patient.therapistId !== user.id) {
     return NextResponse.json({ error: "Forbidden" }, { status: 403 });
   }
 
-  return NextResponse.json({ patient });
+  return NextResponse.json({ patient, tentativas });
 });
 
 export const PATCH = withApiHandler(async (

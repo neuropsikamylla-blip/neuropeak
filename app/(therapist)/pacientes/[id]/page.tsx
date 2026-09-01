@@ -37,12 +37,31 @@ export default async function PatientProfilePage({ params }: { params: Promise<{
 
   if (!patientBase) notFound();
 
-  const [sessionRows, trainingPlans, achievements, alerts] = await Promise.all([
+  const [sessionRows, trainingPlans, achievements, alerts, tentativas] = await Promise.all([
     prisma.session.findMany({ where: { patientId: id }, orderBy: { completedAt: "desc" }, take: 50 }),
     prisma.trainingPlan.findMany({ where: { patientId: id, isActive: true }, take: 1 }),
     prisma.achievement.findMany({ where: { patientId: id }, orderBy: { unlockedAt: "desc" } }),
     prisma.alert.findMany({ where: { patientId: id }, orderBy: { createdAt: "desc" }, take: 5 }),
+    // Tentativas iniciadas (tabela ExerciseAttempt): a única fonte que distingue "nunca fez" de
+    // "começou e desistiu". Abandono é INFERIDO — ficou em INICIADO e nunca virou CONCLUIDO.
+    prisma.exerciseAttempt.groupBy({
+      by: ["exerciseId", "status"],
+      where: { patientId: id },
+      _count: { _all: true },
+    }),
   ]);
+
+  // Consolida por exercício: iniciadas, concluídas e abandonadas.
+  const porExercicio = new Map<string, { iniciadas: number; concluidas: number }>();
+  for (const t of tentativas) {
+    const atual = porExercicio.get(t.exerciseId) ?? { iniciadas: 0, concluidas: 0 };
+    atual.iniciadas += t._count._all;
+    if (t.status === "CONCLUIDO") atual.concluidas += t._count._all;
+    porExercicio.set(t.exerciseId, atual);
+  }
+  const linhasTentativas = [...porExercicio.entries()]
+    .map(([exerciseId, v]) => ({ exerciseId, ...v, abandonadas: v.iniciadas - v.concluidas }))
+    .sort((a, b) => b.abandonadas - a.abandonadas || b.iniciadas - a.iniciadas);
 
   const patient = {
     ...patientBase,
@@ -446,6 +465,46 @@ export default async function PatientProfilePage({ params }: { params: Promise<{
               )}
             </CardContent>
           </Card>
+
+          {/* Iniciados x concluídos — seção 55 da espec das Torres, e vale para todos os
+              exercícios. Antes de 01/set/2026 quem desistia no meio não deixava rastro: exercício
+              nunca prescrito e exercício abandonado eram a mesma coisa no acompanhamento. Só
+              aparece quando há tentativa registrada; sessões antigas não têm como ser
+              reconstruídas. */}
+          {linhasTentativas.length > 0 && (
+            <Card className="mt-4">
+              <CardHeader><CardTitle className="text-base">Tentativas iniciadas</CardTitle></CardHeader>
+              <CardContent>
+                <div className="overflow-x-auto">
+                  <table className="w-full text-sm">
+                    <thead>
+                      <tr className="border-b text-slate-400">
+                        <th className="text-left pb-2">Exercício</th>
+                        <th className="text-right pb-2">Iniciados</th>
+                        <th className="text-right pb-2">Concluídos</th>
+                        <th className="text-right pb-2">Abandonados</th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      {linhasTentativas.map((l) => (
+                        <tr key={l.exerciseId} className="border-b border-white/5">
+                          <td className="py-2 font-medium text-slate-100">{l.exerciseId}</td>
+                          <td className="py-2 text-right text-slate-300">{l.iniciadas}</td>
+                          <td className="py-2 text-right text-slate-300">{l.concluidas}</td>
+                          <td className={`py-2 text-right font-bold ${l.abandonadas > 0 ? "text-amber-300" : "text-slate-400"}`}>
+                            {l.abandonadas}
+                          </td>
+                        </tr>
+                      ))}
+                    </tbody>
+                  </table>
+                </div>
+                <p className="text-xs text-slate-400 mt-3">
+                  Abandonado = começou e não chegou ao fim. O dado existe a partir de 1º de setembro de 2026.
+                </p>
+              </CardContent>
+            </Card>
+          )}
         </TabsContent>
 
         <TabsContent value="clinical" className="mt-4">
