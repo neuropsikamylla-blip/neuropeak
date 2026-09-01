@@ -6,6 +6,8 @@ import { Check, X } from "lucide-react";
 import { calculateExerciseScore } from "@/lib/scoring";
 import { deveSubirDeNivel, eficiencia } from "@/lib/torre-hanoi";
 import { contarReversoes, type MovimentoTorre } from "@/lib/torres-registro";
+import { BANCO, type Problema } from "@/lib/torres/banco";
+import { faseDaDificuldade, proximoProblema, type Fase } from "@/lib/torres/selecao";
 import { useTimedProgress } from "@/components/exercises/useExerciseEngine";
 import { TutorialBase } from "@/components/exercises/TutorialBase";
 import { ExerciseStage } from "@/components/exercises/ExerciseStage";
@@ -29,6 +31,9 @@ interface EventoReinicio {
 interface ResultadoPuzzle {
   correct: boolean;
   discs: number;
+  problemaId: string;
+  tipo: string;
+  fase: number;
   restarts: number;
   eficiencia: number;
   movimentosTotais: number;
@@ -64,17 +69,61 @@ const DISC_COLORS_LIGHT = [
 type Peg = number[];
 type State = [Peg, Peg, Peg];
 
-function optimalMoves(n: number): number {
-  return Math.pow(2, n) - 1;
+/**
+ * Miniatura do objetivo. Desenho sóbrio das três hastes com os discos na posição-alvo — sem
+ * números e sem legenda. Nos alvos que NÃO são torre completa (tipos C e D) ela permanece
+ * visível durante a execução: seção 47 dela, "não transformar o exercício em jogo de memória...
+ * o foco é planejamento e resolução de problemas, não memória visual".
+ */
+function MiniaturaAlvo({ alvo, discos }: { alvo: readonly (readonly number[])[]; discos: number }) {
+  const H = 44, W = 34, DH = 5;
+  return (
+    <div className="flex items-end justify-center gap-1.5" aria-hidden>
+      {[0, 1, 2].map((haste) => (
+        <div key={haste} className="relative flex flex-col-reverse items-center"
+          style={{ width: W, height: H, borderBottom: "2px solid #CBD5E1" }}>
+          <div className="absolute bottom-0" style={{ width: 2, height: H - 4, background: "#E2E8F0" }} />
+          {alvo[haste].map((disc) => (
+            <div key={disc} className="relative rounded-sm"
+              style={{
+                width: 8 + (disc / discos) * (W - 10),
+                height: DH,
+                marginBottom: 1,
+                background: "#93C5FD",
+              }} />
+          ))}
+        </div>
+      ))}
+    </div>
+  );
 }
 
-function initialPegs(discCount: number): State {
-  return [
-    Array.from({ length: discCount }, (_, i) => discCount - i),
-    [],
-    [],
-  ];
+/** Alvo que é uma torre completa numa haste — nesses casos basta a linha de texto. */
+function hasteUnicaDoAlvo(alvo: readonly (readonly number[])[]): 0 | 1 | 2 | null {
+  const cheias = [0, 1, 2].filter((i) => alvo[i].length > 0);
+  return cheias.length === 1 ? (cheias[0] as 0 | 1 | 2) : null;
 }
+
+const NOME_HASTE = ["esquerda", "central", "direita"] as const;
+
+/** Cópia profunda das três pilhas — o estado do banco é congelado e nunca pode ser mutado. */
+function clonarEstado(e: readonly (readonly number[])[]): State {
+  return [[...e[0]], [...e[1]], [...e[2]]] as State;
+}
+
+/**
+ * Vitória deixou de ser "haste 2 cheia" e passou a ser IGUALDADE COM O ALVO do problema — com os
+ * tipos C e D o alvo pode ser qualquer configuração. Comparação por valor, pilha a pilha: por
+ * referência nunca daria certo, e o exercício simplesmente não terminaria.
+ */
+function mesmoEstado(a: readonly (readonly number[])[], b: readonly (readonly number[])[]): boolean {
+  for (let i = 0; i < 3; i++) {
+    if (a[i].length !== b[i].length) return false;
+    for (let j = 0; j < a[i].length; j++) if (a[i][j] !== b[i][j]) return false;
+  }
+  return true;
+}
+
 
 function HanoiPegsDisplay({
   pegs,
@@ -251,12 +300,24 @@ export function TorreHanoi({ difficulty, theme, onComplete }: TorreHanoiProps) {
   const [showTutorial, setShowTutorial] = useState(true);
   const { begin, isTimeUp, elapsedSec, finish } = useTimedProgress(11 * 60 * 1000); // 11 min — planejamento (pedido da Kamylla)
 
-  const [discCount, setDiscCount] = useState(initialDiscs(difficulty));
+  // O problema deixa de ser gerado (torre cheia → haste 2) e passa a VIR DO BANCO pré-validado:
+  // configuração inicial, alvo e mínimo (da BFS) são propriedades dele. É o que traz os tipos
+  // B–E da espec dela, e portanto a flexibilidade — seção 2: a dificuldade cresce pela NOVIDADE
+  // do problema, não só pelo número de discos.
+  const [fase, setFase] = useState<Fase>(() => faseDaDificuldade(difficulty));
+  const usadosRef = useRef<string[]>([]);
+  const tiposRef = useRef<string[]>([]);
+  const [problema, setProblema] = useState<Problema>(() => {
+    const p = proximoProblema(faseDaDificuldade(difficulty), [], []);
+    return p;
+  });
+  const [mostrandoObjetivo, setMostrandoObjetivo] = useState(true);
+  const discCount = problema.discos;
   const [puzzle, setPuzzle] = useState(0);
   const [puzzleResults, setPuzzleResults] = useState<ResultadoPuzzle[]>([]);
 
   // Puzzle state
-  const [pegs, setPegs] = useState<State>(() => initialPegs(initialDiscs(difficulty)));
+  const [pegs, setPegs] = useState<State>(() => clonarEstado(problema.inicial));
   const [selected, setSelected] = useState<number | null>(null);
   const [moves, setMoves] = useState(0);
   const [won, setWon] = useState(false);
@@ -277,7 +338,7 @@ export function TorreHanoi({ difficulty, theme, onComplete }: TorreHanoiProps) {
   const segundasRef = useRef<{ primeira: number; segunda: number }[]>([]);
   // Para onde ir quando ele escolher "Continuar": o cálculo acontece na vitória, o uso acontece
   // depois, na escolha.
-  const proximoRef = useRef<{ puzzle: number; discos: number } | null>(null);
+  const proximoRef = useRef<{ puzzle: number; fase: Fase } | null>(null);
 
   const puzzleStart = useRef<number>(Date.now());
   // A latência pertence ao problema inteiro: um reinício não apaga o primeiro contato válido.
@@ -298,10 +359,22 @@ export function TorreHanoi({ difficulty, theme, onComplete }: TorreHanoiProps) {
     if (invalidMoveTimer.current !== null) clearTimeout(invalidMoveTimer.current);
   }, []);
 
-  const optimal = optimalMoves(discCount);
+  // O mínimo vem da BFS, gravado no problema. A fórmula 2^n−1 só valia para a torre
+  // clássica e mentiria em todos os outros tipos.
+  const optimal = problema.minimo;
 
-  function startNewPuzzle(nextDiscs: number) {
-    setPegs(initialPegs(nextDiscs));
+  /** Sorteia o próximo problema da fase e reabre a tela de objetivo (seção 45). */
+  function avancarParaProximoProblema(proxFase: Fase) {
+    const prox = proximoProblema(proxFase, usadosRef.current, tiposRef.current);
+    usadosRef.current = [...usadosRef.current, prox.id];
+    tiposRef.current = [...tiposRef.current, prox.tipo];
+    setProblema(prox);
+    startNewPuzzle(prox);
+    setMostrandoObjetivo(true);
+  }
+
+  function startNewPuzzle(prox: Problema) {
+    setPegs(clonarEstado(prox.inicial));
     setSelected(null);
     setMoves(0);
     setWon(false);
@@ -322,7 +395,7 @@ export function TorreHanoi({ difficulty, theme, onComplete }: TorreHanoiProps) {
   // Refaz O MESMO problema: mesmos discos, mesma configuração inicial. Preserva
   // `movimentosPrimeira` para a comparação do fim, e marca que a cota de uma tentativa foi usada.
   function tentarNovamente() {
-    setPegs(initialPegs(discCount));
+    setPegs(clonarEstado(problema.inicial));
     setSelected(null);
     setMoves(0);
     setWon(false);
@@ -348,7 +421,7 @@ export function TorreHanoi({ difficulty, theme, onComplete }: TorreHanoiProps) {
       tempoMs: Date.now() - puzzleStart.current,
     }]);
     setReversoesBeforeRestarts((total) => total + contarReversoes(movesThisAttempt));
-    setPegs(initialPegs(discCount));
+    setPegs(clonarEstado(problema.inicial));
     setSelected(null);
     setMoves(0);
     setWon(false);
@@ -364,8 +437,8 @@ export function TorreHanoi({ difficulty, theme, onComplete }: TorreHanoiProps) {
     if (!destino) return;
     proximoRef.current = null;
     setPuzzle(destino.puzzle);
-    setDiscCount(destino.discos);
-    startNewPuzzle(destino.discos);
+    setFase(destino.fase);
+    avancarParaProximoProblema(destino.fase);
   }
 
   function flashInvalidMove() {
@@ -413,13 +486,16 @@ export function TorreHanoi({ difficulty, theme, onComplete }: TorreHanoiProps) {
       if (firstValidMoveAt.current === null) firstValidMoveAt.current = movedAt;
       setSelected(null);
 
-      if (newPegs[2].length === discCount) {
+      if (mesmoEstado(newPegs, problema.alvo)) {
         setWon(true);
         const ef = eficiencia(newMoves, optimal);
 
         const newPuzzleResults = [...puzzleResults, {
           correct: true,
           discs: discCount,
+          problemaId: problema.id,
+          tipo: problema.tipo,
+          fase: problema.fase,
           restarts: restartsThisPuzzle,
           eficiencia: ef,
           movimentosTotais: movesBeforeRestarts + newMoves,
@@ -441,14 +517,16 @@ export function TorreHanoi({ difficulty, theme, onComplete }: TorreHanoiProps) {
 
         const base = isSegundaTentativa ? puzzleResults : newPuzzleResults;
         // Resolver é sucesso; eficiência boa ou adequada define a progressão.
-        const nextDiscs = deveSubirDeNivel(ef) ? Math.min(discCount + 1, MAX_DISCS) : discCount;
+        // A progressão passa a subir de FASE (seção 14: o nível não é o número de discos). O
+        // número de discos vem do problema sorteado dentro da fase.
+        const proxFase: Fase = deveSubirDeNivel(ef) ? (Math.min(6, fase + 1) as Fase) : fase;
 
         const nextPuzzle = puzzle + 1;
         const timeUp = isTimeUp();
 
         // Fim de sessão nunca oferece segunda tentativa: encerra como sempre.
         if (!timeUp && !isSegundaTentativa) {
-          proximoRef.current = { puzzle: nextPuzzle, discos: nextDiscs };
+          proximoRef.current = { puzzle: nextPuzzle, fase: proxFase };
           setAguardandoEscolha(true);
           return;
         }
@@ -508,6 +586,14 @@ export function TorreHanoi({ difficulty, theme, onComplete }: TorreHanoiProps) {
                 reversoes,
                 latenciaMediaMs,
                 reinicios,
+                tiposJogados: resultados.reduce<Record<string, number>>((acc, r) => {
+                  acc[r.tipo] = (acc[r.tipo] ?? 0) + 1;
+                  return acc;
+                }, {}),
+                fasesJogadas: resultados.reduce<Record<string, number>>((acc, r) => {
+                  acc[String(r.fase)] = (acc[String(r.fase)] ?? 0) + 1;
+                  return acc;
+                }, {}),
                 segundasTentativas: segundasRef.current.length,
                 melhoraMediaMovimentos: segundasRef.current.length
                   ? segundasRef.current.reduce((t, r) => t + (r.primeira - r.segunda), 0) / segundasRef.current.length
@@ -520,20 +606,58 @@ export function TorreHanoi({ difficulty, theme, onComplete }: TorreHanoiProps) {
             });
           } else {
             setPuzzle(nextPuzzle);
-            setDiscCount(nextDiscs);
-            startNewPuzzle(nextDiscs);
+            setFase(proxFase);
+            avancarParaProximoProblema(proxFase);
           }
         }, 2500);
       }
     }
   }
 
+  // Tela de cada problema (seção 45): o enunciado, o objetivo em miniatura e COMEÇAR. Ela existe
+  // porque com configuração inicial e alvo variáveis o paciente PRECISA analisar a situação antes
+  // de agir — é o "observe o problema antes de começar" da instrução dela (seção 21).
+  if (!showTutorial && mostrandoObjetivo) {
+    const haste = hasteUnicaDoAlvo(problema.alvo);
+    return (
+      <ExerciseStage width="medio" background="#F3F4F6">
+        <div className="w-full rounded-3xl bg-white p-6 sm:p-7 text-center"
+          style={{ boxShadow: "0 12px 40px rgba(15,23,42,.10)", border: "1px solid #EEF0F4" }}>
+          <h2 className="font-bold tracking-tight" style={{ color: "#0F172A", fontSize: 20 }}>
+            Organize os discos conforme o objetivo.
+          </h2>
+
+          <div className="mt-5">
+            <HanoiPegsDisplay pegs={problema.inicial as State} theme={theme} selected={null} discCount={problema.discos} />
+          </div>
+
+          <p className="mt-5 text-xs font-bold uppercase tracking-wide" style={{ color: "#94A3B8" }}>Objetivo</p>
+          <div className="mt-2">
+            {haste !== null
+              ? <p className="text-sm font-semibold" style={{ color: "#1D4ED8" }}>Todos os discos na haste {NOME_HASTE[haste]}.</p>
+              : <MiniaturaAlvo alvo={problema.alvo} discos={problema.discos} />}
+          </div>
+
+          <button type="button" onClick={() => { setMostrandoObjetivo(false); puzzleStart.current = Date.now(); }}
+            className="mt-6 w-full rounded-xl py-3 font-bold text-sm"
+            style={{ background: "#2563EB", color: "#FFFFFF" }}>
+            Começar
+          </button>
+        </div>
+      </ExerciseStage>
+    );
+  }
+
   if (showTutorial) {
-    return <TorreHanoiTutorial theme={theme} onDone={() => { puzzleStart.current = Date.now(); begin(); setShowTutorial(false); }} />;
+    return <TorreHanoiTutorial theme={theme} onDone={() => { begin(); setShowTutorial(false); setMostrandoObjetivo(true); }} />;
   }
 
   // Progresso VISUAL do jogo: quantos discos já chegaram ao destino.
-  const gameProgress = Math.round((pegs[2].length / discCount) * 100);
+  // Progresso VISUAL: quantos discos já estão na posição final do ALVO (antes assumia a haste 2,
+  // o que só valia para o Tipo A).
+  const gameProgress = Math.round(
+    ([0, 1, 2].reduce((acc, h) => acc + pegs[h].filter((d) => problema.alvo[h].includes(d)).length, 0) / discCount) * 100
+  );
 
   // Larguras progressivas (disco 1 mais estreito, disco N mais largo), escaladas
   // pela largura da torre pra caber em qualquer tela sem cortar.
@@ -555,7 +679,9 @@ export function TorreHanoi({ difficulty, theme, onComplete }: TorreHanoiProps) {
         <div className="flex items-start">
           <div>
             <h2 className="font-bold tracking-tight" style={{ color: "#0F172A", fontSize: 22, lineHeight: 1.1 }}>Jogo das Torres</h2>
-            <p className="mt-1 text-sm font-medium" style={{ color: "#64748B" }}>Nível: {discCount} discos</p>
+            {/* O nível passou a ser a FASE, não o número de discos — e a fase é mecânica interna, que
+                não vai para a tela. Sobra a informação neutra do problema em jogo. */}
+            <p className="mt-1 text-sm font-medium" style={{ color: "#64748B" }}>{discCount} discos</p>
           </div>
         </div>
 
@@ -581,6 +707,23 @@ export function TorreHanoi({ difficulty, theme, onComplete }: TorreHanoiProps) {
         <div className="mt-4 h-2 rounded-full overflow-hidden" style={{ background: "#EEF2F7" }}>
           <div className="h-full rounded-full" style={{ width: `${gameProgress}%`, background: "#1D4ED8", transition: "width .35s ease" }} />
         </div>
+
+        {/* O objetivo continua acessível durante a execução — é o enunciado do problema, não um
+            placar. Alvo em haste única vira uma linha; alvo arbitrário mantém a miniatura, para
+            o exercício não virar prova de memória (seção 47). */}
+        {(() => {
+          const haste = hasteUnicaDoAlvo(problema.alvo);
+          return haste !== null ? (
+            <p className="mt-2 text-center text-xs" style={{ color: "#94A3B8" }}>
+              Objetivo: haste {NOME_HASTE[haste]}
+            </p>
+          ) : (
+            <div className="mt-2">
+              <p className="text-center text-xs mb-1" style={{ color: "#94A3B8" }}>Objetivo</p>
+              <MiniaturaAlvo alvo={problema.alvo} discos={problema.discos} />
+            </div>
+          );
+        })()}
 
         {/* Único texto permitido na execução da 2ª tentativa (seção 25): nada de mínimo,
             contador ou eficiência — a regra da fatia 1 continua valendo integralmente. */}
