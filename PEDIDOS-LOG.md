@@ -18372,3 +18372,6 @@ até o momento gostei acho que esta aprovado
 
 ## 01/09/2026 17:54
 por favor
+
+## 01/09/2026 17:56
+o que preciso fazer? pode subir
