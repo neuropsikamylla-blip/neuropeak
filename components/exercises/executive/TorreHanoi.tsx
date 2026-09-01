@@ -2,9 +2,9 @@
 
 import { useState, useEffect, useRef } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import { Trophy, Check, X } from "lucide-react";
+import { Check, X } from "lucide-react";
 import { calculateExerciseScore } from "@/lib/scoring";
-import { julgarPuzzle } from "@/lib/torre-hanoi";
+import { deveSubirDeNivel, eficiencia } from "@/lib/torre-hanoi";
 import { useTimedProgress } from "@/components/exercises/useExerciseEngine";
 import { TutorialBase } from "@/components/exercises/TutorialBase";
 import { ExerciseStage } from "@/components/exercises/ExerciseStage";
@@ -17,8 +17,8 @@ interface TorreHanoiProps {
 }
 
 const MIN_DISCS = 3;
-const MAX_DISCS = 8;
-const MAX_RESTARTS_PER_PUZZLE = 2;
+// Seis discos voltam apenas nas fases avançadas, previstas para a fatia 5.
+const MAX_DISCS = 5;
 
 function initialDiscs(difficulty: number) {
   return Math.min(Math.max(MIN_DISCS, Math.floor(difficulty * 0.4) + 2), MAX_DISCS);
@@ -234,8 +234,7 @@ export function TorreHanoi({ difficulty, theme, onComplete }: TorreHanoiProps) {
 
   const [discCount, setDiscCount] = useState(initialDiscs(difficulty));
   const [puzzle, setPuzzle] = useState(0);
-  const [puzzleResults, setPuzzleResults] = useState<{ correct: boolean; discs: number; restarts: number }[]>([]);
-  const [lastWasOptimal, setLastWasOptimal] = useState(false);
+  const [puzzleResults, setPuzzleResults] = useState<{ correct: boolean; discs: number; restarts: number; eficiencia: number }[]>([]);
 
   // Puzzle state
   const [pegs, setPegs] = useState<State>(() => initialPegs(initialDiscs(difficulty)));
@@ -268,9 +267,7 @@ export function TorreHanoi({ difficulty, theme, onComplete }: TorreHanoiProps) {
   }
 
   function restartPuzzle() {
-    // `moves === 0` também trava: reiniciar um tabuleiro intacto gastaria um dos dois usos
-    // e tiraria o "mínimo" do puzzle sem que nada tivesse sido feito.
-    if (won || moves === 0 || restartsThisPuzzle >= MAX_RESTARTS_PER_PUZZLE) return;
+    if (won || moves === 0) return;
 
     setPegs(initialPegs(discCount));
     setSelected(null);
@@ -310,15 +307,13 @@ export function TorreHanoi({ difficulty, theme, onComplete }: TorreHanoiProps) {
 
       if (newPegs[2].length === discCount) {
         setWon(true);
-        // "Correct" = movimentos mínimos sem reiniciar o puzzle
-        const isOptimal = julgarPuzzle({ moves: newMoves, optimal, restarts: restartsThisPuzzle }).optimal;
-        setLastWasOptimal(isOptimal);
+        const ef = eficiencia(newMoves, optimal);
 
-        const newPuzzleResults = [...puzzleResults, { correct: isOptimal, discs: discCount, restarts: restartsThisPuzzle }];
+        const newPuzzleResults = [...puzzleResults, { correct: true, discs: discCount, restarts: restartsThisPuzzle, eficiencia: ef }];
         setPuzzleResults(newPuzzleResults);
 
-        // If optimal → increase disc count; if not → stay at same difficulty
-        const nextDiscs = isOptimal ? Math.min(discCount + 1, MAX_DISCS) : discCount;
+        // Resolver é sucesso; eficiência boa ou adequada define a progressão.
+        const nextDiscs = deveSubirDeNivel(ef) ? Math.min(discCount + 1, MAX_DISCS) : discCount;
 
         const nextPuzzle = puzzle + 1;
         const timeUp = isTimeUp();
@@ -327,10 +322,20 @@ export function TorreHanoi({ difficulty, theme, onComplete }: TorreHanoiProps) {
           if (timeUp) {
             finish();
             const correctCount = newPuzzleResults.filter((r) => r.correct).length;
-            const accuracy = correctCount / Math.max(1, newPuzzleResults.length);
+            // `accuracy` é o campo que ALIMENTA A ENGINE ADAPTATIVA (`lib/adaptive.ts:154`:
+            // ≥ 0,80 sobe de nível) e o que a terapeuta lê. Se fosse "resolvidos ÷ total", como
+            // resolver passou a ser sempre o sucesso, daria 100% em toda sessão — o exercício
+            // subiria de nível para sempre e a conquista de 100% dispararia sozinha.
+            // Então a acurácia é a proporção de puzzles resolvidos com eficiência BOA ou
+            // ADEQUADA (≤ 1,40), o mesmo critério de `deveSubirDeNivel`. Não é o mínimo exato,
+            // revogado por ela em 31/ago; é o desempenho estratégico, que discrimina.
+            // `correct` no metadata segue significando RESOLVIDOS.
+            const eficientes = newPuzzleResults.filter((r) => deveSubirDeNivel(r.eficiencia)).length;
+            const accuracy = eficientes / Math.max(1, newPuzzleResults.length);
             const maxDiscs = Math.max(...newPuzzleResults.map((r) => r.discs));
             const restarts = newPuzzleResults.reduce((total, result) => total + result.restarts, 0);
             const puzzlesComReinicio = newPuzzleResults.filter((result) => result.restarts > 0).length;
+            const eficienciaMedia = newPuzzleResults.reduce((total, result) => total + result.eficiencia, 0) / newPuzzleResults.length;
             const score = calculateExerciseScore("torre-hanoi", accuracy, undefined, maxDiscs);
             onComplete({
               exerciseId: "torre-hanoi",
@@ -339,7 +344,7 @@ export function TorreHanoi({ difficulty, theme, onComplete }: TorreHanoiProps) {
               accuracy,
               difficulty: maxDiscs,
               duration: elapsedSec(),
-              metadata: { puzzles: newPuzzleResults.length, maxDiscs, correct: correctCount, restarts, puzzlesComReinicio },
+              metadata: { puzzles: newPuzzleResults.length, maxDiscs, correct: correctCount, resolvidosComBoaEficiencia: eficientes, restarts, puzzlesComReinicio, eficienciaMedia },
             });
           } else {
             setPuzzle(nextPuzzle);
@@ -365,7 +370,8 @@ export function TorreHanoi({ difficulty, theme, onComplete }: TorreHanoiProps) {
   const DISC_H = 26;
   const discWidth = (disc: number) =>
     discCount <= 1 ? MAXW : MINW + ((disc - 1) / (discCount - 1)) * (MAXW - MINW);
-  const towerH = MAX_DISCS * (DISC_H + 4) + 26;   // espaço seguro p/ até 8 discos
+  // O teto baixou para 5, mas a altura mínima preserva uma área confortável para tocar nas hastes.
+  const towerH = Math.max(200, MAX_DISCS * (DISC_H + 4) + 26);
   const LABELS = ["Origem", "Auxiliar", "Destino"];
 
   return (
@@ -373,24 +379,20 @@ export function TorreHanoi({ difficulty, theme, onComplete }: TorreHanoiProps) {
       <div className="w-full rounded-3xl bg-white p-6 sm:p-7"
         style={{ boxShadow: "0 12px 40px rgba(15,23,42,.10)", border: "1px solid #EEF0F4" }}>
 
-        {/* Título + nível + indicadores */}
-        <div className="flex items-start justify-between gap-3 flex-wrap">
+        {/* Título + nível */}
+        <div className="flex items-start">
           <div>
             <h2 className="font-bold tracking-tight" style={{ color: "#0F172A", fontSize: 22, lineHeight: 1.1 }}>Jogo das Torres</h2>
             <p className="mt-1 text-sm font-medium" style={{ color: "#64748B" }}>Nível: {discCount} discos</p>
           </div>
-          <div className="flex gap-2.5">
-            <Indicator label="Movimentos" value={moves} />
-            <Indicator label="Mínimo" value={optimal} />
-          </div>
         </div>
 
-        {!won && (() => { const reiniciarBloqueado = moves === 0 || restartsThisPuzzle >= MAX_RESTARTS_PER_PUZZLE; return (
+        {!won && (() => { const reiniciarBloqueado = moves === 0; return (
           <div className="mt-3 flex justify-end">
             <button
               type="button"
               onClick={restartPuzzle}
-              disabled={moves === 0 || restartsThisPuzzle >= MAX_RESTARTS_PER_PUZZLE}
+              disabled={moves === 0}
               className="rounded-xl px-3 py-2 text-sm font-semibold transition-colors disabled:cursor-not-allowed"
               style={{
                 background: reiniciarBloqueado ? "#F8FAFC" : "#FFFFFF",
@@ -398,7 +400,7 @@ export function TorreHanoi({ difficulty, theme, onComplete }: TorreHanoiProps) {
                 color: reiniciarBloqueado ? "#94A3B8" : "#475569",
               }}
             >
-              Reiniciar ({MAX_RESTARTS_PER_PUZZLE - restartsThisPuzzle})
+              Reiniciar
             </button>
           </div>
         ); })()}
@@ -460,41 +462,29 @@ export function TorreHanoi({ difficulty, theme, onComplete }: TorreHanoiProps) {
             <motion.div
               className="text-center mt-6 rounded-2xl p-4"
               style={{
-                background: lastWasOptimal ? "#ECFDF5" : "#FFFBEB",
-                border: `1px solid ${lastWasOptimal ? "#A7F3D0" : "#FDE68A"}`,
+                background: "#EFF6FF",
+                border: "1px solid #BFDBFE",
               }}
               initial={{ scale: 0.94, opacity: 0 }}
               animate={{ scale: 1, opacity: 1 }}
             >
               <div className="mx-auto mb-2 flex items-center justify-center rounded-full"
-                style={{ width: 44, height: 44, background: lastWasOptimal ? "#DDF7EF" : "#FEF3C7" }}>
-                {lastWasOptimal ? <Trophy size={22} color="#047857" /> : <Check size={22} color="#B45309" strokeWidth={3} />}
+                style={{ width: 44, height: 44, background: "#DBEAFE" }}>
+                <Check size={22} color="#2563EB" strokeWidth={3} />
               </div>
-              <p className="font-bold text-lg" style={{ color: lastWasOptimal ? "#047857" : "#B45309" }}>
-                {lastWasOptimal ? "Movimentos mínimos!" : "Resolvido!"}
+              <p className="font-bold text-lg" style={{ color: "#1D4ED8" }}>
+                Muito bem!
               </p>
-              <p className="text-sm" style={{ color: lastWasOptimal ? "#059669" : "#D97706" }}>
-                {moves} movimento{moves !== 1 ? "s" : ""} · mínimo: {optimal}
+              <p className="text-sm" style={{ color: "#2563EB" }}>
+                Você resolveu o desafio em {moves} movimento{moves !== 1 ? "s" : ""}.
               </p>
-              {!lastWasOptimal && (
-                <p className="text-xs mt-1" style={{ color: "#D97706" }}>
-                  Você pode fazer em {optimal} movimentos — tente de novo!
-                </p>
-              )}
+              <p className="text-xs mt-1" style={{ color: "#2563EB" }}>
+                O menor caminho possível era {optimal} movimento{optimal !== 1 ? "s" : ""}.
+              </p>
             </motion.div>
           )}
         </AnimatePresence>
       </div>
     </ExerciseStage>
-  );
-}
-
-// Indicador discreto (Movimentos / Mínimo).
-function Indicator({ label, value }: { label: string; value: number }) {
-  return (
-    <div className="text-center rounded-2xl px-4 py-2" style={{ background: "#F8FAFC", border: "1px solid #EEF0F4", minWidth: 84 }}>
-      <div className="font-bold tabular-nums" style={{ color: "#0F172A", fontSize: 19, lineHeight: 1 }}>{value}</div>
-      <div className="uppercase" style={{ color: "#94A3B8", fontSize: 10, fontWeight: 700, letterSpacing: ".04em", marginTop: 3 }}>{label}</div>
-    </div>
   );
 }

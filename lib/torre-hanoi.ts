@@ -1,19 +1,22 @@
-export interface TorreHanoiPuzzle {
-  moves: number;
-  optimal: number;
-  restarts: number;
-}
-
-export interface TorreHanoiJudgement {
-  optimal: boolean;
-}
-
 /**
- * Julga UM puzzle da Torre de Hanói.
- *
- * Reiniciar zera os movimentos do tabuleiro, mas não torna uma tentativa ótima:
- * o reinício é registrado como monitoramento e impede a progressão de discos.
+ * O mínimo é referência matemática e métrica interna, nunca critério rígido de
+ * sucesso: resolver em 17 movimentos quando o mínimo era 15 não é fracasso.
  */
-export function julgarPuzzle({ moves, optimal, restarts }: TorreHanoiPuzzle): TorreHanoiJudgement {
-  return { optimal: moves <= optimal && restarts === 0 };
+export function eficiencia(moves: number, optimal: number): number {
+  // Sem um mínimo positivo não há razão de eficiência. Retornamos Infinity para
+  // não deixar NaN escapar e para impedir progressão baseada em uma métrica inválida.
+  if (optimal <= 0) return Infinity;
+  return moves / optimal;
+}
+
+export type FaixaEficiencia = "muito-boa" | "adequada" | "baixa";
+
+export function faixaEficiencia(ef: number): FaixaEficiencia {
+  if (ef <= 1.2) return "muito-boa";
+  if (ef <= 1.4) return "adequada";
+  return "baixa";
+}
+
+export function deveSubirDeNivel(ef: number): boolean {
+  return ef <= 1.4;
 }
