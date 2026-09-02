@@ -145,10 +145,12 @@ registro do **caminho do raciocínio** ação por ação, e motor adaptativo que
 específico** de **sobrecarga global**.
 
 - [x] **Espec salva e commitada** (`c777c5f`). ✅
-- [~] **FASE 1 — auditoria das 13 perguntas dela.** Despachada ao agente `gerente`, **ainda em voo
-      quando a janela fechou**. Saída prevista:
-      `docs/grade-dedutiva/AUDITORIA-GRADE-DEDUTIVA-2026-09-02.md`. ⚠️ **Na volta: verificar se o
-      arquivo existe. Se não existir, redespachar** — o despacho está descrito abaixo.
+- [ ] **FASE 1 — auditoria das 13 perguntas dela. FALHOU, PRECISA SER REFEITA.** Despachada ao
+      agente `gerente` em 02/set; o processo morreu com *"your computer went to sleep
+      mid-response"* logo antes de escrever o arquivo. **Nada foi produzido** —
+      `docs/grade-dedutiva/AUDITORIA-GRADE-DEDUTIVA-2026-09-02.md` NÃO existe, conferido.
+      ⚠️ **É o PRIMEIRO passo da próxima sessão: redespachar a auditoria.** Nenhum código foi
+      tocado, então não há trabalho parcial para verificar nem para descartar.
 - [ ] **F2 modelo lógico** (estrutura, restrições, tipos de pista T1–T11, solver CSP, unicidade,
       testes 1–17 da seção 95).
 - [ ] **F3 protótipo de interface** — ⚠️ ela exigiu **ver proposta desktop E mobile antes** de
