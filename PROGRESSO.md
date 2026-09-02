@@ -131,6 +131,47 @@ MENSAGEM, o erro continua visível), agora estendida ao **aviso passivo**: sai o
       resolvida**. Agora a etapa termina como **não respondida**, e a **omissão virou medida
       própria**.
 
+## 🚧 EM ANDAMENTO — Grade Dedutiva: reformulação completa (02/set/2026)
+
+Ela mandou uma espec de **103 seções** para reformular o exercício. Salva íntegra em
+`docs/grade-dedutiva/ESPEC-GRADE-DEDUTIVA-KAMYLLA-20260902.md` (commit `c777c5f`) — é a fonte da
+verdade do épico.
+
+**O núcleo:** o exercício deixa de ser *"leia uma pista e marque a resposta"* e passa a ser um
+problema de satisfação de restrições com **solução única provada**, quatro estados de marcação
+(vazio · × impossível · ? hipótese · ✓ confirmado), **sem correção imediata do erro** (*"se o
+sistema denuncia toda inconsistência, o monitoramento passa a ser feito pelo software"*), com
+registro do **caminho do raciocínio** ação por ação, e motor adaptativo que distingue **padrão
+específico** de **sobrecarga global**.
+
+- [x] **Espec salva e commitada** (`c777c5f`). ✅
+- [~] **FASE 1 — auditoria das 13 perguntas dela.** Despachada ao agente `gerente`, **ainda em voo
+      quando a janela fechou**. Saída prevista:
+      `docs/grade-dedutiva/AUDITORIA-GRADE-DEDUTIVA-2026-09-02.md`. ⚠️ **Na volta: verificar se o
+      arquivo existe. Se não existir, redespachar** — o despacho está descrito abaixo.
+- [ ] **F2 modelo lógico** (estrutura, restrições, tipos de pista T1–T11, solver CSP, unicidade,
+      testes 1–17 da seção 95).
+- [ ] **F3 protótipo de interface** — ⚠️ ela exigiu **ver proposta desktop E mobile antes** de
+      qualquer estrutura definitiva (seções 91-92).
+- [ ] **F4 instrumentação** do caminho do raciocínio. ⚠️ Se exigir Supabase: **PARAR**, mostrar
+      migration, backup, etapa separada.
+- [ ] **F5 banco inicial** — 12 a 20 problemas validados. *"Não quero 100 problemas ruins."*
+- [ ] **F6 motor adaptativo** · [ ] **F7 relatório de processo**.
+
+### Duas coisas já sabidas, para a próxima sessão não redescobrir
+
+1. **A seção 85 (abandono) provavelmente já está atendida.** A tabela `ExerciseAttempt`, criada em
+   01/set, registra tentativa iniciada/concluída para TODOS os exercícios pelo `ExerciseWrapper`.
+   Confirmar na auditoria antes de propor qualquer migration.
+2. **O motor da Torre (`lib/torres/`) é o precedente direto** da arquitetura que ela pede aqui:
+   banco pré-validado, solução provada por busca, nada de geração aleatória sem validação,
+   metadados por problema. Muda o solver — lá foi BFS em grafo de estados, aqui é CSP.
+
+### Estado da plataforma nesta parada
+
+Produção em **3.9.3** (subiu de 2.90.0 em 01/set, com 99 commits represados desde a v2.90).
+`tsc` exit 0 · 62 arquivos / 861 testes. Torre **aprovada por ela** e no ar.
+
 ## ✅ CONCLUÍDO E APROVADO POR ELA — Jogo das Torres: reconfiguração completa (31/ago-01/set/2026)
 
 **Fonte da verdade:** `docs/torres/ESPEC-JOGO-DAS-TORRES-KAMYLLA-20260831.md` (**60 seções, escritas
