@@ -21403,3 +21403,6 @@ o layout que eu mais gostei foi o C mas eu acho que tumutua demais colocar X imp
 
 ## 03/09/2026 09:53
 ah beleza então tira o risca... eu acho que podemos colocar manual pq pode ser interessante o paciente risca para se planejar e etc nao?
+
+## 03/09/2026 09:54
+manda as fotos para eu ver ou abre no navegador
