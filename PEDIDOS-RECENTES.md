@@ -3,92 +3,40 @@
 
 ## O QUE MUDOU
 
-**1. `/Users/kamyllahonorio/codex-lab/registro-roteamento.md`** — uma linha nova ao final da tabela (linha 22 do arquivo, `#18`). Backup datado ao lado: `registro-roteamento.md.bak-20260903`.
+**1. `/Users/kamyllahonorio/codex-lab/registro-roteamento.md`** — uma linha nova ao final (nenhuma linha antiga tocada; `diff` acusa só `21a22`):
 
 ```
-21a22
-&gt; | 18 | 03/09/2026 | Grade Dedutiva Fase 3 — a interface real (reescrita de DeductiveGrid.tsx sobre o motor lib/grade) | gpt-5.6-sol | high | Amarra o motor lib/grade, o framework de exercício (ExerciseStage/ExerciseWrapper) e as regras clínicas do que a tela deve calar; três fontes de precedência a reconciliar (fronteira 2 da Parte 4: sobe de terra para sol) | (em voo) |
+| 18 | 03/09/2026 | Grade Dedutiva Fase 3 — a interface real (reescrita de DeductiveGrid.tsx sobre o motor lib/grade) | gpt-5.6-sol | high | Amarra o motor lib/grade, o framework de exercício (ExerciseStage/ExerciseWrapper) e as regras clínicas do que a tela deve calar; três fontes de precedência a reconciliar (fronteira 2 da Parte 4: sobe de terra para sol) | (em voo) |
 ```
 
-Decisão de formato que tomei: **não** usei crases no nome do modelo. As quatro linhas mais recentes (#14 a #17) escrevem `gpt-5.6-sol` sem crase; você havia escrito com crase no despacho. Segui as linhas existentes, como você pediu. Se preferir a crase, é um gesto de um caractere.
+Decisão de formato que você deve conferir: as quatro últimas linhas do arquivo (#14 a #17) escrevem o modelo **sem crases** (`gpt-5.6-sol`), ao contrário das linhas 1-9. Segui as últimas, como você mandou. Backup datado em `/Users/kamyllahonorio/codex-lab/registro-roteamento.md.bak-20260903`.
 
-**2. `/Users/kamyllahonorio/neuropeak/PROGRESSO.md`** — só o bloco `EM ANDAMENTO — Grade Dedutiva` (linhas 152-193 antigas → 152-242 novas). `git diff --stat`: **70 insertions, 21 deletions, 1 arquivo**. O diff completo está acima na conversa; os pontos materiais:
-
-- Título passou a `(02-03/set/2026)`.
-- O parágrafo "O núcleo" perdeu os quatro estados de marcação e ganhou o aviso de que eles caíram em 03/set.
-- F1 → `[x]` com o arquivo e as 656 linhas; a falha de 02/set virou parêntese histórico, não o estado atual.
-- F2 → `[x]` com v3.10.0 / `8717f4e`, os 7 arquivos e a contagem de linhas de cada um.
-- Item novo `[x]` para as decisões da mecânica (`408af8d`), com as 6 decisões, incluindo a proibição literal de nomear atribuição não determinada de "confirmação prematura".
-- F3 → em voo, com lab, modelo, esforço, spec, caminho da saída e o procedimento de colheita cega.
-- Seção nova `⚠️ O próximo risco real: a F6 ficou sem os indicadores que a espec pressupunha`, com a citação do gestor de conteúdo e o encargo de rever a seção 48 e submeter a ela.
-- Nota 1 das "Duas coisas já sabidas" foi atualizada de "provavelmente atendida, confirmar na auditoria" para "CONFIRMADO pela auditoria (§10)", com as duas ressalvas que a própria auditoria registra (o log do raciocínio não cabe no `metadata` de hoje; o banco de produção não foi verificado). Nota 2 (motor da Torre) ficou intacta.
-- "Estado da plataforma" reescrito com os números que eu medi.
-
-Backup: `/Users/kamyllahonorio/neuropeak/PROGRESSO.md.bak-20260903`. Está fora do commit — `.gitignore:62` tem `*.bak-*`, e `git status --short` confirma que só `PROGRESSO.md` (mais os dois arquivos do gancho de pedidos) aparece como modificado.
-
----
+**2. `/Users/kamyllahonorio/neuropeak/PROGRESSO.md`** — só o bloco `EM ANDAMENTO` da Grade Dedutiva (linhas 152-193 → 152-242). `git diff --stat`: `70 insertions(+), 21 deletions(-)`, contido ao bloco. O diff literal está no corpo da sessão; os pontos de conteúdo: título vira `(02-03/set/2026)`; F1 e F2 viram `[x]` com commits `c8a7205` e `8717f4e`; entrou o item das decisões da mecânica com os 6 pontos (incluindo o **proibido** nomear de "confirmação prematura"); F3 vira "EM VOO no Codex" com lab/modelo/spec/saída e o procedimento de colheita cega; F6 marcada como "precisa ser REDISCUTIDO ANTES de implementar"; seção nova `⚠️ O próximo risco real: a F6 ficou sem os indicadores que a espec pressupunha` com a citação do gestor de conteúdo e a ordem de rever a seção 48; nota 1 das "duas coisas já sabidas" atualizada de "provavelmente já está atendida / confirmar na auditoria" para "CONFIRMADO pela auditoria (§10)", com as duas ressalvas honestas que a própria auditoria registra (o log do caminho do raciocínio não cabe no `metadata` atual, §12; o banco de produção não foi verificado). Backup em `/Users/kamyllahonorio/neuropeak/PROGRESSO.md.bak-20260903` (ignorado por `.gitignore:62 *.bak-*`).
 
 ## COMO PROVEI
 
-**Tarefa 1 — evidência literal, sem interpretação:**
+**Tarefa 1 — baseline, saída literal:**
 
-```
-$ npx tsc --noEmit; echo "EXIT=$?"
-EXIT=0
-```
+| comando | exit | resultado |
+|---|---|---|
+| `npx tsc --noEmit; echo "EXIT=$?"` | `EXIT=0` | nenhuma saída |
+| `npm run test &gt; arquivo 2&gt;&amp;1; echo "EXIT=$?"` | `EXIT=0` | `Test Files 64 passed (64)` · `Tests 888 passed (888)` · `Duration 14.43s` |
+| `git log --oneline -3` | 0 | `90d3a9f` / `54c778c` / `408af8d Grade Dedutiva: decisoes da mecanica fechadas com o gestor de conteudo` (medido antes do checkpoint automático) |
+| `git status --short` | 0 | ` M PEDIDOS-LOG.md` / ` M PEDIDOS-RECENTES.md` |
+| `grep '"version"' package.json` | 0 | `"version": "3.10.0",` |
 
-```
-$ npm run test &gt; &lt;scratch&gt;/test-out.txt 2&gt;&amp;1; echo "EXIT=$?"
-EXIT=0
+**O baseline da spec BATE com a medição real: 64 arquivos / 888 testes.**
 
- RUN  v4.1.7 /Users/kamyllahonorio/neuropeak
+**Sobre a contaminação que você avisou — minha medição está limpa, e provo:** rodei a primeira vez às `15:53:32` e repeti às `15:53:56` (o `Start at` do próprio vitest), depois da sua janela de ~14:35-14:42. Não houve medição descartada. `ls -la lib/grade/` às 15:53 listou **7 arquivos**, sem `vp-prova-interface.test.ts`; `git status --short` na mesma medição mostrava só os dois `PEDIDOS-*.md`; e a conferência agora (15:56) dá `ls: lib/grade/vp-prova-interface.test.ts: No such file or directory`, exit 1, com `lib/grade/*.test.ts` = apenas `solver.test.ts` e `vp-prova.test.ts`. Se o arquivo estivesse presente, o exit teria sido diferente de 0 — e foi 0 nas duas rodadas.
 
- Test Files  64 passed (64)
-      Tests  888 passed (888)
-   Start at  15:53:56
-   Duration  14.43s (transform 1.91s, setup 0ms, import 3.23s, tests 22.06s, environment 4ms)
-```
-
-(Rodei duas vezes; a primeira, com pipe para `tail`, deu a mesma contagem — 64/888.)
-
-```
-$ git log --oneline -3
-90d3a9f checkpoint automatico (salvamento de seguranca)
-54c778c checkpoint automatico (salvamento de seguranca)
-408af8d Grade Dedutiva: decisoes da mecanica fechadas com o gestor de conteudo
-EXIT=0
-
-$ git status --short
- M PEDIDOS-LOG.md
- M PEDIDOS-RECENTES.md
-EXIT=0
-
-$ grep '"version"' package.json
-  "version": "3.10.0",
-```
-
-**O baseline da spec BATE.** A spec declarou 64 arquivos / 888 testes; a medição real é **64 arquivos / 888 testes**, exit 0. `tsc` exit 0. `npm run build` não foi rodado, conforme o veto.
-
-**Confirmações que fiz por conta própria antes de escrever no PROGRESSO.md** (não confiei nos números do despacho):
-
-- `wc -l docs/grade-dedutiva/AUDITORIA-GRADE-DEDUTIVA-2026-09-02.md` → **656** linhas. Confere.
-- `wc -l lib/grade/*` → `derivacao.ts` 177 · `index.ts` 10 · `motor.ts` 476 · `solver.test.ts` 419 · `solver.ts` 133 · `tipos.ts` 176 · `vp-prova.test.ts` 54 → **1.445 total, 7 arquivos**. Atenção: `derivacao.ts` tem **177** linhas, não 176 — usei o número medido.
-- `grep` em `lib/grade/solver.ts` confirma as 6 funções exportadas nomeadas no despacho; `derivacao.ts` exporta `derivar`. Em `motor.ts`, achei `const OPERADORES: Record&lt;TipoPista, OperadorPista&gt;` com o comentário do registro declarativo, `contarBits`/`ehSingleton`/`indiceDoBit` (máscara de bits) e menção explícita a MRV. As três características declaradas existem no código.
-- `git log --oneline -- lib/grade docs/grade-dedutiva` → `408af8d`, `8717f4e` (fase 2, v3.10.0), `c8a7205` (auditoria), `c777c5f` (espec). Peguei daí os hashes que escrevi no bloco.
-- `ls -la ~/codex-lab/saida-grade-f3-20260903.txt` → existe, 188.655 bytes às 15:53 (crescendo, o Codex está em voo).
-- Sobre a §10/abandono: `grep` na auditoria mostra a linha 313 — *"Para 'nunca iniciou × iniciou e abandonou' (seção 85): NÃO precisa de migration"* — e as duas ressalvas nas linhas 336 e 342. Foi o que escrevi na nota 1.
-- Limites do bloco conferidos por `grep -n "^## "` antes e depois da edição: cabeçalhos vizinhos (`134` DECISÃO DELA, `244` Jogo das Torres) intactos; total do arquivo 2.937 linhas.
-- Registro de roteamento: `diff` contra o backup devolveu exatamente `21a22` — **uma adição, zero alterações em linha antiga**.
-
----
+**Fatos das fases 1 e 2 que verifiquei antes de escrever no PROGRESSO** (não copiei do seu enunciado): `wc -l docs/grade-dedutiva/AUDITORIA-GRADE-DEDUTIVA-2026-09-02.md` = **656**. `lib/grade/` = **1.445 linhas** em 7 arquivos (`motor.ts` 476, `solver.test.ts` 419, `derivacao.ts` 177, `tipos.ts` 176, `solver.ts` 133, `vp-prova.test.ts` 54, `index.ts` 10). `grep` em `solver.ts` confirma os 6 exports citados mais `encontrarSolucoes`; `derivacao.ts` exporta `derivar`; `motor.ts` tem o comentário do registro declarativo, `const OPERADORES`, `contarBits`/`ehSingleton`/`indiceDoBit` (máscara de bits) e MRV. `git log -- lib/grade docs/grade-dedutiva` confirma `c777c5f`, `c8a7205`, `8717f4e`, `408af8d`. A saída do Codex existe e cresce: `~/codex-lab/saida-grade-f3-20260903.txt`, 188.655 bytes às 15:53.
 
 ## O QUE NÃO FIZ
 
-- **Não commitei nada.** As três modificações (`PROGRESSO.md` no repo, mais os dois arquivos do gancho) estão na árvore, esperando você. O `registro-roteamento.md` está em `~/codex-lab`, fora deste repo.
-- **Não rodei `npm run build`**, conforme o veto do despacho.
-- **Não toquei em `lib/grade/`, em `components/`, nem em nenhum código** — só nos dois arquivos de texto pedidos.
-- **Não li nem analisei a saída do Codex** (`saida-grade-f3-20260903.txt`); só verifiquei que o arquivo existe e está crescendo. Leitura de colheita é sua.
-- **Não verifiquei o banco de produção** para saber se `ExerciseAttempt` já existe lá — a ressalva ficou registrada no bloco como pendência, do jeito que a auditoria a deixou.
-- **Não conferi o conteúdo do `~/codex-lab/lab.sh`** nem executei nada do lab.</result>
-<usage><subagent_tokens>51174</subagent_tokens><tool_uses>20</tool_uses><duration_ms>203302</duration_ms></usage>
+- **Não commitei.** Mas registro o fato desagradável: o **hook de checkpoint automático** dela varreu a árvore às 15:56:30 e criou `95e89e5 checkpoint automatico (salvamento de seguranca)` levando junto `PROGRESSO.md` (+ os dois `PEDIDOS-*.md`). Não foi ato meu e não tenho como impedi-lo; se você queria o `PROGRESSO.md` num commit descritivo seu, ele já está dentro do checkpoint — decida se refaz a mensagem no seu próximo commit.
+- Não rodei `npm run build` (proibido no despacho), nem `npm run lint`.
+- Não toquei em `lib/grade/`, em `components/`, nem em nenhum código; não editei o `registro-roteamento.md` em linha antiga; não mexi em configuração.
+- Não abri nem analisei `~/codex-lab/saida-grade-f3-20260903.txt` — só medi o tamanho para provar que o disparo está vivo. Leitura de colheita é sua.
+- Não verifiquei o banco de produção (a ressalva sobre `ExerciseAttempt` entrou no PROGRESSO como ressalva, não como fato).</result>
+<usage><subagent_tokens>52544</subagent_tokens><tool_uses>22</tool_uses><duration_ms>257563</duration_ms></usage>
 </task-notification>
