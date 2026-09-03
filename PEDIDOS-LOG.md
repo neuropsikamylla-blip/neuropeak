@@ -21379,3 +21379,6 @@ nao grade dedutiva ja esta reformulado! esses 27 problemas atuais seriam de que?
 
 ## 02/09/2026 21:52
 vamos la eu quero saber quais sao os 27 problemas, nao quero aposentar quero que resolva
+
+## 02/09/2026 21:53
+vc esta falando que esses 27 problemas é de um jogo?
