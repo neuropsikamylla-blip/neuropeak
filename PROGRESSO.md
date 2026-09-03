@@ -131,6 +131,24 @@ MENSAGEM, o erro continua visível), agora estendida ao **aviso passivo**: sai o
       resolvida**. Agora a etapa termina como **não respondida**, e a **omissão virou medida
       própria**.
 
+## 📌 DECISÃO DELA — reformulação exercício por exercício (02/set/2026)
+
+> *"então eu irei reformular exercício por exercício tirando restaurante e supermercado que não
+> vejo erros, o resto vamos mexer, torre agora também finalizamos"*
+
+**O plano do projeto daqui para a frente:** cada exercício é reformulado a fundo, um de cada vez,
+no modelo que a Torre inaugurou — espec dela primeiro, auditoria antes de tocar em código,
+implementação em fatias com teste e commit próprio, e verificação visual dela antes de fechar.
+
+**FORA da fila, por decisão dela:** **Restaurante** e **Desafio Supermercado** — *"não vejo
+erros"*. Não mexer sem ela pedir.
+
+**Já finalizados neste modelo:** Jogo das Torres (v3.9.3, aprovado por ela em 01/set e no ar).
+**Em curso:** Grade Dedutiva (espec de 103 seções + auditoria feitas).
+
+⚠️ Isto não é uma sessão de trabalho — é a forma de trabalhar do projeto. Cada exercício vai
+consumir várias janelas.
+
 ## 🚧 EM ANDAMENTO — Grade Dedutiva: reformulação completa (02/set/2026)
 
 Ela mandou uma espec de **103 seções** para reformular o exercício. Salva íntegra em

@@ -1,14 +1,6 @@
 # As 3 ultimas especificacoes dela (automatico; a mais nova por ultimo)
 # Na retomada: ler as 3, conectar com PROGRESSO.md e git, declarar e seguir.
 
-## Veredito sobre o Supabase (pergunta 10)
-
-**Para a seção 85 — distinguir "nunca iniciou" de "iniciou e abandonou" — NÃO precisa de migration. Já está resolvido, e vale para a Grade Dedutiva.** `ExerciseAttempt` existe no schema (`prisma/schema.prisma:195-208`), a rota funciona (`app/api/attempts/route.ts`), e o `ExerciseWrapper` abre a tentativa em `:163` e fecha em `:150`; a Grade Dedutiva passa por ele e tem 4 instruções, então entra pelo caminho que dispara `abrirTentativa()`.
-
-**Ressalva honesta:** não verifiquei o Postgres de produção. Se a tabela foi mesmo aplicada lá é **não determinado** — o schema diz que sim, mas `db push` é manual. Faltaria uma consulta ao banco, fora do escopo "leitura de código".
-
-O ponto onde migration *poderia* aparecer é o log por ação — e a recomendação acima o evita. A tabela `DeductiveAction` fica como opção adiada, só se o relatório exigir agregação por SQL.
-
 ## Surpresas
 
 1. **O feedback de erro atual acende a célula da solução correta** (`:540-541`, `:547`), não só a errada. Não é apenas "denunciar a inconsistência" (o que as seções 14–15 já proíbem) — chega perto de entregar a resposta.
@@ -23,3 +15,6 @@ O ponto onde migration *poderia* aparecer é o log por ação — e a recomenda�
 Não alterei nenhum arquivo de código, não commitei, não rodei `npm run build` nem `npm run test`, não executei nem propus migration, não consultei o banco de produção, não escrevi o plano de implementação (é documento separado, conforme a espec), e não medi o desempenho do solver proposto — ele ainda não existe; os números da §11 são do espaço de busca (exatos) e do limite superior da enumeração exaustiva (medido em `scratchpad/bench.js`, fora do repositório).</result>
 <usage><subagent_tokens>120861</subagent_tokens><tool_uses>46</tool_uses><duration_ms>618427</duration_ms></usage>
 </task-notification>
+
+## 02/09/2026 21:09
+então eu irei reformular exercicio por exercicio tirando restaurante e supermercado que não vejo erros, o resto vamos mexer, torre agora também finalizamos
