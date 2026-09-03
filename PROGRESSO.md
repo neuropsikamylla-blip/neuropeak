@@ -223,6 +223,43 @@ decisões da mecânica abaixo.
       ⚠️ Ela exigiu **ver proposta desktop E mobile** (seções 91-92) — o parecer do gestor de
       conteúdo veio sobre o artifact da mecânica, **não sobre esta tela**.
 
+### 🧩 03/set (tarde) — ela aprovou a interface e achou um defeito no BANCO
+
+> *"A interface está aprovada como direção. NÃO quero reconstruí-la."* · *"O desafio 'Encontros na
+> biblioteca' está sendo resolvido como quatro mini-problemas independentes."*
+
+**AUDITORIA DO BANCO — medida, não lida.** Resposta à pergunta dela (*"quantos puzzles apresentam
+esse defeito"*): **2 dos 3**.
+
+| puzzle | pistas | intra | cross | arestas | componentes | ordem declarada |
+|---|---|---|---|---|---|---|
+| tutorial | 4 | 4 | 0 | 0 de 3 | **3** | 3/3 |
+| **biblioteca** | 8 | **8** | **0** | **0 de 6** | **4** | 4/4 |
+| museu | 11 | 2 | 9 | 3 de 6 | 1 | 4/4 |
+
+A leitura dela estava exata: a Biblioteca tem **oito pistas, todas intracategoria, zero arestas** —
+quatro problemas de ordenação lado a lado. O Museu passa em conectividade, mas com **3 de 6
+arestas**, formando uma **cadeia** (responsável—obra—sala—horário), não uma rede: quebrado um elo,
+volta a ser dois problemas.
+
+🔴 **SEGUNDO DEFEITO, achado pelo VP e não pedido por ela — atinge os 3.** Em todos os puzzles a
+solução de **todas** as categorias é **a ordem em que os valores foram declarados**, e o menu da
+célula lista os valores **nessa mesma ordem**. *"Pôr cada um na ordem da lista"* resolve o banco
+inteiro **sem ler uma pista**. Quem perceber o padrão pontua sem fazer o exercício.
+
+- [x] **Ferramenta de triagem** — `lib/grade/estrutura.ts` (v3.12.0, `a8afc74`). O grafo dela,
+      as 6 medidas, reprovação por desconexão **e** por ordem declarada, tutorial isento mas
+      medido. **Reproduz a auditoria acima número por número.** ⚠️ **Não** está ligada ao banco na
+      suíte: 2 dos 3 reprovariam e a suíte ficaria vermelha sem haver o que consertar — o banco
+      corrigido é a **F5**.
+- [x] **Verificação limitada** (v3.12.0). Livre no tutorial · **3** iniciais · **2** intermediário ·
+      **1** avançados, com suporte a **0**, tudo em `CONFIGURACAO_VERIFICACOES`. Contador discreto,
+      botão some ao zerar, **nenhum texto de punição**. Registro por solicitação com correção
+      posterior, ações e tempo até a correção — e **proibição explícita** de interpretar o uso como
+      insegurança, ansiedade ou déficit.
+- [ ] **PRÓXIMO: os problemas novos** (F5), com cruzamento real entre categorias e passando pela
+      triagem. Ela deu os exemplos de pista adequada. **Não começar sem fechar a revisão visual.**
+
 ### 🔎 Auditorias e medição pedidas por ela em 03/set — FEITAS, nada implementado
 
 Documento: `docs/grade-dedutiva/PROPOSTA-DOSAGEM-TUTORIAL-SOLVER-20260903.md`.
