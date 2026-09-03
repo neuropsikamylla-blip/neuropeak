@@ -1,18 +1,6 @@
 # As 3 ultimas especificacoes dela (automatico; a mais nova por ultimo)
 # Na retomada: ler as 3, conectar com PROGRESSO.md e git, declarar e seguir.
 
-## O QUE MUDOU
-
-**1. `/Users/kamyllahonorio/codex-lab/registro-roteamento.md`** — uma linha nova ao final (nenhuma linha antiga tocada; `diff` acusa só `21a22`):
-
-```
-| 18 | 03/09/2026 | Grade Dedutiva Fase 3 — a interface real (reescrita de DeductiveGrid.tsx sobre o motor lib/grade) | gpt-5.6-sol | high | Amarra o motor lib/grade, o framework de exercício (ExerciseStage/ExerciseWrapper) e as regras clínicas do que a tela deve calar; três fontes de precedência a reconciliar (fronteira 2 da Parte 4: sobe de terra para sol) | (em voo) |
-```
-
-Decisão de formato que você deve conferir: as quatro últimas linhas do arquivo (#14 a #17) escrevem o modelo **sem crases** (`gpt-5.6-sol`), ao contrário das linhas 1-9. Segui as últimas, como você mandou. Backup datado em `/Users/kamyllahonorio/codex-lab/registro-roteamento.md.bak-20260903`.
-
-**2. `/Users/kamyllahonorio/neuropeak/PROGRESSO.md`** — só o bloco `EM ANDAMENTO` da Grade Dedutiva (linhas 152-193 → 152-242). `git diff --stat`: `70 insertions(+), 21 deletions(-)`, contido ao bloco. O diff literal está no corpo da sessão; os pontos de conteúdo: título vira `(02-03/set/2026)`; F1 e F2 viram `[x]` com commits `c8a7205` e `8717f4e`; entrou o item das decisões da mecânica com os 6 pontos (incluindo o **proibido** nomear de "confirmação prematura"); F3 vira "EM VOO no Codex" com lab/modelo/spec/saída e o procedimento de colheita cega; F6 marcada como "precisa ser REDISCUTIDO ANTES de implementar"; seção nova `⚠️ O próximo risco real: a F6 ficou sem os indicadores que a espec pressupunha` com a citação do gestor de conteúdo e a ordem de rever a seção 48; nota 1 das "duas coisas já sabidas" atualizada de "provavelmente já está atendida / confirmar na auditoria" para "CONFIRMADO pela auditoria (§10)", com as duas ressalvas honestas que a própria auditoria registra (o log do caminho do raciocínio não cabe no `metadata` atual, §12; o banco de produção não foi verificado). Backup em `/Users/kamyllahonorio/neuropeak/PROGRESSO.md.bak-20260903` (ignorado por `.gitignore:62 *.bak-*`).
-
 ## COMO PROVEI
 
 **Tarefa 1 — baseline, saída literal:**
@@ -39,4 +27,13 @@ Decisão de formato que você deve conferir: as quatro últimas linhas do arquiv
 - Não abri nem analisei `~/codex-lab/saida-grade-f3-20260903.txt` — só medi o tamanho para provar que o disparo está vivo. Leitura de colheita é sua.
 - Não verifiquei o banco de produção (a ressalva sobre `ExerciseAttempt` entrou no PROGRESSO como ressalva, não como fato).</result>
 <usage><subagent_tokens>52544</subagent_tokens><tool_uses>22</tool_uses><duration_ms>257563</duration_ms></usage>
+</task-notification>
+
+## 03/09/2026 16:06
+<task-notification>
+<task-id>by6f38701</task-id>
+<tool-use-id>toolu_013vJLK1xGqrBxcq1UUmsgdJ</tool-use-id>
+<output-file>/private/tmp/claude-501/-Users-kamyllahonorio-neuropeak/af26ae96-821d-4dce-abd1-d20a017fa7f8/tasks/by6f38701.output</output-file>
+<status>completed</status>
+<summary>Background command "Disparar Codex na Fase 3 da Grade Dedutiva" completed (exit code 0)</summary>
 </task-notification>

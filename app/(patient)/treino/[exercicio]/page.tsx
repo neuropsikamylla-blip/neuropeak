@@ -324,10 +324,10 @@ const EXERCISE_INSTRUCTIONS: Record<string, string[]> = {
     "Divida sua atenção entre as duas — não foque em apenas uma!",
   ],
   "deductive-grid": [
-    "Leia as pistas e deduza quem tem cada atributo.",
-    "Toque numa célula para marcar: toque 1x = SIM ✓, 2x = NÃO ✗, 3x = apaga.",
-    "Use eliminação: se souber que Bruno=Verde, marque NÃO para Ana e Carla.",
-    "Confirme quando tiver certeza de todas as células!",
+    "Leia as pistas e descubra o que vai em cada posição.",
+    "Toque numa célula para escolher um item. Pode trocar quando quiser.",
+    "Risque uma pista tocando nela, quando já tiver usado o que ela diz.",
+    "Quando a organização estiver completa, toque em Concluir.",
   ],
   "focus-agents": [
     "Antes de cada rodada aparece um comando. Leia com calma e toque em OK.",
