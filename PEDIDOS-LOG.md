@@ -21321,3 +21321,52 @@ ola vamos dar continuidade a questao paradas inclusive sobre grade dedutiva
 
 ## 02/09/2026 20:53
 nao esta quase no fim pode continuar
+
+## 02/09/2026 21:04
+<task-notification>
+<task-id>a7f126d9a9d05d36a</task-id>
+<tool-use-id>toolu_0166aT4BBrodfnnEDSZg2Y8b</tool-use-id>
+<output-file>/private/tmp/claude-501/-Users-kamyllahonorio-neuropeak/9e4c2936-1fb4-4a9c-a53a-3ad1aad1cf37/tasks/a7f126d9a9d05d36a.output</output-file>
+<status>completed</status>
+<summary>Agent "Auditoria da Grade Dedutiva" finished</summary>
+<note>A task-notification fires each time this agent stops with no live background children of its own. The user can send it another message and resume it, so the same task-id may notify more than once.</note>
+<result>Auditoria concluída e em disco.
+
+## O QUE MUDOU
+
+Um único arquivo, criado: `/Users/kamyllahonorio/neuropeak/docs/grade-dedutiva/AUDITORIA-GRADE-DEDUTIVA-2026-09-02.md` (656 linhas) — as 13 respostas com `arquivo:linha`, a tabela final reaproveitar × substituir × construir do zero, os pontos que exigem decisão dela e os limites da auditoria. Nenhum arquivo de código tocado, nenhum commit, nenhuma migration.
+
+## As respostas que decidem a arquitetura
+
+**3 — Como os problemas são armazenados:** nem banco nem runtime. É um array literal *dentro do componente React*: `const PUZZLES` em `components/exercises/executive/DeductiveGrid.tsx:30-379`. **27 puzzles** (7 de d1, 7 de d2, 8 de d3, 5 de d4), todos 3×1 ou 4×1 categoria. Zero linhas no Prisma. O único sorteio é a ordem do pool (`:469`), e quando o pool acaba ele repete na mesma sessão (`:482`).
+
+**4 — Como a solução é validada:** **gabarito fixo, comparação literal** (`:527-549`). Não existe solver, nem embrião dele. Três consequências duras: (a) as pistas **nunca são lidas pelo programa** — são strings exibidas, e nada garante que o texto corresponda à `solution` escrita à mão logo abaixo; (b) **a unicidade da solução nunca foi provada** — status DESCONHECIDO nos 27 casos; (c) a marcação `✗` do paciente é ignorada na validação (`:529-532`, `:537-538`) — quem marcar tudo `✗` e um `✓` certo por linha passa.
+
+**5 — Progressão:** **o caminho legado `calculateNewDifficulty`**, provado por eliminação em `app/api/sessions/route.ts` (linha 68 exige `dual-task`; 94 exige `ordem-historia`; 115 exige `progressionV2` + `accTotal`, que o metadata dela não tem; 147 é Focus) → cai no `else` da linha 180. `lib/adaptive.ts:8-52`: média das 5 últimas, &gt;0,85 sobe, &lt;0,60 desce, teto 10. Sem `consolidatedLevel`. **Armadilha:** o `take: 20` (`:173-177`) é sobre *todas* as sessões do paciente — num plano com vários exercícios, a Grade Dedutiva pode sumir da janela e a progressão simplesmente para de existir.
+
+**11 — Solver:** espaço de busca **medido, não estimado**. 5 posições × 6 categorias = **(5!)⁵ = 24.883.200.000** (ou (5!)⁶ ≈ 2,99×10¹² se nenhuma categoria for a posição). Benchmark em Node na máquina dela, com um teste de só 3 comparações: 37,4 M atribuições/s → **11,1 min** para (5!)⁵ e **22,1 h** para (5!)⁶ — e isso é o piso, porque o teste real avalia 16–22 pistas, 10–50× mais caro. **Enumeração exaustiva está fora.** Recomendação: matriz de possibilidades em bitmask de 5 bits + propagação até ponto fixo (singleton, hidden single, operadores T1–T11, transitividade cruzada) + backtracking com MRV só quando a propagação empaca. Unicidade sai barata com `contarSolucoes(limite=2)`, que aborta na segunda. **MUS é viável já na v1** por QuickXplain/deleção (~20 chamadas do solver). A decisão que mais economiza: calcular o **traço de derivação na autoria** (nível em que cada célula fica forçada + pistas usadas), o que entrega de graça profundidade inferencial, poder restritivo, classificação essencial/útil/redundante — e torna "confirmação prematura" uma comparação O(1) em runtime.
+
+**12 — Log do raciocínio:** ~375 células numa grade 5×6 → 150–400 ações por puzzle, **400–1.500 por sessão**. Em JSON verboso: 117–440 KB; em formato colunar compacto (~80 B/ação): 31–117 KB, caindo para 10–40 KB armazenados com o TOAST do Postgres. Recomendação em **dois níveis e zero migration**: agregado clínico de 2–4 KB em `Session.metadata` (é o que o relatório e a progressão leem) + log bruto colunar em `ExerciseAttempt.metadata` (coluna `String?` já existente, `text` sem limite no banco), com PATCH ao fim de *cada puzzle*. `Session.metadata` foi **rejeitado para o log bruto** porque é caminho quente: `app/api/sessions/route.ts:74-79`, `:99-104`, `:120-125` fazem `JSON.parse` do metadata da sessão anterior, e `app/api/reports/route.ts:190-191` parseia todas as sessões só para checar `abandoned`.
+
+## Veredito sobre o Supabase (pergunta 10)
+
+**Para a seção 85 — distinguir "nunca iniciou" de "iniciou e abandonou" — NÃO precisa de migration. Já está resolvido, e vale para a Grade Dedutiva.** `ExerciseAttempt` existe no schema (`prisma/schema.prisma:195-208`), a rota funciona (`app/api/attempts/route.ts`), e o `ExerciseWrapper` abre a tentativa em `:163` e fecha em `:150`; a Grade Dedutiva passa por ele e tem 4 instruções, então entra pelo caminho que dispara `abrirTentativa()`.
+
+**Ressalva honesta:** não verifiquei o Postgres de produção. Se a tabela foi mesmo aplicada lá é **não determinado** — o schema diz que sim, mas `db push` é manual. Faltaria uma consulta ao banco, fora do escopo "leitura de código".
+
+O ponto onde migration *poderia* aparecer é o log por ação — e a recomendação acima o evita. A tabela `DeductiveAction` fica como opção adiada, só se o relatório exigir agregação por SQL.
+
+## Surpresas
+
+1. **O feedback de erro atual acende a célula da solução correta** (`:540-541`, `:547`), não só a errada. Não é apenas "denunciar a inconsistência" (o que as seções 14–15 já proíbem) — chega perto de entregar a resposta.
+2. **A sessão só é gravada se o último puzzle for concluído CORRETAMENTE.** O `onComplete` está dentro do bloco de sucesso e a checagem `isTimeUp()` só roda depois de um acerto (`:553-580`). Tempo acabou no meio de um puzzle → **nada é enviado**. Buraco real de registro.
+3. **Zero testes do exercício.** Todas as ocorrências de `deductive-grid` em `.test.ts` o usam como id de exemplo em testes de *outros* módulos (prescrição, layout, aposentadoria).
+4. **`lib/tutorial/versions.ts:23` declara versão de tutorial, mas o exercício não está no registro `TUTORIAIS_POR_EXERCICIO`** (`page.tsx:56-76`). O framework T1 nunca roda; quem roda é o tutorial legado interno (`:396-462`), que só pede "clique 3 vezes numa célula".
+5. **`lib/layout/palco.test.ts:46` trava `width="medio"`** para a Grade Dedutiva — o layout lado a lado da seção 12 vai exigir alterar esse teste existente.
+6. `accuracy` é `1 - totalErrors/(puzzles*2)` (`:562`), e `totalErrors` conta *cliques em Confirmar que deram errado*, não erros lógicos. É esse número que alimenta a progressão e o score do domínio.
+
+## O QUE NÃO FIZ
+
+Não alterei nenhum arquivo de código, não commitei, não rodei `npm run build` nem `npm run test`, não executei nem propus migration, não consultei o banco de produção, não escrevi o plano de implementação (é documento separado, conforme a espec), e não medi o desempenho do solver proposto — ele ainda não existe; os números da §11 são do espaço de busca (exatos) e do limite superior da enumeração exaustiva (medido em `scratchpad/bench.js`, fora do repositório).</result>
+<usage><subagent_tokens>120861</subagent_tokens><tool_uses>46</tool_uses><duration_ms>618427</duration_ms></usage>
+</task-notification>
