@@ -223,6 +223,34 @@ decisões da mecânica abaixo.
       ⚠️ Ela exigiu **ver proposta desktop E mobile** (seções 91-92) — o parecer do gestor de
       conteúdo veio sobre o artifact da mecânica, **não sobre esta tela**.
 
+### 🔎 Auditorias e medição pedidas por ela em 03/set — FEITAS, nada implementado
+
+Documento: `docs/grade-dedutiva/PROPOSTA-DOSAGEM-TUTORIAL-SOLVER-20260903.md`.
+Ela aprovou a F3 tecnicamente e mandou **parar antes da F4**, para validar a experiência real, e
+pediu três coisas — todas entregues como PROPOSTA, sem tocar na mecânica:
+
+1. **Dosagem.** `useTimedProgress` é o framework temporal (37 componentes o usam): 7 min padrão,
+   tempo **ATIVO** que pausa após 15 s sem interação. **A Torre é o precedente exato** e já faz a
+   sequência de problemas por sessão (11 min, `isTimeUp()` decide entre próximo problema e
+   encerrar, seleção por função pura). Proposta: `lib/grade/selecao.ts` espelhando
+   `lib/torres/selecao.ts` — **é ali que entra misto → focalizado → transferência**, sem a tela
+   mudar. ⚠️ **Bloqueio:** com 3 problemas no banco, 11 min esgotam a sessão; **só faz sentido com
+   a F5**.
+2. **Tutorial.** A infra existe e é **persistida no banco** (`ExerciseConfig.tutorialCompletedAt`
+   /`tutorialVersion`/`tutorialSource`), sobrevive a troca de aparelho, e `tutorialRequired()` faz
+   o tutorial **reaparecer uma vez** quando a versão exigida sobe. A Grade tem entrada em
+   `TUTORIAL_VERSIONS` mas **nunca teve `TutorialDefinition`** — por isso o 3×3 roda sempre (o
+   código antigo também rodava). Proposta: converter o 3×3 que já existe em `TutorialDefinition`,
+   registrar em `TUTORIAIS_POR_EXERCICIO` e subir a versão **1 → 2**.
+3. **Solver — MEDIDO, não suposto.** Benchmark reprodutível em `lib/grade/bench-5x6.test.ts`, no
+   tamanho máximo (**5 posições × 6 categorias**, unicidade provada): **0,12 ms** por clique com a
+   grade vazia, **0,08 ms** no meio, **0,02 ms** em estado contraditório, e **teto de 0,36 ms**
+   com só 10 pistas. **Nenhuma otimização se justifica** — 45× abaixo do orçamento de um quadro de
+   60 fps. Revalidar na F5 com problemas de `T7`/`T4`, que abrem mais a busca.
+
+🔴 **Aguardando a revisão visual dela** (desktop e mobile) antes de fechar o UX e seguir para a F4.
+Servidor de revisão: `npm run dev` → `/revisar-layout?ex=deductive-grid`.
+
 ### ⚠️ Pendências que a F3 deixou explícitas
 
 1. 🔴 **O TUTORIAL.** O componente novo começa por um **3×3 real** (`PROBLEMA_TUTORIAL`), que é o
