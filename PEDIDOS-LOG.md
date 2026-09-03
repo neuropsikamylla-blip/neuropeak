@@ -21412,3 +21412,6 @@ eu acho que o ideal é eu clicar e abrir (o nome das pessoas) ficar clicando dif
 
 ## 03/09/2026 09:58
 [Image #22] vc nao acha que fica informação demais (de ter de clicar quando tem certeza?) sinceramente me ajude a analisar
+
+## 03/09/2026 09:59
+manda aqui novamente para eu mandar ali para o meu gestor de conteudo para ele ajudar na decisao
