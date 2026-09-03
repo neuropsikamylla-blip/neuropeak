@@ -21406,3 +21406,6 @@ ah beleza então tira o risca... eu acho que podemos colocar manual pq pode ser 
 
 ## 03/09/2026 09:54
 manda as fotos para eu ver ou abre no navegador
+
+## 03/09/2026 09:56
+eu acho que o ideal é eu clicar e abrir (o nome das pessoas) ficar clicando dificulta o racicinio de eu visualizar quem resta
