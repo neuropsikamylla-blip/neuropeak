@@ -1,14 +1,6 @@
 # As 3 ultimas especificacoes dela (automatico; a mais nova por ultimo)
 # Na retomada: ler as 3, conectar com PROGRESSO.md e git, declarar e seguir.
 
-## O QUE MUDOU (arquivo por arquivo)
-
-**`/private/tmp/claude-501/-Users-kamyllahonorio-neuropeak/9e4c2936-1fb4-4a9c-a53a-3ad1aad1cf37/scratchpad/grade-propostas.html`** — criado (1.031 linhas, 46 KB). Único arquivo entregue. HTML/CSS/JS inline, zero dependência externa (provado: `grep -c 'src=|href=|@import|url('` = 0). Contém: o desafio real com as 8 pistas; o seletor global de modo de marcação (toque cíclico × menu de escolha, seção 9); as três propostas, cada uma em desktop e em celular (moldura de 360 × 660 px com rolagem interna); a seção do pior caso 5 × 6 medido; a vitrine dos quatro estados em tamanho real com provas em escala de cinza e com a tela escurecida; e o bloco "Limites desta página".
-
-**Nenhum arquivo do projeto foi tocado.** `git status` mostra apenas `PEDIDOS-LOG.md` e `PEDIDOS-RECENTES.md` modificados — isso é o gancho automático de registro dos pedidos dela (as entradas novas são dela, de 09:51–09:56 de hoje), não obra minha.
-
-Arquivos auxiliares no scratchpad (evidência, não entrega): `verifica.js`/`verifica2.js`/`verifica3.js` (força bruta do puzzle), `teste-interacao.html`, `teste-5x6.html`, `m-*.html`, e os PNGs `shot-*.png` / `slice-*.png`.
-
 ## COMO PROVEI
 
 **1. O puzzle é real e tem solução única.** Força bruta independente em Node sobre as 331.776 combinações (4 categorias × 4! posições): as 8 pistas admitem **exatamente uma** solução, e cada uma das 8 é essencial (removendo qualquer uma, aparece uma segunda solução). Solução: bancada 1 Bruno/Vulcão/Amarela/Chá · 2 Ana/Ponte/Azul/Água · 3 Carla/Robô/Verde/Café · 4 Diego/Solar/Vermelha/Suco. O estado marcado nas telas é derivável das pistas (as pessoas saem da integração das pistas 1 e 3; as eliminações de Café/Chá/Água/Robô/Verde vêm das pistas 3, 2 e 6).
@@ -54,3 +46,6 @@ A matriz clássica de *logic grid* — categoria × categoria, em escada — **n
 - **Não verifiquei em aparelho real nem em Safari/iOS.** Toda a evidência visual é Chrome headless no macOS; toque real, rolagem com inércia e a sensação do popover no dedo continuam **DESCONHECIDOS** até ela abrir no aparelho.</result>
 <usage><subagent_tokens>211781</subagent_tokens><tool_uses>67</tool_uses><duration_ms>1805040</duration_ms></usage>
 </task-notification>
+
+## 03/09/2026 10:04
+[Image #23] dois pontos (se eu adicionei ANA de novo deveria ficar em VERMELHO para mostrar opa vc ja usou ela) e essa configuraçao das dicas esta desconfigurada 1 tem um espaçamento maior da 3 que as outras e mande a ideia escrita la nao consigo msotrar so mandar por escrito
