@@ -21373,3 +21373,6 @@ Não alterei nenhum arquivo de código, não commitei, não rodei `npm run build
 
 ## 02/09/2026 21:09
 então eu irei reformular exercicio por exercicio tirando restaurante e supermercado que não vejo erros, o resto vamos mexer, torre agora também finalizamos
+
+## 02/09/2026 21:51
+nao grade dedutiva ja esta reformulado! esses 27 problemas atuais seriam de que? pode resolver eles vai
