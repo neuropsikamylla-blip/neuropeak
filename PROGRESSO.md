@@ -193,15 +193,49 @@ decisões da mecânica abaixo.
          **contradição com as pistas CALA**.
       5. **Pistas riscáveis pelo paciente**, com eventos `clue_crossed` / `clue_uncrossed`.
       6. **"Verificar raciocínio"** com disponibilidade variando por nível.
-- [ ] **FASE 3 — a interface real: EM VOO no Codex agora** (03/set). Lab `grade-f3`,
-      `gpt-5.6-sol` esforço high, spec em
-      `docs/specs-codex/spec-grade-fase3-interface-20260903.md`, saída em
-      `~/codex-lab/saida-grade-f3-20260903.txt`. Reescrita do `DeductiveGrid.tsx` sobre o motor.
-      ⚠️ **Se a janela acabar antes da colheita:** colher para ARQUIVO **sem analisar** —
-      `bash ~/codex-lab/lab.sh colher grade-f3 > colheita-grade-f3-20260903.md` — e registrar aqui
-      *"colheita armazenada, ANALISAR na volta"*.
-      ⚠️ Ela exigiu **ver proposta desktop E mobile antes** de qualquer estrutura definitiva
-      (seções 91-92).
+- [x] **FASE 3 — a interface real. FEITA** — v3.11.0, commit `9f24abf`. ✅
+      Origem: Codex `gpt-5.6-sol` high, lab `grade-f3` (removido), colheita revisada linha a linha
+      em `colheita-grade-f3-20260903.md`. **A tela:** uma marcação só, escolhida numa lista que
+      **risca os valores já usados** em outra posição; pistas sempre visíveis e **riscáveis pelo
+      paciente**; duplicidade em **âmbar discreto**, contradição com as pistas **calada**;
+      "Verificar raciocínio" que nunca nomeia célula nem pista e **some nos níveis avançados**;
+      Concluir que nunca revela a solução.
+      **4 consertos do VP, todos defeitos reais:**
+      1. ⚠️ **`accuracy` era 1 FIXO** — como a tela só deixa concluir com a grade correta, a Grade
+         **subiria de nível em toda sessão** (`lib/adaptive.ts` sobe acima de 0,85) e dispararia
+         sozinha a **conquista de 100%**. **É o mesmo defeito da Torre em 31/ago.** Virou
+         `acuraciaDoProblema()`, calibrada contra os limiares reais: **uma** tentativa de concluir
+         incompatível **mantém** o nível (autocorrigir não é falha), **três** fazem descer.
+         🔶 **PROVISÓRIA e proposta pelo VP** — não é decisão dela. A definitiva é da **F6**.
+      2. **`rootBg` apagado**, quebrando `lib/layout/palco.test.ts` — o teste existe porque essa
+         mesma perda apagou o tema do Jogo da Memória em 27/ago.
+      3. O indicador que alimenta a F6 vinha **inflado**: atribuição feita sobre estado **já
+         contraditório** contava junto com "marcou sem estar determinado". São **três** situações,
+         não duas, e agora contam separadas (`atribuicoesComEstadoJaContraditorio`).
+      4. A **tela de instruções** — a primeira coisa que o paciente lê, e que fica **fora** do
+         arquivo que a spec mandou reescrever — continuava ensinando *"1x = SIM ✓, 2x = NÃO ✗"* e
+         *"Confirme quando tiver certeza"*, contra a decisão 2.
+      **Provas:** `tsc` exit 0 · `npm run test` **66 arquivos / 908 testes** exit 0 (base 64/888) ·
+      `npm run build` exit 0 · `lint` 0 errors. Entrou `lib/grade/vp-prova-interface.test.ts`, prova
+      adversarial escrita **antes** de ver a entrega, que **reprovava 6 de 9** contra o código antigo.
+      🔴 **NÃO VERIFICADO: a tela com os olhos.** A extensão do Chrome não estava conectada nesta
+      sessão. **O aspecto visual e a praticabilidade da grade seguem DESCONHECIDOS até ela ver.**
+      ⚠️ Ela exigiu **ver proposta desktop E mobile** (seções 91-92) — o parecer do gestor de
+      conteúdo veio sobre o artifact da mecânica, **não sobre esta tela**.
+
+### ⚠️ Pendências que a F3 deixou explícitas
+
+1. 🔴 **O TUTORIAL.** O componente novo começa por um **3×3 real** (`PROBLEMA_TUTORIAL`), que é o
+   exercício rodando de verdade — atende a regra dura dela de 12/ago ([[tutorial-e-o-exercicio-rodando]]) —
+   mas roda **em toda sessão** e **fora do framework T1**. `lib/tutorial/versions.ts` tem
+   `"deductive-grid": 1` **sem `TutorialDefinition` registrada**, então o framework não o mostra.
+   Decidir: converter para T1 (e ir para a versão **2**) ou assumir o 3×3 como aquecimento fixo.
+2. **Dosagem.** A sessão passou a ser **um problema**, e não mais **por tempo** (~7 min) como o
+   exercício antigo e o padrão do projeto. Defensável enquanto o banco tem 3 problemas; **revisar na
+   F5**, quando forem 12-20.
+3. **Custo do solver por clique.** `estadoDaAtribuicao` roda **duas buscas CSP a cada atribuição**,
+   de forma síncrona. Imperceptível em 4×4; **medir antes do 5×6** da F5.
+
 - [ ] **F4 instrumentação** do caminho do raciocínio. ⚠️ Se exigir Supabase: **PARAR**, mostrar
       migration, backup, etapa separada.
 - [ ] **F5 banco inicial** — 12 a 20 problemas validados. *"Não quero 100 problemas ruins."*
