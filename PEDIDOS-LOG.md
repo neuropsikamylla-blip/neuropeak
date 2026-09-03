@@ -21488,3 +21488,6 @@ A matriz clássica de *logic grid* — categoria × categoria, em escada — **n
 
 ## 03/09/2026 10:08
 abre de novo
+
+## 03/09/2026 10:11
+agora manda escrito aqui como esta a mecanica para eu partilhar
