@@ -21397,3 +21397,6 @@ por favor
 
 ## 03/09/2026 09:36
 vc pode abrir elas automatico que escolho
+
+## 03/09/2026 09:51
+o layout que eu mais gostei foi o C mas eu acho que tumutua demais colocar X impossivel ? hipotese eu acho que pode ser somente o nome das pessoas entende? igual o original ( mas nao vamos imitiar) mas talvez entender a mecanica olha só [Image #19] [Image #20] vc clica e abre as opcoes. [Image #21] quando acerta risca a DICA que foi usada.
