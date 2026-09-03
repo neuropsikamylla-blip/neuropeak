@@ -21394,3 +21394,6 @@ e ai?
 
 ## 03/09/2026 09:32
 por favor
+
+## 03/09/2026 09:36
+vc pode abrir elas automatico que escolho
