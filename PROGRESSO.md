@@ -149,48 +149,97 @@ erros"*. Não mexer sem ela pedir.
 ⚠️ Isto não é uma sessão de trabalho — é a forma de trabalhar do projeto. Cada exercício vai
 consumir várias janelas.
 
-## 🚧 EM ANDAMENTO — Grade Dedutiva: reformulação completa (02/set/2026)
+## 🚧 EM ANDAMENTO — Grade Dedutiva: reformulação completa (02-03/set/2026)
 
 Ela mandou uma espec de **103 seções** para reformular o exercício. Salva íntegra em
 `docs/grade-dedutiva/ESPEC-GRADE-DEDUTIVA-KAMYLLA-20260902.md` (commit `c777c5f`) — é a fonte da
 verdade do épico.
 
 **O núcleo:** o exercício deixa de ser *"leia uma pista e marque a resposta"* e passa a ser um
-problema de satisfação de restrições com **solução única provada**, quatro estados de marcação
-(vazio · × impossível · ? hipótese · ✓ confirmado), **sem correção imediata do erro** (*"se o
-sistema denuncia toda inconsistência, o monitoramento passa a ser feito pelo software"*), com
+problema de satisfação de restrições com **solução única provada**, **sem correção imediata do erro**
+(*"se o sistema denuncia toda inconsistência, o monitoramento passa a ser feito pelo software"*), com
 registro do **caminho do raciocínio** ação por ação, e motor adaptativo que distingue **padrão
 específico** de **sobrecarga global**.
+⚠️ Os **quatro estados de marcação** da espec (vazio · × · ? · ✓) **caíram** em 03/set — ver as
+decisões da mecânica abaixo.
 
 - [x] **Espec salva e commitada** (`c777c5f`). ✅
-- [ ] **FASE 1 — auditoria das 13 perguntas dela. FALHOU, PRECISA SER REFEITA.** Despachada ao
-      agente `gerente` em 02/set; o processo morreu com *"your computer went to sleep
-      mid-response"* logo antes de escrever o arquivo. **Nada foi produzido** —
-      `docs/grade-dedutiva/AUDITORIA-GRADE-DEDUTIVA-2026-09-02.md` NÃO existe, conferido.
-      ⚠️ **É o PRIMEIRO passo da próxima sessão: redespachar a auditoria.** Nenhum código foi
-      tocado, então não há trabalho parcial para verificar nem para descartar.
-- [ ] **F2 modelo lógico** (estrutura, restrições, tipos de pista T1–T11, solver CSP, unicidade,
-      testes 1–17 da seção 95).
-- [ ] **F3 protótipo de interface** — ⚠️ ela exigiu **ver proposta desktop E mobile antes** de
-      qualquer estrutura definitiva (seções 91-92).
+- [x] **FASE 1 — auditoria das 13 perguntas dela. FEITA** (`c8a7205`). ✅
+      `docs/grade-dedutiva/AUDITORIA-GRADE-DEDUTIVA-2026-09-02.md`, **656 linhas**, com as 13
+      respostas, seis achados e o inventário do que se reaproveita.
+      *(A tentativa de 02/set havia morrido com "your computer went to sleep mid-response"; foi
+      redespachada e concluída.)*
+- [x] **FASE 2 — modelo lógico e solver. FEITO** — v3.10.0, commit `8717f4e`. ✅
+      `lib/grade/` com **1.445 linhas** em 7 arquivos:
+      - `tipos.ts` (176) e `index.ts` (10);
+      - `motor.ts` (476) — **propagação de domínios por máscara de bits**, heurística **MRV** e
+        **registro declarativo de operadores** (`OPERADORES`): um tipo de pista novo entra no
+        registro **sem tocar** na busca, na exclusividade ou no MRV;
+      - `solver.ts` (133) — `validarPuzzle`, `encontrarSolucoes`, `contarSolucoes`,
+        `temSolucaoUnica`, `admiteSolucao`, `pistasEmConflito`;
+      - `derivacao.ts` (177) — `derivar`: **profundidade inferencial** e classificação das pistas em
+        **essencial · útil · redundante**;
+      - testes próprios: `solver.test.ts` (419) e `vp-prova.test.ts` (54).
+- [x] **Decisões da mecânica fechadas com o gestor de conteúdo dela** (`408af8d`), em
+      `docs/grade-dedutiva/DECISOES-MECANICA-20260903.md`. ✅
+      1. **UMA marcação só.** Saem `×`, `?` e `✓` da interface; o estado `hipotese` **permanece no
+         tipo** (não se apaga o modelo por causa da tela).
+      2. **O que o clique significa:** *"neste momento estou colocando Ana aqui"* — atribuição
+         provisória e revisável, não veredito.
+      3. ⚠️ **PROIBIDO nomear atribuição não determinada de "confirmação prematura".** O registro é
+         **descritivo** — `atribuicoesAntesDeDeterminacao`, `dessasMantidas`, `dessasRevisadas` — e a
+         **interpretação é da profissional**, nunca do software.
+      4. **Duplicidade do mesmo valor sinaliza DISCRETO** (âmbar, **nunca** vermelho de alarme);
+         **contradição com as pistas CALA**.
+      5. **Pistas riscáveis pelo paciente**, com eventos `clue_crossed` / `clue_uncrossed`.
+      6. **"Verificar raciocínio"** com disponibilidade variando por nível.
+- [ ] **FASE 3 — a interface real: EM VOO no Codex agora** (03/set). Lab `grade-f3`,
+      `gpt-5.6-sol` esforço high, spec em
+      `docs/specs-codex/spec-grade-fase3-interface-20260903.md`, saída em
+      `~/codex-lab/saida-grade-f3-20260903.txt`. Reescrita do `DeductiveGrid.tsx` sobre o motor.
+      ⚠️ **Se a janela acabar antes da colheita:** colher para ARQUIVO **sem analisar** —
+      `bash ~/codex-lab/lab.sh colher grade-f3 > colheita-grade-f3-20260903.md` — e registrar aqui
+      *"colheita armazenada, ANALISAR na volta"*.
+      ⚠️ Ela exigiu **ver proposta desktop E mobile antes** de qualquer estrutura definitiva
+      (seções 91-92).
 - [ ] **F4 instrumentação** do caminho do raciocínio. ⚠️ Se exigir Supabase: **PARAR**, mostrar
       migration, backup, etapa separada.
 - [ ] **F5 banco inicial** — 12 a 20 problemas validados. *"Não quero 100 problemas ruins."*
-- [ ] **F6 motor adaptativo** · [ ] **F7 relatório de processo**.
+- [ ] **F6 motor adaptativo** — ⚠️ **precisa ser REDISCUTIDO ANTES de implementar** (ver abaixo).
+- [ ] **F7 relatório de processo**.
 
-### Duas coisas já sabidas, para a próxima sessão não redescobrir
+### ⚠️ O próximo risco real: a F6 ficou sem os indicadores que a espec pressupunha
 
-1. **A seção 85 (abandono) provavelmente já está atendida.** A tabela `ExerciseAttempt`, criada em
-   01/set, registra tentativa iniciada/concluída para TODOS os exercícios pelo `ExerciseWrapper`.
-   Confirmar na auditoria antes de propor qualquer migration.
+O parecer do gestor de conteúdo (seção 8 do documento de decisões) aponta que **o motor adaptativo
+tem de ser rediscutido ANTES de virar código**:
+
+> *"O próximo ponto que eu examinaria com bastante cuidado é o motor adaptativo: exatamente quais
+> dados deste novo formato vão decidir qual problema vem em seguida, porque a mudança para uma
+> marcação altera um pouco os indicadores que tínhamos planejado."*
+
+A espec (seções 46-60) desenhou a adaptação contando com a distinção **hipótese × confirmação**, que
+**deixou de existir**. O que sobra: as **atribuições antes de determinação lógica** (mantidas ×
+revisadas), os **tipos de erro lógico**, a **profundidade das conclusões**, os **eventos de pista** e
+o **uso da verificação**. **A seção 48 (o que conta como padrão) tem de ser revista com esses
+indicadores e submetida a ela** antes de qualquer implementação da F6.
+
+### Duas coisas já sabidas
+
+1. **A seção 85 (abandono) está atendida — CONFIRMADO pela auditoria (§10).** A tabela
+   `ExerciseAttempt` (`prisma/schema.prisma:195-208`) e a rota `/api/attempts`, criadas em 01/set,
+   já distinguem *"nunca iniciou"* de *"iniciou e abandonou"* pelo `ExerciseWrapper`, **sem
+   migration**. ⚠️ Duas ressalvas da própria auditoria: o **log do caminho do raciocínio não cabe**
+   no `metadata` como está hoje (§12), e **não foi verificado no banco de produção** se a tabela já
+   existe lá.
 2. **O motor da Torre (`lib/torres/`) é o precedente direto** da arquitetura que ela pede aqui:
    banco pré-validado, solução provada por busca, nada de geração aleatória sem validação,
    metadados por problema. Muda o solver — lá foi BFS em grafo de estados, aqui é CSP.
 
 ### Estado da plataforma nesta parada
 
-Produção em **3.9.3** (subiu de 2.90.0 em 01/set, com 99 commits represados desde a v2.90).
-`tsc` exit 0 · 62 arquivos / 861 testes. Torre **aprovada por ela** e no ar.
+`package.json` em **3.10.0**. Medido em 03/set no repositório real: `npx tsc --noEmit` **exit 0** ·
+`npm run test` **exit 0, 64 arquivos / 888 testes passando**. Árvore limpa fora de
+`PEDIDOS-LOG.md` / `PEDIDOS-RECENTES.md` (gerados por gancho). Torre **aprovada por ela** e no ar.
 
 ## ✅ CONCLUÍDO E APROVADO POR ELA — Jogo das Torres: reconfiguração completa (31/ago-01/set/2026)
 

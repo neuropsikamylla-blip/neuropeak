@@ -1,12 +1,6 @@
 # As 3 ultimas especificacoes dela (automatico; a mais nova por ultimo)
 # Na retomada: ler as 3, conectar com PROGRESSO.md e git, declarar e seguir.
 
-## 03/09/2026 10:04
-[Image #23] dois pontos (se eu adicionei ANA de novo deveria ficar em VERMELHO para mostrar opa vc ja usou ela) e essa configuraçao das dicas esta desconfigurada 1 tem um espaçamento maior da 3 que as outras e mande a ideia escrita la nao consigo msotrar so mandar por escrito
-
-## 03/09/2026 10:11
-agora manda escrito aqui como esta a mecanica para eu partilhar
-
 ## 03/09/2026 10:17
 E acho excelente as pistas serem riscadas manualmente pelo paciente. Isso pode gerar um dado interessante de estratégia:
 quais pistas ele selecionou primeiro;
@@ -111,3 +105,13 @@ Flexibilidade — moderada a forte, dependendo da variação estrutural dos prob
 Controle inibitório — demanda presente, mas eu manteria cautela na interpretação dos dados
 E a parte mais importante: a mecânica não ficou pesada. Na verdade, retirar ×/?/✓ e deixar uma única atribuição provavelmente deixa o exercício mais sofisticado cognitivamente e mais simples operacionalmente, que é exatamente o equilíbrio que eu procuraria.
 Eu aprovaria essa direção e não voltaria para as duas marcações. O próximo ponto que eu examinaria com bastante cuidado é o motor adaptativo: exatamente quais dados deste novo formato vão decidir qual problema vem em seguida, porque a mudança para uma marcação altera um pouco os indicadores que tínhamos planejado.
+
+## 03/09/2026 11:21
+Retome exatamente da Fase 3 onde parou.
+Não refaça auditoria, não replaneje as fases anteriores e não altere o motor lógico já concluído.
+Continue apenas a implementação da interface real da Grade Dedutiva conforme a especificação já fechada e o estado atual do repositório.
+
+## 03/09/2026 12:30
+Retome exatamente da Fase 3 onde parou.
+Não refaça auditoria, não replaneje as fases anteriores e não altere o motor lógico já concluído.
+Continue apenas a implementação da interface real da Grade Dedutiva conforme a especificação já fechada e o estado atual do repositório.
