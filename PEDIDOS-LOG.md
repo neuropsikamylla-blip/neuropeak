@@ -21382,3 +21382,6 @@ vamos la eu quero saber quais sao os 27 problemas, nao quero aposentar quero que
 
 ## 02/09/2026 21:53
 vc esta falando que esses 27 problemas é de um jogo?
+
+## 02/09/2026 21:54
+a grade dedutiva eu mandei reformulado aqui ( ele veio com 27 problemas?
