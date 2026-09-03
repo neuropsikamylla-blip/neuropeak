@@ -21376,3 +21376,6 @@ então eu irei reformular exercicio por exercicio tirando restaurante e supermer
 
 ## 02/09/2026 21:51
 nao grade dedutiva ja esta reformulado! esses 27 problemas atuais seriam de que? pode resolver eles vai
+
+## 02/09/2026 21:52
+vamos la eu quero saber quais sao os 27 problemas, nao quero aposentar quero que resolva
