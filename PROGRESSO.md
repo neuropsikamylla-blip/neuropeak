@@ -223,6 +223,35 @@ revisadas), os **tipos de erro lógico**, a **profundidade das conclusões**, os
 o **uso da verificação**. **A seção 48 (o que conta como padrão) tem de ser revista com esses
 indicadores e submetida a ela** antes de qualquer implementação da F6.
 
+### O que o VP preparou enquanto o Codex trabalha, e o que a colheita ainda vai exigir
+
+**Prova de aceite adversarial, escrita ANTES de ver a entrega** — quem entrega não escreve a própria
+prova. Está em `<scratchpad>/vp-prova-interface.test.ts`, **fora do repositório de propósito** (teste
+vermelho não fica na `main`); entra junto com a aplicação da colheita, como `lib/grade/vp-prova-interface.test.ts`.
+Ela varre o fonte do `DeductiveGrid.tsx` e prova **AUSÊNCIA**: sem glifos `✓`/`✗`/`?` de marcação,
+sem vermelho de alarme, sem ícone de alerta, sem texto que avalie o paciente, sem mensagem de
+verificação que interpole dado do puzzle, e **sem os termos "prematura"/"impulsividade"** (decisão 3).
+Mais três de manutenção: o `rootBg` do tema sobrevive, `clue_crossed`/`clue_uncrossed` existem, e a
+tela importa de `@/lib/grade` em vez de improvisar lógica.
+**Controle negativo rodado:** contra o código antigo ela **reprova 6 de 9** — inclusive a linha 694,
+`"⚠️ Algumas células estão erradas — reveja as pistas!"`, que é exatamente o que a seção 14 proíbe.
+Teste que passasse no código velho não provaria nada.
+
+**Três consertos de integração que a spec do Codex NÃO cobriu** — são do VP, na aplicação:
+
+1. `lib/layout/palco.test.ts:46` **trava a Grade no palco `medio`** (960px). A spec deixou o Codex
+   escolher entre `medio` e `amplo`; se ele escolher `amplo`, o teste quebra e a decisão é do VP.
+   Para 5 posições × 6 categorias, 960px é apertado.
+2. `lib/layout/palco.test.ts:171` exige `const rootBg` e `background={rootBg.background as string}`.
+   É a regressão de 27/ago que apagou o tema do Jogo da Memória numa migração. Coberta também pela
+   prova acima.
+3. ⚠️ **O TUTORIAL FICA MENTINDO.** O tutorial atual (`DeductiveGridTutorial`, dentro do próprio
+   `DeductiveGrid.tsx`) ensina *"Toque: 1x = ✓ (SIM), 2x = ✗ (NÃO), 3x = apaga"* — mecânica que
+   **deixou de existir** —, e ainda é uma tabela falsa em vez do exercício rodando, contra a regra
+   dura dela de 12/ago ([[tutorial-e-o-exercicio-rodando]]). `lib/tutorial/versions.ts` tem
+   `"deductive-grid": 1` e precisa ir a **2**. **Fatia própria, logo depois da interface** — não se
+   improvisa dentro da F3.
+
 ### Duas coisas já sabidas
 
 1. **A seção 85 (abandono) está atendida — CONFIRMADO pela auditoria (§10).** A tabela
