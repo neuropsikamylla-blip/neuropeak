@@ -1,18 +1,25 @@
 import { describe, expect, it } from "vitest";
 import {
   BANCO_GRADE,
+  CONFIGURACAO_VERIFICACOES,
+  MENSAGEM_COM_INCOMPATIBILIDADE,
+  MENSAGEM_SEM_INCOMPATIBILIDADE,
   acuraciaDoProblema,
   celulasComValorRepetido,
   chavePosicaoGrade,
+  consumirVerificacao,
   estadoDaAtribuicao,
   mensagemVerificacao,
   paraMarcacaoParcial,
   PROBLEMA_TUTORIAL,
+  registrarCorrecaoDasVerificacoes,
   relacaoJaDeterminada,
   resumirAtribuicoes,
   temSolucaoUnica,
   verificacaoDisponivel,
+  verificacoesPermitidas,
   type RegistroAtribuicao,
+  type RegistroVerificacao,
 } from "./index";
 
 describe("banco da Grade Dedutiva — Fase 3", () => {
@@ -52,12 +59,58 @@ describe("regras puras da interface", () => {
     }
   });
 
-  it("não disponibiliza o botão de verificar nos níveis avançados", () => {
+  it("limita verificações por nível, mantém o tutorial livre e aceita configuração zero", () => {
+    expect(verificacoesPermitidas(1, false)).toBe(3);
+    expect(verificacoesPermitidas(2, false)).toBe(3);
+    expect(verificacoesPermitidas(3, false)).toBe(2);
+    expect(verificacoesPermitidas(4, false)).toBe(1);
+    expect(verificacoesPermitidas(5, false)).toBe(1);
+    expect(verificacoesPermitidas(5, true)).toBe("livre");
+    expect(verificacoesPermitidas(5, false, {
+      ...CONFIGURACAO_VERIFICACOES,
+      porNivel: { ...CONFIGURACAO_VERIFICACOES.porNivel, 5: 0 },
+    })).toBe(0);
+  });
+
+  it("não deixa a contagem negativa e oculta o recurso quando chega a zero", () => {
+    expect(consumirVerificacao(1)).toBe(0);
+    expect(consumirVerificacao(0)).toBe(0);
+    expect(consumirVerificacao("livre")).toBe("livre");
     expect(verificacaoDisponivel(1)).toBe(true);
-    expect(verificacaoDisponivel(2)).toBe(true);
-    expect(verificacaoDisponivel(3)).toBe(true);
-    expect(verificacaoDisponivel(4)).toBe(false);
-    expect(verificacaoDisponivel(5)).toBe(false);
+    expect(verificacaoDisponivel("livre")).toBe(true);
+    expect(verificacaoDisponivel(0)).toBe(false);
+  });
+
+  it("usa exatamente as duas mensagens genéricas definidas", () => {
+    expect(mensagemVerificacao(1, true)).toBe(MENSAGEM_COM_INCOMPATIBILIDADE);
+    expect(mensagemVerificacao(5, true)).toBe(
+      "Existe uma incompatibilidade na sua organização. Revise suas escolhas."
+    );
+    expect(mensagemVerificacao(1, false)).toBe(MENSAGEM_SEM_INCOMPATIBILIDADE);
+    expect(mensagemVerificacao(5, false)).toBe(
+      "Até aqui, sua organização é compatível com as pistas."
+    );
+  });
+
+  it("registra factual e objetivamente a correção posterior a uma verificação", () => {
+    const verificacao: RegistroVerificacao = {
+      puzzleId: "puzzle-1",
+      numeroAcao: 4,
+      tempoDesdeInicio: 1200,
+      ordemVerificacao: 1,
+      verificacoesRestantes: 2,
+      estado: "inconsistente",
+      quantidadeContradicoes: 3,
+      corrigidaDepois: false,
+      acoesAteCorrecao: null,
+      tempoAteCorrecao: null,
+    };
+    expect(registrarCorrecaoDasVerificacoes([verificacao], "puzzle-1", 7, 2100)).toEqual([{
+      ...verificacao,
+      corrigidaDepois: true,
+      acoesAteCorrecao: 3,
+      tempoAteCorrecao: 900,
+    }]);
   });
 
   it("consulta o solver para saber se uma relação já foi determinada", () => {

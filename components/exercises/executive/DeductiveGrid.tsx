@@ -10,15 +10,21 @@ import {
   admiteSolucao,
   celulasComValorRepetido,
   chavePosicaoGrade,
+  consumirVerificacao,
   criarGradeVazia,
   estadoDaAtribuicao,
   gradeEstaCorreta,
   mensagemVerificacao,
   paraMarcacaoParcial,
+  pistasEmConflito,
+  registrarCorrecaoDasVerificacoes,
   resumirAtribuicoes,
   selecionarProblema,
   verificacaoDisponivel,
+  verificacoesPermitidas,
   type RegistroAtribuicao,
+  type RegistroVerificacao,
+  type QuantidadeVerificacoes,
   type ValorCelula,
   type Puzzle,
 } from "@/lib/grade";
@@ -40,6 +46,7 @@ interface EventoPista {
 
 interface RegistroProblema {
   atribuicoes: RegistroAtribuicao[];
+  verificacoes: RegistroVerificacao[];
   eventosPista: EventoPista[];
   latenciaPrimeiraAcao: number | null;
   totalAcoes: number;
@@ -50,6 +57,7 @@ interface RegistroProblema {
 function novoRegistroProblema(): RegistroProblema {
   return {
     atribuicoes: [],
+    verificacoes: [],
     eventosPista: [],
     latenciaPrimeiraAcao: null,
     totalAcoes: 0,
@@ -131,6 +139,9 @@ export function DeductiveGrid({ difficulty, theme, onComplete }: DeductiveGridPr
   const [pistasRiscadas, setPistasRiscadas] = useState<Set<string>>(() => new Set());
   const [mensagem, setMensagem] = useState<string | null>(null);
   const [concluido, setConcluido] = useState(false);
+  const [verificacoesRestantes, setVerificacoesRestantes] = useState<QuantidadeVerificacoes>(() =>
+    verificacoesPermitidas(PROBLEMA_TUTORIAL.nivel, true)
+  );
   const inicioProblema = useRef(Date.now());
   const registro = useRef<RegistroProblema>(novoRegistroProblema());
   const transicao = useRef<ReturnType<typeof setTimeout> | null>(null);
@@ -160,6 +171,19 @@ export function DeductiveGrid({ difficulty, theme, onComplete }: DeductiveGridPr
     });
   }
 
+  function registrarCorrecaoSeNecessaria(
+    proximaGrade: Record<string, ValorCelula[]>,
+    momento: number
+  ): void {
+    if (!admiteSolucao(puzzle, paraMarcacaoParcial(proximaGrade))) return;
+    registro.current.verificacoes = registrarCorrecaoDasVerificacoes(
+      registro.current.verificacoes,
+      puzzle.id,
+      registro.current.totalAcoes,
+      momento
+    );
+  }
+
   function atribuir(categoria: string, posicao: number, valor: string): void {
     if (concluido) return;
     const valorAnterior = grade[categoria][posicao - 1];
@@ -173,25 +197,30 @@ export function DeductiveGrid({ difficulty, theme, onComplete }: DeductiveGridPr
       valor,
       posicao
     );
+    const momento = registrarAcao();
     registro.current.atribuicoes.push({
       categoria,
       valor,
       posicao,
-      momento: registrarAcao(),
+      momento,
       valorAnterior,
       relacaoJaEstavaLogicamenteDeterminada: estado === "determinada",
       estadoDaAtribuicao: estado,
       revisadaDepois: false,
     });
-    setGrade((atual) => celulaComValor(atual, categoria, posicao, valor));
+    const proximaGrade = celulaComValor(grade, categoria, posicao, valor);
+    registrarCorrecaoSeNecessaria(proximaGrade, momento);
+    setGrade(proximaGrade);
     setMensagem(null);
   }
 
   function limpar(categoria: string, posicao: number): void {
     if (concluido || grade[categoria][posicao - 1] === null) return;
     marcarAtribuicoesRevisadas(categoria, posicao);
-    registrarAcao();
-    setGrade((atual) => celulaComValor(atual, categoria, posicao, null));
+    const momento = registrarAcao();
+    const proximaGrade = celulaComValor(grade, categoria, posicao, null);
+    registrarCorrecaoSeNecessaria(proximaGrade, momento);
+    setGrade(proximaGrade);
     setMensagem(null);
   }
 
@@ -215,10 +244,29 @@ export function DeductiveGrid({ difficulty, theme, onComplete }: DeductiveGridPr
   }
 
   function verificar(): void {
-    if (concluido || !verificacaoDisponivel(puzzle.nivel)) return;
-    registrarAcao();
-    registro.current.usosVerificarRaciocinio += 1;
-    const temIncompatibilidade = !admiteSolucao(puzzle, paraMarcacaoParcial(grade));
+    if (concluido || !verificacaoDisponivel(verificacoesRestantes)) return;
+    const momento = registrarAcao();
+    const parcial = paraMarcacaoParcial(grade);
+    const temIncompatibilidade = !admiteSolucao(puzzle, parcial);
+    const proximasRestantes = consumirVerificacao(verificacoesRestantes);
+    const ordemVerificacao = registro.current.usosVerificarRaciocinio + 1;
+    registro.current.usosVerificarRaciocinio = ordemVerificacao;
+    // `pistasEmConflito` devolve um conjunto seguro de pistas relevantes, não um MUS.
+    // A contagem registra somente o que o motor sustenta, sem atribuir minimalidade.
+    const quantidadeContradicoes = pistasEmConflito(puzzle, parcial).length;
+    registro.current.verificacoes.push({
+      puzzleId: puzzle.id,
+      numeroAcao: registro.current.totalAcoes,
+      tempoDesdeInicio: momento,
+      ordemVerificacao,
+      verificacoesRestantes: proximasRestantes,
+      estado: temIncompatibilidade ? "inconsistente" : "consistente",
+      quantidadeContradicoes,
+      corrigidaDepois: false,
+      acoesAteCorrecao: null,
+      tempoAteCorrecao: null,
+    });
+    setVerificacoesRestantes(proximasRestantes);
     setMensagem(mensagemVerificacao(puzzle.nivel, temIncompatibilidade));
   }
 
@@ -229,6 +277,7 @@ export function DeductiveGrid({ difficulty, theme, onComplete }: DeductiveGridPr
     setPistasRiscadas(new Set());
     setMensagem(null);
     setConcluido(false);
+    setVerificacoesRestantes(verificacoesPermitidas(desafio.nivel, false));
     registro.current = novoRegistroProblema();
     inicioProblema.current = Date.now();
   }
@@ -252,12 +301,14 @@ export function DeductiveGrid({ difficulty, theme, onComplete }: DeductiveGridPr
     }
 
     const atribuicoes = registro.current.atribuicoes.map((atribuicao) => ({ ...atribuicao }));
+    const verificacoes = registro.current.verificacoes.map((verificacao) => ({ ...verificacao }));
     const eventosPista = registro.current.eventosPista.map((evento) => ({ ...evento }));
     const resumo = resumirAtribuicoes(atribuicoes);
     const metadata = {
       puzzleId: puzzle.id,
       nivel: puzzle.nivel,
       atribuicoes,
+      verificacoes,
       eventosPista,
       ...resumo,
       latenciaPrimeiraAcao: registro.current.latenciaPrimeiraAcao ?? tempoTotal,
@@ -448,7 +499,7 @@ export function DeductiveGrid({ difficulty, theme, onComplete }: DeductiveGridPr
             )}
 
             <div className="flex flex-col-reverse gap-3 sm:flex-row sm:justify-end">
-              {verificacaoDisponivel(puzzle.nivel) && (
+              {verificacaoDisponivel(verificacoesRestantes) && (
                 <button
                   type="button"
                   onClick={verificar}
@@ -456,6 +507,7 @@ export function DeductiveGrid({ difficulty, theme, onComplete }: DeductiveGridPr
                   className={`min-h-11 rounded-lg border px-5 py-2.5 text-sm font-semibold transition-colors disabled:opacity-50 ${pal.secundaria}`}
                 >
                   Verificar raciocínio
+                  {verificacoesRestantes === "livre" ? "" : ` · ${verificacoesRestantes}`}
                 </button>
               )}
               <button

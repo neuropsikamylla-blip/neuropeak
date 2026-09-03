@@ -4,23 +4,87 @@ import type { MarcacaoParcial, Puzzle } from "./tipos";
 export type ValorCelula = string | null;
 export type EstadoGrade = Readonly<Record<string, readonly ValorCelula[]>>;
 
+export type QuantidadeVerificacoes = number | "livre";
+
 /**
- * Regra de conteúdo ajustável: níveis 1–2 são iniciais, 3 é intermediário e
- * 4–5 são avançados, portanto não exibem a verificação.
+ * Configuração única e recalibrável da ajuda: o tutorial ensina a mecânica;
+ * nos problemas de treino, a quantidade diminui conforme o nível aumenta.
+ * Valores zero são válidos e retiram o recurso daquele nível.
  */
-export const NIVEIS_COM_VERIFICACAO: readonly Puzzle["nivel"][] = [1, 2, 3];
-
-export const MENSAGEM_SEM_INCOMPATIBILIDADE = "Nenhuma incompatibilidade encontrada até aqui.";
-
-export function verificacaoDisponivel(nivel: Puzzle["nivel"]): boolean {
-  return NIVEIS_COM_VERIFICACAO.includes(nivel);
+export interface ConfiguracaoVerificacoes {
+  tutorial: "livre";
+  porNivel: Readonly<Record<Puzzle["nivel"], number>>;
 }
 
-export function mensagemVerificacao(nivel: Puzzle["nivel"], temIncompatibilidade: boolean): string {
-  if (!temIncompatibilidade) return MENSAGEM_SEM_INCOMPATIBILIDADE;
-  return nivel <= 2
-    ? "Existe uma incompatibilidade no seu raciocínio. Revise suas conclusões."
-    : "Existe pelo menos uma incompatibilidade. Revise antes de continuar.";
+export const CONFIGURACAO_VERIFICACOES: Readonly<ConfiguracaoVerificacoes> = {
+  tutorial: "livre",
+  porNivel: { 1: 3, 2: 3, 3: 2, 4: 1, 5: 1 },
+};
+
+export const MENSAGEM_COM_INCOMPATIBILIDADE =
+  "Existe uma incompatibilidade na sua organização. Revise suas escolhas.";
+export const MENSAGEM_SEM_INCOMPATIBILIDADE =
+  "Até aqui, sua organização é compatível com as pistas.";
+
+export function verificacoesPermitidas(
+  nivel: Puzzle["nivel"],
+  ehTutorial: boolean,
+  configuracao: Readonly<ConfiguracaoVerificacoes> = CONFIGURACAO_VERIFICACOES
+): QuantidadeVerificacoes {
+  return ehTutorial ? configuracao.tutorial : configuracao.porNivel[nivel];
+}
+
+export function verificacaoDisponivel(restantes: QuantidadeVerificacoes): boolean {
+  return restantes === "livre" || restantes > 0;
+}
+
+export function consumirVerificacao(restantes: QuantidadeVerificacoes): QuantidadeVerificacoes {
+  return restantes === "livre" ? restantes : Math.max(0, restantes - 1);
+}
+
+export function mensagemVerificacao(
+  _nivel: Puzzle["nivel"],
+  temIncompatibilidade: boolean
+): string {
+  return temIncompatibilidade
+    ? MENSAGEM_COM_INCOMPATIBILIDADE
+    : MENSAGEM_SEM_INCOMPATIBILIDADE;
+}
+
+export interface RegistroVerificacao {
+  puzzleId: string;
+  numeroAcao: number;
+  tempoDesdeInicio: number;
+  ordemVerificacao: number;
+  verificacoesRestantes: QuantidadeVerificacoes;
+  estado: "consistente" | "inconsistente";
+  quantidadeContradicoes: number;
+  corrigidaDepois: boolean;
+  acoesAteCorrecao: number | null;
+  tempoAteCorrecao: number | null;
+}
+
+export function registrarCorrecaoDasVerificacoes(
+  verificacoes: readonly RegistroVerificacao[],
+  puzzleId: string,
+  numeroAcao: number,
+  tempoDesdeInicio: number
+): RegistroVerificacao[] {
+  return verificacoes.map((verificacao) => {
+    if (
+      verificacao.puzzleId !== puzzleId
+      || verificacao.estado !== "inconsistente"
+      || verificacao.corrigidaDepois
+    ) {
+      return verificacao;
+    }
+    return {
+      ...verificacao,
+      corrigidaDepois: true,
+      acoesAteCorrecao: Math.max(0, numeroAcao - verificacao.numeroAcao),
+      tempoAteCorrecao: Math.max(0, tempoDesdeInicio - verificacao.tempoDesdeInicio),
+    };
+  });
 }
 
 /** Chave sem delimitadores ambíguos para uma célula visual da grade. */

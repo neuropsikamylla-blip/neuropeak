@@ -25,7 +25,9 @@ describe("Grade Dedutiva — a tela cala o que tem de calar", () => {
     // vazia. Os glifos dos quatro estados antigos não podem reaparecer como conteúdo de célula.
     expect(src, "o ✓ de 'confirmado' voltou à tela").not.toMatch(/["'`]\s*✓\s*["'`]/);
     expect(src, "o ✗/× de 'impossível' voltou à tela").not.toMatch(/["'`]\s*[✗×✘]\s*["'`]/);
-    expect(src, "o ? de 'hipótese' voltou à tela como marcação").not.toMatch(/["'`]\s*\?\s*["'`]/);
+    // Sem \s* aqui, de propósito: com espaços, a regex casaria com o operador ternário
+    // (`"livre" ? ""`), que é sintaxe e não conteúdo de tela. O que se proíbe é a STRING "?".
+    expect(src, "o ? de 'hipótese' voltou à tela como marcação").not.toMatch(/(["'`])\?\1/);
   });
 
   it("não chama atribuição não determinada de confirmação prematura nem de impulsividade", () => {
