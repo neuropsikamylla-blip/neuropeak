@@ -21482,3 +21482,6 @@ A matriz clássica de *logic grid* — categoria × categoria, em escada — **n
 
 ## 03/09/2026 10:04
 [Image #23] dois pontos (se eu adicionei ANA de novo deveria ficar em VERMELHO para mostrar opa vc ja usou ela) e essa configuraçao das dicas esta desconfigurada 1 tem um espaçamento maior da 3 que as outras e mande a ideia escrita la nao consigo msotrar so mandar por escrito
+
+## 03/09/2026 10:07
+[Image #24] totalmente estranha as palavras
