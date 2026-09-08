@@ -123,3 +123,18 @@ describe("Grade Dedutiva — a tela de instruções ensina a mecânica que exist
     expect(instrucoes, "não explicam que a pista se risca").toMatch(/ris[cq]/i);
   });
 });
+
+describe("Grade Dedutiva — o eixo mostra o rótulo do problema", () => {
+  // Fechamento 2 dela: uma sequência conhecida (14h, 15h…) é o EIXO, não categoria. De nada
+  // adianta o campo existir no modelo se a coluna continua dizendo "Posição 1" — um enunciado
+  // que fale "o encontro das 15h" apontaria para algo que a tela não mostra.
+  const src = codigo(ARQUIVO);
+
+  it("o cabeçalho usa rotulosPosicao quando o puzzle os define", () => {
+    expect(src, "o cabeçalho ignora os rótulos do problema").toContain("puzzle.rotulosPosicao?.[indice]");
+  });
+
+  it("e cai em 'Posição N' quando o puzzle não os define", () => {
+    expect(src, "sumiu o rótulo padrão dos puzzles sem eixo nomeado").toMatch(/Posição \$\{indice \+ 1\}/);
+  });
+});

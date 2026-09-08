@@ -260,6 +260,44 @@ inteiro **sem ler uma pista**. Quem perceber o padrão pontua sem fazer o exerc�
 - [ ] **PRÓXIMO: os problemas novos** (F5), com cruzamento real entre categorias e passando pela
       triagem. Ela deu os exemplos de pista adequada. **Não começar sem fechar a revisão visual.**
 
+### ✅ 08/set — os seis fechamentos dela, e a régua ANTES da autoria
+
+Ela aprovou a proposta do banco com **seis fechamentos** e fixou a ordem de trabalho: **régua
+primeiro, autoria depois.**
+
+1. [x] **Pistas compostas** — v3.13.0, `3a2e9ad`. A `Pista` vira `{ id, texto, restricoes[] }`:
+       para o paciente **UMA** pista, para o solver **N restrições atômicas** com id próprio. O
+       registro preserva `clueId` + `constraintId` **sem** criar operador para a frase composta.
+       Junto veio `restricoesViolando`, que é **EXATA** (só avalia restrição com **todos** os
+       operandos determinados), ao lado de `pistasEmConflito`, que segue sendo o conjunto **seguro
+       heurístico**. ⚠️ Esse dado vai **SÓ para o registro de processo, NUNCA para a tela**.
+2. [x] **`rotulosPosicao`** entra no modelo e **é validado** — mas **NÃO é consumido pela
+       interface**: ela mandou **não mexer na tela** nesta etapa, a exibição vem com o banco novo.
+       ⚠️ **Isto é uma PENDÊNCIA, não uma entrega completa.**
+3. [x] **A régua estrutural** — v3.14.0, `580f3e7`. Os **10 critérios dela**.
+       ⚠️ **A correção dela é o coração da fatia:** o VP propôs *"conectado + grau ≥ 2"* e ela
+       apontou que isso **não impede uma aresta crítica partir o problema em dois blocos**,
+       exigindo `bridgeCount === 0`. **Não era teórico:** o **museu é conectado e reprova
+       ESPECIFICAMENTE pela ponte** — sem o critério dela, esse defeito passava.
+4. [x] **Os três puzzles reprovam com motivos nomeados**; o tutorial passa por **isenção**.
+       ⚠️ Registre-se com destaque: esse teste **AFIRMA o defeito**, então a suíte fica **verde
+       enquanto o banco está errado** — **quando o banco for refeito, ele CAI, e cair será o sinal
+       de sucesso, não uma quebra.**
+5. [ ] **PRÓXIMO PASSO, e só agora liberado: a autoria dos 16 problemas** (4×3, 4×4, 5×4, 5×5 —
+       **quatro de cada**) + tutorial. Proposta em
+       `docs/grade-dedutiva/PROPOSTA-BANCO-F5-20260908.md`. Ela registrou que este é um **seed bank
+       para validação, NÃO o banco definitivo da adaptação**: o motor adaptativo final exigirá mais
+       variedade por nível/operação, para focalização e transferência **sem repetição excessiva**.
+       E que **não** se deve obrigar todo puzzle avançado a usar **todos** os operadores complexos
+       ao mesmo tempo.
+6. [ ] 🔧 **Achado de infra, aguardando decisão dela.** `~/codex-lab/lab.sh` usa `mktemp` com
+       **sufixo depois do `XXXXXX`** (`mktemp /tmp/lab-XXXXXX.bundle`, linha 23); no macOS o
+       **BSD `mktemp` não substitui o template nesse formato** e cria o arquivo com o nome
+       **LITERAL** `/tmp/lab-XXXXXX.bundle`. No caminho normal não morde (o script apaga no fim),
+       mas **um comando interrompido deixa o resto e o próximo `preparar` falha** com
+       `mkstemp failed: File exists` — **aconteceu hoje**. Dois labs simultâneos colidiriam pelo
+       mesmo motivo. ⚠️ **É a porta única dela: o VP não mexe sem aval.**
+
 ### 🔎 Auditorias e medição pedidas por ela em 03/set — FEITAS, nada implementado
 
 Documento: `docs/grade-dedutiva/PROPOSTA-DOSAGEM-TUTORIAL-SOLVER-20260903.md`.
@@ -365,9 +403,17 @@ Teste que passasse no código velho não provaria nada.
 
 ### Estado da plataforma nesta parada
 
-`package.json` em **3.10.0**. Medido em 03/set no repositório real: `npx tsc --noEmit` **exit 0** ·
-`npm run test` **exit 0, 64 arquivos / 888 testes passando**. Árvore limpa fora de
-`PEDIDOS-LOG.md` / `PEDIDOS-RECENTES.md` (gerados por gancho). Torre **aprovada por ela** e no ar.
+`package.json` em **3.14.0**. Medido em 08/set no repositório real (agente gerente): `npx tsc
+--noEmit` **exit 0** · `npm run test` **exit 0, 69 arquivos / 945 testes passando** · `git log`
+com `580f3e7` (v3.14.0) e `3a2e9ad` (v3.13.0) no topo · `wc -l lib/grade/*.ts` = **3.420 linhas em
+15 arquivos** (motor 515, estrutura 321 + estrutura.test 403, solver 176 + solver.test 537,
+interacao 245 + interacao.test 200, derivacao 179, banco 204, tipos 192, index 53, bench-5x6 119,
+e as três provas do VP: vp-prova-interface 125, vp-prova-regua 96, vp-prova 55). ⚠️ `npm run build`
+**NÃO rodado** nesta parada (proibido no despacho). `git status --short` **vazio** antes desta
+edição — só o `PROGRESSO.md` fica modificado, **aguardando commit do VP**. Torre **aprovada por
+ela** e no ar.
+
+🗄️ *Medição anterior (03/set): 3.10.0, `tsc` exit 0, 64 arquivos / 888 testes.*
 
 ## ✅ CONCLUÍDO E APROVADO POR ELA — Jogo das Torres: reconfiguração completa (31/ago-01/set/2026)
 

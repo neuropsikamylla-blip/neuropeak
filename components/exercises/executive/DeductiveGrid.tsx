@@ -401,7 +401,7 @@ export function DeductiveGrid({ difficulty, theme, onComplete }: DeductiveGridPr
                       </th>
                       {Array.from({ length: puzzle.posicoes }, (_, indice) => (
                         <th key={indice} className={`border-b px-2 py-3 text-center text-xs font-semibold uppercase tracking-wide ${pal.divisoria} ${pal.textoSuave}`}>
-                          Posição {indice + 1}
+                          {puzzle.rotulosPosicao?.[indice] ?? `Posição ${indice + 1}`}
                         </th>
                       ))}
                     </tr>
