@@ -12,6 +12,7 @@ export { itensDaPista, itensDaRestricao, validarEstruturaPuzzle } from "./motor"
 export { derivar } from "./derivacao";
 export {
   LIMIAR_ORDEM_DECLARADA,
+  PADROES_SEQUENCIA_EIXO,
   avaliarEstrutura,
 } from "./estrutura";
 export type {
