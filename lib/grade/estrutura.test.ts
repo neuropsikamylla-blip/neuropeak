@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import type { Pista, Puzzle } from "./tipos";
+import { pistaSimples, type Pista, type Puzzle } from "./tipos";
 import { avaliarEstrutura } from "./estrutura";
 
 function criarPuzzle(
@@ -13,20 +13,14 @@ function criarPuzzle(
     valores: naOrdemDeclarada ? [`${id}1`, `${id}2`, `${id}3`] : [`${id}2`, `${id}1`, `${id}3`],
   }));
   const ancoras: Pista[] = categoriasIds.flatMap((categoria) => [
-    {
-      id: `${categoria}-1`,
-      tipo: "T3",
-      texto: `${categoria}1 está na primeira posição.`,
+    pistaSimples(`${categoria}-1`, `${categoria}1 está na primeira posição.`, { tipo: "T3",
       item: { categoria, valor: `${categoria}1` },
       posicao: 1,
-    },
-    {
-      id: `${categoria}-2`,
-      tipo: "T3",
-      texto: `${categoria}2 está na segunda posição.`,
+    }),
+    pistaSimples(`${categoria}-2`, `${categoria}2 está na segunda posição.`, { tipo: "T3",
       item: { categoria, valor: `${categoria}2` },
       posicao: 2,
-    },
+    }),
   ]);
   return {
     id: `sintetico-${categoriasIds.join("-")}`,
@@ -52,13 +46,10 @@ function criarPuzzle(
 }
 
 function associacao(id: string, categoriaA: string, categoriaB: string): Pista {
-  return {
-    id,
-    tipo: "T1",
-    texto: `${categoriaA}1 está com ${categoriaB}1.`,
+  return pistaSimples(id, `${categoriaA}1 está com ${categoriaB}1.`, { tipo: "T1",
     itemA: { categoria: categoriaA, valor: `${categoriaA}1` },
     itemB: { categoria: categoriaB, valor: `${categoriaB}1` },
-  };
+  });
 }
 
 describe("validação estrutural da Grade Dedutiva", () => {
@@ -79,21 +70,15 @@ describe("validação estrutural da Grade Dedutiva", () => {
   });
 
   it("não cria aresta para pista intracategoria e cria três para pista de três categorias", () => {
-    const pistaInterna: Pista = {
-      id: "interna",
-      tipo: "T4",
-      texto: "a1 vem antes de a2.",
+    const pistaInterna = pistaSimples("interna", "a1 vem antes de a2.", { tipo: "T4",
       itemA: { categoria: "a", valor: "a1" },
       itemB: { categoria: "a", valor: "a2" },
-    };
-    const pistaTripla: Pista = {
-      id: "tripla",
-      tipo: "T7",
-      texto: "b2 fica entre a1 e c3.",
+    });
+    const pistaTripla = pistaSimples("tripla", "b2 fica entre a1 e c3.", { tipo: "T7",
       itemA: { categoria: "a", valor: "a1" },
       itemC: { categoria: "b", valor: "b2" },
       itemB: { categoria: "c", valor: "c3" },
-    };
+    });
     const relatorio = avaliarEstrutura(criarPuzzle(["a", "b", "c"], [pistaInterna, pistaTripla]));
 
     expect(relatorio.pistasIntracategoria).toBe(7);

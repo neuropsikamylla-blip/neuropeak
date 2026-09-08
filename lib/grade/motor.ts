@@ -4,23 +4,24 @@ import {
   type MarcacaoParcial,
   type Pista,
   type Puzzle,
+  type Restricao,
   type Solucao,
   type TipoPista,
 } from "./tipos";
 
-interface OperadorPista {
+interface OperadorRestricao {
   quantidadeOperandos: number;
-  itens: (pista: Pista) => readonly Item[];
-  satisfaz: (posicoes: readonly number[], pista: Pista) => boolean;
+  itens: (restricao: Restricao) => readonly Item[];
+  satisfaz: (posicoes: readonly number[], restricao: Restricao) => boolean;
 }
 
-function itensAB(pista: Pista): readonly Item[] {
-  return "itemA" in pista && "itemB" in pista ? [pista.itemA, pista.itemB] : [];
+function itensAB(restricao: Restricao): readonly Item[] {
+  return "itemA" in restricao && "itemB" in restricao ? [restricao.itemA, restricao.itemB] : [];
 }
 
-function itensABCD(pista: Pista): readonly Item[] {
-  return "itemA" in pista && "itemB" in pista && "itemC" in pista && "itemD" in pista
-    ? [pista.itemA, pista.itemB, pista.itemC, pista.itemD]
+function itensABCD(restricao: Restricao): readonly Item[] {
+  return "itemA" in restricao && "itemB" in restricao && "itemC" in restricao && "itemD" in restricao
+    ? [restricao.itemA, restricao.itemB, restricao.itemC, restricao.itemD]
     : [];
 }
 
@@ -29,21 +30,21 @@ function itensABCD(pista: Pista): readonly Item[] {
  * domínios e predicados; um operador futuro entra neste registro sem alterar
  * a busca, a exclusividade ou o MRV.
  */
-const OPERADORES: Record<TipoPista, OperadorPista> = {
+export const OPERADORES: Record<TipoPista, OperadorRestricao> = {
   T1: { quantidadeOperandos: 2, itens: itensAB, satisfaz: ([a, b]) => a === b },
   T2: { quantidadeOperandos: 2, itens: itensAB, satisfaz: ([a, b]) => a !== b },
   T3: {
     quantidadeOperandos: 1,
-    itens: (pista) => (pista.tipo === "T3" ? [pista.item] : []),
-    satisfaz: ([posicao], pista) => pista.tipo === "T3" && posicao === pista.posicao - 1,
+    itens: (restricao) => (restricao.tipo === "T3" ? [restricao.item] : []),
+    satisfaz: ([posicao], restricao) => restricao.tipo === "T3" && posicao === restricao.posicao - 1,
   },
   T4: { quantidadeOperandos: 2, itens: itensAB, satisfaz: ([a, b]) => a < b },
   T5: { quantidadeOperandos: 2, itens: itensAB, satisfaz: ([a, b]) => Math.abs(a - b) === 1 },
   T6: { quantidadeOperandos: 2, itens: itensAB, satisfaz: ([a, b]) => b - a === 1 },
   T7: {
     quantidadeOperandos: 3,
-    itens: (pista) =>
-      pista.tipo === "T7" ? [pista.itemA, pista.itemC, pista.itemB] : [],
+    itens: (restricao) =>
+      restricao.tipo === "T7" ? [restricao.itemA, restricao.itemC, restricao.itemB] : [],
     satisfaz: ([a, c, b]) => a < c && c < b,
   },
   T8: { quantidadeOperandos: 2, itens: itensAB, satisfaz: ([a, b]) => a === b },
@@ -66,10 +67,12 @@ export interface VariavelCompilada {
   valor: string;
 }
 
-export interface PistaCompilada {
-  pista: Pista;
+export interface RestricaoCompilada {
+  /** A pessoa manipula a pista; o solver avalia a restrição dela. */
+  pistaId: string;
+  restricao: Restricao;
   variaveis: readonly number[];
-  operador: OperadorPista;
+  operador: OperadorRestricao;
 }
 
 export interface ContextoSolver {
@@ -79,7 +82,7 @@ export interface ContextoSolver {
   variaveis: readonly VariavelCompilada[];
   variaveisPorCategoria: readonly (readonly number[])[];
   indiceItens: ReadonlyMap<string, ReadonlyMap<string, number>>;
-  pistas: readonly PistaCompilada[];
+  restricoes: readonly RestricaoCompilada[];
 }
 
 export interface ResultadoPropagacao {
@@ -105,20 +108,24 @@ function indiceDoBit(mascara: number): number {
   return 31 - Math.clz32(mascara);
 }
 
+function ehTipoConhecido(tipo: unknown): tipo is TipoPista {
+  return typeof tipo === "string" && (TIPOS_PISTA as readonly string[]).includes(tipo);
+}
+
 function textoNaoVazio(valor: unknown): valor is string {
   return typeof valor === "string" && valor.trim().length > 0;
 }
 
-function erroItem(puzzle: Puzzle, item: Item, pistaId: string): string | null {
+function erroItem(puzzle: Puzzle, item: Item, restricaoId: string): string | null {
   if (item === null || typeof item !== "object") {
-    return `A pista ${pistaId} contém um item inválido.`;
+    return `A restrição ${restricaoId} contém um item inválido.`;
   }
   const categoria = puzzle.categorias.find((c) => c.id === item.categoria);
   if (categoria === undefined) {
-    return `A pista ${pistaId} referencia a categoria inexistente "${item.categoria}".`;
+    return `A restrição ${restricaoId} referencia a categoria inexistente "${item.categoria}".`;
   }
   if (!categoria.valores.includes(item.valor)) {
-    return `A pista ${pistaId} referencia o valor inexistente "${item.valor}" na categoria "${item.categoria}".`;
+    return `A restrição ${restricaoId} referencia o valor inexistente "${item.valor}" na categoria "${item.categoria}".`;
   }
   return null;
 }
@@ -137,6 +144,17 @@ export function validarEstruturaPuzzle(puzzle: Puzzle): string | null {
   // exercícios de treino usam 4 ou 5; o teto de 5 é decisão dela (seção 62).
   if (!Number.isInteger(puzzle.posicoes) || puzzle.posicoes < 3 || puzzle.posicoes > 5) {
     return `O puzzle ${puzzle.id} deve ter de 3 a 5 posições; recebido: ${puzzle.posicoes}.`;
+  }
+  if (puzzle.rotulosPosicao !== undefined) {
+    if (!Array.isArray(puzzle.rotulosPosicao) || puzzle.rotulosPosicao.length !== puzzle.posicoes) {
+      return `Os rótulos de posição do puzzle ${puzzle.id} devem ter exatamente ${puzzle.posicoes} valores.`;
+    }
+    if (puzzle.rotulosPosicao.some((rotulo) => !textoNaoVazio(rotulo))) {
+      return `Os rótulos de posição do puzzle ${puzzle.id} contêm rótulo vazio ou inválido.`;
+    }
+    if (new Set(puzzle.rotulosPosicao).size !== puzzle.rotulosPosicao.length) {
+      return `Os rótulos de posição do puzzle ${puzzle.id} contêm rótulos repetidos.`;
+    }
   }
   if (!Array.isArray(puzzle.categorias) || puzzle.categorias.length < 3 || puzzle.categorias.length > 6) {
     return `O puzzle ${puzzle.id} deve ter entre 3 e 6 categorias.`;
@@ -161,25 +179,38 @@ export function validarEstruturaPuzzle(puzzle: Puzzle): string | null {
 
   if (!Array.isArray(puzzle.pistas)) return `As pistas do puzzle ${puzzle.id} devem ser uma lista.`;
   const idsPistas = new Set<string>();
+  const idsRestricoes = new Set<string>();
   for (const pista of puzzle.pistas) {
     if (!textoNaoVazio(pista?.id)) return `O puzzle ${puzzle.id} contém pista sem id válido.`;
     if (idsPistas.has(pista.id)) return `A pista "${pista.id}" aparece mais de uma vez.`;
     idsPistas.add(pista.id);
     if (!textoNaoVazio(pista.texto)) return `A pista ${pista.id} deve ter texto não vazio.`;
-    if (!TIPOS_PISTA.includes(pista.tipo)) return `A pista ${pista.id} tem tipo desconhecido: ${pista.tipo}.`;
+    if (!Array.isArray(pista.restricoes) || pista.restricoes.length === 0) {
+      return `A pista ${pista.id} deve conter ao menos uma restrição.`;
+    }
+    for (const restricao of pista.restricoes) {
+      if (!textoNaoVazio(restricao?.id)) return `A pista ${pista.id} contém restrição sem id válido.`;
+      if (idsRestricoes.has(restricao.id)) return `A restrição "${restricao.id}" aparece mais de uma vez.`;
+      idsRestricoes.add(restricao.id);
+      // Dois motivos para o const local: `Array.isArray` sobre um `readonly Restricao[]` alarga
+      // o elemento para `any`, e `Array.includes` devolve boolean sem estreitar tipo. Sem o
+      // guard tipado, o índice em OPERADORES vira `any` e o compilador para de proteger o registro.
+      const tipo: unknown = restricao.tipo;
+      if (!ehTipoConhecido(tipo)) return `A restrição ${restricao.id} tem tipo desconhecido: ${String(tipo)}.`;
 
-    const operador = OPERADORES[pista.tipo];
-    const itens = operador.itens(pista);
-    if (itens.length !== operador.quantidadeOperandos) return `A pista ${pista.id} não contém todos os operandos de ${pista.tipo}.`;
-    for (const item of itens) {
-      const erro = erroItem(puzzle, item, pista.id);
-      if (erro !== null) return erro;
-    }
-    if (pista.tipo === "T3" && (!Number.isInteger(pista.posicao) || pista.posicao < 1 || pista.posicao > puzzle.posicoes)) {
-      return `A pista ${pista.id} usa posição inválida: ${pista.posicao}.`;
-    }
-    if (pista.tipo === "T8" && pista.itemA.categoria === pista.itemB.categoria) {
-      return `A pista ${pista.id} do tipo T8 deve cruzar categorias diferentes.`;
+      const operador = OPERADORES[tipo];
+      const itens = operador.itens(restricao);
+      if (itens.length !== operador.quantidadeOperandos) return `A restrição ${restricao.id} não contém todos os operandos de ${restricao.tipo}.`;
+      for (const item of itens) {
+        const erro = erroItem(puzzle, item, restricao.id);
+        if (erro !== null) return erro;
+      }
+      if (restricao.tipo === "T3" && (!Number.isInteger(restricao.posicao) || restricao.posicao < 1 || restricao.posicao > puzzle.posicoes)) {
+        return `A restrição ${restricao.id} usa posição inválida: ${restricao.posicao}.`;
+      }
+      if (restricao.tipo === "T8" && restricao.itemA.categoria === restricao.itemB.categoria) {
+        return `A restrição ${restricao.id} do tipo T8 deve cruzar categorias diferentes.`;
+      }
     }
   }
 
@@ -223,15 +254,15 @@ export function criarContexto(puzzle: Puzzle, pistas: readonly Pista[] = puzzle.
     indiceItens.set(categoria.id, porValor);
   });
 
-  const compiladas = pistas.map((pista): PistaCompilada => {
-    const operador = OPERADORES[pista.tipo];
-    const indices = operador.itens(pista).map((item) => {
+  const compiladas = pistas.flatMap((pista) => pista.restricoes.map((restricao): RestricaoCompilada => {
+    const operador = OPERADORES[restricao.tipo];
+    const indices = operador.itens(restricao).map((item) => {
       const indice = indiceItens.get(item.categoria)?.get(item.valor);
-      if (indice === undefined) throw new Error(`Item inválido ao compilar a pista ${pista.id}.`);
+      if (indice === undefined) throw new Error(`Item inválido ao compilar a restrição ${restricao.id}.`);
       return indice;
     });
-    return { pista, variaveis: indices, operador };
-  });
+    return { pistaId: pista.id, restricao, variaveis: indices, operador };
+  }));
 
   return {
     puzzle,
@@ -240,7 +271,7 @@ export function criarContexto(puzzle: Puzzle, pistas: readonly Pista[] = puzzle.
     variaveis,
     variaveisPorCategoria,
     indiceItens,
-    pistas: compiladas,
+    restricoes: compiladas,
   };
 }
 
@@ -278,10 +309,10 @@ function propagarExclusividade(dominios: number[], contexto: ContextoSolver): Re
   return { consistente: true, alterou };
 }
 
-function propagarPista(
+function propagarRestricao(
   dominios: number[],
   contexto: ContextoSolver,
-  compilada: PistaCompilada
+  compilada: RestricaoCompilada
 ): ResultadoPropagacao {
   const unicas: number[] = [];
   const paraUnica: number[] = [];
@@ -300,7 +331,7 @@ function propagarPista(
   const visitar = (profundidade: number): void => {
     if (profundidade === unicas.length) {
       const posicoesOperandos = paraUnica.map((indice) => atribuicao[indice]);
-      if (!compilada.operador.satisfaz(posicoesOperandos, compilada.pista)) return;
+      if (!compilada.operador.satisfaz(posicoesOperandos, compilada.restricao)) return;
       atribuicao.forEach((posicao, indice) => {
         suportes[indice] |= 1 << posicao;
       });
@@ -343,7 +374,7 @@ function propagarPista(
   return { consistente: true, alterou };
 }
 
-/** Propaga exclusividade e todas as pistas até o ponto fixo. */
+/** Propaga exclusividade e todas as restrições até o ponto fixo. */
 export function propagarDominios(dominios: number[], contexto: ContextoSolver): ResultadoPropagacao {
   let alterouAlguma = false;
 
@@ -353,8 +384,8 @@ export function propagarDominios(dominios: number[], contexto: ContextoSolver): 
     if (!exclusividade.consistente) return { consistente: false, alterou: alterouAlguma || exclusividade.alterou };
     alterouRodada ||= exclusividade.alterou;
 
-    for (const pista of contexto.pistas) {
-      const resultado = propagarPista(dominios, contexto, pista);
+    for (const restricao of contexto.restricoes) {
+      const resultado = propagarRestricao(dominios, contexto, restricao);
       if (!resultado.consistente) return { consistente: false, alterou: true };
       alterouRodada ||= resultado.alterou;
     }
@@ -459,10 +490,14 @@ export function posicaoDoItem(solucao: Solucao, item: Item): number {
   return solucao[item.categoria]?.indexOf(item.valor) ?? -1;
 }
 
+export function restricaoSatisfeita(restricao: Restricao, solucao: Solucao): boolean {
+  const operador = OPERADORES[restricao.tipo];
+  const posicoes = operador.itens(restricao).map((item) => posicaoDoItem(solucao, item));
+  return posicoes.every((posicao) => posicao >= 0) && operador.satisfaz(posicoes, restricao);
+}
+
 export function pistaSatisfeita(pista: Pista, solucao: Solucao): boolean {
-  const operador = OPERADORES[pista.tipo];
-  const posicoes = operador.itens(pista).map((item) => posicaoDoItem(solucao, item));
-  return posicoes.every((posicao) => posicao >= 0) && operador.satisfaz(posicoes, pista);
+  return pista.restricoes.every((restricao) => restricaoSatisfeita(restricao, solucao));
 }
 
 export function solucoesIguais(a: Solucao, b: Solucao, puzzle: Puzzle): boolean {
@@ -472,5 +507,9 @@ export function solucoesIguais(a: Solucao, b: Solucao, puzzle: Puzzle): boolean 
 }
 
 export function itensDaPista(pista: Pista): readonly Item[] {
-  return OPERADORES[pista.tipo].itens(pista);
+  return pista.restricoes.flatMap((restricao) => itensDaRestricao(restricao));
+}
+
+export function itensDaRestricao(restricao: Restricao): readonly Item[] {
+  return OPERADORES[restricao.tipo].itens(restricao);
 }

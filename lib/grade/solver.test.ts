@@ -7,15 +7,29 @@ import {
   derivar,
   encontrarSolucoes,
   pistasEmConflito,
+  pistaSimples,
+  PROBLEMAS_GRADE,
+  restricoesViolando,
   temSolucaoUnica,
+  validarEstruturaPuzzle,
   validarPuzzle,
   type Categoria,
   type MarcacaoParcial,
   type Pista,
   type Puzzle,
   type PuzzleMetadata,
+  type Restricao,
   type Solucao,
 } from "./index";
+
+type SemId<T> = T extends unknown ? Omit<T, "id"> : never;
+type PistaAtomicaDeTeste = SemId<Restricao> & { id: string; texto: string };
+
+function comoPista(pista: Pista | PistaAtomicaDeTeste): Pista {
+  if ("restricoes" in pista) return pista;
+  const { id, texto, ...restricao } = pista;
+  return { id, texto, restricoes: [{ ...restricao, id: `${id}#1` } as Restricao] };
+}
 
 const CATEGORIAS_BASE: Categoria[] = [
   { id: "pessoa", label: "Pessoa", valores: ["Ana", "Bia", "Caio", "Davi"] },
@@ -41,7 +55,7 @@ function metadata(): PuzzleMetadata {
   };
 }
 
-function puzzleBase(id: string, pistas: Pista[], solucao: Solucao = SOLUCAO_BASE): Puzzle {
+function puzzleBase(id: string, pistas: readonly (Pista | PistaAtomicaDeTeste)[], solucao: Solucao = SOLUCAO_BASE): Puzzle {
   return {
     id,
     titulo: `Puzzle ${id}`,
@@ -52,7 +66,7 @@ function puzzleBase(id: string, pistas: Pista[], solucao: Solucao = SOLUCAO_BASE
       ...categoria,
       valores: [...categoria.valores],
     })),
-    pistas,
+    pistas: pistas.map(comoPista),
     solucao: Object.fromEntries(Object.entries(solucao).map(([idCategoria, valores]) => [idCategoria, [...valores]])),
     metadata: metadata(),
   };
@@ -67,7 +81,7 @@ function marca(
   return { categoria, valor, posicao, estado };
 }
 
-function pistaT3(id: string, categoria: string, valor: string, posicao: number): Pista {
+function pistaT3(id: string, categoria: string, valor: string, posicao: number): PistaAtomicaDeTeste {
   return { id, tipo: "T3", texto: `${valor} está na posição ${posicao}.`, item: { categoria, valor }, posicao };
 }
 
@@ -83,7 +97,7 @@ function puzzleAmbiguo(): Puzzle {
 }
 
 function puzzleUnico(): Puzzle {
-  const pistas: Pista[] = [];
+  const pistas: PistaAtomicaDeTeste[] = [];
   for (const categoria of CATEGORIAS_BASE) {
     categoria.valores.slice(0, 3).forEach((valor, indice) => {
       pistas.push(pistaT3(`u-${categoria.id}-${indice + 1}`, categoria.id, valor, indice + 1));
@@ -94,7 +108,7 @@ function puzzleUnico(): Puzzle {
 
 interface CasoOperador {
   nome: string;
-  pista: Pista;
+  pista: PistaAtomicaDeTeste;
   permitida: MarcacaoParcial;
   proibida: MarcacaoParcial;
 }
@@ -168,7 +182,7 @@ const CASOS_OPERADORES: CasoOperador[] = [
   },
 ];
 
-function caso(tipo: Pista["tipo"]): CasoOperador {
+function caso(tipo: Restricao["tipo"]): CasoOperador {
   const encontrado = CASOS_OPERADORES.find((candidato) => candidato.pista.tipo === tipo);
   if (encontrado === undefined) throw new Error(`Caso ausente para ${tipo}.`);
   return encontrado;
@@ -181,7 +195,7 @@ function puzzleDesempenho(): Puzzle {
     label: id.toUpperCase(),
     valores: [1, 2, 3, 4, 5].map((numero) => `${id}${numero}`),
   }));
-  const pistas: Pista[] = [];
+  const pistas: PistaAtomicaDeTeste[] = [];
   for (const id of ids) {
     pistas.push({
       id: `${id}-ordem-1`, tipo: "T7", texto: `${id}1, ${id}2 e ${id}3 estão nessa ordem.`,
@@ -211,7 +225,7 @@ function puzzleDesempenho(): Puzzle {
     nivel: 5,
     posicoes: 5,
     categorias,
-    pistas,
+    pistas: pistas.map(comoPista),
     solucao: Object.fromEntries(categorias.map((categoria) => [categoria.id, [...categoria.valores]])),
     metadata: metadata(),
   };
@@ -223,7 +237,7 @@ function puzzleTraco(): Puzzle {
     { id: "x", label: "Projeto", valores: ["x1", "x2", "x3", "x4"] },
     { id: "d", label: "Bebida", valores: ["d1", "d2", "d3", "d4"] },
   ];
-  const pistas: Pista[] = [
+  const pistas: PistaAtomicaDeTeste[] = [
     { id: "tr-1", tipo: "T1", texto: "p1 está com x1.", itemA: { categoria: "p", valor: "p1" }, itemB: { categoria: "x", valor: "x1" } },
     pistaT3("tr-2", "x", "x1", 1),
     { id: "tr-3", tipo: "T6", texto: "p2 vem antes de p3.", itemA: { categoria: "p", valor: "p2" }, itemB: { categoria: "p", valor: "p3" } },
@@ -242,7 +256,7 @@ function puzzleTraco(): Puzzle {
     nivel: 2,
     posicoes: 4,
     categorias,
-    pistas,
+    pistas: pistas.map(comoPista),
     solucao: Object.fromEntries(categorias.map((categoria) => [categoria.id, [...categoria.valores]])),
     metadata: metadata(),
   };
@@ -415,5 +429,109 @@ describe("provas adicionais da Fase 2", () => {
     }));
     expect(resultados.filter((resultado) => resultado.permitida)).toHaveLength(CASOS_OPERADORES.length);
     expect(resultados.filter((resultado) => !resultado.proibida)).toHaveLength(CASOS_OPERADORES.length);
+  });
+});
+
+describe("pistas compostas e rótulos de posição", () => {
+  it("a pista composta do museu preserva a solução única", () => {
+    const museu = PROBLEMAS_GRADE.find((puzzle) => puzzle.id === "museu-mostra-noturna");
+
+    expect(museu).toBeDefined();
+    expect(temSolucaoUnica(museu!)).toBe(true);
+  });
+
+  it("uma pista composta restringe como duas pistas simples equivalentes", () => {
+    const ancoras = CATEGORIAS_BASE.flatMap((categoria) =>
+      categoria.valores.slice(0, 3).map((valor, indice) => pistaT3(`a-${categoria.id}-${indice}`, categoria.id, valor, indice + 1))
+    );
+    const separadas = [
+      ...ancoras.filter((pista) => pista.id !== "a-pessoa-0" && pista.id !== "a-pessoa-1"),
+      pistaT3("pessoa-1", "pessoa", "Ana", 1),
+      pistaT3("pessoa-2", "pessoa", "Bia", 2),
+    ];
+    const composta: Pista = {
+      id: "pessoas-fixas",
+      texto: "Ana e Bia ocupam, respectivamente, as duas primeiras posições.",
+      restricoes: [
+        { id: "pessoas-fixas#1", tipo: "T3", item: { categoria: "pessoa", valor: "Ana" }, posicao: 1 },
+        { id: "pessoas-fixas#2", tipo: "T3", item: { categoria: "pessoa", valor: "Bia" }, posicao: 2 },
+      ],
+    };
+    const agrupadas = [...ancoras.filter((pista) => pista.id !== "a-pessoa-0" && pista.id !== "a-pessoa-1"), composta];
+
+    expect(contarSolucoes(puzzleBase("separadas", separadas), 2)).toBe(1);
+    expect(contarSolucoes(puzzleBase("agrupadas", agrupadas), 2)).toBe(1);
+  });
+
+  it("registra exatamente a restrição composta diretamente violada", () => {
+    const composta: Pista = {
+      id: "exclusoes",
+      texto: "Ana não está com Atlas nem Bia com Brisa.",
+      restricoes: [
+        { id: "exclusoes#1", tipo: "T2", itemA: { categoria: "pessoa", valor: "Ana" }, itemB: { categoria: "projeto", valor: "Atlas" } },
+        { id: "exclusoes#2", tipo: "T2", itemA: { categoria: "pessoa", valor: "Bia" }, itemB: { categoria: "projeto", valor: "Brisa" } },
+      ],
+    };
+    const puzzle = puzzleBase("violacao-exata", [composta]);
+
+    expect(restricoesViolando(puzzle, [
+      marca("pessoa", "Ana", 1), marca("projeto", "Atlas", 1),
+      marca("pessoa", "Bia", 1), marca("projeto", "Brisa", 2),
+    ])).toEqual([{ pistaId: "exclusoes", restricaoId: "exclusoes#1" }]);
+  });
+
+  it("não registra restrição com operandos ainda não determinados, mesmo com contradição latente", () => {
+    const puzzle = puzzleBase("latente", [
+      {
+        id: "exclusao", texto: "Ana não está com Atlas.",
+        restricoes: [{ id: "exclusao#1", tipo: "T2", itemA: { categoria: "pessoa", valor: "Ana" }, itemB: { categoria: "projeto", valor: "Atlas" } }],
+      },
+      pistaT3("atlas-primeiro", "projeto", "Atlas", 1),
+    ]);
+    const parcial = [marca("pessoa", "Ana", 1)];
+
+    expect(admiteSolucao(puzzle, parcial)).toBe(false);
+    expect(restricoesViolando(puzzle, parcial)).toEqual([]);
+  });
+
+  it("pistaSimples preserva texto e gera id determinístico da restrição", () => {
+    const pista = pistaSimples("simples", "Ana está na primeira posição.", {
+      tipo: "T3", item: { categoria: "pessoa", valor: "Ana" }, posicao: 1,
+    });
+
+    expect(pista.texto).toBe("Ana está na primeira posição.");
+    expect(pista.restricoes).toEqual([
+      { id: "simples#1", tipo: "T3", item: { categoria: "pessoa", valor: "Ana" }, posicao: 1 },
+    ]);
+  });
+
+  it("rejeita pista vazia, ids de restrição repetidos e rótulos de posição inválidos", () => {
+    const semRestricao = puzzleBase("sem-restricao", [{ id: "vazia", texto: "Sem regra.", restricoes: [] }]);
+    const idsRepetidos = puzzleBase("ids-repetidos", [
+      { id: "a", texto: "A.", restricoes: [{ id: "r", tipo: "T3", item: { categoria: "pessoa", valor: "Ana" }, posicao: 1 }] },
+      { id: "b", texto: "B.", restricoes: [{ id: "r", tipo: "T3", item: { categoria: "pessoa", valor: "Bia" }, posicao: 2 }] },
+    ]);
+
+    expect(validarEstruturaPuzzle(semRestricao)).toMatch(/ao menos uma restrição/);
+    expect(validarEstruturaPuzzle(idsRepetidos)).toMatch(/restrição "r" aparece mais de uma vez/);
+    expect(validarEstruturaPuzzle({ ...puzzleUnico(), rotulosPosicao: ["A", "B"] })).toMatch(/exatamente 4 valores/);
+    expect(validarEstruturaPuzzle({ ...puzzleUnico(), rotulosPosicao: ["A", "A", "C", "D"] })).toMatch(/rótulos repetidos/);
+  });
+
+  it("derivar classifica uma pista composta como uma única entrada", () => {
+    const composta: Pista = {
+      id: "composta-derivacao",
+      texto: "Iara não está com Duna nem na sala Oeste.",
+      restricoes: [
+        { id: "composta-derivacao#1", tipo: "T2", itemA: { categoria: "p", valor: "p1" }, itemB: { categoria: "x", valor: "x2" } },
+        { id: "composta-derivacao#2", tipo: "T2", itemA: { categoria: "p", valor: "p1" }, itemB: { categoria: "d", valor: "d2" } },
+      ],
+    };
+    const puzzle = { ...puzzleTraco(), pistas: [...puzzleTraco().pistas, composta] };
+    const traco = derivar(puzzle);
+
+    expect(traco.classificacao["composta-derivacao"]).toBeDefined();
+    expect(Object.keys(traco.classificacao)).toHaveLength(puzzle.pistas.length);
+    expect(traco.classificacao["composta-derivacao#1"]).toBeUndefined();
   });
 });

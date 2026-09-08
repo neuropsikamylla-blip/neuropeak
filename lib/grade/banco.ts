@@ -1,4 +1,4 @@
-import type { Puzzle, PuzzleMetadata } from "./tipos";
+import { pistaSimples, type Puzzle, type PuzzleMetadata } from "./tipos";
 
 function metadata(
   complexity: number,
@@ -32,36 +32,28 @@ export const PROBLEMA_TUTORIAL: Puzzle = {
     { id: "horario", label: "Horário", valores: ["9h", "10h", "11h"] },
   ],
   pistas: [
-    {
-      id: "tutorial-1",
+    pistaSimples("tutorial-1", "Ana ocupa a posição central.", {
       tipo: "T3",
-      texto: "Ana ocupa a posição central.",
       item: { categoria: "apresentador", valor: "Ana" },
       posicao: 2,
-    },
-    {
-      id: "tutorial-2",
+    }),
+    pistaSimples("tutorial-2", "Bruno aparece antes de Carla.", {
       tipo: "T4",
-      texto: "Bruno aparece antes de Carla.",
       itemA: { categoria: "apresentador", valor: "Bruno" },
       itemB: { categoria: "apresentador", valor: "Carla" },
-    },
-    {
-      id: "tutorial-3",
+    }),
+    pistaSimples("tutorial-3", "Brisa fica entre Atlas e Cosmos, nessa ordem.", {
       tipo: "T7",
-      texto: "Brisa fica entre Atlas e Cosmos, nessa ordem.",
       itemA: { categoria: "projeto", valor: "Atlas" },
       itemC: { categoria: "projeto", valor: "Brisa" },
       itemB: { categoria: "projeto", valor: "Cosmos" },
-    },
-    {
-      id: "tutorial-4",
+    }),
+    pistaSimples("tutorial-4", "A apresentação das 10h fica entre as de 9h e 11h, nessa ordem.", {
       tipo: "T7",
-      texto: "A apresentação das 10h fica entre as de 9h e 11h, nessa ordem.",
       itemA: { categoria: "horario", valor: "9h" },
       itemC: { categoria: "horario", valor: "10h" },
       itemB: { categoria: "horario", valor: "11h" },
-    },
+    }),
   ],
   solucao: {
     apresentador: ["Bruno", "Ana", "Carla"],
@@ -91,38 +83,30 @@ const PROBLEMA_BIBLIOTECA: Puzzle = {
     { id: "horario", label: "Horário", valores: ["14h", "15h", "16h", "17h"] },
   ],
   pistas: [
-    {
-      id: "biblioteca-1", tipo: "T7", texto: "Lia chegou entre Caio e Mauro, nessa ordem.",
+    pistaSimples("biblioteca-1", "Lia chegou entre Caio e Mauro, nessa ordem.", { tipo: "T7",
       itemA: { categoria: "visitante", valor: "Caio" }, itemC: { categoria: "visitante", valor: "Lia" }, itemB: { categoria: "visitante", valor: "Mauro" },
-    },
-    {
-      id: "biblioteca-2", tipo: "T7", texto: "Mauro chegou entre Lia e Nina, nessa ordem.",
+    }),
+    pistaSimples("biblioteca-2", "Mauro chegou entre Lia e Nina, nessa ordem.", { tipo: "T7",
       itemA: { categoria: "visitante", valor: "Lia" }, itemC: { categoria: "visitante", valor: "Mauro" }, itemB: { categoria: "visitante", valor: "Nina" },
-    },
-    {
-      id: "biblioteca-3", tipo: "T7", texto: "Leitura fica entre Acervo e Mídia, nessa ordem.",
+    }),
+    pistaSimples("biblioteca-3", "Leitura fica entre Acervo e Mídia, nessa ordem.", { tipo: "T7",
       itemA: { categoria: "sala", valor: "Acervo" }, itemC: { categoria: "sala", valor: "Leitura" }, itemB: { categoria: "sala", valor: "Mídia" },
-    },
-    {
-      id: "biblioteca-4", tipo: "T7", texto: "Mídia fica entre Leitura e Pesquisa, nessa ordem.",
+    }),
+    pistaSimples("biblioteca-4", "Mídia fica entre Leitura e Pesquisa, nessa ordem.", { tipo: "T7",
       itemA: { categoria: "sala", valor: "Leitura" }, itemC: { categoria: "sala", valor: "Mídia" }, itemB: { categoria: "sala", valor: "Pesquisa" },
-    },
-    {
-      id: "biblioteca-5", tipo: "T7", texto: "Arte aparece entre História e Ciência, nessa ordem.",
+    }),
+    pistaSimples("biblioteca-5", "Arte aparece entre História e Ciência, nessa ordem.", { tipo: "T7",
       itemA: { categoria: "tema", valor: "História" }, itemC: { categoria: "tema", valor: "Arte" }, itemB: { categoria: "tema", valor: "Ciência" },
-    },
-    {
-      id: "biblioteca-6", tipo: "T7", texto: "Ciência aparece entre Arte e Viagem, nessa ordem.",
+    }),
+    pistaSimples("biblioteca-6", "Ciência aparece entre Arte e Viagem, nessa ordem.", { tipo: "T7",
       itemA: { categoria: "tema", valor: "Arte" }, itemC: { categoria: "tema", valor: "Ciência" }, itemB: { categoria: "tema", valor: "Viagem" },
-    },
-    {
-      id: "biblioteca-7", tipo: "T7", texto: "15h fica entre 14h e 16h, nessa ordem.",
+    }),
+    pistaSimples("biblioteca-7", "15h fica entre 14h e 16h, nessa ordem.", { tipo: "T7",
       itemA: { categoria: "horario", valor: "14h" }, itemC: { categoria: "horario", valor: "15h" }, itemB: { categoria: "horario", valor: "16h" },
-    },
-    {
-      id: "biblioteca-8", tipo: "T7", texto: "16h fica entre 15h e 17h, nessa ordem.",
+    }),
+    pistaSimples("biblioteca-8", "16h fica entre 15h e 17h, nessa ordem.", { tipo: "T7",
       itemA: { categoria: "horario", valor: "15h" }, itemC: { categoria: "horario", valor: "16h" }, itemB: { categoria: "horario", valor: "17h" },
-    },
+    }),
   ],
   solucao: {
     visitante: ["Caio", "Lia", "Mauro", "Nina"],
@@ -153,49 +137,46 @@ const PROBLEMA_MUSEU: Puzzle = {
     { id: "horario", label: "Horário", valores: ["18h", "19h", "20h", "21h"] },
   ],
   pistas: [
-    {
-      id: "museu-1", tipo: "T8", texto: "A obra Bruma foi conduzida por Hugo.",
+    pistaSimples("museu-1", "A obra Bruma foi conduzida por Hugo.", { tipo: "T8",
       itemA: { categoria: "obra", valor: "Bruma" }, itemB: { categoria: "responsavel", valor: "Hugo" },
-    },
-    {
-      id: "museu-2", tipo: "T8", texto: "A sala Leste recebeu a obra Cais.",
+    }),
+    pistaSimples("museu-2", "A sala Leste recebeu a obra Cais.", { tipo: "T8",
       itemA: { categoria: "sala", valor: "Leste" }, itemB: { categoria: "obra", valor: "Cais" },
-    },
-    {
-      id: "museu-3", tipo: "T3", texto: "Hugo participou da segunda visita.",
+    }),
+    pistaSimples("museu-3", "Hugo participou da segunda visita.", { tipo: "T3",
       item: { categoria: "responsavel", valor: "Hugo" }, posicao: 2,
-    },
-    {
-      id: "museu-4", tipo: "T8", texto: "A obra Aurora ficou na sala Norte.",
+    }),
+    pistaSimples("museu-4", "A obra Aurora ficou na sala Norte.", { tipo: "T8",
       itemA: { categoria: "obra", valor: "Aurora" }, itemB: { categoria: "sala", valor: "Norte" },
-    },
-    {
-      id: "museu-5", tipo: "T8", texto: "A visita das 19h ocorreu na sala Sul.",
+    }),
+    pistaSimples("museu-5", "A visita das 19h ocorreu na sala Sul.", { tipo: "T8",
       itemA: { categoria: "horario", valor: "19h" }, itemB: { categoria: "sala", valor: "Sul" },
-    },
-    {
-      id: "museu-6", tipo: "T7", texto: "Iara participou entre Gabi e João, nessa ordem.",
+    }),
+    pistaSimples("museu-6", "Iara participou entre Gabi e João, nessa ordem.", { tipo: "T7",
       itemA: { categoria: "responsavel", valor: "Gabi" }, itemC: { categoria: "responsavel", valor: "Iara" }, itemB: { categoria: "responsavel", valor: "João" },
-    },
-    {
-      id: "museu-7", tipo: "T8", texto: "Gabi conduziu a obra Aurora.",
+    }),
+    pistaSimples("museu-7", "Gabi conduziu a obra Aurora.", { tipo: "T8",
       itemA: { categoria: "responsavel", valor: "Gabi" }, itemB: { categoria: "obra", valor: "Aurora" },
-    },
-    {
-      id: "museu-8", tipo: "T8", texto: "A sala Norte recebeu a visita das 18h.",
+    }),
+    pistaSimples("museu-8", "A sala Norte recebeu a visita das 18h.", { tipo: "T8",
       itemA: { categoria: "sala", valor: "Norte" }, itemB: { categoria: "horario", valor: "18h" },
-    },
-    {
-      id: "museu-9", tipo: "T8", texto: "Iara conduziu a obra Cais.",
+    }),
+    pistaSimples("museu-9", "Iara conduziu a obra Cais.", { tipo: "T8",
       itemA: { categoria: "responsavel", valor: "Iara" }, itemB: { categoria: "obra", valor: "Cais" },
-    },
-    {
-      id: "museu-10", tipo: "T8", texto: "A obra Bruma ficou na sala Sul.",
+    }),
+    pistaSimples("museu-10", "A obra Bruma ficou na sala Sul.", { tipo: "T8",
       itemA: { categoria: "obra", valor: "Bruma" }, itemB: { categoria: "sala", valor: "Sul" },
-    },
-    {
-      id: "museu-11", tipo: "T8", texto: "A visita das 20h ocorreu na sala Leste.",
+    }),
+    pistaSimples("museu-11", "A visita das 20h ocorreu na sala Leste.", { tipo: "T8",
       itemA: { categoria: "horario", valor: "20h" }, itemB: { categoria: "sala", valor: "Leste" },
+    }),
+    {
+      id: "museu-12",
+      texto: "Iara não conduziu a obra Duna nem esteve na sala Oeste.",
+      restricoes: [
+        { id: "museu-12#1", tipo: "T2", itemA: { categoria: "responsavel", valor: "Iara" }, itemB: { categoria: "obra", valor: "Duna" } },
+        { id: "museu-12#2", tipo: "T2", itemA: { categoria: "responsavel", valor: "Iara" }, itemB: { categoria: "sala", valor: "Oeste" } },
+      ],
     },
   ],
   solucao: {

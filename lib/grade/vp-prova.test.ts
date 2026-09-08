@@ -1,5 +1,6 @@
 import { describe, expect, it } from "vitest";
 import { temSolucaoUnica, contarSolucoes, admiteSolucao } from "./index";
+import { pistaSimples } from "./tipos";
 
 const cats = [
   { id: "pessoa", label: "Pessoa", valores: ["Ana", "Bruno", "Carla"] },
@@ -11,12 +12,12 @@ const base = (pistas: any[]): any => ({
   solucao: { pessoa: ["Ana", "Bruno", "Carla"], cor: ["Azul", "Verde", "Rosa"], fruta: ["Maçã", "Uva", "Pera"] }, metadata: {},
 });
 const T3 = (id: string, valor: string, posicao: number): any =>
-  ({ id, tipo: "T3", texto: id, item: { categoria: "pessoa", valor }, posicao });
+  pistaSimples(id, id, { tipo: "T3", item: { categoria: "pessoa", valor }, posicao });
 const T1 = (id: string, p: string, c: string): any =>
-  ({ id, tipo: "T1", texto: id, itemA: { categoria: "pessoa", valor: p }, itemB: { categoria: "cor", valor: c } });
+  pistaSimples(id, id, { tipo: "T1", itemA: { categoria: "pessoa", valor: p }, itemB: { categoria: "cor", valor: c } });
 
 const T1f = (id: string, p: string, f: string): any =>
-  ({ id, tipo: "T1", texto: id, itemA: { categoria: "pessoa", valor: p }, itemB: { categoria: "fruta", valor: f } });
+  pistaSimples(id, id, { tipo: "T1", itemA: { categoria: "pessoa", valor: p }, itemB: { categoria: "fruta", valor: f } });
 
 /** Amarra as três categorias: solução única de verdade. */
 const UNICO: any[] = [

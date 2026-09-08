@@ -87,7 +87,7 @@ export function avaliarEstrutura(puzzle: Puzzle, ehTutorial = false): RelatorioE
       .sort((a, b) => (ordemCategorias.get(a) ?? 0) - (ordemCategorias.get(b) ?? 0));
     if (categorias.length <= 1) {
       pistasIntracategoria += 1;
-      if (pista.tipo === "T3") pistasAncora += 1;
+      if (pista.restricoes.some((restricao) => restricao.tipo === "T3")) pistasAncora += 1;
       continue;
     }
 

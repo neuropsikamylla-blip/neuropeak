@@ -29,50 +29,49 @@ export const TIPOS_PISTA = [
 
 export type TipoPista = (typeof TIPOS_PISTA)[number];
 
-interface PistaBase {
+interface RestricaoBase {
   id: string;
   tipo: TipoPista;
-  texto: string;
 }
 
-export interface PistaT1 extends PistaBase {
+export interface RestricaoT1 extends RestricaoBase {
   tipo: "T1";
   itemA: Item;
   itemB: Item;
 }
 
-export interface PistaT2 extends PistaBase {
+export interface RestricaoT2 extends RestricaoBase {
   tipo: "T2";
   itemA: Item;
   itemB: Item;
 }
 
-export interface PistaT3 extends PistaBase {
+export interface RestricaoT3 extends RestricaoBase {
   tipo: "T3";
   item: Item;
   /** Posição apresentada ao paciente, portanto 1-based. */
   posicao: number;
 }
 
-export interface PistaT4 extends PistaBase {
+export interface RestricaoT4 extends RestricaoBase {
   tipo: "T4";
   itemA: Item;
   itemB: Item;
 }
 
-export interface PistaT5 extends PistaBase {
+export interface RestricaoT5 extends RestricaoBase {
   tipo: "T5";
   itemA: Item;
   itemB: Item;
 }
 
-export interface PistaT6 extends PistaBase {
+export interface RestricaoT6 extends RestricaoBase {
   tipo: "T6";
   itemA: Item;
   itemB: Item;
 }
 
-export interface PistaT7 extends PistaBase {
+export interface RestricaoT7 extends RestricaoBase {
   tipo: "T7";
   /** A semântica é, nesta ordem, pos(A) < pos(C) < pos(B). */
   itemA: Item;
@@ -80,13 +79,13 @@ export interface PistaT7 extends PistaBase {
   itemB: Item;
 }
 
-export interface PistaT8 extends PistaBase {
+export interface RestricaoT8 extends RestricaoBase {
   tipo: "T8";
   itemA: Item;
   itemB: Item;
 }
 
-export interface PistaT9 extends PistaBase {
+export interface RestricaoT9 extends RestricaoBase {
   tipo: "T9";
   itemA: Item;
   itemB: Item;
@@ -94,7 +93,7 @@ export interface PistaT9 extends PistaBase {
   itemD: Item;
 }
 
-export interface PistaT10 extends PistaBase {
+export interface RestricaoT10 extends RestricaoBase {
   tipo: "T10";
   /** Primeira associação do XOR: A ocupa a mesma posição que B. */
   itemA: Item;
@@ -104,24 +103,39 @@ export interface PistaT10 extends PistaBase {
   itemD: Item;
 }
 
-export interface PistaT11 extends PistaBase {
+export interface RestricaoT11 extends RestricaoBase {
   tipo: "T11";
   itemA: Item;
   itemB: Item;
 }
 
-export type Pista =
-  | PistaT1
-  | PistaT2
-  | PistaT3
-  | PistaT4
-  | PistaT5
-  | PistaT6
-  | PistaT7
-  | PistaT8
-  | PistaT9
-  | PistaT10
-  | PistaT11;
+/** Uma restrição atômica: o que o solver avalia. */
+export type Restricao =
+  | RestricaoT1
+  | RestricaoT2
+  | RestricaoT3
+  | RestricaoT4
+  | RestricaoT5
+  | RestricaoT6
+  | RestricaoT7
+  | RestricaoT8
+  | RestricaoT9
+  | RestricaoT10
+  | RestricaoT11;
+
+/** O que o paciente lê: uma pista pode agrupar uma ou mais restrições. */
+export interface Pista {
+  id: string;
+  texto: string;
+  restricoes: readonly Restricao[];
+}
+
+/** Cria a forma comum de uma pista que contém somente uma restrição. */
+type RestricaoSemId<T extends Restricao = Restricao> = T extends unknown ? Omit<T, "id"> : never;
+
+export function pistaSimples(id: string, texto: string, restricao: RestricaoSemId): Pista {
+  return { id, texto, restricoes: [{ ...restricao, id: `${id}#1` } as Restricao] };
+}
 
 /** Metadados de autoria previstos na seção 25 da especificação-fonte. */
 export interface PuzzleMetadata {
@@ -140,6 +154,8 @@ export interface Puzzle {
   contexto: string;
   nivel: 1 | 2 | 3 | 4 | 5;
   posicoes: number;
+  /** Rótulos das colunas. Ausente = "Posição 1", "Posição 2"… A engine só conhece 0..N-1. */
+  rotulosPosicao?: readonly string[];
   categorias: Categoria[];
   pistas: Pista[];
   solucao: Solucao;

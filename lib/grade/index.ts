@@ -4,9 +4,11 @@ export {
   contarSolucoes,
   encontrarSolucoes,
   pistasEmConflito,
+  restricoesViolando,
   temSolucaoUnica,
   validarPuzzle,
 } from "./solver";
+export { itensDaPista, itensDaRestricao, validarEstruturaPuzzle } from "./motor";
 export { derivar } from "./derivacao";
 export {
   LIMIAR_ORDEM_DECLARADA,

@@ -1,7 +1,7 @@
 import { describe, it } from "vitest";
 import { temSolucaoUnica, validarPuzzle } from "./solver";
 import { estadoDaAtribuicao, paraMarcacaoParcial } from "./interacao";
-import type { Pista, Puzzle } from "./tipos";
+import { pistaSimples, type Pista, type Puzzle } from "./tipos";
 
 const POSICOES = 5;
 const CATS = ["pessoa", "cor", "fruta", "cidade", "animal", "esporte"];
@@ -35,16 +35,14 @@ function montar5x6(): Puzzle {
   const candidatas: Pista[] = [];
   for (let p = 0; p < POSICOES; p += 1) {
     for (let c = 1; c < CATS.length; c += 1) {
-      candidatas.push({
-        id: `t1-${p}-${c}`, tipo: "T1", texto: "assoc",
+      candidatas.push(pistaSimples(`t1-${p}-${c}`, "assoc", { tipo: "T1",
         itemA: { categoria: CATS[0], valor: solucao[CATS[0]][p] },
         itemB: { categoria: CATS[c], valor: solucao[CATS[c]][p] },
-      } as Pista);
+      }));
     }
-    candidatas.push({
-      id: `t3-${p}`, tipo: "T3", texto: "pos",
+    candidatas.push(pistaSimples(`t3-${p}`, "pos", { tipo: "T3",
       item: { categoria: CATS[0], valor: solucao[CATS[0]][p] }, posicao: p + 1,
-    } as Pista);
+    }));
   }
 
   const base = (pistas: Pista[]): Puzzle => ({

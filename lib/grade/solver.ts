@@ -4,7 +4,9 @@ import {
   criarContexto,
   dominiosIniciais,
   itensDaPista,
+  itensDaRestricao,
   pistaSatisfeita,
+  restricaoSatisfeita,
   solucoesIguais,
   validarEstruturaPuzzle,
 } from "./motor";
@@ -67,6 +69,47 @@ export function admiteSolucao(puzzle: Puzzle, parcial: MarcacaoParcial): boolean
   if (validarEstruturaPuzzle(puzzle) !== null) return false;
   const resultado = buscarComContexto(criarContexto(puzzle), 1, parcial);
   return resultado.erro === null && resultado.solucoes.length > 0;
+}
+
+/**
+ * Registro de processo apenas: nunca deve alimentar a tela ou revelar ao
+ * paciente qual pista/restrição falhou. Só registra violações que já podem
+ * ser verificadas diretamente porque todos os operandos foram confirmados.
+ */
+export function restricoesViolando(
+  puzzle: Puzzle,
+  parcial: MarcacaoParcial
+): { pistaId: string; restricaoId: string }[] {
+  if (validarEstruturaPuzzle(puzzle) !== null || !Array.isArray(parcial)) return [];
+
+  const posicoesPorItem = new Map<string, number[]>();
+  for (const marcacao of parcial) {
+    if (marcacao?.estado !== "confirmado") continue;
+    const chave = chaveItem(marcacao.categoria, marcacao.valor);
+    const posicoes = posicoesPorItem.get(chave) ?? [];
+    posicoes.push(marcacao.posicao);
+    posicoesPorItem.set(chave, posicoes);
+  }
+
+  const resultado: { pistaId: string; restricaoId: string }[] = [];
+  for (const pista of puzzle.pistas) {
+    for (const restricao of pista.restricoes) {
+      const posicoes = itensDaRestricao(restricao).map((item) => posicoesPorItem.get(chaveItem(item.categoria, item.valor)));
+      if (posicoes.some((posicoesDoItem) => posicoesDoItem === undefined || posicoesDoItem.length !== 1)) continue;
+
+      const solucaoParcial: Record<string, string[]> = {};
+      itensDaRestricao(restricao).forEach((item, indice) => {
+        const posicao = posicoes[indice]![0] - 1;
+        const valores = solucaoParcial[item.categoria] ?? [];
+        valores[posicao] = item.valor;
+        solucaoParcial[item.categoria] = valores;
+      });
+      if (!restricaoSatisfeita(restricao, solucaoParcial)) {
+        resultado.push({ pistaId: pista.id, restricaoId: restricao.id });
+      }
+    }
+  }
+  return resultado;
 }
 
 function chaveItem(categoria: string, valor: string): string {

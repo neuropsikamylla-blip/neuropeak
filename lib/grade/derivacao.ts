@@ -78,6 +78,8 @@ export function derivar(puzzle: Puzzle): TracoDerivacao {
   const contextoCompleto = criarContexto(puzzle);
   const porVariavel = new Map<number, { profundidade: number; pistas: string[] }>();
 
+  // A pessoa lê e risca pistas, não restrições: profundidade e classificação
+  // descrevem o que ela manipula, mesmo quando uma pista agrupa restrições.
   for (let profundidade = 1; profundidade <= Math.min(3, puzzle.pistas.length); profundidade += 1) {
     for (const grupo of combinacoes(puzzle.pistas, profundidade)) {
       const dominios = dominiosPropagados(puzzle, grupo);
