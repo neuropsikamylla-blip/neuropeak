@@ -1,4 +1,7 @@
 import { pistaSimples, type Puzzle, type PuzzleMetadata } from "./tipos";
+import { PROBLEMAS_NIVEL_2 } from "./problemas/nivel2";
+
+export { PROBLEMAS_NIVEL_2 };
 
 function metadata(
   complexity: number,
