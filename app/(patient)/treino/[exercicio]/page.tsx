@@ -7,6 +7,7 @@ import dynamic from "next/dynamic";
 import { ExerciseWrapper } from "@/components/exercises/ExerciseWrapper";
 import { EXERCISE_DEFINITIONS, type ExerciseResult, type Theme } from "@/types";
 import { planExerciseSettings, planExerciseIds } from "@/lib/exercise-plan";
+import { gravarSessaoDiariaLocal, lerSessaoDiariaLocal, marcarExercicioConcluido } from "@/lib/session-storage";
 import { useToast } from "@/components/ui/use-toast";
 import { Loader2, CheckCircle2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
@@ -502,15 +503,9 @@ export default function ExercicioPage() {
           // Session tracking (Cogmed global progress)
           const planIds = planExerciseIds(activePlan.exercises);
           const total = planIds.length;
-          const today = new Date().toLocaleDateString("sv"); // YYYY-MM-DD local
-          const storageKey = `np_session_${today}`;
           try {
-            const raw = localStorage.getItem(storageKey);
-            const saved = raw ? (JSON.parse(raw) as { total: number; completed: string[] }) : null;
-            const sessionData = saved && saved.total === total ? saved : { total, completed: [] as string[] };
-            if (!raw || !saved || saved.total !== total) {
-              localStorage.setItem(storageKey, JSON.stringify(sessionData));
-            }
+            const sessionData = lerSessaoDiariaLocal(total);
+            gravarSessaoDiariaLocal(sessionData);
             setSessionTotal(total);
             setSessionCompleted(sessionData.completed.filter((id: string) => id !== exerciseId).length);
           } catch {
@@ -606,14 +601,8 @@ export default function ExercicioPage() {
 
     // Marca exercício como concluído no tracking global da sessão
     try {
-      const today = new Date().toLocaleDateString("sv");
-      const storageKey = `np_session_${today}`;
-      const raw = localStorage.getItem(storageKey);
-      const sessionData = raw ? (JSON.parse(raw) as { total: number; completed: string[] }) : { total: sessionTotal ?? 1, completed: [] as string[] };
-      if (!sessionData.completed.includes(exerciseId)) {
-        sessionData.completed.push(exerciseId);
-      }
-      localStorage.setItem(storageKey, JSON.stringify(sessionData));
+      const sessionData = lerSessaoDiariaLocal(sessionTotal ?? 1);
+      gravarSessaoDiariaLocal(marcarExercicioConcluido(sessionData, exerciseId));
     } catch { /* ignore */ }
 
     // Game On (gamificado): cada treino soma XP da Jornada. Cache otimista no

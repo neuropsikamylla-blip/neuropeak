@@ -8,7 +8,9 @@ import { deveAvancarDeFase, deveSubirDeNivel, eficiencia, ofereceSegundaTentativ
 import { contarReversoes, type MovimentoTorre } from "@/lib/torres-registro";
 import { BANCO, type Problema } from "@/lib/torres/banco";
 import { dificuldadeDaFase, faseDaDificuldade, proximoProblema, type Fase } from "@/lib/torres/selecao";
-import { useTimedProgress } from "@/components/exercises/useExerciseEngine";
+import { useBlocoDeTreino } from "@/components/exercises/useExerciseEngine";
+import { ExerciseProgressBar } from "@/components/exercises/ExerciseProgressBar";
+import { registrarDesafioInterrompido } from "@/lib/exercise-block";
 import { TutorialBase } from "@/components/exercises/TutorialBase";
 import { ExerciseStage } from "@/components/exercises/ExerciseStage";
 import type { ExerciseResult, Theme } from "@/types";
@@ -308,7 +310,10 @@ function HanoiRuleStep({ theme, onDone }: { theme: Theme; onDone: () => void }) 
 
 export function TorreHanoi({ difficulty, theme, onComplete }: TorreHanoiProps) {
   const [showTutorial, setShowTutorial] = useState(true);
-  const { begin, isTimeUp, elapsedSec, finish } = useTimedProgress(11 * 60 * 1000); // 11 min — planejamento (pedido da Kamylla)
+  const {
+    begin, elapsedSec, finish, progressPct, emTolerancia, atingiuTeto,
+    podeIniciarNovoDesafio, registroBloco,
+  } = useBlocoDeTreino("torre-hanoi", difficulty);
 
   // O problema deixa de ser gerado (torre cheia → haste 2) e passa a VIR DO BANCO pré-validado:
   // configuração inicial, alvo e mínimo (da BFS) são propriedades dele. É o que traz os tipos
@@ -326,6 +331,7 @@ export function TorreHanoi({ difficulty, theme, onComplete }: TorreHanoiProps) {
   const discCount = problema.discos;
   const [puzzle, setPuzzle] = useState(0);
   const [puzzleResults, setPuzzleResults] = useState<ResultadoPuzzle[]>([]);
+  const doneRef = useRef(false);
 
   // Puzzle state
   const [pegs, setPegs] = useState<State>(() => clonarEstado(problema.inicial));
@@ -440,6 +446,76 @@ export function TorreHanoi({ difficulty, theme, onComplete }: TorreHanoiProps) {
     setMovesThisAttempt([]);
   }
 
+  function finishGame(
+    resultados: ResultadoPuzzle[],
+    proxFase: Fase,
+    desafioInterrompido?: { id: string; interrompidoPeloFimDoBloco: true; dados: Record<string, unknown> },
+  ) {
+    if (doneRef.current) return;
+    doneRef.current = true;
+    const bloco = registroBloco(desafioInterrompido?.id ?? null);
+    finish();
+    const correctCount = resultados.filter((r) => r.correct).length;
+    const eficientes = resultados.filter((r) => deveSubirDeNivel(r.eficiencia)).length;
+    const accuracy = eficientes / Math.max(1, resultados.length);
+    const maxDiscs = resultados.length > 0 ? Math.max(...resultados.map((r) => r.discs)) : discCount;
+    const restarts = resultados.reduce((total, result) => total + result.restarts, 0);
+    const puzzlesComReinicio = resultados.filter((result) => result.restarts > 0).length;
+    const eficienciaMedia = resultados.reduce((total, result) => total + result.eficiencia, 0) / Math.max(1, resultados.length);
+    const movimentosTotais = resultados.reduce((total, result) => total + result.movimentosTotais, 0);
+    const movimentosSolucao = resultados.reduce((total, result) => total + result.movimentosSolucao, 0);
+    const invalidos = resultados.reduce((total, result) => total + result.invalidos, 0);
+    const reversoes = resultados.reduce((total, result) => total + result.reversoes, 0);
+    const latencias = resultados.map((result) => result.latenciaMs).filter((latencia): latencia is number => latencia !== null);
+    const latenciaMediaMs = latencias.length > 0
+      ? latencias.reduce((total, latencia) => total + latencia, 0) / latencias.length
+      : null;
+    const reinicios = resultados
+      .map((result, index) => ({ puzzle: index + 1, discos: result.discs, eventos: result.eventosReinicio }))
+      .filter((result) => result.eventos.length > 0);
+    const score = calculateExerciseScore("torre-hanoi", accuracy, undefined, maxDiscs);
+    onComplete({
+      exerciseId: "torre-hanoi",
+      domain: "executive",
+      score,
+      accuracy,
+      difficulty: dificuldadeDaFase(proxFase),
+      duration: elapsedSec(),
+      metadata: {
+        puzzles: resultados.length,
+        maxDiscs,
+        correct: correctCount,
+        resolvidosComBoaEficiencia: eficientes,
+        restarts,
+        puzzlesComReinicio,
+        eficienciaMedia,
+        movimentosTotais,
+        movimentosSolucao,
+        invalidos,
+        reversoes,
+        latenciaMediaMs,
+        reinicios,
+        tiposJogados: resultados.reduce<Record<string, number>>((acc, r) => {
+          acc[r.tipo] = (acc[r.tipo] ?? 0) + 1;
+          return acc;
+        }, {}),
+        fasesJogadas: resultados.reduce<Record<string, number>>((acc, r) => {
+          acc[String(r.fase)] = (acc[String(r.fase)] ?? 0) + 1;
+          return acc;
+        }, {}),
+        segundasTentativas: segundasRef.current.length,
+        melhoraMediaMovimentos: segundasRef.current.length
+          ? segundasRef.current.reduce((t, r) => t + (r.primeira - r.segunda), 0) / segundasRef.current.length
+          : null,
+        melhoraMediaPercentual: segundasRef.current.length
+          ? segundasRef.current.reduce((t, r) => t + (r.primeira - r.segunda) / Math.max(1, r.primeira), 0) / segundasRef.current.length
+          : null,
+        bloco,
+        ...(desafioInterrompido ? { desafioInterrompido } : {}),
+      },
+    });
+  }
+
   // Botão "Continuar" da escolha. Se o tempo da sessão acabou enquanto ele decidia, a próxima
   // vitória encerra a sessão pelo caminho normal — aqui só avançamos o problema.
   function continuarAposEscolha() {
@@ -447,6 +523,10 @@ export function TorreHanoi({ difficulty, theme, onComplete }: TorreHanoiProps) {
     setAguardandoEscolha(false);
     if (!destino) return;
     proximoRef.current = null;
+    if (!podeIniciarNovoDesafio()) {
+      finishGame(puzzleResults, destino.fase);
+      return;
+    }
     setPuzzle(destino.puzzle);
     setFase(destino.fase);
     avancarParaProximoProblema(destino.fase);
@@ -540,92 +620,19 @@ export function TorreHanoi({ difficulty, theme, onComplete }: TorreHanoiProps) {
         const proxFase: Fase = avanca ? (Math.min(8, fase + 1) as Fase) : fase;
 
         const nextPuzzle = puzzle + 1;
-        const timeUp = isTimeUp();
+        const encerraAposDesafio = !podeIniciarNovoDesafio();
 
         // Fim de sessão nunca oferece segunda tentativa; solução ÓTIMA também não — não há
         // caminho mais curto para procurar. Nesse caso a tela espera só o "Continuar".
-        if (!timeUp && !isSegundaTentativa) {
+        if (!encerraAposDesafio && !isSegundaTentativa) {
           proximoRef.current = { puzzle: nextPuzzle, fase: proxFase };
           setAguardandoEscolha(true);
           return;
         }
 
         setTimeout(() => {
-          if (timeUp) {
-            finish();
-            const resultados = base;
-            const correctCount = resultados.filter((r) => r.correct).length;
-            // `accuracy` é o campo que ALIMENTA A ENGINE ADAPTATIVA (`lib/adaptive.ts:154`:
-            // ≥ 0,80 sobe de nível) e o que a terapeuta lê. Se fosse "resolvidos ÷ total", como
-            // resolver passou a ser sempre o sucesso, daria 100% em toda sessão — o exercício
-            // subiria de nível para sempre e a conquista de 100% dispararia sozinha.
-            // Então a acurácia é a proporção de puzzles resolvidos com eficiência BOA ou
-            // ADEQUADA (≤ 1,40), o mesmo critério de `deveSubirDeNivel`. Não é o mínimo exato,
-            // revogado por ela em 31/ago; é o desempenho estratégico, que discrimina.
-            // `correct` no metadata segue significando RESOLVIDOS.
-            const eficientes = resultados.filter((r) => deveSubirDeNivel(r.eficiencia)).length;
-            const accuracy = eficientes / Math.max(1, resultados.length);
-            const maxDiscs = Math.max(...resultados.map((r) => r.discs));
-            const restarts = resultados.reduce((total, result) => total + result.restarts, 0);
-            const puzzlesComReinicio = resultados.filter((result) => result.restarts > 0).length;
-            const eficienciaMedia = resultados.reduce((total, result) => total + result.eficiencia, 0) / Math.max(1, resultados.length);
-            const movimentosTotais = resultados.reduce((total, result) => total + result.movimentosTotais, 0);
-            const movimentosSolucao = resultados.reduce((total, result) => total + result.movimentosSolucao, 0);
-            const invalidos = resultados.reduce((total, result) => total + result.invalidos, 0);
-            const reversoes = resultados.reduce((total, result) => total + result.reversoes, 0);
-            const latencias = resultados
-              .map((result) => result.latenciaMs)
-              .filter((latencia): latencia is number => latencia !== null);
-            // `null` é intencional quando não há primeiro movimento válido, evitando NaN no JSON.
-            const latenciaMediaMs = latencias.length > 0
-              ? latencias.reduce((total, latencia) => total + latencia, 0) / latencias.length
-              : null;
-            const reinicios = resultados
-              .map((result, index) => ({ puzzle: index + 1, discos: result.discs, eventos: result.eventosReinicio }))
-              .filter((result) => result.eventos.length > 0);
-            const score = calculateExerciseScore("torre-hanoi", accuracy, undefined, maxDiscs);
-            onComplete({
-              exerciseId: "torre-hanoi",
-              domain: "executive",
-              score,
-              accuracy,
-              // A FASE é o que precisa sobreviver à sessão. Enviar `maxDiscs` aqui fazia o
-              // paciente REGREDIR de fase a cada retomada (bug de 01/set/2026); `maxDiscs`
-              // continua no metadata, que é onde ele é informação clínica.
-              difficulty: dificuldadeDaFase(proxFase),
-              duration: elapsedSec(),
-              metadata: {
-                puzzles: resultados.length,
-                maxDiscs,
-                correct: correctCount,
-                resolvidosComBoaEficiencia: eficientes,
-                restarts,
-                puzzlesComReinicio,
-                eficienciaMedia,
-                movimentosTotais,
-                movimentosSolucao,
-                invalidos,
-                reversoes,
-                latenciaMediaMs,
-                reinicios,
-                tiposJogados: resultados.reduce<Record<string, number>>((acc, r) => {
-                  acc[r.tipo] = (acc[r.tipo] ?? 0) + 1;
-                  return acc;
-                }, {}),
-                fasesJogadas: resultados.reduce<Record<string, number>>((acc, r) => {
-                  acc[String(r.fase)] = (acc[String(r.fase)] ?? 0) + 1;
-                  return acc;
-                }, {}),
-                segundasTentativas: segundasRef.current.length,
-                melhoraMediaMovimentos: segundasRef.current.length
-                  ? segundasRef.current.reduce((t, r) => t + (r.primeira - r.segunda), 0) / segundasRef.current.length
-                  : null,
-                // Registrada, NUNCA mostrada ao paciente (seção 51 dela).
-                melhoraMediaPercentual: segundasRef.current.length
-                  ? segundasRef.current.reduce((t, r) => t + (r.primeira - r.segunda) / Math.max(1, r.primeira), 0) / segundasRef.current.length
-                  : null,
-              },
-            });
+          if (!podeIniciarNovoDesafio()) {
+            finishGame(base, proxFase);
           } else {
             setPuzzle(nextPuzzle);
             setFase(proxFase);
@@ -635,6 +642,34 @@ export function TorreHanoi({ difficulty, theme, onComplete }: TorreHanoiProps) {
       }
     }
   }
+
+  useEffect(() => {
+    if (showTutorial || !atingiuTeto() || doneRef.current) return;
+    if (won) {
+      finishGame(puzzleResults, proximoRef.current?.fase ?? fase);
+      return;
+    }
+    finishGame(puzzleResults, fase, registrarDesafioInterrompido(problema.id, {
+      problemaId: problema.id,
+      tipo: problema.tipo,
+      fase: problema.fase,
+      configuracaoInicial: problema.inicial.map((peg) => [...peg]),
+      objetivo: problema.alvo.map((peg) => [...peg]),
+      estadoAtual: pegs.map((peg) => [...peg]),
+      movimentos: moves,
+      movimentosAntesDeReinicios: movesBeforeRestarts,
+      movimentosDestaTentativa: [...movesThisAttempt],
+      reinicios: restartsThisPuzzle,
+      eventosReinicio: [...restartEvents],
+      movimentosInvalidos: invalidMoves,
+      reversoesAntesDeReinicios: reversoesBeforeRestarts,
+      segundaTentativa: isSegundaTentativa,
+      movimentosPrimeiraTentativa: movimentosPrimeira,
+      mostrandoObjetivo,
+    }));
+  // A identidade de atingiuTeto muda a cada tick e traz o estado temporal atual.
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [atingiuTeto]);
 
   // Tela de cada problema (seção 45): o enunciado, o objetivo em miniatura e COMEÇAR. Ela existe
   // porque com configuração inicial e alvo variáveis o paciente PRECISA analisar a situação antes
@@ -647,6 +682,11 @@ export function TorreHanoi({ difficulty, theme, onComplete }: TorreHanoiProps) {
           <h2 className="font-bold tracking-tight" style={{ color: "#0F172A", fontSize: 20 }}>
             Organize os discos conforme o objetivo.
           </h2>
+          {/* 09/set/2026: esta barra é apenas temporal; não conhece discos, movimentos,
+              mínimo, eficiência nem reinícios. A barra de solução removida não voltou. */}
+          <div className="mt-4">
+            <ExerciseProgressBar progressPct={progressPct} theme={theme} emTolerancia={emTolerancia()} />
+          </div>
 
           {/* Os dois estados visuais, com PESOS DIFERENTES — hierarquia pedida por ela em
               01/set/2026 vendo a tela: "manter a Configuração Inicial em destaque principal;
@@ -679,8 +719,6 @@ export function TorreHanoi({ difficulty, theme, onComplete }: TorreHanoiProps) {
   if (showTutorial) {
     return <TorreHanoiTutorial theme={theme} onDone={() => { begin(); setShowTutorial(false); setMostrandoObjetivo(true); }} />;
   }
-
-  // Progresso VISUAL do jogo: quantos discos já chegaram ao destino.
 
   // Larguras progressivas (disco 1 mais estreito, disco N mais largo), escaladas
   // pela largura da torre pra caber em qualquer tela sem cortar.
@@ -726,6 +764,11 @@ export function TorreHanoi({ difficulty, theme, onComplete }: TorreHanoiProps) {
           </button>
         </div>
 
+        {/* 09/set/2026: barra temporal, independente de qualquer estado da solução. */}
+        <div className="mt-4">
+          <ExerciseProgressBar progressPct={progressPct} theme={theme} emTolerancia={emTolerancia()} />
+        </div>
+
         {!won && (() => { const reiniciarBloqueado = moves === 0; return (
           <div className="mt-3 flex justify-end">
             <button
@@ -744,10 +787,11 @@ export function TorreHanoi({ difficulty, theme, onComplete }: TorreHanoiProps) {
           </div>
         ); })()}
 
-        {/* A barra de progresso do jogo SAIU em 01/set/2026, vendo a tela com ela. Ela contava
+        {/* A barra de progresso da SOLUÇÃO SAIU em 01/set/2026, vendo a tela com ela. Ela contava
             discos já na posição do alvo — e como o alvo pode ser qualquer haste, os discos entram
             e saem dela o tempo todo: a barra subia e descia sem querer dizer nada. Além disso era
-            um placar, e placar durante a execução é justamente o que ela mandou tirar. */}
+            um placar, e placar durante a execução é justamente o que ela mandou tirar. Continua
+            inexistente; a barra acima é exclusivamente temporal. */}
 
         {/* Ampliação temporária do objetivo. Nunca é a ÚNICA forma de ver o alvo — a miniatura
             do canto continua ali. Isto é conforto de leitura, não um recurso a ser gerenciado. */}

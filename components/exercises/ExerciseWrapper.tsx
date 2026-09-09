@@ -7,6 +7,7 @@ import { ScoreDisplay } from "@/components/gamification/ScoreDisplay";
 import { formatDuration, formatReactionTime } from "@/lib/utils";
 import { EXERCISE_FUNCTIONAL } from "@/lib/exercise-functional";
 import { completionRecordFor, tutorialRequired, type TutorialState } from "@/lib/tutorial/state";
+import { progressoDaSessao } from "@/lib/session-storage";
 import type { TutorialDefinition } from "@/lib/tutorial/types";
 import type { ExerciseResult, Theme } from "@/types";
 import { TutorialRunner } from "@/components/exercises/tutorial/TutorialRunner";
@@ -75,21 +76,15 @@ export function ExerciseWrapper({
   const [isTutorialReview, setIsTutorialReview] = useState(false);
 
   // Progresso interno do exercício atual (0-100), reportado via useExerciseProgress().
-  const [innerPct, setInnerPct] = useState(0);
+  const innerPctRef = useRef(0);
   const reportProgress = useCallback((pct: number) => {
-    setInnerPct((prev) => {
-      const next = Math.max(0, Math.min(100, pct));
-      // Monotônico: nunca recua dentro do mesmo exercício (evita "piscadas" da barra).
-      return next > prev ? next : prev;
-    });
+    const next = Math.max(0, Math.min(100, pct));
+    // Monotônico: nunca recua dentro do mesmo exercício (evita "piscadas" da barra).
+    innerPctRef.current = Math.max(innerPctRef.current, next);
   }, []);
 
-  // Barra única do dia que TAMBÉM sobe aos poucos durante o exercício atual:
-  // (exercícios concluídos + fração do exercício atual) / total do plano.
-  const sessionProgress =
-    sessionTotal && sessionTotal > 0
-      ? Math.round(((sessionCompleted + innerPct / 100) / sessionTotal) * 100)
-      : Math.round(innerPct);
+  // Progresso do dia conta somente exercícios concluídos; a dose do bloco é independente.
+  const sessionProgress = progressoDaSessao(sessionCompleted, sessionTotal);
 
   useEffect(() => {
     const onChange = () => setIsFullscreen(!!document.fullscreenElement);
@@ -356,11 +351,10 @@ export function ExerciseWrapper({
                   ? "bg-white/95 border-2 border-teal-300 backdrop-blur-sm"
                   : "bg-white/95 border border-gray-200 backdrop-blur-sm shadow-md"
               }`}>
-                <p className={`text-xs font-bold mb-1 flex items-center justify-between gap-2 ${
+                <p className={`text-xs font-bold mb-1 ${
                   theme === "GAMIFIED" ? "text-cyan-400" : theme === "COLORFUL" ? "text-teal-700" : "text-gray-800"
                 }`}>
                   <span>Progresso</span>
-                  <span className="tabular-nums">{sessionProgress}%</span>
                 </p>
                 <div className={`h-1.5 rounded-full ${theme === "GAMIFIED" ? "bg-gray-600" : "bg-gray-200"}`}>
                   <motion.div

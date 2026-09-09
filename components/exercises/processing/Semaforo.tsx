@@ -4,9 +4,10 @@ import { useState, useRef, useCallback, useEffect } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { calculateExerciseScore } from "@/lib/scoring";
 import { judgeSemaforo, type SemaforoResponse } from "@/lib/semaforo";
-import { useTimedProgress } from "@/components/exercises/useExerciseEngine";
+import { useBlocoDeTreino } from "@/components/exercises/useExerciseEngine";
 import { ExerciseProgressBar } from "@/components/exercises/ExerciseProgressBar";
 import { ExerciseStage } from "@/components/exercises/ExerciseStage";
+import { registrarDesafioInterrompido } from "@/lib/exercise-block";
 import type { ExerciseResult, Theme } from "@/types";
 
 interface SemaforoProps {
@@ -119,10 +120,11 @@ interface TrialResult {
   omitted: boolean;
 }
 
-const SESSION_MS = 5 * 60 * 1000;   // 5 min (era 7)
-
 export function Semaforo({ difficulty, theme, onComplete }: SemaforoProps) {
-  const { begin, isTimeUp, elapsedSec, finish: finishProgress, progressPct } = useTimedProgress(SESSION_MS);
+  const {
+    begin, elapsedSec, finish: finishProgress, progressPct, emTolerancia,
+    atingiuTeto, podeIniciarNovoDesafio, registroBloco,
+  } = useBlocoDeTreino("semaforo", difficulty);
 
   const [started, setStarted] = useState(false);
   const [phase, setPhase] = useState<Phase>("idle");
@@ -156,9 +158,13 @@ export function Semaforo({ difficulty, theme, onComplete }: SemaforoProps) {
 
   // ─── Finish game ──────────────────────────────────────────────────────────
   const finishGame = useCallback(
-    (finalResults: TrialResult[]) => {
+    (finalResults: TrialResult[], desafioInterrompido?: ReturnType<typeof registrarDesafioInterrompido>) => {
       if (doneRef.current) return;
       doneRef.current = true;
+      [blinkTimer, activeTimer, feedbackTimer].forEach((timer) => {
+        if (timer.current) clearTimeout(timer.current);
+      });
+      const bloco = registroBloco(desafioInterrompido?.id ?? null);
       finishProgress();
 
       const hits = finalResults.filter((r) => r.correct && r.rt !== null);
@@ -184,11 +190,13 @@ export function Semaforo({ difficulty, theme, onComplete }: SemaforoProps) {
             avgRT,
             correct: hits.length,
             omissions: finalResults.filter((r) => r.omitted).length,
+            bloco,
+            ...(desafioInterrompido ? { desafioInterrompido } : {}),
           },
         });
       }, 1200);
     },
-    [difficulty, onComplete, elapsedSec, finishProgress]
+    [difficulty, onComplete, elapsedSec, finishProgress, registroBloco]
   );
 
   // ─── Start a new round ────────────────────────────────────────────────────
@@ -243,15 +251,29 @@ export function Semaforo({ difficulty, theme, onComplete }: SemaforoProps) {
       if (feedbackTimer.current) clearTimeout(feedbackTimer.current);
       feedbackTimer.current = setTimeout(() => {
         setFeedback(null);
-        if (isTimeUp()) {
+        if (!podeIniciarNovoDesafio()) {
           finishGame(newResults);
         } else {
           startRound();
         }
       }, 500);
     },
-    [finishGame, startRound, isTimeUp]
+    [finishGame, startRound, podeIniciarNovoDesafio]
   );
+
+  useEffect(() => {
+    if (!atingiuTeto() || doneRef.current) return;
+    if (phase === "feedback" || phase === "idle") {
+      finishGame(resultsRef.current);
+      return;
+    }
+    const id = `rodada-${Math.max(1, roundCountRef.current)}`;
+    finishGame(resultsRef.current, registrarDesafioInterrompido(id, {
+      fase: phase,
+      rodada: round,
+      respondeu: respondedRef.current,
+    }));
+  }, [atingiuTeto, finishGame, phase, round]);
 
   function onPressAdvance() {
     if (phase !== "active" || respondedRef.current || !round) return;
@@ -323,7 +345,7 @@ export function Semaforo({ difficulty, theme, onComplete }: SemaforoProps) {
             </p>
           </div>
         </div>
-        <ExerciseProgressBar progressPct={progressPct} theme={theme} />
+        <ExerciseProgressBar progressPct={progressPct} theme={theme} emTolerancia={emTolerancia()} />
       </div>
 
       {/* Play area */}

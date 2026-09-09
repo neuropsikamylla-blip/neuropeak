@@ -1,7 +1,20 @@
 "use client";
 
-import { useRef, useState, useEffect, useCallback } from "react";
+import { useRef, useState, useEffect, useCallback, useMemo } from "react";
 import { useExerciseProgress } from "@/components/exercises/ExerciseWrapper";
+import { resolveExerciseDosage } from "@/lib/exercise-dosage";
+import {
+  avancarTempoAtivo,
+  blocoAtingiuTeto,
+  blocoEmTolerancia,
+  blocoPodeIniciarNovoDesafio,
+  comecarBloco,
+  criarEstadoBloco,
+  criarRegistroBloco,
+  progressoTemporalPct,
+  registrarAtividadeBloco,
+} from "@/lib/exercise-block";
+import { gravarDosePersistidaLocal, lerDosePersistidaLocal, limparDosePersistidaLocal } from "@/lib/session-storage";
 
 // ── Engine de progressão padrão dos exercícios ────────────────────────────────
 // Decisões da Kamylla:
@@ -76,4 +89,84 @@ export function useTimedProgress(targetMs: number = DEFAULT_TARGET_MS) {
   }, [markProgress]);
 
   return { begin, isTimeUp, elapsedSec, finish, progressPct };
+}
+
+/** Bloco temporal configurável. Não substitui useTimedProgress nos exercícios não migrados. */
+export function useBlocoDeTreino(exerciseId: string, difficulty = 1) {
+  const markProgress = useExerciseProgress();
+  const dosage = useMemo(() => resolveExerciseDosage(exerciseId, difficulty), [exerciseId, difficulty]);
+  const stateRef = useRef<ReturnType<typeof criarEstadoBloco> | null>(null);
+  if (stateRef.current === null) {
+    const restored = lerDosePersistidaLocal(exerciseId);
+    stateRef.current = criarEstadoBloco(restored);
+  }
+  const [activeMs, setActiveMs] = useState(stateRef.current.activeMs);
+  const [progressPct, setProgressPct] = useState(
+    progressoTemporalPct(stateRef.current.activeMs, dosage.targetDurationSec * 1000),
+  );
+
+  useEffect(() => {
+    const onActivity = () => {
+      stateRef.current = registrarAtividadeBloco(stateRef.current!, Date.now());
+    };
+    window.addEventListener("pointerdown", onActivity, { passive: true });
+    window.addEventListener("keydown", onActivity);
+    return () => {
+      window.removeEventListener("pointerdown", onActivity);
+      window.removeEventListener("keydown", onActivity);
+    };
+  }, []);
+
+  useEffect(() => {
+    const id = setInterval(() => {
+      const next = avancarTempoAtivo(stateRef.current!, Date.now(), dosage.maxDurationSec * 1000);
+      stateRef.current = next;
+      if (!next.started || next.finished) return;
+      const pct = progressoTemporalPct(next.activeMs, dosage.targetDurationSec * 1000);
+      setActiveMs(next.activeMs);
+      setProgressPct(pct);
+      markProgress(pct);
+      gravarDosePersistidaLocal(exerciseId, next.activeMs);
+    }, 400);
+    return () => clearInterval(id);
+  }, [dosage.maxDurationSec, dosage.targetDurationSec, exerciseId, markProgress]);
+
+  const begin = useCallback(() => {
+    stateRef.current = comecarBloco(stateRef.current!, Date.now());
+  }, []);
+  const emTolerancia = useCallback(
+    () => blocoEmTolerancia(activeMs, dosage),
+    [activeMs, dosage],
+  );
+  const atingiuTeto = useCallback(
+    () => blocoAtingiuTeto(activeMs, dosage),
+    [activeMs, dosage],
+  );
+  const podeIniciarNovoDesafio = useCallback(
+    () => blocoPodeIniciarNovoDesafio(stateRef.current!.activeMs, dosage),
+    [dosage],
+  );
+  const elapsedSec = useCallback(() => Math.round(stateRef.current!.activeMs / 1000), []);
+  const finish = useCallback(() => {
+    stateRef.current = { ...stateRef.current!, finished: true };
+    limparDosePersistidaLocal(exerciseId);
+  }, [exerciseId]);
+  const registroBloco = useCallback(
+    (desafioInterrompidoId: string | null = null) =>
+      criarRegistroBloco(exerciseId, stateRef.current!, dosage, desafioInterrompidoId),
+    [dosage, exerciseId],
+  );
+
+  return {
+    begin,
+    progressPct,
+    emTolerancia,
+    atingiuTeto,
+    podeIniciarNovoDesafio,
+    elapsedSec,
+    finish,
+    registroBloco,
+    targetDurationSec: dosage.targetDurationSec,
+    maxDurationSec: dosage.maxDurationSec,
+  };
 }

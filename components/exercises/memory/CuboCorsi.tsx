@@ -2,10 +2,11 @@
 
 import { useState, useRef, useCallback, useEffect } from "react";
 import { calculateExerciseScore } from "@/lib/scoring";
-import { useTimedProgress } from "@/components/exercises/useExerciseEngine";
+import { useBlocoDeTreino } from "@/components/exercises/useExerciseEngine";
 import { ExerciseProgressBar } from "@/components/exercises/ExerciseProgressBar";
 import { ExerciseStage } from "@/components/exercises/ExerciseStage";
 import { classifyTrial, nextLevelPerTrial } from "@/lib/adaptive-trial";
+import { registrarDesafioInterrompido } from "@/lib/exercise-block";
 import type { ExerciseResult, Theme } from "@/types";
 
 // ── Cubo 2×2×2 em CSS 3D real ──────────────────────────────
@@ -226,7 +227,6 @@ const sndWrong   = () => beep(180, 300, 0.05);
 // ── Sequência / timing ────────────────────────────────────────────────────────
 // Engine padrão: a sessão dura ~7 min (faixa 6-8) e a barra avança pelo TEMPO
 // decorrido (0→100%). A dificuldade sobe +1 a cada 2 acertos SEGUIDOS.
-const TARGET_MS  = 7 * 60 * 1000;  // duração-alvo da sessão
 const MAX_ROUNDS = 80;             // trava de segurança (normalmente não atingida)
 const N_TILES    = CUBO_CORSI_CELL_COUNT;
 
@@ -252,9 +252,11 @@ function randSeq(len: number): number[] {
 interface Props { difficulty: number; theme: Theme; onComplete: (r: ExerciseResult) => void; }
 type Phase = "watch" | "input" | "result" | "between";
 
-export function CuboCorsi({ difficulty, theme: _theme, onComplete }: Props) {
-  // Barra por TEMPO ATIVO (pausa quando o paciente não interage) — hook padrão.
-  const { begin, isTimeUp, elapsedSec, finish, progressPct } = useTimedProgress(TARGET_MS);
+export function CuboCorsi({ difficulty, theme, onComplete }: Props) {
+  const {
+    begin, elapsedSec, finish, progressPct, emTolerancia, atingiuTeto,
+    podeIniciarNovoDesafio, registroBloco,
+  } = useBlocoDeTreino("cubo-corsi", difficulty);
 
   const [phase, setPhase]      = useState<Phase>("watch");
   const [round, setRound]      = useState(0);
@@ -270,6 +272,7 @@ export function CuboCorsi({ difficulty, theme: _theme, onComplete }: Props) {
   const timersRef     = useRef<ReturnType<typeof setTimeout>[]>([]);
   const rtsRef        = useRef<number[]>([]);
   const inputStartRef = useRef(0);
+  const doneRef       = useRef(false);
 
   // Dificuldade adaptativa intra-sessão — motor POR TENTATIVA (épico Cogmed):
   // correta → +1 já na próxima; erro leve (só o último toque errado ou troca de
@@ -322,6 +325,29 @@ export function CuboCorsi({ difficulty, theme: _theme, onComplete }: Props) {
     } catch { /* cancelado */ }
   }, [sleep]);
 
+  const finishGame = useCallback((rounds: number, desafioInterrompido?: ReturnType<typeof registrarDesafioInterrompido>) => {
+    if (doneRef.current) return;
+    doneRef.current = true;
+    clearAll();
+    const bloco = registroBloco(desafioInterrompido?.id ?? null);
+    finish();
+    const avgRt = rtsRef.current.reduce((a, b) => a + b, 0) / Math.max(1, rtsRef.current.length);
+    const fc = correctRef.current, fe = errorsRef.current;
+    const acc = fc / Math.max(1, fc + fe);
+    const reached = maxDiffRef.current;
+    const score = calculateExerciseScore("cubo-corsi", acc, avgRt, reached);
+    onComplete({
+      exerciseId: "cubo-corsi", domain: "memory",
+      score, accuracy: acc, reactionTime: avgRt, difficulty: reached, duration: elapsedSec(),
+      metadata: {
+        correct: fc, errors: fe, rounds, reachedDifficulty: reached, bloco,
+        ...(desafioInterrompido ? { desafioInterrompido } : {}),
+      },
+    });
+  // clearAll só opera refs estáveis.
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [elapsedSec, finish, onComplete, registroBloco]);
+
   const evaluateSequence = useCallback((userInput: number[], seq: number[], r: number) => {
     const verdict = classifyTrial(seq, userInput);
     const allOk = verdict === "correta";
@@ -352,27 +378,16 @@ export function CuboCorsi({ difficulty, theme: _theme, onComplete }: Props) {
 
     const t = setTimeout(() => {
       setTS(Array(N_TILES).fill("idle"));
-      // Termina quando atinge a duração-alvo de TEMPO ATIVO (~7 min) — não por nº fixo de rodadas.
-      if (isTimeUp() || nr >= MAX_ROUNDS) {
-        finish();
-        const avgRt = rtsRef.current.reduce((a, b) => a + b, 0) / Math.max(1, rtsRef.current.length);
-        const fc = correctRef.current, fe = errorsRef.current;
-        const acc = fc / Math.max(1, fc + fe);
-        const dur = elapsedSec();
-        const reached = maxDiffRef.current;
-        const score = calculateExerciseScore("cubo-corsi", acc, avgRt, reached);
-        onComplete({
-          exerciseId: "cubo-corsi", domain: "memory",
-          score, accuracy: acc, reactionTime: avgRt, difficulty: reached, duration: dur,
-          metadata: { correct: fc, errors: fe, rounds: nr, reachedDifficulty: reached },
-        });
+      // Termina quando atinge a duração-alvo de TEMPO ATIVO (8 min) — não por nº fixo de rodadas.
+      if (!podeIniciarNovoDesafio() || nr >= MAX_ROUNDS) {
+        finishGame(nr);
         return;
       }
       setPhase("between");
       timersRef.current.push(setTimeout(() => startRound(nr), 500));
     }, 1800);
     timersRef.current.push(t);
-  }, [isTimeUp, finish, elapsedSec, onComplete, startRound]);
+  }, [finishGame, podeIniciarNovoDesafio, startRound]);
 
   const handleTileTap = useCallback((idx: number) => {
     if (phase !== "input") return;
@@ -393,8 +408,23 @@ export function CuboCorsi({ difficulty, theme: _theme, onComplete }: Props) {
   }, [phase, inputSoFar, sequence, round, evaluateSequence]);
 
   useEffect(() => {
+    if (!atingiuTeto() || doneRef.current) return;
+    if (phase === "result" || phase === "between") {
+      finishGame(round + 1);
+      return;
+    }
+    finishGame(round, registrarDesafioInterrompido(`rodada-${round + 1}`, {
+      phase,
+      sequence: [...sequence],
+      inputSoFar: [...inputSoFar],
+      difficulty: curDiffRef.current,
+    }));
+  }, [atingiuTeto, finishGame, inputSoFar, phase, round, sequence]);
+
+  useEffect(() => {
     begin();
-    void startRound(0);
+    if (podeIniciarNovoDesafio()) void startRound(0);
+    else finishGame(0);
     return () => clearAll();
   // O treino começa ao ser montado pelo ExerciseWrapper, após o tutorial compartilhado.
   // eslint-disable-next-line react-hooks/exhaustive-deps
@@ -421,7 +451,7 @@ export function CuboCorsi({ difficulty, theme: _theme, onComplete }: Props) {
       <div style={{ padding: "18px 14px 32px" }}>
 
         {/* Barra de progresso (tempo ativo) */}
-        <ExerciseProgressBar progressPct={progressPct} />
+        <ExerciseProgressBar progressPct={progressPct} theme={theme} emTolerancia={emTolerancia()} />
 
         {/* Label */}
         <p style={{
