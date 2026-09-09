@@ -1,6 +1,8 @@
 import type { Item, Restricao } from "./tipos";
 
 export interface GramaticaCategoria {
+  /** Se os valores da categoria representam pessoas. */
+  animado: boolean;
   /** Como o valor vira sujeito da frase. */
   sujeito: (valor: string) => string;
   /** Predicado iniciado por verbo, para permitir a negação com "não". */
@@ -138,7 +140,47 @@ export function textoDaPistaComposta(
   const predA = predicado(primeira.itemB, gramatica);
   const predB = predicado(segunda.itemB, gramatica);
   return finalizar(
-    `${sujeito(primeira.itemA, gramatica)} não ${predA} nem ${elidirVerboRepetido(predA, predB)}`
+    `${sujeito(primeira.itemA, gramatica)} não ${predA} nem ${elidirVerboRepetido(predA, predB, segunda.itemB.valor)}`
+  );
+}
+
+/** Agrupa duas ou mais exclusões que compartilham o mesmo sujeito. */
+export function textoDasExclusoes(
+  restricoes: readonly Restricao[],
+  gramatica: GramaticaTema
+): string {
+  if (restricoes.length < 2) {
+    throw new Error("Uma fusão exige ao menos duas restrições T2.");
+  }
+  const [primeira] = restricoes;
+  if (
+    primeira.tipo !== "T2"
+    || restricoes.some((restricao) =>
+      restricao.tipo !== "T2"
+      || restricao.itemA.categoria !== primeira.itemA.categoria
+      || restricao.itemA.valor !== primeira.itemA.valor
+    )
+  ) {
+    throw new Error("Uma fusão exige restrições T2 com o mesmo sujeito.");
+  }
+
+  const predicados = restricoes.map((restricao) => {
+    if (restricao.tipo !== "T2") throw new Error("Restrição incompatível com a fusão.");
+    return predicado(restricao.itemB, gramatica);
+  });
+  const valores = restricoes.map((restricao) => {
+    if (restricao.tipo !== "T2") throw new Error("Restrição incompatível com a fusão.");
+    return restricao.itemB.valor;
+  });
+  const partes = [
+    predicados[0],
+    ...predicados.slice(1).map((parte, indice) =>
+      elidirVerboRepetido(predicados[indice], parte, valores[indice + 1])
+    ),
+  ];
+  const separador = partes.length >= 3 ? ", nem " : " nem ";
+  return finalizar(
+    `${sujeito(primeira.itemA, gramatica)} não ${partes.join(separador)}`
   );
 }
 
@@ -163,16 +205,33 @@ const PALAVRAS_FUNCIONAIS = new Set([
  *
  * A comparação é por palavras inteiras, do início, para nunca cortar no meio de um termo.
  */
-export function elidirVerboRepetido(predicadoA: string, predicadoB: string): string {
+export function elidirVerboRepetido(predicadoA: string, predicadoB: string, valorB?: string): string {
   const palavrasA = predicadoA.split(" ");
   const palavrasB = predicadoB.split(" ");
+  // ⚠️ A elisão NUNCA pode entrar no valor. "foi conduzida por Dra. Norma" e "…por Dra. Sônia"
+  // compartilham o prefixo "foi conduzida por Dra.", e elidir tudo produzia "nem Sônia" — um
+  // nome que não existe na grade, onde o item se chama "Dra. Sônia". O paciente leria um
+  // referente inexistente. `valorB` marca onde o valor começa, e a elisão para antes dele.
+  const inicioDoValor = valorB === undefined ? palavrasB.length : (() => {
+    const indice = palavrasB.findIndex((_, i) => palavrasB.slice(i).join(" ").startsWith(valorB));
+    return indice === -1 ? palavrasB.length : indice;
+  })();
   let comuns = 0;
-  while (comuns < palavrasA.length - 1 && comuns < palavrasB.length - 1 && palavrasA[comuns] === palavrasB[comuns]) {
+  while (
+    comuns < palavrasA.length - 1
+    && comuns < palavrasB.length - 1
+    && comuns < inicioDoValor
+    && palavrasA[comuns] === palavrasB[comuns]
+  ) {
     comuns += 1;
   }
   if (comuns === 0) return predicadoB;
-  // Devolve à segunda parte as palavras funcionais do fim do trecho comum: elidir "preparou o"
-  // inteiro produziria "nem Espresso", que não é português.
+  // Elide o trecho comum, mas DEVOLVE as palavras funcionais do fim dele. É essa devolução que
+  // separa dois casos que parecem iguais e não são:
+  //   "preparou o Gelado"  + "…o Espresso"  -> o artigo faz parte do nome -> "o Espresso"
+  //   "usou a sala Jade"   + "…a sala Coral" -> "sala" já foi dita        -> "Coral"
+  //   "foi mediada por Zeca" + "…por Iuri"   -> a preposição rege o nome  -> "por Iuri"
+  //   "é Décio"            + "é Íris"        -> nada funcional            -> "Íris"
   let inicio = comuns;
   while (inicio > 0 && PALAVRAS_FUNCIONAIS.has(palavrasB[inicio - 1].toLocaleLowerCase("pt-BR"))) {
     inicio -= 1;

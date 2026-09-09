@@ -1,15 +1,6 @@
 # As 3 ultimas especificacoes dela (automatico; a mais nova por ultimo)
 # Na retomada: ler as 3, conectar com PROGRESSO.md e git, declarar e seguir.
 
-## 08/09/2026 20:41
-<task-notification>
-<task-id>by4mo9272</task-id>
-<tool-use-id>toolu_01Nct6rktJeL5FEieXgZ3BZp</tool-use-id>
-<output-file>/private/tmp/claude-501/-Users-kamyllahonorio-neuropeak/af26ae96-821d-4dce-abd1-d20a017fa7f8/tasks/by4mo9272.output</output-file>
-<status>completed</status>
-<summary>Background command "Disparar Codex no gerador" completed (exit code 0)</summary>
-</task-notification>
-
 ## 09/09/2026 16:16
 <task-notification>
 <task-id>bw23tc7oc</task-id>
@@ -32,3 +23,12 @@ grade por posição;
 O tutorial pode continuar com raciocínio simples, porque sua função é ensinar a mecânica.
 A exigência de pistas cross-category, integração profunda e estrutura conectada começa nos problemas reais, não aqui.
 Nos problemas reais, aplicar a limitação progressiva do “Verificar raciocínio” que já definimos.
+
+## 09/09/2026 17:45
+<task-notification>
+<task-id>bmzw4t0nt</task-id>
+<tool-use-id>toolu_011WDfBy746AYGbPoruovThL</tool-use-id>
+<output-file>/private/tmp/claude-501/-Users-kamyllahonorio-neuropeak/af26ae96-821d-4dce-abd1-d20a017fa7f8/tasks/bmzw4t0nt.output</output-file>
+<status>completed</status>
+<summary>Background command "Disparar Codex nos 12 problemas" completed (exit code 0)</summary>
+</task-notification>

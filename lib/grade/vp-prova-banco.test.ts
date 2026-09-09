@@ -1,5 +1,8 @@
 import { describe, expect, it } from "vitest";
 import { PROBLEMAS_NIVEL_2 } from "./problemas/nivel2";
+import { PROBLEMAS_NIVEL_3 } from "./problemas/nivel3";
+import { PROBLEMAS_NIVEL_4 } from "./problemas/nivel4";
+import { PROBLEMAS_NIVEL_5 } from "./problemas/nivel5";
 import { avaliarEstrutura } from "./estrutura";
 import { temSolucaoUnica, validarPuzzle } from "./solver";
 import { itensDaRestricao } from "./motor";
@@ -10,38 +13,45 @@ import type { Restricao } from "./tipos";
 // frase errada — e aí o paciente lê uma coisa e o motor cobra outra. Isso é indetectável pela
 // suíte de lógica e destrói o exercício em silêncio.
 
-describe("banco de nível 2 — a lógica", () => {
-  it("são 4 problemas, todos com solução única e gabarito válido", () => {
-    expect(PROBLEMAS_NIVEL_2).toHaveLength(4);
-    for (const p of PROBLEMAS_NIVEL_2) {
+const TODOS_OS_PROBLEMAS = [
+  ...PROBLEMAS_NIVEL_2,
+  ...PROBLEMAS_NIVEL_3,
+  ...PROBLEMAS_NIVEL_4,
+  ...PROBLEMAS_NIVEL_5,
+];
+
+describe("banco dos níveis 2 a 5 — a lógica", () => {
+  it("são 16 problemas, todos com solução única e gabarito válido", () => {
+    expect(TODOS_OS_PROBLEMAS).toHaveLength(16);
+    for (const p of TODOS_OS_PROBLEMAS) {
       expect(validarPuzzle(p), `${p.id}`).toBeNull();
       expect(temSolucaoUnica(p), `${p.id}`).toBe(true);
-      expect(p.posicoes).toBe(4);
-      expect(p.categorias).toHaveLength(3);
+      expect(p.posicoes).toBe(p.nivel <= 3 ? 4 : 5);
+      expect(p.categorias).toHaveLength(p.nivel === 2 ? 3 : p.nivel === 5 ? 5 : 4);
     }
   });
 
   it("todos passam na régua INTEIRA, e o motivo aparece quando não passam", () => {
-    for (const p of PROBLEMAS_NIVEL_2) {
+    for (const p of TODOS_OS_PROBLEMAS) {
       const r = avaliarEstrutura(p);
       expect(r.aprovado, `${p.id} reprovou: ${r.motivos.join(" | ")}`).toBe(true);
     }
   });
 
   it("nenhum problema repete a solução de outro", () => {
-    const chaves = PROBLEMAS_NIVEL_2.map((p) => JSON.stringify(p.solucao));
+    const chaves = TODOS_OS_PROBLEMAS.map((p) => JSON.stringify(p.solucao));
     expect(new Set(chaves).size).toBe(chaves.length);
   });
 
   it("o eixo tem rótulos, um por posição", () => {
-    for (const p of PROBLEMAS_NIVEL_2) {
+    for (const p of TODOS_OS_PROBLEMAS) {
       expect(p.rotulosPosicao, `${p.id} sem rótulos de eixo`).toHaveLength(p.posicoes);
     }
   });
 });
 
-describe("banco de nível 2 — o TEXTO das pistas", () => {
-  const todasAsPistas = PROBLEMAS_NIVEL_2.flatMap((p) =>
+describe("banco dos níveis 2 a 5 — o TEXTO das pistas", () => {
+  const todasAsPistas = TODOS_OS_PROBLEMAS.flatMap((p) =>
     p.pistas.map((pista) => ({ puzzle: p.id, pista }))
   );
 

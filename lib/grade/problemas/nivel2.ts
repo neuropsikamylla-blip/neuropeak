@@ -19,47 +19,47 @@ export const PROBLEMAS_NIVEL_2: Puzzle[] = [
         "id": "paciente",
         "label": "Paciente",
         "valores": [
-          "Décio",
           "Rafa",
-          "Alice",
-          "Íris"
+          "Décio",
+          "Íris",
+          "Alice"
         ]
       },
       {
         "id": "especialidade",
         "label": "Especialidade",
         "valores": [
+          "Psicologia",
           "Cardiologia",
-          "Nutrição",
           "Ortopedia",
-          "Psicologia"
+          "Nutrição"
         ]
       },
       {
         "id": "sala",
         "label": "Sala",
         "valores": [
-          "Jade",
-          "Névoa",
           "Âmbar",
-          "Coral"
+          "Jade",
+          "Coral",
+          "Névoa"
         ]
       }
     ],
     "pistas": [
       {
         "id": "consultas-manha-1",
-        "texto": "Rafa foi atendido imediatamente antes de quem foi à Psicologia.",
+        "texto": "A pessoa que usou a sala Jade teve consulta imediatamente antes da pessoa que usou a sala Coral.",
         "restricoes": [
           {
             "tipo": "T6",
             "itemA": {
-              "categoria": "paciente",
-              "valor": "Rafa"
+              "categoria": "sala",
+              "valor": "Jade"
             },
             "itemB": {
-              "categoria": "especialidade",
-              "valor": "Psicologia"
+              "categoria": "sala",
+              "valor": "Coral"
             },
             "id": "consultas-manha-1#1"
           }
@@ -67,55 +67,43 @@ export const PROBLEMAS_NIVEL_2: Puzzle[] = [
       },
       {
         "id": "consultas-manha-2",
-        "texto": "Quem usou a sala Âmbar não é Alice nem foi à Psicologia.",
+        "texto": "Décio e a pessoa que usou a sala Névoa tiveram consultas em horários vizinhos.",
         "restricoes": [
           {
-            "tipo": "T2",
+            "tipo": "T5",
             "itemA": {
-              "categoria": "sala",
-              "valor": "Âmbar"
+              "categoria": "paciente",
+              "valor": "Décio"
             },
             "itemB": {
-              "categoria": "paciente",
-              "valor": "Alice"
+              "categoria": "sala",
+              "valor": "Névoa"
             },
             "id": "consultas-manha-2#1"
-          },
-          {
-            "tipo": "T2",
-            "itemA": {
-              "categoria": "sala",
-              "valor": "Âmbar"
-            },
-            "itemB": {
-              "categoria": "especialidade",
-              "valor": "Psicologia"
-            },
-            "id": "consultas-manha-2#2"
           }
         ]
       },
       {
         "id": "consultas-manha-3",
-        "texto": "Quem foi à Psicologia não é Rafa nem usou a sala Coral.",
+        "texto": "Alice não foi à Ortopedia nem usou a sala Coral.",
         "restricoes": [
           {
             "tipo": "T2",
             "itemA": {
-              "categoria": "especialidade",
-              "valor": "Psicologia"
+              "categoria": "paciente",
+              "valor": "Alice"
             },
             "itemB": {
-              "categoria": "paciente",
-              "valor": "Rafa"
+              "categoria": "especialidade",
+              "valor": "Ortopedia"
             },
             "id": "consultas-manha-3#1"
           },
           {
             "tipo": "T2",
             "itemA": {
-              "categoria": "especialidade",
-              "valor": "Psicologia"
+              "categoria": "paciente",
+              "valor": "Alice"
             },
             "itemB": {
               "categoria": "sala",
@@ -127,29 +115,29 @@ export const PROBLEMAS_NIVEL_2: Puzzle[] = [
       },
       {
         "id": "consultas-manha-4",
-        "texto": "Quem usou a sala Névoa não é Décio nem Íris.",
+        "texto": "A pessoa que foi à Ortopedia não é Íris nem usou a sala Coral.",
         "restricoes": [
           {
             "tipo": "T2",
             "itemA": {
-              "categoria": "sala",
-              "valor": "Névoa"
+              "categoria": "especialidade",
+              "valor": "Ortopedia"
             },
             "itemB": {
               "categoria": "paciente",
-              "valor": "Décio"
+              "valor": "Íris"
             },
             "id": "consultas-manha-4#1"
           },
           {
             "tipo": "T2",
             "itemA": {
-              "categoria": "sala",
-              "valor": "Névoa"
+              "categoria": "especialidade",
+              "valor": "Ortopedia"
             },
             "itemB": {
-              "categoria": "paciente",
-              "valor": "Íris"
+              "categoria": "sala",
+              "valor": "Coral"
             },
             "id": "consultas-manha-4#2"
           }
@@ -157,13 +145,13 @@ export const PROBLEMAS_NIVEL_2: Puzzle[] = [
       },
       {
         "id": "consultas-manha-5",
-        "texto": "Quem foi à Cardiologia é Rafa.",
+        "texto": "Íris teve consulta imediatamente antes de Rafa.",
         "restricoes": [
           {
-            "tipo": "T8",
+            "tipo": "T6",
             "itemA": {
-              "categoria": "especialidade",
-              "valor": "Cardiologia"
+              "categoria": "paciente",
+              "valor": "Íris"
             },
             "itemB": {
               "categoria": "paciente",
@@ -175,17 +163,17 @@ export const PROBLEMAS_NIVEL_2: Puzzle[] = [
       },
       {
         "id": "consultas-manha-6",
-        "texto": "Quem foi à Nutrição foi atendido imediatamente antes de Décio.",
+        "texto": "Décio não usou a sala Âmbar.",
         "restricoes": [
           {
-            "tipo": "T6",
+            "tipo": "T2",
             "itemA": {
-              "categoria": "especialidade",
-              "valor": "Nutrição"
-            },
-            "itemB": {
               "categoria": "paciente",
               "valor": "Décio"
+            },
+            "itemB": {
+              "categoria": "sala",
+              "valor": "Âmbar"
             },
             "id": "consultas-manha-6#1"
           }
@@ -193,75 +181,105 @@ export const PROBLEMAS_NIVEL_2: Puzzle[] = [
       },
       {
         "id": "consultas-manha-7",
-        "texto": "Quem usou a sala Névoa não é Décio nem Alice.",
+        "texto": "Íris teve consulta antes da pessoa que usou a sala Névoa.",
         "restricoes": [
           {
-            "tipo": "T2",
+            "tipo": "T11",
             "itemA": {
-              "categoria": "sala",
-              "valor": "Névoa"
+              "categoria": "paciente",
+              "valor": "Íris"
             },
             "itemB": {
-              "categoria": "paciente",
-              "valor": "Décio"
+              "categoria": "sala",
+              "valor": "Névoa"
             },
             "id": "consultas-manha-7#1"
-          },
-          {
-            "tipo": "T2",
-            "itemA": {
-              "categoria": "sala",
-              "valor": "Névoa"
-            },
-            "itemB": {
-              "categoria": "paciente",
-              "valor": "Alice"
-            },
-            "id": "consultas-manha-7#2"
           }
         ]
       },
       {
         "id": "consultas-manha-8",
-        "texto": "Alice e quem foi à Psicologia foram atendidos em horários vizinhos.",
+        "texto": "A pessoa que foi à Psicologia não é Rafa nem Íris.",
         "restricoes": [
           {
-            "tipo": "T5",
+            "tipo": "T2",
             "itemA": {
-              "categoria": "paciente",
-              "valor": "Alice"
-            },
-            "itemB": {
               "categoria": "especialidade",
               "valor": "Psicologia"
             },
+            "itemB": {
+              "categoria": "paciente",
+              "valor": "Rafa"
+            },
             "id": "consultas-manha-8#1"
+          },
+          {
+            "tipo": "T2",
+            "itemA": {
+              "categoria": "especialidade",
+              "valor": "Psicologia"
+            },
+            "itemB": {
+              "categoria": "paciente",
+              "valor": "Íris"
+            },
+            "id": "consultas-manha-8#2"
+          }
+        ]
+      },
+      {
+        "id": "consultas-manha-9",
+        "texto": "A pessoa que foi à Nutrição não usou a sala Âmbar nem Coral.",
+        "restricoes": [
+          {
+            "tipo": "T2",
+            "itemA": {
+              "categoria": "especialidade",
+              "valor": "Nutrição"
+            },
+            "itemB": {
+              "categoria": "sala",
+              "valor": "Âmbar"
+            },
+            "id": "consultas-manha-9#1"
+          },
+          {
+            "tipo": "T2",
+            "itemA": {
+              "categoria": "especialidade",
+              "valor": "Nutrição"
+            },
+            "itemB": {
+              "categoria": "sala",
+              "valor": "Coral"
+            },
+            "id": "consultas-manha-9#2"
           }
         ]
       }
     ],
     "solucao": {
       "paciente": [
-        "Rafa",
         "Íris",
-        "Alice",
-        "Décio"
+        "Rafa",
+        "Décio",
+        "Alice"
       ],
       "especialidade": [
         "Cardiologia",
+        "Ortopedia",
         "Psicologia",
-        "Nutrição",
-        "Ortopedia"
+        "Nutrição"
       ],
       "sala": [
-        "Névoa",
+        "Âmbar",
         "Jade",
         "Coral",
-        "Âmbar"
+        "Névoa"
       ]
     },
     "metadata": {
-      "complexity": 8,
+      "complexity": 9,
       "inferenceDepthDistribution": {
         "1": 0,
         "2": 0,
@@ -269,23 +287,23 @@ export const PROBLEMAS_NIVEL_2: Puzzle[] = [
         "4+": 12
       },
       "skillWeights": {
-        "exclusion": 8,
-        "relativeOrder": 0,
+        "exclusion": 9,
+        "relativeOrder": 1,
         "adjacency": 3,
-        "crossCategory": 12,
-        "integrationDepth": 8,
+        "crossCategory": 11,
+        "integrationDepth": 9,
         "uncertaintyTolerance": 2
       },
       "dominantOperations": [
         "T2",
         "T6",
-        "T5"
+        "T11"
       ],
       "clueTypeDistribution": {
         "T6": 2,
-        "T2": 8,
-        "T8": 1,
-        "T5": 1
+        "T5": 1,
+        "T2": 9,
+        "T11": 1
       },
       "expectedDifficulty": 2,
       "validatedUniqueSolution": true
@@ -308,107 +326,107 @@ export const PROBLEMAS_NIVEL_2: Puzzle[] = [
         "id": "barista",
         "label": "Barista",
         "valores": [
-          "Ester",
           "Bruno",
-          "Nara",
-          "Tulio"
+          "Tulio",
+          "Ester",
+          "Nara"
         ]
       },
       {
         "id": "preparo",
         "label": "Preparo",
         "valores": [
+          "Espresso",
           "Filtrado",
           "Prensa",
-          "Gelado",
-          "Espresso"
+          "Gelado"
         ]
       },
       {
         "id": "posto",
         "label": "Posto",
         "valores": [
-          "Balcão",
           "Caixa",
-          "Salão",
-          "Forno"
+          "Balcão",
+          "Forno",
+          "Salão"
         ]
       }
     ],
     "pistas": [
       {
         "id": "turnos-cafeteria-1",
-        "texto": "Bruno não preparou o Gelado nem o Espresso.",
-        "restricoes": [
-          {
-            "tipo": "T2",
-            "itemA": {
-              "categoria": "barista",
-              "valor": "Bruno"
-            },
-            "itemB": {
-              "categoria": "preparo",
-              "valor": "Gelado"
-            },
-            "id": "turnos-cafeteria-1#1"
-          },
-          {
-            "tipo": "T2",
-            "itemA": {
-              "categoria": "barista",
-              "valor": "Bruno"
-            },
-            "itemB": {
-              "categoria": "preparo",
-              "valor": "Espresso"
-            },
-            "id": "turnos-cafeteria-1#2"
-          }
-        ]
-      },
-      {
-        "id": "turnos-cafeteria-2",
-        "texto": "Quem preparou o Gelado ficou no Salão.",
+        "texto": "O barista que preparou o Filtrado ficou no Forno.",
         "restricoes": [
           {
             "tipo": "T8",
             "itemA": {
               "categoria": "preparo",
-              "valor": "Gelado"
+              "valor": "Filtrado"
             },
             "itemB": {
               "categoria": "posto",
-              "valor": "Salão"
+              "valor": "Forno"
+            },
+            "id": "turnos-cafeteria-1#1"
+          }
+        ]
+      },
+      {
+        "id": "turnos-cafeteria-2",
+        "texto": "Ester não preparou o Espresso nem ficou no Balcão.",
+        "restricoes": [
+          {
+            "tipo": "T2",
+            "itemA": {
+              "categoria": "barista",
+              "valor": "Ester"
+            },
+            "itemB": {
+              "categoria": "preparo",
+              "valor": "Espresso"
             },
             "id": "turnos-cafeteria-2#1"
+          },
+          {
+            "tipo": "T2",
+            "itemA": {
+              "categoria": "barista",
+              "valor": "Ester"
+            },
+            "itemB": {
+              "categoria": "posto",
+              "valor": "Balcão"
+            },
+            "id": "turnos-cafeteria-2#2"
           }
         ]
       },
       {
         "id": "turnos-cafeteria-3",
-        "texto": "Quem preparou o Espresso não é Tulio nem ficou no Forno.",
+        "texto": "Tulio não preparou o Gelado nem ficou no Balcão.",
         "restricoes": [
           {
             "tipo": "T2",
             "itemA": {
-              "categoria": "preparo",
-              "valor": "Espresso"
-            },
-            "itemB": {
               "categoria": "barista",
               "valor": "Tulio"
+            },
+            "itemB": {
+              "categoria": "preparo",
+              "valor": "Gelado"
             },
             "id": "turnos-cafeteria-3#1"
           },
           {
             "tipo": "T2",
             "itemA": {
-              "categoria": "preparo",
-              "valor": "Espresso"
+              "categoria": "barista",
+              "valor": "Tulio"
             },
             "itemB": {
               "categoria": "posto",
-              "valor": "Forno"
+              "valor": "Balcão"
             },
             "id": "turnos-cafeteria-3#2"
           }
@@ -416,83 +434,99 @@ export const PROBLEMAS_NIVEL_2: Puzzle[] = [
       },
       {
         "id": "turnos-cafeteria-4",
-        "texto": "Nara trabalhou antes de quem preparou o Filtrado.",
+        "texto": "O barista do posto Salão não é Bruno nem preparou o Espresso.",
         "restricoes": [
           {
-            "tipo": "T11",
+            "tipo": "T2",
+            "itemA": {
+              "categoria": "posto",
+              "valor": "Salão"
+            },
+            "itemB": {
+              "categoria": "barista",
+              "valor": "Bruno"
+            },
+            "id": "turnos-cafeteria-4#1"
+          },
+          {
+            "tipo": "T2",
+            "itemA": {
+              "categoria": "posto",
+              "valor": "Salão"
+            },
+            "itemB": {
+              "categoria": "preparo",
+              "valor": "Espresso"
+            },
+            "id": "turnos-cafeteria-4#2"
+          }
+        ]
+      },
+      {
+        "id": "turnos-cafeteria-5",
+        "texto": "Bruno trabalhou entre o barista do posto Salão e o barista que preparou o Gelado, nessa ordem.",
+        "restricoes": [
+          {
+            "tipo": "T7",
+            "itemA": {
+              "categoria": "posto",
+              "valor": "Salão"
+            },
+            "itemC": {
+              "categoria": "barista",
+              "valor": "Bruno"
+            },
+            "itemB": {
+              "categoria": "preparo",
+              "valor": "Gelado"
+            },
+            "id": "turnos-cafeteria-5#1"
+          }
+        ]
+      },
+      {
+        "id": "turnos-cafeteria-6",
+        "texto": "Nara não preparou o Espresso nem o Gelado.",
+        "restricoes": [
+          {
+            "tipo": "T2",
             "itemA": {
               "categoria": "barista",
               "valor": "Nara"
             },
             "itemB": {
               "categoria": "preparo",
-              "valor": "Filtrado"
+              "valor": "Espresso"
             },
-            "id": "turnos-cafeteria-4#1"
-          }
-        ]
-      },
-      {
-        "id": "turnos-cafeteria-5",
-        "texto": "Quem preparou o Gelado não é Tulio nem ficou no Forno.",
-        "restricoes": [
-          {
-            "tipo": "T2",
-            "itemA": {
-              "categoria": "preparo",
-              "valor": "Gelado"
-            },
-            "itemB": {
-              "categoria": "barista",
-              "valor": "Tulio"
-            },
-            "id": "turnos-cafeteria-5#1"
+            "id": "turnos-cafeteria-6#1"
           },
           {
             "tipo": "T2",
             "itemA": {
+              "categoria": "barista",
+              "valor": "Nara"
+            },
+            "itemB": {
               "categoria": "preparo",
               "valor": "Gelado"
             },
-            "itemB": {
-              "categoria": "posto",
-              "valor": "Forno"
-            },
-            "id": "turnos-cafeteria-5#2"
-          }
-        ]
-      },
-      {
-        "id": "turnos-cafeteria-6",
-        "texto": "Bruno trabalhou antes de quem ficou no Balcão.",
-        "restricoes": [
-          {
-            "tipo": "T4",
-            "itemA": {
-              "categoria": "barista",
-              "valor": "Bruno"
-            },
-            "itemB": {
-              "categoria": "posto",
-              "valor": "Balcão"
-            },
-            "id": "turnos-cafeteria-6#1"
+            "id": "turnos-cafeteria-6#2"
           }
         ]
       },
       {
         "id": "turnos-cafeteria-7",
-        "texto": "Quem ficou no Forno trabalhou antes de Bruno.",
+        "texto": "O barista do posto Forno não é Tulio.",
         "restricoes": [
           {
-            "tipo": "T11",
+            "tipo": "T2",
             "itemA": {
               "categoria": "posto",
               "valor": "Forno"
             },
             "itemB": {
               "categoria": "barista",
-              "valor": "Bruno"
+              "valor": "Tulio"
             },
             "id": "turnos-cafeteria-7#1"
           }
@@ -500,17 +534,21 @@ export const PROBLEMAS_NIVEL_2: Puzzle[] = [
       },
       {
         "id": "turnos-cafeteria-8",
-        "texto": "Quem preparou a Prensa e quem ficou no Caixa trabalharam em dias vizinhos.",
+        "texto": "O barista que preparou a Prensa trabalhou entre o barista do posto Forno e o barista que preparou o Gelado, nessa ordem.",
         "restricoes": [
           {
-            "tipo": "T5",
+            "tipo": "T7",
             "itemA": {
+              "categoria": "posto",
+              "valor": "Forno"
+            },
+            "itemC": {
               "categoria": "preparo",
               "valor": "Prensa"
             },
             "itemB": {
-              "categoria": "posto",
-              "valor": "Caixa"
+              "categoria": "preparo",
+              "valor": "Gelado"
             },
             "id": "turnos-cafeteria-8#1"
           }
@@ -525,16 +563,16 @@ export const PROBLEMAS_NIVEL_2: Puzzle[] = [
         "Ester"
       ],
       "preparo": [
-        "Gelado",
-        "Prensa",
         "Filtrado",
-        "Espresso"
+        "Prensa",
+        "Espresso",
+        "Gelado"
       ],
       "posto": [
-        "Salão",
         "Forno",
-        "Caixa",
-        "Balcão"
+        "Salão",
+        "Balcão",
+        "Caixa"
       ]
     },
     "metadata": {
@@ -546,24 +584,22 @@ export const PROBLEMAS_NIVEL_2: Puzzle[] = [
         "4+": 12
       },
       "skillWeights": {
-        "exclusion": 6,
-        "relativeOrder": 3,
-        "adjacency": 1,
-        "crossCategory": 11,
+        "exclusion": 9,
+        "relativeOrder": 2,
+        "adjacency": 0,
+        "crossCategory": 12,
         "integrationDepth": 8,
         "uncertaintyTolerance": 2
       },
       "dominantOperations": [
         "T2",
-        "T11",
-        "T4"
+        "T7",
+        "T8"
       ],
       "clueTypeDistribution": {
-        "T2": 6,
         "T8": 1,
-        "T11": 2,
-        "T4": 1,
-        "T5": 1
+        "T2": 9,
+        "T7": 2
       },
       "expectedDifficulty": 2,
       "validatedUniqueSolution": true
@@ -586,19 +622,19 @@ export const PROBLEMAS_NIVEL_2: Puzzle[] = [
         "id": "filme",
         "label": "Filme",
         "valores": [
-          "Vertigem",
-          "Correnteza",
           "Estuário",
-          "Miragem"
+          "Correnteza",
+          "Miragem",
+          "Vertigem"
         ]
       },
       {
         "id": "curador",
         "label": "Curador",
         "valores": [
-          "Otto",
-          "Vera",
           "Lena",
+          "Vera",
+          "Otto",
           "Ciro"
         ]
       },
@@ -606,17 +642,47 @@ export const PROBLEMAS_NIVEL_2: Puzzle[] = [
         "id": "genero",
         "label": "Gênero",
         "valores": [
+          "Drama",
           "Suspense",
-          "Policial",
           "Documentário",
-          "Drama"
+          "Policial"
         ]
       }
     ],
     "pistas": [
       {
         "id": "sessoes-cineclube-1",
-        "texto": "O Drama foi exibido entre o filme apresentado por Otto e o filme apresentado por Vera, nessa ordem.",
+        "texto": "O Drama não é Correnteza nem foi apresentado por Otto.",
+        "restricoes": [
+          {
+            "tipo": "T2",
+            "itemA": {
+              "categoria": "genero",
+              "valor": "Drama"
+            },
+            "itemB": {
+              "categoria": "filme",
+              "valor": "Correnteza"
+            },
+            "id": "sessoes-cineclube-1#1"
+          },
+          {
+            "tipo": "T2",
+            "itemA": {
+              "categoria": "genero",
+              "valor": "Drama"
+            },
+            "itemB": {
+              "categoria": "curador",
+              "valor": "Otto"
+            },
+            "id": "sessoes-cineclube-1#2"
+          }
+        ]
+      },
+      {
+        "id": "sessoes-cineclube-2",
+        "texto": "O Policial foi exibido entre o filme apresentado por Otto e o Documentário, nessa ordem.",
         "restricoes": [
           {
             "tipo": "T7",
@@ -626,33 +692,11 @@ export const PROBLEMAS_NIVEL_2: Puzzle[] = [
             },
             "itemC": {
               "categoria": "genero",
-              "valor": "Drama"
+              "valor": "Policial"
             },
             "itemB": {
-              "categoria": "curador",
-              "valor": "Vera"
-            },
-            "id": "sessoes-cineclube-1#1"
-          }
-        ]
-      },
-      {
-        "id": "sessoes-cineclube-2",
-        "texto": "Estuário foi exibido entre o filme apresentado por Otto e o filme apresentado por Vera, nessa ordem.",
-        "restricoes": [
-          {
-            "tipo": "T7",
-            "itemA": {
-              "categoria": "curador",
-              "valor": "Otto"
-            },
-            "itemC": {
-              "categoria": "filme",
-              "valor": "Estuário"
-            },
-            "itemB": {
-              "categoria": "curador",
-              "valor": "Vera"
+              "categoria": "genero",
+              "valor": "Documentário"
             },
             "id": "sessoes-cineclube-2#1"
           }
@@ -660,17 +704,13 @@ export const PROBLEMAS_NIVEL_2: Puzzle[] = [
       },
       {
         "id": "sessoes-cineclube-3",
-        "texto": "O filme apresentado por Lena foi exibido entre o Policial e o filme apresentado por Vera, nessa ordem.",
+        "texto": "Estuário foi apresentado por Vera.",
         "restricoes": [
           {
-            "tipo": "T7",
+            "tipo": "T1",
             "itemA": {
-              "categoria": "genero",
-              "valor": "Policial"
-            },
-            "itemC": {
-              "categoria": "curador",
-              "valor": "Lena"
+              "categoria": "filme",
+              "valor": "Estuário"
             },
             "itemB": {
               "categoria": "curador",
@@ -682,17 +722,17 @@ export const PROBLEMAS_NIVEL_2: Puzzle[] = [
       },
       {
         "id": "sessoes-cineclube-4",
-        "texto": "O filme apresentado por Ciro é um Drama.",
+        "texto": "O filme apresentado por Vera foi exibido antes de Miragem.",
         "restricoes": [
           {
-            "tipo": "T1",
+            "tipo": "T11",
             "itemA": {
               "categoria": "curador",
-              "valor": "Ciro"
+              "valor": "Vera"
             },
             "itemB": {
-              "categoria": "genero",
-              "valor": "Drama"
+              "categoria": "filme",
+              "valor": "Miragem"
             },
             "id": "sessoes-cineclube-4#1"
           }
@@ -700,17 +740,17 @@ export const PROBLEMAS_NIVEL_2: Puzzle[] = [
       },
       {
         "id": "sessoes-cineclube-5",
-        "texto": "O Policial foi exibido antes de Miragem.",
+        "texto": "O Suspense foi exibido antes do filme apresentado por Ciro.",
         "restricoes": [
           {
-            "tipo": "T4",
+            "tipo": "T11",
             "itemA": {
               "categoria": "genero",
-              "valor": "Policial"
+              "valor": "Suspense"
             },
             "itemB": {
-              "categoria": "filme",
-              "valor": "Miragem"
+              "categoria": "curador",
+              "valor": "Ciro"
             },
             "id": "sessoes-cineclube-5#1"
           }
@@ -718,72 +758,100 @@ export const PROBLEMAS_NIVEL_2: Puzzle[] = [
       },
       {
         "id": "sessoes-cineclube-6",
-        "texto": "Correnteza foi exibido entre o Drama e o Suspense, nessa ordem.",
+        "texto": "O filme apresentado por Otto e o Drama foram exibidos em horários vizinhos.",
         "restricoes": [
           {
-            "tipo": "T7",
+            "tipo": "T5",
             "itemA": {
-              "categoria": "genero",
-              "valor": "Drama"
-            },
-            "itemC": {
-              "categoria": "filme",
-              "valor": "Correnteza"
+              "categoria": "curador",
+              "valor": "Otto"
             },
             "itemB": {
               "categoria": "genero",
-              "valor": "Suspense"
+              "valor": "Drama"
             },
             "id": "sessoes-cineclube-6#1"
+          }
+        ]
+      },
+      {
+        "id": "sessoes-cineclube-7",
+        "texto": "O filme apresentado por Ciro não é um Documentário nem um Policial.",
+        "restricoes": [
+          {
+            "tipo": "T2",
+            "itemA": {
+              "categoria": "curador",
+              "valor": "Ciro"
+            },
+            "itemB": {
+              "categoria": "genero",
+              "valor": "Documentário"
+            },
+            "id": "sessoes-cineclube-7#1"
+          },
+          {
+            "tipo": "T2",
+            "itemA": {
+              "categoria": "curador",
+              "valor": "Ciro"
+            },
+            "itemB": {
+              "categoria": "genero",
+              "valor": "Policial"
+            },
+            "id": "sessoes-cineclube-7#2"
           }
         ]
       }
     ],
     "solucao": {
       "filme": [
+        "Correnteza",
         "Vertigem",
         "Estuário",
-        "Correnteza",
         "Miragem"
       ],
       "curador": [
         "Otto",
         "Ciro",
-        "Lena",
-        "Vera"
+        "Vera",
+        "Lena"
       ],
       "genero": [
-        "Policial",
+        "Suspense",
         "Drama",
-        "Documentário",
-        "Suspense"
+        "Policial",
+        "Documentário"
       ]
     },
     "metadata": {
-      "complexity": 6,
+      "complexity": 7,
       "inferenceDepthDistribution": {
         "1": 0,
-        "2": 4,
-        "3": 7,
-        "4+": 1
+        "2": 0,
+        "3": 1,
+        "4+": 11
       },
       "skillWeights": {
-        "exclusion": 0,
-        "relativeOrder": 5,
-        "adjacency": 0,
-        "crossCategory": 6,
-        "integrationDepth": 4,
+        "exclusion": 4,
+        "relativeOrder": 3,
+        "adjacency": 1,
+        "crossCategory": 9,
+        "integrationDepth": 7,
         "uncertaintyTolerance": 2
       },
       "dominantOperations": [
-        "T7",
-        "T1",
-        "T4"
+        "T2",
+        "T11",
+        "T1"
       ],
       "clueTypeDistribution": {
-        "T7": 4,
+        "T2": 4,
+        "T7": 1,
         "T1": 1,
-        "T4": 1
+        "T11": 2,
+        "T5": 1
       },
       "expectedDifficulty": 2,
       "validatedUniqueSolution": true
@@ -806,29 +874,29 @@ export const PROBLEMAS_NIVEL_2: Puzzle[] = [
         "id": "oficina",
         "label": "Oficina",
         "valores": [
-          "Fotografia",
+          "Marcenaria",
           "Tecelagem",
-          "Cerâmica",
-          "Marcenaria"
+          "Fotografia",
+          "Cerâmica"
         ]
       },
       {
         "id": "mediador",
         "label": "Mediador",
         "valores": [
-          "Sol",
+          "Iuri",
           "Alma",
-          "Zeca",
-          "Iuri"
+          "Sol",
+          "Zeca"
         ]
       },
       {
         "id": "espaco",
         "label": "Espaço",
         "valores": [
+          "Galpão",
           "Ateliê",
           "Pátio",
-          "Galpão",
           "Mezanino"
         ]
       }
@@ -836,69 +904,59 @@ export const PROBLEMAS_NIVEL_2: Puzzle[] = [
     "pistas": [
       {
         "id": "oficinas-centro-cultural-1",
-        "texto": "A oficina que ocupou o Pátio aconteceu entre a oficina que ocupou o Galpão e a oficina mediada por Sol, nessa ordem.",
+        "texto": "A oficina de Marcenaria não ocupou o Galpão, nem foi mediada por Sol, nem por Zeca.",
         "restricoes": [
           {
-            "tipo": "T7",
+            "tipo": "T2",
             "itemA": {
+              "categoria": "oficina",
+              "valor": "Marcenaria"
+            },
+            "itemB": {
               "categoria": "espaco",
               "valor": "Galpão"
             },
-            "itemC": {
-              "categoria": "espaco",
-              "valor": "Pátio"
+            "id": "oficinas-centro-cultural-1#1"
+          },
+          {
+            "tipo": "T2",
+            "itemA": {
+              "categoria": "oficina",
+              "valor": "Marcenaria"
             },
             "itemB": {
               "categoria": "mediador",
               "valor": "Sol"
             },
-            "id": "oficinas-centro-cultural-1#1"
-          }
-        ]
-      },
-      {
-        "id": "oficinas-centro-cultural-2",
-        "texto": "A oficina mediada por Zeca não ocupou o Ateliê nem o Mezanino.",
-        "restricoes": [
-          {
-            "tipo": "T2",
-            "itemA": {
-              "categoria": "mediador",
-              "valor": "Zeca"
-            },
-            "itemB": {
-              "categoria": "espaco",
-              "valor": "Ateliê"
-            },
-            "id": "oficinas-centro-cultural-2#1"
+            "id": "oficinas-centro-cultural-1#2"
           },
           {
             "tipo": "T2",
             "itemA": {
+              "categoria": "oficina",
+              "valor": "Marcenaria"
+            },
+            "itemB": {
               "categoria": "mediador",
               "valor": "Zeca"
             },
-            "itemB": {
-              "categoria": "espaco",
-              "valor": "Mezanino"
-            },
-            "id": "oficinas-centro-cultural-2#2"
+            "id": "oficinas-centro-cultural-1#3"
           }
         ]
       },
       {
         "id": "oficinas-centro-cultural-3",
-        "texto": "A oficina mediada por Sol é a oficina de Tecelagem.",
+        "texto": "A oficina que ocupou o Ateliê é a oficina de Cerâmica.",
         "restricoes": [
           {
             "tipo": "T8",
             "itemA": {
-              "categoria": "mediador",
-              "valor": "Sol"
+              "categoria": "espaco",
+              "valor": "Ateliê"
             },
             "itemB": {
               "categoria": "oficina",
-              "valor": "Tecelagem"
+              "valor": "Cerâmica"
             },
             "id": "oficinas-centro-cultural-3#1"
           }
@@ -906,35 +964,47 @@ export const PROBLEMAS_NIVEL_2: Puzzle[] = [
       },
       {
         "id": "oficinas-centro-cultural-4",
-        "texto": "A oficina mediada por Iuri aconteceu antes da oficina de Marcenaria.",
+        "texto": "A oficina que ocupou o Galpão não foi mediada por Sol nem por Zeca.",
         "restricoes": [
           {
-            "tipo": "T11",
+            "tipo": "T2",
             "itemA": {
-              "categoria": "mediador",
-              "valor": "Iuri"
+              "categoria": "espaco",
+              "valor": "Galpão"
             },
             "itemB": {
-              "categoria": "oficina",
-              "valor": "Marcenaria"
+              "categoria": "mediador",
+              "valor": "Sol"
             },
             "id": "oficinas-centro-cultural-4#1"
+          },
+          {
+            "tipo": "T2",
+            "itemA": {
+              "categoria": "espaco",
+              "valor": "Galpão"
+            },
+            "itemB": {
+              "categoria": "mediador",
+              "valor": "Zeca"
+            },
+            "id": "oficinas-centro-cultural-4#2"
           }
         ]
       },
       {
         "id": "oficinas-centro-cultural-5",
-        "texto": "A oficina de Fotografia não foi mediada por Alma.",
+        "texto": "A oficina mediada por Alma não é a oficina de Marcenaria.",
         "restricoes": [
           {
             "tipo": "T2",
             "itemA": {
-              "categoria": "oficina",
-              "valor": "Fotografia"
-            },
-            "itemB": {
               "categoria": "mediador",
               "valor": "Alma"
+            },
+            "itemB": {
+              "categoria": "oficina",
+              "valor": "Marcenaria"
             },
             "id": "oficinas-centro-cultural-5#1"
           }
@@ -942,103 +1012,7 @@ export const PROBLEMAS_NIVEL_2: Puzzle[] = [
       },
       {
         "id": "oficinas-centro-cultural-6",
-        "texto": "A oficina que ocupou o Pátio é a oficina de Marcenaria.",
-        "restricoes": [
-          {
-            "tipo": "T1",
-            "itemA": {
-              "categoria": "espaco",
-              "valor": "Pátio"
-            },
-            "itemB": {
-              "categoria": "oficina",
-              "valor": "Marcenaria"
-            },
-            "id": "oficinas-centro-cultural-6#1"
-          }
-        ]
-      },
-      {
-        "id": "oficinas-centro-cultural-7",
-        "texto": "A oficina de Cerâmica não foi mediada por Sol nem ocupou o Mezanino.",
-        "restricoes": [
-          {
-            "tipo": "T2",
-            "itemA": {
-              "categoria": "oficina",
-              "valor": "Cerâmica"
-            },
-            "itemB": {
-              "categoria": "mediador",
-              "valor": "Sol"
-            },
-            "id": "oficinas-centro-cultural-7#1"
-          },
-          {
-            "tipo": "T2",
-            "itemA": {
-              "categoria": "oficina",
-              "valor": "Cerâmica"
-            },
-            "itemB": {
-              "categoria": "espaco",
-              "valor": "Mezanino"
-            },
-            "id": "oficinas-centro-cultural-7#2"
-          }
-        ]
-      },
-      {
-        "id": "oficinas-centro-cultural-8",
-        "texto": "A oficina que ocupou o Ateliê não foi mediada por Zeca nem por Iuri.",
-        "restricoes": [
-          {
-            "tipo": "T2",
-            "itemA": {
-              "categoria": "espaco",
-              "valor": "Ateliê"
-            },
-            "itemB": {
-              "categoria": "mediador",
-              "valor": "Zeca"
-            },
-            "id": "oficinas-centro-cultural-8#1"
-          },
-          {
-            "tipo": "T2",
-            "itemA": {
-              "categoria": "espaco",
-              "valor": "Ateliê"
-            },
-            "itemB": {
-              "categoria": "mediador",
-              "valor": "Iuri"
-            },
-            "id": "oficinas-centro-cultural-8#2"
-          }
-        ]
-      },
-      {
-        "id": "oficinas-centro-cultural-9",
-        "texto": "A oficina que ocupou o Mezanino não foi mediada por Iuri.",
-        "restricoes": [
-          {
-            "tipo": "T2",
-            "itemA": {
-              "categoria": "espaco",
-              "valor": "Mezanino"
-            },
-            "itemB": {
-              "categoria": "mediador",
-              "valor": "Iuri"
-            },
-            "id": "oficinas-centro-cultural-9#1"
-          }
-        ]
-      },
-      {
-        "id": "oficinas-centro-cultural-10",
-        "texto": "A oficina que ocupou o Galpão aconteceu imediatamente antes da oficina mediada por Alma.",
+        "texto": "A oficina que ocupou o Galpão aconteceu imediatamente antes da oficina de Fotografia.",
         "restricoes": [
           {
             "tipo": "T6",
@@ -1047,36 +1021,58 @@ export const PROBLEMAS_NIVEL_2: Puzzle[] = [
               "valor": "Galpão"
             },
             "itemB": {
+              "categoria": "oficina",
+              "valor": "Fotografia"
+            },
+            "id": "oficinas-centro-cultural-6#1"
+          }
+        ]
+      },
+      {
+        "id": "oficinas-centro-cultural-7",
+        "texto": "A oficina mediada por Zeca aconteceu entre a oficina que ocupou o Mezanino e a oficina mediada por Alma, nessa ordem.",
+        "restricoes": [
+          {
+            "tipo": "T7",
+            "itemA": {
+              "categoria": "espaco",
+              "valor": "Mezanino"
+            },
+            "itemC": {
+              "categoria": "mediador",
+              "valor": "Zeca"
+            },
+            "itemB": {
               "categoria": "mediador",
               "valor": "Alma"
             },
-            "id": "oficinas-centro-cultural-10#1"
+            "id": "oficinas-centro-cultural-7#1"
           }
         ]
       }
     ],
     "solucao": {
       "oficina": [
-        "Fotografia",
-        "Cerâmica",
         "Marcenaria",
-        "Tecelagem"
+        "Cerâmica",
+        "Tecelagem",
+        "Fotografia"
       ],
       "mediador": [
         "Iuri",
-        "Alma",
         "Zeca",
+        "Alma",
         "Sol"
       ],
       "espaco": [
-        "Galpão",
+        "Mezanino",
         "Ateliê",
-        "Pátio",
-        "Mezanino"
+        "Galpão",
+        "Pátio"
       ]
     },
     "metadata": {
-      "complexity": 10,
+      "complexity": 6,
       "inferenceDepthDistribution": {
         "1": 0,
         "2": 0,
@@ -1084,25 +1080,23 @@ export const PROBLEMAS_NIVEL_2: Puzzle[] = [
         "4+": 12
       },
       "skillWeights": {
-        "exclusion": 8,
-        "relativeOrder": 2,
+        "exclusion": 6,
+        "relativeOrder": 1,
         "adjacency": 1,
-        "crossCategory": 13,
-        "integrationDepth": 10,
+        "crossCategory": 9,
+        "integrationDepth": 6,
         "uncertaintyTolerance": 2
       },
       "dominantOperations": [
         "T2",
-        "T1",
-        "T11"
+        "T6",
+        "T7"
       ],
       "clueTypeDistribution": {
-        "T7": 1,
-        "T2": 8,
+        "T2": 6,
         "T8": 1,
-        "T11": 1,
-        "T1": 1,
-        "T6": 1
+        "T6": 1,
+        "T7": 1
       },
       "expectedDifficulty": 2,
       "validatedUniqueSolution": true

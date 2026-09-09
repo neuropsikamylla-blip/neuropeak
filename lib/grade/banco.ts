@@ -1,7 +1,10 @@
 import { pistaSimples, type Puzzle, type PuzzleMetadata } from "./tipos";
 import { PROBLEMAS_NIVEL_2 } from "./problemas/nivel2";
+import { PROBLEMAS_NIVEL_3 } from "./problemas/nivel3";
+import { PROBLEMAS_NIVEL_4 } from "./problemas/nivel4";
+import { PROBLEMAS_NIVEL_5 } from "./problemas/nivel5";
 
-export { PROBLEMAS_NIVEL_2 };
+export { PROBLEMAS_NIVEL_2, PROBLEMAS_NIVEL_3, PROBLEMAS_NIVEL_4, PROBLEMAS_NIVEL_5 };
 
 function metadata(
   complexity: number,
