@@ -330,37 +330,8 @@ describe("cobertura essencial e ordem declarada", () => {
   });
 });
 
-describe("banco atual — testes que documentam defeitos deliberadamente", () => {
-  it("biblioteca-encontros reprova pelos motivos estruturais exatos", () => {
-    const biblioteca = PROBLEMAS_GRADE.find((puzzle) => puzzle.id === "biblioteca-encontros");
-    expect(biblioteca).toBeDefined();
+describe("banco atual", () => {
 
-    // Este teste deve cair quando o banco for refeito: nesse momento, cair será sinal de sucesso,
-    // não uma quebra da régua. As expectativas então devem ser substituídas pelos novos puzzles.
-    expect(avaliarEstrutura(biblioteca as Puzzle).motivos).toEqual([
-      "O grafo de categorias possui 4 componentes independentes.",
-      "Categorias com grau menor que 2: Visitante, Sala, Tema, Horário.",
-      "As restrições cross-category (0) não predominam sobre as intracategoria (8).",
-      "Categorias isomorfas ao eixo de posições: Horário.",
-      "Categorias resolvíveis apenas com restrições próprias: Visitante, Sala, Tema, Horário.",
-      "4 categorias seguem a ordem declarada; o máximo permitido é 1.",
-    ]);
-  });
-
-  it("museu-mostra-noturna reprova pelos motivos estruturais exatos", () => {
-    const museu = PROBLEMAS_GRADE.find((puzzle) => puzzle.id === "museu-mostra-noturna");
-    expect(museu).toBeDefined();
-
-    // Este teste deve cair quando o banco for refeito: nesse momento, cair será sinal de sucesso,
-    // não uma quebra da régua. As expectativas então devem ser substituídas pelos novos puzzles.
-    expect(avaliarEstrutura(museu as Puzzle).motivos).toEqual([
-      "Categorias com grau menor que 2: Horário.",
-      "O grafo de categorias possui 1 ponte.",
-      "Categorias isomorfas ao eixo de posições: Horário.",
-      "Categorias resolvíveis apenas com restrições próprias: Responsável.",
-      "4 categorias seguem a ordem declarada; o máximo permitido é 1.",
-    ]);
-  });
 
   it("tutorial passa por isenção, mas todas as medidas continuam calculadas", () => {
     const relatorio = avaliarEstrutura(PROBLEMA_TUTORIAL, true);

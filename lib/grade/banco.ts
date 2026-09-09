@@ -76,135 +76,44 @@ export const PROBLEMA_TUTORIAL: Puzzle = {
   ),
 };
 
-const PROBLEMA_BIBLIOTECA: Puzzle = {
-  id: "biblioteca-encontros",
-  titulo: "Encontros na biblioteca",
-  contexto: "Quatro encontros aconteceram em sequência. Organize visitantes, salas, temas e horários.",
-  nivel: 2,
-  posicoes: 4,
-  categorias: [
-    { id: "visitante", label: "Visitante", valores: ["Caio", "Lia", "Mauro", "Nina"] },
-    { id: "sala", label: "Sala", valores: ["Acervo", "Leitura", "Mídia", "Pesquisa"] },
-    { id: "tema", label: "Tema", valores: ["História", "Arte", "Ciência", "Viagem"] },
-    { id: "horario", label: "Horário", valores: ["14h", "15h", "16h", "17h"] },
-  ],
-  pistas: [
-    pistaSimples("biblioteca-1", "Lia chegou entre Caio e Mauro, nessa ordem.", { tipo: "T7",
-      itemA: { categoria: "visitante", valor: "Caio" }, itemC: { categoria: "visitante", valor: "Lia" }, itemB: { categoria: "visitante", valor: "Mauro" },
-    }),
-    pistaSimples("biblioteca-2", "Mauro chegou entre Lia e Nina, nessa ordem.", { tipo: "T7",
-      itemA: { categoria: "visitante", valor: "Lia" }, itemC: { categoria: "visitante", valor: "Mauro" }, itemB: { categoria: "visitante", valor: "Nina" },
-    }),
-    pistaSimples("biblioteca-3", "Leitura fica entre Acervo e Mídia, nessa ordem.", { tipo: "T7",
-      itemA: { categoria: "sala", valor: "Acervo" }, itemC: { categoria: "sala", valor: "Leitura" }, itemB: { categoria: "sala", valor: "Mídia" },
-    }),
-    pistaSimples("biblioteca-4", "Mídia fica entre Leitura e Pesquisa, nessa ordem.", { tipo: "T7",
-      itemA: { categoria: "sala", valor: "Leitura" }, itemC: { categoria: "sala", valor: "Mídia" }, itemB: { categoria: "sala", valor: "Pesquisa" },
-    }),
-    pistaSimples("biblioteca-5", "Arte aparece entre História e Ciência, nessa ordem.", { tipo: "T7",
-      itemA: { categoria: "tema", valor: "História" }, itemC: { categoria: "tema", valor: "Arte" }, itemB: { categoria: "tema", valor: "Ciência" },
-    }),
-    pistaSimples("biblioteca-6", "Ciência aparece entre Arte e Viagem, nessa ordem.", { tipo: "T7",
-      itemA: { categoria: "tema", valor: "Arte" }, itemC: { categoria: "tema", valor: "Ciência" }, itemB: { categoria: "tema", valor: "Viagem" },
-    }),
-    pistaSimples("biblioteca-7", "15h fica entre 14h e 16h, nessa ordem.", { tipo: "T7",
-      itemA: { categoria: "horario", valor: "14h" }, itemC: { categoria: "horario", valor: "15h" }, itemB: { categoria: "horario", valor: "16h" },
-    }),
-    pistaSimples("biblioteca-8", "16h fica entre 15h e 17h, nessa ordem.", { tipo: "T7",
-      itemA: { categoria: "horario", valor: "15h" }, itemC: { categoria: "horario", valor: "16h" }, itemB: { categoria: "horario", valor: "17h" },
-    }),
-  ],
-  solucao: {
-    visitante: ["Caio", "Lia", "Mauro", "Nina"],
-    sala: ["Acervo", "Leitura", "Mídia", "Pesquisa"],
-    tema: ["História", "Arte", "Ciência", "Viagem"],
-    horario: ["14h", "15h", "16h", "17h"],
-  },
-  metadata: metadata(
-    2,
-    2,
-    { "1": 0, "2": 16, "3": 0, "4+": 0 },
-    { exclusion: 0, relativeOrder: 3, adjacency: 0, crossCategory: 0, integrationDepth: 2, uncertaintyTolerance: 1 },
-    ["T7"],
-    { T7: 8 }
-  ),
-};
+// `biblioteca-encontros` e `museu-mostra-noturna` foram REMOVIDOS em 09/set, por decisão dela:
+// reprovavam na régua estrutural e o defeito era estrutural, não de ajuste. Cada critério da régua
+// tem prova sintética própria em `estrutura.test.ts`, então nada de evidência saiu com eles.
+// O histórico do que eram e por que caíram está no PROGRESSO.md.
 
-const PROBLEMA_MUSEU: Puzzle = {
-  id: "museu-mostra-noturna",
-  titulo: "Mostra noturna no museu",
-  contexto: "Quatro responsáveis conduziram obras por salas e horários diferentes. Reconstrua a sequência.",
-  nivel: 4,
-  posicoes: 4,
-  categorias: [
-    { id: "responsavel", label: "Responsável", valores: ["Gabi", "Hugo", "Iara", "João"] },
-    { id: "obra", label: "Obra", valores: ["Aurora", "Bruma", "Cais", "Duna"] },
-    { id: "sala", label: "Sala", valores: ["Norte", "Sul", "Leste", "Oeste"] },
-    { id: "horario", label: "Horário", valores: ["18h", "19h", "20h", "21h"] },
-  ],
-  pistas: [
-    pistaSimples("museu-1", "A obra Bruma foi conduzida por Hugo.", { tipo: "T8",
-      itemA: { categoria: "obra", valor: "Bruma" }, itemB: { categoria: "responsavel", valor: "Hugo" },
-    }),
-    pistaSimples("museu-2", "A sala Leste recebeu a obra Cais.", { tipo: "T8",
-      itemA: { categoria: "sala", valor: "Leste" }, itemB: { categoria: "obra", valor: "Cais" },
-    }),
-    pistaSimples("museu-3", "Hugo participou da segunda visita.", { tipo: "T3",
-      item: { categoria: "responsavel", valor: "Hugo" }, posicao: 2,
-    }),
-    pistaSimples("museu-4", "A obra Aurora ficou na sala Norte.", { tipo: "T8",
-      itemA: { categoria: "obra", valor: "Aurora" }, itemB: { categoria: "sala", valor: "Norte" },
-    }),
-    pistaSimples("museu-5", "A visita das 19h ocorreu na sala Sul.", { tipo: "T8",
-      itemA: { categoria: "horario", valor: "19h" }, itemB: { categoria: "sala", valor: "Sul" },
-    }),
-    pistaSimples("museu-6", "Iara participou entre Gabi e João, nessa ordem.", { tipo: "T7",
-      itemA: { categoria: "responsavel", valor: "Gabi" }, itemC: { categoria: "responsavel", valor: "Iara" }, itemB: { categoria: "responsavel", valor: "João" },
-    }),
-    pistaSimples("museu-7", "Gabi conduziu a obra Aurora.", { tipo: "T8",
-      itemA: { categoria: "responsavel", valor: "Gabi" }, itemB: { categoria: "obra", valor: "Aurora" },
-    }),
-    pistaSimples("museu-8", "A sala Norte recebeu a visita das 18h.", { tipo: "T8",
-      itemA: { categoria: "sala", valor: "Norte" }, itemB: { categoria: "horario", valor: "18h" },
-    }),
-    pistaSimples("museu-9", "Iara conduziu a obra Cais.", { tipo: "T8",
-      itemA: { categoria: "responsavel", valor: "Iara" }, itemB: { categoria: "obra", valor: "Cais" },
-    }),
-    pistaSimples("museu-10", "A obra Bruma ficou na sala Sul.", { tipo: "T8",
-      itemA: { categoria: "obra", valor: "Bruma" }, itemB: { categoria: "sala", valor: "Sul" },
-    }),
-    pistaSimples("museu-11", "A visita das 20h ocorreu na sala Leste.", { tipo: "T8",
-      itemA: { categoria: "horario", valor: "20h" }, itemB: { categoria: "sala", valor: "Leste" },
-    }),
-    {
-      id: "museu-12",
-      texto: "Iara não conduziu a obra Duna nem esteve na sala Oeste.",
-      restricoes: [
-        { id: "museu-12#1", tipo: "T2", itemA: { categoria: "responsavel", valor: "Iara" }, itemB: { categoria: "obra", valor: "Duna" } },
-        { id: "museu-12#2", tipo: "T2", itemA: { categoria: "responsavel", valor: "Iara" }, itemB: { categoria: "sala", valor: "Oeste" } },
-      ],
-    },
-  ],
-  solucao: {
-    responsavel: ["Gabi", "Hugo", "Iara", "João"],
-    obra: ["Aurora", "Bruma", "Cais", "Duna"],
-    sala: ["Norte", "Sul", "Leste", "Oeste"],
-    horario: ["18h", "19h", "20h", "21h"],
-  },
-  metadata: metadata(
-    4,
-    4,
-    { "1": 1, "2": 5, "3": 6, "4+": 4 },
-    { exclusion: 0, relativeOrder: 2, adjacency: 0, crossCategory: 3, integrationDepth: 3, uncertaintyTolerance: 2 },
-    ["T8", "T7"],
-    { T3: 1, T7: 1, T8: 9 }
-  ),
-};
+/** O seed bank validado: 16 problemas, quatro por nível, todos aprovados pela régua. */
+export const PROBLEMAS_GRADE: readonly Puzzle[] = [
+  ...PROBLEMAS_NIVEL_2,
+  ...PROBLEMAS_NIVEL_3,
+  ...PROBLEMAS_NIVEL_4,
+  ...PROBLEMAS_NIVEL_5,
+];
 
-export const PROBLEMAS_GRADE: readonly Puzzle[] = [PROBLEMA_BIBLIOTECA, PROBLEMA_MUSEU];
 export const BANCO_GRADE: readonly Puzzle[] = [PROBLEMA_TUTORIAL, ...PROBLEMAS_GRADE];
 
-/** Mantém a seleção determinística enquanto o banco desta fase tem só dois desafios. */
-export function selecionarProblema(difficulty: number): Puzzle {
-  return difficulty >= 7 ? PROBLEMA_MUSEU : PROBLEMA_BIBLIOTECA;
+/**
+ * A dificuldade do paciente (1–13, teto do banco) vira o NÍVEL do problema. As faixas são largas
+ * de propósito: quatro problemas por nível dão margem para repetir a mesma exigência cognitiva
+ * com conteúdo diferente antes de subir a carga.
+ */
+export function nivelDaDificuldade(difficulty: number): Puzzle["nivel"] {
+  if (difficulty <= 3) return 2;
+  if (difficulty <= 6) return 3;
+  if (difficulty <= 9) return 4;
+  return 5;
+}
+
+/**
+ * Escolhe o próximo problema do nível, pulando os já usados.
+ *
+ * `usados` existe para a sequência dentro da sessão — misto → focalizado → transferência — que
+ * é a fatia da dosagem, ainda pendente. Hoje a tela chama sem histórico e recebe o primeiro do
+ * nível; quando a sessão passar a encadear problemas, basta passar a lista, sem mudar a tela.
+ * Esgotados os do nível, recomeça: repetir conteúdo é melhor do que devolver nada.
+ */
+export function selecionarProblema(difficulty: number, usados: readonly string[] = []): Puzzle {
+  const nivel = nivelDaDificuldade(difficulty);
+  const doNivel = PROBLEMAS_GRADE.filter((puzzle) => puzzle.nivel === nivel);
+  if (doNivel.length === 0) throw new Error(`O banco não tem problema de nível ${nivel}.`);
+  return doNivel.find((puzzle) => !usados.includes(puzzle.id)) ?? doNivel[0];
 }

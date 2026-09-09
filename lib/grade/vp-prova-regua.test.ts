@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { BANCO_GRADE, PROBLEMA_TUTORIAL } from "./banco";
+import { BANCO_GRADE, PROBLEMAS_GRADE } from "./banco";
 import { avaliarEstrutura } from "./estrutura";
 import { pistaSimples, type Pista, type Puzzle } from "./tipos";
 
@@ -69,28 +69,21 @@ describe("prova independente — detecção de pontes", () => {
   });
 });
 
-describe("prova independente — os puzzles reais reprovam", () => {
-  it("biblioteca e museu REPROVAM; o tutorial passa por isenção", () => {
-    for (const p of BANCO_GRADE) {
-      const ehTutorial = p.id === PROBLEMA_TUTORIAL.id;
-      const r = avaliarEstrutura(p, ehTutorial);
-      expect(r.aprovado, `${p.id}`).toBe(ehTutorial);
+describe("prova independente — o banco vivo passa inteiro", () => {
+  it("todos os problemas servidos ao paciente são aprovados pela régua", () => {
+    // Substitui os dois testes que afirmavam o defeito de `biblioteca-encontros` e
+    // `museu-mostra-noturna`: eles foram REMOVIDOS do banco em 09/set, por decisão dela.
+    // A prova de cada critério continua viva, sintética, em `estrutura.test.ts`.
+    expect(PROBLEMAS_GRADE.length).toBeGreaterThanOrEqual(16);
+    for (const puzzle of PROBLEMAS_GRADE) {
+      const relatorio = avaliarEstrutura(puzzle);
+      expect(relatorio.aprovado, `${puzzle.id}: ${relatorio.motivos.join(" | ")}`).toBe(true);
     }
   });
 
-  it("a biblioteca reprova pelo defeito que ela apontou, nomeadamente", () => {
-    const r = avaliarEstrutura(BANCO_GRADE.find((p) => p.id === "biblioteca-encontros")!);
-    const motivos = r.motivos.join(" | ");
-    expect(motivos, "componentes independentes").toMatch(/component/i);
-    expect(motivos, "categoria que se resolve sozinha").toMatch(/sozinh|independente/i);
-    expect(r.restricoesCrossCategory).toBe(0);
-    expect(r.restricoesIntracategoria).toBe(8);
-  });
-
-  it("o museu reprova pela PONTE — o critério que só existe por causa da correção dela", () => {
-    const r = avaliarEstrutura(BANCO_GRADE.find((p) => p.id === "museu-mostra-noturna")!);
-    expect(r.componentes, "o museu é conectado, por isso o grafo sozinho não o pegaria").toHaveLength(1);
-    expect(r.pontes, "sem o critério de ponte, este defeito passaria").toBeGreaterThan(0);
-    expect(r.aprovado).toBe(false);
+  it("os problemas aposentados não voltam pela porta dos fundos", () => {
+    const ids = BANCO_GRADE.map((puzzle) => puzzle.id);
+    expect(ids).not.toContain("biblioteca-encontros");
+    expect(ids).not.toContain("museu-mostra-noturna");
   });
 });

@@ -22,9 +22,16 @@ import {
   type RegistroVerificacao,
 } from "./index";
 
-describe("banco da Grade Dedutiva — Fase 3", () => {
-  it("prova com o solver que os três problemas têm solução única", () => {
-    expect(BANCO_GRADE).toHaveLength(3);
+describe("banco da Grade Dedutiva", () => {
+  it("prova com o solver que TODO problema do banco tem solução única", () => {
+    // Eram 3 na fase 3; hoje são o tutorial mais os 16 do seed bank. A asserção deixou de fixar
+    // um número e passou a exigir o tutorial + quatro problemas por nível, de 2 a 5 — assim ela
+    // continua valendo quando o banco crescer, sem virar contagem a corrigir a cada entrega.
+    expect(BANCO_GRADE.length).toBeGreaterThanOrEqual(17);
+    for (const nivel of [2, 3, 4, 5] as const) {
+      expect(BANCO_GRADE.filter((puzzle) => puzzle.nivel === nivel).length, `nível ${nivel}`)
+        .toBeGreaterThanOrEqual(4);
+    }
     expect(BANCO_GRADE.map((puzzle) => [puzzle.id, temSolucaoUnica(puzzle)])).toEqual(
       BANCO_GRADE.map((puzzle) => [puzzle.id, true])
     );

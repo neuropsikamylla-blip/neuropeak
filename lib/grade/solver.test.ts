@@ -433,11 +433,17 @@ describe("provas adicionais da Fase 2", () => {
 });
 
 describe("pistas compostas e rótulos de posição", () => {
-  it("a pista composta do museu preserva a solução única", () => {
-    const museu = PROBLEMAS_GRADE.find((puzzle) => puzzle.id === "museu-mostra-noturna");
+  it("as pistas compostas do banco preservam a solução única", () => {
+    // Era o museu, removido em 09/set. Agora vale para TODO puzzle do banco que tenha pista
+    // composta — cobertura maior do que a de antes, não menor.
+    const comCompostas = PROBLEMAS_GRADE.filter((puzzle) =>
+      puzzle.pistas.some((pista) => pista.restricoes.length > 1)
+    );
 
-    expect(museu).toBeDefined();
-    expect(temSolucaoUnica(museu!)).toBe(true);
+    expect(comCompostas.length).toBeGreaterThan(0);
+    for (const puzzle of comCompostas) {
+      expect(temSolucaoUnica(puzzle), puzzle.id).toBe(true);
+    }
   });
 
   it("uma pista composta restringe como duas pistas simples equivalentes", () => {
