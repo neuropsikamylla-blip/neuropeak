@@ -22331,3 +22331,6 @@ e ai?
 
 ## 09/09/2026 18:04
 limpa o que tinha do antigo e mantem somente esse novo.
+
+## 09/09/2026 18:11
+entao pode mandar publicar
