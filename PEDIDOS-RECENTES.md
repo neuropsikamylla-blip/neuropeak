@@ -1,20 +1,6 @@
 # As 3 ultimas especificacoes dela (automatico; a mais nova por ultimo)
 # Na retomada: ler as 3, conectar com PROGRESSO.md e git, declarar e seguir.
 
-## 09/09/2026 16:43
-Tutorial aprovado visual e funcionalmente. Não mexer mais na estrutura desta tela.
-Manter:
-pistas sempre visíveis;
-possibilidade de riscar/restaurar manualmente;
-uma única escolha por célula;
-possibilidade de trocar a escolha;
-grade por posição;
-“Verificar raciocínio” disponível livremente no tutorial;
-“Concluir” sem revelar solução.
-O tutorial pode continuar com raciocínio simples, porque sua função é ensinar a mecânica.
-A exigência de pistas cross-category, integração profunda e estrutura conectada começa nos problemas reais, não aqui.
-Nos problemas reais, aplicar a limitação progressiva do “Verificar raciocínio” que já definimos.
-
 ## 09/09/2026 17:45
 <task-notification>
 <task-id>bmzw4t0nt</task-id>
@@ -26,3 +12,6 @@ Nos problemas reais, aplicar a limitação progressiva do “Verificar raciocín
 
 ## 09/09/2026 18:04
 limpa o que tinha do antigo e mantem somente esse novo.
+
+## 09/09/2026 18:15
+RESOLVA TUDO CLAUDE quero isso funcionando em 10 min
