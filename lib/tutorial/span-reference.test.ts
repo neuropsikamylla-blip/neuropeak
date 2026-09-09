@@ -362,6 +362,7 @@ describe("o Span Inverso continua na fábrica compartilhada", () => {
     expect(convertidos.sort()).toEqual([
       "certo-ou-errado",
       "cubo-corsi",
+      "deductive-grid",
       "desafio-supermercado",
       "dual-task",
       "focus-agents",
@@ -604,6 +605,7 @@ describe("T1 congelada — 2. sem emoji no framework do tutorial", () => {
     "lib/tutorial/definitions/conjunto-selecao.tsx",
     "lib/tutorial/definitions/estimulo-continuo.tsx",
     "lib/tutorial/definitions/focus-agents.tsx",
+    "lib/tutorial/definitions/grade-dedutiva.tsx",
     "lib/tutorial/definitions/mot.tsx",
     "lib/tutorial/definitions/sequencia-ordenada.tsx",
     "lib/tutorial/definitions/span-numerico.tsx",

@@ -120,7 +120,7 @@ describe("regra 8 — conclusão grava, revisão não", () => {
 
   it("revisão não produz tutorialCompletedAt", () => {
     // Sem registro não há requisição, e sem requisição a coluna não é tocada.
-    expect(completionRecordFor(true, 1)).toBeNull();
+    expect(completionRecordFor(true, 2)).toBeNull();
   });
 
   it("revisão não produz tutorialVersion", () => {

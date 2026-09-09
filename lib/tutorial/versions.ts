@@ -20,7 +20,7 @@ export const TUTORIAL_VERSIONS: Readonly<Record<string, number>> = Object.freeze
   "ordem-historia": 1,
   "compra-multifuncional": 1,
   "task-switching": 1,
-  "deductive-grid": 1,
+  "deductive-grid": 2,
   "letras-sequencia": 1,
   "sequencia-itens": 1,
   "padroes-rotacao": 1,

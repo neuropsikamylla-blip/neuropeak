@@ -12,8 +12,13 @@ describe("catálogo de versões de tutorial", () => {
     expect(versionedIds).toEqual(canonicalIds);
   });
 
-  it("mantém os três reformulados em 2 e todos os demais em 1", () => {
-    const reformulated = new Set(["vigilancia", "focus-agents", "informacao-em-foco"]);
+  it("mantém os quatro reformulados em 2 e todos os demais em 1", () => {
+    const reformulated = new Set([
+      "vigilancia",
+      "focus-agents",
+      "informacao-em-foco",
+      "deductive-grid",
+    ]);
 
     for (const [exerciseId, version] of Object.entries(TUTORIAL_VERSIONS)) {
       expect(version, exerciseId).toBe(reformulated.has(exerciseId) ? 2 : 1);

@@ -45,6 +45,7 @@ import {
 import { focusAgentsTutorial } from "@/lib/tutorial/definitions/focus-agents";
 import { motTutorial } from "@/lib/tutorial/definitions/mot";
 import { vigilanciaTutorial } from "@/lib/tutorial/definitions/vigilancia";
+import { gradeDedutivaTutorial } from "@/lib/tutorial/definitions/grade-dedutiva";
 import type { TutorialDefinition } from "@/lib/tutorial/types";
 import type { TutorialState } from "@/lib/tutorial/state";
 
@@ -74,6 +75,7 @@ const TUTORIAIS_POR_EXERCICIO: Readonly<Record<string, TutorialDefinition>> = Ob
   "mot": motTutorial,
   "certo-ou-errado": certoOuErradoTutorial,
   "focus-agents": focusAgentsTutorial,
+  "deductive-grid": gradeDedutivaTutorial,
 });
 
 function ExerciseLoader() {
