@@ -22299,3 +22299,17 @@ e agora o que devo fazer?
 
 ## 09/09/2026 16:24
 onde posso ver?
+
+## 09/09/2026 16:43
+Tutorial aprovado visual e funcionalmente. Não mexer mais na estrutura desta tela.
+Manter:
+pistas sempre visíveis;
+possibilidade de riscar/restaurar manualmente;
+uma única escolha por célula;
+possibilidade de trocar a escolha;
+grade por posição;
+“Verificar raciocínio” disponível livremente no tutorial;
+“Concluir” sem revelar solução.
+O tutorial pode continuar com raciocínio simples, porque sua função é ensinar a mecânica.
+A exigência de pistas cross-category, integração profunda e estrutura conectada começa nos problemas reais, não aqui.
+Nos problemas reais, aplicar a limitação progressiva do “Verificar raciocínio” que já definimos.
