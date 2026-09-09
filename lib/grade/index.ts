@@ -22,6 +22,16 @@ export type {
 } from "./estrutura";
 export { BANCO_GRADE, PROBLEMA_TUTORIAL, PROBLEMAS_GRADE, selecionarProblema } from "./banco";
 export {
+  DURACAO_SESSAO_GRADE_MS,
+  agregarSessaoGrade,
+} from "./sessao";
+export type {
+  AgregadoSessaoGrade,
+  EventoPistaGrade,
+  MetadataSessaoGrade,
+  RegistroProblemaGrade,
+} from "./sessao";
+export {
   CONFIGURACAO_VERIFICACOES,
   MENSAGEM_COM_INCOMPATIBILIDADE,
   MENSAGEM_SEM_INCOMPATIBILIDADE,

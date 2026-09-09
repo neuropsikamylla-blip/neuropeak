@@ -106,9 +106,8 @@ export function nivelDaDificuldade(difficulty: number): Puzzle["nivel"] {
 /**
  * Escolhe o próximo problema do nível, pulando os já usados.
  *
- * `usados` existe para a sequência dentro da sessão — misto → focalizado → transferência — que
- * é a fatia da dosagem, ainda pendente. Hoje a tela chama sem histórico e recebe o primeiro do
- * nível; quando a sessão passar a encadear problemas, basta passar a lista, sem mudar a tela.
+ * `usados` sustenta a sequência dentro da sessão — misto → focalizado → transferência. A tela
+ * passa os ids já resolvidos para não repetir um problema enquanto ainda houver outro no nível.
  * Esgotados os do nível, recomeça: repetir conteúdo é melhor do que devolver nada.
  */
 export function selecionarProblema(difficulty: number, usados: readonly string[] = []): Puzzle {

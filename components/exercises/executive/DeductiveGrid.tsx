@@ -2,11 +2,13 @@
 
 import * as DropdownMenu from "@radix-ui/react-dropdown-menu";
 import type React from "react";
-import { useEffect, useMemo, useRef, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { ExerciseStage } from "@/components/exercises/ExerciseStage";
+import { useTimedProgress } from "@/components/exercises/useExerciseEngine";
 import {
+  DURACAO_SESSAO_GRADE_MS,
   PROBLEMA_TUTORIAL,
-  acuraciaDoProblema,
+  agregarSessaoGrade,
   admiteSolucao,
   celulasComValorRepetido,
   chavePosicaoGrade,
@@ -22,7 +24,9 @@ import {
   selecionarProblema,
   verificacaoDisponivel,
   verificacoesPermitidas,
+  type EventoPistaGrade,
   type RegistroAtribuicao,
+  type RegistroProblemaGrade,
   type RegistroVerificacao,
   type QuantidadeVerificacoes,
   type ValorCelula,
@@ -37,17 +41,10 @@ interface DeductiveGridProps {
   onComplete: (result: ExerciseResult) => void;
 }
 
-interface EventoPista {
-  type: "clue_crossed" | "clue_uncrossed";
-  pistaId: string;
-  momento: number;
-  timestamp: number;
-}
-
 interface RegistroProblema {
   atribuicoes: RegistroAtribuicao[];
   verificacoes: RegistroVerificacao[];
-  eventosPista: EventoPista[];
+  eventosPista: EventoPistaGrade[];
   latenciaPrimeiraAcao: number | null;
   totalAcoes: number;
   tentativasConcluirIncorretas: number;
@@ -132,7 +129,7 @@ function celulaComValor(
 }
 
 export function DeductiveGrid({ difficulty, theme, onComplete }: DeductiveGridProps) {
-  const desafio = useMemo(() => selecionarProblema(difficulty), [difficulty]);
+  const { begin, isTimeUp, elapsedSec, finish } = useTimedProgress(DURACAO_SESSAO_GRADE_MS);
   const [tutorial, setTutorial] = useState(true);
   const [puzzle, setPuzzle] = useState<Puzzle>(PROBLEMA_TUTORIAL);
   const [grade, setGrade] = useState<Record<string, ValorCelula[]>>(() => criarGradeVazia(PROBLEMA_TUTORIAL));
@@ -144,6 +141,8 @@ export function DeductiveGrid({ difficulty, theme, onComplete }: DeductiveGridPr
   );
   const inicioProblema = useRef(Date.now());
   const registro = useRef<RegistroProblema>(novoRegistroProblema());
+  const problemas = useRef<RegistroProblemaGrade[]>([]);
+  const usados = useRef<string[]>([]);
   const transicao = useRef<ReturnType<typeof setTimeout> | null>(null);
   const pal = paleta(theme);
   const rootBg = fundoDoTema(theme);
@@ -270,20 +269,51 @@ export function DeductiveGrid({ difficulty, theme, onComplete }: DeductiveGridPr
     setMensagem(mensagemVerificacao(puzzle.nivel, temIncompatibilidade));
   }
 
-  function iniciarDesafio(): void {
-    setTutorial(false);
-    setPuzzle(desafio);
-    setGrade(criarGradeVazia(desafio));
+  function iniciarProblema(proximo: Puzzle): void {
+    setPuzzle(proximo);
+    setGrade(criarGradeVazia(proximo));
     setPistasRiscadas(new Set());
     setMensagem(null);
     setConcluido(false);
-    setVerificacoesRestantes(verificacoesPermitidas(desafio.nivel, false));
+    setVerificacoesRestantes(verificacoesPermitidas(proximo.nivel, false));
     registro.current = novoRegistroProblema();
     inicioProblema.current = Date.now();
   }
 
+  function iniciarDesafio(): void {
+    const primeiro = selecionarProblema(difficulty, usados.current);
+    setTutorial(false);
+    iniciarProblema(primeiro);
+    begin();
+  }
+
+  function finalizarRegistro(
+    problemaAtual: Puzzle,
+    tempoTotal: number,
+    concluidoNoTempo: boolean
+  ): RegistroProblemaGrade {
+    const atribuicoes = registro.current.atribuicoes.map((atribuicao) => ({ ...atribuicao }));
+    const verificacoes = registro.current.verificacoes.map((verificacao) => ({ ...verificacao }));
+    const eventosPista = registro.current.eventosPista.map((evento) => ({ ...evento }));
+    const resumo = resumirAtribuicoes(atribuicoes);
+    return {
+      puzzleId: problemaAtual.id,
+      nivel: problemaAtual.nivel,
+      concluido: concluidoNoTempo,
+      atribuicoes,
+      verificacoes,
+      eventosPista,
+      ...resumo,
+      latenciaPrimeiraAcao: registro.current.latenciaPrimeiraAcao ?? tempoTotal,
+      totalAcoes: registro.current.totalAcoes,
+      tempoTotal,
+      tentativasConcluirIncorretas: registro.current.tentativasConcluirIncorretas,
+      usosVerificarRaciocinio: registro.current.usosVerificarRaciocinio,
+    };
+  }
+
   function concluir(): void {
-    if (concluido) return;
+    if (concluido || transicao.current !== null) return;
     registrarAcao();
     if (!gradeEstaCorreta(puzzle, grade)) {
       registro.current.tentativasConcluirIncorretas += 1;
@@ -296,40 +326,39 @@ export function DeductiveGrid({ difficulty, theme, onComplete }: DeductiveGridPr
     setMensagem("Desafio concluído.");
 
     if (tutorial) {
-      transicao.current = setTimeout(iniciarDesafio, 700);
+      transicao.current = setTimeout(() => {
+        transicao.current = null;
+        iniciarDesafio();
+      }, 700);
       return;
     }
 
-    const atribuicoes = registro.current.atribuicoes.map((atribuicao) => ({ ...atribuicao }));
-    const verificacoes = registro.current.verificacoes.map((verificacao) => ({ ...verificacao }));
-    const eventosPista = registro.current.eventosPista.map((evento) => ({ ...evento }));
-    const resumo = resumirAtribuicoes(atribuicoes);
-    const metadata = {
-      puzzleId: puzzle.id,
-      nivel: puzzle.nivel,
-      atribuicoes,
-      verificacoes,
-      eventosPista,
-      ...resumo,
-      latenciaPrimeiraAcao: registro.current.latenciaPrimeiraAcao ?? tempoTotal,
-      totalAcoes: registro.current.totalAcoes,
-      tempoTotal,
-      tentativasConcluirIncorretas: registro.current.tentativasConcluirIncorretas,
-      usosVerificarRaciocinio: registro.current.usosVerificarRaciocinio,
-    };
-
-    // A acurácia NÃO pode ser 1 fixo: ela alimenta a engine adaptativa e a Grade subiria de
-    // nível para sempre, além de disparar sozinha a conquista de 100%. Ver acuraciaDoProblema.
-    const acuracia = acuraciaDoProblema(registro.current.tentativasConcluirIncorretas);
+    const tempoEsgotado = isTimeUp();
+    // Se o limite foi atingido durante este problema, a pessoa pode terminá-lo sem interrupção,
+    // mas o registro preserva que ele ainda não estava concluído dentro do tempo da sessão.
+    const registroFinal = finalizarRegistro(puzzle, tempoTotal, !tempoEsgotado);
+    const problemasDaSessao = [...problemas.current, registroFinal];
+    problemas.current = problemasDaSessao;
+    usados.current = [...usados.current, puzzle.id];
 
     transicao.current = setTimeout(() => {
+      transicao.current = null;
+      if (!tempoEsgotado) {
+        iniciarProblema(selecionarProblema(difficulty, usados.current));
+        return;
+      }
+
+      finish();
+      // A acurácia NÃO pode ser 1 fixo: ela alimenta a engine adaptativa e a Grade subiria de
+      // nível para sempre, além de disparar sozinha a conquista de 100%. Ver acuraciaDoProblema.
+      const { metadata, acuracia } = agregarSessaoGrade(problemasDaSessao);
       onComplete({
         exerciseId: "deductive-grid",
         domain: "executive",
         score: calculateExerciseScore("deductive-grid", acuracia, undefined, difficulty),
         accuracy: acuracia,
         difficulty,
-        duration: Math.round(tempoTotal / 1000),
+        duration: elapsedSec(),
         metadata,
       });
     }, 700);
