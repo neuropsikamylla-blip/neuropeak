@@ -22296,3 +22296,6 @@ estou aguardando
 
 ## 09/09/2026 16:22
 e agora o que devo fazer?
+
+## 09/09/2026 16:24
+onde posso ver?
