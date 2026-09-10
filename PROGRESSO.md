@@ -260,6 +260,56 @@ inteiro **sem ler uma pista**. Quem perceber o padrão pontua sem fazer o exerc�
 - [ ] **PRÓXIMO: os problemas novos** (F5), com cruzamento real entre categorias e passando pela
       triagem. Ela deu os exemplos de pista adequada. **Não começar sem fechar a revisão visual.**
 
+### ✅ 09/set — quatro entregas, tudo publicado (v3.20.0)
+
+Quatro entregas commitadas e no ar. Roteamento registrado nas linhas **22-25** de
+`~/codex-lab/registro-roteamento.md`.
+
+1. [x] **Sessão por tempo na Grade** — v3.18.0, `2fac46b`. A Grade deixa de ser *um problema por
+       sessão*: **encadeia problemas enquanto houver tempo**. A **cota de verificação recomeça a
+       cada problema**; o `onComplete` virou **UM por sessão**, com a **acurácia como MÉDIA dos
+       problemas resolvidos**; problema **inacabado** entra no registro como `concluido: false` e
+       fica **FORA da média**. ⚠️ Conserto do VP: a fatia trazia **11 minutos**, escritos ANTES do
+       pedido de padronização dela — caiu para **8** e ficou marcada como **provisória** até a
+       migração para `useBlocoDeTreino`.
+2. [x] **Dosagem global do treino** — v3.19.0, `ce120bb`.
+       ⚠️ **Isto é arquitetura de PLATAFORMA, não da Grade** — a peça de maior alcance mexida até
+       aqui. `lib/exercise-dosage.ts` **sem um único `if` por `exerciseId`**: padrão **480/600**,
+       com a **tolerância como REGRA** (+2 min em problema estruturado, +1 min em tarefa por
+       tentativas). `useBlocoDeTreino` entrou **ao lado** do hook antigo, sem quebrar
+       `useTimedProgress`; a dose **persiste** na chave `np_session_<data>` que já existia e **zera
+       quando o bloco termina normalmente**. Decisões dela aplicadas: **Torre e Estacionamento de
+       11 → 8/10**, **Stroop resolvendo o PAR** (alvo e teto variando com a dificuldade), a
+       **porcentagem removida** da barra e do widget do dia, o **vazamento bloco → sessão
+       eliminado** e a **barra temporal de volta à Torre**. A prova travou a barra por **injeção**:
+       ela só pode receber `progressPct`, `theme` e `emTolerancia`.
+3. [x] **Tutorial da Grade no framework T1** — v3.20.0, `8737d72`. A fase própria saiu do
+       componente, o relógio segue começando no **primeiro problema REAL**, e a **versão do tutorial
+       subiu de 1 para 2** — o que **reapresenta o tutorial UMA vez** a quem já tinha aprendido a
+       mecânica velha dos símbolos (`×`/`?`/`✓`). Os testes de contagem foram **atualizados, não
+       contornados** (19→20 tutoriais, reformulados 3→4, guarda de emoji).
+4. [x] **Proposta do motor adaptativo da Grade** — `1849783`,
+       `docs/grade-dedutiva/PROPOSTA-ADAPTATIVO-SECAO48-20260909.md` (**113 linhas**). Cinco
+       indicadores propostos, com o cuidado central de **separar o que é decisão do VP do que é
+       decisão clínica dela**. ⚠️ **É proposta: nada implementado.**
+
+🔴 **PENDENTE E BLOQUEANTE — o portão da etapa 4.** Ela precisa **USAR** os três pilotos —
+**Semáforo 300/360**, **Cubo Corsi 480/600** e **Torre 480/600 com a barra de volta** — e validar
+**visual, alvo, tolerância, teto, recarga** e a **separação bloco × sessão**. **Os outros 31
+exercícios NÃO podem ser migrados antes disso — decisão 9 dela.**
+
+⚠️ **O que mudou para o paciente em produção ontem, e é VISÍVEL:**
+- a **barra do dia não sobe mais durante o exercício** — só ao **concluir** um;
+- a **porcentagem sumiu** de todas as barras;
+- **três exercícios mudaram de dose** (Torre e Estacionamento saíram de 11 min; Stroop passou a ter
+  alvo e teto variando com a dificuldade).
+
+⚠️ **Quatro perguntas clínicas dela em aberto** (motor adaptativo), que o VP **não** decide:
+1. **quais indicadores** entram no motor;
+2. **quais limiares** para subir e descer;
+3. se **reduzir categorias** é a forma certa de reduzir carga;
+4. se o motor **pode mexer na cota de verificação**.
+
 ### ✅ 08/set — os seis fechamentos dela, e a régua ANTES da autoria
 
 Ela aprovou a proposta do banco com **seis fechamentos** e fixou a ordem de trabalho: **régua
@@ -403,17 +453,20 @@ Teste que passasse no código velho não provaria nada.
 
 ### Estado da plataforma nesta parada
 
-`package.json` em **3.14.0**. Medido em 08/set no repositório real (agente gerente): `npx tsc
---noEmit` **exit 0** · `npm run test` **exit 0, 69 arquivos / 945 testes passando** · `git log`
-com `580f3e7` (v3.14.0) e `3a2e9ad` (v3.13.0) no topo · `wc -l lib/grade/*.ts` = **3.420 linhas em
-15 arquivos** (motor 515, estrutura 321 + estrutura.test 403, solver 176 + solver.test 537,
-interacao 245 + interacao.test 200, derivacao 179, banco 204, tipos 192, index 53, bench-5x6 119,
-e as três provas do VP: vp-prova-interface 125, vp-prova-regua 96, vp-prova 55). ⚠️ `npm run build`
-**NÃO rodado** nesta parada (proibido no despacho). `git status --short` **vazio** antes desta
-edição — só o `PROGRESSO.md` fica modificado, **aguardando commit do VP**. Torre **aprovada por
-ela** e no ar.
+`package.json` em **3.20.0**. Medido em 10/set no repositório real (agente gerente): `npx tsc
+--noEmit` **exit 0** · `npm run test` **exit 0, 79 arquivos / 1041 testes passando** (vitest 4.1.7,
+15,73 s) · `git log` com `8737d72` (v3.20.0), `ce120bb` (v3.19.0), `1849783` (proposta do adaptativo)
+e `2fac46b` (v3.18.0) no topo · `wc -l lib/grade/*.ts` = **5.660 linhas em 25 arquivos**.
+⚠️ `npm run build` **NÃO rodado** nesta parada (proibido no despacho) — foi rodado em 09/set, no
+fecho do tutorial T1, com **exit 0**. `git status -sb` antes desta edição: `## main...origin/main`
+com **apenas `PEDIDOS-LOG.md`** modificado (arquivo do gancho de registro, não é código), depois
+absorvido pelo commit `5481e05` (spec dos cinco indicadores). Depois desta edição:
+`## main...origin/main [ahead 1]` com **apenas `PROGRESSO.md`** modificado — mais o
+`~/codex-lab/registro-roteamento.md`, que vive fora do repo —, **aguardando commit do VP**.
+Torre **aprovada por ela** e no ar, agora com a **barra temporal**.
 
-🗄️ *Medição anterior (03/set): 3.10.0, `tsc` exit 0, 64 arquivos / 888 testes.*
+🗄️ *Medições anteriores: 08/set — 3.14.0, `tsc` exit 0, 69 arquivos / 945 testes · 03/set — 3.10.0,
+`tsc` exit 0, 64 arquivos / 888 testes.*
 
 ## ✅ CONCLUÍDO E APROVADO POR ELA — Jogo das Torres: reconfiguração completa (31/ago-01/set/2026)
 
