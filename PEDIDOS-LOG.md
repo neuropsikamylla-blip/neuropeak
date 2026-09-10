@@ -23199,3 +23199,6 @@ Certo agora tem algo a mais alem de testar o exercicio que precisamos resolver? 
 
 ## 10/09/2026 11:11
 O aplicativo vou usar mais tarde eu gostaria de resolve algumas pendencias para depois testar como um todo sabe? Seria possivel matar hoje todas essas questoes?
+
+## 10/09/2026 12:57
+pode seguir
