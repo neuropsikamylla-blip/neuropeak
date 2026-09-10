@@ -23211,3 +23211,6 @@ pode seguir
 <status>completed</status>
 <summary>Background command "Disparar a migração dos 31" completed (exit code 0)</summary>
 </task-notification>
+
+## 10/09/2026 13:22
+o que eu vou ter de testar eu irei fazer depois, finaliza tudo que irei entrar no programa e testar tudo de uma unica vez

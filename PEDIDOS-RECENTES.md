@@ -1,9 +1,6 @@
 # As 3 ultimas especificacoes dela (automatico; a mais nova por ultimo)
 # Na retomada: ler as 3, conectar com PROGRESSO.md e git, declarar e seguir.
 
-## 10/09/2026 11:06
-Certo agora tem algo a mais alem de testar o exercicio que precisamos resolver? definir?
-
 ## 10/09/2026 11:11
 O aplicativo vou usar mais tarde eu gostaria de resolve algumas pendencias para depois testar como um todo sabe? Seria possivel matar hoje todas essas questoes?
 
@@ -15,3 +12,6 @@ O aplicativo vou usar mais tarde eu gostaria de resolve algumas pendencias para 
 <status>completed</status>
 <summary>Background command "Disparar a migração dos 31" completed (exit code 0)</summary>
 </task-notification>
+
+## 10/09/2026 13:22
+o que eu vou ter de testar eu irei fazer depois, finaliza tudo que irei entrar no programa e testar tudo de uma unica vez
