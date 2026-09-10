@@ -4,7 +4,7 @@ import { useState, useRef, useCallback, useEffect } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { Eye, Headphones } from "lucide-react";
 import { calculateExerciseScore } from "@/lib/scoring";
-import { useTimedProgress } from "@/components/exercises/useExerciseEngine";
+import { useBlocoDeTreino } from "@/components/exercises/useExerciseEngine";
 import { ExerciseProgressBar } from "@/components/exercises/ExerciseProgressBar";
 import { ExerciseStage } from "@/components/exercises/ExerciseStage";
 import { classifyTrial, nextLevelPerTrial } from "@/lib/adaptive-trial";
@@ -133,8 +133,8 @@ export function LetrasSequenciaBoard({
   );
 }
 
-export function LetrasSequencia({ difficulty, onComplete }: LetrasSequenciaProps) {
-  const { begin: startTimer, isTimeUp, elapsedSec, finish: finishTimer, progressPct } = useTimedProgress();
+export function LetrasSequencia({ difficulty, theme, onComplete }: LetrasSequenciaProps) {
+  const { begin: startTimer, podeIniciarNovoDesafio, elapsedSec, finish: finishTimer, progressPct, emTolerancia } = useBlocoDeTreino("letras-sequencia", difficulty);
   const startLevel = levelOf(difficulty);
   const [level, setLevel] = useState(startLevel);
   const spec = LS_LEVELS[level];
@@ -246,12 +246,12 @@ export function LetrasSequencia({ difficulty, onComplete }: LetrasSequenciaProps
       reachedRef.current = Math.max(reachedRef.current, nl);
       return nl;
     });
-    const timeUp = isTimeUp();
+    const timeUp = !podeIniciarNovoDesafio();
     setTimeout(() => {
       if (timeUp) { finish(); }
       else { startRound(); }
     }, correct ? 1300 : 2400);
-  }, [expected, startRound, finish, isTimeUp]);
+  }, [expected, startRound, finish, podeIniciarNovoDesafio]);
 
   function handleKey(k: string) {
     if (phase !== "input" || enteredRef.current.length >= spec.count) return;
@@ -308,7 +308,7 @@ export function LetrasSequencia({ difficulty, onComplete }: LetrasSequenciaProps
           </p>
         </div>
 
-        <ExerciseProgressBar progressPct={progressPct} theme="GAMIFIED" />
+        <ExerciseProgressBar progressPct={progressPct} theme={theme} emTolerancia={emTolerancia()} />
 
         {/* Apresentação */}
         {phase === "show" && (

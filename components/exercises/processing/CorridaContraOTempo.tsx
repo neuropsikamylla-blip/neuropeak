@@ -4,7 +4,8 @@ import { useState, useEffect, useRef } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { Timer, Target, Ban, Check, Zap, Crosshair, MousePointerClick, Eye } from "lucide-react";
 import { calculateExerciseScore } from "@/lib/scoring";
-import { useTimedProgress } from "@/components/exercises/useExerciseEngine";
+import { useBlocoDeTreino } from "@/components/exercises/useExerciseEngine";
+import { ExerciseProgressBar } from "@/components/exercises/ExerciseProgressBar";
 import { ExerciseStage } from "@/components/exercises/ExerciseStage";
 import { TutorialBase } from "@/components/exercises/TutorialBase";
 import type { ExerciseResult, Theme } from "@/types";
@@ -149,7 +150,7 @@ type Phase = "ready" | "loading" | "playing" | "roundfb" | "roundpause" | "summa
 
 export function CorridaContraOTempo({ difficulty, theme, onComplete }: Props) {
   const [showTutorial, setShowTutorial] = useState(true);
-  const { begin, isTimeUp, elapsedSec, finish } = useTimedProgress();
+  const { begin, podeIniciarNovoDesafio, elapsedSec, finish, progressPct, emTolerancia } = useBlocoDeTreino("corrida-tempo", difficulty);
 
   const [round, setRound] = useState(0);
   const [phase, setPhase] = useState<Phase>("ready");
@@ -230,7 +231,7 @@ export function CorridaContraOTempo({ difficulty, theme, onComplete }: Props) {
 
     setLastRound({ hits, total, errors });
     setPhase(porTempo ? "roundpause" : "roundfb");
-    const timeUp = isTimeUp();
+    const timeUp = !podeIniciarNovoDesafio();
     setTimeout(() => {
       if (timeUp) { setPhase("summary"); }
       else { roundRef.current++; setRound(roundRef.current); startRound(); }
@@ -313,6 +314,7 @@ export function CorridaContraOTempo({ difficulty, theme, onComplete }: Props) {
             </div>
           )}
         </div>
+        <ExerciseProgressBar progressPct={progressPct} theme={theme} emTolerancia={emTolerancia()} />
 
         <AnimatePresence mode="wait">
           {phase === "ready" && (

@@ -3,7 +3,7 @@
 import { useState, useRef, useCallback } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { calculateExerciseScore } from "@/lib/scoring";
-import { useTimedProgress } from "@/components/exercises/useExerciseEngine";
+import { useBlocoDeTreino } from "@/components/exercises/useExerciseEngine";
 import { ExerciseProgressBar } from "@/components/exercises/ExerciseProgressBar";
 import { ExerciseStage } from "@/components/exercises/ExerciseStage";
 import { TutorialBase } from "@/components/exercises/TutorialBase";
@@ -564,7 +564,7 @@ function TutStep({ theme, onDone }: { theme: Theme; onDone: () => void }) {
 
 export function MudancaRegras({ difficulty, theme, onComplete }: Props) {
   const [showTutorial, setShowTutorial] = useState(true);
-  const { begin, isTimeUp, elapsedSec, finish, progressPct } = useTimedProgress();
+  const { begin, podeIniciarNovoDesafio, elapsedSec, finish, progressPct, emTolerancia } = useBlocoDeTreino("mudanca-regras", difficulty);
 
   const [level, setLevel] = useState<MRLevel>(() => getLevel(difficulty));
   const [streak, setStreak] = useState(0);
@@ -613,7 +613,7 @@ export function MudancaRegras({ difficulty, theme, onComplete }: Props) {
     setLevel(nextLevel);
 
     const nextTrial = trialRef.current + 1;
-    const timeUp = isTimeUp();
+    const timeUp = !podeIniciarNovoDesafio();
 
     setTimeout(() => {
       if (timeUp) {
@@ -689,7 +689,7 @@ export function MudancaRegras({ difficulty, theme, onComplete }: Props) {
           </div>
         </div>
 
-        <ExerciseProgressBar progressPct={progressPct} theme={theme} />
+        <ExerciseProgressBar progressPct={progressPct} theme={theme} emTolerancia={emTolerancia()} />
 
         {/* Question banner */}
         <AnimatePresence mode="wait">

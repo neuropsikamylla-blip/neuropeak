@@ -4,7 +4,7 @@ import { useState, useEffect, useCallback, useRef } from "react";
 import { motion } from "framer-motion";
 import { Headphones } from "lucide-react";
 import { calculateExerciseScore } from "@/lib/scoring";
-import { useTimedProgress } from "@/components/exercises/useExerciseEngine";
+import { useBlocoDeTreino } from "@/components/exercises/useExerciseEngine";
 import { ExerciseProgressBar } from "@/components/exercises/ExerciseProgressBar";
 import { ExerciseStage } from "@/components/exercises/ExerciseStage";
 import { classifyTrial, nextLevelPerTrial } from "@/lib/adaptive-trial";
@@ -191,10 +191,10 @@ export function Beads({
 
 // ── Componente principal ────────────────────────────────────────────────────────
 
-export function SpanNumerico({ difficulty, onComplete, reverse = false, settings }: SpanNumericoProps) {
+export function SpanNumerico({ difficulty, theme, onComplete, reverse = false, settings }: SpanNumericoProps) {
   const exerciseId = reverse ? "span-numerico-inverso" : "span-numerico";
   const title = reverse ? "Span Numérico Auditivo Inverso" : "Span Numérico Auditivo Direto";
-  const { begin, elapsedSec, finish } = useTimedProgress();
+  const { begin, elapsedSec, finish, progressPct, emTolerancia } = useBlocoDeTreino(exerciseId, difficulty);
 
   // Config do TERAPEUTA (prescrição) — fixa para o paciente. Ausente = padrões.
   const cfg: SpanSettings = normalizeSettings(settings);
@@ -396,8 +396,7 @@ export function SpanNumerico({ difficulty, onComplete, reverse = false, settings
           <p className="text-sm font-bold leading-tight" style={{ color: "#3B5A75" }}>{title}</p>
         </div>
 
-        {/* Conclusão do exercício (0–100% pelas tentativas feitas, como no método) */}
-        <ExerciseProgressBar progressPct={Math.min(100, Math.round((attempts.length / cfg.trials) * 100))} />
+        <ExerciseProgressBar progressPct={progressPct} theme={theme} emTolerancia={emTolerancia()} />
 
         {/* ── FASE: ouvir (painel visível; a tecla falada PISCA) ─────────── */}
         {(phase === "listen" || phase === "flip") && (

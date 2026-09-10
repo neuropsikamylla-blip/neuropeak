@@ -5,7 +5,7 @@ import { motion } from "framer-motion";
 import { Hash, Pointer } from "lucide-react";
 import { calculateExerciseScore } from "@/lib/scoring";
 import { shuffle } from "@/lib/utils";
-import { useTimedProgress } from "@/components/exercises/useExerciseEngine";
+import { useBlocoDeTreino } from "@/components/exercises/useExerciseEngine";
 import { ExerciseProgressBar } from "@/components/exercises/ExerciseProgressBar";
 import { ExerciseStage } from "@/components/exercises/ExerciseStage";
 import { TutorialBase } from "@/components/exercises/TutorialBase";
@@ -188,7 +188,7 @@ function TrilhaVisualTutorial({ theme, onDone }: { theme: Theme; onDone: () => v
 
 export function TrilhaVisual({ difficulty, theme, onComplete }: TrilhaVisualProps) {
   const [showTutorial, setShowTutorial] = useState(true);
-  const { begin, isTimeUp, elapsedSec, finish, progressPct } = useTimedProgress();
+  const { begin, podeIniciarNovoDesafio, elapsedSec, finish, progressPct, emTolerancia } = useBlocoDeTreino("trilha-visual", difficulty);
 
   const [count, setCount] = useState(initialCount(difficulty));
   const [streak, setStreak] = useState(0);
@@ -237,7 +237,7 @@ export function TrilhaVisual({ difficulty, theme, onComplete }: TrilhaVisualProp
         if (newStreak <= -2) { nextCount = Math.max(count - 2, MIN_COUNT); nextStreak = 0; }
 
         const nextRound = round + 1;
-        const timeUp = isTimeUp();
+        const timeUp = !podeIniciarNovoDesafio();
 
         setTimeout(() => {
           if (timeUp) {
@@ -265,7 +265,7 @@ export function TrilhaVisual({ difficulty, theme, onComplete }: TrilhaVisualProp
     } else {
       setErrors((e) => e + 1);
     }
-  }, [roundPhase, nextExpected, count, errors, streak, round, roundResults, difficulty, cells, onComplete, isTimeUp, elapsedSec, finish, startNewRound]);
+  }, [roundPhase, nextExpected, count, errors, streak, round, roundResults, difficulty, cells, onComplete, podeIniciarNovoDesafio, elapsedSec, finish, startNewRound]);
 
   if (showTutorial) {
     return <TrilhaVisualTutorial theme={theme} onDone={() => { begin(); setShowTutorial(false); }} />;
@@ -309,7 +309,7 @@ export function TrilhaVisual({ difficulty, theme, onComplete }: TrilhaVisualProp
           </span>
         </div>
 
-        <ExerciseProgressBar progressPct={progressPct} theme={theme} />
+        <ExerciseProgressBar progressPct={progressPct} theme={theme} emTolerancia={emTolerancia()} />
 
         {/* Faixa de instrução */}
         <div style={{ display: "flex", alignItems: "center", justifyContent: "center", gap: 8, background: stripBg, borderRadius: 12, padding: "10px 14px", marginBottom: 14 }}>

@@ -3,7 +3,7 @@
 import { useState, useRef, useCallback, useEffect } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { calculateExerciseScore } from "@/lib/scoring";
-import { useTimedProgress } from "@/components/exercises/useExerciseEngine";
+import { useBlocoDeTreino } from "@/components/exercises/useExerciseEngine";
 import { ExerciseProgressBar } from "@/components/exercises/ExerciseProgressBar";
 import { ExerciseStage } from "@/components/exercises/ExerciseStage";
 import type { ExerciseResult, Theme } from "@/types";
@@ -129,7 +129,7 @@ export function JogoMemoriaBoard({
 }
 
 export function JogoMemoria({ difficulty, theme, onComplete }: JogoMemoriaProps) {
-  const { begin, isTimeUp, elapsedSec, finish, progressPct } = useTimedProgress();
+  const { begin, podeIniciarNovoDesafio, elapsedSec, finish, progressPct, emTolerancia } = useBlocoDeTreino("jogo-memoria", difficulty);
 
   const isGamified = theme === "GAMIFIED";
   const isColorful = theme === "COLORFUL";
@@ -183,7 +183,7 @@ export function JogoMemoria({ difficulty, theme, onComplete }: JogoMemoriaProps)
     if (newStreak <= -2) { nextPairs = Math.max(currentPairCount - 2, MIN_PAIRS); nextStreak = 0; }
 
     const nextRound = round + 1;
-    const timeUp = isTimeUp();
+    const timeUp = !podeIniciarNovoDesafio();
 
     setTimeout(() => {
       if (timeUp) {
@@ -294,7 +294,7 @@ export function JogoMemoria({ difficulty, theme, onComplete }: JogoMemoriaProps)
           )}
         </div>
 
-        <ExerciseProgressBar progressPct={progressPct} theme={theme} />
+        <ExerciseProgressBar progressPct={progressPct} theme={theme} emTolerancia={emTolerancia()} />
 
         {/* Instrução */}
         <p style={{ fontSize: 13, textAlign: "center", marginBottom: 12, color: instructionColor }}>

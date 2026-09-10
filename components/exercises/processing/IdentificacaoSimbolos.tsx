@@ -4,7 +4,7 @@ import { useState, useRef } from "react";
 import { motion } from "framer-motion";
 import { calculateExerciseScore } from "@/lib/scoring";
 import { shuffle } from "@/lib/utils";
-import { useTimedProgress } from "@/components/exercises/useExerciseEngine";
+import { useBlocoDeTreino } from "@/components/exercises/useExerciseEngine";
 import { ExerciseProgressBar } from "@/components/exercises/ExerciseProgressBar";
 import { ExerciseStage } from "@/components/exercises/ExerciseStage";
 import { TutorialBase } from "@/components/exercises/TutorialBase";
@@ -97,7 +97,7 @@ function IdentificacaoStep({ theme, onDone }: { theme: Theme; onDone: () => void
 
 export function IdentificacaoSimbolos({ difficulty, theme, onComplete }: IdentificacaoSimbolosProps) {
   const [showTutorial, setShowTutorial] = useState(true);
-  const { begin, isTimeUp, elapsedSec, finish, progressPct } = useTimedProgress();
+  const { begin, podeIniciarNovoDesafio, elapsedSec, finish, progressPct, emTolerancia } = useBlocoDeTreino("identificacao-simbolos", difficulty);
 
   const [distractorCount, setDistractorCount] = useState(initialDistractors(difficulty));
   const [streak, setStreak] = useState(0);
@@ -136,7 +136,7 @@ export function IdentificacaoSimbolos({ difficulty, theme, onComplete }: Identif
     if (newStreak <= -2) { nextDistr = Math.max(distractorCount - 2, MIN_DISTRACTORS); nextStreak = 0; }
 
     const nextTrialNum = trial + 1;
-    const timeUp = isTimeUp();
+    const timeUp = !podeIniciarNovoDesafio();
 
     setTimeout(() => {
       if (timeUp) {
@@ -187,7 +187,7 @@ export function IdentificacaoSimbolos({ difficulty, theme, onComplete }: Identif
           </div>
         </div>
 
-        <ExerciseProgressBar progressPct={progressPct} theme={theme} />
+        <ExerciseProgressBar progressPct={progressPct} theme={theme} emTolerancia={emTolerancia()} />
 
         {/* Target */}
         <div className={`text-center p-4 rounded-xl mb-4 ${theme === "GAMIFIED" ? "bg-gray-700" : "bg-gray-50"}`}>

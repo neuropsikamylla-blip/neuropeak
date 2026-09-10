@@ -4,9 +4,9 @@ import * as DropdownMenu from "@radix-ui/react-dropdown-menu";
 import type React from "react";
 import { useEffect, useRef, useState } from "react";
 import { ExerciseStage } from "@/components/exercises/ExerciseStage";
-import { useTimedProgress } from "@/components/exercises/useExerciseEngine";
+import { useBlocoDeTreino } from "@/components/exercises/useExerciseEngine";
+import { ExerciseProgressBar } from "@/components/exercises/ExerciseProgressBar";
 import {
-  DURACAO_SESSAO_GRADE_MS,
   PROBLEMA_TUTORIAL,
   agregarSessaoGrade,
   admiteSolucao,
@@ -137,6 +137,9 @@ interface GradeDedutivaBoardProps {
   concluido: boolean;
   verificacoesRestantes: QuantidadeVerificacoes;
   theme: Theme;
+  /** Progresso TEMPORAL do bloco. Opcional: o tutorial usa o Board sem relógio. */
+  progressPct?: number;
+  emTolerancia?: boolean;
   rotuloCabecalho: string;
   instrucaoTutorial?: string;
   onAtribuir: (categoria: string, posicao: number, valor: string) => void;
@@ -155,6 +158,8 @@ interface GradeDedutivaBoardProps {
  * pistas, células, menus e ações; os atributos `data-grade-*` apenas dão alvos ao DemoPointer.
  */
 export function GradeDedutivaBoard({
+  progressPct,
+  emTolerancia,
   puzzle,
   grade,
   pistasRiscadas,
@@ -192,6 +197,11 @@ export function GradeDedutivaBoard({
         </header>
 
         <div className="space-y-5 p-4 sm:p-6">
+          {/* 10/set/2026: barra TEMPORAL do bloco, padrao da plataforma. Nao tem relacao
+              com celulas preenchidas, pistas riscadas nem proximidade da solucao. */}
+          {progressPct !== undefined && (
+            <ExerciseProgressBar progressPct={progressPct} theme={theme} emTolerancia={emTolerancia ?? false} />
+          )}
           <section aria-labelledby="titulo-pistas">
             <div className="mb-3 flex items-baseline justify-between gap-3">
               <h2 id="titulo-pistas" className={`text-sm font-semibold uppercase tracking-[0.12em] ${pal.titulo}`}>
@@ -385,7 +395,8 @@ export function celulaComValor(
 }
 
 export function DeductiveGrid({ difficulty, theme, onComplete }: DeductiveGridProps) {
-  const { begin, isTimeUp, elapsedSec, finish } = useTimedProgress(DURACAO_SESSAO_GRADE_MS);
+  const { begin, podeIniciarNovoDesafio, atingiuTeto, emTolerancia, progressPct, elapsedSec, finish } =
+    useBlocoDeTreino("deductive-grid", difficulty);
   const [puzzle, setPuzzle] = useState<Puzzle>(() => selecionarProblema(difficulty));
   const [grade, setGrade] = useState<Record<string, ValorCelula[]>>(() => criarGradeVazia(puzzle));
   const [pistasRiscadas, setPistasRiscadas] = useState<Set<string>>(() => new Set());
@@ -574,7 +585,9 @@ export function DeductiveGrid({ difficulty, theme, onComplete }: DeductiveGridPr
     setConcluido(true);
     setMensagem("Desafio concluído.");
 
-    const tempoEsgotado = isTimeUp();
+    // Passou do ALVO: o problema recem-terminado ainda conta como concluido dentro da sessao
+    // (ela mandou nao cortar quem esta no meio), mas nao se comeca outro.
+    const tempoEsgotado = !podeIniciarNovoDesafio() || atingiuTeto();
     // Se o limite foi atingido durante este problema, a pessoa pode terminá-lo sem interrupção,
     // mas o registro preserva que ele ainda não estava concluído dentro do tempo da sessão.
     const registroFinal = finalizarRegistro(puzzle, tempoTotal, !tempoEsgotado);
@@ -608,6 +621,8 @@ export function DeductiveGrid({ difficulty, theme, onComplete }: DeductiveGridPr
   return (
     <ExerciseStage width="medio" background={rootBg.background as string}>
       <GradeDedutivaBoard
+        progressPct={progressPct}
+        emTolerancia={emTolerancia()}
         puzzle={puzzle}
         grade={grade}
         pistasRiscadas={pistasRiscadas}

@@ -17,7 +17,8 @@
 import React, { useState, useRef, useCallback, useEffect, useMemo } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { calculateExerciseScore } from "@/lib/scoring";
-import { useTimedProgress } from "@/components/exercises/useExerciseEngine";
+import { useBlocoDeTreino } from "@/components/exercises/useExerciseEngine";
+import { ExerciseProgressBar } from "@/components/exercises/ExerciseProgressBar";
 import { TutorialBase } from "@/components/exercises/TutorialBase";
 import { ExerciseStage } from "@/components/exercises/ExerciseStage";
 import type { ExerciseResult, Theme } from "@/types";
@@ -470,7 +471,7 @@ function PainelHistoria({ missao, etapa }: { missao: Missao; etapa: Etapa }) {
 // ── Componente principal ──────────────────────────────────────────────────────
 export function CompraMultifuncional({ difficulty, theme, onComplete }: Props) {
   const { rootBg, cardStyle, btnStyle, pal, isG } = styles(theme);
-  const { begin, isTimeUp, elapsedSec, finish } = useTimedProgress();
+  const { begin, atingiuTeto, podeIniciarNovoDesafio, elapsedSec, finish, progressPct, emTolerancia } = useBlocoDeTreino("compra-multifuncional", difficulty);
 
   const [stage, setStage] = useState<"config" | "tutorial" | "play">("config");
   const [temaCfg, setTemaCfg] = useState<TemaConfig>("variado");
@@ -527,7 +528,7 @@ export function CompraMultifuncional({ difficulty, theme, onComplete }: Props) {
   const handleEtapaDone = useCallback((result: EtapaResult) => {
     sessionResultsRef.current = [...sessionResultsRef.current, result];
     missionResultsRef.current = [...missionResultsRef.current, result.firstTry];
-    if (isTimeUp()) { finishSession(); return; }
+    if (atingiuTeto()) { finishSession(); return; }
 
     const m = missao!;
     if (etapaIdx + 1 < m.etapas.length) { setEtapaIdx((i) => i + 1); return; }
@@ -538,10 +539,10 @@ export function CompraMultifuncional({ difficulty, theme, onComplete }: Props) {
     if (rate >= 0.75 && levelRef.current < MAX_LEVEL) levelRef.current += 1;
     else if (rate < 0.4 && levelRef.current > 1) levelRef.current -= 1;
     reachedRef.current = Math.max(reachedRef.current, levelRef.current);
-    if (isTimeUp()) { finishSession(); return; }
+    if (!podeIniciarNovoDesafio()) { finishSession(); return; }
     iniciarMissao();
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [missao, etapaIdx]);
+  }, [missao, etapaIdx, atingiuTeto, podeIniciarNovoDesafio]);
 
   // ── Config ──
   if (stage === "config") {
@@ -619,6 +620,7 @@ export function CompraMultifuncional({ difficulty, theme, onComplete }: Props) {
             </div>
           </div>
         </div>
+        <ExerciseProgressBar progressPct={progressPct} theme={theme} emTolerancia={emTolerancia()} />
 
         {/* Dois painéis: história | missão */}
         <div className="grid md:grid-cols-2 gap-4 items-stretch">

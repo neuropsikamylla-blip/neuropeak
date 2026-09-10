@@ -3,7 +3,7 @@
 import React, { useState, useEffect, useRef } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { calculateExerciseScore } from "@/lib/scoring";
-import { useTimedProgress } from "@/components/exercises/useExerciseEngine";
+import { useBlocoDeTreino } from "@/components/exercises/useExerciseEngine";
 import { ExerciseProgressBar } from "@/components/exercises/ExerciseProgressBar";
 import { ExerciseStage } from "@/components/exercises/ExerciseStage";
 import type { ExerciseResult, Theme } from "@/types";
@@ -1030,7 +1030,7 @@ function buildMissionQueue(count: number): EnvId[] {
 export function DesafioCidade({ difficulty, theme, onComplete }: {
   difficulty: number; theme: Theme; onComplete: (result: ExerciseResult) => void;
 }) {
-  const { begin, isTimeUp, elapsedSec, finish, progressPct } = useTimedProgress();
+  const { begin, podeIniciarNovoDesafio, elapsedSec, finish, progressPct, emTolerancia } = useBlocoDeTreino("desafio-cidade", difficulty);
   const results = useRef<boolean[]>([]);
   const missionQueue = useRef<EnvId[]>(buildMissionQueue(80));
   useEffect(() => { begin(); }, [begin]);
@@ -1075,7 +1075,7 @@ export function DesafioCidade({ difficulty, theme, onComplete }: {
     setPhase("result");
 
     if (resultTimerRef.current) clearTimeout(resultTimerRef.current);
-    const timeUp = isTimeUp();
+    const timeUp = !podeIniciarNovoDesafio();
     resultTimerRef.current = setTimeout(() => {
       if (timeUp) {
         finish();
@@ -1099,7 +1099,7 @@ export function DesafioCidade({ difficulty, theme, onComplete }: {
   }
 
   const ProgressBar = () => (
-    <ExerciseProgressBar progressPct={progressPct} theme={theme} />
+    <ExerciseProgressBar progressPct={progressPct} theme={theme} emTolerancia={emTolerancia()} />
   );
 
   return (

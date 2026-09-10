@@ -11,7 +11,8 @@
 
 import { useState, useRef, useCallback, useEffect, useLayoutEffect } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import { useTimedProgress } from "@/components/exercises/useExerciseEngine";
+import { useBlocoDeTreino } from "@/components/exercises/useExerciseEngine";
+import { ExerciseProgressBar } from "@/components/exercises/ExerciseProgressBar";
 import { calculateExerciseScore } from "@/lib/scoring";
 import { ExerciseStage } from "@/components/exercises/ExerciseStage";
 import type { ExerciseResult, Theme } from "@/types";
@@ -33,9 +34,7 @@ interface Kite { pos: number; isAlvo: boolean }
 
 export function Vigilancia({ difficulty, theme, onComplete }: Props) {
   const isG = theme === "GAMIFIED";
-  // Sessão por TEMPO (~8 min), como Estacionamento e Torre — não por nº de blocos.
-  const { begin, finish: finishTimer, progressPct } = useTimedProgress(8 * 60 * 1000);
-  const tempoAcabouRef = useRef(false);
+  const { begin, finish: finishTimer, progressPct, emTolerancia, podeIniciarNovoDesafio } = useBlocoDeTreino("vigilancia", difficulty);
   const [fase, setFase] = useState<Fase>("fixacao");
 
   const nivelRef = useRef(nivelDe(difficulty));
@@ -87,8 +86,6 @@ export function Vigilancia({ difficulty, theme, onComplete }: Props) {
     return () => ro.disconnect();
   }, [tentativa]);
 
-  useEffect(() => { tempoAcabouRef.current = progressPct >= 100; }, [progressPct]);
-
   const posToXY = (pos: number): Ponto => centrosRef.current[pos] ?? { x: dims.w / 2, y: dims.h / 2 };
 
   // Fim de bloco SILENCIOSO (§ princípio dela: nada de tela de "resultado do bloco" no meio):
@@ -97,14 +94,14 @@ export function Vigilancia({ difficulty, theme, onComplete }: Props) {
   const encerrarRef = useRef<() => void>(() => {});
   const finalizarBloco = useCallback(() => {
     clearTimers();
-    if (tempoAcabouRef.current) { encerrarRef.current(); return; }
+    if (!podeIniciarNovoDesafio()) { encerrarRef.current(); return; }
     const { decisao } = avaliarBloco(bloco.current.acertos);
     if (decisao === "avancar" && nivelRef.current < NIVEIS.length) {
       nivelRef.current++;
       estadoRef.current = estadoInicial(DEGRAU_CONFORTAVEL);
     }
     proximoBlocoRef.current();
-  }, []);
+  }, [podeIniciarNovoDesafio]);
 
   // ── Uma tentativa: fixação → exposição → resposta (SEM reapresentar o alvo) ──
   const iniciarTentativa = useCallback(() => {
@@ -136,12 +133,12 @@ export function Vigilancia({ difficulty, theme, onComplete }: Props) {
     setFase("feedback");
     const dur = correto ? 900 : 2600;  // erro: tempo de OLHAR onde estava a certa
     timers.current.push(setTimeout(() => {
-      if (tempoAcabouRef.current) { encerrarRef.current(); return; }
+      if (!podeIniciarNovoDesafio()) { encerrarRef.current(); return; }
       if (tentativaRef.current >= BLOCO_TENTATIVAS) { finalizarBloco(); return; }
       tentativaRef.current += 1; setTentativa(tentativaRef.current);
       iniciarTentativa();
     }, dur));
-  }, [finalizarBloco, iniciarTentativa]);
+  }, [finalizarBloco, iniciarTentativa, podeIniciarNovoDesafio]);
 
   const aoTocar = useCallback((e: React.PointerEvent) => {
     if (fase !== "resposta" || respondidoRef.current) return;
@@ -227,10 +224,7 @@ export function Vigilancia({ difficulty, theme, onComplete }: Props) {
           <span className={`font-black ${txt}`}>Vigilância</span>
           <span className={`text-xs font-semibold ${sub}`}>Nível {nivelRef.current}</span>
         </div>
-        <div className={`h-2 rounded-full overflow-hidden ${isG ? "bg-white/10" : "bg-slate-300"}`}>
-          <div className="h-full rounded-full transition-[width] duration-500"
-            style={{ width: `${Math.min(100, progressPct)}%`, background: isG ? "#22d3ee" : "#0284c7" }} />
-        </div>
+        <ExerciseProgressBar progressPct={progressPct} theme={theme} emTolerancia={emTolerancia()} />
       </div>
 
       <div ref={arenaRef} onPointerDown={aoTocar} onPointerMove={aoMover}

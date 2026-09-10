@@ -3,7 +3,7 @@
 import { useState, useRef, useCallback } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { calculateExerciseScore } from "@/lib/scoring";
-import { useTimedProgress } from "@/components/exercises/useExerciseEngine";
+import { useBlocoDeTreino } from "@/components/exercises/useExerciseEngine";
 import { ExerciseProgressBar } from "@/components/exercises/ExerciseProgressBar";
 import { ExerciseStage } from "@/components/exercises/ExerciseStage";
 import { TutorialBase } from "@/components/exercises/TutorialBase";
@@ -408,7 +408,7 @@ function CacaTutorial({ theme, onDone }: { theme: Theme; onDone: () => void }) {
 
 export function CacaItemBarato({ difficulty, theme, onComplete }: Props) {
   const [showTutorial, setShowTutorial] = useState(true);
-  const { begin, isTimeUp, elapsedSec, finish, progressPct } = useTimedProgress();
+  const { begin, podeIniciarNovoDesafio, elapsedSec, finish, progressPct, emTolerancia } = useBlocoDeTreino("caca-item-barato", difficulty);
 
   const [round, setRound] = useState(0);
   const [roundResults, setRoundResults] = useState<boolean[]>([]);
@@ -422,7 +422,7 @@ export function CacaItemBarato({ difficulty, theme, onComplete }: Props) {
   const reachedRef = useRef(difficulty);
 
   const nextRound = useCallback((results: boolean[]) => {
-    if (isTimeUp()) {
+    if (!podeIniciarNovoDesafio()) {
       finish();
       const accuracy = results.filter(Boolean).length / Math.max(1, results.length);
       onComplete({
@@ -445,7 +445,7 @@ export function CacaItemBarato({ difficulty, theme, onComplete }: Props) {
       setRound(results.length);
       setPhase("question");
     }
-  }, [isTimeUp, finish, elapsedSec, onComplete]);
+  }, [podeIniciarNovoDesafio, finish, elapsedSec, onComplete]);
 
   function handleProductTap(id: string) {
     if (phase !== "question" || picked !== null) return;
@@ -500,7 +500,7 @@ export function CacaItemBarato({ difficulty, theme, onComplete }: Props) {
         </div>
 
         {/* Progress (pelo tempo, ~7 min) */}
-        <ExerciseProgressBar progressPct={progressPct} theme={theme} />
+        <ExerciseProgressBar progressPct={progressPct} theme={theme} emTolerancia={emTolerancia()} />
 
         {/* Question */}
         <AnimatePresence mode="wait">

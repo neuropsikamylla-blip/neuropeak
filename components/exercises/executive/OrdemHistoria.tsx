@@ -11,7 +11,7 @@ import {
 } from "@dnd-kit/sortable";
 import { CSS } from "@dnd-kit/utilities";
 import { calculateExerciseScore } from "@/lib/scoring";
-import { useTimedProgress } from "@/components/exercises/useExerciseEngine";
+import { useBlocoDeTreino } from "@/components/exercises/useExerciseEngine";
 import { ExerciseProgressBar } from "@/components/exercises/ExerciseProgressBar";
 import { HISTORIAS, HISTORIAS_INTRUSO, HISTORIAS_DESCUBRA, histPanelSrc, descubraScene, descubraOption, type HistDiff } from "@/data/historias";
 import type { ExerciseResult, Theme } from "@/types";
@@ -171,8 +171,8 @@ function SortableScene({
   );
 }
 
-export function OrdemHistoria({ difficulty, onComplete, settings }: OrdemHistoriaProps) {
-  const { begin: startTimer, isTimeUp, elapsedSec, finish: finishTimer, progressPct } = useTimedProgress();
+export function OrdemHistoria({ difficulty, theme, onComplete, settings }: OrdemHistoriaProps) {
+  const { begin: startTimer, podeIniciarNovoDesafio, elapsedSec, finish: finishTimer, progressPct, emTolerancia } = useBlocoDeTreino("ordem-historia", difficulty);
   // Trilha (estágio salvo em currentDifficulty): 1-10 = ordenar; 11 = Encontre o Intruso; 12 = Descubra o que falta.
   const stage = Math.min(12, Math.max(1, Math.round(difficulty)));
   // Atalho do terapeuta: ligar um desafio sobe o estágio efetivo da sessão.
@@ -343,7 +343,7 @@ export function OrdemHistoria({ difficulty, onComplete, settings }: OrdemHistori
   }, [onComplete, difficulty, reportLevel, tier, sessionMode, finishTimer, elapsedSec]);
 
   function advance(wasExact: boolean) {
-    const timeUp = isTimeUp();
+    const timeUp = !podeIniciarNovoDesafio();
     setTimeout(() => { if (timeUp) finish(); else { setTrial((t) => t + 1); startRound(); } }, wasExact ? 1900 : 3200);
   }
 
@@ -478,7 +478,7 @@ export function OrdemHistoria({ difficulty, onComplete, settings }: OrdemHistori
             <div style={{ fontSize: 11.5, color: "#9a93b0" }}>{headerSub}</div>
           </div>
         </div>
-        <ExerciseProgressBar progressPct={progressPct} theme="COLORFUL" />
+        <ExerciseProgressBar progressPct={progressPct} theme={theme} emTolerancia={emTolerancia()} />
       </div>
 
       {/* Instrução + dicas */}

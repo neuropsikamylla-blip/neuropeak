@@ -4,7 +4,7 @@ import { useState, useRef, useEffect, useCallback } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { GitBranch, Lightbulb, Check, RotateCcw, Volume2 } from "lucide-react";
 import { calculateExerciseScore } from "@/lib/scoring";
-import { useTimedProgress } from "@/components/exercises/useExerciseEngine";
+import { useBlocoDeTreino } from "@/components/exercises/useExerciseEngine";
 import { ExerciseProgressBar } from "@/components/exercises/ExerciseProgressBar";
 import type { ExerciseResult, Theme } from "@/types";
 
@@ -259,8 +259,8 @@ function mcOptions(q: Question): { text: string; correct: boolean }[] {
 // visual = sem áudio · visual_audio = texto + áudio · audio_only = só áudio (esconde o texto).
 type PresMode = "visual" | "visual_audio" | "audio_only" | null;
 
-export function AntesDepois({ difficulty, onComplete }: AntesDepoisProps) {
-  const { begin, isTimeUp, elapsedSec, finish: finishTimer, progressPct } = useTimedProgress();
+export function AntesDepois({ difficulty, theme, onComplete }: AntesDepoisProps) {
+  const { begin, podeIniciarNovoDesafio, elapsedSec, finish: finishTimer, progressPct, emTolerancia } = useBlocoDeTreino("antes-depois", difficulty);
   const band = bandOf(difficulty);
   const startLevel = Math.min(10, Math.max(1, Math.round(difficulty)));
 
@@ -328,7 +328,7 @@ export function AntesDepois({ difficulty, onComplete }: AntesDepoisProps) {
     hits.current = newHits;
     const n = idx + 1;
     totalRef.current = n;
-    const timeUp = isTimeUp();
+    const timeUp = !podeIniciarNovoDesafio();
     const delay = correct ? 1700 : 2700;   // erro: tempo p/ ler a explicação
     setTimeout(() => { if (timeUp) finish(newHits); else setIdx(n); }, delay);
   }
@@ -413,7 +413,7 @@ export function AntesDepois({ difficulty, onComplete }: AntesDepoisProps) {
             Raciocínio sequencial
           </span>
         </div>
-        <ExerciseProgressBar progressPct={progressPct} />
+        <ExerciseProgressBar progressPct={progressPct} theme={theme} emTolerancia={emTolerancia()} />
       </div>
 
       <div style={{ flex: 1, overflowY: "auto", display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", padding: "10px 16px 18px", gap: 16 }}>

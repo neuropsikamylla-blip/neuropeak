@@ -4,7 +4,7 @@ import { useState, useEffect, useCallback } from "react";
 import { motion } from "framer-motion";
 import { LayoutGrid, Pointer } from "lucide-react";
 import { calculateExerciseScore } from "@/lib/scoring";
-import { useTimedProgress } from "@/components/exercises/useExerciseEngine";
+import { useBlocoDeTreino } from "@/components/exercises/useExerciseEngine";
 import { ExerciseProgressBar } from "@/components/exercises/ExerciseProgressBar";
 import { ExerciseStage } from "@/components/exercises/ExerciseStage";
 import { classifyTrial, nextLevelPerTrial } from "@/lib/adaptive-trial";
@@ -134,6 +134,7 @@ export function MatrizEspacialGrid({
 }
 
 export function MatrizEspacial({ difficulty, theme, onComplete, alwaysReverse }: MatrizEspacialProps) {
+  const exerciseId = alwaysReverse === true ? "matriz-espacial-inversa" : "matriz-espacial";
   const reverse = alwaysReverse ?? REVERSE_MODE(difficulty);
   const [seqLength, setSeqLength] = useState(matrizEspacialSequenceLengthFor(difficulty));
   const [phase, setPhase] = useState<Phase>("showing");
@@ -143,7 +144,7 @@ export function MatrizEspacial({ difficulty, theme, onComplete, alwaysReverse }:
   const [trial, setTrial] = useState(0);
   const [attempts, setAttempts] = useState<{ correct: boolean; seqLen: number }[]>([]);
   const [feedbackData, setFeedbackData] = useState<{ correct: boolean; userSeq: number[] } | null>(null);
-  const { begin, isTimeUp, elapsedSec, finish, progressPct } = useTimedProgress();
+  const { begin, podeIniciarNovoDesafio, elapsedSec, finish, progressPct, emTolerancia } = useBlocoDeTreino(exerciseId, difficulty);
 
   useEffect(() => { begin(); }, [begin]);
 
@@ -208,7 +209,7 @@ export function MatrizEspacial({ difficulty, theme, onComplete, alwaysReverse }:
     const nextSeqLen = nextLevelPerTrial(seqLength, verdict, MIN_SEQ, MAX_SEQ);
 
     const nextTrial = trial + 1;
-    const timeUp = isTimeUp();
+    const timeUp = !podeIniciarNovoDesafio();
 
     setTimeout(() => {
       if (timeUp) {
@@ -332,7 +333,7 @@ export function MatrizEspacial({ difficulty, theme, onComplete, alwaysReverse }:
           </span>
         </div>
 
-        <ExerciseProgressBar progressPct={progressPct} theme={theme} />
+        <ExerciseProgressBar progressPct={progressPct} theme={theme} emTolerancia={emTolerancia()} />
 
         {/* Faixa de instrução */}
         <div style={{ display: "flex", alignItems: "center", justifyContent: "center", gap: 8, background: stripBg, borderRadius: 12, padding: "10px 14px", marginBottom: 16 }}>

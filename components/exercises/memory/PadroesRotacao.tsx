@@ -4,7 +4,7 @@ import { useState, useRef, useCallback, useEffect } from "react";
 import { motion } from "framer-motion";
 import { RotateCw } from "lucide-react";
 import { calculateExerciseScore } from "@/lib/scoring";
-import { useTimedProgress } from "@/components/exercises/useExerciseEngine";
+import { useBlocoDeTreino } from "@/components/exercises/useExerciseEngine";
 import { ExerciseProgressBar } from "@/components/exercises/ExerciseProgressBar";
 import { ExerciseStage } from "@/components/exercises/ExerciseStage";
 import type { ExerciseResult, Theme } from "@/types";
@@ -126,8 +126,8 @@ export function PadroesRotacaoGrid({
   );
 }
 
-export function PadroesRotacao({ difficulty, onComplete }: PadroesRotacaoProps) {
-  const { begin: startTimer, isTimeUp, elapsedSec, finish: finishTimer, progressPct } = useTimedProgress();
+export function PadroesRotacao({ difficulty, theme, onComplete }: PadroesRotacaoProps) {
+  const { begin: startTimer, podeIniciarNovoDesafio, elapsedSec, finish: finishTimer, progressPct, emTolerancia } = useBlocoDeTreino("padroes-rotacao", difficulty);
   const startLevel = levelOf(difficulty);
   const [level, setLevel] = useState(startLevel);
   const spec = LEVELS[level];
@@ -261,9 +261,9 @@ export function PadroesRotacao({ difficulty, onComplete }: PadroesRotacaoProps) 
     streakRef.current = exact ? Math.max(0, streakRef.current) + 1 : Math.min(0, streakRef.current) - 1;
     if (streakRef.current >= 2) { streakRef.current = 0; setLevel((l) => { const nl = Math.min(10, l + 1); reachedRef.current = Math.max(reachedRef.current, nl); return nl; }); }
     else if (streakRef.current <= -2) { streakRef.current = 0; setLevel((l) => Math.max(1, l - 1)); }
-    const timeUp = isTimeUp();
+    const timeUp = !podeIniciarNovoDesafio();
     setTimeout(() => { if (timeUp) finish(); else startRound(); }, exact ? 1300 : 2300);
-  }, [startRound, finish, isTimeUp]);
+  }, [startRound, finish, podeIniciarNovoDesafio]);
 
   function toggle(r: number, c: number) {
     if (phase !== "input") return;
@@ -318,7 +318,7 @@ export function PadroesRotacao({ difficulty, onComplete }: PadroesRotacaoProps) 
           )}
         </div>
 
-        <ExerciseProgressBar progressPct={progressPct} theme="GAMIFIED" />
+        <ExerciseProgressBar progressPct={progressPct} theme={theme} emTolerancia={emTolerancia()} />
 
         <p className="text-sm font-semibold text-center" style={{ color: phase === "feedback" && feedback === "incorrect" ? "#2C6B84" : TEAL, minHeight: 22 }}>
           {phase === "show" ? "👀 " : phase === "rotating" ? "🔄 " : ""}{instruction}

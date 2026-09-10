@@ -3,7 +3,7 @@
 import { useState, useRef } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { calculateExerciseScore } from "@/lib/scoring";
-import { useTimedProgress } from "@/components/exercises/useExerciseEngine";
+import { useBlocoDeTreino } from "@/components/exercises/useExerciseEngine";
 import { ExerciseProgressBar } from "@/components/exercises/ExerciseProgressBar";
 import { ExerciseStage } from "@/components/exercises/ExerciseStage";
 import { TutorialBase } from "@/components/exercises/TutorialBase";
@@ -202,7 +202,7 @@ function TutStep({ theme, onDone }: { theme: Theme; onDone: () => void }) {
 
 export function DesafioOrcamento({ difficulty, theme, onComplete }: Props) {
   const [showTutorial, setShowTutorial] = useState(true);
-  const { begin, isTimeUp, elapsedSec, finish, progressPct } = useTimedProgress();
+  const { begin, podeIniciarNovoDesafio, elapsedSec, finish, progressPct, emTolerancia } = useBlocoDeTreino("desafio-orcamento", difficulty);
 
   const [round, setRound] = useState(0);
   const [roundResults, setRoundResults] = useState<boolean[]>([]);
@@ -240,7 +240,7 @@ export function DesafioOrcamento({ difficulty, theme, onComplete }: Props) {
     if (streakRef.current >= 2) { streakRef.current = 0; curLevelRef.current = Math.min(10, curLevelRef.current + 1); reachedRef.current = Math.max(reachedRef.current, curLevelRef.current); }
     else if (streakRef.current <= -2) { streakRef.current = 0; curLevelRef.current = Math.max(1, curLevelRef.current - 1); }
     const nextR = roundRef.current + 1;
-    const timeUp = isTimeUp();
+    const timeUp = !podeIniciarNovoDesafio();
 
     setTimeout(() => {
       if (timeUp) {
@@ -300,7 +300,7 @@ export function DesafioOrcamento({ difficulty, theme, onComplete }: Props) {
             <span className={`text-xs ${pal.sub}`}>{currentRound.domain.name}</span>
           </div>
 
-          <ExerciseProgressBar progressPct={progressPct} theme={theme} />
+          <ExerciseProgressBar progressPct={progressPct} theme={theme} emTolerancia={emTolerancia()} />
 
           <AnimatePresence mode="wait">
             {phase === "shopping" && (

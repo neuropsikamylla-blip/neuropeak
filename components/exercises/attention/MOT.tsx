@@ -3,7 +3,7 @@
 import { useState, useEffect, useRef, useCallback, useLayoutEffect } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { calculateExerciseScore } from "@/lib/scoring";
-import { useTimedProgress } from "@/components/exercises/useExerciseEngine";
+import { useBlocoDeTreino } from "@/components/exercises/useExerciseEngine";
 import { ExerciseProgressBar } from "@/components/exercises/ExerciseProgressBar";
 import { ExerciseStage } from "@/components/exercises/ExerciseStage";
 import { MOTBall } from "@/components/exercises/attention/MOTBall";
@@ -39,7 +39,7 @@ type Phase = "memorize" | "track" | "identify";
 // ── Main component ─────────────────────────────────────────────────────────
 
 export function MOT({ difficulty, theme, onComplete }: MOTProps) {
-  const { begin, isTimeUp, elapsedSec, finish, progressPct } = useTimedProgress();
+  const { begin, podeIniciarNovoDesafio, elapsedSec, finish, progressPct, emTolerancia } = useBlocoDeTreino("mot", difficulty);
 
   // Nível ADAPTATIVO dentro da sessão. Começa a partir da dificuldade salva do
   // paciente (modesto) e sobe a cada 3 rodadas perfeitas seguidas.
@@ -225,7 +225,7 @@ export function MOT({ difficulty, theme, onComplete }: MOTProps) {
     const nextRound = round + 1;
     const reachedDifficulty = Math.max(1, Math.min(10, 2 + reachedLevelRef.current));
 
-    if (isTimeUp()) {
+    if (!podeIniciarNovoDesafio()) {
       finish();
       const accuracy = (totalCorrect + correct) / Math.max(1, totalTargets + k);
       const duration = elapsedSec();
@@ -278,7 +278,7 @@ export function MOT({ difficulty, theme, onComplete }: MOTProps) {
           <div className="flex justify-between items-center mb-2">
             <h2 className={`font-bold text-sm ${pal.title}`}>👁️ Rastreamento de Objetos</h2>
           </div>
-          <ExerciseProgressBar progressPct={progressPct} theme={theme} />
+          <ExerciseProgressBar progressPct={progressPct} theme={theme} emTolerancia={emTolerancia()} />
         </div>
 
         {/* Phase label */}

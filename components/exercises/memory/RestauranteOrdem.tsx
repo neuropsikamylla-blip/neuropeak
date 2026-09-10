@@ -6,7 +6,7 @@ import { Timer, Bell, ArrowLeftRight, Volume2 } from "lucide-react";
 import { calculateExerciseScore } from "@/lib/scoring";
 import { speakText } from "@/lib/voicePrefs";
 import { VoicePicker } from "@/components/exercises/VoicePicker";
-import { useTimedProgress } from "@/components/exercises/useExerciseEngine";
+import { useBlocoDeTreino } from "@/components/exercises/useExerciseEngine";
 import { ExerciseProgressBar } from "@/components/exercises/ExerciseProgressBar";
 import { PresentationConfig, type PresMode } from "@/components/exercises/PresentationConfig";
 import type { ExerciseResult, Theme } from "@/types";
@@ -423,11 +423,11 @@ export function RestauranteOrdemBoard({
 type Phase = "ready" | "salao" | "update" | "bancada" | "feedback";
 
 // ── Componente principal ────────────────────────────────────────────────────────
-export function RestauranteOrdem({ difficulty, onComplete }: RestauranteOrdemProps) {
+export function RestauranteOrdem({ difficulty, theme, onComplete }: RestauranteOrdemProps) {
   const [presMode, setPresMode] = useState<PresMode | null>(null);
   const speakOn = presMode === "visual_audio" || presMode === "audio_only";
   const hideText = presMode === "audio_only";
-  const { begin: startTimer, isTimeUp, elapsedSec, finish: finishTimer, progressPct } = useTimedProgress();
+  const { begin: startTimer, podeIniciarNovoDesafio, elapsedSec, finish: finishTimer, progressPct, emTolerancia } = useBlocoDeTreino("restaurante-ordem", difficulty);
   const startLevel = levelOf(difficulty);
   const [sessionLevel, setSessionLevel] = useState(startLevel);
   const spec = R_LEVELS[sessionLevel];
@@ -559,7 +559,7 @@ export function RestauranteOrdem({ difficulty, onComplete }: RestauranteOrdemPro
 
   function advance() {
     const nextTrial = trial + 1;
-    if (isTimeUp()) finish();
+    if (!podeIniciarNovoDesafio()) finish();
     else { setTrial(nextTrial); startRound(); }
   }
 
@@ -787,7 +787,7 @@ export function RestauranteOrdem({ difficulty, onComplete }: RestauranteOrdemPro
           </button>
         </div>
         <div style={{ flexShrink: 0, padding: "0 18px 10px" }}>
-          <ExerciseProgressBar progressPct={progressPct} theme="GAMIFIED" />
+          <ExerciseProgressBar progressPct={progressPct} theme={theme} emTolerancia={emTolerancia()} />
         </div>
       </div>
     );
@@ -847,7 +847,7 @@ export function RestauranteOrdem({ difficulty, onComplete }: RestauranteOrdemPro
               color: "#fff", fontWeight: 900, fontSize: 16, cursor: "pointer", boxShadow: "0 6px 20px rgba(20,122,69,0.5)" }}>
             Continuar →
           </button>
-          <div style={{ width: "100%", maxWidth: 280 }}><ExerciseProgressBar progressPct={progressPct} theme="GAMIFIED" /></div>
+          <div style={{ width: "100%", maxWidth: 280 }}><ExerciseProgressBar progressPct={progressPct} theme={theme} emTolerancia={emTolerancia()} /></div>
         </div>
       </div>
     );

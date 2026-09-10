@@ -161,9 +161,12 @@ describe("configuração e limites da fatia", () => {
     expect(progressLines.join(" ")).not.toMatch(/disc|move|minim|eficien|restart|peg/i);
   });
 
-  it("19. Grade não entra nesta fatia", () => {
+  it("19. a Grade ENTROU na dosagem global — o teste anterior caiu, e cair foi acerto", () => {
+    // Escrito em 09/set afirmando que a Grade ficava de fora da fatia dos pilotos. Ela migrou em
+    // 10/set, com os outros 31, quando ela levantou o portão. O invariante útil agora é o inverso.
     const source = readFileSync("components/exercises/executive/DeductiveGrid.tsx", "utf8");
-    expect(source).not.toContain("useBlocoDeTreino");
+    expect(source).toContain('useBlocoDeTreino("deductive-grid"');
+    expect(source, "a Grade não pode ter ficado com dois relógios").not.toContain("useTimedProgress");
   });
 
   it("só os três pilotos usam o hook novo", () => {

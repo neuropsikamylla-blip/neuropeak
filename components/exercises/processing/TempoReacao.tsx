@@ -3,7 +3,7 @@
 import { useState, useRef, useCallback, useEffect } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { calculateExerciseScore } from "@/lib/scoring";
-import { useTimedProgress } from "@/components/exercises/useExerciseEngine";
+import { useBlocoDeTreino } from "@/components/exercises/useExerciseEngine";
 import { ExerciseProgressBar } from "@/components/exercises/ExerciseProgressBar";
 import { ExerciseStage } from "@/components/exercises/ExerciseStage";
 import type { ExerciseResult, Theme } from "@/types";
@@ -31,7 +31,6 @@ interface Balloon {
   tx: number; ty: number;   // transform final (sai pelo lado oposto)
 }
 
-const SESSION_MS = 5 * 60 * 1000;   // 5 min (era 7)
 const GREEN = "#16a34a";       // o ÚNICO verde que vale
 // distratores "fáceis" (cores bem diferentes do verde)
 const DISTRACTOR_COLORS = ["#dc2626", "#2563eb", "#9333ea", "#ea580c", "#f59e0b"];
@@ -107,7 +106,9 @@ function BalloonShape({ color, size = 70 }: { color: string; size?: number }) {
 }
 
 export function TempoReacao({ difficulty, theme, onComplete }: TempoReacaoProps) {
-  const { begin, isTimeUp, elapsedSec, finish, progressPct } = useTimedProgress(SESSION_MS);
+  const {
+    begin, atingiuTeto, podeIniciarNovoDesafio, elapsedSec, finish, progressPct, emTolerancia,
+  } = useBlocoDeTreino("tempo-reacao", difficulty);
 
   const [started, setStarted] = useState(false);
   const [balloons, setBalloons] = useState<Balloon[]>([]);
@@ -134,7 +135,7 @@ export function TempoReacao({ difficulty, theme, onComplete }: TempoReacaoProps)
     resultsRef.current = newResults;
     setResults(newResults);
 
-    if (isTimeUp()) {
+    if (atingiuTeto() || (!podeIniciarNovoDesafio() && pendingTargetsRef.current <= 0)) {
       doneRef.current = true;
       finish();
       if (nextSpawnTimer.current) clearTimeout(nextSpawnTimer.current);
@@ -158,11 +159,11 @@ export function TempoReacao({ difficulty, theme, onComplete }: TempoReacaoProps)
         });
       }, 1500);
     }
-  }, [difficulty, onComplete, isTimeUp, elapsedSec, finish]);
+  }, [difficulty, onComplete, atingiuTeto, podeIniciarNovoDesafio, elapsedSec, finish]);
 
   const spawnBatch = useCallback(() => {
     if (doneRef.current) return;
-    if (isTimeUp()) return;
+    if (!podeIniciarNovoDesafio()) return;
 
     const acertos = correctCountRef.current;
     const prog = progressao(acertos);
@@ -191,7 +192,7 @@ export function TempoReacao({ difficulty, theme, onComplete }: TempoReacaoProps)
     ];
     pendingTargetsRef.current = numTargets;
     setBalloons(batch);
-  }, [nd, isTimeUp]);
+  }, [nd, podeIniciarNovoDesafio]);
 
   function start() {
     setStarted(true);
@@ -208,7 +209,7 @@ export function TempoReacao({ difficulty, theme, onComplete }: TempoReacaoProps)
   function handleBalloonClick(balloon: Balloon) {
     if (!startedRef.current || doneRef.current) return;
     if (resolvedIds.current.has(balloon.id)) return;
-    if (isTimeUp()) return;
+    if (atingiuTeto()) return;
 
     resolvedIds.current.add(balloon.id);
     setBalloons((prev) => prev.filter((b) => b.id !== balloon.id));
@@ -271,7 +272,7 @@ export function TempoReacao({ difficulty, theme, onComplete }: TempoReacaoProps)
             <p className={`text-xs ${subClass}`}>Toque apenas nos balões <span className="font-bold text-green-600">VERDES</span></p>
           </div>
         </div>
-        <ExerciseProgressBar progressPct={progressPct} theme={theme} />
+        <ExerciseProgressBar progressPct={progressPct} theme={theme} emTolerancia={emTolerancia()} />
       </div>
 
       {/* Play area */}

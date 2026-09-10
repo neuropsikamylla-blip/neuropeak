@@ -3,9 +3,8 @@
 import { useState, useEffect, useRef } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { calculateExerciseScore } from "@/lib/scoring";
-import { useTimedProgress } from "@/components/exercises/useExerciseEngine";
+import { useBlocoDeTreino } from "@/components/exercises/useExerciseEngine";
 import { ExerciseProgressBar } from "@/components/exercises/ExerciseProgressBar";
-import { stroopDosage } from "@/lib/exercise-dosage";
 import { ExerciseStage } from "@/components/exercises/ExerciseStage";
 import type { ExerciseResult, Theme } from "@/types";
 
@@ -428,7 +427,7 @@ function TutorialStep({
 // ── Main exercise ─────────────────────────────────────────────────────────────
 
 export function StroopTask({ difficulty, theme, onComplete }: StroopTaskProps) {
-  const { begin, isTimeUp, elapsedSec, finish, progressPct } = useTimedProgress(stroopDosage(difficulty).targetDurationSec * 1000);
+  const { begin, podeIniciarNovoDesafio, elapsedSec, finish, progressPct, emTolerancia } = useBlocoDeTreino("stroop-task", difficulty);
 
   const [phase, setPhase] = useState<Phase>("tutorial");
   const [tutorialStep, setTutorialStep] = useState(0);
@@ -485,7 +484,7 @@ export function StroopTask({ difficulty, theme, onComplete }: StroopTaskProps) {
 
     const nextTrial = trialRef.current + 1;
 
-    if (isTimeUp()) {
+    if (!podeIniciarNovoDesafio()) {
       doneRef.current = true;
       setDone(true);
       finish();
@@ -572,7 +571,7 @@ export function StroopTask({ difficulty, theme, onComplete }: StroopTaskProps) {
           </span>
         </div>
 
-        <ExerciseProgressBar progressPct={progressPct} theme={theme} />
+        <ExerciseProgressBar progressPct={progressPct} theme={theme} emTolerancia={emTolerancia()} />
 
         {/* Timer bar */}
         <div

@@ -4,7 +4,7 @@ import { useState, useRef, useCallback, useEffect } from "react";
 import { motion } from "framer-motion";
 import { ListChecks } from "lucide-react";
 import { calculateExerciseScore } from "@/lib/scoring";
-import { useTimedProgress } from "@/components/exercises/useExerciseEngine";
+import { useBlocoDeTreino } from "@/components/exercises/useExerciseEngine";
 import { ExerciseProgressBar } from "@/components/exercises/ExerciseProgressBar";
 import { ExerciseStage } from "@/components/exercises/ExerciseStage";
 import type { ExerciseResult, Theme } from "@/types";
@@ -118,8 +118,8 @@ export function ListaDistracaoBoard({
   );
 }
 
-export function ListaDistracao({ difficulty, onComplete }: ListaDistracaoProps) {
-  const { begin: startTimer, isTimeUp, elapsedSec, finish: finishTimer, progressPct } = useTimedProgress();
+export function ListaDistracao({ difficulty, theme, onComplete }: ListaDistracaoProps) {
+  const { begin: startTimer, podeIniciarNovoDesafio, elapsedSec, finish: finishTimer, progressPct, emTolerancia } = useBlocoDeTreino("lista-distracao", difficulty);
   const startLevel = levelOf(difficulty);
   const [level, setLevel] = useState(startLevel);
   const spec = LD_LEVELS[level];
@@ -213,9 +213,9 @@ export function ListaDistracao({ difficulty, onComplete }: ListaDistracaoProps) 
     streakRef.current = correct ? Math.max(0, streakRef.current) + 1 : Math.min(0, streakRef.current) - 1;
     if (streakRef.current >= 2) { streakRef.current = 0; setLevel((l) => { const nl = Math.min(10, l + 1); reachedRef.current = Math.max(reachedRef.current, nl); return nl; }); }
     else if (streakRef.current <= -2) { streakRef.current = 0; setLevel((l) => Math.max(1, l - 1)); }
-    const timeUp = isTimeUp();
+    const timeUp = !podeIniciarNovoDesafio();
     setTimeout(() => { if (timeUp) finish(); else startRound(); }, correct ? 1300 : 2400);
-  }, [spec, list, startRound, finish, isTimeUp]);
+  }, [spec, list, startRound, finish, podeIniciarNovoDesafio]);
 
   function pickWord(w: string) {
     if (phase !== "recall" || pickedRef.current.includes(w) || pickedRef.current.length >= spec.count) return;
@@ -267,7 +267,7 @@ export function ListaDistracao({ difficulty, onComplete }: ListaDistracaoProps) 
             Nível {level} · {spec.count} itens · {spec.order ? "em ordem" : "reconhecer"}
           </p>
         </div>
-        <ExerciseProgressBar progressPct={progressPct} theme="GAMIFIED" />
+        <ExerciseProgressBar progressPct={progressPct} theme={theme} emTolerancia={emTolerancia()} />
 
         {/* Etapa 1 — memorizar */}
         {phase === "memorize" && (

@@ -7,7 +7,7 @@ import { cancelTTS } from "@/lib/tts";
 import { resolveVoice, ensureVoices } from "@/lib/voicePrefs";
 import { VoicePicker } from "@/components/exercises/VoicePicker";
 import { PresentationConfig, type PresMode } from "@/components/exercises/PresentationConfig";
-import { useTimedProgress } from "@/components/exercises/useExerciseEngine";
+import { useBlocoDeTreino } from "@/components/exercises/useExerciseEngine";
 import { ExerciseProgressBar } from "@/components/exercises/ExerciseProgressBar";
 import type { ExerciseResult, Theme } from "@/types";
 
@@ -455,8 +455,8 @@ export function DesafioSupermercadoBoard({
 
 // ── HUD (barra azul-marinho) ─────────────────────────────────────────────────────
 
-function Hud({ level, mode, progressPct }: {
-  level: number; mode: "leitura" | "auditivo"; progressPct: number;
+function Hud({ level, mode, progressPct, theme, emTolerancia }: {
+  level: number; mode: "leitura" | "auditivo"; progressPct: number; theme: Theme; emTolerancia: boolean;
 }) {
   return (
     <div style={{
@@ -475,7 +475,7 @@ function Hud({ level, mode, progressPct }: {
         </div>
       </div>
 
-      <ExerciseProgressBar progressPct={progressPct} theme="GAMIFIED" />
+      <ExerciseProgressBar progressPct={progressPct} theme={theme} emTolerancia={emTolerancia} />
 
       {/* direita: Treino de Memória */}
       <div style={{ display: "flex", alignItems: "center", gap: 9, flexShrink: 0 }} className="np-hud-right">
@@ -496,13 +496,13 @@ function Hud({ level, mode, progressPct }: {
 // ── Main component ────────────────────────────────────────────────────────────────
 
 
-export function DesafioSupermercado({ difficulty, onComplete }: DesafioSupermercadoProps) {
+export function DesafioSupermercado({ difficulty, theme, onComplete }: DesafioSupermercadoProps) {
   // Modo de apresentação (escolhido na tela "Configurar atividade", antes de iniciar).
   const [presMode, setPresMode] = useState<PresMode | null>(null);
   const displayMode: "leitura" | "auditivo" = presMode === "audio_only" ? "auditivo" : "leitura";
   const mode = displayMode;                                  // controla esconder/mostrar texto
   const speakOn = presMode === "visual_audio" || presMode === "audio_only";  // controla a fala
-  const { begin, isTimeUp, elapsedSec, finish, progressPct } = useTimedProgress();
+  const { begin, podeIniciarNovoDesafio, elapsedSec, finish, progressPct, emTolerancia } = useBlocoDeTreino("desafio-supermercado", difficulty);
 
   const startLevel = useMemo(() => clampLevel(difficulty), [difficulty]);
   const [sessionLevel, setSessionLevel] = useState(startLevel);
@@ -614,7 +614,7 @@ export function DesafioSupermercado({ difficulty, onComplete }: DesafioSupermerc
     setTrialResults(newResults);
     setPhase("result");
     const nextTrial = trial + 1;
-    const timeUp = isTimeUp();
+    const timeUp = !podeIniciarNovoDesafio();
 
     setTimeout(() => {
       if (timeUp) {
@@ -663,7 +663,7 @@ export function DesafioSupermercado({ difficulty, onComplete }: DesafioSupermerc
       {showVoice && <VoicePicker onClose={() => setShowVoice(false)} />}
 
       <div style={{ position: "relative", zIndex: 2, display: "flex", flexDirection: "column", height: "100%" }}>
-        <Hud level={sessionLevel} mode={mode} progressPct={progressPct} />
+        <Hud level={sessionLevel} mode={mode} progressPct={progressPct} theme={theme} emTolerancia={emTolerancia()} />
 
         <AnimatePresence mode="wait">
 

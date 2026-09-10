@@ -32,7 +32,7 @@ import {
 } from "lucide-react";
 import { calculateExerciseScore } from "@/lib/scoring";
 import { playTTS, cancelTTS } from "@/lib/tts";
-import { useTimedProgress } from "@/components/exercises/useExerciseEngine";
+import { useBlocoDeTreino } from "@/components/exercises/useExerciseEngine";
 import { ExerciseProgressBar } from "@/components/exercises/ExerciseProgressBar";
 import { corrigirResposta, corrigirImprevisto } from "@/lib/caminhos-meta";
 import {
@@ -391,7 +391,7 @@ export function CaminhosMeta({ difficulty, theme, onComplete, settings }: Caminh
   const cfg = useMemo(() => normalizeCaminhosSettings(settings), [settings]);
   const sessao = useMemo(() => montarSessao(cfg), [cfg]);
 
-  const { begin, isTimeUp, elapsedSec, finish, progressPct } = useTimedProgress();
+  const { begin, podeIniciarNovoDesafio, elapsedSec, finish, progressPct, emTolerancia } = useBlocoDeTreino("antes-depois", difficulty);
 
   const [idx, setIdx] = useState(0);
   const atividade = sessao[Math.min(idx, sessao.length - 1)];
@@ -473,12 +473,12 @@ export function CaminhosMeta({ difficulty, theme, onComplete, settings }: Caminh
 
   const proximaAtividade = useCallback(() => {
     limparProgresso(atividade.id);
-    if (isTimeUp() || idx + 1 >= sessao.length) {
+    if (!podeIniciarNovoDesafio() || idx + 1 >= sessao.length) {
       finalizarSessao();
       return;
     }
     setIdx((i) => i + 1);
-  }, [atividade.id, isTimeUp, idx, sessao.length, finalizarSessao]);
+  }, [atividade.id, podeIniciarNovoDesafio, idx, sessao.length, finalizarSessao]);
 
   // registra o desempenho de UMA atividade e avança
   const registrarEavancar = useCallback(
@@ -543,6 +543,7 @@ export function CaminhosMeta({ difficulty, theme, onComplete, settings }: Caminh
       cfg={cfg}
       theme={theme}
       progressPct={progressPct}
+      emTolerancia={emTolerancia()}
       progresso={{ atual: idx + 1, total: sessao.length }}
       retomar={retomarDe ?? undefined}
       startTs={startTsRef.current}
@@ -687,6 +688,7 @@ function AtividadeRunner({
   cfg,
   theme,
   progressPct,
+  emTolerancia,
   progresso,
   retomar,
   startTs,
@@ -697,6 +699,7 @@ function AtividadeRunner({
   cfg: ReturnType<typeof normalizeCaminhosSettings>;
   theme: Theme;
   progressPct: number;
+  emTolerancia: boolean;
   progresso: { atual: number; total: number };
   retomar?: SavedProgress;
   startTs: number;
@@ -1159,7 +1162,7 @@ function AtividadeRunner({
           </button>
         </div>
 
-        <ExerciseProgressBar progressPct={progressPct} theme={theme} />
+        <ExerciseProgressBar progressPct={progressPct} theme={theme} emTolerancia={emTolerancia} />
 
         {/* CARTÃO DA META — sempre visível (spec §13) */}
         <div

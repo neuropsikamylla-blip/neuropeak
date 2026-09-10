@@ -11,9 +11,10 @@
 import React, { useMemo, useRef, useState, useCallback } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { calculateExerciseScore } from "@/lib/scoring";
-import { useTimedProgress } from "@/components/exercises/useExerciseEngine";
+import { useBlocoDeTreino } from "@/components/exercises/useExerciseEngine";
 import { TutorialBase } from "@/components/exercises/TutorialBase";
 import { ExerciseStage } from "@/components/exercises/ExerciseStage";
+import { ExerciseProgressBar } from "@/components/exercises/ExerciseProgressBar";
 import type { ExerciseResult, Theme } from "@/types";
 import { AssetImage } from "@/components/assets/AssetImage";
 import { socialStyles } from "./socialTheme";
@@ -159,7 +160,7 @@ function QuestionView({ story, scene, q, theme, index, total, onAnswered }: {
 // ── Componente principal ──────────────────────────────────────────────────────
 export function InvestigadoresSociais({ difficulty, theme, onComplete }: Props) {
   const { rootBg, card, btn, pal, isG } = socialStyles(theme);
-  const { begin, isTimeUp, elapsedSec, finish } = useTimedProgress();
+  const { begin, podeIniciarNovoDesafio, elapsedSec, finish, progressPct, emTolerancia } = useBlocoDeTreino("investigadores-sociais", difficulty);
 
   const faixasDisp = useMemo(() => FAIXAS.filter((f) => storiesByFaixa(f).length > 0), []);
   const [faixa, setFaixa] = useState<FaixaEtaria>(faixasDisp[0] ?? "crianca");
@@ -216,7 +217,7 @@ export function InvestigadoresSociais({ difficulty, theme, onComplete }: Props) 
     const curItems = cur ? scoredItems(cur) : [];
     if (itemIdx + 1 < curItems.length) { setItemIdx((i) => i + 1); return; }
     // fim do caso
-    if (isTimeUp() || storyIdx + 1 >= poolRef.current.length) { finishSession(); return; }
+    if (!podeIniciarNovoDesafio() || storyIdx + 1 >= poolRef.current.length) { finishSession(); return; }
     const next = poolRef.current[storyIdx + 1];
     if (next) maxNivelRef.current = Math.max(maxNivelRef.current, next.nivel);
     setStoryIdx((s) => s + 1); setItemIdx(0);
@@ -276,6 +277,7 @@ export function InvestigadoresSociais({ difficulty, theme, onComplete }: Props) 
         <div className="p-5" style={card}>
           <StoryHeader story={story} theme={theme}
             right={<span className={`text-xs font-semibold ${pal.sub}`}>Caso {storyIdx + 1}/{poolRef.current.length}</span>} />
+          <ExerciseProgressBar progressPct={progressPct} theme={theme} emTolerancia={emTolerancia()} />
           <AnimatePresence mode="wait">
             <QuestionView key={`${story.id}-${item.q.id}`} story={story} scene={item.scene} q={item.q}
               theme={theme} index={itemIdx} total={items.length} onAnswered={handleAnswered} />

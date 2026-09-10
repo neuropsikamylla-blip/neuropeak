@@ -4,7 +4,7 @@ import { useState, useRef, useCallback, useEffect } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { Eye, Headphones } from "lucide-react";
 import { calculateExerciseScore } from "@/lib/scoring";
-import { useTimedProgress } from "@/components/exercises/useExerciseEngine";
+import { useBlocoDeTreino } from "@/components/exercises/useExerciseEngine";
 import { ExerciseProgressBar } from "@/components/exercises/ExerciseProgressBar";
 import { ExerciseStage } from "@/components/exercises/ExerciseStage";
 import { ItemVisual } from "@/components/exercises/ItemVisual";
@@ -140,8 +140,8 @@ export function SequenciaItensBoard({
   );
 }
 
-export function SequenciaItens({ difficulty, onComplete }: SequenciaItensProps) {
-  const { begin: startTimer, isTimeUp, elapsedSec, finish: finishTimer, progressPct } = useTimedProgress();
+export function SequenciaItens({ difficulty, theme, onComplete }: SequenciaItensProps) {
+  const { begin: startTimer, podeIniciarNovoDesafio, elapsedSec, finish: finishTimer, progressPct, emTolerancia } = useBlocoDeTreino("sequencia-itens", difficulty);
   const startLevel = levelOf(difficulty);
   const [level, setLevel] = useState(startLevel);
   const spec = SI_LEVELS[level];
@@ -245,9 +245,9 @@ export function SequenciaItens({ difficulty, onComplete }: SequenciaItensProps) 
       reachedRef.current = Math.max(reachedRef.current, nl);
       return nl;
     });
-    const timeUp = isTimeUp();
+    const timeUp = !podeIniciarNovoDesafio();
     setTimeout(() => { if (timeUp) finish(); else startRound(); }, correct ? 1200 : 2200);
-  }, [sequence, startRound, finish, isTimeUp]);
+  }, [sequence, startRound, finish, podeIniciarNovoDesafio]);
 
   function handleKey(it: Item) {
     if (phase !== "input" || enteredRef.current.length >= spec.count) return;
@@ -291,7 +291,7 @@ export function SequenciaItens({ difficulty, onComplete }: SequenciaItensProps) 
             Nível {level} · {spec.count} itens · {spec.audio ? "áudio" : "visual"}{spec.similar ? " · semelhantes" : ""}
           </p>
         </div>
-        <ExerciseProgressBar progressPct={progressPct} theme="GAMIFIED" />
+        <ExerciseProgressBar progressPct={progressPct} theme={theme} emTolerancia={emTolerancia()} />
 
         {phase === "show" && (
           <div className="flex flex-col items-center gap-4 py-6" style={{ minHeight: 200 }}>

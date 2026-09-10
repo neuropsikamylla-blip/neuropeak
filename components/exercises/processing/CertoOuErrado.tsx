@@ -3,7 +3,7 @@
 import { useState, useRef, useCallback, useMemo, useEffect } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { calculateExerciseScore } from "@/lib/scoring";
-import { useTimedProgress } from "@/components/exercises/useExerciseEngine";
+import { useBlocoDeTreino } from "@/components/exercises/useExerciseEngine";
 import { ExerciseProgressBar } from "@/components/exercises/ExerciseProgressBar";
 import { ExerciseStage } from "@/components/exercises/ExerciseStage";
 import type { ExerciseResult, Theme } from "@/types";
@@ -510,7 +510,7 @@ export function CertoOuErrado({
   onComplete,
   patientAge,
 }: CertoOuErradoProps) {
-  const { begin, isTimeUp, elapsedSec, finish, progressPct } = useTimedProgress();
+  const { begin, podeIniciarNovoDesafio, elapsedSec, finish, progressPct, emTolerancia } = useBlocoDeTreino("certo-ou-errado", difficulty);
 
   const SCENARIO_POOL = useMemo(() => getScenarioPool(patientAge), [patientAge]);
 
@@ -559,7 +559,7 @@ export function CertoOuErrado({
       resultsRef.current = newResults;
       setResults(newResults);
 
-      if (isTimeUp()) {
+      if (!podeIniciarNovoDesafio()) {
         doneRef.current = true;
         finish();
 
@@ -593,7 +593,7 @@ export function CertoOuErrado({
         }, 1600);
       }
     },
-    [difficulty, onComplete, isTimeUp, elapsedSec, finish]
+    [difficulty, onComplete, podeIniciarNovoDesafio, elapsedSec, finish]
   );
 
   // ── Handle patient's answer ─────────────────────────────────────────────────
@@ -697,7 +697,7 @@ export function CertoOuErrado({
           </div>
         </div>
 
-        <ExerciseProgressBar progressPct={progressPct} theme={theme} />
+        <ExerciseProgressBar progressPct={progressPct} theme={theme} emTolerancia={emTolerancia()} />
       </div>
 
       {/* ── Main play area ── */}

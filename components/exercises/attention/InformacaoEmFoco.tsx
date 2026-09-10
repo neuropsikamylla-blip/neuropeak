@@ -13,7 +13,8 @@ import { useState, useRef, useCallback, useEffect } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { HelpCircle, Lightbulb, Check, X, Volume2, Search } from "lucide-react";
 import { calculateExerciseScore } from "@/lib/scoring";
-import { useTimedProgress } from "@/components/exercises/useExerciseEngine";
+import { useBlocoDeTreino } from "@/components/exercises/useExerciseEngine";
+import { ExerciseProgressBar } from "@/components/exercises/ExerciseProgressBar";
 import { ExerciseStage } from "@/components/exercises/ExerciseStage";
 import { playTTS, cancelTTS } from "@/lib/tts";
 import type { ExerciseResult, Theme } from "@/types";
@@ -224,7 +225,7 @@ function Tutorial({ theme, onStart }: { theme: Theme; onStart: () => void }) {
 
 export function InformacaoEmFoco({ difficulty, theme, onComplete }: Props) {
   const s = styles(theme);
-  const { begin, isTimeUp, elapsedSec, finish, progressPct } = useTimedProgress(6 * 60 * 1000); // sessão por TEMPO (~6 min)
+  const { begin, podeIniciarNovoDesafio, elapsedSec, finish, progressPct, emTolerancia } = useBlocoDeTreino("informacao-em-foco", difficulty);
 
   const [fase, setFase] = useState<"tutorial" | "play" | "fim">("tutorial");
   const nivelRef = useRef<number>(nivelInicialDe(difficulty));
@@ -288,12 +289,12 @@ export function InformacaoEmFoco({ difficulty, theme, onComplete }: Props) {
   }, [finish, elapsedSec, onComplete]);
 
   const proxima = useCallback(() => {
-    if (isTimeUp()) { encerrar(); return; }
+    if (!podeIniciarNovoDesafio()) { encerrar(); return; }
     // adaptativo: 3 acertos de 1ª sobe; 2 erros seguidos desce (spec §21)
     if (acertosSeguidos.current >= 3 && nivelRef.current < NIVEL_MAX) { nivelRef.current += 1; acertosSeguidos.current = 0; }
     else if (errosSeguidos.current >= 2 && nivelRef.current > 1) { nivelRef.current -= 1; errosSeguidos.current = 0; }
     novaQuestao();
-  }, [isTimeUp, encerrar, novaQuestao]);
+  }, [podeIniciarNovoDesafio, encerrar, novaQuestao]);
 
   const responder = useCallback((idx: number) => {
     if (!questao || revelou || fb?.ok) return;
@@ -368,17 +369,11 @@ export function InformacaoEmFoco({ difficulty, theme, onComplete }: Props) {
               {`Nível ${nivelRef.current}`}
             </span>
           </div>
-          {/* O que a barra mede fica EXPLÍCITO: a sessão é por tempo, não por nº de questões.
-              Antes aparecia "Questão 7" ao lado de um "%" de tempo — parecia progresso errado. */}
           <div className="flex items-center justify-between mt-2 mb-1">
             <span className={`text-xs font-semibold ${s.sub}`}>Atividade {qNum}</span>
             <span className={`text-xs ${s.sub}`}>Tempo da sessão · {Math.round(progressPct)}%</span>
           </div>
-          {/* progresso por TEMPO (sessão de ~6 min), não por nº de questões */}
-          <div className={`h-2 rounded-full overflow-hidden ${s.isG ? "bg-white/10" : "bg-slate-200"}`}>
-            <motion.div className="h-full rounded-full" style={{ background: s.isG ? "#22d3ee" : "#2563eb" }}
-              animate={{ width: `${progressPct}%` }} transition={{ duration: 0.3 }} />
-          </div>
+          <ExerciseProgressBar progressPct={progressPct} theme={theme} emTolerancia={emTolerancia()} />
         </div>
 
         {/* Pergunta + ajuda + áudio */}
@@ -447,7 +442,7 @@ export function InformacaoEmFoco({ difficulty, theme, onComplete }: Props) {
         {/* Continuar — só depois de resolver (sem auto-avanço) */}
         {revelou && (
           <button onClick={proxima} className={`w-full h-12 rounded-full font-bold ${s.btn}`}>
-            {isTimeUp() ? "Ver resultado" : "Continuar"}
+            {!podeIniciarNovoDesafio() ? "Ver resultado" : "Continuar"}
           </button>
         )}
         </div>

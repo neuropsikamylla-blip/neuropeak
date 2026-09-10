@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useEffect, useCallback, useRef } from "react";
-import { useTimedProgress } from "@/components/exercises/useExerciseEngine";
+import { useBlocoDeTreino } from "@/components/exercises/useExerciseEngine";
 import { ExerciseProgressBar } from "@/components/exercises/ExerciseProgressBar";
 import { ExerciseStage } from "@/components/exercises/ExerciseStage";
 import { TutorialBase } from "@/components/exercises/TutorialBase";
@@ -608,7 +608,7 @@ function LabirintoTutorial({ theme, onDone }: { theme: Theme; onDone: () => void
 // ── Main component ─────────────────────────────────────────────────────────
 export function Labirinto({ difficulty, theme, onComplete }: LabirintoProps) {
   const [showTutorial, setShowTutorial] = useState(true);
-  const { begin, isTimeUp, elapsedSec, finish, progressPct } = useTimedProgress();
+  const { begin, podeIniciarNovoDesafio, elapsedSec, finish, progressPct, emTolerancia } = useBlocoDeTreino("labirinto", difficulty);
   const pal = PALETTES[theme];
 
   const [sizeIdx, setSizeIdx] = useState(() => initialIdx(difficulty));
@@ -744,7 +744,7 @@ export function Labirinto({ difficulty, theme, onComplete }: LabirintoProps) {
     }
     const nextMaze = curMazeNum + 1;
 
-    if (isTimeUp()) {
+    if (!podeIniciarNovoDesafio()) {
       allDoneRef.current = true;
       finish();
       const solvedCount = all.filter((x) => x.solved).length;
@@ -965,7 +965,7 @@ export function Labirinto({ difficulty, theme, onComplete }: LabirintoProps) {
             <p className="text-[11px] tabular-nums" style={{ color: timeColor }}>{elapsed}s / {timeLimit}s</p>
           </div>
         </div>
-        <ExerciseProgressBar progressPct={progressPct} theme={theme} />
+        <ExerciseProgressBar progressPct={progressPct} theme={theme} emTolerancia={emTolerancia()} />
       </div>
 
       {/* Maze */}
@@ -999,7 +999,7 @@ export function Labirinto({ difficulty, theme, onComplete }: LabirintoProps) {
             : report.deadEnds >= 3 ? "Evite os becos: trace o caminho com o olho antes de mover."
             : report.efficiency < 0.6 ? "Muitos movimentos extras — planeje a rota mais curta."
             : "Bom! Tente usar ainda menos movimentos.";
-          const last = isTimeUp();
+          const last = !podeIniciarNovoDesafio();
           const Row = ({ k, v, warn }: { k: string; v: string | number; warn?: boolean }) => (
             <div className="flex justify-between" style={{ fontSize: 12.5 }}>
               <span style={{ color: "#9ca3af" }}>{k}</span>

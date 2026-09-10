@@ -13,7 +13,7 @@
 import { useState, useRef, useEffect, useCallback, useLayoutEffect } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { calculateExerciseScore } from "@/lib/scoring";
-import { useTimedProgress } from "@/components/exercises/useExerciseEngine";
+import { useBlocoDeTreino } from "@/components/exercises/useExerciseEngine";
 import { ExerciseProgressBar } from "@/components/exercises/ExerciseProgressBar";
 import { playTTS, cancelTTS } from "@/lib/tts";
 import type { ExerciseResult, Theme } from "@/types";
@@ -128,7 +128,7 @@ function AnuncioComando({ round, onOk }: { round: FocusRound; onOk: () => void }
 // ── Componente principal ─────────────────────────────────────────────────────
 export function FocusAgents({ difficulty, theme, onComplete, exerciseId = "focus-agents", settings }: FocusAgentsProps) {
   const auditivo = exerciseId === "focus-agents-auditivo";
-  const { begin, isTimeUp, elapsedSec, finish, progressPct } = useTimedProgress();
+  const { begin, podeIniciarNovoDesafio, elapsedSec, finish, progressPct, emTolerancia } = useBlocoDeTreino(exerciseId, difficulty);
 
   type Fase = "comando" | "jogando" | "feedback";
   const [fase, setFase] = useState<Fase>("comando");
@@ -352,7 +352,7 @@ export function FocusAgents({ difficulty, theme, onComplete, exerciseId = "focus
 
   // ANUNCIA o comando, depois solta a queda (§ "mandar antes" + sempre visível)
   const novaRodada = useCallback(() => {
-    if (doneRef.current || isTimeUp()) { encerrar(); return; }
+    if (doneRef.current || !podeIniciarNovoDesafio()) { encerrar(); return; }
     const step = STEPS[stepRef.current];
     const r = gerarRodada(step.etapa, step.n, roundRef.current?.texto, step.semelhantes); // não repete o comando anterior
     // Os personagens desta rodada furam a fila: são os únicos que precisam estar prontos AGORA.
@@ -365,7 +365,7 @@ export function FocusAgents({ difficulty, theme, onComplete, exerciseId = "focus
     if (auditivo) falar(r);
     // NÃO inicia sozinho: o card mostra o comando e espera o paciente clicar OK
     // (confirma que leu). Depois disso, nenhuma dica fica na tela. (pedido da Kamylla)
-  }, [auditivo, falar, isTimeUp, encerrar]);
+  }, [auditivo, falar, podeIniciarNovoDesafio, encerrar]);
 
   // Paciente confirmou que leu o comando → começa a rodada (sem o comando visível).
   const confirmarComando = useCallback(() => {
@@ -450,7 +450,7 @@ export function FocusAgents({ difficulty, theme, onComplete, exerciseId = "focus
       {/* Só a barra de progresso no topo — SEM o comando visível durante a busca
           (sem dica após a instrução). O comando aparece só no card "Encontre". */}
       <div className="flex-shrink-0 px-3 pt-3 pb-2" style={{ zIndex: 50 }}>
-        <ExerciseProgressBar progressPct={progressPct} theme={theme} />
+        <ExerciseProgressBar progressPct={progressPct} theme={theme} emTolerancia={emTolerancia()} />
       </div>
 
       <div ref={arenaRef} className="relative flex-1 overflow-hidden mx-2 mb-2 rounded-2xl"

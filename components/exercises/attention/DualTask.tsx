@@ -4,7 +4,7 @@ import { useState, useEffect, useRef, useCallback } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { Hash, AlertTriangle, Sparkles } from "lucide-react";
 import { calculateExerciseScore } from "@/lib/scoring";
-import { useTimedProgress } from "@/components/exercises/useExerciseEngine";
+import { useBlocoDeTreino } from "@/components/exercises/useExerciseEngine";
 import { ExerciseProgressBar } from "@/components/exercises/ExerciseProgressBar";
 import { ExerciseStage } from "@/components/exercises/ExerciseStage";
 import type { ExerciseResult, Theme } from "@/types";
@@ -235,7 +235,7 @@ function InstrucaoBloco({ spec, idx, theme, alterada }: { spec: LevelSpec; idx: 
 export function DualTask({ difficulty, theme, onComplete }: DualTaskProps) {
   const spec = levelOf(difficulty);
   const nback = spec.nback;
-  const { begin, isTimeUp, elapsedSec, finish, progressPct } = useTimedProgress();
+  const { begin, podeIniciarNovoDesafio, elapsedSec, finish, progressPct, emTolerancia } = useBlocoDeTreino("dual-task", difficulty);
 
   const [shapes] = useState<ShapeTrial[]>(() => buildShapeSequence(spec, TOTAL_SHAPES));
   const [digitSeq] = useState<number[]>(() => buildDigitSequence(900, nback));
@@ -330,7 +330,7 @@ export function DualTask({ difficulty, theme, onComplete }: DualTaskProps) {
     function scheduleNextShape() {
       if (allDoneRef.current) return;
       const idx = shapeIdxRef.current;
-      if (isTimeUp() || idx >= TOTAL_SHAPES) { finishSession(); return; }
+      if (!podeIniciarNovoDesafio() || idx >= TOTAL_SHAPES) { finishSession(); return; }
 
       // Mudança de regra (block-alt): ao entrar num novo bloco, avisa "REGRA ALTERADA".
       if (spec.topRule === "block-alt") {
@@ -471,7 +471,7 @@ export function DualTask({ difficulty, theme, onComplete }: DualTaskProps) {
             <p className={`shrink-0 whitespace-nowrap text-xs ${pal.sub}`}>Seu progresso</p>
             {/* A barra canônica traz `marginBottom: 14` embutido; compensado aqui para o
                 cabeçalho ficar compacto, sem reescrever a peça compartilhada. */}
-            <div style={{ marginBottom: -14 }} className="min-w-0 flex-1"><ExerciseProgressBar progressPct={progressPct} theme={theme} /></div>
+            <div style={{ marginBottom: -14 }} className="min-w-0 flex-1"><ExerciseProgressBar progressPct={progressPct} theme={theme} emTolerancia={emTolerancia()} /></div>
           </div>
         </header>
 

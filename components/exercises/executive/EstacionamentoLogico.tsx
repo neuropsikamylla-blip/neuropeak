@@ -2,7 +2,7 @@
 
 import { useState, useRef, useCallback, useLayoutEffect, useMemo, useEffect } from "react";
 import { calculateExerciseScore } from "@/lib/scoring";
-import { useTimedProgress } from "@/components/exercises/useExerciseEngine";
+import { useBlocoDeTreino } from "@/components/exercises/useExerciseEngine";
 import { ExerciseProgressBar } from "@/components/exercises/ExerciseProgressBar";
 import { ExerciseStage } from "@/components/exercises/ExerciseStage";
 import { assignCarImages, ALL_CAR_IMAGES } from "@/lib/parking-cars";
@@ -355,8 +355,8 @@ const TUTORIAL_LEVEL: Level = {
   ],
 };
 
-export function EstacionamentoLogico({ difficulty, theme: _theme, onComplete }: Props) {
-  const { begin, isTimeUp, elapsedSec, finish: finishTimer, progressPct } = useTimedProgress(11 * 60 * 1000); // 11 min — tarefa de planejamento (pedido da Kamylla)
+export function EstacionamentoLogico({ difficulty, theme, onComplete }: Props) {
+  const { begin, podeIniciarNovoDesafio, elapsedSec, finish: finishTimer, progressPct, emTolerancia } = useBlocoDeTreino("estacionamento-logico", difficulty);
 
   const [cellPx, setCellPx] = useState(52);
   const wrapRef = useRef<HTMLDivElement>(null);
@@ -480,12 +480,12 @@ export function EstacionamentoLogico({ difficulty, theme: _theme, onComplete }: 
       streakRef.current -= 1;
       if (streakRef.current <= -2) { streakRef.current = 0; curDiffRef.current = stepDiff(curDiffRef.current, -1); }
     }
-    if (isTimeUp()) { completeSession(); return; }
+    if (!podeIniciarNovoDesafio()) { completeSession(); return; }
     const picked = pickLevel(curDiffRef.current, recentRef.current);
     curDiffRef.current = picked.diff;
     reachedRef.current = Math.max(reachedRef.current, picked.diff);
     loadLevel(picked.level);
-  }, [isTimeUp, completeSession, loadLevel]);
+  }, [podeIniciarNovoDesafio, completeSession, loadLevel]);
 
   // Fim do tutorial → começa o jogo de verdade (não conta nas estatísticas).
   const startRealGame = useCallback(() => {
@@ -724,7 +724,7 @@ export function EstacionamentoLogico({ difficulty, theme: _theme, onComplete }: 
 
       {/* Barra de progresso (pelo tempo, ~11 min, em saltos de 10%) */}
       <div style={{ width: "100%", maxWidth: 320, margin: "0 auto", display: "flex", alignItems: "center", gap: 8, paddingLeft: 14, paddingRight: 14 }}>
-        <ExerciseProgressBar progressPct={progressPct} theme="GAMIFIED" />
+        <ExerciseProgressBar progressPct={progressPct} theme={theme} emTolerancia={emTolerancia()} />
       </div>
 
       {/* Banner da DICA no MODO GUIADO (ativado pelo "Ver dica" após 4 erros seguidos) */}

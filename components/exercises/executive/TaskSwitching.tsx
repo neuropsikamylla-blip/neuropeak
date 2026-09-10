@@ -3,7 +3,7 @@
 import { useState, useEffect, useRef, useCallback } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { calculateExerciseScore } from "@/lib/scoring";
-import { useTimedProgress } from "@/components/exercises/useExerciseEngine";
+import { useBlocoDeTreino } from "@/components/exercises/useExerciseEngine";
 import { ExerciseProgressBar } from "@/components/exercises/ExerciseProgressBar";
 import { ExerciseStage } from "@/components/exercises/ExerciseStage";
 import { TutorialBase } from "@/components/exercises/TutorialBase";
@@ -219,7 +219,7 @@ function TaskSwitchingTutorial({ theme, onDone }: { theme: Theme; onDone: () => 
 
 export function TaskSwitching({ difficulty, theme, onComplete }: TaskSwitchingProps) {
   const [showTutorial, setShowTutorial] = useState(true);
-  const { begin, isTimeUp, elapsedSec, finish, progressPct } = useTimedProgress();
+  const { begin, podeIniciarNovoDesafio, elapsedSec, finish, progressPct, emTolerancia } = useBlocoDeTreino("task-switching", difficulty);
 
   const [trials] = useState<Trial[]>(() => buildTrials(difficulty));
   const [trialIdx, setTrialIdx] = useState(0);
@@ -269,7 +269,7 @@ export function TaskSwitching({ difficulty, theme, onComplete }: TaskSwitchingPr
 
   const advance = useCallback((res: TrialResult[]) => {
     const next = trialIdx + 1;
-    if (isTimeUp()) {
+    if (!podeIniciarNovoDesafio()) {
       finishSession(res);
       return;
     }
@@ -289,7 +289,7 @@ export function TaskSwitching({ difficulty, theme, onComplete }: TaskSwitchingPr
       setPhase("stimulus");
       stimulusStart.current = Date.now();
     }
-  }, [trialIdx, TOTAL, trials, isTimeUp, finishSession]);
+  }, [trialIdx, TOTAL, trials, podeIniciarNovoDesafio, finishSession]);
 
   function handleAnswer(side: "left" | "right") {
     if (phase !== "stimulus" || allDoneRef.current) return;
@@ -352,7 +352,7 @@ export function TaskSwitching({ difficulty, theme, onComplete }: TaskSwitchingPr
           <div className="flex justify-between items-center mb-2">
             <h2 className={`font-bold text-sm ${pal.title}`}>🔄 Task Switching</h2>
           </div>
-          <ExerciseProgressBar progressPct={progressPct} theme={theme} />
+          <ExerciseProgressBar progressPct={progressPct} theme={theme} emTolerancia={emTolerancia()} />
         </div>
 
         {/* Rule banner */}
