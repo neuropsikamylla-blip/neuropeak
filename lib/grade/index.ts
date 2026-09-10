@@ -25,6 +25,15 @@ export {
   DURACAO_SESSAO_GRADE_MS,
   agregarSessaoGrade,
 } from "./sessao";
+export {
+  autonomiaDeMonitoramento,
+  calcularIndicadores,
+  exploracaoAntesDaDeterminacao,
+  metodoDeLeitura,
+  persistenciaEmContradicao,
+  resolucao,
+} from "./indicadores";
+export type { IndicadoresGrade, OrdemDaPistaTrabalhada } from "./indicadores";
 export type {
   AgregadoSessaoGrade,
   EventoPistaGrade,

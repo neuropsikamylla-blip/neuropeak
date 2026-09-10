@@ -1,4 +1,5 @@
 import { acuraciaDoProblema, type RegistroAtribuicao, type RegistroVerificacao } from "./interacao";
+import { calcularIndicadores, type IndicadoresGrade } from "./indicadores";
 import type { Puzzle } from "./tipos";
 
 /**
@@ -47,6 +48,7 @@ export type MetadataSessaoGrade = {
   dessasMantidas: number;
   dessasRevisadas: number;
   atribuicoesComEstadoJaContraditorio: number;
+  indicadores?: IndicadoresGrade;
 };
 
 export interface AgregadoSessaoGrade {
@@ -79,15 +81,20 @@ export function agregarSessaoGrade(
       0
     ) / concluidos.length;
 
+  const metadataSemIndicadores: MetadataSessaoGrade = {
+    problemas,
+    problemasResolvidos: concluidos.length,
+    tempoTotal: somar("tempoTotal"),
+    atribuicoesAntesDeDeterminacao: somar("atribuicoesAntesDeDeterminacao"),
+    dessasMantidas: somar("dessasMantidas"),
+    dessasRevisadas: somar("dessasRevisadas"),
+    atribuicoesComEstadoJaContraditorio: somar("atribuicoesComEstadoJaContraditorio"),
+  };
+
   return {
     metadata: {
-      problemas,
-      problemasResolvidos: concluidos.length,
-      tempoTotal: somar("tempoTotal"),
-      atribuicoesAntesDeDeterminacao: somar("atribuicoesAntesDeDeterminacao"),
-      dessasMantidas: somar("dessasMantidas"),
-      dessasRevisadas: somar("dessasRevisadas"),
-      atribuicoesComEstadoJaContraditorio: somar("atribuicoesComEstadoJaContraditorio"),
+      ...metadataSemIndicadores,
+      indicadores: calcularIndicadores(metadataSemIndicadores),
     },
     acuracia,
   };

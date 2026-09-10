@@ -116,6 +116,30 @@ describe("agregado da sessão da Grade Dedutiva", () => {
     expect(Number.isNaN(resultado.acuracia)).toBe(false);
     expect(resultado.acuracia).toBeGreaterThanOrEqual(0);
   });
+
+  it("grava os indicadores no metadata sem substituir os registros brutos", () => {
+    const original = registro("tutorial-feira-cientifica", { concluido: false });
+    const resultado = agregarSessaoGrade([original]);
+
+    expect(resultado.metadata.problemas).toEqual([original]);
+    expect(resultado.metadata.indicadores).toEqual({
+      resolucao: 0,
+      exploracaoAntesDaDeterminacao: {
+        atribuicoesAntesDeDeterminacaoPorAtribuicoes: null,
+        atribuicoesRevisadasPorAtribuicoesAntesDeDeterminacao: null,
+      },
+      persistenciaEmContradicao: null,
+      autonomiaDeMonitoramento: {
+        verificacoesUsadasPorCota: 0,
+        verificacoesInconsistentesCorrigidasDepois: 0,
+      },
+      metodoDeLeitura: {
+        pistasRiscadasPorPistasDoProblema: 0,
+        pistasDesmarcadasDepois: 0,
+        ordemDasPistasTrabalhadas: [],
+      },
+    });
+  });
 });
 
 describe("dosagem e sequência da Grade Dedutiva", () => {
