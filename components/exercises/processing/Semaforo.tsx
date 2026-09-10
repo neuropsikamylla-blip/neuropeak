@@ -392,7 +392,7 @@ export function Semaforo({ difficulty, theme, onComplete }: SemaforoProps) {
                       feedback === "correct" ? "text-green-400" : "text-red-400"
                     }`}
                   >
-                    {feedback === "correct" ? "✓ Certo!" : "✗ Errado!"}
+                    {feedback === "correct" ? "✓" : "✗"}
                   </motion.p>
                 )}
               </AnimatePresence>

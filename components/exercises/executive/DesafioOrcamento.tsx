@@ -187,7 +187,7 @@ function TutStep({ theme, onDone }: { theme: Theme; onDone: () => void }) {
         <span className={`text-xs ${sub}`}>{sel.size} item(s) selecionado(s)</span>
         <span className={`text-xs ${sub}`}>💡 Calcule mentalmente</span>
       </div>
-      {confirmed && !ok && <p className="text-xs text-center text-red-500 font-semibold">Orçamento não respeitado! Tente de novo.</p>}
+      {confirmed && !ok && <p className="text-xs text-center text-red-500 font-semibold">Orçamento excedido.</p>}
       <button onClick={confirm} disabled={sel.size === 0}
         className={`w-full h-11 rounded-xl font-bold text-white transition-all disabled:opacity-40 ${
           theme === "GAMIFIED" ? "bg-cyan-600" : "bg-indigo-600"
@@ -353,7 +353,7 @@ export function DesafioOrcamento({ difficulty, theme, onComplete }: Props) {
                 initial={{ opacity: 0, scale: 0.9 }} animate={{ opacity: 1, scale: 1 }}>
                 <p className="text-5xl mb-2">{lastCorrect ? "✅" : "❌"}</p>
                 <p className={`font-bold text-lg ${lastCorrect ? "text-green-600" : "text-red-500"}`}>
-                  {lastCorrect ? "Orçamento respeitado!" : "Tente de novo na próxima"}
+                  {lastCorrect ? "Orçamento respeitado!" : "Valor fora do orçamento"}
                 </p>
                 <p className={`text-sm mt-1 ${pal.sub}`}>
                   Você gastou: <strong>{fmt(totalRounded)}</strong> · {currentRound.goal.label}

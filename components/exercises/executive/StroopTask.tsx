@@ -360,13 +360,7 @@ function TutorialStep({
                   border: `1.5px solid ${isCorrect ? "rgba(74,222,128,0.3)" : "rgba(251,113,133,0.3)"}`,
                 }}
               >
-                <p
-                  className="font-bold text-base tracking-wide"
-                  style={{ color: isCorrect ? "#4ade80" : "#fb7185" }}
-                >
-                  {isCorrect ? "✓ Correto" : "✗ Quase lá"}
-                </p>
-                <p className="text-sm mt-1 text-slate-300">
+                <p className="text-sm text-slate-300">
                   {item.rule === "COR" ? (
                     isCorrect ? (
                       <>
@@ -374,7 +368,7 @@ function TutorialStep({
                         <strong style={{ color: item.inkColor.hex }}>
                           {item.inkColor.name}
                         </strong>
-                        . Perfeito!
+                        .
                       </>
                     ) : (
                       <>
@@ -389,7 +383,6 @@ function TutorialStep({
                     <>
                       A palavra escrita era{" "}
                       <strong className="text-white">{item.word.name}</strong>.
-                      Perfeito!
                     </>
                   ) : (
                     <>

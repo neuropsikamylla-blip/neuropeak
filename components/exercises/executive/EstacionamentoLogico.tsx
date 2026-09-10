@@ -582,7 +582,7 @@ export function EstacionamentoLogico({ difficulty, theme, onComplete }: Props) {
     return (
       <ExerciseStage width="medio" background="#ECEAE4">
         <div className="w-full max-w-xs text-center">
-          <p className="text-2xl font-light mb-3" style={{ color: "#2E9E4F" }}>Muito bem! 🎉</p>
+          <p className="text-2xl font-light mb-3" style={{ color: "#2E9E4F" }}>Tutorial concluído</p>
           <p className="text-sm mb-8" style={{ color: "#6B7384" }}>
             Você liberou o carro vermelho! É sempre assim: mova os outros carros para abrir o caminho e leve o vermelho até a saída.
           </p>
@@ -605,12 +605,12 @@ export function EstacionamentoLogico({ difficulty, theme, onComplete }: Props) {
     const perfect = extra <= 0;            // resolveu no mínimo
     const oneOver = extra === 1;           // 1 a mais → pode seguir ou refazer
     // 2+ a mais → treino rígido: tem que refazer.
-    const headColor = perfect ? "#2E9E4F" : oneOver ? "#B45309" : "#3A4050";
+    const headColor = "#3A4050";
     return (
       <ExerciseStage width="medio" background="#ECEAE4">
         <div className="w-full max-w-xs text-center">
           <p className="text-2xl font-light mb-8" style={{ color: headColor }}>
-            {perfect ? "Perfeito!" : oneOver ? "Quase perfeito!" : "Quase lá"}
+            Desafio resolvido
           </p>
           <div className="flex justify-center gap-14 mb-8">
             <div>
@@ -659,7 +659,7 @@ export function EstacionamentoLogico({ difficulty, theme, onComplete }: Props) {
           ) : (
             <>
               <p className="text-sm mb-5" style={{ color: "#6B7384" }}>
-                Você fez <strong>{extra} movimentos a mais</strong>. Dá para resolver em <strong>{ideal}</strong> — tente de novo!
+                Você fez <strong>{extra} movimentos a mais</strong>. Dá para resolver em <strong>{ideal}</strong> movimentos.
               </p>
               <button
                 onClick={() => loadLevel(currentLevel)}

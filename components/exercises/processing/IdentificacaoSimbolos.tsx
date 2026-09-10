@@ -109,12 +109,14 @@ export function IdentificacaoSimbolos({ difficulty, theme, onComplete }: Identif
   });
   const [results, setResults] = useState<{ correct: boolean; rt: number; distractors: number }[]>([]);
   const [feedback, setFeedback] = useState<"correct" | "incorrect" | null>(null);
+  const [selectedSymbol, setSelectedSymbol] = useState<string | null>(null);
   const trialStart = useRef<number>(Date.now());
 
   function advanceTrial(newTarget: string, dCount: number) {
     setTarget(newTarget);
     setOptions(makeOptions(newTarget, dCount));
     setFeedback(null);
+    setSelectedSymbol(null);
     trialStart.current = Date.now();
   }
 
@@ -122,6 +124,7 @@ export function IdentificacaoSimbolos({ difficulty, theme, onComplete }: Identif
     if (feedback) return;
     const rt = Date.now() - trialStart.current;
     const isCorrect = symbol === target;
+    setSelectedSymbol(symbol);
     setFeedback(isCorrect ? "correct" : "incorrect");
     const newResults = [...results, { correct: isCorrect, rt, distractors: distractorCount }];
     setResults(newResults);
@@ -205,6 +208,7 @@ export function IdentificacaoSimbolos({ difficulty, theme, onComplete }: Identif
             let cellStyle = "";
             if (feedback) {
               if (isTargetSym) cellStyle = "bg-green-100 border-green-500 text-green-700";
+              else if (sym === selectedSymbol) cellStyle = "bg-red-100 border-red-500 text-red-700";
               else cellStyle = theme === "GAMIFIED" ? "bg-gray-700 border-gray-600 text-gray-400" : "bg-gray-50 border-gray-200 text-gray-500";
             } else {
               cellStyle = theme === "GAMIFIED"
@@ -228,9 +232,10 @@ export function IdentificacaoSimbolos({ difficulty, theme, onComplete }: Identif
         </div>
 
         {feedback && (
-          <p className={`text-center text-sm font-medium ${feedback === "correct" ? "text-green-500" : "text-red-500"}`}>
-            {feedback === "correct" ? "Correto! ✅" : "Incorreto ❌"}
-          </p>
+          <div className="text-center text-sm font-medium text-gray-600">
+            <p>Era este o símbolo: <strong>{target}</strong></p>
+            <p>Símbolo tocado: <strong>{selectedSymbol}</strong></p>
+          </div>
         )}
       </div>
     </ExerciseStage>
