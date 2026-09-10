@@ -23196,3 +23196,6 @@ Confirmei no código os fatos que escrevi sobre a dosagem, em vez de copiar do e
 
 ## 10/09/2026 11:06
 Certo agora tem algo a mais alem de testar o exercicio que precisamos resolver? definir?
+
+## 10/09/2026 11:11
+O aplicativo vou usar mais tarde eu gostaria de resolve algumas pendencias para depois testar como um todo sabe? Seria possivel matar hoje todas essas questoes?
