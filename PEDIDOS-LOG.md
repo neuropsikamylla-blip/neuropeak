@@ -23235,3 +23235,6 @@ o que eu vou ter de testar eu irei fazer depois, finaliza tudo que irei entrar n
 
 ## 10/09/2026 21:24
 e ai? agora falta somente eu jogar?
+
+## 10/09/2026 21:33
+vou encerrar aqui então ok? e manaha iniciamos novamente

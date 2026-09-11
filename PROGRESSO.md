@@ -260,6 +260,57 @@ inteiro **sem ler uma pista**. Quem perceber o padrão pontua sem fazer o exerc�
 - [ ] **PRÓXIMO: os problemas novos** (F5), com cruzamento real entre categorias e passando pela
       triagem. Ela deu os exemplos de pista adequada. **Não começar sem fechar a revisão visual.**
 
+### ✅ 10/set — a plataforma fechada: dosagem, relatório e feedback (v3.24.0, publicado)
+
+Ela pediu para **matar todas as pendências** e testar tudo de uma vez depois. Quatro entregas.
+
+1. **Indicadores de processo** (v3.21.0, `f267bc0`) — os cinco que a proposta do adaptativo definiu,
+   como funções puras, **gravando sem decidir nada**. ⚠️ **Nada foi ligado ao motor**, e isso é
+   travado por prova do VP: `lib/adaptive.ts` não os conhece, `selecionarProblema` não os consulta,
+   a cota de verificação não os consulta. Provado **por injeção**. Denominador zero devolve `null`,
+   nunca `NaN` — *"não tem o indicador"* é clinicamente diferente de *"vale zero"*.
+2. **⚠️ ELA LEVANTOU O PORTÃO DA ETAPA 4** e mandou migrar tudo. Risco registrado e assumido:
+   defeito no desenho dos pilotos chegaria aos 34 antes de alguém ver.
+   **Migração completa** (v3.22.0, `4980a27`) — **os 35 exercícios num relógio só**, a Grade
+   inclusa. Seis que tinham relógio e não mostravam barra passaram a mostrar. Teste de completude
+   exige **zero exceções**.
+3. **Relatório de processo da Grade — a FASE 7** (v3.23.0, `0a76898`). A Grade registrava muito e a
+   terapeuta **não via nada**: o relatório só lia o campo de abandono. Segue o molde do Caminhos,
+   que ela já aprovou. ⚠️ A fronteira clínica é travada por prova que constrói o **pior cenário
+   possível** — nada resolvido, 160 escolhas sobre estado contraditório — e exige que o texto
+   continue **descritivo**. Provado por injeção com *"apresenta impulsividade"*.
+4. **Feedback dos cinco últimos** (v3.24.0, `2218e2a`) — fecha o *"decidir depois"* de 28/ago.
+   ⚠️ O conserto **não foi apagar texto**: sai a palavra que julga, fica a informação.
+   ⛔ **Sequência Temporal e Desafio Cidade NÃO foram tocados** — ali "errado" é **enunciado da
+   tarefa** e **conteúdo de história**. Há **contraprova** exigindo que a palavra CONTINUE lá: se
+   ela falhar, ninguém limpou nada, alguém quebrou uma atividade.
+
+**Consertos do VP nesta rodada:** a barra posta num componente **filho** em dois exercícios, usando
+valor que só existe no pai (erro que só o compilador pega, e o Codex não compila no lab); o Codex
+ter feito as varreduras como script próprio **sem deixar teste**; e um `"Muito bem! 🎉"` que ele
+deixou passar em **outra tela** do Estacionamento.
+
+### 🔴 O que NINGUÉM verificou com os olhos
+
+Os **1084 testes** provam que o código faz o que foi especificado. **Não provam que a tela está
+boa.** Nenhum exercício foi aberto desde que a dosagem mudou — a extensão do Chrome não está
+conectada nesta máquina. **Prioridades quando ela testar:**
+1. a **barra sem porcentagem** em 35 telas (pode ter sobrado vão onde o número estava);
+2. a **barra do dia**, que agora só avança ao concluir um exercício — vai parecer travada, e é o
+   esperado, mas é diferente do que ela conhecia;
+3. a **Torre com barra de volta** — ela a removeu em julho por virar placar;
+4. **recarregar no meio** de um exercício: se a dose voltar a zero, a correção não funcionou.
+
+### ⏳ Esperando decisão clínica dela — não são minhas
+
+- **Semáforo:** saíram só as palavras; glifo, cor e 500 ms ficaram. ⚠️ O VP **argumentou contra
+  mudar mais**: é tarefa de tempo de reação e o retorno imediato faz parte do **construto**.
+- **As quatro perguntas do motor adaptativo** (quais indicadores, quais limiares, se reduzir
+  categorias é a forma certa de reduzir carga, se o motor pode mexer na cota). Com os indicadores
+  gravando, ela pode responder **olhando dados reais** em vez de decidir no escuro.
+- Levantamento em `docs/feedback/ERRO-SEM-MENSAGEM-OUTROS-7-20260910.md` e
+  `docs/grade-dedutiva/PROPOSTA-ADAPTATIVO-SECAO48-20260909.md`.
+
 ### ✅ 09/set — quatro entregas, tudo publicado (v3.20.0)
 
 Quatro entregas commitadas e no ar. Roteamento registrado nas linhas **22-25** de
