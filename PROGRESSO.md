@@ -3,6 +3,28 @@
 > Checkpoint de contexto para continuidade entre sessões. Atualizado automaticamente.
 > 👉 Visão geral e handoff para o próximo Claude: **`ESTADO-DO-PROJETO.md`** (leia primeiro).
 
+## 📤 PUBLICADO — 12/set/2026, v3.26.0 no ar
+
+`git push origin main` autorizado por ela (*"sobe tudo para eu testar"*). Deploy
+**`dpl_6mHg4JRBLXpNfdYwe9QwrTzvfnXN`**, confirmado em `/api/version` → `3.26.0`.
+
+Três entregas subiram juntas: **v3.24.1** (cores dos discos no objetivo da Torre), **v3.25.0**
+(densidade do rastreamento + a bola que cabe na tela) e **v3.26.0** (Estacionamento adaptativo,
+centralizado e com fundo dia/noite).
+
+### 🔴 O que ela precisa olhar, em ordem
+
+1. **Torre** — a caixa OBJETIVO mostra os discos nas **cores do tabuleiro**, o amarelo inclusive.
+2. **Rastreamento** — o **nível inicial é idêntico** ao de antes (de propósito); a partir daí vêm
+   mais distratores. **No celular**, conferir que as bolas **não nascem empilhadas** e que dá para
+   tocar nelas (a bola desenhada encolhe, a área de toque não).
+3. **Estacionamento** — a tela **"Tutorial concluído"** centralizada; o **tabuleiro no centro**
+   (eram 13 px à esquerda); e o **fundo**. ⚠️ **Depois das 18h ela verá o fundo de NOITE**, que hoje
+   é o provisório do VP (a foto atual escurecida) — a arte dela substitui pelos mesmos nomes.
+4. **O que ninguém viu desde 10/set:** a barra sem porcentagem em 35 telas, a barra do dia que só
+   avança ao concluir um exercício, e recarregar no meio de um exercício (a dose não pode voltar a
+   zero).
+
 ## ✅ CONCLUÍDO (falta ela ver) — Estacionamento: layout adaptativo e fundo dia/noite (12/set/2026)
 
 **Espec dela** em `docs/estacionamento/ESPEC-LAYOUT-ESTACIONAMENTO-KAMYLLA-20260912.md` (`429a1dc1`),
