@@ -1,11 +1,13 @@
 "use client";
 
-import { useEffect, useRef, useState, type MutableRefObject } from "react";
+import { useEffect, useRef, useState, type MouseEvent as ReactMouseEvent, type MutableRefObject } from "react";
 import { Check } from "lucide-react";
 import { MOTBall, type MOTBallPhase } from "@/components/exercises/attention/MOTBall";
 import { DemoPointer } from "@/components/exercises/tutorial/DemoPointer";
 import {
   ASPECT,
+  ballRadius,
+  bolaNoPonto,
   randomBalls,
   stepAll,
   targetsForLevel,
@@ -58,6 +60,7 @@ function MOTArena({
   onConfirm: () => void;
 }) {
   const targetCount = balls.filter((ball) => ball.isTarget).length;
+  const raio = ballRadius(dimensions.width);
   const phaseLabel = phase === "memorize"
     ? "Memorize os alvos dourados."
     : phase === "track"
@@ -76,6 +79,18 @@ function MOTArena({
       <div
         className="relative overflow-hidden rounded-2xl border-2 border-gray-200 bg-gray-50"
         style={{ width: dimensions.width, height: dimensions.height, maxWidth: "100%" }}
+        onClick={(event: ReactMouseEvent<HTMLDivElement>) => {
+          if (!interactive) return;
+          const rect = event.currentTarget.getBoundingClientRect();
+          const id = bolaNoPonto(
+            balls,
+            event.clientX - rect.left,
+            event.clientY - rect.top,
+            dimensions.width,
+          );
+          const ball = balls.find((current) => current.id === id);
+          if (ball) onBallClick(ball);
+        }}
       >
         {balls.map((ball) => (
           <MOTBall
@@ -91,9 +106,7 @@ function MOTArena({
             gamified={false}
             arenaWidth={dimensions.width}
             arenaHeight={dimensions.height}
-            onClick={() => {
-              if (interactive) onBallClick(ball);
-            }}
+            raio={raio}
           />
         ))}
       </div>
@@ -148,7 +161,12 @@ function animateTracking(
         return;
       }
       if (firstFrame === null) firstFrame = frameTime;
-      movingBalls = stepAll(movingBalls, dimensions.width, dimensions.height);
+      movingBalls = stepAll(
+        movingBalls,
+        dimensions.width,
+        dimensions.height,
+        ballRadius(dimensions.width),
+      );
       for (const ball of movingBalls) {
         const node = nodes.current.get(ball.id);
         const initial = base.get(ball.id);

@@ -45,10 +45,27 @@ próprio `stepAll` a 60 fps. O que saiu:
       | 7 | 14 → **24** | 8,4 → **14,5** |
       | 10 | 14 → **27** | 11,7 → **22,5** |
       | 14 | 14 → **29** | 14,2 → **31,3** |
-- [ ] **Passo 3 — implementação.** *Critério:* a prova de aceite da seção 7 da spec passa inteira,
-      incluindo o item 4 (zero pares sobrepostos em 6 arenas × 7 níveis × 40 rodadas), que **falha
-      contra o código de hoje**.
-- [ ] **Passo 4 — revisão linha a linha do VP, aplicação no repo vivo, provas e commit.**
+- [x] **Passo 3 — implementação. FEITA** — Codex `gpt-5.6-terra` high, lab `mot-densidade`,
+      colheita em `colheita-mot-densidade-20260912.md` (`ef9cd029`), revisada linha a linha. ✅
+- [x] **Passo 4 — revisão, aplicação, provas e commit. FEITO** — v3.25.0. ✅
+      **Dois consertos do VP:**
+      1. o teste do congelamento da velocidade usava `toBe(2.65)` e `ballSpeed(10)` vale
+         **2,6500000000000004** em ponto flutuante — falha do TESTE, não do código (a função saiu
+         intacta). Virou `toBeCloseTo(…, 10)`, que prova o congelamento sem falso negativo;
+      2. o Codex acrescentou uma **malha de salvaguarda** (`gridPositions`) que não estava na spec, e
+         eu medi que ela **nunca dispara**: 0 em 8.400 casos (6 arenas × 7 níveis × 200 sementes).
+         Rede de segurança nunca executada pode sobrepor igual ao defeito que existe para evitar —
+         então foi **exportada e provada**: um teste exige separação ≥ 2 × raio nas posições que ela
+         devolve, em todas as 42 combinações.
+      **Um arquivo fora da spec era obrigatório:** `lib/tutorial/definitions/mot.tsx` usa `MOTBall`, e
+      remover o `onClick` da bola quebraria a compilação do tutorial. Não foi violação de escopo.
+      **Provas:** `tsc` exit 0 · `npm run test` **86 arquivos / 1101 testes** exit 0 · lint 0 errors ·
+      e **por injeção**: devolvidas a separação fixa de 78 px e a contagem sem travessão, o teste de
+      sobreposição **quebra**; restaurado, 10/10.
+      **Medido no repo vivo:** distratores por nível no desktop 6 → 9 → 14 → 19 → 24 → 27 → 29; no
+      celular acompanha até o nível 7 e para em 30 bolas pela capacidade real, em vez de nascer
+      empilhado. Raio: **22 em qualquer arena ≥ 600 px** (desktop e tablet idênticos), 17 em 393 px,
+      15 em 320 px.
 - [ ] **Passo 5 — verificação visual dela**, desktop e celular. *Critério:* ela confirma que a
       densidade nova endurece de verdade e que no celular as bolas não nascem empilhadas.
 

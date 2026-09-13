@@ -1,7 +1,7 @@
 "use client";
 
 import { forwardRef } from "react";
-import { BALL_RADIUS, type Ball } from "@/lib/mot/scene";
+import { type Ball } from "@/lib/mot/scene";
 
 export type MOTBallPhase = "memorize" | "track" | "identify";
 
@@ -13,7 +13,7 @@ interface MOTBallProps {
   gamified: boolean;
   arenaWidth: number;
   arenaHeight: number;
-  onClick: () => void;
+  raio: number;
 }
 
 export const MOTBall = forwardRef<HTMLDivElement, MOTBallProps>(function MOTBall({
@@ -24,7 +24,7 @@ export const MOTBall = forwardRef<HTMLDivElement, MOTBallProps>(function MOTBall
   gamified,
   arenaWidth,
   arenaHeight,
-  onClick,
+  raio,
 }, ref) {
   const showTarget = phase === "memorize" && ball.isTarget;
 
@@ -34,10 +34,10 @@ export const MOTBall = forwardRef<HTMLDivElement, MOTBallProps>(function MOTBall
       data-mot-ball={ball.id}
       style={{
         position: "absolute",
-        left: Math.min(Math.max(0, ball.x - BALL_RADIUS), arenaWidth - BALL_RADIUS * 2),
-        top: Math.min(Math.max(0, ball.y - BALL_RADIUS), arenaHeight - BALL_RADIUS * 2),
-        width: BALL_RADIUS * 2,
-        height: BALL_RADIUS * 2,
+        left: Math.min(Math.max(0, ball.x - raio), arenaWidth - raio * 2),
+        top: Math.min(Math.max(0, ball.y - raio), arenaHeight - raio * 2),
+        width: raio * 2,
+        height: raio * 2,
         ...(phase === "track" ? {} : { transform: "translate(0px, 0px)" }),
         transition: phase === "identify" ? "none" : undefined,
       }}
@@ -47,7 +47,6 @@ export const MOTBall = forwardRef<HTMLDivElement, MOTBallProps>(function MOTBall
         selected ? "border-blue-600 bg-blue-400" :
         gamified ? "border-gray-500 bg-gray-400" : "border-gray-400 bg-gray-300"
       }`}
-      onClick={onClick}
     >
       {selected && phase === "identify" ? "✓" : ""}
     </div>

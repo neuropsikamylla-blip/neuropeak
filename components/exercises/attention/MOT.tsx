@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect, useRef, useCallback, useLayoutEffect } from "react";
+import { useState, useEffect, useRef, useCallback, useLayoutEffect, type MouseEvent as ReactMouseEvent } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { calculateExerciseScore } from "@/lib/scoring";
 import { useBlocoDeTreino } from "@/components/exercises/useExerciseEngine";
@@ -10,9 +10,12 @@ import { MOTBall } from "@/components/exercises/attention/MOTBall";
 import {
   ASPECT,
   arenaScaleForLevel,
+  ballRadius,
+  bolaNoPonto,
   randomBalls,
   stepAll,
   targetsForLevel,
+  totalBalls,
   trackDuration,
   type Ball,
 } from "@/lib/mot/scene";
@@ -92,6 +95,8 @@ export function MOT({ difficulty, theme, onComplete }: MOTProps) {
   // bola dentro do quadro visível, e usar o teto faria a bola sumir na área que não está desenhada.
   const escala = arenaScaleForLevel(level);
   const arena = { w: Math.round(dims.w * escala), h: Math.round(dims.h * escala) };
+  const raio = ballRadius(arena.w);
+  const totalNaArena = totalBalls(level, arena.w, arena.h);
   const arenaRef = useRef(arena);
   arenaRef.current = arena;
   useLayoutEffect(() => {
@@ -155,7 +160,12 @@ export function MOT({ difficulty, theme, onComplete }: MOTProps) {
 
       function animate() {
         // Avanca a fisica no ref (paredes + colisao entre bolas) sem render.
-        ballsRef.current = stepAll(ballsRef.current, arenaRef.current.w, arenaRef.current.h);
+        ballsRef.current = stepAll(
+          ballsRef.current,
+          arenaRef.current.w,
+          arenaRef.current.h,
+          ballRadius(arenaRef.current.w),
+        );
         for (const ball of ballsRef.current) {
           const node = ballNodes.current.get(ball.id);
           const b0 = base.get(ball.id);
@@ -196,6 +206,17 @@ export function MOT({ difficulty, theme, onComplete }: MOTProps) {
       if (next.has(id)) next.delete(id); else next.add(id);
       return next;
     });
+  }
+
+  function handleArenaTap(event: ReactMouseEvent<HTMLDivElement>) {
+    const rect = event.currentTarget.getBoundingClientRect();
+    const id = bolaNoPonto(
+      balls,
+      event.clientX - rect.left,
+      event.clientY - rect.top,
+      arena.w,
+    );
+    if (id !== null) handleBallTap(id);
   }
 
   function handleConfirm() {
@@ -297,7 +318,9 @@ export function MOT({ difficulty, theme, onComplete }: MOTProps) {
         {/* Ball area — coordenadas REAIS em px (sem escala CSS); a bola nunca passa da borda */}
         <div ref={stageWrapRef} className="w-full flex justify-center">
         <div className={`relative rounded-2xl overflow-hidden ${pal.area}`}
-          style={{ width: arena.w, height: arena.h }}>
+          style={{ width: arena.w, height: arena.h }}
+          aria-label={`Arena com ${totalNaArena} bolas`}
+          onClick={handleArenaTap}>
           {balls.map(ball => (
               <MOTBall key={ball.id}
                 ref={node => {
@@ -311,7 +334,7 @@ export function MOT({ difficulty, theme, onComplete }: MOTProps) {
                 gamified={theme === "GAMIFIED"}
                 arenaWidth={arena.w}
                 arenaHeight={arena.h}
-                onClick={() => handleBallTap(ball.id)}
+                raio={raio}
               />
           ))}
         </div>
