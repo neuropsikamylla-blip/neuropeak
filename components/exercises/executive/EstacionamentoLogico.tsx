@@ -8,7 +8,7 @@ import { ExerciseStage } from "@/components/exercises/ExerciseStage";
 import { assignCarImages, ALL_CAR_IMAGES } from "@/lib/parking-cars";
 import { PARKING_LEVELS, PLAY_LEVELS } from "@/lib/parking-levels";
 import {
-  BORDER, CORRIDOR, fundoDoPalco, medidasDoTabuleiro, periodoDoDia,
+  BORDER, CORRIDOR, fundoDoPalco, medidasDoTabuleiro, OPACIDADE_TABULEIRO, periodoDoDia,
   RESPIRO_VERTICAL, tamanhoDaCelula,
 } from "@/lib/parking-layout";
 import type { Level } from "@/types/parking";
@@ -299,16 +299,17 @@ function BoardSVG({ cellPx, grid }: { cellPx: number; grid: number }) {
 
       {/* ── Corredor/rampa de saída (continua para fora, escuro) ───────────── */}
       <rect x={T-B-4} y={EY1} width={CORRIDOR+B+4} height={cellPx} rx={5}
-        fill="#10151f" filter="url(#boardShadow)" />
+        fill={`rgba(16,21,31,${OPACIDADE_TABULEIRO.moldura})`} filter="url(#boardShadow)" />
       <rect x={T-B-2} y={EY1+3} width={CORRIDOR+B} height={cellPx-6} rx={3}
-        fill="rgba(36,44,66,0.9)" />
+        fill={`rgba(36,44,66,${OPACIDADE_TABULEIRO.interior})`} />
 
       {/* ── Moldura fina elevada + sombra de contato ───────────────────────── */}
       <rect x={0} y={0} width={T} height={T} rx={13}
-        fill="#10151f" filter="url(#boardShadow)" />
+        fill={`rgba(16,21,31,${OPACIDADE_TABULEIRO.moldura})`} filter="url(#boardShadow)" />
 
       {/* ── Piso do tabuleiro: painel translúcido (área demarcada) ─────────── */}
-      <rect x={B} y={B} width={S} height={S} rx={7} fill="rgba(33,41,62,0.82)" />
+      <rect x={B} y={B} width={S} height={S} rx={7}
+        fill={`rgba(33,41,62,${OPACIDADE_TABULEIRO.interior})`} />
 
       {/* Grade do exercício — linhas bem sutis */}
       {Array.from({ length: grid - 1 }).map((_, i) => (
@@ -328,7 +329,8 @@ function BoardSVG({ cellPx, grid }: { cellPx: number; grid: number }) {
       <rect x={0.75} y={0.75} width={T-1.5} height={T-1.5} rx={12.5}
         fill="none" stroke="rgba(255,255,255,0.09)" strokeWidth={1.5} />
       {/* "apaga" a moldura na saída → abertura real para a rampa */}
-      <rect x={T-B-1} y={EY1+3} width={B+2} height={cellPx-6} fill="rgba(36,44,66,0.9)" />
+      <rect x={T-B-1} y={EY1+3} width={B+2} height={cellPx-6}
+        fill={`rgba(36,44,66,${OPACIDADE_TABULEIRO.interior})`} />
 
       {/* ── Seta de saída (luminosa, no chão da rampa) ─────────────────────── */}
       <g filter="url(#exitGlow)">

@@ -23361,3 +23361,6 @@ abre todas pra eu ver
 
 ## 13/09/2026 00:22
 abre pra eu ver abre no safari as opcoes
+
+## 13/09/2026 00:24
+c

@@ -3,6 +3,36 @@
 > Checkpoint de contexto para continuidade entre sessões. Atualizado automaticamente.
 > 👉 Visão geral e handoff para o próximo Claude: **`ESTADO-DO-PROJETO.md`** (leia primeiro).
 
+## 🎨 DECISÃO DELA — o tabuleiro do Estacionamento fica translúcido, opção C (13/set/2026)
+
+Ela, vendo o cenário funcionando pela primeira vez: *"consegue deixar o fundo onde estao os carros
+mais translucido? ou nao ficaria legal?"* — e depois *"abre no safari as opcoes"*. Entregue em
+**v3.26.2**: `OPACIDADE_TABULEIRO = { moldura: 0.5, interior: 0.42 }`.
+
+**A medida derrubou a objeção que o VP ia levantar.** A ressalva óbvia seria que o tabuleiro escuro é
+o que separa os carros do chão, e que abri-lo apagaria o carro preto. **Não se sustenta:** o asfalto
+da arte dela e o azul do tabuleiro têm luminância praticamente igual (**0,0197 contra 0,0193**), então
+o contraste do carro mais escuro fica em **1,01:1 opaco e 1,02:1 a 22%** — não muda. A decisão pôde
+ser estética porque a medição mostrou que podia.
+
+**Cinco variantes montadas e abertas no Safari dela**, todas com a arte dela, os carros reais e a fase
+`n5-01`, variando só a opacidade: A (hoje, 82%/opaca), B (62%/70%), **C (42%/50%)**, D (22%/30%) e
+E (22%/85%). **Ela escolheu a C.**
+
+⚠️ **A única ressalva funcional das cinco — e virou regra travada em teste:** na D a **borda quase
+some**, e a fronteira do tabuleiro é **informação**, não enfeite: é ela que diz ao paciente até onde o
+carro pode ir e onde fica a saída. Num exercício de planejamento, perder essa referência tira algo que
+ele usa para montar a rota antes de mover. O teste agora exige `moldura >= interior` e
+`moldura >= 0,3` — **provado por injeção**: com a moldura em 0,15 o teste quebra.
+
+**Achado separado, que NÃO é sobre translucidez e continua aberto:** o carro mais escuro do acervo
+(`car-13`) tem cor média **(29,38,55)** contra um tabuleiro de **(30,37,56)** — **1,01:1**. Ele só se
+distingue hoje pelos reflexos do vidro e pelo contorno da imagem, não pela cor da carroceria. Isso já
+era assim antes de tudo isto, e vale uma decisão dela: num exercício em que o paciente planeja **sobre
+as peças**, uma peça que se confunde com o chão é carga perceptiva que não é o construto.
+
+**Provas:** `tsc` exit 0 · **87 arquivos / 1110 testes** exit 0 · lint 0 errors.
+
 ## 🔴 REGRESSÃO DE 27/AGO ENCONTRADA E CORRIGIDA — o cenário do Estacionamento nunca aparecia (13/set/2026)
 
 **Ela, vendo a tela publicada:** *"não entrou"* — com a captura mostrando o tabuleiro sobre o **navy

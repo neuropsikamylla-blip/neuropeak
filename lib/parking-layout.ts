@@ -2,6 +2,28 @@ export const CELL_IDEAL = 76;
 export const CELL_MIN = 34;
 export const BORDER = 11;
 export const CORRIDOR = 26;
+/**
+ * Quanto o tabuleiro deixa o chão do cenário aparecer.
+ *
+ * Escolha dela em 13/set/2026 (opção **C** de cinco variantes montadas com a arte dela, os carros
+ * reais e a fase `n5-01`): o asfalto aparece de verdade e o tabuleiro deixa de parecer uma placa
+ * apoiada sobre o chão, mas a **moldura continua delimitando** a área de jogo — e essa borda é
+ * informação, não enfeite: é ela que diz até onde o carro pode ir e onde fica a saída.
+ *
+ * Medido antes de propor: o asfalto da arte de noite e o azul do tabuleiro têm luminância
+ * praticamente igual (0,0197 contra 0,0193), então **o contraste dos carros não muda** em nenhum
+ * nível de opacidade — de 1,01:1 opaco a 1,02:1 a 22%. A decisão foi estética porque a medida
+ * mostrou que podia ser.
+ *
+ * São dois números, e mudá-los é a única coisa necessária para rever a escolha.
+ */
+export const OPACIDADE_TABULEIRO = {
+  /** Moldura externa e corredor de saída — o que delimita a área. */
+  moldura: 0.5,
+  /** Piso interno, onde os carros andam. */
+  interior: 0.42,
+} as const;
+
 /** Respiro abaixo do tabuleiro, para ele nunca encostar na dobra da tela. */
 export const RESPIRO_VERTICAL = 8;
 

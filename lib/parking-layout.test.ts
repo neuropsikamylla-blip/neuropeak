@@ -8,6 +8,7 @@ import {
   fundoDoPalco,
   COR_DE_BASE,
   FUNDO_POR_PERIODO,
+  OPACIDADE_TABULEIRO,
 } from "./parking-layout";
 
 const COMPONENT_PATH = resolve(process.cwd(), "components/exercises/executive/EstacionamentoLogico.tsx");
@@ -104,6 +105,24 @@ describe("layout do Estacionamento Lógico", () => {
       }
       expect(camadas[camadas.length - 1]).toContain(COR_DE_BASE);
     }
+  });
+
+  it("a translucidez do tabuleiro vive em constante, e a moldura nunca some", () => {
+    // Escolha dela (opção C). Os dois números ficam num lugar só para a revisão ser de uma linha.
+    expect(OPACIDADE_TABULEIRO.interior).toBeGreaterThan(0);
+    expect(OPACIDADE_TABULEIRO.interior).toBeLessThan(1);
+
+    // A borda é INFORMAÇÃO, não enfeite: é ela que diz até onde o carro pode ir e onde fica a
+    // saída. Ela pode clarear, mas não pode sumir nem ficar mais apagada que o piso — foi a única
+    // ressalva funcional levantada nas cinco variantes, e aqui vira regra.
+    expect(OPACIDADE_TABULEIRO.moldura).toBeGreaterThanOrEqual(OPACIDADE_TABULEIRO.interior);
+    expect(OPACIDADE_TABULEIRO.moldura).toBeGreaterThanOrEqual(0.3);
+
+    // E o componente tem de consumir a constante, em vez de reescrever a cor na mão.
+    const source = readFileSync(COMPONENT_PATH, "utf8");
+    expect(source).not.toMatch(/fill="#10151f"/);
+    expect(source).not.toMatch(/fill="rgba\(33,41,62,0\.82\)"/);
+    expect((source.match(/OPACIDADE_TABULEIRO\./g) ?? []).length).toBeGreaterThanOrEqual(5);
   });
 
   it("preserva os contratos de UI e a lógica fixa", () => {
