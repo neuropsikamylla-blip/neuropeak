@@ -50,7 +50,38 @@ export const FUNDO_POR_PERIODO: Record<PeriodoDoDia, string> = {
   noite: "/exercises/Carros/fundo-noite.webp",
 };
 
+/**
+ * Véu escuro sobre o cenário, para o tabuleiro se destacar do fundo.
+ *
+ * Leve de propósito: a arte dela já vem tratada — a de dia é clara e quente, a de noite já é escura
+ * e tem os postes acesos. O véu antigo (0,28→0,40) foi calibrado contra uma FOTO que na prática nunca
+ * apareceu na tela (ver `fundoDoPalco`), e sobre a arte dela apagaria o dourado do fim de tarde.
+ * É uma linha para ajustar quando ela vir com os olhos.
+ */
 export const VEU_POR_PERIODO: Record<PeriodoDoDia, [string, string]> = {
-  dia: ["rgba(8,10,16,0.28)", "rgba(8,10,16,0.40)"],
-  noite: ["rgba(8,10,16,0.10)", "rgba(8,10,16,0.18)"],
+  dia: ["rgba(8,10,16,0.12)", "rgba(8,10,16,0.20)"],
+  noite: ["rgba(8,10,16,0.05)", "rgba(8,10,16,0.10)"],
 };
+
+/** Cor sob o cenário, enquanto a imagem não carrega. */
+export const COR_DE_BASE = "#23262e";
+
+/**
+ * A string do atalho `background` do palco — e a razão de existir uma função para isto.
+ *
+ * ⚠️ REGRESSÃO REAL, corrigida em 13/set/2026: de 27/ago (v2.94.0, a migração ao palco) até aqui, o
+ * cenário do Estacionamento **não apareceu na tela**. O valor era
+ * `#23262e linear-gradient(…), url(…) center / cover`, com a **cor na PRIMEIRA camada** — e no atalho
+ * `background` a cor só é aceita na ÚLTIMA. Declaração inválida é descartada INTEIRA pelo navegador,
+ * então não vinha nem a foto, nem o véu, nem sequer o cinza: aparecia o fundo do app por baixo.
+ * Ninguém viu porque ninguém abriu a tela com os olhos desde a migração. Em 25/jun o mesmo desenho
+ * funcionava porque usava `backgroundImage`, que não aceita cor e por isso não tinha como errar.
+ *
+ * A ordem aqui — imagens primeiro, cor por último — é o que torna a declaração válida, e
+ * `parking-layout.test.ts` prova isso pela estrutura, para a regressão não voltar em silêncio.
+ */
+export function fundoDoPalco(periodo: PeriodoDoDia): string {
+  const [inicio, fim] = VEU_POR_PERIODO[periodo];
+  return `linear-gradient(${inicio}, ${fim}), `
+    + `url(${FUNDO_POR_PERIODO[periodo]}) center / cover no-repeat ${COR_DE_BASE}`;
+}

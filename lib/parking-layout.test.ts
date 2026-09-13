@@ -5,6 +5,9 @@ import { PARKING_LEVELS } from "./parking-levels";
 import {
   BORDER, CELL_IDEAL, CELL_MIN, CORRIDOR, DAY_START_HOUR, medidasDoTabuleiro,
   NIGHT_START_HOUR, periodoDoDia, tamanhoDaCelula,
+  fundoDoPalco,
+  COR_DE_BASE,
+  FUNDO_POR_PERIODO,
 } from "./parking-layout";
 
 const COMPONENT_PATH = resolve(process.cwd(), "components/exercises/executive/EstacionamentoLogico.tsx");
@@ -82,12 +85,36 @@ describe("layout do Estacionamento Lógico", () => {
     expect(Math.max(...fases.map((level) => level.cars.length))).toBe(10);
   });
 
+  it("o fundo do palco é um atalho CSS VÁLIDO: a cor vai na última camada", () => {
+    // Regressão real, de 27/ago a 13/set: o valor era `#23262e linear-gradient(...), url(...)`, com a
+    // cor na PRIMEIRA camada. No atalho `background` a cor só é aceita na última, e uma declaração
+    // inválida é descartada INTEIRA — não vinha nem a foto, nem o véu, nem o cinza. Ninguém viu
+    // porque ninguém abriu a tela. Este teste é o que faz isso não voltar calado.
+    for (const periodo of ["dia", "noite"] as const) {
+      const valor = fundoDoPalco(periodo);
+      const camadas = valor.split(/,(?![^()]*\))/).map((camada) => camada.trim());
+
+      expect(camadas.length).toBeGreaterThan(1);
+      expect(valor).toContain(FUNDO_POR_PERIODO[periodo]);
+      expect(valor).toContain("center / cover");
+      expect(valor).toContain("no-repeat");
+
+      for (const camada of camadas.slice(0, -1)) {
+        expect(camada, "cor fora da ultima camada em " + periodo).not.toContain(COR_DE_BASE);
+      }
+      expect(camadas[camadas.length - 1]).toContain(COR_DE_BASE);
+    }
+  });
+
   it("preserva os contratos de UI e a lógica fixa", () => {
     const source = readFileSync(COMPONENT_PATH, "utf8");
     const logica = source.slice(source.indexOf("function buildGrid"), source.indexOf("// ── Top-view vehicle"));
     const tutorialConcluido = source.slice(source.indexOf("// ── Tutorial concluído"), source.indexOf("// ── Result screen"));
 
     expect(source).not.toMatch(/transform:\s*["'`][^"'`]*scale\s*\(/);
+    // A montagem do fundo vive no módulo puro, onde é provada; o componente só consome.
+    expect(source).not.toMatch(/#23262e\s+linear-gradient/);
+    expect(source).toContain("fundoDoPalco(periodo)");
     expect(tutorialConcluido).toContain("mx-auto");
     expect(tutorialConcluido).not.toContain("max-w-xs");
     expect(tutorialConcluido).not.toContain("#ECEAE4");

@@ -8,8 +8,8 @@ import { ExerciseStage } from "@/components/exercises/ExerciseStage";
 import { assignCarImages, ALL_CAR_IMAGES } from "@/lib/parking-cars";
 import { PARKING_LEVELS, PLAY_LEVELS } from "@/lib/parking-levels";
 import {
-  BORDER, CORRIDOR, FUNDO_POR_PERIODO, medidasDoTabuleiro, periodoDoDia,
-  RESPIRO_VERTICAL, tamanhoDaCelula, VEU_POR_PERIODO,
+  BORDER, CORRIDOR, fundoDoPalco, medidasDoTabuleiro, periodoDoDia,
+  RESPIRO_VERTICAL, tamanhoDaCelula,
 } from "@/lib/parking-layout";
 import type { Level } from "@/types/parking";
 import type { ExerciseResult, Theme } from "@/types";
@@ -430,8 +430,7 @@ export function EstacionamentoLogico({ difficulty, theme, onComplete }: Props) {
   }, [gridDaFase, hint, tutorial, currentLevel]);
 
   const { interno: boardInner, total: boardTotal } = medidasDoTabuleiro(gridDaFase, cellPx);
-  const [veuInicio, veuFim] = VEU_POR_PERIODO[periodo];
-  const gameBackground = `#23262e linear-gradient(${veuInicio}, ${veuFim}), url(${FUNDO_POR_PERIODO[periodo]}) center / cover no-repeat`;
+  const gameBackground = fundoDoPalco(periodo);
 
   useEffect(() => { if (!startedRef.current) { startedRef.current = true; begin(); } }, [begin]);
 

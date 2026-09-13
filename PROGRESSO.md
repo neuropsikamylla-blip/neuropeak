@@ -3,6 +3,55 @@
 > Checkpoint de contexto para continuidade entre sessões. Atualizado automaticamente.
 > 👉 Visão geral e handoff para o próximo Claude: **`ESTADO-DO-PROJETO.md`** (leia primeiro).
 
+## 🔴 REGRESSÃO DE 27/AGO ENCONTRADA E CORRIGIDA — o cenário do Estacionamento nunca aparecia (13/set/2026)
+
+**Ela, vendo a tela publicada:** *"não entrou"* — com a captura mostrando o tabuleiro sobre o **navy
+do app**, sem cenário nenhum. Corrigido em **v3.26.1**.
+
+**A causa, provada por parser CSS (`cssstyle`), não por leitura:**
+
+```
+"#23262e linear-gradient(...), url(...) center / cover"   -> declaracao RECUSADA (vazia)
+"linear-gradient(...), url(...) center / cover #23262e"   -> ACEITA
+```
+
+No atalho `background`, a **cor só é aceita na ÚLTIMA camada**. Estando na primeira, o navegador
+**descarta a declaração inteira** — não vinha a foto, nem o véu, nem sequer o cinza `#23262e`, e o que
+aparecia era o fundo do app por baixo. Foi por isso que a captura dela não tinha cinza nenhum.
+
+**Desde quando:** em **25/jun (v1.85.23)** o desenho usava `backgroundImage`, que **não aceita cor** e
+por isso não tinha como errar — funcionava. No **lote F (v2.94.0, 27/ago, a migração ao palco)** virou
+o atalho `background` com a cor na primeira camada. **O cenário está apagado há duas semanas e meia**,
+e ninguém viu porque **ninguém abriu a tela com os olhos** desde a migração — exatamente o risco que o
+bloco *"O que NINGUÉM verificou com os olhos"* de 10/set registrava. A entrega de ontem (v3.26.0)
+**herdou** o defeito: eu mantive a estrutura errada ao trocar a foto pelo par dia/noite.
+
+**⚠️ Falha minha, separada:** ela salvou as artes dela às **23h15 e 23h16** como `fundo dia.png` e
+`fundo noite.png` (1672×941, com ESPAÇO no nome). Meu `git add -A` do commit da spec (`429a1dc1`) as
+levou junto **sem eu olhar**, e às 23h34 eu gerei provisórios por cima — o código ficou apontando para
+os **meus** arquivos, não para os dela. Agora as artes dela estão convertidas para
+`fundo-dia.webp` (348 KB) e `fundo-noite.webp` (220 KB); os PNGs originais ficam como fonte.
+
+- [x] **`fundoDoPalco(periodo)`** em `lib/parking-layout.ts`: monta a string com as imagens primeiro e
+      a cor por último. O componente só consome. ✅
+- [x] **Véu reduzido** — dia 0,12→0,20 e noite 0,05→0,10, contra 0,28→0,40 de antes. O véu antigo foi
+      calibrado contra uma foto que **nunca apareceu na tela**, e sobre a arte dela apagaria o dourado
+      do fim de tarde. A arte de noite já vem escura, com os postes acesos. **É uma linha para ajustar
+      quando ela vir.** ✅
+- [x] **Teste que impede a volta silenciosa:** quebra a string em camadas e exige que a cor **não**
+      apareça em nenhuma que não seja a última; mais prova de ausência no componente. **Provado por
+      injeção:** devolvida a cor à primeira camada, o teste quebra. ✅
+- [x] **Provas:** `tsc` exit 0 · **87 arquivos / 1109 testes** exit 0 · lint 0 errors · e as duas
+      strings reais validadas no **parser CSS** de verdade. ✅
+- [ ] **PENDENTE — ela ver.** Depois das 18h a tela abre no cenário de NOITE.
+
+### A lição, que vale além deste exercício
+
+Uma declaração CSS inválida **falha em silêncio**: nada no `tsc`, nada no lint, nada nos testes, nada
+no console. A suíte inteira passava com o cenário apagado. **Só o olho pega** — e é por isso que a
+verificação visual dela não é formalidade. O teste novo existe para converter este caso específico em
+algo que a máquina pega, mas a classe do problema continua só visível com os olhos.
+
 ## 📤 PUBLICADO — 12/set/2026, v3.26.0 no ar
 
 `git push origin main` autorizado por ela (*"sobe tudo para eu testar"*). Deploy
