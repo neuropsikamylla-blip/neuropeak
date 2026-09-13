@@ -1,9 +1,6 @@
 # As 3 ultimas especificacoes dela (automatico; a mais nova por ultimo)
 # Na retomada: ler as 3, conectar com PROGRESSO.md e git, declarar e seguir.
 
-## 12/09/2026 23:25
-pode publicar para eu poder jogar e atualizar vc ... e aproveitando o exercicio estacionamento preciso colocar novos fundos (dia e noite) onde eu posso colocar?
-
 ## 12/09/2026 23:27
 Quero alterar SOMENTE o comportamento visual/layout do exercício de estacionamento. Não alterar regras, lógica do jogo, movimentação dos carros, colisões, geração dos desafios ou critérios de progressão.
 1. Grade onde ficam os carros
@@ -99,3 +96,6 @@ Estamos alterando exclusivamente UI, tamanho adaptativo da área jogável, centr
 <status>completed</status>
 <summary>Background command "Disparar o Codex no Estacionamento" completed (exit code 0)</summary>
 </task-notification>
+
+## 13/09/2026 00:18
+[Image #3] consegue deixar o fundo onde estao os carros mais translucido? ou nao ficaria legal?
