@@ -1,9 +1,6 @@
 # As 3 ultimas especificacoes dela (automatico; a mais nova por ultimo)
 # Na retomada: ler as 3, conectar com PROGRESSO.md e git, declarar e seguir.
 
-## 12/09/2026 23:03
-rastreamento com objetos esta excelente... mas acho que a partir de 3 - 4 bolas podemos deixar mais dificil, aumentando a quantidade de distratores, as bolas ficando mais distantes nao sei... o que acha?
-
 ## 12/09/2026 23:25
 pode publicar para eu poder jogar e atualizar vc ... e aproveitando o exercicio estacionamento preciso colocar novos fundos (dia e noite) onde eu posso colocar?
 
@@ -93,3 +90,12 @@ objetivo;
 tutorial;
 progressão funcional.
 Estamos alterando exclusivamente UI, tamanho adaptativo da área jogável, centralização, responsividade e background contextual dia/noite.
+
+## 12/09/2026 23:43
+<task-notification>
+<task-id>bbnkb7oi0</task-id>
+<tool-use-id>toolu_01TzYjXLrvkhmWoA2CNHcNUw</tool-use-id>
+<output-file>/private/tmp/claude-501/-Users-kamyllahonorio-neuropeak/09c0cfb7-2b4d-4a80-949f-11029931c6fe/tasks/bbnkb7oi0.output</output-file>
+<status>completed</status>
+<summary>Background command "Disparar o Codex no Estacionamento" completed (exit code 0)</summary>
+</task-notification>
