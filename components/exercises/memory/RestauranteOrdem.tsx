@@ -253,9 +253,14 @@ let ambBuffer: AudioBuffer | null = null;
  *   0,10 → −39,3
  *   0,063 → −43,3
  *   0,04 → −47,3
- *   0,028 → −50,3   ← aqui
+ *   0,028 → −50,3
+ *   0,04 → −47,3   ← AQUI: o nível que ela escolheu ouvindo, em 13/set ("um degrau acima").
+ *
+ * ⚠️ Este número é GANHO, e ganho não distorce: o arquivo é o mesmo desde julho e nunca foi
+ * reprocessado. Ela levantou a dúvida com razão, depois de eu ter abafado uma OUTRA gravação (a do
+ * supermercado) com corte de agudos. Aqui não há filtro nenhum — só volume.
  */
-const AMB_LEVEL = 0.028;
+const AMB_LEVEL = 0.04;
 const AMB_URL = "/exercises/audio/ambience-restaurante-real.m4a";
 async function startAmbience() {
   if (typeof window === "undefined") return;
