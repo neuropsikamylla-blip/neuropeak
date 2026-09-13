@@ -23379,3 +23379,6 @@ ue o que foi solicitado? nao foi que com o aumento da quantidade de carro iria a
 
 ## 13/09/2026 20:19
 ok vamos para o proximo exercicio ok?
+
+## 13/09/2026 20:30
+Restaurante e Desafio Supermercado é por estarem bem redondos... somente a barra de progressao que precisa ser igual a todos acredito que vc ja resolveu isso... e gostaria de reduzir o volume do restaurante pois estou achando bem alto talvez reduzir pela metade? e seria possivel colocar barulho de supermercado no desafio de supermercado?

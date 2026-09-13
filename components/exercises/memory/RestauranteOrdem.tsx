@@ -236,7 +236,18 @@ let ambCtx: AudioContext | null = null;
 let ambMaster: GainNode | null = null;
 let ambSource: AudioBufferSourceNode | null = null;
 let ambBuffer: AudioBuffer | null = null;
-const AMB_LEVEL = 0.20; // ganho baixo sobre a gravação (RMS ~0.08) → fundo bem discreto
+/**
+ * Ganho do ambiente do salão sobre a gravação.
+ *
+ * 13/set/2026, pedido dela: *"gostaria de reduzir o volume do restaurante pois estou achando bem
+ * alto talvez reduzir pela metade?"*. Medido no arquivo real (74 s, RMS −19,3 dBFS): a 0,20 o
+ * ambiente chegava a **−33,3 dBFS**.
+ *
+ * "Metade" tem dois sentidos que não coincidem: metade do GANHO é −6 dB (0,10), que o ouvido percebe
+ * apenas como "um pouco mais baixo"; para SOAR metade são −10 dB. Como ela disse "bem alto", vale o
+ * segundo: **0,063 → −43,3 dBFS**. Se ficar baixo demais, 0,10 é o degrau intermediário.
+ */
+const AMB_LEVEL = 0.063;
 const AMB_URL = "/exercises/audio/ambience-restaurante-real.m4a";
 async function startAmbience() {
   if (typeof window === "undefined") return;
