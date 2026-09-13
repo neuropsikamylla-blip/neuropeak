@@ -23376,3 +23376,6 @@ pronto?
 
 ## 13/09/2026 19:14
 ue o que foi solicitado? nao foi que com o aumento da quantidade de carro iria auemntar? a questao é a centralização de tudo te mandei a primeira imagem ela esta pro lado esquerdo deveria ser centralizado o que eu mandei foi se estava certo no translucido que pedi conforme combinamos
+
+## 13/09/2026 20:19
+ok vamos para o proximo exercicio ok?

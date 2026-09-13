@@ -3,6 +3,35 @@
 > Checkpoint de contexto para continuidade entre sessões. Atualizado automaticamente.
 > 👉 Visão geral e handoff para o próximo Claude: **`ESTADO-DO-PROJETO.md`** (leia primeiro).
 
+## ✅ FECHADO COM ELA — Estacionamento (13/set/2026, v3.26.3 no ar)
+
+Três voltas de uso dela fecharam o exercício:
+
+1. **v3.26.1** — o cenário voltou a aparecer. Regressão de 27/ago, CSS inválido em silêncio.
+2. **v3.26.2** — a translucidez, **opção C** escolhida por ela entre cinco variantes abertas no
+   Safari. Confirmada por ela vendo em jogo: *"o que eu mandei foi se estava certo no translucido
+   que pedi conforme combinamos"* — está.
+3. **v3.26.3** — a tela **"Desafio resolvido"** centralizada.
+
+⚠️ **Duas falhas minhas nesta rodada, as duas de LEITURA, não de execução:**
+
+1. **Escopo estreito demais.** A espec dela citava a tela "Tutorial concluído" e eu corrigi só ela,
+   deixando a de fim de fase com o **mesmo** defeito (`max-w-*` sem `mx-auto`). Ela teve de apontar
+   duas vezes o que era um problema só. **Conserto estrutural:** o teste deixou de olhar uma tela e
+   passou a varrer **todas** as ocorrências de `max-w-*` do arquivo.
+2. **Extrapolei o pedido dela.** Ela mandou a tela em jogo perguntando *"aqui vc acha que esta ok?"*
+   — que era **confirmação do translúcido combinado** — e eu respondi propondo **aumentar os
+   carros** numa tela grande. Ela corrigiu: *"ue o que foi solicitado? nao foi que com o aumento da
+   quantidade de carro iria aumentar?"*. **Ela está certa:** a espec dela diz que a área cresce com o
+   **grid lógico da fase**, não que o tabuleiro deva crescer na tela grande com a mesma fase.
+   Proposta retirada. **A regra que fica: uma pergunta de confirmação não é convite para propor
+   mudança nova.**
+
+Também medido nesta rodada, e vale registrar porque **derrubou um alarme meu antes de eu dar**: a
+translucidez **não** enfraqueceu a saída. O marcador dela é a seta verde, com **12,3:1** de contraste
+contra o corredor (eram 13,4:1 opaco), muito acima do piso de 3:1. Eu ia apontar perda funcional; a
+medida mostrou que não havia.
+
 ## 🎨 DECISÃO DELA — o tabuleiro do Estacionamento fica translúcido, opção C (13/set/2026)
 
 Ela, vendo o cenário funcionando pela primeira vez: *"consegue deixar o fundo onde estao os carros
