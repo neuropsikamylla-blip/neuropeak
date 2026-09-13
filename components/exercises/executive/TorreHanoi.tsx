@@ -8,6 +8,7 @@ import { deveAvancarDeFase, deveSubirDeNivel, eficiencia, ofereceSegundaTentativ
 import { contarReversoes, type MovimentoTorre } from "@/lib/torres-registro";
 import { BANCO, type Problema } from "@/lib/torres/banco";
 import { dificuldadeDaFase, faseDaDificuldade, proximoProblema, type Fase } from "@/lib/torres/selecao";
+import { contornoDoDisco, corDoDisco, gradienteDoDisco, larguraDoDisco, FUNDO_CAIXA_OBJETIVO } from "@/lib/torres/discos";
 import { useBlocoDeTreino } from "@/components/exercises/useExerciseEngine";
 import { ExerciseProgressBar } from "@/components/exercises/ExerciseProgressBar";
 import { registrarDesafioInterrompido } from "@/lib/exercise-block";
@@ -50,30 +51,16 @@ function initialDiscs(difficulty: number) {
   return Math.min(Math.max(MIN_DISCS, Math.floor(difficulty * 0.4) + 2), MAX_DISCS);
 }
 
-// 8 cores (disco 1 no topo → 8 na base). Cada disco usa um gradiente leve
-// (clara → base) montado a partir destas cores.
-const DISC_COLORS = [
-  "#F43F5E", // 1 rosa/vermelho
-  "#FB923C", // 2 laranja
-  "#FACC15", // 3 amarelo
-  "#34D399", // 4 verde
-  "#22D3EE", // 5 turquesa
-  "#3B82F6", // 6 azul
-  "#6366F1", // 7 índigo
-  "#A855F7", // 8 violeta
-];
-// Tom mais claro para o topo do gradiente do disco.
-const DISC_COLORS_LIGHT = [
-  "#FB7185", "#FDBA74", "#FDE047", "#6EE7B7",
-  "#67E8F9", "#93C5FD", "#A5B4FC", "#D8B4FE",
-];
+// A paleta dos discos vive em `lib/torres/discos.ts` — fonte única. Ver o cabeçalho de lá:
+// a miniatura do objetivo ficou fora dela e pintava os 8 discos de azul.
 
 type Peg = number[];
 type State = [Peg, Peg, Peg];
 
 /**
- * Miniatura do objetivo. Desenho sóbrio das três hastes com os discos na posição-alvo — sem
- * números e sem legenda. Nos alvos que NÃO são torre completa (tipos C e D) ela permanece
+ * Miniatura do objetivo. Desenho sóbrio das três hastes com os discos na posição-alvo — sem números
+ * e sem legenda, mas **com a cor de cada disco**, a mesma do tabuleiro (pedido dela em 12/set/2026;
+ * antes os oito discos saíam no mesmo azul e só a largura ligava o objetivo ao tabuleiro). Nos alvos que NÃO são torre completa (tipos C e D) ela permanece
  * visível durante a execução: seção 47 dela, "não transformar o exercício em jogo de memória...
  * o foco é planejamento e resolução de problemas, não memória visual".
  */
@@ -91,10 +78,17 @@ function MiniaturaAlvo({ alvo, discos, escala = 1 }: { alvo: readonly (readonly 
           {alvo[haste].map((disc) => (
             <div key={disc} className="relative rounded-sm"
               style={{
-                width: 8 * escala + (disc / discos) * (W - 10 * escala),
+                width: larguraDoDisco(disc, discos, 8 * escala + (W - 10 * escala) / discos, W - 2 * escala),
                 height: DH,
                 marginBottom: Math.max(1, escala),
-                background: "#93C5FD",
+                // 12/set/2026, pedido dela: o objetivo tem de mostrar A COR de cada disco. Até aqui
+                // pintava os oito no mesmo azul, e o paciente só podia casar objetivo e tabuleiro
+                // comparando LARGURA. Mesmo gradiente do tabuleiro, para ser a mesma peça.
+                background: gradienteDoDisco(disc),
+                // O disco tem 4-5 px e o fundo da caixa é quase branco: sem contorno o amarelo
+                // (1,46:1) desaparece. Filete de 1 px na própria família de cor — sombra externa,
+                // não borda, que comeria a área preenchida. Ver `DISCO_CONTORNOS`.
+                boxShadow: `0 0 0 1px ${contornoDoDisco(disc)}`,
               }} />
           ))}
         </div>
@@ -182,7 +176,7 @@ function HanoiPegsDisplay({
                   className="rounded-lg flex items-center justify-center text-white text-xs font-bold"
                   style={{
                     width: w, height: 32,
-                    backgroundColor: DISC_COLORS[disc - 1] ?? "#666",
+                    backgroundColor: corDoDisco(disc),
                     opacity: selected === pegIdx && isTop ? 0.6 : 1,
                   }}
                 >
@@ -700,7 +694,7 @@ export function TorreHanoi({ difficulty, theme, onComplete }: TorreHanoiProps) {
             </div>
 
             <div className="shrink-0 rounded-2xl px-4 py-3 mx-auto sm:mx-0"
-              style={{ background: "#F8FAFC", border: "1px solid #E2E8F0" }}>
+              style={{ background: FUNDO_CAIXA_OBJETIVO, border: "1px solid #E2E8F0" }}>
               <p className="text-[11px] font-bold uppercase tracking-wide mb-2 text-center" style={{ color: "#94A3B8" }}>Objetivo</p>
               <MiniaturaAlvo alvo={problema.alvo} discos={problema.discos} escala={2.4} />
             </div>
@@ -756,7 +750,7 @@ export function TorreHanoi({ difficulty, theme, onComplete }: TorreHanoiProps) {
 
           <button type="button" onClick={() => setObjetivoAmpliado(true)}
             className="shrink-0 rounded-xl px-3 py-2 text-left transition-colors"
-            style={{ background: "#F8FAFC", border: "1px solid #E2E8F0" }}
+            style={{ background: FUNDO_CAIXA_OBJETIVO, border: "1px solid #E2E8F0" }}
             aria-label="Ampliar objetivo">
             <p className="text-[10px] font-bold uppercase tracking-wide mb-1.5" style={{ color: "#94A3B8" }}>Objetivo</p>
             <MiniaturaAlvo alvo={problema.alvo} discos={problema.discos} escala={0.85} />
@@ -864,8 +858,7 @@ export function TorreHanoi({ difficulty, theme, onComplete }: TorreHanoiProps) {
                 <div className="absolute flex flex-col-reverse items-center" style={{ bottom: 18, gap: 4 }}>
                   {peg.map((disc, di) => {
                     const lifted = isSel && di === peg.length - 1;
-                    const c = DISC_COLORS[disc - 1] ?? "#666";
-                    const cl = DISC_COLORS_LIGHT[disc - 1] ?? "#999";
+                    const c = corDoDisco(disc);
                     return (
                       <motion.div key={disc}
                         layoutId={`disc-${disc}-${puzzle}`}
@@ -873,7 +866,7 @@ export function TorreHanoi({ difficulty, theme, onComplete }: TorreHanoiProps) {
                         className="flex items-center justify-center font-bold text-white"
                         style={{
                           width: discWidth(disc), height: DISC_H, borderRadius: 8, fontSize: 12,
-                          background: `linear-gradient(180deg, ${cl}, ${c})`,
+                          background: gradienteDoDisco(disc),
                           boxShadow: lifted
                             ? `0 7px 16px ${c}66, 0 0 0 2px #B45309`
                             : "0 2px 5px rgba(15,23,42,.16)",

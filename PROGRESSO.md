@@ -3,6 +3,76 @@
 > Checkpoint de contexto para continuidade entre sessões. Atualizado automaticamente.
 > 👉 Visão geral e handoff para o próximo Claude: **`ESTADO-DO-PROJETO.md`** (leia primeiro).
 
+## 🚧 EM ANDAMENTO — Torre: as cores dos discos no OBJETIVO (12/set/2026)
+
+**O que ela viu, nas palavras dela:** *"ah parte da torre das questoes das cores no objetivo nao
+entrou ..."*
+
+**O defeito, medido em `components/exercises/executive/TorreHanoi.tsx`:** a mesma coisa é desenhada
+de duas formas incompatíveis. O **tabuleiro** (linha 867) e a **`HanoiPegsDisplay`** — usada na
+*Configuração inicial* e no *objetivo ampliado* (linha 185) — pintam cada disco com a sua cor de
+`DISC_COLORS` **e escrevem o número dentro**. A **`MiniaturaAlvo`** (linha 97), que é o **OBJETIVO**
+na abertura e a caixinha do canto durante toda a execução, pinta **os oito discos no mesmo azul
+`#93C5FD`**, sem número. O objetivo é a única peça da tela **sem a cor dos discos** — e é exatamente
+a peça que o paciente tem de casar com o tabuleiro. Sobra a **largura** como único vínculo.
+
+⚠️ **Não é regressão: nunca foi especificado.** Procurei em `PEDIDOS-LOG.md` e nas 60 seções de
+`docs/torres/ESPEC-JOGO-DAS-TORRES-KAMYLLA-20260831.md` — **zero menção a cor na Torre**. A miniatura
+nasceu monocromática na v3.4.0. Ela achou com os olhos o que o registro não pegou.
+
+**Confirmado por ela em 12/set:** *o objetivo deve ter as cores dos discos.*
+
+- [x] **Passo 1 — fonte única de cor.** `lib/torres/discos.ts` com as 8 cores, as 8 claras do
+      gradiente, os 8 contornos calibrados e a função de cor. *Critério:* o `TorreHanoi.tsx` deixa de
+      declarar paleta própria e passa a importar — a divergência não pode voltar por descuido.
+- [x] **Passo 2 — a miniatura ganha a cor de cada disco**, com o mesmo gradiente do tabuleiro.
+      *Critério:* nenhuma ocorrência de `#93C5FD` como cor de disco; os 8 discos distintos.
+- [x] **Passo 3 — o filete que impede o disco claro de desaparecer.** Na miniatura o disco tem
+      **4–5 px** e o fundo da caixa é `#F8FAFC`: o amarelo `#FACC15` tem **1,46:1** contra ele e
+      sumiria. Contorno na **própria família de cor**, escurecido **só em L\*** (matiz e croma
+      intactos, o eixo da variante E que ela aprovou na Dupla Tarefa), o mínimo para **3:1** —
+      o piso de objeto gráfico:
+      | disco | preenchimento | ΔL\* | contorno | contra `#F8FAFC` |
+      |---|---|---|---|---|
+      | 1 rosa | `#F43F5E` | 0 | `#F43F5E` | 3,51:1 |
+      | 2 laranja | `#FB923C` | −11 | `#D8751E` | 3,10:1 |
+      | 3 amarelo | `#FACC15` | −24 | `#B08C00` | 3,04:1 |
+      | 4 verde | `#34D399` | −16 | `#00A670` | 3,00:1 |
+      | 5 turquesa | `#22D3EE` | −19 | `#009FB9` | 3,01:1 |
+      | 6 azul | `#3B82F6` | 0 | `#3B82F6` | 3,52:1 |
+      | 7 índigo | `#6366F1` | 0 | `#6366F1` | 4,27:1 |
+      | 8 violeta | `#A855F7` | 0 | `#A855F7` | 3,78:1 |
+      O contorno vai como **sombra externa de 1 px**, não como borda: borda comeria a área
+      preenchida de um disco de 4 px. Quatro cores já passam sozinhas e ficam intactas.
+      *Critério:* o teste **calcula** o contraste, não confere hexadecimal decorado.
+- [x] **Passo 4 — prova.** `lib/torres/discos.test.ts`, **17 testes**. ✅
+      - `npx tsc --noEmit` → **exit 0**; `npm run test` → **86 arquivos / 1101 testes**, exit 0
+        (base era 85/1084 — **17 novos**); `npm run lint` → **0 errors**.
+      - **Provado POR INJEÇÃO:** devolvido o `background: "#93C5FD"` à miniatura, **2 testes
+        quebram** (o da ausência do azul e o que exige pintura por disco). Restaurado, 17/17.
+      - ⚠️ **O teste me corrigiu duas vezes, e as duas eram erro meu, não do código:**
+        1. a primeira calibração do filete andava só em **L\*** com `a*b*` fixos e **estourava o
+           gamut do sRGB** — o clamp girava o matiz do turquesa em **4,64°** e comprimia o croma do
+           amarelo em **22%** pelas costas, enquanto o comentário afirmava "matiz e croma intactos".
+           Refeita em **LCh com o matiz travado**: giro máximo **0,29°**, e a perda de croma passou a
+           ser **declarada** (ΔC\* −18,2 no amarelo) em vez de acontecer escondida.
+        2. a regex que proibia cor fixa na miniatura pegava o **cinza da haste**, que é legítimo —
+           o teste foi restringido ao bloco do disco. **Teste errado, não código errado.**
+      - **A largura saiu intacta, e isso é provado:** um teste compara a fórmula nova com a antiga
+        (`8e + (disco/total)·(W−10e)`) em 3 escalas × 4 totais e exige igualdade até 9 casas. O
+        pedido era sobre cor; geometria de tela aprovada não se mexe de carona.
+- [x] **Passo 5 — bump e commit.** v3.24.1.
+- [ ] **Passo 6 — verificação visual dela.** *Critério:* ela abre a Torre e a caixa do OBJETIVO
+      mostra os discos nas cores do tabuleiro, o amarelo inclusive.
+
+### Fora do escopo, de propósito
+
+A **largura** não muda. Medi: a fórmula da miniatura e a da `HanoiPegsDisplay` são **linearmente
+equivalentes** (ambas vão de 1/n do máximo até o máximo), então a proporção relativa dos discos já
+bate entre o objetivo e a configuração inicial. O **tabuleiro** usa outro par mínimo/máximo e por
+isso tem proporção própria — mas é tela que ela aprovou em 01/set, e não vou mexer em proporção
+aprovada por causa de um pedido que era sobre cor.
+
 ## ✅ CONCLUÍDO — Dupla Tarefa: reconstrução da interface (29-31/ago/2026)
 
 Pedido dela com mockup anexado (desktop + celular), nas palavras dela: *"Quero que você recrie a
