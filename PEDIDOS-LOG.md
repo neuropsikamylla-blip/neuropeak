@@ -23373,3 +23373,6 @@ pronto?
 
 ## 13/09/2026 19:01
 [Image #5] aqui vc acha que esta ok?
+
+## 13/09/2026 19:14
+ue o que foi solicitado? nao foi que com o aumento da quantidade de carro iria auemntar? a questao é a centralização de tudo te mandei a primeira imagem ela esta pro lado esquerdo deveria ser centralizado o que eu mandei foi se estava certo no translucido que pedi conforme combinamos
