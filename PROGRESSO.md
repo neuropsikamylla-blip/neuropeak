@@ -3,6 +3,74 @@
 > Checkpoint de contexto para continuidade entre sessões. Atualizado automaticamente.
 > 👉 Visão geral e handoff para o próximo Claude: **`ESTADO-DO-PROJETO.md`** (leia primeiro).
 
+## ✅ CONCLUÍDO (falta ela ver) — Estacionamento: layout adaptativo e fundo dia/noite (12/set/2026)
+
+**Espec dela** em `docs/estacionamento/ESPEC-LAYOUT-ESTACIONAMENTO-KAMYLLA-20260912.md` (`429a1dc1`),
+íntegra. **Leitura técnica** em `docs/estacionamento/SPEC-TECNICA-LAYOUT-20260912.md` (`5afbd359`).
+Entregue em **v3.26.0**.
+
+**Três achados da análise que ela pediu ANTES de tocar em código:**
+
+1. 🔴 **Não existe "grid lógico da fase".** `GRID = 6` é constante, e o banco tem **no máximo 10
+   carros** em 400 fases (10 níveis × 40) — uma fase tem só `id`, `idealMoves` e `cars`, **sem campo
+   de grid**. As fases de 17–20 carros que a espec dela descreve são **geometricamente impossíveis**
+   num 6×6: 36 células contra 40–60 que 20 carros ocupariam. Exigem geração de desafio, que ela
+   mandou não tocar. **Decisão dela:** layout adaptativo agora, fases grandes como tarefa própria.
+2. ⚠️ **A armadilha:** `GRID` aparece em 20 lugares e **14 são LÓGICA** (ocupação, `canMove`,
+   `isWin`, `reachRange`, as BFS, contagem de movimento). A spec **proibiu** parametrizar esses, e
+   exigiu um teste que trave o banco em 6×6 — ele avisa no dia em que alguém criar uma fase 8×8 sem
+   migrar a lógica antes.
+3. **As causas exatas dos desalinhamentos que ela viu:** a tela "Tutorial concluído" tinha
+   `max-w-xs` **sem `mx-auto`** (bloco de 320 px encostado na esquerda dentro de um palco de 960 —
+   e o `text-center` centralizava o texto DENTRO da caixa estreita, que é por isso que parecia
+   "centralizado, mas tudo à esquerda"); e o tabuleiro ficava **13 px fora do centro** porque o
+   container media tabuleiro **+ corredor de saída** e centralizava o conjunto.
+
+Também medido: a célula era travada em **44–70 px** (área de 264 a 420 px) e a **altura do viewport
+nunca entrava na conta** — não havia uma referência a `innerHeight` no arquivo. E uma boa notícia: o
+exercício **já não usava `transform: scale`**, então a estrutura existente serviu, como ela pediu.
+
+- [x] **Espec dela salva e commitada** (`429a1dc1`). ✅
+- [x] **Análise + spec técnica** (`5afbd359`). ✅
+- [x] **Implementação** — Codex `gpt-5.6-terra` high, lab `estac-layout`, colheita em
+      `colheita-estac-layout-20260912.md`, revisada linha a linha. ✅
+      `lib/parking-layout.ts` novo: `tamanhoDaCelula`, `medidasDoTabuleiro`, `periodoDoDia`,
+      `FUNDO_POR_PERIODO` e `VEU_POR_PERIODO`. O componente consome o módulo; `gridDaFase` só no
+      layout; wrapper único centralizado; a altura entra na conta; tela do tutorial corrigida.
+- [x] **Conserto do VP, com medição:** o cálculo da altura era `innerHeight − cromo` e **ignorava o
+      topo** (o palco tem padding próprio). Medi as duas contas em 7 viewports: em desktop e celular
+      em pé não muda nada — a **largura** é sempre o gargalo —, mas em **celular na HORIZONTAL
+      (852×393) o tabuleiro estourava a dobra em 29 px**, que é exatamente a reclamação dela de
+      11/ago no MOT. Entrou `RESPIRO_VERTICAL` e o desconto do topo real. ✅
+- [x] **Provas:** `tsc` exit 0 · `npm run test` **87 arquivos / 1108 testes** exit 0 (base 86/1101) ·
+      lint 0 errors. **Por injeção, duas vezes:** devolvido o `max-w-xs` sem `mx-auto`, o teste
+      quebra; feita a lógica usar `gridDaFase`, o teste quebra também — a fronteira da seção 0 está
+      protegida por prova, não por boa intenção. ✅
+- [ ] **PENDENTE — a arte dela dos dois fundos.** `fundo-dia.webp` e `fundo-noite.webp` existem em
+      `public/exercises/Carros/` mas são **provisórios**, gerados do `parking-bg.jpg` (o de noite é a
+      foto escurecida com viés frio). Quando ela salvar as artes dela **com esses dois nomes exatos**,
+      substituem e **nada no código muda**.
+- [ ] **PENDENTE — verificação visual dela**, desktop e celular.
+
+### O fundo por horário
+
+`DAY_START_HOUR = 6` e `NIGHT_START_HOUR = 18`, em constantes, como ela pediu. Determinado **uma vez**,
+ao montar a tela — sem timer. ⚠️ O **véu escuro** sobre o fundo passou a ser **por período**: no de
+dia é **idêntico ao de hoje** (0,28→0,40), e no de noite cai para 0,10→0,18, porque o véu antigo sobre
+um fundo já escuro apagaria os carros.
+
+### Fora desta fatia, registrado
+
+1. **Fases com grid maior** (7×7, 8×8, até ~20 carros) — geração de desafio validada por BFS, com
+   espec dela antes. É o que de fato entrega o *"fase muito complexa"* da espec dela.
+2. As telas de **abertura** e de **fase concluída** seguem com fundo sólido `#ECEAE4`: ela pediu a
+   mudança só na tela final do tutorial.
+
+### Roteamento (regra 8)
+
+12/set/2026 — **Estacionamento (layout e fundo)** — **Codex `gpt-5.6-terra`, esforço high** — motivo:
+camada visual com spec escrita antes e lógica congelada, classe "código estruturado e testável".
+
 ## 🚧 EM ANDAMENTO — Rastreamento com Objetos: densidade crescente (12/set/2026)
 
 **Ela, testando:** *"rastreamento com objetos esta excelente... mas acho que a partir de 3 - 4 bolas
