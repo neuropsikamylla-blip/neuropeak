@@ -244,10 +244,18 @@ let ambBuffer: AudioBuffer | null = null;
  * ambiente chegava a **−33,3 dBFS**.
  *
  * "Metade" tem dois sentidos que não coincidem: metade do GANHO é −6 dB (0,10), que o ouvido percebe
- * apenas como "um pouco mais baixo"; para SOAR metade são −10 dB. Como ela disse "bem alto", vale o
- * segundo: **0,063 → −43,3 dBFS**. Se ficar baixo demais, 0,10 é o degrau intermediário.
+ * apenas como "um pouco mais baixo"; para SOAR metade são −10 dB (0,063).
+ *
+ * Ela pediu MAIS redução na sequência: *"coloquei o volume do meu computador no maximo e o som ainda
+ * permanece alto"*. Daí **0,028 → −50,3 dBFS**, que é −17 dB do original e outra metade percebida
+ * abaixo dos 0,063. Escala completa, para ajuste futuro em uma linha:
+ *   0,20 → −33,3 dBFS (o original, que ela achou alto)
+ *   0,10 → −39,3
+ *   0,063 → −43,3
+ *   0,04 → −47,3
+ *   0,028 → −50,3   ← aqui
  */
-const AMB_LEVEL = 0.063;
+const AMB_LEVEL = 0.028;
 const AMB_URL = "/exercises/audio/ambience-restaurante-real.m4a";
 async function startAmbience() {
   if (typeof window === "undefined") return;
