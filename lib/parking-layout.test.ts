@@ -135,7 +135,16 @@ describe("layout do Estacionamento Lógico", () => {
     expect(source).not.toMatch(/#23262e\s+linear-gradient/);
     expect(source).toContain("fundoDoPalco(periodo)");
     expect(tutorialConcluido).toContain("mx-auto");
-    expect(tutorialConcluido).not.toContain("max-w-xs");
+
+    // TODAS as telas, não só a do tutorial: em 13/set ela apontou a de "Desafio resolvido" com o
+    // mesmo defeito, porque a correção anterior se limitou ao que a spec citava. `max-w-*` sem
+    // `mx-auto` encosta o bloco na esquerda do palco de 960px, e o `text-center` engana — centraliza
+    // o texto DENTRO da caixa estreita. Varrer o arquivo inteiro tira isso da memória de alguém.
+    const blocosEstreitos = source.match(/className="[^"]*\bmax-w-[a-z0-9]+\b[^"]*"/g) ?? [];
+    expect(blocosEstreitos.length).toBeGreaterThan(0);
+    for (const bloco of blocosEstreitos) {
+      expect(bloco, `bloco com largura máxima e sem mx-auto: ${bloco}`).toContain("mx-auto");
+    }
     expect(tutorialConcluido).not.toContain("#ECEAE4");
     expect(logica).not.toContain("gridDaFase");
     for (const functionName of ["buildGrid", "canMove", "isWin", "reachRange"]) {

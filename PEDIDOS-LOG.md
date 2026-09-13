@@ -23367,3 +23367,9 @@ c
 
 ## 13/09/2026 19:00
 pronto?
+
+## 13/09/2026 19:01
+[Image #4] ainda nao esta centralizado
+
+## 13/09/2026 19:01
+[Image #5] aqui vc acha que esta ok?

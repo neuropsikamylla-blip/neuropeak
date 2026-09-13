@@ -627,7 +627,10 @@ export function EstacionamentoLogico({ difficulty, theme, onComplete }: Props) {
     const headColor = "#3A4050";
     return (
       <ExerciseStage width="medio" background="#ECEAE4">
-        <div className="w-full max-w-xs text-center">
+        {/* `mx-auto` é obrigatório: `max-w-*` sem ele encosta o bloco na ESQUERDA do palco de 960px,
+            e o `text-center` só centraliza o texto DENTRO da caixa estreita — foi o que ela viu em
+            13/set. O teste varre TODAS as telas deste arquivo para não depender de ninguém lembrar. */}
+        <div className="w-full max-w-sm mx-auto text-center">
           <p className="text-2xl font-light mb-8" style={{ color: headColor }}>
             Desafio resolvido
           </p>
