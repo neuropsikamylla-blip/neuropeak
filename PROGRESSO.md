@@ -3,6 +3,69 @@
 > Checkpoint de contexto para continuidade entre sessões. Atualizado automaticamente.
 > 👉 Visão geral e handoff para o próximo Claude: **`ESTADO-DO-PROJETO.md`** (leia primeiro).
 
+## 🚧 EM ANDAMENTO — Rastreamento com Objetos: densidade crescente (12/set/2026)
+
+**Ela, testando:** *"rastreamento com objetos esta excelente... mas acho que a partir de 3 - 4 bolas
+podemos deixar mais dificil, aumentando a quantidade de distratores, as bolas ficando mais distantes
+nao sei... o que acha?"*
+
+**Auditoria feita antes de tocar em nada:** `docs/mot/AUDITORIA-PROGRESSAO-MOT-20260912.md` — tabela
+gerada **executando** as funções de `lib/mot/scene.ts` e **300 rodadas simuladas por nível** rodando o
+próprio `stepAll` a 60 fps. O que saiu:
+
+- **Ela está certa nos distratores:** a razão distrator/alvo **CAI** com o nível (3,00 no nível 0
+  contra 2,33 do 7 em diante) e as bolas cobrem só **2,7% a 3,8%** da arena em todos os níveis.
+- **O exercício satura:** do nível 7 em diante só velocidade e duração andam; do **14** em diante
+  **nada muda**, e o componente não tem teto de nível.
+- ⚠️ **Discordei de "mais distantes", e o motivo é clínico:** afastar **facilita** o rastreamento —
+  sem encontro próximo o alvo isolado é acompanhado sem custo. É o que ela mesma disse em 12/ago e
+  está escrito no comentário de `arenaScaleForLevel`. O eixo que endurece é **aproximar**.
+- 🔴 **Defeito de produção achado de passagem, que ela não pediu:** na arena de **320×211** o nível 7
+  pede 20 bolas onde cabem **15** — as 300 tentativas de separação esgotam e nascem em média
+  **16,6 pares SOBREPOSTOS**. Em 393 px, 7,9. No desktop, zero. **O MOT em celular já quebra hoje a
+  partir do nível 5.**
+
+**Duas decisões dela em 12/set:**
+1. o eixo é **densidade crescente**;
+2. a bola **encolhe junto com a arena, com teto de 22 px** — arena ≥ 600 px fica **idêntica** ao que
+   ela aprovou; em 320 px o raio cai a 15 e o exercício passa a alcançar o **nível 9** em vez do 2.
+
+- [x] **Passo 1 — auditoria medida e commitada.** `7f2ba2a8`. ✅
+- [x] **Passo 2 — spec escrita.** `docs/mot/SPEC-DENSIDADE-MOT-20260912.md`, 10 seções. ✅
+      Congela o que não muda (alvos, velocidade, duração, escala da arena, progressão, dosagem,
+      aparência), dá as fórmulas fechadas e a prova de aceite em 9 itens.
+      **Os dois fatores da fórmula são MEDIDOS, não estimados:** `FATOR_CAPACIDADE = 0,45` (observado
+      entre 0,466 e 0,516 na colocação por rejeição — 0,45 fica abaixo de todos, com margem) e
+      `FATOR_OCUPACAO = 0,65` (a inversa, `√0,45 ≈ 0,67`, com margem).
+      **Curva calibrada por simulação** — o nível 0 sai **idêntico** ao de hoje de propósito:
+      | nível | distratores hoje → novo | encontros hoje → novo |
+      |---|---|---|
+      | 0 | 6 → **6** | 1,1 → 1,1 |
+      | 3 | 10 → **14** | 3,4 → 4,8 |
+      | 7 | 14 → **24** | 8,4 → **14,5** |
+      | 10 | 14 → **27** | 11,7 → **22,5** |
+      | 14 | 14 → **29** | 14,2 → **31,3** |
+- [ ] **Passo 3 — implementação.** *Critério:* a prova de aceite da seção 7 da spec passa inteira,
+      incluindo o item 4 (zero pares sobrepostos em 6 arenas × 7 níveis × 40 rodadas), que **falha
+      contra o código de hoje**.
+- [ ] **Passo 4 — revisão linha a linha do VP, aplicação no repo vivo, provas e commit.**
+- [ ] **Passo 5 — verificação visual dela**, desktop e celular. *Critério:* ela confirma que a
+      densidade nova endurece de verdade e que no celular as bolas não nascem empilhadas.
+
+### Roteamento (regra 8)
+
+12/set/2026 — **MOT (densidade e raio proporcional)** — **Codex `gpt-5.6-terra`, esforço high** —
+motivo: trabalho estruturado e testável com prova de aceite escrita ANTES, classe da tabela da Parte 4.
+
+### Fora desta fatia, registrado
+
+1. **Velocidade proporcional à arena** — hoje px/frame fixo, então no celular as bolas cruzam a arena
+   ~4,5× mais rápido em tempo relativo. Mexer altera o que ela aprovou; precisa dos olhos dela.
+2. **Encontros como parâmetro em vez de sorte** — no nível 7 a mesma configuração produz de **2 a 16**
+   encontros. A densidade nova melhora a separação entre níveis vizinhos (p10 do nível 7 sai de 5 para
+   10, contra p90 de 8 no nível 3) mas **não fecha** a sobreposição. Ela não escolheu este eixo.
+3. **Teto de nível** acima do 14. Não escolhido.
+
 ## 🚧 EM ANDAMENTO — Torre: as cores dos discos no OBJETIVO (12/set/2026)
 
 **O que ela viu, nas palavras dela:** *"ah parte da torre das questoes das cores no objetivo nao
