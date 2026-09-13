@@ -23355,3 +23355,6 @@ sobre tudo para eu testar
 
 ## 13/09/2026 00:18
 [Image #3] consegue deixar o fundo onde estao os carros mais translucido? ou nao ficaria legal?
+
+## 13/09/2026 00:21
+abre todas pra eu ver
