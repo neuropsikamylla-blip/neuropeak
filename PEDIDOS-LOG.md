@@ -23238,3 +23238,6 @@ e ai? agora falta somente eu jogar?
 
 ## 10/09/2026 21:33
 vou encerrar aqui então ok? e manaha iniciamos novamente
+
+## 12/09/2026 22:53
+onde paramos?
