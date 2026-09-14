@@ -1,5 +1,63 @@
 import { describe, expect, it } from "vitest";
-import { avaliarOrdem, resumirSessao, type RegistroHistoria } from "./tentativas";
+import { nextLevelPerTrial } from "../adaptive-trial";
+import {
+  avaliarOrdem,
+  resumirSessao,
+  tierForLevel,
+  vereditoDaHistoria,
+  type RegistroHistoria,
+} from "./tentativas";
+
+describe("vereditoDaHistoria", () => {
+  it.each([
+    [{ resolvidaDePrimeira: true, acertoPrimeira: 1 }, "correta"],
+    [{ resolvidaDePrimeira: false, acertoPrimeira: 0.5 }, "erro-leve"],
+    [{ resolvidaDePrimeira: false, acertoPrimeira: 0.499 }, "erro-grave"],
+    [{ resolvidaDePrimeira: false, acertoPrimeira: 1 }, "erro-leve"],
+  ] as const)("classifica %o como %s", (registro, esperado) => {
+    expect(vereditoDaHistoria(registro)).toBe(esperado);
+  });
+
+  it("compõe a escada com a regra adaptativa global", () => {
+    const correta = vereditoDaHistoria({ resolvidaDePrimeira: true, acertoPrimeira: 1 });
+    const grave = vereditoDaHistoria({ resolvidaDePrimeira: false, acertoPrimeira: 0.25 });
+    let level = 1;
+
+    for (let i = 0; i < 3; i++) level = nextLevelPerTrial(level, correta, 1, 10);
+    expect(level).toBe(4);
+    for (let i = 0; i < 2; i++) level = nextLevelPerTrial(level, grave, 1, 10);
+    expect(level).toBe(2);
+  });
+
+  it("respeita o teto 10 e o piso 1 mesmo após 30 mudanças", () => {
+    let level = 10;
+    for (let i = 0; i < 30; i++) level = nextLevelPerTrial(level, "correta", 1, 10);
+    expect(level).toBe(10);
+
+    level = 1;
+    for (let i = 0; i < 30; i++) level = nextLevelPerTrial(level, "erro-grave", 1, 10);
+    expect(level).toBe(1);
+  });
+
+  it("sai da faixa fácil após cinco histórias certas partindo do nível 1", () => {
+    let level = 1;
+    for (let i = 0; i < 5; i++) level = nextLevelPerTrial(level, "correta", 1, 10);
+
+    expect(level).toBe(6);
+    expect(tierForLevel(level)).not.toBe("faceis");
+  });
+});
+
+describe("tierForLevel", () => {
+  it.each([
+    [1, "faceis"], [2, "faceis"],
+    [3, "media"], [5, "media"],
+    [6, "dificil"], [8, "dificil"],
+    [9, "muito-dificil"], [10, "muito-dificil"],
+  ] as const)("mantém o nível %i na faixa %s", (level, tier) => {
+    expect(tierForLevel(level)).toBe(tier);
+  });
+});
 
 describe("avaliarOrdem", () => {
   it("reconhece a ordem perfeita e guarda cada cartão na posição avaliada", () => {

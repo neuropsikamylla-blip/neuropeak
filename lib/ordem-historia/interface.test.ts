@@ -30,4 +30,28 @@ describe("interface da Ordem da História", () => {
     const fonte = readFileSync(COMPONENTE, "utf8");
     expect(fonte).not.toContain("⠿");
   });
+
+  it("monta cada rodada de ordem com o nível atual da sessão", () => {
+    const fonte = readFileSync(COMPONENTE, "utf8");
+    const inicio = fonte.indexOf("function makeRound()");
+    const fim = fonte.indexOf("function markFirst()", inicio);
+    const montagemDaRodada = fonte.slice(inicio, fim);
+
+    expect(inicio).toBeGreaterThan(-1);
+    expect(fim).toBeGreaterThan(inicio);
+    expect(fonte).not.toContain("const tier = tierForLevel(startLevel)");
+    expect(montagemDaRodada).toContain("tierForLevel(curLevelRef.current)");
+  });
+
+  it("descarta a rodada pré-carregada quando o veredito troca a faixa", () => {
+    const fonte = readFileSync(COMPONENTE, "utf8");
+    const inicio = fonte.indexOf("function closeOrderStory(");
+    const fim = fonte.indexOf("function processSubmit()", inicio);
+    const fechamentoDaHistoria = fonte.slice(inicio, fim);
+
+    expect(inicio).toBeGreaterThan(-1);
+    expect(fim).toBeGreaterThan(inicio);
+    expect(fechamentoDaHistoria).toContain("tierForLevel(previousLevel) !== tierForLevel(nextLevel)");
+    expect(fechamentoDaHistoria).toContain("pendingRef.current = null");
+  });
 });

@@ -1,3 +1,5 @@
+import type { TrialVerdict } from "../adaptive-trial";
+
 export interface RegistroHistoria {
   acertoPrimeira: number;
   acertoFinal: number;
@@ -5,6 +7,25 @@ export interface RegistroHistoria {
   resolvida: boolean;
   resolvidaDePrimeira: boolean;
   movimentos: number;
+}
+
+export type HistoriaTier = "faceis" | "media" | "dificil" | "muito-dificil";
+
+/** Faixa de histórias correspondente ao nível interno de ordenação. */
+export function tierForLevel(level: number): HistoriaTier {
+  if (level <= 2) return "faceis";
+  if (level <= 5) return "media";
+  if (level <= 8) return "dificil";
+  return "muito-dificil";
+}
+
+/** Veredito da história para a escada interna, no vocabulário de lib/adaptive-trial.ts. */
+export function vereditoDaHistoria(
+  registro: Pick<RegistroHistoria, "resolvidaDePrimeira" | "acertoPrimeira">,
+): TrialVerdict {
+  if (registro.resolvidaDePrimeira) return "correta";
+  if (registro.acertoPrimeira < 0.5) return "erro-grave";
+  return "erro-leve";
 }
 
 export interface ResumoSessao {

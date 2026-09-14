@@ -11,8 +11,15 @@ import {
 } from "@dnd-kit/sortable";
 import { CSS } from "@dnd-kit/utilities";
 import { calculateExerciseScore } from "@/lib/scoring";
+import { nextLevelPerTrial } from "@/lib/adaptive-trial";
 import { embaralharCenas } from "@/lib/ordem-historia/embaralhar";
-import { avaliarOrdem, resumirSessao, type RegistroHistoria } from "@/lib/ordem-historia/tentativas";
+import {
+  avaliarOrdem,
+  resumirSessao,
+  tierForLevel,
+  vereditoDaHistoria,
+  type RegistroHistoria,
+} from "@/lib/ordem-historia/tentativas";
 import { useBlocoDeTreino } from "@/components/exercises/useExerciseEngine";
 import { ExerciseProgressBar } from "@/components/exercises/ExerciseProgressBar";
 import { HISTORIAS, HISTORIAS_INTRUSO, HISTORIAS_DESCUBRA, histPanelSrc, descubraScene, descubraOption, painelDaPosicao, type HistDiff } from "@/data/historias";
@@ -33,15 +40,6 @@ const RECENT_KEY = "np-ordem-historia-recentes";
 const RECENT_MAX = 30;
 
 type RoundMode = "ordem" | "intruso" | "falta";
-
-// nível (1-10) → dificuldade das histórias (nº de cenas)
-function tierForLevel(lvl: number): HistDiff {
-  if (lvl <= 2) return "faceis";          // 4 cenas
-  if (lvl <= 5) return "media";           // 5
-  if (lvl <= 8) return "dificil";         // 6
-  return "muito-dificil";                 // 8
-}
-const PANELS: Record<HistDiff, number> = { faceis: 4, media: 5, dificil: 6, "muito-dificil": 8 };
 
 const MAX_ATTEMPTS = 3;   // tentativas por rodada nos desafios antes de revelar a resposta
 // Dicas progressivas (textos da Kamylla). Usar dica reduz a pontuação da rodada.
@@ -213,7 +211,6 @@ export function OrdemHistoria({ difficulty, theme, onComplete, settings }: Ordem
   const unlocked = sessionMode !== "ordem";
   const startLevel = Math.min(10, effStage);   // nível de ordenação (1-10) para seleção da faixa
   const reportLevel = effStage;                // estágio salvo na progressão (1-12)
-  const tier = tierForLevel(startLevel);
 
   const [phase, setPhase] = useState<Phase>("ready");
   const [roundMode, setRoundMode] = useState<RoundMode>("ordem");
@@ -249,6 +246,9 @@ export function OrdemHistoria({ difficulty, theme, onComplete, settings }: Ordem
 
   const recentRef = useRef<string[]>([]);
   const lastPermutationRef = useRef<Map<string, number[]>>(new Map());
+  const curLevelRef = useRef(startLevel);
+  const maxLevelRef = useRef(startLevel);
+  const levelPathRef = useRef<number[]>([]);
   const gradedRef = useRef<number[]>([]);
   const registrosRef = useRef<RegistroHistoria[]>([]);
   const roundFirstAccuracyRef = useRef<number | null>(null);
@@ -308,7 +308,12 @@ export function OrdemHistoria({ difficulty, theme, onComplete, settings }: Ordem
       preloadUrls([...Array.from({ length: 7 }, (_, i) => descubraScene(r.storyId, i + 1)), ...r.options.map((o) => o.src)]);
       return { mode: "falta", storyId: r.storyId, a: r.a, cards: r.cards, options: r.options };
     }
-    const r = buildOrdem(sessionMode === "intruso", tier, recentRef.current, lastPermutationRef.current);
+    const r = buildOrdem(
+      sessionMode === "intruso",
+      tierForLevel(curLevelRef.current),
+      recentRef.current,
+      lastPermutationRef.current,
+    );
     if (sessionMode === "ordem") lastPermutationRef.current.set(r.storyId, r.cards.map((card) => card.order));
     recentRef.current = [r.storyId, ...recentRef.current.filter((id) => id !== r.storyId)].slice(0, RECENT_MAX);
     try { localStorage.setItem(RECENT_KEY, JSON.stringify(recentRef.current)); } catch { /* armazenamento bloqueado */ }
@@ -325,6 +330,7 @@ export function OrdemHistoria({ difficulty, theme, onComplete, settings }: Ordem
     roundFirstAccuracyRef.current = null;
     roundConfirmationsRef.current = 0; roundSwapsRef.current = 0;
     setStoryId(data.storyId); setStoryA(data.a); setCards(data.cards); setOptions(data.options);
+    levelPathRef.current.push(sessionMode === "ordem" ? curLevelRef.current : reportLevel);
     startRoundAt.current = Date.now();
     setPhase("playing");
     pendingRef.current = makeRound();                 // já adianta a PRÓXIMA rodada em background
@@ -335,6 +341,7 @@ export function OrdemHistoria({ difficulty, theme, onComplete, settings }: Ordem
     setTutorialSeen(true);
     gradedRef.current = []; posCorrectRef.current = 0; posWrongRef.current = 0;
     registrosRef.current = [];
+    curLevelRef.current = startLevel; maxLevelRef.current = startLevel; levelPathRef.current = [];
     swapsRef.current = 0; intruderHitsRef.current = 0; faltaHitsRef.current = 0;
     hintsUsedRef.current = 0; retriesRef.current = 0;
     firstRespRef.current = []; roundFirstAt.current = null;
@@ -393,15 +400,18 @@ export function OrdemHistoria({ difficulty, theme, onComplete, settings }: Ordem
       score: calculateExerciseScore("ordem-historia", accTotal, meanRT ?? undefined, Math.min(10, difficulty)),
       accuracy: accTotal,
       reactionTime: meanRT ?? undefined,
-      difficulty: reportLevel,
+      difficulty: sessionMode === "ordem" ? maxLevelRef.current : reportLevel,
       duration,
       metadata: {
         progressionV2: true,
         accTotal: Number(accTotal.toFixed(3)),
         level: reportLevel,
         startedLevel: reportLevel,
+        startedLevelSession: sessionMode === "ordem" ? startLevel : reportLevel,
+        reachedLevel: sessionMode === "ordem" ? maxLevelRef.current : reportLevel,
+        levelPath: levelPathRef.current,
         mode: sessionMode,
-        tier,
+        tier: tierForLevel(startLevel),
         positionsCorrect: posCorrectRef.current,
         positionsWrong: posWrongRef.current,
         swaps: swapsRef.current,
@@ -421,7 +431,7 @@ export function OrdemHistoria({ difficulty, theme, onComplete, settings }: Ordem
         confirmationsTotal: resumo.confirmationsTotal,
       },
     });
-  }, [onComplete, difficulty, reportLevel, tier, sessionMode, finishTimer, elapsedSec]);
+  }, [onComplete, difficulty, reportLevel, startLevel, sessionMode, finishTimer, elapsedSec]);
 
   function advance(wasExact: boolean) {
     const timeUp = !podeIniciarNovoDesafio();
@@ -439,16 +449,23 @@ export function OrdemHistoria({ difficulty, theme, onComplete, settings }: Ordem
 
   function closeOrderStory(accFinal: number, resolved: boolean) {
     const acertoPrimeira = roundFirstAccuracyRef.current ?? accFinal;
-    registrosRef.current.push({
+    const registro: RegistroHistoria = {
       acertoPrimeira,
       acertoFinal: accFinal,
       confirmacoes: roundConfirmationsRef.current,
       resolvida: resolved,
       resolvidaDePrimeira: resolved && roundConfirmationsRef.current === 1,
       movimentos: roundSwapsRef.current,
-    });
+    };
+    registrosRef.current.push(registro);
     rtsRef.current.push(Date.now() - startRoundAt.current);
     firstRespRef.current.push((roundFirstAt.current ?? Date.now()) - startRoundAt.current);
+
+    const previousLevel = curLevelRef.current;
+    const nextLevel = nextLevelPerTrial(previousLevel, vereditoDaHistoria(registro), 1, 10);
+    curLevelRef.current = nextLevel;
+    maxLevelRef.current = Math.max(maxLevelRef.current, nextLevel);
+    if (tierForLevel(previousLevel) !== tierForLevel(nextLevel)) pendingRef.current = null;
 
     if (resolved) {
       gradedRef.current.push(acertoPrimeira);
@@ -538,7 +555,7 @@ export function OrdemHistoria({ difficulty, theme, onComplete, settings }: Ordem
   const falta = roundMode === "falta";
 
   // grade dos modos ordem/intruso — no computador (wide) os cards crescem; no celular mantém 2 colunas
-  const nPanels = falta ? 7 : (intruso ? 8 : PANELS[tier]);
+  const nPanels = falta ? 7 : (intruso ? 8 : cards.length);
   const cols = !wide ? 2 : nPanels <= 4 ? 2 : nPanels <= 6 ? 3 : 4;
   const cardTarget = nPanels <= 4 ? 300 : nPanels <= 6 ? 250 : 210;   // largura-alvo do card no desktop
   const gridCols = `repeat(${cols}, minmax(0,1fr))`;
