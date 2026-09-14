@@ -3,7 +3,7 @@
 > Checkpoint de contexto para continuidade entre sessões. Atualizado automaticamente.
 > 👉 Visão geral e handoff para o próximo Claude: **`ESTADO-DO-PROJETO.md`** (leia primeiro).
 
-## 🌙 FECHAMENTO — 12-13/set/2026 · a plataforma foi a 3.26.5 (hoje está em 3.28.0)
+## 🌙 FECHAMENTO — 12-13/set/2026 · a plataforma foi a 3.26.5 (hoje está em 3.29.1)
 
 Sessão longa, quatro exercícios tocados. **Tudo commitado e publicado**; produção confirmada em
 `/api/version` → **3.26.5** (`dpl_HPbQguuWTqcCNgqaKGaZrdRFLP1d`) **naquela data**. O número atual da
@@ -61,14 +61,15 @@ A auditoria de **Ordem da História** está feita (`docs/ordem-historia/AUDITORI
 - **Ordem da História:** `d2` e `d8` são a mesma história; seis narrativas se repetem entre faixas; o
   "não repetir recentes" vive num `useRef` e perde ao recarregar; o tutorial aparece em toda sessão.
 
-## ✅ ENTREGUE — Ordem da História: a revisão completa (14/set/2026)
+## ✅ ENTREGUE — Ordem da História: a revisão completa, fatias A, B e C (14/set/2026)
 
 Ela pediu em 13/set uma **revisão completa** do exercício (espec dela, 20 seções:
 `docs/ordem-historia/ESPEC-REVISAO-KAMYLLA-20260913.md`). A auditoria foi feita **antes de tocar em
 nada** (`docs/ordem-historia/AUDITORIA-20260913.md`, `43d5cabb`) e o trabalho ficou parado em três
 perguntas que ela pediu para não serem decididas sozinho. **Em 14/set ela respondeu as três** e
-fechou com *"pode dar continuidade"*. As duas fatias foram implementadas, provadas e publicadas no
-mesmo dia.
+fechou com *"pode dar continuidade"*. As fatias A e B foram implementadas, provadas e publicadas no
+mesmo dia — e então **ela testou em produção**, achou dois defeitos que nenhuma prova automatizada
+pegaria, e daí nasceram a **v3.28.1**, a **Fatia C (v3.29.0)** e a **v3.29.1**.
 
 ### As três respostas dela, e o motivo de cada uma
 
@@ -78,7 +79,7 @@ mesmo dia.
 | Construir a **segunda tentativa** depois do feedback parcial (seções 9 a 12 da espec dela)? | **Sim, construir** | hoje **não existe** no modo ordem: o paciente confirma uma vez, vê o feedback e a história troca — ele nunca chega a corrigir o próprio plano |
 | **Travar** os cartões já corretos na segunda tentativa? | **NÃO travar** — só marcá-los em **verde** | travar transformaria a segunda tentativa num problema menor, **resolvido por eliminação**; o alvo do exercício é planejamento e raciocínio causal |
 
-### O plano, fatiado em duas (regra 15)
+### O plano, fatiado (regra 15)
 
 **Fatia A — o dado, o embaralhamento e a tela.** Spec em
 `docs/ordem-historia/SPEC-FATIA-A-20260914.md` (`c3333e1b`). Entregue em `2285da14` (**v3.27.0**).
@@ -152,6 +153,100 @@ mesmo dia.
 - [ ] **Passo final — verificação dela em produção.** *Critério:* ela joga Ordem da História no ar,
       confirma os gabaritos do cinema e do herbário, a segunda tentativa e a tela sem linha técnica.
 
+### O que ELA achou testando
+
+Depois da Fatia B publicada, **ela jogou em produção** e achou **dois defeitos reais que nenhuma
+prova automatizada pegaria**. Os dois viraram correção no mesmo dia.
+
+**(a) `f5` (rotina de dormir) — gabarito errado.** Corrigido em **v3.28.1** (`0353188e`), com
+`ord: [2,1,3,4]`. **A prova é a ROUPA:** a menina escova os dentes de camiseta de **BOLINHAS**
+(`2.png`) e só **depois** abotoa o pijama de **CORAÇÕES** (`1.png`), que usa para ler (3) e dormir
+(4). Na ordem numerada ela teria **trocado de roupa duas vezes**. O VP confirmou **ampliando o tecido
+das quatro cenas** — não pela leitura do enredo.
+
+> ⚠️ **A lição, e ela é grande.** A auditoria de 13/set varreu as 86 histórias e declarou **esta**
+> coerente. Ela errou porque julgou pelo **ENREDO** ("essa sequência faz sentido?") e não pela
+> **CONTINUIDADE** (a roupa, os objetos e a luz batem entre as cenas?). **Um enredo trocado quase
+> sempre continua fazendo sentido sozinho** — por isso o critério do enredo não acha nada. **A
+> auditoria deixou de ser confiável e a varredura foi refeita** (ver "Revarredura por continuidade").
+
+**(b) A progressão de dificuldade não subia dentro da sessão.** Nas palavras dela: *"eu acertei umas
+5 histórias e ela permaneceu com 4 desenhos, onde entra a progressão de dificuldade"*. **O código
+confirmou:** `tier` era uma `const` calculada na montagem e só mudava **ENTRE** sessões. Começando no
+nível 1, eram **DUAS SESSÕES INTEIRAS** com 85% para ver a primeira história de **5 cenas**. O **Cubo
+Corsi**, o modelo que ela mandou replicar, **já fazia certo** (`CuboCorsi.tsx:297` — "dificuldade
+ATUAL (sobe durante a sessão)"). Virou a **Fatia C**.
+
+**Fatia C — a dificuldade sobe DENTRO da sessão.** Spec em
+`docs/ordem-historia/SPEC-FATIA-C-20260914.md` (`b590330e`). Entregue em `2bee2dec` (**v3.29.0**).
+
+- [x] **As decisões dela:** **reutilizar o `nextLevelPerTrial` de `lib/adaptive-trial.ts`** — o mesmo
+      motor do Cubo e da Matriz, como a **seção 15 da espec dela** exige (nada de motor novo) — e
+      **descer só quando errar muito de primeira**.
+- [x] **A regra dos três vereditos, uma história por vez:**
+
+      | veredito | quando | efeito no nível |
+      |---|---|---|
+      | **correta** | resolvida **100% na 1ª confirmação** | **+1** |
+      | **erro-grave** | **menos da metade** certa na 1ª confirmação | **−1** |
+      | **erro-leve** | qualquer outro caso, **inclusive resolver depois de corrigir** | **mantém** |
+
+      Limites **1 a 10**, e **só no modo ordem**.
+- [x] **O efeito:** agora bastam **2 acertos de primeira** para sair das 4 cenas, e **5 acertos**
+      levam ao **nível 6** — contra as duas sessões inteiras de antes.
+- [x] **O que passa a ser reportado:** o `difficulty` da sessão é o **máximo alcançado**; o `metadata`
+      ganhou `startedLevelSession`, `reachedLevel` e `levelPath`.
+- [x] **`lib/adaptive.ts` NÃO foi tocado**, e **o nível continua invisível na tela** — a linha técnica
+      saiu na Fatia A e não voltou.
+- [x] ⚠️ **A armadilha tratada:** `startRound` já monta a **PRÓXIMA** história para **pré-carregar as
+      imagens**, e fazia isso com o **`tier` ANTIGO** — a história seguinte nasceria na faixa errada
+      justamente quando o nível acabasse de subir. O `pendingRef` passa a ser **invalidado quando a
+      faixa muda**. **Por injeção:** voltar o `tier` a ser `const` da montagem, **e** não descartar o
+      pré-carregamento na troca de faixa — **cada uma, por si, derruba os testes**.
+- [ ] **Falta a verificação visual dela:** acertar 2 histórias de primeira e ver a tela **passar de 4
+      para 5 desenhos**.
+
+**`d13` (balé) — o quarto gabarito errado**, achado **na revarredura** e corrigido em **v3.29.1**
+(`5849286c`), com `ord: [3,1,2,4,5,6]`. Prova de continuidade igual à da `f5`: a **cena 3 é o ENSAIO**
+no estúdio (collant de aula, barra, espelho, cartaz "DISCIPLINA FOCO DEDICAÇÃO") e estava numerada
+**entre o camarim (2, já de TUTU com tiara) e o palco (4, de tutu)** — **duas trocas de roupa
+impossíveis**. O ensaio é **outro dia** e **abre** a história. ⚠️ A ordem relativa de **1**
+(bastidores, de agasalho) e **2** (camarim) **ficou como estava**: ali há só **leitura de enredo**,
+não prova — e a regra dela é **corrigir sozinho apenas o que tem prova visual dura**.
+
+### ⚠️ Falha da própria prova do VP
+
+Registrada aqui **com a mesma letra** dos defeitos do Codex, porque o defeito é **do VP**.
+
+**A primeira versão do teste do teto da escada simulava a escada com o limite escrito NO TESTE**, em
+vez de **ler o limite real do componente**. O VP **injetou o defeito** — trocar `1, 10` por `1, 12` —
+e **o teste PASSOU quando devia falhar**.
+
+**O que teria acontecido se fosse ao ar:** o exercício poderia **reportar estágio 11 ou 12** e, com
+isso, **DESBLOQUEAR o "Encontre o Intruso" e o "Descubra o que falta" sem o paciente cumprir a régua
+de 80%**.
+
+**Correção:** o teste passou a **ler a linha do componente**, e **a injeção agora o derruba**. Uma
+**segunda falha na mesma prova** — a regex parava no **parêntese da chamada aninhada** — também foi
+corrigida. As duas foram **corrigidas, não afrouxadas**.
+
+### Revarredura por continuidade — estado
+
+Refeita porque o critério da auditoria de 13/set (**enredo**) não acha esse tipo de defeito.
+**Regra dela (14/set):** varrer **as 83 de uma vez** — não por lotes com relatório parcial — e, nas
+suspeitas, **corrigir sozinho só o que tiver prova visual dura**, **listando** as que dependem apenas
+de leitura de enredo.
+
+| item | número |
+|---|---|
+| catálogo | **86 histórias** — 20 de 4 cenas, 22 de 5, 22 de 6, 22 de 8 |
+| fora do sorteio | **1** (`d8`, duplicata de `d2`) → **85 sorteáveis** |
+| **CONFERIDAS** | **54** — todas as 20 de **4 cenas**, todas as 22 de **5 cenas** e **12 das 21** de **6 cenas** (`d1`–`d7`, `d9`–`d13`) |
+| **FALTAM** | **31** — nove de 6 cenas (`d14`–`d22`) e as **22 de 8 cenas** (`x1`–`x22`) |
+| gabaritos errados achados **nesta** varredura | **`f5`** e **`d13`** — os dois a auditoria de 13/set declarara **coerentes** |
+| **ambíguas SINALIZADAS e NÃO alteradas** | **`m21`** — as maçãs aparecem num escorredor na cena 4 e voltam à cesta na 5, o que sugere lavar **depois** de chegar em casa, mas a pia é externa e pode ser do pomar · **`d6`** — o bolo queima e a família come bolo: **a numeração está CERTA**, o que não fecha é o **conteúdo** |
+| **total de gabaritos corrigidos até agora** (campo `ord`) | **4** — `f5`, `f12`, `d13`, `d20` |
+
 ### A entrega
 
 **Commits** (push na `main` feito: `59ec98d9..8c572ed2`):
@@ -165,21 +260,27 @@ mesmo dia.
 | `2285da14` | **Fatia A — v3.27.0** · gabaritos do cinema e do herbário, e o embaralhamento que exige 2 trocas |
 | `a040176e` | **Fatia B — v3.28.0** · a segunda tentativa, e a nota que não infla |
 | `8c572ed2` | `package-lock` na versão 3.28.0 |
+| `0353188e` | **v3.28.1** · `f5` (rotina de dormir) tinha o gabarito errado — achado por **ELA**, testando em produção |
+| `b590330e` | spec da Fatia C |
+| `2bee2dec` | **Fatia C — v3.29.0** · a dificuldade sobe **DENTRO** da sessão |
+| `5849286c` | **v3.29.1** · `d13` (balé) tinha o ensaio numerado no meio da apresentação |
 
-**Provas do VP, no repositório real:**
+**Provas do VP, no repositório real** (rodadas **depois de tudo**, inclusive da Fatia C e da v3.29.1):
 
 | prova | resultado | baseline |
 |---|---|---|
 | `npx tsc --noEmit` | exit **0** | — |
-| `npm run test` | **92 arquivos / 1171 testes** | 87/1110 antes de tudo · 90/1143 após a Fatia A |
+| `npm run test` | **93 arquivos / 1202 testes** | 87/1110 antes de tudo · 90/1143 após a Fatia A · 92/1171 após a Fatia B |
 | `npm run build` | exit **0** | — |
 | `npm run lint` | **0 errors** | — |
-| `npx vitest run lib/ordem-historia` | **61/61** no estado bom | — |
+| `npx vitest run lib/ordem-historia` | **92/92** no estado bom | 61/61 após a Fatia B |
 
 **Prova por INJEÇÃO, nas duas fatias** — cada uma destas alterações **derruba os testes**: reinserir
 a linha técnica · remover o filtro de duplicata · voltar a imagem para `order + 1` · apagar o `ord`
 de `f12` · gravar a nota final em vez da primeira · travar os cartões na 2ª tentativa · recalcular o
 acerto durante o arraste · comparar o painel em vez da posição · voltar a inflar o `posCorrect`.
+**Na Fatia C:** voltar o `tier` a ser `const` da montagem · não descartar o pré-carregamento na
+troca de faixa — **cada uma derruba os testes**.
 ⚠️ **Duas provas do próprio VP miravam linhas que a Fatia B reescreveu: foram CORRIGIDAS, não
 afrouxadas.**
 
@@ -192,13 +293,19 @@ afrouxadas.**
    **letra morta** — passou a vetar no máximo **metade** do pool.
 4. **O botão em feedback repetia "Sequência correta."**, frase que já está na instrução.
 
-**Versão em produção, medida agora (não presumida):**
+**Versão em produção — medida, nunca presumida.** Primeiro, a leitura da Fatia B:
 
 `https://neuropeak-5jyl.vercel.app/api/version` →
 `{"version":"3.28.0-dpl_Az83xaTeY7VyX2kQz7RFiYGtzD4g","appVersion":"3.28.0","buildId":"dpl_Az83xaTeY7VyX2kQz7RFiYGtzD4g"}`
 · HTTP 200, medido em 14/set às **10:54** (três leituras: às 10:53 a produção ainda respondia
 **3.26.5** `dpl_5Bcmamf3GHgp5JBesKKWTGdhQN9c`; às 10:54:09 e 10:54:52 já respondia **3.28.0**).
 ⚠️ O domínio de produção é **`neuropeak-5jyl.vercel.app`** — `neuropeak.vercel.app` responde 404.
+
+E, **depois da Fatia C e da v3.29.1**, medida de novo:
+
+`https://neuropeak-5jyl.vercel.app/api/version` →
+`{"version":"3.29.1-dpl_2jmKfBhdJYcLCQHwkkfH6sbC5psc","appVersion":"3.29.1","buildId":"dpl_2jmKfBhdJYcLCQHwkkfH6sbC5psc"}`
+— **tudo publicado**.
 
 ### 🔴 O QUE FALTA — e é dela
 
@@ -221,6 +328,14 @@ afrouxadas.**
      estavam, porque só ela pode decidir se a ordem é mesmo única;
    - **6 famílias de enredo repetidas entre faixas** — não são duplicatas exatas como `d2`/`d8`, e
      por isso nenhuma saiu do sorteio.
+5. **A verificação visual DELA da progressão** (Fatia C — é o defeito que ela mesma achou):
+   jogando, **acertar 2 histórias de primeira deve mudar a tela de 4 para 5 desenhos**. O teste
+   prova o motor; **só ela prova a sensação de que a dificuldade anda**.
+6. **As duas ambíguas da revarredura — `m21` e `d6` — aguardando decisão dela.** Nenhuma foi
+   alterada, porque em nenhuma há prova visual dura: em `m21` a pia pode ser do pomar; em `d6`
+   **a numeração está CERTA** e o que não fecha é o conteúdo (o bolo queima e a família come bolo).
+7. **A revarredura por continuidade não terminou: faltam 31 histórias** — nove de 6 cenas
+   (`d14`–`d22`) e as **22 de 8 cenas** (`x1`–`x22`). As 54 já conferidas renderam `f5` e `d13`.
 
 ### Roteamento (regra 8)
 
@@ -234,6 +349,13 @@ segunda tentativa toca mecânica, registro clínico e tela ao mesmo tempo, com a
 travar os cartões. Lab `ordem-hist-b` (já removido), saída em
 `~/codex-lab/saida-ordem-hist-b-20260914.txt`. **Veredito: ACEITA com 4 consertos do VP** (os quatro
 listados acima). O Codex não commitou.
+
+14/09/2026 — **Ordem da História, Fatia C** — **Codex `gpt-5.6-sol`, esforço high** — motivo: troca
+o `tier` de constante de montagem para estado que sobe dentro da sessão, reutilizando o
+`nextLevelPerTrial` já existente, com a regra dos três vereditos fechada na spec pelo VP. Lab
+`ordem-hist-c`. **Veredito: ACEITO SEM CONSERTO** no código dele — a spec já avisava da armadilha
+do pré-carregamento (`startRound` montando a próxima história com o `tier` antigo) e ele tratou.
+O defeito do dia foi **da prova do VP**, não da entrega dele. O Codex não commitou.
 
 ## 🔊 Áudio ambiente — Restaurante ajustado; Supermercado fica SEM som (13/set/2026)
 
