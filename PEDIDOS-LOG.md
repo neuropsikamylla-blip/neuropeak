@@ -23412,3 +23412,6 @@ deixa sem supermercado vc nao conseguiu criar vou tentar gravar um e enviar pra 
 
 ## 13/09/2026 21:16
 onde posso colocar
+
+## 13/09/2026 21:18
+deuxa sem barulho... o supermercado

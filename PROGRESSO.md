@@ -3,7 +3,7 @@
 > Checkpoint de contexto para continuidade entre sessões. Atualizado automaticamente.
 > 👉 Visão geral e handoff para o próximo Claude: **`ESTADO-DO-PROJETO.md`** (leia primeiro).
 
-## 🔊 Áudio ambiente — Restaurante ajustado, Supermercado PENDENTE de gravação dela (13/set/2026)
+## 🔊 Áudio ambiente — Restaurante ajustado; Supermercado fica SEM som (13/set/2026)
 
 ### ✅ Restaurante — v3.26.5 no ar
 
@@ -19,7 +19,7 @@ inaudíveis na conferência". Ela avaliou "bem ao fundo" como alto — e estava,
 antes da escolha final. **Ferramenta de avaliação que não reproduz o nível real faz a pessoa decidir
 sobre outra coisa.**
 
-### ⏳ Supermercado — QUATRO tentativas de síntese, quatro reprovações dela
+### ❌ Supermercado — quatro tentativas de síntese, quatro reprovações dela
 
 Ela pediu barulho de supermercado; escolheu que eu sintetizasse. **Não consegui.** O histórico, porque
 a lição vale mais que as tentativas:
@@ -38,14 +38,21 @@ síntese até faz — mas nem isso bastou. **O caminho que funciona é gravaçã
 restaurante (`ambience-restaurante-real.m4a`, que **não** foi criado por mim: está no projeto desde
 11/jul).
 
-- [ ] **Ela vai gravar** num supermercado e mandar o arquivo cru. Orientações dadas: 2–3 min
-      contínuos, parada, sem roçar o microfone, longe do caixa, evitando música com melodia e anúncio
-      com palavra nítida (competem com a lista que o paciente memoriza). `.m4a` do Gravador do iPhone
-      serve. Destino: `public/exercises/audio/`.
-- [ ] **Quando chegar:** corte, nivelamento e laço sem emenda são comigo; depois ligo no exercício com
-      o ambiente **calando durante a fala da lista** — decisão dela, porque o Supermercado FALA a
-      lista no modo auditivo e ruído por cima mascararia a instrução, fazendo o paciente errar por não
-      ouvir e não por não lembrar.
+### ⛔ FECHADO: o Supermercado fica SEM som ambiente — decisão dela, 13/set
+
+Ela chegou a dizer que gravaria um som real e enviaria, e em seguida fechou: *"deixa sem barulho... o
+supermercado"*. **Não há nada a desfazer:** nenhuma linha do `DesafioSupermercado.tsx` foi tocada em
+nenhuma das quatro tentativas, e nenhum arquivo de áudio de supermercado entrou no repositório — tudo
+viveu em `/tmp`. O exercício segue exatamente como estava.
+
+**Se um dia ela mudar de ideia**, o que ficou resolvido e não precisa ser rediscutido:
+- o caminho é **gravação real**, não síntese (quatro tentativas provaram);
+- o arquivo vai em `public/exercises/audio/`, cru, sem edição prévia;
+- a infraestrutura de ambiente já existe pronta no `RestauranteOrdem.tsx` (Web Audio em laço, entrada
+  suave, botão de ligar/desligar) e é reaproveitável;
+- e a regra clínica já decidida por ela: o ambiente teria de **calar durante a fala da lista**, porque
+  o Supermercado FALA no modo auditivo e ruído por cima faria o paciente errar por **não ouvir** em
+  vez de por não lembrar — o que entraria na acurácia como falha de memória.
 
 ### Sobre a barra de progresso nos dois
 
