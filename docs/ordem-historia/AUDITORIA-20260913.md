@@ -200,7 +200,7 @@ após feedback" — porque, como dito em 0.2, **não há segunda tentativa no mo
 |---|---|---|
 | 3 | linha `Nível 1 · 4 cenas · fácil` | **existe**, montada na linha 463; e também na tela de abertura (450) |
 | 6 | rótulo fácil/média/difícil | `DIFF_LABEL`, usado nos dois lugares acima |
-| 7 | arrastar pelo cartão inteiro | hoje o `listeners` do dnd-kit fica **só na alça de pontinhos**; o resto do cartão não arrasta |
+| 7 | arrastar pelo cartão inteiro | ✅ **já funciona** — ver a correção de 14/set abaixo. O `⠿` é decorativo, e é ELE que engana |
 | 7 | toque no celular | `TouchSensor` com `delay: 160ms`, `tolerance: 8` |
 | 17 | layout | grade central `margin: 0 auto`; o botão fica depois dos cartões, no fluxo |
 | 19 | instrução | já é curta: *"Arraste as cenas para a ordem certa — do começo ao fim."* |
@@ -236,3 +236,31 @@ Ela pediu explicitamente para não decidir sozinho em três pontos. São estes:
 3. **Travar os cartões já corretos** durante a segunda tentativa (seção 11): ela pediu para ser
    avisada antes, e aviso — **isso muda a demanda da tarefa**. Com os corretos travados, a segunda
    tentativa vira um problema menor e mais fácil; sem travar, ela exige revisar tudo de novo.
+
+
+---
+
+## ⚠️ CORREÇÃO DESTA AUDITORIA — 14/set/2026
+
+**A linha da seção 7 da tabela acima estava errada, e o VP a corrigiu depois de reler o código.**
+
+O que eu havia escrito: *"o `listeners` do dnd-kit fica só na alça de pontinhos; o resto do cartão
+não arrasta"*. **É falso.** Em `components/exercises/executive/OrdemHistoria.tsx:127`, os listeners
+são aplicados ao **container inteiro do cartão**:
+
+```tsx
+<div ref={setNodeRef} style={style} {...attributes} {...(phase === "playing" ? listeners : {})}>
+```
+
+E o `⠿` da linha 165 é um `<span aria-hidden>` **sem listener nenhum** — é desenho, não alça.
+
+**Consequência para a espec dela:** o pedido da seção 7 (*"não depender exclusivamente daquele
+pequeno ícone de pontinhos; o cartão inteiro deve poder ser usado para movimentação"*) **já está
+atendido na mecânica**. O problema é de **comunicação visual**: o ícone de alça comunica ao paciente
+que só ali se arrasta, quando o cartão todo arrasta. O conserto, portanto, não é mexer no dnd-kit —
+é resolver o que o ícone diz e melhorar o retorno visual do arraste (as outras alíneas da seção 7,
+que continuam pendentes de verdade: o cartão subir ao ser segurado, o destino ficar evidente, o
+encaixe ao soltar).
+
+**Como o erro passou:** a auditoria leu o `⠿` como alça por ele parecer uma, em vez de conferir onde
+os listeners estavam ligados. Medida e leitura não são a mesma coisa — e só a medida vale.
