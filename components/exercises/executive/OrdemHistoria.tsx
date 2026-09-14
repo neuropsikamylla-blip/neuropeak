@@ -12,6 +12,7 @@ import {
 import { CSS } from "@dnd-kit/utilities";
 import { calculateExerciseScore } from "@/lib/scoring";
 import { embaralharCenas } from "@/lib/ordem-historia/embaralhar";
+import { avaliarOrdem, resumirSessao, type RegistroHistoria } from "@/lib/ordem-historia/tentativas";
 import { useBlocoDeTreino } from "@/components/exercises/useExerciseEngine";
 import { ExerciseProgressBar } from "@/components/exercises/ExerciseProgressBar";
 import { HISTORIAS, HISTORIAS_INTRUSO, HISTORIAS_DESCUBRA, histPanelSrc, descubraScene, descubraOption, painelDaPosicao, type HistDiff } from "@/data/historias";
@@ -26,8 +27,10 @@ interface OrdemHistoriaProps {
 }
 
 const VIOLET = "#7c5cf0";
-const TRIALS = 5;
 const INTRUDER_ORDER = 7;                 // intruso: a cena com order===7 é a que NÃO pertence
+const TUTORIAL_KEY = "np-ordem-historia-visto";
+const RECENT_KEY = "np-ordem-historia-recentes";
+const RECENT_MAX = 30;
 
 type RoundMode = "ordem" | "intruso" | "falta";
 
@@ -62,8 +65,13 @@ function penalize(raw: number, hints: number, tries: number): number {
 }
 
 function shuffle<T>(a: T[]): T[] { const r = [...a]; for (let i = r.length - 1; i > 0; i--) { const j = Math.floor(Math.random() * (i + 1)); [r[i], r[j]] = [r[j], r[i]]; } return r; }
-function pickFrom<T extends { id: string }>(pool: T[], recent: Set<string>): T {
-  const avail = pool.filter((h) => !recent.has(h.id));
+// Os 30 ids recentes são guardados para os três modos juntos, mas uma faixa de ordenar tem
+// só 20-22 histórias: usar a lista inteira como veto acabaria vetando a faixa toda, e o
+// "não repetir" viraria letra morta (cai no fallback e sorteia de tudo). Vetamos no máximo
+// metade do pool — assim sempre sobra metade da faixa para sortear de verdade.
+function pickFrom<T extends { id: string }>(pool: T[], recent: readonly string[]): T {
+  const veto = new Set(recent.slice(0, Math.floor(pool.length / 2)));
+  const avail = pool.filter((h) => !veto.has(h.id));
   const list = avail.length ? avail : pool;
   return list[Math.floor(Math.random() * list.length)];
 }
@@ -78,7 +86,7 @@ interface Option { id: string; src: string; a: number; correct: boolean; }
 function buildOrdem(
   intruso: boolean,
   tier: HistDiff,
-  recent: Set<string>,
+  recent: readonly string[],
   anteriores: ReadonlyMap<string, number[]>,
 ): { storyId: string; a: number; cards: Card[] } {
   if (intruso) {
@@ -100,7 +108,7 @@ function buildOrdem(
 
 // "Descubra o que falta": base DEDICADA — 7 cenas (em ordem) + 3 opções da própria prancha.
 // A opção certa (story.correct) é embaralhada entre A/B/C a cada partida.
-function buildFalta(recent: Set<string>): { storyId: string; a: number; cards: Card[]; options: Option[] } {
+function buildFalta(recent: readonly string[]): { storyId: string; a: number; cards: Card[]; options: Option[] } {
   const story = pickFrom(HISTORIAS_DESCUBRA, recent);
   const cards: Card[] = Array.from({ length: 7 }, (_, i) => ({ id: `c${i}`, order: i, panel: i + 1 }));   // cena1..7 em ordem
   const opts: Option[] = [1, 2, 3].map((n) => ({
@@ -109,44 +117,53 @@ function buildFalta(recent: Set<string>): { storyId: string; a: number; cards: C
   return { storyId: story.id, a: story.a, cards, options: shuffle(opts) };
 }
 
-type Phase = "ready" | "playing" | "feedback";
+type Phase = "ready" | "playing" | "corrigindo" | "feedback";
 
 // ── Card arrastável (modos ordem/intruso) ──
 function SortableScene({
-  card, posNum, isMarked, intruso, storyId, aspect, phase, onMark,
+  card, posNum, isMarked, acertos, intruso, storyId, aspect, phase, onMark,
 }: {
-  card: Card; posNum?: number; isMarked: boolean; intruso: boolean;
+  card: Card; posNum?: number; isMarked: boolean; acertos: Record<string, number>; intruso: boolean;
   storyId: string; aspect: number; phase: Phase; onMark: (id: string) => void;
 }) {
-  const { attributes, listeners, setNodeRef, transform, transition, isDragging } =
-    useSortable({ id: card.id, disabled: phase !== "playing" });
+  const movable = phase === "playing" || phase === "corrigindo";
+  const { attributes, listeners, setNodeRef, transform, transition, isDragging, isOver } =
+    useSortable({ id: card.id, disabled: !movable, transition: { duration: 180, easing: "ease-out" } });
 
   const fb = phase === "feedback";
   const correctPos = posNum != null && card.order === posNum - 1;
+  const correctionRight = phase === "corrigindo" && posNum != null && acertos[card.id] === posNum - 1;
   const intruderRight = card.order === INTRUDER_ORDER;
 
   let border: string;
   if (intruso && isMarked) border = fb ? (intruderRight ? "#34d399" : "#ef4444") : "#ef4444";
-  else border = fb ? (correctPos ? "#34d399" : "#f59e0b") : "rgba(124,92,240,0.35)";
+  else if (fb) border = correctPos ? "#34d399" : "#f59e0b";
+  else if (phase === "corrigindo") border = correctionRight ? "#34d399" : "#f59e0b";
+  else border = "rgba(124,92,240,0.35)";
 
-  const numBg = fb ? (correctPos ? "#34d399" : "#f59e0b") : VIOLET;
+  const numBg = fb
+    ? (correctPos ? "#34d399" : "#f59e0b")
+    : phase === "corrigindo" ? (correctionRight ? "#34d399" : "#f59e0b") : VIOLET;
 
   const style: React.CSSProperties = {
     transform: CSS.Transform.toString(transform),
-    transition: transition ?? undefined,
+    transition: transition ?? "transform 180ms ease-out",
     touchAction: "manipulation",
     zIndex: isDragging ? 10 : 1,
     opacity: isDragging ? 0.92 : isMarked && !fb ? 0.62 : 1,
   };
 
   return (
-    <div ref={setNodeRef} style={style} {...attributes} {...(phase === "playing" ? listeners : {})}>
+    <div ref={setNodeRef} style={style} {...attributes} {...(movable ? listeners : {})}>
       <div style={{
         position: "relative", borderRadius: 14, overflow: "hidden", background: "#fff",
         border: `3px solid ${border}`,
-        boxShadow: isDragging ? "0 14px 30px rgba(80,60,140,0.35)" : "0 3px 10px rgba(80,60,140,0.14)",
-        cursor: phase === "playing" ? "grab" : "default",
-        transform: isDragging ? "scale(1.04)" : "none", transition: "box-shadow .15s, transform .12s",
+        boxShadow: isDragging ? "0 14px 30px rgba(80,60,140,0.32)"
+          : isOver ? "0 0 0 4px rgba(124,92,240,0.2), 0 7px 18px rgba(80,60,140,0.2)"
+            : "0 3px 10px rgba(80,60,140,0.14)",
+        cursor: movable ? (isDragging ? "grabbing" : "grab") : "default",
+        transform: isDragging ? "scale(1.035) translateY(-3px)" : "none",
+        transition: "box-shadow 160ms ease, transform 160ms ease, border-color 160ms ease",
       }}>
         <div style={{ width: "100%", aspectRatio: String(aspect), background: "#f4f1fb" }}>
           {/* eslint-disable-next-line @next/next/no-img-element */}
@@ -166,7 +183,7 @@ function SortableScene({
         {posNum != null && (
           <span style={{ position: "absolute", top: 6, left: 6, minWidth: 26, height: 26, padding: "0 6px", borderRadius: 13,
             background: numBg, color: "#fff", fontWeight: 900, fontSize: 14, display: "flex", alignItems: "center", justifyContent: "center",
-            boxShadow: "0 2px 6px rgba(0,0,0,0.28)" }}>{fb ? (correctPos ? "✓" : posNum) : posNum}</span>
+            boxShadow: "0 2px 6px rgba(0,0,0,0.28)" }}>{fb || correctionRight ? (correctPos || correctionRight ? "✓" : posNum) : posNum}</span>
         )}
 
         {intruso && phase === "playing" && (
@@ -177,11 +194,6 @@ function SortableScene({
               display: "flex", alignItems: "center", gap: 3, cursor: "pointer", boxShadow: "0 2px 6px rgba(0,0,0,0.28)" }}>{isMarked ? "↩ tirar" : "✗ não é"}</button>
         )}
 
-        {!intruso && phase === "playing" && (
-          <span aria-hidden style={{ position: "absolute", top: 6, right: 6, width: 24, height: 24, borderRadius: 7,
-            background: "rgba(44,36,64,0.45)", color: "#fff", fontSize: 13, fontWeight: 900,
-            display: "flex", alignItems: "center", justifyContent: "center", lineHeight: 1 }}>⠿</span>
-        )}
       </div>
     </div>
   );
@@ -218,6 +230,15 @@ export function OrdemHistoria({ difficulty, theme, onComplete, settings }: Ordem
   const [wrongOpts, setWrongOpts] = useState<string[]>([]); // opções já erradas (falta)
   const [flash, setFlash] = useState("");                 // mensagem transitória ("tente outra")
   const [wide, setWide] = useState(false);   // tela larga (computador) → cards maiores
+  const [tutorialSeen, setTutorialSeen] = useState(false);
+  const [acertos, setAcertos] = useState<Record<string, number>>({});
+  const [processing, setProcessing] = useState(false);
+  const [confirmHover, setConfirmHover] = useState(false);
+  const [confirmPressed, setConfirmPressed] = useState(false);
+  const confirmTimerRef = useRef<number | null>(null);
+  // Sair do exercício no meio do "Verificando…" deixaria o timer atualizando estado de um
+  // componente já desmontado.
+  useEffect(() => () => { if (confirmTimerRef.current !== null) window.clearTimeout(confirmTimerRef.current); }, []);
 
   useEffect(() => {
     const onResize = () => setWide(window.innerWidth >= 760);
@@ -226,15 +247,13 @@ export function OrdemHistoria({ difficulty, theme, onComplete, settings }: Ordem
     return () => window.removeEventListener("resize", onResize);
   }, []);
 
-  // Pré-carrega a 1ª rodada já na tela de abertura (some o delay de imagem ao começar).
-  useEffect(() => {
-    if (!pendingRef.current) pendingRef.current = makeRound();
-  // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, []);
-
   const recentRef = useRef<string[]>([]);
   const lastPermutationRef = useRef<Map<string, number[]>>(new Map());
   const gradedRef = useRef<number[]>([]);
+  const registrosRef = useRef<RegistroHistoria[]>([]);
+  const roundFirstAccuracyRef = useRef<number | null>(null);
+  const roundConfirmationsRef = useRef(0);
+  const roundSwapsRef = useRef(0);
   const posCorrectRef = useRef(0);
   const posWrongRef = useRef(0);
   const swapsRef = useRef(0);
@@ -247,11 +266,31 @@ export function OrdemHistoria({ difficulty, theme, onComplete, settings }: Ordem
   const roundFirstAt = useRef<number | null>(null);
   const rtsRef = useRef<number[]>([]);
   const startRoundAt = useRef(0);
-  const startTime = useRef(Date.now());
+
+  // Carrega as memórias do aparelho antes de sortear e pré-carregar a primeira história.
+  useEffect(() => {
+    try {
+      setTutorialSeen(localStorage.getItem(TUTORIAL_KEY) === "1");
+    } catch {
+      setTutorialSeen(false);
+    }
+
+    try {
+      const stored = JSON.parse(localStorage.getItem(RECENT_KEY) ?? "[]");
+      recentRef.current = Array.isArray(stored)
+        ? stored.filter((id): id is string => typeof id === "string").slice(0, RECENT_MAX)
+        : [];
+    } catch {
+      recentRef.current = [];
+    }
+
+    if (!pendingRef.current) pendingRef.current = makeRound();
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
 
   const sensors = useSensors(
     useSensor(MouseSensor, { activationConstraint: { distance: 5 } }),
-    useSensor(TouchSensor, { activationConstraint: { delay: 160, tolerance: 8 } }),
+    useSensor(TouchSensor, { activationConstraint: { delay: 160, tolerance: 12 } }),
     useSensor(KeyboardSensor, { coordinateGetter: sortableKeyboardCoordinates }),
   );
 
@@ -263,14 +302,16 @@ export function OrdemHistoria({ difficulty, theme, onComplete, settings }: Ordem
   // monta a próxima rodada (dedup + pré-carrega as imagens dela).
   function makeRound(): { mode: RoundMode; storyId: string; a: number; cards: Card[]; options: Option[] } {
     if (sessionMode === "falta") {
-      const r = buildFalta(new Set(recentRef.current));
-      recentRef.current = [r.storyId, ...recentRef.current].slice(0, 60);
+      const r = buildFalta(recentRef.current);
+      recentRef.current = [r.storyId, ...recentRef.current.filter((id) => id !== r.storyId)].slice(0, RECENT_MAX);
+      try { localStorage.setItem(RECENT_KEY, JSON.stringify(recentRef.current)); } catch { /* armazenamento bloqueado */ }
       preloadUrls([...Array.from({ length: 7 }, (_, i) => descubraScene(r.storyId, i + 1)), ...r.options.map((o) => o.src)]);
       return { mode: "falta", storyId: r.storyId, a: r.a, cards: r.cards, options: r.options };
     }
-    const r = buildOrdem(sessionMode === "intruso", tier, new Set(recentRef.current), lastPermutationRef.current);
+    const r = buildOrdem(sessionMode === "intruso", tier, recentRef.current, lastPermutationRef.current);
     if (sessionMode === "ordem") lastPermutationRef.current.set(r.storyId, r.cards.map((card) => card.order));
-    recentRef.current = [r.storyId, ...recentRef.current].slice(0, 60);
+    recentRef.current = [r.storyId, ...recentRef.current.filter((id) => id !== r.storyId)].slice(0, RECENT_MAX);
+    try { localStorage.setItem(RECENT_KEY, JSON.stringify(recentRef.current)); } catch { /* armazenamento bloqueado */ }
     preloadUrls(Array.from({ length: r.cards.length }, (_, i) => histPanelSrc(r.storyId, i + 1)));
     return { mode: sessionMode, storyId: r.storyId, a: r.a, cards: r.cards, options: [] };
   }
@@ -280,7 +321,9 @@ export function OrdemHistoria({ difficulty, theme, onComplete, settings }: Ordem
     pendingRef.current = null;
     roundFirstAt.current = null;
     setRoundMode(data.mode); setMarked(null); setPicked(null); setResult(null);
-    setHintLevel(0); setAttempts(1); setWrongOpts([]); setFlash("");
+    setHintLevel(0); setAttempts(1); setWrongOpts([]); setFlash(""); setAcertos({});
+    roundFirstAccuracyRef.current = null;
+    roundConfirmationsRef.current = 0; roundSwapsRef.current = 0;
     setStoryId(data.storyId); setStoryA(data.a); setCards(data.cards); setOptions(data.options);
     startRoundAt.current = Date.now();
     setPhase("playing");
@@ -288,11 +331,14 @@ export function OrdemHistoria({ difficulty, theme, onComplete, settings }: Ordem
   }
 
   function begin() {
+    try { localStorage.setItem(TUTORIAL_KEY, "1"); } catch { /* armazenamento bloqueado */ }
+    setTutorialSeen(true);
     gradedRef.current = []; posCorrectRef.current = 0; posWrongRef.current = 0;
+    registrosRef.current = [];
     swapsRef.current = 0; intruderHitsRef.current = 0; faltaHitsRef.current = 0;
     hintsUsedRef.current = 0; retriesRef.current = 0;
     firstRespRef.current = []; roundFirstAt.current = null;
-    rtsRef.current = []; startTime.current = Date.now(); startTimer(); setTrial(0);
+    rtsRef.current = []; startTimer(); setTrial(0);
     startRound();   // usa a 1ª rodada já pré-carregada na abertura (pendingRef)
   }
 
@@ -308,14 +354,14 @@ export function OrdemHistoria({ difficulty, theme, onComplete, settings }: Ordem
   }
 
   function onDragEnd(e: DragEndEvent) {
-    if (phase !== "playing") return;
+    if (phase !== "playing" && phase !== "corrigindo") return;
     const { active, over } = e;
     if (!over || active.id === over.id) return;
     setCards((prev) => {
       const from = prev.findIndex((c) => c.id === active.id);
       const to = prev.findIndex((c) => c.id === over.id);
       if (from < 0 || to < 0) return prev;
-      swapsRef.current++;
+      swapsRef.current++; roundSwapsRef.current++;
       return arrayMove(prev, from, to);
     });
     markFirst();
@@ -325,7 +371,18 @@ export function OrdemHistoria({ difficulty, theme, onComplete, settings }: Ordem
 
   const finish = useCallback(() => {
     const accTotal = gradedRef.current.length ? gradedRef.current.reduce((a, b) => a + b, 0) / gradedRef.current.length : 0;
-    const exactCount = gradedRef.current.filter((g) => g >= 0.999).length;
+    const resumoOrdem = resumirSessao(registrosRef.current);
+    const exactCount = sessionMode === "ordem"
+      ? resumoOrdem.storiesFirstTryExact + resumoOrdem.storiesSolvedAfter
+      : gradedRef.current.filter((g) => g >= 0.999).length;
+    const resumo = sessionMode === "ordem" ? resumoOrdem : {
+      storiesFirstTryExact: exactCount,
+      storiesSolvedAfter: 0,
+      storiesUnsolved: Math.max(0, gradedRef.current.length - exactCount),
+      accFirstTry: accTotal,
+      accFinal: accTotal,
+      confirmationsTotal: gradedRef.current.length + retriesRef.current,
+    };
     const meanRT = rtsRef.current.length ? Math.round(rtsRef.current.reduce((a, b) => a + b, 0) / rtsRef.current.length) : null;
     const meanFirst = firstRespRef.current.length ? Math.round(firstRespRef.current.reduce((a, b) => a + b, 0) / firstRespRef.current.length) : null;
     finishTimer();
@@ -353,9 +410,15 @@ export function OrdemHistoria({ difficulty, theme, onComplete, settings }: Ordem
         hintsUsed: hintsUsedRef.current,
         retries: retriesRef.current,
         sequencesCorrect: exactCount,
-        sequencesIncorrect: Math.max(0, gradedRef.current.length - exactCount),
+        sequencesIncorrect: sessionMode === "ordem" ? resumo.storiesUnsolved : Math.max(0, gradedRef.current.length - exactCount),
         meanReactionTimeMs: meanRT,
         timeToFirstMs: meanFirst,
+        storiesFirstTryExact: resumo.storiesFirstTryExact,
+        storiesSolvedAfter: resumo.storiesSolvedAfter,
+        storiesUnsolved: resumo.storiesUnsolved,
+        accFirstTry: resumo.accFirstTry,
+        accFinal: resumo.accFinal,
+        confirmationsTotal: resumo.confirmationsTotal,
       },
     });
   }, [onComplete, difficulty, reportLevel, tier, sessionMode, finishTimer, elapsedSec]);
@@ -374,8 +437,31 @@ export function OrdemHistoria({ difficulty, theme, onComplete, settings }: Ordem
     advance(exact);
   }
 
-  function submit() {
-    if (phase !== "playing") return;
+  function closeOrderStory(accFinal: number, resolved: boolean) {
+    const acertoPrimeira = roundFirstAccuracyRef.current ?? accFinal;
+    registrosRef.current.push({
+      acertoPrimeira,
+      acertoFinal: accFinal,
+      confirmacoes: roundConfirmationsRef.current,
+      resolvida: resolved,
+      resolvidaDePrimeira: resolved && roundConfirmationsRef.current === 1,
+      movimentos: roundSwapsRef.current,
+    });
+    rtsRef.current.push(Date.now() - startRoundAt.current);
+    firstRespRef.current.push((roundFirstAt.current ?? Date.now()) - startRoundAt.current);
+
+    if (resolved) {
+      gradedRef.current.push(acertoPrimeira);
+      setResult({ exact: true });
+      setPhase("feedback");
+      advance(true);
+    } else {
+      finish();
+    }
+  }
+
+  function processSubmit() {
+    if (phase !== "playing" && phase !== "corrigindo") return;
 
     // ── Descubra o que falta: escolha A/B/C, com tentativas ──
     if (roundMode === "falta") {
@@ -415,10 +501,37 @@ export function OrdemHistoria({ difficulty, theme, onComplete, settings }: Ordem
     }
 
     // ── Ordenar a história ──
-    const n = cards.length;
-    const posCorrect = cards.filter((c, i) => c.order === i).length;
-    posCorrectRef.current += posCorrect; posWrongRef.current += (n - posCorrect);
-    record(n ? posCorrect / n : 0, posCorrect === n);
+    const avaliacao = avaliarOrdem(cards);
+    const acc = avaliacao.total ? avaliacao.corretas / avaliacao.total : 0;
+    roundConfirmationsRef.current++;
+    // Posições certas/erradas contam UMA vez por história, na 1ª confirmação. Somar a cada
+    // retentativa inflaria o número que o terapeuta lê, e a inflação cresceria justamente
+    // com quem mais precisa corrigir — o oposto do que a métrica deve mostrar.
+    if (roundFirstAccuracyRef.current === null) {
+      roundFirstAccuracyRef.current = acc;
+      posCorrectRef.current += avaliacao.corretas;
+      posWrongRef.current += avaliacao.total - avaliacao.corretas;
+    }
+    setAcertos(avaliacao.acertos);
+
+    if (avaliacao.corretas === avaliacao.total) {
+      closeOrderStory(acc, true);
+      return;
+    }
+
+    setResult({ exact: false });
+    setPhase("corrigindo");
+    if (!podeIniciarNovoDesafio()) closeOrderStory(acc, false);
+  }
+
+  function submit() {
+    if ((phase !== "playing" && phase !== "corrigindo") || processing) return;
+    setProcessing(true);
+    confirmTimerRef.current = window.setTimeout(() => {
+      confirmTimerRef.current = null;
+      processSubmit();
+      setProcessing(false);
+    }, 120);
   }
 
   const intruso = roundMode === "intruso";
@@ -444,11 +557,11 @@ export function OrdemHistoria({ difficulty, theme, onComplete, settings }: Ordem
         background: "linear-gradient(180deg,#f3f0fb 0%,#eaeefb 55%,#eef0f8 100%)" }}>
         <div style={{ width: "100%", maxWidth: 440, background: "#fff", borderRadius: 26, padding: "26px 22px", textAlign: "center",
           boxShadow: "0 22px 60px rgba(80,60,140,0.18)" }}>
-          <div style={{ margin: "0 auto 14px", width: 70, height: 70, borderRadius: "50%", background: unlocked ? "rgba(239,68,68,0.12)" : "rgba(124,92,240,0.12)",
-            border: `1px solid ${unlocked ? "rgba(239,68,68,0.3)" : "rgba(124,92,240,0.28)"}`, display: "flex", alignItems: "center", justifyContent: "center", fontSize: 34 }}>{sessionMode === "intruso" ? "🔍" : sessionMode === "falta" ? "🧩" : "📖"}</div>
+          {(!tutorialSeen || unlocked) && <div style={{ margin: "0 auto 14px", width: 70, height: 70, borderRadius: "50%", background: unlocked ? "rgba(239,68,68,0.12)" : "rgba(124,92,240,0.12)",
+            border: `1px solid ${unlocked ? "rgba(239,68,68,0.3)" : "rgba(124,92,240,0.28)"}`, display: "flex", alignItems: "center", justifyContent: "center", fontSize: 34 }}>{sessionMode === "intruso" ? "🔍" : sessionMode === "falta" ? "🧩" : "📖"}</div>}
           {unlocked && <div style={{ fontSize: 12, fontWeight: 900, color: "#ef4444", letterSpacing: 0.5, marginBottom: 4 }}>🔓 DESAFIO DESBLOQUEADO</div>}
           <h2 style={{ fontSize: 20, fontWeight: 900, color: "#2a2440", marginBottom: 8 }}>{sessionMode === "intruso" ? "Encontre o Intruso" : sessionMode === "falta" ? "Descubra o que falta" : "Ordem da História"}</h2>
-          <div style={{ textAlign: "left", fontSize: 13, color: "#5b5470", margin: "0 auto 10px", maxWidth: 320, lineHeight: 1.7 }}>
+          {(!tutorialSeen || unlocked) && <div style={{ textAlign: "left", fontSize: 13, color: "#5b5470", margin: "0 auto 10px", maxWidth: 320, lineHeight: 1.7 }}>
             {unlocked ? (
               sessionMode === "intruso" ? (
                 <div><b>🔍 Encontre o Intruso:</b> uma das cenas não faz parte da história. Toque na intrusa (✗) e ordene as outras.</div>
@@ -463,7 +576,7 @@ export function OrdemHistoria({ difficulty, theme, onComplete, settings }: Ordem
                 <div>4. Toque em <b>Confirmar Ordem</b>.</div>
               </>
             )}
-          </div>
+          </div>}
           <p style={{ fontSize: 11.5, color: "#9a93b0", marginBottom: 18 }}>
             {unlocked ? "Você dominou a Ordem da História! Hora dos desafios." : "As cenas aparecem fora de ordem. Monte a história do começo ao fim."}
           </p>
@@ -474,13 +587,14 @@ export function OrdemHistoria({ difficulty, theme, onComplete, settings }: Ordem
     );
   }
 
-  const canSubmit = phase === "playing" && (falta ? !!picked : intruso ? !!marked : true);
+  const canSubmit = !processing && (phase === "playing" || phase === "corrigindo") && (falta ? !!picked : intruso ? !!marked : true);
   const headerTitle = falta ? "🧩 Descubra o que falta" : intruso ? "🔍 Encontre o Intruso" : "Ordem da História";
   const headerSub = falta ? "Escolha a cena que completa a história"
     : intruso ? "Ache a cena errada e ordene as outras"
     : null;
   const instruction = phase === "feedback"
-    ? (result?.exact ? (falta ? "✅ Isso! Cena certa." : intruso ? "✅ Mandou bem!" : "✅ Ordem correta!") : (falta ? "Não era essa. Veja a certa (verde)." : "Quase! Veja as marcações"))
+    ? (result?.exact ? (falta ? "✅ Isso! Cena certa." : intruso ? "✅ Mandou bem!" : "Sequência correta.") : (falta ? "Não era essa. Veja a certa (verde)." : "Quase! Veja as marcações"))
+    : phase === "corrigindo" ? "As cenas em verde estão no lugar certo. Reveja as outras."
     : (falta ? "Veja a história e toque na opção (A, B ou C) que completa."
       : intruso ? "Marque a cena intrusa (✗) e arraste as outras na ordem."
       : "Arraste as cenas para a ordem certa — do começo ao fim.");
@@ -516,7 +630,7 @@ export function OrdemHistoria({ difficulty, theme, onComplete, settings }: Ordem
       </div>
 
       {/* Corpo */}
-      <div style={{ flex: 1, overflowY: "auto", padding: "2px 16px 8px" }}>
+      <div style={{ flex: wide ? "0 1 auto" : 1, overflowY: "auto", padding: "2px 16px 8px" }}>
         {falta ? (
           <div style={{ maxWidth: faltaMax, margin: "0 auto" }}>
             {/* história (7 cenas, em ordem, só leitura) */}
@@ -574,7 +688,7 @@ export function OrdemHistoria({ difficulty, theme, onComplete, settings }: Ordem
               <div style={{ display: "grid", gridTemplateColumns: gridCols, gap: 10, maxWidth: gridMax, margin: "0 auto" }}>
                 {cards.map((card) => (
                   <SortableScene key={card.id} card={card} posNum={posOf[card.id]} isMarked={intruso && marked === card.id}
-                    intruso={intruso} storyId={storyId} aspect={storyA} phase={phase} onMark={toggleMark} />
+                    acertos={acertos} intruso={intruso} storyId={storyId} aspect={storyA} phase={phase} onMark={toggleMark} />
                 ))}
               </div>
             </SortableContext>
@@ -600,11 +714,23 @@ export function OrdemHistoria({ difficulty, theme, onComplete, settings }: Ordem
             </button>
           )}
           <button onClick={submit} disabled={!canSubmit}
+            onMouseEnter={() => { if (wide) setConfirmHover(true); }}
+            onMouseLeave={() => { setConfirmHover(false); setConfirmPressed(false); }}
+            onPointerDown={() => { if (canSubmit) setConfirmPressed(true); }}
+            onPointerUp={() => setConfirmPressed(false)}
             style={{ flex: 1, height: 52, borderRadius: 16, border: "none", color: "#fff", fontWeight: 800, fontSize: 15,
               cursor: canSubmit ? "pointer" : "default",
-              background: canSubmit ? "linear-gradient(135deg,#7c5cf0,#6d4fd6)" : "#cfc7e6",
-              boxShadow: canSubmit ? "0 6px 18px rgba(109,79,214,0.4)" : "none", display: "block" }}>
-            ✓ {falta || intruso ? "Confirmar" : "Confirmar Ordem"}
+              backgroundColor: phase === "feedback" ? "#34a879" : processing ? "#7257df"
+                : !canSubmit ? "#cfc7e6" : confirmPressed ? "#5a3fc0" : confirmHover ? "#6848d2" : "#6d4fd6",
+              boxShadow: phase === "feedback" ? "0 5px 16px rgba(52,168,121,0.28)"
+                : canSubmit ? "0 6px 18px rgba(109,79,214,0.36)" : "none",
+              transform: confirmPressed ? "translateY(1px)" : "translateY(0)",
+              transition: "background-color 160ms ease, box-shadow 160ms ease, transform 120ms ease, opacity 160ms ease",
+              opacity: processing ? 0.88 : 1, display: "block" }}>
+            {/* Em feedback o botão só confirma pela COR que deu certo: a frase "Sequência correta."
+                já está na instrução, logo acima dos cartões, e repeti-la aqui é ruído. */}
+            {processing ? "Verificando…" : phase === "feedback" && !falta && !intruso ? "✓"
+              : `✓ ${falta || intruso ? "Confirmar" : phase === "corrigindo" ? "Confirmar de novo" : "Confirmar Ordem"}`}
           </button>
         </div>
       </div>

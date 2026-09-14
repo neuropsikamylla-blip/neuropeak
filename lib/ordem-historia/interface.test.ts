@@ -14,4 +14,20 @@ describe("interface da Ordem da História", () => {
     const fonte = readFileSync(COMPONENTE, "utf8");
     expect(fonte.split(literal).length - 1).toBe(0);
   });
+
+  it("mantém os listeners no mesmo container que recebe setNodeRef", () => {
+    const fonte = readFileSync(COMPONENTE, "utf8");
+    const inicioContainer = fonte.indexOf("<div ref={setNodeRef}");
+    const fimDaTag = fonte.indexOf(">", inicioContainer);
+    const tagDoContainer = fonte.slice(inicioContainer, fimDaTag + 1);
+
+    expect(inicioContainer).toBeGreaterThan(-1);
+    expect(tagDoContainer).toContain("listeners");
+    expect(tagDoContainer).toContain("{...(movable ? listeners : {})}");
+  });
+
+  it("não volta a sugerir que só um ícone serve para arrastar", () => {
+    const fonte = readFileSync(COMPONENTE, "utf8");
+    expect(fonte).not.toContain("⠿");
+  });
 });

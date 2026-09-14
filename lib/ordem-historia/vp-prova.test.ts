@@ -8,6 +8,7 @@ import { embaralharCenas, minimoDeTrocas } from "./embaralhar";
 
 const FONTE = readFileSync(
   resolve(process.cwd(), "components/exercises/executive/OrdemHistoria.tsx"), "utf8");
+const MOTOR = readFileSync(resolve(process.cwd(), "lib/ordem-historia/tentativas.ts"), "utf8");
 
 /** Cartões da história montados como o componente monta, na ordem CORRETA. */
 function cartoesCorretos(id: string) {
@@ -88,11 +89,26 @@ describe("VP — d8 fora do sorteio", () => {
 });
 
 describe("VP — a correção não foi tocada", () => {
-  it("continua comparando a cena com a POSIÇÃO no array, e não com o painel", () => {
-    expect(FONTE).toContain("cards.filter((c, i) => c.order === i)");
-    // o campo da imagem nunca pode entrar numa comparação de acerto
-    expect(FONTE).not.toMatch(/panel\s*===\s*i\b/);
-    expect(FONTE).not.toMatch(/c\.panel\s*===/);
+  // A Fatia B moveu a comparação do componente para avaliarOrdem. A prova segue
+  // o alvo em vez de afrouxar: a regra tem de continuar sendo cena × POSIÇÃO.
+  it("avaliarOrdem compara a cena com a POSIÇÃO no array, e não com o painel", () => {
+    expect(MOTOR).toContain("card.order === indice");
+    expect(MOTOR).not.toMatch(/panel/);
+    // o componente não pode ter uma segunda regra de acerto por fora do motor
+    expect(FONTE).toContain("avaliarOrdem(cards)");
+    expect(FONTE).not.toMatch(/cards\.filter\(\(c, i\) => c\.order === i\)/);
+  });
+
+  it("o campo da imagem nunca entra numa comparação de acerto", () => {
+    for (const fonte of [FONTE, MOTOR]) {
+      expect(fonte).not.toMatch(/panel\s*===\s*i\b/);
+      expect(fonte).not.toMatch(/\.panel\s*===/);
+      expect(fonte).not.toMatch(/===\s*\w*\.panel/);
+    }
+  });
+
+  it("o Intruso mantém a própria regra, sobre a sequência sem a cena intrusa", () => {
+    expect(FONTE).toContain("seq.filter((c, i) => c.order === i)");
   });
 
   it("a imagem do cartão vem de panel, e nunca mais de order + 1", () => {
