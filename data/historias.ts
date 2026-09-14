@@ -1,8 +1,16 @@
-// Catálogo das histórias ilustradas (cenas em /exercises/historias/<id>/<1..n>.png, em ORDEM correta).
+// Catálogo das histórias ilustradas (cenas em /exercises/historias/<id>/<1..n>.png).
 // n = nº de cenas; a = formato (largura/altura) das cenas. Dificuldade: fáceis=4, média=5, difícil=6, muito=8.
 
 export type HistDiff = "faceis" | "media" | "dificil" | "muito-dificil";
-export interface HistoriaDef { id: string; diff: HistDiff; n: number; a: number; }
+export interface HistoriaDef {
+  id: string; diff: HistDiff; n: number; a: number;
+  /** Ordem narrativa correta, quando difere da numeração dos arquivos.
+   *  ord[k] = número do ARQUIVO (1-based) que deve ocupar a posição k (0-based).
+   *  Ausente = a numeração dos arquivos já é a ordem certa (o caso das outras 84). */
+  ord?: number[];
+  /** Conteúdo duplicado de outra história; fica no banco por histórico, fora do sorteio. */
+  duplicataDe?: string;
+}
 
 export const HISTORIAS: HistoriaDef[] = [
   { id: "f1", diff: "faceis", n: 4, a: 1.56 },
@@ -16,7 +24,7 @@ export const HISTORIAS: HistoriaDef[] = [
   { id: "f9", diff: "faceis", n: 4, a: 1.5 },
   { id: "f10", diff: "faceis", n: 4, a: 1.44 },
   { id: "f11", diff: "faceis", n: 4, a: 1.48 },
-  { id: "f12", diff: "faceis", n: 4, a: 1.48 },
+  { id: "f12", diff: "faceis", n: 4, a: 1.48, ord: [1, 4, 2, 3] },
   { id: "f13", diff: "faceis", n: 4, a: 1.52 },
   { id: "f14", diff: "faceis", n: 4, a: 1.5 },
   { id: "f15", diff: "faceis", n: 4, a: 1.54 },
@@ -54,7 +62,7 @@ export const HISTORIAS: HistoriaDef[] = [
   { id: "d5", diff: "dificil", n: 6, a: 1.07 },
   { id: "d6", diff: "dificil", n: 6, a: 1.1 },
   { id: "d7", diff: "dificil", n: 6, a: 1.02 },
-  { id: "d8", diff: "dificil", n: 6, a: 1.08 },
+  { id: "d8", diff: "dificil", n: 6, a: 1.08, duplicataDe: "d2" },
   { id: "d9", diff: "dificil", n: 6, a: 1.07 },
   { id: "d10", diff: "dificil", n: 6, a: 1.06 },
   { id: "d11", diff: "dificil", n: 6, a: 1.05 },
@@ -66,7 +74,7 @@ export const HISTORIAS: HistoriaDef[] = [
   { id: "d17", diff: "dificil", n: 6, a: 1.05 },
   { id: "d18", diff: "dificil", n: 6, a: 1.02 },
   { id: "d19", diff: "dificil", n: 6, a: 1.03 },
-  { id: "d20", diff: "dificil", n: 6, a: 1.03 },
+  { id: "d20", diff: "dificil", n: 6, a: 1.03, ord: [2, 6, 4, 1, 3, 5] },
   { id: "d21", diff: "dificil", n: 6, a: 1.03 },
   { id: "d22", diff: "dificil", n: 6, a: 1.04 },
   { id: "x1", diff: "muito-dificil", n: 8, a: 0.81 },
@@ -95,6 +103,17 @@ export const HISTORIAS: HistoriaDef[] = [
 
 export const HIST_DIFF_PANELS: Record<HistDiff, number> = { faceis: 4, media: 5, dificil: 6, "muito-dificil": 8 };
 export const histPanelSrc = (id: string, i: number) => `/exercises/historias/${id}/${i}.png`;
+
+/** Painéis na ordem narrativa correta. painelDaPosicao(story)[k] = arquivo da posição k. */
+export function painelDaPosicao(story: { n: number; ord?: number[] }): number[] {
+  const natural = Array.from({ length: story.n }, (_, i) => i + 1);
+  if (!story.ord || story.ord.length !== story.n) return natural;
+
+  const paineis = new Set(story.ord);
+  const completa = paineis.size === story.n
+    && story.ord.every((panel) => Number.isInteger(panel) && panel >= 1 && panel <= story.n);
+  return completa ? [...story.ord] : natural;
+}
 
 // ── Encontre o Intruso (desbloqueio do nível 10) ──
 // 8 cenas: as cenas com order 0..6 formam a história em ordem; `intruder` (=7) é a cena que NÃO pertence.

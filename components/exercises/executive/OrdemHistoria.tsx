@@ -11,9 +11,10 @@ import {
 } from "@dnd-kit/sortable";
 import { CSS } from "@dnd-kit/utilities";
 import { calculateExerciseScore } from "@/lib/scoring";
+import { embaralharCenas } from "@/lib/ordem-historia/embaralhar";
 import { useBlocoDeTreino } from "@/components/exercises/useExerciseEngine";
 import { ExerciseProgressBar } from "@/components/exercises/ExerciseProgressBar";
-import { HISTORIAS, HISTORIAS_INTRUSO, HISTORIAS_DESCUBRA, histPanelSrc, descubraScene, descubraOption, type HistDiff } from "@/data/historias";
+import { HISTORIAS, HISTORIAS_INTRUSO, HISTORIAS_DESCUBRA, histPanelSrc, descubraScene, descubraOption, painelDaPosicao, type HistDiff } from "@/data/historias";
 import type { ExerciseResult, Theme } from "@/types";
 
 interface OrdemHistoriaProps {
@@ -37,7 +38,6 @@ function tierForLevel(lvl: number): HistDiff {
   if (lvl <= 8) return "dificil";         // 6
   return "muito-dificil";                 // 8
 }
-const DIFF_LABEL: Record<HistDiff, string> = { faceis: "fácil", media: "média", dificil: "difícil", "muito-dificil": "muito difícil" };
 const PANELS: Record<HistDiff, number> = { faceis: 4, media: 5, dificil: 6, "muito-dificil": 8 };
 
 const MAX_ATTEMPTS = 3;   // tentativas por rodada nos desafios antes de revelar a resposta
@@ -68,25 +68,41 @@ function pickFrom<T extends { id: string }>(pool: T[], recent: Set<string>): T {
   return list[Math.floor(Math.random() * list.length)];
 }
 
-interface Card { id: string; order: number; } // order = índice correto (0-based); imagem = histPanelSrc(story.id, order+1)
+interface Card {
+  id: string;
+  order: number;   // posição correta (0-based)
+  panel: number;   // número do arquivo exibido (1-based)
+}
 interface Option { id: string; src: string; a: number; correct: boolean; }
 
-function buildOrdem(intruso: boolean, tier: HistDiff, recent: Set<string>): { storyId: string; a: number; cards: Card[] } {
-  const story = intruso
-    ? pickFrom(HISTORIAS_INTRUSO, recent)
-    : pickFrom(HISTORIAS.filter((h) => h.diff === tier), recent);
-  const correct: Card[] = Array.from({ length: story.n }, (_, i) => ({ id: `c${i}`, order: i })); // intruso: order 7 = intrusa
-  let cards = shuffle(correct);
-  let guard = 0;
-  while (cards[0].order === 0 && guard++ < 12) cards = shuffle(cards);   // anti-previsibilidade
-  return { storyId: story.id, a: story.a, cards };
+function buildOrdem(
+  intruso: boolean,
+  tier: HistDiff,
+  recent: Set<string>,
+  anteriores: ReadonlyMap<string, number[]>,
+): { storyId: string; a: number; cards: Card[] } {
+  if (intruso) {
+    const story = pickFrom(HISTORIAS_INTRUSO, recent);
+    const correct: Card[] = Array.from({ length: story.n }, (_, i) => ({ id: `c${i}`, order: i, panel: i + 1 }));
+    let cards = shuffle(correct);
+    let guard = 0;
+    while (cards[0].order === 0 && guard++ < 12) cards = shuffle(cards);
+    return { storyId: story.id, a: story.a, cards };
+  }
+
+  const pool = HISTORIAS.filter((h) => h.diff === tier && !h.duplicataDe);
+  const story = pickFrom(pool, recent);
+  const paineis = painelDaPosicao(story);
+  const correct: Card[] = paineis.map((panel, i) => ({ id: `c${i}`, order: i, panel }));
+  const apresentacao = embaralharCenas(story.n, anteriores.get(story.id));
+  return { storyId: story.id, a: story.a, cards: apresentacao.map((i) => correct[i]) };
 }
 
 // "Descubra o que falta": base DEDICADA — 7 cenas (em ordem) + 3 opções da própria prancha.
 // A opção certa (story.correct) é embaralhada entre A/B/C a cada partida.
 function buildFalta(recent: Set<string>): { storyId: string; a: number; cards: Card[]; options: Option[] } {
   const story = pickFrom(HISTORIAS_DESCUBRA, recent);
-  const cards: Card[] = Array.from({ length: 7 }, (_, i) => ({ id: `c${i}`, order: i }));   // cena1..7 em ordem
+  const cards: Card[] = Array.from({ length: 7 }, (_, i) => ({ id: `c${i}`, order: i, panel: i + 1 }));   // cena1..7 em ordem
   const opts: Option[] = [1, 2, 3].map((n) => ({
     id: `op${n}`, src: descubraOption(story.id, n), a: story.oa, correct: (n - 1) === story.correct,
   }));
@@ -134,7 +150,7 @@ function SortableScene({
       }}>
         <div style={{ width: "100%", aspectRatio: String(aspect), background: "#f4f1fb" }}>
           {/* eslint-disable-next-line @next/next/no-img-element */}
-          <img src={histPanelSrc(storyId, card.order + 1)} alt="" draggable={false}
+          <img src={histPanelSrc(storyId, card.panel)} alt="" draggable={false}
             style={{ width: "100%", height: "100%", objectFit: "cover", display: "block", userSelect: "none", pointerEvents: "none" }} />
         </div>
 
@@ -183,7 +199,7 @@ export function OrdemHistoria({ difficulty, theme, onComplete, settings }: Ordem
   else if (sIntruso) effStage = Math.max(effStage, 11);
   const sessionMode: RoundMode = effStage >= 12 ? "falta" : effStage === 11 ? "intruso" : "ordem";
   const unlocked = sessionMode !== "ordem";
-  const startLevel = Math.min(10, effStage);   // nível de ordenação (1-10) p/ tier e rótulos
+  const startLevel = Math.min(10, effStage);   // nível de ordenação (1-10) para seleção da faixa
   const reportLevel = effStage;                // estágio salvo na progressão (1-12)
   const tier = tierForLevel(startLevel);
 
@@ -217,6 +233,7 @@ export function OrdemHistoria({ difficulty, theme, onComplete, settings }: Ordem
   }, []);
 
   const recentRef = useRef<string[]>([]);
+  const lastPermutationRef = useRef<Map<string, number[]>>(new Map());
   const gradedRef = useRef<number[]>([]);
   const posCorrectRef = useRef(0);
   const posWrongRef = useRef(0);
@@ -251,7 +268,8 @@ export function OrdemHistoria({ difficulty, theme, onComplete, settings }: Ordem
       preloadUrls([...Array.from({ length: 7 }, (_, i) => descubraScene(r.storyId, i + 1)), ...r.options.map((o) => o.src)]);
       return { mode: "falta", storyId: r.storyId, a: r.a, cards: r.cards, options: r.options };
     }
-    const r = buildOrdem(sessionMode === "intruso", tier, new Set(recentRef.current));
+    const r = buildOrdem(sessionMode === "intruso", tier, new Set(recentRef.current), lastPermutationRef.current);
+    if (sessionMode === "ordem") lastPermutationRef.current.set(r.storyId, r.cards.map((card) => card.order));
     recentRef.current = [r.storyId, ...recentRef.current].slice(0, 60);
     preloadUrls(Array.from({ length: r.cards.length }, (_, i) => histPanelSrc(r.storyId, i + 1)));
     return { mode: sessionMode, storyId: r.storyId, a: r.a, cards: r.cards, options: [] };
@@ -447,7 +465,7 @@ export function OrdemHistoria({ difficulty, theme, onComplete, settings }: Ordem
             )}
           </div>
           <p style={{ fontSize: 11.5, color: "#9a93b0", marginBottom: 18 }}>
-            {unlocked ? "Você dominou a Ordem da História! Hora dos desafios." : `Começa no nível ${startLevel} (${PANELS[tier]} cenas · ${DIFF_LABEL[tier]}) — onde parou.`}
+            {unlocked ? "Você dominou a Ordem da História! Hora dos desafios." : "As cenas aparecem fora de ordem. Monte a história do começo ao fim."}
           </p>
           <button onClick={begin} style={{ width: "100%", height: 52, borderRadius: 16, border: "none", color: "#fff", fontWeight: 800, fontSize: 15,
             cursor: "pointer", background: unlocked ? "linear-gradient(135deg,#ef4444,#dc2626)" : "linear-gradient(135deg,#7c5cf0,#6d4fd6)", boxShadow: "0 6px 18px rgba(109,79,214,0.4)" }}>Começar →</button>
@@ -460,7 +478,7 @@ export function OrdemHistoria({ difficulty, theme, onComplete, settings }: Ordem
   const headerTitle = falta ? "🧩 Descubra o que falta" : intruso ? "🔍 Encontre o Intruso" : "Ordem da História";
   const headerSub = falta ? "Escolha a cena que completa a história"
     : intruso ? "Ache a cena errada e ordene as outras"
-    : `Nível ${startLevel} · ${nPanels} cenas · ${DIFF_LABEL[tier]}`;
+    : null;
   const instruction = phase === "feedback"
     ? (result?.exact ? (falta ? "✅ Isso! Cena certa." : intruso ? "✅ Mandou bem!" : "✅ Ordem correta!") : (falta ? "Não era essa. Veja a certa (verde)." : "Quase! Veja as marcações"))
     : (falta ? "Veja a história e toque na opção (A, B ou C) que completa."
@@ -475,7 +493,7 @@ export function OrdemHistoria({ difficulty, theme, onComplete, settings }: Ordem
         <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 8 }}>
           <div>
             <div style={{ fontSize: 15, fontWeight: 900, color: "#2a2440" }}>{headerTitle}</div>
-            <div style={{ fontSize: 11.5, color: "#9a93b0" }}>{headerSub}</div>
+            {headerSub && <div style={{ fontSize: 11.5, color: "#9a93b0" }}>{headerSub}</div>}
           </div>
         </div>
         <ExerciseProgressBar progressPct={progressPct} theme={theme} emTolerancia={emTolerancia()} />
