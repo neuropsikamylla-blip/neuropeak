@@ -3,10 +3,11 @@
 > Checkpoint de contexto para continuidade entre sessões. Atualizado automaticamente.
 > 👉 Visão geral e handoff para o próximo Claude: **`ESTADO-DO-PROJETO.md`** (leia primeiro).
 
-## 🌙 FECHAMENTO — 12-13/set/2026 · plataforma em 3.26.5 no ar
+## 🌙 FECHAMENTO — 12-13/set/2026 · a plataforma foi a 3.26.5 (hoje está em 3.28.0)
 
 Sessão longa, quatro exercícios tocados. **Tudo commitado e publicado**; produção confirmada em
-`/api/version` → **3.26.5** (`dpl_HPbQguuWTqcCNgqaKGaZrdRFLP1d`).
+`/api/version` → **3.26.5** (`dpl_HPbQguuWTqcCNgqaKGaZrdRFLP1d`) **naquela data**. O número atual da
+plataforma está no bloco de 14/set, acima.
 
 ### O que foi entregue e está no ar
 
@@ -60,13 +61,14 @@ A auditoria de **Ordem da História** está feita (`docs/ordem-historia/AUDITORI
 - **Ordem da História:** `d2` e `d8` são a mesma história; seis narrativas se repetem entre faixas; o
   "não repetir recentes" vive num `useRef` e perde ao recarregar; o tutorial aparece em toda sessão.
 
-## 🚧 EM ANDAMENTO — Ordem da História: a revisão completa (14/set/2026)
+## ✅ ENTREGUE — Ordem da História: a revisão completa (14/set/2026)
 
 Ela pediu em 13/set uma **revisão completa** do exercício (espec dela, 20 seções:
 `docs/ordem-historia/ESPEC-REVISAO-KAMYLLA-20260913.md`). A auditoria foi feita **antes de tocar em
 nada** (`docs/ordem-historia/AUDITORIA-20260913.md`, `43d5cabb`) e o trabalho ficou parado em três
 perguntas que ela pediu para não serem decididas sozinho. **Em 14/set ela respondeu as três** e
-fechou com *"pode dar continuidade"*.
+fechou com *"pode dar continuidade"*. As duas fatias foram implementadas, provadas e publicadas no
+mesmo dia.
 
 ### As três respostas dela, e o motivo de cada uma
 
@@ -79,73 +81,159 @@ fechou com *"pode dar continuidade"*.
 ### O plano, fatiado em duas (regra 15)
 
 **Fatia A — o dado, o embaralhamento e a tela.** Spec em
-`docs/ordem-historia/SPEC-FATIA-A-20260914.md` (`c3333e1b`).
+`docs/ordem-historia/SPEC-FATIA-A-20260914.md` (`c3333e1b`). Entregue em `2285da14` (**v3.27.0**).
 
-- [ ] **Passo A1 — campo de ordem no dado, sem renomear imagem.** `ord` opcional em `HistoriaDef`,
+- [x] **Passo A1 — campo de ordem no dado, sem renomear imagem.** `ord` opcional em `HistoriaDef`,
       com `f12 = [1,4,2,3]` e `d20 = [2,6,4,1,3,5]`; o cartão ganha o campo `panel`, usado **só** para
       escolher a imagem. A comparação da correção (`card.order === i`) **não muda**.
       *Critério:* `npx vitest run lib/ordem-historia` verde com a prova de `painelDaPosicao`, e
       `git diff --stat` **sem nenhum arquivo de imagem** — nada em `public/exercises/` renomeado.
-- [ ] **Passo A2 — `d8` sai do sorteio.** Marcado `duplicataDe: "d2"` (é a mesma história) e fora do
+      **Provado:** os dois gabaritos conferidos pelo VP **nas próprias imagens**, uma a uma; suíte de
+      `lib/ordem-historia` verde; nenhum arquivo de imagem no diff. **Por injeção:** voltar a imagem
+      para `order + 1`, apagar o `ord` de `f12` e comparar o **painel** em vez da **posição** —
+      **cada uma derruba os testes**.
+- [x] **Passo A2 — `d8` sai do sorteio.** Marcado `duplicataDe: "d2"` (é a mesma história) e fora do
       pool. *Critério:* teste que conta as histórias sorteáveis e afirma que `d8` **não** aparece.
-- [ ] **Passo A3 — embaralhamento que não se resolve com uma troca.** Novo
+      **Provado:** teste de contagem do pool verde; **por injeção**, remover o filtro de duplicata
+      derruba o teste.
+- [x] **Passo A3 — embaralhamento que não se resolve com uma troca.** Novo
       `lib/ordem-historia/embaralhar.ts`, exigindo **mínimo de 2 trocas** e proibindo repetir a
       abertura anterior. *Motivo medido na auditoria:* **16,5%** das partidas de 4 cenas nasciam
       resolvíveis por **uma única troca**. *Critério:* prova **por volume** — 5.000 execuções
       semeadas por tamanho (n = 4, 5, 6, 8), **100%** com `minimoDeTrocas >= 2`; e o resultado sempre
       uma permutação completa, sem índice perdido ou repetido.
-- [ ] **Passo A4 — a linha técnica sai da interface.** "Nível 1 · 4 cenas · fácil" some em **dois**
+      **Provado:** a prova por volume rodou e passou nos quatro tamanhos, com a permutação íntegra em
+      todas as execuções.
+- [x] **Passo A4 — a linha técnica sai da interface.** "Nível 1 · 4 cenas · fácil" some em **dois**
       lugares: o `headerSub` do modo ordem e a tela de abertura. *Critério:* teste que prova a
       **AUSÊNCIA** — contagem **zero** dos literais `"Nível "`, `" cenas · "`, `"Começa no nível"` e
       `DIFF_LABEL[tier]` no texto de `OrdemHistoria.tsx`. Presença não serve de prova aqui.
+      **Provado:** contagem zero nos quatro literais; **por injeção**, reinserir a linha técnica
+      derruba o teste — a prova é de ausência, como o critério exigia.
 
-**Fatia B — a segunda tentativa e o toque.** Spec **ainda não escrita**.
+**Fatia B — a segunda tentativa e o toque.** Spec em `b1220c26`. Entregue em `a040176e` (**v3.28.0**).
 
-- [ ] **Passo B1 — segunda tentativa com os verdes mantidos e SEM travar.** *Critério:* teste do
+- [x] **Passo B1 — segunda tentativa com os verdes mantidos e SEM travar.** *Critério:* teste do
       motor provando que, após a 1ª confirmação, os cartões corretos continuam **movíveis** (nenhum
       `disabled`/`draggable={false}` sobre eles) e que a história só troca depois da 2ª confirmação.
-- [ ] **Passo B2 — registro da 1ª tentativa separado no `metadata`.** *Critério:* teste do payload
+      **Provado:** fase `corrigindo` com os cartões livres; a marca verde é **derivada da posição
+      atual** e some sozinha se o cartão sair de lá. **Por injeção:** travar os cartões na 2ª
+      tentativa derruba os testes.
+- [x] **Passo B2 — registro da 1ª tentativa separado no `metadata`.** *Critério:* teste do payload
       enviado ao `POST /api/sessions` com acertos da 1ª e da 2ª tentativa em campos distintos; a
       acurácia gravada não pode ser a da 2ª tentativa disfarçada de única.
-- [ ] **Passo B3 — o retorno visual do arraste.** ⚠️ **A auditoria errou aqui, e o VP corrigiu o
-      documento em 14/set:** o cartão **inteiro já arrasta** (`OrdemHistoria.tsx:127` põe os
-      `listeners` no container; o `⠿` da linha 165 é `aria-hidden`, desenho sem listener). O que
-      falta não é mecânica, é **comunicação**: o ícone de alça diz ao paciente que só ali se arrasta.
-      Resolver o que o ícone comunica, e entregar as outras alíneas da seção 7 — o cartão subir ao
-      ser segurado, o destino ficar evidente, o encaixe ao soltar. *Critério:* teste que prova que os
-      `listeners` seguem no container (prova por posição, não por presença) + verificação visual dela.
-- [ ] **Passo B4 — conclusão visual curta.** *Critério:* teste do contrato da tela + verificação dela.
-- [ ] **Passo B5 — layout e estados do botão Confirmar.** *Critério:* teste dos estados (desabilitado
+      **Provado:** a acurácia gravada é a da **PRIMEIRA** confirmação; 6 campos novos no `metadata`
+      (`storiesFirstTryExact`, `storiesSolvedAfter`, `storiesUnsolved`, `accFirstTry`, `accFinal`,
+      `confirmationsTotal`), com `accFinal` **apenas informativo**. **Por injeção:** gravar a nota
+      final em vez da primeira derruba os testes. É a mesma armadilha que **inflou a Torre em 31/ago
+      e a Grade Dedutiva em 03/set**.
+- [x] **Passo B3 — o retorno visual do arraste.** ⚠️ **A auditoria errou aqui, e o VP corrigiu o
+      documento em 14/set (`443004a8`):** o cartão **inteiro já arrasta** (`OrdemHistoria.tsx:127`
+      põe os `listeners` no container; o `⠿` era `aria-hidden`, desenho sem listener). O que faltava
+      não era mecânica, era **comunicação**: o ícone de alça dizia ao paciente que só ali se arrasta.
+      *Critério:* teste que prova que os `listeners` seguem no container (prova por posição, não por
+      presença) + verificação visual dela.
+      **Provado:** ícone `⠿` **removido**; teste de posição confirma os `listeners` no container.
+      ⏳ **A verificação visual dela continua pendente** (ver seção vermelha abaixo).
+- [x] **Passo B4 — conclusão visual curta.** *Critério:* teste do contrato da tela + verificação dela.
+      **Provado:** conclusão **"Sequência correta."**, sem confete; teste de contrato verde.
+      ⏳ Verificação dela pendente.
+- [x] **Passo B5 — layout e estados do botão Confirmar.** *Critério:* teste dos estados (desabilitado
       enquanto falta ordenar, rótulo distinto na 2ª tentativa) + verificação dela.
-- [ ] **Passo B6 — tutorial só na primeira utilização.** *Critério:* o tutorial não reaparece na
-      segunda sessão do mesmo paciente. ⚠️ **Depende de decisão** — ver limitação 2 abaixo.
+      **Provado:** estados testados e rótulo **"Confirmar de novo"** na 2ª tentativa. ⏳ Verificação
+      dela pendente.
+- [x] **Passo B6 — tutorial só na primeira utilização.** *Critério:* o tutorial não reaparece na
+      segunda sessão do mesmo paciente.
+      **Entregue com limitação declarada:** o tutorial completo aparece **só na 1ª vez**, por
+      `localStorage` (`np-ordem-historia-visto`) — ou seja, **por APARELHO, não por paciente**,
+      porque Ordem da História ainda não foi convertida ao framework T1. Também ficaram persistidas
+      as histórias recentes (`np-ordem-historia-recentes`), que antes viviam num `useRef` e se
+      perdiam ao recarregar. A decisão sobre o T1 segue aberta — ver seção vermelha.
 - [ ] **Passo final — verificação dela em produção.** *Critério:* ela joga Ordem da História no ar,
       confirma os gabaritos do cinema e do herbário, a segunda tentativa e a tela sem linha técnica.
 
-### Onde está agora
+### A entrega
 
-**Passo em curso: Fatia A inteira, no Codex** — lab `ordem-hist-a`, saída em
-`~/codex-lab/saida-ordem-hist-a-20260914.txt`. Nada aplicado no repositório ainda.
+**Commits** (push na `main` feito: `59ec98d9..8c572ed2`):
 
-**Baseline de testes medido no repositório real ANTES de qualquer mudança:** `npx vitest run` =
-**87 arquivos / 1110 testes**, todos passando. É contra este número que a colheita se compara.
+| commit | o que é |
+|---|---|
+| `443004a8` | correção da auditoria — o cartão inteiro já arrastava; o ícone de alça é que enganava |
+| `c3333e1b` | spec da Fatia A |
+| `b1220c26` | spec da Fatia B |
+| `513aa1a8` | bloco EM ANDAMENTO no PROGRESSO |
+| `2285da14` | **Fatia A — v3.27.0** · gabaritos do cinema e do herbário, e o embaralhamento que exige 2 trocas |
+| `a040176e` | **Fatia B — v3.28.0** · a segunda tentativa, e a nota que não infla |
+| `8c572ed2` | `package-lock` na versão 3.28.0 |
 
-### 🔴 A RELATAR A ELA — duas limitações estruturais que a Fatia A não resolve
+**Provas do VP, no repositório real:**
 
-A auditoria achou as duas; nenhuma é conserto de código desta fatia:
+| prova | resultado | baseline |
+|---|---|---|
+| `npx tsc --noEmit` | exit **0** | — |
+| `npm run test` | **92 arquivos / 1171 testes** | 87/1110 antes de tudo · 90/1143 após a Fatia A |
+| `npm run build` | exit **0** | — |
+| `npm run lint` | **0 errors** | — |
+| `npx vitest run lib/ordem-historia` | **61/61** no estado bom | — |
 
-1. **A classificação das 86 histórias por demanda cognitiva** (seções 4 e 14 da espec dela) é
-   **trabalho clínico dela**, não de código. Nenhum algoritmo decide qual história exige mais
-   inferência causal; sem essa classificação, a progressão continua andando por número de cenas.
-2. **O tutorial de primeira utilização não tem como usar o gate de banco do projeto**
-   (`/api/exercise-tutorial`), porque **Ordem da História ainda não foi convertida ao framework T1** —
-   o gate só funciona para os **20 exercícios já convertidos**. Ou a conversão ao T1 entra antes do
-   passo B6, ou o passo B6 precisa de outra decisão dela.
+**Prova por INJEÇÃO, nas duas fatias** — cada uma destas alterações **derruba os testes**: reinserir
+a linha técnica · remover o filtro de duplicata · voltar a imagem para `order + 1` · apagar o `ord`
+de `f12` · gravar a nota final em vez da primeira · travar os cartões na 2ª tentativa · recalcular o
+acerto durante o arraste · comparar o painel em vez da posição · voltar a inflar o `posCorrect`.
+⚠️ **Duas provas do próprio VP miravam linhas que a Fatia B reescreveu: foram CORRIGIDAS, não
+afrouxadas.**
+
+**Os quatro consertos do VP sobre a entrega do Codex (Fatia B), todos defeitos reais:**
+
+1. **`posCorrect`/`posWrong` somavam a cada confirmação** — a métrica que o terapeuta lê saía
+   **inflada** a cada tentativa extra.
+2. **`setTimeout` de 120 ms do botão sem limpeza ao desmontar.**
+3. **Os 30 ids recentes vetavam a faixa inteira** (20 a 22 histórias) e tornavam o "não repetir"
+   **letra morta** — passou a vetar no máximo **metade** do pool.
+4. **O botão em feedback repetia "Sequência correta."**, frase que já está na instrução.
+
+**Versão em produção, medida agora (não presumida):**
+
+`https://neuropeak-5jyl.vercel.app/api/version` →
+`{"version":"3.28.0-dpl_Az83xaTeY7VyX2kQz7RFiYGtzD4g","appVersion":"3.28.0","buildId":"dpl_Az83xaTeY7VyX2kQz7RFiYGtzD4g"}`
+· HTTP 200, medido em 14/set às **10:54** (três leituras: às 10:53 a produção ainda respondia
+**3.26.5** `dpl_5Bcmamf3GHgp5JBesKKWTGdhQN9c`; às 10:54:09 e 10:54:52 já respondia **3.28.0**).
+⚠️ O domínio de produção é **`neuropeak-5jyl.vercel.app`** — `neuropeak.vercel.app` responde 404.
+
+### 🔴 O QUE FALTA — e é dela
+
+1. **A verificação visual dela em produção** — nada substitui. O que conferir, jogando:
+   - o **cinema** (`f12`) e o **herbário** (`d20`) na ordem certa;
+   - a **segunda tentativa**: o verde que aparece, o cartão que continua podendo sair do lugar, e o
+     botão "Confirmar de novo";
+   - a tela **sem a linha técnica** ("Nível 1 · 4 cenas · fácil") nos dois lugares;
+   - o **arraste no celular**, agora sem o ícone `⠿` — é lá que o toque decide se ficou claro.
+2. **A classificação das 86 histórias por demanda cognitiva e por tipo de raciocínio** (seções 4 e 14
+   da espec dela). **Trabalho clínico dela, não de código:** nenhum algoritmo decide qual história
+   exige mais inferência causal. **Sem essa classificação, a dificuldade continua andando só por
+   número de cenas.**
+3. **A decisão sobre converter Ordem da História ao framework T1.** Hoje o tutorial de primeira
+   utilização vive em `localStorage` — **por aparelho, não por paciente**: quem trocar de celular vê
+   o tutorial de novo, e quem dividir o aparelho não vê. O gate de banco
+   (`/api/exercise-tutorial`) só serve os exercícios já convertidos.
+4. **Duas histórias e seis famílias que ninguém alterou:**
+   - **`d6` e `x4`, as duas do bolo**, que a auditoria sinalizou como **ambíguas** — continuam como
+     estavam, porque só ela pode decidir se a ordem é mesmo única;
+   - **6 famílias de enredo repetidas entre faixas** — não são duplicatas exatas como `d2`/`d8`, e
+     por isso nenhuma saiu do sorteio.
 
 ### Roteamento (regra 8)
 
 14/09/2026 — **Ordem da História, Fatia A** — **Codex `gpt-5.6-sol`, esforço high** — motivo: amarra o
 dado, o motor de embaralhamento e a tela, com as decisões de desenho já fechadas na spec pelo VP.
+Lab `ordem-hist-a` (já removido), saída em `~/codex-lab/saida-ordem-hist-a-20260914.txt`.
+**Veredito: ACEITA com 0 consertos.** O Codex não commitou.
+
+14/09/2026 — **Ordem da História, Fatia B** — **Codex `gpt-5.6-sol`, esforço high** — motivo: a
+segunda tentativa toca mecânica, registro clínico e tela ao mesmo tempo, com a regra dura de não
+travar os cartões. Lab `ordem-hist-b` (já removido), saída em
+`~/codex-lab/saida-ordem-hist-b-20260914.txt`. **Veredito: ACEITA com 4 consertos do VP** (os quatro
+listados acima). O Codex não commitou.
 
 ## 🔊 Áudio ambiente — Restaurante ajustado; Supermercado fica SEM som (13/set/2026)
 
