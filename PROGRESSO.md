@@ -60,6 +60,93 @@ A auditoria de **Ordem da História** está feita (`docs/ordem-historia/AUDITORI
 - **Ordem da História:** `d2` e `d8` são a mesma história; seis narrativas se repetem entre faixas; o
   "não repetir recentes" vive num `useRef` e perde ao recarregar; o tutorial aparece em toda sessão.
 
+## 🚧 EM ANDAMENTO — Ordem da História: a revisão completa (14/set/2026)
+
+Ela pediu em 13/set uma **revisão completa** do exercício (espec dela, 20 seções:
+`docs/ordem-historia/ESPEC-REVISAO-KAMYLLA-20260913.md`). A auditoria foi feita **antes de tocar em
+nada** (`docs/ordem-historia/AUDITORIA-20260913.md`, `43d5cabb`) e o trabalho ficou parado em três
+perguntas que ela pediu para não serem decididas sozinho. **Em 14/set ela respondeu as três** e
+fechou com *"pode dar continuidade"*.
+
+### As três respostas dela, e o motivo de cada uma
+
+| pergunta de 13/set | resposta dela (14/set) | motivo |
+|---|---|---|
+| Corrigir os gabaritos de `f12` (cinema) e `d20` (herbário)? | **Sim, por um CAMPO DE ORDEM no dado** — nunca renomeando arquivo de imagem | renomear **quebra o cache do navegador do paciente** e não deixa rastro no diff; o campo deixa a correção legível e reversível |
+| Construir a **segunda tentativa** depois do feedback parcial (seções 9 a 12 da espec dela)? | **Sim, construir** | hoje **não existe** no modo ordem: o paciente confirma uma vez, vê o feedback e a história troca — ele nunca chega a corrigir o próprio plano |
+| **Travar** os cartões já corretos na segunda tentativa? | **NÃO travar** — só marcá-los em **verde** | travar transformaria a segunda tentativa num problema menor, **resolvido por eliminação**; o alvo do exercício é planejamento e raciocínio causal |
+
+### O plano, fatiado em duas (regra 15)
+
+**Fatia A — o dado, o embaralhamento e a tela.** Spec em
+`docs/ordem-historia/SPEC-FATIA-A-20260914.md` (`c3333e1b`).
+
+- [ ] **Passo A1 — campo de ordem no dado, sem renomear imagem.** `ord` opcional em `HistoriaDef`,
+      com `f12 = [1,4,2,3]` e `d20 = [2,6,4,1,3,5]`; o cartão ganha o campo `panel`, usado **só** para
+      escolher a imagem. A comparação da correção (`card.order === i`) **não muda**.
+      *Critério:* `npx vitest run lib/ordem-historia` verde com a prova de `painelDaPosicao`, e
+      `git diff --stat` **sem nenhum arquivo de imagem** — nada em `public/exercises/` renomeado.
+- [ ] **Passo A2 — `d8` sai do sorteio.** Marcado `duplicataDe: "d2"` (é a mesma história) e fora do
+      pool. *Critério:* teste que conta as histórias sorteáveis e afirma que `d8` **não** aparece.
+- [ ] **Passo A3 — embaralhamento que não se resolve com uma troca.** Novo
+      `lib/ordem-historia/embaralhar.ts`, exigindo **mínimo de 2 trocas** e proibindo repetir a
+      abertura anterior. *Motivo medido na auditoria:* **16,5%** das partidas de 4 cenas nasciam
+      resolvíveis por **uma única troca**. *Critério:* prova **por volume** — 5.000 execuções
+      semeadas por tamanho (n = 4, 5, 6, 8), **100%** com `minimoDeTrocas >= 2`; e o resultado sempre
+      uma permutação completa, sem índice perdido ou repetido.
+- [ ] **Passo A4 — a linha técnica sai da interface.** "Nível 1 · 4 cenas · fácil" some em **dois**
+      lugares: o `headerSub` do modo ordem e a tela de abertura. *Critério:* teste que prova a
+      **AUSÊNCIA** — contagem **zero** dos literais `"Nível "`, `" cenas · "`, `"Começa no nível"` e
+      `DIFF_LABEL[tier]` no texto de `OrdemHistoria.tsx`. Presença não serve de prova aqui.
+
+**Fatia B — a segunda tentativa e o toque.** Spec **ainda não escrita**.
+
+- [ ] **Passo B1 — segunda tentativa com os verdes mantidos e SEM travar.** *Critério:* teste do
+      motor provando que, após a 1ª confirmação, os cartões corretos continuam **movíveis** (nenhum
+      `disabled`/`draggable={false}` sobre eles) e que a história só troca depois da 2ª confirmação.
+- [ ] **Passo B2 — registro da 1ª tentativa separado no `metadata`.** *Critério:* teste do payload
+      enviado ao `POST /api/sessions` com acertos da 1ª e da 2ª tentativa em campos distintos; a
+      acurácia gravada não pode ser a da 2ª tentativa disfarçada de única.
+- [ ] **Passo B3 — o retorno visual do arraste.** ⚠️ **A auditoria errou aqui, e o VP corrigiu o
+      documento em 14/set:** o cartão **inteiro já arrasta** (`OrdemHistoria.tsx:127` põe os
+      `listeners` no container; o `⠿` da linha 165 é `aria-hidden`, desenho sem listener). O que
+      falta não é mecânica, é **comunicação**: o ícone de alça diz ao paciente que só ali se arrasta.
+      Resolver o que o ícone comunica, e entregar as outras alíneas da seção 7 — o cartão subir ao
+      ser segurado, o destino ficar evidente, o encaixe ao soltar. *Critério:* teste que prova que os
+      `listeners` seguem no container (prova por posição, não por presença) + verificação visual dela.
+- [ ] **Passo B4 — conclusão visual curta.** *Critério:* teste do contrato da tela + verificação dela.
+- [ ] **Passo B5 — layout e estados do botão Confirmar.** *Critério:* teste dos estados (desabilitado
+      enquanto falta ordenar, rótulo distinto na 2ª tentativa) + verificação dela.
+- [ ] **Passo B6 — tutorial só na primeira utilização.** *Critério:* o tutorial não reaparece na
+      segunda sessão do mesmo paciente. ⚠️ **Depende de decisão** — ver limitação 2 abaixo.
+- [ ] **Passo final — verificação dela em produção.** *Critério:* ela joga Ordem da História no ar,
+      confirma os gabaritos do cinema e do herbário, a segunda tentativa e a tela sem linha técnica.
+
+### Onde está agora
+
+**Passo em curso: Fatia A inteira, no Codex** — lab `ordem-hist-a`, saída em
+`~/codex-lab/saida-ordem-hist-a-20260914.txt`. Nada aplicado no repositório ainda.
+
+**Baseline de testes medido no repositório real ANTES de qualquer mudança:** `npx vitest run` =
+**87 arquivos / 1110 testes**, todos passando. É contra este número que a colheita se compara.
+
+### 🔴 A RELATAR A ELA — duas limitações estruturais que a Fatia A não resolve
+
+A auditoria achou as duas; nenhuma é conserto de código desta fatia:
+
+1. **A classificação das 86 histórias por demanda cognitiva** (seções 4 e 14 da espec dela) é
+   **trabalho clínico dela**, não de código. Nenhum algoritmo decide qual história exige mais
+   inferência causal; sem essa classificação, a progressão continua andando por número de cenas.
+2. **O tutorial de primeira utilização não tem como usar o gate de banco do projeto**
+   (`/api/exercise-tutorial`), porque **Ordem da História ainda não foi convertida ao framework T1** —
+   o gate só funciona para os **20 exercícios já convertidos**. Ou a conversão ao T1 entra antes do
+   passo B6, ou o passo B6 precisa de outra decisão dela.
+
+### Roteamento (regra 8)
+
+14/09/2026 — **Ordem da História, Fatia A** — **Codex `gpt-5.6-sol`, esforço high** — motivo: amarra o
+dado, o motor de embaralhamento e a tela, com as decisões de desenho já fechadas na spec pelo VP.
+
 ## 🔊 Áudio ambiente — Restaurante ajustado; Supermercado fica SEM som (13/set/2026)
 
 ### ✅ Restaurante — v3.26.5 no ar
