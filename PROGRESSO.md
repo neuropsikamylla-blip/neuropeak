@@ -3,6 +3,63 @@
 > Checkpoint de contexto para continuidade entre sessões. Atualizado automaticamente.
 > 👉 Visão geral e handoff para o próximo Claude: **`ESTADO-DO-PROJETO.md`** (leia primeiro).
 
+## 🌙 FECHAMENTO — 12-13/set/2026 · plataforma em 3.26.5 no ar
+
+Sessão longa, quatro exercícios tocados. **Tudo commitado e publicado**; produção confirmada em
+`/api/version` → **3.26.5** (`dpl_HPbQguuWTqcCNgqaKGaZrdRFLP1d`).
+
+### O que foi entregue e está no ar
+
+| versão | entrega |
+|---|---|
+| v3.24.1 | **Torre** — o OBJETIVO passa a mostrar os discos nas cores do tabuleiro |
+| v3.25.0 | **Rastreamento** — densidade crescente + a bola que cabe no celular |
+| v3.26.0 | **Estacionamento** — área adaptativa, centralização, fundo dia/noite |
+| v3.26.1 | **Estacionamento** — o cenário volta a aparecer (regressão de 27/ago) |
+| v3.26.2 | **Estacionamento** — translucidez, opção C escolhida por ela |
+| v3.26.3 | **Estacionamento** — a tela "Desafio resolvido" centralizada |
+| v3.26.4/5 | **Restaurante** — ambiente de −33,3 para −47,3 dBFS, nível que ela escolheu ouvindo |
+
+### Decisões dela nesta sessão
+
+1. **Torre:** o objetivo tem as cores dos discos.
+2. **Rastreamento:** densidade crescente; a bola encolhe junto com a arena, teto de 22 px.
+3. **Estacionamento:** layout adaptativo agora, fases de grid maior como tarefa própria depois;
+   translucidez **C**; fundo dia/noite pelo horário local.
+4. **Restaurante:** ambiente no nível "um degrau acima" (`AMB_LEVEL = 0.04`).
+5. **Supermercado:** **fica SEM som ambiente**. Barra já estava correta.
+6. **Ordem da História:** revisão completa pedida, com auditoria antes de tocar em nada.
+
+### 🔴 O PRÓXIMO PASSO — três perguntas esperando resposta dela
+
+A auditoria de **Ordem da História** está feita (`docs/ordem-historia/AUDITORIA-20260913.md`) e
+**nada foi implementado**, porque ela pediu para não decidir sozinho em três pontos:
+
+1. **Corrijo os gabaritos de `f12` (cinema) e `d20` (herbário)?** Recomendação do VP: criar um campo
+   de ordem no dado, **não** renomear arquivos — renomear quebra o cache do navegador do paciente e
+   não deixa rastro do que mudou.
+2. **A segunda tentativa é para construir?** Hoje **não existe** no modo ordem — é mudança de
+   mecânica, não ajuste.
+3. **Travar os cartões já corretos** na segunda tentativa **muda a demanda da tarefa**.
+
+### ⏳ O que continua sem verificação visual dela
+
+- **Torre, Rastreamento e Estacionamento em USO REAL.** Ela viu o Estacionamento parado (capturas),
+  nunca jogando os três.
+- **O celular não foi aberto** em nenhum deles — e foi lá que mais se mexeu: a bola do MOT encolhendo,
+  o tabuleiro na horizontal, o corte lateral do fundo.
+- **A pendência de 10/set segue igual:** barra sem porcentagem em 35 telas, barra do dia que só avança
+  ao concluir, e recarregar no meio de um exercício.
+
+### Achados abertos, não pedidos por ela
+
+- **`car-13`** (Estacionamento) tem cor média (29,38,55) contra um tabuleiro de (30,37,56) — **1,01:1**.
+  Só se distingue pelos reflexos do vidro, não pela cor da carroceria.
+- **MOT:** a dificuldade da rodada é **sorteada**, não controlada — no nível 7 a mesma configuração
+  produz de 2 a 16 encontros alvo-distrator. Ela não escolheu este eixo.
+- **Ordem da História:** `d2` e `d8` são a mesma história; seis narrativas se repetem entre faixas; o
+  "não repetir recentes" vive num `useRef` e perde ao recarregar; o tutorial aparece em toda sessão.
+
 ## 🔊 Áudio ambiente — Restaurante ajustado; Supermercado fica SEM som (13/set/2026)
 
 ### ✅ Restaurante — v3.26.5 no ar

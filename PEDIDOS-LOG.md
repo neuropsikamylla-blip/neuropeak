@@ -23653,3 +23653,6 @@ Verifique como o projeto controla tutorial visto/não visto.
 Idealmente:
 primeira utilização → tutorial;
 utilizações seguintes → entrar diretamente no exercício;
+
+## 13/09/2026 21:39
+vamos parar por aqui e voltamos amanha ok?
