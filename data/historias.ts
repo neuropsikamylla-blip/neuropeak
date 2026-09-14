@@ -17,7 +17,7 @@ export const HISTORIAS: HistoriaDef[] = [
   { id: "f2", diff: "faceis", n: 4, a: 1.47 },
   { id: "f3", diff: "faceis", n: 4, a: 1.51 },
   { id: "f4", diff: "faceis", n: 4, a: 1.48 },
-  { id: "f5", diff: "faceis", n: 4, a: 1.53 },
+  { id: "f5", diff: "faceis", n: 4, a: 1.53, ord: [2, 1, 3, 4] },
   { id: "f6", diff: "faceis", n: 4, a: 1.52 },
   { id: "f7", diff: "faceis", n: 4, a: 1.5 },
   { id: "f8", diff: "faceis", n: 4, a: 1.46 },

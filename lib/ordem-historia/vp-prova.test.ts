@@ -37,9 +37,17 @@ describe("VP — o que o paciente vê na tela quando acerta", () => {
     expect(dela.filter((p, i) => p === agora[i]).length).toBe(4);
   });
 
-  it("as outras 84 histórias continuam com a numeração natural dos arquivos", () => {
+  // Achada por ELA na 1ª sessão de teste, em 14/set — e a auditoria de 13/set tinha
+  // declarado esta história coerente. A prova é a ROUPA: ela escova os dentes de camiseta
+  // de bolinhas (2.png) e só depois abotoa o pijama de corações (1.png), que usa para ler
+  // (3.png) e dormir (4.png). Na ordem numerada, teria trocado de roupa duas vezes.
+  it("f5 (rotina de dormir): escovar os dentes vem ANTES de vestir o pijama", () => {
+    expect(cartoesCorretos("f5").map((c) => c.panel)).toEqual([2, 1, 3, 4]);
+  });
+
+  it("as outras 83 histórias continuam com a numeração natural dos arquivos", () => {
     const comOrd = HISTORIAS.filter((h) => h.ord);
-    expect(comOrd.map((h) => h.id)).toEqual(["f12", "d20"]);
+    expect(comOrd.map((h) => h.id)).toEqual(["f5", "f12", "d20"]);
     for (const h of HISTORIAS.filter((x) => !x.ord)) {
       expect(painelDaPosicao(h)).toEqual(Array.from({ length: h.n }, (_, i) => i + 1));
     }
