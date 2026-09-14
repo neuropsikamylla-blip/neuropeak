@@ -3,6 +3,55 @@
 > Checkpoint de contexto para continuidade entre sessões. Atualizado automaticamente.
 > 👉 Visão geral e handoff para o próximo Claude: **`ESTADO-DO-PROJETO.md`** (leia primeiro).
 
+## 🔊 Áudio ambiente — Restaurante ajustado, Supermercado PENDENTE de gravação dela (13/set/2026)
+
+### ✅ Restaurante — v3.26.5 no ar
+
+Ela: *"gostaria de reduzir o volume do restaurante pois estou achando bem alto"*, depois *"pode
+reduzir mais"*, e por fim, ouvindo no nível real, *"gostei do barulho do restaurante um degrau acima"*.
+**`AMB_LEVEL` 0,20 → 0,04** (−47,3 dBFS, −13 dB do original). O arquivo é o mesmo desde julho: mudou
+só o **ganho**, e ganho **não distorce** — ela levantou a dúvida com razão, e a razão veio do
+supermercado (ver abaixo).
+
+⚠️ **Erro meu de ferramenta, que quase fez ela decidir sobre a coisa errada:** o player HTML que abri
+para ela julgar tocava **14 dB ACIMA** do exercício, porque normalizei os ganhos "para não ficarem
+inaudíveis na conferência". Ela avaliou "bem ao fundo" como alto — e estava, naquele player. Corrigido
+antes da escolha final. **Ferramenta de avaliação que não reproduz o nível real faz a pessoa decidir
+sobre outra coisa.**
+
+### ⏳ Supermercado — QUATRO tentativas de síntese, quatro reprovações dela
+
+Ela pediu barulho de supermercado; escolheu que eu sintetizasse. **Não consegui.** O histórico, porque
+a lição vale mais que as tentativas:
+
+| # | o que fiz | veredito dela |
+|---|---|---|
+| 1 | ruído de banda larga com modulação lenta | *"parece barulho do mar"* — e estava certa: é literalmente a receita de som de ondas |
+| 2 | 26 vozes sintetizadas (sílabas 3,5–6 Hz, formantes de vogal) | *"bizarro... não parece nada com supermercado"* |
+| 3 | gravação real do restaurante com corte de agudos a 2300 Hz para "afastar" | *"vc distorceu muito o barulho do restaurante era só reduzir o volume"* — certa: distância se faz com VOLUME, não destruindo o áudio |
+| 4 | só carrinhos (rotação 9–22 Hz, guincho, juntas do piso, passagem com brilho e altura) | *"deixa sem supermercado vc nao conseguiu criar"* |
+
+**A lição, e ela é sobre limite de ferramenta, não sobre esforço:** ambiente humano convincente **não
+sai de síntese**. O que faz um lugar soar como aquele lugar é um acúmulo de detalhes reais (acústica,
+distâncias, eventos irregulares, imperfeição) que não se monta somando camadas. Som mecânico isolado a
+síntese até faz — mas nem isso bastou. **O caminho que funciona é gravação**, como já era a base do
+restaurante (`ambience-restaurante-real.m4a`, que **não** foi criado por mim: está no projeto desde
+11/jul).
+
+- [ ] **Ela vai gravar** num supermercado e mandar o arquivo cru. Orientações dadas: 2–3 min
+      contínuos, parada, sem roçar o microfone, longe do caixa, evitando música com melodia e anúncio
+      com palavra nítida (competem com a lista que o paciente memoriza). `.m4a` do Gravador do iPhone
+      serve. Destino: `public/exercises/audio/`.
+- [ ] **Quando chegar:** corte, nivelamento e laço sem emenda são comigo; depois ligo no exercício com
+      o ambiente **calando durante a fala da lista** — decisão dela, porque o Supermercado FALA a
+      lista no modo auditivo e ruído por cima mascararia a instrução, fazendo o paciente errar por não
+      ouvir e não por não lembrar.
+
+### Sobre a barra de progresso nos dois
+
+Ela perguntou se já estava igual à dos demais. **Está** — Restaurante e Supermercado usam
+`useBlocoDeTreino` e `ExerciseProgressBar` desde a migração dos 35 (v3.22.0). Nada a fazer.
+
 ## ✅ FECHADO COM ELA — Estacionamento (13/set/2026, v3.26.3 no ar)
 
 Três voltas de uso dela fecharam o exercício:
