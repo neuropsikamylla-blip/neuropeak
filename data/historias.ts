@@ -67,7 +67,7 @@ export const HISTORIAS: HistoriaDef[] = [
   { id: "d10", diff: "dificil", n: 6, a: 1.06 },
   { id: "d11", diff: "dificil", n: 6, a: 1.05 },
   { id: "d12", diff: "dificil", n: 6, a: 1.09 },
-  { id: "d13", diff: "dificil", n: 6, a: 1.03 },
+  { id: "d13", diff: "dificil", n: 6, a: 1.03, ord: [3, 1, 2, 4, 5, 6] },
   { id: "d14", diff: "dificil", n: 6, a: 1.04 },
   { id: "d15", diff: "dificil", n: 6, a: 1.03 },
   { id: "d16", diff: "dificil", n: 6, a: 1.08 },

@@ -45,9 +45,18 @@ describe("VP — o que o paciente vê na tela quando acerta", () => {
     expect(cartoesCorretos("f5").map((c) => c.panel)).toEqual([2, 1, 3, 4]);
   });
 
-  it("as outras 83 histórias continuam com a numeração natural dos arquivos", () => {
+  // Achada na revarredura por CONTINUIDADE de 14/set. A cena 3 é o ensaio no estúdio
+  // (collant de aula, barra, cartaz "DISCIPLINA FOCO DEDICAÇÃO") e estava numerada entre o
+  // camarim (2, já de tutu) e o palco (4, de tutu): a menina teria trocado de roupa duas
+  // vezes. O ensaio é outro dia e abre a história. A ordem de 1 e 2 fica como estava —
+  // para ela não há prova, só leitura.
+  it("d13 (balé): o ensaio no estúdio vem ANTES do dia da apresentação", () => {
+    expect(cartoesCorretos("d13").map((c) => c.panel)).toEqual([3, 1, 2, 4, 5, 6]);
+  });
+
+  it("as outras 82 histórias continuam com a numeração natural dos arquivos", () => {
     const comOrd = HISTORIAS.filter((h) => h.ord);
-    expect(comOrd.map((h) => h.id)).toEqual(["f5", "f12", "d20"]);
+    expect(comOrd.map((h) => h.id)).toEqual(["f5", "f12", "d13", "d20"]);
     for (const h of HISTORIAS.filter((x) => !x.ord)) {
       expect(painelDaPosicao(h)).toEqual(Array.from({ length: h.n }, (_, i) => i + 1));
     }
