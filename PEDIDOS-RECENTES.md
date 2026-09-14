@@ -1,9 +1,6 @@
 # As 3 ultimas especificacoes dela (automatico; a mais nova por ultimo)
 # Na retomada: ler as 3, conectar com PROGRESSO.md e git, declarar e seguir.
 
-## 14/09/2026 13:56
-e eu acertei umas 5 historias e ela permaneceu com 4 desenhos onde entra a progressao de dificuldade
-
 ## 14/09/2026 14:29
 <task-notification>
 <task-id>bn2akncmf</task-id>
@@ -21,3 +18,6 @@ e eu acertei umas 5 historias e ela permaneceu com 4 desenhos onde entra a progr
 <status>completed</status>
 <summary>Background command "Conferir o deploy" completed (exit code 0)</summary>
 </task-notification>
+
+## 14/09/2026 16:15
+pronto vou testar ela mais tarde.. ficou alguma pedencia ?
