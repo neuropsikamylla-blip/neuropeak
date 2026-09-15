@@ -54,9 +54,28 @@ describe("VP — o que o paciente vê na tela quando acerta", () => {
     expect(cartoesCorretos("d13").map((c) => c.panel)).toEqual([3, 1, 2, 4, 5, 6]);
   });
 
-  it("as outras 82 histórias continuam com a numeração natural dos arquivos", () => {
+  // As três achadas ao FIM da revarredura por continuidade, em 15/set.
+  it("d15 (o dente): o dente cai na maçã ANTES de estar na mão do pai", () => {
+    // na cena 2 o dente já está fora da boca, na mão do pai; na 3 ele está SAINDO
+    // na mordida da maçã (o ícone do dente voando). Objeto não chega à mão antes de sair.
+    expect(cartoesCorretos("d15").map((c) => c.panel)).toEqual([1, 3, 2, 4, 5, 6]);
+  });
+
+  it("d19 (coral): provar o vestido vem ANTES de esperar nos bastidores vestida", () => {
+    // cena 3 = provando o vestido (arara com outro, sapatos no chão); cena 2 = bastidores,
+    // já pronta. Ninguém está pronto antes de provar. O ensaio (4) já é com o figurino.
+    expect(cartoesCorretos("d19").map((c) => c.panel)).toEqual([1, 3, 4, 2, 5, 6]);
+  });
+
+  it("d22 (capoeira): chegar de mochila é a PRIMEIRA cena", () => {
+    // cena 2 = chega com a mochila nas costas e cumprimenta o mestre na porta; nas demais
+    // ele já treina, sem mochila. Ninguém chega depois de já estar treinando.
+    expect(cartoesCorretos("d22").map((c) => c.panel)[0]).toBe(2);
+  });
+
+  it("as outras 78 histórias continuam com a numeração natural dos arquivos", () => {
     const comOrd = HISTORIAS.filter((h) => h.ord);
-    expect(comOrd.map((h) => h.id)).toEqual(["f5", "f12", "d13", "d20"]);
+    expect(comOrd.map((h) => h.id)).toEqual(["f5", "f12", "d13", "d15", "d19", "d20", "d22"]);
     for (const h of HISTORIAS.filter((x) => !x.ord)) {
       expect(painelDaPosicao(h)).toEqual(Array.from({ length: h.n }, (_, i) => i + 1));
     }
