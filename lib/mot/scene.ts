@@ -80,8 +80,15 @@ export function separacaoEfetiva(
   return Math.max(SEP_PISO_EM_RAIOS * raio, Math.min(separacaoDesejada(level, raio), porBola));
 }
 
+/** Quanto tempo as bolas ficam em MOVIMENTO, por nível (ms).
+ *  4,5 s no começo até 7,0 s no teto (nível 13), decisão dela em 15/set/2026.
+ *  Antes eram 3,5 s → 5,3 s, e ela relatou o efeito clínico: *"como está rápido, fica
+ *  muito fácil decorar onde está"*. Abaixo de ~4 s o paciente fotografa as posições
+ *  iniciais e acompanha por memória visuoespacial — resolve a tarefa sem exercer o
+ *  rastreamento atencional sustentado, que é o construto. O paradigma clássico usa de
+ *  5 a 15 s; 4,5 s é a entrada conservadora que ela escolheu para sentir a mudança. */
 export function trackDuration(level: number): number {
-  return 3500 + Math.min(1800, level * 140);
+  return 4500 + Math.min(2500, level * 200);
 }
 
 export interface Ball {

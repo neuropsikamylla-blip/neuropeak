@@ -167,7 +167,9 @@ describe("cena do MOT", () => {
     const targets = [2, 3, 3, 4, 4, 5, 5, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6];
     const speedSteps = [0, 0, 1, 1, 2, 2, 3, 3, 4, 4, 5, 5, 6, 6, 7, 7, 8, 8, 9, 9, 10];
     const speeds = [1.25, 1.25, 1.53, 1.53, 1.81, 1.81, 2.09, 2.09, 2.37, 2.37, 2.65, 2.65, 2.93, 2.93, 3, 3, 3, 3, 3, 3, 3];
-    const durations = [3500, 3640, 3780, 3920, 4060, 4200, 4340, 4480, 4620, 4760, 4900, 5040, 5180, 5300, 5300, 5300, 5300, 5300, 5300, 5300, 5300];
+    // 4,5 s → 7,0 s (v3.30.0). Eram 3,5 → 5,3 e ela relatou que dava para DECORAR as
+    // posições em vez de rastrear. Teto no mesmo nível 13 de antes: muda a escala, não a forma.
+    const durations = [4500, 4700, 4900, 5100, 5300, 5500, 5700, 5900, 6100, 6300, 6500, 6700, 6900, 7000, 7000, 7000, 7000, 7000, 7000, 7000, 7000];
     const scales = [0.75, 0.7916666666666666, 0.8333333333333334, 0.875, 0.9166666666666666, 0.9583333333333334, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1];
 
     for (let level = 0; level <= 20; level++) {
@@ -237,5 +239,40 @@ describe("cena do MOT", () => {
     expect(exercise).not.toMatch(/totalBalls\(level\)/);
     expect(ball).not.toMatch(/import\s*\{[^}]*BALL_RADIUS/);
     expect(ball).not.toMatch(/onClick=/);
+  });
+});
+
+describe("VP — a duração do rastreamento (pedido dela, 15/set/2026)", () => {
+  it("nunca começa abaixo de 4,5 s — o piso em que decorar deixa de resolver", () => {
+    for (let level = 0; level <= 30; level++) {
+      expect(trackDuration(level)).toBeGreaterThanOrEqual(4500);
+    }
+  });
+
+  it("é monotônica e para exatamente em 7,0 s", () => {
+    let anterior = 0;
+    for (let level = 0; level <= 30; level++) {
+      const atual = trackDuration(level);
+      expect(atual).toBeGreaterThanOrEqual(anterior);
+      expect(atual).toBeLessThanOrEqual(7000);
+      anterior = atual;
+    }
+    expect(trackDuration(13)).toBe(7000);
+    expect(trackDuration(30)).toBe(7000);
+  });
+
+  // Controle negativo: prova que o teste acima reprovaria a curva ANTIGA, em vez de
+  // passar por qualquer valor. Sem isto, o piso de 4,5 s não estaria realmente provado.
+  it("controle negativo: a curva antiga (3,5 s) seria reprovada pelo piso", () => {
+    const antiga = (level: number) => 3500 + Math.min(1800, level * 140);
+    expect(antiga(0)).toBeLessThan(4500);
+    expect(antiga(13)).toBeLessThan(7000);
+  });
+
+  it("a rodada continua cabendo na sessão: pior caso bem abaixo do alvo de 8 min", () => {
+    // memorizar 2 s + rastrear + responder (~5 s) + intervalo 1,5 s
+    const ciclo = (2000 + trackDuration(13) + 5000 + 1500) / 1000;
+    expect(ciclo).toBeLessThan(16);          // ~15,5 s por rodada no nível mais alto
+    expect(Math.floor(480 / ciclo)).toBeGreaterThanOrEqual(30);   // ≥ 30 rodadas em 8 min
   });
 });
