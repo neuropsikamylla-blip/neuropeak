@@ -302,33 +302,49 @@ export const PARAMS_POR_NIVEL: ParametrosQuestao[] = [
 ];
 export const paramsDoNivel = (n: number) => PARAMS_POR_NIVEL[Math.min(8, Math.max(1, Math.round(n))) - 1];
 
-/**
- * Composição da sessão (§16/§17 da Fase 2): a cada 10 atividades, ~7 leem o quadro
- * funcional, ~2 são situação do cotidiano e ~1 é leitura direta da embalagem.
- * Isto é DISTRIBUIÇÃO de modalidade, não peso de dificuldade: dentro da modalidade os
- * tipos entram por rodízio, sem sorteio ponderado.
- */
-export type Modalidade = "quadro" | "situacao" | "embalagem";
-const PADRAO_MODALIDADES: Modalidade[] = [
-  "quadro", "quadro", "situacao", "quadro", "quadro",
-  "embalagem", "quadro", "situacao", "quadro", "quadro",
-];
+/** Peso de cada tipo no sorteio, por nível. */
+export const PESOS_TIPO_POR_NIVEL: Record<number, Partial<Record<TipoQuestao, number>>> = {
+  1: { localizacao: 55, comparacao: 45 },
+  2: { localizacao: 45, comparacao: 55 },
+  3: { localizacao: 22, comparacao: 25, duasCondicoes: 20, validade: 13, conservacao: 7, ingredientes: 7, alergenicos: 6 },
+  4: { localizacao: 18, comparacao: 24, duasCondicoes: 24, validade: 14, conservacao: 7, ingredientes: 7, alergenicos: 6 },
+  5: { localizacao: 15, comparacao: 22, duasCondicoes: 26, validade: 14, conservacao: 8, ingredientes: 8, alergenicos: 7 },
+  6: { localizacao: 13, comparacao: 20, duasCondicoes: 27, validade: 15, conservacao: 8, ingredientes: 9, alergenicos: 8 },
+  7: { localizacao: 10, comparacao: 18, duasCondicoes: 24, validade: 14, conservacao: 8, ingredientes: 8, alergenicos: 8, tresCondicoes: 10 },
+  8: { localizacao: 9, comparacao: 16, duasCondicoes: 24, validade: 14, conservacao: 8, ingredientes: 8, alergenicos: 8, tresCondicoes: 13 },
+};
 
-/** Modalidade da atividade `indice` (0-based), respeitando o que o nível liberou. */
-export function modalidadeDaAtividade(indice: number, nivel: number): Modalidade {
-  const m = PADRAO_MODALIDADES[indice % PADRAO_MODALIDADES.length];
-  if (m === "situacao" && nivel < 5) return "quadro";
-  if (m === "embalagem" && nivel < 6) return "quadro";
-  return m;
+export type Modalidade = "quadro" | "situacao" | "embalagem";
+
+function sortearComPesos<T>(opcoes: readonly T[], pesoDe: (opcao: T) => number, rnd: Rnd): T {
+  const total = opcoes.reduce((soma, opcao) => soma + pesoDe(opcao), 0);
+  if (total <= 0) return pick(opcoes, rnd);
+  let limite = rnd() * total;
+  for (const opcao of opcoes) {
+    limite -= pesoDe(opcao);
+    if (limite < 0) return opcao;
+  }
+  return opcoes[opcoes.length - 1];
 }
 
-/** Tipo da atividade: modalidade decide o "onde ler"; o rodízio decide o "o quê". */
-export function tipoDaAtividade(indice: number, nivel: number): TipoQuestao {
-  const m = modalidadeDaAtividade(indice, nivel);
-  if (m === "situacao") return "situacao";
-  if (m === "embalagem") return "leituraEmbalagem";
-  const doQuadro = tiposDoNivel(nivel).filter((t) => t !== "situacao" && t !== "leituraEmbalagem");
-  return doQuadro[indice % doQuadro.length];
+/** Sorteia o tipo de uma atividade de quadro, respeitando o que o nível liberou. */
+export function sortearTipo(nivel: number, rnd: Rnd): TipoQuestao {
+  const permitidos = tiposDoNivel(nivel).filter((tipo) => tipo !== "situacao" && tipo !== "leituraEmbalagem");
+  const pesos = PESOS_TIPO_POR_NIVEL[Math.min(8, Math.max(1, Math.round(nivel)))];
+  return sortearComPesos(permitidos, (tipo) => pesos[tipo] ?? 0, rnd);
+}
+
+/** Sorteia a modalidade, mantendo os pisos de nível para situação e embalagem. */
+export function sortearModalidade(nivel: number, rnd: Rnd): Modalidade {
+  const pesos: Record<Modalidade, number> = nivel < 5
+    ? { quadro: 100, situacao: 0, embalagem: 0 }
+    : nivel < 6
+      ? { quadro: 80, situacao: 20, embalagem: 0 }
+      : nivel < 7
+        ? { quadro: 70, situacao: 18, embalagem: 12 }
+        : { quadro: 65, situacao: 20, embalagem: 15 };
+  const permitidas = (Object.keys(pesos) as Modalidade[]).filter((modalidade) => pesos[modalidade] > 0);
+  return sortearComPesos(permitidas, (modalidade) => pesos[modalidade], rnd);
 }
 
 /** Tipos liberados por nível — carga, não peso: nada de sorteio ponderado. */

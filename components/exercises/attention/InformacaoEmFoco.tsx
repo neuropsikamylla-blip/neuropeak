@@ -20,7 +20,8 @@ import { playTTS, cancelTTS } from "@/lib/tts";
 import type { ExerciseResult, Theme } from "@/types";
 import {
   gerarQuestao, criarSnapshot, valorCampo, labelCampo, explicarErro, registroDe, paramsDoNivel, tiposDoNivel,
-  type Questao, type ProdutoNaQuestao, type CampoKey, type Snapshot, type TipoQuestao, type RegistroHistorico,
+  sortearModalidade, sortearTipo,
+  type Questao, type ProdutoNaQuestao, type CampoKey, type Snapshot, type RegistroHistorico,
 } from "@/lib/informacao-foco-questoes";
 
 interface Props { difficulty: number; theme: Theme; onComplete: (result: ExerciseResult) => void; }
@@ -231,7 +232,6 @@ export function InformacaoEmFoco({ difficulty, theme, onComplete }: Props) {
   const nivelRef = useRef<number>(nivelInicialDe(difficulty));
   const snapshotRef = useRef<Snapshot | null>(null);      // preço/validade estáveis na sessão
   const historicoRef = useRef<RegistroHistorico[]>([]);    // não repetir (§13)
-  const rodizioRef = useRef(0);                           // rotação de tipos, sem peso
   const descartadasRef = useRef(0);
   const [qNum, setQNum] = useState(1);
   const [questao, setQuestao] = useState<Questao | null>(null);
@@ -252,7 +252,10 @@ export function InformacaoEmFoco({ difficulty, theme, onComplete }: Props) {
     if (!snapshotRef.current) snapshotRef.current = carregarSnapshot();
     const nivel = nivelRef.current;
     const tipos = tiposDoNivel(nivel);
-    const tipo: TipoQuestao = tipos[rodizioRef.current++ % tipos.length];
+    const modalidade = sortearModalidade(nivel, Math.random);
+    const tipo = modalidade === "situacao" ? "situacao"
+      : modalidade === "embalagem" ? "leituraEmbalagem"
+        : sortearTipo(nivel, Math.random);
     const { questao: q, descartes } = gerarQuestao(
       tipo, paramsDoNivel(nivel), snapshotRef.current, Math.random, historicoRef.current, tipos,
     );
@@ -369,9 +372,8 @@ export function InformacaoEmFoco({ difficulty, theme, onComplete }: Props) {
               {`Nível ${nivelRef.current}`}
             </span>
           </div>
-          <div className="flex items-center justify-between mt-2 mb-1">
+          <div className="flex items-center mt-2 mb-1">
             <span className={`text-xs font-semibold ${s.sub}`}>Atividade {qNum}</span>
-            <span className={`text-xs ${s.sub}`}>Tempo da sessão · {Math.round(progressPct)}%</span>
           </div>
           <ExerciseProgressBar progressPct={progressPct} theme={theme} emTolerancia={emTolerancia()} />
         </div>

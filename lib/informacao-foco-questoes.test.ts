@@ -2,8 +2,8 @@ import { describe, it, expect } from "vitest";
 import {
   gerarQuestao, montarQuestao, criarSnapshot, validarQuestao, motivoInvalidez,
   labelCampo, valorCampo, temCampo, satisfaz, explicarErro, registroDe, motivoRepeticao, campoReveladoPor,
-  TIPOS_QUESTAO, PARAMS_PADRAO, modalidadeDaAtividade, tipoDaAtividade, tiposDoNivel,
-  type ParametrosQuestao, type Questao, type TipoQuestao, type Snapshot, type RegistroHistorico,
+  TIPOS_QUESTAO, PARAMS_PADRAO, PESOS_TIPO_POR_NIVEL, sortearModalidade, sortearTipo, tiposDoNivel,
+  type ParametrosQuestao, type Questao, type TipoQuestao, type Snapshot, type RegistroHistorico, type Modalidade,
 } from "./informacao-foco-questoes";
 import { dimensaoDe, produtoPorId, CATALOGO_PRODUTOS } from "@/data/informacao-foco-catalogo";
 
@@ -350,41 +350,94 @@ describe("Leitura direta da embalagem (Fase 2 §9/§10)", () => {
   }, 90_000);
 });
 
-describe("Composição da sessão (Fase 2 §16)", () => {
-  it("em 10 atividades do nível alto: ~70% quadro, ~20% situação, ~10% embalagem", () => {
-    const conta = { quadro: 0, situacao: 0, embalagem: 0 };
-    for (let i = 0; i < 10; i++) conta[modalidadeDaAtividade(i, 7)]++;
-    expect(conta.quadro).toBe(7);
-    expect(conta.situacao).toBe(2);
-    expect(conta.embalagem).toBe(1);
-  });
-
-  it("níveis iniciais não recebem situação nem leitura da embalagem", () => {
-    for (let nivel = 1; nivel <= 4; nivel++) {
-      for (let i = 0; i < 20; i++) {
-        expect(modalidadeDaAtividade(i, nivel), `nível ${nivel}`).toBe("quadro");
-        expect(["situacao", "leituraEmbalagem"]).not.toContain(tipoDaAtividade(i, nivel));
+describe("Sorteio controlado da sessão (C1)", () => {
+  it("respeita os tipos liberados em 2.000 sorteios de cada nível", () => {
+    for (let nivel = 1; nivel <= 8; nivel++) {
+      const rnd = rndSeed(1500 + nivel);
+      const permitidos = tiposDoNivel(nivel);
+      for (let i = 0; i < 2_000; i++) {
+        expect(permitidos, `nível ${nivel}`).toContain(sortearTipo(nivel, rnd));
       }
     }
-    for (let i = 0; i < 20; i++) expect(modalidadeDaAtividade(i, 5)).not.toBe("embalagem");
   });
 
-  it("a sessão gerada de verdade respeita a composição e continua válida", () => {
-    const rnd = rndSeed(1301);
-    const snap = criarSnapshot(rnd);
-    const hist: RegistroHistorico[] = [];
-    const modalidades: string[] = [];
-    for (let i = 0; i < 10; i++) {
-      const tipo = tipoDaAtividade(i, 7);
-      const { questao } = gerarQuestao(tipo, NIVEIS[6], snap, rnd, hist, tiposDoNivel(7));
-      if (!questao) continue;
-      modalidades.push(questao.modalidade);
-      expect(motivoInvalidez(questao)).toBeNull();
-      hist.push(registroDe(questao));
+  it("aproxima os pesos declarados no nível 5", () => {
+    const rnd = rndSeed(1511);
+    const conta: Partial<Record<TipoQuestao, number>> = {};
+    const total = 20_000;
+    for (let i = 0; i < total; i++) {
+      const tipo = sortearTipo(5, rnd);
+      conta[tipo] = (conta[tipo] ?? 0) + 1;
     }
-    expect(modalidades.filter((m) => m === "quadro").length).toBeGreaterThanOrEqual(6);
-    expect(modalidades.filter((m) => m === "situacao").length).toBeGreaterThanOrEqual(1);
-  }, 30_000);
+    const pesos = PESOS_TIPO_POR_NIVEL[5];
+    const somaDosPesos = Object.values(pesos).reduce((soma, peso) => soma + (peso ?? 0), 0);
+    for (const tipo of Object.keys(pesos) as TipoQuestao[]) {
+      const frequencia = (conta[tipo] ?? 0) / total;
+      expect(Math.abs(frequencia - pesos[tipo]! / somaDosPesos), tipo).toBeLessThan(0.03);
+    }
+  });
+
+  it("deixa de repetir a mesma sequência de 10 atividades", () => {
+    const padraoAntigo: Modalidade[] = [
+      "quadro", "quadro", "situacao", "quadro", "quadro",
+      "embalagem", "quadro", "situacao", "quadro", "quadro",
+    ];
+    const tipoDoRodizioAntigo = (indice: number, nivel: number): TipoQuestao => {
+      const modalidade = padraoAntigo[indice % padraoAntigo.length];
+      if (modalidade === "situacao" && nivel >= 5) return "situacao";
+      if (modalidade === "embalagem" && nivel >= 6) return "leituraEmbalagem";
+      const doQuadro = tiposDoNivel(nivel).filter((tipo) => tipo !== "situacao" && tipo !== "leituraEmbalagem");
+      return doQuadro[indice % doQuadro.length];
+    };
+    const sequenciaAntiga = Array.from({ length: 10 }, (_, indice) => tipoDoRodizioAntigo(indice, 7)).join("|");
+    const sequenciasAntigas = new Set<string>();
+    const sequenciasNovas = new Set<string>();
+    const rnd = rndSeed(1523);
+    for (let rodada = 0; rodada < 10_000; rodada++) {
+      sequenciasAntigas.add(sequenciaAntiga);
+      const sequenciaNova = Array.from({ length: 10 }, () => {
+        const modalidade = sortearModalidade(7, rnd);
+        return modalidade === "situacao" ? "situacao"
+          : modalidade === "embalagem" ? "leituraEmbalagem"
+            : sortearTipo(7, rnd);
+      }).join("|");
+      sequenciasNovas.add(sequenciaNova);
+    }
+    expect(sequenciasAntigas.size).toBe(1);
+    expect(sequenciasNovas.size).toBeGreaterThan(1_000);
+  });
+
+  it("preserva a trava contra três tipos iguais seguidos numa sessão de 40 atividades", () => {
+    const rnd = rndSeed(1531);
+    const snap = criarSnapshot(rnd);
+    let historico: RegistroHistorico[] = [];
+    const tiposGerados: TipoQuestao[] = [];
+    for (let i = 0; i < 40; i++) {
+      const modalidade = sortearModalidade(7, rnd);
+      const tipo = modalidade === "situacao" ? "situacao"
+        : modalidade === "embalagem" ? "leituraEmbalagem"
+          : sortearTipo(7, rnd);
+      const { questao } = gerarQuestao(tipo, NIVEIS[6], snap, rnd, historico, tiposDoNivel(7));
+      expect(questao, `atividade ${i + 1}`).not.toBeNull();
+      expect(motivoRepeticao(questao!, historico), `atividade ${i + 1}`).toBeNull();
+      tiposGerados.push(questao!.tipo);
+      historico = [...historico, registroDe(questao!)].slice(-8);
+    }
+    for (let i = 2; i < tiposGerados.length; i++) {
+      expect(new Set(tiposGerados.slice(i - 2, i + 1)).size, `atividades ${i - 1}-${i + 1}`).toBeGreaterThan(1);
+    }
+  }, 60_000);
+
+  it("respeita os pisos de nível das modalidades", () => {
+    for (let nivel = 1; nivel <= 8; nivel++) {
+      const rnd = rndSeed(1540 + nivel);
+      for (let i = 0; i < 5_000; i++) {
+        const modalidade = sortearModalidade(nivel, rnd);
+        if (nivel < 5) expect(modalidade, `nível ${nivel}`).not.toBe("situacao");
+        if (nivel < 6) expect(modalidade, `nível ${nivel}`).not.toBe("embalagem");
+      }
+    }
+  });
 });
 
 describe("Quadro funcional (Fase 2 §6)", () => {

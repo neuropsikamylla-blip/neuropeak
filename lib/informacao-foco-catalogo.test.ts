@@ -12,6 +12,13 @@ const PODE_SABOR: Categoria[] = ["iogurtes", "sucos", "doces"];
 const SO_VOLUME: Categoria[] = ["leites", "bebidas-vegetais", "sucos"];
 
 describe("Catálogo do Informação em Foco — atributos FIXOS", () => {
+  it("não mostra porcentagem nem rótulo de tempo na barra", () => {
+    const arquivo = path.join(process.cwd(), "components", "exercises", "attention", "InformacaoEmFoco.tsx");
+    const fonte = fs.readFileSync(arquivo, "utf8");
+    expect(fonte).not.toContain("progressPct)}%");
+    expect((fonte.match(/Tempo da sessão ·/g) ?? []).length).toBe(0);
+  });
+
   it("tem 73 produtos com id único e imagem em disco", () => {
     expect(TOTAL_CATALOGO).toBe(73);
     const ids = CATALOGO_PRODUTOS.map((p) => p.id);
