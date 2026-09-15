@@ -233,7 +233,6 @@ export function InformacaoEmFoco({ difficulty, theme, onComplete }: Props) {
   const snapshotRef = useRef<Snapshot | null>(null);      // preço/validade estáveis na sessão
   const historicoRef = useRef<RegistroHistorico[]>([]);    // não repetir (§13)
   const descartadasRef = useRef(0);
-  const [qNum, setQNum] = useState(1);
   const [questao, setQuestao] = useState<Questao | null>(null);
   const [tentativas, setTentativas] = useState(0);
   const [selecao, setSelecao] = useState<number | null>(null);   // último cartão tocado
@@ -265,7 +264,6 @@ export function InformacaoEmFoco({ difficulty, theme, onComplete }: Props) {
     setTentativas(0); setSelecao(null); setRevelou(false); setFb(null); setAjuda(false);
     usouPistaRef.current = false;
     qAbertaEm.current = Date.now();
-    if (!primeira) setQNum((n) => n + 1);
   }, []);
 
   const iniciar = () => { begin(); novaQuestao(true); setFase("play"); };
@@ -363,19 +361,17 @@ export function InformacaoEmFoco({ difficulty, theme, onComplete }: Props) {
         <div className="flex flex-col gap-4">
         {/* Header */}
         <div>
-          <div className="flex justify-between items-baseline">
-            <div>
-              <h2 className={`font-black text-lg ${s.title}`}>Informação em Foco</h2>
-              <p className={`text-xs ${s.sub}`}>Leia, confira e escolha</p>
-            </div>
-            <span className={`text-xs font-semibold px-2.5 py-1 rounded-full ${s.isG ? "bg-white/10 text-white/80" : "bg-white text-slate-700 border border-slate-200"}`}>
-              {`Nível ${nivelRef.current}`}
-            </span>
+          {/* Nada de nível nem de contagem de atividade: decisão dela em 15/set/2026, a mesma
+              regra que já valia em Ordem da História. O paciente não precisa saber em que degrau
+              está, nem quantas atividades fez — a dificuldade sobe em silêncio e a barra
+              TEMPORAL já comunica o avanço da sessão. */}
+          <div>
+            <h2 className={`font-black text-lg ${s.title}`}>Informação em Foco</h2>
+            <p className={`text-xs ${s.sub}`}>Leia, confira e escolha</p>
           </div>
-          <div className="flex items-center mt-2 mb-1">
-            <span className={`text-xs font-semibold ${s.sub}`}>Atividade {qNum}</span>
+          <div className="mt-3">
+            <ExerciseProgressBar progressPct={progressPct} theme={theme} emTolerancia={emTolerancia()} />
           </div>
-          <ExerciseProgressBar progressPct={progressPct} theme={theme} emTolerancia={emTolerancia()} />
         </div>
 
         {/* Pergunta + ajuda + áudio */}

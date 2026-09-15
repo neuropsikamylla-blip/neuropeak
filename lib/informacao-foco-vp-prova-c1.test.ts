@@ -79,12 +79,19 @@ describe("VP — a sequência que o PACIENTE via deixa de ser previsível", () =
     expect(COMPONENTE).toContain("sortearModalidade");
   });
 
-  it("a porcentagem sumiu da barra, e a contagem de atividade ficou", () => {
-    expect((COMPONENTE.match(/progressPct\)}%/g) ?? []).length).toBe(0);
-    expect((COMPONENTE.match(/Tempo da sessão ·/g) ?? []).length).toBe(0);
-    expect(COMPONENTE).toContain("Atividade {qNum}");
-    // a barra global continua lá — tirar a porcentagem não pode ter tirado a barra
+  // Em 15/set ela mandou tirar TAMBÉM o nível e a contagem de atividade: "isso já precisa ser
+  // tirado e o problema dos exercícios permanece, nada de avisar quantas atividades foi feita".
+  // A prova original exigia "Atividade {qNum}" presente; foi CORRIGIDA para o novo alvo, não
+  // afrouxada — o que era presença virou contagem ZERO.
+  it("nada de porcentagem, de nível nem de contagem de atividade na tela", () => {
+    for (const proibido of ["progressPct)}%", "Tempo da sessão ·", "Nível ${nivelRef.current}", "Atividade {qNum}", "qNum"]) {
+      expect(COMPONENTE.split(proibido).length - 1, proibido).toBe(0);
+    }
+  });
+
+  it("mas a barra TEMPORAL global continua lá — tirar rótulos não pode tirar a barra", () => {
     expect(COMPONENTE).toContain("<ExerciseProgressBar");
+    expect(COMPONENTE).toContain("useBlocoDeTreino(\"informacao-em-foco\"");
   });
 
   it("a dose NÃO foi tocada: 6 minutos, decisão dela", () => {
