@@ -25543,3 +25543,6 @@ Antes de criar mais conteúdo, me mostre:
 Só depois disso corrija o seletor e o banco.
 
 Não quero mais conteúdo novo antes de corrigir a arquitetura de seleção das rodadas.
+
+## 15/09/2026 15:39
+sim
