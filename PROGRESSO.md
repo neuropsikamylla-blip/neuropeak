@@ -91,6 +91,56 @@ explica o fenômeno por outro caminho, a métrica é que está errada.
 - **Ordem da História:** `d2` e `d8` são a mesma história; seis narrativas se repetem entre faixas; o
   "não repetir recentes" vive num `useRef` e perde ao recarregar; o tutorial aparece em toda sessão.
 
+## ✅ ENTREGUE — Rastreamento: as bolas se movem mais tempo (15/set/2026, v3.30.0)
+
+**Pedido dela, com o efeito clínico nas próprias palavras:** *"eu quero que as bolinhas se movimente
+mais tempo antes de parar (pra o paciente ter de usar mais as habilidades que estamos treinando)"* e
+*"como está rápido, fica muito fácil decorar onde estar"*.
+
+### O que foi MEDIDO antes de mexer — uma rodada
+
+| fase | antes |
+|---|---|
+| memorizar os alvos | 2,0 s (fixo) |
+| **bolas em movimento** | **3,5 s** (nível 0) → 5,3 s (teto) |
+| identificar | sem limite |
+| intervalo | 1,5 s |
+
+**Ela estava certa, e a margem era grande.** Abaixo de ~4 s o paciente **fotografa** as posições
+iniciais e acompanha por memória visuoespacial — resolve a tarefa **sem exercer o rastreamento
+atencional sustentado**, que é o construto. O paradigma clássico usa de 5 a 15 s.
+
+### A mudança
+
+```
+trackDuration:  3500 + min(1800, nível*140)   →   4500 + min(2500, nível*200)
+```
+**4,5 s no nível 0 · 7,0 s no teto**, com o teto no **mesmo nível 13** de antes: muda a **escala**,
+não a **forma** da progressão.
+
+**Decisões dela:** escolheu a entrada **conservadora** (4,5 → 7,0) entre três opções, para sentir a
+mudança antes de ir mais longe — o próximo degrau (6,0 → 10,0) está calculado e é **uma linha**; e
+decidiu **não** mexer nos 2 s de memorização, que são outro construto (codificação inicial) — uma
+coisa por vez, para saber o que causou o quê.
+
+**Dosagem conferida:** a sessão cai de ~40 para ~36 rodadas em 8 min; no nível mais alto o ciclo fica
+em ~15,5 s, com **no mínimo 30 rodadas**. Há teste travando isso.
+
+**Provas:** `tsc` exit 0 · `npm run test` **93 arquivos / 1209 testes** · `build` exit 0 ·
+produção medida: **3.30.0** (`dpl_8fLpsgymfYmqKfzubf3gU9YcYNgN`).
+A tabela congelada do teste foi **ATUALIZADA, não afrouxada**, mais piso, monotonia, teto e um
+**CONTROLE NEGATIVO** provando que a curva antiga seria reprovada — sem ele o piso de 4,5 s estaria
+escrito e não provado. Por injeção: repor a curva antiga derruba 3 testes.
+
+### 🔴 O que falta — e é dela
+
+- **Testar.** A pergunta que importa: **4,5 s já resolve o "decorar", ou ainda dá?** Se ainda der,
+  o degrau seguinte é 6,0 s e é uma linha.
+- Os **2 s de memorização**: nos níveis altos são 5-6 alvos para gravar em tempo fixo. Ela preferiu
+  julgar depois de testar o movimento.
+
+---
+
 ## ✅ ENTREGUE — Ordem da História: a revisão completa, fatias A, B e C (14/set/2026)
 
 Ela pediu em 13/set uma **revisão completa** do exercício (espec dela, 20 seções:
