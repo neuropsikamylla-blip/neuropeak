@@ -54,8 +54,38 @@ A auditoria de **Ordem da História** está feita (`docs/ordem-historia/AUDITORI
 
 ### Achados abertos, não pedidos por ela
 
-- **`car-13`** (Estacionamento) tem cor média (29,38,55) contra um tabuleiro de (30,37,56) — **1,01:1**.
-  Só se distingue pelos reflexos do vidro, não pela cor da carroceria.
+- ~~**`car-13`** (Estacionamento) tem contraste de 1,01:1 contra o tabuleiro~~ — ❌ **RETIRADO em
+  15/set: o achado estava ERRADO.** Ver "O achado do carro invisível, que não existia", abaixo.
+
+### ❌ O achado do "carro invisível", que não existia (15/set/2026)
+
+Ela usou o Estacionamento e disse: *"eu nao achei esse carro preto transparente (usei o estacionamento
+e os carros pretos ficaram bem visto... então nao sei qual vc esta falando)"*. **Ela estava certa e o
+achado era meu erro.**
+
+O `car-13` **não é preto**: é azul-marinho, e fica perfeitamente legível sobre o tabuleiro.
+
+**O erro foi de MÉTODO, e é o que interessa guardar.** Julguei contraste por **cor MÉDIA**. Para um
+objeto com brilho especular — um carro, com vidro e faróis — a média mistura a carroceria escura com
+os reflexos quase brancos e devolve um número que não descreve nada do que o olho vê. Medindo a
+**distribuição** do mesmo arquivo:
+
+| medida | `car-13` |
+|---|---|
+| cor média | (29, 38, 55) — quase igual ao tabuleiro |
+| luminância mediana | 29 |
+| **pixels com luminância > 80** | **7,6 %** |
+| **pixels com luminância > 120** | **3,0 %** |
+| máximo | **247** (quase branco) |
+
+São esses 7,6 % que desenham o contorno inteiro do carro — e é por isso que ele se vê.
+
+⚠️ **O sinal de alerta estava no próprio texto do achado** e eu não o li: ele dizia *"só se distingue
+pelos reflexos do vidro"*. Isso não é a descrição de um problema, é a confissão de que **a métrica
+usada não servia para o objeto medido**. Quando a própria conclusão precisa de uma ressalva que
+explica o fenômeno por outro caminho, a métrica é que está errada.
+
+**Consequência prática:** o Estacionamento **não tem** essa pendência. Nada a consertar.
 - **MOT:** a dificuldade da rodada é **sorteada**, não controlada — no nível 7 a mesma configuração
   produz de 2 a 16 encontros alvo-distrator. Ela não escolheu este eixo.
 - **Ordem da História:** `d2` e `d8` são a mesma história; seis narrativas se repetem entre faixas; o
@@ -464,11 +494,8 @@ carro pode ir e onde fica a saída. Num exercício de planejamento, perder essa 
 ele usa para montar a rota antes de mover. O teste agora exige `moldura >= interior` e
 `moldura >= 0,3` — **provado por injeção**: com a moldura em 0,15 o teste quebra.
 
-**Achado separado, que NÃO é sobre translucidez e continua aberto:** o carro mais escuro do acervo
-(`car-13`) tem cor média **(29,38,55)** contra um tabuleiro de **(30,37,56)** — **1,01:1**. Ele só se
-distingue hoje pelos reflexos do vidro e pelo contorno da imagem, não pela cor da carroceria. Isso já
-era assim antes de tudo isto, e vale uma decisão dela: num exercício em que o paciente planeja **sobre
-as peças**, uma peça que se confunde com o chão é carga perceptiva que não é o construto.
+~~**Achado separado:** o `car-13` tem 1,01:1 contra o tabuleiro e só se distingue pelos reflexos.~~
+❌ **RETIRADO em 15/set — o achado estava ERRADO.** Ver a seção própria abaixo.
 
 **Provas:** `tsc` exit 0 · **87 arquivos / 1110 testes** exit 0 · lint 0 errors.
 
