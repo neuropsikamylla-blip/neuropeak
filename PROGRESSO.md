@@ -91,6 +91,70 @@ explica o fenômeno por outro caminho, a métrica é que está errada.
 - **Ordem da História:** `d2` e `d8` são a mesma história; seis narrativas se repetem entre faixas; o
   "não repetir recentes" vive num `useRef` e perde ao recarregar; o tutorial aparece em toda sessão.
 
+## 🚧 EM ANDAMENTO — Informação em Foco: a reformulação (15/set/2026)
+
+Espec dela em `docs/informacao-em-foco/ESPEC-REFORMULACAO-KAMYLLA-20260915.md` (45 seções).
+**Auditoria feita antes de tocar em nada:** `docs/informacao-em-foco/AUDITORIA-20260915.md` (`8e6b5178`).
+
+### O que ela quer, e por quê
+
+*"O problema principal NÃO é visual. O problema é COGNITIVO: hoje quase todas as rodadas exigem a
+mesma operação — LER → LOCALIZAR UMA LINHA → CLICAR"*. E ao decidir a dose: *"hoje o exercício está
+chato"*.
+
+### O que a auditoria achou — a engine já existe
+
+**As Fases 2 e 3 do plano dela já estão implementadas** desde ago/2026: validação de resposta única,
+anti-repetição, 3 modalidades, separação conteúdo × mecânica, e 6 dimensões de carga que já **não**
+sobem só por número de cards. Quase tudo é reaproveitável.
+
+🔴 **A causa mecânica do "chato" não é falta de tipos — é o rodízio.** `tipoDaAtividade` e
+`modalidadeDaAtividade` escolhem por **resto de divisão**: a sequência é 100 % determinística e se
+repete a cada 10 atividades. E a anti-repetição, que é boa, fica **ociosa**, porque rodízio nunca
+produz repetição.
+
+🔴 **Achado técnico central, provado por EXECUÇÃO:** o **TIPO E** dela (filtrar e depois comparar)
+**não é expressável** — `minimo`/`maximo` comparam contra TODOS os produtos, nunca contra os
+filtrados. Três leites, pergunta *"entre os que vencem em 2027, qual o mais barato?"* → o motor
+devolve **ZERO** produtos e a questão seria descartada como `semResposta`.
+
+Outros: **não há registro por rodada** (o relatório por tipo da §27 é impossível hoje); o tutorial
+**aparece sempre**; e este é o **único exercício da plataforma** que ainda mostra porcentagem na barra.
+
+### Decisão dela, 15/set
+
+**A dose fica em 6 min** (não 8): *"caso resolva com essas mudanças aí aumentamos"*. O raciocínio é o
+certo — não se aumenta a dose de um exercício monótono; primeiro se torna interessante.
+
+### O plano — 6 fatias
+
+- [ ] **C1 — a sequência deixa de ser previsível** (sorteio ponderado no lugar do rodízio) + a
+      porcentagem sai da barra + dose mantida. Spec: `SPEC-C1-20260915.md`.
+      *Critério:* teste provando que 10.000 sequências de 10 atividades produzem **> 1.000**
+      sequências distintas, **com controle negativo** mostrando que o rodízio antigo produz **1**.
+      **EM VOO no Codex** (lab `info-foco-c1`, `gpt-5.6-terra` high).
+- [ ] **C2 — registro por rodada** (§26). *Critério:* payload com `questionType`, `context`,
+      `responseTime`, `zoomUsed`, `ruleChangedFromPreviousRound`.
+- [ ] **C3 — TIPO D, exclusão/negação.** *Critério:* operador de desigualdade + questões válidas.
+- [ ] **C4 — TIPO E, filtro + comparação.** ⚠️ **ALTO RISCO**: muda a semântica de `minimo`/`maximo`
+      **dentro da validação que hoje impede pergunta ambígua de chegar ao paciente**.
+      *Critério:* prova por volume — milhares de questões, **nenhuma** com 0 ou 2+ respostas.
+- [ ] **C5 — contextos novos** (cardápio, cinema, viagem, agenda). Depende de C3 e C4: sem os tipos
+      novos, contexto novo seria só troca de nome, o que a §8 dela proíbe.
+- [ ] **C6 — tutorial no T1 + relatório por tipo** (§27). Depende dos dados de C2.
+
+**Medido antes de fixar os pesos de C1** (condição que ela pôs na §31): o banco sustenta **100 %** de
+todos os tipos em **todos** os níveis — 100 gerações por tipo por nível, por execução. Nenhum tipo é
+frágil, então a distribuição pode ser o que fizer sentido clinicamente.
+
+### 🔴 O que falta — e é dela
+
+- **Testar o Rastreamento** (v3.30.0): 4,5 s já resolve o "decorar", ou ainda dá?
+- **Ordem da História**: as ambíguas `m21` e `d6`/`x4`, e o elo incerto de `d19`/`d22`.
+- **Informação em Foco**: a §34 (responsividade no celular) precisa do olho dela antes de eu mexer.
+
+---
+
 ## ✅ ENTREGUE — Rastreamento: as bolas se movem mais tempo (15/set/2026, v3.30.0)
 
 **Pedido dela, com o efeito clínico nas próprias palavras:** *"eu quero que as bolinhas se movimente
