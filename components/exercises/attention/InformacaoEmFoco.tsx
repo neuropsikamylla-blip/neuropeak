@@ -20,7 +20,7 @@ import { playTTS, cancelTTS } from "@/lib/tts";
 import type { ExerciseResult, Theme } from "@/types";
 import {
   gerarQuestao, criarSnapshot, valorCampo, labelCampo, explicarErro, registroDe, paramsDoNivel, tiposDoNivel,
-  sortearModalidade, sortearTipo,
+  sortearModalidade, sortearOperacao, tipoParaOperacao,
   type Questao, type ProdutoNaQuestao, type CampoKey, type Snapshot, type RegistroHistorico,
 } from "@/lib/informacao-foco-questoes";
 
@@ -251,10 +251,14 @@ export function InformacaoEmFoco({ difficulty, theme, onComplete }: Props) {
     if (!snapshotRef.current) snapshotRef.current = carregarSnapshot();
     const nivel = nivelRef.current;
     const tipos = tiposDoNivel(nivel);
+    const anterior = historicoRef.current[historicoRef.current.length - 1];
     const modalidade = sortearModalidade(nivel, Math.random);
+    const operacao = modalidade === "quadro"
+      ? sortearOperacao(nivel, Math.random, anterior?.operacao)
+      : null;
     const tipo = modalidade === "situacao" ? "situacao"
       : modalidade === "embalagem" ? "leituraEmbalagem"
-        : sortearTipo(nivel, Math.random);
+        : tipoParaOperacao(operacao!, nivel, Math.random, anterior?.campoPrincipal);
     const { questao: q, descartes } = gerarQuestao(
       tipo, paramsDoNivel(nivel), snapshotRef.current, Math.random, historicoRef.current, tipos,
     );

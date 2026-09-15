@@ -75,7 +75,9 @@ describe("VP — a sequência que o PACIENTE via deixa de ser previsível", () =
   it("o rodízio do COMPONENTE não existe mais", () => {
     expect(COMPONENTE).not.toContain("rodizioRef");
     expect(COMPONENTE).not.toMatch(/tipos\[[^\]]*%\s*tipos\.length\]/);
-    expect(COMPONENTE).toContain("sortearTipo");
+    expect(COMPONENTE).not.toContain("sortearTipo");
+    expect(COMPONENTE).toContain("sortearOperacao");
+    expect(COMPONENTE).toContain("tipoParaOperacao");
     expect(COMPONENTE).toContain("sortearModalidade");
   });
 

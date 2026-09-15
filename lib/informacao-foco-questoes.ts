@@ -32,10 +32,21 @@ export type TipoQuestao =
   | "validade" | "conservacao" | "ingredientes" | "alergenicos" | "situacao"
   | "leituraEmbalagem";
 
+/** O que o paciente precisa FAZER mentalmente. É isto que o seletor sorteia. */
+export type Operacao = "buscaDireta" | "comparacao" | "doisCriterios" | "tresCriterios";
+
 export const TIPOS_QUESTAO: TipoQuestao[] = [
   "localizacao", "comparacao", "duasCondicoes", "tresCondicoes",
   "validade", "conservacao", "ingredientes", "alergenicos", "situacao", "leituraEmbalagem",
 ];
+
+/** Tipos de conteúdo escolhidos somente depois da operação. Modalidades ficam fora. */
+export const TIPOS_POR_OPERACAO: Record<Operacao, TipoQuestao[]> = {
+  buscaDireta: ["localizacao", "validade", "conservacao", "ingredientes", "alergenicos"],
+  comparacao: ["comparacao"],
+  doisCriterios: ["duasCondicoes"],
+  tresCriterios: ["tresCondicoes"],
+};
 
 export interface Validade { mes: number; ano: number }
 export interface DadosSessao { preco: number; validade: Validade }
@@ -79,6 +90,28 @@ export interface Questao {
   categoria: Categoria;
   /** assinatura para a regra de não repetição (§13 da Fase 1) */
   assinatura: string;
+}
+
+/**
+ * A operação de uma questão pronta vem das condições reais, nunca do nome do tipo.
+ * Comparação é a condição única cujo operador procura um extremo.
+ */
+export function operacaoDaQuestao(q: Questao): Operacao {
+  if (q.condicoes.length === 1 && (q.condicoes[0].operador === "minimo" || q.condicoes[0].operador === "maximo")) {
+    return "comparacao";
+  }
+  if (q.condicoes.length === 2) return "doisCriterios";
+  if (q.condicoes.length >= 3) return "tresCriterios";
+  return "buscaDireta";
+}
+
+/** Operação determinada pelo tipo; situação depende dos parâmetros da questão. */
+export function operacaoDoTipo(tipo: TipoQuestao): Operacao | null {
+  if (tipo === "situacao") return null;
+  if (tipo === "comparacao") return "comparacao";
+  if (tipo === "duasCondicoes") return "doisCriterios";
+  if (tipo === "tresCondicoes") return "tresCriterios";
+  return "buscaDireta";
 }
 
 export type Rnd = () => number;
@@ -314,6 +347,17 @@ export const PESOS_TIPO_POR_NIVEL: Record<number, Partial<Record<TipoQuestao, nu
   8: { localizacao: 9, comparacao: 16, duasCondicoes: 24, validade: 14, conservacao: 8, ingredientes: 8, alergenicos: 8, tresCondicoes: 13 },
 };
 
+const PESOS_OPERACAO_POR_NIVEL: Record<number, Record<Operacao, number>> = {
+  1: { buscaDireta: 67, comparacao: 33, doisCriterios: 0, tresCriterios: 0 },
+  2: { buscaDireta: 31, comparacao: 31, doisCriterios: 38, tresCriterios: 0 },
+  3: { buscaDireta: 25, comparacao: 30, doisCriterios: 45, tresCriterios: 0 },
+  4: { buscaDireta: 22, comparacao: 29, doisCriterios: 49, tresCriterios: 0 },
+  5: { buscaDireta: 19, comparacao: 28, doisCriterios: 53, tresCriterios: 0 },
+  6: { buscaDireta: 16, comparacao: 26, doisCriterios: 57, tresCriterios: 0 },
+  7: { buscaDireta: 13, comparacao: 24, doisCriterios: 46, tresCriterios: 17 },
+  8: { buscaDireta: 11, comparacao: 22, doisCriterios: 45, tresCriterios: 22 },
+};
+
 export type Modalidade = "quadro" | "situacao" | "embalagem";
 
 function sortearComPesos<T>(opcoes: readonly T[], pesoDe: (opcao: T) => number, rnd: Rnd): T {
@@ -334,6 +378,51 @@ export function sortearTipo(nivel: number, rnd: Rnd): TipoQuestao {
   return sortearComPesos(permitidos, (tipo) => pesos[tipo] ?? 0, rnd);
 }
 
+/** Operações cognitivas liberadas em cada nível. */
+export function operacoesDoNivel(nivel: number): Operacao[] {
+  const n = Math.min(8, Math.max(1, Math.round(nivel)));
+  const operacoes: Operacao[] = ["buscaDireta", "comparacao"];
+  if (n >= 2) operacoes.push("doisCriterios");
+  if (n >= 7) operacoes.push("tresCriterios");
+  return operacoes;
+}
+
+/**
+ * Sorteia primeiro a operação. A anterior continua possível, mas com 15% do peso,
+ * evitando tanto a repetição frequente quanto uma alternância determinística.
+ */
+export function sortearOperacao(nivel: number, rnd: Rnd, anterior?: Operacao): Operacao {
+  const n = Math.min(8, Math.max(1, Math.round(nivel)));
+  const permitidas = operacoesDoNivel(n);
+  const pesos = PESOS_OPERACAO_POR_NIVEL[n];
+  return sortearComPesos(
+    permitidas,
+    (operacao) => pesos[operacao] * (operacao === anterior ? 0.15 : 1),
+    rnd,
+  );
+}
+
+const TIPO_DO_CAMPO: Partial<Record<CampoKey, TipoQuestao>> = {
+  conteudo: "localizacao", saches: "localizacao", unidades: "localizacao", cacau: "localizacao", tipo: "localizacao",
+  validade: "validade", conservacao: "conservacao",
+  lactose: "ingredientes", gluten: "ingredientes", acucar: "ingredientes",
+  alergenicos: "alergenicos",
+};
+
+/** Escolhe o tipo/campo somente depois que a operação cognitiva foi definida. */
+export function tipoParaOperacao(
+  operacao: Operacao, nivel: number, rnd: Rnd, campoAnterior?: CampoKey,
+): TipoQuestao {
+  const liberados = tiposDoNivel(nivel);
+  const candidatos = TIPOS_POR_OPERACAO[operacao].filter((tipo) => liberados.includes(tipo));
+  const disponiveis = candidatos.length ? candidatos : TIPOS_POR_OPERACAO[operacao];
+  const tipoAnterior = campoAnterior ? TIPO_DO_CAMPO[campoAnterior] : undefined;
+  const semCampoAnterior = disponiveis.filter((tipo) => tipo !== tipoAnterior);
+  const elegiveis = semCampoAnterior.length ? semCampoAnterior : disponiveis;
+  const pesos = PESOS_TIPO_POR_NIVEL[Math.min(8, Math.max(1, Math.round(nivel)))];
+  return sortearComPesos(elegiveis, (tipo) => pesos[tipo] ?? 0, rnd);
+}
+
 /** Sorteia a modalidade, mantendo os pisos de nível para situação e embalagem. */
 export function sortearModalidade(nivel: number, rnd: Rnd): Modalidade {
   const pesos: Record<Modalidade, number> = nivel < 5
@@ -350,7 +439,8 @@ export function sortearModalidade(nivel: number, rnd: Rnd): Modalidade {
 /** Tipos liberados por nível — carga, não peso: nada de sorteio ponderado. */
 export function tiposDoNivel(n: number): TipoQuestao[] {
   const base: TipoQuestao[] = ["localizacao", "comparacao"];
-  if (n >= 3) base.push("duasCondicoes", "validade", "conservacao", "ingredientes", "alergenicos");
+  if (n >= 2) base.push("duasCondicoes");
+  if (n >= 3) base.push("validade", "conservacao", "ingredientes", "alergenicos");
   if (n >= 5) base.push("situacao");
   if (n >= 6) base.push("leituraEmbalagem");
   if (n >= 7) base.push("tresCondicoes");
@@ -736,6 +826,8 @@ export const validarQuestao = (q: Questao) => motivoInvalidez(q) === null;
 export interface RegistroHistorico {
   assinatura: string;
   tipo: TipoQuestao;
+  operacao: Operacao;
+  campoPrincipal: CampoKey;
   camposChave: string;
   produtoCorreto: string;
   categoria: Categoria;
@@ -744,6 +836,8 @@ export interface RegistroHistorico {
 export const registroDe = (q: Questao): RegistroHistorico => ({
   assinatura: q.assinatura,
   tipo: q.tipo,
+  operacao: operacaoDaQuestao(q),
+  campoPrincipal: q.condicoes[0].campo,
   camposChave: [...q.camposExigidos].sort().join("+"),
   produtoCorreto: q.produtos[q.correta].produto.id,
   categoria: q.categoria,
@@ -757,6 +851,9 @@ export function motivoRepeticao(q: Questao, hist: RegistroHistorico[]): string |
   if (u3.some((h) => h.camposChave === r.camposChave)) return "mesmosCamposNas3";
   if (hist[hist.length - 1]?.produtoCorreto === r.produtoCorreto) return "mesmoProdutoCorretoSeguido";
   if (hist.length >= 2 && hist.slice(-2).every((h) => h.tipo === r.tipo)) return "tresDoMesmoTipoSeguidas";
+  if (hist.length >= 2 && hist.slice(-2).every((h) => h.operacao === r.operacao)) return "tresDaMesmaOperacao";
+  if (hist[hist.length - 1]?.operacao === r.operacao) return "mesmaOperacaoSeguida";
+  if (hist[hist.length - 1]?.campoPrincipal === r.campoPrincipal) return "mesmoCampoPrincipalSeguido";
   if (hist.length >= 3 && hist.slice(-3).every((h) => h.categoria === r.categoria)) return "categoriaDemais";
   if (hist.filter((h) => h.assinatura === r.assinatura).length >= 2) return "duasIdenticasNaSessao";
   return null;

@@ -3,7 +3,10 @@ import {
   gerarQuestao, montarQuestao, criarSnapshot, validarQuestao, motivoInvalidez,
   labelCampo, valorCampo, temCampo, satisfaz, explicarErro, registroDe, motivoRepeticao, campoReveladoPor,
   TIPOS_QUESTAO, PARAMS_PADRAO, PESOS_TIPO_POR_NIVEL, sortearModalidade, sortearTipo, tiposDoNivel,
+  TIPOS_POR_OPERACAO, operacaoDaQuestao, operacaoDoTipo, operacoesDoNivel, sortearOperacao,
+  tipoParaOperacao, paramsDoNivel,
   type ParametrosQuestao, type Questao, type TipoQuestao, type Snapshot, type RegistroHistorico, type Modalidade,
+  type Operacao,
 } from "./informacao-foco-questoes";
 import { dimensaoDe, produtoPorId, CATALOGO_PRODUTOS } from "@/data/informacao-foco-catalogo";
 
@@ -37,6 +40,19 @@ function simularSessao(params: ParametrosQuestao, rnd: () => number, snap: Snaps
     if (questao) { questoes.push(questao); historico.push(registroDe(questao)); }
   }
   return { questoes, descartadas };
+}
+
+/** Mesmo caminho de seleção usado por novaQuestao() no componente. */
+function gerarRodadaDoComponente(
+  nivel: number, rnd: () => number, snap: Snapshot, historico: RegistroHistorico[], comModalidade = true,
+) {
+  const anterior = historico[historico.length - 1];
+  const modalidade = comModalidade ? sortearModalidade(nivel, rnd) : "quadro";
+  const operacao = modalidade === "quadro" ? sortearOperacao(nivel, rnd, anterior?.operacao) : null;
+  const tipo = modalidade === "situacao" ? "situacao"
+    : modalidade === "embalagem" ? "leituraEmbalagem"
+      : tipoParaOperacao(operacao!, nivel, rnd, anterior?.campoPrincipal);
+  return gerarQuestao(tipo, paramsDoNivel(nivel), snap, rnd, historico, tiposDoNivel(nivel));
 }
 
 describe("Gerador de questões — invariantes em massa", () => {
@@ -437,6 +453,247 @@ describe("Sorteio controlado da sessão (C1)", () => {
         if (nivel < 6) expect(modalidade, `nível ${nivel}`).not.toBe("embalagem");
       }
     }
+  });
+});
+
+describe("Operação cognitiva como eixo da seleção (C2)", () => {
+  it("operacaoDoTipo é coerente com o número e os operadores das condições reais", () => {
+    const rnd = rndSeed(2026091501);
+    const snap = criarSnapshot(rnd);
+    expect(TIPOS_POR_OPERACAO).toEqual({
+      buscaDireta: ["localizacao", "validade", "conservacao", "ingredientes", "alergenicos"],
+      comparacao: ["comparacao"],
+      doisCriterios: ["duasCondicoes"],
+      tresCriterios: ["tresCondicoes"],
+    });
+
+    for (const tipo of TIPOS_QUESTAO) {
+      let q: Questao | null = null;
+      for (let tentativa = 0; tentativa < 400 && !q; tentativa++) {
+        q = montarQuestao({ tipo, params: paramsDoNivel(8), snapshot: snap, rnd });
+      }
+      expect(q, tipo).not.toBeNull();
+      const declarada = operacaoDoTipo(tipo);
+      const real = operacaoDaQuestao(q!);
+      if (tipo === "situacao") expect(declarada).toBeNull();
+      else expect(real, tipo).toBe(declarada);
+
+      if (real === "buscaDireta") expect(q!.condicoes).toHaveLength(1);
+      if (real === "doisCriterios") expect(q!.condicoes).toHaveLength(2);
+      if (real === "tresCriterios") expect(q!.condicoes).toHaveLength(3);
+      if (real === "comparacao") {
+        expect(q!.condicoes).toHaveLength(1);
+        expect(["minimo", "maximo"]).toContain(q!.condicoes[0].operador);
+      }
+    }
+  }, 60_000);
+
+  it("a prova central: 200 sessões reais não têm duas ou três operações seguidas; o seletor antigo reprova", () => {
+    const rnd = rndSeed(2026091502);
+    const snap = criarSnapshot(rnd);
+    let sessoesNovasComDuas = 0;
+    let sessoesNovasComTres = 0;
+
+    for (let sessao = 0; sessao < 200; sessao++) {
+      const historico: RegistroHistorico[] = [];
+      const operacoes: Operacao[] = [];
+      for (let rodada = 0; rodada < 12; rodada++) {
+        const { questao } = gerarRodadaDoComponente(5, rnd, snap, historico);
+        expect(questao, `sessão ${sessao + 1}, rodada ${rodada + 1}`).not.toBeNull();
+        const real = operacaoDaQuestao(questao!);
+        operacoes.push(real);
+        historico.push(registroDe(questao!));
+        historico.splice(0, Math.max(0, historico.length - 8));
+      }
+      if (operacoes.some((op, i) => i >= 1 && op === operacoes[i - 1])) sessoesNovasComDuas++;
+      if (operacoes.some((op, i) => i >= 2 && op === operacoes[i - 1] && op === operacoes[i - 2])) sessoesNovasComTres++;
+    }
+    expect(sessoesNovasComDuas).toBe(0);
+    expect(sessoesNovasComTres).toBe(0);
+
+    // Controle negativo: o caminho antigo sorteava nomes diretamente e era cego ao
+    // fato de cinco deles realizarem a mesma busca direta.
+    const rndAntigo = rndSeed(2026091502);
+    let sessoesAntigasComTres = 0;
+    for (let sessao = 0; sessao < 200; sessao++) {
+      const operacoes: Operacao[] = [];
+      for (let rodada = 0; rodada < 12; rodada++) {
+        const modalidade = sortearModalidade(5, rndAntigo);
+        const tipo = modalidade === "situacao" ? "situacao" : sortearTipo(5, rndAntigo);
+        operacoes.push(tipo === "situacao" ? "doisCriterios" : operacaoDoTipo(tipo)!);
+      }
+      if (operacoes.some((op, i) => i >= 2 && op === operacoes[i - 1] && op === operacoes[i - 2])) {
+        sessoesAntigasComTres++;
+      }
+    }
+    expect(sessoesAntigasComTres / 200).toBeGreaterThan(0.30);
+  }, 120_000);
+
+  it("o nível 2 apresenta pelo menos três operações e inclui dois critérios", () => {
+    const rnd = rndSeed(2026091503);
+    const snap = criarSnapshot(rnd);
+    const historico: RegistroHistorico[] = [];
+    const vistas = new Set<Operacao>();
+    for (let rodada = 0; rodada < 20; rodada++) {
+      const { questao } = gerarRodadaDoComponente(2, rnd, snap, historico, false);
+      expect(questao, `rodada ${rodada + 1}`).not.toBeNull();
+      vistas.add(operacaoDaQuestao(questao!));
+      historico.push(registroDe(questao!));
+      historico.splice(0, Math.max(0, historico.length - 8));
+    }
+    expect(vistas.size).toBeGreaterThanOrEqual(3);
+    expect(vistas).toContain("doisCriterios");
+    expect(operacoesDoNivel(2)).toEqual(["buscaDireta", "comparacao", "doisCriterios"]);
+  }, 60_000);
+
+  it("50.000 sorteios encadeados batem nos alvos vividos dos níveis 1, 5 e 8", () => {
+    const alvos: Record<number, Partial<Record<Operacao, number>>> = {
+      1: { buscaDireta: 0.55, comparacao: 0.45 },
+      5: { buscaDireta: 0.24, comparacao: 0.32, doisCriterios: 0.44 },
+      8: { buscaDireta: 0.14, comparacao: 0.24, doisCriterios: 0.38, tresCriterios: 0.24 },
+    };
+    for (const nivel of [1, 5, 8]) {
+      const rnd = rndSeed(2026091510 + nivel);
+      const contagem: Partial<Record<Operacao, number>> = {};
+      let anterior: Operacao | undefined;
+      for (let i = 0; i < 50_000; i++) {
+        const operacao = sortearOperacao(nivel, rnd, anterior);
+        contagem[operacao] = (contagem[operacao] ?? 0) + 1;
+        anterior = operacao;
+      }
+      for (const [operacao, alvo] of Object.entries(alvos[nivel]) as [Operacao, number][]) {
+        const observada = (contagem[operacao] ?? 0) / 50_000;
+        expect(Math.abs(observada - alvo), `nível ${nivel}, ${operacao}: ${observada}`).toBeLessThan(0.03);
+      }
+    }
+  });
+
+  it("duas seguidas são raras com fator 0,15, três aceitas são impossíveis e o controle 1,0 reprova", () => {
+    const pesos: Record<number, Partial<Record<Operacao, number>>> = {
+      1: { buscaDireta: 67, comparacao: 33 },
+      2: { buscaDireta: 31, comparacao: 31, doisCriterios: 38 },
+      3: { buscaDireta: 25, comparacao: 30, doisCriterios: 45 },
+      4: { buscaDireta: 22, comparacao: 29, doisCriterios: 49 },
+      5: { buscaDireta: 19, comparacao: 28, doisCriterios: 53 },
+      6: { buscaDireta: 16, comparacao: 26, doisCriterios: 57 },
+      7: { buscaDireta: 13, comparacao: 24, doisCriterios: 46, tresCriterios: 17 },
+      8: { buscaDireta: 11, comparacao: 22, doisCriterios: 45, tresCriterios: 22 },
+    };
+    const sortearSemEnfraquecer = (nivel: number, rnd: () => number): Operacao => {
+      const permitidas = operacoesDoNivel(nivel);
+      const total = permitidas.reduce((soma, op) => soma + pesos[nivel][op]!, 0);
+      let limite = rnd() * total;
+      for (const op of permitidas) {
+        limite -= pesos[nivel][op]!;
+        if (limite < 0) return op;
+      }
+      return permitidas[permitidas.length - 1];
+    };
+
+    const rndQuestoes = rndSeed(2026091519);
+    const snapQuestoes = criarSnapshot(rndQuestoes);
+    const tipoPorOperacao: Record<Operacao, TipoQuestao> = {
+      buscaDireta: "localizacao", comparacao: "comparacao",
+      doisCriterios: "duasCondicoes", tresCriterios: "tresCondicoes",
+    };
+    const questaoPorOperacao = {} as Record<Operacao, Questao>;
+    for (const operacao of Object.keys(tipoPorOperacao) as Operacao[]) {
+      for (let tentativa = 0; tentativa < 400 && !questaoPorOperacao[operacao]; tentativa++) {
+        const q = montarQuestao({
+          tipo: tipoPorOperacao[operacao], params: paramsDoNivel(8), snapshot: snapQuestoes, rnd: rndQuestoes,
+        });
+        if (q) questaoPorOperacao[operacao] = q;
+      }
+      expect(questaoPorOperacao[operacao], operacao).toBeTruthy();
+    }
+
+    for (let nivel = 1; nivel <= 8; nivel++) {
+      const rnd = rndSeed(2026091520 + nivel);
+      let anterior: Operacao | undefined;
+      let repeticoes = 0;
+      const aceitas: Operacao[] = [];
+      let historico: RegistroHistorico[] = [];
+      for (let i = 0; i < 50_000; i++) {
+        const candidata = sortearOperacao(nivel, rnd, anterior);
+        if (candidata === anterior) repeticoes++;
+
+        // Isola as regras de operação das demais travas já existentes; em produção,
+        // gerarQuestao faz esse mesmo fallback entre tipos quando a candidata é recusada.
+        const histOperacoes = historico.map((h, indice) => ({
+          ...h,
+          assinatura: `hist-${i}-${indice}`,
+          camposChave: `campos-${i}-${indice}`,
+          produtoCorreto: `produto-${i}-${indice}`,
+          campoPrincipal: "fraseEmbalagem" as const,
+          categoria: (["leites", "sucos", "iogurtes", "laticinios"] as const)[indice % 4],
+        }));
+        const ordem = [candidata, ...operacoesDoNivel(nivel).filter((op) => op !== candidata)];
+        const aceita = ordem.find((op) => motivoRepeticao(questaoPorOperacao[op], histOperacoes) === null);
+        expect(aceita, `fallback nível ${nivel}, sorteio ${i}`).toBeTruthy();
+        aceitas.push(aceita!);
+        historico = [...historico, registroDe(questaoPorOperacao[aceita!])].slice(-8);
+        anterior = aceita;
+      }
+      const repeticoesAceitas = aceitas.filter((op, i) => i >= 1 && op === aceitas[i - 1]).length;
+      expect(repeticoesAceitas / 49_999, `nível ${nivel}`).toBeLessThan(0.15);
+      const triplas = aceitas.filter((op, i) => i >= 2 && op === aceitas[i - 1] && op === aceitas[i - 2]).length;
+      expect(triplas, `nível ${nivel}`).toBe(0);
+
+      const rndControle = rndSeed(2026091520 + nivel);
+      let anteriorControle: Operacao | undefined;
+      let repeticoesControle = 0;
+      for (let i = 0; i < 50_000; i++) {
+        const operacao = sortearSemEnfraquecer(nivel, rndControle);
+        if (operacao === anteriorControle) repeticoesControle++;
+        anteriorControle = operacao;
+      }
+      expect(repeticoesControle / 49_999, `controle nível ${nivel}`).toBeGreaterThan(0.25);
+      expect(repeticoes, `fator 0,15 nível ${nivel}`).toBeLessThan(repeticoesControle);
+    }
+  });
+
+  it("500 questões reais mantêm null abaixo de 2% e descartes por entrega abaixo de 15", () => {
+    const rnd = rndSeed(2026091530);
+    const snap = criarSnapshot(rnd);
+    const historico: RegistroHistorico[] = [];
+    let nulas = 0;
+    let entregues = 0;
+    let descartes = 0;
+    for (let rodada = 0; rodada < 500; rodada++) {
+      const resultado = gerarRodadaDoComponente(5, rnd, snap, historico);
+      descartes += resultado.descartes.length;
+      if (!resultado.questao) {
+        nulas++;
+        continue;
+      }
+      entregues++;
+      historico.push(registroDe(resultado.questao));
+      historico.splice(0, Math.max(0, historico.length - 8));
+    }
+    const taxaNull = nulas / 500;
+    const descartesPorEntregue = descartes / entregues;
+    console.info(`C2 geração nível 5: null=${nulas}/500 (${(taxaNull * 100).toFixed(2)}%); descartes/entregue=${descartesPorEntregue.toFixed(3)}`);
+    expect(taxaNull).toBeLessThan(0.02);
+    expect(descartesPorEntregue).toBeLessThan(15);
+  }, 120_000);
+
+  it("detecta os três novos motivos sem perder a precedência das regras antigas", () => {
+    const rnd = rndSeed(2026091540);
+    const snap = criarSnapshot(rnd);
+    const q = gerarQuestao("localizacao", paramsDoNivel(5), snap, rnd).questao!;
+    const r = registroDe(q);
+    const livre = {
+      ...r, assinatura: "outra", camposChave: "outros", produtoCorreto: "outro-produto",
+      categoria: "sucos" as const, tipo: "validade" as const,
+    };
+    expect(motivoRepeticao(q, [{ ...livre, campoPrincipal: "preco" }])).toBe("mesmaOperacaoSeguida");
+    expect(motivoRepeticao(q, [
+      { ...livre, assinatura: "a", campoPrincipal: "preco", tipo: "validade" },
+      { ...livre, assinatura: "b", campoPrincipal: "validade", tipo: "conservacao" },
+    ])).toBe("tresDaMesmaOperacao");
+    expect(motivoRepeticao(q, [{
+      ...livre, operacao: "comparacao", campoPrincipal: r.campoPrincipal,
+    }])).toBe("mesmoCampoPrincipalSeguido");
   });
 });
 
