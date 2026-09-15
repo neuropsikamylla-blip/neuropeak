@@ -23900,3 +23900,9 @@ eu nao achei esse carro preto transparente (usei o estacionamento e os carros pr
 
 ## 15/09/2026 09:14
 achei todos visiveis
+
+## 15/09/2026 09:21
+então está tudo ok certo? rastreamento eu quero que as bolinhas se movimente mais tempo antes de parar (pra o paciente ter de usar mais as habilidades que estamos treinando certo?)
+
+## 15/09/2026 09:22
+masi tempo digo, um pouco a mais, como esta rapido, fica muito facil decorar onde estar
