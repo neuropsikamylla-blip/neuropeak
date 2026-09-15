@@ -1,9 +1,6 @@
 # As 3 ultimas especificacoes dela (automatico; a mais nova por ultimo)
 # Na retomada: ler as 3, conectar com PROGRESSO.md e git, declarar e seguir.
 
-## 15/09/2026 09:21
-então está tudo ok certo? rastreamento eu quero que as bolinhas se movimente mais tempo antes de parar (pra o paciente ter de usar mais as habilidades que estamos treinando certo?)
-
 ## 15/09/2026 09:22
 masi tempo digo, um pouco a mais, como esta rapido, fica muito facil decorar onde estar
 
@@ -1378,3 +1375,6 @@ Me responda:
 12. qual plano técnico você recomenda para implementar essa reformulação sem quebrar o que já funciona.
 
 Depois da auditoria, me mostre o plano em etapas e só então implemente.
+
+## 15/09/2026 13:05
+vamos manter os 6 min, hoje o exercicio esta chato.. caso resolva com essa mudanças ai aumentamos
