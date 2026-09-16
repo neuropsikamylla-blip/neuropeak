@@ -6,7 +6,7 @@ import {
   TIPOS_POR_OPERACAO, operacaoDaQuestao, operacaoDoTipo, operacoesDoNivel, sortearOperacao,
   tipoParaOperacao, paramsDoNivel,
   type ParametrosQuestao, type Questao, type TipoQuestao, type Snapshot, type RegistroHistorico, type Modalidade,
-  type Operacao,
+  type Operacao, type Condicao,
 } from "./informacao-foco-questoes";
 import { dimensaoDe, produtoPorId, CATALOGO_PRODUTOS } from "@/data/informacao-foco-catalogo";
 
@@ -238,6 +238,110 @@ describe("Gerador de questões — invariantes em massa", () => {
       }
     }
   }, 60_000);
+});
+
+describe("Necessidade dos critérios (C3)", () => {
+  it("300 questões de duas condições por nível exigem cada critério e cobrem os distratores", () => {
+    for (let nivel = 3; nivel <= 8; nivel++) {
+      const rnd = rndSeed(2026091610 + nivel);
+      const snap = criarSnapshot(rnd);
+      for (let tentativa = 0; tentativa < 300; tentativa++) {
+        const { questao: q } = gerarQuestao(
+          "duasCondicoes", paramsDoNivel(nivel), snap, rnd, [], ["duasCondicoes"],
+        );
+        expect(q, `nível ${nivel}, tentativa ${tentativa + 1}`).not.toBeNull();
+        expect(q!.condicoes).toHaveLength(2);
+        expect(motivoInvalidez(q!)).toBeNull();
+
+        for (const condicao of q!.condicoes) {
+          const atendem = q!.produtos.filter((pq) => satisfaz(pq, condicao, q!.produtos));
+          expect(atendem.length, `nível ${nivel}: ${condicao.texto}`).toBeGreaterThanOrEqual(2);
+          expect(
+            atendem.some((pq) => pq !== q!.produtos[q!.correta]),
+            `nível ${nivel}: sem distrator para ${condicao.texto}`,
+          ).toBe(true);
+        }
+        const atendemTodas = q!.produtos.filter((pq) =>
+          q!.condicoes.every((condicao) => satisfaz(pq, condicao, q!.produtos)));
+        expect(atendemTodas).toEqual([q!.produtos[q!.correta]]);
+      }
+    }
+  }, 120_000);
+
+  it("controle negativo detecta uma questão cujo critério isolado já dá a resposta", () => {
+    const rnd = rndSeed(2026091620);
+    const snap = criarSnapshot(rnd);
+    const original = gerarQuestao(
+      "duasCondicoes", paramsDoNivel(5), snap, rnd, [], ["duasCondicoes"],
+    ).questao!;
+    const produtos = original.produtos.map((pq, indice) => ({
+      ...pq,
+      preco: indice === original.correta ? 1 : 10 + indice,
+    }));
+    const criterioRedundante: Condicao = {
+      campo: "preco", operador: "igual", valor: 1,
+      texto: "custa exatamente R$ 1,00", resumo: "R$ 1,00",
+    };
+    const adulterada: Questao = {
+      ...original,
+      produtos,
+      condicoes: [criterioRedundante, original.condicoes[0]],
+    };
+
+    expect(produtos.filter((pq) => satisfaz(pq, criterioRedundante, produtos))).toHaveLength(1);
+    expect(motivoInvalidez(adulterada)).toBe("criterioRedundante");
+  });
+
+  it("300 questões de três condições nos níveis 7 e 8 exigem cada critério", () => {
+    for (const nivel of [7, 8]) {
+      const rnd = rndSeed(2026091630 + nivel);
+      const snap = criarSnapshot(rnd);
+      for (let tentativa = 0; tentativa < 300; tentativa++) {
+        const { questao: q } = gerarQuestao(
+          "tresCondicoes", paramsDoNivel(nivel), snap, rnd, [], ["tresCondicoes"],
+        );
+        expect(q, `nível ${nivel}, tentativa ${tentativa + 1}`).not.toBeNull();
+        expect(q!.condicoes).toHaveLength(3);
+        expect(motivoInvalidez(q!)).toBeNull();
+        for (const condicao of q!.condicoes) {
+          expect(q!.produtos.filter((pq) => satisfaz(pq, condicao, q!.produtos)).length,
+            `nível ${nivel}: ${condicao.texto}`).toBeGreaterThanOrEqual(2);
+        }
+        expect(q!.produtos.filter((pq) =>
+          q!.condicoes.every((condicao) => satisfaz(pq, condicao, q!.produtos)))).toHaveLength(1);
+      }
+    }
+  }, 120_000);
+
+  it("mantém pelo menos 80% da taxa anterior e menos de 5% de null por nível", () => {
+    const anteriores: Record<number, number> = {
+      3: 254, 4: 129, 5: 164, 6: 277, 7: 264, 8: 294,
+    };
+    for (let nivel = 3; nivel <= 8; nivel++) {
+      const rndDireto = rndSeed(2026091600 + nivel);
+      const snapDireto = criarSnapshot(rndDireto);
+      let validas = 0;
+      for (let tentativa = 0; tentativa < 300; tentativa++) {
+        const q = montarQuestao({
+          tipo: "duasCondicoes", params: paramsDoNivel(nivel), snapshot: snapDireto, rnd: rndDireto,
+        });
+        if (q && motivoInvalidez(q) === null) validas++;
+      }
+      expect(validas, `taxa direta nível ${nivel}`).toBeGreaterThanOrEqual(Math.ceil(anteriores[nivel] * 0.8));
+
+      const rndPublico = rndSeed(2026091650 + nivel);
+      const snapPublico = criarSnapshot(rndPublico);
+      let nulas = 0;
+      for (let tentativa = 0; tentativa < 500; tentativa++) {
+        const { questao } = gerarQuestao(
+          "duasCondicoes", paramsDoNivel(nivel), snapPublico, rndPublico, [], ["duasCondicoes"],
+        );
+        if (!questao) nulas++;
+      }
+      console.info(`C3 nível ${nivel}: válidas=${validas}/300; null=${nulas}/500`);
+      expect(nulas / 500, `null nível ${nivel}`).toBeLessThan(0.05);
+    }
+  }, 120_000);
 });
 
 // Amostra para conferência humana — roda junto com os testes e atualiza o arquivo.

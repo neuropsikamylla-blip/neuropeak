@@ -631,6 +631,62 @@ function tentarNoGrupo(
     : tipo === "situacao" ? Math.min(params.nCondicoes, 3)
     : 1;
 
+  // Com múltiplos critérios, a construção parte dos produtos apresentados. Assim
+  // cada condição pode ser necessária por construção, em vez de depender de
+  // distratores encontrados depois para condições fabricadas a partir de um alvo.
+  if (nCond >= 2) {
+    if (pool.length < params.nProdutos) return null;
+    const escolhidos = shuffle(pool, rnd).slice(0, params.nProdutos);
+
+    const porAssinatura = new Map<string, Condicao>();
+    for (const pq of escolhidos) {
+      for (const fabrica of FABRICAS_POR_TIPO[tipo]) {
+        const condicao = fabrica(pq, rnd);
+        if (!condicao || !satisfaz(pq, condicao, escolhidos)) continue;
+        if (!escolhidos.every((produto) => temCampo(produto.produto, condicao.campo))) continue;
+        const assinatura = `${condicao.campo}|${condicao.operador}|${JSON.stringify(condicao.valor)}`;
+        if (!porAssinatura.has(assinatura)) porAssinatura.set(assinatura, condicao);
+      }
+    }
+
+    // O limite mantém a enumeração de trios em O(24³), como pede a especificação.
+    const candidatas = shuffle([...porAssinatura.values()], rnd).slice(0, 24);
+    const viaveis: { condicoes: Condicao[]; alvo: ProdutoNaQuestao }[] = [];
+
+    function enumerar(inicio: number, atuais: Condicao[]): void {
+      if (viaveis.length >= 12) return;
+      if (atuais.length === nCond) {
+        if (new Set(atuais.map((c) => c.campo)).size !== atuais.length) return;
+        if (!atuais.every((c) => escolhidos.filter((pq) => satisfaz(pq, c, escolhidos)).length >= 2)) return;
+        const corretos = escolhidos.filter((pq) => atendeTodas(pq, atuais, escolhidos));
+        if (corretos.length !== 1) return;
+        if (nCond === 2 && params.semelhancaDistratores === "alta") {
+          const distratoresCobertos = escolhidos
+            .filter((pq) => pq !== corretos[0])
+            .every((pq) => quantasAtende(pq, atuais, escolhidos) >= 1);
+          if (!distratoresCobertos) return;
+        }
+        viaveis.push({ condicoes: [...atuais], alvo: corretos[0] });
+        return;
+      }
+      for (let i = inicio; i <= candidatas.length - (nCond - atuais.length); i++) {
+        enumerar(i + 1, [...atuais, candidatas[i]]);
+        if (viaveis.length >= 12) return;
+      }
+    }
+
+    enumerar(0, []);
+    if (!viaveis.length) return null;
+    const escolhida = pick(viaveis, rnd);
+    const distratores = escolherDistratores(
+      escolhidos.filter((pq) => pq !== escolhida.alvo), escolhida.condicoes, params, rnd,
+    );
+    if (!distratores) return null;
+    const todos = shuffle([escolhida.alvo, ...distratores], rnd);
+    return finalizar(tipo, todos, escolhida.condicoes, todos.indexOf(escolhida.alvo), params, rnd);
+  }
+
+  // Uma condição conserva o caminho anterior e sua seleção de distratores.
   for (const alvo of shuffle(pool, rnd).slice(0, 8)) {
     const fabricas = shuffle(FABRICAS_POR_TIPO[tipo], rnd);
     const cs: Condicao[] = [];
@@ -666,32 +722,38 @@ function escolherProdutos(pool: ProdutoNaQuestao[], params: ParametrosQuestao, r
 }
 
 /**
- * Distratores conforme a semelhança pedida (§16 da Fase 2 / dimensão D da Fase 3):
- * baixa = falham em tudo · moderada = um atende a uma condição · alta = todos atendem a ≥1.
+ * Para uma condição, conserva a seleção anterior. Para múltiplas condições,
+ * garante que nenhum distrator seja resposta e que cada critério tenha cobertura.
  */
 function escolherDistratores(
   candidatos: ProdutoNaQuestao[], cs: Condicao[], params: ParametrosQuestao, rnd: Rnd,
 ): ProdutoNaQuestao[] | null {
   const n = params.nProdutos - 1;
   const comScore = shuffle(candidatos, rnd).map((pq) => ({ pq, k: quantasAtende(pq, cs, candidatos) }));
-  const parciais = comScore.filter((x) => x.k >= 1 && x.k < cs.length);
-  const zerados = comScore.filter((x) => x.k === 0);
-
-  let escolhidos: ProdutoNaQuestao[];
   if (cs.length === 1) {
     // com uma condição só, todo distrator falha nela — a semelhança vem dos valores
-    escolhidos = comScore.filter((x) => x.k === 0).slice(0, n).map((x) => x.pq);
-  } else if (params.semelhancaDistratores === "alta") {
-    if (parciais.length < n) return null;
-    escolhidos = parciais.slice(0, n).map((x) => x.pq);
-  } else if (params.semelhancaDistratores === "moderada") {
-    if (!parciais.length || zerados.length < n - 1) return null;
-    escolhidos = [parciais[0].pq, ...zerados.slice(0, n - 1).map((x) => x.pq)];
-  } else {
-    if (zerados.length < n) return null;
-    escolhidos = zerados.slice(0, n).map((x) => x.pq);
+    const escolhidos = comScore.filter((x) => x.k === 0).slice(0, n).map((x) => x.pq);
+    return escolhidos.length === n ? escolhidos : null;
   }
-  return escolhidos.length === n ? escolhidos : null;
+
+  const elegiveis = comScore.filter((x) => x.k < cs.length);
+  let resultado: ProdutoNaQuestao[] | null = null;
+  function buscar(inicio: number, atuais: ProdutoNaQuestao[]): void {
+    if (resultado) return;
+    if (atuais.length === n) {
+      const cobreTudo = cs.every((c) => atuais.some((pq) => satisfaz(pq, c, candidatos)));
+      const altaEmPares = cs.length !== 2 || params.semelhancaDistratores !== "alta"
+        || atuais.every((pq) => quantasAtende(pq, cs, candidatos) >= 1);
+      if (cobreTudo && altaEmPares) resultado = atuais;
+      return;
+    }
+    for (let i = inicio; i <= elegiveis.length - (n - atuais.length); i++) {
+      buscar(i + 1, [...atuais, elegiveis[i].pq]);
+      if (resultado) return;
+    }
+  }
+  buscar(0, []);
+  return resultado;
 }
 
 function camposDoQuadro(
@@ -794,6 +856,11 @@ export function motivoInvalidez(q: Questao): string | null {
   const corretos = q.produtos.filter((pq) => atendeTodas(pq, q.condicoes, q.produtos));
   if (corretos.length !== 1) return corretos.length === 0 ? "semResposta" : "respostaDupla";
   if (q.produtos[q.correta] !== corretos[0]) return "corretaErrada";
+
+  // Em questões multi-critério, nenhum critério pode identificar sozinho a resposta.
+  if (q.condicoes.length >= 2 && q.condicoes.some(
+    (c) => q.produtos.filter((pq) => satisfaz(pq, c, q.produtos)).length < 2,
+  )) return "criterioRedundante";
 
   // campos exigidos visíveis e presentes em todos os produtos
   const exigidosReais = q.camposExigidos.filter((c) => c !== "fraseEmbalagem");
