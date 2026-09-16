@@ -1,15 +1,6 @@
 # As 3 ultimas especificacoes dela (automatico; a mais nova por ultimo)
 # Na retomada: ler as 3, conectar com PROGRESSO.md e git, declarar e seguir.
 
-## 15/09/2026 15:45
-<task-notification>
-<task-id>b134t8i5k</task-id>
-<tool-use-id>toolu_011ukq65oy6zq5YBY3spCUbq</tool-use-id>
-<output-file>/private/tmp/claude-501/-Users-kamyllahonorio-neuropeak/2053e0e1-fe44-49ff-87f3-a59ea6001dde/tasks/b134t8i5k.output</output-file>
-<status>completed</status>
-<summary>Background command "Disparar o Codex na fatia C2" completed (exit code 0)</summary>
-</task-notification>
-
 ## 16/09/2026 16:19
 A reformulação melhorou, mas ainda há um problema importante: algumas perguntas estão rotuladas como multi_criteria, porém um único critério já basta para descobrir a resposta.
 
@@ -244,4 +235,13 @@ Não mexer na interface por enquanto. O problema agora é a qualidade cognitiva 
 <output-file>/private/tmp/claude-501/-Users-kamyllahonorio-neuropeak/2053e0e1-fe44-49ff-87f3-a59ea6001dde/tasks/b1xml4u7y.output</output-file>
 <status>completed</status>
 <summary>Background command "Disparar o Codex na C3" completed (exit code 0)</summary>
+</task-notification>
+
+## 16/09/2026 18:11
+<task-notification>
+<task-id>bfbc53vb0</task-id>
+<tool-use-id>toolu_01F4W15KNvzexPv4yK4zSUDR</tool-use-id>
+<output-file>/private/tmp/claude-501/-Users-kamyllahonorio-neuropeak/2053e0e1-fe44-49ff-87f3-a59ea6001dde/tasks/bfbc53vb0.output</output-file>
+<status>completed</status>
+<summary>Background command "Aguardar o Codex terminar" completed (exit code 0)</summary>
 </task-notification>
