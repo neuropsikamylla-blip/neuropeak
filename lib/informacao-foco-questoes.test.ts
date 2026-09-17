@@ -164,7 +164,7 @@ describe("Gerador de questões — invariantes em massa", () => {
     }
   }, 60_000);
 
-  it("os 9 tipos de questão são realmente gerados", () => {
+  it("todos os tipos de questão são realmente gerados", () => {
     const rnd = rndSeed(57);
     const snap = criarSnapshot(rnd);
     const feitos = new Set<TipoQuestao>();
@@ -567,6 +567,7 @@ describe("Operação cognitiva como eixo da seleção (C2)", () => {
     expect(TIPOS_POR_OPERACAO).toEqual({
       buscaDireta: ["localizacao", "validade", "conservacao", "ingredientes", "alergenicos"],
       comparacao: ["comparacao"],
+      filtroComparacao: ["filtroComparacao"],
       doisCriterios: ["duasCondicoes"],
       tresCriterios: ["tresCondicoes"],
     });
@@ -585,6 +586,10 @@ describe("Operação cognitiva como eixo da seleção (C2)", () => {
       if (real === "buscaDireta") expect(q!.condicoes).toHaveLength(1);
       if (real === "doisCriterios") expect(q!.condicoes).toHaveLength(2);
       if (real === "tresCriterios") expect(q!.condicoes).toHaveLength(3);
+      if (real === "filtroComparacao") {
+        expect(q!.condicoes.length).toBeGreaterThanOrEqual(2);
+        expect(q!.condicoes.some((c) => c.operador === "minimo" || c.operador === "maximo")).toBe(true);
+      }
       if (real === "comparacao") {
         expect(q!.condicoes).toHaveLength(1);
         expect(["minimo", "maximo"]).toContain(q!.condicoes[0].operador);
@@ -653,8 +658,8 @@ describe("Operação cognitiva como eixo da seleção (C2)", () => {
   it("50.000 sorteios encadeados batem nos alvos vividos dos níveis 1, 5 e 8", () => {
     const alvos: Record<number, Partial<Record<Operacao, number>>> = {
       1: { buscaDireta: 0.55, comparacao: 0.45 },
-      5: { buscaDireta: 0.24, comparacao: 0.32, doisCriterios: 0.44 },
-      8: { buscaDireta: 0.14, comparacao: 0.24, doisCriterios: 0.38, tresCriterios: 0.24 },
+      5: { buscaDireta: 0.19, comparacao: 0.26, filtroComparacao: 0.18, doisCriterios: 0.38 },
+      8: { buscaDireta: 0.10, comparacao: 0.19, filtroComparacao: 0.21, doisCriterios: 0.31, tresCriterios: 0.18 },
     };
     for (const nivel of [1, 5, 8]) {
       const rnd = rndSeed(2026091510 + nivel);
@@ -674,14 +679,14 @@ describe("Operação cognitiva como eixo da seleção (C2)", () => {
 
   it("duas seguidas são raras com fator 0,15, três aceitas são impossíveis e o controle 1,0 reprova", () => {
     const pesos: Record<number, Partial<Record<Operacao, number>>> = {
-      1: { buscaDireta: 67, comparacao: 33 },
-      2: { buscaDireta: 31, comparacao: 31, doisCriterios: 38 },
-      3: { buscaDireta: 25, comparacao: 30, doisCriterios: 45 },
-      4: { buscaDireta: 22, comparacao: 29, doisCriterios: 49 },
-      5: { buscaDireta: 19, comparacao: 28, doisCriterios: 53 },
-      6: { buscaDireta: 16, comparacao: 26, doisCriterios: 57 },
-      7: { buscaDireta: 13, comparacao: 24, doisCriterios: 46, tresCriterios: 17 },
-      8: { buscaDireta: 11, comparacao: 22, doisCriterios: 45, tresCriterios: 22 },
+      1: { buscaDireta: 67, comparacao: 33, filtroComparacao: 0 },
+      2: { buscaDireta: 31, comparacao: 31, filtroComparacao: 0, doisCriterios: 38 },
+      3: { buscaDireta: 21.25, comparacao: 25.5, filtroComparacao: 15, doisCriterios: 38.25 },
+      4: { buscaDireta: 18.7, comparacao: 24.65, filtroComparacao: 15, doisCriterios: 41.65 },
+      5: { buscaDireta: 16.15, comparacao: 23.8, filtroComparacao: 15, doisCriterios: 45.05 },
+      6: { buscaDireta: 13.5758, comparacao: 22.0606, filtroComparacao: 15, doisCriterios: 48.3636 },
+      7: { buscaDireta: 10.4, comparacao: 19.2, filtroComparacao: 20, doisCriterios: 36.8, tresCriterios: 13.6 },
+      8: { buscaDireta: 8.8, comparacao: 17.6, filtroComparacao: 20, doisCriterios: 36, tresCriterios: 17.6 },
     };
     const sortearSemEnfraquecer = (nivel: number, rnd: () => number): Operacao => {
       const permitidas = operacoesDoNivel(nivel);
@@ -698,6 +703,7 @@ describe("Operação cognitiva como eixo da seleção (C2)", () => {
     const snapQuestoes = criarSnapshot(rndQuestoes);
     const tipoPorOperacao: Record<Operacao, TipoQuestao> = {
       buscaDireta: "localizacao", comparacao: "comparacao",
+      filtroComparacao: "filtroComparacao",
       doisCriterios: "duasCondicoes", tresCriterios: "tresCondicoes",
     };
     const questaoPorOperacao = {} as Record<Operacao, Questao>;
@@ -751,7 +757,7 @@ describe("Operação cognitiva como eixo da seleção (C2)", () => {
         if (operacao === anteriorControle) repeticoesControle++;
         anteriorControle = operacao;
       }
-      expect(repeticoesControle / 49_999, `controle nível ${nivel}`).toBeGreaterThan(0.25);
+      expect(repeticoesControle / 49_999, `controle nível ${nivel}`).toBeGreaterThan(0.20);
       expect(repeticoes, `fator 0,15 nível ${nivel}`).toBeLessThan(repeticoesControle);
     }
   });

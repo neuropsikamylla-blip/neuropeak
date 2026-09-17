@@ -122,7 +122,10 @@ describe("cena do MOT", () => {
     }
   });
 
-  it("não nasce sobreposta nas arenas e níveis de aceite", () => {
+  // 20 s: são 6 larguras x 7 níveis x 40 rodadas = 1.680 cenas com física, e o teste passa a
+  // estourar o limite padrão de 5 s quando a suíte inteira compete por CPU. Não é lentidão da
+  // geração (medida em 0,1 ms por cena) — é volume legítimo deste teste.
+  it("não nasce sobreposta nas arenas e níveis de aceite", { timeout: 20_000 }, () => {
     for (const width of [320, 393, 600, 768, 1100, 1440]) {
       const height = Math.round(width * 0.66);
       const radius = ballRadius(width);

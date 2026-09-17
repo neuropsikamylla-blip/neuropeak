@@ -28,15 +28,15 @@ export type CampoKey =
   | "fraseEmbalagem";
 
 export type TipoQuestao =
-  | "localizacao" | "comparacao" | "duasCondicoes" | "tresCondicoes"
+  | "localizacao" | "comparacao" | "filtroComparacao" | "duasCondicoes" | "tresCondicoes"
   | "validade" | "conservacao" | "ingredientes" | "alergenicos" | "situacao"
   | "leituraEmbalagem";
 
 /** O que o paciente precisa FAZER mentalmente. É isto que o seletor sorteia. */
-export type Operacao = "buscaDireta" | "comparacao" | "doisCriterios" | "tresCriterios";
+export type Operacao = "buscaDireta" | "comparacao" | "filtroComparacao" | "doisCriterios" | "tresCriterios";
 
 export const TIPOS_QUESTAO: TipoQuestao[] = [
-  "localizacao", "comparacao", "duasCondicoes", "tresCondicoes",
+  "localizacao", "comparacao", "filtroComparacao", "duasCondicoes", "tresCondicoes",
   "validade", "conservacao", "ingredientes", "alergenicos", "situacao", "leituraEmbalagem",
 ];
 
@@ -44,6 +44,7 @@ export const TIPOS_QUESTAO: TipoQuestao[] = [
 export const TIPOS_POR_OPERACAO: Record<Operacao, TipoQuestao[]> = {
   buscaDireta: ["localizacao", "validade", "conservacao", "ingredientes", "alergenicos"],
   comparacao: ["comparacao"],
+  filtroComparacao: ["filtroComparacao"],
   doisCriterios: ["duasCondicoes"],
   tresCriterios: ["tresCondicoes"],
 };
@@ -94,9 +95,12 @@ export interface Questao {
 
 /**
  * A operação de uma questão pronta vem das condições reais, nunca do nome do tipo.
- * Comparação é a condição única cujo operador procura um extremo.
+ * Comparação filtrada combina duas ou mais condições e pelo menos um extremo.
  */
 export function operacaoDaQuestao(q: Questao): Operacao {
+  if (q.condicoes.length >= 2 && q.condicoes.some((c) => c.operador === "minimo" || c.operador === "maximo")) {
+    return "filtroComparacao";
+  }
   if (q.condicoes.length === 1 && (q.condicoes[0].operador === "minimo" || q.condicoes[0].operador === "maximo")) {
     return "comparacao";
   }
@@ -109,6 +113,7 @@ export function operacaoDaQuestao(q: Questao): Operacao {
 export function operacaoDoTipo(tipo: TipoQuestao): Operacao | null {
   if (tipo === "situacao") return null;
   if (tipo === "comparacao") return "comparacao";
+  if (tipo === "filtroComparacao") return "filtroComparacao";
   if (tipo === "duasCondicoes") return "doisCriterios";
   if (tipo === "tresCondicoes") return "tresCriterios";
   return "buscaDireta";
@@ -278,6 +283,22 @@ export function satisfaz(pq: ProdutoNaQuestao, c: Condicao, todos?: ProdutoNaQue
   }
 }
 
+const ehExtremo = (c: Condicao) => c.operador === "minimo" || c.operador === "maximo";
+
+/** Avalia condições em duas etapas: primeiro os FILTROS, depois os EXTREMOS sobre o que sobrou.
+ *  É isto que torna "entre os que X, qual o menor Y" expressável. */
+export function avaliarEmEtapas(
+  produtos: ProdutoNaQuestao[], condicoes: Condicao[],
+): { filtrados: ProdutoNaQuestao[]; atendem: ProdutoNaQuestao[] } {
+  const filtros = condicoes.filter((c) => !ehExtremo(c));
+  const extremos = condicoes.filter(ehExtremo);
+  const filtrados = produtos.filter((pq) => filtros.every((c) => satisfaz(pq, c, produtos)));
+  const atendem = extremos.length === 0
+    ? filtrados
+    : filtrados.filter((pq) => extremos.every((c) => satisfaz(pq, c, filtrados)));
+  return { filtrados, atendem };
+}
+
 const atendeTodas = (pq: ProdutoNaQuestao, cs: Condicao[], todos: ProdutoNaQuestao[]) =>
   cs.every((c) => satisfaz(pq, c, todos));
 const quantasAtende = (pq: ProdutoNaQuestao, cs: Condicao[], todos: ProdutoNaQuestao[]) =>
@@ -348,14 +369,14 @@ export const PESOS_TIPO_POR_NIVEL: Record<number, Partial<Record<TipoQuestao, nu
 };
 
 const PESOS_OPERACAO_POR_NIVEL: Record<number, Record<Operacao, number>> = {
-  1: { buscaDireta: 67, comparacao: 33, doisCriterios: 0, tresCriterios: 0 },
-  2: { buscaDireta: 31, comparacao: 31, doisCriterios: 38, tresCriterios: 0 },
-  3: { buscaDireta: 25, comparacao: 30, doisCriterios: 45, tresCriterios: 0 },
-  4: { buscaDireta: 22, comparacao: 29, doisCriterios: 49, tresCriterios: 0 },
-  5: { buscaDireta: 19, comparacao: 28, doisCriterios: 53, tresCriterios: 0 },
-  6: { buscaDireta: 16, comparacao: 26, doisCriterios: 57, tresCriterios: 0 },
-  7: { buscaDireta: 13, comparacao: 24, doisCriterios: 46, tresCriterios: 17 },
-  8: { buscaDireta: 11, comparacao: 22, doisCriterios: 45, tresCriterios: 22 },
+  1: { buscaDireta: 67, comparacao: 33, filtroComparacao: 0, doisCriterios: 0, tresCriterios: 0 },
+  2: { buscaDireta: 31, comparacao: 31, filtroComparacao: 0, doisCriterios: 38, tresCriterios: 0 },
+  3: { buscaDireta: 21.25, comparacao: 25.5, filtroComparacao: 15, doisCriterios: 38.25, tresCriterios: 0 },
+  4: { buscaDireta: 18.7, comparacao: 24.65, filtroComparacao: 15, doisCriterios: 41.65, tresCriterios: 0 },
+  5: { buscaDireta: 16.15, comparacao: 23.8, filtroComparacao: 15, doisCriterios: 45.05, tresCriterios: 0 },
+  6: { buscaDireta: 13.5758, comparacao: 22.0606, filtroComparacao: 15, doisCriterios: 48.3636, tresCriterios: 0 },
+  7: { buscaDireta: 10.4, comparacao: 19.2, filtroComparacao: 20, doisCriterios: 36.8, tresCriterios: 13.6 },
+  8: { buscaDireta: 8.8, comparacao: 17.6, filtroComparacao: 20, doisCriterios: 36, tresCriterios: 17.6 },
 };
 
 export type Modalidade = "quadro" | "situacao" | "embalagem";
@@ -383,6 +404,7 @@ export function operacoesDoNivel(nivel: number): Operacao[] {
   const n = Math.min(8, Math.max(1, Math.round(nivel)));
   const operacoes: Operacao[] = ["buscaDireta", "comparacao"];
   if (n >= 2) operacoes.push("doisCriterios");
+  if (n >= 3) operacoes.push("filtroComparacao");
   if (n >= 7) operacoes.push("tresCriterios");
   return operacoes;
 }
@@ -440,7 +462,7 @@ export function sortearModalidade(nivel: number, rnd: Rnd): Modalidade {
 export function tiposDoNivel(n: number): TipoQuestao[] {
   const base: TipoQuestao[] = ["localizacao", "comparacao"];
   if (n >= 2) base.push("duasCondicoes");
-  if (n >= 3) base.push("validade", "conservacao", "ingredientes", "alergenicos");
+  if (n >= 3) base.push("filtroComparacao", "validade", "conservacao", "ingredientes", "alergenicos");
   if (n >= 5) base.push("situacao");
   if (n >= 6) base.push("leituraEmbalagem");
   if (n >= 7) base.push("tresCondicoes");
@@ -530,6 +552,7 @@ const condFraseEmbalagem: FabricaCondicao = (a, rnd) => {
 const FABRICAS_POR_TIPO: Record<TipoQuestao, FabricaCondicao[]> = {
   localizacao: [condConteudoExato, condSaches, condUnidades, condCacau, condTipo],
   comparacao: [],                                   // usa mínimo/máximo, montado à parte
+  filtroComparacao: [],                             // enumera filtro + extremo no grupo
   duasCondicoes: [condConteudoMinimo, condPrecoMaximo, condSemLactose, condSemAcucar, condSemGluten, condTipo, condSaches],
   tresCondicoes: [condConteudoMinimo, condPrecoMaximo, condSemLactose, condSemAcucar, condSemGluten, condTipo, condCacau],
   validade: [condValidadeApos],
@@ -550,10 +573,29 @@ function juntar(partes: string[]): string {
   return `${partes.slice(0, -1).join(", ")} e ${partes[partes.length - 1]}`;
 }
 
+function textoFiltroPlural(texto: string): string {
+  return texto
+    .replace(/^precisa ser mantido refrigerado\b/, "precisam ser mantidos refrigerados")
+    .replace(/^precisa ser mantido congelado\b/, "precisam ser mantidos congelados")
+    .replace(/^precisa ser conservado\b/, "precisam ser conservados")
+    .replace(/^não contém\b/, "não contêm")
+    .replace(/^não tem\b/, "não têm")
+    .replace(/^contém\b/, "contêm")
+    .replace(/^tem\b/, "têm")
+    .replace(/^custa\b/, "custam")
+    .replace(/^vence\b/, "vencem")
+    .replace(/^é do tipo\b/, "são do tipo");
+}
+
 function textoPergunta(tipo: TipoQuestao, cs: Condicao[]): string {
   const lista = juntar(cs.map((c) => c.texto));
   if (tipo === "situacao") return "Qual produto atende ao pedido?";
   if (tipo === "leituraEmbalagem") return `Olhe as embalagens: qual produto ${lista}?`;
+  if (tipo === "filtroComparacao") {
+    const filtros = cs.filter((c) => !ehExtremo(c));
+    const extremos = cs.filter(ehExtremo);
+    return `Entre os produtos que ${juntar(filtros.map((c) => textoFiltroPlural(c.texto)))}, qual ${juntar(extremos.map((c) => c.texto))}?`;
+  }
   return `Qual produto ${lista}?`;
 }
 
@@ -610,19 +652,70 @@ function tentarNoGrupo(
 ): Questao | null {
   const pool = grupo.map((p) => emQuestao(p, snap));
 
+  const condicaoExtremo = (campo: CampoKey, operador: "minimo" | "maximo"): Condicao => {
+    const texto = campo === "preco" ? (operador === "minimo" ? "tem o menor preço" : "tem o maior preço")
+      : campo === "validade" ? (operador === "minimo" ? "vence primeiro" : "tem a validade mais longa")
+      : campo === "cacau" ? (operador === "minimo" ? "tem o menor percentual de cacau" : "tem o maior percentual de cacau")
+      : (operador === "minimo" ? "tem a menor quantidade" : "tem a maior quantidade");
+    return { campo, operador, texto, resumo: texto.charAt(0).toUpperCase() + texto.slice(1) };
+  };
+
   // ── comparação: a resposta é o extremo, não uma condição sobre valor fixo ──
   if (tipo === "comparacao") {
     const campo = exigidosDoTipo[0];
     const extremo = rnd() < 0.5 ? "minimo" : "maximo";
-    const texto = campo === "preco" ? (extremo === "minimo" ? "tem o menor preço" : "tem o maior preço")
-      : campo === "validade" ? (extremo === "minimo" ? "vence primeiro" : "tem a validade mais longa")
-      : (extremo === "minimo" ? "tem a menor quantidade" : "tem a maior quantidade");
     const escolhidos = escolherProdutos(pool, params, rnd);
     if (!escolhidos) return null;
-    const cond: Condicao = { campo, operador: extremo, texto, resumo: texto.charAt(0).toUpperCase() + texto.slice(1) };
+    const cond = condicaoExtremo(campo, extremo);
     const vencedores = escolhidos.filter((pq) => satisfaz(pq, cond, escolhidos));
     if (vencedores.length !== 1) return null;
     return finalizar(tipo, escolhidos, [cond], escolhidos.indexOf(vencedores[0]), params, rnd);
+  }
+
+  // ── filtro + comparação: primeiro enumera filtros no grupo, depois extremos no subconjunto ──
+  if (tipo === "filtroComparacao") {
+    const escolhidos = escolherProdutos(pool, params, rnd);
+    if (!escolhidos) return null;
+    const fabricasFiltro: FabricaCondicao[] = [
+      condConteudoMinimo, condPrecoMaximo, condValidadeApos, condSemLactose, condComLactose,
+      condSemAcucar, condSemGluten, condTipo, condSaches, condUnidades, condCacau,
+      condConservacao, condAlergenico,
+    ];
+    const porAssinatura = new Map<string, Condicao>();
+    for (const pq of escolhidos) {
+      for (const fabrica of fabricasFiltro) {
+        const filtro = fabrica(pq, rnd);
+        if (!filtro || ehExtremo(filtro)) continue;
+        if (!escolhidos.every((produto) => temCampo(produto.produto, filtro.campo))) continue;
+        const filtrados = escolhidos.filter((produto) => satisfaz(produto, filtro, escolhidos));
+        if (filtrados.length < 2 || filtrados.length >= escolhidos.length) continue;
+        const assinatura = `${filtro.campo}|${filtro.operador}|${JSON.stringify(filtro.valor)}`;
+        if (!porAssinatura.has(assinatura)) porAssinatura.set(assinatura, filtro);
+      }
+    }
+
+    const camposNumericos: CampoKey[] = ["preco", "conteudo", "validade", "saches", "unidades", "cacau"];
+    const viaveis: { condicoes: Condicao[]; alvo: ProdutoNaQuestao }[] = [];
+    for (const filtro of shuffle([...porAssinatura.values()], rnd)) {
+      const filtrados = escolhidos.filter((produto) => satisfaz(produto, filtro, escolhidos));
+      for (const campo of shuffle(camposNumericos.filter(
+        (c) => escolhidos.every((produto) => temCampo(produto.produto, c)),
+      ), rnd)) {
+        for (const operador of shuffle(["minimo", "maximo"] as const, rnd)) {
+          const extremo = condicaoExtremo(campo, operador);
+          const { atendem } = avaliarEmEtapas(escolhidos, [filtro, extremo]);
+          if (atendem.length === 1) viaveis.push({ condicoes: [filtro, extremo], alvo: atendem[0] });
+          if (viaveis.length >= 24) break;
+        }
+        if (viaveis.length >= 24) break;
+      }
+      if (viaveis.length >= 24) break;
+    }
+    if (!viaveis.length) return null;
+    const escolhida = pick(viaveis, rnd);
+    return finalizar(
+      tipo, escolhidos, escolhida.condicoes, escolhidos.indexOf(escolhida.alvo), params, rnd,
+    );
   }
 
   // ── demais tipos: condições construídas a partir de um ALVO real ──────────
@@ -828,8 +921,10 @@ export function explicarErro(q: Questao, escolha: number): string {
   const pq = q.produtos[escolha];
   if (escolha === q.correta) return q.explicacao;
   const nome = pq.produto.nome;
-  const ok = q.condicoes.filter((c) => satisfaz(pq, c, q.produtos));
-  const falta = q.condicoes.filter((c) => !satisfaz(pq, c, q.produtos));
+  const { filtrados } = avaliarEmEtapas(q.produtos, q.condicoes);
+  const atendeCondicao = (c: Condicao) => satisfaz(pq, c, ehExtremo(c) ? filtrados : q.produtos);
+  const ok = q.condicoes.filter(atendeCondicao);
+  const falta = q.condicoes.filter((c) => !atendeCondicao(c));
   if (!falta.length) return q.explicacao;
   if (ok.length) {
     return `${nome} ${juntar(ok.map((c) => c.texto))}, mas ${juntar(falta.map((c) => `não ${c.texto}`))}.`;
@@ -852,13 +947,22 @@ export function motivoInvalidez(q: Questao): string | null {
   const dims = new Set(q.produtos.map((p) => dimensaoDe(p.produto.conteudo.unidade)));
   if (dims.size !== 1) return "dimensoesIncompativeis";
 
-  // exatamente uma resposta correta
-  const corretos = q.produtos.filter((pq) => atendeTodas(pq, q.condicoes, q.produtos));
+  // exatamente uma resposta correta, com extremos avaliados só após os filtros
+  const { filtrados, atendem: corretos } = avaliarEmEtapas(q.produtos, q.condicoes);
+  const temExtremo = q.condicoes.some(ehExtremo);
+  const temFiltro = q.condicoes.some((c) => !ehExtremo(c));
+  // O filtro precisa FILTRAR: deixar 2+ (senão a comparação não tem o que comparar) e excluir
+  // ao menos um (senão é comparação simples com uma frase decorativa na frente — o mesmo defeito
+  // que ela apontou nos dois critérios, na forma de filtro). Medido antes desta trava: 43% a 59%
+  // das questões tinham filtro que não excluía ninguém.
+  if (temExtremo && temFiltro
+    && (filtrados.length < 2 || filtrados.length >= q.produtos.length)) return "filtroNaoFiltra";
   if (corretos.length !== 1) return corretos.length === 0 ? "semResposta" : "respostaDupla";
   if (q.produtos[q.correta] !== corretos[0]) return "corretaErrada";
 
-  // Em questões multi-critério, nenhum critério pode identificar sozinho a resposta.
-  if (q.condicoes.length >= 2 && q.condicoes.some(
+  // Em questões multi-critério, nenhum filtro pode identificar sozinho a resposta.
+  // Extremos são excluídos: por definição eles podem deixar um único produto.
+  if (q.condicoes.length >= 2 && q.condicoes.filter((c) => !ehExtremo(c)).some(
     (c) => q.produtos.filter((pq) => satisfaz(pq, c, q.produtos)).length < 2,
   )) return "criterioRedundante";
 
