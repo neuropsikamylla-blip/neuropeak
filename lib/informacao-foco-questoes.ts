@@ -955,6 +955,20 @@ export function motivoInvalidez(q: Questao): string | null {
   // ao menos um (senão é comparação simples com uma frase decorativa na frente — o mesmo defeito
   // que ela apontou nos dois critérios, na forma de filtro). Medido antes desta trava: 43% a 59%
   // das questões tinham filtro que não excluía ninguém.
+  // Rótulo que CONTÉM outro rótulo confunde a leitura sem exigir nada cognitivo: perguntar
+  // "qual é do tipo desnatado?" tendo "semidesnatado" no quadro faz o paciente hesitar sobre a
+  // PALAVRA, não sobre a informação. É a ambiguidade de linguagem que ela proíbe (§18 da espec).
+  // Medido antes desta trava: 1 caso em 326 perguntas de tipo — raro, mas real.
+  for (const c of q.condicoes) {
+    if (c.campo !== "tipo" || c.operador !== "igual") continue;
+    const pedido = String(c.valor).toLowerCase();
+    const confunde = q.produtos.some((pq) => {
+      const t = pq.produto.tipo?.toLowerCase();
+      return t != null && t !== pedido && (t.includes(pedido) || pedido.includes(t));
+    });
+    if (confunde) return "rotuloAmbiguo";
+  }
+
   if (temExtremo && temFiltro
     && (filtrados.length < 2 || filtrados.length >= q.produtos.length)) return "filtroNaoFiltra";
   if (corretos.length !== 1) return corretos.length === 0 ? "semResposta" : "respostaDupla";

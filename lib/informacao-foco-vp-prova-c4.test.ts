@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest";
 import {
-  _resetIds, avaliarEmEtapas, criarSnapshot, gerarQuestao, montarQuestao, motivoInvalidez,
+  _resetIds, avaliarEmEtapas, criarSnapshot, gerarQuestao, montarQuestao, motivoInvalidez, TIPOS_QUESTAO,
   operacaoDaQuestao, operacaoDoTipo, operacoesDoNivel, paramsDoNivel, satisfaz,
   type Condicao, type ProdutoNaQuestao, type Questao, type TipoQuestao,
 } from "./informacao-foco-questoes";
@@ -163,5 +163,54 @@ describe("VP — o filtro tem de FILTRAR (conserto do VP sobre a entrega da C4)"
     const { filtrados } = avaliarEmEtapas(produtos, [filtroInutil, maisCaro]);
     expect(filtrados.length, "o cenário precisa ter filtro que não exclui").toBe(3);
     expect(motivoInvalidez(q)).toBe("filtroNaoFiltra");
+  });
+});
+
+describe("VP — rótulo que contém outro rótulo (pergunta dela: 'em Informação em Foco tem a ver?')", () => {
+  // Ela perguntou se o defeito de Ordem da História — pergunta sem resposta dedutível — existe
+  // aqui. A resposta medida: em forma muito mais branda, porque este exercício lê DADO TABULADO
+  // e não interpretação de imagem. O único caso achado em 3.000 questões: "qual é do tipo
+  // desnatado?" com "semidesnatado" no quadro — o paciente hesita sobre a PALAVRA, não sobre a
+  // informação, e isso é a ambiguidade de linguagem que ela proíbe na §18.
+  it("nenhuma pergunta de tipo tem outro rótulo que a contenha", () => {
+    _resetIds();
+    const rnd = lcg(80808);
+    const snap = criarSnapshot(rnd);
+    let perguntasDeTipo = 0;
+    for (let i = 0; i < 3000; i++) {
+      const t = TIPOS_QUESTAO[i % TIPOS_QUESTAO.length];
+      const r = gerarQuestao(t, paramsDoNivel(6), snap, rnd, [], [t]);
+      if (!r.questao) continue;
+      for (const c of r.questao.condicoes) {
+        if (c.campo !== "tipo" || c.operador !== "igual") continue;
+        perguntasDeTipo++;
+        const pedido = String(c.valor).toLowerCase();
+        const confuso = r.questao.produtos.find((pq) => {
+          const t2 = pq.produto.tipo?.toLowerCase();
+          return t2 != null && t2 !== pedido && (t2.includes(pedido) || pedido.includes(t2));
+        });
+        expect(confuso, `"${r.questao.pergunta}" mostra também "${confuso?.produto.tipo}"`).toBeUndefined();
+      }
+    }
+    expect(perguntasDeTipo, "o teste precisa ter visto perguntas de tipo").toBeGreaterThan(100);
+  });
+
+  it("controle: a validação rejeita 'desnatado' convivendo com 'semidesnatado'", () => {
+    const desnatado = CATALOGO_PRODUTOS.find((p) => p.tipo === "desnatado");
+    const semi = CATALOGO_PRODUTOS.find((p) => p.tipo === "semidesnatado");
+    const outro = CATALOGO_PRODUTOS.find((p) => p.categoria === "leites" && p.tipo === "integral");
+    expect([desnatado, semi, outro].every(Boolean), "o cenário precisa existir no catálogo").toBe(true);
+    const produtos: ProdutoNaQuestao[] = [desnatado!, semi!, outro!].map((produto, i) => ({
+      produto, preco: 5 + i, validade: { mes: 6, ano: 2027 },
+    }));
+    const cond: Condicao = { campo: "tipo", operador: "igual", valor: "desnatado",
+      texto: "é do tipo desnatado", resumo: "Desnatado" };
+    const q = {
+      id: "vp-rotulo", tipo: "localizacao", modalidade: "quadro", produtos, condicoes: [cond],
+      correta: 0, camposVisiveis: ["tipo", "preco", "conteudo"], camposExigidos: ["tipo"],
+      pergunta: "Qual produto é do tipo desnatado?", assinatura: "vp-rotulo",
+      categoria: desnatado!.categoria,
+    } as unknown as Questao;
+    expect(motivoInvalidez(q)).toBe("rotuloAmbiguo");
   });
 });
