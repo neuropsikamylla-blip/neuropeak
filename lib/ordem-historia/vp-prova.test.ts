@@ -73,9 +73,17 @@ describe("VP — o que o paciente vê na tela quando acerta", () => {
     expect(cartoesCorretos("d22").map((c) => c.panel)[0]).toBe(2);
   });
 
-  it("as outras 78 histórias continuam com a numeração natural dos arquivos", () => {
+  // ELA achou em 21/set, jogando, com a MESMA prova da f5: a roupa. No arquivo 1 ele VESTE o
+  // avental (telas ainda em branco); no arquivo 2 ele desenha SEM avental; do 3 em diante pinta
+  // COM avental. Na numeração original ele vestiria, tiraria para desenhar, e vestiria de novo.
+  // ⚠️ A varredura do VP passou por esta história e a declarou coerente. Não passou.
+  it("m16 (pintura): desenhar vem ANTES de vestir o avental", () => {
+    expect(cartoesCorretos("m16").map((c) => c.panel)).toEqual([2, 1, 3, 4, 5]);
+  });
+
+  it("as outras 77 histórias continuam com a numeração natural dos arquivos", () => {
     const comOrd = HISTORIAS.filter((h) => h.ord);
-    expect(comOrd.map((h) => h.id)).toEqual(["f5", "f12", "d13", "d15", "d19", "d20", "d22"]);
+    expect(comOrd.map((h) => h.id)).toEqual(["f5", "f12", "m16", "d13", "d15", "d19", "d20", "d22"]);
     for (const h of HISTORIAS.filter((x) => !x.ord)) {
       expect(painelDaPosicao(h)).toEqual(Array.from({ length: h.n }, (_, i) => i + 1));
     }
