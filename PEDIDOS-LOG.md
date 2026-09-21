@@ -25818,3 +25818,6 @@ preciso testar la ?
 
 ## 21/09/2026 13:38
 [Image #6] [Image #7] [Image #8] [Image #9] ordem da historia... tem uma que a da pintura.. repara que quando ele esta desenhando ainda ele esta sem o avental ou seja, se imagina que ele colocou depois... acho que temos de verificar
+
+## 21/09/2026 19:27
+em informácao em foco tem haver?
