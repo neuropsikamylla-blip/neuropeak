@@ -109,6 +109,33 @@ describe("VP — painelDaPosicao não confia no dado", () => {
   });
 });
 
+describe("VP — histórias com ordem NÃO DEDUTÍVEL ficam fora do sorteio", () => {
+  // Decisão dela em 21/set, depois de encontrar três jogando: uma história cuja ordem não se
+  // deduz faz o paciente acertar por sorte — é pior que gabarito errado, porque não há o que
+  // corrigir. Ficam no catálogo por histórico, com o motivo escrito no dado.
+  it("m1, m6 e m21 estão marcadas com o MOTIVO, não só excluídas", () => {
+    for (const id of ["m1", "m6", "m21"]) {
+      const h = HISTORIAS.find((x) => x.id === id);
+      expect(h, id).toBeDefined();
+      expect(h!.foraDoSorteio, `${id} precisa do motivo escrito`).toBeTruthy();
+      expect(h!.foraDoSorteio!.length, `${id}: o motivo não pode ser vago`).toBeGreaterThan(30);
+    }
+  });
+
+  it("o sorteio exclui tanto duplicata quanto ordem não dedutível", () => {
+    const fonte = FONTE.slice(FONTE.indexOf("function buildOrdem("));
+    expect(fonte).toContain("!h.duplicataDe");
+    expect(fonte).toContain("!h.foraDoSorteio");
+  });
+
+  it("sobram histórias suficientes em cada faixa", () => {
+    for (const diff of ["faceis", "media", "dificil", "muito-dificil"] as const) {
+      const sorteaveis = HISTORIAS.filter((h) => h.diff === diff && !h.duplicataDe && !h.foraDoSorteio);
+      expect(sorteaveis.length, diff).toBeGreaterThanOrEqual(15);
+    }
+  });
+});
+
 describe("VP — d8 fora do sorteio", () => {
   it("d8 é a única história marcada como duplicata, e aponta para d2", () => {
     const dups = HISTORIAS.filter((h) => h.duplicataDe);

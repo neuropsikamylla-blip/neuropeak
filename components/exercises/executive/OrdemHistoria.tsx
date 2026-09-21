@@ -96,7 +96,7 @@ function buildOrdem(
     return { storyId: story.id, a: story.a, cards };
   }
 
-  const pool = HISTORIAS.filter((h) => h.diff === tier && !h.duplicataDe);
+  const pool = HISTORIAS.filter((h) => h.diff === tier && !h.duplicataDe && !h.foraDoSorteio);
   const story = pickFrom(pool, recent);
   const paineis = painelDaPosicao(story);
   const correct: Card[] = paineis.map((panel, i) => ({ id: `c${i}`, order: i, panel }));

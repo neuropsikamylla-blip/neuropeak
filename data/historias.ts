@@ -10,6 +10,10 @@ export interface HistoriaDef {
   ord?: number[];
   /** Conteúdo duplicado de outra história; fica no banco por histórico, fora do sorteio. */
   duplicataDe?: string;
+  /** Fora do sorteio por ORDEM NÃO DEDUTÍVEL: a história não sustenta uma única sequência
+   *  correta, então o paciente acertaria por sorte. Fica no catálogo por histórico.
+   *  O texto é o motivo, para quem for reavaliar depois saber o que olhar. */
+  foraDoSorteio?: string;
 }
 
 export const HISTORIAS: HistoriaDef[] = [
@@ -33,12 +37,12 @@ export const HISTORIAS: HistoriaDef[] = [
   { id: "f18", diff: "faceis", n: 4, a: 1.49 },
   { id: "f19", diff: "faceis", n: 4, a: 1.53 },
   { id: "f20", diff: "faceis", n: 4, a: 1.48 },
-  { id: "m1", diff: "media", n: 5, a: 1.06 },
+  { id: "m1", diff: "media", n: 5, a: 1.06, foraDoSorteio: "cenas 3 e 4 são as duas 'andando na chuva', sem pista de qual vem antes" },
   { id: "m2", diff: "media", n: 5, a: 1.06 },
   { id: "m3", diff: "media", n: 5, a: 1.04 },
   { id: "m4", diff: "media", n: 5, a: 1.06 },
   { id: "m5", diff: "media", n: 5, a: 1.07 },
-  { id: "m6", diff: "media", n: 5, a: 1.08 },
+  { id: "m6", diff: "media", n: 5, a: 1.08, foraDoSorteio: "separar materiais e fazer o cartaz são atividades independentes; a ordem entre os blocos é arbitrária" },
   { id: "m7", diff: "media", n: 5, a: 1.06 },
   { id: "m8", diff: "media", n: 5, a: 1.06 },
   { id: "m9", diff: "media", n: 5, a: 1.04 },
@@ -53,7 +57,7 @@ export const HISTORIAS: HistoriaDef[] = [
   { id: "m18", diff: "media", n: 5, a: 1.04 },
   { id: "m19", diff: "media", n: 5, a: 1.08 },
   { id: "m20", diff: "media", n: 5, a: 1.1 },
-  { id: "m21", diff: "media", n: 5, a: 1.1 },
+  { id: "m21", diff: "media", n: 5, a: 1.1, foraDoSorteio: "lavar as maçãs antes ou depois de levar para casa: as duas leituras são defensáveis" },
   { id: "m22", diff: "media", n: 5, a: 1.06 },
   { id: "d1", diff: "dificil", n: 6, a: 1.11 },
   { id: "d2", diff: "dificil", n: 6, a: 1.08 },
