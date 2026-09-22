@@ -25830,3 +25830,6 @@ Desafio da cidade eu cancelei ele, inclusive pode retirar ele do programa.
 
 ## 22/09/2026 20:52
 agora Fechar Informação em Foco por favor
+
+## 22/09/2026 20:57
+Certo — Desafio Cidade fica autorizado e registrado como pendência, (ue vc nao removeu?)
