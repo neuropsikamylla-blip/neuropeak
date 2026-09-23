@@ -25914,3 +25914,6 @@ lembre se de tirar os numeros das imagens que seram usadas
 
 ## 23/09/2026 15:52
 onde coloco as novas
+
+## 23/09/2026 15:54
+abre a pasta por favor
