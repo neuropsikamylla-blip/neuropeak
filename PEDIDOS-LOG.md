@@ -25923,3 +25923,9 @@ vou colocar sem ser em nenhuma pasta e vc sabe qto de prancha é da faceis, medi
 
 ## 23/09/2026 16:11
 abra a pasta do informácao em foco do cinema e da viagem pra eu colocar
+
+## 23/09/2026 16:13
+pornto, verifica
+
+## 23/09/2026 16:17
+feijao no algodao tirei - coloquei arrumando o computador - abra a pasta novamente pra eu mandar as duas faltantes
