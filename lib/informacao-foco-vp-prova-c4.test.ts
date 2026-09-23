@@ -111,9 +111,11 @@ describe("C4 — filtrar e depois comparar", () => {
     expect(nulas / 300).toBeLessThan(0.05);
   }, 120_000);
 
-  it("o tipo e a operação são liberados somente a partir do nível 3", () => {
-    expect(operacoesDoNivel(2)).not.toContain("filtroComparacao");
-    for (let nivel = 3; nivel <= 8; nivel++) expect(operacoesDoNivel(nivel)).toContain("filtroComparacao");
+  it("o tipo e a operação existem desde o nível 1", () => {
+    // Até 23/set eram liberados só a partir do nível 3. Ela testou os níveis baixos e
+    // reprovou o estilo; filtroComparacao era justamente a operação que ela aprovou, e não
+    // chegava lá. Desceu para o nível 1 — ver o teto de uma etapa em informacao-foco-questoes.
+    for (let nivel = 1; nivel <= 8; nivel++) expect(operacoesDoNivel(nivel)).toContain("filtroComparacao");
     expect(operacaoDoTipo("filtroComparacao")).toBe("filtroComparacao");
   });
 });

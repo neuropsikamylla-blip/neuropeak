@@ -373,16 +373,22 @@ export const PESOS_TIPO_POR_NIVEL: Record<number, Partial<Record<TipoQuestao, nu
 };
 
 export const PESOS_OPERACAO_POR_NIVEL: Record<number, Record<Operacao, number>> = {
-  1: { buscaDireta: 67, comparacao: 33, filtroComparacao: 0, doisCriterios: 0, exclusao: 0, tresCriterios: 0 },
-  2: { buscaDireta: 31, comparacao: 31, filtroComparacao: 0, doisCriterios: 38, exclusao: 0, tresCriterios: 0 },
-  3: { buscaDireta: 21.25, comparacao: 25.5, filtroComparacao: 15, doisCriterios: 38.25, exclusao: 0, tresCriterios: 0 },
-  // A parcela de exclusão fica exata; as demais colunas da tabela C5 são
-  // normalizadas proporcionalmente no espaço restante para cada linha somar 100.
-  4: { buscaDireta: 18, comparacao: 23.4, filtroComparacao: 12.6, doisCriterios: 36, exclusao: 10, tresCriterios: 0 },
-  5: { buscaDireta: 15.229167, comparacao: 22.395833, filtroComparacao: 12.541667, doisCriterios: 35.833333, exclusao: 14, tresCriterios: 0 },
-  6: { buscaDireta: 13.387097, comparacao: 20.526882, filtroComparacao: 13.387097, doisCriterios: 35.698924, exclusao: 17, tresCriterios: 0 },
-  7: { buscaDireta: 10.14433, comparacao: 16.907216, filtroComparacao: 13.525773, doisCriterios: 28.742268, exclusao: 18, tresCriterios: 12.680413 },
-  8: { buscaDireta: 8.247423, comparacao: 14.845361, filtroComparacao: 14.020619, doisCriterios: 27.216495, exclusao: 20, tresCriterios: 15.670102 },
+  // Reescrita em 23/set contra a queixa dela de repetitividade. O que mudou: filtroComparacao
+  // passa a existir desde o nível 1 e ganha peso real em todos. O que NÃO mudou: a coluna da
+  // exclusão, fixada pela spec C5 (4:10 · 5:14 · 6:17 · 7:18 · 8:20) e vigiada pela prova da
+  // C5 — e a de tresCriterios nos níveis 7-8. O resto de cada linha se redistribui no espaço
+  // que sobra, tirando de buscaDireta e comparacao.
+  //
+  // A coluna que importa é quanto sobra de UMA ETAPA (buscaDireta + comparacao), que é a
+  // mecânica que ela chamou de chata:            antes → agora
+  1: { buscaDireta: 45, comparacao: 25, filtroComparacao: 30, doisCriterios: 0, exclusao: 0, tresCriterios: 0 },          // 100% → 70%
+  2: { buscaDireta: 22, comparacao: 18, filtroComparacao: 25, doisCriterios: 35, exclusao: 0, tresCriterios: 0 },         //  62% → 40%
+  3: { buscaDireta: 16, comparacao: 16, filtroComparacao: 28, doisCriterios: 40, exclusao: 0, tresCriterios: 0 },         //  47% → 32%
+  4: { buscaDireta: 13, comparacao: 14, filtroComparacao: 25, doisCriterios: 38, exclusao: 10, tresCriterios: 0 },        //  41% → 27%
+  5: { buscaDireta: 11, comparacao: 12, filtroComparacao: 25, doisCriterios: 38, exclusao: 14, tresCriterios: 0 },        //  38% → 23%
+  6: { buscaDireta: 9, comparacao: 11, filtroComparacao: 25, doisCriterios: 38, exclusao: 17, tresCriterios: 0 },         //  34% → 20%
+  7: { buscaDireta: 7, comparacao: 9, filtroComparacao: 22, doisCriterios: 31.319587, exclusao: 18, tresCriterios: 12.680413 }, // 27% → 16%
+  8: { buscaDireta: 6, comparacao: 7, filtroComparacao: 21, doisCriterios: 30.329898, exclusao: 20, tresCriterios: 15.670102 }, // 23% → 13%
 };
 
 export type Modalidade = "quadro" | "situacao" | "embalagem";
@@ -408,9 +414,14 @@ export function sortearTipo(nivel: number, rnd: Rnd): TipoQuestao {
 /** Operações cognitivas liberadas em cada nível. */
 export function operacoesDoNivel(nivel: number): Operacao[] {
   const n = Math.min(8, Math.max(1, Math.round(nivel)));
-  const operacoes: Operacao[] = ["buscaDireta", "comparacao"];
+  // 23/set: filtroComparacao desceu de 3 para 1. Ela testou os níveis baixos e reprovou —
+  // "nesse estilo INSUPORTAVEL de chato" —, e a medição deu razão: o nível 1 era 100%
+  // operação de UMA etapa (ler, olhar a mesma linha nos três cartões, escolher). A única
+  // que ela aprovou foi filtroComparacao ("esse já foi melhor"), porque ali a resposta não
+  // está em nenhuma linha: restringe o conjunto primeiro, compara dentro do que sobrou.
+  // A curva da EXCLUSÃO não se toca — é a spec C5 dela, e a prova da C5 a fixa nível a nível.
+  const operacoes: Operacao[] = ["buscaDireta", "comparacao", "filtroComparacao"];
   if (n >= 2) operacoes.push("doisCriterios");
-  if (n >= 3) operacoes.push("filtroComparacao");
   if (n >= 4) operacoes.push("exclusao");
   if (n >= 7) operacoes.push("tresCriterios");
   return operacoes;

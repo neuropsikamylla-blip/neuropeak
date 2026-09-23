@@ -654,14 +654,17 @@ describe("Operação cognitiva como eixo da seleção (C2)", () => {
     }
     expect(vistas.size).toBeGreaterThanOrEqual(3);
     expect(vistas).toContain("doisCriterios");
-    expect(operacoesDoNivel(2)).toEqual(["buscaDireta", "comparacao", "doisCriterios"]);
+    expect(operacoesDoNivel(2)).toEqual(["buscaDireta", "comparacao", "filtroComparacao", "doisCriterios"]);
   }, 60_000);
 
   it("50.000 sorteios encadeados batem nos alvos vividos dos níveis 1, 5 e 8", () => {
     const alvos: Record<number, Partial<Record<Operacao, number>>> = {
-      1: { buscaDireta: 0.55, comparacao: 0.45 },
-      5: { buscaDireta: 0.17, comparacao: 0.23, filtroComparacao: 0.14, doisCriterios: 0.31, exclusao: 0.15 },
-      8: { buscaDireta: 0.09, comparacao: 0.16, filtroComparacao: 0.15, doisCriterios: 0.25, exclusao: 0.20, tresCriterios: 0.16 },
+      // Medidos com a distribuição de 23/set. São as frequências VIVIDAS — já depois do
+      // enfraquecimento ×0,15 da operação anterior, que achata a curva: um peso de 45%
+      // chega ao paciente como 40%, e um de 30% como 32%.
+      1: { buscaDireta: 0.40, comparacao: 0.28, filtroComparacao: 0.32 },
+      5: { buscaDireta: 0.13, comparacao: 0.14, filtroComparacao: 0.25, doisCriterios: 0.33, exclusao: 0.16 },
+      8: { buscaDireta: 0.07, comparacao: 0.08, filtroComparacao: 0.21, doisCriterios: 0.27, exclusao: 0.20, tresCriterios: 0.17 },
     };
     for (const nivel of [1, 5, 8]) {
       const rnd = rndSeed(2026091510 + nivel);
@@ -837,4 +840,44 @@ describe("Quadro funcional (Fase 2 §6)", () => {
       }
     }
   }, 60_000);
+});
+
+describe("VP — o teto de operação de UMA ETAPA por nível (23/set)", () => {
+  // Ela testou em produção e reprovou: "nesse estilo INSUPORTAVEL de chato... teria de
+  // alternar". Medido na época: o nível 1 servia 100% de buscaDireta + comparacao, e o
+  // nível 2, 62%. Essas duas são a mesma mecânica — ler, olhar UMA linha nos três cartões,
+  // escolher — e é disso que vem a sensação de que só muda o rótulo da linha.
+  //
+  // A que ela aprovou ("esse já foi melhor") foi filtroComparacao, porque ali a resposta
+  // não está em nenhuma linha: restringe o conjunto primeiro, compara dentro do que sobrou.
+  //
+  // Este teto é o que impede alguém de encher os níveis baixos de busca direta outra vez.
+  const TETO_UMA_ETAPA: Record<number, number> = {
+    1: 70, 2: 40, 3: 32, 4: 27, 5: 23, 6: 20, 7: 16, 8: 13,
+  };
+
+  it.each([1, 2, 3, 4, 5, 6, 7, 8])("nível %i não passa do teto de uma etapa", (nivel) => {
+    const p = PESOS_OPERACAO_POR_NIVEL[nivel];
+    const umaEtapa = p.buscaDireta + p.comparacao;
+    expect(umaEtapa, `nível ${nivel}: ${umaEtapa.toFixed(1)}% de uma etapa`)
+      .toBeLessThanOrEqual(TETO_UMA_ETAPA[nivel]);
+  });
+
+  it("filtroComparacao existe e pesa em TODOS os níveis, inclusive o 1", () => {
+    // Era o gargalo real: não adiantava dar peso, porque operacoesDoNivel só a liberava
+    // a partir do nível 3 — ela nem entrava na lista de permitidas.
+    for (let nivel = 1; nivel <= 8; nivel++) {
+      expect(operacoesDoNivel(nivel), `nível ${nivel}`).toContain("filtroComparacao");
+      expect(PESOS_OPERACAO_POR_NIVEL[nivel].filtroComparacao, `nível ${nivel}`).toBeGreaterThanOrEqual(20);
+    }
+  });
+
+  it("nenhum nível é servido por uma única mecânica", () => {
+    // O nível 1 era 100% de uma etapa. Nunca mais.
+    for (let nivel = 1; nivel <= 8; nivel++) {
+      const p = PESOS_OPERACAO_POR_NIVEL[nivel];
+      const comPeso = Object.values(p).filter((v) => v > 0).length;
+      expect(comPeso, `nível ${nivel} tem só ${comPeso} operação(ões)`).toBeGreaterThanOrEqual(3);
+    }
+  });
 });
