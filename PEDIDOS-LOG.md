@@ -25887,3 +25887,9 @@ calma vou criar o cinema e viagem... agora eu queria que vc olhasse o ordem da h
 
 ## 23/09/2026 14:01
 tudo bem.. mas por exemplo ordem da historia la coloquei novas lembra? então antes verifica se tudo esta ok e tire o que esta duplicado
+
+## 23/09/2026 15:11
+pode continuar
+
+## 23/09/2026 15:13
+voce acha que as hitorias com o mesmo enredo mesmo sendo diferente atrapalha?
