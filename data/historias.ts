@@ -10,6 +10,11 @@ export interface HistoriaDef {
   ord?: number[];
   /** Conteúdo duplicado de outra história; fica no banco por histórico, fora do sorteio. */
   duplicataDe?: string;
+  /** Mesmo ENREDO de outra história, em nível diferente (desenhos e nº de cenas distintos).
+   *  Fica fora do sorteio até ser substituída por um enredo inédito. Motivo: a escada sobe
+   *  DENTRO da sessão (nível 8 = difícil, 9 = muito-difícil), então as duas podiam cair com
+   *  minutos de distância — e aí a segunda vira reconhecimento, não raciocínio sequencial. */
+  mesmoEnredoDe?: string;
   /** Fora do sorteio por ORDEM NÃO DEDUTÍVEL: a história não sustenta uma única sequência
    *  correta, então o paciente acertaria por sorte. Fica no catálogo por histórico.
    *  O texto é o motivo, para quem for reavaliar depois saber o que olhar. */
@@ -59,17 +64,17 @@ export const HISTORIAS: HistoriaDef[] = [
   { id: "m20", diff: "media", n: 5, a: 1.1 },
   { id: "m21", diff: "media", n: 5, a: 1.1, foraDoSorteio: "lavar as maçãs antes ou depois de levar para casa: as duas leituras são defensáveis" },
   { id: "m22", diff: "media", n: 5, a: 1.06 },
-  { id: "d1", diff: "dificil", n: 6, a: 1.11 },
-  { id: "d2", diff: "dificil", n: 6, a: 1.08 },
-  { id: "d3", diff: "dificil", n: 6, a: 1.05 },
+  { id: "d1", diff: "dificil", n: 6, a: 1.11, mesmoEnredoDe: "f1" /* João planejando uma viagem */ },
+  { id: "d2", diff: "dificil", n: 6, a: 1.08, mesmoEnredoDe: "x9" /* a turma vai ao teatro */ },
+  { id: "d3", diff: "dificil", n: 6, a: 1.05, mesmoEnredoDe: "x2" /* Lucas na feira de ciências */ },
   { id: "d4", diff: "dificil", n: 6, a: 1.08 },
-  { id: "d5", diff: "dificil", n: 6, a: 1.07 },
-  { id: "d6", diff: "dificil", n: 6, a: 1.1 },
-  { id: "d7", diff: "dificil", n: 6, a: 1.02 },
+  { id: "d5", diff: "dificil", n: 6, a: 1.07, mesmoEnredoDe: "x3" /* o cachorro da Sofia fugiu */ },
+  { id: "d6", diff: "dificil", n: 6, a: 1.1, mesmoEnredoDe: "x4" /* Maria quase queimou o bolo */ },
+  { id: "d7", diff: "dificil", n: 6, a: 1.02, mesmoEnredoDe: "x8" /* Clara faz um presente à mão */ },
   { id: "d8", diff: "dificil", n: 6, a: 1.08, duplicataDe: "d2" },
-  { id: "d9", diff: "dificil", n: 6, a: 1.07 },
+  { id: "d9", diff: "dificil", n: 6, a: 1.07, mesmoEnredoDe: "x1" /* a família vai acampar */ },
   { id: "d10", diff: "dificil", n: 6, a: 1.06 },
-  { id: "d11", diff: "dificil", n: 6, a: 1.05 },
+  { id: "d11", diff: "dificil", n: 6, a: 1.05, mesmoEnredoDe: "x7" /* Gabriel no campeonato de futebol */ },
   { id: "d12", diff: "dificil", n: 6, a: 1.09 },
   { id: "d13", diff: "dificil", n: 6, a: 1.03, ord: [3, 1, 2, 4, 5, 6] },
   { id: "d14", diff: "dificil", n: 6, a: 1.04 },

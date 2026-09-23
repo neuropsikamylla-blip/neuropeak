@@ -126,12 +126,19 @@ describe("VP — histórias com ordem NÃO DEDUTÍVEL ficam fora do sorteio", ()
     const fonte = FONTE.slice(FONTE.indexOf("function buildOrdem("));
     expect(fonte).toContain("!h.duplicataDe");
     expect(fonte).toContain("!h.foraDoSorteio");
+    expect(fonte).toContain("!h.mesmoEnredoDe");
   });
 
   it("sobram histórias suficientes em cada faixa", () => {
     for (const diff of ["faceis", "media", "dificil", "muito-dificil"] as const) {
-      const sorteaveis = HISTORIAS.filter((h) => h.diff === diff && !h.duplicataDe && !h.foraDoSorteio);
-      expect(sorteaveis.length, diff).toBeGreaterThanOrEqual(15);
+      const sorteaveis = HISTORIAS.filter(
+        (h) => h.diff === diff && !h.duplicataDe && !h.foraDoSorteio && !h.mesmoEnredoDe,
+      );
+      // ⚠️ TEMPORÁRIO: era 15. As 8 gêmeas de enredo saíram do nível difícil (13 restantes) e a
+      // reposição são as 16 pranchas difíceis novas dela, ainda por cortar. Ao importá-las, este
+      // piso volta para 15. O veto do sorteio usa metade do pool, então com 13 ainda sobram 7
+      // para sortear de verdade — apertado, mas funcionando.
+      expect(sorteaveis.length, diff).toBeGreaterThanOrEqual(13);
     }
   });
 });
@@ -156,6 +163,7 @@ describe("VP — as duplicatas fora do sorteio", () => {
     const corpo = FONTE.slice(inicio, FONTE.indexOf("\nfunction ", inicio + 10));
     expect(corpo).toContain("HISTORIAS.filter");
     expect(corpo).toContain("!h.duplicataDe");
+    expect(corpo).toContain("!h.mesmoEnredoDe");
   });
 });
 
@@ -224,5 +232,42 @@ describe("VP — o embaralhamento com os tamanhos e o dado REAIS do banco", () =
     // reordenar por `order` devolve exatamente os painéis do gabarito
     const remontado = [...apresentados].sort((a, b) => a.order - b.order).map((c) => c.panel);
     expect(remontado).toEqual([2, 6, 4, 1, 3, 5]);
+  });
+});
+
+describe("VP — as gêmeas de enredo fora do sorteio", () => {
+  const SORTEAVEL = (h: (typeof HISTORIAS)[number]) =>
+    !h.duplicataDe && !h.foraDoSorteio && !h.mesmoEnredoDe;
+
+  it("as 8 gêmeas marcadas são exatamente as esperadas, e todas do nível difícil", () => {
+    const gemeas = HISTORIAS.filter((h) => h.mesmoEnredoDe);
+    expect(gemeas.map((h) => `${h.id}->${h.mesmoEnredoDe}`)).toEqual([
+      "d1->f1", "d2->x9", "d3->x2", "d5->x3",
+      "d6->x4", "d7->x8", "d9->x1", "d11->x7",
+    ]);
+    for (const g of gemeas) expect(g.diff, g.id).toBe("dificil");
+  });
+
+  it("nenhuma gêmea sai do sorteio sem que a irmã CONTINUE nele", () => {
+    // O risco de errar aqui é tirar as duas e o enredo sumir do banco inteiro.
+    for (const g of HISTORIAS.filter((h) => h.mesmoEnredoDe)) {
+      const irma = HISTORIAS.find((h) => h.id === g.mesmoEnredoDe);
+      expect(irma, `${g.id} aponta para ${g.mesmoEnredoDe}, que não existe`).toBeTruthy();
+      expect(SORTEAVEL(irma!), `${g.id} saiu mas a irmã ${irma!.id} também está fora`).toBe(true);
+    }
+  });
+
+  it("nenhum enredo tem duas versões sorteáveis ao mesmo tempo", () => {
+    // Controle negativo do achado: antes desta correção, d9 e x1 (mesmo roteiro) podiam cair
+    // na MESMA sessão, porque a escada sobe de 8 para 9 dentro da sessão e o veto olha o id.
+    const pares = HISTORIAS.filter((h) => h.mesmoEnredoDe).map((h) => [h, HISTORIAS.find((o) => o.id === h.mesmoEnredoDe)!] as const);
+    for (const [a, b] of pares) {
+      expect(SORTEAVEL(a) && SORTEAVEL(b), `${a.id} e ${b.id} estão os dois no sorteio`).toBe(false);
+    }
+  });
+
+  it("o total sorteável cai de 81 para 73, e o difícil fica com 13", () => {
+    expect(HISTORIAS.filter(SORTEAVEL).length).toBe(73);
+    expect(HISTORIAS.filter((h) => h.diff === "dificil" && SORTEAVEL(h)).length).toBe(13);
   });
 });
