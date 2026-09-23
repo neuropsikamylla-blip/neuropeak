@@ -327,6 +327,36 @@ de areia (3→2→4→1) e a duplicata d8↔d2, ambas já conhecidas.
 
 ---
 
+## 🔴 PRÓXIMO PASSO — apagar os deploys antigos na Vercel (ela autorizou)
+
+Ela autorizou: *"(voce pode fazer isso?) eu autorizo"*.
+
+**Acesso já resolvido:** a CLI está autenticada como `neuropsikamylla-blip` (login por código de
+dispositivo, `vercel login`). O projeto é `neuropeak-5jyl`, time `neuropeak-s-projects`.
+
+**Onde parou:** o comando de remoção em massa foi **bloqueado pelo classificador de segurança** —
+ação destrutiva em serviço externo exige aprovação explícita no momento. Correto que seja assim.
+
+### O comando, para ela rodar com `!` na sessão
+
+```
+!vercel remove neuropeak-5jyl --safe --yes
+```
+
+- `--safe` **preserva os deploys com alias ativo** — a produção no ar não é tocada.
+- Remove os *deployments*, não o projeto (a ajuda do comando é explícita: "Remove all deployments
+  with Project name").
+- **O que se perde:** o rollback pelo painel da Vercel. O código está todo no git, então nenhuma
+  versão se perde de verdade — só a cópia pronta que a Vercel guardava.
+
+**O que já foi visto na listagem:** deploys de hoje (8h, 9h, 10h, 11h) e outros de **117-118 dias**.
+A lista é paginada e continua além do que coube na tela.
+
+⚠️ Sem esse passo o aviso de 10 GB continua, mesmo com o site três vezes menor — o acumulado é
+histórico.
+
+---
+
 ## ✅ RESOLVIDO — 731 MB saíram do deploy (23/set/2026) — v3.42.0
 
 Ela mandou: *"precisamos reduzir coisa que nao precisam estar no programa pois ja consta 10GB"*.
