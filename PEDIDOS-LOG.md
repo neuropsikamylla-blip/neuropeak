@@ -25977,3 +25977,21 @@ You can close this tab.
 
 ## 23/09/2026 19:22
 então mais nao vai apagar o meu programa ne?
+
+## 23/09/2026 19:44
+continue claude
+
+## 23/09/2026 19:49
+[Image #15] vc nao resolveu isso? Deployment Storage 10,97 GB
+
+## 23/09/2026 19:52
+ah perfeito! então agora podemos seguir o que falta ne?
+
+## 23/09/2026 19:54
+fui testar o informação em foco.. e ja fiz 3 [Image #17] nesse estilo INSUPORTAVEL de chato... que tentamos melhorar teria de alternar está chato real. [Image #18] [Image #19] [Image #20] e esse repetiu a mesma pergunta [Image #21]
+
+## 23/09/2026 19:55
+[Image #22] esse ja foi melhor
+
+## 23/09/2026 19:55
+[Image #23] ai volta esse chato
