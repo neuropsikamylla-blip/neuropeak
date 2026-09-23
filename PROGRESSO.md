@@ -327,35 +327,51 @@ de areia (3→2→4→1) e a duplicata d8↔d2, ambas já conhecidas.
 
 ---
 
-## 🔴 PRÓXIMO PASSO — o peso do deploy (23/set/2026)
+## ✅ RESOLVIDO — 731 MB saíram do deploy (23/set/2026) — v3.42.0
 
-A Vercel avisou: **100 % dos 10 GB de Deployment Storage**. Ela perguntou se era caso de remover
-exercícios descontinuados. **Medido: não é.**
+Ela mandou: *"precisamos reduzir coisa que nao precisam estar no programa pois ja consta 10GB"*.
 
-| pasta em `public/` | tamanho | usada pelo app | no git |
+### A medição
+
+| pasta | tamanho | no git | citada no código |
 |---|---|---|---|
-| `historias-novas` | **360 MB** | ❌ | ❌ |
-| `Personagem restaurante` | 126 MB | ❌ | ❌ |
-| `Restaurante-bistro` | 101 MB | ❌ | ❌ |
-| `icones novos` | 56 MB | ❌ | ❌ |
-| `itens-novos` | 49 MB | ❌ | ❌ |
-| `historias` | 51 MB | ✅ | ✅ |
+| **historias-novas** | **399 MB** | 0 | ❌ |
+| **Personagem restaurante** | **126 MB** | 0 | ❌ |
+| **Restaurante-bistro** | **101 MB** | 0 | ❌ |
+| **icones novos** | **56 MB** | 0 | ❌ |
+| **itens-novos** | **49 MB** | 0 | ❌ |
+| historias | 90 MB | 710 | ✅ |
+| todas as outras | < 20 MB | sim | ✅ |
 
-**~700 MB são MATÉRIA-PRIMA** — pranchas originais, mockups, ícones antes do recorte. Nenhuma
-referenciada no código, nenhuma versionada. Mas estão em `public/`, e tudo em `public/` vai no deploy.
+**731 MB de 968 MB eram matéria-prima** — pranchas originais, mockups e ícones antes do recorte.
+O app usa só o material já cortado. `public/` no deploy: **968 MB → ~237 MB (−75%)**.
 
-**E "Deployment Storage" é o ACUMULADO de todos os deploys**, não o tamanho do site: cada push guarda
-uma cópia dos ~878 MB. Dezenas de publicações nas últimas semanas explicam os 10 GB.
-Remover exercícios descontinuados resolveria quase nada — o Desafio Cidade eram alguns KB de texto.
+### Como, e por que assim
 
-### O plano, quando houver janela
+`.vercelignore` na raiz. **Os arquivos continuam no disco, no mesmo lugar** — ela acessa pelo Finder
+como sempre; só param de viajar para a Vercel. Escolhido em vez de mover ou apagar porque esses
+731 MB **não estão no git**: um erro de destino seria irreversível, e aqui não se move nada.
 
-1. **Tirar a matéria-prima de `public/`**: mover para uma pasta fora do deploy (ex.: `_fontes/` na
-   raiz, no `.gitignore` e no `.vercelignore`). Cada deploy futuro cai de ~878 MB para ~180 MB.
-2. **Apagar deploys antigos** na Vercel, o que libera o acumulado de uma vez.
+### Provas
 
-⚠️ **NÃO executado de propósito:** esses 700 MB **não estão no git**. Mover errado é irreversível —
-não há de onde restaurar. Merece janela cheia e o destino confirmado com ela antes.
+- `lib/deploy-peso.test.ts` — dois vigias: o `.vercelignore` existe e lista as cinco; e **nenhum
+  arquivo de código referencia uma pasta que não vai mais ao deploy**. Esse segundo importa porque
+  a falha seria silenciosa: a imagem carrega local (200) e quebra em produção (404).
+- **Injeção A** (tirar `itens-novos` do .vercelignore): reprovou. **Injeção B** (citar
+  `exercises/itens-novos` em `lib/exercise-icons.ts`): reprovou nomeando o arquivo.
+- Suíte completa **1317/1317**; `tsc --noEmit` exit 0.
+
+### O que ainda falta para o alerta da Vercel sumir
+
+Isto resolve os deploys **futuros**. O 10 GB acumulado é histórico: **é preciso apagar os deploys
+antigos no painel da Vercel** (Project → Deployments), que ela faz em minutos. Sem isso, o aviso
+continua mesmo com o site menor.
+
+### Pendência de arrumação (não é peso, é nomenclatura)
+
+`items` **e** `itens` existem as duas, e as duas são usadas pelo código (2 e 3 referências).
+`icones novos`, `Personagem restaurante` têm espaço no nome; `Carros`, `Restaurante-bistro` têm
+maiúscula. Renomear exige mexer no código junto — fatiado para depois.
 
 ---
 

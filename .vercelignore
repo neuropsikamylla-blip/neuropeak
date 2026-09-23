@@ -1,0 +1,22 @@
+# ---------------------------------------------------------------------------
+# O que NÃO sobe para o deploy da Vercel.
+#
+# 23/set/2026 — a Vercel avisou 100% dos 10 GB de Deployment Storage. A causa não
+# eram exercícios antigos: são as pastas de MATÉRIA-PRIMA dentro de public/.
+#
+# Elas guardam as pranchas originais, os mockups e os ícones antes do recorte. O app
+# usa só o material JÁ CORTADO (public/exercises/historias, /itens, /icones-exercicios).
+# Medido: 731 MB dos 968 MB de public/, nenhuma no git, nenhuma citada no código.
+#
+# E "Deployment Storage" é o ACUMULADO de todos os deploys, não o tamanho do site:
+# cada push guardava mais uma cópia desses 731 MB.
+#
+# Os arquivos CONTINUAM no disco, no mesmo lugar de sempre — ela acessa pelo Finder
+# como antes. Só param de viajar para a Vercel.
+# ---------------------------------------------------------------------------
+
+public/exercises/historias-novas
+public/exercises/Personagem restaurante
+public/exercises/Restaurante-bistro
+public/exercises/icones novos
+public/exercises/itens-novos
