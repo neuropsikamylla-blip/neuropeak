@@ -155,6 +155,38 @@ frágil, então a distribuição pode ser o que fizer sentido clinicamente.
 
 ---
 
+## 🔴 PRÓXIMO PASSO — o peso do deploy (23/set/2026)
+
+A Vercel avisou: **100 % dos 10 GB de Deployment Storage**. Ela perguntou se era caso de remover
+exercícios descontinuados. **Medido: não é.**
+
+| pasta em `public/` | tamanho | usada pelo app | no git |
+|---|---|---|---|
+| `historias-novas` | **360 MB** | ❌ | ❌ |
+| `Personagem restaurante` | 126 MB | ❌ | ❌ |
+| `Restaurante-bistro` | 101 MB | ❌ | ❌ |
+| `icones novos` | 56 MB | ❌ | ❌ |
+| `itens-novos` | 49 MB | ❌ | ❌ |
+| `historias` | 51 MB | ✅ | ✅ |
+
+**~700 MB são MATÉRIA-PRIMA** — pranchas originais, mockups, ícones antes do recorte. Nenhuma
+referenciada no código, nenhuma versionada. Mas estão em `public/`, e tudo em `public/` vai no deploy.
+
+**E "Deployment Storage" é o ACUMULADO de todos os deploys**, não o tamanho do site: cada push guarda
+uma cópia dos ~878 MB. Dezenas de publicações nas últimas semanas explicam os 10 GB.
+Remover exercícios descontinuados resolveria quase nada — o Desafio Cidade eram alguns KB de texto.
+
+### O plano, quando houver janela
+
+1. **Tirar a matéria-prima de `public/`**: mover para uma pasta fora do deploy (ex.: `_fontes/` na
+   raiz, no `.gitignore` e no `.vercelignore`). Cada deploy futuro cai de ~878 MB para ~180 MB.
+2. **Apagar deploys antigos** na Vercel, o que libera o acumulado de uma vez.
+
+⚠️ **NÃO executado de propósito:** esses 700 MB **não estão no git**. Mover errado é irreversível —
+não há de onde restaurar. Merece janela cheia e o destino confirmado com ela antes.
+
+---
+
 ## 🚧 EM ANDAMENTO — Histórias novas de Ordem da História (23/set/2026)
 
 Ela criou histórias novas nas quatro faixas e colocou em `public/exercises/historias-novas/`
