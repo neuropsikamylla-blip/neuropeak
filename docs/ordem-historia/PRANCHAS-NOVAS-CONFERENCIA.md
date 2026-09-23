@@ -177,3 +177,92 @@ As **118 pranchas de junho (~330 MB)** são matéria-prima já cortada: o app us
 pranchas. Sair de `public/` alivia o deploy sem tocar em exercício nenhum. Tratado na pendência do
 peso — nada movido aqui, porque esses arquivos não estão no git e um erro de destino seria
 irreversível.
+
+---
+
+# CONFERÊNCIA COMPLETA DAS INÉDITAS — 39 de 47 prontas para cortar
+
+As 8 que faltam (D02 planetário, D05 casinha, D06 aquário, D07 nadar, D09 cerâmica, D10 gatinho,
+D12 fantoches, X08 feira de trocas) **repetem enredo ainda no banco** e dependem da decisão dela.
+
+## A regra de corte, por faixa
+
+| faixa | quantas | numeração impressa |
+|---|---|---|
+| fáceis | 11 | ⚠️ **5 batem, 6 NÃO** — precisam de `ord` |
+| médias | 10 | ✅ todas batem |
+| difíceis | 9 inéditas | ✅ todas batem |
+| muito-difíceis | 9 inéditas | ✅ todas batem |
+
+**O problema está só nas fáceis.** Ali, quando os números saem em ordem de leitura (1,2,3,4), eles
+são apenas rótulo e a ordem real é outra. Da média para cima, o número é o gabarito.
+
+### As 6 fáceis que precisam de `ord`
+
+| prancha | tema | ordem correta |
+|---|---|---|
+| F01 | Caio dá banho no cachorro | 2 → 1 → 4 → 3 |
+| F07 | Bruno faz um sanduíche | 3 → 1 → 4 → 2 |
+| F08 | Lia faz limonada | 2 → 4 → 1 → 3 |
+| F09 | Marina faz avião de papel | 3 → 1 → 4 → 2 |
+| F10 | Nina monta quebra-cabeça | 4 → 1 → 3 → 2 |
+| F11 | Mateus faz castelo de areia | 3 → 2 → 4 → 1 |
+
+## Lista das inéditas conferidas
+
+**Médias (10, todas 1→5):** biscoitos decorados · biblioteca · patins · pizza caseira · museu dos
+dinossauros · robô de sucata · piquenique no parque · padaria · trem de trilhos · terrário.
+
+**Difíceis (9, todas 1→6):** cupcakes · skate · picolés de frutas · trilha ecológica · aula de judô ·
+plantar morangos · pão caseiro · compostagem na escola · viveiro de borboletas.
+
+**Muito-difíceis (9, todas 1→8):** bicicleta sem rodinhas · geleia de morango · teatro de sombras ·
+torneio de xadrez · ponte de palitos · telescópio · almofada de estrela · carrinho a balão · sushi.
+
+---
+
+# 🔴 Problemas encontrados — 5 pranchas pedem atenção
+
+## X05 — Ponte de palitos: continuidade quebrada
+
+Cena 4: ponte em madeira natural. Cena 5: ponte **já com as diagonais coloridas**, sendo testada com
+o carrinho. Cena 6: ela **pintando** a ponte.
+
+A ponte ganha cor antes da cena que mostra a pintura. Um paciente atento pode — com razão — colocar
+a 6 antes da 5. **Recomendação: refazer**, ou trocar a 5 por uma versão com a ponte ainda natural.
+
+## X01 — Bicicleta sem rodinhas: três cenas quase iguais
+
+As cenas 5, 6 e 7 mostram a mesma menina pedalando no mesmo cenário. O que muda é só a **expressão
+facial** (tensa → sorrindo → relaxada de olhos fechados).
+
+É o mesmo defeito que tirou `m1` do sorteio ("cenas 3 e 4 são as duas 'andando na chuva', sem pista
+de qual vem antes"). Pior: exige leitura de expressão facial, que não é o que o exercício treina e
+que parte dos pacientes não faz bem. **Recomendação: refazer as cenas 5-7** com marcos visíveis —
+por exemplo, o pai cada vez mais longe ao fundo, ou a distância percorrida no caminho.
+
+## D11 — Aula de judô: ordem por conhecimento, não por pista
+
+Entre "cair no tatame" (4) e "treinar em dupla" (5) não há pista visual. Quem sabe como uma aula de
+judô se estrutura acerta; quem não sabe, chuta. **Aceitável, mas é a mais fraca das difíceis.**
+
+## X04 — Torneio de xadrez: três cenas de tabuleiro
+
+As cenas 4, 5 e 6 são "jogando". Há pistas (a placa "1" na mesa da 4, o brilho da jogada decisiva na
+6), mas são sutis. **Passa, com ressalva.**
+
+## D15 — Compostagem: erro de português no enunciado
+
+Está escrito **"Ajude us crianças"** — deveria ser **"as crianças"**. Precisa refazer só a faixa do
+título, ou gerar de novo.
+
+---
+
+# ✅ A melhor da série: X06, telescópio
+
+Vale registrar como modelo do que pedir. As cenas 5 e 6 são as duas "olhando no telescópio" — o tipo
+de par que costuma dar ambiguidade. Mas a cena 7 mostra o caderno de anotações com **"A LUA"** e
+**"SATURNO"** escritos nessa ordem: a própria prancha carrega a pista que resolve a sequência.
+
+**É esse o padrão a pedir ao gerador:** quando duas cenas forem parecidas, que alguma terceira cena
+registre qual veio antes.
