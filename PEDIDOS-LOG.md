@@ -25935,3 +25935,6 @@ pronto tanto ordem da historia , quando informaçao em foco todos
 
 ## 23/09/2026 18:21
 entao mandei para vc colocar o que precisa colocar e tirar oque precisa tirar
+
+## 23/09/2026 18:35
+nao fiz da limonada pq ja tinha
