@@ -327,33 +327,36 @@ de areia (3→2→4→1) e a duplicata d8↔d2, ambas já conhecidas.
 
 ---
 
-## 🔴 PRÓXIMO PASSO — apagar os deploys antigos na Vercel (ela autorizou)
+## ✅ RESOLVIDO — os 10 GB da Vercel, nas duas pontas (23/set/2026)
 
-Ela autorizou: *"(voce pode fazer isso?) eu autorizo"*.
+### O passado: 22 deploys antigos apagados
 
-**Acesso já resolvido:** a CLI está autenticada como `neuropsikamylla-blip` (login por código de
-dispositivo, `vercel login`). O projeto é `neuropeak-5jyl`, time `neuropeak-s-projects`.
+Ela rodou `vercel remove neuropeak-5jyl --safe --yes`. Resultado: **22 removidos, 2 mantidos.**
 
-**Onde parou:** o comando de remoção em massa foi **bloqueado pelo classificador de segurança** —
-ação destrutiva em serviço externo exige aprovação explícita no momento. Correto que seja assim.
+O `--safe` protegeu `hriu8xkon`, que é o deployment servindo o site — confirmado antes de rodar.
 
-### O comando, para ela rodar com `!` na sessão
+⚠️ **Susto que valeu a pena:** `vercel alias ls` mostrava os aliases com idade de **126 dias**, o que
+parecia indicar que o alias apontava para um deploy velho e que o `--safe` não protegeria o deploy
+atual. Verificado: os 126d são a idade do ALIAS (o endereço existe desde então), não do deployment.
+O `hriu8xkon` tinha 4 minutos e carregava o alias. **Não afirmar sem medir valeu de novo.**
 
-```
-!vercel remove neuropeak-5jyl --safe --yes
-```
+### O futuro: cada deploy agora leva 237 MB em vez de 968 MB
 
-- `--safe` **preserva os deploys com alias ativo** — a produção no ar não é tocada.
-- Remove os *deployments*, não o projeto (a ajuda do comando é explícita: "Remove all deployments
-  with Project name").
-- **O que se perde:** o rollback pelo painel da Vercel. O código está todo no git, então nenhuma
-  versão se perde de verdade — só a cópia pronta que a Vercel guardava.
+Pelo `.vercelignore` — ver a seção anterior.
 
-**O que já foi visto na listagem:** deploys de hoje (8h, 9h, 10h, 11h) e outros de **117-118 dias**.
-A lista é paginada e continua além do que coube na tela.
+### Prova depois da remoção
 
-⚠️ Sem esse passo o aviso de 10 GB continua, mesmo com o site três vezes menor — o acumulado é
-histórico.
+| verificação | resultado |
+|---|---|
+| `/api/version` | 3.42.0, mesmo `dpl_CqjVqwWaC1qcsbhVBCVDbSkdszdM` |
+| `/login` · `/api/health` | 200 · 200 |
+| `/` | 307 (redireciona por perfil) |
+| `historias/f21/1.png` · `historias/d23/1.png` | 200 · 200 |
+| `icones-exercicios/mot.png` | 200 |
+
+**Acesso à Vercel:** a CLI ficou autenticada como `neuropsikamylla-blip` (login por código de
+dispositivo — o fluxo OAuth do MCP expirava entre autorizar e concluir; o device code não tem esse
+problema). Útil para a próxima vez.
 
 ---
 
