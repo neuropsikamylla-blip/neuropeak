@@ -1,11 +1,11 @@
 # As 3 ultimas especificacoes dela (automatico; a mais nova por ultimo)
 # Na retomada: ler as 3, conectar com PROGRESSO.md e git, declarar e seguir.
 
-## 23/09/2026 19:49
-[Image #15] vc nao resolveu isso? Deployment Storage 10,97 GB
+## 23/09/2026 19:59
+[Image #24] quando PARA a tela treme (isso nao pode acontecer) como aparece selecione mais 3 bolas, meio que desloca o quadro que esta as bolas... acho que pode aparecer de uma foram onde nao treme o retangulo/quadrado faz sentido ?
 
-## 23/09/2026 19:52
-ah perfeito! então agora podemos seguir o que falta ne?
+## 23/09/2026 20:00
+[Image #25] onde fica selecione exatamente 3 bolas alvo ele fica azul (nao precisa adicionar um lugar a mais para clicar confirmar) o selecione exatamente as bolas alvos (e nao precisa avisar qts) e ai quando clicar na quantidade ele segue o que acha?
 
-## 23/09/2026 19:54
-fui testar o informação em foco.. e ja fiz 3 [Image #17] nesse estilo INSUPORTAVEL de chato... que tentamos melhorar teria de alternar está chato real. [Image #18] [Image #19] [Image #20] e esse repetiu a mesma pergunta [Image #21]
+## 23/09/2026 20:02
+[Image #26] mesma coisa aqui... se eu cliquei já segue [Image #27] precisa ficar limpo assim : concorda? (acho que isso vale para todos (talvez um o outro que nao de mas por enqto acredito que serve para todos) talvez restaurante e supermercado vou avaliar antes
