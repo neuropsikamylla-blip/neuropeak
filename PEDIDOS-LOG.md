@@ -25917,3 +25917,6 @@ onde coloco as novas
 
 ## 23/09/2026 15:54
 abre a pasta por favor
+
+## 23/09/2026 15:55
+vou colocar sem ser em nenhuma pasta e vc sabe qto de prancha é da faceis, media e dificil ne
