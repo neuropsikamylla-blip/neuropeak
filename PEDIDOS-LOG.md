@@ -25845,3 +25845,6 @@ vamos la informação em foco eu preciso que vc me descreva o estilo de cada con
 
 ## 23/09/2026 07:47
 pode limpar esse desafio da cidade nao vai acontecer mais
+
+## 23/09/2026 08:06
+entao informação em foco eu nao pedi para excluir ne? o exercicio.. somnete desafio da cidade (e pode sumir com os dados do paciente pq era pacientes testes) nenhum paciente ainda é real
