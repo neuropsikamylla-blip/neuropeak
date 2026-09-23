@@ -327,6 +327,43 @@ de areia (3→2→4→1) e a duplicata d8↔d2, ambas já conhecidas.
 
 ---
 
+## ✅ MOT — o palco não treme mais (23/set/2026) — v3.43.0
+
+Ela testou e reprovou: *"quando PARA a tela treme (isso nao pode acontecer)... meio que desloca o
+quadro que esta as bolas"*.
+
+**A causa:** o botão de confirmar e a mensagem de resultado eram blocos CONDICIONAIS soltos na
+coluna. Ao aparecerem, a coluna crescia e empurrava o palco. Pior ainda: eram dois, que se
+alternavam (botão → resultado), então tremia duas vezes por rodada.
+
+**Por que é grave e não cosmético:** num exercício de rastreamento o paciente fixa as posições das
+bolas na tela. Se o quadro se desloca no instante da resposta, as posições que ele memorizou deixam
+de valer — a tarefa se invalida.
+
+**A solução foi dela, e é melhor que a minha.** Eu ia só reservar a altura do botão; ela propôs
+tirar o botão: *"se eu cliquei já segue... nao precisa adicionar um lugar a mais para clicar
+confirmar"*. Sem botão que aparece, não há o que empurrar.
+
+Implementado no MOT:
+1. **O clique na última bola confirma** — `if (next.size === k) confirmarSelecao(next)`.
+2. **Rodapé único de altura fixa**, sempre presente: a mensagem muda dentro dele.
+3. **Sem o número de alvos** no texto ("Selecione as bolas alvo"): dizer quantos são entrega parte
+   da tarefa — quantos eram é o que ele tinha de ter memorizado.
+
+**Virou princípio geral** — ver a memória `principio-gesto-e-a-confirmacao`. Ela: *"acho que isso
+vale para todos... talvez restaurante e supermercado vou avaliar antes"*. A fronteira é: gesto único
+ou quantidade conhecida → o gesto confirma; resposta que é CONSTRUÇÃO (ordem, lista, conta) → botão
+cabe. **Falta propagar aos demais exercícios.**
+
+### Provas
+
+- `lib/mot/mot-layout.test.ts` — 5 vigias: sem botão de confirmar; rodapé com altura fixa; **nenhum
+  bloco condicional irmão do palco na coluna**; texto sem o número; o clique confirma sozinho.
+- **Injeção A** (devolver o botão condicional): reprovou. **Injeção B** (tirar a altura fixa):
+  reprovou. Suíte completa 1320/1320; `tsc --noEmit` exit 0.
+
+---
+
 ## 🚧 EM ANDAMENTO — cortar as 30 do lote 1 (23/set/2026)
 
 Aprovado por ela o critério da DISTÂNCIA entre faixas: enredo repetido só atrapalha quando as duas

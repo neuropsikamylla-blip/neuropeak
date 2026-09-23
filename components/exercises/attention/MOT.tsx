@@ -41,6 +41,10 @@ type Phase = "memorize" | "track" | "identify";
 
 // ── Main component ─────────────────────────────────────────────────────────
 
+/** Altura fixa do rodapé de status. Reservá-la desde o início é o que impede o palco
+ *  de se deslocar quando a mensagem muda — ver o comentário no rodapé. */
+const ALTURA_RODAPE = 32;
+
 export function MOT({ difficulty, theme, onComplete }: MOTProps) {
   const { begin, podeIniciarNovoDesafio, elapsedSec, finish, progressPct, emTolerancia } = useBlocoDeTreino("mot", difficulty);
 
@@ -200,10 +204,15 @@ export function MOT({ difficulty, theme, onComplete }: MOTProps) {
   }, [hasMeasured, startRound]);
 
   function handleBallTap(id: number) {
-    if (phase !== "identify") return;
+    if (phase !== "identify" || roundScore !== null) return;
     setSelected(prev => {
       const next = new Set(prev);
       if (next.has(id)) next.delete(id); else next.add(id);
+      // Decisão dela (23/set): "se eu cliquei já segue". O gesto de resposta É a
+      // confirmação — botão separado só cabe quando a resposta é uma CONSTRUÇÃO
+      // (montar uma ordem, uma lista, uma conta). Aqui a quantidade fecha a resposta.
+      // Isso também elimina o tremor: sem botão que aparece, nada empurra o palco.
+      if (next.size === k) confirmarSelecao(next);
       return next;
     });
   }
@@ -219,10 +228,10 @@ export function MOT({ difficulty, theme, onComplete }: MOTProps) {
     if (id !== null) handleBallTap(id);
   }
 
-  function handleConfirm() {
+  function confirmarSelecao(escolhidas: Set<number>) {
     if (phase !== "identify") return;
     const targets = balls.filter(b => b.isTarget).map(b => b.id);
-    const correct = [...selected].filter(id => targets.includes(id)).length;
+    const correct = [...escolhidas].filter(id => targets.includes(id)).length;
     const perfect = k > 0 && correct === k;
     setRoundScore(correct);
     setTotalCorrect(tc => tc + correct);
@@ -340,33 +349,35 @@ export function MOT({ difficulty, theme, onComplete }: MOTProps) {
         </div>
         </div>
 
-        {/* Confirm button */}
-        {phase === "identify" && roundScore === null && (
-          <button onClick={handleConfirm}
-            style={{ width: dims.w, maxWidth: "100%" }}
-            className={`py-3 rounded-xl font-bold text-sm ${pal.btn}`}
-            disabled={selected.size !== k}>
-            {selected.size < k ? `Selecione mais ${k - selected.size} bola(s)` : "Confirmar →"}
-          </button>
-        )}
-
-        {roundScore !== null && (
-          <motion.div initial={{ opacity: 0, scale: 0.8 }} animate={{ opacity: 1, scale: 1 }}
-            style={{ width: dims.w, maxWidth: "100%" }}
-            className={`py-3 rounded-xl text-center font-bold text-sm ${
-              roundScore === k ? (theme === "GAMIFIED" ? "bg-green-900/40 text-green-300" : "bg-green-100 text-green-800") :
-              roundScore > 0 ? (theme === "GAMIFIED" ? "bg-yellow-900/40 text-yellow-300" : "bg-yellow-100 text-yellow-800") :
-              (theme === "GAMIFIED" ? "bg-red-900/40 text-red-300" : "bg-red-100 text-red-800")
+        {/* Rodapé de status — UMA faixa só, com altura FIXA e sempre presente.
+            Antes havia dois blocos condicionais (botão de confirmar e mensagem de resultado)
+            soltos na coluna: ao aparecerem, empurravam o palco para cima. Num exercício de
+            rastreamento isso invalida a tarefa — o paciente fixa as posições na tela, e se o
+            quadro se desloca no instante da resposta, o que ele memorizou deixa de valer.
+            Ela viu e reprovou: "quando PARA a tela treme (isso nao pode acontecer)".
+            Sem número de alvos no texto: dizer quantos são entrega parte da tarefa. */}
+        <div style={{ width: dims.w, maxWidth: "100%", height: ALTURA_RODAPE }}
+             className="flex items-center justify-center">
+          {roundScore !== null ? (
+            <span className={`text-sm font-bold ${
+              roundScore === k ? (theme === "GAMIFIED" ? "text-green-300" : "text-green-700") :
+              roundScore > 0 ? (theme === "GAMIFIED" ? "text-yellow-300" : "text-yellow-700") :
+              (theme === "GAMIFIED" ? "text-red-300" : "text-red-700")
             }`}>
-            {roundScore === k ? `✅ Perfeito! ${roundScore}/${k} alvos` :
-             roundScore > 0 ? `👍 ${roundScore}/${k} alvos corretos` :
-             `❌ 0/${k} — continue praticando!`}
-          </motion.div>
-        )}
-
-        <p className={`text-xs text-center ${pal.sub}`}>
-          Selecione exatamente {k} bola{k > 1 ? "s" : ""} alvo
-        </p>
+              {roundScore === k ? `✅ Perfeito! ${roundScore}/${k} alvos` :
+               roundScore > 0 ? `👍 ${roundScore}/${k} alvos corretos` :
+               `❌ 0/${k} — continue praticando!`}
+            </span>
+          ) : (
+            <span className={`text-sm font-semibold ${
+              phase === "identify"
+                ? (theme === "GAMIFIED" ? "text-cyan-300" : "text-blue-700")
+                : pal.sub
+            }`}>
+              Selecione as bolas alvo
+            </span>
+          )}
+        </div>
       </div>
     </ExerciseStage>
   );
