@@ -1,11 +1,11 @@
 # As 3 ultimas especificacoes dela (automatico; a mais nova por ultimo)
 # Na retomada: ler as 3, conectar com PROGRESSO.md e git, declarar e seguir.
 
-## 22/09/2026 11:51
-de uma olhada geral no programa inteiro, avalie o que foi feito até aqui e me proponha um cronograma de revisoes separados por partes do programa. Eu quero que me envie de proposta de revisao já com prompt feito em uma ordem sequencial ideal, em que todas essas revisoes avaliem problemas, oportunidades e erros de codigos, me mande o cronograma para tudo dividido em fases, nomeei em fases 1 até em fase x até a quantidade que vc ache que precise. E deixe registrado em um arquivo.md esse cronograma, de forma que eu so tenha de pedir para vc executar determinada fase.
-
 ## 22/09/2026 15:29
 Desafio da cidade eu cancelei ele, inclusive pode retirar ele do programa.
 
 ## 22/09/2026 20:57
 Certo — Desafio Cidade fica autorizado e registrado como pendência, (ue vc nao removeu?)
+
+## 22/09/2026 21:39
+Na C6 vou precisar de você num ponto: os contextos novos exigem dados novos (um cardápio com pratos, preços, tempo de preparo; uma tabela de horários de cinema). Não há como medir viabilidade antes de criar. Vou montar um conjunto pequeno de cada e te mostrar antes de gerar em escala — se o conteúdo não fizer sentido clínico, é melhor descobrir com 6 itens do que com 60. (então me mande toda a lista do que precisa ser feito para eu solicitar)
