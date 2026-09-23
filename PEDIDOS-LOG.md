@@ -25929,3 +25929,6 @@ pornto, verifica
 
 ## 23/09/2026 16:17
 feijao no algodao tirei - coloquei arrumando o computador - abra a pasta novamente pra eu mandar as duas faltantes
+
+## 23/09/2026 16:48
+pronto tanto ordem da historia , quando informaçao em foco todos
