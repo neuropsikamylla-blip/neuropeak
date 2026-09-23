@@ -73,3 +73,69 @@ dessa tabela.
 
 A arte, os produtos e o layout: ela não reclamou de nada disso. O material do C6 (12 imagens de
 cardápio, cinema e viagem) está pronto e não é afetado por este diagnóstico.
+
+---
+
+# A TENTATIVA DE 23/set — o que descobri e por que revertí
+
+Apliquei a correção proposta e **revertí**. Vale registrar o que a tentativa ensinou.
+
+## 🔴 Achado novo: o gargalo não é o peso, é a LIBERAÇÃO
+
+`operacoesDoNivel()` decide o que cada nível pode sortear:
+
+```ts
+const operacoes: Operacao[] = ["buscaDireta", "comparacao"];
+if (n >= 2) operacoes.push("doisCriterios");
+if (n >= 3) operacoes.push("filtroComparacao");   // ← só a partir do 3
+if (n >= 4) operacoes.push("exclusao");           // ← só a partir do 4
+if (n >= 7) operacoes.push("tresCriterios");
+```
+
+**Mexer só na tabela de pesos não resolveria nada:** `filtroComparacao` pode ter o peso que for no
+nível 1, que ela nem entra na lista de permitidas. É preciso mudar as duas coisas juntas.
+
+## A proposta, pronta para aplicar
+
+**Liberação:** `filtroComparacao` desce de 3 → **1**; `exclusao` de 4 → **3**.
+
+**Pesos** (a coluna da direita é quanto sobra de UMA etapa):
+
+| nível | buscaDireta | comparacao | filtroComparacao | doisCriterios | exclusao | tresCriterios | uma etapa |
+|---|---|---|---|---|---|---|---|
+| 1 | 40 | 30 | 30 | 0 | 0 | 0 | **70%** (era 100%) |
+| 2 | 20 | 15 | 25 | 40 | 0 | 0 | **35%** (era 62%) |
+| 3 | 15 | 13 | 24 | 33 | 15 | 0 | 28% |
+| 4 | 12 | 11 | 22 | 32 | 23 | 0 | 23% |
+| 5 | 10 | 10 | 20 | 30 | 30 | 0 | 20% |
+| 6 | 8 | 9 | 19 | 29 | 35 | 0 | 17% |
+| 7 | 6 | 7 | 16 | 25 | 30 | 16 | 13% |
+| 8 | 5 | 5 | 14 | 22 | 32 | 22 | 10% |
+
+O nível 1 continua o mais fácil — é onde se aprende a mecânica —, mas deixa de ser só uma coisa.
+
+## ⚠️ Por que revertí: cinco provas caem, e elas guardam a C2 e a C5
+
+Com a mudança aplicada (`tsc` limpo), reprovaram:
+
+1. `tipo, operação, níveis e pesos obedecem ao contrato da C5`
+2. `o tipo e a operação são liberados somente a partir do nível 3`
+3. `o nível 2 apresenta pelo menos três operações e inclui dois critérios`
+4. `50.000 sorteios encadeados batem nos alvos vividos dos níveis 1, 5 e 8`
+5. `duas seguidas são raras com fator 0,15, três aceitas são impossíveis e o controle 1,0 reprova`
+
+As quatro primeiras são **atualização de números** — o contrato mudou por decisão dela, e o teste
+precisa acompanhar. **A quinta é outra coisa:** é a prova da não-repetição (C2), com controle
+negativo, e falhou por margem estreita (`controle nível 8: teórico 0.224, obteve 0.189`). Recalibrar
+esse número sem refazer a conta é como afrouxar a prova sem perceber — exatamente o defeito contra o
+qual ela existe.
+
+**Fazer isso direito exige:** recalcular os alvos teóricos da C2 e da C5 para a distribuição nova,
+atualizar os cinco testes com as contas refeitas, e rodar o controle negativo de novo. É trabalho de
+janela inteira, não de encaixe no fim.
+
+## E continua pendente a segunda metade do conserto
+
+A anti-repetição por **(operação + atributo) com memória de 3 rodadas**. Hoje `sortearOperacao`
+recebe só `anterior?: Operacao` — mudar isso altera a assinatura e o chamador. Foi o que produziu
+"Qual produto vence primeiro?" duas vezes no teste dela.
