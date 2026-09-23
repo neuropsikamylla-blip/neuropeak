@@ -171,10 +171,10 @@ describe("VP — a correção não foi tocada", () => {
 });
 
 describe("VP — o embaralhamento com os tamanhos e o dado REAIS do banco", () => {
-  // O teste do Codex usa n solto. Este usa as 76 histórias de ordenar, uma a uma.
+  // O teste do Codex usa n solto. Este usa as 95 histórias de ordenar, uma a uma.
   it("nenhuma história do banco nasce resolvível em menos de 2 trocas", () => {
     const sorteaveis = HISTORIAS.filter((h) => !h.duplicataDe);
-    expect(sorteaveis.length).toBe(76);
+    expect(sorteaveis.length).toBe(95);
     let piores = 0;
     for (const h of sorteaveis) {
       for (let i = 0; i < 200; i++) {
@@ -244,11 +244,13 @@ describe("VP — as gêmeas de enredo foram APAGADAS do banco", () => {
     }
   });
 
-  it("o catálogo tem 76 histórias de ordenar e 73 sorteáveis", () => {
-    expect(HISTORIAS.length).toBe(76);
+  it("o catálogo tem 96 histórias de ordenar e 92 sorteáveis", () => {
+    // 23/set, lote 2: entraram 20 (6 fáceis, 11 difíceis, 3 muito-difíceis) e f3 saiu,
+    // substituída por f25 ("arrumar o quarto"), que cobre o mesmo cenário com mais etapas.
+    expect(HISTORIAS.length).toBe(96);
     const ordenar = HISTORIAS.filter((h) => ["faceis", "media", "dificil", "muito-dificil"].includes(h.diff));
-    expect(ordenar.filter((h) => !h.duplicataDe && !h.foraDoSorteio).length).toBe(73);
-    expect(ordenar.filter((h) => h.diff === "dificil").length).toBe(13);
+    expect(ordenar.filter((h) => !h.duplicataDe && !h.foraDoSorteio).length).toBe(92);
+    expect(ordenar.filter((h) => h.diff === "dificil").length).toBe(24);
   });
 
   it("toda história do catálogo tem a pasta de imagens no disco, com o nº de cenas declarado", () => {
@@ -260,5 +262,47 @@ describe("VP — as gêmeas de enredo foram APAGADAS do banco", () => {
       const cenas = readdirSync(dir).filter((f) => f.endsWith(".png"));
       expect(cenas.length, `${h.id}: declarou ${h.n} cenas, achou ${cenas.length}`).toBe(h.n);
     }
+  });
+});
+
+describe("VP — o lote 2 (23/set): as 20 histórias novas", () => {
+  const NOVAS = [
+    ["f21", 4], ["f22", 4], ["f23", 4], ["f24", 4], ["f25", 4], ["f26", 4],
+    ["d23", 6], ["d24", 6], ["d25", 6], ["d26", 6], ["d27", 6], ["d28", 6],
+    ["d29", 6], ["d30", 6], ["d31", 6], ["d32", 6], ["d33", 6],
+    ["x23", 8], ["x24", 8], ["x25", 8],
+  ] as const;
+
+  it("as 20 estão no catálogo, sorteáveis, com o nº de cenas da sua faixa", () => {
+    for (const [id, cenas] of NOVAS) {
+      const h = HISTORIAS.find((x) => x.id === id);
+      expect(h, `${id} não foi cadastrada`).toBeTruthy();
+      expect(h!.n, `${id}: esperava ${cenas} cenas`).toBe(cenas);
+      expect(h!.duplicataDe, `${id} nasceu marcada como duplicata`).toBeUndefined();
+      expect(h!.foraDoSorteio, `${id} nasceu fora do sorteio`).toBeUndefined();
+    }
+  });
+
+  it("nenhum id novo reaproveita id de história apagada", () => {
+    // As sessões já gravadas referenciam storyId no metadata: reusar um id apagado
+    // faria o histórico do paciente apontar para outra história.
+    const APAGADAS = ["d1", "d2", "d3", "d5", "d6", "d7", "d8", "d9", "d11", "x20"];
+    for (const [id] of NOVAS) expect(APAGADAS, `${id} reusa id apagado`).not.toContain(id);
+  });
+
+  it("as 20 não trazem ord: a ordem de leitura da prancha já é a correta", () => {
+    // Conferidas uma a uma na prancha. O formato novo (sem enunciado, sem número no
+    // quadro) entregou a grade já na ordem da história.
+    for (const [id] of NOVAS) {
+      expect(HISTORIAS.find((x) => x.id === id)!.ord, `${id} não deveria precisar de ord`).toBeUndefined();
+    }
+  });
+
+  it("f3 saiu apontando para f25, que está no sorteio", () => {
+    const f3 = HISTORIAS.find((h) => h.id === "f3")!;
+    expect(f3.duplicataDe).toBe("f25");
+    const f25 = HISTORIAS.find((h) => h.id === "f25")!;
+    expect(f25.duplicataDe).toBeUndefined();
+    expect(f25.foraDoSorteio).toBeUndefined();
   });
 });

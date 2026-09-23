@@ -155,6 +155,60 @@ frágil, então a distribuição pode ser o que fizer sentido clinicamente.
 
 ---
 
+## ✅ Lote 2 cortado e cadastrado — 20 histórias novas (23/set/2026) — v3.41.0
+
+Ela autorizou: *"mandei para vc colocar o que precisa colocar e tirar oque precisa tirar"*.
+
+### O banco agora
+
+| nível | antes do dia | agora |
+|---|---|---|
+| fáceis | 20 | **25** |
+| média | 19 | 19 |
+| **difícil** | 21 → 13 | **24** |
+| muito-difícil | 21 | 24 |
+| **total sorteável** | 81 | **92** |
+
+O nível difícil, que tinha caído para 13 com a remoção das gêmeas, **fechou em 24** — melhor do que
+estava antes de tudo começar.
+
+### Decisões que tomei, com o motivo
+
+1. **Coelho duplicado:** ficou `02_montar_espaco...`, saiu `...16_32_29` (mesma prancha, distância
+   0,147). Critério: manter a de nome descritivo.
+2. **`02_arrumar_computador`: descartada.** Cenas 1 e 4 eram as duas a tela carregando; 5 e 6 as duas
+   a área de trabalho ligada. A causa é o ENREDO — consertar computador travado quase não produz
+   estado visível — então refazer cairia no mesmo.
+3. **`f3` saiu**, substituída por `f25` ("arrumar o quarto"): mesmo cenário, mais etapas distintas.
+4. **Ids NOVOS, nunca reusados.** As sessões gravadas referenciam `storyId` no metadata; reusar um id
+   apagado faria o histórico do paciente apontar para outra história. Por isso f21+, d23+, x23+.
+
+### O formato novo resolveu três problemas de uma vez
+
+As pranchas vieram **sem faixa de enunciado, sem plaquinha motivacional e sem o disco numerado dentro
+do quadro**. Resultado: não há gabarito impresso para apagar, não há frase entregando a última cena,
+e o corte sai limpo — sem o remendo que estraga o canto das 76 histórias antigas.
+
+**E a ordem de leitura da prancha já era a ordem correta nas 20.** Nenhuma precisou de `ord`.
+
+### Provas
+
+- Suíte completa **1315/1315**; `tsc --noEmit` exit 0.
+- Cortador: `docs/scripts/cortar-prancha.py`, acha a grade pelas faixas claras. Detectou sozinho
+  3x2, 4x2 e 2x2. Validado visualmente antes de rodar no lote.
+- 4 provas novas: as 20 cadastradas e sorteáveis com o nº de cenas da faixa; nenhum id reusado;
+  nenhuma precisando de `ord`; `f3` apontando para uma `f25` que está no sorteio.
+- **Injeção A** (renomear d23 para d1): reprovou em duas provas independentes — pasta inexistente e
+  história não cadastrada. **Injeção B** (declarar 8 cenas onde há 6): reprovou nas duas também.
+- Backup: `data/historias.ts.bak2-20260923` e as descartadas em `~/APPs/backups-neuropeak/`.
+
+### Pendente
+
+- **A limonada não chegou** (fácil, 4 cenas). O lote entrou sem ela.
+- As 20 pranchas seguem em `PARA-CORTAR/` — matéria-prima já consumida, entra na pendência do peso.
+
+---
+
 ## 🔴 ACHADO — o número do gabarito está mal removido nas 76 histórias em produção
 
 Ela lembrou: *"lembre se de tirar os numeros das imagens que seram usadas"*. Fui verificar.
