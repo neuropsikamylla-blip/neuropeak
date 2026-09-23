@@ -25905,3 +25905,6 @@ pode apagar vc e me mande os novos enredos que vc sugere para substituir pode se
 
 ## 23/09/2026 15:30
 ja solicitei
+
+## 23/09/2026 15:35
+o anunciado vc vai escrever de todos ne? de forma ludica ele pode ser retirado das imagens... o que acha? o anunciado acho que vc pode colocar um botaozinho para leitura em voz alta caso a pessoa nao consgia ler. E mande todas que estao com problema para eu refazer, apague elas e vamos refazer ai mande o enredo e quantidade de prancha :  fáceis (11)                 │ ⚠️ 5 batem, 6 não manda as 6 com enredo para eu pedir
