@@ -1,0 +1,6 @@
+CINEMA — quadro de programacao
+
+Coloque aqui as imagens, com o nome que vierem.
+A spec pede 2 quadros, cada um com 6 sessoes.
+
+Detalhes de estilo: docs/informacao-em-foco/C6-ESTILO-DOS-CONTEXTOS.md (secao 2)

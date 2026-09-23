@@ -1,0 +1,6 @@
+VIAGEM — painel de partidas da rodoviaria
+
+Coloque aqui as imagens, com o nome que vierem.
+A spec pede 2 paineis, cada um com 6 destinos.
+
+Detalhes de estilo: docs/informacao-em-foco/C6-ESTILO-DOS-CONTEXTOS.md (secao 3)
