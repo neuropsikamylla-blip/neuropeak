@@ -16,6 +16,7 @@ function lcg(seed: number): () => number {
 
 /** A operação REAL, lida das condições. É esta leitura que a auditoria usou. */
 function operacaoReal(q: Questao): string {
+  if (q.tipo === "exclusaoParcial") return "EXCLUSAO";
   if (q.condicoes.length >= 2 && q.condicoes.some(
     (c) => c.operador === "minimo" || c.operador === "maximo",
   )) return "FILTRO_COMPARACAO";

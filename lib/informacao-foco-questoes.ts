@@ -28,15 +28,16 @@ export type CampoKey =
   | "fraseEmbalagem";
 
 export type TipoQuestao =
-  | "localizacao" | "comparacao" | "filtroComparacao" | "duasCondicoes" | "tresCondicoes"
+  | "localizacao" | "comparacao" | "filtroComparacao" | "duasCondicoes" | "exclusaoParcial" | "tresCondicoes"
   | "validade" | "conservacao" | "ingredientes" | "alergenicos" | "situacao"
   | "leituraEmbalagem";
 
 /** O que o paciente precisa FAZER mentalmente. É isto que o seletor sorteia. */
-export type Operacao = "buscaDireta" | "comparacao" | "filtroComparacao" | "doisCriterios" | "tresCriterios";
+export type Operacao =
+  | "buscaDireta" | "comparacao" | "filtroComparacao" | "doisCriterios" | "exclusao" | "tresCriterios";
 
 export const TIPOS_QUESTAO: TipoQuestao[] = [
-  "localizacao", "comparacao", "filtroComparacao", "duasCondicoes", "tresCondicoes",
+  "localizacao", "comparacao", "filtroComparacao", "duasCondicoes", "exclusaoParcial", "tresCondicoes",
   "validade", "conservacao", "ingredientes", "alergenicos", "situacao", "leituraEmbalagem",
 ];
 
@@ -46,6 +47,7 @@ export const TIPOS_POR_OPERACAO: Record<Operacao, TipoQuestao[]> = {
   comparacao: ["comparacao"],
   filtroComparacao: ["filtroComparacao"],
   doisCriterios: ["duasCondicoes"],
+  exclusao: ["exclusaoParcial"],
   tresCriterios: ["tresCondicoes"],
 };
 
@@ -98,6 +100,7 @@ export interface Questao {
  * Comparação filtrada combina duas ou mais condições e pelo menos um extremo.
  */
 export function operacaoDaQuestao(q: Questao): Operacao {
+  if (q.tipo === "exclusaoParcial") return "exclusao";
   if (q.condicoes.length >= 2 && q.condicoes.some((c) => c.operador === "minimo" || c.operador === "maximo")) {
     return "filtroComparacao";
   }
@@ -115,6 +118,7 @@ export function operacaoDoTipo(tipo: TipoQuestao): Operacao | null {
   if (tipo === "comparacao") return "comparacao";
   if (tipo === "filtroComparacao") return "filtroComparacao";
   if (tipo === "duasCondicoes") return "doisCriterios";
+  if (tipo === "exclusaoParcial") return "exclusao";
   if (tipo === "tresCondicoes") return "tresCriterios";
   return "buscaDireta";
 }
@@ -368,15 +372,17 @@ export const PESOS_TIPO_POR_NIVEL: Record<number, Partial<Record<TipoQuestao, nu
   8: { localizacao: 9, comparacao: 16, duasCondicoes: 24, validade: 14, conservacao: 8, ingredientes: 8, alergenicos: 8, tresCondicoes: 13 },
 };
 
-const PESOS_OPERACAO_POR_NIVEL: Record<number, Record<Operacao, number>> = {
-  1: { buscaDireta: 67, comparacao: 33, filtroComparacao: 0, doisCriterios: 0, tresCriterios: 0 },
-  2: { buscaDireta: 31, comparacao: 31, filtroComparacao: 0, doisCriterios: 38, tresCriterios: 0 },
-  3: { buscaDireta: 21.25, comparacao: 25.5, filtroComparacao: 15, doisCriterios: 38.25, tresCriterios: 0 },
-  4: { buscaDireta: 18.7, comparacao: 24.65, filtroComparacao: 15, doisCriterios: 41.65, tresCriterios: 0 },
-  5: { buscaDireta: 16.15, comparacao: 23.8, filtroComparacao: 15, doisCriterios: 45.05, tresCriterios: 0 },
-  6: { buscaDireta: 13.5758, comparacao: 22.0606, filtroComparacao: 15, doisCriterios: 48.3636, tresCriterios: 0 },
-  7: { buscaDireta: 10.4, comparacao: 19.2, filtroComparacao: 20, doisCriterios: 36.8, tresCriterios: 13.6 },
-  8: { buscaDireta: 8.8, comparacao: 17.6, filtroComparacao: 20, doisCriterios: 36, tresCriterios: 17.6 },
+export const PESOS_OPERACAO_POR_NIVEL: Record<number, Record<Operacao, number>> = {
+  1: { buscaDireta: 67, comparacao: 33, filtroComparacao: 0, doisCriterios: 0, exclusao: 0, tresCriterios: 0 },
+  2: { buscaDireta: 31, comparacao: 31, filtroComparacao: 0, doisCriterios: 38, exclusao: 0, tresCriterios: 0 },
+  3: { buscaDireta: 21.25, comparacao: 25.5, filtroComparacao: 15, doisCriterios: 38.25, exclusao: 0, tresCriterios: 0 },
+  // A parcela de exclusão fica exata; as demais colunas da tabela C5 são
+  // normalizadas proporcionalmente no espaço restante para cada linha somar 100.
+  4: { buscaDireta: 18, comparacao: 23.4, filtroComparacao: 12.6, doisCriterios: 36, exclusao: 10, tresCriterios: 0 },
+  5: { buscaDireta: 15.229167, comparacao: 22.395833, filtroComparacao: 12.541667, doisCriterios: 35.833333, exclusao: 14, tresCriterios: 0 },
+  6: { buscaDireta: 13.387097, comparacao: 20.526882, filtroComparacao: 13.387097, doisCriterios: 35.698924, exclusao: 17, tresCriterios: 0 },
+  7: { buscaDireta: 10.14433, comparacao: 16.907216, filtroComparacao: 13.525773, doisCriterios: 28.742268, exclusao: 18, tresCriterios: 12.680413 },
+  8: { buscaDireta: 8.247423, comparacao: 14.845361, filtroComparacao: 14.020619, doisCriterios: 27.216495, exclusao: 20, tresCriterios: 15.670102 },
 };
 
 export type Modalidade = "quadro" | "situacao" | "embalagem";
@@ -405,6 +411,7 @@ export function operacoesDoNivel(nivel: number): Operacao[] {
   const operacoes: Operacao[] = ["buscaDireta", "comparacao"];
   if (n >= 2) operacoes.push("doisCriterios");
   if (n >= 3) operacoes.push("filtroComparacao");
+  if (n >= 4) operacoes.push("exclusao");
   if (n >= 7) operacoes.push("tresCriterios");
   return operacoes;
 }
@@ -463,6 +470,7 @@ export function tiposDoNivel(n: number): TipoQuestao[] {
   const base: TipoQuestao[] = ["localizacao", "comparacao"];
   if (n >= 2) base.push("duasCondicoes");
   if (n >= 3) base.push("filtroComparacao", "validade", "conservacao", "ingredientes", "alergenicos");
+  if (n >= 4) base.push("exclusaoParcial");
   if (n >= 5) base.push("situacao");
   if (n >= 6) base.push("leituraEmbalagem");
   if (n >= 7) base.push("tresCondicoes");
@@ -554,6 +562,11 @@ const FABRICAS_POR_TIPO: Record<TipoQuestao, FabricaCondicao[]> = {
   comparacao: [],                                   // usa mínimo/máximo, montado à parte
   filtroComparacao: [],                             // enumera filtro + extremo no grupo
   duasCondicoes: [condConteudoMinimo, condPrecoMaximo, condSemLactose, condSemAcucar, condSemGluten, condTipo, condSaches],
+  exclusaoParcial: [
+    condConteudoMinimo, condPrecoMaximo, condValidadeApos, condSemLactose, condComLactose,
+    condSemAcucar, condSemGluten, condTipo, condSaches, condUnidades, condCacau,
+    condConservacao, condAlergenico,
+  ],
   tresCondicoes: [condConteudoMinimo, condPrecoMaximo, condSemLactose, condSemAcucar, condSemGluten, condTipo, condCacau],
   validade: [condValidadeApos],
   conservacao: [condConservacao],
@@ -595,6 +608,9 @@ function textoPergunta(tipo: TipoQuestao, cs: Condicao[]): string {
     const filtros = cs.filter((c) => !ehExtremo(c));
     const extremos = cs.filter(ehExtremo);
     return `Entre os produtos que ${juntar(filtros.map((c) => textoFiltroPlural(c.texto)))}, qual ${juntar(extremos.map((c) => c.texto))}?`;
+  }
+  if (tipo === "exclusaoParcial") {
+    return `Precisamos de um produto que ${lista}. Qual destes atende a APENAS UMA dessas exigências?`;
   }
   return `Qual produto ${lista}?`;
 }
@@ -716,6 +732,48 @@ function tentarNoGrupo(
     return finalizar(
       tipo, escolhidos, escolhida.condicoes, escolhidos.indexOf(escolhida.alvo), params, rnd,
     );
+  }
+
+  // ── exclusão parcial: grupo primeiro, depois enumeração dos pares viáveis ──
+  if (tipo === "exclusaoParcial") {
+    const escolhidos = escolherProdutos(pool, params, rnd);
+    if (!escolhidos) return null;
+    const porAssinatura = new Map<string, Condicao>();
+    for (const pq of escolhidos) {
+      for (const fabrica of FABRICAS_POR_TIPO.exclusaoParcial) {
+        const condicao = fabrica(pq, rnd);
+        if (!condicao || !satisfaz(pq, condicao, escolhidos)) continue;
+        if (!escolhidos.every((produto) => temCampo(produto.produto, condicao.campo))) continue;
+        const assinatura = `${condicao.campo}|${condicao.operador}|${JSON.stringify(condicao.valor)}`;
+        if (!porAssinatura.has(assinatura)) porAssinatura.set(assinatura, condicao);
+      }
+    }
+
+    const candidatas = shuffle([...porAssinatura.values()], rnd).slice(0, 24);
+    const viaveis: { condicoes: [Condicao, Condicao]; alvo: ProdutoNaQuestao }[] = [];
+    for (let i = 0; i < candidatas.length - 1; i++) {
+      for (let j = i + 1; j < candidatas.length; j++) {
+        const condicoes: [Condicao, Condicao] = [candidatas[i], candidatas[j]];
+        if (condicoes[0].campo === condicoes[1].campo) continue;
+        const alvos = escolhidos.filter((pq) => quantasAtende(pq, condicoes, escolhidos) === 1);
+        if (alvos.length !== 1) continue;
+        const alvo = alvos[0];
+        const redutivel = condicoes.some((condicao) => {
+          const atendem = escolhidos.filter((pq) => satisfaz(pq, condicao, escolhidos));
+          const naoAtendem = escolhidos.filter((pq) => !satisfaz(pq, condicao, escolhidos));
+          return (atendem.length === 1 && atendem[0] === alvo)
+            || (naoAtendem.length === 1 && naoAtendem[0] === alvo);
+        });
+        if (!redutivel) viaveis.push({ condicoes, alvo });
+      }
+    }
+    for (const escolhida of shuffle(viaveis, rnd)) {
+      const questao = finalizar(
+        tipo, escolhidos, escolhida.condicoes, escolhidos.indexOf(escolhida.alvo), params, rnd,
+      );
+      if (questao) return questao;
+    }
+    return null;
   }
 
   // ── demais tipos: condições construídas a partir de um ALVO real ──────────
@@ -902,9 +960,13 @@ function finalizar(
     condicoes: cs,
     camposVisiveis,
     camposExigidos: exigidos,
-    explicacao: `Correto. ${alvo.produto.nome} (${alvo.produto.marca || "sem marca"}) atende: ${
-      cs.map((c) => `${labelCampo(c.campo, alvo.produto)} — ${valorCampo(alvo, c.campo)}`).join(" · ")}.`,
-    pista: cs.length === 1
+    explicacao: tipo === "exclusaoParcial"
+      ? `Correto. ${alvo.produto.nome} atende a apenas uma das duas exigências.`
+      : `Correto. ${alvo.produto.nome} (${alvo.produto.marca || "sem marca"}) atende: ${
+        cs.map((c) => `${labelCampo(c.campo, alvo.produto)} — ${valorCampo(alvo, c.campo)}`).join(" · ")}.`,
+    pista: tipo === "exclusaoParcial"
+      ? "Conte quantas das duas exigências cada produto cumpre."
+      : cs.length === 1
       ? `Confira o campo “${labelCampo(cs[0].campo, alvo.produto)}” em cada produto.`
       : `Confira ${juntar(cs.map((c) => `“${labelCampo(c.campo, alvo.produto)}”`))} antes de responder.`,
     categoria: alvo.produto.categoria,
@@ -921,6 +983,12 @@ export function explicarErro(q: Questao, escolha: number): string {
   const pq = q.produtos[escolha];
   if (escolha === q.correta) return q.explicacao;
   const nome = pq.produto.nome;
+  if (q.tipo === "exclusaoParcial") {
+    const quantidade = quantasAtende(pq, q.condicoes, q.produtos);
+    return quantidade === 2
+      ? `${nome} cumpre as duas exigências.`
+      : `${nome} não cumpre nenhuma das exigências.`;
+  }
   const { filtrados } = avaliarEmEtapas(q.produtos, q.condicoes);
   const atendeCondicao = (c: Condicao) => satisfaz(pq, c, ehExtremo(c) ? filtrados : q.produtos);
   const ok = q.condicoes.filter(atendeCondicao);
@@ -948,7 +1016,10 @@ export function motivoInvalidez(q: Questao): string | null {
   if (dims.size !== 1) return "dimensoesIncompativeis";
 
   // exatamente uma resposta correta, com extremos avaliados só após os filtros
-  const { filtrados, atendem: corretos } = avaliarEmEtapas(q.produtos, q.condicoes);
+  const { filtrados, atendem } = avaliarEmEtapas(q.produtos, q.condicoes);
+  const corretos = q.tipo === "exclusaoParcial"
+    ? q.produtos.filter((pq) => quantasAtende(pq, q.condicoes, q.produtos) === 1)
+    : atendem;
   const temExtremo = q.condicoes.some(ehExtremo);
   const temFiltro = q.condicoes.some((c) => !ehExtremo(c));
   // O filtro precisa FILTRAR: deixar 2+ (senão a comparação não tem o que comparar) e excluir
@@ -974,9 +1045,20 @@ export function motivoInvalidez(q: Questao): string | null {
   if (corretos.length !== 1) return corretos.length === 0 ? "semResposta" : "respostaDupla";
   if (q.produtos[q.correta] !== corretos[0]) return "corretaErrada";
 
+  if (q.tipo === "exclusaoParcial") {
+    const alvo = corretos[0];
+    const redutivel = q.condicoes.some((condicao) => {
+      const atendemCondicao = q.produtos.filter((pq) => satisfaz(pq, condicao, q.produtos));
+      const naoAtendemCondicao = q.produtos.filter((pq) => !satisfaz(pq, condicao, q.produtos));
+      return (atendemCondicao.length === 1 && atendemCondicao[0] === alvo)
+        || (naoAtendemCondicao.length === 1 && naoAtendemCondicao[0] === alvo);
+    });
+    if (redutivel) return "exclusaoRedutivel";
+  }
+
   // Em questões multi-critério, nenhum filtro pode identificar sozinho a resposta.
   // Extremos são excluídos: por definição eles podem deixar um único produto.
-  if (q.condicoes.length >= 2 && q.condicoes.filter((c) => !ehExtremo(c)).some(
+  if (q.tipo !== "exclusaoParcial" && q.condicoes.length >= 2 && q.condicoes.filter((c) => !ehExtremo(c)).some(
     (c) => q.produtos.filter((pq) => satisfaz(pq, c, q.produtos)).length < 2,
   )) return "criterioRedundante";
 

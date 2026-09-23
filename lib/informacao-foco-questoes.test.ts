@@ -2,7 +2,7 @@ import { describe, it, expect } from "vitest";
 import {
   gerarQuestao, montarQuestao, criarSnapshot, validarQuestao, motivoInvalidez,
   labelCampo, valorCampo, temCampo, satisfaz, explicarErro, registroDe, motivoRepeticao, campoReveladoPor,
-  TIPOS_QUESTAO, PARAMS_PADRAO, PESOS_TIPO_POR_NIVEL, sortearModalidade, sortearTipo, tiposDoNivel,
+  TIPOS_QUESTAO, PARAMS_PADRAO, PESOS_OPERACAO_POR_NIVEL, PESOS_TIPO_POR_NIVEL, sortearModalidade, sortearTipo, tiposDoNivel,
   TIPOS_POR_OPERACAO, operacaoDaQuestao, operacaoDoTipo, operacoesDoNivel, sortearOperacao,
   tipoParaOperacao, paramsDoNivel,
   type ParametrosQuestao, type Questao, type TipoQuestao, type Snapshot, type RegistroHistorico, type Modalidade,
@@ -569,6 +569,7 @@ describe("Operação cognitiva como eixo da seleção (C2)", () => {
       comparacao: ["comparacao"],
       filtroComparacao: ["filtroComparacao"],
       doisCriterios: ["duasCondicoes"],
+      exclusao: ["exclusaoParcial"],
       tresCriterios: ["tresCondicoes"],
     });
 
@@ -585,6 +586,7 @@ describe("Operação cognitiva como eixo da seleção (C2)", () => {
 
       if (real === "buscaDireta") expect(q!.condicoes).toHaveLength(1);
       if (real === "doisCriterios") expect(q!.condicoes).toHaveLength(2);
+      if (real === "exclusao") expect(q!.condicoes).toHaveLength(2);
       if (real === "tresCriterios") expect(q!.condicoes).toHaveLength(3);
       if (real === "filtroComparacao") {
         expect(q!.condicoes.length).toBeGreaterThanOrEqual(2);
@@ -658,8 +660,8 @@ describe("Operação cognitiva como eixo da seleção (C2)", () => {
   it("50.000 sorteios encadeados batem nos alvos vividos dos níveis 1, 5 e 8", () => {
     const alvos: Record<number, Partial<Record<Operacao, number>>> = {
       1: { buscaDireta: 0.55, comparacao: 0.45 },
-      5: { buscaDireta: 0.19, comparacao: 0.26, filtroComparacao: 0.18, doisCriterios: 0.38 },
-      8: { buscaDireta: 0.10, comparacao: 0.19, filtroComparacao: 0.21, doisCriterios: 0.31, tresCriterios: 0.18 },
+      5: { buscaDireta: 0.17, comparacao: 0.23, filtroComparacao: 0.14, doisCriterios: 0.31, exclusao: 0.15 },
+      8: { buscaDireta: 0.09, comparacao: 0.16, filtroComparacao: 0.15, doisCriterios: 0.25, exclusao: 0.20, tresCriterios: 0.16 },
     };
     for (const nivel of [1, 5, 8]) {
       const rnd = rndSeed(2026091510 + nivel);
@@ -679,14 +681,14 @@ describe("Operação cognitiva como eixo da seleção (C2)", () => {
 
   it("duas seguidas são raras com fator 0,15, três aceitas são impossíveis e o controle 1,0 reprova", () => {
     const pesos: Record<number, Partial<Record<Operacao, number>>> = {
-      1: { buscaDireta: 67, comparacao: 33, filtroComparacao: 0 },
-      2: { buscaDireta: 31, comparacao: 31, filtroComparacao: 0, doisCriterios: 38 },
-      3: { buscaDireta: 21.25, comparacao: 25.5, filtroComparacao: 15, doisCriterios: 38.25 },
-      4: { buscaDireta: 18.7, comparacao: 24.65, filtroComparacao: 15, doisCriterios: 41.65 },
-      5: { buscaDireta: 16.15, comparacao: 23.8, filtroComparacao: 15, doisCriterios: 45.05 },
-      6: { buscaDireta: 13.5758, comparacao: 22.0606, filtroComparacao: 15, doisCriterios: 48.3636 },
-      7: { buscaDireta: 10.4, comparacao: 19.2, filtroComparacao: 20, doisCriterios: 36.8, tresCriterios: 13.6 },
-      8: { buscaDireta: 8.8, comparacao: 17.6, filtroComparacao: 20, doisCriterios: 36, tresCriterios: 17.6 },
+      1: { buscaDireta: 67, comparacao: 33, filtroComparacao: 0, exclusao: 0 },
+      2: { buscaDireta: 31, comparacao: 31, filtroComparacao: 0, doisCriterios: 38, exclusao: 0 },
+      3: { buscaDireta: 21.25, comparacao: 25.5, filtroComparacao: 15, doisCriterios: 38.25, exclusao: 0 },
+      4: { buscaDireta: 18, comparacao: 23.4, filtroComparacao: 12.6, doisCriterios: 36, exclusao: 10 },
+      5: { buscaDireta: 15.229167, comparacao: 22.395833, filtroComparacao: 12.541667, doisCriterios: 35.833333, exclusao: 14 },
+      6: { buscaDireta: 13.387097, comparacao: 20.526882, filtroComparacao: 13.387097, doisCriterios: 35.698924, exclusao: 17 },
+      7: { buscaDireta: 10.14433, comparacao: 16.907216, filtroComparacao: 13.525773, doisCriterios: 28.742268, exclusao: 18, tresCriterios: 12.680413 },
+      8: { buscaDireta: 8.247423, comparacao: 14.845361, filtroComparacao: 14.020619, doisCriterios: 27.216495, exclusao: 20, tresCriterios: 15.670102 },
     };
     const sortearSemEnfraquecer = (nivel: number, rnd: () => number): Operacao => {
       const permitidas = operacoesDoNivel(nivel);
@@ -704,7 +706,7 @@ describe("Operação cognitiva como eixo da seleção (C2)", () => {
     const tipoPorOperacao: Record<Operacao, TipoQuestao> = {
       buscaDireta: "localizacao", comparacao: "comparacao",
       filtroComparacao: "filtroComparacao",
-      doisCriterios: "duasCondicoes", tresCriterios: "tresCondicoes",
+      doisCriterios: "duasCondicoes", exclusao: "exclusaoParcial", tresCriterios: "tresCondicoes",
     };
     const questaoPorOperacao = {} as Record<Operacao, Questao>;
     for (const operacao of Object.keys(tipoPorOperacao) as Operacao[]) {
@@ -757,8 +759,19 @@ describe("Operação cognitiva como eixo da seleção (C2)", () => {
         if (operacao === anteriorControle) repeticoesControle++;
         anteriorControle = operacao;
       }
-      expect(repeticoesControle / 49_999, `controle nível ${nivel}`).toBeGreaterThan(0.20);
-      expect(repeticoes, `fator 0,15 nível ${nivel}`).toBeLessThan(repeticoesControle);
+      // O piso deste controle era 0,20 fixo, e quebrou quando a operação `exclusao` entrou:
+      // com MAIS operações no pool, repetir por acaso fica naturalmente mais raro (no nível 7
+      // caiu a 19%). Um número escrito à mão envelhece a cada operação nova. Comparamos com o
+      // valor TEÓRICO da repetição ao acaso — a soma dos quadrados dos pesos normalizados —,
+      // que se ajusta sozinho ao tamanho do pool.
+      const pesos = operacoesDoNivel(nivel).map((op) => PESOS_OPERACAO_POR_NIVEL[nivel]?.[op] ?? 0);
+      const somaPesos = pesos.reduce((a, b) => a + b, 0);
+      const repeticaoTeorica = pesos.reduce((acc, w) => acc + (w / somaPesos) ** 2, 0);
+      const observadaControle = repeticoesControle / 49_999;
+      expect(observadaControle, `controle nível ${nivel}: teórico ${repeticaoTeorica.toFixed(3)}`)
+        .toBeGreaterThan(repeticaoTeorica * 0.85);
+      // e o que a fatia existe para provar: COM o enfraquecimento, repete bem menos que ao acaso
+      expect(repeticoes / 49_999, `fator 0,15 nível ${nivel}`).toBeLessThan(observadaControle * 0.75);
     }
   });
 
