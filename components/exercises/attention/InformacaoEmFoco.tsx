@@ -224,6 +224,15 @@ function Tutorial({ theme, onStart }: { theme: Theme; onStart: () => void }) {
   );
 }
 
+/** Quanto o feedback fica na tela antes de a próxima questão entrar. Precisa caber a
+ *  leitura da frase inteira ("Correto. X atende: Tipo — não filtrado.") sem pressa: o
+ *  público inclui pacientes com lentificação. */
+const TEMPO_LEITURA_FEEDBACK_MS = 2600;
+
+/** Altura reservada para a faixa de feedback, cabendo duas linhas. Reservá-la é o que
+ *  impede os cartões de saltarem quando a resposta aparece. */
+const ALTURA_FEEDBACK = 76;
+
 export function InformacaoEmFoco({ difficulty, theme, onComplete }: Props) {
   const s = styles(theme);
   const { begin, podeIniciarNovoDesafio, elapsedSec, finish, progressPct, emTolerancia } = useBlocoDeTreino("informacao-em-foco", difficulty);
@@ -334,6 +343,16 @@ export function InformacaoEmFoco({ difficulty, theme, onComplete }: Props) {
     }
   }, [questao, revelou, fb, tentativas]);
 
+  // Decisão dela (23/set): "se eu cliquei já segue" — sem botão de Continuar. O toque no
+  // cartão É a resposta; resolvida a questão, o feedback fica visível o tempo de ser lido e
+  // a próxima entra sozinha. Tirar o botão também acaba com o empurrão no layout: ele e o
+  // feedback apareciam juntos e deslocavam os cartões. Ver [[principio-gesto-e-a-confirmacao]].
+  useEffect(() => {
+    if (!revelou) return;
+    const t = setTimeout(() => proxima(), TEMPO_LEITURA_FEEDBACK_MS);
+    return () => clearTimeout(t);
+  }, [revelou, proxima]);
+
   useEffect(() => () => cancelTTS(), []); // limpa TTS ao desmontar
 
   if (fase === "tutorial") return <Tutorial theme={theme} onStart={iniciar} />;
@@ -420,7 +439,10 @@ export function InformacaoEmFoco({ difficulty, theme, onComplete }: Props) {
           })}
         </div>
 
-        {/* Feedback */}
+        {/* Feedback — a ALTURA É SEMPRE RESERVADA. Antes o feedback e o botão de Continuar
+            eram condicionais soltos na coluna e, ao aparecerem, empurravam os cartões para
+            cima no exato instante em que ela olhava a resposta. */}
+        <div style={{ minHeight: ALTURA_FEEDBACK }}>
         <AnimatePresence>
           {fb && (
             <motion.div key={fb.texto} initial={{ opacity: 0, y: 6 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0 }}
@@ -440,13 +462,7 @@ export function InformacaoEmFoco({ difficulty, theme, onComplete }: Props) {
             </motion.div>
           )}
         </AnimatePresence>
-
-        {/* Continuar — só depois de resolver (sem auto-avanço) */}
-        {revelou && (
-          <button onClick={proxima} className={`w-full h-12 rounded-full font-bold ${s.btn}`}>
-            {!podeIniciarNovoDesafio() ? "Ver resultado" : "Continuar"}
-          </button>
-        )}
+        </div>
         </div>
       </ExerciseStage>
 
