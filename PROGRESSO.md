@@ -327,6 +327,73 @@ de areia (3→2→4→1) e a duplicata d8↔d2, ambas já conhecidas.
 
 ---
 
+## 🚧 EM ANDAMENTO — cortar as 30 do lote 1 (23/set/2026)
+
+Aprovado por ela o critério da DISTÂNCIA entre faixas: enredo repetido só atrapalha quando as duas
+versões podem cair perto. Faixas adjacentes (a escada sobe dentro da sessão) = risco; 2+ faixas de
+distância = meses entre uma e outra, sem risco prático.
+
+### As 30, das 44 do lote 1
+
+- **3 fáceis:** F02 salada de frutas · F04 pipa · F06 torre de blocos
+- **10 médias:** todas (M01-M10)
+- **10 difíceis:** D01 cupcakes · D03 skate · D04 picolés · D07 nadar · D08 trilha · D09 cerâmica ·
+  D11 judô · D13 morangos · D14 pão · D15 borboletas
+- **7 muito-difíceis:** X01 geleia · X02 sombras · X03 xadrez · X04 telescópio · X05 almofada ·
+  X07 carrinho a balão · X08 sushi
+
+**Descartadas 14:** 5 já refeitas no lote 2 (banho, sanduíche, avião, quebra-cabeça, castelo),
+1 superada (guardar brinquedos → f25), 7 arriscadas (faixas adjacentes: lavar bicicleta, limonada,
+planetário, casinha, aquário, gatinho, fantoches) e 1 grave (feira de trocas, mesmo nível de x11).
+
+### Dois cuidados que este lote exige e o lote 2 não exigia
+
+1. **Formato ANTIGO:** disco numerado DENTRO do quadro. Sai por
+   `docs/scripts/tira-numero-da-cena.py` (inpainting), senão o gabarito vai impresso na cena.
+2. **Nas 3 fáceis a POSIÇÃO na folha está embaralhada** — o número impresso é o gabarito, e o corte
+   por posição daria a ordem errada. Precisa mapear posição → número antes de nomear.
+
+### Passos
+
+1. [ ] Conferir D07 (nadar) e D09 (cerâmica), as duas ainda não lidas.
+2. [ ] Mapear posição → número nas 3 fáceis.
+3. [ ] Cortar as 30 com remoção do número. **Pronto:** amostra validada a olho.
+4. [ ] Cadastrar. **Pronto:** provas verdes.
+5. [ ] Publicar.
+
+---
+
+## ⚠️ CORREÇÃO — o número do painel NÃO cai ao apagar deploys (23/set/2026)
+
+Eu havia dito a ela que o aviso sumiria "em algumas horas". **Errado, e era suposição minha, não
+medição.** Ela cobrou mostrando o painel ainda em 10,97 GB.
+
+**O que a documentação diz** (`vercel.com/docs/deployment-storage`):
+
+> *"For each metric, Vercel records the maximum stored amount for each project on each billing day.
+> It adds those daily project amounts across the billing period."*
+
+**Deployment Storage é GB-MÊS acumulado, não bytes armazenados agora.** É a soma do que ficou
+guardado em cada dia do ciclo. Logo:
+
+- os 10,97 GB são consumo **já registrado** dos dias em que os 25 deploys existiram;
+- **apagar não desfaz** — os dias passados já contaram;
+- o que a limpeza faz é **parar o crescimento**: de 25 deploys grandes por dia para 3 pequenos;
+- o número **só zera quando o ciclo de faturamento virar**.
+
+**Já estamos no mínimo possível:** no plano Hobby a Vercel preserva sempre os últimos 3 deploys
+(exceção à política de retenção). Restam exatamente 3. Não há mais o que apagar.
+
+**Retenção padrão no Hobby: 30 dias** para todos os estados. Configurável em Settings → Security →
+Deployment Retention Policy, se um dia fizer sentido encurtar.
+
+**O site seguiu no ar o tempo todo:** `/login` 200, `/api/version` 3.42.0, `/` 307.
+
+> **Lição:** eu previ um comportamento de sistema externo sem medir e apresentei como fato. A medição
+> era uma consulta à documentação — dois minutos de trabalho que teriam evitado a informação errada.
+
+---
+
 ## ✅ RESOLVIDO — os 10 GB da Vercel, nas duas pontas (23/set/2026)
 
 ### O passado: 22 deploys antigos apagados
