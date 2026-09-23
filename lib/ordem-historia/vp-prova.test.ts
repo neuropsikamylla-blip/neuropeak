@@ -171,10 +171,10 @@ describe("VP — a correção não foi tocada", () => {
 });
 
 describe("VP — o embaralhamento com os tamanhos e o dado REAIS do banco", () => {
-  // O teste do Codex usa n solto. Este usa as 95 histórias de ordenar, uma a uma.
+  // O teste do Codex usa n solto. Este usa as 96 histórias de ordenar, uma a uma.
   it("nenhuma história do banco nasce resolvível em menos de 2 trocas", () => {
     const sorteaveis = HISTORIAS.filter((h) => !h.duplicataDe);
-    expect(sorteaveis.length).toBe(95);
+    expect(sorteaveis.length).toBe(96);
     let piores = 0;
     for (const h of sorteaveis) {
       for (let i = 0; i < 200; i++) {
@@ -244,12 +244,12 @@ describe("VP — as gêmeas de enredo foram APAGADAS do banco", () => {
     }
   });
 
-  it("o catálogo tem 96 histórias de ordenar e 92 sorteáveis", () => {
-    // 23/set, lote 2: entraram 20 (6 fáceis, 11 difíceis, 3 muito-difíceis) e f3 saiu,
-    // substituída por f25 ("arrumar o quarto"), que cobre o mesmo cenário com mais etapas.
+  it("o catálogo tem 96 histórias de ordenar e 93 sorteáveis", () => {
+    // 23/set, lote 2: entraram 20 (6 fáceis, 11 difíceis, 3 muito-difíceis).
+    // Fora do sorteio seguem só m1, m6 e m21 (ordem não dedutível).
     expect(HISTORIAS.length).toBe(96);
     const ordenar = HISTORIAS.filter((h) => ["faceis", "media", "dificil", "muito-dificil"].includes(h.diff));
-    expect(ordenar.filter((h) => !h.duplicataDe && !h.foraDoSorteio).length).toBe(92);
+    expect(ordenar.filter((h) => !h.duplicataDe && !h.foraDoSorteio).length).toBe(93);
     expect(ordenar.filter((h) => h.diff === "dificil").length).toBe(24);
   });
 
@@ -298,11 +298,14 @@ describe("VP — o lote 2 (23/set): as 20 histórias novas", () => {
     }
   });
 
-  it("f3 saiu apontando para f25, que está no sorteio", () => {
+  it("f3 continua no sorteio: é 'Lucas toma banho', não colide com f25", () => {
+    // ⚠️ CONSERTO DO VP, 23/set: eu havia tirado f3 do sorteio como duplicata de f25
+    // ("arrumar o quarto"). Errado. f3 é "Lucas brincou muito e precisa tomar banho" —
+    // toalha, banho, secar, vestir. Confundi com a prancha F03 do LOTE 1 ("Pedro quer
+    // guardar os brinquedos"), que ainda nem está cadastrada. É essa que colide com f25,
+    // e basta não cadastrá-la. Conferido cena a cena antes de reverter.
     const f3 = HISTORIAS.find((h) => h.id === "f3")!;
-    expect(f3.duplicataDe).toBe("f25");
-    const f25 = HISTORIAS.find((h) => h.id === "f25")!;
-    expect(f25.duplicataDe).toBeUndefined();
-    expect(f25.foraDoSorteio).toBeUndefined();
+    expect(f3.duplicataDe).toBeUndefined();
+    expect(f3.foraDoSorteio).toBeUndefined();
   });
 });

@@ -19,7 +19,7 @@ export interface HistoriaDef {
 export const HISTORIAS: HistoriaDef[] = [
   { id: "f1", diff: "faceis", n: 4, a: 1.56 },
   { id: "f2", diff: "faceis", n: 4, a: 1.47 },
-  { id: "f3", diff: "faceis", n: 4, a: 1.51, duplicataDe: "f25" },
+  { id: "f3", diff: "faceis", n: 4, a: 1.51 },
   { id: "f4", diff: "faceis", n: 4, a: 1.48 },
   { id: "f5", diff: "faceis", n: 4, a: 1.53, ord: [2, 1, 3, 4] },
   { id: "f6", diff: "faceis", n: 4, a: 1.52 },
