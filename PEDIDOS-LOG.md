@@ -25848,3 +25848,6 @@ pode limpar esse desafio da cidade nao vai acontecer mais
 
 ## 23/09/2026 08:06
 entao informação em foco eu nao pedi para excluir ne? o exercicio.. somnete desafio da cidade (e pode sumir com os dados do paciente pq era pacientes testes) nenhum paciente ainda é real
+
+## 23/09/2026 08:07
+ah sim, ja estou indo fazer o que vc me solicitou ja envio.. qual a proxima fase ?
