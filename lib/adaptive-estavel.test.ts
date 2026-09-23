@@ -1,9 +1,14 @@
 import fs from "node:fs";
+import crypto from "node:crypto";
 import path from "node:path";
 import { describe, expect, it } from "vitest";
 import { calculateNewDifficulty, calculateProgression } from "@/lib/adaptive";
-import { calculateStableProgression } from "@/lib/adaptive-estavel";
-import type { SessionData } from "@/types";
+import {
+  calculateStableProgression,
+  getPreviousAccuracies,
+  PROGRESSAO_ESTAVEL,
+} from "@/lib/adaptive-estavel";
+import { EXERCISE_DEFINITIONS, type SessionData } from "@/types";
 
 function sessions(accs: number[]): SessionData[] {
   return accs.map((accuracy, index) => ({
@@ -149,7 +154,7 @@ describe("calculateStableProgression", () => {
     expect(simular(5, Array.from({ length: 20 }, (_, i) => i % 2 === 0 ? 0.95 : 0.40), 1)).toBe(5);
   });
 
-  it("não é importada nem chamada por componente ou rota", () => {
+  it("é ligada somente pela rota de sessões", () => {
     const appDir = path.resolve(process.cwd(), "app");
     const fontes: string[] = [];
     const visitar = (dir: string) => {
@@ -164,7 +169,119 @@ describe("calculateStableProgression", () => {
     const usos = fontes.filter((arquivo) =>
       fs.readFileSync(arquivo, "utf8").includes("calculateStableProgression"),
     );
-    expect(usos).toEqual([]);
+    expect(usos).toEqual([path.resolve(process.cwd(), "app/api/sessions/route.ts")]);
+  });
+});
+
+describe("opt-in da progressão estável", () => {
+  it("mantém a lista explícita, pequena e restrita a ids existentes no catálogo", () => {
+    const ids = [...PROGRESSAO_ESTAVEL];
+
+    expect(ids).toEqual([
+      "mot",
+      "informacao-em-foco",
+      "estacionamento-logico",
+      "cubo-corsi",
+    ]);
+    expect(ids).toHaveLength(4);
+    for (const id of ids) expect(id in EXERCISE_DEFINITIONS, id).toBe(true);
+  });
+
+  it("deixa exercícios fora da lista no fallback legado, comprovado pela posição na rota", () => {
+    const route = fs.readFileSync(
+      path.resolve(process.cwd(), "app/api/sessions/route.ts"),
+      "utf8",
+    );
+    const decisionStart = route.indexOf("const adaptiveResult = dualProg");
+    const decisionEnd = route.indexOf("await prisma.exerciseConfig.upsert", decisionStart);
+    const decision = route.slice(decisionStart, decisionEnd);
+    const genericPosition = decision.indexOf(": genericProg");
+    const stablePosition = decision.indexOf(": PROGRESSAO_ESTAVEL.has(data.exerciseId)");
+    const legacyPosition = decision.indexOf(": calculateNewDifficulty(");
+
+    expect(decisionStart).toBeGreaterThan(-1);
+    expect(genericPosition).toBeGreaterThan(-1);
+    expect(stablePosition).toBeGreaterThan(genericPosition);
+    expect(legacyPosition).toBeGreaterThan(stablePosition);
+    for (const id of ["torre-hanoi", "semaforo", "stroop-task"]) {
+      expect(PROGRESSAO_ESTAVEL.has(id), id).toBe(false);
+    }
+  });
+
+  it("antecipa a única busca e recompõe a janela existente depois de criar a sessão", () => {
+    const route = fs.readFileSync(
+      path.resolve(process.cwd(), "app/api/sessions/route.ts"),
+      "utf8",
+    );
+    const historyPosition = route.indexOf("const recentSessionsBeforeCreate = await prisma.session.findMany");
+    const stablePosition = route.indexOf("stableProg = calculateStableProgression");
+    const createPosition = route.indexOf("const newSession = await prisma.session.create");
+    const rebuildPosition = route.indexOf(
+      "const recentSessions = [newSession, ...recentSessionsBeforeCreate].slice(0, 20)",
+    );
+
+    expect((route.match(/prisma\.session\.findMany/g) ?? [])).toHaveLength(1);
+    expect(historyPosition).toBeGreaterThan(-1);
+    expect(stablePosition).toBeGreaterThan(historyPosition);
+    expect(createPosition).toBeGreaterThan(stablePosition);
+    expect(rebuildPosition).toBeGreaterThan(createPosition);
+  });
+
+  it("filtra o exercício certo, ordena da mais recente e limita a três acurácias", () => {
+    const recentSessions = [
+      { exerciseId: "mot", accuracy: 0.60, completedAt: "2026-09-20T12:00:00Z" },
+      { exerciseId: "semaforo", accuracy: 0.10, completedAt: "2026-09-23T12:00:00Z" },
+      { exerciseId: "mot", accuracy: 0.90, completedAt: "2026-09-23T10:00:00Z" },
+      { exerciseId: "mot", accuracy: 0.70, completedAt: "2026-09-21T12:00:00Z" },
+      { exerciseId: "semaforo", accuracy: 0.20, completedAt: "2026-09-24T12:00:00Z" },
+      { exerciseId: "mot", accuracy: 0.80, completedAt: "2026-09-22T12:00:00Z" },
+    ];
+
+    expect(getPreviousAccuracies(recentSessions, "mot")).toEqual([0.90, 0.80, 0.70]);
+  });
+
+  it("mantém o nível na primeira sessão, quando o histórico do exercício está vazio", () => {
+    const accsAnteriores = getPreviousAccuracies([
+      { exerciseId: "semaforo", accuracy: 0.95, completedAt: "2026-09-23T12:00:00Z" },
+    ], "mot");
+    const result = calculateStableProgression(4, {
+      accAtual: 0.95,
+      accsAnteriores,
+      consolidado: 4,
+    });
+
+    expect(accsAnteriores).toEqual([]);
+    expect(result).toMatchObject({ nextLevel: 4, action: "maintain" });
+  });
+
+  it("mantém assinaturas e corpos dos quatro motores antigos intactos", () => {
+    const source = fs.readFileSync(path.resolve(process.cwd(), "lib/adaptive.ts"), "utf8");
+    const expectedHashes: Record<string, string> = {
+      calculateNewDifficulty: "d679241a9ddfa4450a083aabdc36b22cd12eadb67e1b7e9cb7313f46eaa6d9b3",
+      calculateProgression: "9409f2e55c601b6a37690996d9c43aa9a4a0e4b6eef649549c4994c5c4265a50",
+      calculateStoryTrailProgression: "59532b5175227059476ecd9bfc2c06aeed2108f7242d504932f7b0f8a9523297",
+      calculateDualTaskProgression: "e9b81b082e4684afb9330132e7148784553102f27cda0171ae685c41c96ccd5f",
+    };
+
+    const extractFunction = (name: string): string => {
+      const start = source.indexOf(`export function ${name}(`);
+      expect(start, name).toBeGreaterThan(-1);
+      const openingBrace = source.indexOf("{", start);
+      let depth = 0;
+      for (let index = openingBrace; index < source.length; index += 1) {
+        if (source[index] === "{") depth += 1;
+        if (source[index] === "}") {
+          depth -= 1;
+          if (depth === 0) return source.slice(start, index + 1);
+        }
+      }
+      throw new Error(`Corpo de ${name} não encontrado`);
+    };
+
+    for (const [name, expectedHash] of Object.entries(expectedHashes)) {
+      const actualHash = crypto.createHash("sha256").update(extractFunction(name)).digest("hex");
+      expect(actualHash, name).toBe(expectedHash);
+    }
   });
 });
 

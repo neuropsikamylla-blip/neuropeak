@@ -5,6 +5,7 @@ import { authOptions } from "@/lib/auth";
 import prisma from "@/lib/db";
 import { z } from "zod";
 import { calculateNewDifficulty, calculateDualTaskProgression, calculateProgression, calculateStoryTrailProgression, calculateFocusProgression, checkAchievements } from "@/lib/adaptive";
+import { calculateStableProgression, getPreviousAccuracies, PROGRESSAO_ESTAVEL } from "@/lib/adaptive-estavel";
 import type { SessionData } from "@/types";
 import { withApiHandler } from "@/lib/api-handler";
 
@@ -59,11 +60,22 @@ export const POST = withApiHandler(async (req: NextRequest) => {
     return NextResponse.json({ ok: true, abandoned: true });
   }
 
+  // Antecipada para a progressão estável poder enriquecer o metadata antes do create.
+  // Depois do create, a sessão nova é recolocada na frente para preservar a janela que
+  // legado, conquistas e alertas já consumiam.
+  const recentSessionsBeforeCreate = await prisma.session.findMany({
+    where: { patientId: data.patientId },
+    orderBy: { completedAt: "desc" },
+    take: 20,
+    select: { exerciseId: true, domain: true, score: true, accuracy: true, reactionTime: true, difficulty: true, duration: true, completedAt: true, metadata: true },
+  });
+
   // Dupla Tarefa: progressão clínica própria (exige as duas tarefas boas para subir,
   // mantém "nível consolidado"). Calculada antes de gravar para enriquecer o metadata.
   const meta = (data.metadata ?? {}) as Record<string, unknown>;
   let dualProg: ReturnType<typeof calculateDualTaskProgression> | null = null;
   let genericProg: ReturnType<typeof calculateProgression> | null = null;
+  let stableProg: ReturnType<typeof calculateStableProgression> | null = null;
   if (
     data.exerciseId === "dual-task" &&
     typeof meta.accTop === "number" && typeof meta.accBottom === "number" && typeof meta.accTotal === "number"
@@ -142,6 +154,31 @@ export const POST = withApiHandler(async (req: NextRequest) => {
     meta.progressionReason = genericProg.reason;
   }
 
+  if (!dualProg && !genericProg && PROGRESSAO_ESTAVEL.has(data.exerciseId)) {
+    const lastStableSession = recentSessionsBeforeCreate.find(
+      (previousSession) => previousSession.exerciseId === data.exerciseId,
+    );
+    let prevConsolidated = data.difficulty;
+    try {
+      const previousMetadata = lastStableSession?.metadata
+        ? JSON.parse(lastStableSession.metadata)
+        : null;
+      if (previousMetadata && typeof previousMetadata.consolidatedLevel === "number") {
+        prevConsolidated = previousMetadata.consolidatedLevel;
+      }
+    } catch { /* metadata antigo */ }
+
+    stableProg = calculateStableProgression(data.difficulty, {
+      accAtual: data.accuracy,
+      accsAnteriores: getPreviousAccuracies(recentSessionsBeforeCreate, data.exerciseId),
+      consolidado: prevConsolidated,
+    });
+    meta.endedLevel = stableProg.nextLevel;
+    meta.consolidatedLevel = stableProg.consolidatedLevel;
+    meta.progressionAction = stableProg.action;
+    meta.progressionReason = stableProg.reason;
+  }
+
   // Focus Agentes: progressão automática POR MODO — guarda o próximo nível no metadata
   // (a fonte da verdade do nível por modo são as sessões, não o ExerciseConfig).
   if ((data.exerciseId === "focus-agents" || data.exerciseId === "focus-agents-auditivo") && typeof meta.level === "number") {
@@ -170,17 +207,14 @@ export const POST = withApiHandler(async (req: NextRequest) => {
     },
   });
 
-  const recentSessions = await prisma.session.findMany({
-    where: { patientId: data.patientId },
-    orderBy: { completedAt: "desc" },
-    take: 20,
-    select: { exerciseId: true, domain: true, score: true, accuracy: true, reactionTime: true, difficulty: true, duration: true, completedAt: true },
-  });
+  const recentSessions = [newSession, ...recentSessionsBeforeCreate].slice(0, 20);
 
   const adaptiveResult = dualProg
     ? { newDifficulty: dualProg.nextLevel, action: dualProg.action, reason: dualProg.reason }
     : genericProg
     ? { newDifficulty: genericProg.nextLevel, action: genericProg.action, reason: genericProg.reason }
+    : PROGRESSAO_ESTAVEL.has(data.exerciseId)
+    ? { newDifficulty: stableProg!.nextLevel, action: stableProg!.action, reason: stableProg!.reason }
     : calculateNewDifficulty(
         data.difficulty,
         recentSessions as unknown as SessionData[],

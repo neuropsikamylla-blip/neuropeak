@@ -1,5 +1,35 @@
 import type { ProgressionResult } from "@/lib/adaptive";
 
+/** Exercícios já migrados para a progressão com memória (Fase 2). Cresce aos poucos:
+ *  cada entrada nova é uma decisão, não um efeito colateral. Quem não está aqui
+ *  continua no motor legado, intocado. */
+export const PROGRESSAO_ESTAVEL: ReadonlySet<string> = new Set([
+  "mot",
+  "informacao-em-foco",
+  "estacionamento-logico",
+  "cubo-corsi",
+]);
+
+export interface RecentAccuracySession {
+  exerciseId: string;
+  accuracy: number;
+  completedAt: Date | string;
+}
+
+/** Seleciona as sessões anteriores do exercício, da mais recente para a mais antiga. */
+export function getPreviousAccuracies(
+  recentSessions: readonly RecentAccuracySession[],
+  exerciseId: string,
+): number[] {
+  return recentSessions
+    .filter((session) => session.exerciseId === exerciseId)
+    .sort(
+      (a, b) => new Date(b.completedAt).getTime() - new Date(a.completedAt).getTime(),
+    )
+    .slice(0, 3)
+    .map((session) => session.accuracy);
+}
+
 export interface StableProgressionInput {
   /** Acurácia da sessão que acabou. */
   accAtual: number;
