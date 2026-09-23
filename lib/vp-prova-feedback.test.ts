@@ -36,9 +36,9 @@ describe("nenhum exercício julga o paciente por escrito", () => {
  * ⚠️ CONTRAPROVA — o teste mais importante deste conjunto.
  *
  * Em Sequência Temporal, "errado" é o ENUNCIADO da tarefa: a atividade pede para identificar o que
- * está errado numa sequência, e uma das alternativas é "Nada está errado". Em Desafio Cidade, é
- * conteúdo de história. Uma varredura por palavra — exatamente o tipo de limpeza que a regra de
- * 28/ago poderia sugerir — DESTRUIRIA os dois exercícios.
+ * está errado numa sequência, e uma das alternativas é "Nada está errado". Uma varredura por
+ * palavra — exatamente o tipo de limpeza que a regra de 28/ago poderia sugerir — DESTRUIRIA a
+ * atividade.
  *
  * Se este teste falhar, ninguém "limpou" nada: alguém quebrou uma atividade.
  */
@@ -49,10 +49,6 @@ describe("a palavra que é CONTEÚDO não pode ser varrida", () => {
     expect(src, "sumiu a alternativa 'Nada está errado'").toContain("Nada está errado");
   });
 
-  it("Desafio Cidade mantém a história que fala em remédio errado", () => {
-    const src = readFileSync(`${EX}/executive/DesafioCidade.tsx`, "utf8");
-    expect(src, "conteúdo de história removido por engano").toMatch(/rem[eé]dio errado/i);
-  });
 });
 
 describe("a informação clínica não foi apagada junto com o julgamento", () => {

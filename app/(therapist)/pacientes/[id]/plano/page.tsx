@@ -65,7 +65,7 @@ export default function PlanoPage() {
         if (plan) {
           setHasPlan(true);
           const parsed = parsePlanExercises(plan.exercises);
-          setSelectedExercises(parsed.map(e => e.id).filter((id) => id !== "desafio-cidade"));
+          setSelectedExercises(parsed.map(e => e.id));
           const settings: Record<string, Record<string, unknown>> = {};
           parsed.forEach(e => { if (e.settings) settings[e.id] = e.settings; });
           setExerciseSettings(settings);

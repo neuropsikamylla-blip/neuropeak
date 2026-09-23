@@ -64,7 +64,6 @@ describe("palco padrão dos exercícios", () => {
       ["Certo ou Errado", "components/exercises/processing/CertoOuErrado.tsx", "compacto"],
       ["Informação em Foco", "components/exercises/attention/InformacaoEmFoco.tsx", "amplo"],
       ["Compra Multifuncional", "components/exercises/executive/CompraMultifuncional.tsx", "amplo"],
-      ["Desafio Cidade", "components/exercises/executive/DesafioCidade.tsx", "amplo"],
       ["Estacionamento Lógico", "components/exercises/executive/EstacionamentoLogico.tsx", "medio"],
       ["Vigilância", "components/exercises/attention/Vigilancia.tsx", "medio"],
       ["Investigadores Sociais", "components/exercises/social/InvestigadoresSociais.tsx", "medio"],

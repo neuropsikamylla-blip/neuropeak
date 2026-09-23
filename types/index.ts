@@ -295,14 +295,6 @@ export const EXERCISE_DEFINITIONS = {
     estimatedMinutes: 9,
     icon: "🔊",
   },
-  "desafio-cidade": {
-    id: "desafio-cidade",
-    name: "Desafio da Cidade",
-    domain: "executive" as Domain,
-    description: "Resolva missões em ambientes da cidade: mercado, cinema e mais",
-    estimatedMinutes: 7,
-    icon: "🏙️",
-  },
   "corrida-tempo": {
     id: "corrida-tempo",
     name: "Busca Rápida",

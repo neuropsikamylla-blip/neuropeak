@@ -372,13 +372,12 @@ por ID:
 - **ARQ-002** — Estado de **pet** (`lib/pet.ts`) e **skill tree** (`lib/skilltree.ts`)
   persistido **só em `localStorage`**, sem espelho no banco: perda silenciosa ao trocar
   de aparelho.
-- **ARQ-003 / ARQ-004** — Exercício **órfão** `desafio-cidade` **REMOVED_FROM_CURRENT_CATALOG** (renderiza no `switch`,
-  mas é filtrado do catálogo/planos) e **id fantasma** `atencao-dividida` (referenciado
-  em `lib/domain-taxonomy.ts:26` e no filtro de planos, sem definição em
+- **ARQ-004** — **Id fantasma** `atencao-dividida` (referenciado em
+  `lib/domain-taxonomy.ts:26` e no filtro de planos, sem definição em
   `EXERCISE_DEFINITIONS` nem `case` de renderização; existe um **componente órfão**
   `AtencaoDividida.tsx` no repositório, mas não está ligado ao roteador).
-- **ARQ-007** — **God files** crescentes: `FocusAgents.tsx`, `DesafioCidade.tsx`,
-  `Labirinto.tsx` e o roteador `treino/[exercicio]/page.tsx` (switch de 39 casos +
+- **ARQ-007** — **God files** crescentes: `FocusAgents.tsx`, `Labirinto.tsx` e o
+  roteador `treino/[exercicio]/page.tsx` (switch de 39 casos +
   tabelas de instruções, forçando registro do exercício em vários lugares — ver
   também ARQ-006).
 

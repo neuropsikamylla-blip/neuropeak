@@ -99,7 +99,6 @@ const CertoOuErrado       = dynamic(() => import("@/components/exercises/process
 const CaminhosMeta        = dynamic(() => import("@/components/exercises/executive/CaminhosMeta").then(m => ({ default: m.CaminhosMeta })), { loading: ExerciseLoader, ssr: false });
 const Semaforo            = dynamic(() => import("@/components/exercises/processing/Semaforo").then(m => ({ default: m.Semaforo })), { loading: ExerciseLoader, ssr: false });
 const DesafioSupermercado = dynamic(() => import("@/components/exercises/memory/DesafioSupermercado").then(m => ({ default: m.DesafioSupermercado })), { loading: ExerciseLoader, ssr: false });
-const DesafioCidade       = dynamic(() => import("@/components/exercises/executive/DesafioCidade").then(m => ({ default: m.DesafioCidade })), { loading: ExerciseLoader, ssr: false });
 const CorridaContraOTempo = dynamic(() => import("@/components/exercises/processing/CorridaContraOTempo").then(m => ({ default: m.CorridaContraOTempo })), { loading: ExerciseLoader, ssr: false });
 const InformacaoEmFoco    = dynamic(() => import("@/components/exercises/attention/InformacaoEmFoco").then(m => ({ default: m.InformacaoEmFoco })), { loading: ExerciseLoader, ssr: false });
 const CompraMultifuncional = dynamic(() => import("@/components/exercises/executive/CompraMultifuncional").then(m => ({ default: m.CompraMultifuncional })), { loading: ExerciseLoader, ssr: false });
@@ -229,12 +228,6 @@ const EXERCISE_INSTRUCTIONS: Record<string, string[]> = {
     "Memorize os produtos pelo SOM e encontre-os na prateleira pelo desenho.",
     "Conforme você acerta, surgem variações: DUAS listas (mãe e avó — compre só a pedida).",
     "E também comprar na ORDEM, ou de TRÁS PARA FRENTE. Siga a instrução de cada rodada!",
-  ],
-  "desafio-cidade": [
-    "Você está em uma cidade com diferentes ambientes: Mercado, Cinema e mais.",
-    "Escolha um ambiente e complete a missão proposta.",
-    "No Mercado: memorize a lista de compras e encontre os itens corretos.",
-    "No Cinema: planeje sua compra dentro do orçamento disponível.",
   ],
   "corrida-tempo": [
     "Uma categoria de produto será anunciada antes de cada rodada.",
@@ -736,7 +729,6 @@ export default function ExercicioPage() {
       case "semaforo": return <Semaforo {...props} />;
       case "desafio-supermercado":
       case "desafio-supermercado-auditivo": return <DesafioSupermercado {...props} />;
-      case "desafio-cidade": return <DesafioCidade {...props} />;
       case "corrida-tempo": return <CorridaContraOTempo {...props} />;
       // "desafio-orcamento" foi fundido na Compra Multifuncional (fallback p/ links antigos)
       case "desafio-orcamento": return <CompraMultifuncional {...props} />;
@@ -768,7 +760,7 @@ export default function ExercicioPage() {
   // Exercícios que gerenciam o próprio layout (sem barra de progresso no canto)
   // Exercícios com barra de progresso própria (por tempo) no layout
   const HIDE_PROGRESS_WIDGET = new Set([
-    "estacionamento-logico", "cubo-corsi", "matriz-espacial", "matriz-espacial-inversa", "jogo-memoria", "sequencia-itens", "lista-distracao", "letras-sequencia", "padroes-rotacao", "torre-hanoi", "tempo-reacao", "semaforo", "certo-ou-errado", "stroop-task", "identificacao-simbolos", "trilha-visual", "informacao-em-foco", "caca-item-barato", "corrida-tempo", "mudanca-regras", "labirinto", "vigilancia", "atencao-dividida", "focus-agents", "mot", "dual-task", "desafio-orcamento", "compra-multifuncional", "investigadores-sociais", "ordem-historia", "desafio-cidade", "antes-depois", "restaurante-ordem", "desafio-supermercado", "task-switching", "deductive-grid", "span-numerico", "span-numerico-inverso",
+    "estacionamento-logico", "cubo-corsi", "matriz-espacial", "matriz-espacial-inversa", "jogo-memoria", "sequencia-itens", "lista-distracao", "letras-sequencia", "padroes-rotacao", "torre-hanoi", "tempo-reacao", "semaforo", "certo-ou-errado", "stroop-task", "identificacao-simbolos", "trilha-visual", "informacao-em-foco", "caca-item-barato", "corrida-tempo", "mudanca-regras", "labirinto", "vigilancia", "atencao-dividida", "focus-agents", "mot", "dual-task", "desafio-orcamento", "compra-multifuncional", "investigadores-sociais", "ordem-historia", "antes-depois", "restaurante-ordem", "desafio-supermercado", "task-switching", "deductive-grid", "span-numerico", "span-numerico-inverso",
   ]);
 
   return (

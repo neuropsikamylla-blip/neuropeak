@@ -54,10 +54,12 @@ describe("migração global da dosagem", () => {
         .map((match) => ({ path: relative(ROOT, path), id: match[1] })),
     );
 
-    // 32 na migração dos 31 + 1 quando a Grade entrou, no mesmo dia. O que este teste protege
-    // não é o número: é que TODO id passado ao hook exista no catálogo. Um id inventado faria o
-    // exercício cair no padrão 8/10 em silêncio, e um de dose curta perderia a dose curta.
-    expect(usos.length, "algum exercício deixou de declarar seu id ao hook").toBeGreaterThanOrEqual(33);
+    // 32 na migração dos 31 + 1 quando a Grade entrou, no mesmo dia → 33. Voltou a 32 em
+    // 23/set/2026, quando o Desafio Cidade foi retirado do programa por decisão dela.
+    // O que este teste protege não é o número: é que TODO id passado ao hook exista no catálogo.
+    // Um id inventado faria o exercício cair no padrão 8/10 em silêncio, e um de dose curta
+    // perderia a dose curta. O piso existe para avisar quando um exercício PARA de declarar o id.
+    expect(usos.length, "algum exercício deixou de declarar seu id ao hook").toBeGreaterThanOrEqual(32);
     for (const uso of usos) expect(catalogo.has(uso.id), `${uso.path}: ${uso.id}`).toBe(true);
 
     const span = fonte(resolve(EXERCISES_DIR, "memory/SpanNumerico.tsx"));

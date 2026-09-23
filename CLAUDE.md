@@ -91,8 +91,7 @@ e renderizados por `switch` em `treino/[exercicio]/page.tsx` (contagens alinhada
 | `functional` | Desenvolvimento Funcional | caca-item-barato, compra-multifuncional |
 
 > **Armadilha:** `atencao-dividida` está na taxonomia mas **não** em `EXERCISE_DEFINITIONS` nem no
-> switch (id fantasma — finding ARQ-004). `desafio-cidade` é o inverso: existe e renderiza, mas é
-> filtrado do catálogo (órfão — ARQ-003). Nomes de exibição divergem do id: `corrida-tempo` = "Busca
+> switch (id fantasma — finding ARQ-004). Nomes de exibição divergem do id: `corrida-tempo` = "Busca
 > Rápida"; `antes-depois` = "Sequência Temporal". Aliases em `lib/exercise-plan.ts` (`EXERCISE_ALIASES`):
 > `desafio-orcamento`→`compra-multifuncional`, `*-auditivo`→base.
 

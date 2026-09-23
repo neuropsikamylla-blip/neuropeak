@@ -63,7 +63,6 @@ dos exercícios → SEC-002/003 → dívida arquitetural.
 |------|---------|
 | **ARQ-001** | Metadados de exercício triplicados e divergentes (3 fontes de verdade). |
 | **ARQ-002** | Estado de pet e skill tree só em localStorage — perde ao trocar de aparelho. |
-| **ARQ-003** | `desafio-cidade` (1.146 l) órfão: renderiza mas é filtrado do catálogo. |
 | **ARQ-004** | `atencao-dividida` fantasma: na taxonomia, sem definição nem rota. |
 | **PERF-001** | Lista de pacientes carrega todo o histórico de sessões (sem `take`) — metade do PERF-02 antigo. |
 | **PERF-002** | POST /api/sessions faz ~8-11 round-trips sequenciais no caminho quente. |
