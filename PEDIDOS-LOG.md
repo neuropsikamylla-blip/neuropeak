@@ -25941,3 +25941,6 @@ nao fiz da limonada pq ja tinha
 
 ## 23/09/2026 18:45
 o que vc acha?
+
+## 23/09/2026 18:49
+perfeito ! eu acho que nao tem problema a placa motivadora depois no futuro podemos mudar e refazer todas para uma mais bonita... agora precisamos fazer funcioanr tudo e reduzir coisa que nao preicsam estar no programa pois ja consta 10GB então precisamos disso. olha como está a pasta public : [Image #12] precisamos tornar isso mais profissional
