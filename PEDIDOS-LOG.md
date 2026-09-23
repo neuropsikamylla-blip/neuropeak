@@ -25854,3 +25854,6 @@ ah sim, ja estou indo fazer o que vc me solicitou ja envio.. qual a proxima fase
 
 ## 23/09/2026 08:28
 quero
+
+## 23/09/2026 09:49
+e ai?
