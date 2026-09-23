@@ -1,9 +1,6 @@
 # As 3 ultimas especificacoes dela (automatico; a mais nova por ultimo)
 # Na retomada: ler as 3, conectar com PROGRESSO.md e git, declarar e seguir.
 
-## 23/09/2026 08:07
-ah sim, ja estou indo fazer o que vc me solicitou ja envio.. qual a proxima fase ?
-
 ## 23/09/2026 11:34
 <task-notification>
 <task-id>b17w8z8kr</task-id>
@@ -15,3 +12,6 @@ ah sim, ja estou indo fazer o que vc me solicitou ja envio.. qual a proxima fase
 
 ## 23/09/2026 11:38
 bom fiz 4 cardapios já onde posso colocar (da tarefa informaçao)
+
+## 23/09/2026 11:43
+calma vou criar o cinema e viagem... agora eu queria que vc olhasse o ordem da historia eu tirei as que estavam falhando, e fiz novas historias nos niveis facil, media, dificil e muito dificil coloquei na pasta historias-novas

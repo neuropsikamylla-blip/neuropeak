@@ -25878,3 +25878,6 @@ bom fiz 4 cardapios já onde posso colocar (da tarefa informaçao)
 
 ## 23/09/2026 11:39
 coloquei
+
+## 23/09/2026 11:43
+calma vou criar o cinema e viagem... agora eu queria que vc olhasse o ordem da historia eu tirei as que estavam falhando, e fiz novas historias nos niveis facil, media, dificil e muito dificil coloquei na pasta historias-novas
