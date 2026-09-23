@@ -30,6 +30,16 @@ carrega a própria pista.
 
 **4. Cada cena tem de mostrar um estado que não volta atrás** — o que já foi feito continua feito.
 
+**5. 🔴 O NÚMERO fora do quadro.**
+O disco numerado fica hoje DENTRO do quadro, no canto. Esse número **é o gabarito**: se for junto no
+corte, o paciente lê a resposta em vez de deduzi-la.
+
+Pedir que o número apareça **acima de cada quadro, fora da moldura** — numa faixinha própria. Assim o
+corte descarta junto com o resto e não sobra nada para apagar.
+
+Se vier dentro do quadro mesmo assim, não é problema: existe `docs/scripts/tira-numero-da-cena.py`,
+que reconstrói o fundo por inpainting. Mas o corte limpo é sempre melhor que o remendo.
+
 ---
 
 # PARTE 1 — as 3 com defeito (refazer)

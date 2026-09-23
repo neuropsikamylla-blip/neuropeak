@@ -155,6 +155,35 @@ frágil, então a distribuição pode ser o que fizer sentido clinicamente.
 
 ---
 
+## 🔴 ACHADO — o número do gabarito está mal removido nas 76 histórias em produção
+
+Ela lembrou: *"lembre se de tirar os numeros das imagens que seram usadas"*. Fui verificar.
+
+**A boa notícia:** o número JÁ é removido — nenhuma cena em produção mostra o disco numerado, então
+o gabarito não está sendo entregue.
+
+**A má:** o cortador de junho (não versionado, perdido) removia o número **colando um bloco de outra
+parte da imagem por cima**. Sobra um retângulo claro visível no canto superior esquerdo, com a arte
+deslocada — em `f2/1.png` o cartaz do foguete fica cortado e o cabelo do menino aparece picotado.
+Amostrei 8 cenas de 4 faixas: **está em todas**.
+
+**O conserto existe e foi medido:** `docs/scripts/tira-numero-da-cena.py` acha o disco por
+transformada de Hough e reconstrói o fundo por inpainting (Navier-Stokes, OpenCV 4.13). Comparado
+lado a lado com o de produção, a diferença é grande — a parede fica contínua e a arte intacta.
+
+### O que fazer, e por que não agora
+
+Refazer o corte das 76 exige mapear cada história à sua prancha — **e esse mapa já existe**, foi
+levantado pelo rastreador de pixel nesta sessão. É viável e vale o ganho visual.
+
+Mas é tarefa de janela inteira e mexe em 76 pastas de imagem que não estão no git. **Fatiado para
+depois** (regra 15), com backup antes.
+
+Para as pranchas novas, a instrução já foi escrita: pedir o número **fora do quadro**, numa faixa
+acima. Aí o corte descarta e não há o que reconstruir.
+
+---
+
 ## ✅ Dez histórias repetidas APAGADAS do banco (23/set/2026) — v3.40.0
 
 Ela decidiu: *"eu quero apagar as irmas gemeas.. deixar apenas uma delas"*. Vistas as 10 folhas
