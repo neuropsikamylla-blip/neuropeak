@@ -25958,3 +25958,6 @@ lembra qual email esta cadastrado? neuropsi.kamylla ou myllaah ou kamyllaah?
 
 ## 23/09/2026 19:00
 no github?
+
+## 23/09/2026 19:07
+manda de novo
