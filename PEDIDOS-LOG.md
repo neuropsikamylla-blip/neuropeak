@@ -25932,3 +25932,6 @@ feijao no algodao tirei - coloquei arrumando o computador - abra a pasta novamen
 
 ## 23/09/2026 16:48
 pronto tanto ordem da historia , quando informaçao em foco todos
+
+## 23/09/2026 18:21
+entao mandei para vc colocar o que precisa colocar e tirar oque precisa tirar
