@@ -25974,3 +25974,6 @@ pronto
 ## 23/09/2026 19:15
 Authorization Successful
 You can close this tab.
+
+## 23/09/2026 19:22
+então mais nao vai apagar o meu programa ne?
