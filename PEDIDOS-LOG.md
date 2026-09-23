@@ -25902,3 +25902,6 @@ eu quero apagar as irmas gemeas.. deixar apenas uma delas... me manda por gentil
 
 ## 23/09/2026 15:21
 pode apagar vc e me mande os novos enredos que vc sugere para substituir pode ser? (ai vc me avisa se é do nivel facil, dificil, muito dificil) para eu pedir certinho
+
+## 23/09/2026 15:30
+ja solicitei
