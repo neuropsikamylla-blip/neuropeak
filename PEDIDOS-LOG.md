@@ -25875,3 +25875,6 @@ e ai?
 
 ## 23/09/2026 11:38
 bom fiz 4 cardapios já onde posso colocar (da tarefa informaçao)
+
+## 23/09/2026 11:39
+coloquei
