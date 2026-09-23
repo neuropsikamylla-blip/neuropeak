@@ -25851,3 +25851,6 @@ entao informação em foco eu nao pedi para excluir ne? o exercicio.. somnete de
 
 ## 23/09/2026 08:07
 ah sim, ja estou indo fazer o que vc me solicitou ja envio.. qual a proxima fase ?
+
+## 23/09/2026 08:28
+quero
