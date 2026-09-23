@@ -26004,3 +26004,6 @@ fui testar o informação em foco.. e ja fiz 3 [Image #17] nesse estilo INSUPORT
 
 ## 23/09/2026 20:02
 [Image #26] mesma coisa aqui... se eu cliquei já segue [Image #27] precisa ficar limpo assim : concorda? (acho que isso vale para todos (talvez um o outro que nao de mas por enqto acredito que serve para todos) talvez restaurante e supermercado vou avaliar antes
+
+## 23/09/2026 20:31
+eu acho que vc pode continuar
