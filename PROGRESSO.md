@@ -155,6 +155,51 @@ frágil, então a distribuição pode ser o que fizer sentido clinicamente.
 
 ---
 
+## ✅ Dez histórias repetidas APAGADAS do banco (23/set/2026) — v3.40.0
+
+Ela decidiu: *"eu quero apagar as irmas gemeas.. deixar apenas uma delas"*. Vistas as 10 folhas
+comparativas, autorizou: *"pode apagar vc"*.
+
+### O que saiu
+
+**Oito com o mesmo ENREDO de uma irmã em outro nível** (saiu sempre a versão DIFÍCIL, porque é o
+nível com reposição pronta — 16 pranchas difíceis novas dela):
+
+`d1`→f1 viagem · `d2`→x9 teatro · `d3`→x2 feira de ciências · `d5`→x3 cachorro fugiu ·
+`d6`→x4 bolo queimado · `d7`→x8 presente à mão · `d9`→x1 acampar · `d11`→x7 futebol
+
+**Duas cópias literais:** `d8` (de d2) e `x20` (de x11).
+
+**Por que o enredo repetido importava:** a escada sobe DENTRO da sessão (nível 8 = difícil,
+9 = muito-difícil), então as duas podiam cair com minutos de distância — e o veto do sorteio olha
+o ID, não o enredo. A segunda virava reconhecimento, não raciocínio sequencial, e a acurácia subia
+sem ganho de habilidade.
+
+### Estado do banco
+
+| nível | antes | agora |
+|---|---|---|
+| fáceis | 20 | 20 |
+| média | 19 | 19 |
+| **difícil** | **21** | **13** ⚠️ |
+| muito-difícil | 21 | 21 |
+| **total sorteável** | **81** | **73** |
+
+⚠️ O difícil ficou magro. O veto usa metade do pool, então ainda sobram 7 para sortear — funciona,
+mas **a importação das 16 pranchas difíceis novas virou prioridade**.
+
+### Provas
+
+- Suíte completa 1311/1311; `tsc --noEmit` exit 0.
+- **Prova nova contra o defeito que a remoção poderia criar:** toda entrada do catálogo tem pasta
+  no disco com o nº de cenas declarado. Provada por injeção — reinserir `d9` sem pasta reprovou
+  (`d9: pasta ... não existe`); esconder `f1/4.png` reprovou (`f1: declarou 4 cenas, achou 3`).
+- Prova de que o enredo sobreviveu na irmã: as 9 sobreviventes existem e estão no sorteio.
+- Prova de que nenhuma marca de duplicata aponta para história inexistente.
+- **Backup:** `~/APPs/backups-neuropeak/historias-apagadas-20260923.tar.gz` — 62 cenas, fora do repo.
+
+---
+
 ## ✅ Histórias novas conferidas e duplicata removida (23/set/2026) — v3.39.1
 
 Pedido dela: *"ordem da historia la coloquei novas lembra? então antes verifica se tudo esta ok e

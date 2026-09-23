@@ -1,6 +1,6 @@
 // Prova adversarial do VP sobre a Fatia A. Não confia na palavra do Codex nem nos
 // testes que ele escreveu: ataca exatamente o que a Kamylla vai conferir na tela.
-import { readFileSync } from "node:fs";
+import { existsSync, readdirSync, readFileSync } from "node:fs";
 import { resolve } from "node:path";
 import { describe, expect, it } from "vitest";
 import { HISTORIAS, painelDaPosicao } from "@/data/historias";
@@ -126,46 +126,20 @@ describe("VP — histórias com ordem NÃO DEDUTÍVEL ficam fora do sorteio", ()
     const fonte = FONTE.slice(FONTE.indexOf("function buildOrdem("));
     expect(fonte).toContain("!h.duplicataDe");
     expect(fonte).toContain("!h.foraDoSorteio");
-    expect(fonte).toContain("!h.mesmoEnredoDe");
   });
 
   it("sobram histórias suficientes em cada faixa", () => {
     for (const diff of ["faceis", "media", "dificil", "muito-dificil"] as const) {
-      const sorteaveis = HISTORIAS.filter(
-        (h) => h.diff === diff && !h.duplicataDe && !h.foraDoSorteio && !h.mesmoEnredoDe,
-      );
-      // ⚠️ TEMPORÁRIO: era 15. As 8 gêmeas de enredo saíram do nível difícil (13 restantes) e a
-      // reposição são as 16 pranchas difíceis novas dela, ainda por cortar. Ao importá-las, este
-      // piso volta para 15. O veto do sorteio usa metade do pool, então com 13 ainda sobram 7
-      // para sortear de verdade — apertado, mas funcionando.
+      const sorteaveis = HISTORIAS.filter((h) => h.diff === diff && !h.duplicataDe && !h.foraDoSorteio);
+      // ⚠️ TEMPORÁRIO: era 15. As 8 gêmeas de enredo foram apagadas do nível difícil (13 restantes)
+      // e a reposição são as 16 pranchas difíceis novas dela, ainda por cortar. Ao importá-las,
+      // este piso volta para 15. O veto do sorteio usa metade do pool, então com 13 ainda sobram
+      // 7 para sortear de verdade — apertado, mas funcionando.
       expect(sorteaveis.length, diff).toBeGreaterThanOrEqual(13);
     }
   });
 });
 
-describe("VP — as duplicatas fora do sorteio", () => {
-  it("d8 e x20 são as duplicatas marcadas, apontando para d2 e x11", () => {
-    const dups = HISTORIAS.filter((h) => h.duplicataDe);
-    expect(dups.map((h) => `${h.id}->${h.duplicataDe}`)).toEqual(["d8->d2", "x20->x11"]);
-  });
-
-  it("d8 continua no catálogo (histórico) e com o mesmo nº de cenas de d2", () => {
-    const d8 = HISTORIAS.find((h) => h.id === "d8")!;
-    const d2 = HISTORIAS.find((h) => h.id === "d2")!;
-    expect(d8.n).toBe(d2.n);
-  });
-
-  // Prova POR POSIÇÃO, não por presença: o filtro tem de estar dentro de buildOrdem,
-  // no pool do modo ordem. Se alguém o mover para fora, este teste cai.
-  it("o filtro de duplicata está dentro de buildOrdem", () => {
-    const inicio = FONTE.indexOf("function buildOrdem(");
-    expect(inicio).toBeGreaterThan(-1);
-    const corpo = FONTE.slice(inicio, FONTE.indexOf("\nfunction ", inicio + 10));
-    expect(corpo).toContain("HISTORIAS.filter");
-    expect(corpo).toContain("!h.duplicataDe");
-    expect(corpo).toContain("!h.mesmoEnredoDe");
-  });
-});
 
 describe("VP — a correção não foi tocada", () => {
   // A Fatia B moveu a comparação do componente para avaliarOrdem. A prova segue
@@ -197,10 +171,10 @@ describe("VP — a correção não foi tocada", () => {
 });
 
 describe("VP — o embaralhamento com os tamanhos e o dado REAIS do banco", () => {
-  // O teste do Codex usa n solto. Este usa as 84 histórias sorteáveis, uma a uma.
+  // O teste do Codex usa n solto. Este usa as 76 histórias de ordenar, uma a uma.
   it("nenhuma história do banco nasce resolvível em menos de 2 trocas", () => {
     const sorteaveis = HISTORIAS.filter((h) => !h.duplicataDe);
-    expect(sorteaveis.length).toBe(84);
+    expect(sorteaveis.length).toBe(76);
     let piores = 0;
     for (const h of sorteaveis) {
       for (let i = 0; i < 200; i++) {
@@ -235,39 +209,56 @@ describe("VP — o embaralhamento com os tamanhos e o dado REAIS do banco", () =
   });
 });
 
-describe("VP — as gêmeas de enredo fora do sorteio", () => {
-  const SORTEAVEL = (h: (typeof HISTORIAS)[number]) =>
-    !h.duplicataDe && !h.foraDoSorteio && !h.mesmoEnredoDe;
+describe("VP — as gêmeas de enredo foram APAGADAS do banco", () => {
+  // 23/set: dez histórias saíram de vez (pastas e entradas). Oito eram o mesmo ENREDO de uma
+  // irmã em outro nível — e a escada sobe DENTRO da sessão (nível 8 = difícil, 9 = muito-difícil),
+  // então as duas podiam cair com minutos de distância, e a segunda virava reconhecimento.
+  // As outras duas (d8, x20) eram cópia literal de d2 e x11.
+  // Backup: ~/APPs/backups-neuropeak/historias-apagadas-20260923.tar.gz (62 cenas).
+  const APAGADAS = ["d1", "d2", "d3", "d5", "d6", "d7", "d8", "d9", "d11", "x20"];
+  const SOBREVIVENTES = ["f1", "x9", "x2", "x3", "x4", "x8", "x1", "x7", "x11"];
 
-  it("as 8 gêmeas marcadas são exatamente as esperadas, e todas do nível difícil", () => {
-    const gemeas = HISTORIAS.filter((h) => h.mesmoEnredoDe);
-    expect(gemeas.map((h) => `${h.id}->${h.mesmoEnredoDe}`)).toEqual([
-      "d1->f1", "d2->x9", "d3->x2", "d5->x3",
-      "d6->x4", "d7->x8", "d9->x1", "d11->x7",
-    ]);
-    for (const g of gemeas) expect(g.diff, g.id).toBe("dificil");
-  });
-
-  it("nenhuma gêmea sai do sorteio sem que a irmã CONTINUE nele", () => {
-    // O risco de errar aqui é tirar as duas e o enredo sumir do banco inteiro.
-    for (const g of HISTORIAS.filter((h) => h.mesmoEnredoDe)) {
-      const irma = HISTORIAS.find((h) => h.id === g.mesmoEnredoDe);
-      expect(irma, `${g.id} aponta para ${g.mesmoEnredoDe}, que não existe`).toBeTruthy();
-      expect(SORTEAVEL(irma!), `${g.id} saiu mas a irmã ${irma!.id} também está fora`).toBe(true);
+  it("nenhuma das dez apagadas continua no catálogo", () => {
+    for (const id of APAGADAS) {
+      expect(HISTORIAS.find((h) => h.id === id), `${id} ainda está no catálogo`).toBeUndefined();
     }
   });
 
-  it("nenhum enredo tem duas versões sorteáveis ao mesmo tempo", () => {
-    // Controle negativo do achado: antes desta correção, d9 e x1 (mesmo roteiro) podiam cair
-    // na MESMA sessão, porque a escada sobe de 8 para 9 dentro da sessão e o veto olha o id.
-    const pares = HISTORIAS.filter((h) => h.mesmoEnredoDe).map((h) => [h, HISTORIAS.find((o) => o.id === h.mesmoEnredoDe)!] as const);
-    for (const [a, b] of pares) {
-      expect(SORTEAVEL(a) && SORTEAVEL(b), `${a.id} e ${b.id} estão os dois no sorteio`).toBe(false);
+  it("o enredo de cada apagada sobreviveu na irmã", () => {
+    // O risco de errar era apagar as DUAS e o enredo sumir do banco inteiro.
+    for (const id of SOBREVIVENTES) {
+      const h = HISTORIAS.find((x) => x.id === id);
+      expect(h, `${id} sumiu junto com a gêmea`).toBeTruthy();
+      expect(h!.duplicataDe, `${id} sobreviveu mas está marcada como duplicata`).toBeUndefined();
+      expect(h!.foraDoSorteio, `${id} sobreviveu mas está fora do sorteio`).toBeUndefined();
     }
   });
 
-  it("o total sorteável cai de 81 para 73, e o difícil fica com 13", () => {
-    expect(HISTORIAS.filter(SORTEAVEL).length).toBe(73);
-    expect(HISTORIAS.filter((h) => h.diff === "dificil" && SORTEAVEL(h)).length).toBe(13);
+  it("não sobrou nenhuma marca de duplicata apontando para história inexistente", () => {
+    for (const h of HISTORIAS) {
+      if (!h.duplicataDe) continue;
+      expect(
+        HISTORIAS.some((o) => o.id === h.duplicataDe),
+        `${h.id} aponta para ${h.duplicataDe}, que não existe mais`,
+      ).toBe(true);
+    }
+  });
+
+  it("o catálogo tem 76 histórias de ordenar e 73 sorteáveis", () => {
+    expect(HISTORIAS.length).toBe(76);
+    const ordenar = HISTORIAS.filter((h) => ["faceis", "media", "dificil", "muito-dificil"].includes(h.diff));
+    expect(ordenar.filter((h) => !h.duplicataDe && !h.foraDoSorteio).length).toBe(73);
+    expect(ordenar.filter((h) => h.diff === "dificil").length).toBe(13);
+  });
+
+  it("toda história do catálogo tem a pasta de imagens no disco, com o nº de cenas declarado", () => {
+    // Prova direta contra o defeito que a remoção poderia ter criado: entrada sem imagem.
+    const base = resolve(__dirname, "../../public/exercises/historias");
+    for (const h of HISTORIAS) {
+      const dir = resolve(base, h.id);
+      expect(existsSync(dir), `${h.id}: pasta ${dir} não existe`).toBe(true);
+      const cenas = readdirSync(dir).filter((f) => f.endsWith(".png"));
+      expect(cenas.length, `${h.id}: declarou ${h.n} cenas, achou ${cenas.length}`).toBe(h.n);
+    }
   });
 });
