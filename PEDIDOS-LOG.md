@@ -25884,3 +25884,6 @@ calma vou criar o cinema e viagem... agora eu queria que vc olhasse o ordem da h
 
 ## 23/09/2026 11:56
 [Image #10] precismaos tirar do programa definitivamente tudo que nao esta sendo usado e que possa estar sendo pesado (tipo exercicios antigos que foram descontinuizado e etc) faz sentido?
+
+## 23/09/2026 14:01
+tudo bem.. mas por exemplo ordem da historia la coloquei novas lembra? então antes verifica se tudo esta ok e tire o que esta duplicado
