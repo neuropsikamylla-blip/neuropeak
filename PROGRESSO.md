@@ -155,6 +155,42 @@ frágil, então a distribuição pode ser o que fizer sentido clinicamente.
 
 ---
 
+## 🚧 EM ANDAMENTO — Histórias novas de Ordem da História (23/set/2026)
+
+Ela criou histórias novas nas quatro faixas e colocou em `public/exercises/historias-novas/`
+(faceis 29 · media 30 · dificil 34 · muito-dificil 32 = **125 pranchas**, chegadas em 22-23/set).
+
+### 🔴 O ACHADO QUE TRAVA A IMPORTAÇÃO — verificado em duas pranchas
+
+As imagens são **pranchas** (todas as cenas numa folha, com o enunciado no topo e os quadros
+numerados), e **a numeração impressa NÃO é consistente entre elas**:
+
+| prancha | o que a numeração significa |
+|---|---|
+| viveiro de borboletas (difícil) | **é a ordem correta** — chega → lagartas → casulos → borboletas → na mão → despedida |
+| castelo de areia (fácil) | **NÃO é** — o quadro **1** é o castelo **pronto**; a ordem real é 3 → 2 → 4 → 1 |
+
+**Por que trava:** no sistema `1.png` significa "primeira cena da história". Cortar assumindo a
+numeração impressa importaria **gabarito errado de fábrica** — o mesmo defeito que custou oito
+correções e que ELA achou jogando quatro vezes.
+
+### O que precisa acontecer antes de importar
+
+1. **Determinar a ordem correta de cada prancha**, uma a uma, por continuidade (roupa, objetos,
+   estado do que se constrói) — o método que funcionou nas correções anteriores;
+2. decidir com ela o que fazer quando a numeração impressa diverge: cortar na ordem certa, ou cortar
+   na ordem impressa e registrar `ord` no dado (o mecanismo já existe desde a v3.27.0);
+3. só então cortar, nomear e cadastrar.
+
+⚠️ **Nada foi importado, cortado ou cadastrado.** As pranchas estão na pasta, intocadas.
+
+### Estado do exercício hoje
+
+82 histórias sorteáveis (86 no catálogo − `d8` duplicata − `m1`/`m6`/`m21` de ordem não dedutível),
+com 8 gabaritos corrigidos por campo `ord`.
+
+---
+
 ## ✅ ENTREGUE — Rastreamento: as bolas se movem mais tempo (15/set/2026, v3.30.0)
 
 **Pedido dela, com o efeito clínico nas próprias palavras:** *"eu quero que as bolinhas se movimente
