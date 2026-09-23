@@ -155,6 +155,50 @@ frágil, então a distribuição pode ser o que fizer sentido clinicamente.
 
 ---
 
+## ✅ Histórias novas conferidas e duplicata removida (23/set/2026) — v3.39.1
+
+Pedido dela: *"ordem da historia la coloquei novas lembra? então antes verifica se tudo esta ok e
+tire o que esta duplicado"*.
+
+Laudo completo: `docs/ordem-historia/PRANCHAS-NOVAS-CONFERENCIA.md`.
+
+### O que a varredura achou
+
+`historias-novas/` tem **165 pranchas**: 118 de junho (matéria-prima JÁ cortada, provado por pixel)
+e **47 novas dela** (22-23/set).
+
+**🔴 Duplicatas dentro do catálogo em produção.** As pranchas de junho repetiam enredos entre
+`dificil` e `muito-dificil`; todas foram cortadas e cadastradas, e só `d8` tinha sido pega:
+
+- **`x11` ↔ `x20`** — mesmo enredo, MESMO nível, 8 cenas idênticas. **Corrigido:** `x20` recebeu
+  `duplicataDe: "x11"`. Sorteáveis: 82 → 81.
+- **8 pares de mesmo enredo em níveis diferentes** (f1↔d1, d3↔x2, d5↔x3, d6↔x4, d7↔x8, d9↔x1,
+  d11↔x7, d2↔x9) — **pendente de decisão dela**, com recomendação escrita no laudo.
+
+**17 das 47 pranchas novas repetem enredo já existente** no catálogo; 30 são inéditas.
+
+**A regra de corte das novas está estabelecida** (11 fáceis conferidas quadro a quadro): quando os
+números saem embaralhados na folha, o número É a ordem; quando saem em 1,2,3,4, o número é só
+rótulo e a ordem tem de ser deduzida. O método se validou sozinho — reencontrou a ordem do castelo
+de areia (3→2→4→1) e a duplicata d8↔d2, ambas já conhecidas.
+
+### Provas
+
+- `npx vitest run lib/ordem-historia/` — 99/99; a suíte completa 1309/1309; `tsc --noEmit` exit 0.
+- Os testes de vigia REPROVARAM antes do ajuste (esperavam 85 sorteáveis e só `d8->d2`), o que
+  mostra que vigiam de verdade.
+- Filtro do sorteio provado direto: `x20` fora, `x11` mantida, 81 sorteáveis.
+- Backup do catálogo: `data/historias.ts.bak-20260923`.
+
+### Pendente
+
+1. **Decisão dela** sobre os 8 pares de mesmo enredo em níveis diferentes.
+2. **Conferir as 36 pranchas novas restantes** (média, difícil, muito-difícil) quadro a quadro.
+3. Decidir o que fazer com as 17 novas que repetem enredo existente.
+4. Cortar, nomear e cadastrar as pranchas aprovadas.
+
+---
+
 ## 🔴 PRÓXIMO PASSO — o peso do deploy (23/set/2026)
 
 A Vercel avisou: **100 % dos 10 GB de Deployment Storage**. Ela perguntou se era caso de remover

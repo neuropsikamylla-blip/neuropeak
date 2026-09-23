@@ -100,7 +100,7 @@ export const HISTORIAS: HistoriaDef[] = [
   { id: "x17", diff: "muito-dificil", n: 8, a: 0.84 },
   { id: "x18", diff: "muito-dificil", n: 8, a: 0.85 },
   { id: "x19", diff: "muito-dificil", n: 8, a: 0.77 },
-  { id: "x20", diff: "muito-dificil", n: 8, a: 0.77 },
+  { id: "x20", diff: "muito-dificil", n: 8, a: 0.77, duplicataDe: "x11" },
   { id: "x21", diff: "muito-dificil", n: 8, a: 0.81 },
   { id: "x22", diff: "muito-dificil", n: 8, a: 0.79 },
 ];

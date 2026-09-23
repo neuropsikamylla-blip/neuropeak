@@ -1,62 +1,51 @@
-# dependencies
-/node_modules
-/.pnp
-.pnp.js
 
-# testing
-/coverage
-
-# next.js
-/.next/
-/out/
-
-# production
-/build
-
-# misc
+.claude/
 .DS_Store
-*.pem
-
-# debug
-npm-debug.log*
-yarn-debug.log*
-yarn-error.log*
-
-# local env files
-.env.local
 .env.development.local
-.env.test.local
+.env.local
 .env.production.local
-
-# vercel
+.env.test.local
+.env*
+.pnp.js
 .vercel
-
-# typescript
+*.bak-*
+*.pem
 *.tsbuildinfo
-next-env.d.ts
-
+/.next/
+/.pnp
+/build
+/coverage
+/node_modules
+/out/
+# Backups datados (regra 11): ficam no disco, nunca no repositorio
+# Biblioteca de Assets — arquivos de trabalho da geração em lote (Etapa 4)
+# debug
+# dependencies
+# local env files
+# matéria-prima (originais do ChatGPT) — não deployar; backup em ~/neuropeak-asset-backups/
+# misc
+# next.js
 # prisma
+# production
+# supabase
+# testing
+# typescript
+# vercel
+data/historias.ts.bak-*
+dist/assets/
+next-env.d.ts
+npm-debug.log*
+prisma/*.db
 prisma/dev.db
 prisma/dev.db-journal
-prisma/*.db
-
-# supabase
-supabase/.temp
-.env*
-.claude/
-
-# matéria-prima (originais do ChatGPT) — não deployar; backup em ~/neuropeak-asset-backups/
-public/exercises/Personagem restaurante/
+public/assets/metadata/
 public/exercises/historias-novas/
-public/exercises/Restaurante-bistro/
 public/exercises/icones novos/
 public/exercises/itens-novos/
-
-# Biblioteca de Assets — arquivos de trabalho da geração em lote (Etapa 4)
+public/exercises/Personagem restaurante/
+public/exercises/Restaurante-bistro/
 scripts/assets-gen/.state.json
 scripts/assets-gen/prompts/
-dist/assets/
-public/assets/metadata/
-
-# Backups datados (regra 11): ficam no disco, nunca no repositorio
-*.bak-*
+supabase/.temp
+yarn-debug.log*
+yarn-error.log*

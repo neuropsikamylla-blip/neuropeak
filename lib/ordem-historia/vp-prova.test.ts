@@ -136,10 +136,10 @@ describe("VP — histórias com ordem NÃO DEDUTÍVEL ficam fora do sorteio", ()
   });
 });
 
-describe("VP — d8 fora do sorteio", () => {
-  it("d8 é a única história marcada como duplicata, e aponta para d2", () => {
+describe("VP — as duplicatas fora do sorteio", () => {
+  it("d8 e x20 são as duplicatas marcadas, apontando para d2 e x11", () => {
     const dups = HISTORIAS.filter((h) => h.duplicataDe);
-    expect(dups.map((h) => `${h.id}->${h.duplicataDe}`)).toEqual(["d8->d2"]);
+    expect(dups.map((h) => `${h.id}->${h.duplicataDe}`)).toEqual(["d8->d2", "x20->x11"]);
   });
 
   it("d8 continua no catálogo (histórico) e com o mesmo nº de cenas de d2", () => {
@@ -189,10 +189,10 @@ describe("VP — a correção não foi tocada", () => {
 });
 
 describe("VP — o embaralhamento com os tamanhos e o dado REAIS do banco", () => {
-  // O teste do Codex usa n solto. Este usa as 85 histórias sorteáveis, uma a uma.
+  // O teste do Codex usa n solto. Este usa as 84 histórias sorteáveis, uma a uma.
   it("nenhuma história do banco nasce resolvível em menos de 2 trocas", () => {
     const sorteaveis = HISTORIAS.filter((h) => !h.duplicataDe);
-    expect(sorteaveis.length).toBe(85);
+    expect(sorteaveis.length).toBe(84);
     let piores = 0;
     for (const h of sorteaveis) {
       for (let i = 0; i < 200; i++) {
