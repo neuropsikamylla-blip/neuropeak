@@ -411,39 +411,49 @@ cabe. **Falta propagar aos demais exercícios.**
 
 ---
 
-## 🚧 EM ANDAMENTO — cortar as 30 do lote 1 (23/set/2026)
+## ✅ Lote 1 cortado — o banco fecha em 123 histórias (23/set/2026) — v3.45.0
 
-Aprovado por ela o critério da DISTÂNCIA entre faixas: enredo repetido só atrapalha quando as duas
-versões podem cair perto. Faixas adjacentes (a escada sobe dentro da sessão) = risco; 2+ faixas de
-distância = meses entre uma e outra, sem risco prático.
+| nível | manhã | agora |
+|---|---|---|
+| fáceis | 20 | **29** |
+| média | 19 | **32** |
+| difícil | 21 → 13 | **34** |
+| muito-difícil | 21 | **31** |
+| **sorteável** | **81** | **123** |
 
-### As 30, das 44 do lote 1
+As 30 aprovadas pelo critério da **distância entre faixas**: 23 inéditas e 7 cujo enredo repetido
+está a 2+ faixas da irmã. Ficaram de fora as 7 adjacentes, a de mesmo nível e as 6 já superadas.
 
-- **3 fáceis:** F02 salada de frutas · F04 pipa · F06 torre de blocos
-- **10 médias:** todas (M01-M10)
-- **10 difíceis:** D01 cupcakes · D03 skate · D04 picolés · D07 nadar · D08 trilha · D09 cerâmica ·
-  D11 judô · D13 morangos · D14 pão · D15 borboletas
-- **7 muito-difíceis:** X01 geleia · X02 sombras · X03 xadrez · X04 telescópio · X05 almofada ·
-  X07 carrinho a balão · X08 sushi
+### 🔴 Dois defeitos pegos na verificação — os dois graves
 
-**Descartadas 14:** 5 já refeitas no lote 2 (banho, sanduíche, avião, quebra-cabeça, castelo),
-1 superada (guardar brinquedos → f25), 7 arriscadas (faixas adjacentes: lavar bicicleta, limonada,
-planetário, casinha, aquário, gatinho, fantoches) e 1 grave (feira de trocas, mesmo nível de x11).
+**1. O número não saiu em 13 cenas na primeira passada.** Gabarito impresso na imagem. O detector
+media o brilho no INTERIOR do disco, e o número escuro derrubava a média abaixo do limiar. Corrigido
+para medir o **anel** entre 0,62r e 0,92r, que é branco puro.
 
-### Dois cuidados que este lote exige e o lote 2 não exigia
+**2. As médias cortaram em 2 pedaços.** O layout delas é **3+2**, e a divisão vertical de baixo não
+alinha com a de cima — nenhuma coluna atravessava a imagem inteira. O cortador passou a procurar as
+colunas **dentro de cada fileira**. Os quatro formatos agora passam: 2×2, 3+2, 3×2 e 4×2.
 
-1. **Formato ANTIGO:** disco numerado DENTRO do quadro. Sai por
-   `docs/scripts/tira-numero-da-cena.py` (inpainting), senão o gabarito vai impresso na cena.
-2. **Nas 3 fáceis a POSIÇÃO na folha está embaralhada** — o número impresso é o gabarito, e o corte
-   por posição daria a ordem errada. Precisa mapear posição → número antes de nomear.
+**Os dois só apareceram porque o script conta e confere.** Se eu tivesse cortado no escuro, 13 cenas
+entrariam com a resposta impressa e 5 histórias com 2 cenas em vez de 5.
 
-### Passos
+### As 3 fáceis, com a posição embaralhada
 
-1. [ ] Conferir D07 (nadar) e D09 (cerâmica), as duas ainda não lidas.
-2. [ ] Mapear posição → número nas 3 fáceis.
-3. [ ] Cortar as 30 com remoção do número. **Pronto:** amostra validada a olho.
-4. [ ] Cadastrar. **Pronto:** provas verdes.
-5. [ ] Publicar.
+`f27` e `f29` vieram 2,4,1,3 e `f28` veio 4,2,1,3 — o número é que era o gabarito. O corte
+**reordenou por número**, então nenhuma precisa de `ord`. Conferido visualmente cena a cena:
+frutas→cortar→misturar→comer · materiais→fitas→pipa pronta→no ar · blocos→3 blocos→triângulo→pronta.
+
+### Varredura final
+
+As **178 cenas novas** passadas pelo detector. As 8 suspeitas eram falsos positivos — cabeça de
+ursinho, vaso, coração de cartaz, olho do menino —, conferidas uma a uma. **Nenhum número sobrou.**
+
+Provas: 109 no exercício, 4 novas para o lote 1. Backup: `data/historias.ts.bak3-20260923`.
+
+### Pendências do exercício
+
+- As 14 descartadas seguem em `historias-novas/` como matéria-prima (fora do deploy).
+- **Ainda não propagado:** o princípio do gesto aos demais exercícios.
 
 ---
 
