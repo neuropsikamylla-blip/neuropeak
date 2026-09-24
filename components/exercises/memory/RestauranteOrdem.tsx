@@ -444,6 +444,12 @@ export function RestauranteOrdemBoard({
   );
 }
 
+/** Quanto o resultado fica na tela antes de a próxima mesa entrar.
+ *  O erro fica MAIS tempo porque a tela do erro mostra o pedido correto — há o que estudar;
+ *  no acerto não há. */
+const TEMPO_ACERTO_MS = 2200;
+const TEMPO_ERRO_MS = 5000;
+
 type Phase = "ready" | "salao" | "update" | "bancada" | "feedback";
 
 // ── Componente principal ────────────────────────────────────────────────────────
@@ -581,11 +587,23 @@ export function RestauranteOrdem({ difficulty, theme, onComplete }: RestauranteO
     setFeedback(res); setPhase("feedback");
   }, [trial]);
 
+
   function advance() {
     const nextTrial = trial + 1;
     if (!podeIniciarNovoDesafio()) finish();
     else { setTrial(nextTrial); startRound(); }
   }
+  // Sem botão para dispensar a mensagem. Ela, vendo esta tela: "aqui pode aparecer a
+  // mensagem mas não preciso apertar continuar". O resultado aparece e a rodada segue.
+  //
+  // O ERRO fica mais tempo de propósito: quando erra, a tela mostra o PEDIDO CORRETO,
+  // que é material de aprendizagem — o paciente precisa estudar o que era para ter feito.
+  // Acertar não tem nada a estudar.
+  useEffect(() => {
+    if (phase !== "feedback") return;
+    const t = setTimeout(advance, feedback?.ok ? TEMPO_ACERTO_MS : TEMPO_ERRO_MS);
+    return () => clearTimeout(t);
+  }, [phase, feedback, advance]);
 
   function placeItem(it: RestauranteItem) {
     if (phase !== "bancada") return;
@@ -866,11 +884,6 @@ export function RestauranteOrdem({ difficulty, theme, onComplete }: RestauranteO
             </div>
           )}
 
-          <button onClick={advance}
-            style={{ width: "100%", maxWidth: 300, height: 52, borderRadius: 100, border: "none", background: "linear-gradient(135deg,#1f9d5c,#147a45)",
-              color: "#fff", fontWeight: 900, fontSize: 16, cursor: "pointer", boxShadow: "0 6px 20px rgba(20,122,69,0.5)" }}>
-            Continuar →
-          </button>
           <div style={{ width: "100%", maxWidth: 280 }}><ExerciseProgressBar progressPct={progressPct} theme={theme} emTolerancia={emTolerancia()} /></div>
         </div>
       </div>

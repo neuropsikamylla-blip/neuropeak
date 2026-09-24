@@ -8,7 +8,7 @@
 // Figuras: emoji por ora (ou AssetImage quando a história trouxer `imagem`).
 // ─────────────────────────────────────────────────────────────────────────────
 
-import React, { useMemo, useRef, useState, useCallback } from "react";
+import React, { useEffect, useMemo, useRef, useState, useCallback } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { calculateExerciseScore } from "@/lib/scoring";
 import { useBlocoDeTreino } from "@/components/exercises/useExerciseEngine";
@@ -74,18 +74,40 @@ function SceneBlock({ story, scene, theme }: { story: SocialStory; scene: Social
 }
 
 // ── Uma pergunta (selecionar → confirmar → feedback → continuar) ───────────────
+/** Quanto o feedback fica na tela antes de a próxima questão entrar. As explicações aqui
+ *  têm duas ou três linhas, e o público inclui pacientes com lentificação. */
+const TEMPO_LEITURA_MS = 3200;
+
 function QuestionView({ story, scene, q, theme, index, total, onAnswered }: {
   story: SocialStory; scene: SocialScene; q: SocialQuestion; theme: Theme;
   index: number; total: number; onAnswered: (a: PatientAnswer) => void;
 }) {
   const { isG, btn, box, pal } = socialStyles(theme);
   const [sel, setSel] = useState<string | null>(null);
+  const selRef = useRef<string | null>(null);
+  selRef.current = sel;
+
   const [committed, setCommitted] = useState(false);
   const [correct, setCorrect] = useState(false);
   const startRef = useRef<number>(Date.now());
   const ansRef = useRef<PatientAnswer | null>(null);
+  // Respondida a questão, o feedback fica o tempo de ser lido e a próxima entra sozinha.
+  // O botão "Continuar" existia só para dispensar a mensagem — e dispensar mensagem não é
+  // decisão do paciente, é atrito. Ela, vendo o Restaurante: "aqui pode aparecer a mensagem
+  // mas não preciso apertar continuar".
+  useEffect(() => {
+    if (!committed) return;
+    const t = setTimeout(() => { if (ansRef.current) onAnswered(ansRef.current); }, TEMPO_LEITURA_MS);
+    return () => clearTimeout(t);
+  }, [committed, onAnswered]);
 
-  function confirmar() {
+  // Decisão dela (23/set): "se eu cliquei já segue". A resposta aqui é um gesto ÚNICO —
+  // escolher uma opção —, então o toque É a confirmação. Botão separado só cabe quando a
+  // resposta é uma CONSTRUÇÃO (montar uma ordem, uma lista, uma conta), que é o caso da
+  // Compra Multifuncional, do Supermercado e da Ordem da História.
+  // Ver [[principio-gesto-e-a-confirmacao]].
+  function confirmar(escolha?: string) {
+    const sel = escolha ?? selRef.current;
     if (committed || !sel) return;
     const ok = verificarResposta(q, sel) === true;
     setCorrect(ok);
@@ -118,7 +140,7 @@ function QuestionView({ story, scene, q, theme, index, total, onAnswered }: {
           const border = isRight ? "border-emerald-500 bg-emerald-50" : isWrongChosen ? "border-red-400 bg-red-50"
             : chosen ? "border-emerald-500 bg-emerald-50" : isG ? "border-white/20" : "border-slate-200";
           return (
-            <button key={o.id} disabled={committed} onClick={() => setSel(o.id)}
+            <button key={o.id} disabled={committed} onClick={() => { setSel(o.id); confirmar(o.id); }}
               className={`w-full text-left px-4 py-3 rounded-xl border-2 font-semibold text-sm transition-all active:scale-[0.99] disabled:cursor-default ${border} ${chosen || isRight || isWrongChosen ? "text-gray-800" : pal.title}`}
               style={!(chosen || isRight || isWrongChosen) ? box : undefined}>
               {o.texto}
@@ -146,13 +168,13 @@ function QuestionView({ story, scene, q, theme, index, total, onAnswered }: {
         )}
       </AnimatePresence>
 
-      {committed ? (
-        <button onClick={() => ansRef.current && onAnswered(ansRef.current)} className="w-full h-12 font-bold" style={btn}>Continuar</button>
-      ) : (
-        <button onClick={confirmar} disabled={!sel} className="w-full h-12 font-bold transition-all disabled:opacity-40" style={btn}>
-          {sel ? "Confirmar" : "Escolha uma resposta"}
-        </button>
-      )}
+      {/* Faixa de rodapé com ALTURA FIXA: sem ela, o feedback e o antigo botão empurravam
+          as opções para cima no instante da resposta. */}
+      <div style={{ height: 48 }} className="flex items-center justify-center">
+        {!committed && (
+          <span className="text-sm font-semibold opacity-60">Toque na resposta</span>
+        )}
+      </div>
     </motion.div>
   );
 }
