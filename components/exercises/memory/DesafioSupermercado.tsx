@@ -155,6 +155,22 @@ function ProductImg({ id, size }: { id: string; size: number }) {
   );
 }
 
+/** Tamanho da foto na tela de MEMORIZAR, conforme quantos itens a lista tem.
+ *
+ *  Era 66px fixo, e ela reprovou vendo uma lista de dois: "está muito pequena as figuras".
+ *  Com poucos itens sobra espaço de sobra no card e a foto ficava perdida no meio dele.
+ *
+ *  Memorizar é a fase em que enxergar bem mais importa: é ali que o paciente CODIFICA o
+ *  que vai ter de reconhecer depois. Foto pequena na memorização prejudica o exercício
+ *  inteiro — na prateleira ele já pode procurar com calma, aqui não.
+ *  A referência é a prateleira, que ela aprovou ("aqui está legal"). */
+function tamanhoDaMemoria(itens: number): number {
+  if (itens <= 2) return 150;
+  if (itens <= 4) return 116;
+  if (itens <= 6) return 96;
+  return 78;
+}
+
 // ── Tabela de níveis (1–12) — progressão da Kamylla ──────────────────────────────
 // lists: 1 ou 2 listas (mãe/avó); order: livre / ordem direta / de trás para frente.
 type OrderKind = "none" | "direct" | "reverse";
@@ -477,18 +493,9 @@ function Hud({ level, mode, progressPct, theme, emTolerancia }: {
 
       <ExerciseProgressBar progressPct={progressPct} theme={theme} emTolerancia={emTolerancia} />
 
-      {/* direita: Treino de Memória */}
-      <div style={{ display: "flex", alignItems: "center", gap: 9, flexShrink: 0 }} className="np-hud-right">
-        <div style={{ width: 34, height: 34, borderRadius: 10, flexShrink: 0,
-          background: "rgba(120,160,220,0.16)", border: "1px solid rgba(140,175,225,0.3)",
-          display: "flex", alignItems: "center", justifyContent: "center", fontSize: 17 }}>🧠</div>
-        <div style={{ lineHeight: 1.15, textAlign: "right" }}>
-          <div style={{ color: "#fff", fontWeight: 800, fontSize: 13 }}>Treino de Memória</div>
-          <div style={{ color: "rgba(190,205,230,0.75)", fontSize: 11 }}>
-            {mode === "auditivo" ? "Selecione os itens que você ouviu." : "Selecione os itens que estavam na lista."}
-          </div>
-        </div>
-      </div>
+      {/* O bloco "Treino de Memória" saiu daqui a pedido dela (23/set): "isso pode tirar".
+          Dizia ao paciente o que ele já sabe, repetia uma instrução que a própria fase já
+          dá, e ficava por baixo do botão de tela cheia — aparecia cortado. */}
     </div>
   );
 }
@@ -722,7 +729,7 @@ export function DesafioSupermercado({ difficulty, theme, onComplete }: DesafioSu
                               <span style={{ position: "absolute", top: -8, left: -8, width: 22, height: 22, borderRadius: "50%", zIndex: 2,
                                 background: "#2f9e8f", color: "#fff", fontSize: 12, fontWeight: 900, display: "flex", alignItems: "center", justifyContent: "center" }}>{idx + 1}</span>
                             )}
-                            <ProductImg id={p.id} size={66} />
+                            <ProductImg id={p.id} size={tamanhoDaMemoria(lst.length)} />
                             {mode === "leitura" && <span style={{ color: "#374151", fontSize: 11, fontWeight: 700, textAlign: "center", lineHeight: 1.2 }}>{p.name}</span>}
                             {mode === "auditivo" && <span style={{ fontSize: 20 }}>🔊</span>}
                           </motion.div>
