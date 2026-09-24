@@ -171,10 +171,10 @@ describe("VP — a correção não foi tocada", () => {
 });
 
 describe("VP — o embaralhamento com os tamanhos e o dado REAIS do banco", () => {
-  // O teste do Codex usa n solto. Este usa as 96 histórias de ordenar, uma a uma.
+  // O teste do Codex usa n solto. Este usa as 126 histórias de ordenar, uma a uma.
   it("nenhuma história do banco nasce resolvível em menos de 2 trocas", () => {
     const sorteaveis = HISTORIAS.filter((h) => !h.duplicataDe);
-    expect(sorteaveis.length).toBe(96);
+    expect(sorteaveis.length).toBe(126);
     let piores = 0;
     for (const h of sorteaveis) {
       for (let i = 0; i < 200; i++) {
@@ -244,13 +244,13 @@ describe("VP — as gêmeas de enredo foram APAGADAS do banco", () => {
     }
   });
 
-  it("o catálogo tem 96 histórias de ordenar e 93 sorteáveis", () => {
-    // 23/set, lote 2: entraram 20 (6 fáceis, 11 difíceis, 3 muito-difíceis).
-    // Fora do sorteio seguem só m1, m6 e m21 (ordem não dedutível).
-    expect(HISTORIAS.length).toBe(96);
+  it("o catálogo tem 126 histórias de ordenar e 123 sorteáveis", () => {
+    // 23/set: lote 2 trouxe 20 e o lote 1 mais 30 (3 fáceis, 10 médias, 10 difíceis,
+    // 7 muito-difíceis). Fora do sorteio seguem só m1, m6 e m21 (ordem não dedutível).
+    expect(HISTORIAS.length).toBe(126);
     const ordenar = HISTORIAS.filter((h) => ["faceis", "media", "dificil", "muito-dificil"].includes(h.diff));
-    expect(ordenar.filter((h) => !h.duplicataDe && !h.foraDoSorteio).length).toBe(93);
-    expect(ordenar.filter((h) => h.diff === "dificil").length).toBe(24);
+    expect(ordenar.filter((h) => !h.duplicataDe && !h.foraDoSorteio).length).toBe(123);
+    expect(ordenar.filter((h) => h.diff === "dificil").length).toBe(34);
   });
 
   it("toda história do catálogo tem a pasta de imagens no disco, com o nº de cenas declarado", () => {
@@ -307,5 +307,45 @@ describe("VP — o lote 2 (23/set): as 20 histórias novas", () => {
     const f3 = HISTORIAS.find((h) => h.id === "f3")!;
     expect(f3.duplicataDe).toBeUndefined();
     expect(f3.foraDoSorteio).toBeUndefined();
+  });
+});
+
+describe("VP — o lote 1 (23/set): as 30 histórias do formato antigo", () => {
+  // Pranchas do formato ANTIGO: tinham o disco numerado DENTRO do quadro. Esse número é o
+  // gabarito — se fosse junto no corte, o paciente leria a resposta em vez de deduzi-la.
+  // Saiu por inpainting (docs/scripts/tira-numero-da-cena.py).
+  //
+  // Nas 3 fáceis a POSIÇÃO na folha estava embaralhada e o número é que era o gabarito:
+  // f27 e f29 vieram 2,4,1,3 e f28 veio 4,2,1,3. O corte reordenou por número, então elas
+  // NÃO precisam de `ord` — 1.png já é a primeira cena.
+  const NOVAS: ReadonlyArray<readonly [string, number]> = [["f27", 4], ["f28", 4], ["f29", 4], ["m23", 5], ["m24", 5], ["m25", 5], ["m26", 5], ["m27", 5], ["m28", 5], ["m29", 5], ["m30", 5], ["m31", 5], ["m32", 5], ["d34", 6], ["d35", 6], ["d36", 6], ["d37", 6], ["d38", 6], ["d39", 6], ["d40", 6], ["d41", 6], ["d42", 6], ["d43", 6], ["x26", 8], ["x27", 8], ["x28", 8], ["x29", 8], ["x30", 8], ["x31", 8], ["x32", 8]];
+
+  it("as 30 estão no catálogo, sorteáveis, com o nº de cenas da faixa", () => {
+    for (const [id, cenas] of NOVAS) {
+      const h = HISTORIAS.find((x) => x.id === id);
+      expect(h, `${id} não foi cadastrada`).toBeTruthy();
+      expect(h!.n, `${id}`).toBe(cenas);
+      expect(h!.duplicataDe, `${id} nasceu duplicata`).toBeUndefined();
+      expect(h!.foraDoSorteio, `${id} nasceu fora do sorteio`).toBeUndefined();
+    }
+  });
+
+  it("nenhum id novo reaproveita id de história apagada", () => {
+    const APAGADAS = ["d1", "d2", "d3", "d5", "d6", "d7", "d8", "d9", "d11", "x20"];
+    for (const [id] of NOVAS) expect(APAGADAS, `${id} reusa id apagado`).not.toContain(id);
+  });
+
+  it("as fáceis do lote 1 não precisam de ord: o corte já reordenou por número", () => {
+    for (const id of ["f27", "f28", "f29"]) {
+      expect(HISTORIAS.find((h) => h.id === id)!.ord, `${id}`).toBeUndefined();
+    }
+  });
+
+  it("cada faixa cresceu como esperado", () => {
+    const conta = (d: string) => HISTORIAS.filter((h) => h.diff === d).length;
+    expect(conta("faceis")).toBe(29);
+    expect(conta("media")).toBe(32);
+    expect(conta("dificil")).toBe(34);
+    expect(conta("muito-dificil")).toBe(31);
   });
 });

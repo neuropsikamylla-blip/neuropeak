@@ -14,15 +14,18 @@ def acha_circulo(bgr, frac=0.30):
     masc = np.zeros((h, w), np.uint8)
     if circulos is None:
         return masc, None
-    # o disco do numero e claro por dentro: escolhe o candidato mais brilhante
+    # O disco tem borda branca e NUMERO ESCURO no meio. Medir o interior cheio faz o
+    # numero derrubar a media -- foi assim que 13 cenas passaram com o gabarito impresso
+    # na primeira tentativa. Mede-se o ANEL entre 0,62r e 0,92r, que e branco puro.
     melhor, brilho_max = None, -1
     for x, y, r in np.uint16(np.around(circulos[0])):
-        m = np.zeros(cinza.shape, np.uint8)
-        cv2.circle(m, (x, y), max(1, int(r * 0.6)), 255, -1)
-        b = cv2.mean(cinza, mask=m)[0]
+        anel = np.zeros(cinza.shape, np.uint8)
+        cv2.circle(anel, (x, y), max(1, int(r * 0.92)), 255, -1)
+        cv2.circle(anel, (x, y), max(1, int(r * 0.62)), 0, -1)
+        b = cv2.mean(cinza, mask=anel)[0]
         if b > brilho_max:
             brilho_max, melhor = b, (int(x), int(y), int(r))
-    if brilho_max < 150:      # disco escuro: nao e o numero
+    if brilho_max < 170:      # anel escuro: nao e o disco do numero
         return masc, None
     x, y, r = melhor
     cv2.circle(masc, (x, y), int(r * 1.22), 255, -1)   # folga para pegar a borda

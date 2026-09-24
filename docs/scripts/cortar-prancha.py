@@ -31,19 +31,27 @@ def cortes(perfil, tamanho):
     return blocos
 
 def corta(caminho, destino):
+    """As colunas sao procuradas DENTRO de cada fileira, nao na imagem toda.
+
+    Layouts irregulares existem: as pranchas de 5 cenas vem 3 em cima e 2 embaixo, e a
+    divisao vertical de baixo nao alinha com a de cima. Procurando colunas na imagem
+    inteira, nenhuma atravessa -- e a prancha saia cortada em 2 pedacos."""
     im = Image.open(caminho).convert("RGB")
     a = np.asarray(im.convert("L"), dtype=np.uint8)
     h, w = a.shape
-    linhas = (a > LIMIAR_CLARO).mean(axis=1) >= FRACAO     # horizontais
-    colunas = (a > LIMIAR_CLARO).mean(axis=0) >= FRACAO    # verticais
-    ys, xs = cortes(linhas, h), cortes(colunas, w)
+    linhas = (a > LIMIAR_CLARO).mean(axis=1) >= FRACAO
+    ys = cortes(linhas, h)
     os.makedirs(destino, exist_ok=True)
-    n = 0
+    n, larguras = 0, []
     for (y0, y1) in ys:
+        faixa = a[y0:y1 + 1, :]
+        colunas = (faixa > LIMIAR_CLARO).mean(axis=0) >= FRACAO
+        xs = cortes(colunas, w)
+        larguras.append(len(xs))
         for (x0, x1) in xs:
             n += 1
             im.crop((x0, y0, x1 + 1, y1 + 1)).save(f"{destino}/{n}.png")
-    return len(ys), len(xs), n
+    return len(ys), larguras, n
 
 if __name__ == "__main__":
     ly, lx, n = corta(sys.argv[1], sys.argv[2])
