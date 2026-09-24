@@ -411,6 +411,38 @@ cabe. **Falta propagar aos demais exercícios.**
 
 ---
 
+## ✅ Princípio do gesto propagado (23/set/2026) — v3.46.0
+
+**Refinamento dela**, na tela de vitória do Restaurante: *"aqui pode aparecer a mensagem mas não
+preciso apertar continuar"*. A mensagem de resultado **pode existir** — é informação. O que não pode
+é o botão para **dispensá-la**: dispensar mensagem não é decisão do paciente, é atrito.
+
+### A varredura mostrou que a maioria já estava certa
+
+| exercício | veredito |
+|---|---|
+| **InvestigadoresSociais** | ✅ mudou — tocar na opção já responde; feedback avança em 3,2s |
+| **RestauranteOrdem** | ✅ mudou — fora o "Continuar" do resultado |
+| CertoOuErrado | falso alarme: os "Verificar" são texto de conteúdo |
+| CorridaContraOTempo | falso alarme: o "Concluir" é da tela final |
+| FocusAgents | falso alarme: o "OK" é da tela de comando, desenho aprovado por ela |
+| 8 exercícios | **construção** — o botão é legítimo |
+
+**No Restaurante, tempos diferentes para acerto (2,2s) e erro (5s):** quando erra, a tela mostra o
+PEDIDO CORRETO, que é material de aprendizagem. Acertar não tem o que estudar.
+
+**O vigia achou um que eu deixei passar:** `PadroesRotacao`. Classificado como construção — ele monta
+um padrão espacial com rotação mental e reorganiza células; fechar na última marcada frustraria quem
+ainda ajusta. Diferente do MOT, onde a resposta é reconhecimento imediato.
+
+### Provas
+
+`lib/gesto-confirma.test.ts` varre TODOS os exercícios: sem botão de confirmar em resposta única, sem
+botão de dispensar resultado, e **piso de 2s** em toda constante de tempo de leitura. Injeção
+(devolver o "Continuar" do Restaurante) reprovou nomeando arquivo e linha.
+
+---
+
 ## ✅ Lote 1 cortado — o banco fecha em 123 histórias (23/set/2026) — v3.45.0
 
 | nível | manhã | agora |
