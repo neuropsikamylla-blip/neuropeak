@@ -26061,3 +26061,15 @@ crie que eu coloco
 
 ## 24/09/2026 08:57
 coloquei
+
+## 24/09/2026 09:18
+[Image #44] muito bom... mas seria possivel manter o X mais perto da imagem correspondente ?
+
+## 24/09/2026 09:19
+[Image #45] esta desproporcional esse isotonick kkkk
+
+## 24/09/2026 09:25
+[Image #46] quando tem 8 itens está ficando assim
+
+## 24/09/2026 09:26
+[Image #47] ideal era ficar assim
