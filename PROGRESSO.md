@@ -411,46 +411,44 @@ cabe. **Falta propagar aos demais exercícios.**
 
 ---
 
-## 🔴 EM ABERTO — o carrinho do Supermercado ainda vaza (24/set/2026)
+## ✅ RESOLVIDO — o vazamento do carrinho, na 4ª tentativa (24/set/2026) — v3.47.8
 
-Ela viu produtos saindo para fora da cesta **três vezes seguidas**, e a cada vez eu disse que
-estava resolvido. Estado atual: **v3.47.7 no ar com a correção, e ela ainda vê o defeito.**
+Ela confirmou: **"perfeito deu certo"**.
 
-### O que já foi feito no carrinho (e funciona)
+### A causa real: `placeItems: center` na célula
 
-- A arte dela é a moldura; contagem e botão em HTML por cima (texto na imagem mentiria).
-- Grade com colunas que abrem conforme a quantidade, piso de 3 faixas, assentando no fundo.
-- Área da cesta medida da arte: as barras deixam livre de x 0,170 a 0,821; configurado 0,190-0,810.
+A célula usava `display: grid; placeItems: center`. Isso **impede o filho de esticar
+verticalmente** — então o wrapper nunca ganhava a altura da célula, e o `height: 100%` dentro dele
+não tinha a que se referir. **O limite de altura da foto estava escrito no código e era inerte.**
 
-### As três tentativas de conserto do vazamento
+Conserto: o wrapper virou `position: absolute; inset: 0`. Fixa no tamanho exato da célula, sem
+depender de alinhamento nem de herança — não há cadeia de percentuais para quebrar.
 
-1. **Escala 1,14** para compensar a margem das fotos → era ela que empurrava a imagem para fora.
-   Removida.
-2. **Área grande demais** → medida da arte e recuada. Não era a causa.
-3. **Wrapper sem altura** → `max-height: 100%` só vale quando o pai tem altura definida; o wrapper
-   `inline-block` que eu criei para grudar o × na foto não tinha. Corrigido para `display: block`
-   com `height: 100%`.
+### O dado que resolveu veio dela
 
-### A medição que sustenta o diagnóstico 3
+A captura do **protetor solar**, que é alto e estreito: vazou **1,60×**, contra **1,29×** de um
+produto quadrado. *Quanto mais alta a foto, mais vazava* — assinatura de altura sem limite e largura
+limitada. Sem esse contraste eu continuaria adivinhando.
 
-Pelos marcos da arte (topo do cabo, base das rodas), na captura dela os produtos ocupam
-**1,29× a altura da célula** esperada. Esse é o número exato de quando a foto é limitada pela
-LARGURA em vez da altura — o efeito do wrapper sem altura. Numa célula de 105×79px, um produto
-quadrado renderiza a 105 de altura: razão 1,33.
+### Por que três tentativas erraram antes
 
-**Logo: ou ela está vendo cache, ou o diagnóstico está errado pela terceira vez.**
+Nenhuma por descuido: cada uma consertou algo que estava mesmo errado — a escala 1,14, a área larga
+demais, o wrapper `inline-block` sem altura. Mas **nenhuma tocou no `placeItems`**, que era o que
+quebrava a cadeia.
 
-### ⚠️ O que fazer na volta, e o que NÃO repetir
+### 🔴 A lição que importa mais que o conserto
 
-**Não continuar deduzindo pelo CSS.** Três rodadas de hipótese-conserto-falha custaram mais que
-medir. O caminho é **conectar a extensão do Claude no Chrome** (claude.ai/chrome) e medir o layout
-no navegador: `getBoundingClientRect` da célula e da foto, comparado com o da imagem do carrinho.
-Aí o número aparece em vez de ser inferido.
+**Minhas auditorias liam o CSS como texto.** Elas viam `height: 100%` escrito e davam por bom — sem
+perceber que a regra era **inerte pelo contexto**. Um teste de fonte confere a INTENÇÃO, nunca o
+efeito: ele não sabe que `place-items: center` desliga o esticamento do filho, nem que
+`max-height: %` precisa de pai com altura definida.
 
-Também vale registrar: a primeira versão da auditoria `lib/supermercado-cesta-cabe.test.ts`
-**passava com o defeito presente**, porque lia o CSS como texto e conferia que havia
-`objectFit: contain` — o que era verdade e inerte. Foi reforçada para conferir a cadeia de alturas,
-mas um teste que lê fonte nunca vai ver o que o navegador calcula.
+Ela testou no **Safari**, que nunca tinha aberto o app, e o defeito permaneceu — foi o que descartou
+a hipótese de cache, na qual eu estava apostando.
+
+**Para a próxima vez que um layout fugir do esperado:** medir no navegador antes da segunda
+tentativa, não depois da terceira. A extensão do Claude no Chrome (claude.ai/chrome) permite
+`getBoundingClientRect` no elemento real. Ver [[licao-teste-de-fonte-nao-ve-o-navegador]].
 
 ---
 
