@@ -13,6 +13,7 @@ import { CSS } from "@dnd-kit/utilities";
 import { calculateExerciseScore } from "@/lib/scoring";
 import { nextLevelPerTrial } from "@/lib/adaptive-trial";
 import { embaralharCenas } from "@/lib/ordem-historia/embaralhar";
+import { tamanhoDoCard } from "@/lib/ordem-historia/tamanho-do-card";
 import {
   avaliarOrdem,
   resumirSessao,
@@ -61,6 +62,7 @@ function penalize(raw: number, hints: number, tries: number): number {
   const tryF = Math.max(0.3, 1 - 0.25 * (tries - 1));
   return raw * hintF * tryF;
 }
+
 
 function shuffle<T>(a: T[]): T[] { const r = [...a]; for (let i = r.length - 1; i > 0; i--) { const j = Math.floor(Math.random() * (i + 1)); [r[i], r[j]] = [r[j], r[i]]; } return r; }
 // Os 30 ids recentes são guardados para os três modos juntos, mas uma faixa de ordenar tem
@@ -227,6 +229,8 @@ export function OrdemHistoria({ difficulty, theme, onComplete, settings }: Ordem
   const [wrongOpts, setWrongOpts] = useState<string[]>([]); // opções já erradas (falta)
   const [flash, setFlash] = useState("");                 // mensagem transitória ("tente outra")
   const [wide, setWide] = useState(false);   // tela larga (computador) → cards maiores
+  const [alturaJanela, setAlturaJanela] = useState(900);
+  const [larguraJanela, setLarguraJanela] = useState(1280);
   const [tutorialSeen, setTutorialSeen] = useState(false);
   const [acertos, setAcertos] = useState<Record<string, number>>({});
   const [processing, setProcessing] = useState(false);
@@ -238,7 +242,11 @@ export function OrdemHistoria({ difficulty, theme, onComplete, settings }: Ordem
   useEffect(() => () => { if (confirmTimerRef.current !== null) window.clearTimeout(confirmTimerRef.current); }, []);
 
   useEffect(() => {
-    const onResize = () => setWide(window.innerWidth >= 760);
+    const onResize = () => {
+      setWide(window.innerWidth >= 760);
+      setAlturaJanela(window.innerHeight);
+      setLarguraJanela(window.innerWidth);
+    };
     onResize();
     window.addEventListener("resize", onResize);
     return () => window.removeEventListener("resize", onResize);
@@ -557,7 +565,18 @@ export function OrdemHistoria({ difficulty, theme, onComplete, settings }: Ordem
   // grade dos modos ordem/intruso — no computador (wide) os cards crescem; no celular mantém 2 colunas
   const nPanels = falta ? 7 : (intruso ? 8 : cards.length);
   const cols = !wide ? 2 : nPanels <= 4 ? 2 : nPanels <= 6 ? 3 : 4;
-  const cardTarget = nPanels <= 4 ? 300 : nPanels <= 6 ? 250 : 210;   // largura-alvo do card no desktop
+  // Largura-alvo do card no computador. Era um número FIXO (300/250/210) e ela reprovou:
+  // "acho que elas estao muito pequena para quando abre no NOTEBOOK... o tamanho talvez
+  // esteja razoavel para celular, mas para o computador nao". Fixo em px, o card ignorava
+  // a altura da tela — num notebook sobrava meia tela vazia embaixo enquanto as cenas
+  // ficavam miúdas. E aqui enxergar é a tarefa: a ordem se deduz de detalhes pequenos
+  // (a roupa, o objeto na mão, o estado do que se constrói).
+  //
+  // Agora o card cresce até o limite do que couber — o menor entre o que cabe na LARGURA
+  // e o que cabe na ALTURA, para nunca empurrar o botão de confirmar para fora da tela.
+  const cardTarget = wide
+    ? tamanhoDoCard({ larguraJanela, alturaJanela, cenas: nPanels, colunas: cols, proporcao: storyA })
+    : (nPanels <= 4 ? 300 : nPanels <= 6 ? 250 : 210);
   const gridCols = `repeat(${cols}, minmax(0,1fr))`;
   const gridMax = wide ? cols * cardTarget : 460;
   const faltaMax = wide ? 760 : 520;
