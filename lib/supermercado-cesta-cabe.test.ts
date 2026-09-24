@@ -67,11 +67,30 @@ describe("auditoria: tudo cabe dentro do carrinho", () => {
   });
 
   it("nada é ampliado além da célula — foto não estoura para fora", () => {
-    // Era exatamente o defeito que ela viu.
     const bloco = FONTE.slice(FONTE.indexOf("/* O CARRINHO"), FONTE.indexOf("{/* confirmar */}"));
     expect(bloco, "scale na foto joga a imagem para fora da cesta").not.toMatch(/transform:\s*`?scale/);
     expect(bloco, "a foto tem de ser limitada pela célula").toContain('objectFit: "contain"');
-    expect(bloco).toContain('maxWidth: "100%", maxHeight: "100%"');
+  });
+
+  it("o limite de altura da foto REALMENTE se aplica — a cadeia de alturas é sólida", () => {
+    // O defeito que passou pela primeira versão desta auditoria: o wrapper do × era um
+    // `inline-block` SEM altura, e `max-height: 100%` só vale quando o pai tem altura
+    // definida. Sem isso o limite não se aplica e a foto sai do carrinho — ela viu duas
+    // vezes. Texto de CSS não basta: o que se confere aqui é a cadeia de alturas.
+    const bloco = FONTE.slice(FONTE.indexOf("/* O CARRINHO"), FONTE.indexOf("{/* confirmar */}"));
+
+    // 1. a grade tem altura
+    expect(bloco, "a grade precisa de altura").toContain('width: "100%", height: "100%"');
+    // 2. o wrapper entre a célula e a foto também
+    const wrapper = bloco.slice(bloco.indexOf("<span style={{ position: \"relative\""));
+    expect(wrapper.slice(0, 260), "wrapper sem altura quebra o max-height da foto")
+      .toContain('height: "100%"');
+    expect(wrapper.slice(0, 260), "inline-block não recebe altura em %")
+      .not.toContain('display: "inline-block"');
+    // 3. e a foto se limita por altura, não só por largura
+    const img = bloco.slice(bloco.indexOf("<img src={`/exercises/produtos/"));
+    expect(img.slice(0, 300), "a foto precisa ser limitada nas DUAS dimensões")
+      .toMatch(/height: "100%"/);
   });
 
   it("todo produto do catálogo cabe na célula, em qualquer quantidade", async () => {

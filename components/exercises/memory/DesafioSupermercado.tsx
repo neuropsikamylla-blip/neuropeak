@@ -846,14 +846,18 @@ export function DesafioSupermercado({ difficulty, theme, onComplete }: DesafioSu
                               exit={{ scale: 0.7, opacity: 0 }} transition={{ type: "spring", stiffness: 460, damping: 30 }}
                               title={p.name}
                               style={{ display: "grid", placeItems: "center", minHeight: 0, minWidth: 0 }}>
-                              {/* O wrapper encolhe até a LARGURA DA FOTO (inline-block), e é nele que o
-                                  × se ancora. Ancorado na célula, ele ficava longe sempre que a foto era
-                                  estreita — um álcool em gel numa célula quadrada deixa metade vazia. */}
-                              <span style={{ position: "relative", display: "inline-block",
-                                maxWidth: "100%", maxHeight: "100%", lineHeight: 0 }}>
+                              {/* ⚠️ O wrapper PRECISA ter altura própria (100% da célula).
+                                  Ele já foi um `inline-block` sem altura, para encolher até a largura da
+                                  foto e o × ficar colado nela. Parecia certo e estava errado: `max-height:
+                                  100%` só vale quando o pai tem altura definida — sem isso o limite
+                                  simplesmente NÃO SE APLICA, e a foto passava da célula e saía do carrinho.
+                                  Ela viu duas vezes: "agora a imagem esta vazando do carrinho".
+                                  Com `height: 100%` e `objectFit: contain`, a foto nunca ultrapassa. */}
+                              <span style={{ position: "relative", display: "block",
+                                width: "100%", height: "100%", lineHeight: 0 }}>
                               {/* eslint-disable-next-line @next/next/no-img-element */}
                               <img src={`/exercises/produtos/${id}.png`} alt={p.name} draggable={false}
-                                style={{ display: "block", maxWidth: "100%", maxHeight: "100%", objectFit: "contain",
+                                style={{ display: "block", width: "100%", height: "100%", objectFit: "contain",
                                   filter: "drop-shadow(0 2px 4px rgba(60,45,20,0.28))" }} />
                               {ordered && (
                                 <span style={{ position: "absolute", top: 0, left: 0, width: 17, height: 17, borderRadius: "50%",
