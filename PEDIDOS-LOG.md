@@ -26055,3 +26055,6 @@ abre a pasta que jogo lá e esse texto é que no nivel 12 por exemplo são 2 lis
 
 ## 24/09/2026 08:54
 coloquei
+
+## 24/09/2026 08:56
+crie que eu coloco

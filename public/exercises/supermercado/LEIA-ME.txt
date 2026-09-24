@@ -1,0 +1,11 @@
+SUPERMERCADO — imagem do carrinho
+
+Coloque aqui a imagem do CARRINHO VAZIO, sem texto nenhum desenhado.
+
+O "No carrinho", a contagem de itens e o botao de confirmar entram por cima,
+em HTML, para acompanharem os toques do paciente. Texto desenhado na imagem
+ficaria mentindo assim que ele pegasse o primeiro produto.
+
+Pode largar com o nome que vier -- eu renomeio.
+
+Se a imagem tiver fundo (creme ou branco), tudo bem: eu recorto aqui.
