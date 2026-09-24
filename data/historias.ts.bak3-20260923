@@ -1,0 +1,185 @@
+// Catálogo das histórias ilustradas (cenas em /exercises/historias/<id>/<1..n>.png).
+// n = nº de cenas; a = formato (largura/altura) das cenas. Dificuldade: fáceis=4, média=5, difícil=6, muito=8.
+
+export type HistDiff = "faceis" | "media" | "dificil" | "muito-dificil";
+export interface HistoriaDef {
+  id: string; diff: HistDiff; n: number; a: number;
+  /** Ordem narrativa correta, quando difere da numeração dos arquivos.
+   *  ord[k] = número do ARQUIVO (1-based) que deve ocupar a posição k (0-based).
+   *  Ausente = a numeração dos arquivos já é a ordem certa (o caso das outras 84). */
+  ord?: number[];
+  /** Conteúdo duplicado de outra história; fica no banco por histórico, fora do sorteio. */
+  duplicataDe?: string;
+  /** Fora do sorteio por ORDEM NÃO DEDUTÍVEL: a história não sustenta uma única sequência
+   *  correta, então o paciente acertaria por sorte. Fica no catálogo por histórico.
+   *  O texto é o motivo, para quem for reavaliar depois saber o que olhar. */
+  foraDoSorteio?: string;
+}
+
+export const HISTORIAS: HistoriaDef[] = [
+  { id: "f1", diff: "faceis", n: 4, a: 1.56 },
+  { id: "f2", diff: "faceis", n: 4, a: 1.47 },
+  { id: "f3", diff: "faceis", n: 4, a: 1.51 },
+  { id: "f4", diff: "faceis", n: 4, a: 1.48 },
+  { id: "f5", diff: "faceis", n: 4, a: 1.53, ord: [2, 1, 3, 4] },
+  { id: "f6", diff: "faceis", n: 4, a: 1.52 },
+  { id: "f7", diff: "faceis", n: 4, a: 1.5 },
+  { id: "f8", diff: "faceis", n: 4, a: 1.46 },
+  { id: "f9", diff: "faceis", n: 4, a: 1.5 },
+  { id: "f10", diff: "faceis", n: 4, a: 1.44 },
+  { id: "f11", diff: "faceis", n: 4, a: 1.48 },
+  { id: "f12", diff: "faceis", n: 4, a: 1.48, ord: [1, 4, 2, 3] },
+  { id: "f13", diff: "faceis", n: 4, a: 1.52 },
+  { id: "f14", diff: "faceis", n: 4, a: 1.5 },
+  { id: "f15", diff: "faceis", n: 4, a: 1.54 },
+  { id: "f16", diff: "faceis", n: 4, a: 1.51 },
+  { id: "f17", diff: "faceis", n: 4, a: 1.51 },
+  { id: "f18", diff: "faceis", n: 4, a: 1.49 },
+  { id: "f19", diff: "faceis", n: 4, a: 1.53 },
+  { id: "f20", diff: "faceis", n: 4, a: 1.48 },
+  { id: "f21", diff: "faceis", n: 4, a: 1.23 },
+  { id: "f22", diff: "faceis", n: 4, a: 1.23 },
+  { id: "f23", diff: "faceis", n: 4, a: 1.21 },
+  { id: "f24", diff: "faceis", n: 4, a: 1.21 },
+  { id: "f25", diff: "faceis", n: 4, a: 1.2 },
+  { id: "f26", diff: "faceis", n: 4, a: 1.22 },
+  { id: "m1", diff: "media", n: 5, a: 1.06, foraDoSorteio: "cenas 3 e 4 são as duas 'andando na chuva', sem pista de qual vem antes" },
+  { id: "m2", diff: "media", n: 5, a: 1.06 },
+  { id: "m3", diff: "media", n: 5, a: 1.04 },
+  { id: "m4", diff: "media", n: 5, a: 1.06 },
+  { id: "m5", diff: "media", n: 5, a: 1.07 },
+  { id: "m6", diff: "media", n: 5, a: 1.08, foraDoSorteio: "separar materiais e fazer o cartaz são atividades independentes; a ordem entre os blocos é arbitrária" },
+  { id: "m7", diff: "media", n: 5, a: 1.06 },
+  { id: "m8", diff: "media", n: 5, a: 1.06 },
+  { id: "m9", diff: "media", n: 5, a: 1.04 },
+  { id: "m10", diff: "media", n: 5, a: 1.08 },
+  { id: "m11", diff: "media", n: 5, a: 1.06 },
+  { id: "m12", diff: "media", n: 5, a: 1.05 },
+  { id: "m13", diff: "media", n: 5, a: 1.08 },
+  { id: "m14", diff: "media", n: 5, a: 1.08 },
+  { id: "m15", diff: "media", n: 5, a: 1.08 },
+  { id: "m16", diff: "media", n: 5, a: 1.07, ord: [2, 1, 3, 4, 5] },
+  { id: "m17", diff: "media", n: 5, a: 1.06 },
+  { id: "m18", diff: "media", n: 5, a: 1.04 },
+  { id: "m19", diff: "media", n: 5, a: 1.08 },
+  { id: "m20", diff: "media", n: 5, a: 1.1 },
+  { id: "m21", diff: "media", n: 5, a: 1.1, foraDoSorteio: "lavar as maçãs antes ou depois de levar para casa: as duas leituras são defensáveis" },
+  { id: "m22", diff: "media", n: 5, a: 1.06 },
+  { id: "d4", diff: "dificil", n: 6, a: 1.08 },
+  { id: "d10", diff: "dificil", n: 6, a: 1.06 },
+  { id: "d12", diff: "dificil", n: 6, a: 1.09 },
+  { id: "d13", diff: "dificil", n: 6, a: 1.03, ord: [3, 1, 2, 4, 5, 6] },
+  { id: "d14", diff: "dificil", n: 6, a: 1.04 },
+  { id: "d15", diff: "dificil", n: 6, a: 1.03, ord: [1, 3, 2, 4, 5, 6] },
+  { id: "d16", diff: "dificil", n: 6, a: 1.08 },
+  { id: "d17", diff: "dificil", n: 6, a: 1.05 },
+  { id: "d18", diff: "dificil", n: 6, a: 1.02 },
+  { id: "d19", diff: "dificil", n: 6, a: 1.03, ord: [1, 3, 4, 2, 5, 6] },
+  { id: "d20", diff: "dificil", n: 6, a: 1.03, ord: [2, 6, 4, 1, 3, 5] },
+  { id: "d21", diff: "dificil", n: 6, a: 1.03 },
+  { id: "d22", diff: "dificil", n: 6, a: 1.04, ord: [2, 1, 3, 4, 5, 6] },
+  { id: "d23", diff: "dificil", n: 6, a: 1.06 },
+  { id: "d24", diff: "dificil", n: 6, a: 1.01 },
+  { id: "d25", diff: "dificil", n: 6, a: 1.03 },
+  { id: "d26", diff: "dificil", n: 6, a: 1.01 },
+  { id: "d27", diff: "dificil", n: 6, a: 1.0 },
+  { id: "d28", diff: "dificil", n: 6, a: 1.06 },
+  { id: "d29", diff: "dificil", n: 6, a: 1.02 },
+  { id: "d30", diff: "dificil", n: 6, a: 0.99 },
+  { id: "d31", diff: "dificil", n: 6, a: 1.01 },
+  { id: "d32", diff: "dificil", n: 6, a: 1.0 },
+  { id: "d33", diff: "dificil", n: 6, a: 1.07 },
+  { id: "x1", diff: "muito-dificil", n: 8, a: 0.81 },
+  { id: "x2", diff: "muito-dificil", n: 8, a: 0.85 },
+  { id: "x3", diff: "muito-dificil", n: 8, a: 0.78 },
+  { id: "x4", diff: "muito-dificil", n: 8, a: 0.77 },
+  { id: "x5", diff: "muito-dificil", n: 8, a: 0.75 },
+  { id: "x6", diff: "muito-dificil", n: 8, a: 0.78 },
+  { id: "x7", diff: "muito-dificil", n: 8, a: 0.74 },
+  { id: "x8", diff: "muito-dificil", n: 8, a: 0.81 },
+  { id: "x9", diff: "muito-dificil", n: 8, a: 0.8 },
+  { id: "x10", diff: "muito-dificil", n: 8, a: 0.78 },
+  { id: "x11", diff: "muito-dificil", n: 8, a: 0.84 },
+  { id: "x12", diff: "muito-dificil", n: 8, a: 0.82 },
+  { id: "x13", diff: "muito-dificil", n: 8, a: 0.84 },
+  { id: "x14", diff: "muito-dificil", n: 8, a: 0.83 },
+  { id: "x15", diff: "muito-dificil", n: 8, a: 0.86 },
+  { id: "x16", diff: "muito-dificil", n: 8, a: 0.81 },
+  { id: "x17", diff: "muito-dificil", n: 8, a: 0.84 },
+  { id: "x18", diff: "muito-dificil", n: 8, a: 0.85 },
+  { id: "x19", diff: "muito-dificil", n: 8, a: 0.77 },
+  { id: "x21", diff: "muito-dificil", n: 8, a: 0.81 },
+  { id: "x22", diff: "muito-dificil", n: 8, a: 0.79 },
+  { id: "x23", diff: "muito-dificil", n: 8, a: 0.76 },
+  { id: "x24", diff: "muito-dificil", n: 8, a: 0.75 },
+  { id: "x25", diff: "muito-dificil", n: 8, a: 0.77 },
+];
+
+export const HIST_DIFF_PANELS: Record<HistDiff, number> = { faceis: 4, media: 5, dificil: 6, "muito-dificil": 8 };
+export const histPanelSrc = (id: string, i: number) => `/exercises/historias/${id}/${i}.png`;
+
+/** Painéis na ordem narrativa correta. painelDaPosicao(story)[k] = arquivo da posição k. */
+export function painelDaPosicao(story: { n: number; ord?: number[] }): number[] {
+  const natural = Array.from({ length: story.n }, (_, i) => i + 1);
+  if (!story.ord || story.ord.length !== story.n) return natural;
+
+  const paineis = new Set(story.ord);
+  const completa = paineis.size === story.n
+    && story.ord.every((panel) => Number.isInteger(panel) && panel >= 1 && panel <= story.n);
+  return completa ? [...story.ord] : natural;
+}
+
+// ── Encontre o Intruso (desbloqueio do nível 10) ──
+// 8 cenas: as cenas com order 0..6 formam a história em ordem; `intruder` (=7) é a cena que NÃO pertence.
+export interface HistoriaIntruso { id: string; n: number; a: number; intruder: number; }
+// "Descubra o que falta" — base DEDICADA (10 histórias próprias, NÃO reusa as de ordenar).
+// Cada história: 7 cenas em ordem (cena1..7) + 3 opções (op1..3). `correct` = índice (0-based) da opção certa.
+// No jogo as 3 opções são embaralhadas, então `correct` pode ser sempre 0 sem o paciente decorar.
+export interface HistoriaDescubra { id: string; a: number; oa: number; correct: number; }
+export const HISTORIAS_DESCUBRA: HistoriaDescubra[] = [
+  { id: "q1", a: 1.99, oa: 1.24, correct: 0 },
+  { id: "q2", a: 1.06, oa: 1.16, correct: 0 },
+  { id: "q3", a: 1.92, oa: 1.79, correct: 0 },
+  { id: "q4", a: 1.87, oa: 1.42, correct: 0 },
+  { id: "q5", a: 1.98, oa: 1.39, correct: 0 },
+  { id: "q6", a: 1.02, oa: 1.12, correct: 0 },
+  { id: "q7", a: 1.98, oa: 1.45, correct: 0 },
+  { id: "q8", a: 2.02, oa: 1.46, correct: 0 },
+  { id: "q9", a: 1.89, oa: 1.35, correct: 0 },
+  { id: "q10", a: 1.92, oa: 1.47, correct: 0 },
+  { id: "q11", a: 1.93, oa: 1.48, correct: 0 },
+  { id: "q12", a: 1.9, oa: 1.5, correct: 0 },
+  { id: "q13", a: 1.88, oa: 1.48, correct: 0 },
+  { id: "q14", a: 1.85, oa: 1.48, correct: 0 },
+  { id: "q15", a: 1.94, oa: 1.47, correct: 0 },
+  { id: "q16", a: 1.9, oa: 1.45, correct: 0 },
+  { id: "q17", a: 1.69, oa: 1.4, correct: 0 },
+  { id: "q18", a: 1.9, oa: 1.5, correct: 0 },
+  { id: "q19", a: 1.88, oa: 1.5, correct: 0 },
+  { id: "q20", a: 1.92, oa: 1.43, correct: 0 },
+];
+export const descubraScene = (id: string, i: number) => `/exercises/descubra/${id}/cena${i}.png`;
+export const descubraOption = (id: string, i: number) => `/exercises/descubra/${id}/op${i}.png`;
+
+export const HISTORIAS_INTRUSO: HistoriaIntruso[] = [
+  { id: "i1", n: 8, a: 1.84, intruder: 7 },
+  { id: "i2", n: 8, a: 1.41, intruder: 7 },
+  { id: "i3", n: 8, a: 1.69, intruder: 7 },
+  { id: "i4", n: 8, a: 1.74, intruder: 7 },
+  { id: "i5", n: 8, a: 1.43, intruder: 7 },
+  { id: "i6", n: 8, a: 1.42, intruder: 7 },
+  { id: "i7", n: 8, a: 1.47, intruder: 7 },
+  { id: "i8", n: 8, a: 1.43, intruder: 7 },
+  { id: "i9", n: 8, a: 1.41, intruder: 7 },
+  { id: "i10", n: 8, a: 1.46, intruder: 7 },
+  { id: "i11", n: 8, a: 1.39, intruder: 7 },
+  { id: "i12", n: 8, a: 1.34, intruder: 7 },
+  { id: "i13", n: 8, a: 1.41, intruder: 7 },
+  { id: "i14", n: 8, a: 1.39, intruder: 7 },
+  { id: "i15", n: 8, a: 1.43, intruder: 7 },
+  { id: "i16", n: 8, a: 1.42, intruder: 7 },
+  { id: "i17", n: 8, a: 1.38, intruder: 7 },
+  { id: "i18", n: 8, a: 1.42, intruder: 7 },
+  { id: "i19", n: 8, a: 1.4, intruder: 7 },
+  { id: "i20", n: 8, a: 1.38, intruder: 7 },
+];
