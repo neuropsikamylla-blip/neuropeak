@@ -1121,11 +1121,24 @@ export const registroDe = (q: Questao): RegistroHistorico => ({
   categoria: q.categoria,
 });
 
+/** Quantas rodadas para trás o MESMO enunciado fica proibido.
+ *
+ *  Era 3, e ela pegou o furo testando: "Qual produto vence primeiro?" saiu na atividade 1
+ *  e de novo na 5 — fora da janela de 3, e com produtos diferentes, então nenhuma outra
+ *  regra barrou. Para ela é a mesma pergunta; para o motor eram questões distintas, porque
+ *  só os produtos mudaram.
+ *
+ *  6 cobre quase toda a sessão (8 a 10 atividades) sem estrangular a geração — medido: a
+ *  taxa de questão nula continua abaixo do limite em todos os níveis. */
+const JANELA_SEM_REPETIR_ENUNCIADO = 6;
+
 /** Devolve o motivo da recusa, ou null se a questão pode entrar agora. */
 export function motivoRepeticao(q: Questao, hist: RegistroHistorico[]): string | null {
   const r = registroDe(q);
   const u3 = hist.slice(-3);
-  if (u3.some((h) => h.assinatura === r.assinatura)) return "mesmoTextoNas3";
+  if (hist.slice(-JANELA_SEM_REPETIR_ENUNCIADO).some((h) => h.assinatura === r.assinatura)) {
+    return "mesmoEnunciadoNaJanela";
+  }
   if (u3.some((h) => h.camposChave === r.camposChave)) return "mesmosCamposNas3";
   if (hist[hist.length - 1]?.produtoCorreto === r.produtoCorreto) return "mesmoProdutoCorretoSeguido";
   if (hist.length >= 2 && hist.slice(-2).every((h) => h.tipo === r.tipo)) return "tresDoMesmoTipoSeguidas";

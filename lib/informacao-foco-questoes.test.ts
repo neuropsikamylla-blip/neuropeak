@@ -1,3 +1,5 @@
+import { readFileSync } from "node:fs";
+import { resolve } from "node:path";
 import { describe, it, expect } from "vitest";
 import {
   gerarQuestao, montarQuestao, criarSnapshot, validarQuestao, motivoInvalidez,
@@ -424,7 +426,7 @@ describe("Regra de não repetição (§13)", () => {
     const snap = criarSnapshot(rnd);
     const { questao: q } = gerarQuestao("localizacao", NIVEIS[3], snap, rnd);
     const r = registroDe(q!);
-    expect(motivoRepeticao(q!, [r])).toBe("mesmoTextoNas3");
+    expect(motivoRepeticao(q!, [r])).toBe("mesmoEnunciadoNaJanela");
     expect(motivoRepeticao(q!, [{ ...r, assinatura: "outra", camposChave: "x" }])).toBe("mesmoProdutoCorretoSeguido");
     expect(motivoRepeticao(q!, [
       { ...r, assinatura: "a", camposChave: "x", produtoCorreto: "outro" },
@@ -879,5 +881,46 @@ describe("VP — o teto de operação de UMA ETAPA por nível (23/set)", () => {
       const comPeso = Object.values(p).filter((v) => v > 0).length;
       expect(comPeso, `nível ${nivel} tem só ${comPeso} operação(ões)`).toBeGreaterThanOrEqual(3);
     }
+  });
+});
+
+describe("VP — o mesmo enunciado não volta na mesma sessão (23/set)", () => {
+  // Ela pegou testando: "Qual produto vence primeiro?" saiu na atividade 1 e de novo na 5.
+  // A janela era de 3 rodadas, e os produtos eram outros — então nenhuma regra barrou.
+  // Para o paciente é a mesma pergunta; o que muda são as embalagens na tela.
+  it("uma questão é recusada mesmo 5 rodadas depois da igual", () => {
+    const rnd = rndSeed(2026092370);
+    const snap = criarSnapshot(rnd);
+    const { questao } = gerarRodadaDoComponente(3, rnd, snap, [], false);
+    expect(questao).not.toBeNull();
+    const igual = registroDe(questao!);
+
+    // 5 rodadas de distância: fora da janela antiga de 3, dentro da nova de 6.
+    const enchimento: RegistroHistorico[] = Array.from({ length: 4 }, (_, i) => ({
+      ...igual, assinatura: `outra-${i}`, camposChave: `outros-${i}`, produtoCorreto: `p${i}`,
+    }));
+    expect(motivoRepeticao(questao!, [igual, ...enchimento])).toBe("mesmoEnunciadoNaJanela");
+  }, 60_000);
+
+  it.each([1, 2, 3, 5, 8])("nível %i: 12 rodadas encadeadas e nenhuma sai nula", (nivel) => {
+    // A janela maior recusa mais questões, então precisa sobrar catálogo para regerar.
+    // Este é o contrapeso do teste acima: se alargar demais, a geração estrangula e a
+    // rodada volta nula — e aí o paciente veria tela vazia.
+    const rnd = rndSeed(2026092380 + nivel);
+    const snap = criarSnapshot(rnd);
+    const historico: RegistroHistorico[] = [];
+    for (let rodada = 0; rodada < 12; rodada++) {
+      const { questao } = gerarRodadaDoComponente(nivel, rnd, snap, historico, false);
+      expect(questao, `nível ${nivel}, rodada ${rodada + 1}`).not.toBeNull();
+      historico.push(registroDe(questao!));
+    }
+  }, 120_000);
+
+  it("a janela cobre a maior parte de uma sessão", () => {
+    // Uma sessão serve de 8 a 10 atividades; a janela precisa alcançar além de um punhado.
+    const fonte = readFileSync(resolve(__dirname, "informacao-foco-questoes.ts"), "utf-8");
+    const m = fonte.match(/JANELA_SEM_REPETIR_ENUNCIADO\s*=\s*(\d+)/);
+    expect(m, "a constante sumiu").toBeTruthy();
+    expect(Number(m![1])).toBeGreaterThanOrEqual(6);
   });
 });
