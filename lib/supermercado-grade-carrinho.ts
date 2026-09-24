@@ -23,3 +23,15 @@ export function colunasDoCarrinho(itens: number): number {
 export function linhasDoCarrinho(itens: number): number {
   return Math.max(LINHAS_MINIMAS_CESTA, Math.ceil(itens / colunasDoCarrinho(itens)));
 }
+
+/** Quantas células vazias entram ANTES dos produtos na grade.
+ *
+ *  É o que faz as compras assentarem no FUNDO da cesta e subirem conforme entram, como num
+ *  carrinho de verdade. `alignContent: end` sozinho não resolve: as faixas já ocupam a altura
+ *  toda, então não sobra espaço livre para alinhar e os itens ficam na primeira linha.
+ *  Ela viu com dois itens: *"podemos começar na parte de baixo, e quando aumenta a quantidade
+ *  sobe e nao ao contrario"*. */
+export function vaziasAntes(itens: number): number {
+  const celulas = colunasDoCarrinho(itens) * linhasDoCarrinho(itens);
+  return Math.max(0, celulas - itens);
+}

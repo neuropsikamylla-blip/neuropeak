@@ -1,7 +1,7 @@
 import { readFileSync, existsSync, statSync } from "node:fs";
 import { resolve } from "node:path";
 import { describe, expect, it } from "vitest";
-import { colunasDoCarrinho, linhasDoCarrinho } from "@/lib/supermercado-grade-carrinho";
+import { colunasDoCarrinho, linhasDoCarrinho, vaziasAntes } from "@/lib/supermercado-grade-carrinho";
 
 // 24/set — desenho dela: a arte do carrinho é a MOLDURA, e tudo que muda vai por cima em HTML.
 // Antes os itens vinham numa lista vertical com a foto em 34px — pequena demais para o
@@ -104,5 +104,44 @@ describe("Supermercado — o carrinho", () => {
     // Foto estreita (um álcool em gel) numa célula larga deixava o × solto no canto.
     const bloco = FONTE.slice(FONTE.indexOf("/* O CARRINHO"), FONTE.indexOf("{/* confirmar */}"));
     expect(bloco).toContain('display: "inline-block"');
+  });
+
+  it("as compras assentam no FUNDO e sobem conforme entram", () => {
+    // Ela viu com dois itens no topo: "podemos começar na parte de baixo, e quando aumenta
+    // a quantidade sobe e nao ao contrario". `alignContent: end` sozinho não resolvia — as
+    // faixas já ocupam a altura toda, então não sobra espaço para alinhar.
+    for (const n of [1, 2, 3, 4, 6]) {
+      const cols = colunasDoCarrinho(n), lin = linhasDoCarrinho(n);
+      const primeiraFaixa = Math.floor(vaziasAntes(n) / cols) + 1;
+      const ultimaFaixa = Math.ceil((vaziasAntes(n) + n) / cols);
+      expect(ultimaFaixa, `${n} itens não chegam na última faixa`).toBe(lin);
+      expect(primeiraFaixa, `${n} itens`).toBeGreaterThanOrEqual(1);
+    }
+  });
+
+  it("com a cesta cheia não sobra célula vazia", () => {
+    for (const n of [6, 9, 12, 16]) {
+      const celulas = colunasDoCarrinho(n) * linhasDoCarrinho(n);
+      expect(vaziasAntes(n), `${n} itens`).toBe(celulas - n);
+      expect(vaziasAntes(n)).toBeGreaterThanOrEqual(0);
+    }
+  });
+
+  it("as compras preenchem a cesta — a escala compensa a margem das fotos", () => {
+    // Referência dela: os produtos QUASE SE TOCAM. As fotos trazem margem própria (medido:
+    // o produto ocupa de 79% a 98% do arquivo), então `contain` puro deixa respiro duplo.
+    const m = FONTE.match(/const ESCALA_NA_CESTA = ([\d.]+)/);
+    expect(m, "a escala sumiu").toBeTruthy();
+    const escala = Number(m![1]);
+    expect(escala, "sem compensação a cesta parece vazia").toBeGreaterThan(1);
+    expect(escala, "escala demais corta a foto na borda da célula").toBeLessThanOrEqual(1.25);
+  });
+
+  it("a coluna do carrinho tem largura para a foto ficar conferível", () => {
+    const m = FONTE.match(/width: "(\d+)%", maxWidth: (\d+), minWidth: 156/);
+    expect(m, "a coluna mudou de forma").toBeTruthy();
+    expect(Number(m![2]), "coluna estreita deixa a foto pequena").toBeGreaterThanOrEqual(400);
+    // mas não pode engolir a prateleira, que é onde ele procura
+    expect(Number(m![1]), "a prateleira precisa de espaço").toBeLessThanOrEqual(45);
   });
 });

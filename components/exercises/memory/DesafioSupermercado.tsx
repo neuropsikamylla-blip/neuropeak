@@ -3,7 +3,7 @@
 import { useState, useEffect, useRef, useCallback, useMemo, useLayoutEffect } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { calculateExerciseScore } from "@/lib/scoring";
-import { colunasDoCarrinho, linhasDoCarrinho } from "@/lib/supermercado-grade-carrinho";
+import { colunasDoCarrinho, linhasDoCarrinho, vaziasAntes } from "@/lib/supermercado-grade-carrinho";
 import { cancelTTS } from "@/lib/tts";
 import { resolveVoice, ensureVoices } from "@/lib/voicePrefs";
 import { VoicePicker } from "@/components/exercises/VoicePicker";
@@ -156,11 +156,16 @@ function ProductImg({ id, size }: { id: string; size: number }) {
   );
 }
 
+/** As fotos de produto trazem margem branca própria — medido, o produto ocupa de 79% a 98%
+ *  do arquivo. Com `contain` puro sobra respiro duplo e a cesta parece vazia. Esta escala
+ *  compensa a margem do arquivo, para as compras quase se tocarem, como na referência dela. */
+const ESCALA_NA_CESTA = 1.14;
+
 /** Retângulo útil da cesta dentro da arte do carrinho, em fração da imagem.
  *  Medido sobre o próprio desenho: é o retângulo INSCRITO, que cabe tanto na boca (larga)
  *  quanto no fundo (estreito, por causa da perspectiva). Produtos fora daqui apareceriam
  *  atravessando a grade lateral. */
-const CESTA = { x0: 0.225, y0: 0.200, x1: 0.775, y1: 0.710 };
+const CESTA = { x0: 0.215, y0: 0.195, x1: 0.785, y1: 0.715 };
 
 /** Tamanho da foto na tela de MEMORIZAR, conforme quantos itens a lista tem.
  *
@@ -774,7 +779,7 @@ export function DesafioSupermercado({ difficulty, theme, onComplete }: DesafioSu
               </div>
 
               {/* painel do carrinho */}
-              <div style={{ flexShrink: 0, width: "35%", maxWidth: 364, minWidth: 156,
+              <div style={{ flexShrink: 0, width: "39%", maxWidth: 420, minWidth: 156,
                 background: "rgba(247,242,232,0.97)", borderRadius: 20, border: "1px solid rgba(200,180,140,0.5)",
                 boxShadow: "0 14px 36px rgba(40,30,15,0.28)", padding: 12,
                 display: "flex", flexDirection: "column", gap: 10, overflow: "hidden" }}>
@@ -823,8 +828,17 @@ export function DesafioSupermercado({ difficulty, theme, onComplete }: DesafioSu
                     <div style={{
                       display: "grid", gridTemplateColumns: `repeat(${colunasDoCarrinho(cartIds.length)}, 1fr)`,
                       gridTemplateRows: `repeat(${linhasDoCarrinho(cartIds.length)}, minmax(0, 1fr))`,
-                      width: "100%", height: "100%", gap: 3, alignContent: "end",
+                      width: "100%", height: "100%", gap: 1, alignContent: "end",
                     }}>
+                      {/* Células vazias ANTES dos produtos: é o que faz as compras assentarem
+                          no FUNDO e subirem conforme entram, como num carrinho de verdade.
+                          `alignContent: end` sozinho não bastava — as faixas já ocupam a altura
+                          toda, então não sobra espaço para alinhar e os itens caíam no topo.
+                          Ela viu: "podemos começar na parte de baixo, e quando aumenta a
+                          quantidade sobe e nao ao contrario". */}
+                      {Array.from({ length: vaziasAntes(cartIds.length) }, (_, i) => (
+                        <div key={`vazia-${i}`} aria-hidden />
+                      ))}
                       <AnimatePresence mode="popLayout">
                         {cartIds.map((id, idx) => {
                           const p = PRODUCT_MAP.get(id); if (!p) return null;
@@ -841,6 +855,10 @@ export function DesafioSupermercado({ difficulty, theme, onComplete }: DesafioSu
                               {/* eslint-disable-next-line @next/next/no-img-element */}
                               <img src={`/exercises/produtos/${id}.png`} alt={p.name} draggable={false}
                                 style={{ display: "block", maxWidth: "100%", maxHeight: "100%", objectFit: "contain",
+                                  // As fotos trazem margem própria (medido: o produto ocupa de 79% a 98%
+                                  // do arquivo). Sem compensar, sobra respiro duplo e a cesta parece vazia.
+                                  // A referência dela mostra as compras QUASE SE TOCANDO.
+                                  transform: `scale(${ESCALA_NA_CESTA})`,
                                   filter: "drop-shadow(0 2px 4px rgba(60,45,20,0.28))" }} />
                               {ordered && (
                                 <span style={{ position: "absolute", top: 0, left: 0, width: 17, height: 17, borderRadius: "50%",
