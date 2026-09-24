@@ -155,6 +155,12 @@ function ProductImg({ id, size }: { id: string; size: number }) {
   );
 }
 
+/** Retângulo útil da cesta dentro da arte do carrinho, em fração da imagem.
+ *  Medido sobre o próprio desenho: é o retângulo INSCRITO, que cabe tanto na boca (larga)
+ *  quanto no fundo (estreito, por causa da perspectiva). Produtos fora daqui apareceriam
+ *  atravessando a grade lateral. */
+const CESTA = { x0: 0.245, y0: 0.215, x1: 0.755, y1: 0.700 };
+
 /** Tamanho da foto na tela de MEMORIZAR, conforme quantos itens a lista tem.
  *
  *  Era 66px fixo, e ela reprovou vendo uma lista de dois: "está muito pequena as figuras".
@@ -767,7 +773,7 @@ export function DesafioSupermercado({ difficulty, theme, onComplete }: DesafioSu
               </div>
 
               {/* painel do carrinho */}
-              <div style={{ flexShrink: 0, width: "33%", maxWidth: 300, minWidth: 156,
+              <div style={{ flexShrink: 0, width: "35%", maxWidth: 364, minWidth: 156,
                 background: "rgba(247,242,232,0.97)", borderRadius: 20, border: "1px solid rgba(200,180,140,0.5)",
                 boxShadow: "0 14px 36px rgba(40,30,15,0.28)", padding: 12,
                 display: "flex", flexDirection: "column", gap: 10, overflow: "hidden" }}>
@@ -787,34 +793,66 @@ export function DesafioSupermercado({ difficulty, theme, onComplete }: DesafioSu
                   </div>
                 </div>
 
-                {/* linhas de itens */}
-                <div style={{ flex: 1, overflowY: "auto", display: "flex", flexDirection: "column", gap: 7, minHeight: 0 }}>
-                  <AnimatePresence mode="popLayout">
-                    {cartIds.length === 0 ? (
-                      <motion.div key="empty" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}
-                        style={{ color: "#a3acb8", fontSize: 12, fontStyle: "italic", textAlign: "center", padding: "18px 6px" }}>
-                        Toque nos produtos da prateleira...
-                      </motion.div>
-                    ) : cartIds.map((id, idx) => {
-                      const p = PRODUCT_MAP.get(id); if (!p) return null;
-                      return (
-                        <motion.div key={id} layout initial={{ scale: 0.9, opacity: 0 }} animate={{ scale: 1, opacity: 1 }}
-                          exit={{ scale: 0.9, opacity: 0 }} transition={{ type: "spring", stiffness: 460, damping: 30 }}
-                          style={{ display: "flex", alignItems: "center", gap: 9, padding: "6px 8px", background: "#fff",
-                            borderRadius: 12, border: "1px solid #ece3d1", boxShadow: "0 2px 6px rgba(120,90,50,0.08)" }}>
-                          {ordered && <span style={{ width: 20, height: 20, flexShrink: 0, borderRadius: "50%", background: "#2f9e8f",
-                            color: "#fff", fontSize: 11, fontWeight: 900, display: "flex", alignItems: "center", justifyContent: "center" }}>{idx + 1}</span>}
-                          <ProductImg id={id} size={34} />
-                          <span style={{ flex: 1, minWidth: 0, fontSize: 12.5, fontWeight: 700, color: "#37424d",
-                            overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{p.name}</span>
-                          <button onClick={() => toggleProduct(id)} title={`Remover ${p.name}`}
-                            style={{ width: 24, height: 24, borderRadius: "50%", flexShrink: 0, cursor: "pointer", border: "none",
-                              background: "#fbe3cf", color: "#e07a3a", fontWeight: 900, fontSize: 14, lineHeight: 1,
-                              display: "flex", alignItems: "center", justifyContent: "center" }}>×</button>
-                        </motion.div>
-                      );
-                    })}
-                  </AnimatePresence>
+                {/* O CARRINHO — a arte é a moldura, e tudo que muda vai por cima em HTML.
+                    Desenho dela (24/set). Antes os itens vinham numa lista vertical com a foto
+                    em 34px: pequena demais para o paciente CONFERIR de relance o que já pegou,
+                    que é a função do carrinho num exercício de memória — ele bate a lista que
+                    memorizou contra o que está ali.
+                    Texto nunca entra na imagem: a contagem muda a cada toque. */}
+                <div style={{ flex: 1, minHeight: 0, display: "flex", alignItems: "center", justifyContent: "center" }}>
+                  <div style={{ position: "relative", width: "100%", maxWidth: 340 }}>
+                    {/* eslint-disable-next-line @next/next/no-img-element */}
+                    <img src="/exercises/supermercado/carrinho.png" alt="" draggable={false}
+                      style={{ width: "100%", display: "block", userSelect: "none" }} />
+
+                    {/* área útil da cesta, medida da própria arte */}
+                    <div style={{
+                      position: "absolute",
+                      left: `${CESTA.x0 * 100}%`, top: `${CESTA.y0 * 100}%`,
+                      width: `${(CESTA.x1 - CESTA.x0) * 100}%`, height: `${(CESTA.y1 - CESTA.y0) * 100}%`,
+                      display: "grid", gridTemplateColumns: "repeat(2, 1fr)",
+                      gridAutoRows: "1fr", gap: 4, alignContent: "start",
+                    }}>
+                      <AnimatePresence mode="popLayout">
+                        {cartIds.map((id, idx) => {
+                          const p = PRODUCT_MAP.get(id); if (!p) return null;
+                          return (
+                            <motion.div key={id} layout initial={{ scale: 0.7, opacity: 0 }} animate={{ scale: 1, opacity: 1 }}
+                              exit={{ scale: 0.7, opacity: 0 }} transition={{ type: "spring", stiffness: 460, damping: 30 }}
+                              title={p.name}
+                              style={{ position: "relative", display: "flex", alignItems: "center", justifyContent: "center", minHeight: 0 }}>
+                              {/* eslint-disable-next-line @next/next/no-img-element */}
+                              <img src={`/exercises/produtos/${id}.png`} alt={p.name} draggable={false}
+                                style={{ maxWidth: "100%", maxHeight: "100%", objectFit: "contain",
+                                  filter: "drop-shadow(0 2px 4px rgba(60,45,20,0.28))" }} />
+                              {ordered && (
+                                <span style={{ position: "absolute", top: -3, left: -3, width: 17, height: 17, borderRadius: "50%",
+                                  background: "#2f9e8f", color: "#fff", fontSize: 10, fontWeight: 900,
+                                  display: "flex", alignItems: "center", justifyContent: "center" }}>{idx + 1}</span>
+                              )}
+                              {/* Remover continua existindo: ele pode ter tocado no produto errado. */}
+                              <button onClick={() => toggleProduct(id)} title={`Remover ${p.name}`} aria-label={`Remover ${p.name}`}
+                                style={{ position: "absolute", top: -4, right: -4, width: 19, height: 19, borderRadius: "50%",
+                                  cursor: "pointer", border: "1.5px solid #fff", background: "#e07a3a", color: "#fff",
+                                  fontWeight: 900, fontSize: 12, lineHeight: 1, padding: 0,
+                                  display: "flex", alignItems: "center", justifyContent: "center",
+                                  boxShadow: "0 1px 4px rgba(0,0,0,0.3)" }}>×</button>
+                            </motion.div>
+                          );
+                        })}
+                      </AnimatePresence>
+                    </div>
+
+                    {cartIds.length === 0 && (
+                      <div style={{ position: "absolute", left: `${CESTA.x0 * 100}%`, top: `${CESTA.y0 * 100}%`,
+                        width: `${(CESTA.x1 - CESTA.x0) * 100}%`, height: `${(CESTA.y1 - CESTA.y0) * 100}%`,
+                        display: "flex", alignItems: "center", justifyContent: "center", pointerEvents: "none" }}>
+                        <span style={{ color: "#9aa3ad", fontSize: 11.5, fontStyle: "italic", textAlign: "center", lineHeight: 1.3 }}>
+                          Toque nos produtos<br />da prateleira
+                        </span>
+                      </div>
+                    )}
+                  </div>
                 </div>
 
                 {/* confirmar */}
