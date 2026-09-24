@@ -810,8 +810,20 @@ export function DesafioSupermercado({ difficulty, theme, onComplete }: DesafioSu
                       position: "absolute",
                       left: `${CESTA.x0 * 100}%`, top: `${CESTA.y0 * 100}%`,
                       width: `${(CESTA.x1 - CESTA.x0) * 100}%`, height: `${(CESTA.y1 - CESTA.y0) * 100}%`,
+                      display: "flex", flexDirection: "column", justifyContent: "flex-end",
+                    }}>
+                    {/* A grade tem CÉLULAS QUADRADAS e ocupa só a altura que precisa — daí o
+                        aspect-ratio. Antes as linhas dividiam a área inteira: com dois itens a
+                        célula ficava altíssima, a foto boiava no meio dela e o × de remover
+                        subia para o topo, longe do produto. Ela viu: "seria possivel manter o X
+                        mais perto da imagem correspondente?".
+                        `justifyContent: flex-end` assenta as compras no FUNDO da cesta, como num
+                        carrinho de verdade. */}
+                    <div style={{
                       display: "grid", gridTemplateColumns: "repeat(2, 1fr)",
-                      gridAutoRows: "1fr", gap: 4, alignContent: "start",
+                      gridTemplateRows: `repeat(${Math.max(1, Math.ceil(cartIds.length / 2))}, 1fr)`,
+                      aspectRatio: `2 / ${Math.max(1, Math.ceil(cartIds.length / 2))}`,
+                      maxHeight: "100%", width: "100%", margin: "0 auto", gap: 4,
                     }}>
                       <AnimatePresence mode="popLayout">
                         {cartIds.map((id, idx) => {
@@ -826,13 +838,13 @@ export function DesafioSupermercado({ difficulty, theme, onComplete }: DesafioSu
                                 style={{ maxWidth: "100%", maxHeight: "100%", objectFit: "contain",
                                   filter: "drop-shadow(0 2px 4px rgba(60,45,20,0.28))" }} />
                               {ordered && (
-                                <span style={{ position: "absolute", top: -3, left: -3, width: 17, height: 17, borderRadius: "50%",
+                                <span style={{ position: "absolute", top: 0, left: 0, width: 17, height: 17, borderRadius: "50%",
                                   background: "#2f9e8f", color: "#fff", fontSize: 10, fontWeight: 900,
                                   display: "flex", alignItems: "center", justifyContent: "center" }}>{idx + 1}</span>
                               )}
                               {/* Remover continua existindo: ele pode ter tocado no produto errado. */}
                               <button onClick={() => toggleProduct(id)} title={`Remover ${p.name}`} aria-label={`Remover ${p.name}`}
-                                style={{ position: "absolute", top: -4, right: -4, width: 19, height: 19, borderRadius: "50%",
+                                style={{ position: "absolute", top: 0, right: 0, width: 19, height: 19, borderRadius: "50%",
                                   cursor: "pointer", border: "1.5px solid #fff", background: "#e07a3a", color: "#fff",
                                   fontWeight: 900, fontSize: 12, lineHeight: 1, padding: 0,
                                   display: "flex", alignItems: "center", justifyContent: "center",
@@ -841,6 +853,7 @@ export function DesafioSupermercado({ difficulty, theme, onComplete }: DesafioSu
                           );
                         })}
                       </AnimatePresence>
+                    </div>
                     </div>
 
                     {cartIds.length === 0 && (

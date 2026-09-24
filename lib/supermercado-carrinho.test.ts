@@ -56,4 +56,17 @@ describe("Supermercado — o carrinho", () => {
       .map(([, l, c]) => Number(l) * Number(c));
     expect(Math.max(...maiores), "o teto de itens mudou — a grade precisa acompanhar").toBe(8);
   });
+  it("as células são quadradas e a grade ocupa só a altura necessária", () => {
+    // Ela viu o defeito: "seria possivel manter o X mais perto da imagem correspondente?".
+    // A causa era a grade dividir a área INTEIRA entre as linhas — com dois itens a célula
+    // ficava altíssima, a foto boiava no meio e o × subia para o topo dela.
+    expect(FONTE).toContain("aspectRatio: `2 / ${Math.max(1, Math.ceil(cartIds.length / 2))}`");
+    expect(FONTE, "as linhas precisam acompanhar a quantidade de itens")
+      .toContain("gridTemplateRows: `repeat(${Math.max(1, Math.ceil(cartIds.length / 2))}, 1fr)`");
+  });
+
+  it("as compras assentam no fundo da cesta, como num carrinho de verdade", () => {
+    const bloco = FONTE.slice(FONTE.indexOf("/* O CARRINHO"), FONTE.indexOf("{/* confirmar */}"));
+    expect(bloco).toContain('justifyContent: "flex-end"');
+  });
 });
