@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useRef, useCallback, useEffect } from "react";
+import { useState, useRef, useCallback, useEffect, useLayoutEffect } from "react";
 import {
   DndContext, closestCenter, MouseSensor, TouchSensor, KeyboardSensor,
   useSensor, useSensors, type DragEndEvent,
@@ -13,7 +13,7 @@ import { CSS } from "@dnd-kit/utilities";
 import { calculateExerciseScore } from "@/lib/scoring";
 import { nextLevelPerTrial } from "@/lib/adaptive-trial";
 import { embaralharCenas } from "@/lib/ordem-historia/embaralhar";
-import { tamanhoDoCard } from "@/lib/ordem-historia/tamanho-do-card";
+import { tamanhoDoCard, ALTURA_FORA_PADRAO, FOLGA_MEDIDA } from "@/lib/ordem-historia/tamanho-do-card";
 import {
   avaliarOrdem,
   resumirSessao,
@@ -231,6 +231,14 @@ export function OrdemHistoria({ difficulty, theme, onComplete, settings }: Ordem
   const [wide, setWide] = useState(false);   // tela larga (computador) → cards maiores
   const [alturaJanela, setAlturaJanela] = useState(900);
   const [larguraJanela, setLarguraJanela] = useState(1280);
+  // Quanto da altura NÃO é a grade de cenas. Era uma constante chutada em 260px; agora é
+  // MEDIDO do próprio layout. Chutar para mais deixava a cena menor do que podia — foi o
+  // que ela viu no notebook; chutar para menos seria pior, porque o contêiner é
+  // `overflow: hidden` e o botão de confirmar simplesmente sumiria da tela.
+  const headerRef = useRef<HTMLDivElement>(null);
+  const instrucaoRef = useRef<HTMLDivElement>(null);
+  const rodapeRef = useRef<HTMLDivElement>(null);
+  const [alturaForaDaGrade, setAlturaForaDaGrade] = useState(ALTURA_FORA_PADRAO);
   const [tutorialSeen, setTutorialSeen] = useState(false);
   const [acertos, setAcertos] = useState<Record<string, number>>({});
   const [processing, setProcessing] = useState(false);
@@ -240,6 +248,19 @@ export function OrdemHistoria({ difficulty, theme, onComplete, settings }: Ordem
   // Sair do exercício no meio do "Verificando…" deixaria o timer atualizando estado de um
   // componente já desmontado.
   useEffect(() => () => { if (confirmTimerRef.current !== null) window.clearTimeout(confirmTimerRef.current); }, []);
+
+  useLayoutEffect(() => {
+    const medir = () => {
+      const soma = [headerRef, instrucaoRef, rodapeRef]
+        .reduce((t, r) => t + (r.current?.getBoundingClientRect().height ?? 0), 0);
+      // Só aceita a medida se os três já renderizaram; senão mantém o padrão seguro.
+      if (soma > 40) setAlturaForaDaGrade(Math.ceil(soma) + FOLGA_MEDIDA);
+    };
+    medir();
+    const obs = new ResizeObserver(medir);
+    for (const r of [headerRef, instrucaoRef, rodapeRef]) if (r.current) obs.observe(r.current);
+    return () => obs.disconnect();
+  });
 
   useEffect(() => {
     const onResize = () => {
@@ -575,7 +596,7 @@ export function OrdemHistoria({ difficulty, theme, onComplete, settings }: Ordem
   // Agora o card cresce até o limite do que couber — o menor entre o que cabe na LARGURA
   // e o que cabe na ALTURA, para nunca empurrar o botão de confirmar para fora da tela.
   const cardTarget = wide
-    ? tamanhoDoCard({ larguraJanela, alturaJanela, cenas: nPanels, colunas: cols, proporcao: storyA })
+    ? tamanhoDoCard({ larguraJanela, alturaJanela, cenas: nPanels, colunas: cols, proporcao: storyA, alturaForaDaGrade })
     : (nPanels <= 4 ? 300 : nPanels <= 6 ? 250 : 210);
   const gridCols = `repeat(${cols}, minmax(0,1fr))`;
   const gridMax = wide ? cols * cardTarget : 460;
@@ -639,7 +660,7 @@ export function OrdemHistoria({ difficulty, theme, onComplete, settings }: Ordem
     <div style={{ position: "fixed", inset: 0, display: "flex", flexDirection: "column", overflow: "hidden",
       background: "linear-gradient(180deg,#f3f0fb 0%,#eaeefb 55%,#eef0f8 100%)" }}>
       {/* Header */}
-      <div style={{ flexShrink: 0, padding: "14px 18px 8px" }}>
+      <div ref={headerRef} style={{ flexShrink: 0, padding: "14px 18px 8px" }}>
         <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 8 }}>
           <div>
             <div style={{ fontSize: 15, fontWeight: 900, color: "#2a2440" }}>{headerTitle}</div>
@@ -650,7 +671,7 @@ export function OrdemHistoria({ difficulty, theme, onComplete, settings }: Ordem
       </div>
 
       {/* Instrução + dicas */}
-      <div style={{ flexShrink: 0, textAlign: "center", padding: "2px 18px 8px" }}>
+      <div ref={instrucaoRef} style={{ flexShrink: 0, textAlign: "center", padding: "2px 18px 8px" }}>
         <p style={{ fontSize: 13, fontWeight: 700, color: "#5b5470" }}>{instruction}</p>
         {phase === "playing" && flash && (
           <p style={{ fontSize: 12.5, fontWeight: 800, color: "#ef4444", margin: "4px 0 0" }}>{flash}</p>
@@ -733,7 +754,7 @@ export function OrdemHistoria({ difficulty, theme, onComplete, settings }: Ordem
       </div>
 
       {/* Confirmar */}
-      <div style={{ flexShrink: 0, padding: "8px 16px 16px" }}>
+      <div ref={rodapeRef} style={{ flexShrink: 0, padding: "8px 16px 16px" }}>
         {intruso && phase === "playing" && !marked && (
           <p style={{ textAlign: "center", fontSize: 11.5, color: "#ef4444", fontWeight: 700, margin: "0 0 6px" }}>Toque na cena que não pertence para liberar o Confirmar.</p>
         )}

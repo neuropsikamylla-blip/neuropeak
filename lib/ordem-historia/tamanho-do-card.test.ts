@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { tamanhoDoCard, CARD_MIN, CARD_MAX, ALTURA_FORA_DA_GRADE, GAP_GRADE, MARGEM_LATERAL }
+import { tamanhoDoCard, CARD_MIN, CARD_MAX, ALTURA_FORA_PADRAO, GAP_GRADE, MARGEM_LATERAL }
   from "./tamanho-do-card";
 
 const TELAS = [
@@ -27,7 +27,7 @@ describe("tamanho do card de cena", () => {
       const linhas = Math.ceil(cenas / colunas);
       const card = tamanhoDoCard({ ...tela, cenas, colunas, proporcao: 1.2 });
       const alturaGrade = (card / 1.2) * linhas + GAP_GRADE * (linhas - 1);
-      const disponivel = tela.alturaJanela - ALTURA_FORA_DA_GRADE;
+      const disponivel = tela.alturaJanela - ALTURA_FORA_PADRAO;
       // CARD_MIN pode estourar telas muito baixas de propósito: abaixo dele a cena fica
       // ilegível, e aí é melhor rolar a página do que não enxergar.
       if (card > CARD_MIN) {
@@ -60,6 +60,39 @@ describe("tamanho do card de cena", () => {
       const card = tamanhoDoCard({ larguraJanela: 1440, alturaJanela: 900, cenas: 6, colunas: 3, proporcao });
       expect(Number.isFinite(card), `proporção ${proporcao}`).toBe(true);
       expect(card).toBeGreaterThanOrEqual(CARD_MIN);
+    }
+  });
+});
+
+describe("o espaço fora da grade é medido, não chutado", () => {
+  it("medir menos espaço reservado devolve cena maior", () => {
+    const base = { larguraJanela: 1470, alturaJanela: 830, cenas: 5, colunas: 3, proporcao: 1.2 };
+    const comPadrao = tamanhoDoCard(base);
+    const comMedida = tamanhoDoCard({ ...base, alturaForaDaGrade: 175 });
+    expect(comMedida, "medir o layout real tem de render mais que o padrão folgado")
+      .toBeGreaterThan(comPadrao);
+  });
+
+  it("o padrão do primeiro render é folgado, nunca apertado", () => {
+    // Errar para MENOS faria o botão de confirmar sumir: o contêiner do exercício é
+    // `overflow: hidden`, então nada rola — o que não cabe desaparece.
+    expect(ALTURA_FORA_PADRAO).toBeGreaterThanOrEqual(240);
+  });
+
+  it("mesmo com o layout medido, a grade continua cabendo na tela", () => {
+    for (const medida of [150, 175, 200, 260]) {
+      for (const cenas of [4, 5, 6, 8]) {
+        const colunas = cenas <= 4 ? 2 : cenas <= 6 ? 3 : 4;
+        const linhas = Math.ceil(cenas / colunas);
+        const card = tamanhoDoCard({
+          larguraJanela: 1470, alturaJanela: 830, cenas, colunas, proporcao: 1.2,
+          alturaForaDaGrade: medida,
+        });
+        const alturaGrade = (card / 1.2) * linhas + GAP_GRADE * (linhas - 1);
+        if (card > CARD_MIN) {
+          expect(alturaGrade, `fora=${medida}, ${cenas} cenas`).toBeLessThanOrEqual(830 - medida + GAP_GRADE);
+        }
+      }
     }
   });
 });

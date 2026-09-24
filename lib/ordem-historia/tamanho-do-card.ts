@@ -11,8 +11,12 @@
  *  exercício ficando mais difícil pelo motivo errado.
  */
 
-/** Espaço que não é a grade: cabeçalho com barra, frase de instrução, botão e margens. */
-export const ALTURA_FORA_DA_GRADE = 260;
+/** Padrão de segurança para o espaço que não é a grade, usado no primeiro render, antes de
+ *  o layout ser medido. Fica FOLGADO de propósito: errar para menos faria o botão de
+ *  confirmar sumir, porque o contêiner do exercício é `overflow: hidden`. */
+export const ALTURA_FORA_PADRAO = 260;
+/** Margem sobre a altura medida, para o arredondamento e a sombra do botão. */
+export const FOLGA_MEDIDA = 12;
 export const GAP_GRADE = 16;
 export const MARGEM_LATERAL = 48;
 /** Nunca menor que isto (telas baixas) nem maior (telas altas, onde um card gigante deixa
@@ -27,12 +31,16 @@ export function tamanhoDoCard(entrada: {
   colunas: number;
   /** largura/altura da cena, do catálogo */
   proporcao: number;
+  /** Altura ocupada por cabeçalho, instrução e rodapé. MEDIDA do layout; o padrão só
+   *  vale no primeiro render. */
+  alturaForaDaGrade?: number;
 }): number {
   const { larguraJanela, alturaJanela, cenas, colunas, proporcao } = entrada;
+  const foraDaGrade = entrada.alturaForaDaGrade ?? ALTURA_FORA_PADRAO;
   const linhas = Math.ceil(cenas / colunas);
   const a = proporcao > 0 ? proporcao : 1.2;
 
-  const porAltura = (Math.max(0, alturaJanela - ALTURA_FORA_DA_GRADE) / linhas - GAP_GRADE) * a;
+  const porAltura = (Math.max(0, alturaJanela - foraDaGrade) / linhas - GAP_GRADE) * a;
   const porLargura = (larguraJanela - MARGEM_LATERAL) / colunas - GAP_GRADE;
 
   return Math.max(CARD_MIN, Math.min(CARD_MAX, porAltura, porLargura));
