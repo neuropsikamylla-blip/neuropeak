@@ -26073,3 +26073,6 @@ coloquei
 
 ## 24/09/2026 09:26
 [Image #47] ideal era ficar assim
+
+## 24/09/2026 10:03
+e ai?
