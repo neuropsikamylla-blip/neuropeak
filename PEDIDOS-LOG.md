@@ -26031,3 +26031,6 @@ entao onde eu vejo?
 
 ## 24/09/2026 08:28
 abra por favor
+
+## 24/09/2026 08:32
+abre para eu escolher ue
