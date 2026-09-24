@@ -26025,3 +26025,9 @@ pode começar
 
 ## 23/09/2026 22:22
 [Image #32] acho que elas estao muito pequena para quando abre no NOTEBOOK... o tamanho talvez esteja razoavel para celular, mas para o computador nao sei [Image #33]
+
+## 24/09/2026 08:28
+entao onde eu vejo?
+
+## 24/09/2026 08:28
+abra por favor
