@@ -411,6 +411,49 @@ cabe. **Falta propagar aos demais exercícios.**
 
 ---
 
+## 🔴 EM ABERTO — o carrinho do Supermercado ainda vaza (24/set/2026)
+
+Ela viu produtos saindo para fora da cesta **três vezes seguidas**, e a cada vez eu disse que
+estava resolvido. Estado atual: **v3.47.7 no ar com a correção, e ela ainda vê o defeito.**
+
+### O que já foi feito no carrinho (e funciona)
+
+- A arte dela é a moldura; contagem e botão em HTML por cima (texto na imagem mentiria).
+- Grade com colunas que abrem conforme a quantidade, piso de 3 faixas, assentando no fundo.
+- Área da cesta medida da arte: as barras deixam livre de x 0,170 a 0,821; configurado 0,190-0,810.
+
+### As três tentativas de conserto do vazamento
+
+1. **Escala 1,14** para compensar a margem das fotos → era ela que empurrava a imagem para fora.
+   Removida.
+2. **Área grande demais** → medida da arte e recuada. Não era a causa.
+3. **Wrapper sem altura** → `max-height: 100%` só vale quando o pai tem altura definida; o wrapper
+   `inline-block` que eu criei para grudar o × na foto não tinha. Corrigido para `display: block`
+   com `height: 100%`.
+
+### A medição que sustenta o diagnóstico 3
+
+Pelos marcos da arte (topo do cabo, base das rodas), na captura dela os produtos ocupam
+**1,29× a altura da célula** esperada. Esse é o número exato de quando a foto é limitada pela
+LARGURA em vez da altura — o efeito do wrapper sem altura. Numa célula de 105×79px, um produto
+quadrado renderiza a 105 de altura: razão 1,33.
+
+**Logo: ou ela está vendo cache, ou o diagnóstico está errado pela terceira vez.**
+
+### ⚠️ O que fazer na volta, e o que NÃO repetir
+
+**Não continuar deduzindo pelo CSS.** Três rodadas de hipótese-conserto-falha custaram mais que
+medir. O caminho é **conectar a extensão do Claude no Chrome** (claude.ai/chrome) e medir o layout
+no navegador: `getBoundingClientRect` da célula e da foto, comparado com o da imagem do carrinho.
+Aí o número aparece em vez de ser inferido.
+
+Também vale registrar: a primeira versão da auditoria `lib/supermercado-cesta-cabe.test.ts`
+**passava com o defeito presente**, porque lia o CSS como texto e conferia que havia
+`objectFit: contain` — o que era verdade e inerte. Foi reforçada para conferir a cadeia de alturas,
+mas um teste que lê fonte nunca vai ver o que o navegador calcula.
+
+---
+
 ## ✅ APROVADO por ela — o tamanho da cena no Ordem da História (24/set/2026) — v3.46.3
 
 Ela testou no notebook e reprovou: *"acho que elas estao muito pequena para quando abre no
