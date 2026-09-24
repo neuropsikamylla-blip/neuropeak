@@ -127,15 +127,6 @@ describe("Supermercado — o carrinho", () => {
     }
   });
 
-  it("as compras preenchem a cesta — a escala compensa a margem das fotos", () => {
-    // Referência dela: os produtos QUASE SE TOCAM. As fotos trazem margem própria (medido:
-    // o produto ocupa de 79% a 98% do arquivo), então `contain` puro deixa respiro duplo.
-    const m = FONTE.match(/const ESCALA_NA_CESTA = ([\d.]+)/);
-    expect(m, "a escala sumiu").toBeTruthy();
-    const escala = Number(m![1]);
-    expect(escala, "sem compensação a cesta parece vazia").toBeGreaterThan(1);
-    expect(escala, "escala demais corta a foto na borda da célula").toBeLessThanOrEqual(1.25);
-  });
 
   it("a coluna do carrinho tem largura para a foto ficar conferível", () => {
     const m = FONTE.match(/width: "(\d+)%", maxWidth: (\d+), minWidth: 156/);

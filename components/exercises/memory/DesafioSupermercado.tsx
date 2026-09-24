@@ -156,16 +156,15 @@ function ProductImg({ id, size }: { id: string; size: number }) {
   );
 }
 
-/** As fotos de produto trazem margem branca própria — medido, o produto ocupa de 79% a 98%
- *  do arquivo. Com `contain` puro sobra respiro duplo e a cesta parece vazia. Esta escala
- *  compensa a margem do arquivo, para as compras quase se tocarem, como na referência dela. */
-const ESCALA_NA_CESTA = 1.14;
-
 /** Retângulo útil da cesta dentro da arte do carrinho, em fração da imagem.
  *  Medido sobre o próprio desenho: é o retângulo INSCRITO, que cabe tanto na boca (larga)
  *  quanto no fundo (estreito, por causa da perspectiva). Produtos fora daqui apareceriam
  *  atravessando a grade lateral. */
-const CESTA = { x0: 0.215, y0: 0.195, x1: 0.785, y1: 0.715 };
+/** Medido da arte: as barras do cesto deixam livre de x 0,170 a 0,821 em toda a altura
+ *  útil, e o cesto termina em y≈0,74 (abaixo é a base). Estes valores ficam DENTRO disso,
+ *  com folga — nada de produto encostando na grade.
+ *  Vigiado por lib/supermercado-carrinho.test.ts, que remede a arte a cada rodada. */
+const CESTA = { x0: 0.190, y0: 0.195, x1: 0.810, y1: 0.730 };
 
 /** Tamanho da foto na tela de MEMORIZAR, conforme quantos itens a lista tem.
  *
@@ -828,7 +827,7 @@ export function DesafioSupermercado({ difficulty, theme, onComplete }: DesafioSu
                     <div style={{
                       display: "grid", gridTemplateColumns: `repeat(${colunasDoCarrinho(cartIds.length)}, 1fr)`,
                       gridTemplateRows: `repeat(${linhasDoCarrinho(cartIds.length)}, minmax(0, 1fr))`,
-                      width: "100%", height: "100%", gap: 1, alignContent: "end",
+                      width: "100%", height: "100%", gap: 2, alignContent: "end",
                     }}>
                       {/* Células vazias ANTES dos produtos: é o que faz as compras assentarem
                           no FUNDO e subirem conforme entram, como num carrinho de verdade.
@@ -855,10 +854,6 @@ export function DesafioSupermercado({ difficulty, theme, onComplete }: DesafioSu
                               {/* eslint-disable-next-line @next/next/no-img-element */}
                               <img src={`/exercises/produtos/${id}.png`} alt={p.name} draggable={false}
                                 style={{ display: "block", maxWidth: "100%", maxHeight: "100%", objectFit: "contain",
-                                  // As fotos trazem margem própria (medido: o produto ocupa de 79% a 98%
-                                  // do arquivo). Sem compensar, sobra respiro duplo e a cesta parece vazia.
-                                  // A referência dela mostra as compras QUASE SE TOCANDO.
-                                  transform: `scale(${ESCALA_NA_CESTA})`,
                                   filter: "drop-shadow(0 2px 4px rgba(60,45,20,0.28))" }} />
                               {ordered && (
                                 <span style={{ position: "absolute", top: 0, left: 0, width: 17, height: 17, borderRadius: "50%",
