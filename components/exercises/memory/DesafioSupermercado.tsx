@@ -160,7 +160,7 @@ function ProductImg({ id, size }: { id: string; size: number }) {
  *  Medido sobre o próprio desenho: é o retângulo INSCRITO, que cabe tanto na boca (larga)
  *  quanto no fundo (estreito, por causa da perspectiva). Produtos fora daqui apareceriam
  *  atravessando a grade lateral. */
-const CESTA = { x0: 0.245, y0: 0.215, x1: 0.755, y1: 0.700 };
+const CESTA = { x0: 0.225, y0: 0.200, x1: 0.775, y1: 0.710 };
 
 /** Tamanho da foto na tela de MEMORIZAR, conforme quantos itens a lista tem.
  *
@@ -823,7 +823,7 @@ export function DesafioSupermercado({ difficulty, theme, onComplete }: DesafioSu
                     <div style={{
                       display: "grid", gridTemplateColumns: `repeat(${colunasDoCarrinho(cartIds.length)}, 1fr)`,
                       gridTemplateRows: `repeat(${linhasDoCarrinho(cartIds.length)}, minmax(0, 1fr))`,
-                      width: "100%", height: "100%", gap: 5, alignContent: "end",
+                      width: "100%", height: "100%", gap: 3, alignContent: "end",
                     }}>
                       <AnimatePresence mode="popLayout">
                         {cartIds.map((id, idx) => {
