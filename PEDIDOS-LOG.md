@@ -26022,3 +26022,6 @@ pode começar
 
 ## 23/09/2026 22:07
 [Image #29] está muito pequena as figuras; [Image #30] aqui está legal. [Image #31] isso pode tirar...
+
+## 23/09/2026 22:22
+[Image #32] acho que elas estao muito pequena para quando abre no NOTEBOOK... o tamanho talvez esteja razoavel para celular, mas para o computador nao sei [Image #33]
