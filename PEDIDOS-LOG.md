@@ -26100,3 +26100,6 @@ eu acho que as compras deveriam ficar nesse formato de tamanho e visualizacao [I
 
 ## 24/09/2026 11:36
 [Image #54] ainda continua
+
+## 24/09/2026 11:46
+abre de novo
