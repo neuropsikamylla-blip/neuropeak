@@ -845,16 +845,24 @@ export function DesafioSupermercado({ difficulty, theme, onComplete }: DesafioSu
                             <motion.div key={id} layout initial={{ scale: 0.7, opacity: 0 }} animate={{ scale: 1, opacity: 1 }}
                               exit={{ scale: 0.7, opacity: 0 }} transition={{ type: "spring", stiffness: 460, damping: 30 }}
                               title={p.name}
-                              style={{ display: "grid", placeItems: "center", minHeight: 0, minWidth: 0 }}>
-                              {/* ⚠️ O wrapper PRECISA ter altura própria (100% da célula).
+                              style={{ position: "relative", minHeight: 0, minWidth: 0 }}>
+                              {/* ⚠️ `position: absolute; inset: 0` — e não altura em %.
+                                  Três tentativas falharam antes desta, todas por confiar em
+                                  `height: 100%` dentro de uma cadeia que não sustentava o
+                                  percentual (a célula usava `placeItems: center`, que impede o
+                                  filho de esticar). `inset: 0` fixa o wrapper EXATAMENTE no
+                                  tamanho da célula, sem depender de alinhamento nem de herança
+                                  de altura — a foto então nunca ultrapassa.
+                                  Sintoma que denunciou: quanto mais ALTA a foto, mais ela vazava
+                                  (1,29× num produto quadrado, 1,60× num protetor solar).
+                                  O texto abaixo é o histórico das tentativas.
                                   Ele já foi um `inline-block` sem altura, para encolher até a largura da
                                   foto e o × ficar colado nela. Parecia certo e estava errado: `max-height:
                                   100%` só vale quando o pai tem altura definida — sem isso o limite
                                   simplesmente NÃO SE APLICA, e a foto passava da célula e saía do carrinho.
                                   Ela viu duas vezes: "agora a imagem esta vazando do carrinho".
                                   Com `height: 100%` e `objectFit: contain`, a foto nunca ultrapassa. */}
-                              <span style={{ position: "relative", display: "block",
-                                width: "100%", height: "100%", lineHeight: 0 }}>
+                              <span style={{ position: "absolute", inset: 0, lineHeight: 0 }}>
                               {/* eslint-disable-next-line @next/next/no-img-element */}
                               <img src={`/exercises/produtos/${id}.png`} alt={p.name} draggable={false}
                                 style={{ display: "block", width: "100%", height: "100%", objectFit: "contain",

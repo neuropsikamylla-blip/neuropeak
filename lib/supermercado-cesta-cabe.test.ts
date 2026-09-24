@@ -72,25 +72,30 @@ describe("auditoria: tudo cabe dentro do carrinho", () => {
     expect(bloco, "a foto tem de ser limitada pela célula").toContain('objectFit: "contain"');
   });
 
-  it("o limite de altura da foto REALMENTE se aplica — a cadeia de alturas é sólida", () => {
-    // O defeito que passou pela primeira versão desta auditoria: o wrapper do × era um
-    // `inline-block` SEM altura, e `max-height: 100%` só vale quando o pai tem altura
-    // definida. Sem isso o limite não se aplica e a foto sai do carrinho — ela viu duas
-    // vezes. Texto de CSS não basta: o que se confere aqui é a cadeia de alturas.
+  it("o wrapper da foto é fixado por inset, não por percentual de altura", () => {
+    // TRÊS tentativas falharam antes desta, todas confiando em `height: 100%` numa cadeia
+    // que não sustentava o percentual — a célula usava `placeItems: center`, que impede o
+    // filho de esticar, e aí o limite de altura da foto simplesmente não se aplicava.
+    //
+    // O sintoma que denunciou: quanto mais ALTA a foto, mais ela vazava — 1,29× num produto
+    // quadrado, 1,60× num protetor solar. Altura sem limite, largura limitada.
+    //
+    // `inset: 0` fixa o wrapper no tamanho exato da célula, sem depender de alinhamento nem
+    // de herança de altura.
     const bloco = FONTE.slice(FONTE.indexOf("/* O CARRINHO"), FONTE.indexOf("{/* confirmar */}"));
+    const wrapper = bloco.slice(bloco.indexOf("<span style={{ position:"));
+    expect(wrapper.slice(0, 120), "wrapper por percentual já falhou três vezes")
+      .toContain("position: \"absolute\", inset: 0");
 
-    // 1. a grade tem altura
-    expect(bloco, "a grade precisa de altura").toContain('width: "100%", height: "100%"');
-    // 2. o wrapper entre a célula e a foto também
-    const wrapper = bloco.slice(bloco.indexOf("<span style={{ position: \"relative\""));
-    expect(wrapper.slice(0, 260), "wrapper sem altura quebra o max-height da foto")
-      .toContain('height: "100%"');
-    expect(wrapper.slice(0, 260), "inline-block não recebe altura em %")
-      .not.toContain('display: "inline-block"');
-    // 3. e a foto se limita por altura, não só por largura
+    // e a célula não pode centralizar por grid: é isso que impede o filho de esticar
+    const celula = bloco.slice(bloco.indexOf("title={p.name}"));
+    expect(celula.slice(0, 200), "placeItems center impede o wrapper de ocupar a célula")
+      .not.toContain("placeItems");
+
+    // a foto se limita nas duas dimensões
     const img = bloco.slice(bloco.indexOf("<img src={`/exercises/produtos/"));
-    expect(img.slice(0, 300), "a foto precisa ser limitada nas DUAS dimensões")
-      .toMatch(/height: "100%"/);
+    expect(img.slice(0, 300)).toMatch(/width: "100%", height: "100%"/);
+    expect(img.slice(0, 300)).toContain('objectFit: "contain"');
   });
 
   it("todo produto do catálogo cabe na célula, em qualquer quantidade", async () => {
