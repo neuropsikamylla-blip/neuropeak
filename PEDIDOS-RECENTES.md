@@ -1,11 +1,11 @@
 # As 3 ultimas especificacoes dela (automatico; a mais nova por ultimo)
 # Na retomada: ler as 3, conectar com PROGRESSO.md e git, declarar e seguir.
 
-## 24/09/2026 08:52
-abre a pasta que jogo lá e esse texto é que no nivel 12 por exemplo são 2 lista ne exemplo da mae e do pai... ai ele aprende e depois na hora o comando é compre apenas a lista de tal (certo?)
+## 24/09/2026 10:50
+[Image #49] abacaxi esta com o fundo branco esta vendo?
 
-## 24/09/2026 09:18
-[Image #44] muito bom... mas seria possivel manter o X mais perto da imagem correspondente ?
+## 24/09/2026 10:51
+[Image #50] acho que podemos começar na parte de baixo, e quando aumenta a quantidade sobre e nao ao contrario concorda?
 
-## 24/09/2026 09:19
-[Image #45] esta desproporcional esse isotonick kkkk
+## 24/09/2026 10:56
+eu acho que as compras deveriam ficar nesse formato de tamanho e visualizacao [Image #51]
