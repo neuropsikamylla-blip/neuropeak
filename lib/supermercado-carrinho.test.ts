@@ -40,8 +40,8 @@ describe("Supermercado — o carrinho", () => {
 
   it("o produto no carrinho não usa mais o tamanho fixo de 34px", () => {
     expect(FONTE).not.toMatch(/<ProductImg id=\{id\} size=\{34\}/);
-    // agora ele preenche a célula da grade
-    expect(FONTE).toMatch(/maxWidth: "100%", maxHeight: "100%", objectFit: "contain"/);
+    // agora ele preenche a célula da grade, limitado nas DUAS dimensões
+    expect(FONTE).toMatch(/width: "100%", height: "100%", objectFit: "contain"/);
   });
 
   it("dá para REMOVER um item — ele pode ter tocado no produto errado", () => {
@@ -100,10 +100,16 @@ describe("Supermercado — o carrinho", () => {
     }
   });
 
-  it("o × se ancora na FOTO, não na célula", () => {
-    // Foto estreita (um álcool em gel) numa célula larga deixava o × solto no canto.
+  it("o × fica no canto da célula, e a célula é justa", () => {
+    // ⚠️ TRADE-OFF assumido em 24/set. O × já esteve ancorado na FOTO, por um wrapper
+    // inline-block que encolhia até ela. Ficava mais bonito e ESTAVA ERRADO: sem altura no
+    // wrapper, o `max-height` da foto não se aplicava e ela vazava para fora do carrinho —
+    // ela viu três vezes. Foto dentro do carrinho vale mais que × colado.
+    // O × fica perto porque a CÉLULA é justa: as colunas abrem com a quantidade e há piso
+    // de faixas, então ela nunca vira um retângulo enorme com a foto perdida no meio.
     const bloco = FONTE.slice(FONTE.indexOf("/* O CARRINHO"), FONTE.indexOf("{/* confirmar */}"));
-    expect(bloco).toContain('display: "inline-block"');
+    expect(bloco, "wrapper sem altura faz a foto vazar").not.toContain('display: "inline-block"');
+    expect(bloco).toContain('aria-label={`Remover ${p.name}`}');
   });
 
   it("as compras assentam no FUNDO e sobem conforme entram", () => {
