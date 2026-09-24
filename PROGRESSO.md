@@ -327,6 +327,53 @@ de areia (3→2→4→1) e a duplicata d8↔d2, ambas já conhecidas.
 
 ---
 
+## ✅ C7 FEITO — Informação em Foco deixa de ser uma mecânica só (23/set/2026) — v3.44.1
+
+Ela reprovou testando: *"nesse estilo INSUPORTAVEL de chato... teria de alternar"* e *"esse repetiu
+a mesma pergunta"*. Dois defeitos distintos, os dois consertados.
+
+### Defeito 1 — o nível baixo servia quase só operação de UMA etapa
+
+| nível | uma etapa antes | agora |
+|---|---|---|
+| **1** | **100%** | **70%** |
+| **2** | **62%** | **40%** |
+| 3 | 47% | 32% |
+| 8 | 23% | 13% |
+
+**O gargalo não era o peso, era a LIBERAÇÃO.** `operacoesDoNivel` só punha `filtroComparacao` na
+lista a partir do nível 3 — dar peso a ela nos níveis baixos não teria efeito nenhum, porque nem
+entrava no sorteio. São duas mudanças, e na primeira tentativa eu tinha visto só uma.
+
+`filtroComparacao` é exatamente a que ela aprovou (*"esse já foi melhor"*), porque ali a resposta
+**não está em nenhuma linha**: restringe o conjunto primeiro, compara dentro do que sobrou.
+
+**O que NÃO se tocou:** a curva da exclusão (4:10 · 5:14 · 6:17 · 7:18 · 8:20) e a de
+`tresCriterios` — spec C5 dela, fixadas pela prova da C5. Na tentativa anterior eu as havia mexido
+sem necessidade, e foi isso que derrubou a prova da C2. Preservando-as, **a C2 passou intacta**.
+
+### Defeito 2 — o mesmo enunciado voltava na mesma sessão
+
+A assinatura das duas ("Qual produto vence primeiro?") era idêntica, mas a regra só olhava as
+**últimas 3** rodadas, e a repetição dela estava a 4 de distância. A outra regra
+(`duasIdenticasNaSessao`) exige que já existam duas para recusar — permite a segunda por desenho.
+
+Janela de 3 → **6** (`JANELA_SEM_REPETIR_ENUNCIADO`). Uma sessão serve 8-10 atividades.
+
+### Provas — 132 no exercício
+
+- **Teto de uma etapa por nível**, mais: `filtroComparacao` presente e com peso ≥20% em todos, e
+  nenhum nível servido por menos de 3 operações.
+- **Contrapeso medido:** alargar a janela recusa mais questões; se alargar demais a geração
+  estrangula e a rodada volta NULA (tela vazia). Prova: 12 rodadas encadeadas nos níveis 1, 2, 3,
+  5 e 8, nenhuma nula.
+- Os alvos vividos dos 50.000 sorteios foram **medidos**, não estimados — são as frequências depois
+  do ×0,15, que achata a curva (peso 45% chega como 40%).
+- Injeções: voltar o nível 1 ao que era reprovou em 2 provas; tirar `filtroComparacao` do nível 1
+  reprovou em 3; voltar a janela para 3 reprovou em 2.
+
+---
+
 ## ✅ MOT — o palco não treme mais (23/set/2026) — v3.43.0
 
 Ela testou e reprovou: *"quando PARA a tela treme (isso nao pode acontecer)... meio que desloca o
