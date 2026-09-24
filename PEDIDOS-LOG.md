@@ -26052,3 +26052,6 @@ então não cheguei a pensar qual o teto vc pensa? pesquisa na internet pois é 
 
 ## 24/09/2026 08:52
 abre a pasta que jogo lá e esse texto é que no nivel 12 por exemplo são 2 lista ne exemplo da mae e do pai... ai ele aprende e depois na hora o comando é compre apenas a lista de tal (certo?)
+
+## 24/09/2026 08:54
+coloquei
