@@ -411,6 +411,45 @@ cabe. **Falta propagar aos demais exercícios.**
 
 ---
 
+## ✅ APROVADO por ela — o tamanho da cena no Ordem da História (24/set/2026) — v3.46.3
+
+Ela testou no notebook e reprovou: *"acho que elas estao muito pequena para quando abre no
+NOTEBOOK... o tamanho talvez esteja razoavel para celular, mas para o computador nao"*.
+Depois do conserto: **"gostei"**.
+
+### O diagnóstico não era o óbvio
+
+A suspeita natural era o teto (`CARD_MAX`). **Medindo na tela dela** (MacBook Air 13, 2560×1664
+Retina = ~1470 pontos CSS), o teto não limitava nada: com 420, 500 ou 600 o resultado era idêntico.
+
+O limite real era a constante `ALTURA_FORA_DA_GRADE = 260` — **que eu tinha chutado**. Somando o que
+header, instrução e rodapé realmente ocupam, dá ~175px. Eu reservava 85px a mais, e cada pixel ali
+sai do tamanho da cena.
+
+**Se eu tivesse atendido o pedido no pé da letra** (subir o teto), não teria mudado nada e ela
+voltaria dizendo que continuava pequeno.
+
+### O conserto
+
+Os três blocos ganharam `ref` e são **medidos por ResizeObserver**. A constante virou só o padrão do
+primeiro render — e segue **folgada de propósito**: errar para menos faria o botão de confirmar
+sumir, porque o contêiner é `overflow: hidden` e nada rola.
+
+| altura da janela | antes | agora |
+|---|---|---|
+| 760px | 281px | **332px** |
+| 830px | 323px | **374px** |
+| 900px | 365px | **416px** |
+
+### E um erro meu, pego pela prova
+
+A primeira versão do cálculo só limitava pela altura. A prova em quatro telas reais reprovou: no
+MacBook 13 e 14 a grade estouraria para fora. O limite de largura entrou por causa disso.
+
+O cálculo saiu do componente para `lib/ordem-historia/tamanho-do-card.ts` — função pura, 14 provas.
+
+---
+
 ## ✅ Princípio do gesto propagado (23/set/2026) — v3.46.0
 
 **Refinamento dela**, na tela de vitória do Restaurante: *"aqui pode aparecer a mensagem mas não
