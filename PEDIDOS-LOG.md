@@ -26019,3 +26019,6 @@ pode começar
 
 ## 23/09/2026 21:31
 [Image #28] aqui pode aparecer a mensagem mas não preciso apertar continu /clear
+
+## 23/09/2026 22:07
+[Image #29] está muito pequena as figuras; [Image #30] aqui está legal. [Image #31] isso pode tirar...
