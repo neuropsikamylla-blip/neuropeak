@@ -1,6 +1,7 @@
 import { readFileSync, existsSync, statSync } from "node:fs";
 import { resolve } from "node:path";
 import { describe, expect, it } from "vitest";
+import { colunasDoCarrinho, linhasDoCarrinho } from "@/lib/supermercado-grade-carrinho";
 
 // 24/set — desenho dela: a arte do carrinho é a MOLDURA, e tudo que muda vai por cima em HTML.
 // Antes os itens vinham numa lista vertical com a foto em 34px — pequena demais para o
@@ -49,24 +50,59 @@ describe("Supermercado — o carrinho", () => {
   });
 
   it("a grade comporta o teto de 8 itens do nível 12", () => {
-    // 2 listas x 4 itens. Duas colunas dão 4 linhas — cabe sem rolagem.
-    expect(FONTE).toMatch(/gridTemplateColumns: "repeat\(2, 1fr\)"/);
+    // 2 listas x 4 itens — o máximo que a LISTA pede. O carrinho aceita mais que isso
+    // (erro por excesso), e a grade também tem de dar conta.
+    expect(colunasDoCarrinho(8) * linhasDoCarrinho(8), "8 itens não cabem").toBeGreaterThanOrEqual(8);
     const niveis = FONTE.slice(FONTE.indexOf("const LEVELS"), FONTE.indexOf("const MAX_LEVEL"));
     const maiores = [...niveis.matchAll(/lists: (\d), count: (\d)/g)]
       .map(([, l, c]) => Number(l) * Number(c));
     expect(Math.max(...maiores), "o teto de itens mudou — a grade precisa acompanhar").toBe(8);
   });
-  it("as células são quadradas e a grade ocupa só a altura necessária", () => {
-    // Ela viu o defeito: "seria possivel manter o X mais perto da imagem correspondente?".
-    // A causa era a grade dividir a área INTEIRA entre as linhas — com dois itens a célula
-    // ficava altíssima, a foto boiava no meio e o × subia para o topo dela.
-    expect(FONTE).toContain("aspectRatio: `2 / ${Math.max(1, Math.ceil(cartIds.length / 2))}`");
-    expect(FONTE, "as linhas precisam acompanhar a quantidade de itens")
-      .toContain("gridTemplateRows: `repeat(${Math.max(1, Math.ceil(cartIds.length / 2))}, 1fr)`");
+  it("a grade preenche a cesta e assenta no fundo", () => {
+    // Ela mandou a referência: produtos GRANDES, ocupando a cesta, sem espaço sobrando dos
+    // lados. Antes a grade mantinha proporção fixa e encolhia de largura com muitas linhas —
+    // com nove itens as fotos ficavam miúdas no meio.
+    const bloco = FONTE.slice(FONTE.indexOf("/* O CARRINHO"), FONTE.indexOf("{/* confirmar */}"));
+    expect(bloco).toContain('alignContent: "end"');
+    expect(bloco, "a grade tem de ocupar a área toda").toContain('width: "100%", height: "100%"');
+    expect(bloco, "proporção fixa fazia a grade encolher").not.toContain("aspectRatio");
   });
 
-  it("as compras assentam no fundo da cesta, como num carrinho de verdade", () => {
+  it("duas compras não aparecem gigantes — há piso de faixas na cesta", () => {
+    expect(colunasDoCarrinho(2)).toBe(2);
+    expect(linhasDoCarrinho(2), "sem piso, dois itens ocupariam a altura inteira")
+      .toBeGreaterThanOrEqual(3);
+  });
+
+  it("mais itens não achatam a foto: as colunas abrem junto", () => {
+    // Travar as colunas faria a cesta ganhar linha atrás de linha, e a célula ficaria uma
+    // tira baixa demais para reconhecer o produto. A célula é sempre mais larga que 1/4 e
+    // a cesta nunca passa de 5 faixas.
+    let anterior = 0;
+    for (const n of [2, 4, 6, 9, 12, 16, 20, 24]) {
+      const c = colunasDoCarrinho(n), l = linhasDoCarrinho(n);
+      expect(c, `${n} itens: as colunas não podem encolher`).toBeGreaterThanOrEqual(anterior);
+      expect(c, `${n} itens: coluna demais deixa a foto pequena`).toBeLessThanOrEqual(4);
+      expect(l, `${n} itens em ${c} colunas daria ${l} faixas — a célula vira uma tira`)
+        .toBeLessThanOrEqual(6);
+      anterior = c;
+    }
+    // e a abertura acontece de fato, não é uma promessa vazia
+    expect(colunasDoCarrinho(16), "16 itens ainda em 2 colunas").toBeGreaterThan(colunasDoCarrinho(2));
+  });
+
+  it("a grade aguenta MAIS itens do que a lista pedia", () => {
+    // O carrinho não tem teto: o paciente pode pegar itens a mais, e é assim que o erro
+    // por excesso aparece. Ela mesma chegou a 9 numa lista de 2.
+    for (const n of [9, 15, 24]) {
+      const celulas = colunasDoCarrinho(n) * linhasDoCarrinho(n);
+      expect(celulas, `${n} itens não cabem na grade`).toBeGreaterThanOrEqual(n);
+    }
+  });
+
+  it("o × se ancora na FOTO, não na célula", () => {
+    // Foto estreita (um álcool em gel) numa célula larga deixava o × solto no canto.
     const bloco = FONTE.slice(FONTE.indexOf("/* O CARRINHO"), FONTE.indexOf("{/* confirmar */}"));
-    expect(bloco).toContain('justifyContent: "flex-end"');
+    expect(bloco).toContain('display: "inline-block"');
   });
 });

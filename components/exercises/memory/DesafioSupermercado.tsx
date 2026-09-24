@@ -3,6 +3,7 @@
 import { useState, useEffect, useRef, useCallback, useMemo, useLayoutEffect } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { calculateExerciseScore } from "@/lib/scoring";
+import { colunasDoCarrinho, linhasDoCarrinho } from "@/lib/supermercado-grade-carrinho";
 import { cancelTTS } from "@/lib/tts";
 import { resolveVoice, ensureVoices } from "@/lib/voicePrefs";
 import { VoicePicker } from "@/components/exercises/VoicePicker";
@@ -820,10 +821,9 @@ export function DesafioSupermercado({ difficulty, theme, onComplete }: DesafioSu
                         `justifyContent: flex-end` assenta as compras no FUNDO da cesta, como num
                         carrinho de verdade. */}
                     <div style={{
-                      display: "grid", gridTemplateColumns: "repeat(2, 1fr)",
-                      gridTemplateRows: `repeat(${Math.max(1, Math.ceil(cartIds.length / 2))}, 1fr)`,
-                      aspectRatio: `2 / ${Math.max(1, Math.ceil(cartIds.length / 2))}`,
-                      maxHeight: "100%", width: "100%", margin: "0 auto", gap: 4,
+                      display: "grid", gridTemplateColumns: `repeat(${colunasDoCarrinho(cartIds.length)}, 1fr)`,
+                      gridTemplateRows: `repeat(${linhasDoCarrinho(cartIds.length)}, minmax(0, 1fr))`,
+                      width: "100%", height: "100%", gap: 5, alignContent: "end",
                     }}>
                       <AnimatePresence mode="popLayout">
                         {cartIds.map((id, idx) => {
@@ -832,10 +832,15 @@ export function DesafioSupermercado({ difficulty, theme, onComplete }: DesafioSu
                             <motion.div key={id} layout initial={{ scale: 0.7, opacity: 0 }} animate={{ scale: 1, opacity: 1 }}
                               exit={{ scale: 0.7, opacity: 0 }} transition={{ type: "spring", stiffness: 460, damping: 30 }}
                               title={p.name}
-                              style={{ position: "relative", display: "flex", alignItems: "center", justifyContent: "center", minHeight: 0 }}>
+                              style={{ display: "grid", placeItems: "center", minHeight: 0, minWidth: 0 }}>
+                              {/* O wrapper encolhe até a LARGURA DA FOTO (inline-block), e é nele que o
+                                  × se ancora. Ancorado na célula, ele ficava longe sempre que a foto era
+                                  estreita — um álcool em gel numa célula quadrada deixa metade vazia. */}
+                              <span style={{ position: "relative", display: "inline-block",
+                                maxWidth: "100%", maxHeight: "100%", lineHeight: 0 }}>
                               {/* eslint-disable-next-line @next/next/no-img-element */}
                               <img src={`/exercises/produtos/${id}.png`} alt={p.name} draggable={false}
-                                style={{ maxWidth: "100%", maxHeight: "100%", objectFit: "contain",
+                                style={{ display: "block", maxWidth: "100%", maxHeight: "100%", objectFit: "contain",
                                   filter: "drop-shadow(0 2px 4px rgba(60,45,20,0.28))" }} />
                               {ordered && (
                                 <span style={{ position: "absolute", top: 0, left: 0, width: 17, height: 17, borderRadius: "50%",
@@ -849,6 +854,7 @@ export function DesafioSupermercado({ difficulty, theme, onComplete }: DesafioSu
                                   fontWeight: 900, fontSize: 12, lineHeight: 1, padding: 0,
                                   display: "flex", alignItems: "center", justifyContent: "center",
                                   boxShadow: "0 1px 4px rgba(0,0,0,0.3)" }}>×</button>
+                              </span>
                             </motion.div>
                           );
                         })}
